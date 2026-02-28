@@ -120,10 +120,10 @@ async function syncOnlineStatus(db) {
         // Reset all to offline
         db.prepare('UPDATE peer SET status_online = 0').run();
         
-        // Set online for those from API
+        // Set online for those from API (Removed last_online = datetime('now') to prevent infinite loop)
         if (onlineIds.size > 0) {
             const placeholders = Array(onlineIds.size).fill('?').join(',');
-            db.prepare(`UPDATE peer SET status_online = 1, last_online = datetime('now') WHERE id IN (${placeholders})`)
+            db.prepare(`UPDATE peer SET status_online = 1 WHERE id IN (${placeholders})`)
                 .run(...onlineIds);
         }
         
