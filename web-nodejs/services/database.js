@@ -386,6 +386,20 @@ function countDevices(filters = {}) {
     return db.prepare(sql).get(...params).count;
 }
 
+/**
+ * Set device online status (used by Client API heartbeats)
+ */
+function setDeviceOnline(id) {
+    if (!id) return;
+    try {
+        getDb().prepare(
+            "UPDATE peer SET status_online = 1, last_online = datetime('now') WHERE id = ? AND is_deleted = 0"
+        ).run(id);
+    } catch (err) {
+        console.error('Failed to set device online:', err.message);
+    }
+}
+
 // ==================== User Operations ====================
 
 /**
@@ -851,6 +865,7 @@ module.exports = {
     setBanStatus,
     getStats,
     countDevices,
+    setDeviceOnline,
     // Users
     getUserByUsername,
     getUserById,

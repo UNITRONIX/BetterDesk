@@ -73,10 +73,18 @@ router.get('/api/login-options', (req, res) => {
  * Must return a valid JSON response to prevent client errors.
  */
 router.post('/api/heartbeat', (req, res) => {
+    const { id } = req.body || {};
+    if (id) {
+        db.setDeviceOnline(id);
+    }
+    
     const token = extractBearerToken(req);
     if (token) {
         const user = authService.validateAccessToken(token);
         if (user) {
+            if (user.clientId && !id) {
+                db.setDeviceOnline(user.clientId);
+            }
             return res.json({ modified_at: new Date().toISOString() });
         }
     }
@@ -89,6 +97,10 @@ router.post('/api/heartbeat', (req, res) => {
  * Acknowledge the report.
  */
 router.post('/api/sysinfo', (req, res) => {
+    const { id } = req.body || {};
+    if (id) {
+        db.setDeviceOnline(id);
+    }
     return res.json({});
 });
 
