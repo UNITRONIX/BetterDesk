@@ -94,6 +94,7 @@
                     device.id?.toLowerCase().includes(q) ||
                     device.hostname?.toLowerCase().includes(q) ||
                     device.username?.toLowerCase().includes(q) ||
+                    device.note?.toLowerCase().includes(q) ||
                     device.platform?.toLowerCase().includes(q);
                 if (!match) return false;
             }
@@ -156,8 +157,43 @@
             tableBody.innerHTML = '';
             return;
         }
+
+        const userRole = window.BetterDesk?.user?.role || 'viewer';
+        const isManager = userRole === 'admin' || userRole === 'operator';
         
-        tableBody.innerHTML = pageDevices.map(device => `
+        tableBody.innerHTML = pageDevices.map(device => {
+            
+            let actionsHtml = `
+                <button class="action-btn connect" title="${_('actions.connect')}" data-action="connect" data-id="${Utils.escapeHtml(device.id)}">
+                    <span class="material-icons">link</span>
+                </button>
+                <button class="action-btn connect-desktop" title="${_('actions.connect_desktop')}" data-action="connect-desktop" data-id="${Utils.escapeHtml(device.id)}">
+                    <span class="material-icons">computer</span>
+                </button>
+                <button class="action-btn info" title="${_('actions.details')}" data-action="details" data-id="${Utils.escapeHtml(device.id)}">
+                    <span class="material-icons">info</span>
+                </button>
+            `;
+
+            if (isManager) {
+                actionsHtml += `
+                <button class="action-btn" title="${_('actions.edit')}" data-action="edit" data-id="${Utils.escapeHtml(device.id)}">
+                    <span class="material-icons">edit</span>
+                </button>
+                <button class="action-btn" title="${_('devices.change_id')}" data-action="change-id" data-id="${Utils.escapeHtml(device.id)}">
+                    <span class="material-icons">badge</span>
+                </button>
+                <button class="action-btn ${device.banned ? 'unban' : 'ban'}" title="${device.banned ? _('actions.unban') : _('actions.ban')}" 
+                    data-action="toggle-ban" data-id="${Utils.escapeHtml(device.id)}" data-banned="${device.banned}">
+                    <span class="material-icons">${device.banned ? 'check_circle' : 'block'}</span>
+                </button>
+                <button class="action-btn danger" title="${_('actions.delete')}" data-action="delete" data-id="${Utils.escapeHtml(device.id)}">
+                    <span class="material-icons">delete</span>
+                </button>
+                `;
+            }
+
+            return `
             <tr data-id="${Utils.escapeHtml(device.id)}" class="${device.banned ? 'banned-row' : ''}" draggable="true">
                 <td class="drag-handle-cell">
                     <span class="drag-handle material-icons">drag_indicator</span>
@@ -170,7 +206,7 @@
                         </button>
                     </div>
                 </td>
-                <td data-column="hostname">${Utils.escapeHtml(device.hostname || device.note || '-')}</td>
+                <td data-column="hostname">${Utils.escapeHtml(device.note || device.hostname || '-')}</td>
                 <td data-column="platform">
                     <div class="platform-icon">
                         <span class="material-icons">${Utils.getPlatformIcon(device.platform)}</span>
@@ -193,26 +229,11 @@
                 </td>
                 <td data-column="actions">
                     <div class="device-actions">
-                        <button class="action-btn connect" title="${_('actions.connect')}" data-action="connect" data-id="${Utils.escapeHtml(device.id)}">
-                            <span class="material-icons">link</span>
-                        </button>
-                        <button class="action-btn connect-desktop" title="${_('actions.connect_desktop')}" data-action="connect-desktop" data-id="${Utils.escapeHtml(device.id)}">
-                            <span class="material-icons">computer</span>
-                        </button>
-                        <button class="action-btn info" title="${_('actions.details')}" data-action="details" data-id="${Utils.escapeHtml(device.id)}">
-                            <span class="material-icons">info</span>
-                        </button>
-                        <button class="action-btn ${device.banned ? 'unban' : 'ban'}" title="${device.banned ? _('actions.unban') : _('actions.ban')}" 
-                            data-action="toggle-ban" data-id="${Utils.escapeHtml(device.id)}" data-banned="${device.banned}">
-                            <span class="material-icons">${device.banned ? 'check_circle' : 'block'}</span>
-                        </button>
-                        <button class="action-btn danger" title="${_('actions.delete')}" data-action="delete" data-id="${Utils.escapeHtml(device.id)}">
-                            <span class="material-icons">delete</span>
-                        </button>
+                        ${actionsHtml}
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
         
         // Re-apply column visibility to newly rendered rows
         applyColumnVisibility();
@@ -409,7 +430,7 @@
         try {
             await Utils.api(`/api/devices/${deviceId}/change-id`, {
                 method: 'POST',
-                body: { new_id: newId.toUpperCase() }
+                body: { newId: newId.toUpperCase() }
             });
             Notifications.success(_('devices.change_id_success'));
             loadDevices();
@@ -419,132 +440,78 @@
     }
     
     /**
-     * Delete device with delayed confirmation
+     * Delete device using standard Modal.confirm
      */
     async function deleteDevice(deviceId) {
-        return new Promise((resolve) => {
-            const modalHtml = `
-                <div class="modal-overlay delete-confirm-modal" id="delete-modal-${deviceId}">
-                    <div class="modal-container modal-danger">
-                        <div class="modal-header">
-                            <h3 class="modal-title">
-                                <span class="material-icons" style="color: var(--accent-red);">warning</span>
-                                ${_('devices.delete_title')}
-                            </h3>
-                        </div>
-                        <div class="modal-body">
-                            <p class="delete-warning">${_('devices.delete_warning')}</p>
-                            <p class="delete-device-id"><strong>${Utils.escapeHtml(deviceId)}</strong></p>
-                            <p class="delete-info">${_('devices.delete_permanent')}</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary cancel-btn">${_('actions.cancel')}</button>
-                            <button class="btn btn-danger confirm-delete-btn" disabled>
-                                <span class="material-icons">delete_forever</span>
-                                <span class="btn-text">${_('actions.delete')} (<span class="countdown">3</span>)</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            const modal = document.getElementById(`delete-modal-${deviceId}`);
-            const confirmBtn = modal.querySelector('.confirm-delete-btn');
-            const cancelBtn = modal.querySelector('.cancel-btn');
-            const countdownEl = confirmBtn.querySelector('.countdown');
-            
-            let countdown = 3;
-            const timer = setInterval(() => {
-                countdown--;
-                countdownEl.textContent = countdown;
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    confirmBtn.disabled = false;
-                    confirmBtn.querySelector('.btn-text').textContent = _('actions.delete');
-                }
-            }, 1000);
-            
-            const closeModal = () => {
-                clearInterval(timer);
-                modal.remove();
-            };
-            
-            cancelBtn.addEventListener('click', () => {
-                closeModal();
-                resolve(false);
-            });
-            
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                    resolve(false);
-                }
-            });
-            
-            confirmBtn.addEventListener('click', async () => {
-                if (confirmBtn.disabled) return;
-                closeModal();
-                
-                try {
-                    await Utils.api(`/api/devices/${deviceId}`, { method: 'DELETE' });
-                    Notifications.success(_('devices.delete_success'));
-                    loadDevices();
-                    resolve(true);
-                } catch (error) {
-                    Notifications.error(error.message || _('errors.delete_failed'));
-                    resolve(false);
-                }
-            });
+        const confirmed = await Modal.confirm({
+            title: _('devices.delete_title'),
+            message: _('devices.delete_warning') + ' ' + deviceId + '\n\n' + _('devices.delete_permanent'),
+            confirmLabel: _('actions.delete'),
+            confirmIcon: 'delete',
+            danger: true
         });
+        
+        if (!confirmed) return false;
+        
+        try {
+            await Utils.api(`/api/devices/${deviceId}`, { method: 'DELETE' });
+            Notifications.success(_('devices.delete_success'));
+            loadDevices();
+            return true;
+        } catch (error) {
+            Notifications.error(error.message || _('errors.delete_failed'));
+            return false;
+        }
     }
     
     /**
-     * Show edit modal
+     * Show edit modal allowing user to change Note/Hostname alias
      */
     function showEditModal(deviceId) {
         const device = devices.find(d => d.id === deviceId);
         if (!device) return;
         
-        Modal.show({
-            title: _('devices.edit_title'),
-            content: `
-                <div class="device-info-grid">
-                    <div class="device-info-item">
-                        <label>${_('devices.id')}</label>
-                        <span>${Utils.escapeHtml(device.id)}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.hostname')}</label>
-                        <span>${Utils.escapeHtml(device.hostname || '-')}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.username')}</label>
-                        <span>${Utils.escapeHtml(device.username || '-')}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.platform')}</label>
-                        <span>${Utils.escapeHtml(device.platform || '-')}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.version')}</label>
-                        <span>${Utils.escapeHtml(device.version || '-')}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.first_seen')}</label>
-                        <span>${Utils.formatDate(device.created_at)}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.last_seen')}</label>
-                        <span>${Utils.formatDate(device.last_online)}</span>
-                    </div>
+        const content = `
+            <form id="edit-device-form" class="device-edit-form">
+                <div class="form-group">
+                    <label class="form-label">${_('devices.id')}</label>
+                    <input type="text" class="form-input" value="${Utils.escapeHtml(device.id)}" readonly disabled style="background: var(--bg-tertiary); cursor: not-allowed; opacity: 0.7;">
                 </div>
-            `,
+                <div class="form-group">
+                    <label class="form-label" for="edit-device-note">${_('devices.note')} / Alias</label>
+                    <input type="text" id="edit-device-note" class="form-input" value="${Utils.escapeHtml(device.note || '')}" placeholder="Enter an alias or note...">
+                    <p class="form-hint">This will be displayed as the hostname if set.</p>
+                </div>
+            </form>
+        `;
+        
+        Modal.show({
+            title: _('actions.edit') + ' ' + _('devices.details'),
+            content: content,
+            size: 'medium',
             buttons: [
-                { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
+                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: _('actions.save'), class: 'btn-primary', onClick: async () => {
+                    const newNote = document.getElementById('edit-device-note').value;
+                    try {
+                        await Utils.api(`/api/devices/${deviceId}`, {
+                            method: 'PATCH',
+                            body: { note: newNote }
+                        });
+                        Notifications.success(_('common.saved'));
+                        Modal.close();
+                        loadDevices();
+                    } catch (err) {
+                        Notifications.error(err.message || _('errors.server_error'));
+                    }
+                }}
             ],
-            size: 'medium'
+            onOpen: () => {
+                setTimeout(() => {
+                    const input = document.getElementById('edit-device-note');
+                    if (input) input.focus();
+                }, 100);
+            }
         });
     }
     

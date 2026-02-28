@@ -290,7 +290,7 @@ function renderDevices(devices) {
                 <strong>${escapeHtml(device.id)}</strong>
                 ${isBanned ? '<br><span class="status-badge" style="background: #e74c3c; font-size: 0.75rem; margin-top: 4px;"><i class="fas fa-ban"></i> BANNED</span>' : ''}
             </td>
-            <td>${escapeHtml(device.note) || '<span style="color: var(--text-secondary);">No note</span>'}</td>
+            <td>${escapeHtml(device.note || device.hostname || '') || '<span style="color: var(--text-secondary);">No alias/hostname</span>'}</td>
             <td>
                 <span class="status-badge ${statusClass}">
                     <i class="fas ${statusIcon}"></i>
@@ -339,7 +339,8 @@ function filterDevices() {
     
     const filtered = allDevices.filter(device => 
         device.id.toLowerCase().includes(searchTerm) ||
-        (device.note && device.note.toLowerCase().includes(searchTerm))
+        (device.note && device.note.toLowerCase().includes(searchTerm)) ||
+        (device.hostname && device.hostname.toLowerCase().includes(searchTerm))
     );
     
     renderDevices(filtered);
@@ -433,8 +434,8 @@ function showDetails(deviceId) {
         </div>
         ` : ''}
         <div class="detail-item">
-            <div class="detail-label">Note:</div>
-            <div class="detail-value">${escapeHtml(device.note) || 'No note'}</div>
+            <div class="detail-label">Note/Hostname:</div>
+            <div class="detail-value">${escapeHtml(device.note || device.hostname) || 'No note/hostname'}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Created:</div>
@@ -517,14 +518,36 @@ async function saveDevice() {
 
 // Delete device
 function deleteDevice(deviceId) {
-    currentDeviceId = deviceId;
-    document.getElementById('deleteDeviceId').textContent = deviceId;
-    openModal('deleteModal');
+    if (!checkAuth()) return;
+    
+    if (!confirm(`⚠️ Are you sure you want to permanently delete device ${deviceId}?`)) {
+        return;
+    }
+
+    // Call the delete API endpoint
+    fetch(`/api/device/${deviceId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+    }).then(response => {
+        if (handleAuthError(null, response)) return;
+        return response.json();
+    }).then(result => {
+        if (result && result.success) {
+            showToast('Device deleted successfully');
+            loadDevices();
+            loadStats();
+        } else {
+            showToast('Error: ' + (result?.error || 'Unknown error'), 'error');
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to delete device', 'error');
+    });
 }
 
-// Confirm delete
+// Confirm delete - (No longer used as we trigger confirm natively above, but kept for legacy UI compatibility)
 async function confirmDelete() {
-    if (!checkAuth()) return;
+    if (!checkAuth() || !currentDeviceId) return;
     
     try {
         const response = await fetch(`/api/device/${currentDeviceId}`, {
