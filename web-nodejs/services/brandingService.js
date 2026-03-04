@@ -112,96 +112,84 @@ const COLOR_TO_CSS_VAR = {
 let brandingCache = null;
 
 /**
- * Ensure the branding_config table exists in auth.db
+ * Load branding configuration from database into cache (async).
+ * Must be called once at startup before any request is served.
+ * @returns {Promise<Object>} Merged branding config
  */
-function ensureBrandingTable() {
-    const authDb = db.getAuthDb();
-    authDb.exec(`
-        CREATE TABLE IF NOT EXISTS branding_config (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL,
-            updated_at TEXT DEFAULT (datetime('now'))
-        )
-    `);
+async function loadBranding() {
+    try {
+        const rows = await db.getBrandingConfig();
+
+        // Start with defaults
+        const branding = JSON.parse(JSON.stringify(DEFAULT_BRANDING));
+
+        for (const row of rows) {
+            if (row.key === 'colors') {
+                try {
+                    const savedColors = JSON.parse(row.value);
+                    Object.assign(branding.colors, savedColors);
+                } catch (e) {
+                    // Ignore invalid JSON
+                }
+            } else if (row.key in branding) {
+                branding[row.key] = row.value;
+            }
+        }
+
+        brandingCache = branding;
+        return branding;
+    } catch (err) {
+        console.error('[Branding] Failed to load from DB, using defaults:', err.message);
+        brandingCache = JSON.parse(JSON.stringify(DEFAULT_BRANDING));
+        return brandingCache;
+    }
 }
 
 /**
- * Get branding configuration (with caching)
+ * Get branding configuration (synchronous, from cache).
+ * Returns defaults if cache has not been warmed yet.
  * @returns {Object} Merged branding config (defaults + overrides)
  */
 function getBranding() {
     if (brandingCache) return brandingCache;
-    
-    ensureBrandingTable();
-    
-    const authDb = db.getAuthDb();
-    const rows = authDb.prepare('SELECT key, value FROM branding_config').all();
-    
-    // Start with defaults
-    const branding = JSON.parse(JSON.stringify(DEFAULT_BRANDING));
-    
-    for (const row of rows) {
-        if (row.key === 'colors') {
-            try {
-                const savedColors = JSON.parse(row.value);
-                Object.assign(branding.colors, savedColors);
-            } catch (e) {
-                // Ignore invalid JSON
-            }
-        } else if (row.key in branding) {
-            branding[row.key] = row.value;
-        }
-    }
-    
-    brandingCache = branding;
-    return branding;
+    // Cache not yet loaded — return defaults (startup race condition safety)
+    return JSON.parse(JSON.stringify(DEFAULT_BRANDING));
 }
 
 /**
- * Save branding configuration
+ * Save branding configuration (async — uses database adapter)
  * @param {Object} updates - Partial branding config to save
  */
-function saveBranding(updates) {
-    ensureBrandingTable();
-    
-    const authDb = db.getAuthDb();
-    const stmt = authDb.prepare(`
-        INSERT INTO branding_config (key, value, updated_at) 
-        VALUES (?, ?, datetime('now'))
-        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
-    `);
-    
-    const saveAll = authDb.transaction((data) => {
-        for (const [key, value] of Object.entries(data)) {
-            if (key === 'colors') {
-                stmt.run(key, JSON.stringify(value));
-            } else if (key in DEFAULT_BRANDING) {
-                // Security: Sanitize SVG content to prevent XSS
-                if (key === 'logoSvg' || key === 'faviconSvg') {
-                    stmt.run(key, sanitizeSvg(String(value)));
-                } else {
-                    stmt.run(key, String(value));
-                }
+async function saveBranding(updates) {
+    const entries = [];
+    for (const [key, value] of Object.entries(updates)) {
+        if (key === 'colors') {
+            entries.push({ key, value: JSON.stringify(value) });
+        } else if (key in DEFAULT_BRANDING) {
+            // Security: Sanitize SVG content to prevent XSS
+            if (key === 'logoSvg' || key === 'faviconSvg') {
+                entries.push({ key, value: sanitizeSvg(String(value)) });
+            } else {
+                entries.push({ key, value: String(value) });
             }
         }
-    });
-    
-    saveAll(updates);
-    
-    // Invalidate cache
-    brandingCache = null;
+    }
+
+    if (entries.length > 0) {
+        await db.saveBrandingConfigBatch(entries);
+    }
+
+    // Reload cache from DB
+    await loadBranding();
 }
 
 /**
- * Reset branding to defaults
+ * Reset branding to defaults (async — uses database adapter)
  */
-function resetBranding() {
-    ensureBrandingTable();
-    
-    const authDb = db.getAuthDb();
-    authDb.prepare('DELETE FROM branding_config').run();
-    
-    // Invalidate cache
+async function resetBranding() {
+    await db.resetBrandingConfig();
+
+    // Clear cache — next getBranding() will return defaults
     brandingCache = null;
 }
 
@@ -276,7 +264,7 @@ function exportPreset() {
  * @param {Object} preset - Preset object with version + branding fields
  * @returns {boolean} Success
  */
-function importPreset(preset) {
+async function importPreset(preset) {
     if (!preset || preset.type !== 'betterdesk-theme' || !preset.branding) {
         return false;
     }
@@ -303,7 +291,7 @@ function importPreset(preset) {
         }
     }
     
-    saveBranding(sanitized);
+    await saveBranding(sanitized);
     return true;
 }
 
@@ -317,6 +305,7 @@ function invalidateCache() {
 module.exports = {
     DEFAULT_BRANDING,
     COLOR_TO_CSS_VAR,
+    loadBranding,
     getBranding,
     saveBranding,
     resetBranding,

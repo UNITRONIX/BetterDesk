@@ -28,24 +28,19 @@ const BACKUP_FORMAT_VERSION = 1;
  * @returns {Promise<Object>} Serialisable backup object
  */
 async function createBackup() {
-    const authDb = db.getAuthDb();
     const timestamp = new Date().toISOString();
 
     // --- Console local data ---
     const settings = await db.getAllSettings();
     const branding = brandingService.getBranding();
-    const users = authDb.prepare(
-        'SELECT id, username, password_hash, role, created_at, last_login, totp_enabled FROM users'
-    ).all();
+    const users = await db.getAllUsersForBackup();
     const folders = await db.getAllFolders();
     const userGroups = await db.getAllUserGroups();
     const deviceGroups = await db.getAllDeviceGroups();
     const strategies = await db.getAllStrategies();
 
-    // Address books (per-user)
-    const addressBooks = authDb.prepare(
-        'SELECT user_id, ab_type, data, updated_at FROM address_books'
-    ).all();
+    // Address books (all users)
+    const addressBooks = await db.getAllAddressBooks();
 
     // --- Go server data (best-effort) ---
     let goServer = null;
@@ -149,7 +144,6 @@ async function restoreBackup(data, options = {}) {
         restoreAddressBooks = true
     } = options;
 
-    const authDb = db.getAuthDb();
     const result = { restored: [], skipped: [], warnings: [] };
 
     // --- Settings ---
@@ -170,7 +164,7 @@ async function restoreBackup(data, options = {}) {
     // --- Branding ---
     if (restoreBranding && data.console.branding) {
         try {
-            brandingService.saveBranding(data.console.branding);
+            await brandingService.saveBranding(data.console.branding);
             result.restored.push('branding');
         } catch (err) {
             result.warnings.push(`Branding restore failed: ${err.message}`);
@@ -182,22 +176,7 @@ async function restoreBackup(data, options = {}) {
     // --- Users (destructive — replaces all users) ---
     if (restoreUsers && Array.isArray(data.console.users) && data.console.users.length > 0) {
         try {
-            const tx = authDb.transaction(() => {
-                // Safety: keep at least the current admin
-                authDb.prepare('DELETE FROM users').run();
-                const insert = authDb.prepare(
-                    `INSERT OR REPLACE INTO users (id, username, password_hash, role, created_at, last_login, totp_enabled)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)`
-                );
-                for (const u of data.console.users) {
-                    insert.run(
-                        u.id, u.username, u.password_hash,
-                        u.role || 'admin', u.created_at || new Date().toISOString(),
-                        u.last_login || null, u.totp_enabled || 0
-                    );
-                }
-            });
-            tx();
+            await db.restoreUsers(data.console.users);
             result.restored.push('users');
         } catch (err) {
             result.warnings.push(`Users restore failed: ${err.message}`);
@@ -260,8 +239,6 @@ async function restoreBackup(data, options = {}) {
  * Restore user groups, device groups and strategies (merge, don't duplicate).
  */
 async function restoreGroupsData(consoleData, result) {
-    const authDb = db.getAuthDb();
-
     // User groups
     if (Array.isArray(consoleData.userGroups)) {
         const existing = new Set((await db.getAllUserGroups()).map(g => g.guid));
@@ -311,16 +288,9 @@ async function restoreGroupsData(consoleData, result) {
  * @returns {{ tables: Object<string, number>, totalRows: number }}
  */
 async function getBackupStats() {
-    const authDb = db.getAuthDb();
-
+    const stats = await db.getBackupStats();
     return {
-        users: authDb.prepare('SELECT COUNT(*) as c FROM users').get().c,
-        settings: authDb.prepare('SELECT COUNT(*) as c FROM settings').get().c,
-        folders: authDb.prepare('SELECT COUNT(*) as c FROM folders').get().c,
-        userGroups: authDb.prepare('SELECT COUNT(*) as c FROM user_groups').get().c,
-        deviceGroups: authDb.prepare('SELECT COUNT(*) as c FROM device_groups').get().c,
-        strategies: authDb.prepare('SELECT COUNT(*) as c FROM strategies').get().c,
-        addressBooks: authDb.prepare('SELECT COUNT(*) as c FROM address_books').get().c,
+        ...stats,
         backend: serverBackend.getActiveBackend()
     };
 }

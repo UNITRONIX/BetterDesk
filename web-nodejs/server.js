@@ -133,7 +133,7 @@ app.use((req, res, next) => {
     
     if (req.accepts('html')) {
         res.render('errors/404', {
-            title: req.t('errors.not_found'),
+            title: req.t ? req.t('errors.not_found') : 'Not Found',
             activePage: 'error'
         });
     } else {
@@ -160,7 +160,7 @@ app.use((err, req, res, next) => {
     
     if (req.accepts('html')) {
         res.render('errors/500', {
-            title: req.t('errors.server_error'),
+            title: req.t ? req.t('errors.server_error') : 'Server Error',
             activePage: 'error',
             error: config.isProduction ? null : err.message
         });
@@ -226,6 +226,10 @@ async function startServer() {
     try {
         // Initialize database adapter (creates tables, runs migrations)
         await db.init();
+
+        // Warm branding cache from database (must run after db.init)
+        const brandingService = require('./services/brandingService');
+        await brandingService.loadBranding();
 
         // Ensure default admin exists
         await authService.ensureDefaultAdmin();

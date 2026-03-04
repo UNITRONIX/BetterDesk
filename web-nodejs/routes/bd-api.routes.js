@@ -122,15 +122,12 @@ router.post('/register', identifyDevice, async (req, res) => {
         });
 
         // Upsert peer in DB
-        await db.upsertPeer(id, uuid || '', public_key || null, info, ip);
+        await db.upsertPeer({ id, uuid: uuid || '', pk: public_key || null, info, ip });
 
         // Update online status
-        const mainDb = db.getDb();
-        if (mainDb) {
-            try {
-                mainDb.prepare("UPDATE peer SET status_online = 1, last_online = datetime('now') WHERE id = ?").run(id);
-            } catch (_) {}
-        }
+        try {
+            await db.updatePeerOnlineStatus(id);
+        } catch (_) {}
 
         res.json({
             success: true,
@@ -148,7 +145,7 @@ router.post('/register', identifyDevice, async (req, res) => {
 //  POST /api/bd/heartbeat — Lightweight keepalive
 // ---------------------------------------------------------------------------
 
-router.post('/heartbeat', identifyDevice, (req, res) => {
+router.post('/heartbeat', identifyDevice, async (req, res) => {
     try {
         const id = req.body.device_id || req.deviceId;
         if (!id) {
@@ -156,12 +153,9 @@ router.post('/heartbeat', identifyDevice, (req, res) => {
         }
 
         // Touch online status
-        const mainDb = db.getDb();
-        if (mainDb) {
-            try {
-                mainDb.prepare("UPDATE peer SET status_online = 1, last_online = datetime('now') WHERE id = ?").run(id);
-            } catch (_) {}
-        }
+        try {
+            await db.updatePeerOnlineStatus(id);
+        } catch (_) {}
 
         // Check for pending incoming connection requests
         const pending = [];

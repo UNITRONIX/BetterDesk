@@ -152,10 +152,15 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 			}
 
 		case msg.GetRequestRelay() != nil:
-			// Forward relay through UDP-style handler (if possible)
+			// Use the TCP handler which returns an immediate RelayResponse with
+			// signed PK — the UDP handler would send the response via UDP which
+			// the WebSocket client cannot receive.
 			fakeAddr, _ := net.ResolveUDPAddr("udp", remoteAddr)
 			if fakeAddr != nil {
-				s.handleRequestRelay(msg.GetRequestRelay(), fakeAddr)
+				resp := s.handleRequestRelayTCP(msg.GetRequestRelay(), fakeAddr)
+				if resp != nil {
+					wsc.WriteMessage(resp)
+				}
 			}
 
 		case msg.GetFetchLocalAddr() != nil:

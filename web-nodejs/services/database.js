@@ -149,6 +149,17 @@ const facade = {
     setSetting:    (key, value) => adapter.setSetting(key, value),
     getAllSettings: () => adapter.getAllSettings(),
 
+    // ---- Branding Config ----
+    getBrandingConfig:        () => adapter.getBrandingConfig(),
+    saveBrandingConfigBatch:  (entries) => adapter.saveBrandingConfigBatch(entries),
+    resetBrandingConfig:      () => adapter.resetBrandingConfig(),
+
+    // ---- Backup Helpers ----
+    getAllUsersForBackup: () => adapter.getAllUsersForBackup(),
+    getAllAddressBooks:   () => adapter.getAllAddressBooks(),
+    restoreUsers:        (users) => adapter.restoreUsers(users),
+    getBackupStats:      () => adapter.getBackupStats(),
+
     // ---- Pending Registrations ----
     getPendingRegistrations:        (filters) => adapter.getPendingRegistrations(filters),
     getPendingRegistrationById:     (id) => adapter.getPendingRegistrationById(id),

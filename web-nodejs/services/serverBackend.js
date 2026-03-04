@@ -197,6 +197,10 @@ async function syncOnlineStatus() {
         // BetterDesk Go server owns the peer map — no sync needed.
         return betterdeskApi.syncOnlineStatus();
     }
+    // hbbs legacy backend uses raw SQLite — only available in SQLite mode
+    if (db.DB_TYPE === 'postgres' || db.DB_TYPE === 'postgresql') {
+        return { synced: 0, skipped: true, reason: 'hbbs_requires_sqlite' };
+    }
     return hbbsApi.syncOnlineStatus(db.getDb());
 }
 

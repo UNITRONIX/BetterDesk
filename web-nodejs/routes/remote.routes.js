@@ -28,7 +28,7 @@ try {
 /**
  * GET /remote/:deviceId - RustDesk-compatible remote desktop viewer
  */
-router.get('/remote/:deviceId', requireAuth, (req, res) => {
+router.get('/remote/:deviceId', requireAuth, async (req, res) => {
     const deviceId = req.params.deviceId;
 
     // Validate device ID format
@@ -39,10 +39,7 @@ router.get('/remote/:deviceId', requireAuth, (req, res) => {
     // Look up device in database for display info (optional, not blocking)
     let device = null;
     try {
-        const stmt = db.getDb().prepare(
-            'SELECT id, hostname, platform, note FROM peer WHERE id = ?'
-        );
-        device = stmt.get(deviceId);
+        device = await db.getDevice(deviceId);
     } catch {
         // Database lookup failure is non-blocking - viewer can still work
     }
@@ -61,7 +58,7 @@ router.get('/remote/:deviceId', requireAuth, (req, res) => {
 /**
  * GET /remote-desktop/:deviceId - BetterDesk native JPEG stream viewer
  */
-router.get('/remote-desktop/:deviceId', requireAuth, (req, res) => {
+router.get('/remote-desktop/:deviceId', requireAuth, async (req, res) => {
     const deviceId = req.params.deviceId;
 
     if (!deviceId || !/^[A-Za-z0-9_-]{3,32}$/.test(deviceId)) {
@@ -70,10 +67,7 @@ router.get('/remote-desktop/:deviceId', requireAuth, (req, res) => {
 
     let device = null;
     try {
-        const stmt = db.getDb().prepare(
-            'SELECT id, hostname, platform, note FROM peer WHERE id = ?'
-        );
-        device = stmt.get(deviceId);
+        device = await db.getDevice(deviceId);
     } catch { /* non-blocking */ }
 
     res.render('remote-viewer', {

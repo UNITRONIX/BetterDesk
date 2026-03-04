@@ -232,7 +232,7 @@ router.post('/api/settings/branding', requireAuth, requireAdmin, async (req, res
             return res.status(400).json({ success: false, error: 'Invalid branding data' });
         }
         
-        brandingService.saveBranding(updates);
+        await brandingService.saveBranding(updates);
         
         await db.logAction(req.session?.userId, 'branding_update', 'Updated branding configuration', req.ip);
         
@@ -248,7 +248,7 @@ router.post('/api/settings/branding', requireAuth, requireAdmin, async (req, res
  */
 router.post('/api/settings/branding/reset', requireAuth, requireAdmin, async (req, res) => {
     try {
-        brandingService.resetBranding();
+        await brandingService.resetBranding();
         
         await db.logAction(req.session?.userId, 'branding_reset', 'Reset branding to defaults', req.ip);
         
@@ -280,7 +280,7 @@ router.get('/api/settings/branding/export', requireAuth, requireAdmin, (req, res
 router.post('/api/settings/branding/import', requireAuth, requireAdmin, async (req, res) => {
     try {
         const preset = req.body;
-        const success = brandingService.importPreset(preset);
+        const success = await brandingService.importPreset(preset);
         
         if (!success) {
             return res.status(400).json({ success: false, error: 'Invalid theme preset file' });

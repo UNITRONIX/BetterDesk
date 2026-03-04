@@ -281,6 +281,11 @@ function createSqliteAdapter(config) {
                 value TEXT NOT NULL,
                 updated_at TEXT DEFAULT (datetime('now'))
             );
+            CREATE TABLE IF NOT EXISTS branding_config (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                updated_at TEXT DEFAULT (datetime('now'))
+            );
             CREATE TABLE IF NOT EXISTS relay_sessions (
                 id TEXT PRIMARY KEY,
                 initiator_id TEXT NOT NULL,
@@ -1037,6 +1042,63 @@ function createSqliteAdapter(config) {
             const result = {};
             for (const r of rows) result[r.key] = r.value;
             return result;
+        },
+
+        // ---- Branding Config ----
+
+        async getBrandingConfig() {
+            return openAuth().prepare('SELECT key, value FROM branding_config').all();
+        },
+        async saveBrandingConfigBatch(entries) {
+            const db = openAuth();
+            const stmt = db.prepare(`
+                INSERT INTO branding_config (key, value, updated_at) VALUES (?, ?, datetime('now'))
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+            `);
+            const tx = db.transaction((items) => {
+                for (const { key, value } of items) stmt.run(key, value);
+            });
+            tx(entries);
+        },
+        async resetBrandingConfig() {
+            openAuth().prepare('DELETE FROM branding_config').run();
+        },
+
+        // ---- Backup Helpers ----
+
+        async getAllUsersForBackup() {
+            return openAuth().prepare(
+                'SELECT id, username, password_hash, role, created_at, last_login, totp_enabled FROM users ORDER BY id'
+            ).all();
+        },
+        async getAllAddressBooks() {
+            return openAuth().prepare(
+                'SELECT user_id, ab_type, data, updated_at FROM address_books ORDER BY user_id'
+            ).all();
+        },
+        async restoreUsers(users) {
+            const db = openAuth();
+            const tx = db.transaction((items) => {
+                db.prepare('DELETE FROM users').run();
+                const ins = db.prepare(
+                    `INSERT OR REPLACE INTO users (id, username, password_hash, role, created_at, last_login, totp_enabled)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`
+                );
+                for (const u of items) {
+                    ins.run(u.id, u.username, u.password_hash, u.role || 'admin',
+                        u.created_at || new Date().toISOString(), u.last_login || null, u.totp_enabled || 0);
+                }
+            });
+            tx(users);
+        },
+        async getBackupStats() {
+            const db = openAuth();
+            const c = (tbl) => db.prepare(`SELECT COUNT(*) as c FROM ${tbl}`).get().c;
+            return {
+                users: c('users'), settings: c('settings'), folders: c('folders'),
+                userGroups: c('user_groups'), deviceGroups: c('device_groups'),
+                strategies: c('strategies'), addressBooks: c('address_books'),
+            };
         },
 
         // ---- Tickets ----
@@ -2309,6 +2371,14 @@ function createPostgresAdapter() {
         `);
 
         await q(`
+            CREATE TABLE IF NOT EXISTS branding_config (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+
+        await q(`
             CREATE TABLE IF NOT EXISTS relay_sessions (
                 id TEXT PRIMARY KEY,
                 initiator_id TEXT NOT NULL,
@@ -3017,6 +3087,73 @@ function createPostgresAdapter() {
             const result = {};
             for (const r of rows) result[r.key] = r.value;
             return result;
+        },
+
+        // ---- Branding Config ----
+
+        async getBrandingConfig() {
+            return all('SELECT key, value FROM branding_config');
+        },
+        async saveBrandingConfigBatch(entries) {
+            const client = await getPool().connect();
+            try {
+                await client.query('BEGIN');
+                for (const { key, value } of entries) {
+                    await client.query(
+                        `INSERT INTO branding_config (key, value, updated_at) VALUES ($1, $2, NOW())
+                         ON CONFLICT(key) DO UPDATE SET value = $2, updated_at = NOW()`,
+                        [key, value]
+                    );
+                }
+                await client.query('COMMIT');
+            } catch (err) {
+                await client.query('ROLLBACK');
+                throw err;
+            } finally {
+                client.release();
+            }
+        },
+        async resetBrandingConfig() {
+            await q('DELETE FROM branding_config');
+        },
+
+        // ---- Backup Helpers ----
+
+        async getAllUsersForBackup() {
+            return all('SELECT id, username, password_hash, role, created_at, last_login, totp_enabled FROM users ORDER BY id');
+        },
+        async getAllAddressBooks() {
+            return all('SELECT user_id, ab_type, data, updated_at FROM address_books ORDER BY user_id');
+        },
+        async restoreUsers(users) {
+            const client = await getPool().connect();
+            try {
+                await client.query('BEGIN');
+                await client.query('DELETE FROM users');
+                for (const u of users) {
+                    await client.query(
+                        `INSERT INTO users (id, username, password_hash, role, created_at, last_login, totp_enabled)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7)
+                         ON CONFLICT(id) DO UPDATE SET username=$2, password_hash=$3, role=$4, created_at=$5, last_login=$6, totp_enabled=$7`,
+                        [u.id, u.username, u.password_hash, u.role || 'admin',
+                         u.created_at || new Date().toISOString(), u.last_login || null, u.totp_enabled || false]
+                    );
+                }
+                await client.query('COMMIT');
+            } catch (err) {
+                await client.query('ROLLBACK');
+                throw err;
+            } finally {
+                client.release();
+            }
+        },
+        async getBackupStats() {
+            const c = async (tbl) => +(await one(`SELECT COUNT(*) AS c FROM ${tbl}`)).c;
+            return {
+                users: await c('users'), settings: await c('settings'), folders: await c('folders'),
+                userGroups: await c('user_groups'), deviceGroups: await c('device_groups'),
+                strategies: await c('strategies'), addressBooks: await c('address_books'),
+            };
         },
 
         // ---- Tickets ----

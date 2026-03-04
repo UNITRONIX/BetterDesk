@@ -390,6 +390,13 @@ sudo apt-get install -y build-essential libsqlite3-dev pkg-config libssl-dev git
 45. [x] **Verified E2E**: Debug relay confirmed `Message.SignedId` + `Message.PublicKey` handshake between peers
 46. [x] **Deployment path fix**: Discovered systemd ExecStart path mismatch (`/opt/betterdesk-go/` vs `/opt/rustdesk/`), all binaries now deployed to correct path
 
+#### Go Server — TCP Signaling Fix (Phase 7) ✅ COMPLETED 2026-03-04
+47. [x] **TCP PunchHoleRequest immediate response**: `handlePunchHoleRequestTCP` now sends immediate `PunchHoleResponse` with signed PK, socket_addr, relay_server, and NAT type — matching UDP handler behavior. Previously returned nil and waited for target, causing "Failed to secure tcp: deadline has elapsed" timeout for TCP signaling clients (logged-in users).
+48. [x] **TCP ForceRelay handling**: Added `ForceRelay || AlwaysUseRelay` check to TCP path — returns relay-only PunchHoleResponse immediately, matching UDP's `sendRelayResponse` behavior.
+49. [x] **TCP RequestRelay immediate response**: `handleRequestRelayTCP` now returns immediate `RelayResponse` with signed PK and relay server to TCP initiator — previously sent nothing and waited for target's RelayResponse.
+50. [x] **WebSocket RequestRelay fix**: ws.go now uses `handleRequestRelayTCP` instead of UDP handler (`handleRequestRelay`) which was sending the response via UDP — unreachable by WebSocket clients.
+51. [x] **Root cause**: RustDesk client uses TCP (not UDP) for signal messages when logged in (reliable token delivery). TCP handlers returned nil for online targets, forcing clients to wait for target responses that may never arrive (strict NAT, firewall, slow network). UDP handlers always sent immediate responses.
+
 ---
 
 ## 🔄 System Statusu v3.0
@@ -544,6 +551,7 @@ Pełna dokumentacja budowania: [BUILD_GUIDE.md](../docs/BUILD_GUIDE.md)
 9. ~~**Go Server: ConfigUpdate missing**~~ ✅ ROZWIĄZANE - `TestNatResponse.Cu` populated with relay/rendezvous servers (M8)
 10. ~~**Go Server: SQLite only**~~ ✅ ROZWIĄZANE - PostgreSQL backend implemented (`db/postgres.go`, pgx/v5, pgxpool, LISTEN/NOTIFY) — Phase 4
 11. ~~**Go Server: E2E encryption "nieszyfrowane"**~~ ✅ ROZWIĄZANE - 4 bugs fixed in signal/handler.go + relay/server.go (SignIdPk format, PunchHoleResponse, RelayResponse removal). Root cause: deployment path mismatch (`/opt/betterdesk-go/` vs `/opt/rustdesk/`) — Phase 6
+12. ~~**Go Server: "Failed to secure tcp" when logged in**~~ ✅ ROZWIĄZANE - TCP/WS signal handlers returned nil for online targets, forcing logged-in clients (which use TCP) to wait for target responses that may never arrive. Fixed: immediate PunchHoleResponse/RelayResponse with signed PK matching UDP behavior — Phase 7
 
 ---
 
@@ -633,4 +641,4 @@ All code changes MUST include a security review as part of the implementation pr
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-01 (E2E encryption fix) przez GitHub Copilot*
+*Ostatnia aktualizacja: 2026-03-04 (TCP signaling fix — Phase 7) przez GitHub Copilot*

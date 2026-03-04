@@ -60,11 +60,10 @@ func (s *Server) handleMessage(msg *pb.RendezvousMessage, raddr net.Addr) *pb.Re
 		udpAddr, _ := net.ResolveUDPAddr("udp", raddr.String())
 		return s.handlePunchHoleRequestTCP(msg.GetPunchHoleRequest(), udpAddr)
 	case msg.GetRequestRelay() != nil:
-		// TCP relay request: forward to target via UDP. No immediate response.
-		// The RelayResponse from target will be forwarded via tcpPunchConns.
+		// TCP relay request: forward to target via UDP AND send immediate
+		// RelayResponse to TCP initiator with signed PK (matching UDP behavior).
 		udpAddr, _ := net.ResolveUDPAddr("udp", raddr.String())
-		s.handleRequestRelayTCP(msg.GetRequestRelay(), udpAddr)
-		return nil
+		return s.handleRequestRelayTCP(msg.GetRequestRelay(), udpAddr)
 	case msg.GetRelayResponse() != nil:
 		// Target sends RelayResponse to be forwarded to the initiator via TCP.
 		s.handleRelayResponseForward(msg)
@@ -483,11 +482,22 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 }
 
 // handlePunchHoleRequestTCP handles punch hole over TCP/WS.
-// When the target is online, we forward PunchHole to the target via UDP and
-// return nil — the TCP connection stays open so the server can later forward
-// PunchHoleResponse or RelayResponse from the target back to the initiator.
-// Only returns a response (PunchHoleResponse with failure) when the target is
-// offline or not found.
+//
+// Matching the UDP handler behavior: always send an immediate PunchHoleResponse
+// to the TCP initiator with the target's signed PK, socket address, relay server,
+// and NAT type.  This ensures the initiator can proceed with the connection
+// (direct P2P or relay fallback) without waiting for the target to respond.
+//
+// Previous behavior (returning nil and waiting for the target's PunchHoleSent)
+// caused "Failed to secure tcp: deadline has elapsed" timeouts when:
+//   - The target was behind a strict NAT and didn't receive the UDP PunchHole
+//   - The RustDesk client used TCP signaling (e.g. when logged in with a token)
+//   - ForceRelay was set but the TCP path didn't handle it
+//
+// The TCP connection is kept alive (keepAlive=true via logAndCheckKeepAlive) so
+// the server can still forward PunchHoleSent/RelayResponse from the target if
+// they arrive later — this provides an update but is no longer required for the
+// initiator to proceed.
 func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAddr) *pb.RendezvousMessage {
 	targetID := msg.Id
 	if targetID == "" {
@@ -529,9 +539,32 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 	log.Printf("[signal] PunchHole (TCP): target %s found (addr=%s, status=%s), relay=%s",
 		targetID, target.UDPAddr, target.StatusTier, relayServer)
 
+	// ForceRelay or AlwaysUseRelay: send relay-only response immediately,
+	// matching the UDP path's sendRelayResponse behavior.
+	if msg.ForceRelay || s.cfg.AlwaysUseRelay {
+		log.Printf("[signal] PunchHole (TCP): force relay for %s", targetID)
+
+		var signedPk []byte
+		if len(target.PK) > 0 {
+			signed, err := s.kp.SignIdPk(target.ID, target.PK)
+			if err != nil {
+				log.Printf("[signal] PunchHole (TCP): failed to sign PK for %s: %v", targetID, err)
+			} else {
+				signedPk = signed
+			}
+		}
+
+		return &pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_PunchHoleResponse{
+				PunchHoleResponse: &pb.PunchHoleResponse{
+					Pk:          signedPk,
+					RelayServer: relayServer,
+				},
+			},
+		}
+	}
+
 	// Forward PunchHole to the TARGET peer via UDP (tell it the initiator wants to connect).
-	// The PunchHole carries the initiator's TCP address as socket_addr so the target
-	// can include it in its PunchHoleSent/RelayResponse back to the signal server.
 	if target.UDPAddr != nil {
 		punchHole := &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_PunchHole{
@@ -550,11 +583,43 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 		log.Printf("[signal] PunchHole (TCP): forwarded PunchHole to target %s at %s", targetID, target.UDPAddr)
 	}
 
-	// Return nil — do NOT send anything to the initiator yet.
-	// The TCP connection stays open (keep-alive) and the server will forward
-	// PunchHoleResponse (converted from target's PunchHoleSent) or RelayResponse
-	// later when the target responds.
-	return nil
+	// LAN detection: if both peers share the same public IP, they are likely on
+	// the same local network.
+	sameNetwork := isSamePublicIP(raddr, target.UDPAddr)
+	if sameNetwork {
+		log.Printf("[signal] LAN detected (TCP): %s and %s share public IP", raddr.IP, target.UDPAddr.IP)
+	}
+
+	// Sign the target's PK with server's Ed25519 key for E2E verification.
+	var signedPk []byte
+	if len(target.PK) > 0 {
+		signed, err := s.kp.SignIdPk(targetID, target.PK)
+		if err != nil {
+			log.Printf("[signal] PunchHole (TCP): failed to sign PK for %s: %v", targetID, err)
+		} else {
+			signedPk = signed
+			log.Printf("[signal] PunchHole (TCP): signed PK for %s (%d bytes)", targetID, len(signedPk))
+		}
+	}
+
+	// Send immediate PunchHoleResponse to the TCP initiator — matching the UDP
+	// handler's behavior.  This includes the target's signed PK, socket address,
+	// relay server, and NAT type so the client can proceed immediately.
+	var targetAddr []byte
+	if target.UDPAddr != nil {
+		targetAddr = crypto.EncodeAddr(target.UDPAddr)
+	}
+
+	return &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_PunchHoleResponse{
+			PunchHoleResponse: &pb.PunchHoleResponse{
+				SocketAddr:  targetAddr,
+				Pk:          signedPk,
+				RelayServer: relayServer,
+				Union:       &pb.PunchHoleResponse_NatType{NatType: pb.NatType(target.NATType)},
+			},
+		},
+	}
 }
 
 // handlePunchHoleSent processes a PunchHoleSent message from the target peer.
@@ -741,20 +806,27 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 }
 
 // handleRequestRelayTCP handles relay setup request over TCP/WS.
-// Forwards RequestRelay to the target peer via UDP. Does NOT send anything
-// back to the initiator — the TCP connection stays open and the server will
-// forward the target's RelayResponse via tcpPunchConns later.
-func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr) {
+//
+// Matching the UDP handler behavior: forwards RequestRelay to the target via UDP
+// AND sends an immediate RelayResponse to the TCP initiator with the target's
+// signed PK, relay server, and UUID.  This ensures the initiator can proceed
+// with the relay connection immediately without waiting for the target's response.
+//
+// Previous behavior (sending nothing back and waiting for the target's
+// RelayResponse) caused timeouts for TCP signaling clients (e.g. logged-in users).
+func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr) *pb.RendezvousMessage {
 	targetID := msg.Id
 	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, msg.Uuid, msg.Secure, msg.ConnType)
 	target := s.peers.Get(targetID)
 
+	relayServer := s.getRelayServer()
+	if msg.RelayServer != "" {
+		relayServer = msg.RelayServer
+	}
+
 	if target == nil || target.IsExpired(config.RegTimeout) {
 		log.Printf("[signal] RequestRelay (TCP): target %s offline", targetID)
-		// Target offline — try to send failure via TCP if possible.
-		// We use tcpPunchConns since that's where the initiator's TCP sink is stored.
-		relayServer := s.getRelayServer()
-		resp := &pb.RendezvousMessage{
+		return &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
 				RelayResponse: &pb.RelayResponse{
 					RefuseReason: "Target offline",
@@ -762,16 +834,12 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr)
 				},
 			},
 		}
-		addrStr := normalizeAddrKey(raddr.String())
-		s.forwardToTCPInitiator(addrStr, resp)
-		return
 	}
 
 	// Target is banned — reject relay as if offline
 	if target.Banned {
 		log.Printf("[signal] RequestRelay (TCP): target %s is banned, rejecting", targetID)
-		relayServer := s.getRelayServer()
-		resp := &pb.RendezvousMessage{
+		return &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
 				RelayResponse: &pb.RelayResponse{
 					RefuseReason: "Target offline",
@@ -779,14 +847,9 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr)
 				},
 			},
 		}
-		addrStr := normalizeAddrKey(raddr.String())
-		s.forwardToTCPInitiator(addrStr, resp)
-		return
 	}
 
 	// Forward RequestRelay to target peer via UDP.
-	// The target will generate a UUID, connect to relayAddr, and send
-	// RelayResponse back to the signal server with socket_addr = initiator's addr.
 	if target.UDPAddr != nil {
 		reqRelay := &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RequestRelay{
@@ -794,7 +857,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr)
 					SocketAddr:         crypto.EncodeAddr(raddr),
 					Uuid:               msg.Uuid,
 					Id:                 msg.Id,
-					RelayServer:        s.getRelayServer(),
+					RelayServer:        relayServer,
 					Secure:             msg.Secure,
 					ConnType:           msg.ConnType,
 					Token:              msg.Token,
@@ -804,6 +867,29 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr)
 		}
 		s.sendUDP(reqRelay, target.UDPAddr)
 		log.Printf("[signal] RequestRelay (TCP): forwarded to %s secure=%v connType=%v", targetID, msg.Secure, msg.ConnType)
+	}
+
+	// Sign the target's PK for E2E encryption verification
+	var signedPk []byte
+	if len(target.PK) > 0 {
+		signed, err := s.kp.SignIdPk(targetID, target.PK)
+		if err != nil {
+			log.Printf("[signal] RequestRelay (TCP): failed to sign PK for %s: %v", targetID, err)
+		} else {
+			signedPk = signed
+			log.Printf("[signal] RequestRelay (TCP): signed PK for %s (%d bytes)", targetID, len(signedPk))
+		}
+	}
+
+	// Immediate RelayResponse to TCP initiator — matching the UDP handler's behavior.
+	return &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_RelayResponse{
+			RelayResponse: &pb.RelayResponse{
+				Uuid:        msg.Uuid,
+				RelayServer: relayServer,
+				Union:       &pb.RelayResponse_Pk{Pk: signedPk},
+			},
+		},
 	}
 }
 
