@@ -898,11 +898,11 @@ router.post('/api/logout', async (req, res) => {
 });
 
 /**
- * GET /api/currentUser
+ * GET/POST /api/currentUser
  * Returns current user info based on Bearer token.
- * RustDesk client uses this to refresh user state.
+ * RustDesk client uses POST after login, GET for refresh.
  */
-router.get('/api/currentUser', (req, res) => {
+router.all('/api/currentUser', (req, res) => {
     try {
         const token = extractBearerToken(req);
 

@@ -2543,17 +2543,19 @@ function Do-ResetPassword {
     $success = $false
     
     if ($script:CONSOLE_TYPE -eq "nodejs") {
-        # Node.js console - update auth.db
-        $authDbPath = Join-Path $script:CONSOLE_PATH "data\auth.db"
-        
-        # Also check in RUSTDESK_PATH for auth.db (alternative location)
-        if (-not (Test-Path $authDbPath)) {
-            $authDbPath = Join-Path $script:RUSTDESK_PATH "auth.db"
+        # Detect database type from console .env
+        $dbType = "sqlite"
+        $envFile = Join-Path $script:CONSOLE_PATH ".env"
+        if (Test-Path $envFile) {
+            $envContent = Get-Content $envFile -Raw -ErrorAction SilentlyContinue
+            if ($envContent -match '(?m)^DB_TYPE\s*=\s*(postgres|postgresql)') {
+                $dbType = "postgres"
+            }
         }
         
-        Print-Info "Auth database: $authDbPath"
+        Print-Info "Database type: $dbType"
         
-        # Use Node.js reset-password script if available
+        # Use Node.js reset-password script (supports both SQLite and PostgreSQL)
         $resetScript = Join-Path $script:CONSOLE_PATH "scripts\reset-password.js"
         if (Test-Path $resetScript) {
             Print-Info "Using reset-password.js script..."
@@ -2561,7 +2563,8 @@ function Do-ResetPassword {
             if ($nodeExe) {
                 Push-Location $script:CONSOLE_PATH
                 try {
-                    $env:DATA_DIR = Split-Path $authDbPath -Parent
+                    $env:DATA_DIR = Join-Path $script:CONSOLE_PATH "data"
+                    # The script reads .env for DB_TYPE and DATABASE_URL automatically
                     & node $resetScript $newPassword admin
                     if ($LASTEXITCODE -eq 0) {
                         $success = $true
@@ -2572,10 +2575,23 @@ function Do-ResetPassword {
             }
         }
         
-        # Fallback: use Python with bcrypt to update auth.db directly
+        # Fallback: direct database update
         if (-not $success) {
             Print-Info "Using direct database update..."
-            $pythonScript = @"
+            
+            if ($dbType -eq "postgres") {
+                # PostgreSQL mode — need psycopg2 or pg module
+                Print-Warning "PostgreSQL password reset requires Node.js. Please ensure node is installed."
+                Print-Info "Alternatively, run: psql DATABASE_URL -c `"UPDATE users SET password_hash='...' WHERE username='admin'`""
+            } else {
+                # SQLite mode — update auth.db directly
+                $authDbPath = Join-Path $script:CONSOLE_PATH "data\auth.db"
+                if (-not (Test-Path $authDbPath)) {
+                    $authDbPath = Join-Path $script:RUSTDESK_PATH "auth.db"
+                }
+                Print-Info "Auth database: $authDbPath"
+                
+                $pythonScript = @"
 import sqlite3
 import bcrypt
 import os
@@ -2611,11 +2627,12 @@ conn.commit()
 conn.close()
 print("Password updated successfully")
 "@
-            $output = $pythonScript | python 2>&1
-            if ($output -match "successfully") {
-                $success = $true
-            } else {
-                Print-Warning "Python output: $output"
+                $output = $pythonScript | python 2>&1
+                if ($output -match "successfully") {
+                    $success = $true
+                } else {
+                    Print-Warning "Python output: $output"
+                }
             }
         }
     }

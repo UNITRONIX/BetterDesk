@@ -1165,8 +1165,10 @@ do_reset_password() {
             ;;
     esac
     
-    # Update password using Node.js inline script
-    docker exec "$CONSOLE_CONTAINER" node -e "
+    # Update password using reset-password.js (supports both SQLite and PostgreSQL)
+    docker exec "$CONSOLE_CONTAINER" node /app/scripts/reset-password.js admin "$new_password" 2>/dev/null || {
+        print_warning "reset-password.js failed, trying inline fallback..."
+        docker exec "$CONSOLE_CONTAINER" node -e "
 const bcrypt = require('bcrypt');
 const Database = require('better-sqlite3');
 const path = require('path');
@@ -1189,6 +1191,7 @@ if (result.changes === 0) {
 }
 db.close();
 "
+    }
 
     echo ""
     echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"

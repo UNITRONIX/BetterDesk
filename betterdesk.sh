@@ -2513,32 +2513,88 @@ do_reset_password() {
     local success=false
     
     if [ "$CONSOLE_TYPE" = "nodejs" ]; then
-        # Node.js console - update auth.db
-        local auth_db_path="$CONSOLE_PATH/data/auth.db"
-        
-        # Also check in RUSTDESK_PATH for auth.db (alternative location)
-        if [ ! -f "$auth_db_path" ]; then
-            auth_db_path="$RUSTDESK_PATH/auth.db"
+        # Detect database type from console .env
+        local db_type="sqlite"
+        if [ -f "$CONSOLE_PATH/.env" ]; then
+            local env_db_type
+            env_db_type=$(grep -E '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | head -1 | cut -d= -f2 | tr -d '[:space:]')
+            if [ "$env_db_type" = "postgres" ] || [ "$env_db_type" = "postgresql" ]; then
+                db_type="postgres"
+            fi
         fi
         
-        print_info "Auth database: $auth_db_path"
+        print_info "Database type: $db_type"
         
-        # Use Node.js reset-password script if available
+        # Use Node.js reset-password script (supports both SQLite and PostgreSQL)
         local reset_script="$CONSOLE_PATH/scripts/reset-password.js"
         if [ -f "$reset_script" ] && command -v node &> /dev/null; then
             print_info "Using reset-password.js script..."
             pushd "$CONSOLE_PATH" > /dev/null
-            DATA_DIR="$(dirname "$auth_db_path")" node "$reset_script" "$new_password" admin
+            # The script reads .env for DB_TYPE and DATABASE_URL automatically
+            DATA_DIR="$CONSOLE_PATH/data" node "$reset_script" "$new_password" admin
             if [ $? -eq 0 ]; then
                 success=true
             fi
             popd > /dev/null
         fi
         
-        # Fallback: use Python with bcrypt to update auth.db directly
+        # Fallback: direct database update
         if [ "$success" = "false" ]; then
-            print_info "Using direct database update..."
-            python3 << EOF
+            if [ "$db_type" = "postgres" ]; then
+                # PostgreSQL mode — use psql or Python with psycopg2
+                local pg_url
+                pg_url=$(grep -E '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | head -1 | cut -d= -f2-)
+                
+                if [ -n "$pg_url" ] && command -v python3 &> /dev/null; then
+                    print_info "Using Python to update PostgreSQL..."
+                    python3 << EOF
+import bcrypt
+try:
+    import psycopg2
+except ImportError:
+    import subprocess, sys
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'psycopg2-binary', '-q'])
+    import psycopg2
+
+pg_url = '$pg_url'
+new_password = '$new_password'
+password_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt(12)).decode()
+
+conn = psycopg2.connect(pg_url)
+cursor = conn.cursor()
+
+# Create table if missing
+cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'admin',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_login TIMESTAMPTZ
+)''')
+
+cursor.execute("UPDATE users SET password_hash = %s WHERE username = 'admin'", (password_hash,))
+
+if cursor.rowcount == 0:
+    cursor.execute("INSERT INTO users (username, password_hash, role) VALUES ('admin', %s, 'admin')", (password_hash,))
+
+conn.commit()
+conn.close()
+print("Password updated successfully (PostgreSQL)")
+EOF
+                    if [ $? -eq 0 ]; then
+                        success=true
+                    fi
+                fi
+            else
+                # SQLite mode — update auth.db directly
+                local auth_db_path="$CONSOLE_PATH/data/auth.db"
+                if [ ! -f "$auth_db_path" ]; then
+                    auth_db_path="$RUSTDESK_PATH/auth.db"
+                fi
+                print_info "Auth database: $auth_db_path"
+                
+                python3 << EOF
 import sqlite3
 import bcrypt
 import os
@@ -2574,8 +2630,9 @@ conn.commit()
 conn.close()
 print("Password updated successfully")
 EOF
-            if [ $? -eq 0 ]; then
-                success=true
+                if [ $? -eq 0 ]; then
+                    success=true
+                fi
             fi
         fi
     fi

@@ -67,33 +67,45 @@ router.get('/api/server/status', requireAuth, async (req, res) => {
         const hbbsHealth = await serverBackend.getHealth();
         const apiRunning = hbbsHealth && hbbsHealth.status === 'running';
 
-        // Secondary check: TCP probe on relay port (21117)
+        // In BetterDesk mode, all services run in a single binary.
+        // If the API health check passes, signal + relay are also running.
+        // Raw TCP probes on signal/relay ports would cause spurious
+        // NaCl handshake failure log entries in the Go server.
         let relayStatus = { status: 'unknown' };
-        try {
-            const net = require('net');
-            relayStatus = await new Promise((resolve) => {
-                const socket = new net.Socket();
-                socket.setTimeout(2000);
-                socket.on('connect', () => { socket.destroy(); resolve({ status: 'running' }); });
-                socket.on('error', () => resolve({ status: 'stopped' }));
-                socket.on('timeout', () => { socket.destroy(); resolve({ status: 'stopped' }); });
-                socket.connect(config.wsProxy.hbbrPort, config.wsProxy.hbbrHost);
-            });
-        } catch { relayStatus = { status: 'unknown' }; }
-
-        // Signal port probe (21116 TCP)
         let signalStatus = { status: 'unknown' };
-        try {
-            const net = require('net');
-            signalStatus = await new Promise((resolve) => {
-                const socket = new net.Socket();
-                socket.setTimeout(2000);
-                socket.on('connect', () => { socket.destroy(); resolve({ status: 'running' }); });
-                socket.on('error', () => resolve({ status: 'stopped' }));
-                socket.on('timeout', () => { socket.destroy(); resolve({ status: 'stopped' }); });
-                socket.connect(config.wsProxy.hbbsPort, config.wsProxy.hbbsHost);
-            });
-        } catch { signalStatus = { status: 'unknown' }; }
+
+        if (isBD && apiRunning) {
+            // Single binary — derive from API health
+            relayStatus = { status: 'running' };
+            signalStatus = { status: 'running' };
+        } else {
+            // Legacy rustdesk mode or API unreachable — probe ports individually
+            // Secondary check: TCP probe on relay port (21117)
+            try {
+                const net = require('net');
+                relayStatus = await new Promise((resolve) => {
+                    const socket = new net.Socket();
+                    socket.setTimeout(2000);
+                    socket.on('connect', () => { socket.destroy(); resolve({ status: 'running' }); });
+                    socket.on('error', () => resolve({ status: 'stopped' }));
+                    socket.on('timeout', () => { socket.destroy(); resolve({ status: 'stopped' }); });
+                    socket.connect(config.wsProxy.hbbrPort, config.wsProxy.hbbrHost);
+                });
+            } catch { relayStatus = { status: 'unknown' }; }
+
+            // Signal port probe (21116 TCP)
+            try {
+                const net = require('net');
+                signalStatus = await new Promise((resolve) => {
+                    const socket = new net.Socket();
+                    socket.setTimeout(2000);
+                    socket.on('connect', () => { socket.destroy(); resolve({ status: 'running' }); });
+                    socket.on('error', () => resolve({ status: 'stopped' }));
+                    socket.on('timeout', () => { socket.destroy(); resolve({ status: 'stopped' }); });
+                    socket.connect(config.wsProxy.hbbsPort, config.wsProxy.hbbsHost);
+                });
+            } catch { signalStatus = { status: 'unknown' }; }
+        }
 
         // Build port map for the UI
         const apiPort = parseInt(new URL(

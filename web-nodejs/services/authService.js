@@ -15,6 +15,37 @@ const SALT_ROUNDS = 12;
 // Pre-computed dummy hash for timing-safe comparison (prevents user enumeration)
 const DUMMY_HASH = '$2b$12$KiXeOj5vHpJRJHGMhWzadeKfRJLvJRaRHQbMGBBdkpu.jQfXAzgWS';
 
+// PBKDF2 parameters matching Go server's auth.HashPassword()
+const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_KEY_LENGTH = 32; // SHA-256 output size
+const PBKDF2_DIGEST = 'sha256';
+
+/**
+ * Detect whether a stored hash is bcrypt or PBKDF2 (Go server format).
+ * Go format: "hex_salt:hex_derived_key" (32-char salt + ":" + 64-char key)
+ * bcrypt format: "$2b$..." or "$2a$..."
+ */
+function isPBKDF2Hash(hash) {
+    if (!hash || hash.startsWith('$2b$') || hash.startsWith('$2a$')) return false;
+    const parts = hash.split(':');
+    return parts.length === 2
+        && /^[0-9a-f]{32}$/i.test(parts[0])
+        && /^[0-9a-f]{64}$/i.test(parts[1]);
+}
+
+/**
+ * Verify a password against a PBKDF2-HMAC-SHA256 hash (Go server format).
+ * Format: "hex(salt):hex(derived_key)" with 100,000 iterations, SHA-256.
+ */
+function verifyPBKDF2(password, stored) {
+    const parts = stored.split(':');
+    if (parts.length !== 2) return false;
+    const salt = Buffer.from(parts[0], 'hex');
+    const expected = Buffer.from(parts[1], 'hex');
+    const derived = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, PBKDF2_DIGEST);
+    return crypto.timingSafeEqual(expected, derived);
+}
+
 /**
  * Hash a password using bcrypt
  */
@@ -23,15 +54,30 @@ async function hashPassword(password) {
 }
 
 /**
- * Verify password against hash
+ * Verify password against hash (supports both bcrypt and PBKDF2).
+ * Returns { valid: boolean, needsMigration: boolean }
  */
-async function verifyPassword(password, hash) {
-    return bcrypt.compare(password, hash);
+async function verifyPasswordEx(password, hash) {
+    if (isPBKDF2Hash(hash)) {
+        return { valid: verifyPBKDF2(password, hash), needsMigration: true };
+    }
+    return { valid: await bcrypt.compare(password, hash), needsMigration: false };
 }
 
 /**
- * Authenticate user with username and password
- * Returns user object with totpRequired flag if 2FA is enabled
+ * Verify password against hash (simple boolean, backward compatible)
+ */
+async function verifyPassword(password, hash) {
+    const result = await verifyPasswordEx(password, hash);
+    return result.valid;
+}
+
+/**
+ * Authenticate user with username and password.
+ * Supports both bcrypt (Node.js native) and PBKDF2 (Go server) hash formats.
+ * When a PBKDF2 hash is verified successfully, it is auto-migrated to bcrypt
+ * so subsequent logins do not need the PBKDF2 code path.
+ * Returns user object with totpRequired flag if 2FA is enabled.
  */
 async function authenticate(username, password) {
     const user = await db.getUserByUsername(username);
@@ -42,9 +88,20 @@ async function authenticate(username, password) {
         return null;
     }
     
-    const valid = await verifyPassword(password, user.password_hash);
+    const { valid, needsMigration } = await verifyPasswordEx(password, user.password_hash);
     if (!valid) {
         return null;
+    }
+
+    // Auto-migrate PBKDF2 hash to bcrypt for future logins
+    if (needsMigration) {
+        try {
+            const bcryptHash = await hashPassword(password);
+            await db.updateUserPassword(user.id, bcryptHash);
+            console.log(`[AUTH] Migrated password hash from PBKDF2 to bcrypt for user: ${username}`);
+        } catch (err) {
+            console.warn(`[AUTH] Failed to migrate password hash for ${username}:`, err.message);
+        }
     }
     
     // Check if TOTP is enabled
@@ -69,22 +126,43 @@ async function authenticate(username, password) {
 }
 
 /**
- * Create default admin user if no users exist
+ * Create default admin user if no users exist.
+ * In PostgreSQL mode, the Go server may have already created the admin user
+ * with a PBKDF2 hash. In that case, we migrate the hash to bcrypt format
+ * using the password from DEFAULT_ADMIN_PASSWORD env var.
  */
 async function ensureDefaultAdmin() {
+    const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
+    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || '';
+
     if (await db.hasUsers()) {
+        // Users exist — check if the admin's hash needs migration from PBKDF2 to bcrypt.
+        // This handles the case where the Go server created the user first (PostgreSQL shared DB).
+        if (defaultPassword) {
+            const admin = await db.getUserByUsername(defaultUsername);
+            if (admin && isPBKDF2Hash(admin.password_hash)) {
+                console.log(`[AUTH] Found admin user with PBKDF2 hash (created by Go server). Migrating to bcrypt...`);
+                if (verifyPBKDF2(defaultPassword, admin.password_hash)) {
+                    const bcryptHash = await hashPassword(defaultPassword);
+                    await db.updateUserPassword(admin.id, bcryptHash);
+                    console.log(`[AUTH] Admin password hash migrated from PBKDF2 to bcrypt successfully`);
+                } else {
+                    console.warn(`[AUTH] DEFAULT_ADMIN_PASSWORD does not match existing PBKDF2 hash — skipping migration`);
+                }
+            }
+        }
         return false;
     }
     
-    const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
-    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || require('crypto').randomBytes(16).toString('hex');
+    // No users at all — create the default admin
+    const password = defaultPassword || require('crypto').randomBytes(16).toString('hex');
     
-    const hash = await hashPassword(defaultPassword);
+    const hash = await hashPassword(password);
     await db.createUser(defaultUsername, hash, 'admin');
     
     console.log(`Created default admin user: ${defaultUsername}`);
-    if (!process.env.DEFAULT_ADMIN_PASSWORD) {
-        console.log(`Generated admin password: ${defaultPassword}`);
+    if (!defaultPassword) {
+        console.log(`Generated admin password: ${password}`);
     }
     console.log('IMPORTANT: Change the default password immediately!');
     

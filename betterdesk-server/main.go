@@ -83,6 +83,11 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
+	// Load API key from .api_key file or API_KEY env var and sync to database.
+	// This ensures the Node.js console and Go server share the same API key
+	// even when the server is started without the ALL-IN-ONE install script.
+	loadAPIKey(cfg, database)
+
 	// Reset all peers to offline on startup (clean slate)
 	if err := database.SetAllOffline(); err != nil {
 		log.Printf("WARN: Failed to reset peers to offline: %v", err)
@@ -327,6 +332,73 @@ func main() {
 	log.Printf("Received signal %v, shutting down...", sig)
 	cancel()
 	log.Printf("Server stopped")
+}
+
+// loadAPIKey reads the API key from API_KEY environment variable or .api_key file
+// in the key file directory (and DB directory as fallback), and syncs it to the
+// database's server_config table. This ensures the Node.js console and Go server
+// share the same API key regardless of how the server was started.
+func loadAPIKey(cfg *config.Config, database db.Database) {
+	var apiKey string
+	var source string
+
+	// 1. Check API_KEY environment variable (highest priority)
+	if v := os.Getenv("API_KEY"); v != "" {
+		apiKey = strings.TrimSpace(v)
+		source = "API_KEY env var"
+	}
+
+	// 2. Check .api_key file in key file directory
+	if apiKey == "" {
+		keyDir := filepath.Dir(cfg.KeyFile)
+		if keyDir == "" || keyDir == "." {
+			keyDir = "."
+		}
+		apiKeyFile := filepath.Join(keyDir, ".api_key")
+		if data, err := os.ReadFile(apiKeyFile); err == nil {
+			apiKey = strings.TrimSpace(string(data))
+			if apiKey != "" {
+				source = apiKeyFile
+			}
+		}
+	}
+
+	// 3. Check .api_key file in database directory as fallback
+	if apiKey == "" {
+		dbDir := filepath.Dir(cfg.DBPath)
+		if dbDir == "" || dbDir == "." {
+			dbDir = "."
+		}
+		apiKeyFile := filepath.Join(dbDir, ".api_key")
+		if data, err := os.ReadFile(apiKeyFile); err == nil {
+			apiKey = strings.TrimSpace(string(data))
+			if apiKey != "" {
+				source = apiKeyFile
+			}
+		}
+	}
+
+	if apiKey == "" {
+		log.Printf("WARN: No API key found (no API_KEY env var, no .api_key file in key/db directory). Console→Server auth will fail.")
+		return
+	}
+
+	// Sync to database server_config table
+	existing, _ := database.GetConfig("api_key")
+	if existing == apiKey {
+		log.Printf("API key loaded from %s (already in database)", source)
+		return
+	}
+
+	if err := database.SetConfig("api_key", apiKey); err != nil {
+		log.Printf("WARN: Failed to sync API key to database: %v", err)
+		return
+	}
+	if existing == "" {
+		log.Printf("API key loaded from %s and stored in database", source)
+	} else {
+		log.Printf("API key loaded from %s and updated in database", source)
+	}
 }
 
 func parseFlags() *config.Config {

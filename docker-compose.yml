@@ -20,7 +20,7 @@ services:
     pull_policy: never
     container_name: betterdesk-server
     hostname: betterdesk-server
-    command: ["/usr/local/bin/betterdesk-server", "-dir", "/opt/rustdesk"]
+    command: ["/usr/local/bin/betterdesk-server", "-mode", "all", "-db", "/opt/rustdesk/db_v2.sqlite3", "-key-file", "/opt/rustdesk/id_ed25519"]
     ports:
       - "21114:21114"           # HTTP API
       - "21115:21115"           # NAT type test
