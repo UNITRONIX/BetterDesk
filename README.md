@@ -133,7 +133,7 @@ Database Layer
 | **21117** | TCP | Relay Server (bidirectional stream) | WAN |
 | **21118** | WS(S) | WebSocket Signal | WAN |
 | **21119** | WS(S) | WebSocket Relay | WAN |
-| **21121** | HTTP | RustDesk Client API (login, AB sync) | WAN |
+| **21121** | HTTP | RustDesk Client API — Node.js (login, AB sync, heartbeat) | WAN |
 | **5000** | HTTP | Web Console (admin panel) | LAN |
 
 > All TCP/WS ports support **dual-mode TLS** — plain and TLS on the same port with automatic detection.
@@ -917,8 +917,8 @@ SSL_CERT_PATH=         # SSL certificate path
 SSL_KEY_PATH=          # SSL key path
 TRUST_PROXY=false      # Trust X-Forwarded-For
 DB_PATH=               # Path to SQLite database
-HBBS_API_URL=          # Go server API URL (http://localhost:21114)
-HBBS_API_KEY=          # API key for Go server
+BETTERDESK_API_URL=    # Go server API URL (http://localhost:21114)
+BETTERDESK_API_KEY=    # API key for Go server (env: BETTERDESK_API_KEY or HBBS_API_KEY)
 ```
 
 ---
@@ -947,6 +947,21 @@ curl -H "X-API-Key: <your_api_key>" http://localhost:21114/api/peers
 | `GET` | `/metrics` | Prometheus metrics |
 | `POST` | `/api/auth/login` | Login → JWT token |
 | `POST` | `/api/auth/login/2fa` | Complete TOTP 2FA flow |
+
+### RustDesk Client Endpoints (Go Server, Port 21114)
+
+These endpoints are served on the Go server's management API port because the RustDesk desktop client calculates the API port as `signal_port - 2` (21116 - 2 = 21114):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/login` | RustDesk-compatible login (username/password + optional TOTP) |
+| `GET` | `/api/login-options` | Available authentication methods |
+| `POST` | `/api/logout` | Invalidate session (no-op for stateless JWT) |
+| `GET/POST` | `/api/currentUser` | Get current user info (Bearer token) |
+| `GET/POST` | `/api/ab` | Get/update address book |
+| `POST` | `/api/heartbeat` | Client heartbeat (updates peer status to ONLINE) |
+| `POST` | `/api/sysinfo` | Client system info (hostname, OS, version) |
+| `POST` | `/api/sysinfo_ver` | Sysinfo version check (SHA256 of stored fields) |
 
 ### Viewer+ Endpoints
 
@@ -1381,7 +1396,27 @@ Contributions are welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guide
 
 This project is licensed under the **Apache License 2.0** — see [LICENSE](LICENSE).
 
-The Go server and Node.js console are independent, clean-room implementations with no RustDesk-derived code. Commercial licensing is available for organizations requiring extended support, white-label rights, or custom integrations — contact UNITRONIX for details.
+### Clean-Room Implementation
+
+BetterDesk Server (`betterdesk-server/`) is a **clean-room implementation** of the RustDesk rendezvous and relay protocol. Like how any HTTP server implements the HTTP protocol without being "derived from" Apache or Nginx, BetterDesk implements published protocol specifications for compatibility with RustDesk clients — but contains **no RustDesk source code**.
+
+- **Go imports**: No `github.com/rustdesk/*` dependencies
+- **Code review**: No RustDesk copyright headers or attribution
+- **Protocol**: Uses independently authored `.proto` specifications with Apache 2.0 headers
+
+BetterDesk Console (`web-nodejs/`) is an entirely original Node.js/Express application.
+
+### Archive Directory
+
+The `archive/` directory (excluded from distribution via `.gitignore`) contains deprecated code from earlier development phases, including legacy Rust-based server code licensed under AGPL-3.0. These files are **not covered by the Apache 2.0 license** and are never included in releases, packages, or Docker images.
+
+### Trademark Notice
+
+"RustDesk" is a trademark of the RustDesk Team. BetterDesk is an independent project that implements the RustDesk protocol for client compatibility. Use of the name "RustDesk" in this project is purely descriptive (indicating protocol compatibility) and does not imply affiliation with or endorsement by the RustDesk Team.
+
+### Commercial License
+
+Commercial licensing is available for organizations requiring extended support, white-label / OEM redistribution rights, or custom integrations — contact UNITRONIX for details.
 
 ---
 

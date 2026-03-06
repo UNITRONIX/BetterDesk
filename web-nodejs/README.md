@@ -55,7 +55,7 @@ docker run -d -p 5000:5000 \
 | `DB_PATH` | `/opt/rustdesk/db_v2.sqlite3` | Path to SQLite database |
 | `KEYS_PATH` | `/opt/rustdesk` | Path to key files directory |
 | `SESSION_SECRET` | auto-generated | Session cookie secret |
-| `HBBS_API_URL` | `http://127.0.0.1:21114` | HBBS API endpoint |
+| `BETTERDESK_API_URL` | `http://127.0.0.1:21114` | BetterDesk Go server API endpoint |
 | `DEFAULT_LANG` | `en` | Default language code |
 
 ## Project Structure
@@ -88,7 +88,7 @@ web-nodejs/
 ├── services/
 │   ├── authService.js   # Password hashing
 │   ├── database.js      # SQLite operations
-│   ├── hbbsApi.js       # HBBS REST API client
+│   ├── betterdeskApi.js  # BetterDesk Go server REST API client
 │   ├── i18nService.js   # Translation manager
 │   └── keyService.js    # Key file operations
 ├── views/
