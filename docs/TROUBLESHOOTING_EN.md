@@ -399,3 +399,80 @@ sudo systemctl start rustdesksignal rustdeskrelay
 ```
 
 **Key point:** Only the **BetterDesk enhanced hbbs** updates the database with online status. The original RustDesk hbbs does not have this feature.
+
+---
+
+## Problem 3: Relay Connection Failed (IPv6)
+
+### Symptoms
+
+RustDesk clients display:
+```
+Relay connection failed: Connection to relay server failed. Please try again later.
+```
+(German: "Verbindungsfehler — Verbindung über Relay-Server ist fehlgeschlagen")
+
+This happens across **all** client platforms (Windows, Linux, macOS, Android). No errors appear in BetterDesk server or console logs.
+
+### Root Cause
+
+The server resolved an **IPv6-only** address for `RELAY_SERVERS`. Many RustDesk clients cannot connect to a relay via pure IPv6, especially on networks without proper IPv6 support.
+
+### How to Check
+
+```bash
+# Linux: check the systemd service for relay-servers parameter
+sudo systemctl cat betterdesk-server | grep relay-servers
+
+# If you see something like:
+#   -relay-servers 2a01:4f8:xxxx::1
+# That's the problem — it's IPv6-only.
+```
+
+```powershell
+# Windows: check the scheduled task or NSSM service arguments
+nssm get BetterDeskServer AppParameters
+# Or check the task in Task Scheduler → BetterDesk → BetterDeskServer → Arguments
+```
+
+### Solution
+
+Change `RELAY_SERVERS` to use an **IPv4 address** (or both IPv4 and IPv6):
+
+**Linux:**
+```bash
+# Edit the service file
+sudo nano /etc/systemd/system/betterdesk-server.service
+
+# Change -relay-servers from IPv6 to IPv4:
+# Before: -relay-servers 2a01:4f8:xxxx::1
+# After:  -relay-servers 203.0.113.10
+
+# Reload and restart
+sudo systemctl daemon-reload
+sudo systemctl restart betterdesk-server
+```
+
+**Windows:**
+```powershell
+# Update NSSM service parameters
+nssm set BetterDeskServer AppParameters "-mode all -relay-servers YOUR_IPV4_ADDRESS ..."
+Restart-Service BetterDeskServer
+
+# Or edit the scheduled task arguments in Task Scheduler
+```
+
+**Docker:**
+```yaml
+# docker-compose.yml
+services:
+  betterdesk-server:
+    command: >-
+      -mode all
+      -relay-servers YOUR_IPV4_ADDRESS
+      ...
+```
+
+### Prevention
+
+As of v2.4.0, the ALL-IN-ONE installation scripts (`betterdesk.sh` / `betterdesk.ps1`) automatically detect IPv6-only addresses and attempt to resolve an IPv4 address instead, preventing this issue from occurring during installation.

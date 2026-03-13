@@ -1368,6 +1368,26 @@ function Setup-Services {
     Print-Step "Configuring Windows services..."
     
     $serverIP = Get-PublicIP
+    
+    # IPv6-only relay detection: many RustDesk clients cannot connect via IPv6-only relay.
+    # If the detected IP is IPv6, try to also resolve an IPv4 address for dual-stack support.
+    if ($serverIP -match ':') {
+        Print-Warning "Detected IPv6 address: $serverIP"
+        try {
+            $ipv4Addr = (Invoke-WebRequest -Uri "https://ipv4.icanhazip.com" -UseBasicParsing -TimeoutSec 5).Content.Trim()
+            if ($ipv4Addr -and $ipv4Addr -notmatch ':') {
+                $serverIP = $ipv4Addr
+                Print-Info "Using IPv4 address for relay compatibility: $serverIP"
+                Print-Info "(IPv6-only relay causes connection failures on many RustDesk clients)"
+            } else {
+                Print-Warning "No IPv4 address found. Relay connections may fail for clients without IPv6 support."
+                Print-Warning "If clients report 'Relay connection failed', set RELAY_SERVERS to an IPv4 address manually."
+            }
+        } catch {
+            Print-Warning "Could not detect IPv4 address. If relay fails, configure RELAY_SERVERS manually."
+        }
+    }
+    
     Print-Info "Server IP: $serverIP"
     Print-Info "API Port: $script:API_PORT"
     

@@ -1662,6 +1662,22 @@ setup_services() {
     local server_ip
     server_ip=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "127.0.0.1")
     
+    # IPv6-only relay detection: many RustDesk clients cannot connect via IPv6-only relay.
+    # If the detected IP is IPv6, try to also resolve an IPv4 address for dual-stack support.
+    if [[ "$server_ip" == *:* ]]; then
+        print_warning "Detected IPv6 address: $server_ip"
+        local ipv4_addr
+        ipv4_addr=$(curl -4 -s --max-time 5 ifconfig.me 2>/dev/null || curl -4 -s --max-time 5 icanhazip.com 2>/dev/null || "")
+        if [ -n "$ipv4_addr" ] && [[ "$ipv4_addr" != *:* ]]; then
+            server_ip="$ipv4_addr"
+            print_info "Using IPv4 address for relay compatibility: $server_ip"
+            print_info "(IPv6-only relay causes connection failures on many RustDesk clients)"
+        else
+            print_warning "No IPv4 address found. Relay connections may fail for clients without IPv6 support."
+            print_warning "If clients report 'Relay connection failed', set RELAY_SERVERS to an IPv4 address manually."
+        fi
+    fi
+    
     print_info "Server IP: $server_ip"
     print_info "API Port: $API_PORT"
     
