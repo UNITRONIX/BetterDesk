@@ -91,7 +91,7 @@ function buildUserPayload(user) {
 /**
  * Authenticate request via Bearer token — returns user or null
  */
-function authenticateRequest(req) {
+async function authenticateRequest(req) {
     const token = extractBearerToken(req);
     if (!token) return null;
     return authService.validateAccessToken(token);
@@ -100,8 +100,8 @@ function authenticateRequest(req) {
 /**
  * Middleware: require Bearer auth
  */
-function requireAuth(req, res, next) {
-    const user = authenticateRequest(req);
+async function requireAuth(req, res, next) {
+    const user = await authenticateRequest(req);
     if (!user) {
         return res.status(401).json({ error: 'Authorization required' });
     }
@@ -367,7 +367,7 @@ router.get('/api/ab', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: 'Authorization required' });
     }
-    const user = authService.validateAccessToken(token);
+    const user = await authService.validateAccessToken(token);
     if (!user) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -386,7 +386,7 @@ router.post('/api/ab', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: 'Authorization required' });
     }
-    const user = authService.validateAccessToken(token);
+    const user = await authService.validateAccessToken(token);
     if (!user) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -408,7 +408,7 @@ router.get('/api/ab/personal', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: 'Authorization required' });
     }
-    const user = authService.validateAccessToken(token);
+    const user = await authService.validateAccessToken(token);
     if (!user) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -422,7 +422,7 @@ router.get('/api/ab/personal', async (req, res) => {
  * Audit log — returns combined audit summary from all audit sources.
  */
 router.get('/api/audit', async (req, res) => {
-    const user = authenticateRequest(req);
+    const user = await authenticateRequest(req);
     if (!user) {
         return res.status(401).json({ error: 'Authorization required' });
     }
@@ -453,7 +453,7 @@ router.post('/api/ab/personal', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: 'Authorization required' });
     }
-    const user = authService.validateAccessToken(token);
+    const user = await authService.validateAccessToken(token);
     if (!user) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -475,7 +475,7 @@ router.get('/api/ab/tags', async (req, res) => {
     if (!token) {
         return res.status(401).json({ error: 'Authorization required' });
     }
-    const user = authService.validateAccessToken(token);
+    const user = await authService.validateAccessToken(token);
     if (!user) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -488,13 +488,13 @@ router.get('/api/ab/tags', async (req, res) => {
  * List users — return current user only (for RustDesk client with Bearer token).
  * Falls through to panel routes if no Bearer token but session exists.
  */
-router.get('/api/users', (req, res, next) => {
+router.get('/api/users', async (req, res, next) => {
     const token = extractBearerToken(req);
     // If no Bearer token, fallthrough to panel routes (may have session cookie)
     if (!token) {
         return next('route');
     }
-    const user = authService.validateAccessToken(token);
+    const user = await authService.validateAccessToken(token);
     if (!user) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -523,7 +523,7 @@ router.get('/api/peers', async (req, res, next) => {
     if (!token) {
         return next('route');
     }
-    const user = authService.validateAccessToken(token);
+    const user = await authService.validateAccessToken(token);
     if (!user) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
@@ -903,9 +903,9 @@ router.post('/api/logout', async (req, res) => {
 
         if (token) {
             // Validate token to get user info for logging
-            const user = authService.validateAccessToken(token);
+            const user = await authService.validateAccessToken(token);
             if (user) {
-                authService.revokeClientTokens(user.id, clientId, clientUuid);
+                await authService.revokeClientTokens(user.id, clientId, clientUuid);
                 await db.logAction(user.id, 'api_logout', `Client: ${clientId || 'unknown'}`, ip);
             }
         }
@@ -924,7 +924,7 @@ router.post('/api/logout', async (req, res) => {
  * Returns current user info based on Bearer token.
  * RustDesk client uses POST after login, GET for refresh.
  */
-router.all('/api/currentUser', (req, res) => {
+router.all('/api/currentUser', async (req, res) => {
     try {
         const token = extractBearerToken(req);
 
@@ -932,7 +932,7 @@ router.all('/api/currentUser', (req, res) => {
             return res.status(401).json({ error: 'Authorization required' });
         }
 
-        const user = authService.validateAccessToken(token);
+        const user = await authService.validateAccessToken(token);
         if (!user) {
             return res.status(401).json({ error: 'Invalid or expired token' });
         }
