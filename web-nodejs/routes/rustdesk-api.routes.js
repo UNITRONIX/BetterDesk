@@ -54,6 +54,24 @@ const MAX_HOSTNAME_LEN = 256;
 const MAX_STRING_LEN = 512;
 const MAX_PATH_LEN = 1024;
 
+// Throttle sysinfo request logging: only log once per device per 5 minutes
+const _sysinfoLogTimes = new Map();
+function shouldLogSysinfoRequest(deviceId) {
+    const now = Date.now();
+    const last = _sysinfoLogTimes.get(deviceId) || 0;
+    if (now - last > 5 * 60 * 1000) {
+        _sysinfoLogTimes.set(deviceId, now);
+        // Prune old entries to prevent memory leak
+        if (_sysinfoLogTimes.size > 1000) {
+            for (const [k, v] of _sysinfoLogTimes) {
+                if (now - v > 10 * 60 * 1000) _sysinfoLogTimes.delete(k);
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 // ==================== Helper Functions ====================
 
 /**
@@ -190,7 +208,9 @@ router.post('/api/heartbeat', async (req, res) => {
         const sysinfo = await db.getPeerSysinfo(deviceId);
         if (!sysinfo) {
             // No sysinfo - request client to send it (JSON with "sysinfo" key)
-            console.log(`[API:HEARTBEAT] Requesting sysinfo from ${deviceId} (missing)`);
+            if (shouldLogSysinfoRequest(deviceId)) {
+                console.log(`[API:HEARTBEAT] Requesting sysinfo from ${deviceId} (missing)`);
+            }
             return res.json({ modified_at: new Date().toISOString(), sysinfo: true });
         }
         
@@ -198,7 +218,9 @@ router.post('/api/heartbeat', async (req, res) => {
         const updatedAt = new Date(sysinfo.updated_at).getTime();
         const oneHourAgo = Date.now() - (60 * 60 * 1000);
         if (updatedAt < oneHourAgo) {
-            console.log(`[API:HEARTBEAT] Requesting sysinfo refresh from ${deviceId} (stale)`);
+            if (shouldLogSysinfoRequest(deviceId)) {
+                console.log(`[API:HEARTBEAT] Requesting sysinfo refresh from ${deviceId} (stale)`);
+            }
             return res.json({ modified_at: new Date().toISOString(), sysinfo: true });
         }
     } catch (err) {
@@ -1025,8 +1047,9 @@ router.post('/api/audit/conn', async (req, res) => {
     try {
         const body = req.body || {};
 
-        // Validate required fields
-        if (!body.host_id || typeof body.host_id !== 'string') {
+        // Validate required fields (host_id may be string or number from RustDesk client)
+        const hostId = body.host_id != null ? String(body.host_id) : '';
+        if (!hostId) {
             return res.status(400).json({ error: 'host_id is required' });
         }
 
@@ -1037,9 +1060,9 @@ router.post('/api/audit/conn', async (req, res) => {
         }
 
         await db.insertAuditConnection({
-            host_id: sanitizeStr(body.host_id, MAX_ID_LEN),
-            host_uuid: sanitizeStr(body.host_uuid || '', MAX_ID_LEN),
-            peer_id: sanitizeStr(body.peer_id || '', MAX_ID_LEN),
+            host_id: sanitizeStr(hostId, MAX_ID_LEN),
+            host_uuid: sanitizeStr(body.host_uuid != null ? String(body.host_uuid) : '', MAX_ID_LEN),
+            peer_id: sanitizeStr(body.peer_id != null ? String(body.peer_id) : '', MAX_ID_LEN),
             peer_name: sanitizeStr(body.peer_name || '', MAX_HOSTNAME_LEN),
             action: sanitizeStr(body.action || 'connect', 32),
             conn_type: connType,

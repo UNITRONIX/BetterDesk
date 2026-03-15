@@ -1220,6 +1220,10 @@ function Install-Console {
 }
 
 function Install-Binaries {
+    param(
+        [switch]$ForceRecompile
+    )
+    
     Print-Step "Installing BetterDesk Go Server..."
     
     # Create directory
@@ -1229,10 +1233,26 @@ function Install-Binaries {
     
     # Check for Go server binary
     $goBinaryPath = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
+    $needCompile = $false
     
     if (-not (Test-Path $goBinaryPath)) {
+        $needCompile = $true
         Print-Info "Pre-compiled binary not found, attempting to compile..."
-        
+    } elseif ($ForceRecompile) {
+        # During UPDATE: check if any .go source file is newer than the binary
+        $binaryTime = (Get-Item $goBinaryPath).LastWriteTime
+        $newerSource = Get-ChildItem -Path $script:GO_SERVER_SOURCE -Filter "*.go" -Recurse |
+            Where-Object { $_.LastWriteTime -gt $binaryTime } |
+            Select-Object -First 1
+        if ($newerSource) {
+            $needCompile = $true
+            Print-Info "Source code updated since last build, recompiling..."
+        } else {
+            Print-Info "Binary is up-to-date with source code"
+        }
+    }
+    
+    if ($needCompile) {
         # Check if Go is installed
         if (-not (Test-GoInstalled)) {
             Print-Info "Installing Go toolchain..."
@@ -1247,6 +1267,8 @@ function Install-Binaries {
             Print-Error "Failed to compile Go server"
             return $false
         }
+    } else {
+        Print-Info "Using existing Go server binary"
     }
     
     # Verify binary
@@ -2262,7 +2284,7 @@ function Do-Update {
     
     Stop-AllServices
     
-    if (-not (Install-Binaries)) { Print-Error "Binary update failed"; return }
+    if (-not (Install-Binaries -ForceRecompile)) { Print-Error "Binary update failed"; return }
     if (-not (Install-Console)) { Print-Error "Console update failed"; return }
     Run-Migrations
     

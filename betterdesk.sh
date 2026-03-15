@@ -1530,6 +1530,8 @@ EOF
 }
 
 install_binaries() {
+    local force_recompile="${1:-false}"
+    
     print_step "Installing BetterDesk Go Server..."
     
     # Ensure architecture is detected
@@ -1546,14 +1548,24 @@ install_binaries() {
     mkdir -p "$RUSTDESK_PATH"
     
     local go_binary="$GO_SERVER_SOURCE/betterdesk-server"
+    local need_compile=false
     
-    # Check for pre-compiled binary first
-    if [ -f "$go_binary" ]; then
-        print_info "Found pre-compiled Go server binary"
-    else
-        # Compile from source
+    if [ ! -f "$go_binary" ]; then
+        need_compile=true
         print_info "Pre-compiled binary not found, compiling from source..."
-        
+    elif [ "$force_recompile" = "true" ]; then
+        # During UPDATE: check if any .go source file is newer than the binary
+        local newest_source
+        newest_source=$(find "$GO_SERVER_SOURCE" -name '*.go' -newer "$go_binary" 2>/dev/null | head -1)
+        if [ -n "$newest_source" ]; then
+            need_compile=true
+            print_info "Source code updated since last build, recompiling..."
+        else
+            print_info "Binary is up-to-date with source code"
+        fi
+    fi
+    
+    if [ "$need_compile" = true ]; then
         # Ensure Go is installed
         if ! check_go_installed; then
             print_info "Installing Go toolchain..."
@@ -1568,6 +1580,8 @@ install_binaries() {
             print_error "Failed to compile Go server"
             return 1
         fi
+    else
+        print_info "Using existing Go server binary"
     fi
     
     # Verify binary before installation
@@ -2133,7 +2147,7 @@ do_update() {
     graceful_stop_services
     
     detect_architecture
-    install_binaries
+    install_binaries true
     install_console
     run_migrations
     

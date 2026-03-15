@@ -1184,8 +1184,10 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 // getRelayServer returns the relay server address to advertise to clients.
 // Priority:
 //  1. Explicitly configured relay servers (-relay-servers flag / RELAY_SERVERS env)
-//  2. Server's detected public IP + relay port (auto-detected from UDP socket)
-//  3. Bare :port as last resort
+//  2. Server's detected public IP + relay port (auto-detected via external service)
+//  3. LAN IP + relay port (from OS routing table — works for LAN-only setups)
+//
+// Never returns bare ":port" — that is unusable by remote clients.
 func (s *Server) getRelayServer() string {
 	relays := s.cfg.GetRelayServers()
 	if len(relays) > 0 {
@@ -1195,7 +1197,12 @@ func (s *Server) getRelayServer() string {
 	if ip, ok := s.localIP.Load().(string); ok && ip != "" {
 		return fmt.Sprintf("%s:%d", ip, s.cfg.RelayPort)
 	}
-	// Fallback: bare port (same host as signal server)
+	// Last resort: use LAN IP (better than bare port which is unusable)
+	if ip, ok := s.lanIP.Load().(string); ok && ip != "" {
+		return fmt.Sprintf("%s:%d", ip, s.cfg.RelayPort)
+	}
+	// Should not happen — detectLocalIP always detects LAN IP
+	log.Printf("[signal] WARN: No relay address available — remote connections will fail")
 	return fmt.Sprintf(":%d", s.cfg.RelayPort)
 }
 

@@ -456,6 +456,11 @@ sudo apt-get install -y build-essential libsqlite3-dev pkg-config libssl-dev git
 93. [x] **Docker entrypoint fix (`docker/entrypoint.sh`)**: Generates API key before supervisord starts if `.api_key` file missing. Uses `openssl rand -hex 32` with `/dev/urandom` fallback. Also persists `API_KEY` env var to file if provided.
 94. [x] **Node.js resilience (`betterdeskApi.js`)**: Axios 401 interceptor re-reads `.api_key` from disk once on auth failure. Handles race condition where Go server generates key after Node.js cached empty value at startup.
 
+#### Go Server — Relay & Diagnostics Fixes (Phase 17) ✅ COMPLETED 2026-03-16
+95. [x] **Public IP retry never activated**: `startIPDetectionRetry()` goroutine (60s ticker, retries `detectPublicIP()`) was defined in `signal/server.go` but never called from `Start()`. If initial public IP detection failed (e.g. external services unreachable at boot), `getRelayServer()` returned LAN IP or bare port — causing remote clients to fail relay with "Failed to secure tcp: deadline has elapsed". Fixed by adding `s.startIPDetectionRetry(s.ctx)` call in `Start()` before goroutine launches.
+96. [x] **`/api/audit/conn` returns 400 for numeric IDs**: RustDesk client sends `host_id` as numeric (e.g., `1340238749`). Validation `typeof body.host_id !== 'string'` rejected it. Changed to `String()` coercion for `host_id`, `host_uuid`, and `peer_id` — accepts both string and numeric IDs.
+97. [x] **Stale sysinfo log spam**: Heartbeat handler logged "Requesting sysinfo refresh from {id} (stale)" every ~15 seconds per device with no throttling. Added `shouldLogSysinfoRequest()` with Map-based 5-minute cooldown per device (auto-prune at 1000 entries). Sysinfo request to client still happens every heartbeat (functional behavior unchanged), only log message is throttled.
+
 ---
 
 ## 🔄 System Statusu v3.0
@@ -624,6 +629,9 @@ Pełna dokumentacja budowania: [BUILD_GUIDE.md](../docs/BUILD_GUIDE.md)
 23. ~~**Docker single-container port 5000 conflict (Issue #56)**~~ ✅ ROZWIĄZANE - Go server `config.LoadEnv()` read generic `PORT=5000` (meant for Node.js console) and set signal port to 5000 instead of 21116, causing EADDRINUSE race condition. Fixed by adding `SIGNAL_PORT` env var with priority over `PORT` in `config.go`, setting `SIGNAL_PORT=21116` in `supervisord.conf` and `entrypoint.sh`, adding `ENV SIGNAL_PORT=21116` to `Dockerfile` — Phase 13
 24. ~~**`get_public_ip: command not found` (Issue #58)**~~ ✅ ROZWIĄZANE - Diagnostics function called undefined `get_public_ip` at line 3348. Created reusable `get_public_ip()` function (IPv4-first) in all 3 scripts, replaced all inline curl patterns. Added private IP warning + `RELAY_SERVERS` env var override in `setup_services()`. Go server `GetRelayServers()` now auto-appends relay port when missing — Phase 14
 25. ~~**Docker: Devices page 0 while Dashboard shows count (Issue #59)**~~ ✅ ROZWIĄZANE - Docker single-container never created `.api_key` file. Dashboard used public `/api/server/stats` (correct), Devices used protected `/api/peers` (401 → empty). Go server `loadAPIKey()` now auto-generates key on first run, Docker entrypoint also generates as safety net, Node.js `betterdeskApi.js` has 401-interceptor to reload key from file — Phase 16
+26. ~~**Relay fails when initial public IP detection fails**~~ ✅ ROZWIĄZANE - `startIPDetectionRetry()` goroutine was defined but never called from `Start()` in `signal/server.go`. If boot-time `detectPublicIP()` failed, no retry ever happened, causing `getRelayServer()` to return LAN IP. Fixed by calling `s.startIPDetectionRetry(s.ctx)` in `Start()` — Phase 17
+27. ~~**`/api/audit/conn` returns 400 for numeric device IDs**~~ ✅ ROZWIĄZANE - RustDesk client sends `host_id` as number. Validation rejected non-string. Changed to `String()` coercion — Phase 17
+28. ~~**Stale sysinfo log spam every 15 seconds**~~ ✅ ROZWIĄZANE - Added 5-minute per-device throttle for sysinfo log messages in heartbeat handler — Phase 17
 
 ---
 
@@ -713,4 +721,4 @@ All code changes MUST include a security review as part of the implementation pr
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-15 (Docker API key auto-generation — Phase 16) przez GitHub Copilot*
+*Ostatnia aktualizacja: 2026-03-16 (Go Server Relay & Diagnostics Fixes — Phase 17) przez GitHub Copilot*

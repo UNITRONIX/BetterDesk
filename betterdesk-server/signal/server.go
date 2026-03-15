@@ -138,19 +138,63 @@ func (s *Server) detectLocalIP() {
 	// Fallback: use LAN IP as public IP too
 	if ip, ok := s.lanIP.Load().(string); ok && ip != "" {
 		s.localIP.Store(ip)
-		log.Printf("[signal] No public IP detected, using LAN IP: %s (consider setting -relay-servers)", ip)
+		log.Printf("[signal] WARN: No public IP detected, using LAN IP: %s", ip)
+		log.Printf("[signal] WARN: Remote relay connections will fail! Set -relay-servers YOUR.PUBLIC.IP or RELAY_SERVERS env var.")
+	} else {
+		log.Printf("[signal] WARN: Failed to detect any IP address. Relay connections will fail!")
+		log.Printf("[signal] WARN: Set -relay-servers YOUR.PUBLIC.IP or RELAY_SERVERS env var.")
 	}
 }
 
-// detectPublicIP tries to determine the server's public IP address by querying
-// an external service.  Returns empty string on failure.
-func detectPublicIP() string {
-	client := &http.Client{Timeout: 3 * time.Second}
+// startIPDetectionRetry periodically retries public IP detection in background
+// if the initial detection failed (no explicit -relay-servers and no public IP).
+func (s *Server) startIPDetectionRetry(ctx context.Context) {
+	// Skip retry if relay servers are explicitly configured
+	if len(s.cfg.GetRelayServers()) > 0 {
+		return
+	}
+	// Skip if we already have a public IP (not a LAN IP)
+	if ip, ok := s.localIP.Load().(string); ok && ip != "" {
+		if lanIP, ok2 := s.lanIP.Load().(string); ok2 && ip != lanIP {
+			return // Already have a public IP different from LAN IP
+		}
+	}
 
+	go func() {
+		ticker := time.NewTicker(60 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if ip := detectPublicIP(); ip != "" {
+					old, _ := s.localIP.Load().(string)
+					if old != ip {
+						s.localIP.Store(ip)
+						log.Printf("[signal] Public IP detected (retry): %s (relay address updated)", ip)
+					}
+					return // Stop retrying once successful
+				}
+			}
+		}
+	}()
+}
+
+// detectPublicIP tries to determine the server's public IP address by querying
+// external services. Tries HTTPS first, then HTTP fallbacks for environments
+// where outbound HTTPS is blocked. Returns empty string on failure.
+func detectPublicIP() string {
+	client := &http.Client{Timeout: 5 * time.Second}
+
+	// Try HTTPS first, then HTTP fallbacks (some servers block outbound HTTPS)
 	services := []string{
 		"https://checkip.amazonaws.com",
 		"https://api.ipify.org",
 		"https://ifconfig.me/ip",
+		"http://checkip.amazonaws.com",
+		"http://api.ipify.org",
+		"http://ifconfig.me/ip",
 	}
 
 	for _, svc := range services {
@@ -228,6 +272,9 @@ func (s *Server) Start(ctx context.Context) error {
 	} else {
 		log.Printf("[signal] NAT test/online TCP listening on :%d", s.cfg.NATTestPort())
 	}
+
+	// Start background public IP detection retry if initial detection failed
+	s.startIPDetectionRetry(s.ctx)
 
 	// Launch goroutines
 	s.wg.Add(6)

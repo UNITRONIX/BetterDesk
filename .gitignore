@@ -173,3 +173,4 @@ package-lock.json
 # Legacy Rust binaries (archived, removed from repo)
 hbbs-patch/
 hbbs-patch-v2/
+tasks/todo.md
