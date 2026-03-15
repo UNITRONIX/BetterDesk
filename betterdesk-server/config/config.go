@@ -3,6 +3,7 @@
 package config
 
 import (
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -223,6 +224,7 @@ func (c *Config) WSRelayPort() int {
 }
 
 // GetRelayServers parses the comma-separated relay server list.
+// Ensures each entry includes a port; appends the default RelayPort if missing.
 func (c *Config) GetRelayServers() []string {
 	if c.RelayServers == "" {
 		return nil
@@ -231,9 +233,15 @@ func (c *Config) GetRelayServers() []string {
 	result := make([]string, 0, len(servers))
 	for _, s := range servers {
 		s = strings.TrimSpace(s)
-		if s != "" {
-			result = append(result, s)
+		if s == "" {
+			continue
 		}
+		// Add default relay port if not specified.
+		// net.SplitHostPort handles IPv6 bracketed addresses correctly.
+		if _, _, err := net.SplitHostPort(s); err != nil {
+			s = net.JoinHostPort(s, strconv.Itoa(c.RelayPort))
+		}
+		result = append(result, s)
 	}
 	return result
 }

@@ -436,6 +436,13 @@ sudo apt-get install -y build-essential libsqlite3-dev pkg-config libssl-dev git
 79. [x] **Dockerfile fix**: Added `ENV SIGNAL_PORT=21116` as default alongside `ENV PORT=5000`.
 80. [x] **Multi-container NOT affected**: `docker-compose.yml` uses separate containers, no port conflict.
 
+#### ALL-IN-ONE Scripts — IP Detection & Relay Fix (Phase 14) ✅ COMPLETED 2026-03-15
+81. [x] **`get_public_ip: command not found` (Issue #58)**: Diagnostics function called undefined `get_public_ip` function at line 3348. Created reusable `get_public_ip()` function in all 3 scripts (`betterdesk.sh`, `betterdesk.ps1`, `betterdesk-docker.sh`). Function prefers IPv4 (`curl -4`) over IPv6 for relay compatibility.
+82. [x] **DRY refactor**: All 4+ inline `curl ifconfig.me` patterns in `betterdesk.sh` and 5+ in `betterdesk-docker.sh` replaced with `get_public_ip()` calls. Single source of truth for IP detection.
+83. [x] **Private/loopback IP warning**: `setup_services()` in `betterdesk.sh` and `Setup-Services` in `betterdesk.ps1` now warn when detected IP is private (10.x, 192.168.x, 172.16-31.x) or loopback (127.0.0.1). Remote relay connections will fail with private IPs.
+84. [x] **`RELAY_SERVERS` env var override**: Both scripts now support `RELAY_SERVERS=YOUR.PUBLIC.IP sudo ./betterdesk.sh` to override auto-detected IP. Critical for servers behind NAT or with broken external IP detection.
+85. [x] **Go server relay port normalization**: `GetRelayServers()` in `config/config.go` now auto-appends default relay port (21117) when `-relay-servers IP` is passed without port. Uses `net.SplitHostPort`/`net.JoinHostPort` for correct IPv6 handling.
+
 ---
 
 ## 🔄 System Statusu v3.0
@@ -602,6 +609,7 @@ Pełna dokumentacja budowania: [BUILD_GUIDE.md](../docs/BUILD_GUIDE.md)
 21. ~~**TOTP column missing on upgrade (Issue #38)**~~ ✅ ROZWIĄZANE - Added automatic migration of `totp_secret`, `totp_enabled`, `totp_recovery_codes` columns to existing `users` table for both SQLite and PostgreSQL — Phase 12
 22. ~~**SELinux volume mount issues (Issue #31)**~~ ✅ ROZWIĄZANE - Added SELinux documentation to DOCKER_TROUBLESHOOTING.md with 4 solutions (named volumes, `:z` flag, chcon, setenforce) — Phase 12
 23. ~~**Docker single-container port 5000 conflict (Issue #56)**~~ ✅ ROZWIĄZANE - Go server `config.LoadEnv()` read generic `PORT=5000` (meant for Node.js console) and set signal port to 5000 instead of 21116, causing EADDRINUSE race condition. Fixed by adding `SIGNAL_PORT` env var with priority over `PORT` in `config.go`, setting `SIGNAL_PORT=21116` in `supervisord.conf` and `entrypoint.sh`, adding `ENV SIGNAL_PORT=21116` to `Dockerfile` — Phase 13
+24. ~~**`get_public_ip: command not found` (Issue #58)**~~ ✅ ROZWIĄZANE - Diagnostics function called undefined `get_public_ip` at line 3348. Created reusable `get_public_ip()` function (IPv4-first) in all 3 scripts, replaced all inline curl patterns. Added private IP warning + `RELAY_SERVERS` env var override in `setup_services()`. Go server `GetRelayServers()` now auto-appends relay port when missing — Phase 14
 
 ---
 
@@ -691,4 +699,4 @@ All code changes MUST include a security review as part of the implementation pr
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-15 (Docker single-container port 5000 conflict fix — Phase 13) przez GitHub Copilot*
+*Ostatnia aktualizacja: 2026-03-15 (IP detection & relay fix — Phase 14) przez GitHub Copilot*

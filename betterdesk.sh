@@ -207,6 +207,15 @@ confirm() {
     [[ "$response" =~ ^[TtYy]$ ]]
 }
 
+get_public_ip() {
+    local ip
+    ip=$(curl -4 -s --max-time 5 ifconfig.me 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    ip=$(curl -4 -s --max-time 5 icanhazip.com 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    ip=$(curl -s --max-time 5 ifconfig.me 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    ip=$(curl -s --max-time 5 icanhazip.com 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    echo "127.0.0.1"
+}
+
 #===============================================================================
 # Service Management Functions (Enhanced v2.1.2)
 #===============================================================================
@@ -1613,7 +1622,7 @@ generate_ssl_certificates() {
     
     # Detect server IP for SAN (Subject Alternative Name)
     local server_ip
-    server_ip=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "127.0.0.1")
+    server_ip=$(get_public_ip)
     
     # Generate certificate with SAN extension (valid for 3 years)
     openssl req -x509 -nodes -days 1095 -newkey rsa:2048 \
@@ -1674,24 +1683,24 @@ generate_ssl_certificates() {
 setup_services() {
     print_step "Configuring systemd services..."
     
-    # Get server IP
+    # Get server IP (prefers IPv4 for relay compatibility)
     local server_ip
-    server_ip=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "127.0.0.1")
+    server_ip=$(get_public_ip)
     
-    # IPv6-only relay detection: many RustDesk clients cannot connect via IPv6-only relay.
-    # If the detected IP is IPv6, try to also resolve an IPv4 address for dual-stack support.
-    if [[ "$server_ip" == *:* ]]; then
-        print_warning "Detected IPv6 address: $server_ip"
-        local ipv4_addr
-        ipv4_addr=$(curl -4 -s --max-time 5 ifconfig.me 2>/dev/null || curl -4 -s --max-time 5 icanhazip.com 2>/dev/null || "")
-        if [ -n "$ipv4_addr" ] && [[ "$ipv4_addr" != *:* ]]; then
-            server_ip="$ipv4_addr"
-            print_info "Using IPv4 address for relay compatibility: $server_ip"
-            print_info "(IPv6-only relay causes connection failures on many RustDesk clients)"
-        else
-            print_warning "No IPv4 address found. Relay connections may fail for clients without IPv6 support."
-            print_warning "If clients report 'Relay connection failed', set RELAY_SERVERS to an IPv4 address manually."
-        fi
+    # Warn if public IP detection failed — relay will not work for remote clients
+    if [ "$server_ip" = "127.0.0.1" ] || [[ "$server_ip" == 10.* ]] || [[ "$server_ip" == 192.168.* ]] || [[ "$server_ip" == 172.1[6-9].* ]] || [[ "$server_ip" == 172.2[0-9].* ]] || [[ "$server_ip" == 172.3[0-1].* ]]; then
+        print_warning "Detected private/loopback IP: $server_ip"
+        print_warning "Remote clients will NOT be able to connect via relay!"
+        print_warning "If this is a public-facing server, set RELAY_SERVERS env var to your public IP."
+        echo ""
+        echo -e "  ${YELLOW}Example: RELAY_SERVERS=YOUR.PUBLIC.IP sudo ./betterdesk.sh${NC}"
+        echo ""
+    fi
+    
+    # Allow manual override via RELAY_SERVERS env var
+    if [ -n "$RELAY_SERVERS" ]; then
+        server_ip="$RELAY_SERVERS"
+        print_info "Using RELAY_SERVERS override: $server_ip"
     fi
     
     print_info "Server IP: $server_ip"
@@ -2014,7 +2023,7 @@ do_install() {
     echo ""
     
     local server_ip
-    server_ip=$(curl -s ifconfig.me 2>/dev/null || echo "YOUR_IP")
+    server_ip=$(get_public_ip)
     local public_key=""
     if [ -f "$RUSTDESK_PATH/id_ed25519.pub" ]; then
         public_key=$(cat "$RUSTDESK_PATH/id_ed25519.pub")

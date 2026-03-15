@@ -1415,6 +1415,22 @@ function Setup-Services {
         }
     }
     
+    # Warn if public IP detection failed — relay will not work for remote clients
+    if ($serverIP -eq "127.0.0.1" -or $serverIP -match "^10\." -or $serverIP -match "^192\.168\." -or $serverIP -match "^172\.(1[6-9]|2[0-9]|3[0-1])\.") {
+        Print-Warning "Detected private/loopback IP: $serverIP"
+        Print-Warning "Remote clients will NOT be able to connect via relay!"
+        Print-Warning "If this is a public-facing server, set RELAY_SERVERS env var to your public IP."
+        Write-Host ""
+        Write-Host "  Example: `$env:RELAY_SERVERS='YOUR.PUBLIC.IP'; .\betterdesk.ps1" -ForegroundColor Yellow
+        Write-Host ""
+    }
+    
+    # Allow manual override via RELAY_SERVERS env var
+    if ($env:RELAY_SERVERS) {
+        $serverIP = $env:RELAY_SERVERS
+        Print-Info "Using RELAY_SERVERS override: $serverIP"
+    }
+    
     Print-Info "Server IP: $serverIP"
     Print-Info "API Port: $script:API_PORT"
     

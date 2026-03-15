@@ -152,6 +152,15 @@ confirm() {
     [[ "$response" =~ ^[TtYy]$ ]]
 }
 
+get_public_ip() {
+    local ip
+    ip=$(curl -4 -s --max-time 5 ifconfig.me 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    ip=$(curl -4 -s --max-time 5 icanhazip.com 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    ip=$(curl -s --max-time 5 ifconfig.me 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    ip=$(curl -s --max-time 5 icanhazip.com 2>/dev/null) && [ -n "$ip" ] && echo "$ip" && return
+    echo "127.0.0.1"
+}
+
 #===============================================================================
 # Detection Functions
 #===============================================================================
@@ -503,7 +512,7 @@ create_compose_file() {
     print_step "Creating docker-compose.yml..."
     
     local server_ip
-    server_ip=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "127.0.0.1")
+    server_ip=$(get_public_ip)
     
     # Start composing docker-compose.yml
     cat > "$COMPOSE_FILE" << EOF
@@ -560,7 +569,7 @@ EOF
     
     # Get server public IP for relay-servers
     local server_ip
-    server_ip=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "127.0.0.1")
+    server_ip=$(get_public_ip)
     
     # Add BetterDesk server (Go single binary — signal + relay + API)
     cat >> "$COMPOSE_FILE" << EOF
@@ -860,7 +869,7 @@ do_install() {
     echo ""
     
     local server_ip
-    server_ip=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "YOUR_IP")
+    server_ip=$(get_public_ip)
     local public_key=""
     if [ -f "$DATA_DIR/id_ed25519.pub" ]; then
         public_key=$(cat "$DATA_DIR/id_ed25519.pub" 2>/dev/null)
@@ -1598,7 +1607,7 @@ do_diagnostics() {
             echo ""
             echo -e "${WHITE}${BOLD}═══ External port test ═══${NC}"
             echo ""
-            local server_ip=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "127.0.0.1")
+            local server_ip=$(get_public_ip)
             print_info "Public IP: $server_ip"
             print_info "Testing external port accessibility..."
             echo ""
@@ -2010,7 +2019,7 @@ do_migrate() {
     echo -e "${GREEN}╠══════════════════════════════════════════════════════════════════╣${NC}"
     
     local server_ip
-    server_ip=$(curl -s ifconfig.me 2>/dev/null || echo "YOUR_IP")
+    server_ip=$(get_public_ip)
     
     echo -e "${GREEN}║                                                                  ║${NC}"
     echo -e "${GREEN}║  Web Panel:     ${WHITE}http://$server_ip:5000${GREEN}                           ║${NC}"
