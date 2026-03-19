@@ -1564,7 +1564,9 @@ function Setup-Services {
     $apiKeyPath = Join-Path $script:RUSTDESK_PATH ".api_key"
     if (-not (Test-Path $apiKeyPath)) {
         $apiKeyBytes = New-Object byte[] 32
-        [System.Security.Cryptography.RandomNumberGenerator]::Fill($apiKeyBytes)
+        $rng = New-Object System.Security.Cryptography.RNGCryptoServiceProvider
+        $rng.GetBytes($apiKeyBytes)
+        $rng.Dispose()
         $apiKey = [System.BitConverter]::ToString($apiKeyBytes) -replace '-', '' | ForEach-Object { $_.ToLower() }
         Set-Content -Path $apiKeyPath -Value $apiKey -NoNewline
         Print-Info "Generated API key for console-server communication"
@@ -2328,6 +2330,27 @@ function Do-Update {
         Print-Info "Use 'FRESH INSTALLATION' option"
         Press-Enter
         return
+    }
+    
+    # Detect Rust → Go upgrade (major architecture change)
+    if ($script:SERVER_TYPE -eq "rust") {
+        Print-Warning "Legacy Rust server (hbbs/hbbr) detected!"
+        Print-Warning "Upgrading from Rust to Go server requires a FRESH INSTALLATION."
+        Print-Info "The Go server is a single binary replacing both hbbs and hbbr."
+        Print-Info "Your data (keys, database) will be preserved during migration."
+        Write-Host ""
+        if (-not $script:AUTO_MODE) {
+            if (Confirm-Action "Proceed with fresh installation (recommended)?") {
+                Do-Install
+                return
+            } else {
+                Print-Warning "Continuing with update — legacy Rust binaries will NOT be replaced with Go server."
+            }
+        } else {
+            Print-Info "Auto mode: Redirecting to fresh installation for Rust → Go migration"
+            Do-Install
+            return
+        }
     }
     
     # CRITICAL: Preserve database configuration before reinstalling console

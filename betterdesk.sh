@@ -2224,6 +2224,28 @@ do_update() {
         return
     fi
     
+    # Detect Rust → Go upgrade (major architecture change)
+    if [ "${SERVER_TYPE:-}" = "rust" ]; then
+        print_warning "Legacy Rust server (hbbs/hbbr) detected!"
+        print_warning "Upgrading from Rust to Go server requires a FRESH INSTALLATION."
+        print_info "The Go server is a single binary replacing both hbbs and hbbr."
+        print_info "Your data (keys, database) will be preserved during migration."
+        echo ""
+        if [ "${AUTO_MODE:-false}" = "true" ]; then
+            print_info "Auto mode: Redirecting to fresh installation for Rust → Go migration"
+            do_install
+            return
+        else
+            read -rp "Proceed with fresh installation (recommended)? [Y/n] " answer
+            if [ "${answer,,}" != "n" ]; then
+                do_install
+                return
+            else
+                print_warning "Continuing with update — legacy Rust binaries will NOT be replaced with Go server."
+            fi
+        fi
+    fi
+    
     # CRITICAL: Preserve database configuration before reinstalling console
     # This prevents PostgreSQL → SQLite switch during updates
     preserve_database_config

@@ -532,6 +532,10 @@ sudo apt-get install -y build-essential libsqlite3-dev pkg-config libssl-dev git
 151. [x] **docker-compose.yml updated**: Header now points to quick.yml for beginners.
 152. [x] **README.md updated**: Docker section now starts with Quick Start (no build required).
 
+#### ALL-IN-ONE Scripts — PS1 Compatibility & Upgrade Detection (Phase 26) ✅ COMPLETED 2026-03-19
+153. [x] **PS1 `RandomNumberGenerator::Fill` crash (Issue #38)**: `[System.Security.Cryptography.RandomNumberGenerator]::Fill()` is a .NET 6+ static method unavailable in Windows PowerShell 5.1 (.NET Framework 4.x). Changed to `RNGCryptoServiceProvider.GetBytes()` instance method which works on both .NET Framework 4.x and .NET 6+. Fixes API key generation failure → 0 devices in panel on fresh Windows install.
+154. [x] **Rust→Go upgrade detection (Issues #66, #38)**: `Do-Update` (PS1) and `do_update()` (bash) now detect `SERVER_TYPE=rust` (legacy hbbs/hbbr) and warn user that Rust→Go is a major architecture change requiring fresh installation. In auto mode, redirects to `Do-Install`/`do_install` automatically. In interactive mode, prompts user to confirm fresh install (recommended) or continue with partial update. Prevents broken upgrade path from v1.5.0 (Rust) to v2.3.0+ (Go).
+
 ---
 
 ## 🔄 System Statusu v3.0
@@ -801,4 +805,4 @@ All code changes MUST include a security review as part of the implementation pr
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-19 (Docker — GitHub Container Registry & Quick Start — Phase 25) przez GitHub Copilot*
+*Ostatnia aktualizacja: 2026-03-19 (ALL-IN-ONE Scripts — PS1 Compatibility & Upgrade Detection — Phase 26) przez GitHub Copilot*
