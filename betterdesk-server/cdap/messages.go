@@ -21,20 +21,20 @@ type Message struct {
 
 // AuthPayload is sent by client in the "auth" message.
 type AuthPayload struct {
-	Method        string `json:"method"`                   // user_password, api_key, device_token
-	Username      string `json:"username,omitempty"`        // for user_password
-	Password      string `json:"password,omitempty"`        // for user_password
-	TOTPCode      string `json:"totp_code,omitempty"`       // optional 2FA code
-	Key           string `json:"key,omitempty"`             // for api_key
-	Token         string `json:"token,omitempty"`           // for device_token
-	DeviceID      string `json:"device_id,omitempty"`       // requested device ID
+	Method        string `json:"method"`              // user_password, api_key, device_token
+	Username      string `json:"username,omitempty"`  // for user_password
+	Password      string `json:"password,omitempty"`  // for user_password
+	TOTPCode      string `json:"totp_code,omitempty"` // optional 2FA code
+	Key           string `json:"key,omitempty"`       // for api_key
+	Token         string `json:"token,omitempty"`     // for device_token
+	DeviceID      string `json:"device_id,omitempty"` // requested device ID
 	ClientVersion string `json:"client_version,omitempty"`
 }
 
 // AuthResult is sent by server in the "auth_result" message.
 type AuthResult struct {
 	Success      bool   `json:"success"`
-	Token        string `json:"token,omitempty"`          // JWT 24h
+	Token        string `json:"token,omitempty"` // JWT 24h
 	Role         string `json:"role,omitempty"`
 	DeviceID     string `json:"device_id,omitempty"`
 	SessionToken string `json:"session_token,omitempty"`
@@ -51,8 +51,8 @@ type RegisterPayload struct {
 
 // HeartbeatPayload is sent by client in the "heartbeat" message.
 type HeartbeatPayload struct {
-	Metrics      *MetricsData          `json:"metrics,omitempty"`
-	WidgetValues map[string]any        `json:"widget_values,omitempty"`
+	Metrics      *MetricsData   `json:"metrics,omitempty"`
+	WidgetValues map[string]any `json:"widget_values,omitempty"`
 }
 
 // MetricsData holds standard system metrics.

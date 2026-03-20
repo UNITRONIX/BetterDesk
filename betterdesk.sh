@@ -1849,14 +1849,14 @@ setup_services() {
             tls_is_selfsigned=true
         fi
         
-        # Always enable TLS on signal/relay for client encryption
+        # Enable TLS on signal/relay for client encryption.
+        # API port (21114) MUST stay HTTP — RustDesk desktop clients always send
+        # plain HTTP to signal_port-2 and do not support HTTPS for API endpoints
+        # (heartbeat, sysinfo, login, ab). Enabling -tls-api breaks all clients.
         tls_arg="-tls-cert $ssl_dir/betterdesk.crt -tls-key $ssl_dir/betterdesk.key -tls-signal -tls-relay"
         
-        # Only add -tls-api and -force-https when using proper (non-self-signed) certificates
-        # Self-signed certs: API stays HTTP (localhost only), signal/relay use TLS (client-facing)
         if [ "$tls_is_selfsigned" = false ]; then
-            tls_arg="$tls_arg -tls-api -force-https"
-            print_info "TLS: Enabled everywhere including API (proper certificate found)"
+            print_info "TLS: Enabled for signal/relay (proper certificate found, API stays HTTP)"
         else
             print_info "TLS: Enabled for signal/relay (self-signed cert, API stays HTTP)"
         fi
@@ -1873,10 +1873,17 @@ setup_services() {
     print_info "Generated API key for console ↔ server communication"
     
     # Read admin password from install step (for syncing Go server admin)
+    # Escape $ → $$ for systemd (ExecStart interprets $VAR as env var substitution)
     local init_admin_arg=""
     if [ -n "$ADMIN_PASSWORD" ]; then
-        init_admin_arg="-init-admin-pass $ADMIN_PASSWORD"
+        local escaped_admin_pass
+        escaped_admin_pass=$(printf '%s' "$ADMIN_PASSWORD" | sed 's/\$/\$\$/g')
+        init_admin_arg="-init-admin-pass $escaped_admin_pass"
     fi
+    
+    # Escape $ in database URL for systemd (PostgreSQL passwords can contain $)
+    local systemd_db_arg="$db_arg"
+    systemd_db_arg=$(printf '%s' "$systemd_db_arg" | sed 's/\$/\$\$/g')
     
     cat > /etc/systemd/system/betterdesk-server.service << EOF
 [Unit]
@@ -1888,7 +1895,7 @@ After=network.target postgresql.service
 Type=simple
 User=root
 WorkingDirectory=$RUSTDESK_PATH
-ExecStart=$RUSTDESK_PATH/betterdesk-server -mode all -relay-servers $server_ip $db_arg -key-file $RUSTDESK_PATH/id_ed25519 -api-port $API_PORT $init_admin_arg $tls_arg
+ExecStart=$RUSTDESK_PATH/betterdesk-server -mode all -relay-servers $server_ip $systemd_db_arg -key-file $RUSTDESK_PATH/id_ed25519 -api-port $API_PORT $init_admin_arg $tls_arg
 Restart=always
 RestartSec=5
 LimitNOFILE=1000000
@@ -1933,22 +1940,21 @@ EOF
     # Console service (Web Interface) - Node.js only
     if [ "$CONSOLE_TYPE" = "nodejs" ]; then
         # Build database environment variables
+        # Escape $ → $$ for systemd Environment= directives
         local db_env=""
         if [ "$USE_POSTGRESQL" = "true" ] && [ -n "$POSTGRESQL_URI" ]; then
+            local escaped_pg_uri
+            escaped_pg_uri=$(printf '%s' "$POSTGRESQL_URI" | sed 's/\$/\$\$/g')
             db_env="Environment=DB_TYPE=postgres
-Environment=DATABASE_URL=$POSTGRESQL_URI"
+Environment=DATABASE_URL=$escaped_pg_uri"
         else
             db_env="Environment=DB_TYPE=sqlite
 Environment=DB_PATH=$RUSTDESK_PATH/db_v2.sqlite3"
         fi
         
-        # Use HTTPS API URL only when --tls-api is active (proper certs, not self-signed)
-        # Self-signed certs: API stays HTTP on localhost, signal/relay use TLS for clients
+        # API port always stays HTTP (RustDesk clients require plain HTTP)
         local api_scheme="http"
         local tls_env=""
-        if echo "$tls_arg" | grep -q -- "tls-api"; then
-            api_scheme="https"
-        fi
         if [ -n "$tls_arg" ]; then
             # Enable HTTPS on Node.js console (admin panel port 5443 + Client API port 21121)
             # so that RustDesk desktop clients can connect via HTTPS to port 21121.
@@ -3333,8 +3339,8 @@ do_diagnostics() {
         "21116:TCP:betterdesk-serv|betterdesk-server|hbbs:ID Server (TCP)"
         "21116:UDP:betterdesk-serv|betterdesk-server|hbbs:ID Server (UDP)"
         "21117:TCP:betterdesk-serv|betterdesk-server|hbbr:Relay Server"
-        "5000:TCP:node:Web Console"
-        "21121:TCP:node:Client API (WAN)"
+        "5000:TCP:node|MainThread:Web Console"
+        "21121:TCP:node|MainThread:Client API (WAN)"
     )
     
     for entry in "${port_defs[@]}"; do
@@ -3451,10 +3457,10 @@ do_diagnostics() {
     
     local api_port="${API_PORT:-21114}"
     
-    # Detect if Go server API uses TLS (check for --tls-api or --force-https in service args)
+    # Detect if Go server API uses TLS (only if explicit --tls-api in service args)
     local api_use_tls=false
     local api_scheme="http"
-    if systemctl cat betterdesk-server.service 2>/dev/null | grep -qE '\-tls-api|\-force-https'; then
+    if systemctl cat betterdesk-server.service 2>/dev/null | grep -qE '\-tls-api'; then
         api_use_tls=true
         api_scheme="https"
     fi
@@ -3762,22 +3768,14 @@ do_configure_ssl() {
     local api_port
     api_port=$(grep -oP '^HBBS_API_URL=https?://localhost:\K[0-9]+' "$env_file" 2>/dev/null || echo "$API_PORT")
     
-    # Determine if API TLS should be active (proper certs only, not self-signed)
-    local api_tls_active=false
-    if [ "${ssl_choice:-1}" = "1" ] || [ "${ssl_choice:-1}" = "2" ]; then
-        api_tls_active=true
-    fi
+    # API port MUST stay HTTP — RustDesk desktop clients always send plain HTTP
+    # to signal_port-2 (21114). Enabling TLS on API breaks all client communication.
+    # Only signal/relay ports use TLS for end-to-end encryption.
     
     if [ "${ssl_choice:-1}" != "4" ]; then
-        if [ "$api_tls_active" = true ]; then
-            # Proper cert — switch API URLs to HTTPS
-            sed -i "s|^HBBS_API_URL=http://localhost|HBBS_API_URL=https://localhost|" "$env_file"
-            sed -i "s|^BETTERDESK_API_URL=http://localhost|BETTERDESK_API_URL=https://localhost|" "$env_file"
-        else
-            # Self-signed — ensure API URLs stay HTTP
-            sed -i "s|^HBBS_API_URL=https://localhost|HBBS_API_URL=http://localhost|" "$env_file"
-            sed -i "s|^BETTERDESK_API_URL=https://localhost|BETTERDESK_API_URL=http://localhost|" "$env_file"
-        fi
+        # Ensure API URLs always stay HTTP regardless of cert type
+        sed -i "s|^HBBS_API_URL=https://localhost|HBBS_API_URL=http://localhost|" "$env_file"
+        sed -i "s|^BETTERDESK_API_URL=https://localhost|BETTERDESK_API_URL=http://localhost|" "$env_file"
         
         # For self-signed certs, Node.js needs NODE_EXTRA_CA_CERTS to trust the CA
         local ssl_cert_path
@@ -3794,9 +3792,9 @@ do_configure_ssl() {
         # Also update systemd service environment if it exists
         local svc_file="/etc/systemd/system/betterdesk-console.service"
         if [ -f "$svc_file" ]; then
-            if [ "$api_tls_active" = true ]; then
-                sed -i "s|Environment=HBBS_API_URL=http://localhost|Environment=HBBS_API_URL=https://localhost|" "$svc_file"
-                sed -i "s|Environment=BETTERDESK_API_URL=http://localhost|Environment=BETTERDESK_API_URL=https://localhost|" "$svc_file"
+            # Ensure API URLs stay HTTP in systemd service too
+            sed -i "s|Environment=HBBS_API_URL=https://localhost|Environment=HBBS_API_URL=http://localhost|" "$svc_file"
+            sed -i "s|Environment=BETTERDESK_API_URL=https://localhost|Environment=BETTERDESK_API_URL=http://localhost|" "$svc_file"
             else
                 sed -i "s|Environment=HBBS_API_URL=https://localhost|Environment=HBBS_API_URL=http://localhost|" "$svc_file"
                 sed -i "s|Environment=BETTERDESK_API_URL=https://localhost|Environment=BETTERDESK_API_URL=http://localhost|" "$svc_file"
@@ -3819,26 +3817,16 @@ do_configure_ssl() {
             systemctl daemon-reload 2>/dev/null || true
         fi
         
-        # Update Go server service to add/remove --tls-api flag
+        # Update Go server service — always remove -tls-api if present
+        # API port must stay HTTP for RustDesk client compatibility
         local go_svc_file="/etc/systemd/system/betterdesk-server.service"
         if [ -f "$go_svc_file" ]; then
-            if [ "$api_tls_active" = true ]; then
-                # Add -tls-api if not already present
-                if ! grep -q '\-tls-api' "$go_svc_file"; then
-                    sed -i 's/-tls-relay/-tls-relay -tls-api/' "$go_svc_file"
-                fi
-            else
-                # Remove -tls-api if present
-                sed -i 's/ -tls-api//' "$go_svc_file"
-            fi
+            sed -i 's/ -tls-api//' "$go_svc_file"
+            sed -i 's/ -force-https//' "$go_svc_file"
             systemctl daemon-reload 2>/dev/null || true
         fi
         
-        if [ "$api_tls_active" = true ]; then
-            print_info "API URLs updated to HTTPS in .env and systemd service"
-        else
-            print_info "Signal/relay TLS enabled, API stays HTTP (self-signed cert)"
-        fi
+        print_info "Signal/relay TLS enabled, API stays HTTP (RustDesk client compatibility)"
     else
         # SSL disabled — revert API URLs to HTTP
         sed -i "s|^HBBS_API_URL=https://localhost|HBBS_API_URL=http://localhost|" "$env_file"
@@ -3858,10 +3846,11 @@ do_configure_ssl() {
             systemctl daemon-reload 2>/dev/null || true
         fi
         
-        # Remove --tls-api from Go server service
+        # Remove --tls-api and --force-https from Go server service
         local go_svc_file="/etc/systemd/system/betterdesk-server.service"
         if [ -f "$go_svc_file" ]; then
             sed -i 's/ -tls-api//' "$go_svc_file"
+            sed -i 's/ -force-https//' "$go_svc_file"
             systemctl daemon-reload 2>/dev/null || true
         fi
         

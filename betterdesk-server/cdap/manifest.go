@@ -8,19 +8,19 @@ import (
 
 // Manifest describes a CDAP device's capabilities, identity, and widget definitions.
 type Manifest struct {
-	ManifestVersion string           `json:"manifest_version"` // "1.0"
-	Device          ManifestDevice   `json:"device"`
-	Bridge          ManifestBridge   `json:"bridge,omitempty"`
-	Capabilities    []string         `json:"capabilities"`        // telemetry, commands, alerts, logs, ...
-	HeartbeatInterval int            `json:"heartbeat_interval"`  // seconds (default 15, max 300)
-	Widgets         []Widget         `json:"widgets,omitempty"`
-	Alerts          []AlertDef       `json:"alerts,omitempty"`
+	ManifestVersion   string         `json:"manifest_version"` // "1.0"
+	Device            ManifestDevice `json:"device"`
+	Bridge            ManifestBridge `json:"bridge,omitempty"`
+	Capabilities      []string       `json:"capabilities"`       // telemetry, commands, alerts, logs, ...
+	HeartbeatInterval int            `json:"heartbeat_interval"` // seconds (default 15, max 300)
+	Widgets           []Widget       `json:"widgets,omitempty"`
+	Alerts            []AlertDef     `json:"alerts,omitempty"`
 }
 
 // ManifestDevice describes the physical/virtual device identity.
 type ManifestDevice struct {
 	Name        string   `json:"name"`
-	Type        string   `json:"type"`        // scada, iot, os_agent, network, camera, desktop, custom
+	Type        string   `json:"type"` // scada, iot, os_agent, network, camera, desktop, custom
 	Vendor      string   `json:"vendor,omitempty"`
 	Model       string   `json:"model,omitempty"`
 	Firmware    string   `json:"firmware,omitempty"`
@@ -42,11 +42,11 @@ type ManifestBridge struct {
 
 // Widget represents a single control/display element on the device.
 type Widget struct {
-	Type     string `json:"type"`               // toggle, gauge, button, led, chart, select, slider, text, table, terminal, desktop, video_stream, file_browser
+	Type     string `json:"type"` // toggle, gauge, button, led, chart, select, slider, text, table, terminal, desktop, video_stream, file_browser
 	ID       string `json:"id"`
 	Label    string `json:"label"`
-	Group    string `json:"group,omitempty"`     // collapsible group name
-	Value    any    `json:"value,omitempty"`     // initial value
+	Group    string `json:"group,omitempty"` // collapsible group name
+	Value    any    `json:"value,omitempty"` // initial value
 	Readonly bool   `json:"readonly,omitempty"`
 
 	// Gauge/Slider fields
@@ -105,8 +105,8 @@ type TableColumn struct {
 type AlertDef struct {
 	ID        string `json:"id"`
 	Label     string `json:"label"`
-	Severity  string `json:"severity"`   // critical, warning, info
-	Condition string `json:"condition"`  // expression string
+	Severity  string `json:"severity"`  // critical, warning, info
+	Condition string `json:"condition"` // expression string
 	Message   string `json:"message"`
 }
 

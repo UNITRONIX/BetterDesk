@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2026-03-20
+
+### 🔒 Security & Installer Fixes (Phase 31)
+
+Critical fixes for issues #68, #70, #71 — API TLS breaking client communication, password `$` escaping in systemd, and port diagnostic false positives.
+
+#### API TLS Fix (Issues #70, #71)
+- **Root cause**: Fresh install with proper SSL certificates added `-tls-api -force-https` to Go server, making API port 21114 HTTPS-only. RustDesk clients always send plain HTTP → `HTTP 400` on every request → 0 devices.
+- **betterdesk.sh / betterdesk.ps1**: Removed `-tls-api -force-https` from Go server args for ALL certificate types. Signal/relay TLS unchanged.
+- **config.go**: `--force-https` no longer implies API TLS. Only explicit `--tls-api` enables HTTPS on API port.
+- **SSL config menu**: Never adds `-tls-api`. Always removes `-tls-api` and `-force-https` from existing service.
+- **API URLs**: Always `http://localhost:21114/api` in `.env` and systemd — regardless of certificate type.
+
+#### Password `$` Escaping (Issue #68)
+- **Root cause**: systemd interprets `$` as variable substitution in `ExecStart=` and `Environment=` directives. Passwords or PostgreSQL URLs containing `$` get silently corrupted.
+- **betterdesk.sh**: Added `$` → `$$` escaping for admin password and PostgreSQL URL before writing to `.service` files.
+- **Note**: Auto-generated passwords (alphanumeric only) were never affected. Fix targets user-set passwords.
+
+#### Port Diagnostic False Positive
+- **Root cause**: On some Linux systems (Ubuntu 24.04+), `ss -tlnp` reports Node.js as `MainThread` instead of `node`.
+- **betterdesk.sh**: Added `MainThread` to expected process patterns for ports 5000 and 21121.
+
 ## [2.4.1] - 2026-03-20
 
 ### 🎨 Devices Page UI Redesign

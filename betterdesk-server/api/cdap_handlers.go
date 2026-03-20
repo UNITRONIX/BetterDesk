@@ -182,17 +182,17 @@ func (s *Server) handleCDAPListDevices(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCDAPStatus(w http.ResponseWriter, r *http.Request) {
 	if s.cdapGw == nil {
 		writeJSON(w, http.StatusOK, map[string]any{
-			"enabled":    false,
-			"connected":  0,
-			"port":       0,
+			"enabled":   false,
+			"connected": 0,
+			"port":      0,
 		})
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"enabled":    true,
-		"connected":  s.cdapGw.ActiveConnections(),
-		"port":       s.cfg.CDAPPort,
-		"tls":        s.cfg.CDAPTLSEnabled(),
+		"enabled":   true,
+		"connected": s.cdapGw.ActiveConnections(),
+		"port":      s.cfg.CDAPPort,
+		"tls":       s.cfg.CDAPTLSEnabled(),
 	})
 }

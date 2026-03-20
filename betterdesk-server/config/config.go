@@ -339,10 +339,12 @@ func (c *Config) RelayTLSEnabled() bool {
 }
 
 // APITLSEnabled returns true if TLS should be used for the HTTP API server.
-// Requires --tls-api flag (or --force-https) and valid cert/key.
-// Unlike signal/relay, API TLS is opt-in to avoid breaking localhost communication.
+// Requires explicit --tls-api flag and valid cert/key.
+// NOTE: --force-https does NOT imply API TLS because RustDesk desktop clients
+// always send plain HTTP to signal_port-2 (the API port). Enabling TLS on the
+// API would return HTTP 400 to every client and prevent device registration.
 func (c *Config) APITLSEnabled() bool {
-	return (c.TLSApi || c.ForceHTTPS) && c.HasTLSCert()
+	return c.TLSApi && c.HasTLSCert()
 }
 
 // CDAPTLSEnabled returns true if TLS should be used for the CDAP WebSocket gateway.

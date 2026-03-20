@@ -1614,15 +1614,16 @@ function Setup-Services {
             $tlsIsSelfSigned = $true
         }
         
-        # Always enable TLS on signal/relay for client encryption
+        # Enable TLS on signal/relay for client encryption.
+        # API port (21114) MUST stay HTTP — RustDesk desktop clients always send
+        # plain HTTP to signal_port-2 and do not support HTTPS for API endpoints.
         $serverArgs += " -tls-cert `"$certPath`" -tls-key `"$keyPath`" -tls-signal -tls-relay"
         
         # Only add -tls-api and -force-https for proper (non-self-signed) certificates
-        # Self-signed certs: API stays HTTP (localhost only), signal/relay use TLS (client-facing)
+        # DISABLED: RustDesk clients always send HTTP to API port. API stays HTTP for all cert types.
         if (-not $tlsIsSelfSigned) {
-            $serverArgs += " -tls-api -force-https"
-            $apiScheme = "https"
-            Print-Info "TLS: Enabled everywhere including API (proper certificate)"
+            $apiScheme = "http"
+            Print-Info "TLS: Enabled for signal/relay (proper certificate, API stays HTTP)"
         } else {
             $apiScheme = "http"
             Print-Info "TLS: Enabled for signal/relay (self-signed cert, API stays HTTP)"
@@ -1674,8 +1675,9 @@ function Setup-Services {
         } else {
             $envExtra += "DB_TYPE=sqlite"
         }
-        # Enable HTTPS on Node.js console when TLS certs are available
-        if ($apiScheme -eq "https" -and (Test-Path $certPath) -and (Test-Path $keyPath)) {
+        # Enable HTTPS on Node.js console when TLS certs are available (for browser access)
+        # This is separate from Go API TLS — the web panel can serve HTTPS for browsers
+        if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
             $envExtra += "HTTPS_ENABLED=true"
             $envExtra += "SSL_CERT_PATH=$certPath"
             $envExtra += "SSL_KEY_PATH=$keyPath"
@@ -1759,8 +1761,7 @@ function Setup-ScheduledTasks {
         
         $serverArgs += " -tls-cert `"$certPath`" -tls-key `"$keyPath`" -tls-signal -tls-relay"
         if (-not $tlsIsSelfSigned) {
-            $serverArgs += " -tls-api -force-https"
-            Print-Info "TLS: Enabled everywhere including API"
+            Print-Info "TLS: Enabled for signal/relay (proper certificate, API stays HTTP)"
         } else {
             Print-Info "TLS: Enabled for signal/relay (self-signed, API stays HTTP)"
         }
@@ -3801,21 +3802,14 @@ function Do-ConfigureSSL {
     }
     
     # ── Update API URLs in .env when SSL is enabled/disabled ──
-    # API TLS (--tls-api) is only enabled for proper certs (custom), not self-signed.
-    # Self-signed certs: API stays HTTP on localhost, only signal/relay use TLS.
+    # API port MUST stay HTTP — RustDesk desktop clients always send plain HTTP
+    # to signal_port-2 (21114). Enabling TLS on API breaks all client communication.
     $envContent = Get-Content $envFile -Raw
-    $apiTlsActive = ($sslChoice -eq "1") # Only proper certs get API TLS
     
     if ($sslChoice -ne "3") {
-        if ($apiTlsActive) {
-            # Proper cert — switch API URLs to HTTPS  
-            $envContent = $envContent -replace 'HBBS_API_URL=http://localhost', 'HBBS_API_URL=https://localhost'
-            $envContent = $envContent -replace 'BETTERDESK_API_URL=http://localhost', 'BETTERDESK_API_URL=https://localhost'
-        } else {
-            # Self-signed — ensure API URLs stay HTTP
-            $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-            $envContent = $envContent -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
-        }
+        # Ensure API URLs always stay HTTP regardless of cert type
+        $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
+        $envContent = $envContent -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
         
         # For self-signed certs, Node.js needs NODE_EXTRA_CA_CERTS to trust the CA
         $sslCertValue = [regex]::Match($envContent, 'SSL_CERT_PATH=(.+)').Groups[1].Value.Trim()
@@ -3835,38 +3829,26 @@ function Do-ConfigureSSL {
             try {
                 $currentEnv = & nssm get $svcName AppEnvironmentExtra 2>$null
                 if ($currentEnv) {
-                    if ($apiTlsActive) {
-                        $currentEnv = $currentEnv -replace 'HBBS_API_URL=http://localhost', 'HBBS_API_URL=https://localhost'
-                        $currentEnv = $currentEnv -replace 'BETTERDESK_API_URL=http://localhost', 'BETTERDESK_API_URL=https://localhost'
-                    } else {
-                        $currentEnv = $currentEnv -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-                        $currentEnv = $currentEnv -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
-                    }
+                    # Ensure API URLs stay HTTP in NSSM service
+                    $currentEnv = $currentEnv -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
+                    $currentEnv = $currentEnv -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
                     & nssm set $svcName AppEnvironmentExtra $currentEnv 2>$null
                 }
             } catch { }
             
-            # Update Go server service to add/remove -tls-api flag
+            # Always remove -tls-api from Go server service — API must stay HTTP
             $goSvcName = $script:SERVER_SERVICE
             try {
                 $goArgs = & nssm get $goSvcName AppParameters 2>$null
                 if ($goArgs) {
-                    if ($apiTlsActive -and $goArgs -notmatch '-tls-api') {
-                        $goArgs = $goArgs -replace '-tls-relay', '-tls-relay -tls-api'
-                        & nssm set $goSvcName AppParameters $goArgs 2>$null
-                    } elseif (-not $apiTlsActive) {
-                        $goArgs = $goArgs -replace ' -tls-api', ''
-                        & nssm set $goSvcName AppParameters $goArgs 2>$null
-                    }
+                    $goArgs = $goArgs -replace ' -tls-api', ''
+                    $goArgs = $goArgs -replace ' -force-https', ''
+                    & nssm set $goSvcName AppParameters $goArgs 2>$null
                 }
             } catch { }
         }
         
-        if ($apiTlsActive) {
-            Print-Info "API URLs updated to HTTPS"
-        } else {
-            Print-Info "Signal/relay TLS enabled, API stays HTTP (self-signed cert)"
-        }
+        Print-Info "Signal/relay TLS enabled, API stays HTTP (RustDesk client compatibility)"
     } else {
         # SSL disabled — revert API URLs to HTTP
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'

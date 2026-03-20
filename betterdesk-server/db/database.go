@@ -26,7 +26,7 @@ type Peer struct {
 	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
 	Note         string     `json:"note,omitempty"`
 	Tags         string     `json:"tags,omitempty"`
-	DeviceType   string     `json:"device_type,omitempty"`   // CDAP: desktop, mobile, headless, kiosk, etc.
+	DeviceType   string     `json:"device_type,omitempty"`    // CDAP: desktop, mobile, headless, kiosk, etc.
 	LinkedPeerID string     `json:"linked_peer_id,omitempty"` // CDAP: paired device (e.g., mobile→desktop)
 	HeartbeatSeq int64      `json:"-"`                        // internal heartbeat counter
 }

@@ -571,6 +571,11 @@ sudo apt-get install -y build-essential libsqlite3-dev pkg-config libssl-dev git
 180. [x] **devices.js updates**: `renderDevices()` outputs new HTML template with `.device-status-dot`, `.kebab-wrapper`/`.kebab-btn`/`.kebab-menu`. `renderFolders()` changed from `.folder-item` divs to `.folder-chip` buttons with `.chip-action` edit/delete. `attachRowEventListeners()` handles kebab toggle + menu item actions. Added `initKebabGlobalClose()` + `closeAllKebabMenus()`. Updated all selectors: `.folder-item` → `.folder-chip` in `selectFolder()`, `updateFolderCounts()`, `initFolders()`, `attachFolderDropEvents()`. Double-click guard updated from `.action-btn`/`.drag-handle` to `.kebab-wrapper`.
 181. [x] **Deployed & verified**: All 3 files deployed to production server. Console returns 302 (service running). Responsive layout active.
 
+#### Security & Installer Fixes (Phase 31) ✅ COMPLETED 2026-03-20
+182. [x] **API TLS breaking clients (Issues #70, #71)**: Fresh install with proper SSL certs added `-tls-api -force-https` → API port 21114 HTTPS-only → RustDesk clients (HTTP only) get 400 → 0 devices. Fix: removed `-tls-api -force-https` from betterdesk.sh + betterdesk.ps1 for ALL cert types. `config.go`: `ForceHTTPS` no longer implies `APITLSEnabled()`. SSL config menu: always removes `-tls-api`/`-force-https`. API URLs always HTTP.
+183. [x] **Password `$` escaping in systemd (Issue #68)**: systemd interprets `$` as variable substitution in ExecStart and Environment directives. Admin password and PostgreSQL URL now escaped `$` → `$$` before writing to `.service` files. Auto-generated passwords (alphanumeric) unaffected.
+184. [x] **Port CONFLICT false positive**: `ss -tlnp` shows `MainThread` instead of `node` on some Linux systems (Ubuntu 24.04+). Added `MainThread` to expected process patterns for ports 5000 and 21121.
+
 ---
 
 ## 🔄 System Statusu v3.0
@@ -840,4 +845,4 @@ All code changes MUST include a security review as part of the implementation pr
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-20 (Devices Page UI Redesign — Phase 30) przez GitHub Copilot*
+*Ostatnia aktualizacja: 2026-03-20 (Security & Installer Fixes — Phase 31) przez GitHub Copilot*
