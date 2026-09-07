@@ -362,7 +362,11 @@
             } else {
                 data = await api('PUT', `/api/generator/bundles/${state.currentId}`, payload);
             }
-            notify.success(t('generator.saved', 'Saved'));
+            if (data && data.warning) {
+                notify.warning(data.warning);
+            } else {
+                notify.success(t('generator.saved', 'Saved'));
+            }
             showValidation([]);
             await loadBundles();
             await openBundle(data.data.bundle.bundle_id);

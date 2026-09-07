@@ -313,7 +313,7 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
             });
         } catch (e) {
             console.error('[generator] enqueue builds failed:', e.message);
-            return res.status(400).json({
+            return res.json({
                 success: true,
                 warning: e.message,
                 data: { bundle: serializeBundle(created) },
