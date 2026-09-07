@@ -115,6 +115,9 @@ async function finalizeSupportBranding(input) {
     branding.company_name = String(branding.company_name || branding.app_name).trim();
     branding.product_name = branding.app_name;
     branding.disable_settings = branding.disable_settings !== false;
+    branding.sku = 'betterdesk-support';
+    branding.generator_kind = 'betterdesk-support';
+    branding.generator_version = 2;
     branding.server = {
         address: omitPort ? `${scheme}://${host}` : `${scheme}://${host}:${apiPort}`,
         api_url: apiServer,
@@ -212,11 +215,22 @@ router.post('/api/generator/module/install', requireAuth, requireAdmin, async (r
 //  Bundle management API (admin only)
 // =========================================================================
 
+function isBetterDeskSupportBundle(row) {
+    const branding = parseBranding(row?.branding);
+    return branding.sku === 'betterdesk-support'
+        || branding.generator_kind === 'betterdesk-support'
+        || Number(branding.generator_version) >= 2;
+}
+
 router.get('/api/generator/bundles', requireAuth, requireAdmin, async (req, res) => {
     try {
         const includeRevoked = req.query.includeRevoked === '1';
+        const includeLegacy = req.query.includeLegacy === '1';
         const rows = await db.listAgentBundles({ includeRevoked });
-        res.json({ success: true, data: { bundles: rows.map(serializeBundle) } });
+        const filtered = includeLegacy
+            ? rows
+            : (rows || []).filter(isBetterDeskSupportBundle);
+        res.json({ success: true, data: { bundles: filtered.map(serializeBundle) } });
     } catch (err) {
         console.error('[generator] list bundles error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
@@ -293,11 +307,18 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
             productType,
         });
         const platformsFilter = Array.isArray(req.body.platforms) ? req.body.platforms : null;
-        resolveBuildWorker().enqueueBuildsForHash(brandingHash, {
-            platforms: platformsFilter,
-        }).catch((e) => {
+        try {
+            await resolveBuildWorker().enqueueBuildsForHash(brandingHash, {
+                platforms: platformsFilter,
+            });
+        } catch (e) {
             console.error('[generator] enqueue builds failed:', e.message);
-        });
+            return res.status(400).json({
+                success: true,
+                warning: e.message,
+                data: { bundle: serializeBundle(created) },
+            });
+        }
         res.json({ success: true, data: { bundle: serializeBundle(created) } });
     } catch (err) {
         console.error('[generator] create bundle error:', err);

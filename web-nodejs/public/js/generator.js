@@ -375,7 +375,12 @@
 
     async function loadBundles() {
         const data = await api('GET', '/api/generator/bundles?includeRevoked=1');
-        state.bundles = (data.data && data.data.bundles) || [];
+        // Only BetterDesk Support (v2) profiles — hide legacy CDAP Support Agent rows
+        const all = (data.data && data.data.bundles) || [];
+        state.bundles = all.filter((b) => {
+            const br = b.branding || {};
+            return br.sku === 'betterdesk-support' || br.generator_kind === 'betterdesk-support';
+        });
         renderBundleList();
     }
 
@@ -432,6 +437,9 @@
                 : t('generator.module_seed_missing', 'Signing seed missing (plain JSON Phase A)'),
             status.error
                 ? t('generator.module_error_prefix', 'Error') + ': ' + status.error
+                : null,
+            status.warning && !status.binariesPresent
+                ? t('generator.module_stub_warning', 'Stub templates (no desktop binaries) — rebuilds will fail until a full Client release is installed')
                 : null,
         ].filter(Boolean);
         el.textContent = parts.join(' · ');

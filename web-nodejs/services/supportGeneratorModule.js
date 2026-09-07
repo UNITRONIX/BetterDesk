@@ -97,23 +97,59 @@ function templatesExist() {
     }
 }
 
+/** True when at least one platform tree contains a BetterDesk desktop binary. */
+function templatesHaveBinaries() {
+    const root = templatesDir();
+    if (!fs.existsSync(root)) return false;
+    const names = [
+        'betterdesk.exe', 'rustdesk.exe',
+        'betterdesk', 'rustdesk',
+    ];
+    const stack = [root];
+    while (stack.length) {
+        const dir = stack.pop();
+        let entries;
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { continue; }
+        for (const e of entries) {
+            const full = path.join(dir, e.name);
+            if (e.isDirectory()) {
+                if (e.name.endsWith('.app')) return true;
+                stack.push(full);
+            } else if (names.includes(e.name.toLowerCase()) || names.includes(e.name)) {
+                try {
+                    if (fs.statSync(full).size > 1024 * 100) return true;
+                } catch (_) { /* ignore */ }
+            }
+        }
+    }
+    return false;
+}
+
 function isReady(state) {
     const s = state || (fs.existsSync(statePath())
         ? JSON.parse(fs.readFileSync(statePath(), 'utf8'))
         : defaultState());
+    // Module can be "installed" with stub templates, but builds require binaries.
     return !!(s.termsAccepted && s.status === 'ready' && templatesExist());
 }
 
 async function getStatus() {
     const state = await readState();
+    const binariesPresent = templatesHaveBinaries();
     return {
         ...state,
         moduleDir: moduleDir(),
         templatesDir: templatesDir(),
         templatesPresent: templatesExist(),
+        binariesPresent,
+        buildsPossible: binariesPresent,
         signingSeedPresent: fs.existsSync(signingSeedPath()),
         ready: isReady(state),
         clientRepo: clientRepo(),
+        warning: binariesPresent
+            ? null
+            : 'Templates are installed but contain no BetterDesk desktop binaries (stub). '
+              + 'Publish a full Client release (betterdesk-desktop-release.yml) and reinstall.',
     };
 }
 
@@ -412,6 +448,7 @@ module.exports = {
     installFromGitHub,
     isReady,
     templatesExist,
+    templatesHaveBinaries,
     resolveTemplateDir,
     readManifest,
     getSigningSeedBase64,

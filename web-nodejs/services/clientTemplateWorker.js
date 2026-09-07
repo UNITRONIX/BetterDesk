@@ -73,6 +73,12 @@ async function enqueueBuildsForHash(brandingHash, { force = false, platforms: on
     if (!supportModule.isReady()) {
         throw new Error('support_generator_module_not_ready');
     }
+    if (!supportModule.templatesHaveBinaries()) {
+        throw new Error(
+            'support_generator_templates_incomplete: installed templates have no BetterDesk desktop binaries. '
+            + 'Publish a full Client release with generator-templates, then reinstall the module.'
+        );
+    }
     const platforms = _filterPlatforms(onlyPlatforms);
     for (const p of platforms) {
         const existing = await db.getAgentBundleBuild({
@@ -401,6 +407,32 @@ function _sha256OfFile(filePath) {
     });
 }
 
+function _templateHasBinary(stageDir, platform) {
+    const p = String(platform || '').toLowerCase();
+    if (p === 'macos') {
+        if (_findDirEnding(stageDir, '.app')) return true;
+    }
+    const names = new Set(['betterdesk.exe', 'rustdesk.exe', 'betterdesk', 'rustdesk']);
+    const stack = [stageDir];
+    while (stack.length) {
+        const dir = stack.pop();
+        let entries;
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { continue; }
+        for (const e of entries) {
+            const full = path.join(dir, e.name);
+            if (e.isDirectory()) {
+                if (e.name.endsWith('.app')) return true;
+                stack.push(full);
+            } else if (names.has(e.name) || names.has(e.name.toLowerCase())) {
+                try {
+                    if (fs.statSync(full).size > 100 * 1024) return true;
+                } catch (_) { /* ignore */ }
+            }
+        }
+    }
+    return false;
+}
+
 async function _runOne(buildRow) {
     const key = `${buildRow.platform}/${buildRow.arch}/${buildRow.format}`;
     const startTs = Date.now();
@@ -418,8 +450,22 @@ async function _runOne(buildRow) {
         const stageDir = path.join(workDir, `betterdesk-support-${buildRow.platform}-${buildRow.arch}`);
         await _copyDir(templateDir, stageDir);
 
+        if (!_templateHasBinary(stageDir, buildRow.platform)) {
+            throw new Error(
+                `template_missing_binary:${key} — installed templates are a stub without betterdesk.exe / binary. `
+                + 'Publish a full BetterDesk-Client release (workflow betterdesk-desktop-release.yml) '
+                + 'with generator-templates containing desktop binaries, then reinstall the module.'
+            );
+        }
+
         const branding = _parseBranding(buildRow._bundle?.branding);
         const { content, signed } = await _buildCustomTxtContent(branding);
+        if (!signed) {
+            console.warn(
+                '[clientTemplateWorker] custom.txt is unsigned (Phase A). '
+                + 'Set BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED for signed bake-in.'
+            );
+        }
         const injectDir = _findCustomTxtTarget(stageDir, buildRow.platform);
         await fsp.mkdir(injectDir, { recursive: true });
         await fsp.writeFile(path.join(injectDir, 'custom.txt'), content, 'utf8');

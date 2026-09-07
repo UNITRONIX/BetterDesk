@@ -808,6 +808,7 @@
         "module_seed_missing": "Brak seeda podpisującego (plain JSON Phase A)",
         "module_error_prefix": "Błąd",
         "module_no_release": "Brak release GitHub ze szablonami generatora. Najpierw opublikuj assety BetterDesk-Client.",
+        "module_stub_warning": "Szablony stub (bez binarek desktop) — buildy będą kończyć się błędem, dopóki nie zainstalujesz pełnego release Client",
         "bundle_name": "Nazwa pakietu",
         "bundle_name_hint": "Etykieta wewnętrzna — nie jest pokazywana użytkownikom końcowym.",
         "short_link": "Krótki link do pobrania",

@@ -111,7 +111,7 @@
                                 <div class="download-link-row">
                                     <span class="input-prefix">/d/</span>
                                     <input type="text" id="gen-slug" class="form-input" maxlength="32"
-                                           pattern="[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?"
+                                           pattern="[a-z0-9]([-a-z0-9]{0,30}[a-z0-9])?"
                                            autocomplete="off" spellcheck="false">
                                 </div>
                                 <p class="form-hint">${_('generator.short_link_hint')}</p>
@@ -177,7 +177,7 @@
 
                             <div id="gen-builds-section" class="builds-section">
                                 <div class="builds-header">
-                                    <h3 class="section-title">${_('generator.builds')}</h3>
+                                    <h3 class="section-title">${_('generator.builds_title')}</h3>
                                     <span id="gen-builds-summary" class="text-muted"></span>
                                 </div>
                                 <div id="gen-builds-list" class="builds-list"></div>
