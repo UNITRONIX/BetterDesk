@@ -121,7 +121,18 @@ async function acceptTerms() {
     return writeState({ termsAccepted: true, error: null });
 }
 
-function _httpGetBuffer(url, redirects = 0) {
+function _githubHeaders(accept) {
+    const headers = {
+        'User-Agent': 'BetterDesk-Console-Generator',
+        Accept: accept || 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+    };
+    const token = String(process.env.BETTERDESK_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '').trim();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+}
+
+function _httpGetBuffer(url, redirects = 0, accept) {
     return new Promise((resolve, reject) => {
         if (redirects > 8) {
             reject(new Error('too many redirects'));
@@ -129,20 +140,19 @@ function _httpGetBuffer(url, redirects = 0) {
         }
         const lib = String(url).startsWith('https:') ? https : http;
         const req = lib.get(url, {
-            headers: {
-                'User-Agent': 'BetterDesk-Console-Generator',
-                Accept: 'application/octet-stream, application/json',
-            },
+            headers: _githubHeaders(accept || 'application/octet-stream, application/json'),
             timeout: 120000,
         }, (res) => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                 res.resume();
-                _httpGetBuffer(res.headers.location, redirects + 1).then(resolve, reject);
+                _httpGetBuffer(res.headers.location, redirects + 1, accept).then(resolve, reject);
                 return;
             }
             if (res.statusCode !== 200) {
                 res.resume();
-                reject(new Error(`HTTP ${res.statusCode} for ${url}`));
+                const err = new Error(`HTTP ${res.statusCode} for ${url}`);
+                err.statusCode = res.statusCode;
+                reject(err);
                 return;
             }
             const chunks = [];
@@ -159,8 +169,71 @@ function _httpGetBuffer(url, redirects = 0) {
 }
 
 async function _httpGetJson(url) {
-    const buf = await _httpGetBuffer(url);
+    const buf = await _httpGetBuffer(url, 0, 'application/vnd.github+json');
     return JSON.parse(buf.toString('utf8'));
+}
+
+/**
+ * Resolve a GitHub release that carries generator-templates-*.tar.gz.
+ * Prefers /releases/latest, then env tag, then newest release with the asset.
+ */
+async function _resolveRelease(targetRepo, preferredTag) {
+    const apiBase = `https://api.github.com/repos/${targetRepo}/releases`;
+    const envTag = String(
+        preferredTag
+        || process.env.BETTERDESK_CLIENT_RELEASE_TAG
+        || ''
+    ).trim();
+
+    async function loadTag(tag) {
+        return _httpGetJson(`${apiBase}/tags/${encodeURIComponent(tag)}`);
+    }
+
+    if (envTag) {
+        try {
+            const release = await loadTag(envTag);
+            if (_pickTemplateAsset(release.assets || [])) return release;
+            const err = new Error(
+                `Release ${envTag} on ${targetRepo} has no generator-templates-*.tar.gz asset`
+            );
+            err.code = 'no_template_asset';
+            throw err;
+        } catch (err) {
+            if (err.code === 'no_template_asset') throw err;
+            // fall through to latest / list
+        }
+    }
+
+    try {
+        const latest = await _httpGetJson(`${apiBase}/latest`);
+        if (_pickTemplateAsset(latest.assets || [])) return latest;
+    } catch (err) {
+        if (err.statusCode && err.statusCode !== 404) throw err;
+    }
+
+    // /latest is missing or has no asset — scan recent releases (incl. prereleases).
+    const list = await _httpGetJson(`${apiBase}?per_page=30`);
+    if (!Array.isArray(list) || list.length === 0) {
+        const err = new Error(
+            `No GitHub releases found for ${targetRepo}. `
+            + 'Publish a release with generator-templates-*.tar.gz '
+            + '(workflow betterdesk-desktop-release.yml, tag desktop/*), '
+            + 'or set BETTERDESK_CLIENT_RELEASE_TAG.'
+        );
+        err.code = 'no_release';
+        throw err;
+    }
+
+    for (const release of list) {
+        if (_pickTemplateAsset(release.assets || [])) return release;
+    }
+
+    const err = new Error(
+        `No generator-templates-*.tar.gz found in the last ${list.length} releases of ${targetRepo}. `
+        + 'Run Client CI workflow betterdesk-desktop-release.yml or attach the archive to a release.'
+    );
+    err.code = 'no_template_asset';
+    throw err;
 }
 
 function _runTar(args, cwd) {
@@ -234,18 +307,15 @@ async function installFromGitHub({ repo, tag } = {}) {
     try {
         const targetRepo = String(repo || clientRepo()).trim() || clientRepo();
         const releaseTag = String(tag || '').trim();
-        const apiBase = `https://api.github.com/repos/${targetRepo}/releases`;
-        const releaseUrl = releaseTag
-            ? `${apiBase}/tags/${encodeURIComponent(releaseTag)}`
-            : `${apiBase}/latest`;
-
-        const release = await _httpGetJson(releaseUrl);
+        const release = await _resolveRelease(targetRepo, releaseTag);
         const asset = _pickTemplateAsset(release.assets || []);
         if (!asset || !asset.browser_download_url) {
-            throw new Error(
+            const err = new Error(
                 `No generator-templates-*.tar.gz asset found on ${targetRepo}`
-                + (releaseTag ? ` tag ${releaseTag}` : ' latest release')
+                + (release.tag_name ? ` (${release.tag_name})` : '')
             );
+            err.code = 'no_template_asset';
+            throw err;
         }
 
         const tmpDir = path.join(moduleDir(), '.tmp-install');

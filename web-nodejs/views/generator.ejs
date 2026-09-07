@@ -18,35 +18,29 @@
             <div class="card-header">
                 <h2 class="card-title">
                     <span class="material-icons">extension</span>
-                    BetterDesk Support module
+                    ${_('generator.module_title')}
                 </h2>
             </div>
             <div class="card-body">
-                <p class="gen-module-intro">
-                    BetterDesk Support is an <strong>incoming-only</strong> desktop client (AGPL,
-                    based on BetterDesk-Client). The Generator downloads portable templates from
-                    GitHub Releases, then injects a server-locked <code>custom.txt</code> for each
-                    platform. Appearance is loaded at runtime from the Client Branding API — not
-                    baked into installers.
-                </p>
+                <p class="gen-module-intro">${_('generator.module_intro')}</p>
                 <ul class="gen-module-bullets">
-                    <li>Incoming connections only (no outbound remote to other devices)</li>
-                    <li>Templates: Windows / Linux / macOS (x64 + ARM64 portable)</li>
-                    <li>Requires accepting AGPL terms before download</li>
+                    <li>${_('generator.module_bullet_incoming')}</li>
+                    <li>${_('generator.module_bullet_platforms')}</li>
+                    <li>${_('generator.module_bullet_terms')}</li>
                 </ul>
-                <div id="gen-module-status" class="gen-module-status text-muted">Checking module status…</div>
+                <div id="gen-module-status" class="gen-module-status text-muted">${_('generator.module_checking')}</div>
                 <div class="gen-module-actions">
                     <button id="gen-accept-terms" class="btn btn-secondary" type="button">
                         <span class="material-icons">gavel</span>
-                        Accept terms
+                        ${_('generator.module_accept_terms')}
                     </button>
                     <button id="gen-install-module" class="btn btn-primary" type="button" disabled>
                         <span class="material-icons">download</span>
-                        Install from GitHub
+                        <span class="gen-install-label">${_('generator.module_install')}</span>
                     </button>
                     <button id="gen-finish-install" class="btn btn-success hidden" type="button">
                         <span class="material-icons">check_circle</span>
-                        Finish installation
+                        ${_('generator.module_finish')}
                     </button>
                 </div>
             </div>
@@ -60,9 +54,9 @@
                         <span class="material-icons">inventory_2</span>
                         ${_('generator.bundles_title')}
                     </h2>
-                    <button id="gen-new-support" class="btn btn-primary btn-sm" title="New BetterDesk Support">
+                    <button id="gen-new-support" class="btn btn-primary btn-sm" title="${_('generator.new_bundle')}">
                         <span class="material-icons">add</span>
-                        New Support
+                        ${_('generator.new_bundle')}
                     </button>
                 </div>
                 <div class="card-body">

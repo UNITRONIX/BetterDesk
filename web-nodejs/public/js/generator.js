@@ -417,12 +417,22 @@
         const el = els['gen-module-status'];
         if (!el) return;
         const parts = [
-            `Status: ${status.status || 'unknown'}`,
-            status.termsAccepted ? 'Terms accepted' : 'Terms not accepted',
-            status.templatesPresent ? 'Templates present' : 'Templates missing',
-            status.installedVersion ? `Version ${status.installedVersion}` : null,
-            status.signingSeedPresent ? 'Signing seed present' : 'Signing seed missing (plain JSON Phase A)',
-            status.error ? `Error: ${status.error}` : null,
+            t('generator.module_status_label', 'Status') + ': ' + (status.status || 'unknown'),
+            status.termsAccepted
+                ? t('generator.module_terms_ok', 'Terms accepted')
+                : t('generator.module_terms_pending', 'Terms not accepted'),
+            status.templatesPresent
+                ? t('generator.module_templates_ok', 'Templates present')
+                : t('generator.module_templates_missing', 'Templates missing'),
+            status.installedVersion
+                ? t('generator.module_version', 'Version {{v}}').replace('{{v}}', status.installedVersion)
+                : null,
+            status.signingSeedPresent
+                ? t('generator.module_seed_ok', 'Signing seed present')
+                : t('generator.module_seed_missing', 'Signing seed missing (plain JSON Phase A)'),
+            status.error
+                ? t('generator.module_error_prefix', 'Error') + ': ' + status.error
+                : null,
         ].filter(Boolean);
         el.textContent = parts.join(' · ');
         el.classList.toggle('is-error', status.status === 'error');
@@ -430,11 +440,21 @@
         if (els['gen-accept-terms']) {
             els['gen-accept-terms'].disabled = !!status.termsAccepted;
         }
+        const installLabel = els['gen-install-module']
+            && els['gen-install-module'].querySelector('.gen-install-label');
         if (els['gen-install-module']) {
             els['gen-install-module'].disabled = !status.termsAccepted || status.status === 'downloading';
-            els['gen-install-module'].textContent = status.status === 'downloading'
-                ? 'Downloading…'
-                : 'Install from GitHub';
+            const label = status.status === 'downloading'
+                ? t('generator.module_downloading', 'Downloading…')
+                : t('generator.module_install', 'Install from GitHub');
+            if (installLabel) installLabel.textContent = label;
+            else {
+                // Keep icon; replace trailing text nodes if label span missing
+                const icon = els['gen-install-module'].querySelector('.material-icons');
+                els['gen-install-module'].textContent = '';
+                if (icon) els['gen-install-module'].appendChild(icon);
+                els['gen-install-module'].appendChild(document.createTextNode(' ' + label));
+            }
         }
         if (els['gen-finish-install']) {
             els['gen-finish-install'].classList.toggle('hidden', !status.ready);
@@ -539,7 +559,7 @@
             els['gen-accept-terms'].addEventListener('click', async () => {
                 try {
                     await api('POST', '/api/generator/module/accept-terms');
-                    notify.success('Terms accepted');
+                    notify.success(t('generator.module_terms_ok', 'Terms accepted'));
                     await refreshModuleStatus();
                 } catch (err) {
                     notify.error(err.message);
@@ -551,9 +571,9 @@
             els['gen-install-module'].addEventListener('click', async () => {
                 try {
                     els['gen-install-module'].disabled = true;
-                    notify.info('Downloading templates from GitHub…');
+                    notify.info(t('generator.module_downloading', 'Downloading templates from GitHub…'));
                     await api('POST', '/api/generator/module/install', {});
-                    notify.success('Module installed');
+                    notify.success(t('generator.module_installed', 'Module installed'));
                     await refreshModuleStatus();
                 } catch (err) {
                     notify.error(err.message);

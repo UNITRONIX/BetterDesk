@@ -185,12 +185,25 @@ router.post('/api/generator/module/install', requireAuth, requireAdmin, async (r
     } catch (err) {
         const code = err.code || '';
         if (code === 'terms_not_accepted') {
-            return res.status(400).json({ success: false, error: 'terms_not_accepted' });
+            return res.status(400).json({
+                success: false,
+                error: req.t('generator.module_terms_required'),
+                code,
+            });
+        }
+        if (code === 'no_release' || code === 'no_template_asset') {
+            return res.status(404).json({
+                success: false,
+                error: err.message || req.t('generator.module_no_release'),
+                code,
+            });
         }
         console.error('[generator] module install error:', err);
-        res.status(500).json({
+        const status = err.statusCode === 403 ? 502 : 500;
+        res.status(status).json({
             success: false,
             error: err.message || req.t('errors.server_error'),
+            code: code || 'install_failed',
         });
     }
 });
