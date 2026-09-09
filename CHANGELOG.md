@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.92] — 2026-09-09
+
 ### Fixed
 - **RdClient web — PunchHoleResponse #405 / connection policy parity:** honor explicit `Failure=OFFLINE|LICENSE_*` even when `relay_server` is set (proto3 default `failure=0` previously let `hasRelay` win). Inject Go `/api/health` `connection` snapshot into `/remote/:id` viewer; size rendezvous/RelayResponse waits from `p2p_fallback_ms`; keep browser `force_relay=true`; advertise `BetterDesk-Web/1.4.9`. Ships via panel update.
 
@@ -3395,3 +3402,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.89]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.88...v3.5.89
 [3.5.90]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.89...v3.5.90
 [3.5.91]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.90...v3.5.91
+[3.5.92]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.91...v3.5.92
