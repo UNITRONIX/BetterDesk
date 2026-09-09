@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **RdClient web — PunchHoleResponse #405 / connection policy parity:** honor explicit `Failure=OFFLINE|LICENSE_*` even when `relay_server` is set (proto3 default `failure=0` previously let `hasRelay` win). Inject Go `/api/health` `connection` snapshot into `/remote/:id` viewer; size rendezvous/RelayResponse waits from `p2p_fallback_ms`; keep browser `force_relay=true`; advertise `BetterDesk-Web/1.4.9`. Ships via panel update.
+
 ### Changed
 - _(none yet)_
 

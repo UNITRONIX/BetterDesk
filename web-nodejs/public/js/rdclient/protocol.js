@@ -166,7 +166,7 @@ class RDProtocol {
     }
 
     // Client version advertised to RustDesk peers (keep in sync with product baseline)
-    static CLIENT_VERSION = 'BetterDesk-Web/1.4.8';
+    static CLIENT_VERSION = 'BetterDesk-Web/1.4.9';
 
     /**
      * Build PunchHoleRequest for connecting to a device

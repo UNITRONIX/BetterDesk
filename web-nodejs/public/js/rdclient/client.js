@@ -13,7 +13,7 @@
  *   client.disconnect();
  */
 
-/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr */
+/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDPunchHoleResponse, RDConnectionParams */
 
 // eslint-disable-next-line no-unused-vars
 class RDClient {
@@ -31,6 +31,20 @@ class RDClient {
 
         this.deviceId = opts.deviceId;
         this.opts = opts;
+
+        const timeoutResolver = (typeof RDConnectionParams !== 'undefined' && RDConnectionParams.resolveConnectTimeouts)
+            ? RDConnectionParams.resolveConnectTimeouts
+            : null;
+        const resolvedTimeouts = timeoutResolver
+            ? timeoutResolver(opts.connection)
+            : { rendezvousMs: 30000, signalRelayMs: 15000, connection: opts.connection || null };
+        this._rendezvousTimeoutMs = Number(opts.rendezvousTimeoutMs) > 0
+            ? Number(opts.rendezvousTimeoutMs)
+            : resolvedTimeouts.rendezvousMs;
+        this._signalRelayTimeoutMs = Number(opts.signalRelayTimeoutMs) > 0
+            ? Number(opts.signalRelayTimeoutMs)
+            : resolvedTimeouts.signalRelayMs;
+        this._connectionParams = resolvedTimeouts.connection || opts.connection || null;
 
         // Sub-modules
         this.conn = new RDConnection();
@@ -154,9 +168,22 @@ class RDClient {
 
             // Step 4: Connect to rendezvous server via WS proxy
             this._emit('log', 'Connecting to rendezvous server...');
+            if (this._connectionParams) {
+                this._debugRelay('[RDClient] Connection policy:', JSON.stringify({
+                    p2p_first: this._connectionParams.p2p_first,
+                    always_use_relay: this._connectionParams.always_use_relay,
+                    p2p_fallback_ms: this._connectionParams.p2p_fallback_ms,
+                    same_nat_relay: this._connectionParams.same_nat_relay,
+                    relay_servers: this._connectionParams.relay_servers || '',
+                    forceRelay: true,
+                    rendezvousTimeoutMs: this._rendezvousTimeoutMs,
+                    signalRelayTimeoutMs: this._signalRelayTimeoutMs
+                }));
+            }
             await this.conn.connectRendezvous();
 
             // Step 5: Send PunchHoleRequest (with server public key for licence validation)
+            // Browser Web Remote always force_relay=true (no UDP hole punch).
             this._emit('log', `Requesting connection to ${this.deviceId}...`);
             const punchHole = this.proto.buildPunchHoleRequest(this.deviceId, this.opts.serverPubKey);
             const punchData = this.proto.encodeRendezvous(punchHole);
@@ -280,7 +307,10 @@ class RDClient {
                 deviceId: this.deviceId,
                 serverPubKey: this.opts.serverPubKey || '',
                 myName: this.opts.myName || 'BetterDesk Web',
-                proto: this.proto
+                proto: this.proto,
+                connection: this._connectionParams || this.opts.connection || null,
+                rendezvousTimeoutMs: this._rendezvousTimeoutMs,
+                signalRelayTimeoutMs: this._signalRelayTimeoutMs
             });
             this._fileConnection.on('file_response', (resp) => {
                 this.fileTransfer.handleFileResponse(resp);
@@ -414,10 +444,11 @@ class RDClient {
      */
     _waitForRendezvousResponse() {
         return new Promise((resolve, reject) => {
+            const waitMs = this._rendezvousTimeoutMs || 30000;
             const timeout = setTimeout(() => {
                 this.conn.off('rendezvous:message', handler);
-                reject(new Error('Rendezvous response timeout (30s) - target device may be offline'));
-            }, 30000);
+                reject(new Error(`Rendezvous response timeout (${Math.round(waitMs / 1000)}s) - target device may be offline`));
+            }, waitMs);
 
             const handler = (rawData) => {
                 // Decode frames from raw TCP data via stream decoder
@@ -456,30 +487,39 @@ class RDClient {
                                 hasPk: !!(resp.pk && resp.pk.length),
                                 natType: resp.natType
                             }));
-                            // Check for failure:
-                            // Proto3 default enum = 0 (ID_NOT_EXIST), so we check if we got
-                            // a relay server or socket_addr to determine success
-                            const hasRelay = resp.relayServer && resp.relayServer.length > 0;
-                            const hasSocket = resp.socketAddr && resp.socketAddr.length > 0;
-
-                            if (hasRelay || hasSocket) {
-                                resolve({
-                                    relayServer: resp.relayServer || '',
-                                    uuid: resp.uuid || '',
-                                    pk: resp.pk || null,
-                                    natType: resp.natType
-                                });
+                            // Proto3 default failure=0 (ID_NOT_EXIST); #405 may set OFFLINE
+                            // while still filling relay_server — honor explicit failures.
+                            const interpreted = (typeof RDPunchHoleResponse !== 'undefined'
+                                && RDPunchHoleResponse.interpretPunchHoleResponse)
+                                ? RDPunchHoleResponse.interpretPunchHoleResponse(resp)
+                                : null;
+                            if (interpreted) {
+                                resolve(interpreted);
                             } else {
-                                const failureNames = {
-                                    0: 'Device not found',     // ID_NOT_EXIST
-                                    2: 'Device offline',       // OFFLINE
-                                    3: 'License mismatch',     // LICENSE_MISMATCH
-                                    4: 'Too many connections'  // LICENSE_OVERUSE
-                                };
-                                const reason = resp.otherFailure
-                                    || failureNames[resp.failure]
-                                    || `Unknown error (code: ${resp.failure})`;
-                                resolve({ error: reason });
+                                const hasRelay = resp.relayServer && resp.relayServer.length > 0;
+                                const hasSocket = resp.socketAddr && resp.socketAddr.length > 0;
+                                const failure = Number(resp.failure) || 0;
+                                if ((failure === 2 || failure === 3 || failure === 4 || resp.otherFailure)
+                                    || !(hasRelay || hasSocket)) {
+                                    const failureNames = {
+                                        0: 'Device not found',
+                                        2: 'Device offline',
+                                        3: 'License mismatch',
+                                        4: 'Too many connections'
+                                    };
+                                    resolve({
+                                        error: resp.otherFailure
+                                            || failureNames[failure]
+                                            || `Unknown error (code: ${failure})`
+                                    });
+                                } else {
+                                    resolve({
+                                        relayServer: resp.relayServer || '',
+                                        uuid: resp.uuid || '',
+                                        pk: resp.pk || null,
+                                        natType: resp.natType
+                                    });
+                                }
                             }
                             return;
                         }
@@ -534,10 +574,11 @@ class RDClient {
      */
     _waitForSignalRelayResponse() {
         return new Promise((resolve, reject) => {
+            const waitMs = this._signalRelayTimeoutMs || 15000;
             const timeout = setTimeout(() => {
                 this.conn.off('rendezvous:message', handler);
-                reject(new Error('RelayResponse timeout (15s) — target device may be unreachable'));
-            }, 15000);
+                reject(new Error(`RelayResponse timeout (${Math.round(waitMs / 1000)}s) — target device may be unreachable`));
+            }, waitMs);
 
             const handler = (rawData) => {
                 const frames = this._rendezvousDecoder.feed(rawData);
