@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.93] — 2026-09-11
+
 ### Fixed
 - **Leftover generator download pages hidden (#412):** After the Support Generator migration, older download pages stayed in the database and remained reachable at `/d/:slug`, but they disappeared from the Generator list so they could not be deleted and the name stayed reserved. The panel now lists leftover pages (including when the ALPHA module is not installed) with revoke/delete only. Ships via panel update. Verify: Generator shows previous pages with a Legacy badge; Delete frees the slug; a new bundle can reuse the name.
 
@@ -3406,3 +3413,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.90]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.89...v3.5.90
 [3.5.91]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.90...v3.5.91
 [3.5.92]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.91...v3.5.92
+[3.5.93]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.92...v3.5.93
