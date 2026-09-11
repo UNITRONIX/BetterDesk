@@ -58,6 +58,7 @@
         [
             'gen-module-gate', 'gen-module-status', 'gen-accept-terms', 'gen-install-module',
             'gen-finish-install', 'gen-main',
+            'gen-legacy-leftovers', 'gen-legacy-leftovers-list', 'gen-legacy-hint',
             'gen-new-support', 'gen-bundle-list', 'gen-editor-title', 'gen-revoke-btn', 'gen-delete-btn',
             'gen-save-btn', 'gen-rebuild-btn', 'gen-builds-list', 'gen-builds-summary', 'gen-platforms',
             'gen-empty-state', 'gen-editor-form',
@@ -181,7 +182,42 @@
         renderPlatforms();
     }
 
+    function isLegacyBundle(bundle) {
+        return !!(bundle && bundle.legacy);
+    }
+
+    function leftoverBundles() {
+        return (state.bundles || []).filter(isLegacyBundle);
+    }
+
+    function isCurrentLegacy() {
+        return isLegacyBundle(state.currentBundle);
+    }
+
+    function setFormLocked(locked) {
+        ['gen-name', 'gen-slug', 'gen-app-name', 'gen-server-host', 'gen-relay-host', 'gen-api-port', 'gen-use-https']
+            .forEach((id) => {
+                if (els[id]) els[id].disabled = !!locked;
+            });
+        if (els['gen-platforms']) {
+            els['gen-platforms'].querySelectorAll('input').forEach((input) => {
+                input.disabled = !!locked;
+            });
+        }
+    }
+
+    function applyLegacyEditorMode(isLegacy) {
+        if (els['gen-legacy-hint']) els['gen-legacy-hint'].classList.toggle('hidden', !isLegacy);
+        setFormLocked(isLegacy);
+        if (els['gen-save-btn']) {
+            els['gen-save-btn'].classList.toggle('hidden', !!isLegacy);
+            if (isLegacy) els['gen-save-btn'].disabled = true;
+        }
+        if (els['gen-rebuild-btn']) els['gen-rebuild-btn'].classList.toggle('hidden', !!isLegacy);
+    }
+
     function markDirty() {
+        if (isCurrentLegacy() || !state.moduleReady) return;
         state.dirty = true;
         if (els['gen-save-btn']) els['gen-save-btn'].disabled = false;
     }
@@ -217,8 +253,14 @@
         els['gen-bundle-list'].innerHTML = state.bundles.map((b) => {
             const active = state.currentId === b.bundle_id ? 'active' : '';
             const revoked = b.revoked ? 'revoked' : '';
+            const badge = isLegacyBundle(b)
+                ? `<span class="badge-product--legacy">${escapeText(t('generator.legacy_badge', 'Legacy'))}</span>`
+                : '';
             return `<button type="button" class="bundle-item ${active} ${revoked}" data-id="${escapeText(b.bundle_id)}">
-                <span class="bundle-item-name">${escapeText(b.name)}</span>
+                <span class="bundle-item-title">
+                    <span class="bundle-item-name">${escapeText(b.name)}</span>
+                    ${badge}
+                </span>
                 <span class="bundle-item-meta">${escapeText(b.slug || b.public_id || '')}</span>
             </button>`;
         }).join('');
@@ -252,7 +294,7 @@
             const key = `${b.platform}/${b.arch}/${b.format}`;
             const label = (state.platforms.find((p) => platformKey(p) === key) || {}).label || key;
             const err = b.error_message ? `<div class="build-error">${escapeText(b.error_message)}</div>` : '';
-            const retry = b.status === 'failed'
+            const retry = !isCurrentLegacy() && b.status === 'failed'
                 ? `<button type="button" class="btn btn-sm btn-secondary gen-retry-build"
                     data-platform="${escapeText(b.platform)}" data-arch="${escapeText(b.arch)}" data-format="${escapeText(b.format)}">Retry</button>`
                 : '';
@@ -286,6 +328,7 @@
     }
 
     function setEditorForNew() {
+        if (!state.moduleReady) return;
         stopBuildsPoll();
         state.currentId = 'new';
         state.currentBundle = null;
@@ -293,6 +336,7 @@
         state.slugManual = false;
         state.productType = 'betterdesk-support';
         setEditorVisible(true);
+        applyLegacyEditorMode(false);
         els['gen-editor-title'].textContent = t('generator.new_bundle', 'New BetterDesk Support');
         els['gen-name'].value = '';
         els['gen-slug'].value = '';
@@ -319,15 +363,17 @@
             state.slugManual = true;
             state.productType = 'betterdesk-support';
             setEditorVisible(true);
+            applyLegacyEditorMode(isLegacyBundle(bundle));
             els['gen-editor-title'].textContent = bundle.name;
             els['gen-name'].value = bundle.name || '';
             els['gen-slug'].value = bundle.slug || '';
             writeBranding(bundle.branding || {});
             selectAllPlatforms();
+            setFormLocked(isLegacyBundle(bundle));
             els['gen-download-info'].classList.remove('hidden');
             els['gen-revoke-btn'].classList.remove('hidden');
             els['gen-delete-btn'].classList.remove('hidden');
-            els['gen-rebuild-btn'].classList.remove('hidden');
+            els['gen-rebuild-btn'].classList.toggle('hidden', isLegacyBundle(bundle));
             els['gen-revoke-btn'].textContent = bundle.revoked
                 ? t('generator.unrevoke', 'Restore')
                 : t('generator.revoke', 'Revoke');
@@ -336,13 +382,15 @@
             renderBuilds();
             renderBundleList();
             updateDownloadLinkPreview();
-            startBuildsPoll();
+            if (isLegacyBundle(bundle)) stopBuildsPoll();
+            else startBuildsPoll();
         } catch (err) {
             notify.error(err.message);
         }
     }
 
     async function saveBundle() {
+        if (isCurrentLegacy() || !state.moduleReady) return;
         const name = els['gen-name'].value.trim();
         if (!name) {
             notify.error(t('generator.errors.name_required', 'Name is required'));
@@ -378,14 +426,10 @@
     }
 
     async function loadBundles() {
-        const data = await api('GET', '/api/generator/bundles?includeRevoked=1');
-        // Only BetterDesk Support (v2) profiles — hide legacy CDAP Support Agent rows
-        const all = (data.data && data.data.bundles) || [];
-        state.bundles = all.filter((b) => {
-            const br = b.branding || {};
-            return br.sku === 'betterdesk-support' || br.generator_kind === 'betterdesk-support';
-        });
+        const data = await api('GET', '/api/generator/bundles?includeRevoked=1&includeLegacy=1');
+        state.bundles = (data.data && data.data.bundles) || [];
         renderBundleList();
+        applyGeneratorLayout();
     }
 
     async function loadPlatforms() {
@@ -473,17 +517,106 @@
         }
     }
 
-    function showModuleGate(show) {
-        if (els['gen-module-gate']) els['gen-module-gate'].classList.toggle('hidden', !show);
-        if (els['gen-main']) els['gen-main'].classList.toggle('hidden', show);
+    function leftoverPublicId(bundle) {
+        return bundle.slug || bundle.public_id || bundle.bundle_id || '';
+    }
+
+    function renderLeftoverGateList() {
+        const wrap = els['gen-legacy-leftovers'];
+        const list = els['gen-legacy-leftovers-list'];
+        if (!wrap || !list) return;
+        const leftovers = leftoverBundles();
+        const show = leftovers.length > 0 && !state.moduleReady;
+        wrap.classList.toggle('hidden', !show);
+        if (!show) {
+            list.innerHTML = '';
+            return;
+        }
+        list.innerHTML = leftovers.map((b) => {
+            const publicId = leftoverPublicId(b);
+            const revokeLabel = b.revoked
+                ? t('generator.unrevoke', 'Restore')
+                : t('generator.revoke', 'Revoke');
+            return `<div class="gen-legacy-row" data-id="${escapeText(b.bundle_id)}">
+                <div>
+                    <div class="bundle-item-title">
+                        <span class="bundle-item-name">${escapeText(b.name)}</span>
+                        <span class="badge-product--legacy">${escapeText(t('generator.legacy_badge', 'Legacy'))}</span>
+                    </div>
+                    <div class="bundle-item-meta">${escapeText(publicId ? `/d/${publicId}` : '')}</div>
+                </div>
+                <div class="gen-legacy-row-actions">
+                    <a class="btn btn-secondary btn-sm" href="${escapeText(publicId ? `/d/${publicId}` : '#')}" target="_blank" rel="noopener">${escapeText(t('generator.open_portal', 'Open'))}</a>
+                    <button type="button" class="btn btn-warning btn-sm" data-action="revoke">${escapeText(revokeLabel)}</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-action="delete">${escapeText(t('common.delete', 'Delete'))}</button>
+                </div>
+            </div>`;
+        }).join('');
+        list.querySelectorAll('.gen-legacy-row').forEach((row) => {
+            const id = row.dataset.id;
+            const bundle = leftovers.find((b) => b.bundle_id === id);
+            const revokeBtn = row.querySelector('[data-action="revoke"]');
+            const deleteBtn = row.querySelector('[data-action="delete"]');
+            if (revokeBtn) {
+                revokeBtn.addEventListener('click', () => revokeBundle(id, !(bundle && bundle.revoked)));
+            }
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => deleteBundle(id));
+            }
+        });
+    }
+
+    function applyGeneratorLayout() {
+        const ready = !!state.moduleReady;
+        if (els['gen-module-gate']) els['gen-module-gate'].classList.toggle('hidden', ready);
+        if (els['gen-main']) els['gen-main'].classList.toggle('hidden', !ready);
+        if (els['gen-new-support']) els['gen-new-support'].classList.toggle('hidden', !ready);
+        renderLeftoverGateList();
     }
 
     async function refreshModuleStatus() {
         const data = await api('GET', '/api/generator/module/status');
         const status = data.data || {};
         renderModuleStatus(status);
-        showModuleGate(!status.ready);
+        applyGeneratorLayout();
         return status;
+    }
+
+    async function revokeBundle(id, revoked) {
+        if (!id) return;
+        const confirmKey = revoked ? 'generator.confirm_revoke' : 'generator.confirm_unrevoke';
+        const confirmDef = revoked
+            ? 'Revoke this bundle? The download link will stop working.'
+            : 'Re-enable this bundle?';
+        if (!window.confirm(t(confirmKey, confirmDef))) return;
+        try {
+            await api('POST', `/api/generator/bundles/${id}/revoke`, { revoked });
+            notify.success(revoked
+                ? t('generator.revoked_ok', 'Bundle revoked')
+                : t('generator.unrevoked_ok', 'Bundle re-enabled'));
+            await loadBundles();
+            if (state.currentId === id) await openBundle(id);
+        } catch (err) {
+            notify.error(err.message);
+        }
+    }
+
+    async function deleteBundle(id) {
+        if (!id) return;
+        if (!window.confirm(t('generator.confirm_delete', 'Delete this bundle permanently? This cannot be undone.'))) return;
+        try {
+            await api('DELETE', `/api/generator/bundles/${id}`);
+            notify.success(t('generator.deleted', 'Bundle deleted'));
+            if (state.currentId === id) {
+                state.currentId = null;
+                state.currentBundle = null;
+                if (els['gen-empty-state']) setEditorVisible(false);
+                stopBuildsPoll();
+            }
+            await loadBundles();
+        } catch (err) {
+            notify.error(err.message);
+        }
     }
 
     function bindEvents() {
@@ -520,40 +653,22 @@
         }
 
         if (els['gen-revoke-btn']) {
-            els['gen-revoke-btn'].addEventListener('click', async () => {
+            els['gen-revoke-btn'].addEventListener('click', () => {
                 if (!state.currentId || state.currentId === 'new') return;
-                const revoked = !(state.currentBundle && state.currentBundle.revoked);
-                try {
-                    await api('POST', `/api/generator/bundles/${state.currentId}/revoke`, { revoked });
-                    notify.success(revoked ? t('generator.revoked', 'Revoked') : t('generator.restored', 'Restored'));
-                    await loadBundles();
-                    await openBundle(state.currentId);
-                } catch (err) {
-                    notify.error(err.message);
-                }
+                revokeBundle(state.currentId, !(state.currentBundle && state.currentBundle.revoked));
             });
         }
 
         if (els['gen-delete-btn']) {
-            els['gen-delete-btn'].addEventListener('click', async () => {
+            els['gen-delete-btn'].addEventListener('click', () => {
                 if (!state.currentId || state.currentId === 'new') return;
-                if (!window.confirm(t('generator.confirm_delete', 'Delete this bundle?'))) return;
-                try {
-                    await api('DELETE', `/api/generator/bundles/${state.currentId}`);
-                    notify.success(t('common.deleted', 'Deleted'));
-                    state.currentId = null;
-                    setEditorVisible(false);
-                    stopBuildsPoll();
-                    await loadBundles();
-                } catch (err) {
-                    notify.error(err.message);
-                }
+                deleteBundle(state.currentId);
             });
         }
 
         if (els['gen-rebuild-btn']) {
             els['gen-rebuild-btn'].addEventListener('click', async () => {
-                if (!state.currentId || state.currentId === 'new') return;
+                if (!state.currentId || state.currentId === 'new' || isCurrentLegacy() || !state.moduleReady) return;
                 try {
                     await api('POST', `/api/generator/bundles/${state.currentId}/rebuild`, {
                         platforms: selectedPlatformPayload(),
@@ -598,7 +713,6 @@
             els['gen-finish-install'].addEventListener('click', async () => {
                 const status = await refreshModuleStatus();
                 if (status.ready) {
-                    showModuleGate(false);
                     await initGeneratorMain();
                 }
             });
@@ -616,13 +730,13 @@
         bindEvents();
         try {
             const status = await refreshModuleStatus();
+            await loadBundles();
             if (status.ready) {
-                showModuleGate(false);
                 await initGeneratorMain();
             }
         } catch (err) {
             notify.error(err.message);
-            showModuleGate(true);
+            applyGeneratorLayout();
         }
     }
 

@@ -43,6 +43,11 @@
                         ${_('generator.module_finish')}
                     </button>
                 </div>
+                <div id="gen-legacy-leftovers" class="gen-legacy-leftovers hidden">
+                    <h3 class="section-title">${_('generator.legacy_leftovers_title')}</h3>
+                    <p class="form-hint">${_('generator.legacy_leftovers_hint')}</p>
+                    <div id="gen-legacy-leftovers-list" class="gen-legacy-leftovers-list"></div>
+                </div>
             </div>
         </div>
 
@@ -99,6 +104,7 @@
                     </div>
 
                     <div id="gen-editor-form" class="editor-form hidden">
+                        <div id="gen-legacy-hint" class="gen-legacy-hint hidden">${_('generator.legacy_hint')}</div>
                         <div class="editor-fields">
                             <div class="form-group">
                                 <label class="form-label" for="gen-name">${_('generator.bundle_name')}</label>

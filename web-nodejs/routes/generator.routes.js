@@ -22,7 +22,7 @@ const config = require('../config/config');
 const brandingService = require('../services/brandingService');
 const conn = require('../services/agentBundleConnection');
 const clientConfigHost = require('../services/clientConfigHost');
-const { PRODUCT_TYPES, normalizeProductType } = require('../lib/generatorBuildTypes');
+const { PRODUCT_TYPES, normalizeProductType, isBetterDeskSupportBundle } = require('../lib/generatorBuildTypes');
 
 // Branding payloads may carry a base64-encoded logo up to 10 MB; expand the
 // default 2 MB JSON body limit on the bundle CRUD + preview endpoints only.
@@ -50,6 +50,7 @@ function serializeBundle(row) {
         branding:        publicBrandingView(parseBranding(row.branding)),
         branding_hash:   row.branding_hash,
         revoked:         !!row.revoked,
+        legacy:          !isBetterDeskSupportBundle(row),
         download_count:  Number(row.download_count || 0),
         created_at:      row.created_at,
         updated_at:      row.updated_at,
@@ -214,13 +215,6 @@ router.post('/api/generator/module/install', requireAuth, requireAdmin, async (r
 // =========================================================================
 //  Bundle management API (admin only)
 // =========================================================================
-
-function isBetterDeskSupportBundle(row) {
-    const branding = parseBranding(row?.branding);
-    return branding.sku === 'betterdesk-support'
-        || branding.generator_kind === 'betterdesk-support'
-        || Number(branding.generator_version) >= 2;
-}
 
 router.get('/api/generator/bundles', requireAuth, requireAdmin, async (req, res) => {
     try {

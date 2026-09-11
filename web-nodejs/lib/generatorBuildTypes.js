@@ -39,6 +39,25 @@ function isProductType(raw, expected) {
     return normalizeProductType(raw) === expected;
 }
 
+function parseBundleBranding(raw) {
+    if (!raw) return {};
+    if (typeof raw === 'object') return raw;
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) {
+        return {};
+    }
+}
+
+/** True for template-generator (v2) rows; false for leftover pre-migration pages. */
+function isBetterDeskSupportBundle(row) {
+    const branding = parseBundleBranding(row?.branding);
+    return branding.sku === 'betterdesk-support'
+        || branding.generator_kind === 'betterdesk-support'
+        || Number(branding.generator_version) >= 2;
+}
+
 function isQueuedBuildStatus(status) {
     return QUEUED_BUILD_STATUSES.has(String(status ?? '').trim().toLowerCase());
 }
@@ -54,6 +73,7 @@ module.exports = {
     QUEUED_BUILD_STATUSES,
     normalizeProductType,
     isProductType,
+    isBetterDeskSupportBundle,
     isQueuedBuildStatus,
     normalizeBuildStatus,
 };

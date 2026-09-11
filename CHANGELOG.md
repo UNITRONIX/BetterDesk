@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **Leftover generator download pages hidden (#412):** After the Support Generator migration, older download pages stayed in the database and remained reachable at `/d/:slug`, but they disappeared from the Generator list so they could not be deleted and the name stayed reserved. The panel now lists leftover pages (including when the ALPHA module is not installed) with revoke/delete only. Ships via panel update. Verify: Generator shows previous pages with a Legacy badge; Delete frees the slug; a new bundle can reuse the name.
+
 ### Changed
 - _(none yet)_
 
