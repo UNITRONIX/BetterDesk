@@ -11,6 +11,7 @@ const { requireRdClientAuth, rdClientGuestOnly, normalizeRdClientReturnUrl, role
 const { rdClientPageLimiter } = require('../middleware/rateLimiter');
 const betterdeskApi = require('../services/betterdeskApi');
 const keyService = require('../services/keyService');
+const serverConnectionConfig = require('../services/serverConnectionConfigService');
 const {
     getGuestToken,
     getGuestTokenFromQuery,
@@ -19,6 +20,49 @@ const {
     attachGuestGrant,
     peerAllowedByGrant,
 } = require('../middleware/guestAccess');
+
+const DEFAULT_CONNECTION_SNAPSHOT = {
+    p2p_first: true,
+    always_use_relay: false,
+    p2p_fallback_ms: 2000,
+    same_nat_relay: true,
+    allow_shared_nat_initiator: false,
+    relay_servers: ''
+};
+
+/**
+ * Snapshot of Go connection policy for RdClient web (timeouts / diagnostics).
+ * Prefer live /api/health.connection; fall back to local Settings env read.
+ */
+async function resolveConnectionSnapshot() {
+    try {
+        const health = await betterdeskApi.getHealth();
+        if (health && health.connection && typeof health.connection === 'object') {
+            return {
+                ...DEFAULT_CONNECTION_SNAPSHOT,
+                ...health.connection
+            };
+        }
+    } catch (err) {
+        logger.debug('Connection snapshot from health failed:', err.message || err);
+    }
+    try {
+        const mode = await serverConnectionConfig.getConnectionMode();
+        return {
+            ...DEFAULT_CONNECTION_SNAPSHOT,
+            p2p_first: mode.mode !== 'relay_only',
+            always_use_relay: mode.mode === 'relay_only',
+            p2p_fallback_ms: Number(mode.p2p_fallback_ms) >= 0
+                ? Number(mode.p2p_fallback_ms)
+                : DEFAULT_CONNECTION_SNAPSHOT.p2p_fallback_ms,
+            same_nat_relay: mode.same_nat_relay !== false,
+            allow_shared_nat_initiator: mode.allow_shared_nat_initiator === true
+        };
+    } catch (err) {
+        logger.debug('Connection snapshot from settings failed:', err.message || err);
+    }
+    return { ...DEFAULT_CONNECTION_SNAPSHOT };
+}
 
 async function requireRemoteAccess(req, res, next) {
     const deviceId = req.params.deviceId;
@@ -234,6 +278,7 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
         deviceId: deviceId,
         device: device || { id: deviceId, hostname: '', platform: '', note: '' },
         serverPubKey: await resolveServerPubKey(),
+        connection: await resolveConnectionSnapshot(),
         capabilities,
         guestToken: req.guestToken || getGuestTokenFromQuery(req) || '',
         layout: 'viewer'

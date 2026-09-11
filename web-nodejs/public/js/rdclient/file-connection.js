@@ -3,7 +3,7 @@
  * RustDesk peers only handle FileAction on ConnType::FILE_TRANSFER sessions.
  */
 
-/* global RDConnection, RDProtocol, RDCrypto */
+/* global RDConnection, RDProtocol, RDCrypto, RDPunchHoleResponse, RDConnectionParams */
 
 // eslint-disable-next-line no-unused-vars
 class RDFileConnection {
@@ -35,6 +35,19 @@ class RDFileConnection {
         this._loginResolve = null;
         this._loginReject = null;
         this._peerSignedPk = null;
+
+        const timeoutResolver = (typeof RDConnectionParams !== 'undefined' && RDConnectionParams.resolveConnectTimeouts)
+            ? RDConnectionParams.resolveConnectTimeouts
+            : null;
+        const resolvedTimeouts = timeoutResolver
+            ? timeoutResolver(opts.connection)
+            : { rendezvousMs: 30000, signalRelayMs: 15000 };
+        this._rendezvousTimeoutMs = Number(opts.rendezvousTimeoutMs) > 0
+            ? Number(opts.rendezvousTimeoutMs)
+            : resolvedTimeouts.rendezvousMs;
+        this._signalRelayTimeoutMs = Number(opts.signalRelayTimeoutMs) > 0
+            ? Number(opts.signalRelayTimeoutMs)
+            : resolvedTimeouts.signalRelayMs;
     }
 
     get state() { return this._state; }
@@ -250,10 +263,11 @@ class RDFileConnection {
 
     _waitForRendezvousResponse() {
         return new Promise((resolve, reject) => {
+            const waitMs = this._rendezvousTimeoutMs || 30000;
             const timeout = setTimeout(() => {
                 this.conn.off('rendezvous:message', handler);
                 reject(new Error('File transfer rendezvous timeout'));
-            }, 30000);
+            }, waitMs);
 
             const handler = (rawData) => {
                 const frames = this._rendezvousDecoder.feed(rawData);
@@ -266,15 +280,19 @@ class RDFileConnection {
                             clearTimeout(timeout);
                             this.conn.off('rendezvous:message', handler);
                             const resp = msg.punchHoleResponse;
+                            const interpreted = (typeof RDPunchHoleResponse !== 'undefined'
+                                && RDPunchHoleResponse.interpretPunchHoleResponse)
+                                ? RDPunchHoleResponse.interpretPunchHoleResponse(resp)
+                                : null;
+                            if (interpreted) {
+                                resolve(interpreted);
+                                return;
+                            }
                             const hasRelay = resp.relayServer && resp.relayServer.length > 0;
                             const hasSocket = resp.socketAddr && resp.socketAddr.length > 0;
-                            if (hasRelay || hasSocket) {
-                                resolve({
-                                    relayServer: resp.relayServer || '',
-                                    uuid: resp.uuid || '',
-                                    pk: resp.pk || null
-                                });
-                            } else {
+                            const failure = Number(resp.failure) || 0;
+                            if ((failure === 2 || failure === 3 || failure === 4 || resp.otherFailure)
+                                || !(hasRelay || hasSocket)) {
                                 const failureNames = {
                                     0: 'Device not found',
                                     2: 'Device offline',
@@ -282,7 +300,13 @@ class RDFileConnection {
                                     4: 'Too many connections'
                                 };
                                 resolve({
-                                    error: resp.otherFailure || failureNames[resp.failure] || 'Connection failed'
+                                    error: resp.otherFailure || failureNames[failure] || 'Connection failed'
+                                });
+                            } else {
+                                resolve({
+                                    relayServer: resp.relayServer || '',
+                                    uuid: resp.uuid || '',
+                                    pk: resp.pk || null
                                 });
                             }
                             return;
@@ -314,10 +338,11 @@ class RDFileConnection {
 
     _waitForSignalRelayResponse() {
         return new Promise((resolve, reject) => {
+            const waitMs = this._signalRelayTimeoutMs || 15000;
             const timeout = setTimeout(() => {
                 this.conn.off('rendezvous:message', handler);
                 reject(new Error('File transfer RelayResponse timeout'));
-            }, 15000);
+            }, waitMs);
 
             const handler = (rawData) => {
                 const frames = this._rendezvousDecoder.feed(rawData);

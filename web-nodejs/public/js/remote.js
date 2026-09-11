@@ -153,6 +153,7 @@
         return {
             deviceId: session.deviceId,
             serverPubKey: window.BetterDesk.serverPubKey || '',
+            connection: window.BetterDesk.connection || null,
             myName: userName,
             scaleMode: prefs.scale || 'fit',
             fps: activeFps,

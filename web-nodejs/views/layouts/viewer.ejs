@@ -30,6 +30,7 @@
             csrfToken: '<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>',
             user: <%- JSON.stringify(user || null) %>,
             serverPubKey: '<%= typeof serverPubKey !== 'undefined' ? serverPubKey : '' %>',
+            connection: <%- JSON.stringify(typeof connection !== 'undefined' && connection ? connection : {}) %>,
             branding: <%- JSON.stringify(branding || {}) %>,
             availableLanguages: <%- JSON.stringify(availableLanguageList || []) %>
         };
@@ -52,6 +53,8 @@
     
     <!-- RDClient modules (order matters) -->
     <script src="/js/rdclient/connection.js?v=<%= cacheVersion %>"></script>
+    <script src="/js/rdclient/connection-params.js?v=<%= cacheVersion %>"></script>
+    <script src="/js/rdclient/punchhole-response.js?v=<%= cacheVersion %>"></script>
     <script src="/js/rdclient/crypto.js?v=<%= cacheVersion %>"></script>
     <script src="/js/rdclient/protocol.js?v=<%= cacheVersion %>"></script>
     <script src="/js/rdclient/video.js?v=<%= cacheVersion %>"></script>
