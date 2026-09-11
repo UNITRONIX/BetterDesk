@@ -1,5 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#0d1117"/>
-  <path d="M8 10h16M8 16h16M8 22h12" stroke="#58a6ff" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="24" cy="22" r="3" fill="#2ea44f"/>
+  <defs>
+    <linearGradient id="bdMark" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#58a6ff"/>
+      <stop offset="1" stop-color="#a3e635"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#0d1117"/>
+  <text x="16" y="16" text-anchor="middle" dominant-baseline="central"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="23" font-weight="800" fill="url(#bdMark)">B</text>
 </svg>

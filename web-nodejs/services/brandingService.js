@@ -1205,7 +1205,22 @@ function getPublicAppearance() {
 }
 
 /**
+ * Sanitize a CSS hex/rgb color for safe SVG attribute injection.
+ * Falls back when the value is not a simple color token.
+ * @param {string} value
+ * @param {string} fallback
+ * @returns {string}
+ */
+function sanitizeSvgColor(value, fallback) {
+    const raw = String(value || '').trim();
+    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return raw;
+    if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(raw)) return raw;
+    return fallback;
+}
+
+/**
  * Generate favicon SVG from branding
+ * Default mark: large letter "B" on dark tile (readable at 16×16 tab size).
  * @returns {string} SVG markup for favicon
  */
 function generateFavicon() {
@@ -1216,15 +1231,23 @@ function generateFavicon() {
         return branding.faviconSvg;
     }
     
-    // Generate from branding colors (use accent color or default blue)
-    const bgColor = branding.colors.bgPrimary || '#0d1117';
-    const accentColor = branding.colors.accentBlue || '#58a6ff';
-    const greenColor = branding.colors.accentGreen || '#2ea44f';
+    // Large "B" mark — same idea as Flutter contactRow fontSize bump: fill the
+    // small viewport so the glyph stays legible in browser tabs / PWA icons.
+    const bgColor = sanitizeSvgColor(branding.colors?.bgPrimary, '#0d1117');
+    const accentColor = sanitizeSvgColor(branding.colors?.accentBlue, '#58a6ff');
+    const greenColor = sanitizeSvgColor(branding.colors?.accentGreen, '#a3e635');
     
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="${bgColor}"/>
-  <path d="M8 10h16M8 16h16M8 22h12" stroke="${accentColor}" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="24" cy="22" r="3" fill="${greenColor}"/>
+  <defs>
+    <linearGradient id="bdMark" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="${accentColor}"/>
+      <stop offset="1" stop-color="${greenColor}"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="${bgColor}"/>
+  <text x="16" y="16" text-anchor="middle" dominant-baseline="central"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="23" font-weight="800" fill="url(#bdMark)">B</text>
 </svg>`;
 }
 

@@ -253,4 +253,12 @@ describe('brandingService.generateThemeCss', () => {
         expect(readability.ok).toBe(false);
         expect(readability.issues.some(issue => issue.id === 'page-text')).toBe(true);
     });
+
+    it('default favicon uses a large letter B mark on a dark tile', () => {
+        const svg = brandingService.generateFavicon();
+        expect(svg).toMatch(/font-size="23"/);
+        expect(svg).toMatch(/>B<\/text>/);
+        expect(svg).toMatch(/fill="#0d1117"/);
+        expect(svg).not.toMatch(/M8 10h16/);
+    });
 });

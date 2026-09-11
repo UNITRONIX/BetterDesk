@@ -79,7 +79,13 @@ body.app-page.ux35-page {
     width: 22px;
     height: 22px;
 }
-.ux35-topbar-logo img { height: 24px; width: auto; display: block; }
+.ux35-topbar-logo img {
+    width: 28px;
+    height: 28px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+}
 .ux35-topbar-logo .sidebar-logo-svg {
     display: flex;
     align-items: center;

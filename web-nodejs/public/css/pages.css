@@ -895,13 +895,19 @@
 }
 
 .login-logo-img {
-    max-height: 48px;
-    width: auto;
+    width: 56px;
+    height: 56px;
+    max-height: 56px;
+    object-fit: cover;
+    border-radius: 12px;
 }
 
 .sidebar-logo-img {
-    max-height: 32px;
-    width: auto;
+    width: 36px;
+    height: 36px;
+    max-height: 36px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
 /* Logo file upload */
