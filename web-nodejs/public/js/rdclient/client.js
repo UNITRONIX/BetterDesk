@@ -1279,6 +1279,10 @@ class RDClient {
             customFps: fps,
             imageQuality: quality
         }));
+        this._sendPeerMessage(this.proto.buildMisc(
+            'autoAdjustFps',
+            this.opts.fpsMode === 'adaptive' ? 60 : 0
+        ));
 
         // Proactively request an initial keyframe so the decoder can start
         // immediately even if we joined an already-running stream on a delta.
@@ -1926,11 +1930,44 @@ class RDClient {
         };
 
         var c = config[preset] || config.balanced;
-        this._adaptivePaused = true; // explicit user choice — stop auto-adjusting
-        this._savedActiveFps = c.customFps;
+        const mode = this.opts.fpsMode || '30';
+        const customFps = mode === '60' || mode === 'adaptive'
+            ? 60
+            : mode === '30' ? 30 : c.customFps;
+        this._adaptivePaused = mode !== 'adaptive';
+        this._savedActiveFps = customFps;
         this.opts.qualityPreset = preset;
-        this._sendPeerMessage(this.proto.buildOptionMisc({ imageQuality: c.imageQuality, customFps: c.customFps }));
+        this._sendPeerMessage(this.proto.buildOptionMisc({ imageQuality: c.imageQuality, customFps: customFps }));
         this._emit('quality_changed', preset);
+    }
+
+    /**
+     * Set the stream FPS mode.
+     * @param {'30'|'60'|'adaptive'} mode
+     */
+    setFpsMode(mode) {
+        const value = ['30', '60', 'adaptive'].includes(String(mode))
+            ? String(mode)
+            : '30';
+        const fps = value === '30' ? 30 : 60;
+        this.opts.fpsMode = value;
+        this.opts.fps = fps;
+        this.opts.adaptiveQuality = value === 'adaptive';
+        this._savedActiveFps = fps;
+        this._adaptivePaused = value !== 'adaptive';
+        if (this._state !== 'streaming') return;
+
+        this._sendPeerMessage(this.proto.buildOptionMisc({ customFps: fps }));
+        this._sendPeerMessage(this.proto.buildMisc(
+            'autoAdjustFps',
+            value === 'adaptive' ? 60 : 0
+        ));
+        if (value === 'adaptive') {
+            if (!this._adaptiveInterval) this._startAdaptiveQuality();
+        } else if (this._adaptiveInterval) {
+            clearInterval(this._adaptiveInterval);
+            this._adaptiveInterval = null;
+        }
     }
 
     // ---- Codec Control ----

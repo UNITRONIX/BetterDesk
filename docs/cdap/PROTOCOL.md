@@ -151,7 +151,8 @@ After auth, the device sends a `register` message containing its manifest:
 ## Desktop Session
 
 `desktop_start` is sent to the authenticated device and includes
-`session_id`, `width`, `height`, `quality`, `fps`, `codecs`, and optional
+`session_id`, `width`, `height`, `quality`, `fps`, optional `fps_mode`
+(`30`, `60`, or `adaptive`), `codecs`, and optional
 `view_only`. The device returns `desktop_frame` JSON messages with a base64
 JPEG for compatibility clients, or the binary fast path described above.
 

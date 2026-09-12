@@ -4,6 +4,7 @@ const {
     BACKGROUND_FPS,
     sanitizePrefs,
     getActiveFpsForQuality,
+    getActiveFpsForMode,
     getPresetForQuality,
     loadRemoteViewerPrefs,
     saveRemoteViewerPrefs,
@@ -33,5 +34,12 @@ describe('remoteViewerPrefs', () => {
         expect(loaded.quality).toBe('Balanced');
         expect(loaded.scale).toBe('1:1');
         expect(getActiveFpsForQuality(loaded.quality)).toBe(30);
+    });
+
+    it('supports explicit FPS modes', () => {
+        expect(getActiveFpsForMode('30', 'Best')).toBe(30);
+        expect(getActiveFpsForMode('60', 'Balanced')).toBe(60);
+        expect(getActiveFpsForMode('adaptive', 'Balanced')).toBe(60);
+        expect(sanitizePrefs({ fpsMode: 'invalid' }).fpsMode).toBe('adaptive');
     });
 });

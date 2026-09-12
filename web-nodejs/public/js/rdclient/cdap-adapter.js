@@ -246,6 +246,9 @@
             this._sessionActive = true;
             this._clipboardToLocalEnabled = true;
             this._targetFps = this._normaliseFps(opts.fps || 60);
+            this._fpsMode = ['30', '60', 'adaptive'].includes(opts.fpsMode)
+                ? opts.fpsMode
+                : 'adaptive';
             this._backgroundFps = 1;
             this._streamThrottledActive = null;
 
@@ -407,9 +410,14 @@
                 speed: { quality: 50, fps: 60 },
             };
             const p = presets[String(preset || '').toLowerCase()] || presets.balanced;
-            this._targetFps = p.fps;
+            this._targetFps = this._fpsMode === '30' ? 30 : 60;
             this.opts.qualityPreset = preset;
-            this._send({ type: 'quality_set', quality: p.quality, fps: p.fps });
+            this._send({
+                type: 'quality_set',
+                quality: p.quality,
+                fps: this._targetFps,
+                fps_mode: this._fpsMode,
+            });
         }
         setFps(fps) {
             const n = this._normaliseFps(fps);
@@ -417,6 +425,17 @@
                 this._targetFps = n;
             }
             this._send({ type: 'quality_set', fps: n });
+        }
+        setFpsMode(mode) {
+            const value = ['30', '60', 'adaptive'].includes(String(mode))
+                ? String(mode)
+                : '30';
+            const fps = value === '30' ? 30 : 60;
+            this._fpsMode = value;
+            this.opts.fpsMode = value;
+            this.opts.fps = fps;
+            this._targetFps = fps;
+            this._send({ type: 'quality_set', fps, fps_mode: value });
         }
         setScaleMode(mode) {
             try { this.renderer.setScaleMode(mode); } catch { /* noop */ }
@@ -678,6 +697,7 @@
                 height: screenH,
                 quality,
                 fps,
+                fps_mode: this._fpsMode,
                 device_pixel_ratio: dpr,
                 client_css_width:  Math.round(rect.width  || 0),
                 client_css_height: Math.round(rect.height || 0),

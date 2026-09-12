@@ -124,13 +124,14 @@
     const Prefs = window.RemoteViewerPrefs || {};
     const globalViewerPrefs = typeof Prefs.loadRemoteViewerPrefs === 'function'
         ? Prefs.loadRemoteViewerPrefs(window.BetterDesk?.user?.id)
-        : { quality: 'Best', scale: 'fit', codec: 'Auto', adaptiveQuality: true, backgroundFps: 1 };
+        : { quality: 'Best', scale: 'fit', codec: 'Auto', fpsMode: 'adaptive', adaptiveQuality: true, backgroundFps: 1 };
 
     function cloneViewerPrefs(prefs) {
         return Object.assign({
             quality: 'Best',
             scale: 'fit',
             codec: 'Auto',
+            fpsMode: 'adaptive',
             adaptiveQuality: true,
             backgroundFps: 1,
             keyboardMode: 'Auto',
@@ -147,8 +148,8 @@
     function buildClientOpts(session) {
         const prefs = session.viewerPrefs || globalViewerPrefs;
         const userName = (window.BetterDesk.user && (window.BetterDesk.user.display_name || window.BetterDesk.user.username)) || 'BetterDesk Web';
-        const activeFps = typeof Prefs.getActiveFpsForQuality === 'function'
-            ? Prefs.getActiveFpsForQuality(prefs.quality)
+        const activeFps = typeof Prefs.getActiveFpsForMode === 'function'
+            ? Prefs.getActiveFpsForMode(prefs.fpsMode, prefs.quality)
             : 60;
         return {
             deviceId: session.deviceId,
@@ -157,11 +158,12 @@
             myName: userName,
             scaleMode: prefs.scale || 'fit',
             fps: activeFps,
+            fpsMode: prefs.fpsMode || 'adaptive',
             imageQuality: prefs.quality || 'Best',
             qualityPreset: typeof Prefs.getPresetForQuality === 'function'
                 ? Prefs.getPresetForQuality(prefs.quality)
                 : 'best',
-            adaptiveQuality: prefs.adaptiveQuality !== false,
+            adaptiveQuality: prefs.fpsMode === 'adaptive' && prefs.adaptiveQuality !== false,
             preferCodec: prefs.codec || 'Auto',
             disableAudio: false,
             serverRecord: session.meshServerRecord || false,
@@ -179,6 +181,9 @@
                 : ({ Best: 'best', Balanced: 'balanced', Low: 'speed' }[prefs.quality] || 'best');
             if (typeof client.setQualityPreset === 'function') {
                 client.setQualityPreset(preset);
+            }
+            if (typeof client.setFpsMode === 'function') {
+                client.setFpsMode(prefs.fpsMode || 'adaptive');
             }
             if (typeof client.setScaleMode === 'function') {
                 client.setScaleMode(prefs.scale || 'fit');
@@ -1182,6 +1187,9 @@
         document.querySelectorAll('.quality-item').forEach(function (btn) {
             btn.classList.toggle('active', btn.dataset.quality === p.quality);
         });
+        document.querySelectorAll('.fps-mode-item').forEach(function (btn) {
+            btn.classList.toggle('active', btn.dataset.fpsMode === (p.fpsMode || 'adaptive'));
+        });
         document.querySelectorAll('.scale-item').forEach(function (btn) {
             btn.classList.toggle('active', btn.dataset.scale === p.scale);
         });
@@ -1367,6 +1375,19 @@
             withClient(c => c.setQualityPreset(preset));
             if (session) updateSessionViewerPref(session, { quality: this.dataset.quality });
             document.querySelectorAll('.quality-item').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    document.querySelectorAll('.fps-mode-item').forEach(btn => {
+        btn.addEventListener('click', function () {
+            var mode = this.dataset.fpsMode || '30';
+            var session = getActiveSession();
+            withClient(c => {
+                if (typeof c.setFpsMode === 'function') c.setFpsMode(mode);
+            });
+            if (session) updateSessionViewerPref(session, { fpsMode: mode });
+            document.querySelectorAll('.fps-mode-item').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         });
     });

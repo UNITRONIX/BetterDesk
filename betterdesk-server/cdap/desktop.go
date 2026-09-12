@@ -27,6 +27,7 @@ type DesktopSession struct {
 	DeviceID string
 	Username string
 	Role     string
+	FpsMode  string
 
 	browser    *websocket.Conn
 	deviceConn *DeviceConn
@@ -43,6 +44,7 @@ type DesktopStartPayload struct {
 	Height       int      `json:"height"`
 	Quality      int      `json:"quality"` // JPEG quality 1-100
 	FPS          int      `json:"fps"`     // target frames per second
+	FpsMode      string   `json:"fps_mode,omitempty"`
 	OperatorName string   `json:"operator_name,omitempty"`
 	Codecs       []string `json:"codecs,omitempty"`      // codecs the operator can decode
 	VideoCodec   string   `json:"video_codec,omitempty"` // operator codec preference ("auto" = let agent choose)
@@ -96,7 +98,7 @@ type DesktopEndPayload struct {
 
 // StartDesktopSession creates a new remote desktop session between the
 // browser and a CDAP device for screen capture and input relay.
-func (g *Gateway) StartDesktopSession(ctx context.Context, browserConn *websocket.Conn, deviceID, username, role string, width, height, quality, fps int, codecs []string, videoCodec string) (*DesktopSession, error) {
+func (g *Gateway) StartDesktopSession(ctx context.Context, browserConn *websocket.Conn, deviceID, username, role string, width, height, quality, fps int, fpsMode string, codecs []string, videoCodec string) (*DesktopSession, error) {
 	dc := g.GetDeviceConn(deviceID)
 	if dc == nil {
 		return nil, fmt.Errorf("device %s not connected", deviceID)
@@ -119,8 +121,19 @@ func (g *Gateway) StartDesktopSession(ctx context.Context, browserConn *websocke
 	if quality <= 0 || quality > 100 {
 		quality = 70
 	}
-	if fps <= 0 || fps > 60 {
-		fps = 15
+	if fpsMode == "" {
+		if fps >= 60 {
+			fpsMode = "60"
+		} else {
+			fpsMode = "30"
+		}
+	} else if fpsMode != "60" && fpsMode != "adaptive" {
+		fpsMode = "30"
+	}
+	if fpsMode == "30" {
+		fps = 30
+	} else {
+		fps = 60
 	}
 	if width <= 0 {
 		width = 1280
@@ -140,6 +153,7 @@ func (g *Gateway) StartDesktopSession(ctx context.Context, browserConn *websocke
 		DeviceID:   deviceID,
 		Username:   username,
 		Role:       role,
+		FpsMode:    fpsMode,
 		browser:    browserConn,
 		deviceConn: dc,
 		createdAt:  time.Now(),
@@ -151,6 +165,7 @@ func (g *Gateway) StartDesktopSession(ctx context.Context, browserConn *websocke
 		Height:       height,
 		Quality:      quality,
 		FPS:          fps,
+		FpsMode:      fpsMode,
 		OperatorName: username,
 		Codecs:       codecs,
 		VideoCodec:   videoCodec,
@@ -182,6 +197,25 @@ func (g *Gateway) StartDesktopSession(ctx context.Context, browserConn *websocke
 	}
 
 	return ds, nil
+}
+
+func normalizeDesktopFpsMode(mode string) string {
+	if mode == "60" || mode == "adaptive" {
+		return mode
+	}
+	return "30"
+}
+
+// SetDesktopFpsMode updates the operator's FPS policy for a CDAP session.
+func (g *Gateway) SetDesktopFpsMode(sessionID, mode string) {
+	val, ok := g.desktopSessions.Load(sessionID)
+	if !ok {
+		return
+	}
+	ds := val.(*DesktopSession)
+	ds.mu.Lock()
+	ds.FpsMode = normalizeDesktopFpsMode(mode)
+	ds.mu.Unlock()
 }
 
 func (g *Gateway) issuePassiveDesktopGrant(deviceID, operatorID, sessionID string) (string, []string, error) {

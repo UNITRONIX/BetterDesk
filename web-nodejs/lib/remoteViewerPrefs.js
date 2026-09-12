@@ -15,11 +15,13 @@ const PRESET_FPS = {
     quality: 30,
     speed: 60,
 };
+const FPS_MODES = ['30', '60', 'adaptive'];
 
 const DEFAULTS = {
     quality: 'Best',
     scale: 'fit',
     codec: 'Auto',
+    fpsMode: 'adaptive',
     adaptiveQuality: true,
     backgroundFps: BACKGROUND_FPS,
     keyboardMode: 'Auto',
@@ -37,6 +39,9 @@ function sanitizePrefs(raw) {
     }
     if (typeof source.codec === 'string' && source.codec.length <= 16) {
         clean.codec = source.codec;
+    }
+    if (FPS_MODES.includes(source.fpsMode)) {
+        clean.fpsMode = source.fpsMode;
     }
     if (typeof source.adaptiveQuality === 'boolean') {
         clean.adaptiveQuality = source.adaptiveQuality;
@@ -58,6 +63,12 @@ function getPresetForQuality(quality) {
 
 function getActiveFpsForQuality(quality) {
     return PRESET_FPS[getPresetForQuality(quality)] || 30;
+}
+
+function getActiveFpsForMode(mode, quality) {
+    if (mode === '60' || mode === 'adaptive') return 60;
+    if (mode === '30') return 30;
+    return getActiveFpsForQuality(quality);
 }
 
 function storageKey(userId) {
@@ -93,9 +104,11 @@ module.exports = {
     DEFAULTS,
     QUALITY_TO_PRESET,
     PRESET_FPS,
+    FPS_MODES,
     sanitizePrefs,
     getPresetForQuality,
     getActiveFpsForQuality,
+    getActiveFpsForMode,
     storageKey,
     loadRemoteViewerPrefs,
     saveRemoteViewerPrefs,

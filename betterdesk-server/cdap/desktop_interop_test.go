@@ -30,12 +30,30 @@ func TestBetterDeskDesktopManifestCapabilitiesAreAccepted(t *testing.T) {
 }
 
 func TestDesktopStartPayloadSupportsViewOnlySessions(t *testing.T) {
-	payload := []byte(`{"session_id":"desk-1","width":1280,"height":720,"quality":70,"fps":30,"view_only":true}`)
+	payload := []byte(`{"session_id":"desk-1","width":1280,"height":720,"quality":70,"fps":30,"fps_mode":"30","view_only":true}`)
 	var start DesktopStartPayload
 	if err := json.Unmarshal(payload, &start); err != nil {
 		t.Fatalf("decode desktop_start: %v", err)
 	}
 	if !start.ViewOnly {
 		t.Fatal("expected view_only to be preserved")
+	}
+	if start.FpsMode != "30" {
+		t.Fatalf("expected fps_mode to be preserved, got %q", start.FpsMode)
+	}
+}
+
+func TestNormalizeDesktopFpsMode(t *testing.T) {
+	tests := map[string]string{
+		"30":          "30",
+		"60":          "60",
+		"adaptive":    "adaptive",
+		"unsupported": "30",
+		"":            "30",
+	}
+	for input, expected := range tests {
+		if got := normalizeDesktopFpsMode(input); got != expected {
+			t.Errorf("normalizeDesktopFpsMode(%q) = %q, want %q", input, got, expected)
+		}
 	}
 }
