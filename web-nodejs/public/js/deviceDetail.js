@@ -259,10 +259,10 @@ const DeviceDetail = (function () {
             { id: 'overview',  icon: 'info',            label: _('device_detail.tab_overview') },
             { id: 'hardware',  icon: 'memory',          label: _('device_detail.tab_hardware') },
             { id: 'metrics',   icon: 'monitoring',      label: _('device_detail.tab_metrics') },
-            { id: 'services',  icon: 'settings_applications', label: _('device_detail.tab_services') },
+            { id: 'services',  icon: 'settings',          label: _('device_detail.tab_services') },
             { id: 'processes', icon: 'memory',          label: _('device_detail.tab_processes') },
             { id: 'events',    icon: 'event_note',      label: _('device_detail.tab_events') },
-            { id: 'activity',  icon: 'insights',        label: _('device_detail.tab_activity') },
+            { id: 'activity',  icon: 'timeline',        label: _('device_detail.tab_activity') },
             { id: 'files',     icon: 'folder_open',     label: _('device_detail.tab_files') },
             { id: 'tags',      icon: 'sell',             label: _('device_detail.tab_tags') },
             { id: 'actions',   icon: 'play_arrow',       label: _('device_detail.tab_actions') }
@@ -283,10 +283,10 @@ const DeviceDetail = (function () {
             ${_overviewPane()}
             ${_hardwarePane()}
             ${_metricsPane()}
-            ${_agentPane('services', 'settings_applications', 'tab_services')}
+            ${_agentPane('services', 'settings', 'tab_services')}
             ${_agentPane('processes', 'memory', 'tab_processes')}
             ${_agentPane('events', 'event_note', 'tab_events')}
-            ${_agentPane('activity', 'insights', 'tab_activity')}
+            ${_agentPane('activity', 'timeline', 'tab_activity')}
             ${_agentPane('files', 'folder_open', 'tab_files')}
             ${_tagsPane()}
             ${_actionsPane()}
