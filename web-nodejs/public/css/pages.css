@@ -2377,7 +2377,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
-    min-width: 440px;
+    min-width: min(440px, 100%);
 }
 .update-wizard-header {
     display: flex;
@@ -2400,6 +2400,7 @@
 }
 .update-wizard-meta {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--space-sm);
@@ -2409,8 +2410,11 @@
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    flex: 0 0 auto;
 }
 .update-wizard-detail {
+    flex: 1 1 220px;
+    min-width: 0;
     color: var(--text-primary);
     text-align: right;
     min-height: 1.3em;
@@ -2495,6 +2499,7 @@
 }
 .update-wizard-log-toolbar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-sm);
