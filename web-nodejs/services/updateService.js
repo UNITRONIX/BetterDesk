@@ -1973,12 +1973,15 @@ function isAllowedGithubDownloadHost(hostname) {
         || host.endsWith('.blob.core.windows.net');
 }
 
-function downloadGithubBuffer(downloadUrl, { maxBytes = MAX_SERVER_BINARY_BYTES, accept = 'application/octet-stream' } = {}) {
+function downloadGithubBuffer(
+    downloadUrl,
+    { maxBytes = MAX_SERVER_BINARY_BYTES, accept = 'application/octet-stream' } = {}
+) {
     if (!downloadUrl || typeof downloadUrl !== 'string') {
         return Promise.reject(new Error('Invalid GitHub download URL'));
     }
 
-    const follow = (target, redirects = 0) => {
+    const follow = (target, redirects = 0, useConfiguredToken = true) => {
         if (redirects > 5) return Promise.reject(new Error('Too many GitHub download redirects'));
         let url;
         try {
@@ -1994,7 +1997,11 @@ function downloadGithubBuffer(downloadUrl, { maxBytes = MAX_SERVER_BINARY_BYTES,
             const headers = { 'User-Agent': USER_AGENT, Accept: accept };
             // Signed artifact redirects do not need the API token. Never send
             // the token to a storage host.
-            if (GITHUB_TOKEN && url.hostname.toLowerCase() === 'api.github.com') {
+            if (
+                useConfiguredToken
+                && GITHUB_TOKEN
+                && url.hostname.toLowerCase() === 'api.github.com'
+            ) {
                 headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
             }
             const req = https.get({
@@ -2004,12 +2011,37 @@ function downloadGithubBuffer(downloadUrl, { maxBytes = MAX_SERVER_BINARY_BYTES,
             }, (res) => {
                 if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                     res.resume();
-                    return follow(new URL(res.headers.location, url).toString(), redirects + 1)
+                    return follow(
+                        new URL(res.headers.location, url).toString(),
+                        redirects + 1,
+                        useConfiguredToken
+                    )
                         .then(resolve, reject);
+                }
+                // A stale/incorrect GITHUB_TOKEN must not prevent updates of
+                // the public BetterDesk repository. GitHub returns 401 before
+                // issuing the signed artifact redirect in that case. Retry
+                // once without credentials; this also keeps the token away
+                // from any subsequent storage redirect.
+                if (
+                    res.statusCode === 401
+                    && useConfiguredToken
+                    && GITHUB_TOKEN
+                    && url.hostname.toLowerCase() === 'api.github.com'
+                ) {
+                    res.resume();
+                    console.warn(
+                        '[UPDATE] GitHub rejected the configured token for a public download; '
+                        + 'retrying without credentials'
+                    );
+                    return follow(target, redirects, false).then(resolve, reject);
                 }
                 if (res.statusCode !== 200) {
                     res.resume();
-                    return reject(new Error(`GitHub download failed: HTTP ${res.statusCode}`));
+                    const hint = res.statusCode === 401 && GITHUB_TOKEN
+                        ? ' (configured UPDATE_GITHUB_TOKEN was rejected or lacks access)'
+                        : '';
+                    return reject(new Error(`GitHub download failed: HTTP ${res.statusCode}${hint}`));
                 }
 
                 const declaredSize = Number(res.headers['content-length'] || 0);
@@ -2285,6 +2317,7 @@ async function downloadPrebuiltBinary(downloadUrl, expected = {}) {
     try {
         const payload = await downloadGithubBuffer(downloadUrl, {
             maxBytes: metadata.archive ? MAX_SERVER_ARTIFACT_BYTES : MAX_SERVER_BINARY_BYTES,
+            accept: metadata.archive ? 'application/vnd.github+json' : 'application/octet-stream',
         });
         let binaryData = payload;
         let manifest = metadata.manifest || null;
@@ -3068,7 +3101,10 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
             // ---- Strategy: Download pre-built binary ----
             console.log('[UPDATE] Go not available or download strategy selected — trying pre-built binary download');
 
-            // Try to get from GitHub Releases first
+            // Try the exact commit-bound GitHub artifact first. In auto mode
+            // this is an optimisation, not a hard dependency: public artifact
+            // downloads can fail with 401/expired URLs even when the local
+            // toolchain is perfectly usable.
             let downloadResult = null;
             if (prebuilt.available && prebuilt.downloadUrl) {
                 downloadResult = await downloadPrebuiltBinary(prebuilt.downloadUrl, {
@@ -3094,16 +3130,84 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
                 serverBinaryPath = downloadResult.binaryPath;
                 buildUsed = 'download';
             } else {
-                const errMsg = downloadResult?.error
+                const downloadError = downloadResult?.error
                     || prebuilt?.reason
                     || 'No verified pre-built binary available and Go not installed';
-                results.serverBuild = {
-                    success: false,
-                    duration: 0,
-                    error: errMsg,
-                    method: 'download'
-                };
-                results.failed.push({ file: 'betterdesk-server', error: errMsg });
+
+                // A failed pre-built download must not be reported as an
+                // update failure when auto mode can compile the same exact
+                // source locally. Previously this path left a non-critical
+                // failure behind, then rebuilt a second time in the stale
+                // marker recovery block, producing "Applied N / Failed 1"
+                // even though the update was healthy.
+                if (strategy === 'auto') {
+                    if (!goAvailable) {
+                        try {
+                            const tc = await installGoToolchain();
+                            results.toolchainInstall = {
+                                success: tc.success,
+                                version: tc.version || null,
+                                error: tc.error || null,
+                                binPath: tc.binPath || null,
+                                autoTriggered: true,
+                                afterPrebuiltFailure: true
+                            };
+                            if (tc.success) {
+                                goAvailable = true;
+                                preferredGoBinPath = tc.binPath || null;
+                            }
+                        } catch (err) {
+                            results.toolchainInstall = {
+                                success: false,
+                                version: null,
+                                error: err.message || String(err),
+                                binPath: null,
+                                autoTriggered: true,
+                                afterPrebuiltFailure: true
+                            };
+                        }
+                    }
+
+                    if (goAvailable) {
+                        const buildResult = await buildGoServer(preferredGoBinPath);
+                        results.serverBuild = {
+                            success: buildResult.success,
+                            duration: buildResult.duration || 0,
+                            error: buildResult.error || null,
+                            method: 'compile',
+                            fallbackFrom: 'download',
+                            downloadError
+                        };
+                        if (buildResult.success) {
+                            serverBinaryPath = buildResult.binaryPath;
+                            buildUsed = 'compile';
+                            console.warn(
+                                `[UPDATE] Pre-built server download failed; local compile succeeded: ${downloadError}`
+                            );
+                        } else {
+                            results.failed.push({
+                                file: 'betterdesk-server',
+                                error: `Pre-built download failed (${downloadError}); local compile failed: ${buildResult.error || 'unknown error'}`
+                            });
+                        }
+                    } else {
+                        results.serverBuild = {
+                            success: false,
+                            duration: 0,
+                            error: downloadError,
+                            method: 'download'
+                        };
+                        results.failed.push({ file: 'betterdesk-server', error: downloadError });
+                    }
+                } else {
+                    results.serverBuild = {
+                        success: false,
+                        duration: 0,
+                        error: downloadError,
+                        method: 'download'
+                    };
+                    results.failed.push({ file: 'betterdesk-server', error: downloadError });
+                }
             }
         }
 
@@ -3867,6 +3971,7 @@ module.exports = {
     getPrebuiltInfo,
     checkPrebuiltAvailable,
     downloadPrebuiltBinary,
+    downloadGithubBuffer,
     getServerBinaryTarget,
     validateServerBinaryManifest,
     getSafeZipEntryName,

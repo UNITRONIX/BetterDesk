@@ -128,4 +128,53 @@ describe('updateService server binary delivery', () => {
             commit: remoteSHA,
         });
     });
+
+    it('retries a public artifact download without a rejected GitHub token', async () => {
+        const previousUpdateToken = process.env.UPDATE_GITHUB_TOKEN;
+        const previousGithubToken = process.env.GITHUB_TOKEN;
+        process.env.UPDATE_GITHUB_TOKEN = 'stale-token';
+        process.env.GITHUB_TOKEN = 'stale-token';
+        jest.resetModules();
+        delete require.cache[require.resolve('../services/updateService')];
+        updateService = require('../services/updateService');
+
+        const requests = [];
+        jest.spyOn(https, 'get').mockImplementation((options, callback) => {
+            requests.push(options);
+            const isFirstRequest = requests.length === 1;
+            const response = {
+                statusCode: isFirstRequest ? 401 : 200,
+                headers: {},
+                resume: jest.fn(),
+                on(event, handler) {
+                    if (!isFirstRequest && event === 'data') {
+                        process.nextTick(() => handler(Buffer.from('public-artifact')));
+                    }
+                    if (!isFirstRequest && event === 'end') {
+                        process.nextTick(handler);
+                    }
+                },
+            };
+            process.nextTick(() => callback(response));
+            return {
+                on: jest.fn(),
+                setTimeout: jest.fn(),
+                destroy: jest.fn(),
+            };
+        });
+
+        try {
+            await expect(updateService.downloadGithubBuffer(
+                'https://api.github.com/repos/UNITRONIX/BetterDesk/actions/artifacts/67890/zip',
+                { maxBytes: 1024 }
+            )).resolves.toEqual(Buffer.from('public-artifact'));
+            expect(requests[0].headers.Authorization).toBe('Bearer stale-token');
+            expect(requests[1].headers.Authorization).toBeUndefined();
+        } finally {
+            if (previousUpdateToken === undefined) delete process.env.UPDATE_GITHUB_TOKEN;
+            else process.env.UPDATE_GITHUB_TOKEN = previousUpdateToken;
+            if (previousGithubToken === undefined) delete process.env.GITHUB_TOKEN;
+            else process.env.GITHUB_TOKEN = previousGithubToken;
+        }
+    });
 });

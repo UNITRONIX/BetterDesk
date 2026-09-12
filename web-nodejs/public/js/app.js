@@ -254,9 +254,14 @@
         let retryDelay = 3000;
 
         function connect() {
+            // The console is intentionally unavailable during an in-panel
+            // restart. Do not create a burst of failed WSS handshakes while
+            // systemd/NSSM is bringing the replacement process up.
+            if (window.BetterDesk?.consoleRestarting) return;
             try {
                 ws = new WebSocket(wsUrl);
             } catch (_) {
+                if (window.BetterDesk?.consoleRestarting) return;
                 setTimeout(connect, retryDelay);
                 retryDelay = Math.min(retryDelay * 2, 60000);
                 return;
@@ -282,11 +287,13 @@
             };
 
             ws.onclose = () => {
+                if (window.BetterDesk?.consoleRestarting) return;
                 setTimeout(connect, retryDelay);
                 retryDelay = Math.min(retryDelay * 2, 60000);
             };
 
             ws.onerror = () => {
+                if (window.BetterDesk?.consoleRestarting) return;
                 ws.close();
             };
         }

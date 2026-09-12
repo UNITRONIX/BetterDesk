@@ -3991,9 +3991,14 @@
             }
 
             if (result.needsConsoleRestart && !result.consoleRestartBlocked) {
+                window.BetterDesk = window.BetterDesk || {};
+                window.BetterDesk.consoleRestarting = true;
                 setUpdatePhase('restart', 'active', _('updates.restarting'));
                 logUpdate(_('updates.console_will_restart'));
-                setTimeout(() => pollConsoleRestart(result), 2500);
+                // systemd/NSSM normally needs a few seconds to replace the
+                // process. Waiting through that grace window avoids logging
+                // expected connection-refused probes in the browser console.
+                setTimeout(() => pollConsoleRestart(result), 8000);
             } else if (result.consoleRestartBlocked) {
                 setUpdatePhase('restart', 'error', result.consoleRestartBlocked);
                 logUpdate(result.consoleRestartBlocked);
@@ -4021,6 +4026,8 @@
     }
 
     function pollConsoleRestart(installResult) {
+        window.BetterDesk = window.BetterDesk || {};
+        window.BetterDesk.consoleRestarting = true;
         let attempts = 0;
         const maxAttempts = 90;
         const previousCacheVersion = window.BetterDesk?.cacheVersion || '';
@@ -4041,6 +4048,7 @@
                     }
 
                     clearInterval(interval);
+                    window.BetterDesk.consoleRestarting = false;
                     setUpdatePhase('restart', 'done', _('updates.restart_complete'));
                     setUpdatePhase('done', 'done', _('updates.complete'));
                     logUpdate(_('updates.restart_complete'));
@@ -4058,6 +4066,7 @@
             }
             if (attempts >= maxAttempts) {
                 clearInterval(interval);
+                window.BetterDesk.consoleRestarting = false;
                 setUpdatePhase('restart', 'warning', _('updates.restart_timeout'));
                 setUpdatePhase('done', 'done', _('updates.complete'));
                 logUpdate(_('updates.restart_timeout'));
@@ -5166,6 +5175,8 @@
             Notifications.success(_('settings.advanced_restart_started'));
 
             if (result && result.needsConsolePoll) {
+                window.BetterDesk = window.BetterDesk || {};
+                window.BetterDesk.consoleRestarting = true;
                 pollAdvancedConsoleRestart();
             }
         } catch (err) {
@@ -5177,6 +5188,8 @@
     }
 
     function pollAdvancedConsoleRestart() {
+        window.BetterDesk = window.BetterDesk || {};
+        window.BetterDesk.consoleRestarting = true;
         let attempts = 0;
         const maxAttempts = 90;
         const previousCacheVersion = window.BetterDesk?.cacheVersion || '';
@@ -5196,6 +5209,7 @@
                         return;
                     }
                     clearInterval(interval);
+                    window.BetterDesk.consoleRestarting = false;
                     Notifications.success(_('settings.advanced_restart_done'));
                     setTimeout(() => window.location.reload(), 2000);
                     return;
@@ -5203,6 +5217,7 @@
             } catch (_) { /* console still restarting */ }
             if (attempts >= maxAttempts) {
                 clearInterval(interval);
+                window.BetterDesk.consoleRestarting = false;
                 Notifications.warning(_('settings.advanced_restart_timeout'));
             }
         }, 2000);
