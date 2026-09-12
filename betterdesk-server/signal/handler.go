@@ -82,6 +82,43 @@ func encodePeerSocketAddr(entry *peer.Entry) []byte {
 	return crypto.EncodeAddr(&net.UDPAddr{IP: ip, Port: int(portNumber)})
 }
 
+// relayAdvertisedAddr returns the endpoint that a target RustDesk client will
+// see in RequestRelay.socket_addr. Native UDP/TCP clients have a real endpoint
+// and keep the existing address unchanged. WebSocket clients do not expose a
+// usable UDP source port through the WSS proxy, so advertise the registered
+// client IP (or the trusted current IP) with port 0 instead of leaking the
+// proxy's ephemeral TCP port. The live correlation address remains separate.
+func relayAdvertisedAddr(s *Server, correlationAddr *net.UDPAddr, initiatorID string, initiatorType peer.ConnType) *net.UDPAddr {
+	if correlationAddr == nil {
+		return nil
+	}
+	if initiatorType != peer.ConnWS {
+		addr := *correlationAddr
+		addr.IP = append(net.IP(nil), correlationAddr.IP...)
+		return &addr
+	}
+
+	if s != nil && s.peers != nil && initiatorID != "" {
+		if entry := s.peers.Get(initiatorID); entry != nil {
+			if entry.UDPAddr != nil {
+				addr := *entry.UDPAddr
+				addr.IP = append(net.IP(nil), entry.UDPAddr.IP...)
+				return &addr
+			}
+			host := entry.IP
+			if parsedHost, _, err := net.SplitHostPort(host); err == nil {
+				host = parsedHost
+			}
+			if ip := net.ParseIP(strings.Trim(host, "[]")); ip != nil {
+				return &net.UDPAddr{IP: ip}
+			}
+		}
+	}
+
+	addr := &net.UDPAddr{IP: append(net.IP(nil), correlationAddr.IP...)}
+	return addr
+}
+
 // ensurePunchHoleSocketAddr rejects a success-shaped PunchHoleResponse that
 // still has an empty socket_addr (#405). Stock RustDesk only reads Failure when
 // socket_addr is empty, and an unset Failure defaults to ID_NOT_EXIST — so a
@@ -1546,11 +1583,20 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 		}
 	}
 
+	advertisedAddr := relayAdvertisedAddr(s, raddr, initiatorID, initiatorType)
+	if advertisedAddr == nil {
+		return s.relayUnauthorizedResponse(relayServer)
+	}
+	if !advertisedAddr.IP.Equal(raddr.IP) || advertisedAddr.Port != raddr.Port {
+		log.Printf("[signal] RequestRelay (TCP): advertising %s for initiator %s (correlation=%s)",
+			advertisedAddr, initiatorID, raddr)
+	}
+
 	// Forward RequestRelay to target peer (supports UDP, TCP, and WebSocket targets).
 	reqRelay := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
-				SocketAddr:         crypto.EncodeAddr(raddr),
+				SocketAddr:         crypto.EncodeAddr(advertisedAddr),
 				Uuid:               relayUUID,
 				Id:                 msg.Id,
 				RelayServer:        relayServer,
@@ -1562,7 +1608,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 		},
 	}
 	// Store the UUID so we can recover it if target responds with empty UUID.
-	s.storePendingUUID(targetID, raddr, relayUUID, initiatorID)
+	s.storePendingRelay(targetID, raddr, advertisedAddr, relayUUID, initiatorID)
 	if s.sendToPeer(targetID, reqRelay) {
 		log.Printf("[signal] RequestRelay (TCP): forwarded to %s (connType=%s) secure=%v", targetID, target.ConnType, msg.Secure)
 	}
@@ -1620,8 +1666,6 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		return
 	}
 
-	addrStr := normalizeAddrKey(initiatorAddr.String())
-
 	// Look up the target peer to get its public key and sign it (matching Rust's get_pk).
 	targetID := rr.GetId()
 	senderID := s.peerIDForAddr(senderAddr)
@@ -1642,6 +1686,9 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	if pending == nil && targetID != "" {
 		pending = s.getPendingRelay(targetID, initiatorAddr)
 	}
+	if pending == nil {
+		pending = s.getPendingRelayByAdvertised(targetID, initiatorAddr)
+	}
 	if pending == nil && targetID == "" && initiatorAddr != nil {
 		suffix := "\x00" + normalizeAddrKey(initiatorAddr.String())
 		s.pendingRelayUUIDs.Range(func(key, value any) bool {
@@ -1650,7 +1697,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 				return true
 			}
 			keyStr, _ := key.(string)
-			if strings.HasSuffix(keyStr, suffix) {
+			if strings.HasSuffix(keyStr, suffix) || pu.advertisedAddr == normalizeAddrKey(initiatorAddr.String()) {
 				pending = pu
 				return false
 			}
@@ -1669,6 +1716,13 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 				short = short[:8]
 			}
 			log.Printf("[signal] RelayResponse from %s has empty UUID — recovered original %s from pending store", senderAddr, short)
+		}
+	}
+
+	forwardAddr := initiatorAddr
+	if pending != nil && pending.correlationAddr != "" {
+		if addr, resolveErr := net.ResolveUDPAddr("udp", pending.correlationAddr); resolveErr == nil {
+			forwardAddr = addr
 		}
 	}
 
@@ -1691,7 +1745,14 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	// is critical for relay pairing — the target may have connected to relay with
 	// that UUID, but the old RustDesk client doesn't echo it back.
 	if rr.Uuid == "" {
-		if storedUUID := s.getPendingUUID(targetID, initiatorAddr); storedUUID != "" {
+		storedUUID := ""
+		if pending != nil {
+			storedUUID = pending.uuid
+		}
+		if storedUUID == "" {
+			storedUUID = s.getPendingUUID(targetID, initiatorAddr)
+		}
+		if storedUUID != "" {
 			rr.Uuid = storedUUID
 			log.Printf("[signal] RelayResponse from %s has empty UUID — recovered original %s from pending store", senderAddr, storedUUID[:8])
 		} else {
@@ -1783,22 +1844,25 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	}
 
 	// Primary delivery: TCP punch map or WebSocket peer (#276).
-	if s.forwardToInitiator(addrStr, initiatorResp) {
-		log.Printf("[signal] RelayResponse forwarded to %s (uuid=%s, relay=%s, signedPk=%d bytes)", addrStr, rr.Uuid, relayServer, len(signedPk))
+	forwardAddrStr := normalizeAddrKey(forwardAddr.String())
+	if s.forwardToInitiator(forwardAddrStr, initiatorResp) {
+		log.Printf("[signal] RelayResponse forwarded to %s (advertised=%s, uuid=%s, relay=%s, signedPk=%d bytes)",
+			forwardAddrStr, initiatorAddr, rr.Uuid, relayServer, len(signedPk))
 		return
 	}
 
 	// Safe UDP fallback: exact initiator endpoint, or the resolved initiator's
 	// registered UDP addr. Never FindByIP on shared NAT (#399 misdelivery).
-	if initiatorAddr != nil {
-		if s.sendUDP(initiatorResp, initiatorAddr) {
-			log.Printf("[signal] RelayResponse forwarded to exact initiator %s via UDP (uuid=%s, relay=%s, signedPk=%d bytes)", initiatorAddr, rr.Uuid, relayServer, len(signedPk))
+	if forwardAddr != nil {
+		if s.sendUDP(initiatorResp, forwardAddr) {
+			log.Printf("[signal] RelayResponse forwarded to exact initiator %s via UDP (advertised=%s, uuid=%s, relay=%s, signedPk=%d bytes)",
+				forwardAddr, initiatorAddr, rr.Uuid, relayServer, len(signedPk))
 			return
 		}
 	}
 	if entry := s.peers.Get(initiatorID); entry != nil && entry.UDPAddr != nil {
 		if s.peers.CountByIP(entry.UDPAddr.IP) > 1 &&
-			(initiatorAddr == nil || entry.UDPAddr.Port != initiatorAddr.Port || !entry.UDPAddr.IP.Equal(initiatorAddr.IP)) {
+			(forwardAddr == nil || entry.UDPAddr.Port != forwardAddr.Port || !entry.UDPAddr.IP.Equal(forwardAddr.IP)) {
 			log.Printf("[signal] RelayResponse: refusing ambiguous UDP delivery for initiator %s at shared IP %s (uuid=%s)", initiatorID, entry.UDPAddr.IP, rr.Uuid)
 			return
 		}
@@ -1808,7 +1872,8 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		}
 	}
 
-	log.Printf("[signal] RelayResponse: cannot deliver to %s (no TCP conn, no safe peer match, uuid=%s)", addrStr, rr.Uuid)
+	log.Printf("[signal] RelayResponse: cannot deliver to %s (advertised=%s, no TCP conn, no safe peer match, uuid=%s)",
+		forwardAddrStr, initiatorAddr, rr.Uuid)
 }
 
 // relayResponseSourceMatchesTarget applies the strongest source correlation

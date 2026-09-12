@@ -402,13 +402,13 @@ func TestWSEffectiveRemoteAddr(t *testing.T) {
 	t.Parallel()
 	loopbackNet := mustCIDR(t, "10.0.0.0/8")
 	cases := []struct {
-		name            string
-		trustProxy      bool
-		trustedProxies  []*net.IPNet
-		remoteAddr      string
-		xri             string
-		xff             string
-		want            string
+		name           string
+		trustProxy     bool
+		trustedProxies []*net.IPNet
+		remoteAddr     string
+		xri            string
+		xff            string
+		want           string
 	}{
 		{
 			name:       "no proxy trust ignores headers",
@@ -836,6 +836,14 @@ func TestWSSignalXForwardedFor(t *testing.T) {
 	_, err = net.ResolveUDPAddr("udp", entry.IP)
 	if err != nil {
 		t.Fatalf("peer IP %q must parse as UDP addr: %v", entry.IP, err)
+	}
+
+	advertised := relayAdvertisedAddr(srv, udpAddr("203.0.113.50", 59999), "XFFWS01", peer.ConnWS)
+	if advertised == nil || !advertised.IP.Equal(net.ParseIP("203.0.113.50")) {
+		t.Fatalf("advertised WS relay IP = %v, want 203.0.113.50", advertised)
+	}
+	if advertised.Port != 0 {
+		t.Fatalf("advertised WS relay port = %d, want 0 instead of proxy port", advertised.Port)
 	}
 }
 

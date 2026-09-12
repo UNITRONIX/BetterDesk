@@ -29,6 +29,28 @@ func TestPendingRelayUUIDIsolatedByInitiatorEndpoint(t *testing.T) {
 	}
 }
 
+func TestPendingRelayAdvertisedAddressResolvesCorrelationEndpoint(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	correlation := udpAddr("203.0.113.50", 59999)
+	advertised := udpAddr("203.0.113.50", 0)
+
+	srv.storePendingRelay("CORRTARGETWS", correlation, advertised, "corr-ws-session", "CORRWSINIT")
+
+	pending := srv.getPendingRelayByAdvertised("CORRTARGETWS", advertised)
+	if pending == nil {
+		t.Fatal("advertised address should resolve pending relay")
+	}
+	if pending.correlationAddr != normalizeAddrKey(correlation.String()) {
+		t.Fatalf("correlation address = %q, want %q", pending.correlationAddr, correlation)
+	}
+	if pending.initiatorID != "CORRWSINIT" {
+		t.Fatalf("initiator ID = %q, want CORRWSINIT", pending.initiatorID)
+	}
+	if got := srv.getPendingRelayByUUID("corr-ws-session"); got != pending {
+		t.Fatal("UUID and advertised-address indexes must reference the same pending session")
+	}
+}
+
 func TestRelayResponseRejectsUnexpectedTargetSource(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	targetAddr := udpAddr("203.0.113.201", 52001)

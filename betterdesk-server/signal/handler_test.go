@@ -58,6 +58,37 @@ func udpAddr(ip string, port int) *net.UDPAddr {
 	return &net.UDPAddr{IP: net.ParseIP(ip), Port: port}
 }
 
+func TestRelayAdvertisedAddrUsesWSClientIPWithoutProxyPort(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.peers.Put(&peer.Entry{
+		ID:       "WSADDR01",
+		IP:       "203.0.113.50:41000",
+		ConnType: peer.ConnWS,
+		LastReg:  time.Now(),
+	})
+
+	got := relayAdvertisedAddr(srv, udpAddr("203.0.113.50", 59999), "WSADDR01", peer.ConnWS)
+	if got == nil {
+		t.Fatal("relayAdvertisedAddr returned nil")
+	}
+	if !got.IP.Equal(net.ParseIP("203.0.113.50")) {
+		t.Fatalf("advertised IP = %s, want 203.0.113.50", got.IP)
+	}
+	if got.Port != 0 {
+		t.Fatalf("advertised port = %d, want 0 instead of proxy port", got.Port)
+	}
+}
+
+func TestRelayAdvertisedAddrPreservesNativeEndpoint(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	correlation := udpAddr("198.51.100.50", 41000)
+
+	got := relayAdvertisedAddr(srv, correlation, "NATIVE01", peer.ConnTCP)
+	if got == nil || !got.IP.Equal(correlation.IP) || got.Port != correlation.Port {
+		t.Fatalf("native advertised address = %v, want %v", got, correlation)
+	}
+}
+
 func TestProcessRegisterPkManagedRejectsUnknownPeer(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 

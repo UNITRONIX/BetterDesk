@@ -49,10 +49,12 @@ type tcpPunchConn struct {
 // initiator identity. We store both so the reverse path does not fall back to
 // unsafe FindByIP on shared NAT.
 type pendingUUID struct {
-	uuid        string
-	targetID    string
-	initiatorID string
-	createdAt   time.Time
+	uuid            string
+	targetID        string
+	initiatorID     string
+	correlationAddr string
+	advertisedAddr  string
+	createdAt       time.Time
 }
 
 // pendingPunch tracks a scheduled P2P-first fallback for an initiator that is
@@ -136,6 +138,11 @@ type Server struct {
 	// RelayResponse can recover target/initiator when socket_addr correlation
 	// is incomplete (#399).
 	pendingRelayByUUID sync.Map // map[string]*pendingUUID
+
+	// pendingRelayByAdvertised indexes the address sent in RequestRelay.socket_addr
+	// back to the pending session. This keeps legacy clients without a UUID
+	// correlated after WebSocket mode stops advertising the proxy port.
+	pendingRelayByAdvertised sync.Map // map[targetID + "\x00" + advertisedAddr]*pendingUUID
 
 	// pendingPunches tracks P2P-first fallback timers per initiator address
 	// (issue #157). Key=normalizeAddrKey(initiatorAddr), Value=*pendingPunch.
@@ -1057,6 +1064,11 @@ func (s *Server) cleanupTCPPunchConns() {
 					if pu.uuid != "" {
 						s.pendingRelayByUUID.Delete(pu.uuid)
 					}
+					if pu.advertisedAddr != "" {
+						s.pendingRelayByAdvertised.Delete(
+							pendingRelayAdvertisedKey(pu.targetID, pu.advertisedAddr),
+						)
+					}
 					uuidEvicted++
 				}
 				return true
@@ -1119,20 +1131,41 @@ func pendingRelayKey(targetID string, initiatorAddr *net.UDPAddr) string {
 	return targetID + "\x00" + normalizeAddrKey(initiatorAddr.String())
 }
 
+func pendingRelayAdvertisedKey(targetID, advertisedAddr string) string {
+	return targetID + "\x00" + normalizeAddrKey(advertisedAddr)
+}
+
 // storePendingUUID stores relay session correlation for later RelayResponse
 // forwarding (#399). uuid may be empty when PunchHole has not minted a relay
 // ticket yet; initiatorID should still be recorded so the reverse path does
 // not resolve via FindByIP on shared NAT.
 func (s *Server) storePendingUUID(targetID string, initiatorAddr *net.UDPAddr, uuid, initiatorID string) {
+	s.storePendingRelay(targetID, initiatorAddr, initiatorAddr, uuid, initiatorID)
+}
+
+// storePendingRelay stores both addresses involved in a relay session.
+// correlationAddr identifies the live TCP/WS connection inside the server;
+// advertisedAddr is the endpoint encoded into RequestRelay.socket_addr and
+// therefore visible to the target client. They are normally identical for
+// native UDP/TCP clients, but differ for WSS sessions behind a proxy.
+func (s *Server) storePendingRelay(targetID string, correlationAddr, advertisedAddr *net.UDPAddr, uuid, initiatorID string) {
 	if targetID == "" && uuid == "" {
 		return
 	}
-	key := pendingRelayKey(targetID, initiatorAddr)
+	key := pendingRelayKey(targetID, correlationAddr)
 	entry := &pendingUUID{
-		uuid:        uuid,
-		targetID:    targetID,
-		initiatorID: initiatorID,
-		createdAt:   time.Now(),
+		uuid:            uuid,
+		targetID:        targetID,
+		initiatorID:     initiatorID,
+		correlationAddr: "",
+		advertisedAddr:  "",
+		createdAt:       time.Now(),
+	}
+	if correlationAddr != nil {
+		entry.correlationAddr = normalizeAddrKey(correlationAddr.String())
+	}
+	if advertisedAddr != nil {
+		entry.advertisedAddr = normalizeAddrKey(advertisedAddr.String())
 	}
 	// Merge with an existing entry for the same endpoint so a later UUID
 	// fill-in does not wipe initiator identity (or vice versa).
@@ -1147,14 +1180,31 @@ func (s *Server) storePendingUUID(targetID string, initiatorAddr *net.UDPAddr, u
 			if entry.targetID == "" {
 				entry.targetID = old.targetID
 			}
+			if entry.correlationAddr == "" {
+				entry.correlationAddr = old.correlationAddr
+			}
+			if entry.advertisedAddr == "" {
+				entry.advertisedAddr = old.advertisedAddr
+			}
 			if old.uuid != "" && old.uuid != entry.uuid {
 				s.pendingRelayByUUID.Delete(old.uuid)
+			}
+			if old.advertisedAddr != "" && old.advertisedAddr != entry.advertisedAddr {
+				s.pendingRelayByAdvertised.Delete(
+					pendingRelayAdvertisedKey(old.targetID, old.advertisedAddr),
+				)
 			}
 		}
 	}
 	s.pendingRelayUUIDs.Store(key, entry)
 	if entry.uuid != "" {
 		s.pendingRelayByUUID.Store(entry.uuid, entry)
+	}
+	if entry.advertisedAddr != "" {
+		s.pendingRelayByAdvertised.Store(
+			pendingRelayAdvertisedKey(entry.targetID, entry.advertisedAddr),
+			entry,
+		)
 	}
 }
 
@@ -1166,6 +1216,36 @@ func (s *Server) getPendingRelay(targetID string, initiatorAddr *net.UDPAddr) *p
 		}
 	}
 	return nil
+}
+
+// getPendingRelayByAdvertised looks up a legacy relay response using the
+// address that the target echoed from RequestRelay.socket_addr.
+func (s *Server) getPendingRelayByAdvertised(targetID string, advertisedAddr *net.UDPAddr) *pendingUUID {
+	if advertisedAddr == nil {
+		return nil
+	}
+	if targetID != "" {
+		if val, ok := s.pendingRelayByAdvertised.Load(
+			pendingRelayAdvertisedKey(targetID, advertisedAddr.String()),
+		); ok {
+			if pu, ok := val.(*pendingUUID); ok {
+				return pu
+			}
+		}
+		return nil
+	}
+
+	want := normalizeAddrKey(advertisedAddr.String())
+	var found *pendingUUID
+	s.pendingRelayByAdvertised.Range(func(_, value any) bool {
+		pu, ok := value.(*pendingUUID)
+		if !ok || pu == nil || pu.advertisedAddr != want {
+			return true
+		}
+		found = pu
+		return false
+	})
+	return found
 }
 
 // getPendingUUID retrieves the pending UUID for a target device (without removing it).
