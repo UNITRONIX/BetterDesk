@@ -36,6 +36,7 @@
     function getDeviceTypeIcon(type) {
         switch ((type || '').toLowerCase()) {
             case 'betterdesk': return 'desktop_windows';
+            case 'betterdesk-support': return 'support_agent';
             case 'desktop':  return 'desktop_windows';
             case 'scada':    return 'precision_manufacturing';
             case 'iot':      return 'sensors';
@@ -44,6 +45,15 @@
             case 'mobile':   return 'phone_android';
             case 'rustdesk': return 'connected_tv';
             default:         return 'devices';
+        }
+    }
+
+    function getDeviceTypeLabel(type) {
+        switch ((type || '').toLowerCase()) {
+            case 'betterdesk': return 'BetterDesk';
+            case 'betterdesk-support': return 'BetterDesk Support';
+            case 'rustdesk': return 'RustDesk';
+            default: return type || '-';
         }
     }
     
@@ -955,7 +965,7 @@
                 <td data-column="device_type">
                     <div class="platform-icon">
                         <span class="material-icons">${getDeviceTypeIcon(device.device_type)}</span>
-                        <span>${Utils.escapeHtml(device.device_type || '-')}</span>
+                        <span>${Utils.escapeHtml(getDeviceTypeLabel(device.device_type))}</span>
                         ${device.linked_peer_id ? `<span class="mesh-linked-badge" title="${Utils.escapeHtml(_('mesh.linked_peer') || 'Linked device')}">↔ ${Utils.escapeHtml(device.linked_peer_id)}</span>` : ''}
                     </div>
                 </td>

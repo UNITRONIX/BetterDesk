@@ -157,6 +157,33 @@ func (s *SQLiteDB) Migrate() error {
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer ON peer_metrics(peer_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_created ON peer_metrics(created_at)`,
 
+		// BetterDesk device telemetry snapshots and heartbeat-delivered commands.
+		`CREATE TABLE IF NOT EXISTS device_telemetry_snapshots (
+			device_id TEXT NOT NULL,
+			kind TEXT NOT NULL,
+			sample_id TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'ok',
+			payload TEXT NOT NULL DEFAULT '{}',
+			collected_at TEXT NOT NULL DEFAULT '',
+			received_at TEXT DEFAULT (datetime('now')),
+			PRIMARY KEY (device_id, kind)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_device_telemetry_snapshots_received
+			ON device_telemetry_snapshots(received_at)`,
+		`CREATE TABLE IF NOT EXISTS device_telemetry_commands (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			device_id TEXT NOT NULL,
+			command TEXT NOT NULL,
+			args TEXT NOT NULL DEFAULT '{}',
+			status TEXT NOT NULL DEFAULT 'pending',
+			result TEXT NOT NULL DEFAULT '',
+			created_at TEXT DEFAULT (datetime('now')),
+			expires_at TEXT NOT NULL DEFAULT '',
+			completed_at TEXT DEFAULT NULL
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_device_telemetry_commands_device_status
+			ON device_telemetry_commands(device_id, status, created_at)`,
+
 		// Chat messages table
 		`CREATE TABLE IF NOT EXISTS chat_messages (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1215,6 +1242,9 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 		{`UPDATE device_tokens SET peer_id = ? WHERE peer_id = ?`, []any{newID, oldID}},
 		{`UPDATE org_devices SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE peers SET linked_peer_id = ? WHERE linked_peer_id = ?`, []any{newID, oldID}},
+		{`UPDATE device_telemetry_snapshots SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
+		{`UPDATE device_telemetry_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
+		{`UPDATE server_config SET key = ? WHERE key = ?`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
 	}
 	for _, st := range stmts {
 		if _, err := tx.Exec(st.query, st.args...); err != nil {
@@ -2080,7 +2110,125 @@ func (s *SQLiteDB) CleanupOldMetrics(maxAge time.Duration) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if _, err := s.db.Exec(
+		`DELETE FROM device_telemetry_commands
+		 WHERE completed_at IS NOT NULL AND completed_at < ?`,
+		cutoff); err != nil {
+		rows, rowsErr := result.RowsAffected()
+		if rowsErr != nil {
+			return 0, rowsErr
+		}
+		return rows, err
+	}
 	return result.RowsAffected()
+}
+
+// SaveTelemetrySnapshot stores the latest bounded snapshot for a device and
+// category. The payload is already validated JSON from the API layer.
+func (s *SQLiteDB) SaveTelemetrySnapshot(snapshot *TelemetrySnapshot) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec(`
+		INSERT INTO device_telemetry_snapshots
+			(device_id, kind, sample_id, status, payload, collected_at, received_at)
+		VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+		ON CONFLICT(device_id, kind) DO UPDATE SET
+			sample_id = excluded.sample_id,
+			status = excluded.status,
+			payload = excluded.payload,
+			collected_at = excluded.collected_at,
+			received_at = datetime('now')`,
+		snapshot.DeviceID, snapshot.Kind, snapshot.SampleID, snapshot.Status,
+		snapshot.Payload, snapshot.CollectedAt)
+	return err
+}
+
+// GetTelemetrySnapshot returns the latest snapshot for a device/category.
+func (s *SQLiteDB) GetTelemetrySnapshot(deviceID, kind string) (*TelemetrySnapshot, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var snapshot TelemetrySnapshot
+	err := s.db.QueryRow(`
+		SELECT device_id, kind, sample_id, status, payload, collected_at, received_at
+		FROM device_telemetry_snapshots WHERE device_id = ? AND kind = ?`,
+		deviceID, kind).Scan(
+		&snapshot.DeviceID, &snapshot.Kind, &snapshot.SampleID,
+		&snapshot.Status, &snapshot.Payload, &snapshot.CollectedAt, &snapshot.ReceivedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &snapshot, nil
+}
+
+// QueueTelemetryCommand queues an allowlisted command for heartbeat delivery.
+func (s *SQLiteDB) QueueTelemetryCommand(command *TelemetryCommand) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	result, err := s.db.Exec(`
+		INSERT INTO device_telemetry_commands
+			(device_id, command, args, status, expires_at)
+		VALUES (?, ?, ?, 'pending', ?)`,
+		command.DeviceID, command.Command, command.Args, command.ExpiresAt)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+// GetPendingTelemetryCommands returns non-expired commands for heartbeat.
+func (s *SQLiteDB) GetPendingTelemetryCommands(deviceID string, limit int) ([]*TelemetryCommand, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if limit <= 0 || limit > 20 {
+		limit = 10
+	}
+	rows, err := s.db.Query(`
+		SELECT id, device_id, command, args, status, result, created_at, expires_at, completed_at
+		FROM device_telemetry_commands
+		WHERE device_id = ? AND status = 'pending'
+		  AND (expires_at = '' OR expires_at > datetime('now'))
+		ORDER BY id ASC LIMIT ?`, deviceID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var commands []*TelemetryCommand
+	for rows.Next() {
+		command := &TelemetryCommand{}
+		var completedAt sql.NullString
+		if err := rows.Scan(
+			&command.ID, &command.DeviceID, &command.Command, &command.Args,
+			&command.Status, &command.Result, &command.CreatedAt,
+			&command.ExpiresAt, &completedAt); err != nil {
+			return nil, err
+		}
+		if completedAt.Valid {
+			command.CompletedAt = completedAt.String
+		}
+		commands = append(commands, command)
+	}
+	return commands, rows.Err()
+}
+
+// CompleteTelemetryCommand stores the bounded result of a delivered command.
+func (s *SQLiteDB) CompleteTelemetryCommand(id int64, status, result string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec(`
+		UPDATE device_telemetry_commands
+		SET status = ?, result = ?, completed_at = datetime('now')
+		WHERE id = ? AND status = 'pending'`,
+		status, result, id)
+	return err
 }
 
 // ---------------------------------------------------------------------------

@@ -317,6 +317,55 @@ body.device-detail-open {
     display: block;
 }
 
+/* The inventory-oriented panes use two columns on desktop and collapse on
+   narrow screens. Empty/error banners remain full width. */
+.device-panel-tab-pane[data-pane="overview"],
+.device-panel-tab-pane[data-pane="hardware"],
+.device-panel-tab-pane[data-pane="metrics"] {
+    display: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--space-lg, 1.5rem);
+}
+
+.device-panel-tab-pane[data-pane="overview"].active,
+.device-panel-tab-pane[data-pane="hardware"].active,
+.device-panel-tab-pane[data-pane="metrics"].active {
+    display: grid;
+}
+
+.device-panel-tab-pane[data-pane="overview"] > .device-panel-ban-alert,
+.device-panel-tab-pane[data-pane="overview"] > .device-panel-empty-state,
+.device-panel-tab-pane[data-pane="hardware"] > .device-panel-empty-state,
+.device-panel-tab-pane[data-pane="metrics"] > .device-panel-empty-state {
+    grid-column: 1 / -1;
+}
+
+.device-panel-inline-action {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--border-primary, #30363d);
+    border-radius: var(--radius-sm, 4px);
+    background: transparent;
+    color: var(--text-secondary, #8b949e);
+    padding: 3px 7px;
+    cursor: pointer;
+    font-size: var(--font-size-xs, 0.75rem);
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.device-panel-inline-action:hover {
+    color: var(--text-primary, #e6edf3);
+    border-color: var(--accent-blue, #58a6ff);
+}
+
+.device-panel-inline-action .material-icons {
+    font-size: 14px;
+}
+
 /* Section groups */
 .device-panel-section {
     margin-bottom: var(--space-lg, 1.5rem);
@@ -737,6 +786,12 @@ body.device-detail-open {
     .device-panel-info-label {
         flex: 0 0 100px;
     }
+
+    .device-panel-tab-pane[data-pane="overview"],
+    .device-panel-tab-pane[data-pane="hardware"],
+    .device-panel-tab-pane[data-pane="metrics"] {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -812,6 +867,14 @@ body.device-detail-open {
 
 .device-panel-metric-card.critical .device-panel-metric-bar {
     background: var(--accent-red, #f85149);
+}
+
+.device-panel-metric-card.unsupported {
+    opacity: 0.65;
+}
+
+.device-panel-metric-card.unsupported .device-panel-metric-bar {
+    background: var(--text-tertiary, #6e7681);
 }
 
 .device-panel-metric-value {
@@ -1115,6 +1178,28 @@ body.device-detail-open {
     border-radius: 4px;
 }
 
+.device-panel-event-row > summary {
+    display: grid;
+    grid-template-columns: 150px 150px 1fr;
+    grid-column: 1 / -1;
+    cursor: pointer;
+    list-style: none;
+}
+
+.device-panel-event-row > summary::-webkit-details-marker {
+    display: none;
+}
+
+.device-panel-event-detail {
+    grid-column: 1 / -1;
+    margin: 8px 0 0;
+    padding: 8px;
+    overflow-x: auto;
+    background: var(--bg-tertiary, #21262d);
+    color: var(--text-secondary, #8b949e);
+    font: 12px/1.4 ui-monospace, monospace;
+}
+
 .device-panel-event-row.error   { border-left-color: #f85149; }
 .device-panel-event-row.warn    { border-left-color: #d29922; }
 .device-panel-event-row.info    { border-left-color: #3b82f6; }
@@ -1202,7 +1287,7 @@ body.device-detail-open {
 
 .device-panel-file-row {
     display: grid;
-    grid-template-columns: 32px 1fr 100px;
+    grid-template-columns: 32px 1fr 100px 32px;
     align-items: center;
     gap: 10px;
     padding: 6px 10px;
@@ -1210,6 +1295,15 @@ body.device-detail-open {
     border-radius: 4px;
     cursor: pointer;
     user-select: none;
+}
+
+.device-panel-file-download {
+    color: var(--text-secondary, #8b949e);
+    cursor: pointer;
+}
+
+.device-panel-file-download:hover {
+    color: var(--accent-blue, #58a6ff);
 }
 
 .device-panel-file-row:hover {

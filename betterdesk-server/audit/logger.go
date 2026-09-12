@@ -54,6 +54,9 @@ const (
 	ActionAPIKeyRevoked    Action = "apikey_revoked"
 	ActionSysinfoUpdated   Action = "sysinfo_updated"
 	ActionSysinfoError     Action = "sysinfo_error"
+	ActionTelemetrySnapshotError Action = "telemetry_snapshot_error"
+	ActionTelemetryCommandResult Action = "telemetry_command_result"
+	ActionTelemetryCommandQueued Action = "telemetry_command_queued"
 	// Help requests and chat (raised by agent devices via CDAP).
 	ActionHelpRequestCreated Action = "help_request_created"
 	ActionHelpRequestUpdated Action = "help_request_updated"

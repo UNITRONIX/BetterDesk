@@ -42,6 +42,32 @@ type tfaSession struct {
 	createdAt  time.Time
 }
 
+type clientHeartbeatRequest struct {
+	ID                 string          `json:"id"`
+	UUID               string          `json:"uuid"`
+	CPU                float64         `json:"cpu"`
+	Memory             float64         `json:"memory"`
+	Disk               float64         `json:"disk"`
+	ModifiedAt         int64           `json:"modified_at"`
+	TelemetrySchema    int             `json:"telemetry_schema"`
+	ProductSKU         string          `json:"product_sku"`
+	ConnMode           string          `json:"conn_mode"`
+	Capabilities       []string        `json:"capabilities"`
+	Telemetry          json.RawMessage `json:"telemetry"`
+	TelemetryEnvelope  json.RawMessage `json:"telemetry_envelope"`
+	BetterDeskEnvelope json.RawMessage `json:"betterdesk_envelope"`
+}
+
+func classifyBetterDeskDevice(productSKU, connMode string) string {
+	if productSKU == "" && connMode == "" {
+		return ""
+	}
+	if productSKU == "betterdesk-support" || connMode == "incoming-only" {
+		return "betterdesk-support"
+	}
+	return "betterdesk"
+}
+
 // tfaSessionStore is a concurrency-safe in-memory store for pending 2FA sessions.
 // Sessions expire after 5 minutes.
 type tfaSessionStore struct {
@@ -859,14 +885,7 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body struct {
-		ID         string  `json:"id"`
-		UUID       string  `json:"uuid"`
-		CPU        float64 `json:"cpu"`
-		Memory     float64 `json:"memory"`
-		Disk       float64 `json:"disk"`
-		ModifiedAt int64   `json:"modified_at"`
-	}
+	var body clientHeartbeatRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
@@ -892,6 +911,38 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"error": "BANNED", "modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
+	var responsePublicKey *[32]byte
+	if len(body.BetterDeskEnvelope) > 0 {
+		opened, err := s.openTelemetryEnvelope(deviceID, body.BetterDeskEnvelope)
+		if err != nil {
+			log.Printf("[api] BetterDesk heartbeat envelope rejected for %s: %v", deviceID, err)
+			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+			return
+		}
+		var inner clientHeartbeatRequest
+		if err := json.Unmarshal(opened.Payload, &inner); err != nil || (inner.ID != "" && inner.ID != deviceID) {
+			log.Printf("[api] BetterDesk heartbeat payload rejected for %s", deviceID)
+			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+			return
+		}
+		body = inner
+		responsePublicKey = opened.ResponsePublicKey
+		s.rememberSecureClientKey(deviceID, responsePublicKey)
+	}
+	if len(body.TelemetryEnvelope) > 0 {
+		decrypted, err := s.openTelemetryEnvelope(deviceID, body.TelemetryEnvelope)
+		if err != nil {
+			log.Printf("[api] telemetry envelope rejected for %s: %v", deviceID, err)
+			body.Telemetry = nil
+		} else {
+			body.Telemetry = decrypted.Payload
+		}
+	}
+	if deviceType := classifyBetterDeskDevice(body.ProductSKU, body.ConnMode); deviceType != "" {
+		if err := s.db.UpdatePeerFields(deviceID, map[string]string{"device_type": deviceType}); err != nil {
+			log.Printf("[api] failed to classify BetterDesk device %s: %v", deviceID, err)
+		}
+	}
 
 	// Update peer status to ONLINE
 	_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP)
@@ -905,10 +956,25 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 			log.Printf("[api] Failed to save peer metrics for %s: %v", deviceID, err)
 		}
 	}
+	if body.ProductSKU != "" || body.ConnMode != "" || len(body.Capabilities) > 0 {
+		identity, _ := json.Marshal(map[string]any{
+			"product_sku":  body.ProductSKU,
+			"conn_mode":    body.ConnMode,
+			"capabilities": body.Capabilities,
+			"schema":       body.TelemetrySchema,
+		})
+		s.saveTelemetrySnapshot(deviceID, "identity", "", "ok", "", identity)
+	}
+	if len(body.Telemetry) > 0 {
+		s.saveClientTelemetry(deviceID, body.Telemetry)
+	}
 
 	serverModifiedAt := s.clientBrandingModifiedAt()
 	resp := map[string]any{
 		"modified_at": serverModifiedAt,
+	}
+	if commands := s.telemetryCommandsForDevice(deviceID); len(commands) > 0 {
+		resp["telemetry_commands"] = commands
 	}
 
 	// Request sysinfo if hostname is empty (never received)
@@ -932,6 +998,14 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 			"unattended_enabled": policy.UnattendedEnabled,
 			"password_set":       policy.PasswordSet,
 			"schedule_enabled":   policy.ScheduleEnabled,
+		}
+	}
+	if responsePublicKey != nil {
+		if envelope, err := s.sealTelemetryResponse(deviceID, resp, *responsePublicKey); err == nil {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"betterdesk_envelope": envelope,
+			})
+			return
 		}
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -962,12 +1036,14 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		ID       string `json:"id"`
-		UUID     string `json:"uuid"`
-		Hostname string `json:"hostname"`
-		Platform string `json:"platform"`
-		OS       string `json:"os"`
-		Version  string `json:"version"`
+		ID         string `json:"id"`
+		UUID       string `json:"uuid"`
+		Hostname   string `json:"hostname"`
+		Platform   string `json:"platform"`
+		OS         string `json:"os"`
+		Version    string `json:"version"`
+		ProductSKU string `json:"product_sku"`
+		ConnMode   string `json:"conn_mode"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		w.Header().Set("Content-Type", "text/plain")
@@ -997,6 +1073,11 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
 		return
+	}
+	if deviceType := classifyBetterDeskDevice(body.ProductSKU, body.ConnMode); deviceType != "" {
+		if err := s.db.UpdatePeerFields(deviceID, map[string]string{"device_type": deviceType}); err != nil {
+			log.Printf("[api] failed to classify BetterDesk sysinfo %s: %v", deviceID, err)
+		}
 	}
 
 	// Use platform or os field (RustDesk client may send either)

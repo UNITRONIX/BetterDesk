@@ -270,6 +270,47 @@ async function getPeerStatus(id) {
     }
 }
 
+/**
+ * GET /api/peers/:id/telemetry
+ */
+async function getPeerTelemetry(id) {
+    try {
+        const { data } = await apiClient.get(`/peers/${encodeURIComponent(id)}/telemetry`);
+        return wrap(data);
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * POST /api/peers/:id/telemetry/refresh
+ */
+async function refreshPeerHardware(id) {
+    try {
+        const { data } = await apiClient.post(`/peers/${encodeURIComponent(id)}/telemetry/refresh`);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * POST /api/peers/:id/telemetry/command
+ */
+async function queuePeerTelemetryCommand(id, command, args = {}) {
+    try {
+        const { data } = await apiClient.post(`/peers/${encodeURIComponent(id)}/telemetry/command`, {
+            command,
+            args,
+        });
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
 // ========================== Blocklist ========================================
 
 /**
@@ -500,6 +541,8 @@ function normalisePeer(peer) {
     const liveOnline = !!(peer.live_online);
     const banned = !!(peer.banned);
     const lastOnline = peer.last_online || '';
+    const rawDeviceType = String(peer.device_type || '').trim().toLowerCase();
+    const deviceType = rawDeviceType || 'rustdesk';
 
     // Parse tags: Go server sends comma-separated string or JSON array
     let tags = [];
@@ -543,7 +586,8 @@ function normalisePeer(peer) {
         disabled: !!(peer.disabled || peer.soft_deleted),
         soft_deleted: !!(peer.soft_deleted),
         deleted_at: peer.deleted_at || null,
-        device_type: peer.device_type || '',
+        device_type: deviceType,
+        client_type: deviceType,
         cdap_connected: !!peer.cdap_connected,
         mesh_connected: !!peer.mesh_connected,
         mesh_node_id: peer.mesh_node_id || '',
@@ -1328,6 +1372,9 @@ module.exports = {
     getStatusSummary,
     getOnlinePeers,
     getPeerStatus,
+    getPeerTelemetry,
+    refreshPeerHardware,
+    queuePeerTelemetryCommand,
     // Blocklist
     getBlocklist,
     addBlocklistEntry,

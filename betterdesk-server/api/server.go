@@ -74,7 +74,12 @@ type Server struct {
 	// branding endpoints to deter device-ID enumeration and config probing.
 	enrollmentLimiter *ratelimit.IPLimiter
 	brandingLimiter   *ratelimit.IPLimiter
-	keyPair           *crypto.KeyPair      // Ed25519 keypair for signing
+	keyPair           *crypto.KeyPair // Ed25519 keypair for signing
+	telemetryPrivate  [32]byte        // X25519 private key for telemetry envelopes
+	telemetryPublic   [32]byte        // X25519 public key for telemetry envelopes
+	telemetryReady    bool
+	secureClientsMu   sync.RWMutex
+	secureClientKeys  map[string][32]byte
 	cdapGw            *cdap.Gateway        // CDAP gateway (nil if CDAP disabled)
 	meshGw            *meshcentral.Gateway // MeshCentral compat (nil if disabled)
 	ldapProvider      ldapAuthProvider     // LDAP auth provider (nil if not configured)
@@ -112,6 +117,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		enrollmentLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),  // M-07: 20/min per IP, 5-min block
 		brandingLimiter:   ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M-07: 60/min per IP
 		clientTFASessions: newTFASessionStore(),
+		secureClientKeys:  make(map[string][32]byte),
 	}
 }
 
@@ -220,6 +226,7 @@ func (s *Server) InitPeerCredentialVault(secret string) error {
 // SetKeyPair sets the Ed25519 keypair for the server (used for signing IdPk).
 func (s *Server) SetKeyPair(kp *crypto.KeyPair) {
 	s.keyPair = kp
+	s.initializeTelemetryKeys()
 }
 
 // SetCDAPGateway sets the CDAP gateway for serving CDAP REST endpoints.
@@ -277,6 +284,9 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/peers/online", s.handleOnlinePeers)
 	mux.HandleFunc("GET /api/peers/{id}/status", s.handlePeerStatus)
 	mux.HandleFunc("GET /api/peers/{id}/metrics", s.handlePeerMetrics)
+	mux.HandleFunc("GET /api/peers/{id}/telemetry", s.requirePermission(auth.PermDeviceView, s.handleGetPeerTelemetry))
+	mux.HandleFunc("POST /api/peers/{id}/telemetry/refresh", s.requirePermission(auth.PermDeviceEdit, s.handleRefreshPeerHardware))
+	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requireRole(auth.RoleOperator, s.handleQueuePeerTelemetryCommand))
 	mux.HandleFunc("GET /api/peers/{id}/linked", s.handleLinkedPeers)
 	mux.HandleFunc("POST /api/peers/{id}/wol", s.requireRole(auth.RoleOperator, s.handleWakeOnLan))
 	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requireRole(auth.RoleOperator, s.handleGetAccessPolicy))
@@ -390,6 +400,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /api/heartbeat", s.handleClientHeartbeat)
 	mux.HandleFunc("POST /api/sysinfo", s.handleClientSysinfo)
 	mux.HandleFunc("POST /api/sysinfo_ver", s.handleClientSysinfoVer)
+	mux.HandleFunc("GET /api/telemetry/key", s.rateLimitPublic(s.brandingLimiter, s.handleTelemetryKey))
 
 	// RustDesk client compat (Phase A — handlers in client_*.go, mirrored from Node :21121)
 	mux.HandleFunc("GET /api/server-key", s.handleServerKey)
@@ -622,7 +633,7 @@ func (s *Server) Start(ctx context.Context) error {
 	addr := fmt.Sprintf(":%d", s.cfg.APIPort)
 	s.httpSrv = &http.Server{
 		Addr:        addr,
-		Handler:     s.authMiddleware(mux),
+		Handler:     s.secureEnvelopeMiddleware(s.authMiddleware(mux)),
 		ReadTimeout: 10 * time.Second,
 		// No WriteTimeout — WebSocket connections need unlimited write time.
 		// Individual REST handlers are responsible for their own deadlines.
@@ -705,12 +716,12 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 	if s.cfg != nil {
 		payload["connection"] = map[string]any{
-			"p2p_first":                 s.cfg.P2PFirst,
-			"always_use_relay":          s.cfg.AlwaysUseRelay,
-			"p2p_fallback_ms":           s.cfg.P2PFallbackMs,
-			"same_nat_relay":            s.cfg.SameNATRelay,
+			"p2p_first":                  s.cfg.P2PFirst,
+			"always_use_relay":           s.cfg.AlwaysUseRelay,
+			"p2p_fallback_ms":            s.cfg.P2PFallbackMs,
+			"same_nat_relay":             s.cfg.SameNATRelay,
 			"allow_shared_nat_initiator": s.cfg.AllowSharedNATInitiator,
-			"relay_servers":             s.cfg.RelayServers,
+			"relay_servers":              s.cfg.RelayServers,
 		}
 	}
 	writeJSON(w, http.StatusOK, payload)

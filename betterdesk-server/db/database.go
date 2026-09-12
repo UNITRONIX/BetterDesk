@@ -136,6 +136,33 @@ type PeerMetric struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// TelemetrySnapshot is the latest bounded snapshot reported by a device.
+// Payload is kept as JSON so platform-specific fields can be added without
+// changing the server schema for every operating system.
+type TelemetrySnapshot struct {
+	DeviceID    string `json:"device_id"`
+	Kind        string `json:"kind"`
+	SampleID    string `json:"sample_id"`
+	Status      string `json:"status"`
+	Payload     string `json:"payload"`
+	CollectedAt string `json:"collected_at"`
+	ReceivedAt  string `json:"received_at"`
+}
+
+// TelemetryCommand is a durable, device-bound command delivered by heartbeat.
+// Args and Result are bounded JSON strings validated by the API handlers.
+type TelemetryCommand struct {
+	ID          int64  `json:"id"`
+	DeviceID    string `json:"device_id"`
+	Command     string `json:"command"`
+	Args        string `json:"args"`
+	Status      string `json:"status"`
+	Result      string `json:"result,omitempty"`
+	CreatedAt   string `json:"created_at"`
+	ExpiresAt   string `json:"expires_at"`
+	CompletedAt string `json:"completed_at,omitempty"`
+}
+
 // DeviceToken represents a unique enrollment token for device registration.
 // Dual Key System: supports both global server key (backward compatible) and
 // per-device tokens for enhanced security.
@@ -556,6 +583,13 @@ type Database interface {
 	GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, error)
 	GetLatestPeerMetric(peerID string) (*PeerMetric, error)
 	CleanupOldMetrics(maxAge time.Duration) (int64, error) // Delete metrics older than maxAge
+
+	// BetterDesk device telemetry and heartbeat-delivered commands.
+	SaveTelemetrySnapshot(snapshot *TelemetrySnapshot) error
+	GetTelemetrySnapshot(deviceID, kind string) (*TelemetrySnapshot, error)
+	QueueTelemetryCommand(command *TelemetryCommand) (int64, error)
+	GetPendingTelemetryCommands(deviceID string, limit int) ([]*TelemetryCommand, error)
+	CompleteTelemetryCommand(id int64, status, result string) error
 
 	// Chat Messages
 	SaveChatMessage(msg *ChatMessage) (int64, error) // Returns inserted ID

@@ -255,6 +255,9 @@ const DeviceDetail = (function () {
     // ── Tabs ──
 
     function _tabsHTML() {
+        const identity = device?.telemetry?.snapshots?.identity?.data || {};
+        const supportAgent = identity.product_sku === 'betterdesk-support' ||
+            identity.conn_mode === 'incoming-only';
         const tabs = [
             { id: 'overview',  icon: 'info',            label: _('device_detail.tab_overview') },
             { id: 'hardware',  icon: 'memory',          label: _('device_detail.tab_hardware') },
@@ -266,7 +269,7 @@ const DeviceDetail = (function () {
             { id: 'files',     icon: 'folder_open',     label: _('device_detail.tab_files') },
             { id: 'tags',      icon: 'sell',             label: _('device_detail.tab_tags') },
             { id: 'actions',   icon: 'play_arrow',       label: _('device_detail.tab_actions') }
-        ];
+        ].filter(tab => !supportAgent || !['services', 'processes', 'events', 'activity', 'files'].includes(tab.id));
         return `<div class="device-panel-tabs">` +
             tabs.map(t =>
                 `<button class="device-panel-tab${t.id === activeTab ? ' active' : ''}" data-tab="${t.id}">
@@ -316,6 +319,15 @@ const DeviceDetail = (function () {
 
     function _overviewPane() {
         const d = device;
+        const snapshots = d.telemetry?.snapshots || {};
+        const identity = snapshots.identity?.data || {};
+        const telemetryMetrics = snapshots.metrics?.data || {};
+        const currentMetrics = d.metrics || (Object.keys(telemetryMetrics).length > 0 ? {
+            cpu_usage: telemetryMetrics.cpu_percent,
+            memory_usage: telemetryMetrics.memory_percent,
+            disk_usage: telemetryMetrics.disk_percent,
+            updated_at: snapshots.metrics?.collected_at
+        } : null);
         let html = `<div class="device-panel-tab-pane" data-pane="overview">`;
 
         // Ban alert
@@ -331,16 +343,16 @@ const DeviceDetail = (function () {
         }
 
         // Quick metrics summary (if available)
-        if (d.metrics) {
+        if (currentMetrics) {
             html += `
             <div class="device-panel-section">
                 <div class="device-panel-section-title"><span class="material-icons">monitoring</span> ${_('device_detail.section_live_metrics')}</div>
                 <div class="device-panel-metrics-grid">
-                    ${_metricCard('CPU', d.metrics.cpu_usage, 'speed')}
-                    ${_metricCard(_('device_detail.metric_memory'), d.metrics.memory_usage, 'memory')}
-                    ${_metricCard(_('device_detail.metric_disk'), d.metrics.disk_usage, 'storage')}
+                    ${_metricCard('CPU', currentMetrics.cpu_usage, 'speed')}
+                    ${_metricCard(_('device_detail.metric_memory'), currentMetrics.memory_usage, 'memory')}
+                    ${_metricCard(_('device_detail.metric_disk'), currentMetrics.disk_usage, 'storage')}
                 </div>
-                ${d.metrics.updated_at ? `<div class="device-panel-metrics-updated">${_('device_detail.metrics_updated')} ${Utils.formatRelativeTime(d.metrics.updated_at)}</div>` : ''}
+                ${currentMetrics.updated_at ? `<div class="device-panel-metrics-updated">${_('device_detail.metrics_updated')} ${Utils.formatRelativeTime(currentMetrics.updated_at)}</div>` : ''}
             </div>`;
         }
 
@@ -356,6 +368,10 @@ const DeviceDetail = (function () {
                 ${d.uuid ? _infoRow('UUID', `<span class="mono">${Utils.escapeHtml(d.uuid)}</span>`) : ''}
                 ${_infoRow(_('devices.platform'), Utils.escapeHtml(d.platform || d.os || (d.sysinfo && d.sysinfo.platform) || '-'))}
                 ${d.sysinfo && d.sysinfo.version ? _infoRow(_('device_detail.version'), Utils.escapeHtml(d.sysinfo.version)) : ''}
+                ${identity.product_sku ? _infoRow('SKU', Utils.escapeHtml(identity.product_sku)) : ''}
+                ${identity.conn_mode ? _infoRow('Tryb klienta', Utils.escapeHtml(identity.conn_mode)) : ''}
+                ${Array.isArray(identity.capabilities) && identity.capabilities.length
+                    ? _infoRow('Możliwości', Utils.escapeHtml(identity.capabilities.join(', '))) : ''}
             </div>
         </div>`;
 
@@ -391,10 +407,11 @@ const DeviceDetail = (function () {
 
     function _hardwarePane() {
         const d = device;
-        const s = d.sysinfo || {};
+        const hardwareSnapshot = d.telemetry?.snapshots?.hardware;
+        const s = d.sysinfo || hardwareSnapshot?.data || {};
         let html = `<div class="device-panel-tab-pane" data-pane="hardware">`;
 
-        if (!d.sysinfo) {
+        if (!d.sysinfo && !hardwareSnapshot) {
             html += `
             <div class="device-panel-empty-state">
                 <span class="material-icons">memory</span>
@@ -408,13 +425,24 @@ const DeviceDetail = (function () {
         // System section
         html += `
         <div class="device-panel-section">
-            <div class="device-panel-section-title"><span class="material-icons">computer</span> ${_('device_detail.section_system')}</div>
+            <div class="device-panel-section-title">
+                <span class="material-icons">computer</span> ${_('device_detail.section_system')}
+                <button type="button" class="device-panel-inline-action" data-refresh-hardware>
+                    <span class="material-icons">refresh</span> Odśwież
+                </button>
+            </div>
             <div class="device-panel-info-grid">
                 ${s.hostname ? _infoRow(_('devices.hostname'), Utils.escapeHtml(s.hostname)) : ''}
                 ${s.username ? _infoRow(_('devices.username'), Utils.escapeHtml(s.username)) : ''}
                 ${s.os_full ? _infoRow(_('device_detail.os'), Utils.escapeHtml(s.os_full)) : ''}
                 ${s.platform ? _infoRow(_('devices.platform'), Utils.escapeHtml(s.platform)) : ''}
                 ${s.version ? _infoRow(_('device_detail.version'), Utils.escapeHtml(s.version)) : ''}
+                ${s.vendor ? _infoRow('Vendor', Utils.escapeHtml(s.vendor)) : ''}
+                ${s.domain ? _infoRow('Domena', Utils.escapeHtml(s.domain)) : ''}
+                ${s.cpu ? _infoRow('CPU', Utils.escapeHtml(s.cpu)) : ''}
+                ${s.memory ? _infoRow(_('device_detail.total_memory'), Utils.escapeHtml(s.memory)) : ''}
+                ${hardwareSnapshot?.status && hardwareSnapshot.status !== 'ok'
+                    ? _infoRow('Status odczytu', Utils.escapeHtml(hardwareSnapshot.status)) : ''}
             </div>
         </div>`;
 
@@ -484,9 +512,17 @@ const DeviceDetail = (function () {
 
     function _metricsPane() {
         const d = device;
+        const metricsSnapshot = d.telemetry?.snapshots?.metrics;
+        const metricsData = metricsSnapshot?.data || {};
+        const currentMetrics = d.metrics || (Object.keys(metricsData).length > 0 ? {
+            cpu_usage: metricsData.cpu_percent,
+            memory_usage: metricsData.memory_percent,
+            disk_usage: metricsData.disk_percent,
+            updated_at: metricsSnapshot.collected_at
+        } : null);
         let html = `<div class="device-panel-tab-pane" data-pane="metrics">`;
 
-        if (!d.metrics && (!d.metrics_history || d.metrics_history.length === 0)) {
+        if (!currentMetrics && (!d.metrics_history || d.metrics_history.length === 0)) {
             html += `
             <div class="device-panel-empty-state">
                 <span class="material-icons">monitoring</span>
@@ -498,16 +534,16 @@ const DeviceDetail = (function () {
         }
 
         // Current metrics
-        if (d.metrics) {
+        if (currentMetrics) {
             html += `
             <div class="device-panel-section">
                 <div class="device-panel-section-title"><span class="material-icons">speed</span> ${_('device_detail.section_current_usage')}</div>
                 <div class="device-panel-metrics-grid">
-                    ${_metricCard('CPU', d.metrics.cpu_usage, 'speed')}
-                    ${_metricCard(_('device_detail.metric_memory'), d.metrics.memory_usage, 'memory')}
-                    ${_metricCard(_('device_detail.metric_disk'), d.metrics.disk_usage, 'storage')}
+                    ${_metricCard('CPU', currentMetrics.cpu_usage, 'speed')}
+                    ${_metricCard(_('device_detail.metric_memory'), currentMetrics.memory_usage, 'memory')}
+                    ${_metricCard(_('device_detail.metric_disk'), currentMetrics.disk_usage, 'storage')}
                 </div>
-                ${d.metrics.updated_at ? `<div class="device-panel-metrics-updated">${_('device_detail.metrics_updated')} ${Utils.formatRelativeTime(d.metrics.updated_at)}</div>` : ''}
+                ${currentMetrics.updated_at ? `<div class="device-panel-metrics-updated">${_('device_detail.metrics_updated')} ${Utils.formatRelativeTime(currentMetrics.updated_at)}</div>` : ''}
             </div>`;
         }
 
@@ -601,6 +637,9 @@ const DeviceDetail = (function () {
         const d = device;
         const isBanned = d.banned;
         const isDeleted = !!d.soft_deleted;
+        const identity = d.telemetry?.snapshots?.identity?.data || {};
+        const supportAgent = identity.product_sku === 'betterdesk-support' ||
+            identity.conn_mode === 'incoming-only';
 
         let html = `<div class="device-panel-tab-pane" data-pane="actions">`;
 
@@ -662,6 +701,19 @@ const DeviceDetail = (function () {
             </div>
         </div>`;
 
+        if (supportAgent) {
+            html += `
+            <div class="device-panel-section">
+                <div class="device-panel-section-title"><span class="material-icons">info</span> Tryb Support Agent</div>
+                <div class="device-panel-info-grid">
+                    ${_infoRow('Zakres', 'Podstawowe statystyki i pulpit zdalny')}
+                    ${_infoRow('Ograniczenia', 'Funkcje administracyjne są niedostępne')}
+                </div>
+            </div>`;
+            html += `</div>`;
+            return html;
+        }
+
         // Management actions
         html += `
         <div class="device-panel-section">
@@ -722,12 +774,15 @@ const DeviceDetail = (function () {
 
     function _footerHTML() {
         const isDeleted = device && device.soft_deleted;
+        const identity = device?.telemetry?.snapshots?.identity?.data || {};
+        const supportAgent = identity.product_sku === 'betterdesk-support' ||
+            identity.conn_mode === 'incoming-only';
         return `
         <div class="device-panel-footer">
             ${isDeleted ? '' : `
-            <button class="btn btn-secondary" id="dp-edit-btn">
+            ${supportAgent ? '' : `<button class="btn btn-secondary" id="dp-edit-btn">
                 <span class="material-icons">edit</span>${_('actions.edit')}
-            </button>
+            </button>`}
             <button class="btn btn-primary" id="dp-connect-btn">
                 <span class="material-icons">link</span>${_('actions.connect')}
             </button>`}
@@ -758,8 +813,9 @@ const DeviceDetail = (function () {
      * Render a metric card with circular progress indicator
      */
     function _metricCard(label, value, icon) {
-        const pct = Math.min(100, Math.max(0, Math.round(value || 0)));
-        const colorClass = pct > 90 ? 'critical' : pct > 70 ? 'warning' : 'normal';
+        const available = typeof value === 'number' && Number.isFinite(value);
+        const pct = available ? Math.min(100, Math.max(0, Math.round(value))) : 0;
+        const colorClass = !available ? 'unsupported' : pct > 90 ? 'critical' : pct > 70 ? 'warning' : 'normal';
         return `
         <div class="device-panel-metric-card ${colorClass}">
             <div class="device-panel-metric-header">
@@ -767,9 +823,9 @@ const DeviceDetail = (function () {
                 <span class="device-panel-metric-label">${label}</span>
             </div>
             <div class="device-panel-metric-bar-container">
-                <div class="device-panel-metric-bar" style="width: ${pct}%"></div>
+                <div class="device-panel-metric-bar" style="width: ${available ? pct : 0}%"></div>
             </div>
-            <div class="device-panel-metric-value">${pct}%</div>
+            <div class="device-panel-metric-value">${available ? pct + '%' : '—'}</div>
         </div>`;
     }
 
@@ -888,6 +944,23 @@ const DeviceDetail = (function () {
         // Tag events
         _attachTagEvents(panel);
 
+        panel.querySelector('[data-refresh-hardware]')?.addEventListener('click', async function (event) {
+            event.preventDefault();
+            if (!device?.id) return;
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+                await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/telemetry/refresh`, {
+                    method: 'POST'
+                });
+                Notifications.success('Odświeżenie sprzętu zostało zlecone');
+            } catch (err) {
+                Notifications.error(err.message || _('errors.server_error'));
+            } finally {
+                button.disabled = false;
+            }
+        });
+
         // Notes save
         panel.querySelector('#dp-notes-save')?.addEventListener('click', _saveNotes);
 
@@ -985,10 +1058,28 @@ const DeviceDetail = (function () {
     }
 
     function _renderAgentTab(tabId, data, pane) {
+        if (data?.pending) {
+            pane.innerHTML = `
+                <div class="device-panel-agent-empty">
+                    <span class="material-icons">schedule</span>
+                    <div>Odczyt został zlecony</div>
+                    <div class="device-panel-agent-hint">Dane pojawią się po kolejnym heartbeat urządzenia.</div>
+                    <button type="button" class="btn btn-secondary btn-sm" data-retry-tab="${tabId}">
+                        <span class="material-icons">refresh</span> Odśwież
+                    </button>
+                </div>`;
+            pane.querySelector('[data-retry-tab]')?.addEventListener('click', function () {
+                _agentTabLoaded[tabId] = false;
+                _loadAgentTab(tabId);
+            });
+            return;
+        }
         if (tabId === 'services') {
             pane.innerHTML = _renderServicesList(data);
+            _attachServiceEvents(pane);
         } else if (tabId === 'processes') {
             pane.innerHTML = _renderProcessList(data);
+            _attachProcessEvents(pane);
         } else if (tabId === 'events') {
             pane.innerHTML = _renderEventList(data);
         } else if (tabId === 'activity') {
@@ -1012,11 +1103,15 @@ const DeviceDetail = (function () {
             return `<div class="device-panel-agent-empty"><span class="material-icons">inbox</span><div>${_('common.no_data')}</div></div>`;
         }
         const rows = services.slice(0, 500).map(s => `
-            <tr>
+            <tr data-service-name="${Utils.escapeHtml(s.name || '')}">
                 <td>${Utils.escapeHtml(s.name || '')}</td>
                 <td>${Utils.escapeHtml(s.display_name || s.name || '')}</td>
                 <td><span class="badge ${s.status === 'running' ? 'badge-success' : 'badge-neutral'}">${Utils.escapeHtml(s.status || '-')}</span></td>
                 <td>${Utils.escapeHtml(s.start_type || '-')}</td>
+                <td class="device-panel-agent-actions">
+                    <button type="button" class="btn btn-secondary btn-sm" data-service-action="start">Start</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-service-action="stop">Stop</button>
+                </td>
             </tr>`).join('');
         return `<table class="device-panel-agent-table">
             <thead><tr>
@@ -1024,9 +1119,36 @@ const DeviceDetail = (function () {
                 <th>${_('device_detail.service_display') || 'Display'}</th>
                 <th>${_('device_detail.service_status') || 'Status'}</th>
                 <th>${_('device_detail.service_start') || 'Start'}</th>
+                <th>Akcje</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
+    }
+
+    function _attachServiceEvents(pane) {
+        pane.querySelectorAll('[data-service-action]').forEach(button => {
+            button.addEventListener('click', async function () {
+                const row = button.closest('tr');
+                const name = row?.dataset.serviceName;
+                if (!name || !device?.id) return;
+                button.disabled = true;
+                try {
+                    const response = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/telemetry/command`, {
+                        method: 'POST',
+                        body: { command: 'service.control', args: { name, action: button.dataset.serviceAction } }
+                    });
+                    if (response?.pending || response?.data?.pending) {
+                        Notifications.success('Zmiana usługi została zlecona');
+                    } else {
+                        Notifications.success('Polecenie usługi wykonane');
+                    }
+                } catch (err) {
+                    Notifications.error(err.message || _('errors.server_error'));
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        });
     }
 
     function _renderProcessList(data) {
@@ -1043,6 +1165,7 @@ const DeviceDetail = (function () {
                 <td>${Utils.escapeHtml(p.user || '-')}</td>
                 <td>${Number(p.cpu || 0).toFixed(1)}%</td>
                 <td>${Number(p.memory_mb || 0).toFixed(0)} MB</td>
+                <td><button type="button" class="btn btn-secondary btn-sm" data-process-kill="${Utils.escapeHtml(String(p.pid ?? ''))}">Zakończ</button></td>
             </tr>`).join('');
         return `<table class="device-panel-agent-table">
             <thead><tr>
@@ -1051,9 +1174,31 @@ const DeviceDetail = (function () {
                 <th>${_('device_detail.process_user') || 'User'}</th>
                 <th>CPU</th>
                 <th>${_('device_detail.process_memory') || 'Memory'}</th>
+                <th>Akcje</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
+    }
+
+    function _attachProcessEvents(pane) {
+        pane.querySelectorAll('[data-process-kill]').forEach(button => {
+            button.addEventListener('click', async function () {
+                const pid = button.dataset.processKill;
+                if (!pid || !device?.id || !window.confirm('Zakończyć wybrany proces?')) return;
+                button.disabled = true;
+                try {
+                    await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/telemetry/command`, {
+                        method: 'POST',
+                        body: { command: 'process.terminate', args: { pid: Number(pid) } }
+                    });
+                    Notifications.success('Polecenie zakończenia procesu zostało zlecone');
+                } catch (err) {
+                    Notifications.error(err.message || _('errors.server_error'));
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        });
     }
 
     function _renderEventList(data) {
@@ -1065,11 +1210,15 @@ const DeviceDetail = (function () {
             const level = String(e.level || 'info').toLowerCase();
             const levelClass = level === 'error' || level === 'critical' ? 'error'
                 : level === 'warning' || level === 'warn' ? 'warn' : 'info';
-            return `<div class="device-panel-event-row ${levelClass}">
-                <div class="device-panel-event-time">${Utils.escapeHtml(e.time || '')}</div>
-                <div class="device-panel-event-source">${Utils.escapeHtml(e.source || e.facility || '-')}</div>
-                <div class="device-panel-event-msg">${Utils.escapeHtml(e.message || '')}</div>
-            </div>`;
+            const detail = Utils.escapeHtml(JSON.stringify(e, null, 2));
+            return `<details class="device-panel-event-row ${levelClass}">
+                <summary>
+                    <span class="device-panel-event-time">${Utils.escapeHtml(e.time || '')}</span>
+                    <span class="device-panel-event-source">${Utils.escapeHtml(e.source || e.facility || '-')}</span>
+                    <span class="device-panel-event-msg">${Utils.escapeHtml(e.message || '')}</span>
+                </summary>
+                <pre class="device-panel-event-detail">${detail}</pre>
+            </details>`;
         }).join('');
         return `<div class="device-panel-event-list">${rows}</div>`;
     }
@@ -1107,6 +1256,7 @@ const DeviceDetail = (function () {
                 <span class="material-icons">${icon}</span>
                 <div class="device-panel-file-name">${Utils.escapeHtml(e.name || '')}</div>
                 <div class="device-panel-file-size">${size}</div>
+                ${e.is_dir ? '' : '<span class="material-icons device-panel-file-download" title="Pobierz">download</span>'}
             </div>`;
         }).join('');
         return `<div class="device-panel-file-browser">
@@ -1128,7 +1278,41 @@ const DeviceDetail = (function () {
             row.addEventListener('dblclick', () => {
                 if (row.dataset.isDir === '1') _browseFiles(row.dataset.path);
             });
+            row.addEventListener('contextmenu', function (event) {
+                event.preventDefault();
+                if (row.dataset.isDir !== '1') _downloadFile(row.dataset.path);
+            });
+            row.querySelector('.device-panel-file-download')?.addEventListener('click', function (event) {
+                event.stopPropagation();
+                _downloadFile(row.dataset.path);
+            });
         });
+    }
+
+    async function _downloadFile(path) {
+        if (!device?.id || !path) return;
+        try {
+            const response = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/files/read`, {
+                method: 'POST',
+                body: JSON.stringify({ path, offset: 0, length: 1024 * 1024 })
+            });
+            const data = response?.data || response;
+            if (data?.pending) {
+                Notifications.success('Pobieranie zostało zlecone');
+                return;
+            }
+            const fileData = data?.data;
+            if (!fileData) throw new Error('Brak danych pliku');
+            const bytes = Uint8Array.from(atob(fileData), character => character.charCodeAt(0));
+            const blob = new Blob([bytes], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = path.split(/[\\/]/).pop() || 'download';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        } catch (err) {
+            Notifications.error(err.message || _('errors.server_error'));
+        }
     }
 
     async function _browseFiles(path) {

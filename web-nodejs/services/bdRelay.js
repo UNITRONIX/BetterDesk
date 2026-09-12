@@ -184,7 +184,12 @@ function requestFromDevice(deviceId, type, payload = null, timeoutMs = REQUEST_T
         pendingRequests.set(requestId, { resolve, reject, timeout });
 
         try {
-            ws.send(JSON.stringify({ type, request_id: requestId, payload }));
+            ws.send(JSON.stringify({
+                protocol_version: 1,
+                type,
+                request_id: requestId,
+                payload,
+            }));
         } catch (err) {
             pendingRequests.delete(requestId);
             clearTimeout(timeout);
