@@ -1,7 +1,12 @@
 ## [Unreleased]
 
+### Fixed
+- **UX 3.5 light theme topbar:** topbar chrome (background, brand text, icons, hover) now follows light/dark theme instead of staying dark-only; notification badge hides at 0; theme toggle is atomic with target sun/moon semantics.
+- **A11y / i18n shell polish:** decorative Material Icons use `aria-hidden`; language allowlist drops stray `PACKAGE` entries; Help/MeshCentral strings localized; dashboard breadcrumb no longer duplicates “Panel”; attention metrics and activity feed aligned with real data; sidebar filter + collapsible sections; mutual close for topbar popovers; remote desk usable at short laptop heights (~1280×720).
+- **Theme audit noise:** quick light/dark toggle logs as `theme_toggle` instead of `branding_update`; audit action labels localized via `Utils.formatAuditAction`.
+
 ### Changed
-- _(none yet)_
+- **Stop tracking legacy desktop/agent trees:** `betterdesk-agent`, `betterdesk-agent-client`, `betterdesk-desktop`, and `rdclient-desktop` (and local `*_old` renames) are removed from git and ignored — they are not part of the panel update path.
 
 ---
 

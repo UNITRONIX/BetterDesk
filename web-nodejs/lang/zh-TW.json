@@ -35,7 +35,8 @@
         "back": "返回",
         "edit": "編輯",
         "yes": "是",
-        "no": "否"
+        "no": "否",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "主要",
@@ -192,7 +193,11 @@
         "intune_script_hint": "RustDesk MSI 完成後以系統管理員身分執行。使用與「複製部署字串」相同的 config 字串。",
         "deploy_string_not_ready": "在載入伺服器公開金鑰之前，部署字串不可用。",
         "client_server_host_env_hint": "公共 ID、中繼與 API 已於 設定 → 公共用戶端端點 設定。清除後可再次使用此覆寫欄位。",
-        "client_config_qr_unreachable_host": "此 QR 包含 localhost 或 .local 位址。手機通常無法連線 — 請先將 Client server address（或 PANEL_PUBLIC_HOST）設為區網 IP 或公開 DNS。"
+        "client_config_qr_unreachable_host": "此 QR 包含 localhost 或 .local 位址。手機通常無法連線 — 請先將 Client server address（或 PANEL_PUBLIC_HOST）設為區網 IP 或公開 DNS。",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "設備",
@@ -740,7 +745,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "受限 — 僅顯示明確授權的裝置",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -777,7 +782,14 @@
         "action_settings_update": "設置已更新",
         "action_device_ban": "設備已封禁",
         "action_device_unban": "設備已解封",
-        "action_device_delete": "設備已刪除"
+        "action_device_delete": "設備已刪除",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -970,7 +982,8 @@
         "advanced_branding_hint": "快速建立時可保持收合 — 預設值即可。展開可自訂標誌、顏色與聯絡資訊。",
         "toolchain_branding_seal": "品牌簽章失敗 — 請檢查主控台上的簽章金鑰後重新建置。",
         "toolchain_mingw_missing": "找不到 mingw-w64 (x86_64-w64-mingw32-gcc) — Windows 建置將失敗。",
-        "toolchain_appimage_missing": "找不到 appimagetool — AppImage 建置將失敗。"
+        "toolchain_appimage_missing": "找不到 appimagetool — AppImage 建置將失敗。",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "download": {
         "title": "下載 BetterDesk 代理",
@@ -1534,7 +1547,8 @@
         "glass_color": "玻璃色調",
         "glass_color_hint": "磨砂面板的基礎顏色。留空時使用次要背景色。",
         "glass_blur": "表面模糊",
-        "glass_opacity": "玻璃不透明度"
+        "glass_opacity": "玻璃不透明度",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "概覽",
@@ -2847,7 +2861,11 @@
         "light": "淺色",
         "auto": "跟隨系統",
         "title": "主題",
-        "custom": "自訂"
+        "custom": "自訂",
+        "switch_to_dark": "切換到深色主題",
+        "switch_to_light": "切換到淺色主題",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "週一",
@@ -3979,7 +3997,9 @@
             "packages": "套件與合約",
             "sessions": "工作階段",
             "reports": "報告",
-            "settings": "進階設定"
+            "settings": "進階設定",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "伺服器時間 (NTP)",
@@ -4220,11 +4240,11 @@
         "more": "更多"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "MeshCentral 相容性",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "下載 MeshAgent .msh",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4249,7 +4269,7 @@
         "transport_files": "Mesh 檔案",
         "settings_desc": "MeshAgent 入門與 .msh 檔案的 Server ID。",
         "mesh_name": "Mesh 群組名稱 (.msh)",
-        "copy_server_id": "複製 Server ID",
+        "copy_server_id": "複製伺服器 ID",
         "copy_server_id_ok": "已複製 Server ID",
         "enabled_label": "已啟用",
         "disabled_label": "已停用",
@@ -4329,7 +4349,9 @@
         "switch_to_ux35": "切換至 UX 3.5（測試版）",
         "switch_to_classic": "切換至經典介面",
         "beta_badge": "測試版",
-        "beta_tooltip": "測試版主控台版面 — 可選；經典介面仍為預設。"
+        "beta_tooltip": "測試版主控台版面 — 可選；經典介面仍為預設。",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

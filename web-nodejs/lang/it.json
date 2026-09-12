@@ -31,7 +31,8 @@
         "back": "Indietro",
         "edit": "Modifica",
         "yes": "Sì",
-        "no": "No"
+        "no": "No",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Principale",
@@ -188,7 +189,11 @@
         "intune_script_hint": "Esegui come amministratore dopo il MSI di RustDesk. Usa la stessa stringa di Copia stringa di deploy.",
         "deploy_string_not_ready": "La stringa di deploy non è disponibile finché la chiave pubblica del server non è caricata.",
         "client_server_host_env_hint": "ID, relay e API pubblici sono in Impostazioni → Endpoint client pubblici. Svuota lì per usare di nuovo questo campo.",
-        "client_config_qr_unreachable_host": "Questo QR include localhost o un indirizzo .local. I telefoni di solito non lo raggiungono — imposta prima Client server address (o PANEL_PUBLIC_HOST) su un IP LAN o DNS pubblico."
+        "client_config_qr_unreachable_host": "Questo QR include localhost o un indirizzo .local. I telefoni di solito non lo raggiungono — imposta prima Client server address (o PANEL_PUBLIC_HOST) su un IP LAN o DNS pubblico.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Dispositivi",
@@ -736,7 +741,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Limitato — mostra solo i dispositivi concessi esplicitamente",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -773,7 +778,14 @@
         "action_settings_update": "Impostazioni aggiornate",
         "action_device_ban": "Dispositivo bloccato",
         "action_device_unban": "Blocco dispositivo rimosso",
-        "action_device_delete": "Dispositivo eliminato"
+        "action_device_delete": "Dispositivo eliminato",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -966,7 +978,8 @@
         "advanced_branding_hint": "Lascia chiuso per una creazione rapida — i valori predefiniti bastano. Apri per logo, colori e contatti.",
         "toolchain_branding_seal": "Firma del branding non riuscita — controlla la chiave di firma sulla console e ricostruisci.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) non trovato — le build Windows falliranno.",
-        "toolchain_appimage_missing": "appimagetool non trovato — le build AppImage falliranno."
+        "toolchain_appimage_missing": "appimagetool non trovato — le build AppImage falliranno.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Porta",
@@ -1517,7 +1530,8 @@
         "glass_color": "Colore tinta vetro",
         "glass_color_hint": "Colore base per i pannelli satinati. Usa il colore di sfondo secondario se vuoto.",
         "glass_blur": "Sfocatura superficie",
-        "glass_opacity": "Opacità del vetro"
+        "glass_opacity": "Opacità del vetro",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Panoramica",
@@ -2759,7 +2773,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "Personalizzato"
+        "custom": "Personalizzato",
+        "switch_to_dark": "Passa al tema scuro",
+        "switch_to_light": "Passa al tema chiaro",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3975,7 +3993,9 @@
             "packages": "Pacchetti e contratti",
             "sessions": "Sessioni",
             "reports": "Report",
-            "settings": "Impostazioni avanzate"
+            "settings": "Impostazioni avanzate",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Ora server (NTP)",
@@ -4216,11 +4236,11 @@
         "more": "Altro"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "Compatibilità MeshCentral",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "Scarica MeshAgent .msh",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4245,7 +4265,7 @@
         "transport_files": "File Mesh",
         "settings_desc": "Onboarding MeshAgent e Server ID per file .msh.",
         "mesh_name": "Nome gruppo Mesh (.msh)",
-        "copy_server_id": "Copia Server ID",
+        "copy_server_id": "Copia ID server",
         "copy_server_id_ok": "Server ID copiato",
         "enabled_label": "Attivo",
         "disabled_label": "Disattivo",
@@ -4325,7 +4345,9 @@
         "switch_to_ux35": "Passa a UX 3.5 (Beta)",
         "switch_to_classic": "Passa all’interfaccia classica",
         "beta_badge": "BETA",
-        "beta_tooltip": "Layout console in beta — opzionale; l’interfaccia classica resta predefinita."
+        "beta_tooltip": "Layout console in beta — opzionale; l’interfaccia classica resta predefinita.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

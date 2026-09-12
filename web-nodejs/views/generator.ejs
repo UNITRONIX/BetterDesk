@@ -7,7 +7,7 @@
     body: `
         <div class="page-header">
             <h1 class="page-title">
-                <span class="material-icons">support_agent</span>
+                <span class="material-icons" aria-hidden="true">support_agent</span>
                 ${_('generator.title')}
             </h1>
             <p class="page-subtitle">${_('generator.subtitle')}</p>
@@ -17,7 +17,7 @@
         <div id="gen-module-gate" class="card generator-module-gate hidden">
             <div class="card-header">
                 <h2 class="card-title">
-                    <span class="material-icons">extension</span>
+                    <span class="material-icons" aria-hidden="true">extension</span>
                     ${_('generator.module_title')}
                 </h2>
             </div>
@@ -31,21 +31,22 @@
                 <div id="gen-module-status" class="gen-module-status text-muted">${_('generator.module_checking')}</div>
                 <div class="gen-module-actions">
                     <button id="gen-accept-terms" class="btn btn-secondary" type="button">
-                        <span class="material-icons">gavel</span>
+                        <span class="material-icons" aria-hidden="true">gavel</span>
                         ${_('generator.module_accept_terms')}
                     </button>
                     <button id="gen-install-module" class="btn btn-primary" type="button" disabled>
-                        <span class="material-icons">download</span>
+                        <span class="material-icons" aria-hidden="true">download</span>
                         <span class="gen-install-label">${_('generator.module_install')}</span>
                     </button>
                     <button id="gen-finish-install" class="btn btn-success hidden" type="button">
-                        <span class="material-icons">check_circle</span>
+                        <span class="material-icons" aria-hidden="true">check_circle</span>
                         ${_('generator.module_finish')}
                     </button>
                 </div>
                 <div id="gen-legacy-leftovers" class="gen-legacy-leftovers hidden">
                     <h3 class="section-title">${_('generator.legacy_leftovers_title')}</h3>
                     <p class="form-hint">${_('generator.legacy_leftovers_hint')}</p>
+                    <p class="form-hint gen-legacy-upgrade-hint">${_('generator.legacy_upgrade_hint') || '“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to the Generator module maturity, not your client agents.'}</p>
                     <div id="gen-legacy-leftovers-list" class="gen-legacy-leftovers-list"></div>
                 </div>
             </div>
@@ -56,11 +57,11 @@
             <aside class="generator-bundles card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <span class="material-icons">inventory_2</span>
+                        <span class="material-icons" aria-hidden="true">inventory_2</span>
                         ${_('generator.bundles_title')}
                     </h2>
                     <button id="gen-new-support" class="btn btn-primary btn-sm" title="${_('generator.new_bundle')}">
-                        <span class="material-icons">add</span>
+                        <span class="material-icons" aria-hidden="true">add</span>
                         ${_('generator.new_bundle')}
                     </button>
                 </div>
@@ -75,31 +76,31 @@
             <section class="generator-editor card">
                 <div class="card-header">
                     <h2 class="card-title" id="gen-editor-title">
-                        <span class="material-icons">edit</span>
+                        <span class="material-icons" aria-hidden="true">edit</span>
                         ${_('generator.editor_title')}
                     </h2>
                     <div class="editor-actions">
                         <button id="gen-revoke-btn" class="btn btn-warning btn-sm hidden">
-                            <span class="material-icons">block</span>
+                            <span class="material-icons" aria-hidden="true">block</span>
                             ${_('generator.revoke')}
                         </button>
                         <button id="gen-delete-btn" class="btn btn-danger btn-sm hidden">
-                            <span class="material-icons">delete</span>
+                            <span class="material-icons" aria-hidden="true">delete</span>
                             ${_('common.delete')}
                         </button>
                         <button id="gen-rebuild-btn" class="btn btn-secondary btn-sm hidden">
-                            <span class="material-icons">autorenew</span>
+                            <span class="material-icons" aria-hidden="true">autorenew</span>
                             ${_('generator.rebuild')}
                         </button>
                         <button id="gen-save-btn" class="btn btn-primary btn-sm" disabled>
-                            <span class="material-icons">save</span>
+                            <span class="material-icons" aria-hidden="true">save</span>
                             ${_('common.save')}
                         </button>
                     </div>
                 </div>
                 <div class="card-body">
                     <div id="gen-empty-state" class="empty-state">
-                        <span class="material-icons">touch_app</span>
+                        <span class="material-icons" aria-hidden="true">touch_app</span>
                         <p>${_('generator.empty_state')}</p>
                     </div>
 
@@ -173,10 +174,10 @@
                                 <div class="download-link-row">
                                     <input type="text" id="gen-download-url" class="form-input" readonly>
                                     <button type="button" id="gen-copy-link" class="btn btn-secondary btn-sm">
-                                        <span class="material-icons">content_copy</span>
+                                        <span class="material-icons" aria-hidden="true">content_copy</span>
                                     </button>
                                     <a id="gen-open-link" class="btn btn-secondary btn-sm" target="_blank" rel="noopener">
-                                        <span class="material-icons">open_in_new</span>
+                                        <span class="material-icons" aria-hidden="true">open_in_new</span>
                                     </a>
                                 </div>
                             </div>

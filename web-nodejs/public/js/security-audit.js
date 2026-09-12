@@ -99,7 +99,7 @@
           const cls = actionClass(ev.action);
           return `<tr>
             <td>${formatTime(ev.timestamp || ev.created_at)}</td>
-            <td><span class="secaudit-action-badge ${cls}">${esc(ev.action)}</span></td>
+            <td><span class="secaudit-action-badge ${cls}">${esc(Utils.formatAuditAction ? Utils.formatAuditAction(ev.action) : ev.action)}</span></td>
             <td>${esc(ev.actor || ev.user || '—')}</td>
             <td>${esc(ev.target || ev.resource || '—')}</td>
             <td>${esc(ev.ip || '—')}</td>

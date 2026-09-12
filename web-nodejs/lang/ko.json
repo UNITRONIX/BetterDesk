@@ -31,7 +31,8 @@
         "back": "뒤로",
         "edit": "편집",
         "yes": "예",
-        "no": "아니요"
+        "no": "아니요",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "메인",
@@ -188,7 +189,11 @@
         "intune_script_hint": "RustDesk MSI 완료 후 관리자 권한으로 실행하세요. 배포 문자열 복사와 동일한 config 문자열을 사용합니다.",
         "deploy_string_not_ready": "서버 공개 키가 로드될 때까지 배포 문자열을 사용할 수 없습니다.",
         "client_server_host_env_hint": "공개 ID, relay, API는 설정 → 공개 클라이언트 엔드포인트에 구성됨. 비우면 이 재정의를 다시 사용.",
-        "client_config_qr_unreachable_host": "이 QR에는 localhost 또는 .local 주소가 포함됩니다. 휴대전화에서는 보통 접속할 수 없습니다 — 먼저 Client server address(또는 PANEL_PUBLIC_HOST)를 LAN IP 또는 공개 DNS로 설정하세요."
+        "client_config_qr_unreachable_host": "이 QR에는 localhost 또는 .local 주소가 포함됩니다. 휴대전화에서는 보통 접속할 수 없습니다 — 먼저 Client server address(또는 PANEL_PUBLIC_HOST)를 LAN IP 또는 공개 DNS로 설정하세요.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "장치",
@@ -736,7 +741,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "제한됨 — 명시적으로 허용된 장치만 표시",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -773,7 +778,14 @@
         "action_settings_update": "설정이 업데이트되었습니다.",
         "action_device_ban": "금지된 장치",
         "action_device_unban": "금지 해제된 장치",
-        "action_device_delete": "기기가 삭제되었습니다."
+        "action_device_delete": "기기가 삭제되었습니다.",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -966,7 +978,8 @@
         "advanced_branding_hint": "빠른 생성 시 접어두세요 — 기본값으로 충분합니다. 로고·색상·연락처는 펼쳐서 설정하세요.",
         "toolchain_branding_seal": "브랜딩 서명 실패 — 콘솔의 서명 키를 확인한 뒤 다시 빌드하세요.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc)를 찾을 수 없음 — Windows 빌드가 실패합니다.",
-        "toolchain_appimage_missing": "appimagetool을 찾을 수 없음 — AppImage 빌드가 실패합니다."
+        "toolchain_appimage_missing": "appimagetool을 찾을 수 없음 — AppImage 빌드가 실패합니다.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Port",
@@ -1517,7 +1530,8 @@
         "glass_color": "유리 틴트 색상",
         "glass_color_hint": "무광 패널의 기본 색상. 비어 있으면 보조 배경색을 사용합니다.",
         "glass_blur": "표면 흐림",
-        "glass_opacity": "유리 불투명도"
+        "glass_opacity": "유리 불투명도",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "개요",
@@ -2759,7 +2773,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "사용자 지정"
+        "custom": "사용자 지정",
+        "switch_to_dark": "다크 테마로 전환",
+        "switch_to_light": "라이트 테마로 전환",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3975,7 +3993,9 @@
             "packages": "패키지 및 계약",
             "sessions": "세션",
             "reports": "보고서",
-            "settings": "고급 설정"
+            "settings": "고급 설정",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "서버 시간 (NTP)",
@@ -4216,11 +4236,11 @@
         "more": "더보기"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "MeshCentral 호환성",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "MeshAgent .msh 다운로드",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4245,7 +4265,7 @@
         "transport_files": "Mesh 파일",
         "settings_desc": "MeshAgent 온보딩 및 .msh용 Server ID.",
         "mesh_name": "Mesh 그룹 이름 (.msh)",
-        "copy_server_id": "Server ID 복사",
+        "copy_server_id": "서버 ID 복사",
         "copy_server_id_ok": "Server ID 복사됨",
         "enabled_label": "사용",
         "disabled_label": "사용 안 함",
@@ -4325,7 +4345,9 @@
         "switch_to_ux35": "UX 3.5로 전환 (베타)",
         "switch_to_classic": "클래식 UI로 전환",
         "beta_badge": "베타",
-        "beta_tooltip": "베타 콘솔 레이아웃 — 선택 사항이며 기본값은 클래식 UI입니다."
+        "beta_tooltip": "베타 콘솔 레이아웃 — 선택 사항이며 기본값은 클래식 UI입니다.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

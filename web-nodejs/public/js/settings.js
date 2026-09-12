@@ -325,9 +325,7 @@
             }
             
             tbody.innerHTML = logs.map(log => {
-                var actionKey = 'audit.action_' + (log.action || '').replace(/[^a-z0-9_]/gi, '_');
-                var actionLabel = typeof _ === 'function' ? _(actionKey) : log.action;
-                if (actionLabel === actionKey) actionLabel = log.action;
+                var actionLabel = Utils.formatAuditAction(log.action);
                 var actionClass = String(log.action || '').replace(/[^a-z0-9_-]/gi, '');
                 return `
                 <tr>

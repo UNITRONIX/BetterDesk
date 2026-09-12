@@ -51,7 +51,7 @@
                            placeholder="${_('settings.ui.search_placeholder')}"
                            aria-controls="settings-search-status">
                     <button type="button" class="btn btn-ghost btn-sm" id="settings-search-clear" hidden>
-                        <span class="material-icons">close</span>
+                        <span class="material-icons" aria-hidden="true">close</span>
                         ${_('actions.clear')}
                     </button>
                 </div>
@@ -64,7 +64,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">lock</span>
+                        <span class="material-icons" aria-hidden="true">lock</span>
                         ${_('settings.change_password')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.password_desc')}</p>
@@ -86,7 +86,7 @@
                         
                         <div class="password-requirements">
                             <strong>${_('settings.password_requirements')}:</strong>
-                            <ul>
+                            <ul role="list">
                                 <li id="req-length">${_('settings.req_length')}</li>
                                 <li id="req-uppercase">${_('settings.req_uppercase')}</li>
                                 <li id="req-lowercase">${_('settings.req_lowercase')}</li>
@@ -95,7 +95,7 @@
                         </div>
                         
                         <button type="submit" class="btn btn-primary">
-                            <span class="material-icons">save</span>
+                            <span class="material-icons" aria-hidden="true">save</span>
                             ${_('settings.save_password')}
                         </button>
                     </form>
@@ -106,7 +106,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">info</span>
+                        <span class="material-icons" aria-hidden="true">info</span>
                         ${_('settings.server_info')}
                     </h2>
                 </div>
@@ -114,28 +114,28 @@
                     <div class="server-info-grid">
                         <div class="server-info-item">
                             <span class="server-info-label">
-                                <span class="material-icons">tag</span>
+                                <span class="material-icons" aria-hidden="true">tag</span>
                                 ${_('settings.version')}
                             </span>
                             <span class="server-info-value">v${appVersion}</span>
                         </div>
                         <div class="server-info-item">
                             <span class="server-info-label">
-                                <span class="material-icons">dns</span>
+                                <span class="material-icons" aria-hidden="true">dns</span>
                                 ${_('settings.go_server_version')}
                             </span>
                             <span class="server-info-value" id="go-server-version">-</span>
                         </div>
                         <div class="server-info-item">
                             <span class="server-info-label">
-                                <span class="material-icons">storage</span>
+                                <span class="material-icons" aria-hidden="true">storage</span>
                                 ${_('settings.database')}
                             </span>
                             <span class="server-info-value" id="db-path">-</span>
                         </div>
                         <div class="server-info-item">
                             <span class="server-info-label">
-                                <span class="material-icons">schedule</span>
+                                <span class="material-icons" aria-hidden="true">schedule</span>
                                 ${_('settings.uptime')}
                             </span>
                             <span class="server-info-value" id="uptime">-</span>
@@ -148,7 +148,7 @@
             <div class="settings-panel" id="device-scope-settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">devices</span>
+                        <span class="material-icons" aria-hidden="true">devices</span>
                         ${_('settings.device_scope_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.device_scope_desc')}</p>
@@ -169,7 +169,7 @@
                         </div>
                         <p class="form-hint" id="device-scope-warning" hidden>${_('settings.device_scope_restricted_warning')}</p>
                         <button type="submit" class="btn btn-primary">
-                            <span class="material-icons">save</span>
+                            <span class="material-icons" aria-hidden="true">save</span>
                             ${_('settings.device_scope_save')}
                         </button>
                     </form>
@@ -181,7 +181,7 @@
             <div class="settings-panel" id="mesh-settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">hub</span>
+                        <span class="material-icons" aria-hidden="true">hub</span>
                         ${_('mesh.settings_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('mesh.settings_desc')}</p>
@@ -207,11 +207,11 @@
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" id="mesh-copy-server-id">
-                            <span class="material-icons">content_copy</span>
+                            <span class="material-icons" aria-hidden="true">content_copy</span>
                             ${_('mesh.copy_server_id')}
                         </button>
                         <a class="btn btn-primary" id="mesh-download-msh" href="/api/mesh/download.msh" download="meshagents.msh">
-                            <span class="material-icons">download</span>
+                            <span class="material-icons" aria-hidden="true">download</span>
                             ${_('mesh.download_msh')}
                         </a>
                     </div>
@@ -243,21 +243,21 @@
             <div class="settings-panel" id="connection-mode-section">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">swap_horiz</span>
+                        <span class="material-icons" aria-hidden="true">swap_horiz</span>
                         ${_('settings.connection_mode_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.connection_mode_desc')}</p>
                 </div>
                 <div class="settings-panel-body">
                     <div class="alert alert-info" id="connection-mode-info">
-                        <span class="material-icons">info</span>
+                        <span class="material-icons" aria-hidden="true">info</span>
                         <span>${_('settings.connection_mode_network_hint')}</span>
                     </div>
                     <div class="settings-choice-grid" role="radiogroup" aria-label="${_('settings.connection_mode_label')}">
                         <label class="settings-choice-card">
                             <input type="radio" name="connection-mode" value="p2p_first" id="conn-mode-p2p">
                             <span class="settings-choice-card-inner">
-                                <span class="material-icons settings-choice-card-icon">swap_horiz</span>
+                                <span class="material-icons settings-choice-card-icon" aria-hidden="true">swap_horiz</span>
                                 <span class="settings-choice-card-title">${_('settings.connection_mode_p2p_first')}</span>
                                 <span class="settings-choice-card-desc">${_('settings.ui.connection_p2p_hint')}</span>
                             </span>
@@ -265,7 +265,7 @@
                         <label class="settings-choice-card">
                             <input type="radio" name="connection-mode" value="relay_only" id="conn-mode-relay">
                             <span class="settings-choice-card-inner">
-                                <span class="material-icons settings-choice-card-icon">hub</span>
+                                <span class="material-icons settings-choice-card-icon" aria-hidden="true">hub</span>
                                 <span class="settings-choice-card-title">${_('settings.connection_mode_relay_only')}</span>
                                 <span class="settings-choice-card-desc">${_('settings.ui.connection_relay_hint')}</span>
                             </span>
@@ -297,11 +297,11 @@
                     <p class="text-muted" id="connection-mode-source"></p>
                     <div class="form-actions">
                         <button type="button" class="btn btn-primary" id="connection-mode-save">
-                            <span class="material-icons">save</span>
+                            <span class="material-icons" aria-hidden="true">save</span>
                             ${_('settings.connection_mode_save')}
                         </button>
                         <button type="button" class="btn btn-warning" id="connection-mode-save-restart">
-                            <span class="material-icons">restart_alt</span>
+                            <span class="material-icons" aria-hidden="true">restart_alt</span>
                             ${_('settings.connection_mode_save_restart')}
                         </button>
                     </div>
@@ -310,14 +310,14 @@
             <div class="settings-panel" id="public-endpoints-section">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">public</span>
+                        <span class="material-icons" aria-hidden="true">public</span>
                         ${_('settings.public_endpoints_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.public_endpoints_desc')}</p>
                 </div>
                 <div class="settings-panel-body">
                     <div class="alert alert-info">
-                        <span class="material-icons">info</span>
+                        <span class="material-icons" aria-hidden="true">info</span>
                         <span>${_('settings.public_endpoints_hint')}</span>
                     </div>
                     <div class="form-row">
@@ -340,7 +340,7 @@
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-primary" id="public-endpoints-save">
-                            <span class="material-icons">save</span>
+                            <span class="material-icons" aria-hidden="true">save</span>
                             ${_('settings.public_endpoints_save')}
                         </button>
                     </div>
@@ -352,7 +352,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">security</span>
+                        <span class="material-icons" aria-hidden="true">security</span>
                         ${_('settings.totp_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.totp_desc')}</p>
@@ -360,7 +360,7 @@
                 <div class="settings-panel-body">
                     <div id="totp-status-container">
                         <div class="totp-status-loading">
-                            <span class="material-icons spin">sync</span>
+                            <span class="material-icons spin" aria-hidden="true">sync</span>
                             ${_('common.loading')}
                         </div>
                     </div>
@@ -371,7 +371,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">history</span>
+                        <span class="material-icons" aria-hidden="true">history</span>
                         ${_('settings.audit_log')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.audit_desc')}</p>
@@ -419,23 +419,23 @@
             </section>
             <div class="branding-studio-toolbar">
                 <div class="branding-save-status" id="branding-save-status" aria-live="polite">
-                    <span class="material-icons branding-status-icon">check_circle</span>
+                    <span class="material-icons branding-status-icon" aria-hidden="true">check_circle</span>
                     <span id="branding-status-text">${_('branding.status_saved')}</span>
                 </div>
                 <div class="branding-toolbar-actions">
                     <button type="button" class="btn btn-ghost btn-sm" id="branding-revert-btn" title="${_('branding.revert_changes')}">
-                        <span class="material-icons">undo</span>
+                        <span class="material-icons" aria-hidden="true">undo</span>
                         ${_('branding.revert_changes')}
                     </button>
                     <button type="button" class="btn btn-primary btn-sm" id="branding-save-btn">
-                        <span class="material-icons">save</span>
+                        <span class="material-icons" aria-hidden="true">save</span>
                         ${_('branding.save_now')}
                     </button>
                 </div>
             </div>
 
             <div class="branding-readability-alert" id="branding-readability-alert" hidden>
-                <span class="material-icons">visibility</span>
+                <span class="material-icons" aria-hidden="true">visibility</span>
                 <div>
                     <strong>Readability check</strong>
                     <p id="branding-readability-text"></p>
@@ -447,25 +447,25 @@
                     <label class="form-label" for="branding-profile-select">${_('branding.profiles_label')}</label>
                     <select id="branding-profile-select" class="form-input form-select branding-profile-select"></select>
                     <button type="button" class="btn btn-secondary btn-sm" id="branding-profile-apply-btn">
-                        <span class="material-icons">play_arrow</span>
+                        <span class="material-icons" aria-hidden="true">play_arrow</span>
                         ${_('branding.profile_apply')}
                     </button>
                 </div>
                 <div class="branding-profiles-actions">
                     <button type="button" class="btn btn-ghost btn-sm" id="branding-profile-new-btn">
-                        <span class="material-icons">add</span>
+                        <span class="material-icons" aria-hidden="true">add</span>
                         ${_('branding.profile_new')}
                     </button>
                     <button type="button" class="btn btn-ghost btn-sm" id="branding-profile-save-btn">
-                        <span class="material-icons">save_as</span>
+                        <span class="material-icons" aria-hidden="true">save_as</span>
                         ${_('branding.profile_save')}
                     </button>
                     <button type="button" class="btn btn-ghost btn-sm" id="branding-profile-duplicate-btn">
-                        <span class="material-icons">content_copy</span>
+                        <span class="material-icons" aria-hidden="true">content_copy</span>
                         ${_('branding.profile_duplicate')}
                     </button>
                     <button type="button" class="btn btn-ghost btn-sm btn-danger-text" id="branding-profile-delete-btn">
-                        <span class="material-icons">delete</span>
+                        <span class="material-icons" aria-hidden="true">delete</span>
                         ${_('branding.profile_delete')}
                     </button>
                 </div>
@@ -473,33 +473,34 @@
 
             <div class="branding-builtin-themes" id="branding-builtin-themes">
                 <h3 class="branding-builtin-title">${_('branding.builtin_themes')}</h3>
+                <p class="settings-row-hint">${_('branding.builtin_themes_hint') || 'Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle.'}</p>
                 <div class="branding-theme-gallery" id="branding-theme-gallery"></div>
             </div>
 
             <div class="branding-studio-body">
                 <nav class="branding-module-nav" id="branding-module-nav" aria-label="${_('branding.modules_nav')}">
                     <button type="button" class="branding-module-btn active" data-branding-module="identity">
-                        <span class="material-icons">badge</span>
+                        <span class="material-icons" aria-hidden="true">badge</span>
                         ${_('branding.module_identity')}
                     </button>
                     <button type="button" class="branding-module-btn" data-branding-module="colors">
-                        <span class="material-icons">palette</span>
+                        <span class="material-icons" aria-hidden="true">palette</span>
                         ${_('branding.module_colors')}
                     </button>
                     <button type="button" class="branding-module-btn" data-branding-module="typography">
-                        <span class="material-icons">text_format</span>
+                        <span class="material-icons" aria-hidden="true">text_format</span>
                         ${_('branding.module_typography')}
                     </button>
                     <button type="button" class="branding-module-btn" data-branding-module="backgrounds">
-                        <span class="material-icons">wallpaper</span>
+                        <span class="material-icons" aria-hidden="true">wallpaper</span>
                         ${_('branding.module_backgrounds')}
                     </button>
                     <button type="button" class="branding-module-btn" data-branding-module="pages">
-                        <span class="material-icons">web</span>
+                        <span class="material-icons" aria-hidden="true">web</span>
                         ${_('branding.module_pages')}
                     </button>
                     <button type="button" class="branding-module-btn" data-branding-module="advanced">
-                        <span class="material-icons">tune</span>
+                        <span class="material-icons" aria-hidden="true">tune</span>
                         ${_('branding.module_advanced')}
                     </button>
                 </nav>
@@ -509,7 +510,7 @@
             <div class="settings-panel branding-module-panel active" data-branding-module="identity">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">badge</span>
+                        <span class="material-icons" aria-hidden="true">badge</span>
                         ${_('branding.identity_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.identity_desc')}</p>
@@ -534,7 +535,7 @@
             <div class="settings-panel branding-module-panel active" data-branding-module="identity">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">image</span>
+                        <span class="material-icons" aria-hidden="true">image</span>
                         ${_('branding.logo_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.logo_desc')}</p>
@@ -545,28 +546,28 @@
                             <label class="logo-type-option">
                                 <input type="radio" name="logo-type" value="text">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">title</span>
+                                    <span class="material-icons" aria-hidden="true">title</span>
                                     <span>${_('branding.logo_type_text')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="logo-type" value="icon">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">text_fields</span>
+                                    <span class="material-icons" aria-hidden="true">text_fields</span>
                                     <span>${_('branding.logo_type_icon')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="logo-type" value="svg">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">code</span>
+                                    <span class="material-icons" aria-hidden="true">code</span>
                                     <span>${_('branding.logo_type_svg')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="logo-type" value="image">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">photo</span>
+                                    <span class="material-icons" aria-hidden="true">photo</span>
                                     <span>${_('branding.logo_type_image')}</span>
                                 </span>
                             </label>
@@ -615,7 +616,7 @@
                                 <div class="logo-upload-area">
                                     <input type="file" id="logo-image-file" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" class="logo-file-input">
                                     <label for="logo-image-file" class="logo-upload-btn">
-                                        <span class="material-icons">upload_file</span>
+                                        <span class="material-icons" aria-hidden="true">upload_file</span>
                                         <span>${_('branding.logo_image_choose')}</span>
                                     </label>
                                     <span id="logo-file-name" class="logo-file-name"></span>
@@ -634,7 +635,7 @@
                         <div class="branding-preview-box">
                             <label class="form-label">${_('branding.preview')}</label>
                             <div class="logo-preview" id="logo-preview">
-                                <span class="material-icons">dns</span>
+                                <span class="material-icons" aria-hidden="true">dns</span>
                                 <span class="logo-preview-text">BetterDesk</span>
                             </div>
                         </div>
@@ -646,34 +647,35 @@
             <div class="settings-panel branding-module-panel" data-branding-module="colors">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">palette</span>
+                        <span class="material-icons" aria-hidden="true">palette</span>
                         ${_('branding.colors_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.colors_desc')}</p>
                 </div>
                 <div class="settings-panel-body">
                     <div class="form-group" style="max-width: 520px; margin-bottom: 1.25rem;">
-                        <label class="form-label" for="theme-mode-select">${_('theme.title') || 'Theme'}</label>
+                        <label class="form-label" for="theme-mode-select">${_('theme.quick_theme') || _('theme.title') || 'Theme'}</label>
                         <p class="settings-row-hint">${_('ux35.theme_mode_hint') || 'Light and Dark are built-in. Custom activates when you edit colors below.'}</p>
+                        <p class="settings-row-hint">${_('theme.quick_vs_presets') || 'Quick light/dark switch (also available in the top bar). Full color presets are in the gallery above.'}</p>
                         <div class="logo-type-selector" id="theme-mode-selector" role="radiogroup" aria-label="${_('theme.title') || 'Theme'}">
                             <label class="logo-type-option">
                                 <input type="radio" name="theme-mode" value="dark" checked>
                                 <span class="logo-type-card">
-                                    <span class="material-icons">dark_mode</span>
+                                    <span class="material-icons" aria-hidden="true">dark_mode</span>
                                     <span>${_('theme.dark') || 'Dark'}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="theme-mode" value="light">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">light_mode</span>
+                                    <span class="material-icons" aria-hidden="true">light_mode</span>
                                     <span>${_('theme.light') || 'Light'}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="theme-mode" value="custom">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">palette</span>
+                                    <span class="material-icons" aria-hidden="true">palette</span>
                                     <span>${_('theme.custom') || 'Custom'}</span>
                                 </span>
                             </label>
@@ -807,7 +809,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="typography">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">text_format</span>
+                        <span class="material-icons" aria-hidden="true">text_format</span>
                         ${_('branding.typography_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.typography_desc')}</p>
@@ -829,7 +831,7 @@
                                 <input type="hidden" id="font-heading-value">
                                 <span class="font-current" id="font-heading-current">${_('branding.font_system_default')}</span>
                                 <button class="btn btn-ghost btn-sm font-clear-btn hidden" id="font-heading-clear" title="${_('branding.font_clear')}">
-                                    <span class="material-icons">close</span>
+                                    <span class="material-icons" aria-hidden="true">close</span>
                                 </button>
                             </div>
                             <div class="font-preview" id="font-heading-preview">
@@ -852,7 +854,7 @@
                                 <input type="hidden" id="font-body-value">
                                 <span class="font-current" id="font-body-current">${_('branding.font_system_default')}</span>
                                 <button class="btn btn-ghost btn-sm font-clear-btn hidden" id="font-body-clear" title="${_('branding.font_clear')}">
-                                    <span class="material-icons">close</span>
+                                    <span class="material-icons" aria-hidden="true">close</span>
                                 </button>
                             </div>
                             <div class="font-preview" id="font-body-preview">
@@ -874,7 +876,7 @@
                             <div class="font-upload-area">
                                 <input type="file" id="font-upload-file" accept=".woff2,.ttf,font/woff2,font/ttf" class="font-upload-input">
                                 <label for="font-upload-file" class="btn btn-secondary btn-sm">
-                                    <span class="material-icons">upload_file</span>
+                                    <span class="material-icons" aria-hidden="true">upload_file</span>
                                     ${_('branding.font_upload_choose')}
                                 </label>
                                 <input type="text" id="font-upload-name" class="form-input" placeholder="${_('branding.font_upload_name')}" maxlength="80">
@@ -892,7 +894,7 @@
                         
                         <!-- Downloaded fonts info -->
                         <div class="font-local-info" id="font-local-info">
-                            <span class="material-icons">folder</span>
+                            <span class="material-icons" aria-hidden="true">folder</span>
                             <span id="font-local-count">0</span> ${_('branding.font_downloaded_count')}
                         </div>
                     </div>
@@ -903,7 +905,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="backgrounds">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">wallpaper</span>
+                        <span class="material-icons" aria-hidden="true">wallpaper</span>
                         ${_('branding.background_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.background_desc')}</p>
@@ -914,28 +916,28 @@
                             <label class="logo-type-option">
                                 <input type="radio" name="bg-type" value="none">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">block</span>
+                                    <span class="material-icons" aria-hidden="true">block</span>
                                     <span>${_('branding.bg_type_none')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="bg-type" value="color">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">format_color_fill</span>
+                                    <span class="material-icons" aria-hidden="true">format_color_fill</span>
                                     <span>${_('branding.bg_type_color')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="bg-type" value="gradient">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">gradient</span>
+                                    <span class="material-icons" aria-hidden="true">gradient</span>
                                     <span>${_('branding.bg_type_gradient')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="bg-type" value="image">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">image</span>
+                                    <span class="material-icons" aria-hidden="true">image</span>
                                     <span>${_('branding.bg_type_image')}</span>
                                 </span>
                             </label>
@@ -970,7 +972,7 @@
                                     </div>
                                     <input type="file" id="bg-image-file" data-target="bg-image-url" accept="image/png,image/jpeg,image/webp,image/gif" class="logo-file-input branding-bg-file">
                                     <label for="bg-image-file" class="logo-upload-btn">
-                                        <span class="material-icons">upload_file</span>
+                                        <span class="material-icons" aria-hidden="true">upload_file</span>
                                         <span>${_('branding.bg_image_choose')}</span>
                                     </label>
                                 </div>
@@ -978,7 +980,7 @@
                                 <span id="bg-file-name" class="logo-file-name background-current-file"></span>
                                 <div class="branding-upload-status" id="bg-upload-status" hidden>
                                     <div class="branding-upload-status-row">
-                                        <span class="material-icons branding-upload-status-icon">sync</span>
+                                        <span class="material-icons branding-upload-status-icon" aria-hidden="true">sync</span>
                                         <span class="branding-upload-message"></span>
                                     </div>
                                     <div class="branding-upload-progress">
@@ -1050,7 +1052,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="pages">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">login</span>
+                        <span class="material-icons" aria-hidden="true">login</span>
                         ${_('branding.login_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.login_desc')}</p>
@@ -1073,28 +1075,28 @@
                             <label class="logo-type-option">
                                 <input type="radio" name="login-bg-type" value="inherit">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">sync</span>
+                                    <span class="material-icons" aria-hidden="true">sync</span>
                                     <span>${_('branding.login_bg_inherit')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="login-bg-type" value="color">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">format_color_fill</span>
+                                    <span class="material-icons" aria-hidden="true">format_color_fill</span>
                                     <span>${_('branding.bg_type_color')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="login-bg-type" value="gradient">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">gradient</span>
+                                    <span class="material-icons" aria-hidden="true">gradient</span>
                                     <span>${_('branding.bg_type_gradient')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="login-bg-type" value="image">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">image</span>
+                                    <span class="material-icons" aria-hidden="true">image</span>
                                     <span>${_('branding.bg_type_image')}</span>
                                 </span>
                             </label>
@@ -1125,14 +1127,14 @@
                                 <div class="logo-upload-area">
                                     <input type="file" id="login-bg-image-file" data-target="login-bg-image-url" accept="image/png,image/jpeg,image/webp,image/gif" class="logo-file-input branding-bg-file">
                                     <label for="login-bg-image-file" class="logo-upload-btn">
-                                        <span class="material-icons">upload_file</span>
+                                        <span class="material-icons" aria-hidden="true">upload_file</span>
                                         <span>${_('branding.bg_image_choose')}</span>
                                     </label>
                                     <span id="login-bg-file-name" class="logo-file-name"></span>
                                 </div>
                                 <div class="branding-upload-status" id="login-bg-upload-status" hidden>
                                     <div class="branding-upload-status-row">
-                                        <span class="material-icons branding-upload-status-icon">sync</span>
+                                        <span class="material-icons branding-upload-status-icon" aria-hidden="true">sync</span>
                                         <span class="branding-upload-message"></span>
                                     </div>
                                     <div class="branding-upload-progress">
@@ -1159,7 +1161,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="pages">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">download</span>
+                        <span class="material-icons" aria-hidden="true">download</span>
                         ${_('branding.agent_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.agent_desc')}</p>
@@ -1170,28 +1172,28 @@
                             <label class="logo-type-option">
                                 <input type="radio" name="agent-bg-type" value="none">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">block</span>
+                                    <span class="material-icons" aria-hidden="true">block</span>
                                     <span>${_('branding.bg_type_none')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="agent-bg-type" value="color">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">format_color_fill</span>
+                                    <span class="material-icons" aria-hidden="true">format_color_fill</span>
                                     <span>${_('branding.bg_type_color')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="agent-bg-type" value="gradient">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">gradient</span>
+                                    <span class="material-icons" aria-hidden="true">gradient</span>
                                     <span>${_('branding.bg_type_gradient')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="agent-bg-type" value="image">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">image</span>
+                                    <span class="material-icons" aria-hidden="true">image</span>
                                     <span>${_('branding.bg_type_image')}</span>
                                 </span>
                             </label>
@@ -1222,14 +1224,14 @@
                                 <div class="logo-upload-area">
                                     <input type="file" id="agent-bg-image-file" data-target="agent-bg-image-url" accept="image/png,image/jpeg,image/webp,image/gif" class="logo-file-input branding-bg-file">
                                     <label for="agent-bg-image-file" class="logo-upload-btn">
-                                        <span class="material-icons">upload_file</span>
+                                        <span class="material-icons" aria-hidden="true">upload_file</span>
                                         <span>${_('branding.bg_image_choose')}</span>
                                     </label>
                                     <span id="agent-bg-file-name" class="logo-file-name"></span>
                                 </div>
                                 <div class="branding-upload-status" id="agent-bg-upload-status" hidden>
                                     <div class="branding-upload-status-row">
-                                        <span class="material-icons branding-upload-status-icon">sync</span>
+                                        <span class="material-icons branding-upload-status-icon" aria-hidden="true">sync</span>
                                         <span class="branding-upload-message"></span>
                                     </div>
                                     <div class="branding-upload-progress">
@@ -1259,7 +1261,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="pages">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">connected_tv</span>
+                        <span class="material-icons" aria-hidden="true">connected_tv</span>
                         RdClient
                     </h2>
                     <p class="settings-panel-desc">${_('remote_dashboard.subtitle')}</p>
@@ -1270,35 +1272,35 @@
                             <label class="logo-type-option">
                                 <input type="radio" name="rdclient-bg-type" value="inherit">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">sync</span>
+                                    <span class="material-icons" aria-hidden="true">sync</span>
                                     <span>${_('branding.login_bg_inherit')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="rdclient-bg-type" value="none">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">block</span>
+                                    <span class="material-icons" aria-hidden="true">block</span>
                                     <span>${_('branding.bg_type_none')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="rdclient-bg-type" value="color">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">format_color_fill</span>
+                                    <span class="material-icons" aria-hidden="true">format_color_fill</span>
                                     <span>${_('branding.bg_type_color')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="rdclient-bg-type" value="gradient">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">gradient</span>
+                                    <span class="material-icons" aria-hidden="true">gradient</span>
                                     <span>${_('branding.bg_type_gradient')}</span>
                                 </span>
                             </label>
                             <label class="logo-type-option">
                                 <input type="radio" name="rdclient-bg-type" value="image">
                                 <span class="logo-type-card">
-                                    <span class="material-icons">image</span>
+                                    <span class="material-icons" aria-hidden="true">image</span>
                                     <span>${_('branding.bg_type_image')}</span>
                                 </span>
                             </label>
@@ -1329,14 +1331,14 @@
                                 <div class="logo-upload-area">
                                     <input type="file" id="rdclient-bg-image-file" data-target="rdclient-bg-image-url" accept="image/png,image/jpeg,image/webp,image/gif" class="logo-file-input branding-bg-file">
                                     <label for="rdclient-bg-image-file" class="logo-upload-btn">
-                                        <span class="material-icons">upload_file</span>
+                                        <span class="material-icons" aria-hidden="true">upload_file</span>
                                         <span>${_('branding.bg_image_choose')}</span>
                                     </label>
                                     <span id="rdclient-bg-file-name" class="logo-file-name"></span>
                                 </div>
                                 <div class="branding-upload-status" id="rdclient-bg-upload-status" hidden>
                                     <div class="branding-upload-status-row">
-                                        <span class="material-icons branding-upload-status-icon">sync</span>
+                                        <span class="material-icons branding-upload-status-icon" aria-hidden="true">sync</span>
                                         <span class="branding-upload-message"></span>
                                     </div>
                                     <div class="branding-upload-progress">
@@ -1372,7 +1374,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="advanced">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">copyright</span>
+                        <span class="material-icons" aria-hidden="true">copyright</span>
                         ${_('branding.footer_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.footer_desc')}</p>
@@ -1400,7 +1402,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="advanced">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">code</span>
+                        <span class="material-icons" aria-hidden="true">code</span>
                         ${_('branding.custom_css_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.custom_css_desc')}</p>
@@ -1418,7 +1420,7 @@
             <div class="settings-panel branding-module-panel" data-branding-module="advanced">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">swap_horiz</span>
+                        <span class="material-icons" aria-hidden="true">swap_horiz</span>
                         ${_('branding.import_export_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('branding.import_export_desc')}</p>
@@ -1426,16 +1428,16 @@
                 <div class="settings-panel-body">
                     <div class="branding-actions-row">
                         <button class="btn btn-secondary" id="branding-export-btn">
-                            <span class="material-icons">download</span>
+                            <span class="material-icons" aria-hidden="true">download</span>
                             ${_('branding.export_theme')}
                         </button>
                         <label class="btn btn-secondary">
-                            <span class="material-icons">upload</span>
+                            <span class="material-icons" aria-hidden="true">upload</span>
                             ${_('branding.import_theme')}
                             <input type="file" id="branding-import-input" accept=".json" hidden>
                         </label>
                         <button class="btn btn-danger" id="branding-reset-btn">
-                            <span class="material-icons">restart_alt</span>
+                            <span class="material-icons" aria-hidden="true">restart_alt</span>
                             ${_('branding.reset_defaults')}
                         </button>
                     </div>
@@ -1454,7 +1456,7 @@
                     <div class="branding-preview-mockup" id="branding-live-mockup">
                         <div class="branding-mockup-sidebar">
                             <div class="branding-mockup-logo" id="branding-mockup-logo">
-                                <span class="material-icons">dns</span>
+                                <span class="material-icons" aria-hidden="true">dns</span>
                                 <span class="branding-mockup-title">BetterDesk</span>
                             </div>
                             <div class="branding-mockup-nav-item active"></div>
@@ -1503,7 +1505,7 @@
             <div class="settings-panel" id="enrollment-settings-section">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">how_to_reg</span>
+                        <span class="material-icons" aria-hidden="true">how_to_reg</span>
                         ${_('settings.enrollment_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.enrollment_desc')}</p>
@@ -1513,7 +1515,7 @@
                         <label class="settings-choice-card enrollment-option">
                             <input type="radio" name="settings_enrollment_mode" value="open">
                             <span class="settings-choice-card-inner">
-                                <span class="material-icons settings-choice-card-icon">lock_open</span>
+                                <span class="material-icons settings-choice-card-icon" aria-hidden="true">lock_open</span>
                                 <span class="settings-choice-card-title option-label">${_('tokens.mode_open')}</span>
                                 <span class="settings-choice-card-desc option-desc">${_('tokens.mode_open_desc')}</span>
                             </span>
@@ -1521,7 +1523,7 @@
                         <label class="settings-choice-card enrollment-option">
                             <input type="radio" name="settings_enrollment_mode" value="managed">
                             <span class="settings-choice-card-inner">
-                                <span class="material-icons settings-choice-card-icon">supervisor_account</span>
+                                <span class="material-icons settings-choice-card-icon" aria-hidden="true">supervisor_account</span>
                                 <span class="settings-choice-card-title option-label">${_('tokens.mode_managed')}</span>
                                 <span class="settings-choice-card-desc option-desc">${_('tokens.mode_managed_desc')}</span>
                             </span>
@@ -1529,7 +1531,7 @@
                         <label class="settings-choice-card enrollment-option">
                             <input type="radio" name="settings_enrollment_mode" value="locked">
                             <span class="settings-choice-card-inner">
-                                <span class="material-icons settings-choice-card-icon">lock</span>
+                                <span class="material-icons settings-choice-card-icon" aria-hidden="true">lock</span>
                                 <span class="settings-choice-card-title option-label">${_('tokens.mode_locked')}</span>
                                 <span class="settings-choice-card-desc option-desc">${_('tokens.mode_locked_desc')}</span>
                             </span>
@@ -1566,7 +1568,7 @@
                     <p class="form-hint" style="margin-top: 8px;">${_('settings.enrollment_ldap_hint')}</p>
                     <div class="form-actions">
                         <a href="/registrations" class="btn btn-secondary btn-sm">
-                            <span class="material-icons">pending_actions</span>
+                            <span class="material-icons" aria-hidden="true">pending_actions</span>
                             ${_('settings.enrollment_open_requests')}
                         </a>
                     </div>
@@ -1579,7 +1581,7 @@
             <div class="settings-panel" id="client-sessions-settings-section">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">devices</span>
+                        <span class="material-icons" aria-hidden="true">devices</span>
                         ${_('settings.client_sessions_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.client_sessions_desc')}</p>
@@ -1607,7 +1609,7 @@
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary btn-sm">
-                                <span class="material-icons">save</span>
+                                <span class="material-icons" aria-hidden="true">save</span>
                                 ${_('settings.client_sessions_save')}
                             </button>
                         </div>
@@ -1621,7 +1623,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">domain</span>
+                        <span class="material-icons" aria-hidden="true">domain</span>
                         ${_('settings.ldap_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.ldap_desc')}</p>
@@ -1769,11 +1771,11 @@
 
                         <div class="form-actions" style="display: flex; gap: 12px; margin-top: 16px;">
                             <button type="button" class="btn btn-secondary" id="ldap-test-btn">
-                                <span class="material-icons">cable</span>
+                                <span class="material-icons" aria-hidden="true">cable</span>
                                 ${_('settings.ldap_test_connection')}
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                <span class="material-icons">save</span>
+                                <span class="material-icons" aria-hidden="true">save</span>
                                 ${_('settings.ldap_save')}
                             </button>
                         </div>
@@ -1790,7 +1792,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">key</span>
+                        <span class="material-icons" aria-hidden="true">key</span>
                         ${_('settings.oidc_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.oidc_desc')}</p>
@@ -1926,11 +1928,11 @@
 
                         <div class="form-actions" style="display: flex; gap: 12px; margin-top: 16px;">
                             <button type="button" class="btn btn-secondary" id="oidc-test-btn">
-                                <span class="material-icons">travel_explore</span>
+                                <span class="material-icons" aria-hidden="true">travel_explore</span>
                                 ${_('settings.oidc_test_discovery')}
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                <span class="material-icons">save</span>
+                                <span class="material-icons" aria-hidden="true">save</span>
                                 ${_('settings.oidc_save')}
                             </button>
                         </div>
@@ -1949,7 +1951,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">backup</span>
+                        <span class="material-icons" aria-hidden="true">backup</span>
                         ${_('backup.title')}
                     </h2>
                     <p class="settings-panel-desc">${_('backup.desc')}</p>
@@ -1998,12 +2000,12 @@
                         </div>
                     </div>
                     <div class="restore-warning-box">
-                        <span class="material-icons">warning</span>
+                        <span class="material-icons" aria-hidden="true">warning</span>
                         <span>${_('backup.security_warning')}</span>
                     </div>
                     <div class="backup-actions">
                         <button class="btn btn-primary" id="backup-download-btn">
-                            <span class="material-icons">download</span>
+                            <span class="material-icons" aria-hidden="true">download</span>
                             ${_('backup.download')}
                         </button>
                     </div>
@@ -2014,7 +2016,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">restore</span>
+                        <span class="material-icons" aria-hidden="true">restore</span>
                         ${_('backup.restore_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('backup.restore_desc')}</p>
@@ -2048,12 +2050,12 @@
                         </label>
                     </div>
                     <div class="restore-warning-box restore-warning-box-danger">
-                        <span class="material-icons">priority_high</span>
+                        <span class="material-icons" aria-hidden="true">priority_high</span>
                         <span>${_('backup.restore_warning')}</span>
                     </div>
                     <div class="backup-actions">
                         <label class="btn btn-warning" id="restore-upload-label">
-                            <span class="material-icons">upload</span>
+                            <span class="material-icons" aria-hidden="true">upload</span>
                             ${_('backup.upload')}
                             <input type="file" id="restore-file-input" accept=".gz,.tar.gz,.json" hidden>
                         </label>
@@ -2078,7 +2080,7 @@
                               d="M24 8a16 16 0 0 1 14.5 9.2M24 40a16 16 0 0 1-14.5-9.2M8 24h6M34 24h6"/>
                     </svg>
                     <span class="win11-updates-hero-badge" id="update-hero-badge" hidden>
-                        <span class="material-icons">priority_high</span>
+                        <span class="material-icons" aria-hidden="true">priority_high</span>
                     </span>
                 </div>
                 <div class="win11-updates-hero-body">
@@ -2101,7 +2103,7 @@
                 </div>
                 <div class="win11-updates-hero-action">
                     <button class="btn win11-updates-primary-btn" id="update-check-btn" type="button">
-                        <span class="material-icons">refresh</span>
+                        <span class="material-icons" aria-hidden="true">refresh</span>
                         ${_('updates.check_now')}
                     </button>
                 </div>
@@ -2111,7 +2113,7 @@
                 <!-- Docker image deployment -->
                 <div class="update-docker-info win11-updates-alert" id="update-docker-info" style="display:none;">
                     <div class="update-docker-icon">
-                        <span class="material-icons">cloud_download</span>
+                        <span class="material-icons" aria-hidden="true">cloud_download</span>
                     </div>
                     <div class="update-docker-body">
                         <strong>${_('updates.docker_title')}</strong>
@@ -2124,13 +2126,13 @@
                 <!-- Stale server binary warning -->
                 <div class="update-stale-warning win11-updates-alert" id="update-stale-warning" style="display:none;">
                     <div class="update-stale-icon">
-                        <span class="material-icons">gpp_maybe</span>
+                        <span class="material-icons" aria-hidden="true">gpp_maybe</span>
                     </div>
                     <div class="update-stale-body">
                         <strong>${_('updates.server_stale_title')}</strong>
                         <p id="update-stale-detail">${_('updates.server_stale_desc')}</p>
                         <button class="btn btn-warning" id="update-rebuild-server-btn" type="button">
-                            <span class="material-icons">build</span>
+                            <span class="material-icons" aria-hidden="true">build</span>
                             ${_('updates.rebuild_server')}
                         </button>
                     </div>
@@ -2149,7 +2151,7 @@
                             <span>${_('updates.create_backup')}</span>
                         </label>
                         <button class="btn win11-updates-primary-btn win11-updates-install-btn" id="update-install-btn" type="button" disabled>
-                            <span class="material-icons">download</span>
+                            <span class="material-icons" aria-hidden="true">download</span>
                             ${_('updates.install')}
                         </button>
                         <p class="update-install-blocked-hint text-muted" id="update-install-blocked-hint" hidden>
@@ -2216,7 +2218,7 @@
                                     ${_('common.save')}
                                 </button>
                                 <button class="btn btn-sm btn-outline" id="backup-prune-now" type="button">
-                                    <span class="material-icons">cleaning_services</span>
+                                    <span class="material-icons" aria-hidden="true">cleaning_services</span>
                                     ${_('updates.prune_now')}
                                 </button>
                             </div>
@@ -2252,7 +2254,7 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">email</span>
+                        <span class="material-icons" aria-hidden="true">email</span>
                         ${_('settings.email.title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.email.desc')}</p>
@@ -2309,14 +2311,14 @@
             <div class="settings-panel">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
-                        <span class="material-icons">code</span>
+                        <span class="material-icons" aria-hidden="true">code</span>
                         ${_('settings.advanced_title')}
                     </h2>
                     <p class="settings-panel-desc">${_('settings.advanced_desc')}</p>
                 </div>
                 <div class="settings-panel-body">
                     <div class="restore-warning-box">
-                        <span class="material-icons">warning</span>
+                        <span class="material-icons" aria-hidden="true">warning</span>
                         <span>${_('settings.advanced_warning')}</span>
                     </div>
                     <div class="advanced-config-layout">
@@ -2334,15 +2336,15 @@
                                 </div>
                                 <div class="advanced-config-editor-actions">
                                     <button type="button" class="btn btn-sm btn-outline" id="advanced-config-reload">
-                                        <span class="material-icons">refresh</span>
+                                        <span class="material-icons" aria-hidden="true">refresh</span>
                                         ${_('settings.advanced_reload')}
                                     </button>
                                     <button type="button" class="btn btn-sm btn-primary" id="advanced-config-save">
-                                        <span class="material-icons">save</span>
+                                        <span class="material-icons" aria-hidden="true">save</span>
                                         ${_('settings.advanced_save')}
                                     </button>
                                     <button type="button" class="btn btn-sm btn-warning" id="advanced-config-restart" hidden>
-                                        <span class="material-icons">restart_alt</span>
+                                        <span class="material-icons" aria-hidden="true">restart_alt</span>
                                         ${_('settings.advanced_apply_restart')}
                                     </button>
                                 </div>

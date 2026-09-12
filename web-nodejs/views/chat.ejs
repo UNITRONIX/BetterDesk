@@ -6,16 +6,17 @@
     breadcrumb: typeof breadcrumb !== 'undefined' ? breadcrumb : [{ label: _('nav.chat') }],
     body: `
     <div class="chat-page" id="chat-page">
+        <h1 class="sr-only">${_('nav.chat')}</h1>
         <!-- Sidebar: contacts & groups -->
         <aside class="chat-sidebar" id="chat-sidebar">
             <div class="chat-sidebar-header">
                 <h2 class="chat-sidebar-title">${_('nav.chat')}</h2>
                 <div class="chat-sidebar-actions">
                     <button class="chat-icon-btn" id="chat-new-group-btn" title="${_('chat.create_group')}">
-                        <span class="material-icons">group_add</span>
+                        <span class="material-icons" aria-hidden="true">group_add</span>
                     </button>
                     <button class="chat-icon-btn" id="chat-search-toggle" title="${_('chat.search_messages')}">
-                        <span class="material-icons">search</span>
+                        <span class="material-icons" aria-hidden="true">search</span>
                     </button>
                 </div>
             </div>
@@ -25,7 +26,7 @@
                 <input type="text" class="chat-search-input" id="chat-search-input"
                     placeholder="${_('chat.search_placeholder')}">
                 <button class="chat-icon-btn chat-search-close" id="chat-search-close">
-                    <span class="material-icons">close</span>
+                    <span class="material-icons" aria-hidden="true">close</span>
                 </button>
             </div>
             <div class="chat-search-results" id="chat-search-results" style="display:none"></div>
@@ -33,11 +34,11 @@
             <!-- Tabs: Contacts / Groups -->
             <div class="chat-tabs">
                 <button class="chat-tab active" data-tab="contacts">
-                    <span class="material-icons">people</span>
+                    <span class="material-icons" aria-hidden="true">people</span>
                     ${_('chat.contacts')}
                 </button>
                 <button class="chat-tab" data-tab="groups">
-                    <span class="material-icons">groups</span>
+                    <span class="material-icons" aria-hidden="true">groups</span>
                     ${_('chat.groups')}
                 </button>
             </div>
@@ -46,14 +47,14 @@
                 <!-- Contact list -->
                 <div class="chat-list" id="chat-contacts-list" data-tab-content="contacts">
                     <div class="chat-list-empty">
-                        <span class="material-icons">forum</span>
+                        <span class="material-icons" aria-hidden="true">forum</span>
                         <p>${_('chat.no_contacts')}</p>
                     </div>
                 </div>
                 <!-- Group list -->
                 <div class="chat-list" id="chat-groups-list" data-tab-content="groups" style="display:none">
                     <div class="chat-list-empty">
-                        <span class="material-icons">group</span>
+                        <span class="material-icons" aria-hidden="true">group</span>
                         <p>${_('chat.no_groups')}</p>
                     </div>
                 </div>
@@ -75,7 +76,7 @@
         <section class="chat-main" id="chat-main">
             <!-- Empty state -->
             <div class="chat-empty-state" id="chat-empty-state">
-                <span class="material-icons chat-empty-icon">chat</span>
+                <span class="material-icons chat-empty-icon" aria-hidden="true">chat</span>
                 <h3>${_('chat.select_conversation')}</h3>
                 <p>${_('chat.select_conversation_hint')}</p>
             </div>
@@ -85,7 +86,7 @@
                 <!-- Conversation header -->
                 <div class="chat-conv-header" id="chat-conv-header">
                     <button class="chat-icon-btn chat-back-btn" id="chat-back-btn" title="${_('actions.back')}">
-                        <span class="material-icons">arrow_back</span>
+                        <span class="material-icons" aria-hidden="true">arrow_back</span>
                     </button>
                     <div class="chat-conv-info">
                         <div class="chat-conv-avatar" id="chat-conv-avatar"></div>
@@ -96,20 +97,20 @@
                     </div>
                     <div class="chat-conv-actions">
                         <button class="chat-icon-btn" id="chat-encrypt-btn" title="${_('chat.e2e_enabled')}">
-                            <span class="material-icons">lock</span>
+                            <span class="material-icons" aria-hidden="true">lock</span>
                         </button>
                         <button class="chat-icon-btn" id="chat-conv-search-btn" title="${_('chat.search_messages')}">
-                            <span class="material-icons">search</span>
+                            <span class="material-icons" aria-hidden="true">search</span>
                         </button>
                         <button class="chat-icon-btn" id="chat-conv-info-btn" title="${_('chat.info')}">
-                            <span class="material-icons">info</span>
+                            <span class="material-icons" aria-hidden="true">info</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- E2E encryption banner -->
                 <div class="chat-e2e-banner" id="chat-e2e-banner" style="display:none">
-                    <span class="material-icons">enhanced_encryption</span>
+                    <span class="material-icons" aria-hidden="true">enhanced_encryption</span>
                     <span id="chat-e2e-text">${_('chat.e2e_establishing')}</span>
                 </div>
 
@@ -130,17 +131,17 @@
                 <div class="chat-input-area" id="chat-input-area">
                     <div class="chat-input-row">
                         <button class="chat-icon-btn" id="chat-attach-btn" title="${_('chat.attach_file')}">
-                            <span class="material-icons">attach_file</span>
+                            <span class="material-icons" aria-hidden="true">attach_file</span>
                         </button>
                         <button class="chat-icon-btn" id="chat-emoji-btn" title="${_('chat.emoji')}">
-                            <span class="material-icons">sentiment_satisfied_alt</span>
+                            <span class="material-icons" aria-hidden="true">sentiment_satisfied_alt</span>
                         </button>
                         <div class="chat-input-wrap">
                             <textarea class="chat-input" id="chat-input" rows="1"
                                 placeholder="${_('chat.type_message')}" maxlength="4096"></textarea>
                         </div>
                         <button class="chat-send-btn" id="chat-send-btn" title="${_('chat.send')}">
-                            <span class="material-icons">send</span>
+                            <span class="material-icons" aria-hidden="true">send</span>
                         </button>
                     </div>
                     <!-- File preview (hidden) -->
@@ -148,7 +149,7 @@
                         <span class="chat-file-name" id="chat-file-name"></span>
                         <span class="chat-file-size" id="chat-file-size"></span>
                         <button class="chat-icon-btn chat-file-remove" id="chat-file-remove">
-                            <span class="material-icons">close</span>
+                            <span class="material-icons" aria-hidden="true">close</span>
                         </button>
                     </div>
                     <input type="file" id="chat-file-input" style="display:none">

@@ -62,6 +62,21 @@
      * Navbar functionality
      */
     function initNavbar() {
+        function closeAllTopbarPopovers(except) {
+            document.querySelectorAll('.lang-dropdown.open').forEach(d => {
+                if (except && (d === except || except.contains?.(d))) return;
+                d.classList.remove('open');
+                d.parentElement?.querySelector('button')?.setAttribute('aria-expanded', 'false');
+            });
+            const notif = document.getElementById('notif-dropdown');
+            if (notif && !(except && (except === notif || except.contains?.(notif)))) {
+                notif.hidden = true;
+                document.getElementById('notif-btn')?.setAttribute('aria-expanded', 'false');
+            }
+        }
+        window.BetterDesk = window.BetterDesk || {};
+        window.BetterDesk.closeAllTopbarPopovers = closeAllTopbarPopovers;
+
         // Dropdowns
         document.querySelectorAll('.lang-selector').forEach(selector => {
             const btn = selector.querySelector('button');
@@ -71,25 +86,16 @@
             
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // Close other dropdowns
-                document.querySelectorAll('.lang-dropdown.open').forEach(d => {
-                    if (d !== dropdown) {
-                        d.classList.remove('open');
-                        d.parentElement?.querySelector('button')?.setAttribute('aria-expanded', 'false');
-                    }
-                });
-                const open = !dropdown.classList.contains('open');
-                dropdown.classList.toggle('open', open);
-                btn.setAttribute('aria-expanded', String(open));
+                const willOpen = !dropdown.classList.contains('open');
+                closeAllTopbarPopovers(willOpen ? dropdown : null);
+                dropdown.classList.toggle('open', willOpen);
+                btn.setAttribute('aria-expanded', String(willOpen));
             });
         });
         
         // Close dropdowns on outside click
         document.addEventListener('click', () => {
-            document.querySelectorAll('.lang-dropdown.open').forEach(d => {
-                d.classList.remove('open');
-                d.parentElement?.querySelector('button')?.setAttribute('aria-expanded', 'false');
-            });
+            closeAllTopbarPopovers();
         });
     }
     

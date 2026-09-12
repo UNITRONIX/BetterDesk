@@ -37,7 +37,8 @@
         "back": "Tillbaka",
         "edit": "Redigera",
         "yes": "Ja",
-        "no": "Nej"
+        "no": "Nej",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Huvud",
@@ -194,7 +195,11 @@
         "intune_script_hint": "Kör som administratör efter RustDesk MSI. Använder samma config-sträng som Kopiera deploy-sträng.",
         "deploy_string_not_ready": "Deploy-strängen är inte tillgänglig förrän serverns publika nyckel har laddats.",
         "client_server_host_env_hint": "Offentliga ID-, relay- och API-ändpunkter finns under Inställningar → Offentliga klientändpunkter. Töm där för att använda detta fält igen.",
-        "client_config_qr_unreachable_host": "Denna QR innehåller localhost eller en .local-adress. Telefoner når den vanligtvis inte — ställ först in Client server address (eller PANEL_PUBLIC_HOST) till en LAN-IP eller publik DNS."
+        "client_config_qr_unreachable_host": "Denna QR innehåller localhost eller en .local-adress. Telefoner når den vanligtvis inte — ställ först in Client server address (eller PANEL_PUBLIC_HOST) till en LAN-IP eller publik DNS.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Enheter",
@@ -742,7 +747,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Begränsad — visa endast uttryckligen beviljade enheter",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -779,7 +784,14 @@
         "action_settings_update": "Inställningar uppdaterade",
         "action_device_ban": "Enhet förbjuden",
         "action_device_unban": "Enheten avstängd",
-        "action_device_delete": "Enhet raderad"
+        "action_device_delete": "Enhet raderad",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -972,7 +984,8 @@
         "advanced_branding_hint": "Låt vara hopfälld för snabb skapande — standardvärden räcker. Expandera för logotyp, färger och kontakt.",
         "toolchain_branding_seal": "Varumärkessignering misslyckades — kontrollera signeringsnyckeln på konsolen och bygg om.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) saknas — Windows-byggen misslyckas.",
-        "toolchain_appimage_missing": "appimagetool saknas — AppImage-byggen misslyckas."
+        "toolchain_appimage_missing": "appimagetool saknas — AppImage-byggen misslyckas.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Port",
@@ -1523,7 +1536,8 @@
         "glass_color": "Glasfärgston",
         "glass_color_hint": "Grundfärg för frostade paneler. Använder sekundär bakgrundsfärg om tom.",
         "glass_blur": "Ytoblur",
-        "glass_opacity": "Glasopacitet"
+        "glass_opacity": "Glasopacitet",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Översikt",
@@ -2765,7 +2779,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "Anpassad"
+        "custom": "Anpassad",
+        "switch_to_dark": "Byt till mörkt tema",
+        "switch_to_light": "Byt till ljust tema",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3981,7 +3999,9 @@
             "packages": "Paket och avtal",
             "sessions": "Sessioner",
             "reports": "Rapporter",
-            "settings": "Avancerade inställningar"
+            "settings": "Avancerade inställningar",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Servertid (NTP)",
@@ -4222,11 +4242,11 @@
         "more": "Mer"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "MeshCentral-kompatibilitet",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "Ladda ner MeshAgent .msh",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4251,7 +4271,7 @@
         "transport_files": "Mesh-filer",
         "settings_desc": "MeshAgent-onboarding och Server ID för .msh-filer.",
         "mesh_name": "Mesh-gruppnamn (.msh)",
-        "copy_server_id": "Kopiera Server ID",
+        "copy_server_id": "Kopiera server-ID",
         "copy_server_id_ok": "Server ID kopierat",
         "enabled_label": "Aktiverad",
         "disabled_label": "Inaktiverad",
@@ -4331,7 +4351,9 @@
         "switch_to_ux35": "Växla till UX 3.5 (Beta)",
         "switch_to_classic": "Växla till klassiskt gränssnitt",
         "beta_badge": "BETA",
-        "beta_tooltip": "Beta-konsollayout — valfritt; klassiskt UI förblir standard."
+        "beta_tooltip": "Beta-konsollayout — valfritt; klassiskt UI förblir standard.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

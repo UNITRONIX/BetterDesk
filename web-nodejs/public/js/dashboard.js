@@ -505,19 +505,33 @@
 
     function updateClientHostControls(config) {
         const hintEl = findById('client-config-host-hint');
+        const badgeEl = findById('client-config-env-badge');
+        const linkEl = findById('client-config-host-env-link');
         const envOverride = Boolean(config?.env_override_active);
 
         if (clientConfigHostInput) {
             clientConfigHostInput.disabled = envOverride;
+            if (envOverride) {
+                clientConfigHostInput.title = _('dashboard.client_server_host_env_hint');
+            } else {
+                clientConfigHostInput.removeAttribute('title');
+            }
         }
         if (applyClientHostButton) {
             applyClientHostButton.disabled = envOverride;
+            if (envOverride) {
+                applyClientHostButton.title = _('dashboard.client_server_host_env_hint');
+            } else {
+                applyClientHostButton.removeAttribute('title');
+            }
         }
         if (hintEl) {
             hintEl.textContent = envOverride
                 ? _('dashboard.client_server_host_env_hint')
                 : _('dashboard.client_server_host_hint');
         }
+        if (badgeEl) badgeEl.hidden = !envOverride;
+        if (linkEl) linkEl.hidden = !envOverride;
     }
 
     async function copyClientConfigField(elementId, button) {
@@ -671,7 +685,10 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             const events = data.events || data.data?.events || [];
             
             if (events.length === 0) {
-                container.innerHTML = `<div class="activity-empty">${_('dashboard.no_recent_activity')}</div>`;
+                container.innerHTML = `<div class="activity-empty">
+                    <p>${_('dashboard.no_recent_activity')}</p>
+                    <a class="btn btn-secondary btn-sm" href="/settings#audit">${_('dashboard.view_audit_log') || _('nav.settings')}</a>
+                </div>`;
                 return;
             }
             
@@ -684,25 +701,33 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
                     'ban': { icon: 'block', cls: 'ban' },
                     'unban': { icon: 'check_circle', cls: 'unban' },
                     'file_transfer': { icon: 'upload_file', cls: 'file' },
-                    'alarm': { icon: 'warning', cls: 'alert' }
+                    'alarm': { icon: 'warning', cls: 'alert' },
+                    'branding_update': { icon: 'palette', cls: 'connect' },
+                    'theme_toggle': { icon: 'dark_mode', cls: 'connect' }
                 };
                 const info = iconMap[ev.action] || { icon: 'info', cls: 'connect' };
                 const timeAgo = formatTimeAgo(ev.timestamp || ev.created_at);
                 const detail = ev.device_id || ev.peer_id || ev.details || '';
+                const actionLabel = (window.Utils && Utils.formatAuditAction)
+                    ? Utils.formatAuditAction(ev.action, ev.action_label || ev.action)
+                    : (ev.action_label || ev.action || '');
                 
                 return `<div class="activity-item stagger-item">
                     <div class="activity-icon ${info.cls}">
-                        <span class="material-icons">${info.icon}</span>
+                        <span class="material-icons" aria-hidden="true">${info.icon}</span>
                     </div>
                     <div class="activity-content">
-                        <div class="activity-text">${escapeHtml(ev.action_label || ev.action)}${detail ? ' — <strong>' + escapeHtml(String(detail)) + '</strong>' : ''}</div>
+                        <div class="activity-text">${escapeHtml(actionLabel)}${detail ? ' — <strong>' + escapeHtml(String(detail)) + '</strong>' : ''}</div>
                         <div class="activity-time">${timeAgo}</div>
                     </div>
                 </div>`;
             }).join('');
         } catch (err) {
             console.error('Activity feed error:', err);
-            container.innerHTML = `<div class="activity-empty">${_('dashboard.no_recent_activity')}</div>`;
+            container.innerHTML = `<div class="activity-empty">
+                <p>${_('dashboard.activity_load_error') || _('errors.server_error')}</p>
+                <a class="btn btn-secondary btn-sm" href="/settings#audit">${_('dashboard.view_audit_log') || _('nav.settings')}</a>
+            </div>`;
         }
     }
     

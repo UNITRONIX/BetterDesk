@@ -37,7 +37,8 @@
         "back": "पीछे",
         "edit": "संपादन करना",
         "yes": "हाँ",
-        "no": "नहीं"
+        "no": "नहीं",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Main",
@@ -194,7 +195,11 @@
         "intune_script_hint": "RustDesk MSI पूरा होने के बाद व्यवस्थापक के रूप में चलाएँ। डिप्लॉय स्ट्रिंग कॉपी करें जैसा ही config स्ट्रिंग उपयोग करता है।",
         "deploy_string_not_ready": "सर्वर की सार्वजनिक कुंजी लोड होने तक डिप्लॉय स्ट्रिंग उपलब्ध नहीं है।",
         "client_server_host_env_hint": "सार्वजनिक ID, relay और API Settings → Public client endpoints में सेट हैं। इस ओवरराइड के लिए वहाँ खाली करें।",
-        "client_config_qr_unreachable_host": "इस QR में localhost या .local पता है। फ़ोन आमतौर पर इसे पहुँच नहीं पाते — पहले Client server address (या PANEL_PUBLIC_HOST) को LAN IP या सार्वजनिक DNS पर सेट करें।"
+        "client_config_qr_unreachable_host": "इस QR में localhost या .local पता है। फ़ोन आमतौर पर इसे पहुँच नहीं पाते — पहले Client server address (या PANEL_PUBLIC_HOST) को LAN IP या सार्वजनिक DNS पर सेट करें।",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "उपकरण",
@@ -742,7 +747,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "प्रतिबंधित — केवल स्पष्ट रूप से दी गई डिवाइस दिखाएँ",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -779,7 +784,14 @@
         "action_settings_update": "सेटिंग्स अपडेट की गईं",
         "action_device_ban": "डिवाइस प्रतिबंधित",
         "action_device_unban": "डिवाइस अप्रतिबंधित",
-        "action_device_delete": "डिवाइस हटा दिया गया"
+        "action_device_delete": "डिवाइस हटा दिया गया",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -972,7 +984,8 @@
         "advanced_branding_hint": "तेज़ बनाने के लिए बंद रखें — डिफ़ॉल्ट पर्याप्त हैं। लोगो, रंग और संपर्क के लिए खोलें।",
         "toolchain_branding_seal": "ब्रांडिंग हस्ताक्षर विफल — कंसोल पर साइनिंग कुंजी जाँचें, फिर फिर से बनाएँ।",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) नहीं मिला — Windows बिल्ड विफल होंगे।",
-        "toolchain_appimage_missing": "appimagetool नहीं मिला — AppImage बिल्ड विफल होंगे।"
+        "toolchain_appimage_missing": "appimagetool नहीं मिला — AppImage बिल्ड विफल होंगे।",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Port",
@@ -1523,7 +1536,8 @@
         "glass_color": "ग्लास टिंट रंग",
         "glass_color_hint": "फ्रॉस्टेड पैनलों के लिए आधार रंग। खाली होने पर द्वितीयक पृष्ठभूमि रंग का उपयोग करता है।",
         "glass_blur": "सतह ब्लर",
-        "glass_opacity": "ग्लास अपारदर्शिता"
+        "glass_opacity": "ग्लास अपारदर्शिता",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "सिंहावलोकन",
@@ -2765,7 +2779,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "कस्टम"
+        "custom": "कस्टम",
+        "switch_to_dark": "डार्क थीम पर स्विच करें",
+        "switch_to_light": "लाइट थीम पर स्विच करें",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3981,7 +3999,9 @@
             "packages": "पैकेज और अनुबंध",
             "sessions": "सत्र",
             "reports": "रिपोर्ट",
-            "settings": "उन्नत सेटिंग्स"
+            "settings": "उन्नत सेटिंग्स",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "सर्वर समय (NTP)",
@@ -4222,11 +4242,11 @@
         "more": "अधिक"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "MeshCentral संगतता",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "MeshAgent .msh डाउनलोड करें",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4251,7 +4271,7 @@
         "transport_files": "Mesh फ़ाइलें",
         "settings_desc": "MeshAgent ऑनबोर्डिंग और .msh फ़ाइलों के लिए Server ID.",
         "mesh_name": "Mesh समूह नाम (.msh)",
-        "copy_server_id": "Server ID कॉपी करें",
+        "copy_server_id": "सर्वर ID कॉपी करें",
         "copy_server_id_ok": "Server ID कॉपी हो गया",
         "enabled_label": "सक्षम",
         "disabled_label": "अक्षम",
@@ -4331,7 +4351,9 @@
         "switch_to_ux35": "UX 3.5 पर स्विच करें (बीटा)",
         "switch_to_classic": "क्लासिक UI पर स्विच करें",
         "beta_badge": "बीटा",
-        "beta_tooltip": "बीटा कंसोल लेआउट — वैकल्पिक; क्लासिक UI डिफ़ॉल्ट रहता है।"
+        "beta_tooltip": "बीटा कंसोल लेआउट — वैकल्पिक; क्लासिक UI डिफ़ॉल्ट रहता है।",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

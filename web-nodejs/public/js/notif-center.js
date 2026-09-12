@@ -56,8 +56,11 @@
         if (count > 0) {
             dom.badge.textContent = count > 99 ? '99+' : String(count);
             dom.badge.hidden = false;
+            dom.badge.removeAttribute('aria-hidden');
         } else {
+            dom.badge.textContent = '';
             dom.badge.hidden = true;
+            dom.badge.setAttribute('aria-hidden', 'true');
         }
     }
 
@@ -232,6 +235,9 @@
     function toggleDropdown(open) {
         if (!dom) return;
         const isOpen = open !== undefined ? open : dom.dropdown.hidden;
+        if (isOpen && window.BetterDesk && typeof window.BetterDesk.closeAllTopbarPopovers === 'function') {
+            window.BetterDesk.closeAllTopbarPopovers(dom.dropdown);
+        }
         dom.dropdown.hidden = !isOpen;
         dom.btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         if (isOpen) {

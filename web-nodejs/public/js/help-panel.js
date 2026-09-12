@@ -101,7 +101,13 @@
             });
             var label = t('nav.help', 'Help');
             if (!el.getAttribute('title')) el.setAttribute('title', label);
-            if (!el.getAttribute('aria-label')) el.setAttribute('aria-label', label);
+            // Do not override accessible name when the control already has visible text
+            var hasVisibleLabel = Array.prototype.some.call(el.childNodes, function (n) {
+                return n.nodeType === 1 && !n.classList.contains('material-icons') && (n.textContent || '').trim();
+            }) || (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3 && el.textContent.trim());
+            if (!el.getAttribute('aria-label') && !hasVisibleLabel) {
+                el.setAttribute('aria-label', label);
+            }
         });
     }
 

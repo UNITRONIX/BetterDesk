@@ -513,19 +513,19 @@
         el.innerHTML =
             '<div class="widget-header">' +
                 '<div class="widget-header-icon" style="color:' + esc(iconColor) + '">' +
-                    '<span class="material-icons">' + esc(plugin.icon || 'widgets') + '</span>' +
+                    '<span class="material-icons" aria-hidden="true">' + esc(plugin.icon || 'widgets') + '</span>' +
                 '</div>' +
                 '<div class="widget-header-title">' + esc(plugin.name || w.type) + '</div>' +
                 '<div class="widget-header-actions">' +
                     '<button class="widget-btn-kebab" title="Options">' +
-                        '<span class="material-icons">more_vert</span>' +
+                        '<span class="material-icons" aria-hidden="true">more_vert</span>' +
                     '</button>' +
                     '<div class="widget-kebab-menu">' +
-                        '<div class="widget-kebab-item" data-action="config"><span class="material-icons">settings</span>' + esc(t('desktop.configure')) + '</div>' +
-                        '<div class="widget-kebab-item" data-action="refresh"><span class="material-icons">refresh</span>' + esc(t('desktop.refresh')) + '</div>' +
-                        '<div class="widget-kebab-item" data-action="popout"><span class="material-icons">open_in_new</span>' + esc(t('desktop.pop_out_widget')) + '</div>' +
+                        '<div class="widget-kebab-item" data-action="config"><span class="material-icons" aria-hidden="true">settings</span>' + esc(t('desktop.configure')) + '</div>' +
+                        '<div class="widget-kebab-item" data-action="refresh"><span class="material-icons" aria-hidden="true">refresh</span>' + esc(t('desktop.refresh')) + '</div>' +
+                        '<div class="widget-kebab-item" data-action="popout"><span class="material-icons" aria-hidden="true">open_in_new</span>' + esc(t('desktop.pop_out_widget')) + '</div>' +
                         '<div class="widget-kebab-divider"></div>' +
-                        '<div class="widget-kebab-item danger" data-action="remove"><span class="material-icons">delete</span>' + esc(t('desktop.remove_widget')) + '</div>' +
+                        '<div class="widget-kebab-item danger" data-action="remove"><span class="material-icons" aria-hidden="true">delete</span>' + esc(t('desktop.remove_widget')) + '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
@@ -594,7 +594,7 @@
         var body = el.querySelector('.widget-body');
         if (plugin.render) {
             try { plugin.render(body, w.config, w); } catch (err) {
-                body.innerHTML = '<div class="widget-empty"><span class="material-icons">error</span><span>Error</span></div>';
+                body.innerHTML = '<div class="widget-empty"><span class="material-icons" aria-hidden="true">error</span><span>Error</span></div>';
                 console.error('[Widget] render error (' + w.type + '):', err);
             }
         }
@@ -616,7 +616,7 @@
         var btn = document.createElement('button');
         btn.className = 'widget-add-btn';
         btn.title = t('desktop.add_widget');
-        btn.innerHTML = '<span class="material-icons">add</span>';
+        btn.innerHTML = '<span class="material-icons" aria-hidden="true">add</span>';
         btn.addEventListener('click', function () { togglePicker(); });
         var shell = document.getElementById('desktop-shell');
         (shell || document.body).appendChild(btn);
@@ -938,7 +938,7 @@
         var html = '<div class="widget-picker-header">' +
             '<h3>' + esc(t('desktop.add_widget')) + '</h3>' +
             '<div class="widget-picker-search-wrap">' +
-                '<span class="material-icons">search</span>' +
+                '<span class="material-icons" aria-hidden="true">search</span>' +
                 '<input class="widget-picker-search" placeholder="' + esc(t('desktop.search_widgets')) + '">' +
             '</div>' +
         '</div>' +
@@ -952,7 +952,7 @@
             items.forEach(function (p) {
                 html += '<div class="widget-picker-item" data-type="' + esc(p.type) + '">' +
                     '<div class="widget-picker-item-icon" style="background:' + esc(p.color || '#58a6ff') + '22;color:' + esc(p.color || '#58a6ff') + '">' +
-                        '<span class="material-icons">' + esc(p.icon) + '</span>' +
+                        '<span class="material-icons" aria-hidden="true">' + esc(p.icon) + '</span>' +
                     '</div>' +
                     '<div class="widget-picker-item-info">' +
                         '<div class="widget-picker-item-name">' + esc(p.name) + '</div>' +
@@ -1117,14 +1117,14 @@
         var html = '<div class="wallpaper-picker">' +
             '<div class="wallpaper-picker-header">' +
                 '<h3>' + esc(t('desktop.wallpaper')) + '</h3>' +
-                '<button class="wallpaper-picker-close"><span class="material-icons">close</span></button>' +
+                '<button class="wallpaper-picker-close"><span class="material-icons" aria-hidden="true">close</span></button>' +
             '</div>' +
             '<div class="wallpaper-picker-tabs">' +
                 '<button class="wp-tab active" data-tab="images">' +
-                    '<span class="material-icons">image</span> ' + esc(t('desktop.wp_images')) +
+                    '<span class="material-icons" aria-hidden="true">image</span> ' + esc(t('desktop.wp_images')) +
                 '</button>' +
                 '<button class="wp-tab" data-tab="colors">' +
-                    '<span class="material-icons">palette</span> ' + esc(t('desktop.wp_colors')) +
+                    '<span class="material-icons" aria-hidden="true">palette</span> ' + esc(t('desktop.wp_colors')) +
                 '</button>' +
             '</div>' +
             '<div class="wallpaper-picker-body">' +
@@ -1212,7 +1212,7 @@
             var notice = document.createElement('div');
             notice.className = 'wallpaper-unavailable-notice';
             notice.innerHTML =
-                '<span class="material-icons">info</span>' +
+                '<span class="material-icons" aria-hidden="true">info</span>' +
                 '<p>' + esc(t('desktop.wp_unavailable')) + '</p>' +
                 '<small>' + esc(t('desktop.wp_download_hint')) + '</small>';
             grid.appendChild(notice);
@@ -1322,30 +1322,30 @@
         var nav = document.createElement('div');
         nav.className = 'widget-topnav';
         nav.innerHTML =
-            '<button class="topnav-menu" id="topnav-menu-btn" title="Menu"><span class="material-icons">menu</span></button>' +
+            '<button class="topnav-menu" id="topnav-menu-btn" title="Menu"><span class="material-icons" aria-hidden="true">menu</span></button>' +
             '<div class="topnav-brand">BetterDesk</div>' +
             '<div class="topnav-tabs">' +
-                '<button class="topnav-tab active" data-route="/" title="' + esc(t('nav.dashboard') || 'Dashboard') + '"><span class="material-icons">home</span></button>' +
-                '<button class="topnav-tab" data-route="/devices" title="' + esc(t('nav.devices') || 'Devices') + '"><span class="material-icons">devices</span></button>' +
-                '<button class="topnav-tab" data-route="/inventory" title="' + esc(t('inventory.title') || 'Inventory') + '"><span class="material-icons">inventory_2</span></button>' +
-                '<button class="topnav-tab" data-route="/tickets" title="' + esc(t('tickets.title') || 'Helpdesk') + '"><span class="material-icons">support_agent</span></button>' +
-                '<button class="topnav-tab" data-route="/automation" title="' + esc(t('automation.title') || 'Automation') + '"><span class="material-icons">smart_toy</span></button>' +
-                '<button class="topnav-tab" data-route="/network" title="' + esc(t('network.title') || 'Network') + '"><span class="material-icons">wifi</span></button>' +
-                '<button class="topnav-tab" data-route="/reports" title="' + esc(t('reports.title') || 'Reports') + '"><span class="material-icons">assessment</span></button>' +
-                '<button class="topnav-tab" data-route="/keys" title="' + esc(t('nav.keys') || 'Keys') + '"><span class="material-icons">vpn_key</span></button>' +
-                '<button class="topnav-tab" data-route="/cdap/devices" title="CDAP"><span class="material-icons">developer_board</span></button>' +
-                '<button class="topnav-tab" data-route="/tokens" title="' + esc(t('nav.tokens') || 'Tokens') + '"><span class="material-icons">token</span></button>' +
-                '<button class="topnav-tab" data-route="/settings" title="' + esc(t('nav.settings') || 'Settings') + '"><span class="material-icons">settings</span></button>' +
+                '<button class="topnav-tab active" data-route="/" title="' + esc(t('nav.dashboard') || 'Dashboard') + '"><span class="material-icons" aria-hidden="true">home</span></button>' +
+                '<button class="topnav-tab" data-route="/devices" title="' + esc(t('nav.devices') || 'Devices') + '"><span class="material-icons" aria-hidden="true">devices</span></button>' +
+                '<button class="topnav-tab" data-route="/inventory" title="' + esc(t('inventory.title') || 'Inventory') + '"><span class="material-icons" aria-hidden="true">inventory_2</span></button>' +
+                '<button class="topnav-tab" data-route="/tickets" title="' + esc(t('tickets.title') || 'Helpdesk') + '"><span class="material-icons" aria-hidden="true">support_agent</span></button>' +
+                '<button class="topnav-tab" data-route="/automation" title="' + esc(t('automation.title') || 'Automation') + '"><span class="material-icons" aria-hidden="true">smart_toy</span></button>' +
+                '<button class="topnav-tab" data-route="/network" title="' + esc(t('network.title') || 'Network') + '"><span class="material-icons" aria-hidden="true">wifi</span></button>' +
+                '<button class="topnav-tab" data-route="/reports" title="' + esc(t('reports.title') || 'Reports') + '"><span class="material-icons" aria-hidden="true">assessment</span></button>' +
+                '<button class="topnav-tab" data-route="/keys" title="' + esc(t('nav.keys') || 'Keys') + '"><span class="material-icons" aria-hidden="true">vpn_key</span></button>' +
+                '<button class="topnav-tab" data-route="/cdap/devices" title="CDAP"><span class="material-icons" aria-hidden="true">developer_board</span></button>' +
+                '<button class="topnav-tab" data-route="/tokens" title="' + esc(t('nav.tokens') || 'Tokens') + '"><span class="material-icons" aria-hidden="true">token</span></button>' +
+                '<button class="topnav-tab" data-route="/settings" title="' + esc(t('nav.settings') || 'Settings') + '"><span class="material-icons" aria-hidden="true">settings</span></button>' +
             '</div>' +
             '<div class="topnav-sep"></div>' +
             '<div class="topnav-actions">' +
-                '<button class="topnav-btn" id="topnav-search" title="Search"><span class="material-icons">search</span></button>' +
-                '<button class="topnav-btn" id="topnav-add" title="' + esc(t('desktop.add_widget') || 'Add Widget') + '"><span class="material-icons">add</span></button>' +
-                '<button class="topnav-btn" id="topnav-edit" title="Edit"><span class="material-icons">edit</span></button>' +
-                '<button class="topnav-btn" id="topnav-help" title="Help"><span class="material-icons">help_outline</span></button>' +
+                '<button class="topnav-btn" id="topnav-search" title="Search"><span class="material-icons" aria-hidden="true">search</span></button>' +
+                '<button class="topnav-btn" id="topnav-add" title="' + esc(t('desktop.add_widget') || 'Add Widget') + '"><span class="material-icons" aria-hidden="true">add</span></button>' +
+                '<button class="topnav-btn" id="topnav-edit" title="Edit"><span class="material-icons" aria-hidden="true">edit</span></button>' +
+                '<button class="topnav-btn" id="topnav-help" title="' + esc(t('nav.help') || 'Help') + '"><span class="material-icons" aria-hidden="true">help_outline</span></button>' +
             '</div>' +
             '<div class="topnav-clock" id="topnav-clock"></div>' +
-            '<button class="topnav-btn topnav-exit" id="topnav-exit" title="' + esc(t('desktop.exit_desktop') || 'Exit Desktop') + '"><span class="material-icons">logout</span></button>';
+            '<button class="topnav-btn topnav-exit" id="topnav-exit" title="' + esc(t('desktop.exit_desktop') || 'Exit Desktop') + '"><span class="material-icons" aria-hidden="true">logout</span></button>';
         var shell = document.getElementById('desktop-shell');
         if (shell) shell.appendChild(nav);
         // Tab navigation — open as float window if DesktopMode has openApp
@@ -1429,9 +1429,9 @@
         overlay.innerHTML =
             '<div class="ws-dialog">' +
                 '<div class="ws-header">' +
-                    '<span class="material-icons">search</span>' +
+                    '<span class="material-icons" aria-hidden="true">search</span>' +
                     '<input id="ws-input" type="text" placeholder="' + esc(t('desktop.search_placeholder') || 'Search devices, pages, settings...') + '" autocomplete="off" />' +
-                    '<button class="ws-close" id="ws-close"><span class="material-icons">close</span></button>' +
+                    '<button class="ws-close" id="ws-close"><span class="material-icons" aria-hidden="true">close</span></button>' +
                 '</div>' +
                 '<div class="ws-results" id="ws-results"></div>' +
             '</div>';
@@ -1540,15 +1540,15 @@
         var sb = document.createElement('div');
         sb.className = 'widget-sidebar';
         sb.innerHTML =
-            '<button class="sidebar-icon active" data-action="home" title="Dashboard"><span class="material-icons">dashboard</span></button>' +
-            '<button class="sidebar-icon" data-action="add-widget" title="' + esc(t('desktop.add_widget') || 'Add Widget') + '"><span class="material-icons">add_circle</span></button>' +
-            '<button class="sidebar-icon" data-action="wallpaper" title="Wallpaper"><span class="material-icons">wallpaper</span></button>' +
+            '<button class="sidebar-icon active" data-action="home" title="Dashboard"><span class="material-icons" aria-hidden="true">dashboard</span></button>' +
+            '<button class="sidebar-icon" data-action="add-widget" title="' + esc(t('desktop.add_widget') || 'Add Widget') + '"><span class="material-icons" aria-hidden="true">add_circle</span></button>' +
+            '<button class="sidebar-icon" data-action="wallpaper" title="Wallpaper"><span class="material-icons" aria-hidden="true">wallpaper</span></button>' +
             '<div class="sidebar-sep"></div>' +
-            '<button class="sidebar-icon" data-action="edit" title="Edit Layout"><span class="material-icons">edit</span></button>' +
-            '<button class="sidebar-icon" data-action="snap-layout" title="' + esc(t('desktop.label_snap_layout') || 'Snap Layout') + '"><span class="material-icons">grid_view</span></button>' +
-            '<button class="sidebar-icon" data-action="reset" title="Reset Layout"><span class="material-icons">restart_alt</span></button>' +
+            '<button class="sidebar-icon" data-action="edit" title="Edit Layout"><span class="material-icons" aria-hidden="true">edit</span></button>' +
+            '<button class="sidebar-icon" data-action="snap-layout" title="' + esc(t('desktop.label_snap_layout') || 'Snap Layout') + '"><span class="material-icons" aria-hidden="true">grid_view</span></button>' +
+            '<button class="sidebar-icon" data-action="reset" title="Reset Layout"><span class="material-icons" aria-hidden="true">restart_alt</span></button>' +
             '<div class="sidebar-spacer"></div>' +
-            '<button class="sidebar-icon" data-action="help" title="Help"><span class="material-icons">help_outline</span></button>';
+            '<button class="sidebar-icon" data-action="help" title="' + esc(t('nav.help') || 'Help') + '"><span class="material-icons" aria-hidden="true">help_outline</span></button>';
         var shell = document.getElementById('desktop-shell');
         if (shell) shell.appendChild(sb);
         sb.querySelectorAll('.sidebar-icon').forEach(function (icon) {
@@ -1759,7 +1759,7 @@
             html += '</div><div class="widget-snap-layout-label">' + esc(layout.name) + '</div></div>';
         });
         html += '</div>' +
-            '<button class="widget-snap-auto-arrange-btn"><span class="material-icons">auto_fix_high</span>' + esc(t('desktop.label_auto_arrange')) + '</button>' +
+            '<button class="widget-snap-auto-arrange-btn"><span class="material-icons" aria-hidden="true">auto_fix_high</span>' + esc(t('desktop.label_auto_arrange')) + '</button>' +
             '</div>';
         _widgetSnapOverlay.innerHTML = html;
 
@@ -2149,7 +2149,7 @@
                 '<span class="material-icons popout-icon" style="color:' + esc(iconColor) + '">' + esc(plugin.icon || 'widgets') + '</span>' +
                 '<span class="popout-title">' + title + '</span>' +
                 '<button class="popout-pop-in" title="' + esc(t('desktop.pop_in_widget')) + '">' +
-                    '<span class="material-icons">pip_exit</span>' +
+                    '<span class="material-icons" aria-hidden="true">pip_exit</span>' +
                 '</button>' +
             '</div>' +
             '<div id="widget-body" class="popout-body"></div>' +

@@ -35,7 +35,8 @@
         "back": "Retour",
         "edit": "Modifier",
         "yes": "Ja",
-        "no": "Nein"
+        "no": "Nein",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Principal",
@@ -192,7 +193,11 @@
         "intune_script_hint": "Exécutez en administrateur après l’installation MSI de RustDesk. Utilise la même chaîne que Copier la chaîne de déploiement.",
         "deploy_string_not_ready": "La chaîne de déploiement n’est pas disponible tant que la clé publique du serveur n’est pas chargée.",
         "client_server_host_env_hint": "Les points de terminaison publics ID, relais et API sont définis dans Paramètres → Points de terminaison clients publics. Effacez-les pour réutiliser ce champ.",
-        "client_config_qr_unreachable_host": "Ce QR contient localhost ou une adresse .local. Les téléphones ne peuvent généralement pas l’atteindre — définissez d’abord Client server address (ou PANEL_PUBLIC_HOST) sur une IP LAN ou un DNS public."
+        "client_config_qr_unreachable_host": "Ce QR contient localhost ou une adresse .local. Les téléphones ne peuvent généralement pas l’atteindre — définissez d’abord Client server address (ou PANEL_PUBLIC_HOST) sur une IP LAN ou un DNS public.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Tableau de bord",
@@ -740,7 +745,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Restreint — afficher uniquement les appareils explicitement accordés",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -777,7 +782,14 @@
         "action_settings_update": "Settings Updated",
         "action_device_ban": "Device Banned",
         "action_device_unban": "Device Unbanned",
-        "action_device_delete": "Device Deleted"
+        "action_device_delete": "Device Deleted",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -970,7 +982,8 @@
         "advanced_branding_hint": "Laissez replié pour une création rapide — les valeurs par défaut suffisent. Développez pour le logo, les couleurs et le contact.",
         "toolchain_branding_seal": "Échec de la signature de la marque — vérifiez la clé de signature sur la console, puis reconstruisez.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) introuvable — les builds Windows échoueront.",
-        "toolchain_appimage_missing": "appimagetool introuvable — les builds AppImage échoueront."
+        "toolchain_appimage_missing": "appimagetool introuvable — les builds AppImage échoueront.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "download": {
         "title": "BetterDesk Agent herunterladen",
@@ -1534,7 +1547,8 @@
         "glass_color": "Couleur de teinte du verre",
         "glass_color_hint": "Couleur de base des panneaux dépolis. Utilise la couleur de fond secondaire si vide.",
         "glass_blur": "Flou de surface",
-        "glass_opacity": "Opacité du verre"
+        "glass_opacity": "Opacité du verre",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Vue d'ensemble",
@@ -2847,7 +2861,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Tableau de bord",
-        "custom": "Personnalisé"
+        "custom": "Personnalisé",
+        "switch_to_dark": "Passer au thème sombre",
+        "switch_to_light": "Passer au thème clair",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3979,7 +3997,9 @@
             "packages": "Forfaits et contrats",
             "sessions": "Séances",
             "reports": "Rapports",
-            "settings": "Paramètres avancés"
+            "settings": "Paramètres avancés",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Heure serveur (NTP)",
@@ -4220,11 +4240,11 @@
         "more": "Plus"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "Compatibilité MeshCentral",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "Télécharger MeshAgent .msh",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4249,7 +4269,7 @@
         "transport_files": "Fichiers Mesh",
         "settings_desc": "Intégration MeshAgent et ID serveur pour les fichiers .msh.",
         "mesh_name": "Nom du groupe Mesh (.msh)",
-        "copy_server_id": "Copier l’ID serveur",
+        "copy_server_id": "Copier l’ID du serveur",
         "copy_server_id_ok": "ID serveur copié",
         "enabled_label": "Activé",
         "disabled_label": "Désactivé",
@@ -4329,7 +4349,9 @@
         "switch_to_ux35": "Passer à UX 3.5 (Bêta)",
         "switch_to_classic": "Passer à l’interface classique",
         "beta_badge": "BÊTA",
-        "beta_tooltip": "Disposition console en bêta — optionnelle ; l’interface classique reste la valeur par défaut."
+        "beta_tooltip": "Disposition console en bêta — optionnelle ; l’interface classique reste la valeur par défaut.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

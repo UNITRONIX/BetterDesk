@@ -17,17 +17,17 @@
                         <span id="dashboard-system-status">${_('status.checking')}</span>
                     </div>
                     <button class="btn btn-secondary btn-sm" id="refresh-status-btn">
-                        <span class="material-icons">refresh</span>
+                        <span class="material-icons" aria-hidden="true">refresh</span>
                         ${_('actions.refresh')}
                     </button>
                 </div>
             </section>
 
             <div class="dashboard-tip" id="welcome-tip">
-                <span class="material-icons tip-icon">lightbulb</span>
+                <span class="material-icons tip-icon" aria-hidden="true">lightbulb</span>
                 <span class="tip-text" id="tip-text"></span>
                 <button class="tip-dismiss" id="tip-dismiss" title="${_('actions.dismiss')}" aria-label="${_('actions.dismiss')}">
-                    <span class="material-icons">close</span>
+                    <span class="material-icons" aria-hidden="true">close</span>
                 </button>
             </div>
 
@@ -36,7 +36,7 @@
                     <section class="dashboard-stats" aria-label="${_('dashboard.health_overview')}">
                         <article class="dashboard-stat-card">
                             <div class="dashboard-stat-icon devices">
-                                <span class="material-icons">devices</span>
+                                <span class="material-icons" aria-hidden="true">devices</span>
                             </div>
                             <div class="dashboard-stat-content">
                                 <div class="dashboard-stat-value" id="stat-total">
@@ -48,7 +48,7 @@
 
                         <article class="dashboard-stat-card">
                             <div class="dashboard-stat-icon online">
-                                <span class="material-icons">wifi</span>
+                                <span class="material-icons" aria-hidden="true">wifi</span>
                             </div>
                             <div class="dashboard-stat-content">
                                 <div class="dashboard-stat-value" id="stat-online">
@@ -60,7 +60,7 @@
 
                         <article class="dashboard-stat-card">
                             <div class="dashboard-stat-icon banned">
-                                <span class="material-icons">block</span>
+                                <span class="material-icons" aria-hidden="true">block</span>
                             </div>
                             <div class="dashboard-stat-content">
                                 <div class="dashboard-stat-value" id="stat-banned">
@@ -72,7 +72,7 @@
 
                         <article class="dashboard-stat-card">
                             <div class="dashboard-stat-icon offline">
-                                <span class="material-icons">cloud_off</span>
+                                <span class="material-icons" aria-hidden="true">cloud_off</span>
                             </div>
                             <div class="dashboard-stat-content">
                                 <div class="dashboard-stat-value" id="stat-connections">
@@ -88,26 +88,26 @@
                             <div>
                                 <span class="dashboard-eyebrow">${_('dashboard.client_config_eyebrow')}</span>
                                 <h2 class="section-title" id="client-config-title">
-                                    <span class="material-icons">integration_instructions</span>
+                                    <span class="material-icons" aria-hidden="true">integration_instructions</span>
                                     ${_('dashboard.client_config_title')}
                                 </h2>
                                 <p class="client-config-subtitle">${_('dashboard.client_config_subtitle')}</p>
                             </div>
                             <div class="client-config-actions">
                                 <button type="button" class="btn btn-secondary btn-sm" id="copy-client-config-btn">
-                                    <span class="material-icons">content_copy</span>
+                                    <span class="material-icons" aria-hidden="true">content_copy</span>
                                     ${_('dashboard.copy_all_config')}
                                 </button>
                                 <button type="button" class="btn btn-secondary btn-sm" id="copy-deploy-string-btn">
-                                    <span class="material-icons">terminal</span>
+                                    <span class="material-icons" aria-hidden="true">terminal</span>
                                     ${_('dashboard.copy_deploy_string')}
                                 </button>
                                 <button type="button" class="btn btn-secondary btn-sm" id="show-intune-script-btn">
-                                    <span class="material-icons">code</span>
+                                    <span class="material-icons" aria-hidden="true">code</span>
                                     ${_('dashboard.show_intune_script')}
                                 </button>
                                 <button type="button" class="btn btn-secondary btn-sm" id="show-client-qr-btn">
-                                    <span class="material-icons">qr_code_2</span>
+                                    <span class="material-icons" aria-hidden="true">qr_code_2</span>
                                     ${_('dashboard.show_config_qr')}
                                 </button>
                             </div>
@@ -119,8 +119,12 @@
                                 <input type="text" class="form-input client-config-host-input" id="client-config-host-input"
                                        placeholder="${_('dashboard.client_server_host_placeholder')}" autocomplete="off">
                                 <button type="button" class="btn btn-secondary btn-sm" id="apply-client-host-btn">${_('dashboard.apply_client_host')}</button>
+                                <span class="client-config-env-badge" id="client-config-env-badge" hidden title="${_('dashboard.client_server_host_env_hint')}">${_('dashboard.client_host_env_badge') || 'From env'}</span>
                             </div>
                             <p class="client-config-host-hint" id="client-config-host-hint">${_('dashboard.client_server_host_hint')}</p>
+                            <p class="client-config-host-env-link" id="client-config-host-env-link" hidden>
+                                <a href="/settings#public-endpoints">${_('dashboard.client_host_settings_link') || 'Open Settings → Public client endpoints'}</a>
+                            </p>
                         </div>
 
                         <div class="client-config-grid">
@@ -128,31 +132,31 @@
                                 <span class="client-config-label">${_('dashboard.config_server_id')}</span>
                                 <code class="client-config-value" id="client-config-server-id"><span class="skeleton skeleton-text"></span></code>
                                 <button type="button" class="client-config-copy" data-copy-target="client-config-server-id" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${_('dashboard.config_server_id')}">
-                                    <span class="material-icons">content_copy</span>
+                                    <span class="material-icons" aria-hidden="true">content_copy</span>
                                 </button>
                             </div>
                             <div class="client-config-field">
                                 <span class="client-config-label">${_('dashboard.config_relay_server')}</span>
                                 <code class="client-config-value" id="client-config-relay-server"><span class="skeleton skeleton-text"></span></code>
                                 <button type="button" class="client-config-copy" data-copy-target="client-config-relay-server" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${_('dashboard.config_relay_server')}">
-                                    <span class="material-icons">content_copy</span>
+                                    <span class="material-icons" aria-hidden="true">content_copy</span>
                                 </button>
                             </div>
                             <div class="client-config-field">
                                 <span class="client-config-label">${_('dashboard.config_api_server')}</span>
                                 <code class="client-config-value" id="client-config-api-url"><span class="skeleton skeleton-text"></span></code>
                                 <button type="button" class="client-config-copy" data-copy-target="client-config-api-url" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${_('dashboard.config_api_server')}">
-                                    <span class="material-icons">content_copy</span>
+                                    <span class="material-icons" aria-hidden="true">content_copy</span>
                                 </button>
                             </div>
                             <div class="client-config-field client-config-field-wide">
                                 <span class="client-config-label">${_('dashboard.config_key')}</span>
                                 <code class="client-config-value is-masked" id="client-config-public-key"><span class="skeleton skeleton-text"></span></code>
                                 <button type="button" class="client-config-reveal" id="client-config-key-reveal" title="${_('actions.show_value')}" aria-label="${_('actions.show_value')} ${_('dashboard.config_key')}" aria-pressed="false">
-                                    <span class="material-icons">visibility</span>
+                                    <span class="material-icons" aria-hidden="true">visibility</span>
                                 </button>
                                 <button type="button" class="client-config-copy" data-copy-target="client-config-public-key" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${_('dashboard.config_key')}">
-                                    <span class="material-icons">content_copy</span>
+                                    <span class="material-icons" aria-hidden="true">content_copy</span>
                                 </button>
                             </div>
                         </div>
@@ -161,11 +165,11 @@
                             <p>${_('dashboard.client_config_hint')}</p>
                             <div class="client-config-links">
                                 <a class="btn btn-primary btn-sm" href="/generator">
-                                    <span class="material-icons">build</span>
+                                    <span class="material-icons" aria-hidden="true">build</span>
                                     ${_('dashboard.open_generator')}
                                 </a>
                                 <a class="btn btn-secondary btn-sm" href="/keys">
-                                    <span class="material-icons">vpn_key</span>
+                                    <span class="material-icons" aria-hidden="true">vpn_key</span>
                                     ${_('dashboard.open_keys')}
                                 </a>
                             </div>
@@ -175,7 +179,7 @@
                     <section class="server-status-section">
                         <div class="section-header">
                             <h2 class="section-title">
-                                <span class="material-icons">dns</span>
+                                <span class="material-icons" aria-hidden="true">dns</span>
                                 ${_('dashboard.server_status')}
                             </h2>
                         </div>
@@ -184,7 +188,7 @@
                             <article class="server-status-card">
                                 <div class="server-status-header">
                                     <span class="server-status-title">
-                                        <span class="material-icons">router</span>
+                                        <span class="material-icons" aria-hidden="true">router</span>
                                         Signal Server
                                     </span>
                                     <span class="server-status-indicator" id="hbbs-status">
@@ -215,7 +219,7 @@
                             <article class="server-status-card">
                                 <div class="server-status-header">
                                     <span class="server-status-title">
-                                        <span class="material-icons">swap_horiz</span>
+                                        <span class="material-icons" aria-hidden="true">swap_horiz</span>
                                         Relay Server
                                     </span>
                                     <span class="server-status-indicator" id="hbbr-status">
@@ -238,7 +242,7 @@
                             <article class="server-status-card">
                                 <div class="server-status-header">
                                     <span class="server-status-title">
-                                        <span class="material-icons">web</span>
+                                        <span class="material-icons" aria-hidden="true">web</span>
                                         Web Console
                                     </span>
                                     <span class="server-status-indicator running">
@@ -263,7 +267,7 @@
                     <section class="quick-actions-section">
                         <div class="section-header">
                             <h2 class="section-title">
-                                <span class="material-icons">flash_on</span>
+                                <span class="material-icons" aria-hidden="true">flash_on</span>
                                 ${_('dashboard.quick_actions')}
                             </h2>
                         </div>
@@ -271,7 +275,7 @@
                         <div class="quick-actions">
                             <a href="/devices" class="quick-action-card">
                                 <div class="quick-action-icon">
-                                    <span class="material-icons">devices</span>
+                                    <span class="material-icons" aria-hidden="true">devices</span>
                                 </div>
                                 <div class="quick-action-title">${_('nav.devices')}</div>
                                 <div class="quick-action-desc">${_('dashboard.manage_devices')}</div>
@@ -279,7 +283,7 @@
 
                             <a href="/generator" class="quick-action-card">
                                 <div class="quick-action-icon">
-                                    <span class="material-icons">build</span>
+                                    <span class="material-icons" aria-hidden="true">build</span>
                                 </div>
                                 <div class="quick-action-title">${_('nav.generator')}</div>
                                 <div class="quick-action-desc">${_('dashboard.generate_config')}</div>
@@ -287,7 +291,7 @@
 
                             <a href="/remote" class="quick-action-card">
                                 <div class="quick-action-icon">
-                                    <span class="material-icons">desktop_windows</span>
+                                    <span class="material-icons" aria-hidden="true">desktop_windows</span>
                                 </div>
                                 <div class="quick-action-title">${_('nav.remote')}</div>
                                 <div class="quick-action-desc">${_('dashboard.open_remote')}</div>
@@ -295,7 +299,7 @@
 
                             <a href="/settings" class="quick-action-card">
                                 <div class="quick-action-icon">
-                                    <span class="material-icons">settings</span>
+                                    <span class="material-icons" aria-hidden="true">settings</span>
                                 </div>
                                 <div class="quick-action-title">${_('nav.settings')}</div>
                                 <div class="quick-action-desc">${_('dashboard.server_settings')}</div>
@@ -308,34 +312,34 @@
                     <section class="attention-section">
                         <div class="section-header">
                             <h2 class="section-title">
-                                <span class="material-icons">priority_high</span>
+                                <span class="material-icons" aria-hidden="true">priority_high</span>
                                 ${_('dashboard.attention_panel')}
                             </h2>
                         </div>
                         <div class="attention-list">
                             <div class="attention-item attention-online">
-                                <span class="material-icons">cloud_done</span>
+                                <span class="material-icons" aria-hidden="true">cloud_done</span>
                                 <div>
                                     <strong id="health-online">-</strong>
                                     <span>${_('dashboard.devices_online')}</span>
                                 </div>
                             </div>
                             <div class="attention-item attention-alerts">
-                                <span class="material-icons">warning</span>
+                                <span class="material-icons" aria-hidden="true">warning</span>
                                 <div>
                                     <strong id="health-alerts">-</strong>
-                                    <span>${_('dashboard.active_alerts')}</span>
+                                    <span>${_('dashboard.banned')}</span>
                                 </div>
                             </div>
                             <div class="attention-item attention-connections">
-                                <span class="material-icons">sync_alt</span>
+                                <span class="material-icons" aria-hidden="true">sync_alt</span>
                                 <div>
                                     <strong id="health-connections">-</strong>
-                                    <span>${_('dashboard.recent_connections')}</span>
+                                    <span>${_('dashboard.total_devices') || _('dashboard.devices')}</span>
                                 </div>
                             </div>
                             <div class="attention-item attention-uptime">
-                                <span class="material-icons">schedule</span>
+                                <span class="material-icons" aria-hidden="true">schedule</span>
                                 <div>
                                     <strong id="health-uptime">-</strong>
                                     <span>${_('dashboard.server_uptime')}</span>
@@ -347,12 +351,12 @@
                     <section class="activity-feed-section">
                         <div class="section-header">
                             <h2 class="section-title">
-                                <span class="material-icons">history</span>
+                                <span class="material-icons" aria-hidden="true">history</span>
                                 ${_('dashboard.activity_feed')}
                             </h2>
-                            <a href="/security-audit" class="btn btn-secondary btn-sm">
-                                <span class="material-icons">open_in_new</span>
-                                ${_('actions.view_all')}
+                            <a href="/settings#audit" class="btn btn-secondary btn-sm">
+                                <span class="material-icons" aria-hidden="true">open_in_new</span>
+                                ${_('dashboard.view_audit_log') || _('actions.view_all')}
                             </a>
                         </div>
                         <div class="activity-list" id="activity-feed">

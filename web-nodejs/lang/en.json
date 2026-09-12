@@ -31,7 +31,8 @@
         "back": "Back",
         "edit": "Edit",
         "yes": "Yes",
-        "no": "No"
+        "no": "No",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Main",
@@ -196,7 +197,11 @@
         "show_intune_script": "Intune / PSADT script",
         "intune_script_title": "Windows deployment snippet",
         "intune_script_hint": "Run elevated after the RustDesk MSI finishes. Uses the same config string as Copy deploy string.",
-        "deploy_string_not_ready": "Deploy string is not available until the server public key is loaded."
+        "deploy_string_not_ready": "Deploy string is not available until the server public key is loaded.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Devices",
@@ -781,7 +786,14 @@
         "action_settings_update": "Settings Updated",
         "action_device_ban": "Device Banned",
         "action_device_unban": "Device Unbanned",
-        "action_device_delete": "Device Deleted"
+        "action_device_delete": "Device Deleted",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -975,7 +987,8 @@
         "support_agent_new_bundle": "New Support Agent",
         "product_agent_client": "Agent Client",
         "product_support_agent": "Support",
-        "product_rdclient": "RdClient"
+        "product_rdclient": "RdClient",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "download": {
         "title": "Download BetterDesk Agent",
@@ -1577,7 +1590,8 @@
         "show_powered_hint": "Display the BetterDesk name and version in the login footer and sidebar.",
         "custom_css_title": "Custom CSS",
         "custom_css_desc": "Advanced: inject custom CSS applied across the console and login page.",
-        "custom_css_hint": "Use with care. Invalid or unsafe rules are sanitized. Max 20,000 characters."
+        "custom_css_hint": "Use with care. Invalid or unsafe rules are sanitized. Max 20,000 characters.",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Overview",
@@ -2890,7 +2904,11 @@
         "light": "Light",
         "auto": "System",
         "custom": "Custom",
-        "title": "Theme"
+        "title": "Theme",
+        "switch_to_dark": "Switch to dark theme",
+        "switch_to_light": "Switch to light theme",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "ux35": {
         "resize_sidebar": "Resize sidebar",
@@ -2899,7 +2917,9 @@
         "switch_to_ux35": "Switch to UX 3.5 (Beta)",
         "switch_to_classic": "Switch to classic UI",
         "beta_badge": "BETA",
-        "beta_tooltip": "Beta console layout — optional; classic UI remains the default."
+        "beta_tooltip": "Beta console layout — optional; classic UI remains the default.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "days": {
         "mon": "Mon",
@@ -4031,7 +4051,9 @@
             "packages": "Packages & contracts",
             "sessions": "Sessions",
             "reports": "Reports",
-            "settings": "Advanced settings"
+            "settings": "Advanced settings",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Server time (NTP)",

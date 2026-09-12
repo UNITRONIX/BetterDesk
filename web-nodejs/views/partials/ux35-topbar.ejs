@@ -1,12 +1,12 @@
 <% if (typeof emergencyMode !== 'undefined' && emergencyMode) { %>
 <div class="emergency-banner" role="alert">
-    <span class="material-icons">warning</span>
+    <span class="material-icons" aria-hidden="true">warning</span>
     <span><%= _('auth.emergency_mode_banner') %></span>
 </div>
 <% } %>
 <header class="ux35-topbar" id="ux35-topbar">
     <button type="button" class="ux35-topbar-menu-btn" id="ux35-menu-btn" aria-label="<%= _('ux35.open_menu') || 'Open menu' %>" aria-controls="ux35-sidebar" aria-expanded="false">
-        <span class="material-icons">menu</span>
+        <span class="material-icons" aria-hidden="true">menu</span>
     </button>
 
     <a href="/" class="ux35-topbar-logo" title="<%= appName %>">
@@ -17,28 +17,33 @@
         <% } else if (branding.logoType === 'image' && branding.logoUrl) { %>
         <img src="<%= branding.logoUrl %>" alt="<%= appName %>">
         <% } else { %>
-        <span class="material-icons"><%= branding.logoIcon || 'dns' %></span>
+        <span class="material-icons" aria-hidden="true"><%= branding.logoIcon || 'dns' %></span>
         <span><%= appName %></span>
         <% } %>
     </a>
     <span class="ux35-beta-chip" title="<%= _('ux35.beta_tooltip') || 'Beta console layout — optional; classic UI remains the default.' %>"><%= _('ux35.beta_badge') || 'BETA' %></span>
 
     <nav class="ux35-topbar-breadcrumb" aria-label="Breadcrumb">
-        <a href="/"><%= _('nav.dashboard') %></a>
-        <% if (typeof breadcrumb !== 'undefined' && breadcrumb.length) { %>
-            <% breadcrumb.forEach((item, index) => { %>
+        <% const isDashboardHome = (typeof currentPage !== 'undefined' && currentPage === 'dashboard'); %>
+        <% if (isDashboardHome && !(typeof breadcrumb !== 'undefined' && breadcrumb.length)) { %>
+            <span class="current"><%= _('nav.dashboard') %></span>
+        <% } else { %>
+            <a href="/"><%= _('nav.dashboard') %></a>
+            <% if (typeof breadcrumb !== 'undefined' && breadcrumb.length) { %>
+                <% breadcrumb.forEach((item, index) => { %>
+                    <span class="separator">/</span>
+                    <% if (index === breadcrumb.length - 1) { %>
+                        <span class="current"><%= item.label %></span>
+                    <% } else if (item.href) { %>
+                        <a href="<%= item.href %>"><%= item.label %></a>
+                    <% } else { %>
+                        <span><%= item.label %></span>
+                    <% } %>
+                <% }); %>
+            <% } else if (typeof title !== 'undefined' && title && title !== _('nav.dashboard')) { %>
                 <span class="separator">/</span>
-                <% if (index === breadcrumb.length - 1) { %>
-                    <span class="current"><%= item.label %></span>
-                <% } else if (item.href) { %>
-                    <a href="<%= item.href %>"><%= item.label %></a>
-                <% } else { %>
-                    <span><%= item.label %></span>
-                <% } %>
-            <% }); %>
-        <% } else if (typeof title !== 'undefined' && title) { %>
-            <span class="separator">/</span>
-            <span class="current"><%= title %></span>
+                <span class="current"><%= title %></span>
+            <% } %>
         <% } %>
     </nav>
 
@@ -49,26 +54,26 @@
         <button type="button" class="ux35-topbar-btn" id="ui-shell-switch-btn" data-ui-shell-switch="classic"
                 title="<%= _('ux35.switch_to_classic') || 'Switch to classic UI' %>"
                 aria-label="<%= _('ux35.switch_to_classic') || 'Switch to classic UI' %>">
-            <span class="material-icons">dashboard_customize</span>
+            <span class="material-icons" aria-hidden="true">dashboard_customize</span>
         </button>
 
         <button type="button" class="ux35-topbar-btn" id="refresh-btn" title="<%= _('actions.refresh') %>"
                 aria-label="<%= _('actions.refresh') %>">
-            <span class="material-icons">refresh</span>
+            <span class="material-icons" aria-hidden="true">refresh</span>
         </button>
 
-        <button type="button" class="ux35-topbar-btn" id="ux35-theme-btn" title="<%= _('theme.title') || 'Theme' %>" aria-label="<%= _('theme.title') || 'Theme' %>">
-            <span class="material-icons" id="ux35-theme-icon">dark_mode</span>
+        <button type="button" class="ux35-topbar-btn" id="ux35-theme-btn" title="<%= (branding.themeMode === 'light' ? (_('theme.switch_to_dark') || 'Switch to dark theme') : (branding.themeMode === 'custom' ? (_('theme.custom') || 'Custom') : (_('theme.switch_to_light') || 'Switch to light theme'))) %>" aria-label="<%= (branding.themeMode === 'light' ? (_('theme.switch_to_dark') || 'Switch to dark theme') : (branding.themeMode === 'custom' ? (_('theme.custom') || 'Custom') : (_('theme.switch_to_light') || 'Switch to light theme'))) %>">
+            <span class="material-icons" id="ux35-theme-icon" aria-hidden="true"><%= branding.themeMode === 'custom' ? 'palette' : (branding.themeMode === 'light' ? 'dark_mode' : 'light_mode') %></span>
         </button>
 
         <button type="button" class="ux35-topbar-btn accessibility-btn" id="accessibility-btn" title="<%= _('accessibility.title') %>" aria-label="<%= _('accessibility.title') %>" aria-haspopup="dialog">
-            <span class="material-icons">accessibility_new</span>
+            <span class="material-icons" aria-hidden="true">accessibility_new</span>
         </button>
 
         <div class="lang-selector">
             <button type="button" class="ux35-topbar-btn" id="lang-btn" title="<%= _('settings.language') %>"
                     aria-label="<%= _('settings.language') %>" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons">language</span>
+                <span class="material-icons" aria-hidden="true">language</span>
             </button>
             <div class="lang-dropdown" id="lang-dropdown">
                 <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
@@ -76,7 +81,7 @@
                         <span class="lang-flag"><%= language.flag || '🌐' %></span>
                         <span class="lang-label"><%= language.native || language.name || language.code %></span>
                         <% if (lang === language.code) { %>
-                            <span class="material-icons lang-check">check</span>
+                            <span class="material-icons lang-check" aria-hidden="true">check</span>
                         <% } %>
                     </div>
                 <% }); %>
@@ -86,25 +91,25 @@
         <div class="lang-selector">
             <button type="button" class="ux35-topbar-btn" id="user-btn" title="<%= user ? user.username : 'User' %>"
                     aria-label="<%= user ? user.username : 'User' %>" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons">account_circle</span>
+                <span class="material-icons" aria-hidden="true">account_circle</span>
             </button>
             <div class="lang-dropdown" id="user-dropdown">
                 <div class="lang-option" id="change-password-btn" role="button" tabindex="0">
-                    <span class="material-icons" style="font-size: 18px;">lock</span>
+                    <span class="material-icons" style="font-size: 18px;" aria-hidden="true">lock</span>
                     <span><%= _('auth.change_password') %></span>
                 </div>
                 <div class="lang-option" id="logout-btn" role="button" tabindex="0" style="color: var(--accent-red);">
-                    <span class="material-icons" style="font-size: 18px;">logout</span>
+                    <span class="material-icons" style="font-size: 18px;" aria-hidden="true">logout</span>
                     <span><%= _('auth.logout') %></span>
                 </div>
             </div>
         </div>
-        </div>
+
         <div class="notif-wrapper">
             <button type="button" class="ux35-topbar-btn notif-btn" id="notif-btn" title="<%= _('notifications.title') %>"
                     aria-label="<%= _('notifications.title') %>" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons">notifications</span>
-                <span class="notif-badge" id="notif-badge" hidden>0</span>
+                <span class="material-icons" aria-hidden="true">notifications</span>
+                <span class="notif-badge" id="notif-badge" hidden aria-hidden="true"></span>
             </button>
             <div class="notif-dropdown" id="notif-dropdown" role="menu" hidden>
                 <div class="notif-header">
@@ -120,10 +125,12 @@
                 </div>
             </div>
         </div>
+        </div>
         <button type="button" class="ux35-topbar-btn ux35-topbar-actions-menu-btn" id="ux35-actions-menu-btn"
                 aria-label="<%= _('mobile_nav.more') || 'More actions' %>"
+                title="<%= _('mobile_nav.more') || 'More actions' %>"
                 aria-controls="ux35-topbar-action-list" aria-expanded="false">
-            <span class="material-icons">more_vert</span>
+            <span class="material-icons" aria-hidden="true">more_vert</span>
         </button>
     </div>
 </header>

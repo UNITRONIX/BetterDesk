@@ -220,15 +220,15 @@
                             </button>
                         </div>
                     </td>
-                    <td>${escapeHtml(reg.hostname || '—')}</td>
+                    <td><span class="text-muted" aria-label="${escapeAttr(_('common.not_available') || 'Not available')}">${escapeHtml(reg.hostname || _('common.not_available') || '—')}</span></td>
                     <td class="col-platform">
                         <div class="platform-cell">
-                            <span class="material-icons">${platformIcon}</span>
-                            ${escapeHtml(reg.platform || '—')}
+                            <span class="material-icons" aria-hidden="true">${platformIcon}</span>
+                            ${escapeHtml(reg.platform || _('common.not_available') || '—')}
                         </div>
                     </td>
-                    <td>${escapeHtml(reg.ip_address || '—')}</td>
-                    <td class="col-version">${escapeHtml(reg.version || '—')}</td>
+                    <td><span class="text-muted">${escapeHtml(reg.ip_address || _('common.not_available') || '—')}</span></td>
+                    <td class="col-version"><span class="text-muted">${escapeHtml(reg.version || _('common.not_available') || '—')}</span></td>
                     <td class="col-status"><span class="status-badge ${escapeAttr(statusClass)}">${escapeHtml(statusLabel)}</span></td>
                     <td class="col-requested time-cell" title="${escapeAttr(reg.created_at || '')}">${timeAgo}</td>
                     <td class="col-actions">

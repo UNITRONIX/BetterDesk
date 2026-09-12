@@ -111,10 +111,8 @@ class TranslationManager {
             return;
         }
         
-        const files = fs.readdirSync(langDir).filter(f => f.endsWith('.json'));
-        
-        for (const file of files) {
-            const code = path.basename(file, '.json');
+        // Only load allowlisted locale codes (avoids stray files like package.json → "PACKAGE")
+        for (const code of Object.keys(LANGUAGE_META)) {
             this.loadLanguage(code);
         }
     }
@@ -128,6 +126,11 @@ class TranslationManager {
             console.warn('i18n: Invalid language code rejected', sanitizeLogValue(code));
             return false;
         }
+        // Skip unknown codes outside the supported allowlist
+        if (!LANGUAGE_META[code]) {
+            console.warn('i18n: Skipping unsupported language code', sanitizeLogValue(code));
+            return false;
+        }
         
         try {
             if (!langFileExists(config.langDir, code)) {
@@ -139,12 +142,19 @@ class TranslationManager {
             
             this.translations[code] = data;
             
-            // Get metadata from file or fallback
-            const meta = data._meta || LANGUAGE_META[code] || {
+            // Prefer _meta, then meta (native_name), then LANGUAGE_META hardcoded table
+            const fileMeta = data._meta || data.meta || {};
+            const fallback = LANGUAGE_META[code] || {
                 name: code.toUpperCase(),
                 native: code.toUpperCase(),
                 flag: '🌐',
                 rtl: false
+            };
+            const meta = {
+                name: fileMeta.name || fallback.name,
+                native: fileMeta.native || fileMeta.native_name || fallback.native,
+                flag: fileMeta.flag || fallback.flag,
+                rtl: fileMeta.rtl != null ? !!fileMeta.rtl : !!fallback.rtl
             };
             
             this.availableLanguages[code] = {

@@ -37,7 +37,8 @@
         "back": "Geri",
         "edit": "Düzenle",
         "yes": "Evet",
-        "no": "Hayır"
+        "no": "Hayır",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Main",
@@ -194,7 +195,11 @@
         "intune_script_hint": "RustDesk MSI tamamlandıktan sonra yönetici olarak çalıştırın. Dağıtım dizesini kopyala ile aynı config dizesini kullanır.",
         "deploy_string_not_ready": "Sunucu genel anahtarı yüklenene kadar dağıtım dizesi kullanılamaz.",
         "client_server_host_env_hint": "Genel ID, relay ve API Ayarlar → Genel istemci uç noktaları bölümünde. Bu alanı tekrar kullanmak için orayı temizleyin.",
-        "client_config_qr_unreachable_host": "Bu QR localhost veya .local adresi içeriyor. Telefonlar genelde buna ulaşamaz — önce Client server address (veya PANEL_PUBLIC_HOST) değerini bir LAN IP veya genel DNS olarak ayarlayın."
+        "client_config_qr_unreachable_host": "Bu QR localhost veya .local adresi içeriyor. Telefonlar genelde buna ulaşamaz — önce Client server address (veya PANEL_PUBLIC_HOST) değerini bir LAN IP veya genel DNS olarak ayarlayın.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Cihazlar",
@@ -742,7 +747,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Kısıtlı — yalnızca açıkça verilen cihazları göster",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -779,7 +784,14 @@
         "action_settings_update": "Ayarlar Güncellendi",
         "action_device_ban": "Cihaz Yasaklandı",
         "action_device_unban": "Cihazın Yasağı Kaldırıldı",
-        "action_device_delete": "Cihaz Silindi"
+        "action_device_delete": "Cihaz Silindi",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -972,7 +984,8 @@
         "advanced_branding_hint": "Hızlı oluşturma için kapalı bırakın — varsayılanlar yeterlidir. Logo, renkler ve iletişim için açın.",
         "toolchain_branding_seal": "Marka imzalama başarısız — konsoldaki imza anahtarını kontrol edin ve yeniden derleyin.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) bulunamadı — Windows derlemeleri başarısız olur.",
-        "toolchain_appimage_missing": "appimagetool bulunamadı — AppImage derlemeleri başarısız olur."
+        "toolchain_appimage_missing": "appimagetool bulunamadı — AppImage derlemeleri başarısız olur.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Port",
@@ -1523,7 +1536,8 @@
         "glass_color": "Cam ton rengi",
         "glass_color_hint": "Buzlu paneller için temel renk. Boşsa ikincil arka plan rengini kullanır.",
         "glass_blur": "Yüzey bulanıklığı",
-        "glass_opacity": "Cam opaklığı"
+        "glass_opacity": "Cam opaklığı",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Genel Bakış",
@@ -2765,7 +2779,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "Özel"
+        "custom": "Özel",
+        "switch_to_dark": "Koyu temaya geç",
+        "switch_to_light": "Açık temaya geç",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3981,7 +3999,9 @@
             "packages": "Paketler ve sözleşmeler",
             "sessions": "Oturumlar",
             "reports": "Raporlar",
-            "settings": "Gelişmiş ayarlar"
+            "settings": "Gelişmiş ayarlar",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Sunucu saati (NTP)",
@@ -4222,11 +4242,11 @@
         "more": "Daha fazla"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "MeshCentral uyumluluğu",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "MeshAgent .msh indir",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4251,7 +4271,7 @@
         "transport_files": "Mesh dosyaları",
         "settings_desc": "MeshAgent kurulumu ve .msh dosyaları için Server ID.",
         "mesh_name": "Mesh grup adı (.msh)",
-        "copy_server_id": "Server ID kopyala",
+        "copy_server_id": "Sunucu kimliğini kopyala",
         "copy_server_id_ok": "Server ID kopyalandı",
         "enabled_label": "Etkin",
         "disabled_label": "Devre dışı",
@@ -4331,7 +4351,9 @@
         "switch_to_ux35": "UX 3.5’e geç (Beta)",
         "switch_to_classic": "Klasik arayüze geç",
         "beta_badge": "BETA",
-        "beta_tooltip": "Beta konsol düzeni — isteğe bağlı; klasik arayüz varsayılan kalır."
+        "beta_tooltip": "Beta konsol düzeni — isteğe bağlı; klasik arayüz varsayılan kalır.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

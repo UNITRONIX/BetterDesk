@@ -31,7 +31,8 @@
         "back": "Voltar",
         "edit": "Editar",
         "yes": "Sim",
-        "no": "Não"
+        "no": "Não",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Principal",
@@ -188,7 +189,11 @@
         "intune_script_hint": "Execute como administrador após o MSI do RustDesk. Usa a mesma string de Copiar string de implantação.",
         "deploy_string_not_ready": "A string de implantação só fica disponível após carregar a chave pública do servidor.",
         "client_server_host_env_hint": "ID, relay e API públicos estão em Definições → Endpoints públicos do cliente. Limpe lá para usar este campo novamente.",
-        "client_config_qr_unreachable_host": "Este QR inclui localhost ou um endereço .local. Os telefones geralmente não o alcançam — defina primeiro Client server address (ou PANEL_PUBLIC_HOST) para um IP LAN ou DNS público."
+        "client_config_qr_unreachable_host": "Este QR inclui localhost ou um endereço .local. Os telefones geralmente não o alcançam — defina primeiro Client server address (ou PANEL_PUBLIC_HOST) para um IP LAN ou DNS público.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Dispositivos",
@@ -736,7 +741,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Restrito — mostrar apenas dispositivos concedidos explicitamente",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -773,7 +778,14 @@
         "action_settings_update": "Configurações atualizadas",
         "action_device_ban": "Dispositivo bloqueado",
         "action_device_unban": "Bloqueio do dispositivo removido",
-        "action_device_delete": "Dispositivo excluído"
+        "action_device_delete": "Dispositivo excluído",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -966,7 +978,8 @@
         "advanced_branding_hint": "Deixe fechado para criação rápida — os padrões bastam. Expanda para logótipo, cores e contacto.",
         "toolchain_branding_seal": "Falha ao assinar a marca — verifique a chave de assinatura na consola e reconstrua.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) não encontrado — as builds Windows falharão.",
-        "toolchain_appimage_missing": "appimagetool não encontrado — as builds AppImage falharão."
+        "toolchain_appimage_missing": "appimagetool não encontrado — as builds AppImage falharão.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Porta",
@@ -1517,7 +1530,8 @@
         "glass_color": "Cor do tom de vidro",
         "glass_color_hint": "Cor base para painéis foscos. Usa a cor de fundo secundária se vazio.",
         "glass_blur": "Desfoque da superfície",
-        "glass_opacity": "Opacidade do vidro"
+        "glass_opacity": "Opacidade do vidro",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Visão geral",
@@ -2759,7 +2773,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "Personalizado"
+        "custom": "Personalizado",
+        "switch_to_dark": "Mudar para tema escuro",
+        "switch_to_light": "Mudar para tema claro",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3975,7 +3993,9 @@
             "packages": "Pacotes e contratos",
             "sessions": "Sessões",
             "reports": "Relatórios",
-            "settings": "Definições avançadas"
+            "settings": "Definições avançadas",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Hora do servidor (NTP)",
@@ -4216,11 +4236,11 @@
         "more": "Mais"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "Compatibilidade MeshCentral",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "Baixar MeshAgent .msh",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4325,7 +4345,9 @@
         "switch_to_ux35": "Mudar para UX 3.5 (Beta)",
         "switch_to_classic": "Mudar para a interface clássica",
         "beta_badge": "BETA",
-        "beta_tooltip": "Layout da consola em beta — opcional; a UI clássica continua a ser a predefinida."
+        "beta_tooltip": "Layout da consola em beta — opcional; a UI clássica continua a ser a predefinida.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

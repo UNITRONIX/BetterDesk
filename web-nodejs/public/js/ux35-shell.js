@@ -119,15 +119,25 @@
 
     function syncThemeIcon() {
         var icon = document.getElementById('ux35-theme-icon');
+        var btn = document.getElementById('ux35-theme-btn');
         if (!icon) return;
         var mode = document.documentElement.getAttribute('data-theme-mode') || 'dark';
         var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        var label;
         if (mode === 'custom') {
             icon.textContent = 'palette';
+            label = t('theme.custom', 'Custom theme — open Appearance');
         } else if (theme === 'light') {
-            icon.textContent = 'light_mode';
-        } else {
+            // Icon = target mode (click to switch to dark)
             icon.textContent = 'dark_mode';
+            label = t('theme.switch_to_dark', 'Switch to dark theme');
+        } else {
+            icon.textContent = 'light_mode';
+            label = t('theme.switch_to_light', 'Switch to light theme');
+        }
+        if (btn) {
+            btn.setAttribute('title', label);
+            btn.setAttribute('aria-label', label);
         }
     }
 
@@ -171,7 +181,8 @@
         '--ux35-bg', '--ux35-sidebar-bg', '--ux35-card-bg', '--ux35-border',
         '--ux35-border-light', '--ux35-text', '--ux35-muted', '--ux35-hover',
         '--ux35-primary', '--ux35-active-bg', '--ux35-glass-blur', '--ux35-glass-saturate',
-        '--ux35-topbar-bg', '--ux35-topbar-fg', '--ux35-topbar-fg-muted', '--ux35-topbar-border'
+        '--ux35-topbar-bg', '--ux35-topbar-fg', '--ux35-topbar-fg-muted', '--ux35-topbar-border',
+        '--ux35-topbar-hover'
     ];
 
     function clearThemeInlineOverrides() {
@@ -196,6 +207,7 @@
     function applyThemeLocally(next) {
         document.documentElement.setAttribute('data-theme', next);
         document.documentElement.setAttribute('data-theme-mode', next);
+        document.documentElement.style.colorScheme = next === 'light' ? 'light' : 'dark';
         var a11yContrast = document.documentElement.getAttribute('data-a11y-contrast');
         if (a11yContrast && a11yContrast !== 'normal') {
             /* High-contrast preferences deliberately own the palette. Do not
@@ -251,19 +263,32 @@
         root.setProperty('--ux35-glass-blur', '0px');
         root.setProperty('--ux35-glass-saturate', '1');
 
-        // Topbar chrome is theme-invariant (always dark)
-        root.setProperty('--ux35-topbar-bg', '#161b22');
-        root.setProperty('--ux35-topbar-fg', '#e6edf3');
-        root.setProperty('--ux35-topbar-fg-muted', '#8b949e');
-        root.setProperty('--ux35-topbar-border', '#30363d');
+        // Topbar follows theme (same as sidebar chrome)
+        if (next === 'light') {
+            root.setProperty('--ux35-topbar-bg', palette.bgSecondary);
+            root.setProperty('--ux35-topbar-fg', palette.textPrimary);
+            root.setProperty('--ux35-topbar-fg-muted', palette.textSecondary);
+            root.setProperty('--ux35-topbar-border', palette.borderPrimary);
+            root.setProperty('--ux35-topbar-hover', 'rgba(0, 0, 0, 0.06)');
+        } else {
+            root.setProperty('--ux35-topbar-bg', palette.bgSecondary);
+            root.setProperty('--ux35-topbar-fg', palette.textPrimary);
+            root.setProperty('--ux35-topbar-fg-muted', palette.textSecondary);
+            root.setProperty('--ux35-topbar-border', palette.borderPrimary);
+            root.setProperty('--ux35-topbar-hover', 'rgba(255, 255, 255, 0.12)');
+        }
 
         // Force a synchronous style flush so paint does not wait for the next click
         void document.documentElement.offsetHeight;
         syncThemeIcon();
     }
 
-    function reloadBrandingStylesheet(onReady) {
+    function reloadBrandingStylesheet(expectedTheme, onReady) {
         var link = document.querySelector('link[href*="branding.css"]');
+        if (typeof expectedTheme === 'function') {
+            onReady = expectedTheme;
+            expectedTheme = null;
+        }
         if (!link) {
             if (onReady) onReady();
             return;
@@ -274,7 +299,11 @@
         function finish() {
             if (done) return;
             done = true;
-            clearThemeInlineOverrides();
+            var current = document.documentElement.getAttribute('data-theme');
+            // Only clear optimistic overrides when still on the theme we persisted
+            if (!expectedTheme || current === expectedTheme) {
+                clearThemeInlineOverrides();
+            }
             void document.documentElement.offsetHeight;
             syncThemeIcon();
             if (onReady) onReady();
@@ -296,7 +325,8 @@
             window.location.href = '/settings#branding';
             return;
         }
-        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        var prev = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        var next = prev === 'light' ? 'dark' : 'light';
         applyThemeLocally(next);
 
         if (window.BetterDesk && window.BetterDesk.csrfToken) {
@@ -317,9 +347,13 @@
                     if (window.BetterDesk.branding) {
                         window.BetterDesk.branding.themeMode = next;
                     }
-                    reloadBrandingStylesheet();
+                    reloadBrandingStylesheet(next);
+                } else {
+                    applyThemeLocally(prev);
                 }
-            }).catch(function () { /* keep local theme */ });
+            }).catch(function () {
+                applyThemeLocally(prev);
+            });
         }
     }
 
@@ -562,6 +596,58 @@
         });
     }
 
+    function initSidebarNavExtras() {
+        var nav = document.getElementById('ux35-sidebar-nav');
+        if (!nav) return;
+        var COLLAPSE_KEY = 'bd_ux35_sidebar_collapsed';
+        var collapsed = {};
+        try {
+            collapsed = JSON.parse(sessionStorage.getItem(COLLAPSE_KEY) || '{}') || {};
+        } catch (e) { collapsed = {}; }
+
+        nav.querySelectorAll('.ux35-sidebar-section').forEach(function (section) {
+            var panel = section.getAttribute('data-panel') || '';
+            var toggle = section.querySelector('.ux35-sidebar-heading-toggle');
+            if (!toggle) return;
+            if (collapsed[panel]) {
+                section.classList.add('is-collapsed');
+                toggle.setAttribute('aria-expanded', 'false');
+                var chevron = toggle.querySelector('.ux35-section-chevron');
+                if (chevron) chevron.textContent = 'expand_more';
+            }
+            toggle.addEventListener('click', function () {
+                var open = section.classList.toggle('is-collapsed') === false;
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                var icon = toggle.querySelector('.ux35-section-chevron');
+                if (icon) icon.textContent = open ? 'expand_less' : 'expand_more';
+                if (panel) {
+                    if (!open) collapsed[panel] = true;
+                    else delete collapsed[panel];
+                    try { sessionStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); } catch (e) { /* ignore */ }
+                }
+            });
+        });
+
+        var filterInput = document.getElementById('ux35-sidebar-filter-input');
+        if (!filterInput) return;
+        function applyFilter() {
+            var q = (filterInput.value || '').trim().toLowerCase();
+            nav.querySelectorAll('.ux35-sidebar-section').forEach(function (section) {
+                var items = section.querySelectorAll('.ux35-sidebar-item');
+                var visible = 0;
+                items.forEach(function (item) {
+                    var label = (item.textContent || '').toLowerCase();
+                    var match = !q || label.indexOf(q) !== -1;
+                    item.classList.toggle('is-filter-hidden', !match);
+                    if (match) visible++;
+                });
+                section.classList.toggle('is-filter-empty', q !== '' && visible === 0);
+                if (q) section.classList.remove('is-collapsed');
+            });
+        }
+        filterInput.addEventListener('input', applyFilter);
+    }
+
     function init() {
         if (window.BetterDesk && window.BetterDesk.embed) return;
         restoreSidebarWidth();
@@ -570,6 +656,7 @@
         initThemeBtn();
         initCompactActions();
         initScrollPreserve();
+        initSidebarNavExtras();
     }
 
     window.Ux35Shell = {

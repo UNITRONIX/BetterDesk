@@ -31,7 +31,8 @@
         "back": "Terug",
         "edit": "Bewerken",
         "yes": "Ja",
-        "no": "Nee"
+        "no": "Nee",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Hoofdmenu",
@@ -188,7 +189,11 @@
         "intune_script_hint": "Voer uit als beheerder na de RustDesk MSI. Gebruikt dezelfde config-string als Deploy-string kopiëren.",
         "deploy_string_not_ready": "Deploy-string is niet beschikbaar totdat de publieke serversleutel is geladen.",
         "client_server_host_env_hint": "Openbare ID-, relay- en API-eindpunten staan in Instellingen → Openbare client-eindpunten. Leeg daar om dit veld weer te gebruiken.",
-        "client_config_qr_unreachable_host": "Deze QR bevat localhost of een .local-adres. Telefoons kunnen dit meestal niet bereiken — stel eerst Client server address (of PANEL_PUBLIC_HOST) in op een LAN-IP of openbare DNS."
+        "client_config_qr_unreachable_host": "Deze QR bevat localhost of een .local-adres. Telefoons kunnen dit meestal niet bereiken — stel eerst Client server address (of PANEL_PUBLIC_HOST) in op een LAN-IP of openbare DNS.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Apparaten",
@@ -736,7 +741,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Beperkt — toon alleen expliciet toegewezen apparaten",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -773,7 +778,14 @@
         "action_settings_update": "Instellingen bijgewerkt",
         "action_device_ban": "Apparaat geblokkeerd",
         "action_device_unban": "Apparaatblokkade opgeheven",
-        "action_device_delete": "Apparaat verwijderd"
+        "action_device_delete": "Apparaat verwijderd",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -966,7 +978,8 @@
         "advanced_branding_hint": "Laat dichtgeklapt voor snelle aanmaak — standaardwaarden volstaan. Uitklappen voor logo, kleuren en contact.",
         "toolchain_branding_seal": "Branding-ondertekening mislukt — controleer de ondertekeningssleutel op de console en bouw opnieuw.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) niet gevonden — Windows-builds mislukken.",
-        "toolchain_appimage_missing": "appimagetool niet gevonden — AppImage-builds mislukken."
+        "toolchain_appimage_missing": "appimagetool niet gevonden — AppImage-builds mislukken.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Poort",
@@ -1517,7 +1530,8 @@
         "glass_color": "Glazen tintkleur",
         "glass_color_hint": "Basiskleur voor matglazen panelen. Gebruikt secundaire achtergrondkleur indien leeg.",
         "glass_blur": "Oppervlaktevervaging",
-        "glass_opacity": "Glasdekking"
+        "glass_opacity": "Glasdekking",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Overzicht",
@@ -2759,7 +2773,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "Aangepast"
+        "custom": "Aangepast",
+        "switch_to_dark": "Overschakelen naar donker thema",
+        "switch_to_light": "Overschakelen naar licht thema",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3975,7 +3993,9 @@
             "packages": "Pakketten & contracten",
             "sessions": "Sessies",
             "reports": "Rapporten",
-            "settings": "Geavanceerde instellingen"
+            "settings": "Geavanceerde instellingen",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Servertijd (NTP)",
@@ -4216,11 +4236,11 @@
         "more": "Meer"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "MeshCentral-compatibiliteit",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "MeshAgent .msh downloaden",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4245,7 +4265,7 @@
         "transport_files": "Mesh-bestanden",
         "settings_desc": "MeshAgent-onboarding en Server ID voor .msh-bestanden.",
         "mesh_name": "Mesh-groepnaam (.msh)",
-        "copy_server_id": "Server ID kopiëren",
+        "copy_server_id": "Server-ID kopiëren",
         "copy_server_id_ok": "Server ID gekopieerd",
         "enabled_label": "Ingeschakeld",
         "disabled_label": "Uitgeschakeld",
@@ -4325,7 +4345,9 @@
         "switch_to_ux35": "Overschakelen naar UX 3.5 (Beta)",
         "switch_to_classic": "Overschakelen naar klassieke UI",
         "beta_badge": "BETA",
-        "beta_tooltip": "Beta-consolelay-out — optioneel; de klassieke UI blijft de standaard."
+        "beta_tooltip": "Beta-consolelay-out — optioneel; de klassieke UI blijft de standaard.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

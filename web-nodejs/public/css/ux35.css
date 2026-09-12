@@ -91,7 +91,13 @@ body.app-page.ux35-page {
     align-items: center;
     line-height: 0;
 }
-.ux35-topbar-logo .brand-text-accent { opacity: 0.85; }
+.ux35-topbar-logo .brand-text-logo {
+    color: var(--ux35-topbar-fg);
+}
+.ux35-topbar-logo .brand-text-accent {
+    color: var(--ux35-topbar-fg-muted);
+    opacity: 1;
+}
 
 .ux35-topbar-menu-btn {
     display: none;
@@ -106,7 +112,7 @@ body.app-page.ux35-page {
     border-radius: var(--ux35-radius-sm);
     cursor: pointer;
 }
-.ux35-topbar-menu-btn:hover { background: rgba(255, 255, 255, 0.12); color: var(--ux35-topbar-fg); }
+.ux35-topbar-menu-btn:hover { background: var(--ux35-topbar-hover, rgba(255, 255, 255, 0.12)); color: var(--ux35-topbar-fg); }
 .ux35-topbar-menu-btn .material-icons {
     font-size: 22px;
     line-height: 1;
@@ -160,10 +166,11 @@ body.app-page.ux35-page {
     position: relative;
     transition: background var(--ux35-motion-fast), color var(--ux35-motion-fast);
 }
-.ux35-topbar-btn:hover { background: rgba(255, 255, 255, 0.12); color: var(--ux35-topbar-fg); }
+.ux35-topbar-btn:hover { background: var(--ux35-topbar-hover, rgba(255, 255, 255, 0.12)); color: var(--ux35-topbar-fg); }
 .ux35-topbar-btn .material-icons {
     font-size: 20px;
     line-height: 1;
+    color: inherit;
 }
 
 /* Keyboard focus uses the active brand color without relying on hover. */
@@ -191,6 +198,10 @@ body.app-page.ux35-page {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 0 0 2px var(--ux35-topbar-bg);
+}
+.ux35-topbar .notif-badge[hidden] {
+    display: none !important;
 }
 
 .ux35-topbar .lang-selector,
@@ -259,6 +270,65 @@ body.app-page.ux35-page {
     letter-spacing: 0.06em;
     color: var(--ux35-muted);
     padding: 10px 16px 4px;
+}
+
+.ux35-sidebar-filter {
+    padding: 8px 12px 4px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--ux35-sidebar-bg);
+}
+.ux35-sidebar-filter-input {
+    width: 100%;
+    min-height: 32px;
+    font-size: 12px;
+    padding: 6px 10px;
+}
+.ux35-sidebar-heading-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+}
+.ux35-sidebar-heading-toggle .ux35-section-chevron {
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0.7;
+}
+.ux35-sidebar-section.is-collapsed .ux35-sidebar-item {
+    display: none !important;
+}
+.ux35-sidebar-section.is-collapsed .ux35-section-chevron {
+    transform: rotate(-90deg);
+}
+.ux35-sidebar-section.is-filter-hidden,
+.ux35-sidebar-item.is-filter-hidden {
+    display: none !important;
+}
+.ux35-sidebar-section.is-filter-empty {
+    display: none !important;
+}
+
+.client-config-env-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent-yellow-muted, rgba(210, 153, 34, 0.15));
+    color: var(--accent-yellow, #9a6700);
+    white-space: nowrap;
+}
+.client-config-host-env-link {
+    margin: 6px 0 0;
+    font-size: 12px;
 }
 
 .ux35-sidebar-item {
@@ -508,6 +578,16 @@ body.app-page.ux35-page {
 }
 .ux35-page .ux35-content :is(.form-input, .form-select, .form-textarea) {
     background: var(--bg-tertiary);
+}
+
+/* Light mode: stronger field borders (low-contrast gray-on-white fix) */
+[data-theme="light"] .ux35-page .ux35-content :is(.form-input, .form-select, .form-textarea),
+[data-theme="light"] .ux35-page .settings-search {
+    border-color: #8c959f;
+}
+[data-theme="light"] .ux35-page .ux35-content :is(.form-input, .form-select, .form-textarea):focus,
+[data-theme="light"] .ux35-page .settings-search:focus-within {
+    border-color: var(--accent-blue, #0969da);
 }
 
 /* Embed: no chrome */

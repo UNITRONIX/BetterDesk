@@ -282,6 +282,20 @@ const Utils = {
         if (p.includes('android')) return 'smartphone';
         if (p.includes('ios') || p.includes('iphone')) return 'phone_iphone';
         return 'devices';
+    },
+
+    /**
+     * Localize audit action codes (login, branding_update, theme_toggle, …).
+     */
+    formatAuditAction(action, fallback) {
+        const raw = String(action || '').trim();
+        if (!raw) return fallback || '-';
+        const key = 'audit.action_' + raw.replace(/[^a-z0-9_]/gi, '_');
+        if (typeof _ === 'function') {
+            const label = _(key);
+            if (label && label !== key) return label;
+        }
+        return fallback || raw;
     }
 };
 

@@ -245,8 +245,16 @@ router.post('/api/settings/branding', requireAuth, requirePermission('branding.e
         await brandingService.saveBranding(updates);
         const savedBranding = brandingService.getBranding();
         const readability = brandingService.assessAppearanceReadability(savedBranding);
-        
-        await db.logAction(req.session?.userId, 'branding_update', 'Updated branding configuration', req.ip);
+
+        const keys = Object.keys(updates || {});
+        const themeOnly = keys.length > 0 && keys.every((k) =>
+            k === 'themeMode' || k === 'colors' || k === 'glassColor'
+        ) && updates.themeMode;
+        const auditAction = themeOnly ? 'theme_toggle' : 'branding_update';
+        const auditDetails = themeOnly
+            ? `Theme switched to ${updates.themeMode}`
+            : 'Updated branding configuration';
+        await db.logAction(req.session?.userId, auditAction, auditDetails, req.ip);
         
         res.json({
             success: true,

@@ -31,7 +31,8 @@
         "back": "Powrót",
         "edit": "Edytuj",
         "yes": "Tak",
-        "no": "Nie"
+        "no": "Nie",
+        "not_available": "Niedostępne"
     },
     "nav": {
         "main": "Główne",
@@ -188,7 +189,11 @@
         "intune_script_hint": "Uruchom z uprawnieniami administratora po zakończeniu instalacji MSI RustDesk. Używa tego samego ciągu co Kopiuj ciąg wdrożenia.",
         "deploy_string_not_ready": "Ciąg wdrożenia jest niedostępny, dopóki nie zostanie wczytany klucz publiczny serwera.",
         "client_server_host_env_hint": "Publiczne ID, relay i API są w Ustawienia → Publiczne endpointy klienta. Wyczyść tam, aby znów użyć tego pola.",
-        "client_config_qr_unreachable_host": "Ten QR zawiera localhost lub adres .local. Telefony zwykle go nie osiągają — najpierw ustaw Client server address (lub PANEL_PUBLIC_HOST) na IP LAN albo publiczny DNS."
+        "client_config_qr_unreachable_host": "Ten QR zawiera localhost lub adres .local. Telefony zwykle go nie osiągają — najpierw ustaw Client server address (lub PANEL_PUBLIC_HOST) na IP LAN albo publiczny DNS.",
+        "view_audit_log": "Zobacz dziennik audytu",
+        "activity_load_error": "Nie udało się wczytać ostatniej aktywności",
+        "client_host_env_badge": "Z env",
+        "client_host_settings_link": "Otwórz Ustawienia → Publiczne endpointy klienta"
     },
     "devices": {
         "title": "Urządzenia",
@@ -736,11 +741,11 @@
         "device_scope_title": "Domyślna widoczność urządzeń",
         "device_scope_desc": "Określa, co widzą użytkownicy bez roli admin, gdy brak grantów folderów/grup/urządzeń.",
         "device_scope_open": "Otwarty (legacy) — pokaż wszystkie urządzenia do skonfigurowania ACL",
-        "device_scope_restricted": "Restricted — pokaż tylko jawnie przyznane urządzenia",
+        "device_scope_restricted": "Ograniczony — pokaż tylko jawnie przyznane urządzenia",
         "device_scope_save": "Zapisz domyślną widoczność",
         "device_scope_saved": "Zapisano domyślną widoczność urządzeń",
         "device_scope_invalid": "Nieprawidłowy tryb widoczności",
-        "device_scope_restricted_warning": "Tryb restricted jest aktywny. Upewnij się, że użytkownicy mają granty folderów, grup lub urządzeń — inaczej zobaczą pustą listę.",
+        "device_scope_restricted_warning": "Tryb ograniczony jest aktywny. Upewnij się, że użytkownicy mają granty folderów, grup lub urządzeń — inaczej zobaczą pustą listę.",
         "client_sessions_title": "Sesje klienta RustDesk",
         "client_sessions_desc": "Określ, jak długo aplikacje RustDesk (desktop i mobile) pozostają zalogowane do konta BetterDesk.",
         "client_sessions_expiry_days": "Czas trwania sesji (dni)",
@@ -773,7 +778,14 @@
         "action_settings_update": "Zaktualizowano ustawienia",
         "action_device_ban": "Zbanowano urządzenie",
         "action_device_unban": "Odbanowano urządzenie",
-        "action_device_delete": "Usunięto urządzenie"
+        "action_device_delete": "Usunięto urządzenie",
+        "action_branding_update": "Zaktualizowano branding",
+        "action_theme_toggle": "Zmieniono motyw",
+        "action_system_update": "Aktualizacja systemu",
+        "action_password_changed": "Zmieniono hasło",
+        "action_conn_start": "Rozpoczęto połączenie",
+        "action_conn_end": "Zakończono połączenie",
+        "action_User_logged_in": "Użytkownik zalogowany"
     },
     "generator": {
         "title": "Generator BetterDesk Support",
@@ -967,7 +979,8 @@
         "advanced_branding_hint": "Zostaw zwinięte przy szybkim tworzeniu — domyślne ustawienia wystarczą. Rozwiń, by dostosować logo, kolory i kontakt.",
         "toolchain_branding_seal": "Podpisanie brandingu nie powiodło się — sprawdź klucz podpisu na konsoli, potem przebuduj.",
         "toolchain_mingw_missing": "Brak mingw-w64 (x86_64-w64-mingw32-gcc) — buildy Windows się nie udadzą.",
-        "toolchain_appimage_missing": "Brak appimagetool — buildy AppImage się nie udadzą."
+        "toolchain_appimage_missing": "Brak appimagetool — buildy AppImage się nie udadzą.",
+        "legacy_upgrade_hint": "„Starsza wersja” oznacza stary format paczki. Utwórz lub przebuduj nowy pakiet Support powyżej — ALPHA dotyczy dojrzałości modułu Generatora, nie agentów klienta."
     },
     "download": {
         "title": "Pobierz Agenta BetterDesk",
@@ -1531,7 +1544,8 @@
         "glass_color": "Kolor odcienia szkła",
         "glass_color_hint": "Kolor bazowy matowych paneli. Puste pole = kolor tła drugorzędnego.",
         "glass_blur": "Rozmycie powierzchni",
-        "glass_opacity": "Krycie szkła"
+        "glass_opacity": "Krycie szkła",
+        "builtin_themes_hint": "Presety stosują pełną paletę (np. BetterDesk, insolv Core Server). To osobna rzecz od szybkiego przełącznika jasny/ciemny."
     },
     "device_detail": {
         "tab_overview": "Przegląd",
@@ -2844,7 +2858,11 @@
         "light": "Jasny",
         "auto": "Systemowy",
         "title": "Motyw",
-        "custom": "Niestandardowy"
+        "custom": "Niestandardowy",
+        "switch_to_dark": "Przełącz na ciemny motyw",
+        "switch_to_light": "Przełącz na jasny motyw",
+        "quick_theme": "Szybki motyw",
+        "quick_vs_presets": "Szybkie przełączenie jasny/ciemny (także w topbarze). Pełne zestawy kolorów są w galerii powyżej."
     },
     "days": {
         "mon": "Pon",
@@ -3976,7 +3994,9 @@
             "packages": "Pakiety i kontrakty",
             "sessions": "Sesje",
             "reports": "Raporty",
-            "settings": "Ustawienia zaawansowane"
+            "settings": "Ustawienia zaawansowane",
+            "overview_nav": "Przegląd billing",
+            "reports_nav": "Raporty billing"
         },
         "clock": {
             "title": "Czas serwera (NTP)",
@@ -4217,11 +4237,11 @@
         "more": "Więcej"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "Kompatybilność MeshCentral",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "Pobierz MeshAgent (.msh)",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4246,8 +4266,8 @@
         "transport_files": "Pliki Mesh",
         "settings_desc": "Onboarding MeshAgent i Server ID do plików .msh.",
         "mesh_name": "Nazwa grupy mesh (.msh)",
-        "copy_server_id": "Kopiuj Server ID",
-        "copy_server_id_ok": "Server ID skopiowany",
+        "copy_server_id": "Kopiuj identyfikator serwera",
+        "copy_server_id_ok": "Skopiowano identyfikator serwera",
         "enabled_label": "Włączone",
         "disabled_label": "Wyłączone",
         "share_link": "Link gościa (pulpit)",
@@ -4326,7 +4346,9 @@
         "switch_to_ux35": "Przełącz na UX 3.5 (Beta)",
         "switch_to_classic": "Przełącz na klasyczny interfejs",
         "beta_badge": "BETA",
-        "beta_tooltip": "Układ konsoli w wersji beta — opcjonalny; klasyczny UI pozostaje domyślny."
+        "beta_tooltip": "Układ konsoli w wersji beta — opcjonalny; klasyczny UI pozostaje domyślny.",
+        "filter_menu": "Filtruj menu",
+        "filter_menu_placeholder": "Szukaj w menu…"
     },
     "help": {
         "panel": {

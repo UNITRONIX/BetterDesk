@@ -163,12 +163,23 @@ _write_readme.py
 web-nodejs/_test_*.sh
 web-nodejs/_fix_*.sh
 
-# --- BetterDesk desktop clients (TEMPORARY — alpha, not in active use) ---
-# Whole tree excluded to avoid GitHub noise (Dependabot, i18n, stale CI).
+# --- BetterDesk desktop clients / agents (legacy local trees — not shipped via panel) ---
+# Active sources may live only on disk as *_old after local renames; keep out of git.
 betterdesk-mgmt/
-# betterdesk-agent-client/ — restored to git (production readiness plan)
+betterdesk-mgmt_old/
+betterdesk-agent/
+betterdesk-agent_old/
+betterdesk-agent-client/
+betterdesk-agent-client_old/
+betterdesk-desktop/
+betterdesk-desktop_old/
+rdclient-desktop/
+rdclient-desktop_old/
+# betterdesk-agent-client/ binaries (if tree is restored later)
 betterdesk-agent-client/src-tauri/binaries/**
 !betterdesk-agent-client/src-tauri/binaries/.gitkeep
+betterdesk-agent-client_old/src-tauri/binaries/**
+!betterdesk-agent-client_old/src-tauri/binaries/.gitkeep
 
 # --- BetterDesk Agent binaries & config (compiled locally) ---
 betterdesk-agent/betterdesk-agent
@@ -181,6 +192,11 @@ betterdesk-agent/fix_devid.py
 betterdesk-agent/fix_type.py
 betterdesk-agent/update_config.py
 !betterdesk-agent/package.json
+betterdesk-agent_old/betterdesk-agent
+betterdesk-agent_old/betterdesk-agent-*
+betterdesk-agent_old/*.exe
+betterdesk-agent_old/*.json
+!betterdesk-agent_old/package.json
 
 # --- BetterDesk Go server binaries (compiled locally) ---
 betterdesk-server/betterdesk-server

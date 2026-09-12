@@ -37,7 +37,8 @@
         "back": "Înapoi",
         "edit": "Editați",
         "yes": "Da",
-        "no": "Nu"
+        "no": "Nu",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Principal",
@@ -194,7 +195,11 @@
         "intune_script_hint": "Rulați ca administrator după finalizarea MSI RustDesk. Folosește același șir ca Copiază șirul de deploy.",
         "deploy_string_not_ready": "Șirul de deploy nu este disponibil până când cheia publică a serverului este încărcată.",
         "client_server_host_env_hint": "ID, relay și API public sunt în Setări → Endpoint-uri publice client. Goliți acolo pentru a folosi din nou acest câmp.",
-        "client_config_qr_unreachable_host": "Acest QR conține localhost sau o adresă .local. Telefoanele de obicei nu o pot atinge — setați mai întâi Client server address (sau PANEL_PUBLIC_HOST) la un IP LAN sau DNS public."
+        "client_config_qr_unreachable_host": "Acest QR conține localhost sau o adresă .local. Telefoanele de obicei nu o pot atinge — setați mai întâi Client server address (sau PANEL_PUBLIC_HOST) la un IP LAN sau DNS public.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Dispozitive",
@@ -742,7 +747,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Restricționat — afișează doar dispozitivele acordate explicit",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -779,7 +784,14 @@
         "action_settings_update": "Setări actualizate",
         "action_device_ban": "Dispozitiv interzis",
         "action_device_unban": "Dispozitiv neinterzis",
-        "action_device_delete": "Dispozitiv șters"
+        "action_device_delete": "Dispozitiv șters",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -972,7 +984,8 @@
         "advanced_branding_hint": "Lăsați pliat pentru creare rapidă — valorile implicite sunt suficiente. Extindeți pentru logo, culori și contact.",
         "toolchain_branding_seal": "Semnarea brandingului a eșuat — verificați cheia de semnare pe consolă, apoi reconstruiți.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) lipsește — build-urile Windows vor eșua.",
-        "toolchain_appimage_missing": "appimagetool lipsește — build-urile AppImage vor eșua."
+        "toolchain_appimage_missing": "appimagetool lipsește — build-urile AppImage vor eșua.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Port",
@@ -1523,7 +1536,8 @@
         "glass_color": "Culoarea nuanței de sticlă",
         "glass_color_hint": "Culoarea de bază pentru panourile mate. Folosește culoarea secundară de fundal dacă este goală.",
         "glass_blur": "Estompare suprafață",
-        "glass_opacity": "Opacitatea sticlei"
+        "glass_opacity": "Opacitatea sticlei",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Prezentare generală",
@@ -2765,7 +2779,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "Personalizat"
+        "custom": "Personalizat",
+        "switch_to_dark": "Comută la tema întunecată",
+        "switch_to_light": "Comută la tema deschisă",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3981,7 +3999,9 @@
             "packages": "Pachete și contracte",
             "sessions": "Sesiuni",
             "reports": "Rapoarte",
-            "settings": "Setări avansate"
+            "settings": "Setări avansate",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Ora serverului (NTP)",
@@ -4222,11 +4242,11 @@
         "more": "Mai mult"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "Compatibilitate MeshCentral",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "Descarcă MeshAgent .msh",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4251,7 +4271,7 @@
         "transport_files": "Fișiere Mesh",
         "settings_desc": "Onboarding MeshAgent și Server ID pentru fișiere .msh.",
         "mesh_name": "Nume grup Mesh (.msh)",
-        "copy_server_id": "Copiază Server ID",
+        "copy_server_id": "Copiază ID-ul serverului",
         "copy_server_id_ok": "Server ID copiat",
         "enabled_label": "Activat",
         "disabled_label": "Dezactivat",
@@ -4331,7 +4351,9 @@
         "switch_to_ux35": "Comutați la UX 3.5 (Beta)",
         "switch_to_classic": "Comutați la interfața clasică",
         "beta_badge": "BETA",
-        "beta_tooltip": "Aspect consolă beta — opțional; UI-ul clasic rămâne implicit."
+        "beta_tooltip": "Aspect consolă beta — opțional; UI-ul clasic rămâne implicit.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

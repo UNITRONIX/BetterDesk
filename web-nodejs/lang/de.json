@@ -31,7 +31,8 @@
         "back": "Zurück",
         "edit": "Bearbeiten",
         "yes": "Ja",
-        "no": "Nein"
+        "no": "Nein",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Hauptmenü",
@@ -188,7 +189,11 @@
         "intune_script_hint": "Mit Administratorrechten nach Abschluss des RustDesk-MSI ausführen. Verwendet denselben Config-String wie Deploy-String kopieren.",
         "deploy_string_not_ready": "Deploy-String ist erst verfügbar, wenn der öffentliche Serverschlüssel geladen ist.",
         "client_server_host_env_hint": "Öffentliche ID-, Relay- und API-Endpunkte sind unter Einstellungen → Öffentliche Client-Endpunkte konfiguriert. Dort leeren, um diese Überschreibung wieder zu nutzen.",
-        "client_config_qr_unreachable_host": "Dieser QR enthält localhost oder eine .local-Adresse. Telefone erreichen sie meist nicht — setzen Sie zuerst die Client-Serveradresse (oder PANEL_PUBLIC_HOST) auf eine LAN-IP oder öffentliches DNS."
+        "client_config_qr_unreachable_host": "Dieser QR enthält localhost oder eine .local-Adresse. Telefone erreichen sie meist nicht — setzen Sie zuerst die Client-Serveradresse (oder PANEL_PUBLIC_HOST) auf eine LAN-IP oder öffentliches DNS.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "Dashboard",
@@ -736,7 +741,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "Eingeschränkt — nur explizit freigegebene Geräte anzeigen",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -773,7 +778,14 @@
         "action_settings_update": "Einstellungen aktualisiert",
         "action_device_ban": "Gerät gesperrt",
         "action_device_unban": "Gerätesperre aufgehoben",
-        "action_device_delete": "Gerät gelöscht"
+        "action_device_delete": "Gerät gelöscht",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -966,7 +978,8 @@
         "advanced_branding_hint": "Für schnelles Anlegen zugeklappt lassen — Standardwerte reichen. Aufklappen für Logo, Farben und Kontakt.",
         "toolchain_branding_seal": "Branding-Signierung fehlgeschlagen — prüfen Sie den Signaturschlüssel auf der Konsole und bauen Sie neu.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) nicht gefunden — Windows-Builds schlagen fehl.",
-        "toolchain_appimage_missing": "appimagetool nicht gefunden — AppImage-Builds schlagen fehl."
+        "toolchain_appimage_missing": "appimagetool nicht gefunden — AppImage-Builds schlagen fehl.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Port",
@@ -1517,7 +1530,8 @@
         "glass_color": "Glasfarbton",
         "glass_color_hint": "Grundfarbe für mattierte Panels. Leer = sekundäre Hintergrundfarbe.",
         "glass_blur": "Oberflächen-Unschärfe",
-        "glass_opacity": "Glasdeckkraft"
+        "glass_opacity": "Glasdeckkraft",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "Übersicht",
@@ -2759,7 +2773,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Dashboard",
-        "custom": "Benutzerdefiniert"
+        "custom": "Benutzerdefiniert",
+        "switch_to_dark": "Zum dunklen Design wechseln",
+        "switch_to_light": "Zum hellen Design wechseln",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3975,7 +3993,9 @@
             "packages": "Pakete & Verträge",
             "sessions": "Sitzungen",
             "reports": "Berichte",
-            "settings": "Erweiterte Einstellungen"
+            "settings": "Erweiterte Einstellungen",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "Serverzeit (NTP)",
@@ -4216,11 +4236,11 @@
         "more": "Mehr"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "MeshCentral-Kompatibilität",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "MeshAgent .msh herunterladen",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4325,7 +4345,9 @@
         "switch_to_ux35": "Zu UX 3.5 wechseln (Beta)",
         "switch_to_classic": "Zur klassischen Oberfläche wechseln",
         "beta_badge": "BETA",
-        "beta_tooltip": "Beta-Konsolenlayout — optional; die klassische Oberfläche bleibt Standard."
+        "beta_tooltip": "Beta-Konsolenlayout — optional; die klassische Oberfläche bleibt Standard.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

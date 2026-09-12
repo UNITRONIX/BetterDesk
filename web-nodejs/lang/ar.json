@@ -38,7 +38,8 @@
         "back": "خلف",
         "edit": "يحرر",
         "yes": "نعم",
-        "no": "لا"
+        "no": "لا",
+        "not_available": "Not available"
     },
     "nav": {
         "main": "Main",
@@ -195,7 +196,11 @@
         "intune_script_hint": "شغّله بامتيازات المسؤول بعد اكتمال MSI الخاص بـ RustDesk. يستخدم نفس سلسلة الإعداد مثل نسخ سلسلة النشر.",
         "deploy_string_not_ready": "سلسلة النشر غير متاحة حتى يتم تحميل المفتاح العام للخادم.",
         "client_server_host_env_hint": "نقاط نهاية ID والترحيل وAPI العامة مُعدّة في الإعدادات → نقاط نهاية العملاء العامة. امسحها هناك لاستخدام هذا التجاوز مجدداً.",
-        "client_config_qr_unreachable_host": "يضم رمز QR هذا localhost أو عنوان .local. الهواتف عادة لا تصل إليه — عيّن عنوان خادم العميل (أو PANEL_PUBLIC_HOST) إلى IP على الشبكة المحلية أو DNS عام أولاً."
+        "client_config_qr_unreachable_host": "يضم رمز QR هذا localhost أو عنوان .local. الهواتف عادة لا تصل إليه — عيّن عنوان خادم العميل (أو PANEL_PUBLIC_HOST) إلى IP على الشبكة المحلية أو DNS عام أولاً.",
+        "view_audit_log": "View audit log",
+        "activity_load_error": "Could not load recent activity",
+        "client_host_env_badge": "From env",
+        "client_host_settings_link": "Open Settings → Public client endpoints"
     },
     "devices": {
         "title": "الأجهزة",
@@ -743,7 +748,7 @@
         "device_scope_title": "Device visibility default",
         "device_scope_desc": "Controls what non-admin users see when no folder, group, or direct device grants exist.",
         "device_scope_open": "Open (legacy) — show all devices until ACL is configured",
-        "device_scope_restricted": "Restricted — show only explicitly granted devices",
+        "device_scope_restricted": "مقيد — عرض الأجهزة الممنوحة صراحة فقط",
         "device_scope_save": "Save visibility default",
         "device_scope_saved": "Device visibility default saved",
         "device_scope_invalid": "Invalid visibility mode",
@@ -780,7 +785,14 @@
         "action_settings_update": "تم تحديث الإعدادات",
         "action_device_ban": "الجهاز محظور",
         "action_device_unban": "الجهاز غير محظور",
-        "action_device_delete": "تم حذف الجهاز"
+        "action_device_delete": "تم حذف الجهاز",
+        "action_branding_update": "Branding updated",
+        "action_theme_toggle": "Theme changed",
+        "action_system_update": "System update",
+        "action_password_changed": "Password changed",
+        "action_conn_start": "Connection started",
+        "action_conn_end": "Connection ended",
+        "action_User_logged_in": "User logged in"
     },
     "generator": {
         "title": "مولّد وكيل الدعم",
@@ -973,7 +985,8 @@
         "advanced_branding_hint": "اتركه مطويًا للإنشاء السريع — الإعدادات الافتراضية كافية. وسّع لتخصيص الشعار والألوان ومعلومات الاتصال.",
         "toolchain_branding_seal": "فشل توقيع العلامة التجارية — تحقق من مفتاح التوقيع على وحدة التحكم ثم أعد البناء.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) غير موجود — ستفشل بنايات Windows.",
-        "toolchain_appimage_missing": "appimagetool غير موجود — ستفشل بنايات AppImage."
+        "toolchain_appimage_missing": "appimagetool غير موجود — ستفشل بنايات AppImage.",
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
     },
     "server": {
         "port": "Port",
@@ -1524,7 +1537,8 @@
         "glass_color": "لون التظليل الزجاجي",
         "glass_color_hint": "اللون الأساسي للوحات الضبابية. يستخدم لون الخلفية الثانوي عند تركه فارغًا.",
         "glass_blur": "ضبابية السطح",
-        "glass_opacity": "شفافية الزجاج"
+        "glass_opacity": "شفافية الزجاج",
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
     },
     "device_detail": {
         "tab_overview": "ملخص",
@@ -2766,7 +2780,11 @@
         "light": "Light",
         "auto": "System",
         "title": "Theme",
-        "custom": "مخصص"
+        "custom": "مخصص",
+        "switch_to_dark": "التبديل إلى الوضع الداكن",
+        "switch_to_light": "التبديل إلى الوضع الفاتح",
+        "quick_theme": "Quick theme",
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
     },
     "days": {
         "mon": "Mon",
@@ -3982,7 +4000,9 @@
             "packages": "الحزم والعقود",
             "sessions": "الجلسات",
             "reports": "التقارير",
-            "settings": "إعدادات متقدمة"
+            "settings": "إعدادات متقدمة",
+            "overview_nav": "Billing overview",
+            "reports_nav": "Billing reports"
         },
         "clock": {
             "title": "وقت الخادم (NTP)",
@@ -4223,11 +4243,11 @@
         "more": "المزيد"
     },
     "mesh": {
-        "settings_title": "MeshCentral Compatibility",
+        "settings_title": "توافق MeshCentral",
         "enabled": "MeshCentral layer enabled",
         "disabled": "MeshCentral layer disabled",
         "server_id": "Server ID (for .msh)",
-        "download_msh": "Download MeshAgent .msh",
+        "download_msh": "تنزيل MeshAgent .msh",
         "agents_online": "Mesh agents online",
         "device_type": "Mesh Agent",
         "transport_mesh": "MeshCentral KVM",
@@ -4252,7 +4272,7 @@
         "transport_files": "ملفات Mesh",
         "settings_desc": "إعداد MeshAgent ومعرف الخادم لملفات .msh.",
         "mesh_name": "اسم مجموعة Mesh (.msh)",
-        "copy_server_id": "نسخ معرف الخادم",
+        "copy_server_id": "نسخ معرّف الخادم",
         "copy_server_id_ok": "تم نسخ معرف الخادم",
         "enabled_label": "مفعّل",
         "disabled_label": "معطّل",
@@ -4332,7 +4352,9 @@
         "switch_to_ux35": "التبديل إلى UX 3.5 (تجريبي)",
         "switch_to_classic": "التبديل إلى الواجهة الكلاسيكية",
         "beta_badge": "تجريبي",
-        "beta_tooltip": "تخطيط لوحة تجريبي — اختياري؛ تبقى الواجهة الكلاسيكية الافتراضية."
+        "beta_tooltip": "تخطيط لوحة تجريبي — اختياري؛ تبقى الواجهة الكلاسيكية الافتراضية.",
+        "filter_menu": "Filter menu",
+        "filter_menu_placeholder": "Search menu…"
     },
     "help": {
         "panel": {

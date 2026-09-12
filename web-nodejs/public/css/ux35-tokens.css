@@ -36,11 +36,12 @@
 
     /* Solid surfaces (performance: no glass aliases) */
     --ux35-bg: var(--bg-primary);
-    /* Topbar chrome is theme-invariant (always dark) — light/dark only flip shell surfaces */
+    /* Topbar follows theme (dark defaults; light overrides below) */
     --ux35-topbar-bg: #161b22;
     --ux35-topbar-fg: #e6edf3;
     --ux35-topbar-fg-muted: #8b949e;
     --ux35-topbar-border: #30363d;
+    --ux35-topbar-hover: rgba(255, 255, 255, 0.12);
     --ux35-sidebar-bg: var(--bg-secondary);
     --ux35-card-bg: var(--bg-secondary);
     --ux35-border: var(--border-primary);
@@ -55,8 +56,13 @@
     --ux35-glass-saturate: 1;
 }
 
-/* Light: light shell surfaces; topbar stays dark chrome from :root */
+/* Light: shell surfaces + topbar chrome */
 [data-theme="light"] {
+    --ux35-topbar-bg: #ffffff;
+    --ux35-topbar-fg: #1f2328;
+    --ux35-topbar-fg-muted: #656d76;
+    --ux35-topbar-border: #d0d7de;
+    --ux35-topbar-hover: rgba(0, 0, 0, 0.06);
     --ux35-sidebar-bg: var(--bg-secondary, #ffffff);
     --ux35-card-bg: var(--bg-secondary, #ffffff);
     --ux35-bg: var(--bg-primary, #f0f2f5);
