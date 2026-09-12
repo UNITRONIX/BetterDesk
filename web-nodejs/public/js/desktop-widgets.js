@@ -2142,7 +2142,7 @@
         popup.document.write(
             '<!DOCTYPE html><html lang="en" data-desktop-theme="' + esc(theme) + '">' +
             '<head><meta charset="utf-8"><title>' + title + ' — BetterDesk Widget</title>' +
-            '<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">' +
+            '<link rel="stylesheet" href="/css/material-icons-local.css">' +
             '<style>' + _getPopoutCSS() + '</style></head>' +
             '<body>' +
             '<div class="popout-header">' +

@@ -454,7 +454,7 @@
                 `;
             });
             body.innerHTML = rows.join('') ||
-                `<tr><td colspan="4"><div class="empty-state"><span class="material-icons">miscellaneous_services</span><p>${t('server_mgmt.svc_empty', 'No services found')}</p></div></td></tr>`;
+                `<tr><td colspan="4"><div class="empty-state"><span class="material-icons">home_repair_service</span><p>${t('server_mgmt.svc_empty', 'No services found')}</p></div></td></tr>`;
             document.getElementById('sm-services-count').textContent =
                 `${filtered.length} / ${services.length}`;
 
