@@ -3655,7 +3655,7 @@
         "strategy_install_go": "التثبيت التلقائي Go والترجمة",
         "strategy_install_go_hint": "Downloads the official Go toolchain (~120 MB) into the console data directory, then compiles the server. Use this when Go is not installed on the host.",
         "auto_strategy": "Auto",
-        "auto_strategy_hint": "The console will pick the best available method (download → compile → auto-install Go).",
+        "auto_strategy_hint": "????? ???? ?????? ????? ?????? ???????? ??????? ??????.",
         "auto_available": "إعادة البناء التلقائي جاهزة",
         "toolchain_ready": "تم تثبيت سلسلة الأدوات",
         "toolchain_will_install": "Go toolchain will be installed automatically",

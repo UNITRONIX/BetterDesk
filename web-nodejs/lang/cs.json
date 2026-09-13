@@ -3648,7 +3648,7 @@
         "strategy_install_go": "Auto-instalace Go a kompilace",
         "strategy_install_go_hint": "Stáhne oficiální Go toolchain (~120 MB) do datového adresáře konzole a poté zkompiluje server. Použijte, pokud Go není na hostiteli nainstalováno.",
         "auto_strategy": "Automaticky",
-        "auto_strategy_hint": "Konzole vybere nejlepší dostupnou metodu (stažení → kompilace → automatická instalace Go).",
+        "auto_strategy_hint": "Konzole st?hne pot?ebn? zdrojov? soubory serveru a lok?ln? je zkompiluje.",
         "auto_available": "Automatické přebudování připraveno",
         "toolchain_ready": "Nástroje (toolchain) nainstalovány",
         "toolchain_will_install": "Go toolchain bude nainstalován automaticky",

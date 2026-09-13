@@ -1,9 +1,8 @@
 'use strict';
 
-const crypto = require('crypto');
 const https = require('https');
 
-describe('updateService server binary delivery', () => {
+describe('updateService local server build', () => {
     let updateService;
 
     beforeEach(() => {
@@ -17,145 +16,56 @@ describe('updateService server binary delivery', () => {
         delete require.cache[require.resolve('../services/updateService')];
     });
 
-    it('accepts a manifest only for the requested target and exact commit', () => {
-        const target = updateService.getServerBinaryTarget();
-        const binary = Buffer.from('server-binary');
-        const manifest = {
-            commit: 'a'.repeat(40),
-            version: '3.5.56',
-            goos: target.goos,
-            goarch: target.goarch,
-            asset: target.assetName,
-            size: binary.length,
-            sha256: crypto.createHash('sha256').update(binary).digest('hex'),
-        };
-
-        expect(updateService.validateServerBinaryManifest(manifest, binary, {
-            ...target,
-            remoteSHA: manifest.commit,
-        })).toBeNull();
-        expect(updateService.validateServerBinaryManifest({
-            ...manifest,
-            commit: 'b'.repeat(40),
-        }, binary, { ...target, remoteSHA: manifest.commit })).toMatch(/commit mismatch/);
-        expect(updateService.validateServerBinaryManifest({
-            ...manifest,
-            sha256: '0'.repeat(64),
-        }, binary, { ...target, remoteSHA: manifest.commit })).toMatch(/SHA-256/);
+    it('exposes local build readiness without GitHub binary delivery helpers', () => {
+        expect(updateService.getServerUpdateInfo()).toMatchObject({
+            canAutoUpdate: true,
+            buildMethod: 'local',
+            canInstallGo: true,
+        });
+        expect(updateService.getPrebuiltInfo).toBeUndefined();
+        expect(updateService.checkPrebuiltAvailable).toBeUndefined();
+        expect(updateService.downloadPrebuiltBinary).toBeUndefined();
+        expect(updateService.downloadGithubBuffer).toBeUndefined();
     });
 
-    it('rejects unsafe artifact archive paths', () => {
-        expect(updateService.getSafeZipEntryName('../betterdesk-server')).toBeNull();
-        expect(updateService.getSafeZipEntryName('/betterdesk-server')).toBeNull();
-        expect(updateService.getSafeZipEntryName('C:\\temp\\betterdesk-server')).toBeNull();
-        expect(updateService.getSafeZipEntryName('server/betterdesk-server')).toBe('server/betterdesk-server');
+    it('keeps the server build result explicitly local', () => {
+        expect(updateService.getServerUpdateInfo().buildMethod).toBe('local');
     });
 
-    it('finds a successful exact-commit Actions artifact for the current target', async () => {
-        const remoteSHA = 'c'.repeat(40);
-        const target = updateService.getServerBinaryTarget();
-        const runId = 12345;
+    it('enumerates only the requested GitHub subtree', async () => {
+        const commit = 'a'.repeat(40);
+        const rootTree = 'b'.repeat(40);
+        const serverTree = 'c'.repeat(40);
         const routes = new Map([
             [
-                `/repos/UNITRONIX/BetterDesk/actions/workflows/release-server.yml/runs?head_sha=${remoteSHA}&per_page=20`,
-                {
-                    total_count: 1,
-                    workflow_runs: [{
-                        id: runId,
-                        head_sha: remoteSHA,
-                        status: 'completed',
-                        conclusion: 'success',
-                        updated_at: '2026-08-23T18:00:00Z',
-                        name: 'Build & Release Go Server',
-                    }],
-                },
+                `/repos/UNITRONIX/BetterDesk/git/commits/${commit}`,
+                { tree: { sha: rootTree } },
             ],
             [
-                `/repos/UNITRONIX/BetterDesk/actions/runs/${runId}/jobs?per_page=100`,
-                {
-                    jobs: [
-                        { name: 'build (linux, amd64, linux-amd64)', conclusion: 'success' },
-                        { name: 'build (linux, arm64, linux-arm64)', conclusion: 'success' },
-                        { name: 'build (windows, amd64, windows-amd64.exe)', conclusion: 'success' },
-                    ],
-                },
+                `/repos/UNITRONIX/BetterDesk/git/trees/${rootTree}`,
+                { tree: [{ type: 'tree', path: 'betterdesk-server', sha: serverTree }] },
             ],
             [
-                `/repos/UNITRONIX/BetterDesk/actions/runs/${runId}/artifacts?per_page=100`,
-                {
-                    artifacts: [{
-                        id: 67890,
-                        name: `betterdesk-server-${target.suffix}`,
-                        expired: false,
-                        size_in_bytes: 1234567,
-                        archive_download_url: `https://api.github.com/artifacts/67890/zip`,
-                    }],
-                },
+                `/repos/UNITRONIX/BetterDesk/git/trees/${serverTree}?recursive=1`,
+                { tree: [
+                    { type: 'blob', path: 'go.mod' },
+                    { type: 'blob', path: 'api/server.go' },
+                ] },
             ],
         ]);
-
+        const requested = [];
         jest.spyOn(https, 'get').mockImplementation((options, callback) => {
-            const request = {
-                on: jest.fn(),
-                setTimeout: jest.fn(),
-                destroy: jest.fn(),
-            };
-            const route = typeof options === 'string'
-                ? new URL(options).pathname + new URL(options).search
-                : options.path;
+            const route = typeof options === 'string' ? new URL(options).pathname : options.path;
+            requested.push(route);
             const body = routes.get(route);
-            process.nextTick(() => {
-                const response = {
-                    statusCode: body ? 200 : 404,
-                    headers: {},
-                    on(event, handler) {
-                        if (event === 'data' && body) process.nextTick(() => handler(Buffer.from(JSON.stringify(body))));
-                        if (event === 'end') process.nextTick(handler);
-                    },
-                };
-                callback(response);
-            });
-            return request;
-        });
-
-        const result = await updateService.checkPrebuiltAvailable(remoteSHA);
-        expect(result).toMatchObject({
-            available: true,
-            exact: true,
-            source: 'github-actions',
-            artifactId: 67890,
-            runId,
-            commit: remoteSHA,
-        });
-    });
-
-    it('retries a public artifact download without a rejected GitHub token', async () => {
-        const previousUpdateToken = process.env.UPDATE_GITHUB_TOKEN;
-        const previousGithubToken = process.env.GITHUB_TOKEN;
-        process.env.UPDATE_GITHUB_TOKEN = 'stale-token';
-        process.env.GITHUB_TOKEN = 'stale-token';
-        jest.resetModules();
-        delete require.cache[require.resolve('../services/updateService')];
-        updateService = require('../services/updateService');
-
-        const requests = [];
-        jest.spyOn(https, 'get').mockImplementation((options, callback) => {
-            requests.push(options);
-            const isFirstRequest = requests.length === 1;
-            const response = {
-                statusCode: isFirstRequest ? 401 : 200,
+            process.nextTick(() => callback({
+                statusCode: body ? 200 : 404,
                 headers: {},
-                resume: jest.fn(),
                 on(event, handler) {
-                    if (!isFirstRequest && event === 'data') {
-                        process.nextTick(() => handler(Buffer.from('public-artifact')));
-                    }
-                    if (!isFirstRequest && event === 'end') {
-                        process.nextTick(handler);
-                    }
+                    if (event === 'data' && body) process.nextTick(() => handler(Buffer.from(JSON.stringify(body))));
+                    if (event === 'end') process.nextTick(handler);
                 },
-            };
-            process.nextTick(() => callback(response));
+            }));
             return {
                 on: jest.fn(),
                 setTimeout: jest.fn(),
@@ -163,18 +73,8 @@ describe('updateService server binary delivery', () => {
             };
         });
 
-        try {
-            await expect(updateService.downloadGithubBuffer(
-                'https://api.github.com/repos/UNITRONIX/BetterDesk/actions/artifacts/67890/zip',
-                { maxBytes: 1024 }
-            )).resolves.toEqual(Buffer.from('public-artifact'));
-            expect(requests[0].headers.Authorization).toBe('Bearer stale-token');
-            expect(requests[1].headers.Authorization).toBeUndefined();
-        } finally {
-            if (previousUpdateToken === undefined) delete process.env.UPDATE_GITHUB_TOKEN;
-            else process.env.UPDATE_GITHUB_TOKEN = previousUpdateToken;
-            if (previousGithubToken === undefined) delete process.env.GITHUB_TOKEN;
-            else process.env.GITHUB_TOKEN = previousGithubToken;
-        }
+        await expect(updateService.listRepoBlobPathsUnderPrefix(commit, 'betterdesk-server/'))
+            .resolves.toEqual(['betterdesk-server/go.mod', 'betterdesk-server/api/server.go']);
+        expect(requested).not.toContain(`/repos/UNITRONIX/BetterDesk/git/trees/${commit}?recursive=1`);
     });
 });

@@ -3642,7 +3642,7 @@
         "strategy_install_go": "Instalar Go automaticamente e compilar",
         "strategy_install_go_hint": "Downloads the official Go toolchain (~120 MB) into the console data directory, then compiles the server. Use this when Go is not installed on the host.",
         "auto_strategy": "Auto",
-        "auto_strategy_hint": "The console will pick the best available method (download → compile → auto-install Go).",
+        "auto_strategy_hint": "O console baixa os fontes necess?rios do servidor e os compila localmente.",
         "auto_available": "Recompilação automática pronta",
         "toolchain_ready": "Toolchain instalada",
         "toolchain_will_install": "Go toolchain will be installed automatically",

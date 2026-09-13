@@ -3648,7 +3648,7 @@
         "strategy_install_go": "Go'yu otomatik olarak yükle ve derle",
         "strategy_install_go_hint": "Downloads the official Go toolchain (~120 MB) into the console data directory, then compiles the server. Use this when Go is not installed on the host.",
         "auto_strategy": "Auto",
-        "auto_strategy_hint": "The console will pick the best available method (download → compile → auto-install Go).",
+        "auto_strategy_hint": "Konsol gerekli sunucu kaynaklar?n? indirir ve yerel olarak derler.",
         "auto_available": "Otomatik yeniden oluşturmaya hazır",
         "toolchain_ready": "Alet zinciri kuruldu",
         "toolchain_will_install": "Go toolchain will be installed automatically",

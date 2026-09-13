@@ -120,8 +120,6 @@ describe('updateService update channel', () => {
 
     test('preflight stays ready when server update needs Go toolchain bootstrap', async () => {
         const updateService = loadUpdateService({ dataDir });
-        const prebuiltSpy = jest.spyOn(updateService, 'checkPrebuiltAvailable')
-            .mockResolvedValue({ available: false });
         const goSpy = jest.spyOn(updateService, 'checkGoAvailable')
             .mockReturnValue({
                 available: true,
@@ -141,7 +139,6 @@ describe('updateService update channel', () => {
             expect(pf.issues).toHaveLength(0);
             expect(pf.warnings.join(' ')).toMatch(/toolchain/i);
         } finally {
-            prebuiltSpy.mockRestore();
             goSpy.mockRestore();
             remoteSpy.mockRestore();
         }

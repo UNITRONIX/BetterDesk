@@ -996,9 +996,7 @@ router.post('/api/settings/restore', requireAuth, requirePermission('server.conf
 router.get('/api/settings/updates/server-info', requireAuth, requirePermission('server.config'), async (_req, res) => {
     try {
         const info = updateService.getServerUpdateInfo();
-        const remoteSHA = typeof _req.query.sha === 'string' ? _req.query.sha : null;
-        const prebuilt = await updateService.getPrebuiltInfo(remoteSHA);
-        res.json({ success: true, data: { ...info, prebuilt } });
+        res.json({ success: true, data: info });
     } catch (err) {
         console.error('Server info error:', err);
         res.status(500).json({ success: false, error: err.message });

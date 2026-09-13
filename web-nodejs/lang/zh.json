@@ -3719,7 +3719,7 @@
         "strategy_install_go": "自动安装 Go 并编译",
         "strategy_install_go_hint": "在控制台数据目录中下载或刷新官方 Go 工具链（约 120 MB），然后在需要时编译服务器。",
         "auto_strategy": "Auto",
-        "auto_strategy_hint": "控制台会选择最佳可用方法，并自动下载或更新所需工具。",
+        "auto_strategy_hint": "??????????????????????",
         "auto_available": "自动重建已就绪",
         "toolchain_ready": "工具链已安装",
         "toolchain_will_install": "Go 工具链将自动安装或更新",

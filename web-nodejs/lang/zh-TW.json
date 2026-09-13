@@ -3742,7 +3742,7 @@
         "strategy_install_go": "自動安裝 Go 並編譯",
         "strategy_install_go_hint": "在控制檯數據目錄中下載或刷新官方 Go 工具鏈（約 120 MB），然後在需要時編譯服務器。",
         "auto_strategy": "Auto",
-        "auto_strategy_hint": "控制檯會選擇最佳可用方法，並自動下載或更新所需工具。",
+        "auto_strategy_hint": "??????????????????????",
         "auto_available": "自動重建已就緒",
         "toolchain_ready": "工具鏈已安裝",
         "toolchain_will_install": "Go 工具鏈將自動安裝或更新",

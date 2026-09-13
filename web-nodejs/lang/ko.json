@@ -3648,7 +3648,7 @@
         "strategy_install_go": "Go 자동 설치 및 컴파일",
         "strategy_install_go_hint": "Downloads the official Go toolchain (~120 MB) into the console data directory, then compiles the server. Use this when Go is not installed on the host.",
         "auto_strategy": "Auto",
-        "auto_strategy_hint": "The console will pick the best available method (download → compile → auto-install Go).",
+        "auto_strategy_hint": "??? ??? ?? ??? ????? ? ???? ??????.",
         "auto_available": "자동 재구축 준비됨",
         "toolchain_ready": "툴체인이 설치됨",
         "toolchain_will_install": "Go toolchain will be installed automatically",

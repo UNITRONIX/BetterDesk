@@ -4,10 +4,10 @@
 
 - Browser self-update restart confirmation should use lightweight `/api/settings/restart-status`, not heavy/authenticated `/api/settings/info`; DB/Go backend warmup can cause false restart-timeout reports.
 - Use `window.BetterDesk.cacheVersion` to distinguish the old Node.js process from the restarted one, and reload with a cache-busting query after update.
-- `GET /api/settings/updates/preflight?serverUpdate=1` when server files change — blocks install if Go/prebuilt unavailable.
+- `GET /api/settings/updates/preflight?serverUpdate=1` when server files change — checks writable paths, disk space and local Go/toolchain readiness before install.
 - After update, if server source changed but binary build/deploy failed, `applyUpdate` attempts **auto-rebuild** via `rebuildServerBinary` before leaving a stale marker.
-- Server binaries use the exact update commit: the panel checks the `release-server.yml` GitHub Actions run and its platform artifact first, then an exact Release asset with a manifest. A generic `releases/latest` binary is informational only and is never installed for a different SHA.
-- The artifact manifest contains commit, Go target, size and SHA-256. The panel validates all fields before moving the binary into the server source directory; missing/expired artifacts or failed jobs fall back to a local Go build.
+- The panel always builds the Go server locally from the exact update commit. It downloads only the required `betterdesk-server/` subtree through the GitHub tree API, installs the pinned Go toolchain into the console data directory when needed, runs `go mod download` and `go build`, then deploys the resulting binary.
+- The panel does not download or install a pre-built server binary from GitHub Releases or GitHub Actions. This keeps source, dependencies and the compiled binary on the same selected branch/SHA.
 - Console update merges new keys from `web-nodejs/.env.example` into existing `.env` using `buildEnvSubstitutions()` (resolved paths, no raw `__PLACEHOLDER__` values).
 - After server updates, `patchServiceDefinitions()` sanitizes writable/NSSM units in place; protected Linux systemd units require the explicit root maintenance step below.
 - **Linux privilege boundary:** the panel never executes a repository JavaScript file through `sudo` and never writes root-owned systemd units or Go binaries. A root operator must run `sudo node web-nodejs/scripts/linux-ensure-console-user.js` after installation or after a privileged layout change; this installs the fixed root-owned update broker at `/usr/local/libexec/betterdesk/betterdesk-privileged-update.js`. The broker only permits `systemctl daemon-reload` and restart of `betterdesk-console` / `betterdesk-server`.
@@ -31,7 +31,7 @@ workers remain independent.
 
 GitHub `compare` API caps `files` at 300, so large diffs are truncated and changed Go callee files were not downloaded → inconsistent on-disk source and `undefined` build errors.
 
-**Fix:** `ensureServerSource(remoteSHA, { force: true })` before every server compile/rebuild (panel update + Rebuild button).
+**Fix:** `ensureServerSource(remoteSHA, { force: true })` before every server compile/rebuild (panel update + Rebuild button). The helper resolves and downloads only the `betterdesk-server/` Git tree for that SHA; it never clones the complete repository. This remains required because the GitHub compare API caps `files` at 300 entries.
 
 ### Installer GitHub update
 

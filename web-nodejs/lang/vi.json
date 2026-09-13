@@ -3654,7 +3654,7 @@
         "strategy_install_go": "Tự động cài đặt Đi và biên dịch",
         "strategy_install_go_hint": "Downloads the official Go toolchain (~120 MB) into the console data directory, then compiles the server. Use this when Go is not installed on the host.",
         "auto_strategy": "Auto",
-        "auto_strategy_hint": "The console will pick the best available method (download → compile → auto-install Go).",
+        "auto_strategy_hint": "B?ng ?i?u khi?n s? t?i m? ngu?n m?y ch? c?n thi?t v? bi?n d?ch c?c b?.",
         "auto_available": "Tự động xây dựng l���i đã sẵn sàng",
         "toolchain_ready": "Đã cài đặt chuỗi công cụ",
         "toolchain_will_install": "Go toolchain will be installed automatically",
