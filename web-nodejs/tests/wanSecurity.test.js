@@ -37,6 +37,14 @@ describe('WAN API path whitelist', () => {
         expect(result.statusCode).toBe(405);
     });
 
+    test('allows public branding reads and rejects branding writes', () => {
+        expect(runWhitelist('/api/branding', 'GET').nextCalled).toBe(true);
+
+        const result = runWhitelist('/api/branding', 'POST');
+        expect(result.nextCalled).toBe(false);
+        expect(result.statusCode).toBe(405);
+    });
+
     test('allows unauthenticated enrollment bootstrap endpoints', () => {
         expect(runWhitelist('/api/devices/register', 'POST').nextCalled).toBe(true);
         expect(runWhitelist('/api/devices/register/status', 'GET').nextCalled).toBe(true);

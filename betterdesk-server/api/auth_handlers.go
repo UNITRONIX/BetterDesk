@@ -1171,6 +1171,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			path == "/api/login" || path == "/api/login-options" || path == "/api/logout" ||
 			path == "/api/oidc/auth" || path == "/api/oidc/auth-query" || path == "/api/oidc/callback" ||
 			path == "/api/heartbeat" || path == "/api/sysinfo" || path == "/api/sysinfo_ver" ||
+			path == "/api/telemetry/key" ||
 			(path == "/api/branding" && r.Method == http.MethodGet) ||
 			path == "/api/server-key" || path == "/api/server-key/fingerprint" ||
 			path == "/api/software" || path == "/api/software/client-download-link" ||
