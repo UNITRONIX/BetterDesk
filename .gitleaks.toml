@@ -9,6 +9,7 @@ title = "BetterDesk Gitleaks Config"
   # Cargo.lock files contain crate checksums and dependency names like
   # "crypto_secretbox" that trigger generic-api-key false positives.
   paths = [
+    '''\.gitleaks\.toml$''',
     '''.*Cargo\.lock$''',
     '''.*package-lock\.json$''',
     '''docs/private/''',

@@ -41,7 +41,7 @@ describe('installer protocol check', () => {
             .resolves.toMatchObject({ ok: true });
         expect(checkCertificateHostname({ subjectaltname: 'DNS:panel.example.test' }, 'panel.example.test'))
             .toBe(true);
-        expect(checkCertificateHostname({ subjectaltname: 'IP Address:192.168.0.110' }, '192.168.0.110'))
+        expect(checkCertificateHostname({ subjectaltname: 'IP Address:192.0.2.10' }, '192.0.2.10'))
             .toBe(true);
         expect(checkCertificateHostname({ subjectaltname: 'DNS:other.example.test' }, 'panel.example.test'))
             .toBe(false);
