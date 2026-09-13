@@ -141,6 +141,7 @@ const ALLOWED_METHODS = {
  */
 const PATH_BODY_LIMITS = {
     '/api/login': 4096,           // 4KB — login with deviceInfo payload
+    '/api/heartbeat': 8192,       // 8KB — device metrics and telemetry
     '/api/oidc/auth': 4096,       // 4KB — OIDC start with deviceInfo
     '/api/sysinfo': 8192,         // 8KB — sysinfo with displays/encoding data
     '/api/sysinfo_ver': 512,      // 512B — version check (id + hash only)
