@@ -19,6 +19,7 @@ const AdmZip = require('adm-zip');
 const db = require('./database');
 const bundleService = require('./agentBundleService');
 const supportModule = require('./supportGeneratorModule');
+const windowsSupportInstaller = require('./windowsSupportInstaller');
 const customTxt = require('./customTxtBuilder');
 const keyService = require('./keyService');
 const conn = require('./agentBundleConnection');
@@ -477,6 +478,10 @@ async function _runOne(buildRow) {
             try { await fsp.unlink(nestedMarker); } catch (_) { /* ok */ }
         }
 
+        if (buildRow.platform === 'windows') {
+            await windowsSupportInstaller.writeWindowsSupportInstallers(stageDir);
+        }
+
         const ext = buildRow.platform === 'windows' ? 'zip' : 'tar.gz';
         const artifactName = `betterdesk-support-${buildRow.branding_hash.slice(0, 12)}-${buildRow.platform}-${buildRow.arch}.${ext}`;
         const artifactPath = path.join(ARTIFACT_ROOT, artifactName);
@@ -531,6 +536,7 @@ module.exports = {
         buildCustomTxtContent: _buildCustomTxtContent,
         findCustomTxtTarget: _findCustomTxtTarget,
         filterPlatforms: _filterPlatforms,
+        hasWindowsSupportInstallers: windowsSupportInstaller.hasWindowsSupportInstallers,
         ARTIFACT_ROOT,
         WORK_ROOT,
         IS_WINDOWS,

@@ -56,6 +56,13 @@ const LIGATURE_IN_ICON_SPAN =
     /material-icons(?:-round|-outlined)?\b[^>]*>\s*([a-z][a-z0-9_]{1,48})\s*</g;
 
 const NAME_RE = /^[a-z][a-z0-9_]{1,48}$/;
+const ICON_PROPERTY = /\bicon\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
+const ICON_RETURN = /\breturn\s+['"]([a-z][a-z0-9_]{1,48})['"]/g;
+const PLATFORM_ICON_MAP =
+    /\b(?:windows|linux|mac|macos|android|ios)\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
+const ICON_HELPER_LINE = /\b(?:createWindowCtrlBtn|createMaterialIconSpan)\b[^;\n]*/g;
+const TEXT_CONTENT_LINE = /\btextContent\s*=[^;\n]*/g;
+const QUOTED_ICON_NAME = /['"]([a-z][a-z0-9_]{1,48})['"]/g;
 
 function walkFiles(dir, out = []) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -99,10 +106,31 @@ function collectCandidateIcons() {
     const icons = new Set(EXTRA_ICONS);
     for (const file of walkFiles(SCAN_ROOT)) {
         const text = fs.readFileSync(file, 'utf8');
-        LIGATURE_IN_ICON_SPAN.lastIndex = 0;
-        let m;
-        while ((m = LIGATURE_IN_ICON_SPAN.exec(text)) !== null) {
-            icons.add(m[1]);
+        for (const pattern of [
+            LIGATURE_IN_ICON_SPAN,
+            ICON_PROPERTY,
+            ICON_RETURN,
+            PLATFORM_ICON_MAP,
+        ]) {
+            pattern.lastIndex = 0;
+            let match;
+            while ((match = pattern.exec(text)) !== null) {
+                icons.add(match[1]);
+            }
+        }
+
+        // Desktop controls and a few widgets assign icon ligatures through
+        // textContent or helper calls instead of literal <span> markup.
+        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE]) {
+            pattern.lastIndex = 0;
+            let line;
+            while ((line = pattern.exec(text)) !== null) {
+                QUOTED_ICON_NAME.lastIndex = 0;
+                let match;
+                while ((match = QUOTED_ICON_NAME.exec(line[0])) !== null) {
+                    icons.add(match[1]);
+                }
+            }
         }
     }
     return icons;
@@ -194,6 +222,21 @@ async function downloadFamily(familyLabel, familyApiName, outName, icons) {
     return { outName, size: buf.length, sha256: hash, fontUrl, cssUrl };
 }
 
+function updateFontCacheBusters(outlined, rounded) {
+    const cssPath = path.join(WEB, 'public', 'css', 'material-icons-local.css');
+    let css = fs.readFileSync(cssPath, 'utf8');
+    css = css
+        .replace(
+            /MaterialSymbolsOutlined\.woff2(?:\?v=[^'")]+)?/g,
+            `MaterialSymbolsOutlined.woff2?v=${outlined.sha256.slice(0, 12)}`
+        )
+        .replace(
+            /MaterialSymbolsRounded\.woff2(?:\?v=[^'")]+)?/g,
+            `MaterialSymbolsRounded.woff2?v=${rounded.sha256.slice(0, 12)}`
+        );
+    fs.writeFileSync(cssPath, css, 'utf8');
+}
+
 async function main() {
     fs.mkdirSync(FONTS_DIR, { recursive: true });
     const valid = await loadValidIconNames();
@@ -219,6 +262,7 @@ async function main() {
         'MaterialSymbolsRounded.woff2',
         icons
     );
+    updateFontCacheBusters(outlined, rounded);
 
     for (const legacy of [
         'MaterialIcons-Regular.woff2',

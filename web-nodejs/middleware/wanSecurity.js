@@ -39,6 +39,9 @@ const ALLOWED_PATHS = new Set([
     '/api/heartbeat',
     '/api/sysinfo',
     '/api/sysinfo_ver',
+    '/api/telemetry/key',
+    '/api/devices/register',
+    '/api/devices/register/status',
     '/api/peers',
     // Phase 2: Audit
     '/api/audit',
@@ -89,7 +92,7 @@ const ALLOWED_PATH_PATTERNS = [
 const ALLOWED_METHODS = {
     '/api/login': 'POST',
     '/api/logout': 'POST',
-    '/api/currentUser': 'GET',
+    '/api/currentUser': '*',
     '/api/login-options': 'GET',
     '/api/oidc/auth': 'POST',
     '/api/oidc/auth-query': 'GET',
@@ -98,6 +101,9 @@ const ALLOWED_METHODS = {
     '/api/heartbeat': 'POST',
     '/api/sysinfo': 'POST',
     '/api/sysinfo_ver': 'POST',
+    '/api/telemetry/key': 'GET',
+    '/api/devices/register': 'POST',
+    '/api/devices/register/status': 'GET',
     '/api/peers': 'GET',
     '/api/audit': 'GET',
     '/api/audit/conn': '*',

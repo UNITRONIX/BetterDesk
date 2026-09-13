@@ -8,14 +8,14 @@
     font-style: normal;
     font-weight: 400;
     font-display: block;
-    src: url('/fonts/MaterialSymbolsOutlined.woff2') format('woff2');
+    src: url('/fonts/MaterialSymbolsOutlined.woff2?v=d7591ffce9f0') format('woff2');
 }
 @font-face {
     font-family: 'Material Symbols Rounded';
     font-style: normal;
     font-weight: 400;
     font-display: block;
-    src: url('/fonts/MaterialSymbolsRounded.woff2') format('woff2');
+    src: url('/fonts/MaterialSymbolsRounded.woff2?v=9145e9e09708') format('woff2');
 }
 
 .material-icons,

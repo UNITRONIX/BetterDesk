@@ -24,8 +24,8 @@ const conn = require('./agentBundleConnection');
 // Supported delivery targets. The portal renders one card per entry.
 // BetterDesk Support Generator patches portable desktop templates + custom.txt.
 const PLATFORMS = [
-    { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip)' },
-    { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip)' },
+    { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip + installer)' },
+    { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip + installer)' },
     { platform: 'linux',   arch: 'x64',   format: 'portable', label: 'Linux x64 portable (.tar.gz)' },
     { platform: 'linux',   arch: 'arm64', format: 'portable', label: 'Linux ARM64 portable (.tar.gz)' },
     { platform: 'macos',   arch: 'x64',   format: 'portable', label: 'macOS Intel portable (.tar.gz)' },
