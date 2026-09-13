@@ -909,6 +909,13 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
 			liveStatus = snap.Status
 		}
+		// BetterDesk clients may be reachable through the HTTP heartbeat API
+		// without a UDP/WebSocket signal entry. Use the recent DB heartbeat as
+		// the liveness source in that case.
+		if !liveOnline && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
+			liveOnline = true
+			liveStatus = peer.StatusOnline
+		}
 
 		// CDAP overlay: device connected via CDAP gateway is online
 		cdapConnected := s.cdapGw != nil && s.cdapGw.IsConnected(p.ID)
@@ -1018,6 +1025,10 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	liveStatus := peer.StatusOffline
 	if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
 		liveStatus = snap.Status
+	}
+	if !liveOnline && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
+		liveOnline = true
+		liveStatus = peer.StatusOnline
 	}
 
 	// CDAP overlay

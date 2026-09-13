@@ -192,6 +192,26 @@ describe('Devices Routes', () => {
             expect(res.body.success).toBe(true);
             expect(res.body.data.id).toBe('123456789');
         });
+
+        it('should expose Go peer basics when legacy sysinfo is unavailable', async () => {
+            serverBackend.getDeviceById.mockResolvedValue({
+                id: '123456789',
+                hostname: 'PC-1',
+                platform: 'windows',
+                os: 'Windows 10',
+                version: '10.0'
+            });
+
+            const res = await request(app).get('/api/devices/123456789');
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.sysinfo).toEqual(expect.objectContaining({
+                hostname: 'PC-1',
+                platform: 'windows',
+                os_full: 'Windows 10',
+                version: '10.0'
+            }));
+        });
     });
 
     describe('GET /api/tags', () => {

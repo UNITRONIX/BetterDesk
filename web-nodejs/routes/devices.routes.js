@@ -317,9 +317,26 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             const sysinfo = await db.getPeerSysinfo(req.params.id);
             if (sysinfo) {
                 device.sysinfo = sysinfo;
+            } else if (device.hostname || device.platform || device.version) {
+                // BetterDesk keeps the canonical peer record in Go. Populate
+                // the legacy panel shape when peer_sysinfo is not mirrored.
+                device.sysinfo = {
+                    hostname: device.hostname || '',
+                    platform: device.platform || device.os || '',
+                    os_full: device.os || device.platform || '',
+                    version: device.version || ''
+                };
             }
         } catch (e) {
-            // sysinfo table may not exist yet — silently skip
+            // sysinfo table may not exist yet; the Go peer still has basics.
+            if (device.hostname || device.platform || device.version) {
+                device.sysinfo = {
+                    hostname: device.hostname || '',
+                    platform: device.platform || device.os || '',
+                    os_full: device.os || device.platform || '',
+                    version: device.version || ''
+                };
+            }
         }
 
         // Enrich with latest heartbeat metrics
@@ -359,7 +376,7 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
                 device.telemetry = telemetry.data;
             }
         } catch (e) {
-            // Telemetry is optional; the legacy peer response remains usable.
+            console.warn(`[API:DEVICE] Telemetry lookup failed for ${req.params.id}:`, e.message);
         }
 
         // Enrich with device group memberships
