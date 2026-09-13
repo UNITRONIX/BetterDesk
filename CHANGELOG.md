@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.96] — 2026-09-13
+
 ### Fixed
 - **UX 3.5 light theme topbar:** topbar chrome (background, brand text, icons, hover) now follows light/dark theme instead of staying dark-only; notification badge hides at 0; theme toggle is atomic with target sun/moon semantics.
 - **A11y / i18n shell polish:** decorative Material Icons use `aria-hidden`; language allowlist drops stray `PACKAGE` entries; Help/MeshCentral strings localized; dashboard breadcrumb no longer duplicates “Panel”; attention metrics and activity feed aligned with real data; sidebar filter + collapsible sections; mutual close for topbar popovers; remote desk usable at short laptop heights (~1280×720).
@@ -3435,3 +3442,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.93]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.92...v3.5.93
 [3.5.94]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.93...v3.5.94
 [3.5.95]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.94...v3.5.95
+[3.5.96]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.95...v3.5.96
