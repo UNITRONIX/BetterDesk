@@ -141,3 +141,62 @@ func TestCloseOrphanedRemoteAccessSessionsSQLite(t *testing.T) {
 		t.Fatalf("second run closed %d sessions (err=%v), want 0", n, err)
 	}
 }
+
+func TestSupersedeSignalRelaySessionsSQLite(t *testing.T) {
+	database := newTestDB(t)
+	start := time.Date(2026, 9, 14, 12, 0, 0, 0, time.UTC)
+
+	// Signal observes the connection first and records it without an operator.
+	if err := database.UpsertRemoteAccessSession(&RemoteAccessSession{
+		SessionKey: "signal:relay-uuid-1", TargetID: "CFA01", Source: "signal_relay",
+		ControllerName: "95.105.192.186", StartedAt: start, LastSeenAt: start,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	// A logged-in client then reports the same connection with a real operator.
+	audit := start.Add(2 * time.Second)
+	if err := database.UpsertRemoteAccessSession(&RemoteAccessSession{
+		SessionKey: "native:client-session-1", TargetID: "CFA01", Source: "rustdesk_audit",
+		OperatorUsername: "Admin", ControllerID: "pcdoma", StartedAt: audit, LastSeenAt: audit,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	n, err := database.SupersedeSignalRelaySessions("CFA01", audit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Fatalf("superseded %d rows, want 1", n)
+	}
+
+	// Exactly one session may remain open, otherwise the connected-time report
+	// counts this single connection twice.
+	open, err := database.GetOpenRemoteAccessSessions([]string{"CFA01"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(open["CFA01"]) != 1 {
+		t.Fatalf("%d open sessions for one connection, want 1", len(open["CFA01"]))
+	}
+	if got := open["CFA01"][0].OperatorUsername; got != "Admin" {
+		t.Errorf("surviving session operator = %q, want the audit row's %q", got, "Admin")
+	}
+
+	// A signal session for a different target must not be touched.
+	if err := database.UpsertRemoteAccessSession(&RemoteAccessSession{
+		SessionKey: "signal:relay-uuid-2", TargetID: "OTHER01", Source: "signal_relay",
+		StartedAt: start, LastSeenAt: start,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if n, err := database.SupersedeSignalRelaySessions("CFA01", audit); err != nil || n != 0 {
+		t.Fatalf("second supersede touched %d rows (err=%v), want 0", n, err)
+	}
+	otherOpen, err := database.GetOpenRemoteAccessSessions([]string{"OTHER01"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(otherOpen["OTHER01"]) != 1 {
+		t.Error("an unrelated target's signal session was closed")
+	}
+}

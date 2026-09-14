@@ -311,3 +311,34 @@ func (s *SQLiteDB) CloseOrphanedRemoteAccessSessions(minAge time.Duration, reaso
 	}
 	return n, nil
 }
+
+// SupersedeSignalRelaySessions closes signal-observed sessions for a target once
+// a logged-in client reports the same connection over the audit API.
+//
+// The two paths key their rows differently — audit uses the client's own
+// session/connection ids, signal uses the relay UUID — so the same connection
+// would otherwise be counted twice in the connected-time report. The audit row
+// carries a real operator, so it wins; the signal row is closed at the moment
+// the audit record arrived rather than left to the orphan reaper.
+func (s *SQLiteDB) SupersedeSignalRelaySessions(targetID string, at time.Time) (int64, error) {
+	if targetID == "" {
+		return 0, nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	res, err := s.db.Exec(`
+		UPDATE remote_access_sessions
+		SET ended_at = CASE WHEN ? < started_at THEN started_at ELSE ? END,
+		    end_reason = 'superseded_by_audit',
+		    updated_at = datetime('now')
+		WHERE ended_at IS NULL AND source = ? AND target_id = ?`,
+		activityTimeString(at), activityTimeString(at), "signal_relay", targetID)
+	if err != nil {
+		return 0, fmt.Errorf("db: SupersedeSignalRelaySessions: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("db: SupersedeSignalRelaySessions: %w", err)
+	}
+	return n, nil
+}

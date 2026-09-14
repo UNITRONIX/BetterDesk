@@ -278,6 +278,12 @@ func (s *Server) handleAuditConnPost(w http.ResponseWriter, r *http.Request) {
 				writeInternalError(w, err, "UpsertRemoteAccessSession")
 				return
 			}
+			// Signal records the same connection independently, keyed by relay
+			// UUID. This row names a real operator, so it replaces that one
+			// rather than both being counted.
+			if _, err := s.db.SupersedeSignalRelaySessions(hostID, now); err != nil {
+				log.Printf("[audit] supersede signal sessions for %s: %v", hostID, err)
+			}
 		} else if action == "close" || action == "disconnect" {
 			if err := s.db.EndRemoteAccessSession(key, now, action); err != nil {
 				writeInternalError(w, err, "EndRemoteAccessSession")

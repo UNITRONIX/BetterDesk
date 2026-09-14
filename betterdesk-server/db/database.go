@@ -731,6 +731,9 @@ type Database interface {
 	// target device cannot still be connected, for every source. Each is ended at
 	// its own last_seen_at.
 	CloseOrphanedRemoteAccessSessions(minAge time.Duration, reason string) (int64, error)
+	// SupersedeSignalRelaySessions closes signal-observed sessions for a target
+	// when the audit API reports the same connection with a real operator.
+	SupersedeSignalRelaySessions(targetID string, at time.Time) (int64, error)
 	ListRemoteAccessSessions(filter RemoteAccessSessionFilter) ([]*RemoteAccessSession, error)
 	GetOpenRemoteAccessSessions(targetIDs []string) (map[string][]*RemoteAccessSession, error)
 	FindActiveClientUsernameByDevice(clientID string) (string, error)

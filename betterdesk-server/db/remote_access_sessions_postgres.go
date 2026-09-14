@@ -203,3 +203,22 @@ func (pg *PostgresDB) CloseOrphanedRemoteAccessSessions(minAge time.Duration, re
 	}
 	return tag.RowsAffected(), nil
 }
+
+// SupersedeSignalRelaySessions mirrors the SQLite implementation; see there for
+// why audit rows take precedence over signal-observed ones.
+func (pg *PostgresDB) SupersedeSignalRelaySessions(targetID string, at time.Time) (int64, error) {
+	if targetID == "" {
+		return 0, nil
+	}
+	tag, err := pg.pool.Exec(pg.ctx, `
+		UPDATE remote_access_sessions
+		SET ended_at = GREATEST($1, started_at),
+		    end_reason = 'superseded_by_audit',
+		    updated_at = NOW()
+		WHERE ended_at IS NULL AND source = 'signal_relay' AND target_id = $2`,
+		at.UTC(), targetID)
+	if err != nil {
+		return 0, fmt.Errorf("db: SupersedeSignalRelaySessions: %w", err)
+	}
+	return tag.RowsAffected(), nil
+}
