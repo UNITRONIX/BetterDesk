@@ -43,6 +43,19 @@ const panelWebRemoteInitiatorID = "panel-web-remote"
 // panel-web-remote so audit logs stay attributable.
 const sharedNATInitiatorID = "shared-nat-initiator"
 
+const legacyOutboundInitiatorPrefix = "legacy-controller-"
+
+func legacyOutboundInitiatorID(raddr *net.UDPAddr) string {
+	// This identifier exists only to bind relay authorization and policy calls
+	// to this exact connection. It is not a peer identity and is never stored.
+	sum := sha256.Sum256([]byte(normalizeAddrKey(raddr.String())))
+	return legacyOutboundInitiatorPrefix + hex.EncodeToString(sum[:8])
+}
+
+func isLegacyOutboundInitiator(id string) bool {
+	return strings.HasPrefix(id, legacyOutboundInitiatorPrefix)
+}
+
 // relayTransportMismatch reports whether initiator and target use incompatible
 // relay transports (WebSocket Mode vs native TCP/UDP). Signaling may still be
 // mixed; this gate only covers the typical case where ConnType reflects the
@@ -890,6 +903,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 
 	// If force relay or always use relay
 	if msg.ForceRelay || s.cfg.AlwaysUseRelay || hairpin ||
+		isLegacyOutboundInitiator(initiatorID) ||
 		s.shouldForceRelayForPeers(initiatorID, targetID) ||
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole: force relay for %s", targetID)
@@ -1073,6 +1087,7 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 	// — while the target connects with the server's UUID. This broke relay
 	// pairing every time (Issue #66).
 	if msg.ForceRelay || s.cfg.AlwaysUseRelay || hairpin ||
+		isLegacyOutboundInitiator(initiatorID) ||
 		s.shouldForceRelayForPeers(initiatorID, targetID) ||
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole (TCP): force relay for %s (returning SYMMETRIC to let client drive relay UUID)", targetID)
@@ -2143,6 +2158,9 @@ func (s *Server) authorizeRelayTicket(relayUUID, initiatorID, targetID string) b
 //     stock clients that PunchHole on a new TCP port). Multiple live peers at
 //     that IP → initiator_ambiguous_same_nat (no identity inheritance, #302),
 //     unless ALLOW_SHARED_NAT_INITIATOR authorizes synthetic shared-nat-initiator
+//  7. An anonymous, controller-only compatibility identity for initiators with
+//     no live peer at this public IP, when explicitly enabled in open
+//     enrollment mode (ALLOW_LEGACY_OUTBOUND=Y)
 //
 // Managed and locked modes additionally require an approved DB peer row (pending
 // enrollment alone is not enough). Panel proxy initiators skip peer-map / DB
@@ -2205,6 +2223,22 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 	}
 	switch len(live) {
 	case 0:
+		// 7. Official RustDesk permits a controller-only client to send
+		// PunchHole or RequestRelay without registering a local device, so no
+		// live peer exists at this address. Preserve strict auth by default; an
+		// operator may explicitly enable this compatibility path in open mode.
+		// Never infer another peer identity from the source IP. Force this
+		// synthetic initiator through relay so P2P fallback never needs a
+		// durable peer identity, and relay still requires a one-use UUID ticket.
+		if s.cfg != nil && s.cfg.AllowLegacyOutbound && s.cfg.EnrollmentMode == config.EnrollmentModeOpen {
+			id := legacyOutboundInitiatorID(raddr)
+			log.Printf("[signal] Accepted legacy controller-only outbound from %s for target %s", raddr.IP, targetID)
+			return id, true
+		}
+
+		// Never inherit an identity solely from a public IP address. NAT
+		// addresses are shared and attacker-controlled source ports are
+		// trivial to create.
 		s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_not_registered")
 		return "", false
 	case 1:
