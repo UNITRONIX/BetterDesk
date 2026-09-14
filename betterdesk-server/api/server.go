@@ -710,6 +710,9 @@ const (
 	deviceOnlineStaleGrace = time.Minute
 	webRemoteStaleAfter    = 3 * time.Minute
 	webRemoteStaleGrace    = time.Minute
+	// Leave very new sessions alone: the device online interval is written by a
+	// separate heartbeat path and may land a moment after the session itself.
+	orphanedRemoteMinAge   = 5 * time.Minute
 )
 
 // runSessionMaintenance closes device online sessions whose heartbeat stopped and
@@ -740,7 +743,7 @@ func (s *Server) runSessionMaintenance() {
 
 	// Audit-sourced sessions have no heartbeat, so they are judged by device
 	// presence instead of elapsed time.
-	if n, err := s.db.CloseOrphanedRemoteAccessSessions("device_not_connected"); err != nil {
+	if n, err := s.db.CloseOrphanedRemoteAccessSessions(orphanedRemoteMinAge, "device_not_connected"); err != nil {
 		log.Printf("[api] session maintenance: close orphaned remote sessions: %v", err)
 	} else if n > 0 {
 		log.Printf("[api] session maintenance: closed %d orphaned remote session(s)", n)

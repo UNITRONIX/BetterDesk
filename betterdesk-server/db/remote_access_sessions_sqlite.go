@@ -273,24 +273,35 @@ func scanSQLiteRemoteAccessSession(row sqliteRemoteSessionScanner) (*RemoteAcces
 //   - the remote session started before the device's current online session, so
 //     the device disconnected and came back since.
 //
+// Sessions younger than minAge are left alone. device_online_sessions is written
+// by heartbeat handlers, so a freshly recorded remote session can briefly exist
+// before its device has an open online interval; without the grace period that
+// race would close a session that has only just started.
+//
 // Each orphan is closed at its own last_seen_at, the last moment the session was
 // known to exist. Closing at "now" would invent session time that never happened.
-func (s *SQLiteDB) CloseOrphanedRemoteAccessSessions(reason string) (int64, error) {
+func (s *SQLiteDB) CloseOrphanedRemoteAccessSessions(minAge time.Duration, reason string) (int64, error) {
 	if reason == "" {
 		reason = "orphaned"
 	}
+	if minAge < 0 {
+		minAge = 0
+	}
+	cutoff := activityTimeString(time.Now().UTC().Add(-minAge))
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	res, err := s.db.Exec(`
 		UPDATE remote_access_sessions
 		SET ended_at = last_seen_at, end_reason = ?, updated_at = datetime('now')
 		WHERE ended_at IS NULL
+		  AND started_at < ?
+		  AND last_seen_at < ?
 		  AND NOT EXISTS (
 		    SELECT 1 FROM device_online_sessions d
 		    WHERE d.peer_id = remote_access_sessions.target_id
 		      AND d.ended_at IS NULL
 		      AND julianday(d.started_at) <= julianday(remote_access_sessions.started_at)
-		  )`, reason)
+		  )`, reason, cutoff, cutoff)
 	if err != nil {
 		return 0, fmt.Errorf("db: CloseOrphanedRemoteAccessSessions: %w", err)
 	}

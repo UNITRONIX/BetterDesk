@@ -77,7 +77,7 @@ func TestCloseOrphanedRemoteAccessSessionsSQLite(t *testing.T) {
 	}
 	mkSession("audit:live", "LIVE01", base, base)
 
-	n, err := database.CloseOrphanedRemoteAccessSessions("device_not_connected")
+	n, err := database.CloseOrphanedRemoteAccessSessions(time.Minute, "device_not_connected")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,8 +114,30 @@ func TestCloseOrphanedRemoteAccessSessionsSQLite(t *testing.T) {
 		t.Errorf("ended_at = %v, want last_seen_at %v", rows[0].EndedAt, base.Add(2*time.Minute))
 	}
 
+	// A session that has only just been recorded must be left alone even when no
+	// device online interval exists yet: the two are written by different paths.
+	fresh := time.Now().UTC()
+	if err := database.UpsertRemoteAccessSession(&RemoteAccessSession{
+		SessionKey: "audit:just-started", TargetID: "BRANDNEW01", Source: "rustdesk_audit",
+		StartedAt: fresh, LastSeenAt: fresh,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if n, err := database.CloseOrphanedRemoteAccessSessions(5*time.Minute, "device_not_connected"); err != nil {
+		t.Fatal(err)
+	} else if n != 0 {
+		t.Fatalf("closed %d session(s) inside the grace period, want 0", n)
+	}
+	freshOpen, err := database.GetOpenRemoteAccessSessions([]string{"BRANDNEW01"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(freshOpen["BRANDNEW01"]) != 1 {
+		t.Fatal("a session recorded seconds ago was reaped")
+	}
+
 	// Running it again must be a no-op.
-	if n, err := database.CloseOrphanedRemoteAccessSessions("device_not_connected"); err != nil || n != 0 {
+	if n, err := database.CloseOrphanedRemoteAccessSessions(time.Minute, "device_not_connected"); err != nil || n != 0 {
 		t.Fatalf("second run closed %d sessions (err=%v), want 0", n, err)
 	}
 }

@@ -178,20 +178,26 @@ func scanPostgresRemoteAccessSession(row postgresRemoteSessionScanner) (*RemoteA
 // CloseOrphanedRemoteAccessSessions mirrors the SQLite implementation: it closes
 // open remote access sessions whose target device cannot still be connected,
 // ending each at its own last_seen_at. See the SQLite version for the rationale.
-func (pg *PostgresDB) CloseOrphanedRemoteAccessSessions(reason string) (int64, error) {
+func (pg *PostgresDB) CloseOrphanedRemoteAccessSessions(minAge time.Duration, reason string) (int64, error) {
 	if reason == "" {
 		reason = "orphaned"
 	}
+	if minAge < 0 {
+		minAge = 0
+	}
+	cutoff := time.Now().UTC().Add(-minAge)
 	tag, err := pg.pool.Exec(pg.ctx, `
 		UPDATE remote_access_sessions r
 		SET ended_at = r.last_seen_at, end_reason = $1, updated_at = NOW()
 		WHERE r.ended_at IS NULL
+		  AND r.started_at < $2
+		  AND r.last_seen_at < $2
 		  AND NOT EXISTS (
 		    SELECT 1 FROM device_online_sessions d
 		    WHERE d.peer_id = r.target_id
 		      AND d.ended_at IS NULL
 		      AND d.started_at <= r.started_at
-		  )`, reason)
+		  )`, reason, cutoff)
 	if err != nil {
 		return 0, fmt.Errorf("db: CloseOrphanedRemoteAccessSessions: %w", err)
 	}
