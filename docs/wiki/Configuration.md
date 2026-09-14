@@ -42,6 +42,7 @@ Prometheus text is served at `GET /metrics` on the admin API port (gated by auth
 |----------|---------|-------------|
 | `PORT` / `SIGNAL_PORT` | `21116` | Signal server port |
 | `RELAY_PORT` | `21117` | Relay server port |
+| `RELAY_REQUIRE_TICKETS` | `Y` | Require process-local signal-issued relay UUID tickets. Set `N` only on a separate relay process that has no local signal server; all-in-one deployments must keep `Y`. |
 | `API_PORT` | signal-2 (21114) | HTTP API port |
 | `DB_URL` | `db_v2.sqlite3` | Database path or PostgreSQL DSN |
 | `RELAY_SERVERS` | auto-detected | Comma-separated relay addresses |
