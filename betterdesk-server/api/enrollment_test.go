@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -111,6 +112,25 @@ func TestDeviceRegisterIdentityConflict(t *testing.T) {
 	}
 	if resp.SuggestedDeviceID != "BD-TEST1-2" {
 		t.Fatalf("expected suggested ID BD-TEST1-2, got %q", resp.SuggestedDeviceID)
+	}
+}
+
+func TestSameDeviceUUIDAcceptsBase64Encoding(t *testing.T) {
+	stored := "a79d367d-d40b-4b47-b44d-863d4bb52b62"
+	encoded := base64.StdEncoding.EncodeToString([]byte(stored))
+	hexEncoded := hex.EncodeToString([]byte(stored))
+
+	if !sameDeviceUUID(stored, encoded) {
+		t.Fatal("expected Base64 UUID to match stored UUID")
+	}
+	if !sameDeviceUUID(hexEncoded, stored) {
+		t.Fatal("expected hex-encoded UUID to match stored UUID")
+	}
+	if !sameDeviceUUID(stored, stored) {
+		t.Fatal("expected identical UUIDs to match")
+	}
+	if sameDeviceUUID(stored, "different-machine") {
+		t.Fatal("unexpected UUID match")
 	}
 }
 
