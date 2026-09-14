@@ -38,6 +38,11 @@ type Config struct {
 
 	// Servers
 	RelayServers      string // Comma-separated relay server addresses
+	// A relay running apart from signal reports finished sessions back, so the
+	// connected-time report does not keep counting after the pipe closed. Empty
+	// on an all-in-one deployment, where signal sees the relay directly.
+	RelayReportURL    string // Base URL of the signal server's API
+	RelayReportAPIKey string // Internal API key for that server
 	RendezvousServers string // Comma-separated rendezvous server addresses
 
 	// Network mask
@@ -257,6 +262,12 @@ func (c *Config) LoadEnv() {
 	}
 	if v := os.Getenv("RELAY_SERVERS"); v != "" {
 		c.RelayServers = v
+	}
+	if v := os.Getenv("RELAY_REPORT_URL"); v != "" {
+		c.RelayReportURL = strings.TrimRight(strings.TrimSpace(v), "/")
+	}
+	if v := os.Getenv("RELAY_REPORT_API_KEY"); v != "" {
+		c.RelayReportAPIKey = strings.TrimSpace(v)
 	}
 	if v := os.Getenv("RENDEZVOUS_SERVERS"); v != "" {
 		c.RendezvousServers = v

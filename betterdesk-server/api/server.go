@@ -275,6 +275,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/peers", s.requirePermission(auth.PermDeviceView, s.handleListPeers))
 	mux.HandleFunc("POST /api/peers/activity/report", s.requirePermission(auth.PermDeviceView, s.handleDeviceActivityReport))
 	mux.HandleFunc("POST /api/peers/remote-sessions/event", s.requirePermission(auth.PermDeviceView, s.handleRemoteSessionEvent))
+	mux.HandleFunc("POST /api/relay/session-event", s.requirePermission(auth.PermDeviceView, s.handleRelaySessionEvent))
 	mux.HandleFunc("GET /api/peers/{id}", s.requirePermission(auth.PermDeviceView, s.handleGetPeer))
 	mux.HandleFunc("DELETE /api/peers/{id}", s.requirePermission(auth.PermDeviceDelete, s.handleDeletePeer))
 	mux.HandleFunc("PATCH /api/peers/{id}", s.requirePermission(auth.PermDeviceEdit, s.handleUpdatePeerFields))
