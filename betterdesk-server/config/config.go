@@ -107,6 +107,10 @@ type Config struct {
 	// (#302). Default: disabled.
 	AllowSharedNATInitiator bool
 
+	// Force Inititor to be logged in
+	// defaults to false
+	LoggedInOnlyInitiator bool
+	
 	// P2PFirst enables the classic RustDesk hole-punching handshake: instead
 	// of immediately answering the initiator with the target's (still
 	// un-punched) address, the server forwards PunchHole to the target and
@@ -201,6 +205,7 @@ func DefaultConfig() *Config {
 		SignalRateLimitPerIP:      IPRateLimitRegistrations,
 		SameNATRelay:              true, // issue #121: auto-fallback to relay on shared public IP
 		AllowSharedNATInitiator:   false, // issue #399: opt-in stock multi-NAT initiator
+ 		LoggedInOnlyInitiator:     false, // force initiators to be logged in
 		P2PFirst:                  true, // issue #157: give direct P2P a real chance before relay
 		P2PFallbackMs:             2000, // grace period for target hole punch before relay fallback
 		LogLevel:                  "info",
@@ -391,6 +396,17 @@ func (c *Config) LoadEnv() {
 			c.AllowSharedNATInitiator = false
 		}
 	}
+	
+	// force initiator to be logged in befor allowing sessions
+	if v := os.Getenv("LOGGED_IN_ONLY_INITIATOR"); v != "" {
+		switch strings.ToUpper(v) {
+		case "Y", "YES", "1", "TRUE", "ON":
+			c.LoggedInOnlyInitiator = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			c.LoggedInOnlyInitiator = false
+		}
+	}
+	
 	// Issue #157: P2P-first hole punching. Enabled by default so direct
 	// connections are attempted before relay. Set P2P_FIRST=N to restore the
 	// legacy behavior of answering the initiator immediately (always relay).
