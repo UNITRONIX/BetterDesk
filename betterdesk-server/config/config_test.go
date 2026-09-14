@@ -87,3 +87,20 @@ func TestLoadEnv_CDAPTLSRequiredEnablesTLS(t *testing.T) {
 		t.Fatal("CDAPTLS = false, want true when TLS is required")
 	}
 }
+
+func TestLoadEnv_AllowLegacyOutbound(t *testing.T) {
+	t.Setenv("ALLOW_LEGACY_OUTBOUND", "yes")
+
+	cfg := DefaultConfig()
+	cfg.LoadEnv()
+
+	if !cfg.AllowLegacyOutbound {
+		t.Fatal("AllowLegacyOutbound = false, want true")
+	}
+}
+
+func TestDefaultConfig_LegacyOutboundIsSecureByDefault(t *testing.T) {
+	if DefaultConfig().AllowLegacyOutbound {
+		t.Fatal("AllowLegacyOutbound must be disabled by default")
+	}
+}
