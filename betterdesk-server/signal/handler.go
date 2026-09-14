@@ -25,7 +25,10 @@ import (
 	"github.com/unitronix/betterdesk-server/relay"
 )
 
-// refuseRelayProtocolMismatch is returned when one peer uses WebSocket Mode
+// refuseRelayProtocolMismatch is retained for wire compatibility with clients
+// that still special-case this refusal string. Signal no longer emits it: the
+// relay bridges mixed WebSocket/native pairs itself (startMixedRelay, #397).
+// refuseRelayProtocolMismatch was returned when one peer used WebSocket Mode
 // and the other uses native TCP/UDP — their relay framings are incompatible (#290).
 const refuseRelayProtocolMismatch = "Protocol mismatch: WebSocket and native TCP/UDP cannot share a relay session"
 
@@ -1367,27 +1370,9 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		return
 	}
 
-	// WebSocket Mode and native TCP/UDP cannot share a relay session without
-	// framing translation (#290). Panel Web Remote arrives as TCP from the
-	// loopback proxy (`panel-web-remote`); hbbr mediates BytesCodec↔WS (#397).
-	initiatorType := peer.ConnUDP
-	if initiator := s.peers.Get(initiatorID); initiator != nil {
-		initiatorType = initiator.ConnType
-	}
-	if initiatorID != panelWebRemoteInitiatorID && initiatorID != sharedNATInitiatorID && relayTransportMismatch(initiatorType, target.ConnType) {
-		log.Printf("[signal] RequestRelay: protocol mismatch initiator=%s target=%s (%s vs %s)",
-			raddr, targetID, initiatorType, target.ConnType)
-		resp := &pb.RendezvousMessage{
-			Union: &pb.RendezvousMessage_RelayResponse{
-				RelayResponse: &pb.RelayResponse{
-					RefuseReason: refuseRelayProtocolMismatch,
-					RelayServer:  relayServer,
-				},
-			},
-		}
-		s.sendUDP(resp, raddr)
-		return
-	}
+	// Mixed WebSocket/native relay pairs are bridged by the relay itself
+	// (startMixedRelay, #397), so signal no longer refuses them (#290).
+	// The pair is forced through relay; P2P is not attempted across transports.
 
 	if s.billing != nil {
 		if check := s.billing.CheckConnection(targetID); !check.Allowed {
@@ -1542,24 +1527,15 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 		}
 	}
 
-	// WebSocket Mode and native TCP/UDP cannot share a relay session without
-	// framing translation (#290). Panel Web Remote (`panel-web-remote`) is
-	// exempt here; hbbr mediates BytesCodec↔WS (#397).
+	// Mixed WebSocket/native relay pairs are bridged by the relay itself
+	// (startMixedRelay, #397), so signal no longer refuses them (#290).
 	initiatorType := initiatorHint
 	if initiator := s.peers.Get(initiatorID); initiator != nil {
 		initiatorType = initiator.ConnType
 	}
-	if initiatorID != panelWebRemoteInitiatorID && initiatorID != sharedNATInitiatorID && relayTransportMismatch(initiatorType, target.ConnType) {
-		log.Printf("[signal] RequestRelay (TCP): protocol mismatch initiator=%s target=%s (%s vs %s)",
+	if relayTransportMismatch(initiatorType, target.ConnType) {
+		log.Printf("[signal] RequestRelay (TCP): mixed transport initiator=%s target=%s (%s vs %s) — relay will bridge framing",
 			raddr, targetID, initiatorType, target.ConnType)
-		return &pb.RendezvousMessage{
-			Union: &pb.RendezvousMessage_RelayResponse{
-				RelayResponse: &pb.RelayResponse{
-					RefuseReason: refuseRelayProtocolMismatch,
-					RelayServer:  relayServer,
-				},
-			},
-		}
 	}
 	if !s.authorizeRelayTicket(relayUUID, initiatorID, targetID) {
 		return s.relayTicketRejectedResponse(relayServer)
