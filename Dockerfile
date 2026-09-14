@@ -98,14 +98,13 @@ WORKDIR /app
 COPY web-nodejs/ .
 COPY --from=node-builder /app/node_modules ./node_modules/
 
-# Shared Go trees kept for server tooling / legacy workers (not Support Generator).
+# Shared Go tree kept for server tooling / legacy workers (not Support Generator).
 # Support Generator downloads BetterDesk-Client templates into data/modules/.
-COPY betterdesk-agent /app/betterdesk-agent
+# betterdesk-agent/ is no longer part of this repository, so it is not copied here.
 COPY betterdesk-server /app/betterdesk-server
 RUN mkdir -p /opt/BetterDeskConsole/agent-source \
-    && ln -sfn /app/betterdesk-agent /opt/BetterDeskConsole/agent-source/betterdesk-agent \
     && ln -sfn /app/betterdesk-server /opt/BetterDeskConsole/agent-source/betterdesk-server \
-    && chown -R betterdesk:betterdesk /app/betterdesk-agent /app/betterdesk-server /opt/BetterDeskConsole
+    && chown -R betterdesk:betterdesk /app/betterdesk-server /opt/BetterDeskConsole
 
 ARG BETTERDESK_COMMIT_SHA=unknown
 ARG BETTERDESK_IMAGE_VERSION=unknown

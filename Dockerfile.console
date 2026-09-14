@@ -48,11 +48,10 @@ RUN apk add --no-cache \
 COPY web-nodejs/ .
 COPY --from=build /app/node_modules ./node_modules/
 
-# Shared Go trees kept for server tooling / legacy workers (not Support Generator).
-COPY betterdesk-agent /app/betterdesk-agent
+# Shared Go tree kept for server tooling / legacy workers (not Support Generator).
+# betterdesk-agent/ is no longer part of this repository, so it is not copied here.
 COPY betterdesk-server /app/betterdesk-server
 RUN mkdir -p /opt/BetterDeskConsole/agent-source \
-    && ln -sfn /app/betterdesk-agent /opt/BetterDeskConsole/agent-source/betterdesk-agent \
     && ln -sfn /app/betterdesk-server /opt/BetterDeskConsole/agent-source/betterdesk-server
 
 ARG BETTERDESK_COMMIT_SHA=unknown
