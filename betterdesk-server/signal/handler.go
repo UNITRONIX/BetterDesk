@@ -2083,12 +2083,22 @@ func (s *Server) peerIDForAddr(raddr *net.UDPAddr) string {
 // punchHoleUnauthorizedResponse refuses outbound PunchHole when the initiator
 // is not an authorized peer (#302).
 func (s *Server) punchHoleUnauthorizedResponse() *pb.RendezvousMessage {
-	return &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_PunchHoleResponse{
-			PunchHoleResponse: &pb.PunchHoleResponse{
-				Failure: pb.PunchHoleResponse_ID_NOT_EXIST,
+	if s.cfg != nil && s.cfg.LoggedInOnlyInitiator {
+		return &pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_PunchHoleResponse{
+				PunchHoleResponse: &pb.PunchHoleResponse{
+					OtherFailure: "The connection is not allowed. You have not logged in.",
+				},
 			},
-		},
+		}
+	} else {
+		return &pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_PunchHoleResponse{
+				PunchHoleResponse: &pb.PunchHoleResponse{
+					Failure: pb.PunchHoleResponse_ID_NOT_EXIST,
+				},
+			},
+		}
 	}
 }
 
@@ -2155,14 +2165,15 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 	}
 
 	// 1. Same TCP session after RegisterPk (viewer-only / secure TCP, #327).
-	if id := s.tcpSessionPeerID(raddr); id != "" {
-		banned := false
-		if e := s.peers.Get(id); e != nil {
-			banned = e.Banned
+	if s.cfg != nil && !s.cfg.LoggedInOnlyInitiator  {
+		if id := s.tcpSessionPeerID(raddr); id != "" {
+			banned := false
+			if e := s.peers.Get(id); e != nil {
+				banned = e.Banned
+			}
+			return s.finalizeAuthorizedInitiator(id, raddr, targetID, banned, false)
 		}
-		return s.finalizeAuthorizedInitiator(id, raddr, targetID, banned, false)
 	}
-
 	// 2. Opaque client login token — hard-fail when present so we never fall
 	// through to address matching with a different peer identity. Normalize
 	// case so clients that uppercase the hex token still match (#399).
@@ -2183,41 +2194,46 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 		return panelWebRemoteInitiatorID, true
 	}
 
-	// 4. Exact registered endpoint (ip:port).
-	initiator := s.peers.FindByAddr(raddr)
-	if initiator != nil && !initiator.IsExpired(config.RegTimeout) {
-		return s.finalizeAuthorizedInitiator(initiator.ID, raddr, targetID, initiator.Banned, false)
-	}
+	// skip all checks if forced LOGGED_IN_ONLY_INITIATOR
+	if s.cfg != nil && !s.cfg.LoggedInOnlyInitiator {
+		
+		// 4. Exact registered endpoint (ip:port).
+		initiator := s.peers.FindByAddr(raddr)
+		if initiator != nil && !initiator.IsExpired(config.RegTimeout) {
+			return s.finalizeAuthorizedInitiator(initiator.ID, raddr, targetID, initiator.Banned, false)
+		}
 
-	// 5. udp_port hint from PunchHoleRequest (NAT-mapped port of the initiator).
-	if match := s.authorizeViaUdpPortHint(raddr, udpPort); match != nil {
-		return s.finalizeAuthorizedInitiator(match.ID, raddr, targetID, match.Banned, false)
-	}
+		// 5. udp_port hint from PunchHoleRequest (NAT-mapped port of the initiator).
+		if match := s.authorizeViaUdpPortHint(raddr, udpPort); match != nil {
+			return s.finalizeAuthorizedInitiator(match.ID, raddr, targetID, match.Banned, false)
+		}
 
-	// 6. Safe IP-only fallback: stock RustDesk opens PunchHole on a new TCP
-	// port after RegisterPk/UDP heartbeat, so FindByAddr misses. Authorize only
-	// when exactly one live peer shares this public IP.
-	var live []*peer.Entry
-	for _, e := range s.peers.FindAllByIP(raddr.IP) {
-		if e != nil && !e.IsExpired(config.RegTimeout) {
-			live = append(live, e)
+		// 6. Safe IP-only fallback: stock RustDesk opens PunchHole on a new TCP
+		// port after RegisterPk/UDP heartbeat, so FindByAddr misses. Authorize only
+		// when exactly one live peer shares this public IP.	
+		var live []*peer.Entry
+		for _, e := range s.peers.FindAllByIP(raddr.IP) {
+			if e != nil && !e.IsExpired(config.RegTimeout) {
+				live = append(live, e)
+			}
+		}
+		switch len(live) {
+		case 0:
+			s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_not_registered")
+			return "", false
+		case 1:
+			return s.finalizeAuthorizedInitiator(live[0].ID, raddr, targetID, live[0].Banned, false)
+		default:
+			if s.cfg != nil && s.cfg.AllowSharedNATInitiator {
+				log.Printf("[signal] shared-NAT initiator from %s authorized as %s (%d live peers at this IP)",
+					raddr.IP, sharedNATInitiatorID, len(live))
+				return sharedNATInitiatorID, true
+			}
+			s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_ambiguous_same_nat")
+			return "", false
 		}
 	}
-	switch len(live) {
-	case 0:
-		s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_not_registered")
-		return "", false
-	case 1:
-		return s.finalizeAuthorizedInitiator(live[0].ID, raddr, targetID, live[0].Banned, false)
-	default:
-		if s.cfg != nil && s.cfg.AllowSharedNATInitiator {
-			log.Printf("[signal] shared-NAT initiator from %s authorized as %s (%d live peers at this IP)",
-				raddr.IP, sharedNATInitiatorID, len(live))
-			return sharedNATInitiatorID, true
-		}
-		s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_ambiguous_same_nat")
-		return "", false
-	}
+	return "", false
 }
 
 // authorizeViaUdpPortHint resolves the initiator when PunchHole carries the
