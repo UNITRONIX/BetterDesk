@@ -656,6 +656,26 @@ func (s *Server) Start(ctx context.Context) error {
 		s.httpSrv.TLSConfig = tlsCfg
 	}
 
+	// Session bookkeeping must not depend on anyone having the console open.
+	// Both reapers used to run only inside HTTP handlers, so with no admin
+	// browser connected a session that ended without an explicit close event
+	// stayed "open" indefinitely and was reported as live for days.
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		ticker := time.NewTicker(sessionMaintenanceInterval)
+		defer ticker.Stop()
+		s.runSessionMaintenance()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				s.runSessionMaintenance()
+			}
+		}
+	}()
+
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -673,6 +693,55 @@ func (s *Server) Start(ctx context.Context) error {
 	}()
 
 	return nil
+}
+
+// sessionMaintenanceInterval is how often stale session bookkeeping runs in the
+// background, independently of console traffic.
+const sessionMaintenanceInterval = time.Minute
+
+// A device is considered gone once it has missed heartbeats for well beyond the
+// registration timeout; its session is then closed at last_seen + grace so the
+// record reflects when it was last actually seen, not when we noticed.
+const (
+	deviceOnlineStaleAfter = 5 * time.Minute
+	deviceOnlineStaleGrace = time.Minute
+	webRemoteStaleAfter    = 3 * time.Minute
+	webRemoteStaleGrace    = time.Minute
+)
+
+// runSessionMaintenance closes device online sessions whose heartbeat stopped and
+// remote access sessions whose target device cannot still be connected. Errors are
+// logged rather than fatal: this is bookkeeping, and a transient database error
+// must not take the API server down.
+func (s *Server) runSessionMaintenance() {
+	if s.db == nil {
+		return
+	}
+	now := time.Now().UTC()
+
+	// Devices that stopped heartbeating and never came back. A returning device
+	// self-heals its own session on the next heartbeat, so this only catches the
+	// ones that are gone for good.
+	if n, err := s.db.CloseStaleDeviceOnlineSessions(now.Add(-deviceOnlineStaleAfter), deviceOnlineStaleGrace, "heartbeat_timeout"); err != nil {
+		log.Printf("[api] session maintenance: close stale device online sessions: %v", err)
+	} else if n > 0 {
+		log.Printf("[api] session maintenance: closed %d stale device online session(s)", n)
+	}
+
+	// Web console sessions have a heartbeat, so a timeout is meaningful for them.
+	if n, err := s.db.CloseStaleWebRemoteAccessSessions(now.Add(-webRemoteStaleAfter), webRemoteStaleGrace); err != nil {
+		log.Printf("[api] session maintenance: close stale web remote sessions: %v", err)
+	} else if n > 0 {
+		log.Printf("[api] session maintenance: closed %d stale web remote session(s)", n)
+	}
+
+	// Audit-sourced sessions have no heartbeat, so they are judged by device
+	// presence instead of elapsed time.
+	if n, err := s.db.CloseOrphanedRemoteAccessSessions("device_not_connected"); err != nil {
+		log.Printf("[api] session maintenance: close orphaned remote sessions: %v", err)
+	} else if n > 0 {
+		log.Printf("[api] session maintenance: closed %d orphaned remote session(s)", n)
+	}
 }
 
 // Stop gracefully shuts down the HTTP server.
