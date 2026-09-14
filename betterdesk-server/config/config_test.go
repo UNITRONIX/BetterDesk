@@ -87,3 +87,20 @@ func TestLoadEnv_CDAPTLSRequiredEnablesTLS(t *testing.T) {
 		t.Fatal("CDAPTLS = false, want true when TLS is required")
 	}
 }
+
+func TestDefaultConfig_RelayTicketsAreRequired(t *testing.T) {
+	if !DefaultConfig().RelayRequireTickets {
+		t.Fatal("RelayRequireTickets must be enabled by default")
+	}
+}
+
+func TestLoadEnv_CanDisableRelayTicketsExplicitly(t *testing.T) {
+	t.Setenv("RELAY_REQUIRE_TICKETS", "N")
+
+	cfg := DefaultConfig()
+	cfg.LoadEnv()
+
+	if cfg.RelayRequireTickets {
+		t.Fatal("RelayRequireTickets = true, want false")
+	}
+}
