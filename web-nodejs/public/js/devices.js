@@ -92,6 +92,9 @@
     let hScrollSyncing = false;
     const pendingRequests = new Map();
     const LOAD_STAGGER_MS = 120;
+    const DEVICES_REFRESH_INTERVAL_MS = 60000;
+    let devicesRefreshTimer = null;
+    let devicesVisibilityHandler = null;
     
     function fetchOnce(endpoint, fetcher) {
         if (pendingRequests.has(endpoint)) return pendingRequests.get(endpoint);
@@ -175,6 +178,37 @@
 
         // Real-time device status push via WebSocket
         initDeviceStatusWS();
+        initDevicesBackgroundRefresh();
+    }
+
+    /**
+     * Keep the list reconciled with the server without competing with the
+     * WebSocket status updates. The visibility check avoids background
+     * requests while the tab is not being viewed.
+     */
+    function initDevicesBackgroundRefresh() {
+        stopDevicesBackgroundRefresh();
+
+        devicesRefreshTimer = window.setInterval(() => {
+            if (!document.hidden) loadDevices();
+        }, DEVICES_REFRESH_INTERVAL_MS);
+
+        devicesVisibilityHandler = () => {
+            if (!document.hidden) loadDevices();
+        };
+        document.addEventListener('visibilitychange', devicesVisibilityHandler);
+        window.addEventListener('beforeunload', stopDevicesBackgroundRefresh, { once: true });
+    }
+
+    function stopDevicesBackgroundRefresh() {
+        if (devicesRefreshTimer !== null) {
+            window.clearInterval(devicesRefreshTimer);
+            devicesRefreshTimer = null;
+        }
+        if (devicesVisibilityHandler) {
+            document.removeEventListener('visibilitychange', devicesVisibilityHandler);
+            devicesVisibilityHandler = null;
+        }
     }
 
     /**
