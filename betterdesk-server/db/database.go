@@ -727,6 +727,10 @@ type Database interface {
 	TouchRemoteAccessSession(sessionKey string, observedAt time.Time) error
 	EndRemoteAccessSession(sessionKey string, endedAt time.Time, reason string) error
 	CloseStaleWebRemoteAccessSessions(staleBefore time.Time, grace time.Duration) (int64, error)
+	// CloseOrphanedRemoteAccessSessions closes open remote access sessions whose
+	// target device cannot still be connected, for every source. Each is ended at
+	// its own last_seen_at.
+	CloseOrphanedRemoteAccessSessions(reason string) (int64, error)
 	ListRemoteAccessSessions(filter RemoteAccessSessionFilter) ([]*RemoteAccessSession, error)
 	GetOpenRemoteAccessSessions(targetIDs []string) (map[string][]*RemoteAccessSession, error)
 	FindActiveClientUsernameByDevice(clientID string) (string, error)

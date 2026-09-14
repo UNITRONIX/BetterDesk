@@ -45,3 +45,77 @@ func TestRemoteAccessSessionLifecycleSQLite(t *testing.T) {
 		t.Fatalf("closed rows=%+v err=%v", rows, err)
 	}
 }
+
+func TestCloseOrphanedRemoteAccessSessionsSQLite(t *testing.T) {
+	database := newTestDB(t)
+	base := time.Date(2026, 8, 5, 6, 47, 0, 0, time.UTC)
+
+	mkSession := func(key, target string, started time.Time, lastSeen time.Time) {
+		t.Helper()
+		if err := database.UpsertRemoteAccessSession(&RemoteAccessSession{
+			SessionKey: key, TargetID: target, Source: "rustdesk_audit",
+			StartedAt: started, LastSeenAt: lastSeen,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// 1. Device is offline entirely — nothing can be connected to it.
+	mkSession("audit:offline", "GONE01", base, base.Add(2*time.Minute))
+
+	// 2. Device is online, but it reconnected after this session began, so the
+	//    session belongs to a previous connection.
+	mkSession("audit:predates", "BACK01", base, base.Add(time.Minute))
+	if err := database.TouchDeviceOnlineSession("BACK01", base.Add(time.Hour), 0); err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Device has been online since before this session started — it may well
+	//    still be running, even though it has not been touched for a long time.
+	if err := database.TouchDeviceOnlineSession("LIVE01", base.Add(-time.Hour), 0); err != nil {
+		t.Fatal(err)
+	}
+	mkSession("audit:live", "LIVE01", base, base)
+
+	n, err := database.CloseOrphanedRemoteAccessSessions("device_not_connected")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 2 {
+		t.Fatalf("closed %d sessions, want 2", n)
+	}
+
+	open, err := database.GetOpenRemoteAccessSessions([]string{"GONE01", "BACK01", "LIVE01"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(open["GONE01"]) != 0 {
+		t.Error("session on an offline device stayed open")
+	}
+	if len(open["BACK01"]) != 0 {
+		t.Error("session predating the current online session stayed open")
+	}
+	if len(open["LIVE01"]) != 1 {
+		t.Fatalf("a session that may still be running was closed: %d open", len(open["LIVE01"]))
+	}
+
+	// Orphans must be ended at last_seen_at, never at "now", so the record does
+	// not gain session time that never happened.
+	rows, err := database.ListRemoteAccessSessions(RemoteAccessSessionFilter{
+		TargetIDs: []string{"GONE01"}, From: base.Add(-time.Hour), To: base.Add(time.Hour),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].EndedAt == nil {
+		t.Fatalf("expected one closed row, got %+v", rows)
+	}
+	if !rows[0].EndedAt.Equal(base.Add(2 * time.Minute)) {
+		t.Errorf("ended_at = %v, want last_seen_at %v", rows[0].EndedAt, base.Add(2*time.Minute))
+	}
+
+	// Running it again must be a no-op.
+	if n, err := database.CloseOrphanedRemoteAccessSessions("device_not_connected"); err != nil || n != 0 {
+		t.Fatalf("second run closed %d sessions (err=%v), want 0", n, err)
+	}
+}
