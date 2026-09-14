@@ -92,6 +92,7 @@ type Server struct {
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
 	httpSrv           *http.Server
 	wg                sync.WaitGroup
+	maintenanceStop   context.CancelFunc
 	version           string
 }
 
@@ -660,6 +661,8 @@ func (s *Server) Start(ctx context.Context) error {
 	// Both reapers used to run only inside HTTP handlers, so with no admin
 	// browser connected a session that ended without an explicit close event
 	// stayed "open" indefinitely and was reported as live for days.
+	maintenanceCtx, stopMaintenance := context.WithCancel(ctx)
+	s.maintenanceStop = stopMaintenance
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -668,7 +671,7 @@ func (s *Server) Start(ctx context.Context) error {
 		s.runSessionMaintenance()
 		for {
 			select {
-			case <-ctx.Done():
+			case <-maintenanceCtx.Done():
 				return
 			case <-ticker.C:
 				s.runSessionMaintenance()
@@ -750,6 +753,11 @@ func (s *Server) Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	s.httpSrv.Shutdown(ctx)
+	// The maintenance loop is registered with s.wg, so it has to be told to
+	// exit before waiting or Stop blocks forever.
+	if s.maintenanceStop != nil {
+		s.maintenanceStop()
+	}
 	s.wg.Wait()
 	log.Printf("[api] Stopped")
 }
