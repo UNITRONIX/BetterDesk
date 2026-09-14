@@ -1352,12 +1352,14 @@ func (s *SQLiteDB) IsRenamedPeerID(id string) (bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var count int
-	err := s.db.QueryRow(`SELECT COUNT(*) FROM id_change_history WHERE old_id = ?`, id).Scan(&count)
+	var renamed bool
+	err := s.db.QueryRow(`
+		SELECT EXISTS(SELECT 1 FROM id_change_history WHERE old_id = ?)
+		   AND NOT EXISTS(SELECT 1 FROM peers WHERE id = ?)`, id, id).Scan(&renamed)
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	return renamed, nil
 }
 
 // GetLatestRenameTarget returns the most recent new_id for old_id.
