@@ -2083,12 +2083,22 @@ func (s *Server) peerIDForAddr(raddr *net.UDPAddr) string {
 // punchHoleUnauthorizedResponse refuses outbound PunchHole when the initiator
 // is not an authorized peer (#302).
 func (s *Server) punchHoleUnauthorizedResponse() *pb.RendezvousMessage {
-	return &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_PunchHoleResponse{
-			PunchHoleResponse: &pb.PunchHoleResponse{
-				Failure: pb.PunchHoleResponse_ID_NOT_EXIST,
+	if s.cfg != nil && s.cfg.LoggedInOnlyInitiator {
+		return &pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_PunchHoleResponse{
+				PunchHoleResponse: &pb.PunchHoleResponse{
+					OtherFailure: "The connection is not allowed. You have not logged in.",
+				},
 			},
-		},
+		}
+	} else {
+		return &pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_PunchHoleResponse{
+				PunchHoleResponse: &pb.PunchHoleResponse{
+					Failure: pb.PunchHoleResponse_ID_NOT_EXIST,
+				},
+			},
+		}
 	}
 }
 
