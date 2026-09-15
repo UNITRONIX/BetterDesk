@@ -141,7 +141,10 @@ func canonicalDeviceUUID(value string) (string, bool) {
 	return "", false
 }
 
-func sameDeviceUUID(reported, stored string) bool {
+// sameAuditDeviceUUID is deliberately separate from sameDeviceUUID in the
+// branding path: clients report UUIDs with braces, dashes and mixed case, so
+// this normalises to a canonical form rather than comparing decoded strings.
+func sameAuditDeviceUUID(reported, stored string) bool {
 	reported = strings.TrimSpace(reported)
 	stored = strings.TrimSpace(stored)
 	if reported == stored {
@@ -253,7 +256,7 @@ func (s *Server) handleAuditConnPost(w http.ResponseWriter, r *http.Request) {
 			writeInternalError(w, peerErr, "AuditConnectionPeer")
 			return
 		}
-		if peer == nil || (hostUUID != "" && peer.UUID != "" && !sameDeviceUUID(hostUUID, peer.UUID)) {
+		if peer == nil || (hostUUID != "" && peer.UUID != "" && !sameAuditDeviceUUID(hostUUID, peer.UUID)) {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unknown device identity"})
 			return
 		}
