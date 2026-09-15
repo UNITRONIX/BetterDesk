@@ -2447,6 +2447,9 @@
                 await Utils.api('/api/sync-status', { method: 'POST' });
                 Notifications.success(_('devices.sync_success'));
                 loadDevices();
+                // Anything listening on the page — the connected-time report in
+                // particular — is now showing pre-sync data.
+                document.dispatchEvent(new CustomEvent('betterdesk:devices-synced'));
             } catch (error) {
                 Notifications.error(error.message || _('errors.sync_failed'));
             }

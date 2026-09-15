@@ -25,6 +25,17 @@
             panel.hidden = true;
             toggle.classList.remove('active');
         });
+        // Syncing device status changes the very data this report summarises, so
+        // refresh it too rather than leaving stale figures until a page reload.
+        // Only when the panel is open: a hidden panel reloads when it is opened.
+        document.addEventListener('betterdesk:devices-synced', () => {
+            if (!panel.hidden) {
+                loadReport();
+            } else {
+                report = null;
+            }
+        });
+
         document.getElementById('device-activity-run')?.addEventListener('click', loadReport);
         document.getElementById('device-activity-export')?.addEventListener('click', exportCSV);
         document.getElementById('device-activity-select-all')?.addEventListener('change', event => {
