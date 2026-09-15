@@ -765,7 +765,9 @@
         "oidc_redirect_url_invalid": "A Redirect URL-nek http(s)-t kell használnia, és /api/auth/oidc/callback (vagy /api/oidc/callback) végződéssel kell rendelkeznie.",
         "oidc_redirect_url_example": "Példa: {url}",
         "connection_mode_allow_shared_nat_initiator": "Shared-NAT kezdeményezők engedélyezése (stock kliensek, több eszköz egy nyilvános IP mögött)",
-        "connection_mode_allow_shared_nat_initiator_hint": "Opcionális. Ha több élő peer osztozik egy nyilvános IP-n, és a kliensnek nincs bejelentkezési tokenje vagy udp_portja, shared-nat-initiator-ként engedélyezze. Nem örököl másik eszközidentitást. Gyengíti a managed enrollment kimenő kaput ehhez a NAT-hoz — csak CGNAT/irodai helyeken kapcsolja be fiókbejelentkezés nélkül."
+        "connection_mode_allow_shared_nat_initiator_hint": "Opcionális. Ha több élő peer osztozik egy nyilvános IP-n, és a kliensnek nincs bejelentkezési tokenje vagy udp_portja, shared-nat-initiator-ként engedélyezze. Nem örököl másik eszközidentitást. Gyengíti a managed enrollment kimenő kaput ehhez a NAT-hoz — csak CGNAT/irodai helyeken kapcsolja be fiókbejelentkezés nélkül.",
+        "connection_mode_logged_in_only_initiator": "Ügyfél-bejelentkezés megkövetelése a kezdeményezőktől",
+        "connection_mode_logged_in_only_initiator_hint": "Opcionális. A szabványos RustDesk-klienseknek érvényes BetterDesk-fiókmunkamenetre van szükségük PunchHole- vagy relay-kapcsolatok indításához. A Web Remote továbbra is elérhető a panel hitelesítésével; a célgép jelszava vagy jóváhagyása továbbra is szükséges."
     },
     "audit": {
         "time": "Time",

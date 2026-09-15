@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Account-bound stock-client initiation (#414):** Added the opt-in `LOGGED_IN_ONLY_INITIATOR=Y` / **Settings → Connection → Require client login for initiators** setting. Stock RustDesk clients must present an active BetterDesk client-session token before starting PunchHole/relay connections; address, TCP-session, UDP-port, IP, and shared-NAT fallbacks are rejected in this mode. Panel Web Remote remains available through its own authentication, and target passwords/approvals remain required. Disabled by default. Ships via panel update; restart the BetterDesk Go server after enabling.
 
 ---
 

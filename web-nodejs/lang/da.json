@@ -765,7 +765,9 @@
         "oidc_redirect_url_invalid": "Redirect-URL skal bruge http(s) og ende med /api/auth/oidc/callback (eller /api/oidc/callback).",
         "oidc_redirect_url_example": "Eksempel: {url}",
         "connection_mode_allow_shared_nat_initiator": "Tillad shared-NAT-initiatorer (stock-klienter, flere enheder bag én offentlig IP)",
-        "connection_mode_allow_shared_nat_initiator_hint": "Valgfrit. Når flere aktive peers deler én offentlig IP, og klienten ikke har logintoken eller udp_port, autoriser som shared-nat-initiator. Arver ikke en anden enheds identitet. Svækker managed enrollment outbound for den NAT — aktiver kun for CGNAT/kontorer uden kontologin."
+        "connection_mode_allow_shared_nat_initiator_hint": "Valgfrit. Når flere aktive peers deler én offentlig IP, og klienten ikke har logintoken eller udp_port, autoriser som shared-nat-initiator. Arver ikke en anden enheds identitet. Svækker managed enrollment outbound for den NAT — aktiver kun for CGNAT/kontorer uden kontologin.",
+        "connection_mode_logged_in_only_initiator": "Kræv klientlogin for initiatorer",
+        "connection_mode_logged_in_only_initiator_hint": "Valgfrit. Standard-RustDesk-klienter skal have en gyldig BetterDesk-kontosession for at starte PunchHole- eller relay-forbindelser. Web Remote er fortsat tilgængelig via panelgodkendelse; målenhedens adgangskode eller godkendelse er stadig påkrævet."
     },
     "audit": {
         "time": "Time",

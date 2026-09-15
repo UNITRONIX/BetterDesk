@@ -721,6 +721,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 			"p2p_fallback_ms":            s.cfg.P2PFallbackMs,
 			"same_nat_relay":             s.cfg.SameNATRelay,
 			"allow_shared_nat_initiator": s.cfg.AllowSharedNATInitiator,
+			"logged_in_only_initiator":   s.cfg.LoggedInOnlyInitiator,
 			"relay_servers":              s.cfg.RelayServers,
 		}
 	}

@@ -1665,6 +1665,124 @@ func TestOpaqueTokenCaseInsensitive(t *testing.T) {
 	}
 }
 
+func TestLoggedInOnlyInitiatorRejectsAddressFallbacks(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.cfg.LoggedInOnlyInitiator = true
+	srv.cfg.AllowSharedNATInitiator = true
+	if err := database.UpsertPeer(&db.Peer{ID: "LOGINONLY1", Status: "ONLINE", IP: "198.51.100.210"}); err != nil {
+		t.Fatalf("UpsertPeer initiator: %v", err)
+	}
+	if err := database.UpsertPeer(&db.Peer{ID: "LOGINONLY2", Status: "ONLINE", IP: "198.51.100.210"}); err != nil {
+		t.Fatalf("UpsertPeer second initiator: %v", err)
+	}
+	putOnlinePeer(srv, "LOGINONLY1", "198.51.100.210", 41001, peer.ConnUDP)
+	putOnlinePeer(srv, "LOGINONLY2", "198.51.100.210", 41002, peer.ConnUDP)
+	putOnlinePeer(srv, "TGTLOGIN1", "203.0.113.210", 52000, peer.ConnTCP)
+
+	for _, tc := range []struct {
+		name    string
+		addr    *net.UDPAddr
+		udpPort int32
+	}{
+		{name: "exact address", addr: udpAddr("198.51.100.210", 41001)},
+		{name: "udp port hint", addr: udpAddr("198.51.100.210", 49999), udpPort: 41001},
+		{name: "single ip fallback", addr: udpAddr("198.51.100.210", 49998)},
+		{name: "shared NAT fallback", addr: udpAddr("198.51.100.210", 49997)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			id, ok := srv.requireAuthorizedInitiator(tc.addr, "TGTLOGIN1", "", tc.udpPort)
+			if ok {
+				t.Fatalf("login-only %s authorized as %q without token", tc.name, id)
+			}
+		})
+	}
+
+	id, ok := srv.requireAuthorizedInitiator(
+		udpAddr("198.51.100.210", 49996),
+		"TGTLOGIN1",
+		"not-a-client-token",
+		41001,
+	)
+	if ok {
+		t.Fatalf("malformed token must not fall back to udp_port, got id=%q", id)
+	}
+}
+
+func TestLoggedInOnlyInitiatorRejectsExpiredTokenWithoutUdpFallback(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.cfg.LoggedInOnlyInitiator = true
+	if err := database.UpsertPeer(&db.Peer{ID: "EXPIREDLOGIN1", Status: "ONLINE", IP: "198.51.100.211"}); err != nil {
+		t.Fatalf("UpsertPeer initiator: %v", err)
+	}
+	putOnlinePeer(srv, "EXPIREDLOGIN1", "198.51.100.211", 41002, peer.ConnUDP)
+	putOnlinePeer(srv, "TGTLOGIN2", "203.0.113.211", 52000, peer.ConnTCP)
+
+	user := &db.User{Username: "expired-login-user", PasswordHash: "hash", Role: "admin"}
+	if err := database.CreateUser(user); err != nil {
+		t.Fatalf("CreateUser: %v", err)
+	}
+	token := strings.Repeat("ef", 32)
+	sum := sha256.Sum256([]byte(token))
+	if err := database.CreateClientSession(&db.ClientSession{
+		TokenHash:  hex.EncodeToString(sum[:]),
+		UserID:     user.ID,
+		ClientID:   "EXPIREDLOGIN1",
+		ClientUUID: "expired-login-uuid",
+		ExpiresAt:  time.Now().UTC().Add(-time.Hour).Format("2006-01-02 15:04:05"),
+		CreatedAt:  time.Now().UTC().Add(-2 * time.Hour).Format("2006-01-02 15:04:05"),
+	}); err != nil {
+		t.Fatalf("CreateClientSession: %v", err)
+	}
+
+	id, ok := srv.requireAuthorizedInitiator(
+		udpAddr("198.51.100.211", 49997),
+		"TGTLOGIN2",
+		token,
+		41002,
+	)
+	if ok {
+		t.Fatalf("expired token must not fall back to udp_port, got id=%q", id)
+	}
+}
+
+func TestLoggedInOnlyInitiatorAllowsValidTokenAndPanelProxy(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.cfg.LoggedInOnlyInitiator = true
+	putOnlinePeer(srv, "TGTLOGIN3", "203.0.113.212", 52000, peer.ConnTCP)
+
+	user := &db.User{Username: "valid-login-user", PasswordHash: "hash", Role: "admin"}
+	if err := database.CreateUser(user); err != nil {
+		t.Fatalf("CreateUser: %v", err)
+	}
+	token := strings.Repeat("12", 32)
+	sum := sha256.Sum256([]byte(token))
+	if err := database.CreateClientSession(&db.ClientSession{
+		TokenHash:  hex.EncodeToString(sum[:]),
+		UserID:     user.ID,
+		ClientID:   "VALIDLOGIN1",
+		ClientUUID: "valid-login-uuid",
+		ExpiresAt:  time.Now().UTC().Add(time.Hour).Format("2006-01-02 15:04:05"),
+		CreatedAt:  time.Now().UTC().Format("2006-01-02 15:04:05"),
+	}); err != nil {
+		t.Fatalf("CreateClientSession: %v", err)
+	}
+
+	id, ok := srv.requireAuthorizedInitiator(
+		udpAddr("198.51.100.212", 49996),
+		"TGTLOGIN3",
+		token,
+		0,
+	)
+	if !ok || id != "VALIDLOGIN1" {
+		t.Fatalf("valid token auth = (%q, %v), want VALIDLOGIN1", id, ok)
+	}
+
+	id, ok = srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 49995), "TGTLOGIN3", "", 0)
+	if !ok || id != panelWebRemoteInitiatorID {
+		t.Fatalf("panel proxy auth = (%q, %v), want %s", id, ok, panelWebRemoteInitiatorID)
+	}
+}
+
 func TestTCPSessionPeerIDAuthorizesWithoutFindByAddr(t *testing.T) {
 	// #327: RegisterPk on the same Secure TCP session binds peerID even when
 	// the peer map entry has a different registered port (no IP-only fallback).

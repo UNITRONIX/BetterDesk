@@ -765,7 +765,9 @@
         "oidc_redirect_url_invalid": "Omdirigerings-URL måste använda http(s) och sluta med /api/auth/oidc/callback (eller /api/oidc/callback).",
         "oidc_redirect_url_example": "Exempel: {url}",
         "connection_mode_allow_shared_nat_initiator": "Tillåt shared-NAT-initiatorer (stock-klienter, flera enheter bakom en offentlig IP)",
-        "connection_mode_allow_shared_nat_initiator_hint": "Valfritt. När flera aktiva peers delar en offentlig IP och klienten saknar inloggningstoken eller udp_port, auktorisera som shared-nat-initiator. Ärver inte en annan enhets identitet. Försvagar managed enrollment outbound för den NAT:en — aktivera endast för CGNAT/kontor utan kontologin."
+        "connection_mode_allow_shared_nat_initiator_hint": "Valfritt. När flera aktiva peers delar en offentlig IP och klienten saknar inloggningstoken eller udp_port, auktorisera som shared-nat-initiator. Ärver inte en annan enhets identitet. Försvagar managed enrollment outbound för den NAT:en — aktivera endast för CGNAT/kontor utan kontologin.",
+        "connection_mode_logged_in_only_initiator": "Kräv klientinloggning för initiatorer",
+        "connection_mode_logged_in_only_initiator_hint": "Valfritt. Standard-RustDesk-klienter behöver en giltig BetterDesk-kontosession för att starta PunchHole- eller relay-anslutningar. Web Remote är fortfarande tillgängligt via panelautentisering; målenhetens lösenord eller godkännande krävs fortfarande."
     },
     "audit": {
         "time": "Time",

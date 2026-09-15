@@ -763,7 +763,9 @@
         "oidc_redirect_url_invalid": "L'URL de redirection doit utiliser http(s) et se terminer par /api/auth/oidc/callback (ou /api/oidc/callback).",
         "oidc_redirect_url_example": "Exemple : {url}",
         "connection_mode_allow_shared_nat_initiator": "Autoriser les initiateurs shared-NAT (clients stock, plusieurs appareils derrière une IP publique)",
-        "connection_mode_allow_shared_nat_initiator_hint": "Optionnel. Si plusieurs pairs actifs partagent une IP publique et que le client n'a ni jeton de connexion ni udp_port, autoriser comme shared-nat-initiator. N'hérite pas d'une autre identité. Affaiblit la porte d'enrollment sortante gérée pour ce NAT — activer seulement pour CGNAT/bureaux sans connexion compte."
+        "connection_mode_allow_shared_nat_initiator_hint": "Optionnel. Si plusieurs pairs actifs partagent une IP publique et que le client n'a ni jeton de connexion ni udp_port, autoriser comme shared-nat-initiator. N'hérite pas d'une autre identité. Affaiblit la porte d'enrollment sortante gérée pour ce NAT — activer seulement pour CGNAT/bureaux sans connexion compte.",
+        "connection_mode_logged_in_only_initiator": "Exiger la connexion du client pour les initiateurs",
+        "connection_mode_logged_in_only_initiator_hint": "Optionnel. Les clients RustDesk standard doivent disposer d'une session de compte BetterDesk valide pour démarrer des connexions PunchHole ou relay. Web Remote reste disponible via l'authentification du panneau ; le mot de passe ou l'approbation de l'appareil cible reste requis."
     },
     "audit": {
         "time": "Heure",

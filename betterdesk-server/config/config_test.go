@@ -87,3 +87,20 @@ func TestLoadEnv_CDAPTLSRequiredEnablesTLS(t *testing.T) {
 		t.Fatal("CDAPTLS = false, want true when TLS is required")
 	}
 }
+
+func TestLoadEnv_LoggedInOnlyInitiator(t *testing.T) {
+	t.Setenv("LOGGED_IN_ONLY_INITIATOR", "yes")
+
+	cfg := DefaultConfig()
+	cfg.LoadEnv()
+	if !cfg.LoggedInOnlyInitiator {
+		t.Fatal("LoggedInOnlyInitiator = false, want true")
+	}
+
+	t.Setenv("LOGGED_IN_ONLY_INITIATOR", "off")
+	cfg = DefaultConfig()
+	cfg.LoadEnv()
+	if cfg.LoggedInOnlyInitiator {
+		t.Fatal("LoggedInOnlyInitiator = true, want false")
+	}
+}

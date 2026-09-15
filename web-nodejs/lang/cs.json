@@ -759,7 +759,9 @@
         "oidc_redirect_url_invalid": "Redirect URL musí používat http(s) a končit na /api/auth/oidc/callback (nebo /api/oidc/callback).",
         "oidc_redirect_url_example": "Příklad: {url}",
         "connection_mode_allow_shared_nat_initiator": "Povolit shared-NAT iniciátory (stock klienti, více zařízení za jednou veřejnou IP)",
-        "connection_mode_allow_shared_nat_initiator_hint": "Volitelné. Pokud více živých peerů sdílí jednu veřejnou IP a klient nemá přihlašovací token ani udp_port, autorizovat jako shared-nat-initiator. Nedědí identitu jiného zařízení. Oslabuje managed enrollment outbound bránu pro tento NAT — zapněte jen pro CGNAT/kanceláře bez přihlášení účtem."
+        "connection_mode_allow_shared_nat_initiator_hint": "Volitelné. Pokud více živých peerů sdílí jednu veřejnou IP a klient nemá přihlašovací token ani udp_port, autorizovat jako shared-nat-initiator. Nedědí identitu jiného zařízení. Oslabuje managed enrollment outbound bránu pro tento NAT — zapněte jen pro CGNAT/kanceláře bez přihlášení účtem.",
+        "connection_mode_logged_in_only_initiator": "Vyžadovat přihlášení klienta pro iniciátory",
+        "connection_mode_logged_in_only_initiator_hint": "Volitelné. Standardní klienti RustDesk potřebují platnou relaci účtu BetterDesk k zahájení spojení PunchHole nebo relay. Web Remote zůstává dostupný přes ověření panelu; heslo cílového zařízení nebo schválení je stále vyžadováno."
     },
     "audit": {
         "time": "Čas",

@@ -107,6 +107,11 @@ type Config struct {
 	// (#302). Default: disabled.
 	AllowSharedNATInitiator bool
 
+	// LoggedInOnlyInitiator requires a valid BetterDesk RustDesk client
+	// session token for outbound PunchHole/RequestRelay initiation. The
+	// panel Web Remote proxy remains an explicit exception. Default: disabled.
+	LoggedInOnlyInitiator bool
+
 	// P2PFirst enables the classic RustDesk hole-punching handshake: instead
 	// of immediately answering the initiator with the target's (still
 	// un-punched) address, the server forwards PunchHole to the target and
@@ -199,10 +204,11 @@ func DefaultConfig() *Config {
 		MeshAgentCertFile:         "mesh_agent_server.pem",
 		MeshRateLimit:             30,
 		SignalRateLimitPerIP:      IPRateLimitRegistrations,
-		SameNATRelay:              true, // issue #121: auto-fallback to relay on shared public IP
+		SameNATRelay:              true,  // issue #121: auto-fallback to relay on shared public IP
 		AllowSharedNATInitiator:   false, // issue #399: opt-in stock multi-NAT initiator
-		P2PFirst:                  true, // issue #157: give direct P2P a real chance before relay
-		P2PFallbackMs:             2000, // grace period for target hole punch before relay fallback
+		LoggedInOnlyInitiator:     false, // issue #414: require client login for stock initiators
+		P2PFirst:                  true,  // issue #157: give direct P2P a real chance before relay
+		P2PFallbackMs:             2000,  // grace period for target hole punch before relay fallback
 		LogLevel:                  "info",
 		BillingMaxClockSkewMS:     2000,
 		BillingRequireSyncedClock: true,
@@ -389,6 +395,17 @@ func (c *Config) LoadEnv() {
 			c.AllowSharedNATInitiator = true
 		case "N", "NO", "0", "FALSE", "OFF":
 			c.AllowSharedNATInitiator = false
+		}
+	}
+	// Issue #414: require a valid BetterDesk client login token for stock
+	// PunchHole/RequestRelay initiators. Panel Web Remote remains allowed via
+	// PANEL_SIGNAL_PROXY_CIDRS.
+	if v := os.Getenv("LOGGED_IN_ONLY_INITIATOR"); v != "" {
+		switch strings.ToUpper(strings.TrimSpace(v)) {
+		case "Y", "YES", "1", "TRUE", "ON":
+			c.LoggedInOnlyInitiator = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			c.LoggedInOnlyInitiator = false
 		}
 	}
 	// Issue #157: P2P-first hole punching. Enabled by default so direct

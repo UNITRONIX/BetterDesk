@@ -1929,7 +1929,7 @@ router.get('/api/settings/connection-mode', requireAuth, requirePermission('serv
 
 /**
  * PUT /api/settings/connection-mode — persist P2P/relay strategy
- * Body: { mode, p2p_fallback_ms?, same_nat_relay?, allow_shared_nat_initiator?, restart?: boolean }
+ * Body: { mode, p2p_fallback_ms?, same_nat_relay?, allow_shared_nat_initiator?, logged_in_only_initiator?, restart?: boolean }
  */
 router.put('/api/settings/connection-mode', requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
@@ -1938,13 +1938,14 @@ router.put('/api/settings/connection-mode', requireAuth, requirePermission('serv
             mode: body.mode,
             p2p_fallback_ms: body.p2p_fallback_ms,
             same_nat_relay: body.same_nat_relay,
-            allow_shared_nat_initiator: body.allow_shared_nat_initiator
+            allow_shared_nat_initiator: body.allow_shared_nat_initiator,
+            logged_in_only_initiator: body.logged_in_only_initiator
         });
 
         await db.logAction(
             req.session?.userId,
             'connection_mode_changed',
-            `Connection mode set to ${result.settings.mode} (${result.source})`,
+            `Connection mode set to ${result.settings.mode}, logged_in_only_initiator=${result.settings.logged_in_only_initiator ? 'Y' : 'N'} (${result.source})`,
             req.ip
         );
 

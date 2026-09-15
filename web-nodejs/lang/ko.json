@@ -759,7 +759,9 @@
         "oidc_redirect_url_invalid": "리디렉션 URL은 http(s)를 사용하고 /api/auth/oidc/callback(또는 /api/oidc/callback)로 끝나야 합니다.",
         "oidc_redirect_url_example": "예: {url}",
         "connection_mode_allow_shared_nat_initiator": "공유 NAT 개시자 허용 (스톡 클라이언트, 동일 공용 IP의 여러 장치)",
-        "connection_mode_allow_shared_nat_initiator_hint": "선택 사항. 여러 활성 피어가 하나의 공용 IP를 공유하고 클라이언트에 로그인 토큰이나 udp_port가 없으면 shared-nat-initiator로 승인합니다. 다른 장치 ID를 상속하지 않습니다. 해당 NAT의 managed 등록 아웃바운드 게이트를 약화합니다 — 계정 로그인이 불가능한 CGNAT/사무실에서만 사용하세요."
+        "connection_mode_allow_shared_nat_initiator_hint": "선택 사항. 여러 활성 피어가 하나의 공용 IP를 공유하고 클라이언트에 로그인 토큰이나 udp_port가 없으면 shared-nat-initiator로 승인합니다. 다른 장치 ID를 상속하지 않습니다. 해당 NAT의 managed 등록 아웃바운드 게이트를 약화합니다 — 계정 로그인이 불가능한 CGNAT/사무실에서만 사용하세요.",
+        "connection_mode_logged_in_only_initiator": "개시자에게 클라이언트 로그인 요구",
+        "connection_mode_logged_in_only_initiator_hint": "선택 사항. 표준 RustDesk 클라이언트는 PunchHole 또는 relay 연결을 시작하려면 유효한 BetterDesk 계정 세션이 필요합니다. Web Remote는 패널 인증을 통해 계속 사용할 수 있으며 대상 장치의 비밀번호 또는 승인도 여전히 필요합니다."
     },
     "audit": {
         "time": "Time",

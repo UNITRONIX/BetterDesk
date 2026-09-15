@@ -765,7 +765,9 @@
         "oidc_redirect_url_invalid": "URL chuyển hướng phải dùng http(s) và kết thúc bằng /api/auth/oidc/callback (hoặc /api/oidc/callback).",
         "oidc_redirect_url_example": "Ví dụ: {url}",
         "connection_mode_allow_shared_nat_initiator": "Cho phép initiator shared-NAT (client stock, nhiều thiết bị sau cùng một IP công cộng)",
-        "connection_mode_allow_shared_nat_initiator_hint": "Tùy chọn. Khi nhiều peer đang sống dùng chung một IP công cộng và client không có token đăng nhập hay udp_port, ủy quyền là shared-nat-initiator. Không kế thừa danh tính thiết bị khác. Làm yếu cổng enrollment outbound managed cho NAT đó — chỉ bật cho site CGNAT/văn phòng không đăng nhập tài khoản."
+        "connection_mode_allow_shared_nat_initiator_hint": "Tùy chọn. Khi nhiều peer đang sống dùng chung một IP công cộng và client không có token đăng nhập hay udp_port, ủy quyền là shared-nat-initiator. Không kế thừa danh tính thiết bị khác. Làm yếu cổng enrollment outbound managed cho NAT đó — chỉ bật cho site CGNAT/văn phòng không đăng nhập tài khoản.",
+        "connection_mode_logged_in_only_initiator": "Yêu cầu client đăng nhập đối với initiator",
+        "connection_mode_logged_in_only_initiator_hint": "Tùy chọn. Client RustDesk tiêu chuẩn cần một phiên tài khoản BetterDesk hợp lệ để bắt đầu kết nối PunchHole hoặc relay. Web Remote vẫn dùng được qua xác thực của bảng điều khiển; mật khẩu hoặc phê duyệt trên thiết bị đích vẫn bắt buộc."
     },
     "audit": {
         "time": "Time",

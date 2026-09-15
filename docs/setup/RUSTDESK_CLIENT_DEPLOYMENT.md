@@ -124,6 +124,8 @@ BetterDesk **Pro features** (address book sync, device list, audit) activate aft
 
 That BetterDesk login does **not** replace the target’s **permanent peer password**. For unattended access, set `--password` (or equivalent) on each target during deploy and share that peer secret with authorized operators; user/device groups only scope which devices appear in the address book.
 
+For stricter account-bound initiation, enable `LOGGED_IN_ONLY_INITIATOR=Y` on the BetterDesk server (or **Settings → Connection → Require client login for initiators**). With this opt-in setting, stock clients need an active BetterDesk client session before starting PunchHole or relay connections; the session follows the configured client-session expiry and sliding-renewal policy. It does not require a new interactive login before every connection, replace the target password/approve step, or apply to the separately authenticated Web Remote panel path.
+
 ## Troubleshooting
 
 | Symptom | Check |

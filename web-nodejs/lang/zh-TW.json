@@ -763,7 +763,9 @@
         "oidc_redirect_url_invalid": "重新導向 URL 必須使用 http(s)，並以 /api/auth/oidc/callback（或 /api/oidc/callback）結尾。",
         "oidc_redirect_url_example": "範例：{url}",
         "connection_mode_allow_shared_nat_initiator": "允許共用 NAT 發起端（官方用戶端，同一公網 IP 下多台裝置）",
-        "connection_mode_allow_shared_nat_initiator_hint": "選用。當多個線上對等端共用同一公網 IP，且用戶端沒有登入權杖或 udp_port 時，授權為 shared-nat-initiator。不會繼承其他裝置身分。會削弱該 NAT 的受管註冊出站閘道——僅在無法使用帳戶登入的 CGNAT／辦公室站點啟用。"
+        "connection_mode_allow_shared_nat_initiator_hint": "選用。當多個線上對等端共用同一公網 IP，且用戶端沒有登入權杖或 udp_port 時，授權為 shared-nat-initiator。不會繼承其他裝置身分。會削弱該 NAT 的受管註冊出站閘道——僅在無法使用帳戶登入的 CGNAT／辦公室站點啟用。",
+        "connection_mode_logged_in_only_initiator": "要求發起端用戶端登入",
+        "connection_mode_logged_in_only_initiator_hint": "選用。標準 RustDesk 用戶端必須擁有有效的 BetterDesk 帳戶工作階段，才能發起 PunchHole 或 relay 連線。Web Remote 仍可透過面板驗證使用；目標裝置的密碼或核准仍然必要。"
     },
     "audit": {
         "time": "時間",

@@ -2153,28 +2153,54 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 	if raddr == nil {
 		return "", false
 	}
+	loginOnly := s.cfg != nil && s.cfg.LoggedInOnlyInitiator
 
-	// 1. Same TCP session after RegisterPk (viewer-only / secure TCP, #327).
-	if id := s.tcpSessionPeerID(raddr); id != "" {
-		banned := false
-		if e := s.peers.Get(id); e != nil {
-			banned = e.Banned
-		}
-		return s.finalizeAuthorizedInitiator(id, raddr, targetID, banned, false)
+	// The panel proxy is already authenticated at the WebSocket upgrade. Keep
+	// Web Remote working in login-only mode without requiring a stock-client
+	// session token.
+	if loginOnly && s.cfg.IPIsPanelSignalProxy(raddr.IP) {
+		return panelWebRemoteInitiatorID, true
 	}
 
-	// 2. Opaque client login token — hard-fail when present so we never fall
-	// through to address matching with a different peer identity. Normalize
-	// case so clients that uppercase the hex token still match (#399).
-	if tok := strings.ToLower(strings.TrimSpace(token)); tok != "" && opaqueClientTokenRegexp.MatchString(tok) {
-		if id, ok := s.authorizeViaClientToken(tok, raddr, targetID); ok {
+	// 1. Same TCP session after RegisterPk (viewer-only / secure TCP, #327).
+	if !loginOnly {
+		if id := s.tcpSessionPeerID(raddr); id != "" {
+			banned := false
+			if e := s.peers.Get(id); e != nil {
+				banned = e.Banned
+			}
+			return s.finalizeAuthorizedInitiator(id, raddr, targetID, banned, false)
+		}
+	}
+
+	// 2. Opaque client login token. In login-only mode, a token must be both
+	// syntactically valid and active; no address-based fallback is permitted.
+	if tok := strings.TrimSpace(token); tok != "" {
+		if !opaqueClientTokenRegexp.MatchString(tok) {
+			if loginOnly {
+				s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_login_required")
+				return "", false
+			}
+		} else if id, ok := s.authorizeViaClientToken(tok, raddr, targetID); ok {
 			return id, true
+		} else if loginOnly {
+			// Do not let an expired/revoked token fall through to udp_port or
+			// any other identity heuristic when the strict gate is enabled.
+			s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_login_required")
+			return "", false
+		} else {
+			// Invalid/expired opaque token: still allow exact udp_port
+			// correlation (stronger than IP-only), but never single-IP
+			// FindByIP inheritance.
+			if match := s.authorizeViaUdpPortHint(raddr, udpPort); match != nil {
+				return s.finalizeAuthorizedInitiator(match.ID, raddr, targetID, match.Banned, false)
+			}
+			return "", false
 		}
-		// Invalid/expired opaque token: still allow exact udp_port correlation
-		// (stronger than IP-only), but never single-IP FindByIP inheritance.
-		if match := s.authorizeViaUdpPortHint(raddr, udpPort); match != nil {
-			return s.finalizeAuthorizedInitiator(match.ID, raddr, targetID, match.Banned, false)
-		}
+	}
+
+	if loginOnly {
+		s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_login_required")
 		return "", false
 	}
 

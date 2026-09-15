@@ -765,7 +765,9 @@
         "oidc_redirect_url_invalid": "Redirect URL ต้องใช้ http(s) และลงท้ายด้วย /api/auth/oidc/callback (หรือ /api/oidc/callback)",
         "oidc_redirect_url_example": "ตัวอย่าง: {url}",
         "connection_mode_allow_shared_nat_initiator": "อนุญาตตัวเริ่มต้น shared-NAT (ไคลเอนต์ stock, หลายอุปกรณ์หลัง IP สาธารณะเดียวกัน)",
-        "connection_mode_allow_shared_nat_initiator_hint": "ทางเลือก เมื่อ peer ที่ใช้งานอยู่หลายตัวใช้ IP สาธารณะเดียวกัน และไคลเอนต์ไม่มีโทเค็นเข้าสู่ระบบหรือ udp_port ให้รับรองเป็น shared-nat-initiator ไม่สืบทอดตัวตนของอุปกรณ์อื่น ทำให้เกต enrollment ขาออกแบบจัดการอ่อนลงสำหรับ NAT นั้น — เปิดเฉพาะไซต์ CGNAT/สำนักงานที่ไม่มีล็อกอินบัญชี"
+        "connection_mode_allow_shared_nat_initiator_hint": "ทางเลือก เมื่อ peer ที่ใช้งานอยู่หลายตัวใช้ IP สาธารณะเดียวกัน และไคลเอนต์ไม่มีโทเค็นเข้าสู่ระบบหรือ udp_port ให้รับรองเป็น shared-nat-initiator ไม่สืบทอดตัวตนของอุปกรณ์อื่น ทำให้เกต enrollment ขาออกแบบจัดการอ่อนลงสำหรับ NAT นั้น — เปิดเฉพาะไซต์ CGNAT/สำนักงานที่ไม่มีล็อกอินบัญชี",
+        "connection_mode_logged_in_only_initiator": "กำหนดให้ผู้เริ่มต้นต้องเข้าสู่ระบบไคลเอนต์",
+        "connection_mode_logged_in_only_initiator_hint": "ตัวเลือกนี้ทำให้ไคลเอนต์ RustDesk มาตรฐานต้องมีเซสชันบัญชี BetterDesk ที่ถูกต้องเพื่อเริ่มการเชื่อมต่อ PunchHole หรือ relay ส่วน Web Remote ยังคงใช้ได้ผ่านการยืนยันตัวตนของแผงควบคุม และยังต้องใช้รหัสผ่านหรือการอนุมัติจากอุปกรณ์ปลายทาง"
     },
     "audit": {
         "time": "Time",

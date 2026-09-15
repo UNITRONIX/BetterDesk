@@ -611,6 +611,8 @@
             if (sameNat) sameNat.checked = data.same_nat_relay !== false;
             const sharedNatInit = document.getElementById('conn-allow-shared-nat-initiator');
             if (sharedNatInit) sharedNatInit.checked = data.allow_shared_nat_initiator === true;
+            const loggedInOnlyInit = document.getElementById('conn-logged-in-only-initiator');
+            if (loggedInOnlyInit) loggedInOnlyInit.checked = data.logged_in_only_initiator === true;
 
             if (sourceEl) {
                 const src = data.source || data.deployment || 'defaults';
@@ -627,7 +629,8 @@
                     + (r.always_use_relay ? 'relay only' : 'P2P first')
                     + ', fallback=' + (r.p2p_fallback_ms ?? '-')
                     + 'ms, same_nat_relay=' + (r.same_nat_relay ? 'Y' : 'N')
-                    + ', allow_shared_nat_initiator=' + (r.allow_shared_nat_initiator ? 'Y' : 'N');
+                    + ', allow_shared_nat_initiator=' + (r.allow_shared_nat_initiator ? 'Y' : 'N')
+                    + ', logged_in_only_initiator=' + (r.logged_in_only_initiator ? 'Y' : 'N');
             } else if (runtimeEl) {
                 runtimeEl.hidden = true;
             }
@@ -646,11 +649,13 @@
         const fallbackMs = parseInt(document.getElementById('conn-p2p-fallback-ms')?.value, 10);
         const sameNatRelay = document.getElementById('conn-same-nat-relay')?.checked !== false;
         const allowSharedNat = document.getElementById('conn-allow-shared-nat-initiator')?.checked === true;
+        const loggedInOnly = document.getElementById('conn-logged-in-only-initiator')?.checked === true;
         return {
             mode,
             p2p_fallback_ms: Number.isFinite(fallbackMs) ? fallbackMs : 2000,
             same_nat_relay: sameNatRelay,
-            allow_shared_nat_initiator: allowSharedNat
+            allow_shared_nat_initiator: allowSharedNat,
+            logged_in_only_initiator: loggedInOnly
         };
     }
 
