@@ -239,6 +239,7 @@ func (s *Server) startWSRelay(ws1, ws2 *websocket.Conn, addr1, addr2, uuid strin
 
 	s.ActiveSessions.Add(-1)
 	log.Printf("[relay] Session ended: UUID %s (active: %d)", relayUUIDLogID(uuid), s.ActiveSessions.Load())
+	s.reportSessionEnded(uuid, time.Now().UTC())
 }
 
 // copyWSMessages forwards complete WebSocket messages from src to dst.
