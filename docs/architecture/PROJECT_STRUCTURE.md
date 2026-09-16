@@ -27,9 +27,10 @@ BetterDesk/
 └── VERSION
 ```
 
-**Active end-user client:** `betterdesk-support-agent/` (Go/Fyne Support Agent) + shared engine `betterdesk-agent/`. Built via Console Generator (`web-nodejs` `agentBuildWorker`).
-
-**Lower priority / not the current product focus:** `betterdesk-agent-client/` (Tauri Agent Client alpha).
+**Client Generator:** The console builds BetterDesk-Client template bundles and stores them
+under the console data module. The withdrawn `betterdesk-support-agent/`,
+`betterdesk-agent/`, and `betterdesk-agent-client/` source trees are not part of the
+Docker images or the panel update path.
 
 ## Core components
 
@@ -38,12 +39,6 @@ Clean-room Go implementation replacing RustDesk `hbbs`+`hbbr`: UDP/TCP/WS signal
 
 ### `web-nodejs/`
 Node.js management panel: devices, users, policies, updates, remote viewer, i18n (26 locales). Talks to the Go API. Runtime: Node.js **22+** (Docker/CI/installers target **24 LTS**).
-
-### `betterdesk-support-agent/`
-Inbound-only end-user Support Agent (Go + Fyne). Branded installers produced by the panel Generator (Windows `.exe`/`.msi`, Linux portable/AppImage/`.deb`/`.rpm`). Connects via CDAP for Web Remote sessions; per-device enrollment; supervised/unattended access.
-
-### `betterdesk-agent/`
-Shared CDAP OS-agent engine (desktop, files, terminal, clipboard, audio) embedded by Support Agent.
 
 ### `rdclient-desktop/`
 Tauri 2 **operator** desktop shell that hosts the panel remote UI. Vendored `wry` patch + documented glib/`RUSTSEC` ignore until GTK stack migration.

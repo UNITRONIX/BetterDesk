@@ -8,7 +8,6 @@ on:
       - 'betterdesk.sh'
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
-      - 'betterdesk-agent/install/**'
       - 'scripts/installer-protocol-check.js'
       - 'web-nodejs/lib/safePath.js'
       - 'web-nodejs/services/updateService.js'
@@ -25,7 +24,6 @@ on:
       - 'betterdesk.sh'
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
-      - 'betterdesk-agent/install/**'
       - 'scripts/installer-protocol-check.js'
       - 'web-nodejs/lib/safePath.js'
       - 'web-nodejs/services/updateService.js'
@@ -60,15 +58,13 @@ jobs:
           done < <(printf '%s\n' \
             install.sh \
             betterdesk.sh \
-            betterdesk-docker.sh \
-            betterdesk-agent/install/install.sh)
+            betterdesk-docker.sh)
       - name: Run ShellCheck
         run: |
           shellcheck --severity=error \
             install.sh \
             betterdesk.sh \
-            betterdesk-docker.sh \
-            betterdesk-agent/install/install.sh
+            betterdesk-docker.sh
 
   powershell-static:
     name: PowerShell installer syntax
@@ -79,8 +75,7 @@ jobs:
         shell: pwsh
         run: |
           $files = @(
-            "betterdesk.ps1",
-            "betterdesk-agent/install/install.ps1"
+            "betterdesk.ps1"
           )
           foreach ($file in $files) {
             $tokens = $null

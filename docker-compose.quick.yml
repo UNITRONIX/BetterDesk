@@ -57,6 +57,8 @@ services:
       - console-data:/app/data:ro
     environment:
       - ENCRYPTED_ONLY=1
+      # Keep Go and Node.js on the same primary SQLite database.
+      - DB_URL=/opt/rustdesk/db_v2.sqlite3
       # RustDesk client folders/groups (issue #138). Ignored when DB_URL is postgres://.
       - AUTH_DB_PATH=/app/data/auth.db
       # Admin credentials (first run only; existing users are not overwritten).

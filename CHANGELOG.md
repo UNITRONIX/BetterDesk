@@ -1,7 +1,10 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Docker image build sources:** Console and all-in-one images no longer copy the withdrawn `betterdesk-agent` / `betterdesk-support-agent` trees. Client Generator builds use the BetterDesk-Client templates shipped through the console data module.
+
+### Fixed
+- **Docker admin bootstrap database alignment (#385):** Split Compose variants now explicitly point Go and Node.js at the shared `/opt/rustdesk/db_v2.sqlite3` database, preventing credentials-file and panel-auth state from diverging.
 
 ---
 
