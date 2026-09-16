@@ -1326,8 +1326,9 @@
             const id = parseInt(select.value, 10);
             if (!id) return;
             try {
-                await Utils.api(`/api/settings/branding/profiles/${id}/duplicate`, { method: 'POST', body: {} });
-                await refreshBrandingProfiles(select);
+                const resp = await Utils.api(`/api/settings/branding/profiles/${id}/duplicate`, { method: 'POST', body: {} });
+                const duplicatedId = resp?.data?.id;
+                await refreshBrandingProfiles(select, duplicatedId);
                 Notifications.success(_('branding.profile_duplicated'));
             } catch (e) {
                 Notifications.error(e.message || _('errors.server_error'));
@@ -1348,16 +1349,17 @@
         });
     }
 
-    async function refreshBrandingProfiles(select) {
+    async function refreshBrandingProfiles(select, selectedId = '') {
         try {
             const resp = await Utils.api('/api/settings/branding/profiles');
             _brandingProfiles = resp.data || resp || [];
             select.innerHTML = `<option value="">${_('branding.profile_none')}</option>`;
+            const preferredId = selectedId ? String(selectedId) : '';
             _brandingProfiles.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.id;
                 opt.textContent = p.is_active ? `${p.name} (${_('branding.profile_active')})` : p.name;
-                if (p.is_active) opt.selected = true;
+                if (preferredId ? String(p.id) === preferredId : p.is_active) opt.selected = true;
                 select.appendChild(opt);
             });
         } catch (e) {

@@ -20,7 +20,14 @@ const { redactUrlForLog } = require('./lib/logRedact');
 const logger = require('./lib/logger');
 const securityMiddleware = require('./middleware/security');
 const { initI18n } = require('./middleware/i18n');
-const { apiLimiter, widgetLimiter, panelPreferenceLimiter, getPanelPollMountPaths } = require('./middleware/rateLimiter');
+const {
+    apiLimiter,
+    widgetLimiter,
+    panelReadLimiter,
+    panelPreferenceLimiter,
+    getPanelPollMountPaths,
+    getPanelReadMountPaths
+} = require('./middleware/rateLimiter');
 const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
 const { roleHasPermission, isSuperAdminRole } = require('./middleware/auth');
 const authService = require('./services/authService');
@@ -182,6 +189,9 @@ app.use('/wallpapers', express.static(path.join(__dirname, 'wallpapers'), {
 for (const p of getPanelPollMountPaths()) {
     app.use(p, widgetLimiter);
 }
+for (const p of getPanelReadMountPaths()) {
+    app.use(p, panelReadLimiter);
+}
 app.use('/api/panel', widgetLimiter);
 app.use('/api/desktop/layout', panelPreferenceLimiter);
 app.use('/api/', apiLimiter);
@@ -203,24 +213,9 @@ app.use(initI18n());
 // Used by Desktop Mode to load pages inside floating windows (iframes)
 app.use((req, res, next) => {
     res.locals.embed = req.query.embed === '1';
-    // UI shell: classic (rail+flyout, default) | ux35 (full-list sidebar)
-    // Cookie remembers last choice; ?ui=classic|ux35 overrides and persists.
-    const UI_SHELL_COOKIE = 'bd_ui_shell';
-    let uiShell = 'classic';
-    const q = String(req.query.ui || '').toLowerCase();
-    if (q === 'ux35' || q === 'classic') {
-        uiShell = q;
-        res.cookie(UI_SHELL_COOKIE, uiShell, {
-            maxAge: 365 * 24 * 60 * 60 * 1000,
-            sameSite: 'lax',
-            httpOnly: false,
-            path: '/'
-        });
-    } else {
-        const raw = String(req.cookies?.[UI_SHELL_COOKIE] || '').toLowerCase();
-        if (raw === 'ux35' || raw === 'classic') uiShell = raw;
-    }
-    res.locals.uiShell = uiShell;
+    // UX 3.5 is the only supported console shell. Legacy `ui` query
+    // parameters and `bd_ui_shell=classic` cookies are intentionally ignored.
+    res.locals.uiShell = 'ux35';
     res.locals.supporters = loadSupporters();
     // Inject permission helper for EJS templates (sidebar/button visibility)
     const role = req.session?.user?.role;

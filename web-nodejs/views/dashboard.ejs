@@ -162,7 +162,14 @@
                         </div>
 
                         <div class="client-config-footer">
-                            <p>${_('dashboard.client_config_hint')}</p>
+                            <div class="client-config-onboarding">
+                                <p>${_('dashboard.client_config_hint')}</p>
+                                <ol class="client-config-steps">
+                                    <li><a href="/generator">${_('dashboard.open_generator')}</a> — ${_('dashboard.generate_config')}</li>
+                                    <li>${_('dashboard.show_config_qr')} / ${_('dashboard.copy_all_config')} — ${_('dashboard.config_api_server')}</li>
+                                    <li>${_('registrations.title')} — ${_('registrations.subtitle')}</li>
+                                </ol>
+                            </div>
                             <div class="client-config-links">
                                 <a class="btn btn-primary btn-sm" href="/generator">
                                     <span class="material-icons" aria-hidden="true">build</span>

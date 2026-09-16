@@ -21,8 +21,6 @@
         <span><%= appName %></span>
         <% } %>
     </a>
-    <span class="ux35-beta-chip" title="<%= _('ux35.beta_tooltip') || 'Beta console layout — optional; classic UI remains the default.' %>"><%= _('ux35.beta_badge') || 'BETA' %></span>
-
     <nav class="ux35-topbar-breadcrumb" aria-label="Breadcrumb">
         <% const isDashboardHome = (typeof currentPage !== 'undefined' && currentPage === 'dashboard'); %>
         <% if (isDashboardHome && !(typeof breadcrumb !== 'undefined' && breadcrumb.length)) { %>
@@ -51,12 +49,6 @@
 
     <div class="ux35-topbar-actions">
         <div class="ux35-topbar-action-list" id="ux35-topbar-action-list">
-        <button type="button" class="ux35-topbar-btn" id="ui-shell-switch-btn" data-ui-shell-switch="classic"
-                title="<%= _('ux35.switch_to_classic') || 'Switch to classic UI' %>"
-                aria-label="<%= _('ux35.switch_to_classic') || 'Switch to classic UI' %>">
-            <span class="material-icons" aria-hidden="true">dashboard_customize</span>
-        </button>
-
         <button type="button" class="ux35-topbar-btn" id="refresh-btn" title="<%= _('actions.refresh') %>"
                 aria-label="<%= _('actions.refresh') %>">
             <span class="material-icons" aria-hidden="true">refresh</span>

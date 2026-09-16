@@ -799,6 +799,25 @@
     font-size: var(--font-size-sm);
 }
 
+.client-config-onboarding {
+    min-width: 0;
+}
+
+.client-config-steps {
+    margin: var(--space-sm) 0 0;
+    padding-left: 1.25rem;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.client-config-steps li + li {
+    margin-top: 0.25rem;
+}
+
+.client-config-steps a {
+    color: var(--accent-blue);
+}
+
 .client-config-actions,
 .client-config-links {
     display: flex;

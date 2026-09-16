@@ -131,6 +131,21 @@ TRUSTED_PROXIES=127.0.0.1/32,::1/128
 > [!NOTE]
 > UDP/TCP signal on port **21116** cannot use HTTP headers like `X-Forwarded-For`. `TRUST_PROXY` / `TRUSTED_PROXIES` apply to HTTP/API and signal **WebSocket** (`/ws/id`).
 
+#### Panel read rate limiting
+
+The general Node.js API limit remains controlled by `RATE_LIMIT_MAX` (default
+`100` requests per minute). Lightweight authenticated Settings reads use a
+separate quota so loading the UX 3.5 console does not consume the mutation
+budget:
+
+```env
+PANEL_READ_RATE_LIMIT_MAX=600
+```
+
+This quota applies only to the allowlisted read endpoints. Login, mutations,
+uploads, backups, update actions, and other public/API paths keep their own
+limits.
+
 > [!TIP]
 > External reverse proxy (TLS on Caddy/Nginx :443): see [External Reverse Proxy Guide](https://github.com/UNITRONIX/BetterDesk/blob/dev/docs/setup/REVERSE_PROXY.md). Use `HOST=127.0.0.1`, `HTTPS_ENABLED=false`, and run `sudo betterdesk.sh` → **External reverse proxy** to generate Caddy/Nginx snippets.
 

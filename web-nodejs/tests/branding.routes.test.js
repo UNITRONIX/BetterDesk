@@ -103,6 +103,43 @@ describe('Branding routes', () => {
         });
     });
 
+    describe('POST /api/settings/branding/profiles/:id/duplicate', () => {
+        it('returns a new profile id and copies the saved profile data', async () => {
+            const res = await request(app)
+                .post('/api/settings/branding/profiles/1/duplicate')
+                .send({});
+
+            expect(res.status).toBe(200);
+            expect(res.body).toEqual({ success: true, data: { id: 2 } });
+            expect(database.createBrandingProfile).toHaveBeenCalledWith(
+                'Default (copy)',
+                '',
+                expect.objectContaining({
+                    type: 'betterdesk-theme',
+                    branding: mockBranding
+                })
+            );
+        });
+
+        it('suffixes the duplicate name when the default copy already exists', async () => {
+            database.listBrandingProfiles.mockResolvedValueOnce([
+                { id: 1, name: 'Default', is_active: 1 },
+                { id: 2, name: 'Default (copy)', is_active: 0 }
+            ]);
+
+            const res = await request(app)
+                .post('/api/settings/branding/profiles/1/duplicate')
+                .send({});
+
+            expect(res.status).toBe(200);
+            expect(database.createBrandingProfile).toHaveBeenCalledWith(
+                'Default (copy) 2',
+                '',
+                expect.any(Object)
+            );
+        });
+    });
+
     describe('GET /api/settings/appearance', () => {
         it('returns the versioned appearance model with readability status', async () => {
             const res = await request(app).get('/api/settings/appearance');

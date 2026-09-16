@@ -1,6 +1,9 @@
 /**
- * BetterDesk Console — UI shell switcher (classic rail ↔ UX 3.5)
- * Persists choice in cookie bd_ui_shell and reloads.
+ * BetterDesk Console — UX 3.5 shell compatibility bridge.
+ *
+ * UX 3.5 is now the only supported shell. Keep this small bridge so stale
+ * bookmarks, cookies, and integrations from the former shell switch do not
+ * reintroduce classic UI state.
  */
 (function () {
     'use strict';
@@ -14,33 +17,20 @@
     }
 
     function switchTo(shell) {
-        if (shell !== 'classic' && shell !== 'ux35') return;
-        setCookie(shell);
-        try { localStorage.setItem(COOKIE, shell); } catch (e) { /* ignore */ }
-        var url = new URL(window.location.href);
-        url.searchParams.set('ui', shell);
-        window.location.href = url.pathname + url.search + url.hash;
+        if (shell !== 'ux35') return;
+        setCookie('ux35');
+        try { localStorage.setItem(COOKIE, 'ux35'); } catch (e) { /* ignore */ }
     }
 
     function init() {
         if (window.BetterDesk && window.BetterDesk.embed) return;
-        document.querySelectorAll('[data-ui-shell-switch]').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var target = btn.getAttribute('data-ui-shell-switch');
-                if (!target) {
-                    var current = (window.BetterDesk && window.BetterDesk.uiShell) || 'classic';
-                    target = current === 'ux35' ? 'classic' : 'ux35';
-                }
-                switchTo(target);
-            });
-        });
+        switchTo('ux35');
     }
 
     window.UiShell = {
         switchTo: switchTo,
         current: function () {
-            return (window.BetterDesk && window.BetterDesk.uiShell) || 'classic';
+            return 'ux35';
         }
     };
 

@@ -19,6 +19,8 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const automation = read('public', 'js', 'automation.js');
     const appJs = read('public', 'js', 'app.js');
     const notifCenter = read('public', 'js', 'notif-center.js');
+    const uiShell = read('public', 'js', 'ui-shell.js');
+    const classicNavbar = read('views', 'partials', 'navbar.ejs');
 
     it('keeps classic mobile height rules out of the UX 3.5 scroll region', () => {
         assert.match(mobileCss, /\.app-layout \.main-content/);
@@ -73,5 +75,20 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(topbar, /id="notif-badge"/);
         assert.match(topbar, /href="\/registrations"/);
         assert.match(sidebar, /id="reg-sidebar-badge"/);
+    });
+
+    it('keeps the notification badge hidden when unread count is zero', () => {
+        assert.match(notifCenter, /if \(count > 0\)/);
+        assert.match(notifCenter, /dom\.badge\.hidden = true/);
+        assert.match(notifCenter, /dom\.badge\.setAttribute\('aria-hidden', 'true'\)/);
+        assert.match(topbar, /id="notif-badge" hidden aria-hidden="true"/);
+    });
+
+    it('uses UX 3.5 as the only shell without beta or classic switch controls', () => {
+        assert.match(layout, /const shell = 'ux35'/);
+        assert.match(uiShell, /return 'ux35'/);
+        assert.doesNotMatch(topbar, /ux35-beta-chip|data-ui-shell-switch/);
+        assert.doesNotMatch(topbar, /beta_tooltip|beta_badge/);
+        assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
     });
 });

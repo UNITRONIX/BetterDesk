@@ -216,6 +216,19 @@ Planned improvements:
 - Version tracking and rollback
 - Client update management
 
+### Native client scope
+
+The current onboarding path uses generated RustDesk packages with BetterDesk
+server settings embedded or supplied through the configuration QR/deploy
+string. A separate BetterDesk-native Windows or Android client is not implied
+by this generator and must be planned as its own product scope.
+
+Before implementation, that scope must define the supported platforms and
+architectures, remote-control and enrollment flows, signing and update
+infrastructure, server trust and authentication model, data collection,
+distribution, and compatibility requirements. No unsigned or unreviewed
+client binary should be introduced through the panel generator.
+
 ## Support
 
 For issues or questions about the Client Generator:

@@ -1,16 +1,12 @@
-# UX 3.5 (optional beta shell)
+# UX 3.5
 
-UX 3.5 is an **optional** console chrome. The default remains the classic icon rail + flyout.
+UX 3.5 is the standard and only supported console shell. It is enabled by
+default for all users, including new installations. The legacy classic shell
+and its shell switch are no longer available.
 
-## Switch
-
-| Want | Do |
-|------|-----|
-| Try UX 3.5 | Navbar shell button, or `?ui=ux35` |
-| Back to classic | Topbar switch, or `?ui=classic` |
-| Remember choice | Cookie `bd_ui_shell=classic` or `ux35` (1 year) |
-
-While UX 3.5 is on, a small **BETA** chip shows in the topbar. Surfaces are **solid** (not glass/blur). Classic may still use glass accents.
+The console ignores legacy `?ui=classic` links and `bd_ui_shell=classic`
+cookies, so existing users are migrated to UX 3.5 automatically. Surfaces are
+**solid** (not glass/blur).
 
 ## What changes for you
 

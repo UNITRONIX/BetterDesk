@@ -9,6 +9,13 @@
 
 ### Changed
 - **Account-bound stock-client initiation (#414):** Added the opt-in `LOGGED_IN_ONLY_INITIATOR=Y` / **Settings → Connection → Require client login for initiators** setting. Stock RustDesk clients must present an active BetterDesk client-session token before starting PunchHole/relay connections; address, TCP-session, UDP-port, IP, and shared-NAT fallbacks are rejected in this mode. Panel Web Remote remains available through its own authentication, and target passwords/approvals remain required. Disabled by default. Ships via panel update; restart the BetterDesk Go server after enabling.
+- **UX 3.5 default shell:** UX 3.5 is now the only supported console shell for existing and new users; the classic shell, shell switch, and beta indicators are removed. Legacy `bd_ui_shell=classic` cookies and `?ui=classic` links are mapped to UX 3.5.
+- **Settings read rate limit:** Allowlisted authenticated Settings reads now use `PANEL_READ_RATE_LIMIT_MAX` (default `600`/minute) instead of consuming the general `RATE_LIMIT_MAX` budget. Login, mutation, upload, backup, update-action, and public/API limits remain unchanged.
+- **Client onboarding:** The dashboard now presents a short generator → QR/copy configuration → registration workflow using the existing Client Generator and server configuration tools.
+
+### Fixed
+- **Appearance profile duplication (#424):** After duplicating a profile, the new copy is selected so subsequent edits are saved to the copy rather than unexpectedly overwriting the active profile.
+- **Notification badge at zero (#424):** Added a UX 3.5 regression contract ensuring the red unread badge remains hidden when there are no unread notifications.
 
 ---
 
