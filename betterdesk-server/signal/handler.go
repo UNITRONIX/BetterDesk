@@ -27,6 +27,16 @@ import (
 
 // refuseRelayProtocolMismatch is returned when one peer uses WebSocket Mode
 // and the other uses native TCP/UDP — their relay framings are incompatible (#290).
+// relaySessionSourceSignal marks remote access sessions observed by signal
+// itself, as opposed to those reported by a logged-in client over the audit API.
+const relaySessionSourceSignal = "signal_relay"
+
+// isSyntheticInitiator reports whether an initiator id is one the server minted
+// rather than one a device registered under.
+func isSyntheticInitiator(id string) bool {
+	return id == panelWebRemoteInitiatorID || id == sharedNATInitiatorID
+}
+
 const refuseRelayProtocolMismatch = "Protocol mismatch: WebSocket and native TCP/UDP cannot share a relay session"
 
 // refuseInitiatorNotAuthorized is returned when PunchHole/RequestRelay comes from
@@ -433,6 +443,9 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 
 		// Update heartbeat
 		s.peers.UpdateHeartbeat(id, raddr, msg.Serial)
+		if err := s.db.TouchDeviceOnlineSession(id, time.Now().UTC(), config.RegTimeout); err != nil {
+			log.Printf("[signal] Failed to record online heartbeat for %s: %v", id, err)
+		}
 
 		// Respond: don't need PK (we already have it)
 		requestPk := len(existing.PK) == 0
@@ -530,6 +543,9 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 
 	log.Printf("[signal] New peer registered: %s from %s (pk_loaded=%v)", id, raddr, len(entry.PK) > 0)
 	s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String())
+	if err := s.db.TouchDeviceOnlineSession(id, now.UTC(), config.RegTimeout); err != nil {
+		log.Printf("[signal] Failed to start online session for %s: %v", id, err)
+	}
 	s.publishPeerOnline(id)
 }
 
@@ -805,6 +821,63 @@ func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
 		})
 	}
 	return registerPkResponse(pb.RegisterPkResponse_OK)
+}
+
+// recordRelaySessionStart records a remote access session from what signal
+// itself observed, so the connected-time report does not depend on the client
+// volunteering an audit record. Clients that are not logged in to the API never
+// POST /api/audit/conn, and their sessions were previously invisible.
+//
+// The operator is deliberately left empty: when the initiator is a synthetic
+// identity (shared-NAT, legacy outbound) there is no device to attribute the
+// session to, and inventing one would put a name in the audit trail that the
+// server cannot stand behind. The audit path supersedes these rows when it can
+// provide a real operator.
+func (s *Server) recordRelaySessionStart(relayUUID, targetID, initiatorID string, raddr *net.UDPAddr, connType peer.ConnType) {
+	if s.db == nil || relayUUID == "" || targetID == "" {
+		return
+	}
+	now := time.Now().UTC()
+
+	// A synthetic initiator names no device. Record the address it came from
+	// instead of leaving the row anonymous, and resolve it to a real peer when
+	// that address hosts exactly one live peer — then there is no ambiguity.
+	controllerID := initiatorID
+	controllerName := ""
+	operator := ""
+	if isSyntheticInitiator(initiatorID) && raddr != nil && s.peers != nil {
+		var live []*peer.Entry
+		for _, e := range s.peers.FindAllByIP(raddr.IP) {
+			if e != nil && !e.IsExpired(config.RegTimeout) {
+				live = append(live, e)
+			}
+		}
+		if len(live) == 1 {
+			controllerID = live[0].ID
+		} else {
+			controllerName = raddr.IP.String()
+		}
+	}
+	if controllerID != "" && !isSyntheticInitiator(controllerID) && s.db != nil {
+		if name, err := s.db.FindActiveClientUsernameByDevice(controllerID); err == nil {
+			operator = name
+		}
+	}
+
+	session := &db.RemoteAccessSession{
+		SessionKey:       "signal:" + relayUUID,
+		TargetID:         targetID,
+		OperatorUsername: operator,
+		ControllerID:     controllerID,
+		ControllerName:   controllerName,
+		ConnectionType:   int(connType),
+		Source:           relaySessionSourceSignal,
+		StartedAt:        now,
+		LastSeenAt:       now,
+	}
+	if err := s.db.UpsertRemoteAccessSession(session); err != nil {
+		log.Printf("[signal] record relay session for %s: %v", targetID, err)
+	}
 }
 
 // handlePunchHoleRequest processes a hole-punch request from the initiator.
@@ -1465,6 +1538,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 
 	// Confirm to initiator with SIGNED public key
 	log.Printf("[signal] RequestRelay (UDP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUID[:8], relayServer)
+	s.recordRelaySessionStart(relayUUID, targetID, initiatorID, raddr, target.ConnType)
 	resp := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
@@ -1627,6 +1701,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 
 	// Immediate RelayResponse to TCP initiator — matching the UDP handler's behavior.
 	log.Printf("[signal] RequestRelay (TCP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUID[:8], relayServer)
+	s.recordRelaySessionStart(relayUUID, targetID, initiatorID, raddr, target.ConnType)
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
