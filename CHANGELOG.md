@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.103] — 2026-09-16
+
+### Changed
 - **Docker image build sources:** Console and all-in-one images no longer copy the withdrawn `betterdesk-agent` / `betterdesk-support-agent` trees. Client Generator builds use the BetterDesk-Client templates shipped through the console data module.
 
 ### Fixed
@@ -3501,3 +3508,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.100]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.99...v3.5.100
 [3.5.101]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.100...v3.5.101
 [3.5.102]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.101...v3.5.102
+[3.5.103]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.102...v3.5.103
