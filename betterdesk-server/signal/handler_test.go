@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/codec"
 	"github.com/unitronix/betterdesk-server/config"
 	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
@@ -1783,6 +1784,98 @@ func TestLoggedInOnlyInitiatorAllowsValidTokenAndPanelProxy(t *testing.T) {
 	id, ok = srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 49995), "TGTLOGIN3", "", 0)
 	if !ok || id != panelWebRemoteInitiatorID {
 		t.Fatalf("panel proxy auth = (%q, %v), want %s", id, ok, panelWebRemoteInitiatorID)
+	}
+}
+
+func TestOperatorOnlyOutboundRequiresPrivilegedSessionAndRechecksRole(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.cfg.OperatorOnlyOutbound = true
+	srv.SetAuditLogger(audit.NewLogger(""))
+
+	if err := database.UpsertPeer(&db.Peer{ID: "OPINIT425", Status: "ONLINE", IP: "198.51.100.225"}); err != nil {
+		t.Fatalf("UpsertPeer initiator: %v", err)
+	}
+	putOnlinePeer(srv, "OPINIT425", "198.51.100.225", 41025, peer.ConnTCP)
+	putOnlinePeer(srv, "TGT425", "203.0.113.225", 52000, peer.ConnTCP)
+
+	operator := &db.User{Username: "operator425", PasswordHash: "hash", Role: "operator"}
+	if err := database.CreateUser(operator); err != nil {
+		t.Fatalf("CreateUser operator: %v", err)
+	}
+	token := strings.Repeat("42", 32)
+	sum := sha256.Sum256([]byte(token))
+	if err := database.CreateClientSession(&db.ClientSession{
+		TokenHash:  hex.EncodeToString(sum[:]),
+		UserID:     operator.ID,
+		ClientID:   "OPINIT425",
+		ClientUUID: "op-425",
+		ExpiresAt:  time.Now().UTC().Add(time.Hour).Format("2006-01-02 15:04:05"),
+		CreatedAt:  time.Now().UTC().Format("2006-01-02 15:04:05"),
+	}); err != nil {
+		t.Fatalf("CreateClientSession operator: %v", err)
+	}
+
+	if id, ok := srv.requireAuthorizedInitiator(udpAddr("198.51.100.225", 41025), "TGT425", "", 0); ok || id != "" {
+		t.Fatalf("approved endpoint without token must be rejected, got (%q, %v)", id, ok)
+	}
+	if id, ok := srv.requireAuthorizedInitiator(udpAddr("198.51.100.225", 41025), "TGT425", token, 0); !ok || id != "OPINIT425" {
+		t.Fatalf("operator token auth = (%q, %v), want OPINIT425", id, ok)
+	}
+
+	operator.Role = "viewer"
+	if err := database.UpdateUser(operator); err != nil {
+		t.Fatalf("UpdateUser role downgrade: %v", err)
+	}
+	if id, ok := srv.requireAuthorizedInitiator(udpAddr("198.51.100.225", 41025), "TGT425", token, 0); ok || id != "" {
+		t.Fatalf("role-downgraded session must be rejected, got (%q, %v)", id, ok)
+	}
+	punch := srv.handlePunchHoleRequestTCP(
+		&pb.PunchHoleRequest{Id: "TGT425", Token: token},
+		udpAddr("198.51.100.225", 41025),
+	)
+	if response := punch.GetPunchHoleResponse(); response == nil || response.Failure != pb.PunchHoleResponse_ID_NOT_EXIST {
+		t.Fatalf("viewer PunchHole must be rejected, got %+v", punch)
+	}
+	relayResponse := srv.handleRequestRelayTCP(
+		&pb.RequestRelay{Id: "TGT425", Uuid: "viewer-425", Token: token},
+		udpAddr("198.51.100.225", 41025),
+		peer.ConnTCP,
+	)
+	if response := relayResponse.GetRelayResponse(); response == nil || response.RefuseReason != refuseInitiatorNotAuthorized {
+		t.Fatalf("viewer RequestRelay must be rejected, got %+v", relayResponse)
+	}
+
+	denied := srv.auditLog.RecentByAction(audit.ActionConnectionDenied, 10)
+	foundRoleDenied := false
+	for _, event := range denied {
+		if event.Details["reason"] == "initiator_role_denied" {
+			foundRoleDenied = true
+			break
+		}
+	}
+	if !foundRoleDenied {
+		t.Fatalf("expected role-denied audit event, got %+v", denied)
+	}
+}
+
+func TestOperatorOnlyOutboundKeepsPanelProxyAndAuditsAllowedConnection(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.cfg.OperatorOnlyOutbound = true
+	srv.SetAuditLogger(audit.NewLogger(""))
+
+	id, ok := srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 42500), "TGT425PANEL", "", 0)
+	if !ok || id != panelWebRemoteInitiatorID {
+		t.Fatalf("panel proxy auth = (%q, %v), want %s", id, ok, panelWebRemoteInitiatorID)
+	}
+
+	srv.logAuthorizedInitiator(udpAddr("127.0.0.1", 42500), id, "TGT425PANEL", "", "punch_hole")
+	allowed := srv.auditLog.RecentByAction(audit.ActionConnectionAllowed, 10)
+	if len(allowed) != 1 {
+		t.Fatalf("expected one allowed connection audit event, got %+v", allowed)
+	}
+	if allowed[0].Details["initiator_id"] != panelWebRemoteInitiatorID ||
+		allowed[0].Details["transport"] != "punch_hole" {
+		t.Fatalf("unexpected allowed audit details: %+v", allowed[0].Details)
 	}
 }
 

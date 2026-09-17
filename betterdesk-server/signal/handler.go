@@ -16,6 +16,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/crypto"
 	"github.com/unitronix/betterdesk-server/db"
@@ -819,6 +820,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		s.sendUDP(s.punchHoleUnauthorizedResponse(), raddr)
 		return
 	}
+	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
 
 	target := s.peers.Get(targetID)
 
@@ -1009,6 +1011,7 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 	if !ok {
 		return s.punchHoleUnauthorizedResponse()
 	}
+	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
 
 	target := s.peers.Get(targetID)
 	if target == nil || target.IsExpired(config.RegTimeout) {
@@ -1333,6 +1336,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		s.sendUDP(s.relayUnauthorizedResponse(relayServer), raddr)
 		return
 	}
+	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
 
 	target := s.peers.Get(targetID)
 
@@ -1490,6 +1494,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	if !ok {
 		return s.relayUnauthorizedResponse(relayServer)
 	}
+	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
 
 	target := s.peers.Get(targetID)
 
@@ -2112,6 +2117,9 @@ func (s *Server) authorizeRelayTicket(relayUUID, initiatorID, targetID string) b
 //     that IP → initiator_ambiguous_same_nat (no identity inheritance, #302),
 //     unless ALLOW_SHARED_NAT_INITIATOR authorizes synthetic shared-nat-initiator
 //
+// OPERATOR_ONLY_OUTBOUND additionally requires the session user to have
+// device.connect permission; it implies LOGGED_IN_ONLY_INITIATOR semantics.
+//
 // Managed and locked modes additionally require an approved DB peer row (pending
 // enrollment alone is not enough). Panel proxy initiators skip peer-map / DB
 // checks: operator auth is enforced at the panel WS upgrade before TCP is
@@ -2121,7 +2129,8 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 	if raddr == nil {
 		return "", false
 	}
-	loginOnly := s.cfg != nil && s.cfg.LoggedInOnlyInitiator
+	operatorOnly := s.cfg != nil && s.cfg.OperatorOnlyOutbound
+	loginOnly := s.cfg != nil && (s.cfg.LoggedInOnlyInitiator || operatorOnly)
 
 	// The panel proxy is already authenticated at the WebSocket upgrade. Keep
 	// Web Remote working in login-only mode without requiring a stock-client
@@ -2149,7 +2158,7 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 				s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_login_required")
 				return "", false
 			}
-		} else if id, ok := s.authorizeViaClientToken(tok, raddr, targetID); ok {
+		} else if id, ok := s.authorizeViaClientToken(tok, raddr, targetID, operatorOnly); ok {
 			return id, true
 		} else if loginOnly {
 			// Do not let an expired/revoked token fall through to udp_port or
@@ -2280,7 +2289,7 @@ func hashOpaqueClientToken(token string) string {
 
 // authorizeViaClientToken accepts PunchHole/RequestRelay when the stock RustDesk
 // client sends a BetterDesk opaque login token (service may be stopped, #327).
-func (s *Server) authorizeViaClientToken(token string, raddr *net.UDPAddr, targetID string) (string, bool) {
+func (s *Server) authorizeViaClientToken(token string, raddr *net.UDPAddr, targetID string, operatorOnly bool) (string, bool) {
 	token = strings.ToLower(strings.TrimSpace(token))
 	if token == "" || s.db == nil || !opaqueClientTokenRegexp.MatchString(token) {
 		return "", false
@@ -2289,6 +2298,23 @@ func (s *Server) authorizeViaClientToken(token string, raddr *net.UDPAddr, targe
 	if err != nil || sess == nil {
 		s.logUnauthorizedInitiator(raddr, "", targetID, "initiator_token_rejected")
 		return "", false
+	}
+	if operatorOnly {
+		user, userErr := s.db.GetUserByID(sess.UserID)
+		if userErr != nil || user == nil {
+			s.logUnauthorizedInitiatorDetails(raddr, sess.ClientID, targetID, "initiator_user_rejected", map[string]string{
+				"user_id": strconv.FormatInt(sess.UserID, 10),
+			})
+			return "", false
+		}
+		if !auth.RoleHasPermission(user.Role, auth.PermDeviceConnect) {
+			s.logUnauthorizedInitiatorDetails(raddr, sess.ClientID, targetID, "initiator_role_denied", map[string]string{
+				"username": user.Username,
+				"role":     user.Role,
+				"user_id":  strconv.FormatInt(user.ID, 10),
+			})
+			return "", false
+		}
 	}
 	initiatorID := strings.TrimSpace(sess.ClientID)
 	if initiatorID == "" {
@@ -2403,6 +2429,10 @@ func (s *Server) finalizeAuthorizedInitiator(initiatorID string, raddr *net.UDPA
 }
 
 func (s *Server) logUnauthorizedInitiator(raddr *net.UDPAddr, initiatorID, targetID, reason string) {
+	s.logUnauthorizedInitiatorDetails(raddr, initiatorID, targetID, reason, nil)
+}
+
+func (s *Server) logUnauthorizedInitiatorDetails(raddr *net.UDPAddr, initiatorID, targetID, reason string, extra map[string]string) {
 	clientHost := ""
 	if raddr != nil {
 		clientHost = raddr.IP.String()
@@ -2413,6 +2443,11 @@ func (s *Server) logUnauthorizedInitiator(raddr *net.UDPAddr, initiatorID, targe
 		return
 	}
 	details := map[string]string{"reason": reason}
+	for key, value := range extra {
+		if value != "" {
+			details[key] = value
+		}
+	}
 	if initiatorID != "" {
 		details["initiator_id"] = initiatorID
 	}
@@ -2420,6 +2455,37 @@ func (s *Server) logUnauthorizedInitiator(raddr *net.UDPAddr, initiatorID, targe
 		details["target_id"] = targetID
 	}
 	s.auditLog.Log(audit.ActionConnectionDenied, clientHost, targetID, details)
+}
+
+// logAuthorizedInitiator records the authorization decision without persisting
+// the bearer token. The user is resolved again from the active session so the
+// audit entry identifies the account that authorized this specific attempt.
+func (s *Server) logAuthorizedInitiator(raddr *net.UDPAddr, initiatorID, targetID, token, transport string) {
+	if s.auditLog == nil {
+		return
+	}
+	clientHost := ""
+	if raddr != nil {
+		clientHost = raddr.IP.String()
+	}
+	details := map[string]string{
+		"reason":       "initiator_authorized",
+		"initiator_id": initiatorID,
+		"target_id":    targetID,
+		"transport":    transport,
+	}
+	if strings.EqualFold(initiatorID, panelWebRemoteInitiatorID) {
+		details["source"] = "panel_web_remote"
+	} else if s.db != nil && opaqueClientTokenRegexp.MatchString(strings.TrimSpace(token)) {
+		if sess, err := s.db.GetClientSessionByTokenHash(hashOpaqueClientToken(token)); err == nil && sess != nil {
+			details["user_id"] = strconv.FormatInt(sess.UserID, 10)
+			if user, userErr := s.db.GetUserByID(sess.UserID); userErr == nil && user != nil {
+				details["username"] = user.Username
+				details["role"] = user.Role
+			}
+		}
+	}
+	s.auditLog.Log(audit.ActionConnectionAllowed, clientHost, targetID, details)
 }
 
 func (s *Server) shouldForceRelayForPeers(peerIDs ...string) bool {

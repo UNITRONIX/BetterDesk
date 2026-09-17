@@ -16,6 +16,7 @@ const net = require('net');
 const os = require('os');
 const config = require('../config/config');
 const { enforceOrigin } = require('../middleware/wsOrigin');
+const { roleHasPermission } = require('../middleware/auth');
 const { registerUpgradeHandler } = require('./wsUpgradeRouter');
 
 // Maximum concurrent relay connections per IP
@@ -235,6 +236,13 @@ function initWsProxy(server, sessionMiddleware) {
                     }
 
                     if (pathname === '/ws/rendezvous') {
+                        const panelRole = request.session?.user?.role;
+                        if (hasUser && !roleHasPermission(panelRole, 'device.connect')) {
+                            console.warn(`WS proxy: Rejected rendezvous upgrade for non-operator role ${panelRole || 'unknown'}`);
+                            socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                            socket.destroy();
+                            return;
+                        }
                         rendezvousWss.handleUpgrade(request, socket, head, (ws) => {
                             rendezvousWss.emit('connection', ws, request);
                         });

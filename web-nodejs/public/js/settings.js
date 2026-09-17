@@ -613,6 +613,8 @@
             if (sharedNatInit) sharedNatInit.checked = data.allow_shared_nat_initiator === true;
             const loggedInOnlyInit = document.getElementById('conn-logged-in-only-initiator');
             if (loggedInOnlyInit) loggedInOnlyInit.checked = data.logged_in_only_initiator === true;
+            const operatorOnlyOutbound = document.getElementById('conn-operator-only-outbound');
+            if (operatorOnlyOutbound) operatorOnlyOutbound.checked = data.operator_only_outbound === true;
 
             if (sourceEl) {
                 const src = data.source || data.deployment || 'defaults';
@@ -630,7 +632,8 @@
                     + ', fallback=' + (r.p2p_fallback_ms ?? '-')
                     + 'ms, same_nat_relay=' + (r.same_nat_relay ? 'Y' : 'N')
                     + ', allow_shared_nat_initiator=' + (r.allow_shared_nat_initiator ? 'Y' : 'N')
-                    + ', logged_in_only_initiator=' + (r.logged_in_only_initiator ? 'Y' : 'N');
+                    + ', logged_in_only_initiator=' + (r.logged_in_only_initiator ? 'Y' : 'N')
+                    + ', operator_only_outbound=' + (r.operator_only_outbound ? 'Y' : 'N');
             } else if (runtimeEl) {
                 runtimeEl.hidden = true;
             }
@@ -650,12 +653,14 @@
         const sameNatRelay = document.getElementById('conn-same-nat-relay')?.checked !== false;
         const allowSharedNat = document.getElementById('conn-allow-shared-nat-initiator')?.checked === true;
         const loggedInOnly = document.getElementById('conn-logged-in-only-initiator')?.checked === true;
+        const operatorOnlyOutbound = document.getElementById('conn-operator-only-outbound')?.checked === true;
         return {
             mode,
             p2p_fallback_ms: Number.isFinite(fallbackMs) ? fallbackMs : 2000,
             same_nat_relay: sameNatRelay,
             allow_shared_nat_initiator: allowSharedNat,
-            logged_in_only_initiator: loggedInOnly
+            logged_in_only_initiator: loggedInOnly,
+            operator_only_outbound: operatorOnlyOutbound
         };
     }
 

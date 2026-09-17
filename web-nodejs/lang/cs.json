@@ -761,7 +761,9 @@
         "connection_mode_allow_shared_nat_initiator": "Povolit shared-NAT iniciátory (stock klienti, více zařízení za jednou veřejnou IP)",
         "connection_mode_allow_shared_nat_initiator_hint": "Volitelné. Pokud více živých peerů sdílí jednu veřejnou IP a klient nemá přihlašovací token ani udp_port, autorizovat jako shared-nat-initiator. Nedědí identitu jiného zařízení. Oslabuje managed enrollment outbound bránu pro tento NAT — zapněte jen pro CGNAT/kanceláře bez přihlášení účtem.",
         "connection_mode_logged_in_only_initiator": "Vyžadovat přihlášení klienta pro iniciátory",
-        "connection_mode_logged_in_only_initiator_hint": "Volitelné. Standardní klienti RustDesk potřebují platnou relaci účtu BetterDesk k zahájení spojení PunchHole nebo relay. Web Remote zůstává dostupný přes ověření panelu; heslo cílového zařízení nebo schválení je stále vyžadováno."
+        "connection_mode_logged_in_only_initiator_hint": "Volitelné. Standardní klienti RustDesk potřebují platnou relaci účtu BetterDesk k zahájení spojení PunchHole nebo relay. Web Remote zůstává dostupný přes ověření panelu; heslo cílového zařízení nebo schválení je stále vyžadováno.",
+        "connection_mode_operator_only_outbound": "Povolit odchoz? relace pouze administr?tor?m a oper?tor?m",
+        "connection_mode_operator_only_outbound_hint": "Voliteln?. Standardn? klienti RustDesk mus? k zah?jen? spojen? PunchHole nebo relay pou??t aktivn? relaci BetterDesk s opr?vn?n?m device.connect. Schv?len? za??zen? bez tohoto p?ihl??en? nemohou spojen? zah?jit; Web Remote z?st?v? dostupn? p?es ov??en? panelu."
     },
     "audit": {
         "time": "Čas",

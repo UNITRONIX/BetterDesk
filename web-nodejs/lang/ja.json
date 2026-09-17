@@ -761,7 +761,9 @@
         "connection_mode_allow_shared_nat_initiator": "共有 NAT イニシエーターを許可（ストッククライアント、同一パブリック IP 上の複数デバイス）",
         "connection_mode_allow_shared_nat_initiator_hint": "任意。複数の稼働ピアが同一パブリック IP を共有し、クライアントにログイントークンや udp_port がない場合、shared-nat-initiator として認可します。他デバイスの ID は継承しません。その NAT の managed 登録アウトバウンドゲートを弱めます — アカウントログイン不可の CGNAT/オフィスサイトでのみ有効にしてください。",
         "connection_mode_logged_in_only_initiator": "イニシエーターにクライアントログインを要求",
-        "connection_mode_logged_in_only_initiator_hint": "任意。標準の RustDesk クライアントは、PunchHole または relay 接続を開始するために有効な BetterDesk アカウントセッションを必要とします。Web Remote はパネル認証経由で引き続き利用でき、対象デバイスのパスワードまたは承認も必要です。"
+        "connection_mode_logged_in_only_initiator_hint": "任意。標準の RustDesk クライアントは、PunchHole または relay 接続を開始するために有効な BetterDesk アカウントセッションを必要とします。Web Remote はパネル認証経由で引き続き利用でき、対象デバイスのパスワードまたは承認も必要です。",
+        "connection_mode_operator_only_outbound": "??????????????????????",
+        "connection_mode_operator_only_outbound_hint": "?????? RustDesk ????????device.connect ???????? BetterDesk ???????????? PunchHole ??? relay ??????????????????????????????????????Web Remote ??????????????????"
     },
     "audit": {
         "time": "Time",

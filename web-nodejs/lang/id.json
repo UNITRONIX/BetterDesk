@@ -767,7 +767,9 @@
         "connection_mode_allow_shared_nat_initiator": "Izinkan initiator shared-NAT (klien stock, beberapa perangkat di belakang satu IP publik)",
         "connection_mode_allow_shared_nat_initiator_hint": "Opsional. Jika beberapa peer aktif berbagi satu IP publik dan klien tidak punya token login atau udp_port, otorisasi sebagai shared-nat-initiator. Tidak mewarisi identitas perangkat lain. Melemahkan gerbang enrollment outbound terkelola untuk NAT itu — aktifkan hanya untuk situs CGNAT/kantor tanpa login akun.",
         "connection_mode_logged_in_only_initiator": "Wajibkan login klien untuk initiator",
-        "connection_mode_logged_in_only_initiator_hint": "Opsional. Klien RustDesk standar memerlukan sesi akun BetterDesk yang valid untuk memulai koneksi PunchHole atau relay. Web Remote tetap tersedia melalui autentikasi panel; kata sandi atau persetujuan perangkat tujuan tetap diperlukan."
+        "connection_mode_logged_in_only_initiator_hint": "Opsional. Klien RustDesk standar memerlukan sesi akun BetterDesk yang valid untuk memulai koneksi PunchHole atau relay. Web Remote tetap tersedia melalui autentikasi panel; kata sandi atau persetujuan perangkat tujuan tetap diperlukan.",
+        "connection_mode_operator_only_outbound": "Izinkan sesi keluar hanya untuk admin dan operator",
+        "connection_mode_operator_only_outbound_hint": "Opsional. Klien RustDesk standar harus menggunakan sesi BetterDesk aktif dengan izin device.connect untuk memulai koneksi PunchHole atau relay. Perangkat yang disetujui tanpa login ini tidak dapat memulai koneksi; Web Remote tetap tersedia melalui autentikasi panel."
     },
     "audit": {
         "time": "Time",

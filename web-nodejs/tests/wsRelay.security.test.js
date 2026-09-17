@@ -189,6 +189,23 @@ describe('wsRelay — security: session validation on WS upgrade', () => {
         expect(statusLine).not.toBe('HTTP/1.1 503 Service Unavailable');
     });
 
+    test('rejects rendezvous upgrade for a viewer', async () => {
+        const viewerSession = (req, _res, next) => {
+            req.session = { userId: 43, user: { username: 'viewer', role: 'viewer' } };
+            next();
+        };
+
+        const { initWsProxy } = require('../services/wsRelay');
+        server = http.createServer((req, res) => { res.writeHead(404); res.end(); });
+        initWsProxy(server, viewerSession);
+
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        address = server.address();
+
+        const result = await rawUpgrade(address, '/ws/rendezvous');
+        expect(result.statusLine).toBe('HTTP/1.1 403 Forbidden');
+    });
+
     // ── Test: non-empty guest= without valid grant is rejected ───────────────
     test('rejects upgrade when guest query is present but token is invalid', async () => {
         jest.resetModules();

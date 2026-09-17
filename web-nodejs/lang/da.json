@@ -767,7 +767,9 @@
         "connection_mode_allow_shared_nat_initiator": "Tillad shared-NAT-initiatorer (stock-klienter, flere enheder bag én offentlig IP)",
         "connection_mode_allow_shared_nat_initiator_hint": "Valgfrit. Når flere aktive peers deler én offentlig IP, og klienten ikke har logintoken eller udp_port, autoriser som shared-nat-initiator. Arver ikke en anden enheds identitet. Svækker managed enrollment outbound for den NAT — aktiver kun for CGNAT/kontorer uden kontologin.",
         "connection_mode_logged_in_only_initiator": "Kræv klientlogin for initiatorer",
-        "connection_mode_logged_in_only_initiator_hint": "Valgfrit. Standard-RustDesk-klienter skal have en gyldig BetterDesk-kontosession for at starte PunchHole- eller relay-forbindelser. Web Remote er fortsat tilgængelig via panelgodkendelse; målenhedens adgangskode eller godkendelse er stadig påkrævet."
+        "connection_mode_logged_in_only_initiator_hint": "Valgfrit. Standard-RustDesk-klienter skal have en gyldig BetterDesk-kontosession for at starte PunchHole- eller relay-forbindelser. Web Remote er fortsat tilgængelig via panelgodkendelse; målenhedens adgangskode eller godkendelse er stadig påkrævet.",
+        "connection_mode_operator_only_outbound": "Tillad kun udg?ende sessioner for administratorer og operat?rer",
+        "connection_mode_operator_only_outbound_hint": "Valgfrit. Standard-RustDesk-klienter skal bruge en aktiv BetterDesk-session med tilladelsen device.connect for at starte PunchHole- eller relay-forbindelser. Godkendte enheder uden dette login kan ikke starte forbindelser; Web Remote er fortsat tilg?ngelig via panelgodkendelse."
     },
     "audit": {
         "time": "Time",

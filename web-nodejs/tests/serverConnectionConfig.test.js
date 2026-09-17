@@ -41,7 +41,8 @@ WantedBy=multi-user.target
             p2p_fallback_ms: 3000,
             same_nat_relay: false,
             allow_shared_nat_initiator: true,
-            logged_in_only_initiator: true
+            logged_in_only_initiator: true,
+            operator_only_outbound: true
         });
         expect(relayVars.P2P_FIRST).toBe('N');
         expect(relayVars.ALWAYS_USE_RELAY).toBe('Y');
@@ -49,6 +50,7 @@ WantedBy=multi-user.target
         expect(relayVars.SAME_NAT_RELAY).toBe('N');
         expect(relayVars.ALLOW_SHARED_NAT_INITIATOR).toBe('Y');
         expect(relayVars.LOGGED_IN_ONLY_INITIATOR).toBe('Y');
+        expect(relayVars.OPERATOR_ONLY_OUTBOUND).toBe('Y');
     });
 
     it('parses and patches systemd environment blocks', () => {
@@ -60,12 +62,14 @@ WantedBy=multi-user.target
             mode: 'relay_only',
             p2p_fallback_ms: 3000,
             same_nat_relay: false,
-            logged_in_only_initiator: true
+            logged_in_only_initiator: true,
+            operator_only_outbound: true
         });
         const patchedSystemd = svc.patchSystemdEnvironment(sampleSystemd, relayVars);
         expect(patchedSystemd).toContain('Environment=P2P_FIRST=N');
         expect(patchedSystemd).toContain('Environment=ALWAYS_USE_RELAY=Y');
         expect(patchedSystemd).toContain('Environment=LOGGED_IN_ONLY_INITIATOR=Y');
+        expect(patchedSystemd).toContain('Environment=OPERATOR_ONLY_OUTBOUND=Y');
         expect(patchedSystemd.match(/Environment=P2P_FIRST=Y/m)).toBeNull();
     });
 
@@ -78,12 +82,14 @@ WantedBy=multi-user.target
             mode: 'relay_only',
             p2p_fallback_ms: 3000,
             same_nat_relay: false,
-            logged_in_only_initiator: true
+            logged_in_only_initiator: true,
+            operator_only_outbound: true
         });
         const patchedCompose = svc.patchDockerComposeEnvironment(sampleCompose, relayVars);
         expect(patchedCompose).toContain('- P2P_FIRST=N');
         expect(patchedCompose).toContain('- ALWAYS_USE_RELAY=Y');
         expect(patchedCompose).toContain('- LOGGED_IN_ONLY_INITIATOR=Y');
+        expect(patchedCompose).toContain('- OPERATOR_ONLY_OUTBOUND=Y');
         expect(patchedCompose).toContain('- ENCRYPTED_ONLY=1');
         expect(patchedCompose).not.toMatch(/console:\n    environment:\n      - P2P_FIRST/);
     });
@@ -94,5 +100,13 @@ WantedBy=multi-user.target
             'systemd'
         );
         expect(settings.logged_in_only_initiator).toBe(true);
+    });
+
+    it('parses operator-only outbound setting', () => {
+        const settings = svc.settingsFromEnv(
+            { P2P_FIRST: 'Y', OPERATOR_ONLY_OUTBOUND: 'Y' },
+            'systemd'
+        );
+        expect(settings.operator_only_outbound).toBe(true);
     });
 });

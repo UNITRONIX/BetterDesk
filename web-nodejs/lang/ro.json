@@ -767,7 +767,9 @@
         "connection_mode_allow_shared_nat_initiator": "Permiteți inițiatori shared-NAT (clienți stock, mai multe dispozitive în spatele unui IP public)",
         "connection_mode_allow_shared_nat_initiator_hint": "Opțional. Când mai mulți peer-i activi partajează un IP public și clientul nu are token de autentificare sau udp_port, autorizați ca shared-nat-initiator. Nu moștenește identitatea altui dispozitiv. Slăbește poarta de enrollment outbound gestionată pentru acel NAT — activați doar pentru site-uri CGNAT/birou fără autentificare pe cont.",
         "connection_mode_logged_in_only_initiator": "Solicitați autentificarea clientului pentru inițiatori",
-        "connection_mode_logged_in_only_initiator_hint": "Opțional. Clienții RustDesk standard au nevoie de o sesiune validă a contului BetterDesk pentru a iniția conexiuni PunchHole sau relay. Web Remote rămâne disponibil prin autentificarea panoului; parola sau aprobarea dispozitivului țintă rămâne necesară."
+        "connection_mode_logged_in_only_initiator_hint": "Opțional. Clienții RustDesk standard au nevoie de o sesiune validă a contului BetterDesk pentru a iniția conexiuni PunchHole sau relay. Web Remote rămâne disponibil prin autentificarea panoului; parola sau aprobarea dispozitivului țintă rămâne necesară.",
+        "connection_mode_operator_only_outbound": "Permite?i sesiuni de ie?ire doar administratorilor ?i operatorilor",
+        "connection_mode_operator_only_outbound_hint": "Op?ional. Clien?ii RustDesk standard trebuie s? foloseasc? o sesiune BetterDesk activ? cu permisiunea device.connect pentru a ini?ia conexiuni PunchHole sau relay. Dispozitivele aprobate f?r? aceast? autentificare nu pot ini?ia conexiuni; Web Remote r?m?ne disponibil prin autentificarea panoului."
     },
     "audit": {
         "time": "Time",

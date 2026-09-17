@@ -24,7 +24,8 @@ const MANAGED_ENV_KEYS = [
     'P2P_FALLBACK_MS',
     'SAME_NAT_RELAY',
     'ALLOW_SHARED_NAT_INITIATOR',
-    'LOGGED_IN_ONLY_INITIATOR'
+    'LOGGED_IN_ONLY_INITIATOR',
+    'OPERATOR_ONLY_OUTBOUND'
 ];
 
 const DEFAULTS = {
@@ -32,7 +33,8 @@ const DEFAULTS = {
     p2p_fallback_ms: 2000,
     same_nat_relay: true,
     allow_shared_nat_initiator: false,
-    logged_in_only_initiator: false
+    logged_in_only_initiator: false,
+    operator_only_outbound: false
 };
 
 function isDockerRuntime() {
@@ -98,6 +100,7 @@ function envVarsFromSettings(settings) {
     const sameNatRelay = settings.same_nat_relay !== false;
     const allowSharedNat = settings.allow_shared_nat_initiator === true;
     const loggedInOnly = settings.logged_in_only_initiator === true;
+    const operatorOnly = settings.operator_only_outbound === true;
 
     if (mode === 'relay_only') {
         return {
@@ -106,7 +109,8 @@ function envVarsFromSettings(settings) {
             P2P_FALLBACK_MS: String(Number.isFinite(fallbackMs) && fallbackMs >= 0 ? fallbackMs : DEFAULTS.p2p_fallback_ms),
             SAME_NAT_RELAY: yn(sameNatRelay),
             ALLOW_SHARED_NAT_INITIATOR: yn(allowSharedNat),
-            LOGGED_IN_ONLY_INITIATOR: yn(loggedInOnly)
+            LOGGED_IN_ONLY_INITIATOR: yn(loggedInOnly),
+            OPERATOR_ONLY_OUTBOUND: yn(operatorOnly)
         };
     }
     return {
@@ -115,7 +119,8 @@ function envVarsFromSettings(settings) {
         P2P_FALLBACK_MS: String(Number.isFinite(fallbackMs) && fallbackMs >= 0 ? fallbackMs : DEFAULTS.p2p_fallback_ms),
         SAME_NAT_RELAY: yn(sameNatRelay),
         ALLOW_SHARED_NAT_INITIATOR: yn(allowSharedNat),
-        LOGGED_IN_ONLY_INITIATOR: yn(loggedInOnly)
+        LOGGED_IN_ONLY_INITIATOR: yn(loggedInOnly),
+        OPERATOR_ONLY_OUTBOUND: yn(operatorOnly)
     };
 }
 
@@ -323,6 +328,7 @@ function settingsFromEnv(env, source) {
         same_nat_relay: parseYn(env.SAME_NAT_RELAY, DEFAULTS.same_nat_relay),
         allow_shared_nat_initiator: parseYn(env.ALLOW_SHARED_NAT_INITIATOR, DEFAULTS.allow_shared_nat_initiator),
         logged_in_only_initiator: parseYn(env.LOGGED_IN_ONLY_INITIATOR, DEFAULTS.logged_in_only_initiator),
+        operator_only_outbound: parseYn(env.OPERATOR_ONLY_OUTBOUND, DEFAULTS.operator_only_outbound),
         source,
         writable: source !== 'defaults'
     };
@@ -376,7 +382,8 @@ async function setConnectionMode(settings) {
         p2p_fallback_ms: Number(settings.p2p_fallback_ms),
         same_nat_relay: settings.same_nat_relay !== false,
         allow_shared_nat_initiator: settings.allow_shared_nat_initiator === true,
-        logged_in_only_initiator: settings.logged_in_only_initiator === true
+        logged_in_only_initiator: settings.logged_in_only_initiator === true,
+        operator_only_outbound: settings.operator_only_outbound === true
     };
 
     if (source === 'systemd') {

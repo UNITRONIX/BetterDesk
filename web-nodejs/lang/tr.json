@@ -767,7 +767,9 @@
         "connection_mode_allow_shared_nat_initiator": "Paylaşılan NAT başlatıcılarına izin ver (stok istemciler, aynı genel IP arkasında birden fazla cihaz)",
         "connection_mode_allow_shared_nat_initiator_hint": "İsteğe bağlı. Birden fazla canlı eş aynı genel IP’yi paylaşıyor ve istemcinin oturum açma jetonu veya udp_port’u yoksa shared-nat-initiator olarak yetkilendir. Başka bir cihaz kimliğini devralmaz. Bu NAT için yönetilen enrollment giden kapısını zayıflatır — yalnızca hesap oturumu olmayan CGNAT/ofis sitelerinde etkinleştirin.",
         "connection_mode_logged_in_only_initiator": "Başlatıcılar için istemci girişini zorunlu kıl",
-        "connection_mode_logged_in_only_initiator_hint": "İsteğe bağlı. Standart RustDesk istemcileri PunchHole veya relay bağlantılarını başlatmak için geçerli bir BetterDesk hesap oturumu gerektirir. Web Remote panel kimlik doğrulamasıyla kullanılmaya devam eder; hedef cihazın parolası veya onayı yine gereklidir."
+        "connection_mode_logged_in_only_initiator_hint": "İsteğe bağlı. Standart RustDesk istemcileri PunchHole veya relay bağlantılarını başlatmak için geçerli bir BetterDesk hesap oturumu gerektirir. Web Remote panel kimlik doğrulamasıyla kullanılmaya devam eder; hedef cihazın parolası veya onayı yine gereklidir.",
+        "connection_mode_operator_only_outbound": "Yaln?zca y?netici ve operat?rlerin giden oturumlar?na izin ver",
+        "connection_mode_operator_only_outbound_hint": "?ste?e ba?l?. Standart RustDesk istemcileri PunchHole veya relay ba?lant?lar?n? ba?latmak i?in device.connect iznine sahip etkin bir BetterDesk oturumu kullanmal?d?r. Bu giri? olmadan onaylanm?? cihazlar ba?lant? ba?latamaz; Web Remote panel kimlik do?rulamas?yla kullan?lmaya devam eder."
     },
     "audit": {
         "time": "Time",

@@ -111,6 +111,10 @@ type Config struct {
 	// session token for outbound PunchHole/RequestRelay initiation. The
 	// panel Web Remote proxy remains an explicit exception. Default: disabled.
 	LoggedInOnlyInitiator bool
+	// OperatorOnlyOutbound requires a valid BetterDesk client session whose
+	// user has device.connect permission for outbound PunchHole/RequestRelay.
+	// It also disables address-based initiator fallbacks. Default: disabled.
+	OperatorOnlyOutbound bool
 
 	// P2PFirst enables the classic RustDesk hole-punching handshake: instead
 	// of immediately answering the initiator with the target's (still
@@ -149,7 +153,7 @@ type Config struct {
 	// "open" (default) - Accept all device registrations (backward compatible)
 	// "managed" - New devices need to be approved or have a valid token
 	// "locked" - Only devices with valid tokens can register
-	EnrollmentMode string
+	EnrollmentMode            string
 	EnrollmentModeEnvOverride bool // ENROLLMENT_MODE was explicitly configured by the operator
 
 	// CDAP Gateway
@@ -208,6 +212,7 @@ func DefaultConfig() *Config {
 		SameNATRelay:              true,  // issue #121: auto-fallback to relay on shared public IP
 		AllowSharedNATInitiator:   false, // issue #399: opt-in stock multi-NAT initiator
 		LoggedInOnlyInitiator:     false, // issue #414: require client login for stock initiators
+		OperatorOnlyOutbound:      false, // issue #425: restrict outbound initiation to connected operators
 		P2PFirst:                  true,  // issue #157: give direct P2P a real chance before relay
 		P2PFallbackMs:             2000,  // grace period for target hole punch before relay fallback
 		LogLevel:                  "info",
@@ -407,6 +412,17 @@ func (c *Config) LoadEnv() {
 			c.LoggedInOnlyInitiator = true
 		case "N", "NO", "0", "FALSE", "OFF":
 			c.LoggedInOnlyInitiator = false
+		}
+	}
+	// Issue #425: require a valid client session belonging to a user with
+	// device.connect permission for stock PunchHole/RequestRelay initiators.
+	// PANEL_SIGNAL_PROXY_CIDRS remains the authenticated Web Remote exception.
+	if v := os.Getenv("OPERATOR_ONLY_OUTBOUND"); v != "" {
+		switch strings.ToUpper(strings.TrimSpace(v)) {
+		case "Y", "YES", "1", "TRUE", "ON":
+			c.OperatorOnlyOutbound = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			c.OperatorOnlyOutbound = false
 		}
 	}
 	// Issue #157: P2P-first hole punching. Enabled by default so direct

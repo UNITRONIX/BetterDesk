@@ -105,6 +105,23 @@ func TestLoadEnv_LoggedInOnlyInitiator(t *testing.T) {
 	}
 }
 
+func TestLoadEnv_OperatorOnlyOutbound(t *testing.T) {
+	t.Setenv("OPERATOR_ONLY_OUTBOUND", "yes")
+
+	cfg := DefaultConfig()
+	cfg.LoadEnv()
+	if !cfg.OperatorOnlyOutbound {
+		t.Fatal("OperatorOnlyOutbound = false, want true")
+	}
+
+	t.Setenv("OPERATOR_ONLY_OUTBOUND", "off")
+	cfg = DefaultConfig()
+	cfg.LoadEnv()
+	if cfg.OperatorOnlyOutbound {
+		t.Fatal("OperatorOnlyOutbound = true, want false")
+	}
+}
+
 func TestLoadEnv_EnrollmentModeExplicitByDefault(t *testing.T) {
 	t.Setenv("ENROLLMENT_MODE", "open")
 	t.Setenv("ENROLLMENT_MODE_ENV_OVERRIDE", "")

@@ -767,7 +767,9 @@
         "connection_mode_allow_shared_nat_initiator": "Salli shared-NAT-aloittajat (stock-asiakkaat, useita laitteita saman julkisen IP:n takana)",
         "connection_mode_allow_shared_nat_initiator_hint": "Valinnainen. Kun useat aktiiviset peerit jakavat saman julkisen IP:n eikä asiakkaalla ole kirjautumistunnusta tai udp_portia, valtuuta shared-nat-initiatorina. Ei peri toisen laitteen identiteettiä. Heikentää managed enrollment outbound -porttia kyseiselle NAT:lle — ota käyttöön vain CGNAT/toimistosivustoilla ilman tilikirjautumista.",
         "connection_mode_logged_in_only_initiator": "Vaadi aloittajilta asiakasohjelman kirjautuminen",
-        "connection_mode_logged_in_only_initiator_hint": "Valinnainen. Tavalliset RustDesk-asiakkaat tarvitsevat voimassa olevan BetterDesk-tili-istunnon PunchHole- tai relay-yhteyksien aloittamiseen. Web Remote säilyy käytettävissä paneelin todennuksella; kohdelaitteen salasana tai hyväksyntä vaaditaan edelleen."
+        "connection_mode_logged_in_only_initiator_hint": "Valinnainen. Tavalliset RustDesk-asiakkaat tarvitsevat voimassa olevan BetterDesk-tili-istunnon PunchHole- tai relay-yhteyksien aloittamiseen. Web Remote säilyy käytettävissä paneelin todennuksella; kohdelaitteen salasana tai hyväksyntä vaaditaan edelleen.",
+        "connection_mode_operator_only_outbound": "Salli l?htev?t istunnot vain yll?pit?jille ja operaattoreille",
+        "connection_mode_operator_only_outbound_hint": "Valinnainen. Tavallisten RustDesk-asiakkaiden on k?ytett?v? aktiivista BetterDesk-istuntoa, jolla on device.connect-oikeus, PunchHole- tai relay-yhteyksien aloittamiseen. Hyv?ksytyt laitteet eiv?t voi aloittaa yhteyksi? ilman t?t? kirjautumista; Web Remote on edelleen k?ytett?viss? paneelin todennuksella."
     },
     "audit": {
         "time": "Time",

@@ -722,6 +722,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 			"same_nat_relay":             s.cfg.SameNATRelay,
 			"allow_shared_nat_initiator": s.cfg.AllowSharedNATInitiator,
 			"logged_in_only_initiator":   s.cfg.LoggedInOnlyInitiator,
+			"operator_only_outbound":     s.cfg.OperatorOnlyOutbound,
 			"relay_servers":              s.cfg.RelayServers,
 		}
 	}

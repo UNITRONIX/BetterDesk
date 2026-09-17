@@ -761,7 +761,9 @@
         "connection_mode_allow_shared_nat_initiator": "Consenti initiator shared-NAT (client stock, più dispositivi dietro un IP pubblico)",
         "connection_mode_allow_shared_nat_initiator_hint": "Opzionale. Se più peer attivi condividono un IP pubblico e il client non ha token di login né udp_port, autorizza come shared-nat-initiator. Non eredita l'identità di un altro dispositivo. Indebolisce il gate di enrollment outbound gestito per quel NAT — abilitare solo per siti CGNAT/ufficio senza login account.",
         "connection_mode_logged_in_only_initiator": "Richiedi il login del client per gli iniziatori",
-        "connection_mode_logged_in_only_initiator_hint": "Opzionale. I client RustDesk standard richiedono una sessione valida dell'account BetterDesk per avviare connessioni PunchHole o relay. Web Remote resta disponibile tramite l'autenticazione del pannello; la password o l'approvazione del dispositivo di destinazione resta necessaria."
+        "connection_mode_logged_in_only_initiator_hint": "Opzionale. I client RustDesk standard richiedono una sessione valida dell'account BetterDesk per avviare connessioni PunchHole o relay. Web Remote resta disponibile tramite l'autenticazione del pannello; la password o l'approvazione del dispositivo di destinazione resta necessaria.",
+        "connection_mode_operator_only_outbound": "Consenti sessioni in uscita solo ad amministratori e operatori",
+        "connection_mode_operator_only_outbound_hint": "Opzionale. I client RustDesk standard devono usare una sessione BetterDesk attiva con il permesso device.connect per avviare connessioni PunchHole o relay. I dispositivi approvati senza questo accesso non possono avviare connessioni; Web Remote resta disponibile tramite l?autenticazione del pannello."
     },
     "audit": {
         "time": "Ora",
