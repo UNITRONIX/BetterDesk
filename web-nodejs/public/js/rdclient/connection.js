@@ -123,7 +123,8 @@ class RDConnection {
     connectRelay() {
         return new Promise((resolve, reject) => {
             this._setState('relay');
-            const url = `${this.wsBase}/ws/relay${this._guestQuerySuffix()}`;
+            const guestQuery = this._guestQuerySuffix();
+            const url = `${this.wsBase}/ws/relay${guestQuery}${guestQuery ? '&' : '?'}transport=message`;
 
             const ws = new WebSocket(url);
             ws.binaryType = 'arraybuffer';

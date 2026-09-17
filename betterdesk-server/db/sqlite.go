@@ -1344,20 +1344,20 @@ func (s *SQLiteDB) GetIDChangeHistory(id string) ([]*IDChangeHistory, error) {
 	return history, rows.Err()
 }
 
-// IsRenamedPeerID returns true if the given ID was previously used and then
-// changed to a different one (appears as old_id in id_change_history).
-// This prevents a device from re-registering under its old ID after an
-// admin-initiated ID change (#97).
+// IsRenamedPeerID returns true when id is a historical source ID that is no
+// longer a current peer. This permits legitimate round-trip renames (A → B → A).
 func (s *SQLiteDB) IsRenamedPeerID(id string) (bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var count int
-	err := s.db.QueryRow(`SELECT COUNT(*) FROM id_change_history WHERE old_id = ?`, id).Scan(&count)
+	var renamed bool
+	err := s.db.QueryRow(`
+		SELECT EXISTS(SELECT 1 FROM id_change_history WHERE old_id = ?)
+		AND NOT EXISTS(SELECT 1 FROM peers WHERE id = ?)`, id, id).Scan(&renamed)
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	return renamed, nil
 }
 
 // GetLatestRenameTarget returns the most recent new_id for old_id.

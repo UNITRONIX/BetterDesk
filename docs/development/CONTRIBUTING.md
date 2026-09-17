@@ -1,4 +1,4 @@
-# Contributing to BetterDesk Console
+# Contributing to BetterDesk
 
 Thank you for your interest in contributing to BetterDesk Console! This document provides guidelines and instructions for contributing.
 
@@ -25,12 +25,15 @@ This project adheres to a code of conduct that all contributors are expected to 
 
 ## Getting Started
 
-1. Fork the repository on GitHub
-2. Clone your fork locally
-3. Create a branch for your changes
-4. Make your changes
-5. Test your changes thoroughly
-6. Submit a pull request
+1. Fork the repository on GitHub.
+2. Clone your fork and fetch the current `dev` branch.
+3. Create a focused feature branch from `dev`.
+4. Make the smallest change that solves the problem.
+5. Run the complete test scope for every affected component.
+6. Submit the pull request against `dev`.
+
+`main` is reserved for the maintained `dev` → `main` production release flow
+or an explicitly approved stable hotfix.
 
 ## How to Contribute
 
@@ -57,85 +60,29 @@ This project adheres to a code of conduct that all contributors are expected to 
 
 ### Prerequisites
 
-- Linux environment (Ubuntu 20.04+ recommended)
-- Python 3.8+
-- Rust 1.70+
 - Git
-- RustDesk HBBS installed
+- Go version required by `betterdesk-server/go.mod`
+- Node.js version required by `web-nodejs/package.json`
+- Docker when changing images, compose files, or entrypoints
 
-### Local Setup
-
-```bash
-# Clone your fork
-git clone https://github.com/UNITRONIX/Rustdesk-FreeConsole.git
-cd Rustdesk-FreeConsole
-
-# Install Python dependencies
-cd web
-pip3 install -r requirements.txt
-
-# Run demo app for testing
-python3 app_demo.py
-```
-
-### Testing HBBS Changes
+### Local validation
 
 ```bash
-# Navigate to hbbs-patch
-cd hbbs-patch
+# Console
+cd web-nodejs
+npm ci
+npm test
 
-# Clone RustDesk server (if not already done)
-git clone https://github.com/rustdesk/rustdesk-server.git temp-rustdesk
-cd temp-rustdesk
-
-# Copy patched files
-cp ../src/* src/
-
-# Build and test
-cargo build --release --bin hbbs
-./target/release/hbbs --help
+# Go server
+cd ../betterdesk-server
+go test -race -count=1 ./...
+go vet ./...
 ```
+
+Read [BetterDesk Update Flow](../important/betterdesk-update-flow.md) before
+changing update, installer, service, or deployment behavior.
 
 ## Coding Standards
-
-### Python (Flask)
-
-- Follow PEP 8 style guide
-- Use type hints where possible
-- Write docstrings for functions and classes
-- Maximum line length: 100 characters
-- Use meaningful variable names
-
-Example:
-```python
-def get_device_status(device_id: str) -> dict:
-    """
-    Get the current status of a device.
-    
-    Args:
-        device_id: The unique identifier of the device
-        
-    Returns:
-        Dictionary containing device status information
-    """
-    # Implementation
-```
-
-### Rust (HBBS Patches)
-
-- Follow Rust standard style (rustfmt)
-- Use meaningful variable names
-- Add comments for complex logic
-- Prefer immutable references
-- Use proper error handling (Result/Option)
-
-Example:
-```rust
-/// Fetches online peers from the shared PeerMap
-async fn get_online_peers(state: &ApiState) -> Vec<PeerStatus> {
-    // Implementation
-}
-```
 
 ### JavaScript
 
@@ -234,7 +181,10 @@ Fixes #456
 3. ✅ Run all tests locally
 4. ✅ Update CHANGELOG.md
 5. ✅ Ensure code follows style guidelines
-6. ✅ Rebase on latest main branch
+6. ✅ Rebase on latest `dev` branch
+7. ✅ Do not include secrets, private deployment data, or fork-controlled workflows that need repository secrets
+8. ✅ Document provenance for external code, generated artifacts, and protocol compatibility work
+9. ✅ Update every locale when adding console translation keys
 
 ### PR Description Template
 
@@ -266,11 +216,16 @@ Add screenshots for UI changes
 
 ### Review Process
 
-1. Automated checks must pass (if configured)
-2. At least one maintainer approval required
-3. All review comments addressed
-4. Squash commits if requested
-5. Maintainer will merge when ready
+1. Automated checks must pass.
+2. At least one maintainer approval is required; `CODEOWNERS` adds explicit
+   ownership for relay, signal, authentication, database, workflow, Docker,
+   and translation paths.
+3. Fork workflows must not receive repository secrets.
+4. All review comments must be addressed.
+5. The maintainer decides whether to merge the submitted patch or implement a
+   reviewed alternative while preserving accurate attribution.
+6. Routine changes land on `dev`; production release work follows the release
+   checklist for `main`.
 
 ## Reporting Bugs
 
@@ -339,6 +294,8 @@ Any other information, mockups, examples
 ## License
 
 By contributing, you agree that your contributions will be licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+For copyright ownership, clean-room work, provenance, and attribution rules,
+read [Contributor licensing and provenance](CONTRIBUTOR-LICENSING.md).
 
 ---
 

@@ -1,0 +1,14 @@
+# Default maintainer review for every change.
+* @UNITRONIX
+
+# Security-sensitive paths require explicit maintainer ownership.
+/betterdesk-server/signal/ @UNITRONIX
+/betterdesk-server/relay/ @UNITRONIX
+/betterdesk-server/peer/ @UNITRONIX
+/betterdesk-server/auth/ @UNITRONIX
+/betterdesk-server/db/ @UNITRONIX
+/web-nodejs/services/wsRelay.js @UNITRONIX
+/web-nodejs/routes/ @UNITRONIX
+/web-nodejs/lang/ @UNITRONIX
+/docker* @UNITRONIX
+/.github/workflows/ @UNITRONIX

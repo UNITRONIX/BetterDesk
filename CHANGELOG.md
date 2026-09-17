@@ -1,7 +1,20 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Transport and enrollment hardening:** mixed WebSocket/native relay framing
+  is handled through a bounded, authenticated message bridge; connected peer
+  ID renames preserve live registrations; and explicit `ENROLLMENT_MODE`
+  configuration is reconciled safely with panel state. The framing and
+  compatibility review is documented in
+  [PR #346](https://github.com/UNITRONIX/BetterDesk/issues/346).
+- **Web Remote file transfer:** the dedicated file-transfer runtime is loaded
+  only when needed, waits for the relay session before browsing, and tolerates
+  older input implementations without optional controls.
+  Thanks to [@remoover](https://github.com/remoover) for the production
+  reports, test cases, and reviewable designs in [#282](https://github.com/UNITRONIX/BetterDesk/pull/282),
+  [#348](https://github.com/UNITRONIX/BetterDesk/pull/348), and
+  [#357](https://github.com/UNITRONIX/BetterDesk/pull/357). See the
+  [contributor attribution register](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md).
 
 ---
 

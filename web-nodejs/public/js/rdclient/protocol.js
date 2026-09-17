@@ -111,9 +111,18 @@ class RDProtocol {
      * (used for direct rendezvous communication, no encryption)
      */
     encodeRendezvous(msgObj) {
+        return this._encodeFrame(this.serializeRendezvous(msgObj));
+    }
+
+    /**
+     * Serialize a RendezvousMessage without a TCP BytesCodec header.
+     * Native RustDesk WebSocket relay endpoints use one protobuf payload per
+     * binary WebSocket message.
+     */
+    serializeRendezvous(msgObj) {
         const msg = this.types.RendezvousMessage.create(msgObj);
         const buf = this.types.RendezvousMessage.encode(msg).finish();
-        return this._encodeFrame(buf);
+        return buf;
     }
 
     /**

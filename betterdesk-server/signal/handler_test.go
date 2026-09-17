@@ -810,7 +810,7 @@ func TestHandleRequestRelayTCPSamePublicIPIgnoresPrivateRelayHint(t *testing.T) 
 	}
 }
 
-func TestHandleRequestRelayTCPProtocolMismatch(t *testing.T) {
+func TestHandleRequestRelayTCPMixedTransportIsRelayed(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.localIP.Store("198.51.100.20")
 
@@ -831,15 +831,18 @@ func TestHandleRequestRelayTCPProtocolMismatch(t *testing.T) {
 
 	resp := srv.handleRequestRelayTCP(&pb.RequestRelay{
 		Id:   "NATIVETGT",
-		Uuid: "issue-290-mismatch-uuid",
+		Uuid: "issue-290-mixed-uuid",
 	}, udpAddr("198.51.100.30", 51000), peer.ConnWS)
 
 	rr := resp.GetRelayResponse()
 	if rr == nil {
 		t.Fatalf("expected RelayResponse, got %+v", resp)
 	}
-	if rr.RefuseReason != refuseRelayProtocolMismatch {
-		t.Fatalf("RefuseReason = %q, want %q", rr.RefuseReason, refuseRelayProtocolMismatch)
+	if rr.RefuseReason != "" {
+		t.Fatalf("mixed transport was refused: %q", rr.RefuseReason)
+	}
+	if rr.RelayServer == "" {
+		t.Fatal("mixed transport relay response carried no relay server")
 	}
 }
 

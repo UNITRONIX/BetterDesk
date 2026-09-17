@@ -147,3 +147,56 @@ describe('RDFileTransfer folder job queue', () => {
         expect(ft.currentPath).toBe('/keep');
     });
 });
+
+describe('RDFileTransfer dedicated connection', () => {
+    it('waits for the file relay before sending a directory request', async () => {
+        let resolveConnection;
+        const ensureConnected = jest.fn(() => new Promise((resolve) => {
+            resolveConnection = resolve;
+        }));
+        const sendMessage = jest.fn();
+        const emit = jest.fn();
+        const ft = new RDFileTransfer({
+            proto: {
+                buildReadDir: (path, showHidden) => ({ readDir: { path, showHidden } })
+            },
+            sendMessage,
+            emit,
+            ensureConnected,
+            isConnected: () => false
+        });
+        ft.enable();
+
+        ft.browseDir('C:\\Users');
+        expect(ensureConnected).toHaveBeenCalledTimes(1);
+        expect(sendMessage).not.toHaveBeenCalled();
+        expect(emit).toHaveBeenCalledWith('file_connecting');
+
+        resolveConnection();
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(sendMessage).toHaveBeenCalledWith({
+            readDir: { path: 'C:\\Users', showHidden: false }
+        });
+        clearTimeout(ft._browseTimeout);
+    });
+
+    it('reports connection errors instead of throwing from the click handler', async () => {
+        const emit = jest.fn();
+        const ft = new RDFileTransfer({
+            proto: { buildReadDir: jest.fn() },
+            sendMessage: jest.fn(),
+            emit,
+            ensureConnected: () => Promise.reject(new Error('relay unavailable')),
+            isConnected: () => false
+        });
+        ft.enable();
+
+        expect(() => ft.browseDir('')).not.toThrow();
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(emit).toHaveBeenCalledWith('file_connect_error', {
+            error: 'relay unavailable'
+        });
+    });
+});

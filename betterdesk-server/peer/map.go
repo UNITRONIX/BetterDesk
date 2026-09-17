@@ -297,6 +297,50 @@ func (m *Map) Remove(id string) *Entry {
 	return e
 }
 
+// Rename moves a live peer to a new ID without closing its transport.
+// ID changes are metadata updates, not disconnects.
+func (m *Map) Rename(oldID, newID string) (*Entry, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	e, ok := m.entries[oldID]
+	if !ok {
+		return nil, false
+	}
+	if oldID == newID {
+		return e, true
+	}
+	if _, exists := m.entries[newID]; exists {
+		return nil, false
+	}
+
+	delete(m.entries, oldID)
+	e.ID = newID
+	m.entries[newID] = e
+	return e, true
+}
+
+// TouchWSHeartbeat refreshes the peer currently bound to conn. Matching by
+// connection keeps heartbeats working after an in-place ID rename.
+func (m *Map) TouchWSHeartbeat(conn interface{}) bool {
+	if conn == nil {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.entries {
+		if e.WSConn != conn {
+			continue
+		}
+		e.LastReg = time.Now()
+		e.MissedBeats = 0
+		e.StatusTier = StatusOnline
+		e.HeartbeatCount++
+		return true
+	}
+	return false
+}
+
 // Count returns the number of peers currently in the map.
 func (m *Map) Count() int {
 	m.mu.RLock()

@@ -1450,12 +1450,8 @@ func (s *Server) handleChangePeerID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update memory map
-	entry := s.peers.Remove(oldID)
-	if entry != nil {
-		entry.ID = body.NewID
-		s.peers.Put(entry)
-	}
+	// Preserve a live TCP/WSS registration while changing its map key.
+	s.peers.Rename(oldID, body.NewID)
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerIDChanged, s.remoteIP(r), oldID, map[string]string{"new_id": body.NewID})

@@ -22,6 +22,89 @@ const { registerUpgradeHandler } = require('./wsUpgradeRouter');
 const MAX_CONNECTIONS_PER_IP = 5;
 // Connection timeout (no data for 2 minutes = close)
 const IDLE_TIMEOUT_MS = 120000;
+// RustDesk desktop frames can exceed the small control-message limit.
+const MAX_RELAY_FRAME_SIZE = 64 * 1024 * 1024;
+
+function encodeRelayFrame(data) {
+    const payload = Buffer.isBuffer(data) ? data : Buffer.from(data);
+    const len = payload.length;
+    if (len <= 0 || len > MAX_RELAY_FRAME_SIZE) {
+        throw new Error(`invalid relay frame size: ${len}`);
+    }
+
+    let header;
+    if (len <= 0x3F) {
+        header = Buffer.from([len << 2]);
+    } else if (len <= 0x3FFF) {
+        header = Buffer.allocUnsafe(2);
+        header.writeUInt16LE((len << 2) | 0x01);
+    } else if (len <= 0x3FFFFF) {
+        const value = (len * 4) + 0x02;
+        header = Buffer.allocUnsafe(3);
+        header[0] = value & 0xFF;
+        header[1] = (value >>> 8) & 0xFF;
+        header[2] = (value >>> 16) & 0xFF;
+    } else {
+        header = Buffer.allocUnsafe(4);
+        header.writeUInt32LE(((len * 4) + 0x03) >>> 0);
+    }
+    return Buffer.concat([header, payload], header.length + len);
+}
+
+function createRelayFrameDecoder() {
+    let buffer = Buffer.alloc(0);
+    let dataLen = 0;
+
+    return {
+        feed(chunk) {
+            const incoming = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+            const needed = dataLen + incoming.length;
+            if (needed > MAX_RELAY_FRAME_SIZE + 4) {
+                throw new Error('relay frame buffer exceeds maximum size');
+            }
+            if (needed > buffer.length) {
+                const capacity = Math.min(
+                    MAX_RELAY_FRAME_SIZE + 4,
+                    Math.max(needed, buffer.length * 2, 4096)
+                );
+                const grown = Buffer.allocUnsafe(capacity);
+                if (dataLen > 0) buffer.copy(grown, 0, 0, dataLen);
+                buffer = grown;
+            }
+            incoming.copy(buffer, dataLen);
+            dataLen += incoming.length;
+
+            const frames = [];
+            let offset = 0;
+            while (offset < dataLen) {
+                const headerLen = (buffer[offset] & 0x03) + 1;
+                if (dataLen - offset < headerLen) break;
+
+                let encoded = 0;
+                for (let i = 0; i < headerLen; i++) {
+                    encoded += buffer[offset + i] * (2 ** (8 * i));
+                }
+                const payloadLen = Math.floor(encoded / 4);
+                if (payloadLen <= 0 || payloadLen > MAX_RELAY_FRAME_SIZE) {
+                    throw new Error(`invalid relay payload length: ${payloadLen}`);
+                }
+                if (dataLen - offset - headerLen < payloadLen) break;
+
+                const start = offset + headerLen;
+                frames.push(Buffer.from(buffer.subarray(start, start + payloadLen)));
+                offset = start + payloadLen;
+            }
+
+            if (offset > 0) {
+                const remaining = dataLen - offset;
+                if (remaining > 0) buffer.copy(buffer, 0, offset, dataLen);
+                dataLen = remaining;
+            }
+            if (dataLen === 0 && buffer.length > 1024 * 1024) buffer = Buffer.alloc(0);
+            return frames;
+        },
+    };
+}
 
 // Track connections per IP
 const connectionsPerIp = new Map();
@@ -157,6 +240,8 @@ function initWsProxy(server, sessionMiddleware) {
                         });
                     } else {
                         relayWss.handleUpgrade(request, socket, head, (ws) => {
+                            ws._betterdeskMessageTransport =
+                                url.searchParams.get('transport') === 'message';
                             relayWss.emit('connection', ws, request);
                         });
                     }
@@ -191,7 +276,9 @@ function initWsProxy(server, sessionMiddleware) {
 
     // Relay connections
     relayWss.on('connection', (ws, req) => {
-        handleProxyConnection(ws, req, hbbrHost, hbbrPort, 'relay');
+        handleProxyConnection(ws, req, hbbrHost, hbbrPort, 'relay', {
+            messageTransport: ws._betterdeskMessageTransport === true,
+        });
     });
 
     console.log(`  WebSocket proxy: /ws/rendezvous -> ${hbbsHost}:${hbbsPort}`);
@@ -203,7 +290,7 @@ function initWsProxy(server, sessionMiddleware) {
 /**
  * Handle a single proxied WebSocket connection
  */
-function handleProxyConnection(ws, req, targetHost, targetPort, label) {
+function handleProxyConnection(ws, req, targetHost, targetPort, label, options = {}) {
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
         || req.socket.remoteAddress
         || 'unknown';
@@ -219,6 +306,8 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label) {
 
     // Idle timeout
     let idleTimer = null;
+    const messageTransport = options.messageTransport === true;
+    const relayDecoder = messageTransport ? createRelayFrameDecoder() : null;
     const resetIdleTimer = () => {
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
@@ -245,7 +334,18 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label) {
     tcp.on('data', (data) => {
         resetIdleTimer();
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data);
+            if (!messageTransport) {
+                ws.send(data);
+                return;
+            }
+            try {
+                for (const payload of relayDecoder.feed(data)) {
+                    ws.send(payload, { binary: true });
+                }
+            } catch (err) {
+                console.error(`WS proxy [${label}]: invalid relay TCP frame:`, err.message);
+                cleanup();
+            }
         }
     });
 
@@ -255,7 +355,13 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label) {
         if (!tcp.destroyed) {
             // Ensure we send Buffer, not string
             const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
-            tcp.write(buf);
+            if (messageTransport && buf.length === 0) return;
+            try {
+                tcp.write(messageTransport ? encodeRelayFrame(buf) : buf);
+            } catch (err) {
+                console.error(`WS proxy [${label}]: invalid relay WS frame:`, err.message);
+                cleanup();
+            }
         }
     });
 
@@ -292,4 +398,7 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label) {
     }
 }
 
-module.exports = { initWsProxy };
+module.exports = {
+    initWsProxy,
+    _relayFraming: { encodeRelayFrame, createRelayFrameDecoder, MAX_RELAY_FRAME_SIZE },
+};

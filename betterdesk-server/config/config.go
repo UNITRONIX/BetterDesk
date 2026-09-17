@@ -150,6 +150,7 @@ type Config struct {
 	// "managed" - New devices need to be approved or have a valid token
 	// "locked" - Only devices with valid tokens can register
 	EnrollmentMode string
+	EnrollmentModeEnvOverride bool // ENROLLMENT_MODE was explicitly configured by the operator
 
 	// CDAP Gateway
 	CDAPPort        int  // WebSocket gateway port (default 21122)
@@ -455,6 +456,8 @@ func (c *Config) LoadEnv() {
 		mode := strings.ToLower(v)
 		if mode == "open" || mode == "managed" || mode == "locked" {
 			c.EnrollmentMode = mode
+			marker := strings.ToUpper(strings.TrimSpace(os.Getenv("ENROLLMENT_MODE_ENV_OVERRIDE")))
+			c.EnrollmentModeEnvOverride = marker != "N" && marker != "NO" && marker != "FALSE" && marker != "0"
 		}
 	}
 	if v := os.Getenv("CDAP_PORT"); v != "" {
