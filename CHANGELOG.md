@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.107] — 2026-09-17
+
+### Changed
 - **Transport and enrollment hardening:** mixed WebSocket/native relay framing
   is handled through a bounded, authenticated message bridge; connected peer
   ID renames preserve live registrations; and explicit `ENROLLMENT_MODE`
@@ -3546,3 +3553,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.104]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.103...v3.5.104
 [3.5.105]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.104...v3.5.105
 [3.5.106]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.105...v3.5.106
+[3.5.107]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.106...v3.5.107
