@@ -133,16 +133,30 @@ jobs:
           done
           cat SERVER_CHECKSUMS.sha256
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          files: |
-            betterdesk-server-linux-amd64/betterdesk-server-linux-amd64
-            betterdesk-server-linux-amd64/betterdesk-server-linux-amd64.manifest.json
-            betterdesk-server-linux-arm64/betterdesk-server-linux-arm64
-            betterdesk-server-linux-arm64/betterdesk-server-linux-arm64.manifest.json
-            betterdesk-server-windows-amd64.exe/betterdesk-server-windows-amd64.exe
-            betterdesk-server-windows-amd64.exe/betterdesk-server-windows-amd64.exe.manifest.json
-            migrate-linux-amd64/migrate-linux-amd64
-            SERVER_CHECKSUMS.sha256
+      - name: Upload server artifacts to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" -eq 120 ]; then
+              echo "GitHub Release $TAG_NAME was not created within 20 minutes" >&2
+              exit 1
+            fi
+            sleep 10
+          done
+
+          gh release upload "$TAG_NAME" \
+            betterdesk-server-linux-amd64/betterdesk-server-linux-amd64 \
+            betterdesk-server-linux-amd64/betterdesk-server-linux-amd64.manifest.json \
+            betterdesk-server-linux-arm64/betterdesk-server-linux-arm64 \
+            betterdesk-server-linux-arm64/betterdesk-server-linux-arm64.manifest.json \
+            betterdesk-server-windows-amd64.exe/betterdesk-server-windows-amd64.exe \
+            betterdesk-server-windows-amd64.exe/betterdesk-server-windows-amd64.exe.manifest.json \
+            migrate-linux-amd64/migrate-linux-amd64 \
+            SERVER_CHECKSUMS.sha256 \
+            --clobber

@@ -9,14 +9,14 @@
 # Tags:
 #   - main push: latest, sha-<commit>
 #   - dev push:  dev, sha-<commit>
-#   - git tag v* / GitHub Release (stable): semver, v*, major.minor, latest
+#   - GitHub Release (stable): semver, v*, major.minor, latest
 #   - workflow_dispatch: latest + VERSION when tag empty/latest; else custom tag
 #
 # Branch pushes (main/dev): build ONLY on CI version-bump subjects
 # (`chore: bump version … [version-bump]` / `chore: release version …`) so the
 # GHCR image VERSION matches tip (auto-bump runs after the feature commit;
 # building the feature SHA left :dev/:latest one patch behind — #401).
-# Feature commits skip. Tag pushes, release, and workflow_dispatch always build.
+# Feature commits skip. Releases and workflow_dispatch always build.
 #
 # Note: GITHUB_TOKEN pushes do not re-trigger workflows, so version-bump-dev
 # dispatches this workflow with tag=dev after each successful bump.
@@ -41,7 +41,6 @@ on:
 
   push:
     branches: [main, dev]
-    tags: ['v*']
     paths:
       - 'Dockerfile*'
       - 'docker-compose*.yml'
@@ -53,6 +52,12 @@ on:
 
   release:
     types: [published]
+
+concurrency:
+  # Serialize image publication per ref/tag. A release is published by the
+  # release event only; the tag push is intentionally not a Docker trigger.
+  group: docker-publish-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || 'auto' }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -68,6 +73,11 @@ jobs:
       version: ${{ steps.ver.outputs.version }}
     steps:
       - uses: actions/checkout@v6
+      - name: Validate manual publish tag
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::The latest tag may only be published from main. Use tag=dev or a custom test tag such as dev-arm."
+          exit 1
       - id: ver
         run: |
           if [ -f VERSION ]; then
@@ -78,18 +88,18 @@ jobs:
 
   build-server:
     needs: read-version
-    # Release/dispatch/tags always; branch pushes only on CI version-bump subjects (#401).
+    # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
     # Match subject markers (chore: bump/release … [version-bump]), not incidental
     # mentions of [version-bump] in a feature commit body.
     if: |
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'release' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
       (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
         contains(github.event.head_commit.message, '[version-bump]'))
     runs-on: ubuntu-latest
+    timeout-minutes: 330
     permissions:
       contents: read
       packages: write
@@ -117,75 +127,58 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest')) }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
-            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') }}
-            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') }}
+            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
+            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
             type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
-      - name: Resolve image for SBOM/Trivy
-        id: scanref
-        run: |
-          tag_line="$(echo "${{ steps.meta.outputs.tags }}" | grep -m1 'betterdesk-server:' || true)"
-          if [ -z "$tag_line" ]; then
-            tag_line="${{ env.IMAGE_PREFIX }}/betterdesk-server:latest"
-          fi
-          echo "image=$tag_line" >> "$GITHUB_OUTPUT"
-
-      - uses: docker/build-push-action@v6
+      - id: build
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.server
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk-server,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BETTERDESK_COMMIT_SHA=${{ github.sha }}
             BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,scope=betterdesk-server-amd64
+          cache-to: type=gha,mode=max,scope=betterdesk-server-amd64
+          platforms: linux/amd64
 
-      - name: Generate SBOM
-        continue-on-error: true
-        uses: anchore/sbom-action@v0
-        env:
-          SYFT_REGISTRY_AUTH_USERNAME: ${{ github.actor }}
-          SYFT_REGISTRY_AUTH_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          image: ${{ steps.scanref.outputs.image }}
-          format: spdx-json
-          output-file: sbom-server.spdx.json
+      - name: Export image digest
+        run: |
+          set -euo pipefail
+          digest="${{ steps.build.outputs.digest }}"
+          test -n "$digest"
+          mkdir -p /tmp/digests/betterdesk-server
+          touch "/tmp/digests/betterdesk-server/${digest#sha256:}"
 
-      - name: Trivy vulnerability scan
-        continue-on-error: true
-        uses: aquasecurity/trivy-action@master
-        env:
-          TRIVY_USERNAME: ${{ github.actor }}
-          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload image digest
+        uses: actions/upload-artifact@v4
         with:
-          image-ref: ${{ steps.scanref.outputs.image }}
-          format: table
-          exit-code: 0
-          severity: CRITICAL,HIGH
+          name: digests-server-amd64
+          path: /tmp/digests/betterdesk-server
+          if-no-files-found: error
 
   build-console:
     needs: read-version
-    # Release/dispatch/tags always; branch pushes only on CI version-bump subjects (#401).
+    # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
     if: |
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'release' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
       (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
         contains(github.event.head_commit.message, '[version-bump]'))
     runs-on: ubuntu-latest
+    timeout-minutes: 330
     permissions:
       contents: read
       packages: write
@@ -211,44 +204,58 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest')) }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
-            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') }}
-            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') }}
+            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
+            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
             type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
-      - uses: docker/build-push-action@v6
+      - id: build
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.console
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk-console,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BETTERDESK_COMMIT_SHA=${{ github.sha }}
             BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,scope=betterdesk-console-amd64
+          cache-to: type=gha,mode=max,scope=betterdesk-console-amd64
+          platforms: linux/amd64
+
+      - name: Export image digest
+        run: |
+          set -euo pipefail
+          digest="${{ steps.build.outputs.digest }}"
+          test -n "$digest"
+          mkdir -p /tmp/digests/betterdesk-console
+          touch "/tmp/digests/betterdesk-console/${digest#sha256:}"
+
+      - name: Upload image digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-console-amd64
+          path: /tmp/digests/betterdesk-console
+          if-no-files-found: error
 
   build-allinone:
     needs: read-version
-    # Release/dispatch/tags always; branch pushes only on CI version-bump subjects (#401).
+    # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
     if: |
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'release' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
       (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
         contains(github.event.head_commit.message, '[version-bump]'))
     runs-on: ubuntu-latest
     # Multi-arch AIO on dev has hit the 6h Actions limit (#401); fail sooner if stuck.
-    timeout-minutes: 240
+    timeout-minutes: 330
     permissions:
       contents: read
       packages: write
@@ -269,15 +276,9 @@ jobs:
       - name: Resolve AIO platforms
         id: plats
         run: |
-          # :dev republish (branch push or dispatch tag=dev): amd64 only.
-          # Full multi-arch on main, tags, release, and other dispatch tags
-          # (e.g. workflow_dispatch tag=dev-arm for ARM retest — issue #385).
-          if { [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/dev" ]; } \
-             || { [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.tag }}" = "dev" ]; }; then
-            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
-          else
-            echo "platforms=linux/amd64,linux/arm64" >> "$GITHUB_OUTPUT"
-          fi
+          # The amd64 leg is always built on the native amd64 runner.
+          # The arm64 leg is built separately on ubuntu-24.04-arm below.
+          echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
 
       - name: Extract metadata
         id: meta
@@ -287,39 +288,302 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest')) }}
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
-            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') }}
-            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') }}
+            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
+            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
             type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
-      - uses: docker/build-push-action@v6
+      - id: build
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BETTERDESK_COMMIT_SHA=${{ github.sha }}
             BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=betterdesk-aio-amd64
+          cache-to: type=gha,mode=max,scope=betterdesk-aio-amd64
           platforms: ${{ steps.plats.outputs.platforms }}
 
+      - name: Export image digest
+        run: |
+          set -euo pipefail
+          digest="${{ steps.build.outputs.digest }}"
+          test -n "$digest"
+          mkdir -p /tmp/digests/betterdesk
+          touch "/tmp/digests/betterdesk/${digest#sha256:}"
+
+      - name: Upload image digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-aio-amd64
+          path: /tmp/digests/betterdesk
+          if-no-files-found: error
+
+  # Build the ARM64 legs on a native runner. This avoids the QEMU/npm
+  # combination that previously kept build-console running until the
+  # six-hour GitHub Actions limit.
+  build-arm64:
+    needs: read-version
+    if: |
+      (github.event_name == 'workflow_dispatch' ||
+       github.event_name == 'release' ||
+       (github.event_name == 'push' &&
+        (startsWith(github.event.head_commit.message, 'chore: bump version') ||
+         startsWith(github.event.head_commit.message, 'chore: release version')) &&
+        contains(github.event.head_commit.message, '[version-bump]')))
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: server
+            image: betterdesk-server
+            file: Dockerfile.server
+          - name: console
+            image: betterdesk-console
+            file: Dockerfile.console
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 330
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./${{ matrix.file }}
+          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          labels: |
+            org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          build-args: |
+            BETTERDESK_COMMIT_SHA=${{ github.sha }}
+            BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
+            BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
+          cache-from: type=gha,scope=betterdesk-${{ matrix.name }}-arm64
+          cache-to: type=gha,mode=max,scope=betterdesk-${{ matrix.name }}-arm64
+          platforms: linux/arm64
+
+      - name: Export image digest
+        run: |
+          set -euo pipefail
+          digest="${{ steps.build.outputs.digest }}"
+          test -n "$digest"
+          mkdir -p "/tmp/digests/${{ matrix.image }}"
+          touch "/tmp/digests/${{ matrix.image }}/${digest#sha256:}"
+
+      - name: Upload image digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.name }}-arm64
+          path: /tmp/digests/${{ matrix.image }}
+          if-no-files-found: error
+
+  build-aio-arm64:
+    needs: read-version
+    if: |
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.tag != 'dev') ||
+      (github.event_name == 'push' &&
+        (startsWith(github.event.head_commit.message, 'chore: bump version') ||
+         startsWith(github.event.head_commit.message, 'chore: release version')) &&
+        contains(github.event.head_commit.message, '[version-bump]') &&
+        github.ref != 'refs/heads/dev')
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 330
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
+          labels: |
+            org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          build-args: |
+            BETTERDESK_COMMIT_SHA=${{ github.sha }}
+            BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
+            BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
+          cache-from: type=gha,scope=betterdesk-aio-arm64
+          cache-to: type=gha,mode=max,scope=betterdesk-aio-arm64
+          platforms: linux/arm64
+
+      - name: Export image digest
+        run: |
+          set -euo pipefail
+          digest="${{ steps.build.outputs.digest }}"
+          test -n "$digest"
+          mkdir -p /tmp/digests/betterdesk
+          touch "/tmp/digests/betterdesk/${digest#sha256:}"
+
+      - name: Upload image digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-aio-arm64
+          path: /tmp/digests/betterdesk
+          if-no-files-found: error
+
+  # No public image tag is written until all required platform digests exist.
+  merge-images:
+    needs: [read-version, build-server, build-console, build-allinone, build-arm64, build-aio-arm64]
+    if: |
+      always() &&
+      needs.read-version.result == 'success' &&
+      needs.build-server.result == 'success' &&
+      needs.build-console.result == 'success' &&
+      needs.build-allinone.result == 'success' &&
+      needs.build-arm64.result == 'success' &&
+      (needs.build-aio-arm64.result == 'success' ||
+       (needs.build-aio-arm64.result == 'skipped' &&
+        ((github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
+         (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev'))))
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: server
+            image: betterdesk-server
+          - name: console
+            image: betterdesk-console
+          - name: aio
+            image: betterdesk
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download platform digests
+        uses: actions/download-artifact@v4
+        with:
+          pattern: digests-${{ matrix.name }}-*
+          path: /tmp/digests
+          merge-multiple: true
+
+      - name: Extract final image metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
+          tags: |
+            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main') }}
+            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
+            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
+            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
+            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+
+      - name: Create multi-architecture manifest
+        env:
+          IMAGE: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          mapfile -t tags < <(printf '%s\n' "$TAGS" | sed '/^[[:space:]]*$/d')
+          mapfile -t digests < <(find /tmp/digests -maxdepth 1 -type f -printf '%f\n' | sort)
+          test "${#tags[@]}" -gt 0
+          test "${#digests[@]}" -gt 0
+
+          sources=()
+          for digest in "${digests[@]}"; do
+            sources+=("${IMAGE}@sha256:${digest}")
+          done
+
+          tag_args=()
+          for tag in "${tags[@]}"; do
+            tag_args+=(-t "$tag")
+          done
+
+          docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"
+
+      - name: Resolve server scan reference
+        if: matrix.name == 'server'
+        id: scanref
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          image="$(printf '%s\n' "$TAGS" | sed '/^[[:space:]]*$/d' | head -n1)"
+          test -n "$image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Generate server SBOM
+        if: matrix.name == 'server'
+        continue-on-error: true
+        uses: anchore/sbom-action@v0
+        env:
+          SYFT_REGISTRY_AUTH_USERNAME: ${{ github.actor }}
+          SYFT_REGISTRY_AUTH_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image: ${{ steps.scanref.outputs.image }}
+          format: spdx-json
+          output-file: sbom-server.spdx.json
+
+      - name: Scan server image
+        if: matrix.name == 'server'
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.28.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image-ref: ${{ steps.scanref.outputs.image }}
+          format: table
+          exit-code: 0
+          severity: CRITICAL,HIGH
+
   update-description:
-    needs: [build-server, build-console, build-allinone]
+    needs: merge-images
     runs-on: ubuntu-latest
     if: |
       always() &&
-      needs.build-server.result == 'success' &&
-      needs.build-console.result == 'success' &&
-      needs.build-allinone.result == 'success'
+      needs.merge-images.result == 'success'
     permissions:
       contents: read
 
@@ -328,26 +592,19 @@ jobs:
 
       - name: Summary
         env:
-          SERVER_TAGS: ${{ needs.build-server.outputs.tags }}
-          CONSOLE_TAGS: ${{ needs.build-console.outputs.tags }}
-          ALLINONE_TAGS: ${{ needs.build-allinone.outputs.tags }}
+          IMAGE_TAG: ${{ github.event.inputs.tag }}
         run: |
-          extract_tags() {
-            echo "$1" | sed -n 's/.*:\([^ ]*\)$/\1/p' | sort -u | paste -sd ', ' -
-          }
-          server_tags="$(extract_tags "$SERVER_TAGS")"
-          console_tags="$(extract_tags "$CONSOLE_TAGS")"
-          allinone_tags="$(extract_tags "$ALLINONE_TAGS")"
           pin_ver="$(tr -d '\n\r' < VERSION 2>/dev/null || echo VERSION)"
-
+          requested_tag="${IMAGE_TAG:-automatic}"
           {
             echo "## Docker images published"
             echo ""
-            echo "| Image | Tags |"
-            echo "|-------|------|"
-            echo "| \`ghcr.io/${{ github.repository_owner }}/betterdesk-server\` | ${server_tags:-n/a} |"
-            echo "| \`ghcr.io/${{ github.repository_owner }}/betterdesk-console\` | ${console_tags:-n/a} |"
-            echo "| \`ghcr.io/${{ github.repository_owner }}/betterdesk\` | ${allinone_tags:-n/a} |"
+            echo "Requested tag: \`${requested_tag}\`"
+            echo "Product version: \`${pin_ver}\`"
+            echo ""
+            echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk-server\`"
+            echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk-console\`"
+            echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk\`"
             echo ""
             echo "### Pin a version (production — recommended)"
             echo "\`\`\`bash"

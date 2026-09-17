@@ -18,6 +18,7 @@
 
 # ============= Stage 1: Build Go server =============
 FROM golang:1.26-alpine AS go-builder
+ARG TARGETARCH
 
 # Retry apk in case of transient DNS failures (common on AlmaLinux/CentOS Docker)
 RUN apk add --no-cache git || { sleep 2 && apk add --no-cache git; }
@@ -30,7 +31,7 @@ COPY betterdesk-server/ .
 
 ARG BETTERDESK_PRODUCT_VERSION=dev
 
-RUN CGO_ENABLED=0 GOOS=linux go build \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
     -ldflags="-s -w -X main.Version=${BETTERDESK_PRODUCT_VERSION}" \
     -tags "netgo osusergo" \
     -o /betterdesk-server .

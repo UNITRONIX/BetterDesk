@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22.23.2'
           cache: npm
           cache-dependency-path: web-nodejs/package-lock.json
 

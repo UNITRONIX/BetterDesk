@@ -8,6 +8,7 @@
 
 # ---- Build stage ----
 FROM golang:1.26-alpine AS builder
+ARG TARGETARCH
 
 RUN apk add --no-cache git || { sleep 2 && apk add --no-cache git; }
 
@@ -24,7 +25,7 @@ COPY betterdesk-server/ .
 ARG BETTERDESK_PRODUCT_VERSION=dev
 
 # Build static binary (modernc.org/sqlite is pure Go — no CGO needed)
-RUN CGO_ENABLED=0 GOOS=linux go build \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
     -ldflags="-s -w -X main.Version=${BETTERDESK_PRODUCT_VERSION}" \
     -tags "netgo osusergo" \
     -o /betterdesk-server .

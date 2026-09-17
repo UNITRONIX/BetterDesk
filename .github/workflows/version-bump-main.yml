@@ -80,15 +80,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_VERSION: ${{ steps.bump.outputs.version }}
         run: |
+          set -euo pipefail
           TAG="v${NEW_VERSION}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already exists — skipping tag/release creation"
-            exit 0
-          fi
-          git tag "$TAG"
-          git push origin "$TAG"
-
           NOTES_FILE=$(mktemp)
+          trap 'rm -f "$NOTES_FILE"' EXIT
           awk -v ver="${NEW_VERSION}" '
             BEGIN { found=0 }
             /^## \[/ {
@@ -100,6 +95,18 @@ jobs:
 
           if [ ! -s "$NOTES_FILE" ]; then
             echo "BetterDesk ${NEW_VERSION} stable release." > "$NOTES_FILE"
+          fi
+
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag "$TAG"
+            git push origin "$TAG"
+          else
+            echo "Tag ${TAG} already exists — checking release state"
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release ${TAG} already exists"
+            exit 0
           fi
 
           gh release create "$TAG" \

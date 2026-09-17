@@ -166,11 +166,24 @@ jobs:
           cat DESKTOP_CHECKSUMS.sha256
 
       - name: Upload desktop artifacts to product release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: false
-          files: |
-            betterdesk-windows-x64/*
-            betterdesk-linux-x64/*
-            DESKTOP_CHECKSUMS.sha256
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" -eq 120 ]; then
+              echo "GitHub Release $TAG_NAME was not created within 20 minutes" >&2
+              exit 1
+            fi
+            sleep 10
+          done
+
+          gh release upload "$TAG_NAME" \
+            betterdesk-windows-x64/* \
+            betterdesk-linux-x64/* \
+            DESKTOP_CHECKSUMS.sha256 \
+            --clobber
