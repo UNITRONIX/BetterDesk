@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.112] — 2026-09-18
+
+### Changed
 - **Controller-only RustDesk compatibility:** added the opt-in
   `ALLOW_LEGACY_OUTBOUND=Y` path for stock mobile/desktop clients that do not
   register a local device before starting an outbound session. It is limited to
@@ -3593,3 +3600,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.109]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.108...v3.5.109
 [3.5.110]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.109...v3.5.110
 [3.5.111]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.110...v3.5.111
+[3.5.112]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.111...v3.5.112
