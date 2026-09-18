@@ -109,4 +109,9 @@ WantedBy=multi-user.target
         );
         expect(settings.operator_only_outbound).toBe(true);
     });
+
+    it('exports systemd connection drop-in path', () => {
+        expect(svc.SYSTEMD_CONNECTION_DROPIN).toContain('betterdesk-server.service.d');
+        expect(svc.SYSTEMD_CONNECTION_DROPIN).toContain('50-betterdesk-connection.conf');
+    });
 });

@@ -21,4 +21,16 @@ describe('privileged update broker client', () => {
         expect(() => invokePrivilegedUpdate(null)).toThrow(/Invalid privileged update request/);
         expect(() => restartService('sshd')).toThrow(/Service is not allowlisted/);
     });
+
+    test('broker source documents write_connection_env for panel settings', () => {
+        const fs = require('fs');
+        const path = require('path');
+        const src = fs.readFileSync(
+            path.join(__dirname, '..', 'scripts', 'betterdesk-privileged-update.js'),
+            'utf8'
+        );
+        expect(src).toContain("case 'write_connection_env'");
+        expect(src).toContain('ALLOW_SHARED_NAT_INITIATOR');
+        expect(src).toContain('50-betterdesk-connection.conf');
+    });
 });

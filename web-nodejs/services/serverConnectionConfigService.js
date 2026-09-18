@@ -12,10 +12,16 @@ const fsp = require('fs').promises;
 const path = require('path');
 const config = require('../config/config');
 const updateService = require('./updateService');
+const {
+    canUsePrivilegedUpdate,
+    invokePrivilegedUpdate,
+} = require('../lib/privilegedUpdateHelper');
 
 const CONSOLE_ROOT = path.join(__dirname, '..');
 const REPO_ROOT = path.join(CONSOLE_ROOT, '..');
 const SYSTEMD_SERVER_UNIT = '/etc/systemd/system/betterdesk-server.service';
+/** Drop-in written by privileged broker — overrides unit Environment= lines. */
+const SYSTEMD_CONNECTION_DROPIN = '/etc/systemd/system/betterdesk-server.service.d/50-betterdesk-connection.conf';
 const DOCKER_COMPOSE_PATH = path.join(REPO_ROOT, 'docker-compose.yml');
 
 const MANAGED_ENV_KEYS = [
@@ -336,7 +342,14 @@ function settingsFromEnv(env, source) {
 
 async function readSystemdSettings() {
     const content = await fsp.readFile(SYSTEMD_SERVER_UNIT, 'utf8');
-    return settingsFromEnv(parseSystemdEnvironment(content), 'systemd');
+    const env = parseSystemdEnvironment(content);
+    try {
+        const dropin = await fsp.readFile(SYSTEMD_CONNECTION_DROPIN, 'utf8');
+        Object.assign(env, parseSystemdEnvironment(dropin));
+    } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
+    }
+    return settingsFromEnv(env, 'systemd');
 }
 
 async function readDockerSettings() {
@@ -356,11 +369,37 @@ async function getConnectionMode() {
 }
 
 async function writeSystemdSettings(settings) {
-    const content = await fsp.readFile(SYSTEMD_SERVER_UNIT, 'utf8');
     const vars = envVarsFromSettings(settings);
-    const next = patchSystemdEnvironment(content, vars);
-    await fsp.writeFile(SYSTEMD_SERVER_UNIT, next, { encoding: 'utf8', mode: 0o644 });
-    return { path: SYSTEMD_SERVER_UNIT, vars };
+
+    // Prefer a systemd drop-in via the fixed root broker. Direct writes to the
+    // main unit fail with EACCES when the console runs as betterdesk (typical).
+    if (canUsePrivilegedUpdate()) {
+        const result = invokePrivilegedUpdate({
+            action: 'write_connection_env',
+            vars,
+        });
+        return {
+            path: result.path || SYSTEMD_CONNECTION_DROPIN,
+            vars,
+            method: 'privileged_dropin',
+        };
+    }
+
+    try {
+        const content = await fsp.readFile(SYSTEMD_SERVER_UNIT, 'utf8');
+        const next = patchSystemdEnvironment(content, vars);
+        await fsp.writeFile(SYSTEMD_SERVER_UNIT, next, { encoding: 'utf8', mode: 0o644 });
+        return { path: SYSTEMD_SERVER_UNIT, vars, method: 'unit_direct' };
+    } catch (err) {
+        if (err.code === 'EACCES' || err.code === 'EPERM') {
+            throw new Error(
+                `Cannot write systemd connection settings (permission denied on ${SYSTEMD_SERVER_UNIT}). `
+                + 'Run once as root: sudo node /opt/BetterDeskConsole/scripts/linux-ensure-console-user.js '
+                + 'then retry — or set ALLOW_SHARED_NAT_INITIATOR via a systemd drop-in.'
+            );
+        }
+        throw err;
+    }
 }
 
 async function writeDockerSettings(settings) {
@@ -431,6 +470,8 @@ function restartServer() {
 module.exports = {
     DEFAULTS,
     MANAGED_ENV_KEYS,
+    SYSTEMD_SERVER_UNIT,
+    SYSTEMD_CONNECTION_DROPIN,
     detectDeploymentSource,
     parseSystemdEnvironment,
     patchSystemdEnvironment,
