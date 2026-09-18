@@ -63,6 +63,15 @@
     Run the Windows services as LocalSystem (legacy). By default the services
     run under low-privilege per-service virtual accounts (privilege separation).
 
+.PARAMETER CheckPermissions
+    Report whether BetterDesk can update files, change configuration and control services.
+
+.PARAMETER RepairPermissions
+    Repair BetterDesk ACLs and recheck management capabilities.
+
+.PARAMETER SetConfig
+    Apply one or more allowlisted .env settings as KEY=VALUE.
+
 .EXAMPLE
     .\betterdesk.ps1
     Interactive mode
@@ -103,6 +112,9 @@ param(
     [string]$RelayMode = "",
     [string]$RelayServers = "",
     [switch]$RunAsRoot,
+    [switch]$CheckPermissions,
+    [switch]$RepairPermissions,
+    [string[]]$SetConfig = @(),
     [switch]$Flask  # Deprecated, kept for backward compatibility
 )
 
@@ -119,6 +131,9 @@ $script:UNINSTALL_MODE = $Uninstall
 $script:PURGE_MODE = $Purge
 $script:SKIP_VERIFY = $SkipVerify
 $script:MINIMAL_MODE = $Minimal
+$script:CHECK_PERMISSIONS = $CheckPermissions
+$script:REPAIR_PERMISSIONS = $RepairPermissions
+$script:MANAGED_CONFIG_CHANGES = @($SetConfig)
 
 # Privilege separation (default). The installer needs Administrator, but the
 # services run under low-privilege per-service virtual accounts (NT SERVICE\...)
@@ -280,6 +295,99 @@ function Print-Step {
     Write-Host "[>] " -ForegroundColor Magenta -NoNewline
     Write-Host $Message
     Write-Log "STEP: $Message"
+}
+
+#===============================================================================
+# Management capabilities and allowlisted runtime configuration
+#===============================================================================
+
+function Get-ManagementCliPath {
+    $candidates = @(
+        (Join-Path $script:CONSOLE_PATH "scripts\management-cli.js"),
+        (Join-Path $script:ScriptDir "web-nodejs\scripts\management-cli.js")
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate) { return $candidate }
+    }
+    return $null
+}
+
+function Invoke-ManagementCli {
+    param(
+        [Parameter(Mandatory = $true)][string]$Action,
+        [string[]]$Arguments = @()
+    )
+    $cli = Get-ManagementCliPath
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $cli -or -not $node) {
+        Print-Error "Management capability tool or Node.js is unavailable"
+        return $false
+    }
+    $oldConsolePath = $env:BETTERDESK_CONSOLE_PATH
+    $oldServerPath = $env:BETTERDESK_PATH
+    $oldDataDir = $env:DATA_DIR
+    $env:BETTERDESK_CONSOLE_PATH = $script:CONSOLE_PATH
+    $env:BETTERDESK_PATH = $script:RUSTDESK_PATH
+    $env:DATA_DIR = Join-Path $script:CONSOLE_PATH "data"
+    & $node.Source $cli $Action @Arguments
+    $ok = ($LASTEXITCODE -eq 0)
+    $env:BETTERDESK_CONSOLE_PATH = $oldConsolePath
+    $env:BETTERDESK_PATH = $oldServerPath
+    $env:DATA_DIR = $oldDataDir
+    return $ok
+}
+
+function Test-ManagementCapabilities {
+    Print-Step "Checking BetterDesk management capabilities..."
+    $ok = Invoke-ManagementCli -Action "check"
+    if ($ok) {
+        Print-Success "BetterDesk management capabilities are ready"
+    } else {
+        Print-Warning "One or more management capabilities are blocked; see the report above"
+    }
+    return $ok
+}
+
+function Repair-ManagementPermissions {
+    Print-Step "Repairing BetterDesk management permissions..."
+    foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
+        if (Test-Path $path) {
+            & icacls $path /inheritance:e /grant "Administrators:(OI)(CI)F" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
+        } else {
+            New-Item -ItemType Directory -Path $path -Force | Out-Null
+        }
+    }
+    if (Test-Path $script:CONSOLE_PATH) {
+        & icacls $script:CONSOLE_PATH /grant "NT SERVICE\BetterDeskConsole:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
+    }
+    if (Test-Path $script:RUSTDESK_PATH) {
+        & icacls $script:RUSTDESK_PATH /grant "NT SERVICE\BetterDeskServer:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
+    }
+    foreach ($path in @(
+        (Join-Path $script:CONSOLE_PATH ".env"),
+        (Join-Path $script:RUSTDESK_PATH ".api_key"),
+        (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")
+    )) {
+        if (Test-Path $path) {
+            & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" 2>$null | Out-Null
+        }
+    }
+    Test-ManagementCapabilities | Out-Null
+}
+
+function Set-ManagedConfiguration {
+    if (-not $script:MANAGED_CONFIG_CHANGES -or $script:MANAGED_CONFIG_CHANGES.Count -eq 0) {
+        Print-Error "No allowlisted configuration changes supplied"
+        return $false
+    }
+    Print-Step "Applying allowlisted BetterDesk configuration..."
+    if (-not (Invoke-ManagementCli -Action "set" -Arguments $script:MANAGED_CONFIG_CHANGES)) {
+        return $false
+    }
+    & "$env:SystemRoot\System32\sc.exe" control $script:SERVER_SERVICE paramchange 2>$null | Out-Null
+    Restart-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+    Restart-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
+    return (Start-ServicesWithVerification)
 }
 
 function Press-Enter {
@@ -3509,6 +3617,7 @@ function Do-Update {
     Write-Host ""
     
     Detect-Installation
+    Test-ManagementCapabilities | Out-Null
     
     if ($script:INSTALL_STATUS -eq "none") {
         Print-Error "BetterDesk is not installed!"
@@ -3647,6 +3756,7 @@ function Do-Repair {
     Write-Host ""
     
     Detect-Installation
+    Test-ManagementCapabilities | Out-Null
     
     # CRITICAL: Preserve database configuration before any repair operation
     # This prevents PostgreSQL -> SQLite switch when regenerating service files
@@ -5997,6 +6107,7 @@ function Show-Menu {
     Write-Host "  T. Toggle HTTP/HTTPS mode"
     Write-Host "  M. Database migration"
     Write-Host "  S. Settings (paths)"
+    Write-Host "  P. Management capabilities and server settings"
     Write-Host "  0. Exit"
     Write-Host ""
 }
@@ -6007,6 +6118,16 @@ function Main {
     Auto-DetectPaths
     Write-Host ""
     Start-Sleep -Seconds 1
+
+    if ($script:CHECK_PERMISSIONS -or $script:REPAIR_PERMISSIONS -or
+        ($script:MANAGED_CONFIG_CHANGES -and $script:MANAGED_CONFIG_CHANGES.Count -gt 0)) {
+        if ($script:REPAIR_PERMISSIONS) { Repair-ManagementPermissions }
+        $capabilitiesOk = Test-ManagementCapabilities
+        if ($script:MANAGED_CONFIG_CHANGES -and $script:MANAGED_CONFIG_CHANGES.Count -gt 0) {
+            if (-not (Set-ManagedConfiguration)) { $capabilitiesOk = $false }
+        }
+        exit ([int](-not $capabilitiesOk))
+    }
     
     if ($script:UNINSTALL_MODE -and -not $script:AUTO_MODE) {
         Do-Uninstall
@@ -6042,9 +6163,10 @@ function Main {
             "Toggle HTTP/HTTPS`tSwitch protocol mode",
             "Database migration`tMigrate between backends",
             "Settings (paths)`tConfigure install paths",
+            "Management capabilities`tCheck permissions and change allowlisted server settings",
             "Exit`tQuit the manager"
         )
-        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "0")
+        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "P", "0")
 
         $choice = ""
         if (Test-TuiAvailable) {
@@ -6079,6 +6201,24 @@ function Main {
             "m" { Do-MigrateDatabase }
             "S" { Configure-Paths }
             "s" { Configure-Paths }
+            "P" {
+                Print-Header
+                Test-ManagementCapabilities | Out-Null
+                $managementChoice = Read-Host "Choose: 1=repair permissions, 2=set KEY=VALUE, Enter=back"
+                if ($managementChoice -eq "1") {
+                    Repair-ManagementPermissions
+                } elseif ($managementChoice -eq "2") {
+                    $script:MANAGED_CONFIG_CHANGES = @(Read-Host "KEY=VALUE (repeat manually via comma-separated values)" -ErrorAction SilentlyContinue)
+                    $script:MANAGED_CONFIG_CHANGES = @($script:MANAGED_CONFIG_CHANGES -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+                    Set-ManagedConfiguration | Out-Null
+                }
+                Press-Enter
+            }
+            "p" {
+                Print-Header
+                Test-ManagementCapabilities | Out-Null
+                Press-Enter
+            }
             "0" {
                 Write-Host ""
                 Print-Info "Goodbye!"

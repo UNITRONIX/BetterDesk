@@ -179,6 +179,21 @@ async function rollbackChange(change) {
         if (!result.success) throw new Error(result.error || 'go_config_rollback_failed');
         return;
     }
+    case 'env-config': {
+        const management = require('../lib/managementCapabilities');
+        try {
+            management.restoreEnvBackup(descriptor.backupPath, descriptor.options || {});
+        } catch (err) {
+            const helper = require('../lib/privilegedUpdateHelper');
+            if (!helper.canUsePrivilegedUpdate()) throw err;
+            helper.invokePrivilegedUpdate({
+                action: 'restore_env',
+                path: descriptor.options?.envPath,
+                backupPath: descriptor.backupPath,
+            });
+        }
+        return;
+    }
     default:
         throw new Error('unknown_restart_rollback');
     }
@@ -218,6 +233,18 @@ function restartResultFailed(result) {
         || (result?.restarts || []).some((item) => item.success === false);
 }
 
+async function rollbackStateChanges(state) {
+    const failures = [];
+    for (const change of [...(state.changes || [])].reverse()) {
+        try {
+            await rollbackChange(change);
+        } catch (err) {
+            failures.push({ key: change.key, error: err.message });
+        }
+    }
+    return failures;
+}
+
 async function confirm(req, id) {
     const state = getRawForOperator(req, id);
     if (state.phase !== 'pending' && state.phase !== 'failed') {
@@ -239,8 +266,11 @@ async function confirm(req, id) {
         const restart = serverConnection.restartServer();
         state.restart = restart;
         if (restartResultFailed(restart)) {
+            state.rollbackFailures = await rollbackStateChanges(state);
             state.phase = 'failed';
-            state.error = 'service_restart_failed';
+            state.error = state.rollbackFailures.length
+                ? 'service_restart_failed_rollback_failed'
+                : 'service_restart_failed_rolled_back';
             touch(state);
             return {
                 ...publicState(state),

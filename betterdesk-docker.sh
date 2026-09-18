@@ -91,6 +91,9 @@ DIM='\033[2m'
 LOG_FILE="/tmp/betterdesk_docker_$(date +%Y%m%d_%H%M%S).log"
 CLI_ACTION=""
 NONINTERACTIVE=false
+CHECK_CAPABILITIES=false
+REPAIR_PERMISSIONS=false
+MANAGED_CONFIG_CHANGES=()
 
 #===============================================================================
 # SELinux / Volume Helper Functions
@@ -189,6 +192,19 @@ parse_cli_args() {
                 CLI_ACTION="repair-permissions"
                 NONINTERACTIVE=true
                 shift
+                ;;
+            --check-permissions|--check-capabilities)
+                CHECK_CAPABILITIES=true
+                NONINTERACTIVE=true
+                shift
+                ;;
+            --set-config)
+                if [ $# -lt 2 ] || [[ "$2" != *=* ]]; then
+                    print_error "--set-config requires KEY=VALUE"
+                    exit 1
+                fi
+                MANAGED_CONFIG_CHANGES+=("$2")
+                shift 2
                 ;;
             -h|--help)
                 usage
@@ -448,6 +464,81 @@ check_docker_compose() {
         return 0
     fi
     return 1
+}
+
+#===============================================================================
+# Management capabilities and allowlisted runtime configuration
+#===============================================================================
+
+management_cli_path() {
+    if [ -f "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js" ]; then
+        printf '%s\n' "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js"
+    elif [ -f "$SCRIPT_DIR/scripts/management-cli.js" ]; then
+        printf '%s\n' "$SCRIPT_DIR/scripts/management-cli.js"
+    else
+        return 1
+    fi
+}
+
+check_management_capabilities() {
+    print_step "Checking Docker management capabilities..."
+    local failures=0
+    check_docker || { print_error "Docker daemon is unavailable"; failures=$((failures + 1)); }
+    check_docker_compose || { print_error "Docker Compose is unavailable"; failures=$((failures + 1)); }
+    [ -f "$COMPOSE_FILE" ] || { print_error "Compose file is missing: $COMPOSE_FILE"; failures=$((failures + 1)); }
+    [ -d "$DATA_DIR" ] && [ -w "$DATA_DIR" ] || {
+        print_error "Data directory is not writable: $DATA_DIR"
+        failures=$((failures + 1))
+    }
+    mkdir -p "$BACKUP_DIR" 2>/dev/null || true
+    [ -w "$BACKUP_DIR" ] || {
+        print_error "Backup directory is not writable: $BACKUP_DIR"
+        failures=$((failures + 1))
+    }
+    if [ -f "$COMPOSE_FILE" ] && check_docker_compose; then
+        $COMPOSE_CMD -f "$COMPOSE_FILE" config >/dev/null 2>&1 || {
+            print_error "Docker Compose configuration is invalid"
+            failures=$((failures + 1))
+        }
+    fi
+    if [ "$failures" -eq 0 ]; then
+        print_success "Docker management capabilities are ready"
+        return 0
+    fi
+    print_warning "$failures Docker management capability check(s) failed"
+    return 1
+}
+
+repair_management_permissions() {
+    print_step "Repairing Docker management permissions..."
+    create_data_directory "$DATA_DIR" || return 1
+    create_data_directory "$BACKUP_DIR" || return 1
+    if [ -f "$COMPOSE_FILE" ]; then
+        chmod 0644 "$COMPOSE_FILE" 2>/dev/null || true
+    fi
+    if [ -f "$(docker_update_env_file 2>/dev/null || true)" ]; then
+        chmod 0600 "$(docker_update_env_file)" 2>/dev/null || true
+    fi
+    check_management_capabilities
+}
+
+apply_managed_config() {
+    local cli
+    cli=$(management_cli_path 2>/dev/null) || {
+        print_error "Management configuration tool is missing"
+        return 1
+    }
+    [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ] || {
+        print_error "No allowlisted configuration changes supplied"
+        return 1
+    }
+    print_step "Applying allowlisted Docker configuration..."
+    BETTERDESK_CONSOLE_PATH="$SCRIPT_DIR/web-nodejs" \
+        BETTERDESK_PATH="$DATA_DIR" DATA_DIR="$DATA_DIR" \
+        node "$cli" set "${MANAGED_CONFIG_CHANGES[@]}"
+    cd "$SCRIPT_DIR"
+    $COMPOSE_CMD -f "$COMPOSE_FILE" up -d
+    start_containers
 }
 
 # Auto-detect data directory
@@ -1669,6 +1760,7 @@ do_update() {
     echo ""
     
     detect_installation
+    check_management_capabilities || print_warning "Docker update may need the management repair action first"
     
     if [ "$INSTALL_STATUS" = "none" ]; then
         print_error "BetterDesk Docker is not installed!"
@@ -1737,6 +1829,7 @@ do_update() {
 
 do_repair() {
     detect_installation
+    check_management_capabilities || print_warning "Docker repair capability check reported blockers"
     
     local _menu_items=(
         $'Rebuild images\tRecreate the Docker images'
@@ -3611,6 +3704,7 @@ show_menu() {
     echo "  M. 🔄 Migrate from existing RustDesk"
     echo "  P. 🐘 Migrate SQLite → PostgreSQL"
     echo "  S. ⚙️  Settings (paths)"
+    echo "  A. 🛡️  Management capabilities and server settings"
     echo "  0. ❌ Exit"
     echo ""
 }
@@ -3624,7 +3718,7 @@ main() {
     # Check docker compose. Diagnostics can still return useful evidence without
     # Compose, but repair actions need it for safe stack restarts.
     if ! check_docker_compose; then
-        if [ "$CLI_ACTION" = "diagnose" ]; then
+        if [ "$CLI_ACTION" = "diagnose" ] || [ "$CHECK_CAPABILITIES" = true ]; then
             print_warning "Docker Compose is not available; diagnostics will be partial"
             COMPOSE_CMD="docker compose"
         else
@@ -3653,9 +3747,19 @@ main() {
             ;;
         repair-permissions)
             repair_docker_permissions
+            repair_management_permissions
             exit $?
             ;;
     esac
+
+    if [ "$CHECK_CAPABILITIES" = true ] || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+        local management_rc=0
+        check_management_capabilities || management_rc=$?
+        if [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+            apply_managed_config || management_rc=$?
+        fi
+        exit "$management_rc"
+    fi
     
     # Action tokens map 1:1 to the classic case dispatch below, so both the
     # arrow-key TUI and the numeric fallback share the exact same handlers.
@@ -3673,9 +3777,10 @@ main() {
         $'Migrate from RustDesk\tImport an existing RustDesk deployment'
         $'SQLite -> PostgreSQL\tMigrate the database backend'
         $'Settings (paths)\tConfigure install paths'
+        $'Management capabilities\tCheck permissions and change allowlisted server settings'
         $'Exit\tQuit the manager'
     )
-    local menu_actions=( 1 2 3 4 5 6 7 8 9 C M P S 0 )
+    local menu_actions=( 1 2 3 4 5 6 7 8 9 C M P S A 0 )
 
     while true; do
         local choice=""
@@ -3706,6 +3811,11 @@ main() {
             [Mm]) do_migrate ;;
             [Pp]) do_migrate_postgresql ;;
             [Ss]) configure_docker_paths ;;
+            [Aa])
+                check_management_capabilities || true
+                repair_management_permissions
+                press_enter
+                ;;
             0) 
                 echo ""
                 print_info "Goodbye!"

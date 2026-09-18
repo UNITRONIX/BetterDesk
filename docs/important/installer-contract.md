@@ -35,6 +35,10 @@ with a clear message and non-zero exit code:
 
 1. **Preflight** — verify platform, privilege, dependencies, writable paths,
    available disk space, required ports, network access and compatible version.
+   Official managers also expose a read-only capability report for `update`,
+   `config`, `restart`, `permissions`, `backup` and `health`. Use
+   `--check-permissions` before panel-managed maintenance when diagnosing a
+   host.
 2. **Fresh install** — create only the required directories and services,
    preserve operator-supplied secrets, initialize the selected database and
    finish with a health check.
@@ -46,7 +50,8 @@ with a clear message and non-zero exit code:
    repository scripts.
 4. **Repair** — restore missing binaries, dependencies, permissions, service
    definitions and TLS material without requiring legacy RustDesk artifacts for
-   the Go deployment.
+   the Go deployment. `--repair-permissions` is idempotent and does not delete
+   databases, keys or Docker volumes.
 5. **Validate/diagnose** — report actionable errors and warnings without
    changing data in read-only diagnostic mode.
 6. **Backup and restore** — include the database, keys, `.env` and other
@@ -99,3 +104,40 @@ handshake.
   `betterdesk-privileged-update.js` broker with an allowlisted action set.
 - Never report success after a partial update merely because the process
   restarted.
+- Runtime configuration changes use an allowlist generated from
+  `web-nodejs/.env.example`, validate ports/booleans/enums, create a backup,
+  write atomically and require a dependent-service restart plus health check.
+  Unknown environment keys, arbitrary service names and shell fragments are
+  rejected.
+
+## Capability and configuration commands
+
+Native Linux:
+
+```bash
+sudo ./betterdesk.sh --check-permissions
+sudo ./betterdesk.sh --repair-permissions
+sudo ./betterdesk.sh --set-config HTTPS_ENABLED=true --set-config HTTPS_PORT=5443
+```
+
+Native Windows (Administrator PowerShell):
+
+```powershell
+.\betterdesk.ps1 -CheckPermissions
+.\betterdesk.ps1 -RepairPermissions
+.\betterdesk.ps1 -SetConfig "HTTPS_ENABLED=true","HTTPS_PORT=5443"
+```
+
+Docker:
+
+```bash
+sudo ./betterdesk-docker.sh --check-permissions
+sudo ./betterdesk-docker.sh --repair-permissions
+sudo ./betterdesk-docker.sh --set-config LOG_LEVEL=info
+```
+
+The web console exposes the same read-only report at
+`GET /api/settings/management/capabilities` and allowlisted configuration
+operations at `GET/PUT /api/settings/management/config`. Linux root operations
+use only the fixed root-owned BetterDesk broker; the panel never executes a
+mutable repository script through `sudo`.

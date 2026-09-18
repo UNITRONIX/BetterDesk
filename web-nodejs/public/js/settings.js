@@ -3320,7 +3320,17 @@
 
         const issues = Array.isArray(pf.issues) ? pf.issues : [];
         const warnings = Array.isArray(pf.warnings) ? pf.warnings : [];
-        if (pf.ready && warnings.length === 0) {
+        const capabilityWarnings = Object.entries(pf.capabilities?.groups || {})
+            .filter(([name, group]) => name !== 'health' && group && group.ready === false)
+            .map(([name, group]) => {
+                const failed = (group.checks || [])
+                    .filter((check) => check.ready === false)
+                    .map((check) => `${check.id}: ${check.error || 'blocked'}`)
+                    .join(', ');
+                return `${name}: ${failed || 'blocked'}`;
+            });
+        const allWarnings = warnings.concat(capabilityWarnings);
+        if (pf.ready && allWarnings.length === 0) {
             if (banner) banner.remove();
             return;
         }
@@ -3343,7 +3353,7 @@
                 issues.map((item) => `<li>${Utils.escapeHtml(item)}</li>`).join('')
             }</ul>`);
         }
-        if (warnings.length) {
+        if (allWarnings.length) {
             const title = blocked
                 ? updateI18n('updates.preflight_warnings_title', 'Before installing')
                 : updateI18n('updates.preflight_info_title', 'Before installing');
@@ -3355,7 +3365,7 @@
                 )}</p>`);
             }
             parts.push(`<ul style="margin:4px 0 0;padding-left:18px;">${
-                warnings.map((item) => `<li>${Utils.escapeHtml(formatPreflightWarning(item))}</li>`).join('')
+                allWarnings.map((item) => `<li>${Utils.escapeHtml(formatPreflightWarning(item))}</li>`).join('')
             }</ul></div>`);
         }
         banner.innerHTML = parts.join('');

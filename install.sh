@@ -28,6 +28,8 @@
 #   --rescue                       Safe repair: permissions, restart, health checks
 #   --diagnose                     Read-only diagnostics for Docker deployments
 #   --repair-permissions           Only repair Docker data/volume permissions
+#   --check-permissions            Check update/config/restart capabilities
+#   --set-config KEY=VALUE         Apply an allowlisted runtime setting
 #   --purge                        With --uninstall: also remove Docker volumes
 #   --uninstall                    Remove BetterDesk Docker installation
 #   --help                         Show usage
@@ -60,6 +62,8 @@ DO_UNINSTALL=false
 DO_PURGE=false
 DO_RESCUE=false
 RESCUE_ACTION="rescue"
+CHECK_CAPABILITIES=false
+MANAGED_CONFIG_CHANGES=()
 
 # Docker quick-start ports (single: 21121 API; split adds 21114)
 DOCKER_PORTS_SINGLE="21115 21116 21117 21118 21119 21121 5000"
@@ -108,6 +112,12 @@ while [ $# -gt 0 ]; do
         --rescue) DO_RESCUE=true; RESCUE_ACTION="rescue"; shift ;;
         --diagnose|--diagnostics) DO_RESCUE=true; RESCUE_ACTION="diagnose"; shift ;;
         --repair-permissions) DO_RESCUE=true; RESCUE_ACTION="repair-permissions"; shift ;;
+        --check-permissions|--check-capabilities) CHECK_CAPABILITIES=true; shift ;;
+        --set-config)
+            [ $# -ge 2 ] && [[ "$2" == *=* ]] || die "--set-config requires KEY=VALUE"
+            MANAGED_CONFIG_CHANGES+=("$2")
+            shift 2
+            ;;
         --purge) DO_PURGE=true; shift ;;
         --uninstall) DO_UNINSTALL=true; shift ;;
         -h|--help) usage ;;
@@ -597,6 +607,10 @@ uninstall_native_mode() {
 rescue_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
 
+    if [ "$RESCUE_ACTION" = "repair-permissions" ] && [ -x "$repo_dir/betterdesk.sh" ]; then
+        "$repo_dir/betterdesk.sh" --repair-permissions
+        return $?
+    fi
     warn "Native rescue is handled by betterdesk.sh on the installed host."
     if [ -x "$repo_dir/betterdesk.sh" ]; then
         echo "Run the interactive native repair toolkit with:"
@@ -606,6 +620,33 @@ rescue_native_mode() {
     fi
 
     die "Native checkout not found at ${repo_dir}. Re-run without --rescue to install, or use --docker for Docker rescue."
+}
+
+run_native_management_action() {
+    local repo_dir="${INSTALL_DIR}/source"
+    local native_installer="${repo_dir}/betterdesk.sh"
+    [ -x "$native_installer" ] || die "Native BetterDesk manager not found at ${native_installer}"
+    local args=()
+    [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
+    [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
+    local change
+    for change in "${MANAGED_CONFIG_CHANGES[@]}"; do
+        args+=(--set-config "$change")
+    done
+    "$native_installer" "${args[@]}"
+}
+
+run_docker_management_action() {
+    local manager="${INSTALL_DIR}/docker/betterdesk-docker.sh"
+    [ -x "$manager" ] || die "Docker BetterDesk manager not found at ${manager}"
+    local args=()
+    [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
+    [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
+    local change
+    for change in "${MANAGED_CONFIG_CHANGES[@]}"; do
+        args+=(--set-config "$change")
+    done
+    "$manager" "${args[@]}"
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -625,6 +666,15 @@ main() {
     fi
 
     require_root
+
+    if [ "$CHECK_CAPABILITIES" = true ] || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+        case "$INSTALL_MODE" in
+            docker) run_docker_management_action ;;
+            native) run_native_management_action ;;
+            *) die "Unknown install mode: $INSTALL_MODE" ;;
+        esac
+        exit $?
+    fi
 
     if [ "$DO_RESCUE" = true ]; then
         case "$INSTALL_MODE" in

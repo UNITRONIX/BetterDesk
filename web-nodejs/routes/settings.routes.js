@@ -30,8 +30,10 @@ const rustDeskPublicEndpoints = require('../services/rustDeskPublicEndpointsServ
 const clientConfigHost = require('../services/clientConfigHost');
 const { getSmtpSettings, putSmtpSettings, testSmtpSettings } = require('../lib/smtpSettingsHandlers');
 const { apiClient } = require('../services/betterdeskApi');
+const { canUsePrivilegedUpdate, invokePrivilegedUpdate } = require('../lib/privilegedUpdateHelper');
 const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
 const deviceGroupService = require('../services/deviceGroupService');
+const managementCapabilities = require('../lib/managementCapabilities');
 const os = require('os');
 const multer = require('multer');
 
@@ -1090,10 +1092,149 @@ router.get('/api/settings/updates/preflight', requireAuth, requirePermission('se
         const serverUpdateRequired = req.query.serverUpdate === '1' || req.query.serverUpdate === 'true';
         const remoteSHA = typeof req.query.sha === 'string' ? req.query.sha : null;
         const result = await updateService.runUpdatePreflight({ serverUpdateRequired, remoteSHA });
+        result.capabilities = managementCapabilities.getCapabilityReport();
         res.json({ success: true, data: result });
     } catch (err) {
         console.error('Update preflight error:', err);
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * GET /api/settings/management/capabilities
+ *
+ * Read-only host capability report used by the panel and repair tools.
+ * Secrets and environment values are intentionally not included here.
+ */
+router.get('/api/settings/management/capabilities', requireAuth, requirePermission('server.config'), (_req, res) => {
+    try {
+        res.json({ success: true, data: managementCapabilities.getCapabilityReport() });
+    } catch (err) {
+        console.error('Management capability check error:', err);
+        res.status(500).json({ success: false, error: err.message || 'capability_check_failed' });
+    }
+});
+
+/**
+ * GET /api/settings/management/config
+ *
+ * Return allowlisted .env values with secrets masked. The example file is the
+ * source of truth for the key set, so updates automatically remain aligned
+ * with installer-generated configuration.
+ */
+router.get('/api/settings/management/config', requireAuth, requirePermission('server.config'), (_req, res) => {
+    try {
+        const paths = managementCapabilities.resolvePaths();
+        const values = managementCapabilities.readEnvFile(paths.envPath);
+        const keys = [...managementCapabilities.getAllowedEnvKeys(paths)].sort();
+        const data = {};
+        for (const key of keys) {
+            if (Object.prototype.hasOwnProperty.call(values, key)) {
+                data[key] = managementCapabilities.maskValue(key, values[key]);
+            }
+        }
+        res.json({ success: true, data: { keys, values: data, envPath: paths.envPath } });
+    } catch (err) {
+        console.error('Management configuration read error:', err);
+        res.status(500).json({ success: false, error: err.message || 'configuration_read_failed' });
+    }
+});
+
+/**
+ * PUT /api/settings/management/config
+ *
+ * Body: { changes: { KEY: "value" }, dryRun?: boolean }
+ * Changes are backed up and written atomically. A restart transaction is
+ * returned so the operator can confirm or cancel the change in the panel.
+ */
+router.put('/api/settings/management/config', requireAuth, requirePermission('server.config'), async (req, res) => {
+    let result = null;
+    try {
+        const changes = req.body && req.body.changes;
+        const validated = managementCapabilities.validateEnvChanges(changes);
+        const capabilities = managementCapabilities.getCapabilityReport();
+        if (req.body && (req.body.dryRun === true || req.body.dryRun === 'true')) {
+            return res.json({
+                success: true,
+                data: {
+                    dryRun: true,
+                    changes: Object.fromEntries(Object.entries(validated).map(([key, value]) => [
+                        key,
+                        managementCapabilities.maskValue(key, value),
+                    ])),
+                    capabilities,
+                },
+            });
+        }
+        const canUseBroker = process.platform === 'linux' && canUsePrivilegedUpdate();
+        if (!capabilities.groups.config.ready && !canUseBroker) {
+            return res.status(409).json({
+                success: false,
+                error: 'Configuration path is not writable',
+                code: 'CONFIG_CAPABILITY_BLOCKED',
+                data: { capabilities },
+            });
+        }
+
+        if (capabilities.groups.config.ready) {
+            result = managementCapabilities.applyEnvChanges(validated);
+        } else {
+            const paths = managementCapabilities.resolvePaths();
+            result = invokePrivilegedUpdate({
+                action: 'write_env',
+                path: paths.envPath,
+                vars: validated,
+            });
+            result.envPath = paths.envPath;
+            result.changed = result.keys || Object.keys(validated);
+        }
+        const pending = restartCoordinator.registerChange(req, {
+            key: `managed-env:${result.changed.join(',')}`,
+            label: `Managed configuration: ${result.changed.join(', ')}`,
+            rollback: {
+                type: 'env-config',
+                backupPath: result.backupPath,
+                options: managementCapabilities.resolvePaths(),
+            },
+        });
+        await db.logAction(
+            req.session?.userId,
+            'managed_config_saved',
+            `Saved allowlisted environment keys: ${result.changed.join(', ')}`,
+            req.ip,
+        );
+        res.json({
+            success: true,
+            data: {
+                ...result,
+                pendingRestart: pending,
+            },
+            message: 'Configuration saved; service restart confirmation is required',
+        });
+    } catch (err) {
+        if (result && result.backupPath) {
+            try {
+                managementCapabilities.restoreEnvBackup(
+                    result.backupPath,
+                    managementCapabilities.resolvePaths(),
+                );
+            } catch (rollbackErr) {
+                try {
+                    invokePrivilegedUpdate({
+                        action: 'restore_env',
+                        path: managementCapabilities.resolvePaths().envPath,
+                        backupPath: result.backupPath,
+                    });
+                } catch (brokerErr) {
+                    console.error('Managed configuration rollback error:', brokerErr || rollbackErr);
+                }
+            }
+        }
+        const validationError = /allowlisted|Invalid |No configuration|control character|boolean|port|outside BetterDesk|absolute/i.test(err.message || '');
+        res.status(validationError ? 400 : 500).json({
+            success: false,
+            error: err.message || 'configuration_write_failed',
+        });
     }
 });
 

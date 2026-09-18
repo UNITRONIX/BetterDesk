@@ -31,6 +31,20 @@ const CONNECTION_ENV_KEYS = new Set([
     'LOGGED_IN_ONLY_INITIATOR',
     'OPERATOR_ONLY_OUTBOUND',
 ]);
+const MANAGEMENT_MANIFEST_PATH = path.join(__dirname, 'management-capabilities.json');
+const ENV_KEY_RE = /^[A-Z][A-Z0-9_]*$/;
+const SECRET_KEY_RE = /(PASSWORD|PASS|SECRET|TOKEN|API_KEY|PRIVATE_KEY|DATABASE_URL)/i;
+const BOOLEAN_VALUES = new Set(['true', 'false', '1', '0', 'yes', 'no', 'on', 'off', 'y', 'n']);
+const PORT_KEYS = new Set(['PORT', 'HTTPS_PORT', 'SMTP_PORT', 'API_PORT', 'GO_API_PORT', 'CLIENT_API_PORT', 'CHAT_PORT']);
+const PATH_KEYS = new Set([
+    'RUSTDESK_DIR', 'KEYS_PATH', 'PUB_KEY_PATH', 'API_KEY_PATH', 'DB_PATH',
+    'DATA_DIR', 'SSL_CERT_PATH', 'SSL_KEY_PATH', 'SSL_CA_PATH',
+]);
+const MANAGED_ENV_PATHS = new Set([
+    '/opt/BetterDeskConsole/.env',
+    '/opt/betterdesk/.env',
+    '/var/lib/betterdesk/.env',
+]);
 
 function isRoot() {
     return typeof process.getuid === 'function' && process.getuid() === 0;
@@ -108,6 +122,108 @@ function writeConnectionEnv(vars) {
     return { path: CONNECTION_DROPIN_PATH, keys: lines.length - 2 };
 }
 
+function readManagementManifest() {
+    try {
+        const parsed = JSON.parse(fs.readFileSync(MANAGEMENT_MANIFEST_PATH, 'utf8'));
+        return parsed && Array.isArray(parsed.environmentKeys)
+            ? new Set(parsed.environmentKeys)
+            : new Set();
+    } catch (_) {
+        return new Set();
+    }
+}
+
+function validateManagedEnvPath(filePath) {
+    const normalized = path.resolve(String(filePath || ''));
+    if (!MANAGED_ENV_PATHS.has(normalized)) {
+        throw new Error('Environment path is not allowlisted');
+    }
+    return normalized;
+}
+
+function validateManagedEnvValue(key, value) {
+    if (!ENV_KEY_RE.test(key) || !readManagementManifest().has(key)) {
+        throw new Error(`Environment key is not allowlisted: ${key}`);
+    }
+    const raw = String(value == null ? '' : value);
+    if (/[\0\r\n]/.test(raw)) throw new Error(`Invalid control character in ${key}`);
+    if (PATH_KEYS.has(key)) {
+        const normalized = path.resolve(raw);
+        const allowedRoots = ['/opt/BetterDeskConsole', '/opt/betterdesk', '/var/lib/betterdesk', '/etc/letsencrypt'];
+        if (!path.isAbsolute(raw) || !allowedRoots.some((root) =>
+            normalized === root || normalized.startsWith(`${root}${path.sep}`))) {
+            throw new Error(`Path is outside BetterDesk roots for ${key}`);
+        }
+    }
+    if (PORT_KEYS.has(key)
+        && (!/^\d{1,5}$/.test(raw) || Number(raw) < 1 || Number(raw) > 65535)) {
+        throw new Error(`Invalid port for ${key}`);
+    }
+    if (key === 'DB_TYPE' && !new Set(['sqlite', 'postgres', 'postgresql']).has(raw)) {
+        throw new Error(`Invalid value for ${key}`);
+    }
+    if (key === 'UPDATE_GITHUB_BRANCH' && !new Set(['main', 'dev']).has(raw)) {
+        throw new Error(`Invalid value for ${key}`);
+    }
+    if (['HTTPS_ENABLED', 'HTTP_REDIRECT_HTTPS', 'TRUST_PROXY', 'API_ENABLED'].includes(key)
+        && !BOOLEAN_VALUES.has(raw.toLowerCase())) {
+        throw new Error(`Invalid boolean for ${key}`);
+    }
+    return raw;
+}
+
+function writeManagedEnv(payload) {
+    const envPath = validateManagedEnvPath(payload.path);
+    if (!payload.vars || typeof payload.vars !== 'object' || Array.isArray(payload.vars)) {
+        throw new Error('write_env requires a vars object');
+    }
+    const vars = {};
+    for (const [key, value] of Object.entries(payload.vars)) {
+        vars[key] = validateManagedEnvValue(key, value);
+    }
+    if (!Object.keys(vars).length) throw new Error('write_env requires at least one key');
+    const original = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+    const lines = original ? original.split(/\r?\n/) : [];
+    const seen = new Set();
+    const output = lines.map((line) => {
+        const match = line.match(/^\s*([A-Z][A-Z0-9_]*)=(.*)$/);
+        if (!match || !Object.prototype.hasOwnProperty.call(vars, match[1])) return line;
+        seen.add(match[1]);
+        return `${match[1]}=${vars[match[1]]}`;
+    });
+    for (const [key, value] of Object.entries(vars)) {
+        if (!seen.has(key)) output.push(`${key}=${value}`);
+    }
+    const backupPath = `${envPath}.bak.${Date.now()}`;
+    fs.writeFileSync(backupPath, original, { mode: 0o600 });
+    const tmp = `${envPath}.betterdesk.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, `${output.join('\n').replace(/\n+$/, '')}\n`, { mode: 0o600 });
+    fs.renameSync(tmp, envPath);
+    try { fs.chmodSync(envPath, 0o600); } catch (_) { /* root-owned file */ }
+    return {
+        path: envPath,
+        backupPath,
+        keys: Object.keys(vars),
+        values: Object.fromEntries(Object.keys(vars).map((key) => [
+            key,
+            SECRET_KEY_RE.test(key) ? '********' : vars[key],
+        ])),
+    };
+}
+
+function restoreManagedEnv(payload) {
+    const envPath = validateManagedEnvPath(payload.path);
+    const backupPath = path.resolve(String(payload.backupPath || ''));
+    if (!backupPath.startsWith(`${envPath}.bak.`) || !fs.existsSync(backupPath)) {
+        throw new Error('Environment backup path is not allowlisted');
+    }
+    const tmp = `${envPath}.betterdesk-rollback.${process.pid}.tmp`;
+    fs.copyFileSync(backupPath, tmp);
+    fs.renameSync(tmp, envPath);
+    try { fs.chmodSync(envPath, 0o600); } catch (_) { /* root-owned file */ }
+    return { path: envPath, restoredFrom: backupPath };
+}
+
 function handle(payload) {
     if (!isRoot()) {
         throw new Error('Privileged update broker must run as root');
@@ -128,6 +244,14 @@ function handle(payload) {
         case 'write_connection_env': {
             const written = writeConnectionEnv(payload.vars);
             return { success: true, action: payload.action, ...written };
+        }
+        case 'write_env': {
+            const written = writeManagedEnv(payload);
+            return { success: true, action: payload.action, ...written };
+        }
+        case 'restore_env': {
+            const restored = restoreManagedEnv(payload);
+            return { success: true, action: payload.action, ...restored };
         }
         default:
             throw new Error('Privileged update action is not allowlisted');

@@ -30,6 +30,8 @@ describe('privileged update broker client', () => {
             'utf8'
         );
         expect(src).toContain("case 'write_connection_env'");
+        expect(src).toContain("case 'write_env'");
+        expect(src).toContain("case 'restore_env'");
         expect(src).toContain('ALLOW_SHARED_NAT_INITIATOR');
         expect(src).toContain('50-betterdesk-connection.conf');
     });

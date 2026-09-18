@@ -34,6 +34,12 @@ const UPDATE_SUDOERS_PATH = '/etc/sudoers.d/betterdesk-console-updates';
 const UPDATE_SUDOERS_MARKER = '# Managed by BetterDesk linux-ensure-console-user.js';
 const PRIVILEGED_HELPER_PATH = '/usr/local/libexec/betterdesk/betterdesk-privileged-update.js';
 const PRIVILEGED_HELPER_SOURCE = path.join(__dirname, 'betterdesk-privileged-update.js');
+const PRIVILEGED_MANIFEST_PATH = '/usr/local/libexec/betterdesk/management-capabilities.json';
+const PRIVILEGED_MANIFEST_SOURCE = path.join(
+    CONSOLE_PATH,
+    'config',
+    'management-capabilities.json',
+);
 /** setgid + group rwx — new Go-server files inherit group betterdesk (#206) */
 const SHARED_GO_DATA_DIR_MODE = '2775';
 /** setgid + group rx — console reads TLS material written by root */
@@ -80,16 +86,22 @@ function installPrivilegedUpdateHelper() {
         ? fs.readFileSync(PRIVILEGED_HELPER_PATH)
         : null;
     const desired = fs.readFileSync(PRIVILEGED_HELPER_SOURCE);
-    if (current && current.equals(desired)) {
-        return { changed: false, path: PRIVILEGED_HELPER_PATH };
+    const helperChanged = !current || !current.equals(desired);
+    if (helperChanged) {
+        const tmp = path.join(targetDir, `.betterdesk-privileged-update.${process.pid}.tmp`);
+        fs.writeFileSync(tmp, desired, { mode: 0o700 });
+        fs.chmodSync(tmp, 0o755);
+        fs.renameSync(tmp, PRIVILEGED_HELPER_PATH);
+        try { fs.chownSync(PRIVILEGED_HELPER_PATH, 0, 0); } catch (_) { /* root on non-Unix test doubles */ }
     }
-
-    const tmp = path.join(targetDir, `.betterdesk-privileged-update.${process.pid}.tmp`);
-    fs.writeFileSync(tmp, desired, { mode: 0o700 });
-    fs.chmodSync(tmp, 0o755);
-    fs.renameSync(tmp, PRIVILEGED_HELPER_PATH);
-    try { fs.chownSync(PRIVILEGED_HELPER_PATH, 0, 0); } catch (_) { /* root on non-Unix test doubles */ }
-    return { changed: true, path: PRIVILEGED_HELPER_PATH };
+    if (fs.existsSync(PRIVILEGED_MANIFEST_SOURCE)) {
+        const manifestTmp = `${PRIVILEGED_MANIFEST_PATH}.${process.pid}.tmp`;
+        fs.copyFileSync(PRIVILEGED_MANIFEST_SOURCE, manifestTmp);
+        fs.chmodSync(manifestTmp, 0o644);
+        fs.renameSync(manifestTmp, PRIVILEGED_MANIFEST_PATH);
+        try { fs.chownSync(PRIVILEGED_MANIFEST_PATH, 0, 0); } catch (_) { /* root on tests */ }
+    }
+    return { changed: helperChanged, path: PRIVILEGED_HELPER_PATH };
 }
 
 function ensureDeployScriptExecutable() {
@@ -832,4 +844,5 @@ module.exports = {
     SHARED_GO_SSL_DIR_MODE,
     SVC_USER,
     PRIVILEGED_HELPER_PATH,
+    PRIVILEGED_MANIFEST_PATH,
 };

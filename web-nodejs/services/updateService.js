@@ -56,6 +56,7 @@ const {
     ensureParentDirForFile,
     isUpdatePermissionError,
 } = require('../lib/updateProjectRoot');
+const managementCapabilities = require('../lib/managementCapabilities');
 
 const GITHUB_OWNER  = process.env.UPDATE_GITHUB_OWNER  || 'UNITRONIX';
 const GITHUB_REPO   = process.env.UPDATE_GITHUB_REPO   || 'BetterDesk';
@@ -3313,6 +3314,7 @@ async function runUpdatePreflight(opts = {}) {
         ready: issues.length === 0,
         issues,
         warnings,
+        capabilities: managementCapabilities.getCapabilityReport(),
         go: goInfo,
         canBuildServer,
         disk,

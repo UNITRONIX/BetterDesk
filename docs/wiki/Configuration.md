@@ -71,6 +71,25 @@ Prometheus text is served at `GET /metrics` on the admin API port (gated by auth
 
 The Node.js console is configured through `/opt/BetterDeskConsole/.env`:
 
+### Managed configuration and capability checks
+
+The installers and the web panel use the same allowlist from
+`web-nodejs/.env.example`. Before changing runtime settings, check whether
+the console can write configuration, deploy updates and restart both
+BetterDesk services:
+
+```bash
+sudo ./betterdesk.sh --check-permissions
+sudo ./betterdesk.sh --set-config LOG_LEVEL=info --set-config HTTPS_PORT=5443
+```
+
+The Windows manager provides equivalent `-CheckPermissions` and `-SetConfig`
+parameters. Docker uses `betterdesk-docker.sh --check-permissions` and
+`--set-config`. Changes are validated, backed up, written atomically and
+followed by a service/container restart and health check. Unknown keys,
+arbitrary service names and shell commands are not accepted. Secret values
+are never printed in capability or configuration reports.
+
 ```env
 # Server Connection
 BETTERDESK_API_URL=http://localhost:21114/api

@@ -10,7 +10,15 @@
 - The panel does not download or install a pre-built server binary from GitHub Releases or GitHub Actions. This keeps source, dependencies and the compiled binary on the same selected branch/SHA.
 - Console update merges new keys from `web-nodejs/.env.example` into existing `.env` using `buildEnvSubstitutions()` (resolved paths, no raw `__PLACEHOLDER__` values).
 - After server updates, `patchServiceDefinitions()` sanitizes writable/NSSM units in place; protected Linux systemd units require the explicit root maintenance step below.
+- Update preflight now includes the shared management capability report. It
+  separately reports whether the panel can update files, write allowlisted
+  `.env` settings, restart BetterDesk services, repair permissions, create
+  backups and complete a post-operation health check.
 - **Linux privilege boundary:** the panel never executes a repository JavaScript file through `sudo` and never writes root-owned systemd units or Go binaries. A root operator must run `sudo node web-nodejs/scripts/linux-ensure-console-user.js` after installation or after a privileged layout change; this installs the fixed root-owned update broker at `/usr/local/libexec/betterdesk/betterdesk-privileged-update.js`. The broker only permits `systemctl daemon-reload` and restart of `betterdesk-console` / `betterdesk-server`.
+- The fixed broker also permits only validated BetterDesk `.env` writes and
+  rollback from a generated backup. Environment keys are loaded from the
+  root-owned management manifest, and paths, ports, booleans and branch names
+  are validated before a write.
 - **Root-owned Go binary:** when the Go server target is not writable by the console user, the panel leaves the binary unchanged and reports the documented manual root deploy step. Do not add a sudoers rule for `linux-deploy-server-binary.js`, `linux-ensure-console-user.js`, or any script under the writable console tree.
 - **Migration:** a root operator must rerun the ensure script once to replace older broad sudoers entries and remove any legacy `ExecStartPre=+...linux-ensure-console-user.js` line from the console unit. Verify with `sudo visudo -cf /etc/sudoers.d/betterdesk-console-updates` and `sudo systemctl cat betterdesk-console`.
 - **Windows path root (#272):** `resolveProjectRoot()` must never resolve to a drive root (`C:\`). Default layout `C:\BetterDeskConsole` + `C:\BetterDesk` writes Scripts & Docker files under the console directory. `ensureParentDirForFile()` skips `mkdir` on filesystem roots (Node throws `EPERM` on `mkdir('C:\\')`). NSSM OpenService Access Denied when restarting `BetterDeskServer` is non-critical — restart the Go service manually or via `betterdesk.ps1` if needed.

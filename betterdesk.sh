@@ -49,6 +49,9 @@ SKIP_VERIFY=false
 MINIMAL_MODE=false
 UNINSTALL_MODE=false
 PURGE_MODE=false
+CHECK_CAPABILITIES=false
+REPAIR_PERMISSIONS=false
+MANAGED_CONFIG_CHANGES=()
 PREFERRED_CONSOLE_TYPE="nodejs"  # Always Node.js (Flask removed in v2.3.0)
 
 # Relay server selection mode:
@@ -80,6 +83,22 @@ while [[ $# -gt 0 ]]; do
         --purge)
             PURGE_MODE=true
             shift
+            ;;
+        --check-permissions|--check-capabilities)
+            CHECK_CAPABILITIES=true
+            shift
+            ;;
+        --repair-permissions)
+            REPAIR_PERMISSIONS=true
+            shift
+            ;;
+        --set-config)
+            if [ $# -lt 2 ] || [[ "$2" != *=* ]]; then
+                echo "ERROR: --set-config requires KEY=VALUE"
+                exit 1
+            fi
+            MANAGED_CONFIG_CHANGES+=("$2")
+            shift 2
             ;;
         --nodejs)
             PREFERRED_CONSOLE_TYPE="nodejs"
@@ -129,6 +148,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --auto, -a       Run in automatic mode (non-interactive)"
             echo "  --uninstall      Stop services and remove the native installation"
             echo "  --purge          With --uninstall, also remove data and keys"
+            echo "  --check-permissions  Report panel/update/config/restart capabilities"
+            echo "  --repair-permissions Repair BetterDesk ownership, broker and service access"
+            echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
             echo "  --skip-verify    Skip SHA256 verification of binaries"
             echo "  --minimal        Install Go server only (no web console)"
             echo "  --nodejs         Install Node.js web console (default)"
@@ -266,6 +288,126 @@ print_error() { echo -e "${RED}✗${NC} $1"; log "ERROR: $1"; }
 print_warning() { echo -e "${YELLOW}!${NC} $1"; log "WARNING: $1"; }
 print_info() { echo -e "${BLUE}ℹ${NC} $1"; log "INFO: $1"; }
 print_step() { echo -e "${MAGENTA}▶${NC} $1"; log "STEP: $1"; }
+
+#===============================================================================
+# Management capabilities and allowlisted runtime configuration
+#===============================================================================
+
+management_cli_path() {
+    if [ -f "$CONSOLE_PATH/scripts/management-cli.js" ]; then
+        printf '%s\n' "$CONSOLE_PATH/scripts/management-cli.js"
+    elif [ -f "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js" ]; then
+        printf '%s\n' "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js"
+    else
+        return 1
+    fi
+}
+
+check_management_capabilities() {
+    local cli
+    cli=$(management_cli_path 2>/dev/null) || {
+        print_error "Management capability tool is missing"
+        return 1
+    }
+    print_step "Checking BetterDesk management capabilities..."
+    BETTERDESK_CONSOLE_PATH="$CONSOLE_PATH" BETTERDESK_PATH="$RUSTDESK_PATH" \
+        DATA_DIR="$CONSOLE_PATH/data" node "$cli" check || {
+        print_warning "One or more management capabilities are blocked; see the report above"
+        return 1
+    }
+    print_success "BetterDesk management capabilities are ready"
+}
+
+repair_management_permissions() {
+    print_step "Repairing BetterDesk management permissions..."
+    local ensure_script="$CONSOLE_PATH/scripts/linux-ensure-console-user.js"
+    if [ -f "$ensure_script" ] && command -v node >/dev/null 2>&1; then
+        node "$ensure_script" || print_warning "Console permission repair reported issues"
+    fi
+    if [ -d "$CONSOLE_PATH" ]; then
+        chown -R betterdesk:betterdesk "$CONSOLE_PATH" 2>/dev/null || true
+        chmod 700 "$CONSOLE_PATH/data" 2>/dev/null || true
+    fi
+    if [ -d "$RUSTDESK_PATH" ]; then
+        mkdir -p "$RUSTDESK_PATH/ssl"
+        chown root:betterdesk "$RUSTDESK_PATH" "$RUSTDESK_PATH/ssl" 2>/dev/null || true
+        chmod 2775 "$RUSTDESK_PATH" 2>/dev/null || true
+        chmod 2750 "$RUSTDESK_PATH/ssl" 2>/dev/null || true
+        for f in "$RUSTDESK_PATH/.env" "$RUSTDESK_PATH/.api_key" \
+                 "$RUSTDESK_PATH/db_v2.sqlite3" "$RUSTDESK_PATH/db_v2.sqlite3-wal" \
+                 "$RUSTDESK_PATH/db_v2.sqlite3-shm" "$RUSTDESK_PATH/ssl/betterdesk.crt" \
+                 "$RUSTDESK_PATH/ssl/betterdesk.key"; do
+            if [ -e "$f" ]; then
+                chown root:betterdesk "$f" 2>/dev/null || true
+                chmod 640 "$f" 2>/dev/null || true
+            fi
+        done
+    fi
+    systemctl daemon-reload 2>/dev/null || true
+    check_management_capabilities || true
+}
+
+apply_managed_config() {
+    local cli
+    cli=$(management_cli_path 2>/dev/null) || {
+        print_error "Management configuration tool is missing"
+        return 1
+    }
+    if [ "${#MANAGED_CONFIG_CHANGES[@]}" -eq 0 ]; then
+        print_error "No allowlisted configuration changes supplied"
+        return 1
+    fi
+    print_step "Applying allowlisted BetterDesk configuration..."
+    BETTERDESK_CONSOLE_PATH="$CONSOLE_PATH" BETTERDESK_PATH="$RUSTDESK_PATH" \
+        DATA_DIR="$CONSOLE_PATH/data" node "$cli" set "${MANAGED_CONFIG_CHANGES[@]}" || return 1
+    systemctl daemon-reload 2>/dev/null || true
+    systemctl restart betterdesk-server betterdesk-console 2>/dev/null || true
+    sleep 2
+    start_services_with_verification
+}
+
+configure_management() {
+    print_header
+    echo -e "${WHITE}${BOLD}══════════ MANAGEMENT CAPABILITIES ══════════${NC}"
+    echo ""
+    check_management_capabilities || true
+    echo ""
+    local _menu_items=(
+        $'Repair permissions\tRepair console user, data paths, TLS and broker'
+        $'Change .env settings\tApply allowlisted KEY=VALUE pairs and restart'
+        $'Recheck capabilities\tRun the read-only capability report again'
+        $'Back\tReturn to the main menu'
+    )
+    local _menu_returns=( 1 2 3 0 )
+    menu_choose "BetterDesk Management" "Only allowlisted BetterDesk operations are available"
+    case "${MENU_CHOICE:-0}" in
+        1)
+            repair_management_permissions
+            press_enter
+            ;;
+        2)
+            MANAGED_CONFIG_CHANGES=()
+            while true; do
+                echo -ne "Enter KEY=VALUE (empty to apply): "
+                local item
+                read -r item
+                [ -z "$item" ] && break
+                if [[ "$item" != *=* ]]; then
+                    print_warning "Use KEY=VALUE"
+                else
+                    MANAGED_CONFIG_CHANGES+=("$item")
+                fi
+            done
+            apply_managed_config || print_error "Configuration change failed"
+            press_enter
+            ;;
+        3)
+            check_management_capabilities || true
+            press_enter
+            ;;
+        *) return ;;
+    esac
+}
 
 press_enter() {
     echo ""
@@ -5135,6 +5277,7 @@ do_update() {
     echo ""
     
     detect_installation
+    check_management_capabilities || print_warning "Update may need the Management capabilities → Repair permissions action first"
     
     if [ "$INSTALL_STATUS" = "none" ]; then
         print_error "BetterDesk is not installed!"
@@ -5301,6 +5444,7 @@ do_repair() {
     echo ""
     
     detect_installation
+    check_management_capabilities || print_warning "Repair will report permission blockers before changing protected files"
     
     # CRITICAL: Preserve database configuration before any repair operation
     # This prevents PostgreSQL → SQLite switch when regenerating service files
@@ -7866,6 +8010,7 @@ show_menu() {
     echo "  M. 🔄 Database migration"
     echo "  B. 🧰 Build toolchain"
     echo "  S. ⚙️  Settings (paths)"
+    echo "  P. 🛡️  Management capabilities and server settings"
     echo "  0. ❌ Exit"
     echo ""
     echo -e "  ${DIM}Tip: this menu also supports arrow-key navigation (set BETTERDESK_CLASSIC_MENU=1 to force this list).${NC}"
@@ -7885,6 +8030,17 @@ main() {
     auto_detect_paths
     echo ""
     sleep 1
+
+    if [ "$CHECK_CAPABILITIES" = true ] || [ "$REPAIR_PERMISSIONS" = true ] \
+        || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+        local management_rc=0
+        [ "$REPAIR_PERMISSIONS" = true ] && repair_management_permissions
+        check_management_capabilities || management_rc=$?
+        if [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+            apply_managed_config || management_rc=$?
+        fi
+        exit "$management_rc"
+    fi
     
     # Auto mode - run installation directly
     if [ "$AUTO_MODE" = true ]; then
@@ -7917,9 +8073,10 @@ main() {
         $'Database migration\tMigrate between backends'
         $'Build toolchain\tInstall compilers'
         $'Settings (paths)\tConfigure install paths'
+        $'Management capabilities\tCheck permissions and change allowlisted server settings'
         $'Exit\tQuit the manager'
     )
-    local menu_actions=( 1 2 3 4 5 6 7 8 9 L C T M B S 0 )
+    local menu_actions=( 1 2 3 4 5 6 7 8 9 L C T M B S P 0 )
 
     while true; do
         local choice=""
@@ -7954,6 +8111,7 @@ main() {
             [Mm]) do_migrate_database ;;
             [Bb]) do_install_build_toolchain ;;
             [Ss]) configure_paths ;;
+            [Pp]) configure_management ;;
             0) 
                 echo ""
                 print_info "Goodbye!"
