@@ -70,4 +70,14 @@ describe('Docker admin bootstrap contract', () => {
             expect(contents).toContain('DB_PATH=/opt/rustdesk/db_v2.sqlite3');
         }
     });
+
+    test('split server entrypoint normalizes the Go database path', () => {
+        const contents = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'server-entrypoint.sh'),
+            'utf8'
+        );
+
+        expect(contents).toContain('export DB_URL="${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}"');
+        expect(contents).toContain('export DB_URL="${DATABASE_URL:-${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}}"');
+    });
 });

@@ -9,6 +9,21 @@ ensure_betterdesk_user
 
 DATA_DIR="/opt/rustdesk"
 
+# Normalize the Go database path before credential bootstrap and startup.
+# Split Compose files should set DB_URL explicitly, but custom deployments may
+# only set DB_PATH or neither. Keep bootstrap inspection and Go on the same
+# absolute volume-backed path instead of relying on the container WORKDIR.
+if [ -z "${DB_URL:-}" ]; then
+    case "${DB_TYPE:-sqlite}" in
+        postgres|postgresql)
+            export DB_URL="${DATABASE_URL:-${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}}"
+            ;;
+        *)
+            export DB_URL="${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}"
+            ;;
+    esac
+fi
+
 # Fix ownership before bootstrap writes .admin_credentials (issue #385).
 if [ "$(id -u)" = "0" ]; then
     chown -R betterdesk:betterdesk "$DATA_DIR" 2>/dev/null || true
