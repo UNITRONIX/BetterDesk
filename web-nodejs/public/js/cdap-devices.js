@@ -84,6 +84,9 @@
         .then(function (data) {
             if (data.success) {
                 var msg = enable ? _i18n('cdap.enabled_restart') : _i18n('cdap.disabled_restart');
+                if (data.restartRequired && window.BetterDeskRestart) {
+                    window.BetterDeskRestart.handle(data.restartRequired);
+                }
                 if (window.BetterDesk && window.BetterDesk.notify) {
                     window.BetterDesk.notify(msg, 'info');
                 } else if (window.parent !== window && window.parent.BetterDesk && window.parent.BetterDesk.notify) {

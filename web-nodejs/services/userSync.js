@@ -48,6 +48,30 @@ function normalizeUsername(username) {
     return String(username || '').trim().toLowerCase();
 }
 
+function parseLastLogin(value) {
+    const text = String(value || '').trim();
+    if (!text) return null;
+
+    // SQLite datetime('now') is UTC but has no timezone suffix.
+    const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
+        ? `${text.replace(' ', 'T')}Z`
+        : text;
+    const timestamp = Date.parse(normalized);
+    return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function shouldSyncLastLogin(localValue, goValue) {
+    const goText = String(goValue || '').trim();
+    if (!goText || parseLastLogin(goText) === null) return false;
+
+    const localText = String(localValue || '').trim();
+    if (!localText) return true;
+
+    const localTimestamp = parseLastLogin(localText);
+    const goTimestamp = parseLastLogin(goText);
+    return localTimestamp === null || goTimestamp > localTimestamp;
+}
+
 /** Matches Go auth.IsSuperAdminRole / panel isSuperAdminRole (Discussion #99). */
 function isSuperAdminRole(role) {
     return role === 'super_admin' || role === 'admin';
@@ -637,7 +661,7 @@ async function backfillFromGo() {
 
     const synced = syncExistingAuthFromGo(authDb, goUsers, localUsers);
     if (synced > 0) {
-        console.log(`[userSync] Go->Node backfill: synced auth_provider/role for ${synced} existing user(s)`);
+        console.log(`[userSync] Go->Node backfill: synced account metadata/last_login for ${synced} existing user(s)`);
     }
 
     return { imported, synced };
@@ -647,6 +671,9 @@ function syncExistingAuthFromGo(authDb, goUsers, localUsers) {
     if (!authDb || !Array.isArray(goUsers) || goUsers.length === 0) return 0;
     const localByName = new Map((localUsers || []).map(u => [normalizeUsername(u.username), u]));
     const updateStmt = authDb.prepare('UPDATE users SET role = ?, auth_provider = ? WHERE id = ?');
+    const updateWithLastLoginStmt = authDb.prepare(
+        'UPDATE users SET role = ?, auth_provider = ?, last_login = ? WHERE id = ?'
+    );
     let synced = 0;
 
     for (const goUser of goUsers) {
@@ -656,10 +683,20 @@ function syncExistingAuthFromGo(authDb, goUsers, localUsers) {
         const goProvider = String(goUser.auth_provider || 'local').trim() || 'local';
         const goRole = normalizeRole(goUser.role);
         const localProvider = String(local.auth_provider || 'local').trim() || 'local';
+        const syncLastLogin = shouldSyncLastLogin(local.last_login, goUser.last_login);
 
-        if (goProvider !== localProvider || goRole !== local.role) {
+        if (goProvider !== localProvider || goRole !== local.role || syncLastLogin) {
             try {
-                updateStmt.run(goRole, goProvider, local.id);
+                if (syncLastLogin) {
+                    updateWithLastLoginStmt.run(
+                        goRole,
+                        goProvider,
+                        String(goUser.last_login).trim(),
+                        local.id
+                    );
+                } else {
+                    updateStmt.run(goRole, goProvider, local.id);
+                }
                 synced++;
             } catch (err) {
                 console.warn(`[userSync] Go->Node sync failed for '${local.username}': ${err.message}`);

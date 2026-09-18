@@ -12,6 +12,7 @@ const {
 } = require('../services/helpRequestEmailService');
 const { getSmtpSettings } = require('../lib/smtpSettingsHandlers');
 const billingClockConfig = require('../services/billingClockConfigService');
+const restartCoordinator = require('../services/restartCoordinator');
 
 router.get('/commercialization', requireAuth, requirePermission('billing.view'), (req, res) => {
     const validTabs = ['overview', 'packages', 'sessions', 'reports', 'settings'];
@@ -50,7 +51,16 @@ router.get('/api/panel/billing/clock/settings', requireAuth, requirePermission('
 
 router.put('/api/panel/billing/clock/settings', requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
-        const result = await billingClockConfig.saveClockSettings(req.body || {}, { restart: true });
+        const previous = billingClockConfig.getClockSettings();
+        const result = await billingClockConfig.saveClockSettings(req.body || {}, { restart: false });
+        const restartRequired = restartCoordinator.registerChange(req, {
+            key: 'billing-clock',
+            label: req.t('commercialization.clock.title'),
+            rollback: {
+                type: 'billing-clock',
+                settings: previous,
+            }
+        });
         try {
             await db.logAction(
                 req.session.userId,
@@ -64,6 +74,7 @@ router.put('/api/panel/billing/clock/settings', requireAuth, requirePermission('
             settings: result.settings,
             serviceConfig: result.serviceConfig,
             restart: result.restart,
+            restartRequired,
         });
     } catch (err) {
         const code = ['invalid_ntp_servers', 'invalid_max_skew'].includes(err.message) ? 400 : 500;

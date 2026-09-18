@@ -8,11 +8,16 @@
     let _ldapWasEnabled = false;
     let _oidcWasEnabled = false;
     let _smtpWasConfigured = false;
+    let _restartPending = null;
+    let _restartPollTimer = null;
+    let _restartPollAttempts = 0;
+    let _connectionModeSnapshot = null;
     
     document.addEventListener('DOMContentLoaded', init);
     
     function init() {
         initTabs();
+        initRestartCoordinator();
         initSettingsSearch();
         initPasswordForm();
         initTotpSection();
@@ -53,6 +58,228 @@
     // ==================== Settings UI helpers ====================
 
     const _settingsSaveTimers = {};
+
+    function restartLabelList(pending) {
+        return (pending?.changes || [])
+            .map((change) => `<li>${Utils.escapeHtml(change.label || change.key || '')}</li>`)
+            .join('');
+    }
+
+    function restartModalContent(message, pending, progress = '') {
+        return `
+            <div class="settings-restart-modal">
+                <p>${Utils.escapeHtml(message)}</p>
+                ${pending?.changes?.length ? `<ul class="update-wizard-error-list">${restartLabelList(pending)}</ul>` : ''}
+                <p id="settings-restart-modal-status" class="text-muted">${Utils.escapeHtml(progress)}</p>
+            </div>
+        `;
+    }
+
+    function showRestartPrompt(pending) {
+        if (!pending || !pending.id || pending.phase !== 'pending') return;
+        _restartPending = pending;
+        if (!window.Modal) return;
+        Modal.show({
+            title: tSettings('restart_required_title', 'Restart required'),
+            content: restartModalContent(
+                tSettings('restart_required_message', 'The saved settings require a BetterDesk service restart. Cancel to restore the previous values, or restart now.'),
+                pending,
+                tSettings('restart_required_waiting', 'Waiting for your confirmation.')
+            ),
+            closable: false,
+            size: 'medium',
+            buttons: [
+                {
+                    label: tSettings('restart_cancel', 'Cancel and restore'),
+                    class: 'btn-secondary',
+                    icon: 'undo',
+                    onClick: cancelPendingRestart
+                },
+                {
+                    label: tSettings('restart_confirm', 'Restart services'),
+                    class: 'btn-danger',
+                    icon: 'restart_alt',
+                    onClick: confirmPendingRestart
+                }
+            ]
+        });
+    }
+
+    function setRestartModalStatus(text) {
+        const el = document.getElementById('settings-restart-modal-status');
+        if (el) el.textContent = text;
+    }
+
+    function showRestartProgress(pending, text) {
+        _restartPending = pending;
+        if (window.Modal) Modal.close();
+        Modal.show({
+            title: tSettings('restart_progress_title', 'Restarting BetterDesk'),
+            content: restartModalContent(
+                tSettings('restart_progress_message', 'The BetterDesk services are restarting. Keep this page open.'),
+                pending,
+                text
+            ),
+            closable: false,
+            size: 'medium'
+        });
+    }
+
+    function showRestartReady(pending) {
+        if (window.Modal) Modal.close();
+        Modal.show({
+            title: tSettings('restart_ready_title', 'BetterDesk is ready'),
+            content: restartModalContent(
+                tSettings('restart_ready_message', 'The BetterDesk services have restarted successfully. Continue to the login page to start a fresh session.'),
+                pending,
+                tSettings('restart_ready_status', 'Restart completed.')
+            ),
+            closable: false,
+            size: 'medium',
+            buttons: [{
+                label: tSettings('restart_ready_button', 'Ready — go to login'),
+                class: 'btn-primary',
+                icon: 'login',
+                onClick: completeRestartAndLogin
+            }]
+        });
+    }
+
+    function showRestartFailure(pending, message) {
+        if (window.Modal) Modal.close();
+        Modal.show({
+            title: tSettings('restart_failed_title', 'Restart needs attention'),
+            content: restartModalContent(
+                tSettings('restart_failed_message', 'BetterDesk could not complete the service restart. The saved values were kept so you can retry after checking the service permissions.'),
+                pending,
+                message || tSettings('restart_failed_status', 'Restart failed.')
+            ),
+            closable: true,
+            size: 'medium',
+            buttons: [{
+                label: tSettings('restart_retry', 'Retry restart'),
+                class: 'btn-danger',
+                icon: 'replay',
+                onClick: confirmPendingRestart
+            }]
+        });
+    }
+
+    async function cancelPendingRestart() {
+        const pending = _restartPending;
+        if (!pending?.id) return;
+        try {
+            await Utils.api('/api/settings/restart/cancel', {
+                method: 'POST',
+                body: { id: pending.id }
+            });
+            _restartPending = null;
+            Modal.close();
+            Notifications.success(tSettings('restart_canceled', 'Changes were canceled and the previous values were restored.'));
+            await loadConnectionMode();
+            if (typeof loadAdvancedFile === 'function' && advancedState?.activeId) {
+                await loadAdvancedFile(advancedState.activeId, true);
+            }
+        } catch (err) {
+            Notifications.error(err.message || tSettings('restart_rollback_failed', 'Could not restore the previous values.'));
+        }
+    }
+
+    async function confirmPendingRestart() {
+        const pending = _restartPending;
+        if (!pending?.id) return;
+        try {
+            const result = await Utils.api('/api/settings/restart/confirm', {
+                method: 'POST',
+                body: { id: pending.id }
+            });
+            if (result?.phase === 'failed' || result?.failed) {
+                showRestartFailure(pending, result.error);
+                return;
+            }
+            window.BetterDesk = window.BetterDesk || {};
+            window.BetterDesk.consoleRestarting = true;
+            showRestartProgress(pending, tSettings('restart_phase_stopping', 'Stopping and starting the BetterDesk services…'));
+            startRestartPolling(pending.id, result.token);
+        } catch (err) {
+            showRestartFailure(pending, err.message);
+        }
+    }
+
+    async function completeRestartAndLogin() {
+        const pending = _restartPending;
+        try {
+            if (pending?.id) {
+                await Utils.api('/api/settings/restart/complete', {
+                    method: 'POST',
+                    body: { id: pending.id }
+                });
+            }
+        } catch (_) {
+            // A changed session secret can invalidate the old session; the
+            // login redirect below is still the correct recovery path.
+        }
+        window.location.href = '/login';
+    }
+
+    function startRestartPolling(id, token) {
+        clearInterval(_restartPollTimer);
+        _restartPollAttempts = 0;
+        _restartPollTimer = setInterval(async () => {
+            _restartPollAttempts++;
+            setRestartModalStatus(
+                `${tSettings('restart_phase_checking', 'Checking service health…')} (${_restartPollAttempts}/90)`
+            );
+            try {
+                const response = await fetch(
+                    `/api/settings/restart-status?job=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}&_=${Date.now()}`,
+                    { credentials: 'same-origin', cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }
+                );
+                const body = await response.json().catch(() => null);
+                const status = body?.data || body || {};
+                if (status.ready === true || status.phase === 'ready') {
+                    clearInterval(_restartPollTimer);
+                    _restartPollTimer = null;
+                    window.BetterDesk.consoleRestarting = false;
+                    showRestartReady(_restartPending);
+                    return;
+                }
+                if (status.phase === 'failed') {
+                    clearInterval(_restartPollTimer);
+                    _restartPollTimer = null;
+                    window.BetterDesk.consoleRestarting = false;
+                    showRestartFailure(_restartPending, status.error);
+                    return;
+                }
+            } catch (_) {
+                // The console is expected to be unreachable while it restarts.
+            }
+            if (_restartPollAttempts >= 90) {
+                clearInterval(_restartPollTimer);
+                _restartPollTimer = null;
+                window.BetterDesk.consoleRestarting = false;
+                showRestartFailure(_restartPending, tSettings('restart_timeout', 'The restart did not become ready within the expected time.'));
+            }
+        }, 2000);
+    }
+
+    async function initRestartCoordinator() {
+        window.addEventListener('beforeunload', (event) => {
+            if (_restartPending || isRestartSensitiveDirty()) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+        try {
+            const pending = await Utils.api('/api/settings/restart/pending');
+            if (pending) {
+                _restartPending = pending;
+                if (pending.phase === 'pending') showRestartPrompt(pending);
+            }
+        } catch (_) {
+            // Optional helper; normal settings loading should continue.
+        }
+    }
 
     function tSettings(key, fallback) {
         const val = _('settings.' + key);
@@ -130,7 +357,11 @@
     function initTabs() {
         const tabs = document.querySelectorAll('.settings-shell-tab, .settings-tab');
         tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
+            tab.addEventListener('click', async (event) => {
+                if (!(await canNavigateAwayFromRestartSettings())) {
+                    event.preventDefault();
+                    return;
+                }
                 tabs.forEach(t => {
                     t.classList.remove('active');
                     t.setAttribute('aria-selected', 'false');
@@ -156,6 +387,41 @@
             const tab = document.querySelector(`.settings-shell-tab[data-tab="${tabName}"], .settings-tab[data-tab="${tabName}"]`);
             if (tab) tab.click();
         }
+    }
+
+    function isRestartSensitiveDirty() {
+        if (_connectionModeSnapshot) {
+            const current = getConnectionModePayload();
+            if (JSON.stringify(current) !== JSON.stringify(_connectionModeSnapshot)) return true;
+        }
+        return typeof advancedState !== 'undefined' && !!advancedState?.dirty;
+    }
+
+    async function canNavigateAwayFromRestartSettings() {
+        if (_restartPending?.phase === 'pending') {
+            showRestartPrompt(_restartPending);
+            return false;
+        }
+        if (_restartPending?.phase === 'failed') {
+            showRestartFailure(_restartPending, _restartPending.error);
+            return false;
+        }
+        if (!isRestartSensitiveDirty()) return true;
+
+        const save = await settingsConfirmCritical({
+            title: tSettings('unsaved_restart_title', 'Unsaved restart-required changes'),
+            message: tSettings('unsaved_restart_message', 'This section contains changes that need a service restart. Save them before leaving this tab?'),
+            confirmLabel: tSettings('unsaved_restart_save', 'Save changes'),
+            cancelLabel: tSettings('unsaved_restart_stay', 'Stay here'),
+            icon: 'save'
+        });
+        if (!save) return false;
+        if (typeof advancedState !== 'undefined' && advancedState?.dirty) {
+            await saveAdvancedFile();
+        } else {
+            await saveConnectionMode();
+        }
+        return false;
     }
 
     function isBrandingTabActive() {
@@ -641,6 +907,7 @@
             const saveBtns = [document.getElementById('connection-mode-save'), document.getElementById('connection-mode-save-restart')];
             const disabled = data.writable === false || data.source === 'defaults';
             saveBtns.forEach((b) => { if (b) b.disabled = disabled; });
+            _connectionModeSnapshot = getConnectionModePayload();
         } catch (err) {
             console.error('Failed to load connection mode:', err);
             if (sourceEl) sourceEl.textContent = _('errors.server_error');
@@ -664,30 +931,13 @@
         };
     }
 
-    async function saveConnectionMode(restart) {
-        const confirmKey = restart
-            ? 'confirm.connection_restart'
-            : 'confirm.connection_mode';
-        const confirmed = await settingsConfirmCritical({
-            title: tSettings(confirmKey + '_title', restart ? 'Restart server?' : 'Save connection strategy?'),
-            message: tSettings(confirmKey, restart
-                ? 'Save connection settings and restart the BetterDesk server? Active sessions may disconnect briefly.'
-                : 'Apply the new connection strategy for RustDesk clients?'),
-            confirmLabel: restart
-                ? _('settings.connection_mode_save_restart')
-                : _('settings.connection_mode_save'),
-            icon: restart ? 'restart_alt' : 'swap_horiz',
-            danger: restart
-        });
-        if (!confirmed) return;
-
+    async function saveConnectionMode() {
         const saveBtn = document.getElementById('connection-mode-save');
         const saveRestartBtn = document.getElementById('connection-mode-save-restart');
         [saveBtn, saveRestartBtn].forEach((b) => { if (b) b.disabled = true; });
 
         try {
             const payload = getConnectionModePayload();
-            payload.restart = restart;
             const resp = await Utils.api('/api/settings/connection-mode', {
                 method: 'PUT',
                 body: JSON.stringify(payload)
@@ -696,15 +946,8 @@
             if (typeof Notifications !== 'undefined') {
                 Notifications.success(resp.message || _('settings.connection_mode_saved'));
             }
-
-            if (restart && resp.data?.restart) {
-                const failed = (resp.data.restart.restarts || []).filter((r) => !r.success);
-                if (failed.length) {
-                    Notifications.warning(_('settings.connection_mode_restart_failed'));
-                }
-            }
-
             await loadConnectionMode();
+            if (resp.restartRequired) showRestartPrompt(resp.restartRequired);
         } catch (err) {
             console.error('Save connection mode failed:', err);
             if (typeof Notifications !== 'undefined') {
@@ -5112,15 +5355,7 @@
             Notifications.success(msg);
             await loadAdvancedFileList();
             loadAdvancedFile(id, true);
-
-            if (await settingsConfirmCritical({
-                title: tSettings('confirm.advanced_restart_after_title', 'Restart service?'),
-                message: _('settings.advanced_restart_after_save'),
-                confirmLabel: _('settings.advanced_apply_restart'),
-                icon: 'restart_alt'
-            })) {
-                await restartAdvancedServices(true);
-            }
+            if (resp?.restartRequired) showRestartPrompt(resp.restartRequired);
         } catch (err) {
             Notifications.error(err.message || _('errors.server_error'));
             if (saveBtn) saveBtn.disabled = advancedState.dirty;
@@ -5139,41 +5374,12 @@
             danger: true
         })) return;
 
-        const catalog = advancedState.files.find((f) => f.id === id);
-        const isConsole = catalog && (catalog.requiresRestart === 'console' || id === 'systemd-console'
-            || id === 'console-env' || id === 'console-env-local');
-        const confirmKey = isConsole
-            ? 'settings.advanced_restart_console_confirm'
-            : 'settings.advanced_restart_confirm';
-        if (!skipConfirm && !await settingsConfirmCritical({
-            title: tSettings('confirm.advanced_restart_title', 'Restart service?'),
-            message: _(confirmKey),
-            confirmLabel: _('settings.advanced_apply_restart'),
-            icon: 'restart_alt',
-            danger: true
-        })) return;
-
-        const restartBtn = document.getElementById('advanced-config-restart');
-        if (restartBtn) restartBtn.disabled = true;
-
-        try {
-            const result = await Utils.api('/api/settings/advanced/restart', {
-                method: 'POST',
-                body: { fileId: id }
-            });
-            Notifications.success(_('settings.advanced_restart_started'));
-
-            if (result && result.needsConsolePoll) {
-                window.BetterDesk = window.BetterDesk || {};
-                window.BetterDesk.consoleRestarting = true;
-                pollAdvancedConsoleRestart();
-            }
-        } catch (err) {
-            const detail = err.data && (err.data.details || err.data.error);
-            Notifications.error(detail || err.message || _('settings.advanced_restart_failed'));
-        } finally {
-            if (restartBtn) restartBtn.disabled = false;
+        if (_restartPending?.phase === 'pending') {
+            if (!skipConfirm) showRestartPrompt(_restartPending);
+            else await confirmPendingRestart();
+            return;
         }
+        Notifications.info(tSettings('restart_save_first', 'Save the configuration before restarting the services.'));
     }
 
     function pollAdvancedConsoleRestart() {

@@ -291,6 +291,29 @@ async function writeFile(id, content) {
 }
 
 /**
+ * Restore the backup created by writeFile(). The backup name is accepted only
+ * when it belongs to the catalog entry and uses the generated backup suffix.
+ */
+async function restoreBackup(id, backupPath, created = false) {
+    const def = getDefinition(id);
+    if (!def || !isPlatformAllowed(def)) throw new Error('unknown_file');
+    if (created) {
+        try { await fsp.unlink(path.resolve(def.path())); } catch (err) {
+            if (err.code !== 'ENOENT') throw err;
+        }
+        return { id, path: path.resolve(def.path()), removed: true };
+    }
+    if (typeof backupPath !== 'string' || !backupPath.startsWith(`${path.resolve(def.path())}.bak.`)) {
+        throw new Error('invalid_backup');
+    }
+    const target = path.resolve(def.path());
+    const backup = path.resolve(backupPath);
+    if (backup !== backupPath || !fs.existsSync(backup)) throw new Error('invalid_backup');
+    await fsp.copyFile(backup, target);
+    return { id, path: target };
+}
+
+/**
  * Restart services related to a config file. Systemd unit edits run
  * daemon-reload first on Linux.
  */
@@ -334,6 +357,7 @@ module.exports = {
     listFiles,
     readFile,
     writeFile,
+    restoreBackup,
     restartForFile,
     getDefinition
 };

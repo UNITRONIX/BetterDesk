@@ -32,6 +32,7 @@ const PANEL_POLL_PATHS = new Set([
     '/api/logs/recent',
     '/api/database/stats',
     '/api/docker/containers',
+    '/api/settings/restart-status',
     '/api/folders',
     '/api/tags',
     '/api/device-groups',
@@ -46,6 +47,7 @@ const PANEL_POLL_PATHS = new Set([
 const PANEL_READ_PATHS = new Set([
     '/api/settings/audit',
     '/api/settings/info',
+    '/api/settings/restart/pending',
     '/api/settings/device-scope',
     '/api/settings/connection-mode',
     '/api/settings/public-endpoints',

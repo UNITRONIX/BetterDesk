@@ -458,10 +458,16 @@ router.get('/api/auth/oidc/session', async (req, res) => {
             req.session.authMethod = 'oidc';
             clearGuestCookie(res);
 
-            req.session.save((saveErr) => {
+            req.session.save(async (saveErr) => {
                 if (saveErr) {
                     console.error('OIDC session save error:', saveErr);
                     return res.redirect('/login?error=oidc_error');
+                }
+
+                try {
+                    await db.updateLastLogin(user.id);
+                } catch (bookkeepingErr) {
+                    console.error('OIDC post-auth bookkeeping error:', bookkeepingErr);
                 }
                 res.redirect(safeReturnUrl);
             });

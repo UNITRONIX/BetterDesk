@@ -117,6 +117,10 @@ function writeClockSettingsToEnv(settings) {
     return normalized;
 }
 
+function restoreClockSettings(settings) {
+    return writeClockSettingsToEnv(settings);
+}
+
 async function saveClockSettings(settings, opts = {}) {
     const normalized = writeClockSettingsToEnv(settings);
     const serviceConfig = updateService.sanitizeGoServerServiceConfig();
@@ -143,5 +147,6 @@ module.exports = {
     validateSettings,
     settingsFromEnvContent,
     getClockSettings,
+    restoreClockSettings,
     saveClockSettings,
 };

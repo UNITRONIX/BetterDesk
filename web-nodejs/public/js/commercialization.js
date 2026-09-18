@@ -650,7 +650,7 @@
         ));
         if (!ok) return;
         try {
-            await api('/api/panel/billing/clock/settings', {
+            const result = await api('/api/panel/billing/clock/settings', {
                 method: 'PUT',
                 body: {
                     ntp_servers: document.getElementById('clock-ntp-servers')?.value || '',
@@ -660,6 +660,9 @@
                 }
             });
             notifySuccess(t('commercialization.clock.saved', 'Clock settings saved. Go server restart initiated.'));
+            if (result?.restartRequired && window.BetterDeskRestart) {
+                window.BetterDeskRestart.handle(result.restartRequired);
+            }
             await loadTimesync();
         } catch (e) {
             notifyError(e.message);

@@ -13,6 +13,7 @@ jest.mock('../services/database', () => ({
     getUserByUsername: jest.fn().mockResolvedValue(null),
     createUser: jest.fn().mockResolvedValue(undefined),
     syncUserFromGo: jest.fn().mockResolvedValue(undefined),
+    updateLastLogin: jest.fn().mockResolvedValue(undefined),
     enableTotp: jest.fn().mockResolvedValue(undefined),
     disableTotp: jest.fn().mockResolvedValue(undefined)
 }));
@@ -371,6 +372,7 @@ describe('Auth Routes', () => {
                 role: 'operator',
                 authProvider: 'oidc',
             });
+            expect(db.updateLastLogin).toHaveBeenCalledWith(42);
 
             const verify = await agent.get('/api/auth/verify');
             expect(verify.status).toBe(200);
