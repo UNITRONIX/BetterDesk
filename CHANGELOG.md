@@ -1,7 +1,13 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Controller-only RustDesk compatibility:** added the opt-in
+  `ALLOW_LEGACY_OUTBOUND=Y` path for stock mobile/desktop clients that do not
+  register a local device before starting an outbound session. It is limited to
+  `ENROLLMENT_MODE=open`, forces relay with the normal one-use ticket, and
+  remains disabled by default. Design and implementation adapted from
+  [@remoover's PR #358](https://github.com/UNITRONIX/BetterDesk/pull/358).
+  Refs #427.
 
 ---
 

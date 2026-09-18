@@ -47,6 +47,10 @@ services:
       - INIT_ADMIN_PASS=${ADMIN_PASSWORD:-}
       - SQLITE_AUTH_DB_MODE=${SQLITE_AUTH_DB_MODE:-}
       - SIGNAL_RATE_LIMIT_PER_IP=${SIGNAL_RATE_LIMIT_PER_IP:-20}
+      # Opt-in compatibility for stock controller-only clients. Effective
+      # only with ENROLLMENT_MODE=open; strict initiator authorization remains
+      # the default.
+      - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
       - P2P_FIRST=${P2P_FIRST:-Y}
       - ALWAYS_USE_RELAY=${ALWAYS_USE_RELAY:-N}
       - P2P_FALLBACK_MS=${P2P_FALLBACK_MS:-2000}

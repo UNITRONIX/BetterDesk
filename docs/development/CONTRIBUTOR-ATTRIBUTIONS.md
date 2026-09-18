@@ -40,6 +40,9 @@ rewriting of `archive/remoover/*` before release.
 
 The following work informed the current BetterDesk changes:
 
+- [#358](https://github.com/UNITRONIX/BetterDesk/pull/358) — controller-only
+  outbound compatibility design, adapted with the explicit opt-in and
+  relay-ticket safeguards described in this change.
 - [#282](https://github.com/UNITRONIX/BetterDesk/pull/282) — browser relay
   framing, native WebSocket payload boundaries, and file-transfer session
   behavior. BetterDesk uses the framing portion and selected compatibility
@@ -61,8 +64,6 @@ The following work informed the current BetterDesk changes:
 The following proposals remain intentionally unimplemented pending separate
 security decisions:
 
-- [#358](https://github.com/UNITRONIX/BetterDesk/pull/358) —
-  controller-only anonymous outbound authorization.
 - [#359](https://github.com/UNITRONIX/BetterDesk/pull/359) —
   disabling relay ticket enforcement for standalone relay processes.
 - [#271](https://github.com/UNITRONIX/BetterDesk/pull/271) —
