@@ -85,6 +85,39 @@ describeLinux('linuxServerBinaryDeploy', () => {
         expect(fs.readFileSync(target).length).toBe(1024 * 1024);
     });
 
+    test('deployServerBinaryAtomic falls back to backupDir on EACCES', () => {
+        const targetDir = path.join(tmpRoot, 'locked-bin');
+        const target = path.join(targetDir, 'betterdesk-server');
+        const source = path.join(serverRoot, 'betterdesk-server');
+        const backupDir = path.join(tmpRoot, 'alt-backups');
+        writeBinary(source);
+        fs.mkdirSync(targetDir, { recursive: true });
+        fs.writeFileSync(target, Buffer.from('old-binary'));
+
+        const originalCopy = fs.copyFileSync;
+        let primaryAttempts = 0;
+        fs.copyFileSync = (src, dest, ...rest) => {
+            if (dest.startsWith(`${target}.bak.`)) {
+                primaryAttempts += 1;
+                const err = new Error(`EACCES: permission denied, copyfile '${src}' -> '${dest}'`);
+                err.code = 'EACCES';
+                throw err;
+            }
+            return originalCopy(src, dest, ...rest);
+        };
+
+        try {
+            const result = deployServerBinaryAtomic(source, target, { backupDir });
+            expect(primaryAttempts).toBe(1);
+            expect(result.success).toBe(true);
+            expect(result.backupPath).toMatch(/alt-backups[/\\]betterdesk-server\.bak\./);
+            expect(fs.existsSync(result.backupPath)).toBe(true);
+            expect(fs.readFileSync(target).length).toBe(1024 * 1024);
+        } finally {
+            fs.copyFileSync = originalCopy;
+        }
+    });
+
     test('buildAllowedDeployTargets includes standard install paths', () => {
         const targets = buildAllowedDeployTargets({ keysPath: '/opt/rustdesk' });
         expect(targets.has('/opt/rustdesk/betterdesk-server')).toBe(true);

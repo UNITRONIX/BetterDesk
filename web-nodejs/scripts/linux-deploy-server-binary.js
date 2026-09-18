@@ -58,7 +58,9 @@ function runDeploy(payload) {
         extraTarget: process.env.BETTERDESK_SERVER_BINARY || null,
     });
 
-    const result = deployServerBinaryAtomic(validated.sourceReal, validated.targetPath);
+    const result = deployServerBinaryAtomic(validated.sourceReal, validated.targetPath, {
+        backupDir: path.join(config.dataDir || path.join(consoleRoot, 'data'), 'binary-backups'),
+    });
 
     // Running as root — refresh the fixed service-operation broker.
     let sudoersSync = null;

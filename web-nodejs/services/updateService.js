@@ -106,7 +106,17 @@ function resolveProjectRoot(rootDir = ROOT_DIR, opts) {
     return resolveProjectRootFromConsole(rootDir, opts);
 }
 
-const PROJECT_ROOT       = resolveProjectRoot();
+let PROJECT_ROOT         = resolveProjectRoot();
+
+/**
+ * Re-resolve project root. Long-lived console processes can keep a stale
+ * PROJECT_ROOT from before nested server sources existed (e.g. /opt instead of
+ * /opt/BetterDeskConsole), which poisons VERSION ldflags and writes.
+ */
+function refreshProjectRoot() {
+    PROJECT_ROOT = resolveProjectRoot();
+    return PROJECT_ROOT;
+}
 
 function setUpdateChannel(channelId) {
     const channel = UPDATE_CHANNELS[channelId];
@@ -672,7 +682,8 @@ async function getRemoteHeadSHA() {
 }
 
 function getLocalVersion() {
-    return readProductVersion({ rootDir: PROJECT_ROOT }) || config.appVersion;
+    refreshProjectRoot();
+    return readProductVersion({ rootDir: PROJECT_ROOT, consoleDir: ROOT_DIR }) || config.appVersion;
 }
 
 // ======================== Classify ======================================
@@ -1492,7 +1503,13 @@ async function buildGoServer(preferredGoBinPath = null) {
             env: buildEnv
         });
 
-        const productVersion = readProductVersion({ rootDir: PROJECT_ROOT });
+        // Prefer console-local VERSION/package.json: flat installs often leave a
+        // stale root-owned /opt/VERSION that the panel cannot overwrite.
+        const productVersion = readProductVersion({
+            rootDir: ROOT_DIR,
+            consoleDir: ROOT_DIR,
+            fallback: readProductVersion({ rootDir: PROJECT_ROOT, consoleDir: ROOT_DIR }),
+        });
         const ldflags = `-s -w -X main.Version=${productVersion}`;
         await spawnPromise(
             goBin,
@@ -1894,7 +1911,9 @@ function deployServerBinary(builtBinaryPath, targetPath) {
         return deployServerBinaryPrivileged(builtBinaryPath, targetPath);
     }
 
-    const direct = deployServerBinaryAtomic(builtBinaryPath, targetPath);
+    const direct = deployServerBinaryAtomic(builtBinaryPath, targetPath, {
+        backupDir: path.join(config.dataDir, 'binary-backups'),
+    });
     if (direct.success) {
         return { ...direct, method: 'direct' };
     }
@@ -2689,9 +2708,20 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
         // ---- Pull remote VERSION file ----
         try {
             const versionContent = await ghDownloadFile(GITHUB_OWNER, GITHUB_REPO, remoteSHA, 'VERSION');
-            const versionDest = path.join(PROJECT_ROOT, 'VERSION');
-            ensureParentDirForFile(versionDest);
-            fs.writeFileSync(versionDest, versionContent);
+            refreshProjectRoot();
+            // Always write into the writable console tree first (flat installs).
+            const consoleVersionDest = path.join(ROOT_DIR, 'VERSION');
+            ensureParentDirForFile(consoleVersionDest);
+            fs.writeFileSync(consoleVersionDest, versionContent);
+            if (path.resolve(PROJECT_ROOT) !== path.resolve(ROOT_DIR)) {
+                try {
+                    const versionDest = path.join(PROJECT_ROOT, 'VERSION');
+                    ensureParentDirForFile(versionDest);
+                    fs.writeFileSync(versionDest, versionContent);
+                } catch (_parentWriteErr) {
+                    // Parent may be root-owned (/opt/VERSION) — console copy is enough.
+                }
+            }
         } catch (_e) { /* non-critical */ }
 
         const finalFailures = splitUpdateFailures(results.failed, ROOT_DIR);
@@ -3053,6 +3083,7 @@ async function rebuildServerBinary(opts = {}) {
             steps: {}
         };
     }
+    refreshProjectRoot();
     const result = { success: false, steps: {} };
     const remoteSHA = opts.sha || getLocalSHA();
 

@@ -142,16 +142,34 @@ function validateDeployRequest(sourcePath, targetPath, options = {}) {
 
 /**
  * Atomic replace for a running Linux executable (rename over directory entry).
+ * @param {string} sourceReal
+ * @param {string} targetPath
+ * @param {{ backupDir?: string }} [options]  Optional writable dir when target dir denies bak writes
  * @returns {{ success: boolean, backupPath?: string|null, error?: string }}
  */
-function deployServerBinaryAtomic(sourceReal, targetPath) {
+function deployServerBinaryAtomic(sourceReal, targetPath, options = {}) {
     let backupPath = null;
     if (fs.existsSync(targetPath)) {
-        backupPath = `${targetPath}.bak.${Date.now()}`;
+        const stamp = Date.now();
+        const primaryBak = `${targetPath}.bak.${stamp}`;
         try {
-            fs.copyFileSync(targetPath, backupPath);
+            fs.copyFileSync(targetPath, primaryBak);
+            backupPath = primaryBak;
         } catch (err) {
-            return { success: false, error: `Backup failed: ${err.message}` };
+            const permDenied = err && (err.code === 'EACCES' || err.code === 'EPERM'
+                || /permission denied/i.test(String(err.message || '')));
+            const backupDir = options.backupDir ? path.resolve(options.backupDir) : null;
+            if (permDenied && backupDir) {
+                try {
+                    fs.mkdirSync(backupDir, { recursive: true });
+                    backupPath = path.join(backupDir, `${path.basename(targetPath)}.bak.${stamp}`);
+                    fs.copyFileSync(targetPath, backupPath);
+                } catch (fallbackErr) {
+                    return { success: false, error: `Backup failed: ${fallbackErr.message}` };
+                }
+            } else {
+                return { success: false, error: `Backup failed: ${err.message}` };
+            }
         }
     }
 
