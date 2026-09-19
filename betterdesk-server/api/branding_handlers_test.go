@@ -50,6 +50,23 @@ func TestBrandingGetDefaultsAndSave(t *testing.T) {
 	if len(got.Profiles.BetterDesk.Apply) == 0 {
 		t.Fatal("expected betterdesk apply list")
 	}
+	etag := resp.Header.Get("ETag")
+	if etag == "" {
+		t.Fatal("expected branding ETag")
+	}
+	notModifiedReq, err := http.NewRequest(http.MethodGet, base+"/branding", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	notModifiedReq.Header.Set("If-None-Match", etag)
+	notModified, err := http.DefaultClient.Do(notModifiedReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	notModified.Body.Close()
+	if notModified.StatusCode != http.StatusNotModified {
+		t.Fatalf("conditional GET status %d, want 304", notModified.StatusCode)
+	}
 
 	png1x1 := base64.StdEncoding.EncodeToString([]byte{
 		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,

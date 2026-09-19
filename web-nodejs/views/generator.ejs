@@ -38,6 +38,12 @@
                         <span class="material-icons" aria-hidden="true">download</span>
                         <span class="gen-install-label">${_('generator.module_install')}</span>
                     </button>
+                    <label class="btn btn-secondary" for="gen-install-local-file">
+                        <span class="material-icons" aria-hidden="true">upload_file</span>
+                        Install local package
+                    </label>
+                    <input id="gen-install-local-file" type="file" accept=".tar.gz,.tgz,application/gzip"
+                           class="hidden" disabled>
                     <button id="gen-finish-install" class="btn btn-success hidden" type="button">
                         <span class="material-icons" aria-hidden="true">check_circle</span>
                         ${_('generator.module_finish')}
@@ -168,6 +174,22 @@
                             <h3 class="section-title">${_('generator.platforms_section')}</h3>
                             <p class="form-hint">${_('generator.platforms_hint')}</p>
                             <div id="gen-platforms" class="platforms-checklist" role="group" aria-label="${_('generator.platforms_section')}"></div>
+                            <div class="form-row generator-service-options">
+                                <div class="form-group form-group-checkbox">
+                                    <label class="form-label">
+                                        <input type="checkbox" id="gen-install-service">
+                                        Install Support Agent service
+                                    </label>
+                                    <p class="form-hint">Creates a system service only on supported platforms.</p>
+                                </div>
+                                <div class="form-group form-group-checkbox">
+                                    <label class="form-label">
+                                        <input type="checkbox" id="gen-autostart">
+                                        Start Support Agent automatically
+                                    </label>
+                                    <p class="form-hint">Enables service/startup autostart where supported.</p>
+                                </div>
+                            </div>
 
                             <div id="gen-download-info" class="download-info hidden">
                                 <h3 class="section-title">${_('generator.download_hub')}</h3>

@@ -4114,6 +4114,28 @@ _sync_betterdesk_console_user_permissions() {
             chmod 640 "$RUSTDESK_PATH/$f" 2>/dev/null || true
         fi
     done
+    # Generator data is private to the console service. Keep templates and
+    # artifacts readable by the service account, but keep signing material
+    # readable only by that account.
+    local generator_root="$CONSOLE_PATH/data"
+    mkdir -p "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" \
+        "$generator_root/build-cache/support-templates" \
+        "$generator_root/.generator-uploads"
+    chown -R "$svc_user:$svc_user" \
+        "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" \
+        "$generator_root/build-cache" \
+        "$generator_root/.generator-uploads" 2>/dev/null || true
+    find "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" "$generator_root/build-cache" \
+        "$generator_root/.generator-uploads" -type d -exec chmod 750 {} + 2>/dev/null || true
+    find "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" "$generator_root/build-cache" \
+        "$generator_root/.generator-uploads" -type f -exec chmod 640 {} + 2>/dev/null || true
+    if [ -f "$generator_root/modules/betterdesk-support-generator/custom-client-signing.seed" ]; then
+        chmod 600 "$generator_root/modules/betterdesk-support-generator/custom-client-signing.seed" 2>/dev/null || true
+    fi
     { maybe_repair_le_ssl_symlinks || true; } >&2
     return 0
 }

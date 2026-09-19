@@ -121,6 +121,14 @@ services:
       - BETTERDESK_API_URL=http://betterdesk-server:21114/api
       - RUSTDESK_PATH=/opt/rustdesk
       - DATA_DIR=/app/data
+      - BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-UNITRONIX/BetterDesk-Client}
+      - BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
+      - BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
+      - BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}
+      - AGENT_ARTIFACT_DIR=/app/data/agent-builds
+      - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
+      - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
+      - AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
       - DB_PATH=/opt/rustdesk/db_v2.sqlite3
       # Optional public client endpoints (IaC). Non-empty values override the panel
       # file at /app/data/public-endpoints.env. Leave unset to use Settings UI.

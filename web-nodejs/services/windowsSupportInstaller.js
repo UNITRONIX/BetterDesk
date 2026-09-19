@@ -10,6 +10,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$profileInstallsService = __INSTALL_SERVICE__
+$profileAutostarts = __AUTOSTART__
 $app = @(
     (Join-Path $PSScriptRoot 'betterdesk.exe'),
     (Join-Path $PSScriptRoot 'rustdesk.exe')
@@ -42,7 +44,7 @@ if (-not $isAdministrator) {
 
 if ($isUninstall) {
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
-    if (Test-Path -LiteralPath $app) {
+    if ($profileInstallsService -and (Test-Path -LiteralPath $app)) {
         $process = Start-Process -FilePath $app -ArgumentList '--uninstall-service' -Wait -PassThru -WindowStyle Hidden
         if ($process.ExitCode -ne 0) {
             throw "BetterDesk service uninstall failed with exit code $($process.ExitCode)."
@@ -51,16 +53,18 @@ if ($isUninstall) {
     exit 0
 }
 
-$process = Start-Process -FilePath $app -ArgumentList '--install-service' -Wait -PassThru -WindowStyle Hidden
-if ($process.ExitCode -ne 0) {
-    throw "BetterDesk service installation failed with exit code $($process.ExitCode)."
-}
-$service = Get-Service -Name $serviceName -ErrorAction Stop
-if ($service.Status -notin @('Running', 'StartPending')) {
-    throw "BetterDesk service is not running (status: $($service.Status))."
+if ($profileInstallsService) {
+    $process = Start-Process -FilePath $app -ArgumentList '--install-service' -Wait -PassThru -WindowStyle Hidden
+    if ($process.ExitCode -ne 0) {
+        throw "BetterDesk service installation failed with exit code $($process.ExitCode)."
+    }
+    $service = Get-Service -Name $serviceName -ErrorAction Stop
+    if ($service.Status -notin @('Running', 'StartPending')) {
+        throw "BetterDesk service is not running (status: $($service.Status))."
+    }
 }
 
-if ($UseScheduledTask) {
+if ($profileAutostarts -and (-not $profileInstallsService -or $UseScheduledTask)) {
     Remove-Item -LiteralPath $startupShortcut -Force -ErrorAction SilentlyContinue
     $taskAction = New-ScheduledTaskAction -Execute $app -Argument '--tray' -WorkingDirectory (Split-Path -Parent $app)
     $taskTrigger = New-ScheduledTaskTrigger -AtLogOn -User $identity.Name
@@ -69,15 +73,21 @@ if ($UseScheduledTask) {
     Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Principal $taskPrincipal -Settings $taskSettings -Force | Out-Null
 }
 
-Write-Host "BetterDesk service installed successfully."
+if (-not $profileInstallsService -and -not $profileAutostarts) {
+    Write-Host "BetterDesk installed without service or autostart."
+} else {
+    Write-Host "BetterDesk Support startup configuration installed successfully."
+}
 `;
 
-function buildWindowsSupportInstallerScript() {
-    return INSTALLER_SCRIPT;
+function buildWindowsSupportInstallerScript({ installService = false, autostart = false } = {}) {
+    return INSTALLER_SCRIPT
+        .replace('__INSTALL_SERVICE__', installService ? '$true' : '$false')
+        .replace('__AUTOSTART__', autostart ? '$true' : '$false');
 }
 
-async function writeWindowsSupportInstallers(stageDir) {
-    const script = buildWindowsSupportInstallerScript();
+async function writeWindowsSupportInstallers(stageDir, options = {}) {
+    const script = buildWindowsSupportInstallerScript(options);
     await fsp.writeFile(path.join(stageDir, 'Install-BetterDesk.ps1'), script, 'utf8');
     await fsp.writeFile(path.join(stageDir, 'Uninstall-BetterDesk.ps1'), script, 'utf8');
 }

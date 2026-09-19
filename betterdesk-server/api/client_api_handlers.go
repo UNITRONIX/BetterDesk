@@ -986,8 +986,15 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		resp["sysinfo"] = true
 	}
 
-	// Push RustDesk-compatible branding subset when client cursor is stale.
-	if body.ModifiedAt != serverModifiedAt {
+	// Support Agent branding is fetched through BetterDesk's richer API. Do not
+	// push generic RustDesk config_options to an incoming-only client: those
+	// options can contain connection or lockdown settings that conflict with
+	// its signed profile.
+	isSupportAgent := classifyBetterDeskDevice(body.ProductSKU, body.ConnMode) == "betterdesk-support"
+	if !isSupportAgent {
+		isSupportAgent = strings.EqualFold(strings.TrimSpace(peer.DeviceType), "betterdesk-support")
+	}
+	if body.ModifiedAt != serverModifiedAt && !isSupportAgent {
 		branding := s.loadBrandingConfig()
 		opts := branding.Profiles.RustDesk.ConfigOptions
 		if len(opts) > 0 {

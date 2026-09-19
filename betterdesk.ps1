@@ -363,14 +363,28 @@ function Repair-ManagementPermissions {
     if (Test-Path $script:RUSTDESK_PATH) {
         & icacls $script:RUSTDESK_PATH /grant "NT SERVICE\BetterDeskServer:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
     }
+    $generatorRoot = Join-Path $script:CONSOLE_PATH "data"
+    foreach ($path in @(
+        (Join-Path $generatorRoot "modules\betterdesk-support-generator"),
+        (Join-Path $generatorRoot "agent-builds"),
+        (Join-Path $generatorRoot "build-cache\support-templates"),
+        (Join-Path $generatorRoot ".generator-uploads")
+    )) {
+        New-Item -ItemType Directory -Path $path -Force | Out-Null
+        & icacls $path /inheritance:e /grant "NT SERVICE\BetterDeskConsole:(OI)(CI)M" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
+    }
     foreach ($path in @(
         (Join-Path $script:CONSOLE_PATH ".env"),
         (Join-Path $script:RUSTDESK_PATH ".api_key"),
         (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")
     )) {
         if (Test-Path $path) {
-            & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" 2>$null | Out-Null
+            & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" "NT SERVICE\BetterDeskConsole:R" 2>$null | Out-Null
         }
+    }
+    $seed = Join-Path $generatorRoot "modules\betterdesk-support-generator\custom-client-signing.seed"
+    if (Test-Path $seed) {
+        & icacls $seed /inheritance:r /grant:r "SYSTEM:F" "NT SERVICE\BetterDeskConsole:R" 2>$null | Out-Null
     }
     Test-ManagementCapabilities | Out-Null
 }

@@ -283,6 +283,13 @@ func clipBrandingField(s string, max int) string {
 // GET /api/branding
 func (s *Server) handleGetBranding(w http.ResponseWriter, r *http.Request) {
 	cfg := s.loadBrandingConfig()
+	etag := fmt.Sprintf(`"%s"`, cfg.Revision)
+	w.Header().Set("ETag", etag)
+	w.Header().Set("Cache-Control", "private, max-age=60")
+	if strings.TrimSpace(r.Header.Get("If-None-Match")) == etag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(cfg)
 }
@@ -290,6 +297,7 @@ func (s *Server) handleGetBranding(w http.ResponseWriter, r *http.Request) {
 // handleSaveBranding saves branding configuration. Admin only.
 // POST /api/branding
 func (s *Server) handleSaveBranding(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, brandingMaxLogoBytes*2)
 	var req struct {
 		CompanyName    *string           `json:"company_name"`
 		Phone          *string           `json:"phone"`

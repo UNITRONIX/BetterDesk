@@ -1,8 +1,8 @@
 /**
  * Build and optionally sign BetterDesk Support `custom.txt` payloads.
  *
- * Phase A: plain JSON (file starts with `{`)
- * Phase B: base64(NaCl-sign(JSON bytes)) when a signing seed is available
+ * Production Support Agent bundles always use Phase B:
+ * base64(NaCl-sign(JSON bytes)).
  */
 
 'use strict';
@@ -112,19 +112,46 @@ function signCustomTxt(json, seedBase64) {
     }
 }
 
+function requireSigningSeed(seedBase64) {
+    const seedText = String(seedBase64 || '').trim();
+    if (!seedText) {
+        const err = new Error('custom_client_signing_seed_required');
+        err.code = 'custom_client_signing_seed_required';
+        throw err;
+    }
+    let seed;
+    try {
+        seed = Buffer.from(seedText, 'base64');
+    } catch (_) {
+        seed = null;
+    }
+    if (!seed || seed.length !== 32) {
+        const err = new Error('custom_client_signing_seed_invalid');
+        err.code = 'custom_client_signing_seed_invalid';
+        throw err;
+    }
+    return seedText;
+}
+
 /**
- * Build Support Agent custom.txt file contents (plain or signed).
+ * Build a signed Support Agent custom.txt file.
  * @returns {{ content: string, signed: boolean, json: object }}
  */
 function buildAndSignSupportCustomTxt(opts, seedBase64) {
     const json = buildSupportCustomTxt(opts);
-    const result = signCustomTxt(json, seedBase64);
+    const result = signCustomTxt(json, requireSigningSeed(seedBase64));
+    if (!result.signed) {
+        const err = new Error('custom_client_signing_failed');
+        err.code = 'custom_client_signing_failed';
+        throw err;
+    }
     return { ...result, json };
 }
 
 module.exports = {
     buildSupportCustomTxt,
     signCustomTxt,
+    requireSigningSeed,
     buildAndSignSupportCustomTxt,
     stableJsonBytes,
 };

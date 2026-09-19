@@ -12,6 +12,9 @@
 
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const keyService = require('../services/keyService');
 const bundleService = require('../services/agentBundleService');
@@ -23,6 +26,18 @@ const brandingService = require('../services/brandingService');
 const conn = require('../services/agentBundleConnection');
 const clientConfigHost = require('../services/clientConfigHost');
 const { PRODUCT_TYPES, normalizeProductType, isBetterDeskSupportBundle } = require('../lib/generatorBuildTypes');
+const moduleUpload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => {
+            const dir = path.join(config.dataDir, '.generator-uploads');
+            fs.mkdir(dir, { recursive: true }, (err) => cb(err, dir));
+        },
+        filename: (_req, file, cb) => {
+            cb(null, `${Date.now()}-${String(file.originalname || 'generator.tar.gz').replace(/[^a-zA-Z0-9._-]/g, '_')}`);
+        },
+    }),
+    limits: { fileSize: 2 * 1024 * 1024 * 1024 },
+});
 
 // Branding payloads may carry a base64-encoded logo up to 10 MB; expand the
 // default 2 MB JSON body limit on the bundle CRUD + preview endpoints only.
@@ -211,6 +226,30 @@ router.post('/api/generator/module/install', requireAuth, requireAdmin, async (r
         });
     }
 });
+
+router.post(
+    '/api/generator/module/install-local',
+    requireAuth,
+    requireAdmin,
+    moduleUpload.single('archive'),
+    async (req, res) => {
+        const uploaded = req.file?.path;
+        try {
+            if (!uploaded) {
+                return res.status(400).json({ success: false, error: 'generator_archive_required' });
+            }
+            const version = String(req.body?.version || 'local').trim().slice(0, 100);
+            const state = await supportModule.installFromLocalArchive(uploaded, version);
+            return res.json({ success: true, data: state });
+        } catch (err) {
+            console.error('[generator] local module install error:', err);
+            const code = err.code || err.message || 'install_failed';
+            return res.status(400).json({ success: false, error: code, code });
+        } finally {
+            if (uploaded) fs.rm(uploaded, { force: true }, () => {});
+        }
+    },
+);
 
 // =========================================================================
 //  Bundle management API (admin only)

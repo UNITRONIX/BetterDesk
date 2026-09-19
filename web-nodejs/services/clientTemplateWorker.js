@@ -23,6 +23,7 @@ const windowsSupportInstaller = require('./windowsSupportInstaller');
 const customTxt = require('./customTxtBuilder');
 const keyService = require('./keyService');
 const conn = require('./agentBundleConnection');
+const platformSupportInstaller = require('./platformSupportInstaller');
 const config = require('../config/config');
 const {
     PRODUCT_TYPES,
@@ -460,13 +461,7 @@ async function _runOne(buildRow) {
         }
 
         const branding = _parseBranding(buildRow._bundle?.branding);
-        const { content, signed } = await _buildCustomTxtContent(branding);
-        if (!signed) {
-            console.warn(
-                '[clientTemplateWorker] custom.txt is unsigned (Phase A). '
-                + 'Set BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED for signed bake-in.'
-            );
-        }
+        const { content } = await _buildCustomTxtContent(branding);
         const injectDir = _findCustomTxtTarget(stageDir, buildRow.platform);
         await fsp.mkdir(injectDir, { recursive: true });
         await fsp.writeFile(path.join(injectDir, 'custom.txt'), content, 'utf8');
@@ -479,7 +474,15 @@ async function _runOne(buildRow) {
         }
 
         if (buildRow.platform === 'windows') {
-            await windowsSupportInstaller.writeWindowsSupportInstallers(stageDir);
+            await windowsSupportInstaller.writeWindowsSupportInstallers(stageDir, {
+                installService: branding.install_service,
+                autostart: branding.autostart,
+            });
+        } else {
+            await platformSupportInstaller.writeUnixSupportInstallers(stageDir, buildRow.platform, {
+                installService: branding.install_service,
+                autostart: branding.autostart,
+            });
         }
 
         const ext = buildRow.platform === 'windows' ? 'zip' : 'tar.gz';
@@ -501,7 +504,7 @@ async function _runOne(buildRow) {
             errorMessage: '',
         });
         console.log(
-            `[clientTemplateWorker] build ready ${key} signed=${signed}`
+            `[clientTemplateWorker] build ready ${key} signed=true`
             + ` (${(stat.size / 1024 / 1024).toFixed(2)} MB, ${((Date.now() - startTs) / 1000).toFixed(1)}s)`
         );
     } catch (err) {

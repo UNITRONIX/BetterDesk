@@ -39,6 +39,19 @@ func TestNormalizeAbDataField(t *testing.T) {
 	}
 }
 
+func TestClassifyBetterDeskSupportSKU(t *testing.T) {
+	t.Parallel()
+	if got := classifyBetterDeskDevice("betterdesk-support", "normal"); got != "betterdesk-support" {
+		t.Fatalf("support SKU classified as %q", got)
+	}
+	if got := classifyBetterDeskDevice("", "incoming-only"); got != "betterdesk-support" {
+		t.Fatalf("incoming-only mode classified as %q", got)
+	}
+	if got := classifyBetterDeskDevice("betterdesk-desktop", "normal"); got != "betterdesk" {
+		t.Fatalf("full client classified as %q", got)
+	}
+}
+
 func TestAbDataFieldPresent(t *testing.T) {
 	t.Parallel()
 	if abDataFieldPresent(nil) {

@@ -27,15 +27,18 @@ describe('customTxtBuilder', () => {
         expect(json['override-settings'].key).toBe('PUBKEY');
     });
 
-    test('returns plain JSON when seed missing', () => {
+    test('rejects unsigned Support Agent builds', () => {
         const json = buildSupportCustomTxt({
             host: 'h',
             api: 'http://h:21114',
             key: 'k',
         });
-        const out = signCustomTxt(json, '');
-        expect(out.signed).toBe(false);
-        expect(out.content.startsWith('{')).toBe(true);
+        expect(() => buildAndSignSupportCustomTxt({
+            host: 'h',
+            api: 'http://h:21114',
+            key: 'k',
+        }, '')).toThrow('custom_client_signing_seed_required');
+        expect(signCustomTxt(json, '').signed).toBe(false);
     });
 
     test('signs with 32-byte seed', () => {
@@ -90,8 +93,37 @@ describe('supportGeneratorModule state', () => {
     test('isReady when terms accepted, status ready, templates present', async () => {
         await supportModule.acceptTerms();
         const templates = supportModule.templatesDir();
-        fs.mkdirSync(path.join(templates, 'windows-x86_64'), { recursive: true });
-        fs.writeFileSync(path.join(templates, 'manifest.json'), '{"schema_version":1}\n');
+        const platforms = [
+            'windows-x86_64', 'windows-aarch64',
+            'linux-x86_64', 'linux-aarch64',
+            'macos-x86_64', 'macos-aarch64',
+        ];
+        const entries = platforms.map((platform) => {
+            const dir = path.join(templates, platform);
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, '.custom-txt-here'), 'marker\n');
+            fs.writeFileSync(path.join(dir, 'betterdesk'), Buffer.alloc(100 * 1024, 1));
+            fs.writeFileSync(path.join(templates, `${platform}.tar.gz`), 'archive');
+            return {
+                platform: platform.split('-')[0],
+                arch: platform.endsWith('x86_64') ? 'x86_64' : 'aarch64',
+                format: 'portable',
+                template_path: platform,
+                binary_path: 'betterdesk',
+                archive: `${platform}.tar.gz`,
+                sha256: 'a'.repeat(64),
+            };
+        });
+        fs.writeFileSync(path.join(templates, 'manifest.json'), JSON.stringify({
+            schema_version: 2,
+            sku: 'generator-templates',
+            required_platforms: platforms,
+            templates: entries,
+        }));
+        fs.writeFileSync(
+            path.join(supportModule.moduleDir(), 'custom-client-signing.seed'),
+            Buffer.alloc(32, 7).toString('base64'),
+        );
         const statePath = path.join(supportModule.moduleDir(), 'state.json');
         fs.writeFileSync(statePath, JSON.stringify({
             termsAccepted: true,

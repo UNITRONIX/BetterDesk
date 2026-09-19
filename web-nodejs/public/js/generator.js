@@ -36,6 +36,26 @@
         return data;
     }
 
+    async function uploadModuleArchive(file) {
+        const form = new FormData();
+        form.append('archive', file, file.name);
+        const res = await fetch('/api/generator/module/install-local', {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'X-CSRF-Token': csrf() },
+            credentials: 'same-origin',
+            body: form,
+        });
+        const data = (res.headers.get('content-type') || '').includes('application/json')
+            ? await res.json()
+            : null;
+        if (!res.ok || (data && data.success === false)) {
+            const err = new Error((data && data.error) || `HTTP ${res.status}`);
+            err.data = data;
+            throw err;
+        }
+        return data;
+    }
+
     const state = {
         bundles: [],
         currentId: null,
@@ -57,6 +77,7 @@
     function cacheEls() {
         [
             'gen-module-gate', 'gen-module-status', 'gen-accept-terms', 'gen-install-module',
+            'gen-install-local-file',
             'gen-finish-install', 'gen-main',
             'gen-legacy-leftovers', 'gen-legacy-leftovers-list', 'gen-legacy-hint',
             'gen-new-support', 'gen-bundle-list', 'gen-editor-title', 'gen-revoke-btn', 'gen-delete-btn',
@@ -64,6 +85,7 @@
             'gen-empty-state', 'gen-editor-form',
             'gen-name', 'gen-slug', 'gen-app-name',
             'gen-server-host', 'gen-relay-host', 'gen-use-https', 'gen-api-port', 'gen-public-key',
+            'gen-install-service', 'gen-autostart',
             'gen-download-info', 'gen-download-url', 'gen-copy-link', 'gen-open-link',
             'gen-validation-errors',
         ].forEach((id) => { els[id] = $(id); });
@@ -134,6 +156,8 @@
             api_port: els['gen-api-port'].value.trim(),
             public_key: els['gen-public-key'].value.trim(),
             disable_settings: true,
+            install_service: !!(els['gen-install-service'] && els['gen-install-service'].checked),
+            autostart: !!(els['gen-autostart'] && els['gen-autostart'].checked),
         };
     }
 
@@ -147,6 +171,8 @@
         els['gen-use-https'].checked = b.use_https ?? connectionDefaults.use_https ?? true;
         els['gen-api-port'].value = b.api_port || connectionDefaults.api_port || '';
         els['gen-public-key'].value = b.public_key || b.server_key || b.server?.public_key || connectionDefaults.public_key || '';
+        if (els['gen-install-service']) els['gen-install-service'].checked = !!b.install_service;
+        if (els['gen-autostart']) els['gen-autostart'].checked = !!b.autostart;
     }
 
     function platformKey(p) {
@@ -195,7 +221,8 @@
     }
 
     function setFormLocked(locked) {
-        ['gen-name', 'gen-slug', 'gen-app-name', 'gen-server-host', 'gen-relay-host', 'gen-api-port', 'gen-use-https']
+        ['gen-name', 'gen-slug', 'gen-app-name', 'gen-server-host', 'gen-relay-host', 'gen-api-port',
+            'gen-use-https', 'gen-install-service', 'gen-autostart']
             .forEach((id) => {
                 if (els[id]) els[id].disabled = !!locked;
             });
@@ -482,7 +509,7 @@
                 : null,
             status.signingSeedPresent
                 ? t('generator.module_seed_ok', 'Signing seed present')
-                : t('generator.module_seed_missing', 'Signing seed missing (plain JSON Phase A)'),
+                : t('generator.module_seed_missing', 'Signing seed missing — Support builds disabled'),
             status.error
                 ? t('generator.module_error_prefix', 'Error') + ': ' + status.error
                 : null,
@@ -511,6 +538,9 @@
                 if (icon) els['gen-install-module'].appendChild(icon);
                 els['gen-install-module'].appendChild(document.createTextNode(' ' + label));
             }
+        }
+        if (els['gen-install-local-file']) {
+            els['gen-install-local-file'].disabled = !status.termsAccepted || status.status === 'downloading';
         }
         if (els['gen-finish-install']) {
             els['gen-finish-install'].classList.toggle('hidden', !status.ready);
@@ -705,6 +735,26 @@
                 } catch (err) {
                     notify.error(err.message);
                     await refreshModuleStatus();
+                }
+            });
+        }
+
+        if (els['gen-install-local-file']) {
+            els['gen-install-local-file'].addEventListener('change', async () => {
+                const input = els['gen-install-local-file'];
+                const file = input.files && input.files[0];
+                if (!file) return;
+                try {
+                    input.disabled = true;
+                    notify.info('Installing local generator package…');
+                    await uploadModuleArchive(file);
+                    notify.success(t('generator.module_installed', 'Module installed'));
+                    await refreshModuleStatus();
+                } catch (err) {
+                    notify.error(err.message);
+                    await refreshModuleStatus();
+                } finally {
+                    input.value = '';
                 }
             });
         }

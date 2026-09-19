@@ -202,6 +202,9 @@ function validateBranding(input = {}) {
     }
 
     out.allow_unattended = !!(input.allow_unattended ?? input.allowUnattended ?? false);
+    out.install_service = !!(input.install_service ?? input.installService ?? false);
+    out.autostart = !!(input.autostart ?? input.autoStart ?? false);
+    if (out.autostart) out.install_service = true;
 
     // Incoming capability defaults (Support Agent). Omitted keys default to true.
     const capsIn = input.capabilities && typeof input.capabilities === 'object' ? input.capabilities : {};
@@ -390,6 +393,8 @@ function defaultBranding() {
         status_ready_color: '#22c55e',
         header_text_color: '#1f2937',
         allow_unattended: false,
+        install_service: false,
+        autostart: false,
         disable_settings: true,
         capabilities: {
             desktop: true,

@@ -29,8 +29,9 @@ Before creating bundles, admins install the **betterdesk-support-generator** mod
 
 1. Open **Generator**
 2. Read the AGPL / incoming-only notice and click **Accept terms**
-3. Click **Install from GitHub** — downloads `generator-templates-*.tar.gz` from [BetterDesk-Client](https://github.com/UNITRONIX/BetterDesk-Client) Releases (`BETTERDESK_CLIENT_REPO`, default `UNITRONIX/BetterDesk-Client`)
-4. Click **Finish installation** when status is `ready`
+3. Click **Install from GitHub** — downloads and verifies `generator-templates-*.tar.gz` from [BetterDesk-Client](https://github.com/UNITRONIX/BetterDesk-Client) Releases (`BETTERDESK_CLIENT_REPO`, default `UNITRONIX/BetterDesk-Client`)
+4. Alternatively choose **Install local package** and upload the archive downloaded from a Client release
+5. Click **Finish installation** when status is `ready`
 
 Module data lives under:
 
@@ -38,15 +39,15 @@ Module data lives under:
 {dataDir}/modules/betterdesk-support-generator/
   state.json
   templates/          # extracted generator-templates layout + manifest.json
-  custom-client-signing.seed   # optional; from env or file
+  custom-client-signing.seed   # required for production Support builds; from env or file
 ```
 
-Optional signing seed:
+Signing seed:
 
 - Env: `BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED` (base64 32-byte NaCl seed)
 - Or file `custom-client-signing.seed` copied into the module dir
 
-Without a seed, Generator writes **plain JSON** `custom.txt` (Phase A). With a seed matching the client’s embedded `.pub`, it writes **signed** base64 blobs (Phase B).
+The module refuses to become ready without a valid seed. Every production Support bundle contains a signed base64 `custom.txt` (Phase B); unsigned plain JSON is available only to debug builds of the client.
 
 ---
 
@@ -68,6 +69,30 @@ Defaults come from `/api/generator/defaults` (`keyService` + `clientConfigHost`)
 
 The worker writes `custom.txt` beside the binary (or under `Contents/MacOS` on macOS) using the Support Agent example shape (`override-settings`, `conn-type: incoming`).
 
+### Service and autostart
+
+The bundle editor exposes two opt-in settings:
+
+- **Install Support Agent service** — creates the platform service.
+- **Start Support Agent automatically** — enables service/startup autostart.
+
+Both are disabled by default. Windows bundles contain PowerShell install/uninstall scripts; Linux bundles contain systemd scripts; macOS bundles contain LaunchDaemon scripts. The scripts request elevation only for the service installation operation.
+
+### Generator environment
+
+For native, Docker and Windows installations configure these values in the BetterDesk environment file:
+
+```text
+BETTERDESK_CLIENT_REPO=UNITRONIX/BetterDesk-Client
+BETTERDESK_CLIENT_RELEASE_TAG=
+BETTERDESK_GITHUB_TOKEN=
+BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=
+AGENT_ARTIFACT_DIR=<dataDir>/agent-builds
+AGENT_BUILD_WORKER=on
+```
+
+The signing seed is secret. The console service account needs read/write access to the module, build cache and artifact directories, while the seed should be readable only by the console service. Do not expose `agent-builds` or the module directory as a static web directory.
+
 ---
 
 ## Architecture notes
@@ -88,4 +113,6 @@ Legacy Go **Support Agent** (`betterdesk-support-agent`) and compile-on-console 
 - Bundles do **not** embed a shared enrollment token
 - Each install registers independently; managed mode issues a `device_token` after operator approval
 - Support clients are **inbound-only** — end users cannot browse or connect outbound to other devices on your infrastructure
-- Prefer signed `custom.txt` in production (seed on console must match the pubkey baked into Client releases)
+- Support clients load company name, colors and logo at runtime from `GET /api/branding`; branding images are sent through the Client Branding API and are not baked into the bundle.
+- The server does not push generic heartbeat strategy settings to `betterdesk-support` devices.
+- The signing seed on the console must match the public key baked into Client releases.
