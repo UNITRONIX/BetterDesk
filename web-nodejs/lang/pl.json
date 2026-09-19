@@ -1574,7 +1574,10 @@
         "glass_color_hint": "Kolor bazowy matowych paneli. Puste pole = kolor tła drugorzędnego.",
         "glass_blur": "Rozmycie powierzchni",
         "glass_opacity": "Krycie szkła",
-        "builtin_themes_hint": "Presety stosują pełną paletę (np. BetterDesk, insolv Core Server). To osobna rzecz od szybkiego przełącznika jasny/ciemny."
+        "builtin_themes_hint": "Presety stosują pełną paletę (np. BetterDesk, insolv Core Server). To osobna rzecz od szybkiego przełącznika jasny/ciemny.",
+        "readability_check": "Kontrola czytelności",
+        "readability_contrast": "{item}: kontrast ({ratio}) jest niższy niż {minimum}:1",
+        "readability_background": "{item} używa {type} z niskim przyciemnieniem; tekst może być trudny do odczytania."
     },
     "device_detail": {
         "tab_overview": "Przegląd",

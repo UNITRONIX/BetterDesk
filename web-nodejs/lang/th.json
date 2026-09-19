@@ -1566,7 +1566,10 @@
         "glass_color_hint": "สีพื้นสำหรับแผงฝ้า ใช้สีพื้นหลังรองเมื่อเว้นว่าง",
         "glass_blur": "เบลอพื้นผิว",
         "glass_opacity": "ความทึบของกระจก",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "พรีเซ็ตจะใช้ชุดสีแบบเต็ม (เช่น BetterDesk หรือ insolv Core Server) และแยกจากปุ่มสลับโหมดสว่าง/มืดแบบด่วน",
+        "readability_check": "ตรวจสอบความสามารถในการอ่าน",
+        "readability_contrast": "อัตราส่วนคอนทราสต์ของ {item} ({ratio}) ต่ำกว่า {minimum}:1",
+        "readability_background": "{item} ใช้ {type} ที่มีโอเวอร์เลย์ต่ำ ทำให้ข้อความอ่านได้ยาก"
     },
     "device_detail": {
         "tab_overview": "ภาพรวม",

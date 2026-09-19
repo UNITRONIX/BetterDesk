@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Grundfärg för frostade paneler. Använder sekundär bakgrundsfärg om tom.",
         "glass_blur": "Ytoblur",
         "glass_opacity": "Glasopacitet",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Förinställningar använder en komplett färgpalett (till exempel BetterDesk eller insolv Core Server). De är separata från snabbväxlingen mellan ljust och mörkt.",
+        "readability_check": "Läsbarhetskontroll",
+        "readability_contrast": "Kontrasten för {item} ({ratio}) är under {minimum}:1",
+        "readability_background": "{item} använder {type} med ett svagt överlägg; texten kan vara svår att läsa."
     },
     "device_detail": {
         "tab_overview": "Översikt",

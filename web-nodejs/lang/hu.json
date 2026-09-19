@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Matt panelek alapszíne. Üresen a másodlagos háttérszínt használja.",
         "glass_blur": "Felület elmosás",
         "glass_opacity": "Üveg átlátszóság",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "A készletek teljes színpalettát alkalmaznak (például BetterDesk vagy insolv Core Server). Elkülönülnek a gyors világos/sötét kapcsolótól.",
+        "readability_check": "Olvashatósági ellenőrzés",
+        "readability_contrast": "A(z) {item} kontrasztaránya ({ratio}) kisebb, mint {minimum}:1",
+        "readability_background": "A(z) {item} {type} típust használ alacsony fedéssel; a szöveg nehezen olvasható lehet."
     },
     "device_detail": {
         "tab_overview": "Áttekintés",

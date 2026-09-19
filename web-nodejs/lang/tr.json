@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Buzlu paneller için temel renk. Boşsa ikincil arka plan rengini kullanır.",
         "glass_blur": "Yüzey bulanıklığı",
         "glass_opacity": "Cam opaklığı",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Ön ayarlar tam bir renk paketi uygular (ör. BetterDesk veya insolv Core Server). Hızlı açık/koyu geçişinden ayrıdır.",
+        "readability_check": "Okunabilirlik denetimi",
+        "readability_contrast": "{item} kontrast oranı ({ratio}) {minimum}:1 değerinin altında",
+        "readability_background": "{item}, düşük kaplama ile {type} kullanıyor; metin zor okunabilir."
     },
     "device_detail": {
         "tab_overview": "Genel Bakış",

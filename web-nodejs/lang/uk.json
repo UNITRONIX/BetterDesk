@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Базовий колір для матових панелей. Якщо порожньо — використовує вторинний колір фону.",
         "glass_blur": "Розмиття поверхні",
         "glass_opacity": "Непрозорість скла",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Пресети застосовують повну палітру (наприклад BetterDesk або insolv Core Server). Вони відокремлені від швидкого перемикача світлої/темної теми.",
+        "readability_check": "Перевірка читабельності",
+        "readability_contrast": "Контраст {item} ({ratio}) нижчий за {minimum}:1",
+        "readability_background": "{item} використовує {type} з низьким затемненням; текст може бути важко читати."
     },
     "device_detail": {
         "tab_overview": "Огляд",

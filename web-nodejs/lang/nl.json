@@ -1560,7 +1560,10 @@
         "glass_color_hint": "Basiskleur voor matglazen panelen. Gebruikt secundaire achtergrondkleur indien leeg.",
         "glass_blur": "Oppervlaktevervaging",
         "glass_opacity": "Glasdekking",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Voorinstellingen passen een volledig kleurenpakket toe (bijvoorbeeld BetterDesk of insolv Core Server). Ze staan los van de snelle licht/donker-schakelaar.",
+        "readability_check": "Leesbaarheidscontrole",
+        "readability_contrast": "Het contrast van {item} ({ratio}) is lager dan {minimum}:1",
+        "readability_background": "{item} gebruikt {type} met een lage overlay; tekst kan moeilijk leesbaar zijn."
     },
     "device_detail": {
         "tab_overview": "Overzicht",

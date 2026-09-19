@@ -684,7 +684,7 @@ router.get('/api/settings/themes', requireAuth, (req, res) => {
                     if (data.type === 'betterdesk-theme' && data.branding) {
                         themes.push({
                             id: file.replace('.json', ''),
-                            name: data.branding.appName || file.replace('.json', ''),
+                            name: data.displayName || data.branding.appName || file.replace('.json', ''),
                             description: data.branding.appDescription || '',
                             colors: data.branding.colors || {}
                         });

@@ -1,7 +1,7 @@
 <%- include('layouts/main', {
     title: _('nav.settings'),
     pageStyles: ['pages'],
-    pageScripts: ['branding-preview', 'settings'],
+    pageScripts: ['settings'],
     currentPage: 'settings',
     breadcrumb: [{ label: _('nav.settings') }],
     body: `
@@ -422,8 +422,8 @@
             <section class="branding-panel-hero branding-hero">
                 <div class="branding-hero-copy">
                     <span class="branding-panel-hero-kicker branding-hero-kicker">${_('settings.tab_branding')}</span>
-                    <h2>${_('branding.live_preview')}</h2>
-                    <p>${_('branding.background_desc')}</p>
+                    <h2>${_('settings.tab_branding')}</h2>
+                    <p>${_('branding.colors_desc')}</p>
                     <div class="branding-panel-hero-steps branding-hero-steps">
                         <span><span class="material-icons" aria-hidden="true">palette</span>${_('branding.module_colors')}</span>
                         <span><span class="material-icons" aria-hidden="true">wallpaper</span>${_('branding.module_backgrounds')}</span>
@@ -451,11 +451,17 @@
             <div class="branding-readability-alert" id="branding-readability-alert" hidden>
                 <span class="material-icons" aria-hidden="true">visibility</span>
                 <div>
-                    <strong>Readability check</strong>
+                    <strong>${_('branding.readability_check')}</strong>
                     <p id="branding-readability-text"></p>
                 </div>
             </div>
 
+            <details class="branding-management-disclosure">
+                <summary>
+                    <span class="material-icons" aria-hidden="true">folder_special</span>
+                    <span>${_('branding.profiles_label')}</span>
+                    <span class="branding-disclosure-hint">${_('branding.profile_apply')}</span>
+                </summary>
             <div class="branding-profiles-bar">
                 <div class="branding-profiles-main">
                     <label class="form-label" for="branding-profile-select">${_('branding.profiles_label')}</label>
@@ -484,6 +490,7 @@
                     </button>
                 </div>
             </div>
+            </details>
 
             <div class="branding-builtin-themes" id="branding-builtin-themes">
                 <h3 class="branding-builtin-title">${_('branding.builtin_themes')}</h3>
@@ -492,28 +499,24 @@
             </div>
 
             <div class="branding-studio-body">
-                <nav class="branding-module-nav" id="branding-module-nav" aria-label="${_('branding.modules_nav')}">
-                    <button type="button" class="branding-module-btn active" data-branding-module="identity">
+                <nav class="branding-module-nav" id="branding-module-nav" role="tablist" aria-label="${_('branding.modules_nav')}">
+                    <button type="button" role="tab" aria-selected="true" class="branding-module-btn active" data-branding-module="identity">
                         <span class="material-icons" aria-hidden="true">badge</span>
                         ${_('branding.module_identity')}
                     </button>
-                    <button type="button" class="branding-module-btn" data-branding-module="colors">
+                    <button type="button" role="tab" aria-selected="false" class="branding-module-btn" data-branding-module="colors">
                         <span class="material-icons" aria-hidden="true">palette</span>
                         ${_('branding.module_colors')}
                     </button>
-                    <button type="button" class="branding-module-btn" data-branding-module="typography">
+                    <button type="button" role="tab" aria-selected="false" class="branding-module-btn" data-branding-module="typography">
                         <span class="material-icons" aria-hidden="true">text_format</span>
                         ${_('branding.module_typography')}
                     </button>
-                    <button type="button" class="branding-module-btn" data-branding-module="backgrounds">
+                    <button type="button" role="tab" aria-selected="false" class="branding-module-btn" data-branding-module="backgrounds">
                         <span class="material-icons" aria-hidden="true">wallpaper</span>
                         ${_('branding.module_backgrounds')}
                     </button>
-                    <button type="button" class="branding-module-btn" data-branding-module="pages">
-                        <span class="material-icons" aria-hidden="true">web</span>
-                        ${_('branding.module_pages')}
-                    </button>
-                    <button type="button" class="branding-module-btn" data-branding-module="advanced">
+                    <button type="button" role="tab" aria-selected="false" class="branding-module-btn" data-branding-module="advanced">
                         <span class="material-icons" aria-hidden="true">tune</span>
                         ${_('branding.module_advanced')}
                     </button>
@@ -642,15 +645,6 @@
                                 <input type="text" id="logo-image-url" class="form-input" 
                                        placeholder="https://example.com/logo.png">
                                 <small class="form-hint">${_('branding.logo_image_url_hint')}</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Logo preview -->
-                        <div class="branding-preview-box">
-                            <label class="form-label">${_('branding.preview')}</label>
-                            <div class="logo-preview" id="logo-preview">
-                                <span class="material-icons" aria-hidden="true">dns</span>
-                                <span class="logo-preview-text">BetterDesk</span>
                             </div>
                         </div>
                     </div>
@@ -848,9 +842,6 @@
                                     <span class="material-icons" aria-hidden="true">close</span>
                                 </button>
                             </div>
-                            <div class="font-preview" id="font-heading-preview">
-                                <span class="font-preview-text" style="font-size: 1.5rem; font-weight: 600;">The quick brown fox jumps over the lazy dog</span>
-                            </div>
                         </div>
                         
                         <!-- Body Font -->
@@ -870,9 +861,6 @@
                                 <button class="btn btn-ghost btn-sm font-clear-btn hidden" id="font-body-clear" title="${_('branding.font_clear')}">
                                     <span class="material-icons" aria-hidden="true">close</span>
                                 </button>
-                            </div>
-                            <div class="font-preview" id="font-body-preview">
-                                <span class="font-preview-text">The quick brown fox jumps over the lazy dog. 0123456789</span>
                             </div>
                         </div>
                         
@@ -1063,7 +1051,7 @@
             </div>
 
             <!-- Login Page -->
-            <div class="settings-panel branding-module-panel" data-branding-module="pages">
+            <div class="settings-panel branding-module-panel" data-branding-module="backgrounds">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
                         <span class="material-icons" aria-hidden="true">login</span>
@@ -1172,7 +1160,7 @@
             </div>
 
             <!-- Agent Download Page -->
-            <div class="settings-panel branding-module-panel" data-branding-module="pages">
+            <div class="settings-panel branding-module-panel" data-branding-module="backgrounds">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
                         <span class="material-icons" aria-hidden="true">download</span>
@@ -1272,7 +1260,7 @@
             </div>
 
             <!-- RdClient / Remote Dashboard -->
-            <div class="settings-panel branding-module-panel" data-branding-module="pages">
+            <div class="settings-panel branding-module-panel" data-branding-module="backgrounds">
                 <div class="settings-panel-header">
                     <h2 class="settings-panel-title">
                         <span class="material-icons" aria-hidden="true">connected_tv</span>
@@ -1459,36 +1447,6 @@
             </div>
                 </div>
 
-                <aside class="branding-live-preview" id="branding-live-preview">
-                    <div class="branding-live-preview-header">
-                        <h3>${_('branding.live_preview')}</h3>
-                        <label class="branding-preview-page-toggle">
-                            <input type="checkbox" id="branding-preview-page-toggle">
-                            <span>${_('branding.preview_apply_page')}</span>
-                        </label>
-                    </div>
-                    <div class="branding-preview-mockup" id="branding-live-mockup">
-                        <div class="branding-mockup-sidebar">
-                            <div class="branding-mockup-logo" id="branding-mockup-logo">
-                                <span class="material-icons" aria-hidden="true">dns</span>
-                                <span class="branding-mockup-title">BetterDesk</span>
-                            </div>
-                            <div class="branding-mockup-nav-item active"></div>
-                            <div class="branding-mockup-nav-item"></div>
-                            <div class="branding-mockup-nav-item"></div>
-                        </div>
-                        <div class="branding-mockup-main">
-                            <div class="branding-mockup-card">
-                                <h4 class="branding-mockup-heading">${_('branding.preview_card_title')}</h4>
-                                <p class="branding-mockup-body">${_('branding.preview_card_body')}</p>
-                                <div class="branding-mockup-actions">
-                                    <button type="button" class="branding-mockup-btn primary">${_('branding.preview_btn_primary')}</button>
-                                    <button type="button" class="branding-mockup-btn secondary">${_('branding.preview_btn_secondary')}</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
             </div>
         </div>
         </div>

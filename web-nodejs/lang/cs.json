@@ -1560,7 +1560,10 @@
         "glass_color_hint": "Základní barva pro matné panely. Při prázdném poli se použije sekundární barva pozadí.",
         "glass_blur": "Rozmazání povrchu",
         "glass_opacity": "Průhlednost skla",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle.",
+        "readability_check": "Kontrola čitelnosti",
+        "readability_contrast": "Kontrast {item} ({ratio}) je nižší než {minimum}:1",
+        "readability_background": "{item} používá {type} s nízkým překrytím; text může být špatně čitelný."
     },
     "device_detail": {
         "tab_overview": "Přehled",

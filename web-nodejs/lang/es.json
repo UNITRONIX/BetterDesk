@@ -1560,7 +1560,10 @@
         "glass_color_hint": "Color base para paneles esmerilados. Usa el color de fondo secundario si está vacío.",
         "glass_blur": "Desenfoque de superficie",
         "glass_opacity": "Opacidad del cristal",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Los preajustes aplican una paleta completa (por ejemplo, BetterDesk o insolv Core Server). Son independientes del cambio rápido entre claro y oscuro.",
+        "readability_check": "Comprobación de legibilidad",
+        "readability_contrast": "El contraste de {item} ({ratio}) es inferior a {minimum}:1",
+        "readability_background": "{item} usa {type} con una superposición baja; el texto puede ser difícil de leer."
     },
     "device_detail": {
         "tab_overview": "Resumen",

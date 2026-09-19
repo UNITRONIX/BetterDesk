@@ -1560,7 +1560,10 @@
         "glass_color_hint": "すりガラスパネルの基準色。空欄の場合は副背景色を使用します。",
         "glass_blur": "表面のぼかし",
         "glass_opacity": "ガラスの不透明度",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "プリセットは完全なカラーパック（BetterDesk、insolv Core Server など）を適用します。クイック明暗切り替えとは別の機能です。",
+        "readability_check": "可読性チェック",
+        "readability_contrast": "{item} のコントラスト比 ({ratio}) は {minimum}:1 未満です",
+        "readability_background": "{item} はオーバーレイが弱い {type} を使用しているため、テキストが読みにくい可能性があります。"
     },
     "device_detail": {
         "tab_overview": "概要",

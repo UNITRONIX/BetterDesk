@@ -1577,7 +1577,10 @@
         "glass_color_hint": "Couleur de base des panneaux dépolis. Utilise la couleur de fond secondaire si vide.",
         "glass_blur": "Flou de surface",
         "glass_opacity": "Opacité du verre",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Les préréglages appliquent une palette complète (par exemple BetterDesk ou insolv Core Server). Ils sont distincts du changement rapide clair/sombre.",
+        "readability_check": "Vérification de la lisibilité",
+        "readability_contrast": "Le contraste de {item} ({ratio}) est inférieur à {minimum}:1",
+        "readability_background": "{item} utilise {type} avec une superposition faible ; le texte peut être difficile à lire."
     },
     "device_detail": {
         "tab_overview": "Vue d'ensemble",

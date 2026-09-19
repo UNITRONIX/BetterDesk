@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Culoarea de bază pentru panourile mate. Folosește culoarea secundară de fundal dacă este goală.",
         "glass_blur": "Estompare suprafață",
         "glass_opacity": "Opacitatea sticlei",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Presetările aplică o paletă completă (de exemplu BetterDesk sau insolv Core Server). Sunt separate de comutatorul rapid luminos/întunecat.",
+        "readability_check": "Verificare lizibilitate",
+        "readability_contrast": "Contrastul pentru {item} ({ratio}) este sub {minimum}:1",
+        "readability_background": "{item} folosește {type} cu o suprapunere redusă; textul poate fi greu de citit."
     },
     "device_detail": {
         "tab_overview": "Prezentare generală",

@@ -1560,7 +1560,10 @@
         "glass_color_hint": "Colore base per i pannelli satinati. Usa il colore di sfondo secondario se vuoto.",
         "glass_blur": "Sfocatura superficie",
         "glass_opacity": "Opacità del vetro",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "I preset applicano una tavolozza completa (ad esempio BetterDesk o insolv Core Server). Sono separati dal cambio rapido chiaro/scuro.",
+        "readability_check": "Controllo della leggibilità",
+        "readability_contrast": "Il contrasto di {item} ({ratio}) è inferiore a {minimum}:1",
+        "readability_background": "{item} usa {type} con una sovrapposizione ridotta; il testo potrebbe essere difficile da leggere."
     },
     "device_detail": {
         "tab_overview": "Panoramica",

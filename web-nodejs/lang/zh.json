@@ -1560,7 +1560,10 @@
         "glass_color_hint": "磨砂面板的基础颜色。留空时使用次要背景色。",
         "glass_blur": "表面模糊",
         "glass_opacity": "玻璃不透明度",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "预设会应用完整的配色方案（例如 BetterDesk 或 insolv Core Server），与快速明暗切换不同。",
+        "readability_check": "可读性检查",
+        "readability_contrast": "{item} 的对比度（{ratio}）低于 {minimum}:1",
+        "readability_background": "{item} 使用低覆盖度的 {type}，文字可能难以阅读。"
     },
     "device_detail": {
         "tab_overview": "概览",

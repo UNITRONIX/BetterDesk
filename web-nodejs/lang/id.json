@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Warna dasar untuk panel buram. Menggunakan warna latar sekunder jika kosong.",
         "glass_blur": "Blur permukaan",
         "glass_opacity": "Opasitas kaca",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Preset menerapkan paket warna lengkap (misalnya BetterDesk atau insolv Core Server). Preset terpisah dari pengalih cepat terang/gelap.",
+        "readability_check": "Pemeriksaan keterbacaan",
+        "readability_contrast": "Rasio kontras {item} ({ratio}) di bawah {minimum}:1",
+        "readability_background": "{item} menggunakan {type} dengan overlay rendah; teks mungkin sulit dibaca."
     },
     "device_detail": {
         "tab_overview": "Ikhtisar",

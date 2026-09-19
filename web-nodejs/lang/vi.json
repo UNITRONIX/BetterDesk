@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Màu cơ bản cho các bảng mờ. Dùng màu nền phụ khi để trống.",
         "glass_blur": "Làm mờ bề mặt",
         "glass_opacity": "Độ mờ kính",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Preset áp dụng một bộ màu đầy đủ (ví dụ BetterDesk hoặc insolv Core Server). Chúng tách biệt với nút chuyển nhanh giữa sáng và tối.",
+        "readability_check": "Kiểm tra khả năng đọc",
+        "readability_contrast": "Độ tương phản của {item} ({ratio}) thấp hơn {minimum}:1",
+        "readability_background": "{item} dùng {type} với lớp phủ thấp; văn bản có thể khó đọc."
     },
     "device_detail": {
         "tab_overview": "Tổng quan",

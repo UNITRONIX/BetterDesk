@@ -1567,7 +1567,10 @@
         "glass_color_hint": "اللون الأساسي للوحات الضبابية. يستخدم لون الخلفية الثانوي عند تركه فارغًا.",
         "glass_blur": "ضبابية السطح",
         "glass_opacity": "شفافية الزجاج",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle.",
+        "readability_check": "فحص قابلية القراءة",
+        "readability_contrast": "نسبة تباين {item} ({ratio}) أقل من {minimum}:1",
+        "readability_background": "يستخدم {item} نوع {type} مع تعتيم منخفض؛ قد يصعب قراءة النص."
     },
     "device_detail": {
         "tab_overview": "ملخص",

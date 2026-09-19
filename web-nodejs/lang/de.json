@@ -1560,7 +1560,10 @@
         "glass_color_hint": "Grundfarbe für mattierte Panels. Leer = sekundäre Hintergrundfarbe.",
         "glass_blur": "Oberflächen-Unschärfe",
         "glass_opacity": "Glasdeckkraft",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Presets apply a full color pack (z. B. BetterDesk, insolv Core Server). Sie sind vom schnellen Hell-/Dunkel-Schalter getrennt.",
+        "readability_check": "Lesbarkeitsprüfung",
+        "readability_contrast": "Der Kontrast von {item} ({ratio}) liegt unter {minimum}:1",
+        "readability_background": "{item} verwendet {type} mit einer geringen Überlagerung; der Text ist möglicherweise schwer lesbar."
     },
     "device_detail": {
         "tab_overview": "Übersicht",

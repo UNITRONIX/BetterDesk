@@ -1566,7 +1566,10 @@
         "glass_color_hint": "फ्रॉस्टेड पैनलों के लिए आधार रंग। खाली होने पर द्वितीयक पृष्ठभूमि रंग का उपयोग करता है।",
         "glass_blur": "सतह ब्लर",
         "glass_opacity": "ग्लास अपारदर्शिता",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "प्रीसेट पूरा रंग पैक लागू करते हैं (जैसे BetterDesk या insolv Core Server)। ये त्वरित हल्के/गहरे थीम स्विच से अलग हैं।",
+        "readability_check": "पठनीयता जाँच",
+        "readability_contrast": "{item} का कंट्रास्ट अनुपात ({ratio}) {minimum}:1 से कम है",
+        "readability_background": "{item} कम ओवरले के साथ {type} का उपयोग करता है; पाठ पढ़ना कठिन हो सकता है।"
     },
     "device_detail": {
         "tab_overview": "सिंहावलोकन",

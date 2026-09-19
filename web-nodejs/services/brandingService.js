@@ -7,6 +7,7 @@
 const db = require('./database');
 const fontService = require('./fontService');
 const { stripUntilStable, stripTagName } = require('../lib/stripUntilStable');
+const THEME_PALETTES = require('../config/theme-palettes.json');
 
 // Dangerous SVG elements that can execute scripts or fetch external resources.
 // Includes <style> (CSS @import/expression XSS vectors) and <use> (xlink:href external SVG inclusion).
@@ -410,64 +411,23 @@ const DEFAULT_BRANDING = {
 };
 
 /** Built-in palettes for themeMode light/dark (custom uses branding.colors). */
-const BUILTIN_THEME_PALETTES = {
-    dark: {
-        bgPrimary: '#0d1117',
-        bgSecondary: '#161b22',
-        bgTertiary: '#21262d',
-        bgElevated: '#30363d',
-        textPrimary: '#e6edf3',
-        textSecondary: '#8b949e',
-        accentBlue: '#58a6ff',
-        accentBlueHover: '#79c0ff',
-        accentBlueMuted: '#58a6ff',
-        accentGreen: '#2ea44f',
-        accentGreenHover: '#3fb950',
-        accentGreenMuted: '#2ea44f',
-        accentRed: '#f85149',
-        accentRedHover: '#ff6b6b',
-        accentRedMuted: '#f85149',
-        accentYellow: '#d29922',
-        accentYellowHover: '#e3b341',
-        accentYellowMuted: '#d29922',
-        accentPurple: '#a371f7',
-        accentPurpleHover: '#bc8cff',
-        accentPurpleMuted: '#a371f7',
-        borderPrimary: '#30363d',
-        borderSecondary: '#21262d'
-    },
-    light: {
-        bgPrimary: '#f0f2f5',
-        bgSecondary: '#ffffff',
-        bgTertiary: '#eaeef2',
-        bgElevated: '#ffffff',
-        textPrimary: '#1f2328',
-        textSecondary: '#656d76',
-        accentBlue: '#0969da',
-        accentBlueHover: '#0550ae',
-        accentBlueMuted: '#0969da',
-        accentGreen: '#1a7f37',
-        accentGreenHover: '#116329',
-        accentGreenMuted: '#1a7f37',
-        accentRed: '#cf222e',
-        accentRedHover: '#a40e26',
-        accentRedMuted: '#cf222e',
-        accentYellow: '#9a6700',
-        accentYellowHover: '#7d4e00',
-        accentYellowMuted: '#9a6700',
-        accentPurple: '#8250df',
-        accentPurpleHover: '#6639ba',
-        accentPurpleMuted: '#8250df',
-        borderPrimary: '#d0d7de',
-        borderSecondary: '#eaeef2'
-    }
-};
+const BUILTIN_THEME_PALETTES = Object.freeze({
+    dark: Object.freeze({ ...THEME_PALETTES.dark }),
+    light: Object.freeze({ ...THEME_PALETTES.light })
+});
 
 function normalizeThemeMode(mode) {
     let m = String(mode || 'dark');
     if (m === 'auto') m = 'dark';
     if (!['dark', 'light', 'custom'].includes(m)) m = 'dark';
     return m;
+}
+
+function getThemePalettes() {
+    return {
+        dark: { ...BUILTIN_THEME_PALETTES.dark },
+        light: { ...BUILTIN_THEME_PALETTES.light }
+    };
 }
 
 /**
@@ -1109,6 +1069,12 @@ function assessAppearanceReadability(brandingInput = null) {
                 severity: ratio < 3 ? 'error' : 'warning',
                 ratio: Number(ratio.toFixed(2)),
                 minimum,
+                messageKey: 'branding.readability_contrast',
+                messageParams: {
+                    item: id,
+                    ratio: ratio.toFixed(2),
+                    minimum
+                },
                 message: `${id} contrast ratio ${ratio.toFixed(2)} is below ${minimum}:1`
             });
         }
@@ -1128,6 +1094,11 @@ function assessAppearanceReadability(brandingInput = null) {
             issues.push({
                 id: item.id,
                 severity: 'warning',
+                messageKey: 'branding.readability_background',
+                messageParams: {
+                    item: item.id,
+                    type: item.type
+                },
                 message: `${item.id} uses ${item.type} with a low overlay; text may be hard to read.`
             });
         }
@@ -1322,6 +1293,7 @@ module.exports = {
     DEFAULT_BRANDING,
     COLOR_TO_CSS_VAR,
     BUILTIN_THEME_PALETTES,
+    getThemePalettes,
     normalizeThemeMode,
     resolveThemeColors,
     hexToMutedRgba,

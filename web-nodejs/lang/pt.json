@@ -1560,7 +1560,10 @@
         "glass_color_hint": "Cor base para painéis foscos. Usa a cor de fundo secundária se vazio.",
         "glass_blur": "Desfoque da superfície",
         "glass_opacity": "Opacidade do vidro",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "As predefinições aplicam uma paleta completa (por exemplo, BetterDesk ou insolv Core Server). São independentes da troca rápida entre claro e escuro.",
+        "readability_check": "Verificação de legibilidade",
+        "readability_contrast": "O contraste de {item} ({ratio}) é inferior a {minimum}:1",
+        "readability_background": "{item} usa {type} com uma sobreposição baixa; o texto pode ser difícil de ler."
     },
     "device_detail": {
         "tab_overview": "Visão geral",

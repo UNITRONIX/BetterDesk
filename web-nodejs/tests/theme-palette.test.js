@@ -5,10 +5,21 @@ const {
     resolveThemeColors,
     normalizeThemeMode,
     hexToMutedRgba,
-    BUILTIN_THEME_PALETTES
+    BUILTIN_THEME_PALETTES,
+    getThemePalettes
 } = require('../services/brandingService');
 
 describe('UX 3.5 theme palettes', () => {
+    test('exposes the canonical palettes without shared mutable state', () => {
+        const palettes = getThemePalettes();
+        expect(palettes).toEqual({
+            dark: expect.objectContaining({ bgPrimary: '#0d1117' }),
+            light: expect.objectContaining({ bgPrimary: '#f0f2f5' })
+        });
+        palettes.dark.bgPrimary = '#000000';
+        expect(BUILTIN_THEME_PALETTES.dark.bgPrimary).toBe('#0d1117');
+    });
+
     test('normalizeThemeMode maps auto → dark and rejects junk', () => {
         expect(normalizeThemeMode('auto')).toBe('dark');
         expect(normalizeThemeMode('light')).toBe('light');

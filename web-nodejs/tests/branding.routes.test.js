@@ -78,6 +78,17 @@ describe('Branding routes', () => {
         jest.clearAllMocks();
     });
 
+    it('keeps the appearance settings focused on saved configuration', () => {
+        const view = fs.readFileSync(path.join(__dirname, '..', 'views', 'settings.ejs'), 'utf8');
+        const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'settings.js'), 'utf8');
+
+        expect(view).not.toContain('branding-preview');
+        expect(view).not.toContain('branding-live-preview');
+        expect(view).toContain('branding-management-disclosure');
+        expect(script).not.toContain('BrandingPreview');
+        expect(script).toContain('initBrandingFieldTracking');
+    });
+
     describe('GET /css/branding.css', () => {
         it('returns text/css with :root overrides when branding has colors', async () => {
             const css = brandingService.generateThemeCss();
@@ -150,6 +161,19 @@ describe('Branding routes', () => {
             expect(res.body.data.version).toBe('2.0');
             expect(res.body.data.identity.appName).toBeTruthy();
             expect(res.body.readability).toHaveProperty('ok');
+        });
+    });
+
+    describe('GET /api/settings/themes', () => {
+        it('returns distinct display names for built-in presets', async () => {
+            const res = await request(app).get('/api/settings/themes');
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.map(theme => theme.name)).toEqual(expect.arrayContaining([
+                'BetterDesk Dark',
+                'BetterDesk Light',
+                'insolve Core Server'
+            ]));
         });
     });
 

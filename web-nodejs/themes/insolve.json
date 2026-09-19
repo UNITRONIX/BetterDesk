@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "type": "betterdesk-theme",
+  "displayName": "insolve Core Server",
   "branding": {
     "appName": "insolve Core Server",
     "appDescription": "Insolve Device Management",

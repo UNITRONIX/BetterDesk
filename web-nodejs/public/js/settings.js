@@ -424,21 +424,8 @@
         return false;
     }
 
-    function isBrandingTabActive() {
-        const brandingTab = document.getElementById('tab-branding');
-        return !!(brandingTab && brandingTab.classList.contains('active'));
-    }
-
-    function onSettingsTabChanged(tabName) {
-        if (tabName === 'branding') {
-            scheduleBrandingPreview();
-            return;
-        }
-        if (typeof BrandingPreview !== 'undefined' && BrandingPreview.clearAllPreview) {
-            BrandingPreview.clearAllPreview();
-        } else if (typeof BrandingPreview !== 'undefined') {
-            BrandingPreview.clearPagePreview();
-        }
+    function onSettingsTabChanged() {
+        // Appearance changes are applied only after an explicit save.
     }
 
     function initSettingsSearch() {
@@ -1293,7 +1280,6 @@
     let brandingData = null;
     let _brandingSnapshot = null;
     let _brandingDirty = false;
-    let _previewDebounce = null;
     let _autosaveDebounce = null;
     let _canBrandingEdit = true;
     let _fontSource = 'google';
@@ -1325,7 +1311,7 @@
             initBrandingProfiles();
             initBuiltinThemes();
             initBrandingActions();
-            initBrandingLivePreview();
+            initBrandingFieldTracking();
             setBrandingStatus('saved');
             
         } catch (error) {
@@ -1339,8 +1325,12 @@
         nav.querySelectorAll('.branding-module-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const module = btn.dataset.brandingModule;
-                nav.querySelectorAll('.branding-module-btn').forEach(b => b.classList.remove('active'));
+                nav.querySelectorAll('.branding-module-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-selected', 'false');
+                });
                 btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
                 document.querySelectorAll('.branding-module-panel').forEach(panel => {
                     panel.classList.toggle('active', panel.dataset.brandingModule === module);
                 });
@@ -1372,26 +1362,24 @@
         const current = JSON.stringify(collectBrandingData());
         _brandingDirty = current !== _brandingSnapshot;
         if (_brandingDirty) setBrandingStatus('dirty');
-        scheduleBrandingPreview();
         if (_canBrandingEdit) scheduleBrandingAutosave();
     }
 
-    function scheduleBrandingPreview() {
-        clearTimeout(_previewDebounce);
-        _previewDebounce = setTimeout(() => {
-            if (!isBrandingTabActive()) return;
-            if (typeof BrandingPreview !== 'undefined') {
-                const applyPage = document.getElementById('branding-preview-page-toggle')?.checked;
-                BrandingPreview.apply(collectBrandingData(), { applyToPage: !!applyPage });
-            }
-            updateLogoPreview();
-        }, 100);
+    function initBrandingFieldTracking() {
+        const tab = document.getElementById('tab-branding');
+        if (!tab) return;
+        tab.addEventListener('input', (event) => {
+            if (event.target.closest('#tab-branding')) onBrandingFieldChange();
+        });
+        tab.addEventListener('change', (event) => {
+            if (event.target?.classList?.contains('branding-bg-file')) return;
+            if (event.target.closest('#tab-branding')) onBrandingFieldChange();
+        });
     }
 
     function scheduleBrandingAutosave() {
         // Appearance changes can touch many fields at once and the server rate
-        // limiter is intentionally strict. Keep live preview instant, but require
-        // an explicit save for stable, predictable updates.
+        // limiter is intentionally strict. Keep persistence explicit and predictable.
         clearTimeout(_autosaveDebounce);
     }
 
@@ -1410,10 +1398,7 @@
             _brandingSnapshot = JSON.stringify(collectBrandingData());
             _brandingDirty = false;
             setBrandingStatus('saved', options.silent ? _('branding.autosaved') : _('branding.saved'));
-            if (typeof BrandingPreview !== 'undefined') {
-                const rev = resp.revision || Date.now();
-                BrandingPreview.refreshBrandingStylesheet(rev);
-            }
+            refreshBrandingStylesheet(resp.revision || Date.now());
             applyBrandingToChrome(data);
             if (!options.silent) {
                 Notifications.success(_('branding.saved'));
@@ -1439,7 +1424,13 @@
         const errors = issues.filter(issue => issue.severity === 'error');
         box.hidden = false;
         box.classList.toggle('has-errors', errors.length > 0);
-        text.textContent = issues.slice(0, 3).map(issue => issue.message).join(' ');
+        text.textContent = issues.slice(0, 3).map(issue => {
+            if (issue.messageKey) {
+                const translated = _(issue.messageKey, issue.messageParams || {});
+                if (translated !== issue.messageKey) return translated;
+            }
+            return issue.message || '';
+        }).filter(Boolean).join(' ');
     }
 
     async function waitForBackgroundUploads() {
@@ -1455,8 +1446,6 @@
             populateBrandingForm(data);
             _brandingDirty = false;
             setBrandingStatus('saved');
-            scheduleBrandingPreview();
-            if (typeof BrandingPreview !== 'undefined') BrandingPreview.clearPagePreview();
         } catch (e) {
             console.error('Revert failed:', e);
         }
@@ -1474,19 +1463,12 @@
         if (favicon) favicon.href = `/branding/favicon.svg?v=${Date.now()}`;
     }
 
-    function initBrandingLivePreview() {
-        document.getElementById('branding-preview-page-toggle')?.addEventListener('change', scheduleBrandingPreview);
-        const tab = document.getElementById('tab-branding');
-        if (!tab) return;
-        tab.addEventListener('input', (e) => {
-            if (e.target.closest('#tab-branding')) onBrandingFieldChange();
+    function refreshBrandingStylesheet(revision) {
+        const rev = revision || Date.now();
+        document.querySelectorAll('link[href*="/css/branding.css"]').forEach(link => {
+            const base = link.getAttribute('href').split('?')[0];
+            link.setAttribute('href', `${base}?v=${encodeURIComponent(rev)}`);
         });
-        tab.addEventListener('change', (e) => {
-            if (e.target?.classList?.contains('branding-bg-file')) return;
-            if (e.target.closest('#tab-branding')) onBrandingFieldChange();
-        });
-        // Only seed preview when Branding is the active tab (not Updates/etc.)
-        if (isBrandingTabActive()) scheduleBrandingPreview();
     }
 
     async function brandingPrompt(message, options = {}) {
@@ -1528,10 +1510,7 @@
                 _brandingSnapshot = JSON.stringify(collectBrandingData());
                 _brandingDirty = false;
                 setBrandingStatus('saved');
-                scheduleBrandingPreview();
-                if (typeof BrandingPreview !== 'undefined') {
-                    BrandingPreview.refreshBrandingStylesheet(resp.revision || Date.now());
-                }
+                refreshBrandingStylesheet(resp.revision || Date.now());
                 Notifications.success(_('branding.profile_applied'));
             } catch (e) {
                 Notifications.error(e.message || _('errors.server_error'));
@@ -1574,7 +1553,14 @@
             const id = parseInt(select.value, 10);
             if (!id) return;
             try {
-                const resp = await Utils.api(`/api/settings/branding/profiles/${id}/duplicate`, { method: 'POST', body: {} });
+                const profile = _brandingProfiles.find(item => String(item.id) === String(id));
+                const copyName = profile
+                    ? `${profile.name} (${_('branding.profile_duplicate')})`
+                    : '';
+                const resp = await Utils.api(`/api/settings/branding/profiles/${id}/duplicate`, {
+                    method: 'POST',
+                    body: copyName ? { name: copyName } : {}
+                });
                 const duplicatedId = resp?.data?.id;
                 await refreshBrandingProfiles(select, duplicatedId);
                 Notifications.success(_('branding.profile_duplicated'));
@@ -1644,8 +1630,7 @@
                         _brandingSnapshot = JSON.stringify(collectBrandingData());
                         _brandingDirty = false;
                         setBrandingStatus('saved');
-                        scheduleBrandingPreview();
-                        if (typeof BrandingPreview !== 'undefined') BrandingPreview.refreshBrandingStylesheet(Date.now());
+                        refreshBrandingStylesheet(Date.now());
                         Notifications.success(_('branding.theme_applied'));
                     } catch (e) {
                         Notifications.error(e.message || _('errors.server_error'));
@@ -1872,8 +1857,6 @@
         setChecked('show-powered', data.showPoweredBy !== 'false');
         setVal('custom-css', data.customCss || '');
         
-        // Update preview
-        updateLogoPreview();
     }
     
     /**
@@ -2059,9 +2042,7 @@
                 _brandingSnapshot = JSON.stringify(collectBrandingData());
                 _brandingDirty = false;
                 setBrandingStatus('saved', _('branding.autosaved'));
-                if (typeof BrandingPreview !== 'undefined') {
-                    BrandingPreview.refreshBrandingStylesheet(result.revision || Date.now());
-                }
+                refreshBrandingStylesheet(result.revision || Date.now());
             } else {
                 onBrandingFieldChange();
             }
@@ -2249,17 +2230,8 @@
         radios.forEach(radio => {
             radio.addEventListener('change', () => {
                 showLogoPanel(radio.value);
-                updateLogoPreview();
             });
         });
-        
-        // Live preview on input changes
-        document.getElementById('logo-icon-name')?.addEventListener('input', updateLogoPreview);
-        document.getElementById('logo-svg-input')?.addEventListener('input', updateLogoPreview);
-        document.getElementById('logo-image-url')?.addEventListener('input', updateLogoPreview);
-        document.getElementById('logo-text-input')?.addEventListener('input', updateLogoPreview);
-        document.getElementById('logo-text-accent')?.addEventListener('input', updateLogoPreview);
-        document.getElementById('brand-name')?.addEventListener('input', updateLogoPreview);
         
         // File upload handler
         document.getElementById('logo-image-file')?.addEventListener('change', handleLogoFileUpload);
@@ -2272,114 +2244,6 @@
         document.querySelectorAll('.logo-config-panel').forEach(p => p.classList.add('hidden'));
         const panel = document.getElementById(`logo-${type}-panel`);
         if (panel) panel.classList.remove('hidden');
-    }
-    
-    function isSafePreviewUrl(url) {
-        const trimmed = String(url || '').trim();
-        if (!trimmed) return false;
-        if (trimmed.startsWith('//') || trimmed.includes('..')) return false;
-        if (trimmed.startsWith('/')) return true;
-        try {
-            const parsed = new URL(trimmed, window.location.origin);
-            return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-        } catch (_) {
-            return false;
-        }
-    }
-
-    /**
-     * Sanitize SVG content to prevent XSS attacks.
-     * Removes potentially dangerous elements and attributes.
-     * @param {string} svg - Raw SVG string
-     * @returns {string} - Sanitized SVG string
-     */
-    function sanitizeSvg(svg) {
-        // Parse the SVG
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(svg, 'image/svg+xml');
-        
-        // Check for parsing errors
-        const parserError = doc.querySelector('parsererror');
-        if (parserError) return '<!-- Invalid SVG -->';
-        
-        const svgEl = doc.querySelector('svg');
-        if (!svgEl) return '<!-- No SVG element found -->';
-        
-        // Remove dangerous elements
-        const dangerousTags = ['script', 'foreignobject', 'iframe', 'embed', 'object', 'applet'];
-        dangerousTags.forEach(tag => {
-            doc.querySelectorAll(tag).forEach(el => el.remove());
-        });
-        
-        // Remove dangerous attributes from all elements
-        const dangerousAttrs = [
-            'onclick', 'ondblclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove',
-            'onmouseout', 'onmouseenter', 'onmouseleave', 'onkeydown', 'onkeypress', 'onkeyup',
-            'onload', 'onerror', 'onabort', 'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset',
-            'onselect', 'onunload', 'xlink:href'
-        ];
-        
-        doc.querySelectorAll('*').forEach(el => {
-            dangerousAttrs.forEach(attr => el.removeAttribute(attr));
-            for (const attr of Array.from(el.attributes || [])) {
-                if (/^on/i.test(attr.name)) el.removeAttribute(attr.name);
-            }
-            if (el.hasAttribute('href')) {
-                const href = el.getAttribute('href').trim().toLowerCase();
-                if (/^(javascript|data|vbscript|file):/.test(href)) {
-                    el.removeAttribute('href');
-                }
-            }
-            if (el.hasAttribute('xlink:href')) {
-                const href = el.getAttribute('xlink:href').trim().toLowerCase();
-                if (/^(javascript|data|vbscript|file):/.test(href)) {
-                    el.removeAttribute('xlink:href');
-                }
-            }
-        });
-        
-        return svgEl.outerHTML;
-    }
-    
-    /**
-     * Update logo preview
-     */
-    function updateLogoPreview() {
-        const preview = document.getElementById('logo-preview');
-        if (!preview) return;
-        
-        const type = document.querySelector('input[name="logo-type"]:checked')?.value || 'icon';
-        const name = document.getElementById('brand-name')?.value || 'BetterDesk';
-        
-        if (type === 'text') {
-            const logoText = document.getElementById('logo-text-input')?.value || name;
-            const accentText = document.getElementById('logo-text-accent')?.value || '';
-            const fontHeading = document.getElementById('font-heading-value')?.value || '';
-            const fontStyle = fontHeading ? `font-family: '${Utils.escapeHtml(fontHeading)}', sans-serif;` : '';
-            let html = `<span class="brand-text-logo brand-text-logo-lg" style="${fontStyle}">${Utils.escapeHtml(logoText)}`;
-            if (accentText) {
-                html += `<span class="brand-text-accent">${Utils.escapeHtml(accentText)}</span>`;
-            }
-            html += '</span>';
-            preview.innerHTML = html;
-        } else if (type === 'svg') {
-            const svg = document.getElementById('logo-svg-input')?.value || '';
-            if (svg.trim()) {
-                preview.innerHTML = `<span class="logo-preview-svg">${sanitizeSvg(svg)}</span>`;
-            } else {
-                preview.innerHTML = `<span class="material-icons">code</span><span class="logo-preview-text">${Utils.escapeHtml(name)}</span>`;
-            }
-        } else if (type === 'image') {
-            const url = document.getElementById('logo-image-url')?.value || '';
-            if (url.trim() && isSafePreviewUrl(url)) {
-                preview.innerHTML = `<img src="${Utils.escapeHtml(url)}" alt="${Utils.escapeHtml(name)}" style="max-height: 36px;">`;
-            } else {
-                preview.innerHTML = `<span class="material-icons">photo</span><span class="logo-preview-text">${Utils.escapeHtml(name)}</span>`;
-            }
-        } else {
-            const icon = document.getElementById('logo-icon-name')?.value || 'dns';
-            preview.innerHTML = `<span class="material-icons">${Utils.escapeHtml(icon)}</span><span class="logo-preview-text">${Utils.escapeHtml(name)}</span>`;
-        }
     }
     
     /**
@@ -2424,7 +2288,6 @@
             const urlInput = document.getElementById('logo-image-url');
             if (urlInput) urlInput.value = result.url;
             Notifications.success(_('branding.logo_upload_success'));
-            updateLogoPreview();
         } catch (err) {
             Notifications.error(err.message || _('errors.server_error'));
         }
@@ -2462,25 +2325,13 @@
             radio.addEventListener('change', () => {
                 if (!radio.checked) return;
                 if (radio.value === 'light') {
-                    applyBuiltInPalette({
-                        bgPrimary: '#f0f2f5', bgSecondary: '#ffffff', bgTertiary: '#eaeef2', bgElevated: '#ffffff',
-                        textPrimary: '#1f2328', textSecondary: '#656d76',
-                        accentBlue: '#0969da', accentBlueHover: '#0550ae',
-                        accentGreen: '#1a7f37', accentRed: '#cf222e', accentYellow: '#9a6700', accentPurple: '#8250df',
-                        borderPrimary: '#d0d7de', borderSecondary: '#eaeef2'
-                    });
+                    applyBuiltInPalette(window.BetterDesk?.themePalettes?.light || {});
                     const glassColor = document.getElementById('glass-color');
                     const glassPicker = document.getElementById('glass-color-picker');
                     if (glassColor) glassColor.value = '#ffffff';
                     if (glassPicker) glassPicker.value = '#ffffff';
                 } else if (radio.value === 'dark') {
-                    applyBuiltInPalette({
-                        bgPrimary: '#0d1117', bgSecondary: '#161b22', bgTertiary: '#21262d', bgElevated: '#30363d',
-                        textPrimary: '#e6edf3', textSecondary: '#8b949e',
-                        accentBlue: '#58a6ff', accentBlueHover: '#79c0ff',
-                        accentGreen: '#2ea44f', accentRed: '#f85149', accentYellow: '#d29922', accentPurple: '#a371f7',
-                        borderPrimary: '#30363d', borderSecondary: '#21262d'
-                    });
+                    applyBuiltInPalette(window.BetterDesk?.themePalettes?.dark || {});
                     const glassColor = document.getElementById('glass-color');
                     const glassPicker = document.getElementById('glass-color-picker');
                     if (glassColor) glassColor.value = '#161b22';
@@ -2581,7 +2432,6 @@
      */
     let _fontSearchTimeout = null;
     let _fontCategory = '';
-    let _fontPreviewLinks = {};
 
     /**
      * Set font picker value
@@ -2589,34 +2439,11 @@
     function setFontPickerValue(slot, family) {
         const valueInput = document.getElementById(`font-${slot}-value`);
         const currentLabel = document.getElementById(`font-${slot}-current`);
-        const preview = document.getElementById(`font-${slot}-preview`);
         const clearBtn = document.querySelector(`#font-${slot}-slot .font-clear-btn`);
         
         if (valueInput) valueInput.value = family || '';
         if (currentLabel) currentLabel.textContent = family || _('branding.font_system_default');
         if (clearBtn) clearBtn.style.display = family ? 'inline-flex' : 'none';
-        
-        if (preview) {
-            if (family) {
-                loadFontPreview(family);
-                preview.style.fontFamily = `'${family}', sans-serif`;
-            } else {
-                preview.style.fontFamily = '';
-            }
-        }
-    }
-
-    /**
-     * Load font preview via Google Fonts CSS
-     */
-    function loadFontPreview(family) {
-        const key = family.replace(/\s+/g, '+');
-        if (_fontPreviewLinks[key]) return;
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@400;700&display=swap`;
-        document.head.appendChild(link);
-        _fontPreviewLinks[key] = link;
     }
 
     /**
@@ -2656,7 +2483,6 @@
             if (clearBtn) {
                 clearBtn.addEventListener('click', () => {
                     setFontPickerValue(slot, '');
-                    updateLogoPreview();
                 });
             }
         });
@@ -2709,10 +2535,8 @@
                 const item = document.createElement('div');
                 item.className = 'font-dropdown-item';
                 
-                loadFontPreview(font.family);
-                
                 item.innerHTML = `
-                    <span class="font-item-name" style="font-family: '${Utils.escapeHtml(font.family)}', sans-serif">${Utils.escapeHtml(font.family)}</span>
+                    <span class="font-item-name">${Utils.escapeHtml(font.family)}</span>
                     <span class="font-item-meta">
                         <span class="font-item-category">${Utils.escapeHtml(font.category)}</span>
                         ${font.downloaded ? '<span class="font-item-local" title="Downloaded">●</span>' : ''}
@@ -2738,7 +2562,6 @@
                     
                     setFontPickerValue(slot, font.family);
                     dropdown.style.display = 'none';
-                    updateLogoPreview();
                 });
                 
                 dropdown.appendChild(item);
@@ -2810,8 +2633,7 @@
                 _brandingSnapshot = JSON.stringify(collectBrandingData());
                 _brandingDirty = false;
                 setBrandingStatus('saved');
-                scheduleBrandingPreview();
-                if (typeof BrandingPreview !== 'undefined') BrandingPreview.refreshBrandingStylesheet(Date.now());
+                refreshBrandingStylesheet(Date.now());
                 Notifications.success(_('branding.imported'));
                 
             } catch (error) {
@@ -2834,8 +2656,7 @@
                 _brandingSnapshot = JSON.stringify(collectBrandingData());
                 _brandingDirty = false;
                 setBrandingStatus('saved');
-                scheduleBrandingPreview();
-                if (typeof BrandingPreview !== 'undefined') BrandingPreview.refreshBrandingStylesheet(Date.now());
+                refreshBrandingStylesheet(Date.now());
                 Notifications.success(_('branding.reset_success'));
             } catch (error) {
                 Notifications.error(error.message || _('errors.server_error'));

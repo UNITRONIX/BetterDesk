@@ -1620,7 +1620,10 @@
         "custom_css_title": "Custom CSS",
         "custom_css_desc": "Advanced: inject custom CSS applied across the console and login page.",
         "custom_css_hint": "Use with care. Invalid or unsafe rules are sanitized. Max 20,000 characters.",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle.",
+        "readability_check": "Readability check",
+        "readability_contrast": "{item} contrast ratio ({ratio}) is below {minimum}:1",
+        "readability_background": "{item} uses {type} with a low overlay; text may be hard to read."
     },
     "device_detail": {
         "tab_overview": "Overview",

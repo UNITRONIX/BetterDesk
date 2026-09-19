@@ -1560,7 +1560,10 @@
         "glass_color_hint": "무광 패널의 기본 색상. 비어 있으면 보조 배경색을 사용합니다.",
         "glass_blur": "표면 흐림",
         "glass_opacity": "유리 불투명도",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "프리셋은 전체 색상 패키지(예: BetterDesk, insolv Core Server)를 적용합니다. 빠른 밝은/어두운 전환과는 별개입니다.",
+        "readability_check": "가독성 검사",
+        "readability_contrast": "{item} 대비({ratio})가 {minimum}:1보다 낮습니다",
+        "readability_background": "{item}에서 오버레이가 약한 {type}을 사용하므로 텍스트가 읽기 어려울 수 있습니다."
     },
     "device_detail": {
         "tab_overview": "개요",

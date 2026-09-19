@@ -1566,7 +1566,10 @@
         "glass_color_hint": "Huurrettujen paneelien perusväri. Käyttää toissijaista taustaväriä, jos tyhjä.",
         "glass_blur": "Pinnan sumennus",
         "glass_opacity": "Lasin läpinäkyvyys",
-        "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle."
+        "builtin_themes_hint": "Esiasetukset käyttävät koko väripalettia (esim. BetterDesk tai insolv Core Server). Ne ovat erillisiä vaalean ja tumman tilan pikavaihtoehdosta.",
+        "readability_check": "Luettavuuden tarkistus",
+        "readability_contrast": "{item}-kontrasti ({ratio}) on alle {minimum}:1",
+        "readability_background": "{item} käyttää {type}-taustaa pienellä peittokuvalla; tekstiä voi olla vaikea lukea."
     },
     "device_detail": {
         "tab_overview": "Yleiskatsaus",
