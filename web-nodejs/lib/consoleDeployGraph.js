@@ -36,6 +36,13 @@ function createConsoleDeployGraph(rootDir) {
             return path.posix.join(resolved, 'index.js');
         }
 
+        // Preserve explicit non-JavaScript extensions such as .json.
+        // Appending .js here turns require('./config/theme.json') into
+        // the invalid repair path config/theme.json.js.
+        if (/\.(?:json|ya?ml|css|html?|txt|svg|xml|toml|ini)$/i.test(resolved)) {
+            return resolved;
+        }
+
         if (!resolved.endsWith('.js')) resolved += '.js';
         const absJs = path.join(rootDir, resolved);
         if (!fs.existsSync(absJs)) {

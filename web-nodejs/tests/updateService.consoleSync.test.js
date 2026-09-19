@@ -27,6 +27,8 @@ describe('updateService console sync helpers', () => {
         const graph = createConsoleDeployGraph(require('path').join(__dirname, '..'));
         expect(graph.resolveConsoleRequire('routes/auth.routes.js', '../services/serverAttestation'))
             .toBe('services/serverAttestation.js');
+        expect(graph.resolveConsoleRequire('services/brandingService.js', '../config/theme-palettes.json'))
+            .toBe('config/theme-palettes.json');
         expect(graph.resolveConsoleRequire('routes/index.js', './devices.routes'))
             .toBe('routes/devices.routes.js');
         expect(graph.resolveConsoleRequire('server.js', './routes'))
