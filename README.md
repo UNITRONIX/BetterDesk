@@ -37,6 +37,8 @@
 
 Your data stays on **your** server. The project does not run vendor analytics — [PRIVACY.md](PRIVACY.md).
 
+> **AI-assisted development:** BetterDesk is created and maintained with the assistance of artificial intelligence tools.
+
 ---
 
 ## Quick start
