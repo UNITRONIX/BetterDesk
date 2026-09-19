@@ -21,7 +21,7 @@ const MODULE_ID = 'betterdesk-support-generator';
 const DEFAULT_CLIENT_REPO = 'UNITRONIX/BetterDesk-Client';
 const STATE_STATUSES = new Set(['not_installed', 'downloading', 'ready', 'error']);
 const SIGNING_SEED_NAME = 'custom-client-signing.seed';
-const MIN_BINARY_SIZE = 100 * 1024;
+const MIN_BINARY_SIZE = 32 * 1024;
 const REQUIRED_TEMPLATES = Object.freeze([
     'windows-x86_64',
     'windows-aarch64',
