@@ -1309,15 +1309,17 @@
 
 .branding-management-disclosure > summary::-webkit-details-marker { display: none; }
 .branding-management-disclosure > summary::after {
-    content: "expand_more";
+    content: "";
     margin-left: auto;
-    font-family: "Material Symbols Outlined";
-    font-size: 20px;
-    font-feature-settings: "liga";
-    line-height: 1;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-secondary);
+    border-bottom: 2px solid var(--text-secondary);
+    transform: rotate(45deg);
+    transition: transform var(--transition-fast);
     color: var(--text-secondary);
 }
-.branding-management-disclosure[open] > summary::after { content: "expand_less"; }
+.branding-management-disclosure[open] > summary::after { transform: rotate(225deg); }
 .branding-disclosure-hint {
     color: var(--text-secondary);
     font-size: var(--font-size-xs);

@@ -86,9 +86,10 @@ describe('Branding routes', () => {
         expect(view).not.toContain('branding-preview');
         expect(view).not.toContain('branding-live-preview');
         expect(view).toContain('branding-management-disclosure');
+        expect(view).not.toContain('folder_special');
         expect(script).not.toContain('BrandingPreview');
         expect(script).toContain('initBrandingFieldTracking');
-        expect(styles).toContain('font-family: "Material Symbols Outlined";');
+        expect(styles).toContain('border-right: 2px solid var(--text-secondary);');
     });
 
     describe('GET /css/branding.css', () => {
