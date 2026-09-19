@@ -81,12 +81,14 @@ describe('Branding routes', () => {
     it('keeps the appearance settings focused on saved configuration', () => {
         const view = fs.readFileSync(path.join(__dirname, '..', 'views', 'settings.ejs'), 'utf8');
         const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'settings.js'), 'utf8');
+        const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'pages.css'), 'utf8');
 
         expect(view).not.toContain('branding-preview');
         expect(view).not.toContain('branding-live-preview');
         expect(view).toContain('branding-management-disclosure');
         expect(script).not.toContain('BrandingPreview');
         expect(script).toContain('initBrandingFieldTracking');
+        expect(styles).toContain('font-family: "Material Symbols Outlined";');
     });
 
     describe('GET /css/branding.css', () => {
