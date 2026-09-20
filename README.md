@@ -106,12 +106,10 @@ The BetterDesk web console uses the UX 3.5 interface. These preview images show 
     <td align="center">Device details</td>
   </tr>
   <tr>
-    <td><img src="screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
-    <td><img src="screenshots/generated/mobile-devices-dark.png" alt="BetterDesk mobile devices view" width="100%"></td>
+    <td colspan="2"><img src="screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
   </tr>
   <tr>
-    <td align="center">Settings → Updates</td>
-    <td align="center">Mobile devices</td>
+    <td colspan="2" align="center">Settings → Updates</td>
   </tr>
 </table>
 

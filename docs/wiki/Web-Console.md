@@ -28,12 +28,10 @@ The following screenshots show the current UX 3.5 panel in the dark theme and En
     <td align="center">Device details</td>
   </tr>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
-    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/mobile-devices-dark.png" alt="BetterDesk mobile devices view" width="100%"></td>
+    <td colspan="2"><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
   </tr>
   <tr>
-    <td align="center">Settings → Updates</td>
-    <td align="center">Mobile devices</td>
+    <td colspan="2" align="center">Settings → Updates</td>
   </tr>
 </table>
 
