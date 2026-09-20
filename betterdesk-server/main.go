@@ -49,6 +49,36 @@ var (
 	sqliteAuthConsolidationRollback  string
 )
 
+type persistedTimeSyncConfig struct {
+	NTPServers         string `json:"ntp_servers"`
+	MaxSkewMS          int    `json:"max_skew_ms"`
+	RequireSyncedClock bool   `json:"require_synced_clock"`
+	TrustOSNTP         bool   `json:"trust_os_ntp"`
+}
+
+func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
+	raw, err := database.GetConfig(timesync.PersistedConfigKey)
+	if err != nil || strings.TrimSpace(raw) == "" {
+		return
+	}
+
+	var persisted persistedTimeSyncConfig
+	if err := json.Unmarshal([]byte(raw), &persisted); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted time-sync configuration: %v", err)
+		return
+	}
+	if strings.TrimSpace(persisted.NTPServers) == "" || persisted.MaxSkewMS <= 0 || persisted.MaxSkewMS > 600000 {
+		log.Printf("WARN: Ignoring invalid persisted time-sync configuration values")
+		return
+	}
+
+	cfg.NTPServers = persisted.NTPServers
+	cfg.BillingMaxClockSkewMS = persisted.MaxSkewMS
+	cfg.BillingRequireSyncedClock = persisted.RequireSyncedClock
+	cfg.BillingTrustOSNTP = persisted.TrustOSNTP
+	log.Printf("Restored time-sync configuration from DB")
+}
+
 func init() {
 	if Version == "dev" {
 		if v := productversion.Product(); v != "" && v != "dev" {
@@ -159,6 +189,7 @@ func main() {
 	if err := database.EnsureClientSessionsSchema(); err != nil {
 		log.Fatalf("Failed to ensure client_sessions schema: %v", err)
 	}
+	applyPersistedTimeSyncConfig(cfg, database)
 
 	// Load API key from .api_key file or API_KEY env var and sync to database.
 	// This ensures the Node.js console and Go server share the same API key
@@ -334,6 +365,7 @@ func main() {
 	reloadHandler.OnReload(func() error {
 		log.Printf("[reload] Reloading configuration from environment")
 		cfg.LoadEnv()
+		applyPersistedTimeSyncConfig(cfg, database)
 		return nil
 	})
 

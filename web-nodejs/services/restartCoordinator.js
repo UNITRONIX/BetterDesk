@@ -329,6 +329,14 @@ function complete(req, id) {
     return { completed: true, id };
 }
 
+function dismissFailed(req, key) {
+    const state = readState();
+    if (!state || state.phase !== 'failed' || state.userId !== safeUserId(req)) return false;
+    if (key && !(state.changes || []).some((change) => change.key === key)) return false;
+    removeState();
+    return true;
+}
+
 module.exports = {
     STATE_PATH,
     getPending,
@@ -337,5 +345,6 @@ module.exports = {
     confirm,
     getPublicStatus,
     complete,
+    dismissFailed,
     readState,
 };

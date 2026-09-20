@@ -146,6 +146,7 @@
     }
 
     function showRestartFailure(pending, message) {
+        _restartPending = { ...pending, phase: 'failed' };
         if (window.Modal) Modal.close();
         Modal.show({
             title: tSettings('restart_failed_title', 'Restart needs attention'),
@@ -161,8 +162,35 @@
                 class: 'btn-danger',
                 icon: 'replay',
                 onClick: confirmPendingRestart
+            }, {
+                label: tSettings('restart_ready_button', 'Continue'),
+                class: 'btn-secondary',
+                icon: 'check',
+                onClick: dismissFailedRestart
             }]
         });
+    }
+
+    async function dismissFailedRestart() {
+        const pending = _restartPending;
+        if (!pending?.id) return;
+        try {
+            await Utils.api('/api/settings/restart/complete', {
+                method: 'POST',
+                body: { id: pending.id }
+            });
+            _restartPending = null;
+            Modal.close();
+            Notifications.warning(tSettings(
+                'restart_failed_message',
+                'The saved values were kept. Service restart is still required outside the panel.'
+            ));
+        } catch (err) {
+            Notifications.error(err.message || tSettings(
+                'restart_failed_status',
+                'Restart failed.'
+            ));
+        }
     }
 
     async function cancelPendingRestart() {

@@ -90,6 +90,7 @@
     }
 
     function showFailure(item, error) {
+        pending = { ...item, phase: 'failed' };
         Modal.close();
         Modal.show({
             title: t('restart_failed_title', 'Restart needs attention'),
@@ -104,8 +105,29 @@
                 class: 'btn-danger',
                 icon: 'replay',
                 onClick: confirm
+            }, {
+                label: t('restart_ready_button', 'Continue'),
+                class: 'btn-secondary',
+                icon: 'check',
+                onClick: dismissFailure
             }]
         });
+    }
+
+    async function dismissFailure() {
+        if (!pending?.id) return;
+        try {
+            await Utils.api('/api/settings/restart/complete', {
+                method: 'POST',
+                body: { id: pending.id }
+            });
+            pending = null;
+            Modal.close();
+        } catch (err) {
+            if (window.Notifications) {
+                Notifications.error(err.message || t('restart_failed_status', 'Restart failed.'));
+            }
+        }
     }
 
     async function cancel() {
