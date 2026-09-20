@@ -84,6 +84,41 @@ Wiki source in-repo: [`docs/wiki/`](docs/wiki/) (sync with `scripts/sync-wiki.ps
 
 ---
 
+## Web console preview
+
+The BetterDesk web console uses the UX 3.5 interface. These preview images show the dark theme in English with fictional device data:
+
+<table>
+  <tr>
+    <td><img src="screenshots/generated/login-dark.png" alt="BetterDesk web console login" width="100%"></td>
+    <td><img src="screenshots/generated/dashboard-dark.png" alt="BetterDesk web console dashboard" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center">Login</td>
+    <td align="center">Dashboard</td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/generated/devices-list-dark.png" alt="BetterDesk devices list" width="100%"></td>
+    <td><img src="screenshots/generated/device-details-dark.png" alt="BetterDesk device details" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center">Devices</td>
+    <td align="center">Device details</td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
+    <td><img src="screenshots/generated/mobile-devices-dark.png" alt="BetterDesk mobile devices view" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center">Settings → Updates</td>
+    <td align="center">Mobile devices</td>
+  </tr>
+</table>
+
+See the [Web Console wiki page](https://github.com/UNITRONIX/BetterDesk/wiki/Web-Console) for the full visual tour and panel capabilities.
+
+---
+
 ## Ports (short)
 
 | Port | Role |

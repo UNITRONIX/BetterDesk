@@ -6,6 +6,41 @@ The default chrome is the **classic** icon rail + flyout sidebar. You can switch
 
 ---
 
+## Visual preview
+
+The following screenshots show the current UX 3.5 panel in the dark theme and English locale. All device names, IDs, notes, and network values are fictional test data.
+
+<table>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/login-dark.png" alt="BetterDesk web console login" width="100%"></td>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/dashboard-dark.png" alt="BetterDesk web console dashboard" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center">Login</td>
+    <td align="center">Dashboard</td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/devices-list-dark.png" alt="BetterDesk devices list" width="100%"></td>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/device-details-dark.png" alt="BetterDesk device details" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center">Devices</td>
+    <td align="center">Device details</td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
+    <td><img src="https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/screenshots/generated/mobile-devices-dark.png" alt="BetterDesk mobile devices view" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center">Settings → Updates</td>
+    <td align="center">Mobile devices</td>
+  </tr>
+</table>
+
+The source files are kept in [`screenshots/generated/`](../../screenshots/generated/) in the repository.
+
+---
+
 ## Dashboard
 
 Overview cards: device counts, online status, server uptime, versions.
