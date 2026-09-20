@@ -3460,18 +3460,42 @@ migrate_sqlite_to_postgresql() {
 # Node.js Installation Functions
 #===============================================================================
 
+node_runtime_is_usable() {
+    local node_version node_major npm_version
+
+    command -v node >/dev/null 2>&1 || return 1
+    node_version=$(node --version 2>/dev/null) || return 1
+    case "$node_version" in
+        v[0-9]*) ;;
+        *) return 1 ;;
+    esac
+
+    node_major="${node_version#v}"
+    node_major="${node_major%%.*}"
+    [ "$node_major" -ge 22 ] 2>/dev/null || return 1
+
+    command -v npm >/dev/null 2>&1 || return 1
+    npm_version=$(npm --version 2>/dev/null) || return 1
+    [ -n "$npm_version" ] || return 1
+}
+
 install_nodejs() {
+    local node_version node_major npm_version
+
     print_step "Checking Node.js installation..."
     
-    # Check if Node.js is already installed and version is sufficient
-    if command -v node &> /dev/null; then
-        local node_version=$(node --version | sed 's/v//' | cut -d'.' -f1)
-        if [ "$node_version" -ge 22 ]; then
-            print_success "Node.js v$(node --version) already installed"
-            return 0
-        else
-            print_warning "Node.js version $node_version is too old (need 22+). Upgrading..."
-        fi
+    # Check both runtimes before accepting an existing installation. A host can
+    # have a usable node binary but no npm (or an unsupported distro version).
+    if node_runtime_is_usable; then
+        node_version=$(node --version)
+        npm_version=$(npm --version)
+        print_success "Node.js ${node_version} and npm ${npm_version} already installed"
+        return 0
+    fi
+
+    if command -v node >/dev/null 2>&1; then
+        node_version=$(node --version 2>/dev/null || echo "unknown")
+        print_warning "Node.js ${node_version} is missing npm or is too old (need Node.js 22+ with npm). Upgrading..."
     fi
     
     # Keep new bare-metal console installs on Node 22 while Node 24.19.x
@@ -3535,35 +3559,99 @@ install_nodejs() {
     if command -v apt-get &> /dev/null; then
         # Debian/Ubuntu - use NodeSource
         _fetch_and_run_nodesource "https://deb.nodesource.com/setup_22.x" || return 1
-        apt-get install -y -qq nodejs
+
+        # Debian's libnode-dev owns headers also shipped by NodeSource's
+        # nodejs package. Remove only this conflicting development package;
+        # operator data and runtime packages are preserved. In interactive mode
+        # require confirmation because native builds may use these headers.
+        if command -v dpkg-query >/dev/null 2>&1; then
+            local libnode_dev_status
+            libnode_dev_status=$(dpkg-query -W -f='${db:Status-Status}' libnode-dev 2>/dev/null || true)
+            if [ "$libnode_dev_status" = "installed" ]; then
+                print_warning "Found Debian package libnode-dev, which conflicts with NodeSource Node.js 22 headers."
+                if [ "$AUTO_MODE" = false ] && ! confirm "Remove libnode-dev so Node.js 22 can be installed?"; then
+                    print_error "Cannot install Node.js 22 while libnode-dev is present."
+                    print_info "Re-run after removing it with: sudo apt-get remove libnode-dev"
+                    return 1
+                fi
+                if ! apt-get remove -y -qq libnode-dev; then
+                    print_error "Failed to remove conflicting libnode-dev package."
+                    print_info "Resolve the package conflict, then re-run the installer."
+                    return 1
+                fi
+            fi
+        fi
+
+        if ! apt-get install -y -qq nodejs; then
+            print_error "Node.js 22 package installation failed."
+            print_info "Check the apt/dpkg error above, resolve the package conflict, then re-run the installer."
+            return 1
+        fi
     elif command -v dnf &> /dev/null; then
         # Fedora/RHEL 8+
         _fetch_and_run_nodesource "https://rpm.nodesource.com/setup_22.x" || return 1
-        dnf install -y -q nodejs
+        if ! dnf install -y -q nodejs; then
+            print_error "Node.js 22 package installation failed."
+            return 1
+        fi
     elif command -v yum &> /dev/null; then
         # RHEL/CentOS 7
         _fetch_and_run_nodesource "https://rpm.nodesource.com/setup_22.x" || return 1
-        yum install -y -q nodejs
+        if ! yum install -y -q nodejs; then
+            print_error "Node.js 22 package installation failed."
+            return 1
+        fi
     elif command -v pacman &> /dev/null; then
         # Arch Linux
-        pacman -Sy --noconfirm nodejs npm
+        if ! pacman -Sy --noconfirm nodejs npm; then
+            print_error "Node.js and npm package installation failed."
+            return 1
+        fi
     elif command -v apk &> /dev/null; then
         # Alpine Linux
-        apk add --no-cache nodejs npm
+        if ! apk add --no-cache nodejs npm; then
+            print_error "Node.js and npm package installation failed."
+            return 1
+        fi
     else
         print_error "Cannot install Node.js automatically. Please install Node.js 22+ manually."
         return 1
     fi
     
-    # Verify installation
-    if command -v node &> /dev/null; then
-        print_success "Node.js $(node --version) installed"
-        print_info "npm $(npm --version)"
+    # Verify both requirements after the package transaction. Do not accept an
+    # older node left behind by a failed upgrade or a package without npm.
+    if node_runtime_is_usable; then
+        node_version=$(node --version)
+        npm_version=$(npm --version)
+        print_success "Node.js ${node_version} installed"
+        print_info "npm ${npm_version}"
         return 0
-    else
-        print_error "Node.js installation failed!"
+    fi
+
+    if ! command -v node >/dev/null 2>&1; then
+        print_error "Node.js installation failed: node is not available on PATH."
         return 1
     fi
+    if ! node_version=$(node --version 2>/dev/null); then
+        print_error "Node.js installation failed: node could not report its version."
+        return 1
+    fi
+    node_major="${node_version#v}"
+    case "$node_major" in
+        [0-9]*) ;;
+        *)
+            print_error "Node.js installation failed: invalid node version output."
+            return 1
+            ;;
+    esac
+    if [ "${node_major%%.*}" -lt 22 ] 2>/dev/null; then
+        print_error "Node.js installation left unsupported version ${node_version}; need 22+."
+    elif ! command -v npm >/dev/null 2>&1 || ! npm_version=$(npm --version 2>/dev/null); then
+        print_error "Node.js is installed, but npm is missing or not executable."
+    else
+        print_error "Node.js installation completed without a usable Node.js 22/npm runtime."
+    fi
+    return 1
 }
 
 install_nodejs_console() {
