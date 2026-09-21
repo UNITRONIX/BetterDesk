@@ -90,6 +90,7 @@ func (s *Server) startMixedRelay(tcpConn net.Conn, ws *websocket.Conn, tcpAddr, 
 
 	s.ActiveSessions.Add(-1)
 	log.Printf("[relay] Session ended: UUID %s (active: %d)", relayUUIDLogID(uuid), s.ActiveSessions.Load())
+	s.reportSessionEnded(uuid, time.Now().UTC())
 }
 
 // copyTCPFramesToWS reads BytesCodec frames from TCP and writes each payload

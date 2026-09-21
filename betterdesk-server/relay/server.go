@@ -543,6 +543,7 @@ func (s *Server) startRelay(conn1, conn2 net.Conn, uuid string) {
 
 	s.ActiveSessions.Add(-1)
 	log.Printf("[relay] Session ended: UUID %s (active: %d)", relayUUIDLogID(uuid), s.ActiveSessions.Load())
+	s.reportSessionEnded(uuid, time.Now().UTC())
 }
 
 // idleTimeoutConn wraps a net.Conn and extends the deadline on every successful

@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -91,6 +92,7 @@ type Server struct {
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
 	httpSrv           *http.Server
 	wg                sync.WaitGroup
+	maintenanceStop   context.CancelFunc
 	version           string
 }
 
@@ -271,6 +273,9 @@ func (s *Server) Start(ctx context.Context) error {
 
 	// Peers (permission-based access control)
 	mux.HandleFunc("GET /api/peers", s.requirePermission(auth.PermDeviceView, s.handleListPeers))
+	mux.HandleFunc("POST /api/peers/activity/report", s.requirePermission(auth.PermDeviceView, s.handleDeviceActivityReport))
+	mux.HandleFunc("POST /api/peers/remote-sessions/event", s.requirePermission(auth.PermDeviceView, s.handleRemoteSessionEvent))
+	mux.HandleFunc("POST /api/relay/session-event", s.requirePermission(auth.PermDeviceView, s.handleRelaySessionEvent))
 	mux.HandleFunc("GET /api/peers/{id}", s.requirePermission(auth.PermDeviceView, s.handleGetPeer))
 	mux.HandleFunc("DELETE /api/peers/{id}", s.requirePermission(auth.PermDeviceDelete, s.handleDeletePeer))
 	mux.HandleFunc("PATCH /api/peers/{id}", s.requirePermission(auth.PermDeviceEdit, s.handleUpdatePeerFields))
@@ -655,6 +660,28 @@ func (s *Server) Start(ctx context.Context) error {
 		s.httpSrv.TLSConfig = tlsCfg
 	}
 
+	// Session bookkeeping must not depend on anyone having the console open.
+	// Both reapers used to run only inside HTTP handlers, so with no admin
+	// browser connected a session that ended without an explicit close event
+	// stayed "open" indefinitely and was reported as live for days.
+	maintenanceCtx, stopMaintenance := context.WithCancel(ctx)
+	s.maintenanceStop = stopMaintenance
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		ticker := time.NewTicker(sessionMaintenanceInterval)
+		defer ticker.Stop()
+		s.runSessionMaintenance()
+		for {
+			select {
+			case <-maintenanceCtx.Done():
+				return
+			case <-ticker.C:
+				s.runSessionMaintenance()
+			}
+		}
+	}()
+
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -674,12 +701,69 @@ func (s *Server) Start(ctx context.Context) error {
 	return nil
 }
 
+// sessionMaintenanceInterval is how often stale session bookkeeping runs in the
+// background, independently of console traffic.
+const sessionMaintenanceInterval = time.Minute
+
+// A device is considered gone once it has missed heartbeats for well beyond the
+// registration timeout; its session is then closed at last_seen + grace so the
+// record reflects when it was last actually seen, not when we noticed.
+const (
+	deviceOnlineStaleAfter = 5 * time.Minute
+	deviceOnlineStaleGrace = time.Minute
+	webRemoteStaleAfter    = 3 * time.Minute
+	webRemoteStaleGrace    = time.Minute
+	// Leave very new sessions alone: the device online interval is written by a
+	// separate heartbeat path and may land a moment after the session itself.
+	orphanedRemoteMinAge   = 5 * time.Minute
+)
+
+// runSessionMaintenance closes device online sessions whose heartbeat stopped and
+// remote access sessions whose target device cannot still be connected. Errors are
+// logged rather than fatal: this is bookkeeping, and a transient database error
+// must not take the API server down.
+func (s *Server) runSessionMaintenance() {
+	if s.db == nil {
+		return
+	}
+	now := time.Now().UTC()
+
+	// Devices that stopped heartbeating and never came back. A returning device
+	// self-heals its own session on the next heartbeat, so this only catches the
+	// ones that are gone for good.
+	if n, err := s.db.CloseStaleDeviceOnlineSessions(now.Add(-deviceOnlineStaleAfter), deviceOnlineStaleGrace, "heartbeat_timeout"); err != nil {
+		log.Printf("[api] session maintenance: close stale device online sessions: %v", err)
+	} else if n > 0 {
+		log.Printf("[api] session maintenance: closed %d stale device online session(s)", n)
+	}
+
+	// Web console sessions have a heartbeat, so a timeout is meaningful for them.
+	if n, err := s.db.CloseStaleWebRemoteAccessSessions(now.Add(-webRemoteStaleAfter), webRemoteStaleGrace); err != nil {
+		log.Printf("[api] session maintenance: close stale web remote sessions: %v", err)
+	} else if n > 0 {
+		log.Printf("[api] session maintenance: closed %d stale web remote session(s)", n)
+	}
+
+	// Audit-sourced sessions have no heartbeat, so they are judged by device
+	// presence instead of elapsed time.
+	if n, err := s.db.CloseOrphanedRemoteAccessSessions(orphanedRemoteMinAge, "device_not_connected"); err != nil {
+		log.Printf("[api] session maintenance: close orphaned remote sessions: %v", err)
+	} else if n > 0 {
+		log.Printf("[api] session maintenance: closed %d orphaned remote session(s)", n)
+	}
+}
+
 // Stop gracefully shuts down the HTTP server.
 func (s *Server) Stop() {
 	log.Printf("[api] Shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	s.httpSrv.Shutdown(ctx)
+	// The maintenance loop is registered with s.wg, so it has to be told to
+	// exit before waiting or Stop blocks forever.
+	if s.maintenanceStop != nil {
+		s.maintenanceStop()
+	}
 	s.wg.Wait()
 	log.Printf("[api] Stopped")
 }
@@ -894,18 +978,56 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 	// Issue #138 hardening: override db.Peer.Status (string) with an int
 	// so any RustDesk client that reaches this handler without the
 	// ?accessible / ?pageSize detection still receives a valid int.
+	type activeRemoteSessionResponse struct {
+		Operator       string    `json:"operator"`
+		ControllerID   string    `json:"controller_id"`
+		ControllerName string    `json:"controller_name"`
+		StartedAt      time.Time `json:"started_at"`
+	}
 	type peerResponse struct {
 		*db.Peer
-		Status        int         `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
-		StatusText    string      `json:"status_text"` // Original string status for admin panel
-		LiveOnline    bool        `json:"live_online"`
-		LiveStatus    peer.Status `json:"live_status"`
-		Platform      string      `json:"platform"`
-		CDAPConnected bool        `json:"cdap_connected"`
-		MeshConnected bool        `json:"mesh_connected"`
-		MeshNodeID    string      `json:"mesh_node_id,omitempty"`
+		Status               int                           `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
+		StatusText           string                        `json:"status_text"` // Original string status for admin panel
+		LiveOnline           bool                          `json:"live_online"`
+		LiveStatus           peer.Status                   `json:"live_status"`
+		Platform             string                        `json:"platform"`
+		CDAPConnected        bool                          `json:"cdap_connected"`
+		MeshConnected        bool                          `json:"mesh_connected"`
+		MeshNodeID           string                        `json:"mesh_node_id,omitempty"`
+		OnlineSince          *time.Time                    `json:"online_since,omitempty"`
+		OnlineSeconds        int64                         `json:"online_seconds"`
+		RemoteLive           bool                          `json:"remote_live"`
+		RemoteLiveSince      *time.Time                    `json:"remote_live_since,omitempty"`
+		RemoteLiveSeconds    int64                         `json:"remote_live_seconds"`
+		ActiveSessionCount   int                           `json:"active_session_count"`
+		ActiveOperators      []string                      `json:"active_operators"`
+		ActiveRemoteSessions []activeRemoteSessionResponse `json:"active_remote_sessions"`
 	}
 
+	peerIDs := make([]string, 0, len(peers))
+	for _, p := range peers {
+		peerIDs = append(peerIDs, p.ID)
+	}
+	openSessions := map[string]*db.DeviceOnlineSession{}
+	if len(peerIDs) > 0 {
+		openSessions, err = s.db.GetOpenDeviceOnlineSessions(peerIDs)
+		if err != nil {
+			log.Printf("[api] Failed to load open device sessions: %v", err)
+			openSessions = map[string]*db.DeviceOnlineSession{}
+		}
+	}
+	openRemoteSessions := map[string][]*db.RemoteAccessSession{}
+	if len(peerIDs) > 0 {
+		if _, cleanupErr := s.db.CloseStaleWebRemoteAccessSessions(time.Now().UTC().Add(-3*time.Minute), time.Minute); cleanupErr != nil {
+			log.Printf("[api] Failed to close stale web remote sessions: %v", cleanupErr)
+		}
+		openRemoteSessions, err = s.db.GetOpenRemoteAccessSessions(peerIDs)
+		if err != nil {
+			log.Printf("[api] Failed to load open remote sessions: %v", err)
+			openRemoteSessions = map[string][]*db.RemoteAccessSession{}
+		}
+	}
+	reportNow := time.Now().UTC()
 	result := make([]peerResponse, len(peers))
 	for i, p := range peers {
 		liveOnline := s.peers.IsOnline(p.ID, config.RegTimeout)
@@ -941,17 +1063,82 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		if p.Disabled {
 			statusInt = 0
 		}
+		var onlineSince *time.Time
+		var onlineSeconds int64
+		if liveOnline {
+			if session := openSessions[p.ID]; session != nil {
+				startedAt := session.StartedAt.UTC()
+				onlineSince = &startedAt
+				if reportNow.After(startedAt) {
+					onlineSeconds = int64(reportNow.Sub(startedAt) / time.Second)
+				}
+			}
+		}
+		var remoteLiveSince *time.Time
+		activeOperators := make([]string, 0)
+		activeRemoteSessions := make([]activeRemoteSessionResponse, 0, len(openRemoteSessions[p.ID]))
+		for _, session := range openRemoteSessions[p.ID] {
+			startedAt := session.StartedAt.UTC()
+			if remoteLiveSince == nil || startedAt.Before(*remoteLiveSince) {
+				value := startedAt
+				remoteLiveSince = &value
+			}
+			operator := strings.TrimSpace(session.OperatorUsername)
+			if operator == "" {
+				operator = strings.TrimSpace(session.ControllerName)
+			}
+			if operator == "" {
+				operator = session.ControllerID
+			}
+			if operator != "" {
+				found := false
+				for _, existing := range activeOperators {
+					if existing == operator {
+						found = true
+						break
+					}
+				}
+				if !found {
+					activeOperators = append(activeOperators, operator)
+				}
+			}
+			activeRemoteSessions = append(activeRemoteSessions, activeRemoteSessionResponse{
+				Operator:       operator,
+				ControllerID:   strings.TrimSpace(session.ControllerID),
+				ControllerName: strings.TrimSpace(session.ControllerName),
+				StartedAt:      startedAt,
+			})
+		}
+		sort.Strings(activeOperators)
+		sort.Slice(activeRemoteSessions, func(i, j int) bool {
+			if activeRemoteSessions[i].StartedAt.Equal(activeRemoteSessions[j].StartedAt) {
+				return activeRemoteSessions[i].ControllerID < activeRemoteSessions[j].ControllerID
+			}
+			return activeRemoteSessions[i].StartedAt.Before(activeRemoteSessions[j].StartedAt)
+		})
+		remoteLiveSeconds := int64(0)
+		if remoteLiveSince != nil && reportNow.After(*remoteLiveSince) {
+			remoteLiveSeconds = int64(reportNow.Sub(*remoteLiveSince) / time.Second)
+		}
 
 		result[i] = peerResponse{
-			Peer:          p,
-			Status:        statusInt,
-			StatusText:    p.Status,
-			LiveOnline:    liveOnline,
-			LiveStatus:    liveStatus,
-			Platform:      p.OS,
-			CDAPConnected: cdapConnected,
-			MeshConnected: meshConnected,
-			MeshNodeID:    meshNodeID,
+			Peer:                 p,
+			Status:               statusInt,
+			StatusText:           p.Status,
+			LiveOnline:           liveOnline,
+			LiveStatus:           liveStatus,
+			Platform:             p.OS,
+			CDAPConnected:        cdapConnected,
+			MeshConnected:        meshConnected,
+			MeshNodeID:           meshNodeID,
+			OnlineSince:          onlineSince,
+			OnlineSeconds:        onlineSeconds,
+			RemoteLive:           len(openRemoteSessions[p.ID]) > 0,
+			RemoteLiveSince:      remoteLiveSince,
+			RemoteLiveSeconds:    remoteLiveSeconds,
+			ActiveSessionCount:   len(openRemoteSessions[p.ID]),
+			ActiveOperators:      activeOperators,
+			ActiveRemoteSessions: activeRemoteSessions,
 		}
 	}
 
@@ -1061,11 +1248,26 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		CDAPConnected bool        `json:"cdap_connected"`
 		MeshConnected bool        `json:"mesh_connected"`
 		MeshNodeID    string      `json:"mesh_node_id,omitempty"`
+		OnlineSince   *time.Time  `json:"online_since,omitempty"`
+		OnlineSeconds int64       `json:"online_seconds"`
 	}
 
 	statusInt := 1
 	if p.Disabled {
 		statusInt = 0
+	}
+	var onlineSince *time.Time
+	var onlineSeconds int64
+	if liveOnline {
+		if sessions, err := s.db.GetOpenDeviceOnlineSessions([]string{p.ID}); err == nil {
+			if session := sessions[p.ID]; session != nil {
+				startedAt := session.StartedAt.UTC()
+				onlineSince = &startedAt
+				if now := time.Now().UTC(); now.After(startedAt) {
+					onlineSeconds = int64(now.Sub(startedAt) / time.Second)
+				}
+			}
+		}
 	}
 
 	writeJSON(w, http.StatusOK, singlePeerResponse{
@@ -1078,6 +1280,8 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		CDAPConnected: cdapConnected,
 		MeshConnected: meshConnected,
 		MeshNodeID:    meshNodeID,
+		OnlineSince:   onlineSince,
+		OnlineSeconds: onlineSeconds,
 	})
 }
 

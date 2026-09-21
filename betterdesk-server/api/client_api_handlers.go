@@ -951,6 +951,10 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// peer map so the signal heartbeat cleaner does not mark them offline again.
 	s.peers.TouchHeartbeat(deviceID)
 
+	if err := s.db.TouchDeviceOnlineSession(deviceID, time.Now().UTC(), 90*time.Second); err != nil {
+		log.Printf("[api] Failed to record online heartbeat for %s: %v", deviceID, err)
+	}
+
 	// If the user logged in before the peer row existed, bind owner now.
 	db.ApplyActiveSessionOwner(s.db, deviceID, body.UUID)
 
