@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.126] — 2026-09-22
+
 ### Added
 - Operators can switch a BetterDesk Desktop client between normal and incoming-only from device details. The command is queued per device and delivered only inside the signed telemetry envelope.
 
@@ -3708,3 +3715,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.123]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.122...v3.5.123
 [3.5.124]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.123...v3.5.124
 [3.5.125]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.124...v3.5.125
+[3.5.126]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.125...v3.5.126
