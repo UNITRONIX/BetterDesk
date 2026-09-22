@@ -591,6 +591,14 @@ type Database interface {
 	GetPendingTelemetryCommands(deviceID string, limit int) ([]*TelemetryCommand, error)
 	CompleteTelemetryCommand(id int64, status, result string) error
 
+	// Per-device desktop connection mode (normal <-> incoming-only).
+	IssueConnectionMode(issue *ConnectionModeIssue) (*ConnectionModeCommand, bool, error)
+	GetConnectionModePolicy(deviceID string) (*ConnectionModePolicy, error)
+	LatestConnectionModeCommand(deviceID string) (*ConnectionModeCommand, error)
+	DeliverableConnectionModeCommand(deviceID string, now time.Time) (*ConnectionModeCommand, error)
+	MarkConnectionModeDelivered(commandID string, now time.Time) error
+	AcknowledgeConnectionMode(ack *ConnectionModeAck) (bool, error)
+
 	// Chat Messages
 	SaveChatMessage(msg *ChatMessage) (int64, error) // Returns inserted ID
 	GetChatHistory(conversationID string, limit int) ([]*ChatMessage, error)

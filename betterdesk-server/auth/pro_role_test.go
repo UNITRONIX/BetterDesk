@@ -5,7 +5,7 @@ import "testing"
 func TestProRoleHasNoDevicePermissions(t *testing.T) {
 	devicePerms := []string{
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit,
-		PermDeviceDelete, PermDeviceBan, PermDeviceChangeID,
+		PermDeviceDelete, PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
 	}
 	for _, perm := range devicePerms {
 		if RoleHasPermission(RolePro, perm) {

@@ -97,6 +97,29 @@ downloads require an explicit capability and operator permission.
 Commands must be allowlisted. An arbitrary shell command is not part of this
 contract.
 
+## Desktop connection mode
+
+Operators with `device.connection_mode` may switch a BetterDesk Desktop client
+between `normal` and `incoming-only`:
+
+`POST /api/peers/{id}/connection-mode` with `{ "mode", "reason" }`.
+
+The panel exposes the same action as `POST /api/devices/{id}/connection-mode`.
+The server stores the requested mode per device and delivers
+`connection_mode_command` only inside a sealed `betterdesk_envelope` on
+heartbeat. Plaintext heartbeats, `strategy`, and `config_options` never carry
+the command. Retries keep the same `command_id` and revision. A command that
+expires is not replaced by an automatic return to `normal`.
+
+Control requires a signed identity of `product_sku=betterdesk-desktop` and
+capability `connection-mode.remote-control`. `betterdesk-support` stays
+incoming-only. A desktop client that reports `incoming-only` remains a desktop
+client; only a missing SKU plus `incoming-only` is still treated as a legacy
+Support Agent.
+
+The next signed heartbeat may report `effective_conn_mode`, `policy_revision`,
+`policy_status`, `last_command_id`, and `policy_error`.
+
 ## Application-level protection
 
 HTTPS/WSS remains the required production transport. For deployments that

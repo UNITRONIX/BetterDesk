@@ -40,6 +40,7 @@ func TestClassifyBetterDeskDevice(t *testing.T) {
 	}{
 		{"legacy rustdesk", "", "", ""},
 		{"managed betterdesk", "betterdesk-desktop", "normal", "betterdesk"},
+		{"desktop incoming-only", "betterdesk-desktop", "incoming-only", "betterdesk"},
 		{"support sku", "betterdesk-support", "incoming-only", "betterdesk-support"},
 		{"support mode", "", "incoming-only", "betterdesk-support"},
 	}

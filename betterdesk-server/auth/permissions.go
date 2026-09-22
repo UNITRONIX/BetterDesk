@@ -10,12 +10,13 @@ import "strings"
 // Permission constants define every discrete action in the system.
 const (
 	// Device permissions
-	PermDeviceView     = "device.view"
-	PermDeviceConnect  = "device.connect"
-	PermDeviceEdit     = "device.edit"   // notes, tags, display name
-	PermDeviceDelete   = "device.delete" // soft-delete + revoke
-	PermDeviceBan      = "device.ban"    // ban/unban
-	PermDeviceChangeID = "device.change_id"
+	PermDeviceView           = "device.view"
+	PermDeviceConnect        = "device.connect"
+	PermDeviceEdit           = "device.edit"   // notes, tags, display name
+	PermDeviceDelete         = "device.delete" // soft-delete + revoke
+	PermDeviceBan            = "device.ban"    // ban/unban
+	PermDeviceChangeID       = "device.change_id"
+	PermDeviceConnectionMode = "device.connection_mode" // normal <-> incoming-only
 
 	// User management permissions
 	PermUserView   = "user.view"
@@ -71,7 +72,7 @@ const (
 // AllPermissions is the complete list of permission strings for validation.
 var AllPermissions = []string{
 	PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
-	PermDeviceBan, PermDeviceChangeID,
+	PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
 	PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
 	PermServerConfig, PermServerKeys, PermServerAttestation,
 	PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
@@ -117,7 +118,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
 		PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
-		PermDeviceBan, PermDeviceChangeID,
+		PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
 		PermMeshTerminal, PermMeshFiles, PermMeshPower,
@@ -128,7 +129,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 	}),
 
 	RoleOperator: buildPermMap([]string{
-		PermDeviceView, PermDeviceConnect, PermDeviceEdit,
+		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceConnectionMode,
 		PermUserView,
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand,

@@ -5,6 +5,12 @@
 const request = require('supertest');
 const { createTestApp } = require('./helpers');
 
+jest.mock('../services/betterdeskApi', () => ({
+    getPeerTelemetry: jest.fn().mockResolvedValue({ success: false }),
+    getConnectionMode: jest.fn().mockResolvedValue({ success: true, data: { controllable: false } }),
+    setConnectionMode: jest.fn()
+}));
+
 // Mock dependencies
 jest.mock('../services/database', () => ({
     logAction: jest.fn().mockResolvedValue(undefined),
@@ -42,6 +48,7 @@ jest.mock('../services/serverBackend', () => ({
 
 const serverBackend = require('../services/serverBackend');
 const db = require('../services/database');
+const betterdeskApi = require('../services/betterdeskApi');
 const devicesRoutes = require('../routes/devices.routes');
 
 describe('Devices Routes', () => {
@@ -517,6 +524,64 @@ describe('Devices Routes', () => {
             const res = await request(unauthApp).get('/api/devices');
 
             expect(res.status).toBe(401);
+        });
+    });
+
+    describe('POST /api/devices/:id/connection-mode', () => {
+        it('should reject viewers without the connection-mode permission', async () => {
+            const viewerApp = createTestApp();
+            viewerApp.use((req, _res, next) => {
+                req.session.userId = 2;
+                req.session.user = { id: 2, username: 'viewer', role: 'viewer' };
+                next();
+            });
+            viewerApp.use('/', devicesRoutes);
+
+            const res = await request(viewerApp)
+                .post('/api/devices/123456789/connection-mode')
+                .send({ mode: 'incoming-only', reason: 'support session' });
+
+            expect(res.status).toBe(403);
+            expect(betterdeskApi.setConnectionMode).not.toHaveBeenCalled();
+        });
+
+        it('should proxy the command and audit the operator', async () => {
+            serverBackend.getDeviceById.mockResolvedValue({ id: '123456789', hostname: 'PC-1' });
+            betterdeskApi.setConnectionMode.mockResolvedValue({
+                success: true,
+                data: {
+                    created: true,
+                    command: {
+                        command_id: 'cmd-1',
+                        revision: 2,
+                        previous_mode: 'normal',
+                        mode: 'incoming-only'
+                    }
+                }
+            });
+
+            const res = await request(app)
+                .post('/api/devices/123456789/connection-mode')
+                .send({ mode: 'incoming-only', reason: 'support session' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(betterdeskApi.setConnectionMode).toHaveBeenCalledWith('123456789', {
+                mode: 'incoming-only',
+                reason: 'support session',
+                operator_id: '1',
+                operator_name: 'admin'
+            });
+            expect(db.logAction).toHaveBeenCalledWith(
+                1,
+                'device_connection_mode',
+                expect.stringContaining('123456789'),
+                '::ffff:127.0.0.1'
+            );
+            const details = db.logAction.mock.calls.at(-1)[2];
+            expect(details).toContain('normal -> incoming-only');
+            expect(details).toContain('support session');
+            expect(details).toContain('cmd-1');
         });
     });
 });

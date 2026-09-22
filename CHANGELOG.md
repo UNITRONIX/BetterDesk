@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- Operators can switch a BetterDesk Desktop client between normal and incoming-only from device details. The command is queued per device and delivered only inside the signed telemetry envelope.
+
 ### Changed
 - _(none yet)_
 

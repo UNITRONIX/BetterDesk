@@ -205,6 +205,32 @@ async function unbanPeer(id) {
 }
 
 /**
+ * GET /api/peers/:id/connection-mode
+ */
+async function getConnectionMode(id) {
+    try {
+        const { data } = await apiClient.get(`/peers/${encodeURIComponent(id)}/connection-mode`);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return { ...wrap(err.response.data), status: err.response.status };
+        return { success: false, error: err.message, status: err.response?.status || 502 };
+    }
+}
+
+/**
+ * POST /api/peers/:id/connection-mode
+ */
+async function setConnectionMode(id, body) {
+    try {
+        const { data } = await apiClient.post(`/peers/${encodeURIComponent(id)}/connection-mode`, body);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return { ...wrap(err.response.data), status: err.response.status };
+        return { success: false, error: err.message, status: err.response?.status || 502 };
+    }
+}
+
+/**
  * POST /api/peers/:id/restore — restore a soft-deleted peer
  */
 async function restorePeer(id) {
@@ -1366,6 +1392,8 @@ module.exports = {
     deletePeer,
     banPeer,
     unbanPeer,
+    getConnectionMode,
+    setConnectionMode,
     restorePeer,
     changePeerId,
     // Status

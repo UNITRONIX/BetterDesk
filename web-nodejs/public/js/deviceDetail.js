@@ -256,8 +256,7 @@ const DeviceDetail = (function () {
 
     function _tabsHTML() {
         const identity = device?.telemetry?.snapshots?.identity?.data || {};
-        const supportAgent = identity.product_sku === 'betterdesk-support' ||
-            identity.conn_mode === 'incoming-only';
+        const supportAgent = _isSupportAgent(identity);
         const tabs = [
             { id: 'overview',  icon: 'info',            label: _('device_detail.tab_overview') },
             { id: 'hardware',  icon: 'memory',          label: _('device_detail.tab_hardware') },
@@ -369,11 +368,13 @@ const DeviceDetail = (function () {
                 ${_infoRow(_('devices.platform'), Utils.escapeHtml(d.platform || d.os || (d.sysinfo && d.sysinfo.platform) || '-'))}
                 ${d.sysinfo && d.sysinfo.version ? _infoRow(_('device_detail.version'), Utils.escapeHtml(d.sysinfo.version)) : ''}
                 ${identity.product_sku ? _infoRow('SKU', Utils.escapeHtml(identity.product_sku)) : ''}
-                ${identity.conn_mode ? _infoRow('Tryb klienta', Utils.escapeHtml(identity.conn_mode)) : ''}
+                ${identity.conn_mode ? _infoRow(_('device_detail.client_mode'), Utils.escapeHtml(identity.conn_mode)) : ''}
                 ${Array.isArray(identity.capabilities) && identity.capabilities.length
-                    ? _infoRow('Możliwości', Utils.escapeHtml(identity.capabilities.join(', '))) : ''}
+                    ? _infoRow(_('device_detail.capabilities'), Utils.escapeHtml(identity.capabilities.join(', '))) : ''}
             </div>
         </div>`;
+
+        html += _connectionModeSection(d, identity);
 
         // Network section
         html += `
@@ -638,8 +639,7 @@ const DeviceDetail = (function () {
         const isBanned = d.banned;
         const isDeleted = !!d.soft_deleted;
         const identity = d.telemetry?.snapshots?.identity?.data || {};
-        const supportAgent = identity.product_sku === 'betterdesk-support' ||
-            identity.conn_mode === 'incoming-only';
+        const supportAgent = _isSupportAgent(identity);
 
         let html = `<div class="device-panel-tab-pane" data-pane="actions">`;
 
@@ -775,8 +775,7 @@ const DeviceDetail = (function () {
     function _footerHTML() {
         const isDeleted = device && device.soft_deleted;
         const identity = device?.telemetry?.snapshots?.identity?.data || {};
-        const supportAgent = identity.product_sku === 'betterdesk-support' ||
-            identity.conn_mode === 'incoming-only';
+        const supportAgent = _isSupportAgent(identity);
         return `
         <div class="device-panel-footer">
             ${isDeleted ? '' : `
@@ -795,6 +794,90 @@ const DeviceDetail = (function () {
     // ──────────────────────────────────────────────────────────────────────
     // Helpers
     // ──────────────────────────────────────────────────────────────────────
+
+    function _isSupportAgent(identity) {
+        if (!identity) return false;
+        if (identity.product_sku === 'betterdesk-support') return true;
+        if (identity.product_sku === 'betterdesk-desktop') return false;
+        return identity.conn_mode === 'incoming-only';
+    }
+
+    function _connectionModeStatusLabel(status) {
+        if (!status) return _('device_detail.connection_mode_status_none');
+        const key = 'device_detail.connection_mode_status_' + status;
+        const label = _(key);
+        return label === key ? status : label;
+    }
+
+    function _connectionModeSection(d, identity) {
+        const policy = d.connection_mode || {};
+        const command = policy.command || {};
+        const remembered = policy.policy || {};
+        const effective = remembered.effective_mode || identity.conn_mode || '';
+        const desired = remembered.desired_mode || '';
+        const supportLocked = policy.support_agent || _isSupportAgent(identity);
+        const canToggle = !!(policy.controllable && policy.can_change && !d.banned && !d.soft_deleted);
+        const selected = desired || effective || 'normal';
+
+        let body = '';
+        if (supportLocked) {
+            body = `<p class="form-hint">${Utils.escapeHtml(_('device_detail.connection_mode_support_locked'))}</p>`;
+        } else if (!policy.controllable) {
+            body = `<p class="form-hint">${Utils.escapeHtml(_('device_detail.connection_mode_unavailable'))}</p>`;
+        } else {
+            body = `
+                <div class="device-panel-info-grid">
+                    ${_infoRow(_('device_detail.connection_mode_effective'), Utils.escapeHtml(effective || '-'))}
+                    ${_infoRow(_('device_detail.connection_mode_desired'), Utils.escapeHtml(desired || '-'))}
+                    ${_infoRow(_('device_detail.connection_mode_status'), Utils.escapeHtml(_connectionModeStatusLabel(command.status)))}
+                    ${command.rejection_code ? _infoRow(_('device_detail.connection_mode_status_rejected'), Utils.escapeHtml(command.rejection_code)) : ''}
+                </div>
+                ${canToggle ? `
+                <div class="device-panel-notes-actions" style="margin-top:12px;flex-direction:column;align-items:stretch;gap:8px;">
+                    <label class="form-hint" for="dp-conn-mode">${Utils.escapeHtml(_('device_detail.connection_mode_title'))}</label>
+                    <select id="dp-conn-mode" class="form-input">
+                        <option value="normal"${selected === 'normal' ? ' selected' : ''}>${Utils.escapeHtml(_('device_detail.connection_mode_normal'))}</option>
+                        <option value="incoming-only"${selected === 'incoming-only' ? ' selected' : ''}>${Utils.escapeHtml(_('device_detail.connection_mode_incoming_only'))}</option>
+                    </select>
+                    <label class="form-hint" for="dp-conn-reason">${Utils.escapeHtml(_('device_detail.connection_mode_reason'))}</label>
+                    <input id="dp-conn-reason" class="form-input" maxlength="500" placeholder="${Utils.escapeHtml(_('device_detail.connection_mode_reason_placeholder'))}">
+                    <button class="btn btn-primary btn-sm" id="dp-conn-apply" type="button">
+                        <span class="material-icons">sync_alt</span>${Utils.escapeHtml(_('device_detail.connection_mode_apply'))}
+                    </button>
+                </div>` : ''}
+            `;
+        }
+
+        return `
+        <div class="device-panel-section" id="dp-connection-mode">
+            <div class="device-panel-section-title"><span class="material-icons">swap_horiz</span> ${_('device_detail.connection_mode_title')}</div>
+            ${body}
+        </div>`;
+    }
+
+    async function _saveConnectionMode() {
+        if (!device?.id) return;
+        const mode = document.getElementById('dp-conn-mode')?.value;
+        const reason = (document.getElementById('dp-conn-reason')?.value || '').trim();
+        if (!reason) {
+            Notifications.error(_('device_detail.connection_mode_reason'));
+            return;
+        }
+        const button = document.getElementById('dp-conn-apply');
+        if (button) button.disabled = true;
+        try {
+            await Utils.api('/api/devices/' + encodeURIComponent(device.id) + '/connection-mode', {
+                method: 'POST',
+                body: JSON.stringify({ mode, reason })
+            });
+            Notifications.success(_('device_detail.connection_mode_saved'));
+            device = await Utils.api('/api/devices/' + encodeURIComponent(device.id));
+            _render();
+        } catch (err) {
+            Notifications.error(err.message || _('device_detail.connection_mode_failed'));
+            if (button) button.disabled = false;
+        }
+    }
 
     function _infoRow(label, valueHTML, copyValue) {
         const copyBtn = copyValue
@@ -963,6 +1046,7 @@ const DeviceDetail = (function () {
 
         // Notes save
         panel.querySelector('#dp-notes-save')?.addEventListener('click', _saveNotes);
+        panel.querySelector('#dp-conn-apply')?.addEventListener('click', _saveConnectionMode);
 
         // Action cards
         panel.querySelectorAll('.device-panel-action-card').forEach(function (card) {

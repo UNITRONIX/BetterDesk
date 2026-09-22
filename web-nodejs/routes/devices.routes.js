@@ -9,7 +9,7 @@ const serverBackend = require('../services/serverBackend');
 const betterdeskApi = require('../services/betterdeskApi');
 const addressBookSync = require('../services/rustdeskAddressBookSync');
 const deviceGroupService = require('../services/deviceGroupService');
-const { requireAuth, requirePermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
 /**
@@ -379,6 +379,19 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             console.warn(`[API:DEVICE] Telemetry lookup failed for ${req.params.id}:`, e.message);
         }
 
+        try {
+            const mode = await betterdeskApi.getConnectionMode(req.params.id);
+            if (mode?.success && mode.data) {
+                const role = req.session.user && req.session.user.role;
+                device.connection_mode = {
+                    ...mode.data,
+                    can_change: roleHasPermission(role, 'device.connection_mode')
+                };
+            }
+        } catch (e) {
+            console.warn(`[API:DEVICE] Connection mode lookup failed for ${req.params.id}:`, e.message);
+        }
+
         // Enrich with device group memberships
         try {
             const groups = await db.getDeviceGroupsForPeer(req.params.id);
@@ -566,6 +579,55 @@ router.post('/api/devices/:id/restore', requireAuth, requirePermission('device.d
         res.json({ success: true, data: result.data || result });
     } catch (err) {
         console.error('Restore device error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * POST /api/devices/:id/connection-mode
+ * Queue a reversible desktop connection-mode command.
+ */
+router.post('/api/devices/:id/connection-mode', requireAuth, requirePermission('device.connection_mode'), async (req, res) => {
+    try {
+        const id = req.params.id;
+        const device = await serverBackend.getDeviceById(id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
+        const mode = typeof req.body?.mode === 'string' ? req.body.mode.trim() : '';
+        const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 500) : '';
+        if (mode !== 'normal' && mode !== 'incoming-only') {
+            return res.status(400).json({ success: false, error: req.t('device_detail.connection_mode_failed') });
+        }
+        if (!reason) {
+            return res.status(400).json({ success: false, error: req.t('device_detail.connection_mode_reason') });
+        }
+
+        const result = await betterdeskApi.setConnectionMode(id, {
+            mode,
+            reason,
+            operator_id: String(req.session.userId || ''),
+            operator_name: (req.session.user && req.session.user.username) || ''
+        });
+        if (!result?.success) {
+            return res.status(result?.status || 502).json({
+                success: false,
+                error: result?.error || req.t('device_detail.connection_mode_failed')
+            });
+        }
+
+        const previous = result.data?.command?.previous_mode || result.data?.policy?.effective_mode || '';
+        await db.logAction(
+            req.session.userId,
+            'device_connection_mode',
+            `Device ${id} connection mode ${previous} -> ${mode}; reason: ${reason}; revision: ${result.data?.command?.revision || ''}; command: ${result.data?.command?.command_id || ''}`,
+            req.ip
+        );
+        res.json({ success: true, data: result.data });
+    } catch (err) {
+        console.error('Set connection mode error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });

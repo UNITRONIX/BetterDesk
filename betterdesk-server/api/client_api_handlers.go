@@ -53,17 +53,29 @@ type clientHeartbeatRequest struct {
 	ProductSKU         string          `json:"product_sku"`
 	ConnMode           string          `json:"conn_mode"`
 	Capabilities       []string        `json:"capabilities"`
+	EffectiveConnMode  string          `json:"effective_conn_mode"`
+	PolicyRevision     int64           `json:"policy_revision"`
+	PolicyStatus       string          `json:"policy_status"`
+	LastCommandID      string          `json:"last_command_id"`
+	PolicyError        string          `json:"policy_error"`
 	Telemetry          json.RawMessage `json:"telemetry"`
 	TelemetryEnvelope  json.RawMessage `json:"telemetry_envelope"`
 	BetterDeskEnvelope json.RawMessage `json:"betterdesk_envelope"`
 }
 
 func classifyBetterDeskDevice(productSKU, connMode string) string {
-	if productSKU == "" && connMode == "" {
-		return ""
-	}
-	if productSKU == "betterdesk-support" || connMode == "incoming-only" {
+	switch productSKU {
+	case "betterdesk-support":
 		return "betterdesk-support"
+	case "betterdesk-desktop":
+		// Incoming-only is a reversible desktop policy, not a Support Agent.
+		return "betterdesk"
+	}
+	if connMode == "incoming-only" {
+		return "betterdesk-support"
+	}
+	if productSKU == "" {
+		return ""
 	}
 	return "betterdesk"
 }
@@ -912,6 +924,7 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var responsePublicKey *[32]byte
+	envelopeVerified := false
 	if len(body.BetterDeskEnvelope) > 0 {
 		opened, err := s.openTelemetryEnvelope(deviceID, body.BetterDeskEnvelope)
 		if err != nil {
@@ -927,7 +940,12 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		}
 		body = inner
 		responsePublicKey = opened.ResponsePublicKey
+		envelopeVerified = true
 		s.rememberSecureClientKey(deviceID, responsePublicKey)
+		s.rememberVerifiedIdentity(deviceID, body)
+		s.processConnectionModeAck(deviceID, body)
+	} else {
+		s.rememberUnverifiedIdentity(deviceID, body)
 	}
 	if len(body.TelemetryEnvelope) > 0 {
 		decrypted, err := s.openTelemetryEnvelope(deviceID, body.TelemetryEnvelope)
@@ -938,12 +956,6 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 			body.Telemetry = decrypted.Payload
 		}
 	}
-	if deviceType := classifyBetterDeskDevice(body.ProductSKU, body.ConnMode); deviceType != "" {
-		if err := s.db.UpdatePeerFields(deviceID, map[string]string{"device_type": deviceType}); err != nil {
-			log.Printf("[api] failed to classify BetterDesk device %s: %v", deviceID, err)
-		}
-	}
-
 	// Update peer status to ONLINE
 	_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP)
 	// HTTP heartbeats are also a liveness signal for BetterDesk clients that
@@ -959,15 +971,6 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		if err := s.db.SavePeerMetric(deviceID, body.CPU, body.Memory, body.Disk); err != nil {
 			log.Printf("[api] Failed to save peer metrics for %s: %v", deviceID, err)
 		}
-	}
-	if body.ProductSKU != "" || body.ConnMode != "" || len(body.Capabilities) > 0 {
-		identity, _ := json.Marshal(map[string]any{
-			"product_sku":  body.ProductSKU,
-			"conn_mode":    body.ConnMode,
-			"capabilities": body.Capabilities,
-			"schema":       body.TelemetrySchema,
-		})
-		s.saveTelemetrySnapshot(deviceID, "identity", "", "ok", "", identity)
 	}
 	if len(body.Telemetry) > 0 {
 		s.saveClientTelemetry(deviceID, body.Telemetry)
@@ -989,12 +992,8 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// Support Agent branding is fetched through BetterDesk's richer API. Do not
 	// push generic RustDesk config_options to an incoming-only client: those
 	// options can contain connection or lockdown settings that conflict with
-	// its signed profile.
-	isSupportAgent := classifyBetterDeskDevice(body.ProductSKU, body.ConnMode) == "betterdesk-support"
-	if !isSupportAgent {
-		isSupportAgent = strings.EqualFold(strings.TrimSpace(peer.DeviceType), "betterdesk-support")
-	}
-	if body.ModifiedAt != serverModifiedAt && !isSupportAgent {
+	// its signed profile. Connection mode itself is never placed here.
+	if body.ModifiedAt != serverModifiedAt && !s.withholdClientStrategy(deviceID, body, peer.DeviceType, envelopeVerified) {
 		branding := s.loadBrandingConfig()
 		opts := branding.Profiles.RustDesk.ConfigOptions
 		if len(opts) > 0 {
@@ -1011,15 +1010,8 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 			"schedule_enabled":   policy.ScheduleEnabled,
 		}
 	}
-	if responsePublicKey != nil {
-		if envelope, err := s.sealTelemetryResponse(deviceID, resp, *responsePublicKey); err == nil {
-			writeJSON(w, http.StatusOK, map[string]any{
-				"betterdesk_envelope": envelope,
-			})
-			return
-		}
-	}
-	writeJSON(w, http.StatusOK, resp)
+	// connection_mode_command is added only inside the sealed envelope.
+	s.writeHeartbeatResponse(w, deviceID, resp, responsePublicKey)
 }
 
 // clientBrandingModifiedAt returns branding revision as Unix ms for heartbeat cursors.
@@ -1085,11 +1077,7 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
 		return
 	}
-	if deviceType := classifyBetterDeskDevice(body.ProductSKU, body.ConnMode); deviceType != "" {
-		if err := s.db.UpdatePeerFields(deviceID, map[string]string{"device_type": deviceType}); err != nil {
-			log.Printf("[api] failed to classify BetterDesk sysinfo %s: %v", deviceID, err)
-		}
-	}
+	s.classifyPeerFromClient(deviceID, body.ProductSKU, body.ConnMode, false)
 
 	// Use platform or os field (RustDesk client may send either)
 	osValue := body.Platform

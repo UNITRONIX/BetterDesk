@@ -183,6 +183,35 @@ func (s *SQLiteDB) Migrate() error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_device_telemetry_commands_device_status
 			ON device_telemetry_commands(device_id, status, created_at)`,
+		`CREATE TABLE IF NOT EXISTS device_connection_policies (
+			device_id TEXT PRIMARY KEY,
+			device_uuid TEXT NOT NULL,
+			desired_mode TEXT NOT NULL,
+			effective_mode TEXT NOT NULL DEFAULT '',
+			revision INTEGER NOT NULL,
+			active_command_id TEXT NOT NULL DEFAULT '',
+			updated_at TEXT DEFAULT (datetime('now'))
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_connection_mode_commands (
+			command_id TEXT PRIMARY KEY,
+			device_id TEXT NOT NULL,
+			device_uuid TEXT NOT NULL,
+			revision INTEGER NOT NULL,
+			mode TEXT NOT NULL,
+			reason TEXT NOT NULL,
+			operator_id TEXT NOT NULL DEFAULT '',
+			operator_name TEXT NOT NULL DEFAULT '',
+			previous_mode TEXT NOT NULL DEFAULT '',
+			issued_at INTEGER NOT NULL,
+			expires_at INTEGER NOT NULL,
+			status TEXT NOT NULL,
+			rejection_code TEXT NOT NULL DEFAULT '',
+			acknowledged_at INTEGER,
+			delivered_at INTEGER,
+			UNIQUE(device_uuid, revision)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_conn_mode_commands_device
+			ON device_connection_mode_commands(device_id, status, revision)`,
 
 		// Chat messages table
 		`CREATE TABLE IF NOT EXISTS chat_messages (
@@ -1244,6 +1273,8 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 		{`UPDATE peers SET linked_peer_id = ? WHERE linked_peer_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
+		{`UPDATE device_connection_policies SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
+		{`UPDATE device_connection_mode_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE server_config SET key = ? WHERE key = ?`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
 	}
 	for _, st := range stmts {

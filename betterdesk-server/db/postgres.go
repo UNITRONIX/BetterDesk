@@ -215,6 +215,35 @@ func (pg *PostgresDB) Migrate() error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_device_telemetry_commands_device_status
 			ON device_telemetry_commands(device_id, status, created_at)`,
+		`CREATE TABLE IF NOT EXISTS device_connection_policies (
+			device_id TEXT PRIMARY KEY,
+			device_uuid TEXT NOT NULL,
+			desired_mode TEXT NOT NULL,
+			effective_mode TEXT NOT NULL DEFAULT '',
+			revision BIGINT NOT NULL,
+			active_command_id TEXT NOT NULL DEFAULT '',
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_connection_mode_commands (
+			command_id TEXT PRIMARY KEY,
+			device_id TEXT NOT NULL,
+			device_uuid TEXT NOT NULL,
+			revision BIGINT NOT NULL,
+			mode TEXT NOT NULL,
+			reason TEXT NOT NULL,
+			operator_id TEXT NOT NULL DEFAULT '',
+			operator_name TEXT NOT NULL DEFAULT '',
+			previous_mode TEXT NOT NULL DEFAULT '',
+			issued_at BIGINT NOT NULL,
+			expires_at BIGINT NOT NULL,
+			status TEXT NOT NULL,
+			rejection_code TEXT NOT NULL DEFAULT '',
+			acknowledged_at BIGINT,
+			delivered_at BIGINT,
+			UNIQUE(device_uuid, revision)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_conn_mode_commands_device
+			ON device_connection_mode_commands(device_id, status, revision)`,
 
 		// Chat messages
 		`CREATE TABLE IF NOT EXISTS chat_messages (
@@ -1070,6 +1099,8 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 		{`UPDATE device_group_members SET peer_id = $1 WHERE peer_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`UPDATE device_connection_policies SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`UPDATE device_connection_mode_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE server_config SET key = $1 WHERE key = $2`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
 	}
 	for _, st := range stmts {

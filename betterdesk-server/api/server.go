@@ -292,6 +292,8 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requireRole(auth.RoleOperator, s.handleGetAccessPolicy))
 	mux.HandleFunc("PUT /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.handleSaveAccessPolicy))
 	mux.HandleFunc("DELETE /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.handleDeleteAccessPolicy))
+	mux.HandleFunc("GET /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceView, s.handleGetConnectionMode))
+	mux.HandleFunc("POST /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceConnectionMode, s.handleSetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requireRole(auth.RoleOperator, s.handleIssueSupportSessionGrant))
 	mux.HandleFunc("GET /api/peers/{id}/policy", s.handleGetPeerPolicy)
 

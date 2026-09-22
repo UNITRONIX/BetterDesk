@@ -28,7 +28,7 @@
             icon: 'devices',
             permissions: [
                 'device.view', 'device.connect', 'device.edit',
-                'device.delete', 'device.ban', 'device.change_id'
+                'device.delete', 'device.ban', 'device.change_id', 'device.connection_mode'
             ]
         },
         {

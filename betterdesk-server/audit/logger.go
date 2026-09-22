@@ -17,14 +17,15 @@ import (
 type Action string
 
 const (
-	ActionPeerBanned      Action = "peer_banned"
-	ActionPeerUnbanned    Action = "peer_unbanned"
-	ActionPeerDeleted     Action = "peer_deleted"
-	ActionPeerRevoked     Action = "peer_revoked"
-	ActionPeerRestored    Action = "peer_restored"
-	ActionPeerUpdated     Action = "peer_updated"
-	ActionPeerIDChanged   Action = "peer_id_changed"
-	ActionPeerTagsUpdated Action = "peer_tags_updated"
+	ActionPeerBanned            Action = "peer_banned"
+	ActionPeerUnbanned          Action = "peer_unbanned"
+	ActionPeerDeleted           Action = "peer_deleted"
+	ActionPeerRevoked           Action = "peer_revoked"
+	ActionPeerRestored          Action = "peer_restored"
+	ActionPeerUpdated           Action = "peer_updated"
+	ActionPeerIDChanged         Action = "peer_id_changed"
+	ActionPeerTagsUpdated       Action = "peer_tags_updated"
+	ActionConnectionModeChanged Action = "connection_mode_changed"
 	// ActionEnrollmentPending is logged when an unknown device is placed into
 	// the pending enrollment queue (managed mode) awaiting operator approval.
 	ActionEnrollmentPending Action = "enrollment_pending"
