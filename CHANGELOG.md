@@ -9,6 +9,7 @@
 
 ### Changed
 - **Split Docker connection strategy (#432):** Settings → Connection strategy is now writable in the legacy split Docker layout. The Go server persists the validated P2P/relay and initiator policy in the shared `server_config` database and applies it live; environment values remain the bootstrap fallback when no panel value exists. Native systemd/compose deployments keep their existing persistence and restart flow.
+- **PostgreSQL installer authentication:** Native local PostgreSQL setup now adds idempotent, loopback-only `pg_hba.conf` rules for the BetterDesk role and database before testing the TCP/password connection, fixing fresh Rocky Linux/RHEL-compatible installations.
 
 ---
 

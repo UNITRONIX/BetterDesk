@@ -263,6 +263,28 @@ psql "postgres://betterdesk:password@localhost:5432/betterdesk"
 sudo ufw allow 5432/tcp
 ```
 
+### PostgreSQL authentication failed during local installation
+
+On Rocky Linux, RHEL, and similar distributions, PostgreSQL may be running while its default `pg_hba.conf` does not permit the BetterDesk role to authenticate over localhost. A current native installer adds narrow loopback rules automatically. For an older installer or a manually managed database, find the active file and add rules for the BetterDesk database and role:
+
+```bash
+sudo -u postgres psql -Atqc 'SHOW hba_file;'
+sudoedit /path/from/show/hba_file
+```
+
+Add these entries before broader localhost rules, then reload PostgreSQL:
+
+```text
+host    betterdesk    betterdesk    127.0.0.1/32    scram-sha-256
+host    betterdesk    betterdesk    ::1/128         scram-sha-256
+```
+
+```bash
+sudo systemctl reload postgresql
+```
+
+The rules should remain limited to the BetterDesk database, role, and loopback addresses. Do not replace them with `trust` or a network-wide rule.
+
 ### Duplicate key errors
 
 If migrating to a database that already has data, the migration tool uses `INSERT OR IGNORE` (SQLite) or `ON CONFLICT DO NOTHING` (PostgreSQL) to skip duplicates.

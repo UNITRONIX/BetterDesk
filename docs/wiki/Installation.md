@@ -219,6 +219,14 @@ When prompted for database type, choose **PostgreSQL** and provide the connectio
 postgres://user:password@host:5432/betterdesk?sslmode=disable
 ```
 
+For a native Linux installation with a local PostgreSQL server, you can select PostgreSQL non-interactively:
+
+```bash
+sudo ./betterdesk.sh --auto --postgresql
+```
+
+The installer creates the BetterDesk role and database, then configures narrowly scoped `pg_hba.conf` rules for `127.0.0.1/32` and `::1/128` using `scram-sha-256`. It reloads PostgreSQL before testing the same TCP/password connection used by BetterDesk. Remote PostgreSQL hosts are not modified; their authentication policy remains operator-managed.
+
 ### Migrate Existing Data
 
 ```bash

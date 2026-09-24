@@ -698,6 +698,135 @@ is_valid_pg_identifier() {
     [[ "$ident" =~ ^[A-Za-z_][A-Za-z0-9_]{0,62}$ ]]
 }
 
+is_local_postgresql_host() {
+    case "${POSTGRESQL_HOST,,}" in
+        localhost|127.0.0.1|::1)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+postgresql_hba_file_path() {
+    local hba_file
+    hba_file=$(sudo -u postgres psql -v ON_ERROR_STOP=1 -Atqc "SHOW hba_file;" 2>/dev/null) || return 1
+    hba_file="${hba_file//$'\r'/}"
+    [ -n "$hba_file" ] || return 1
+    printf '%s\n' "$hba_file"
+}
+
+ensure_postgresql_local_hba_rules() {
+    if ! is_local_postgresql_host; then
+        print_info "PostgreSQL host '$POSTGRESQL_HOST' is remote; leaving pg_hba.conf unchanged"
+        return 0
+    fi
+
+    local hba_file
+    if ! hba_file=$(postgresql_hba_file_path); then
+        print_error "Could not determine PostgreSQL pg_hba.conf path"
+        return 1
+    fi
+    if [ ! -f "$hba_file" ]; then
+        print_error "PostgreSQL pg_hba.conf was not found at: $hba_file"
+        return 1
+    fi
+
+    local rule_ipv4="host    $POSTGRESQL_DB    $POSTGRESQL_USER    127.0.0.1/32    scram-sha-256"
+    local rule_ipv6="host    $POSTGRESQL_DB    $POSTGRESQL_USER    ::1/128         scram-sha-256"
+    local has_ipv4=false
+    local has_ipv6=false
+
+    if awk -v db="$POSTGRESQL_DB" -v user="$POSTGRESQL_USER" '
+        $1 !~ /^#/ && $1 == "host" && $2 == db && $3 == user &&
+        $4 == "127.0.0.1/32" && $5 == "scram-sha-256" { found=1 }
+        END { exit !found }
+    ' "$hba_file"; then
+        has_ipv4=true
+    fi
+    if awk -v db="$POSTGRESQL_DB" -v user="$POSTGRESQL_USER" '
+        $1 !~ /^#/ && $1 == "host" && $2 == db && $3 == user &&
+        $4 == "::1/128" && $5 == "scram-sha-256" { found=1 }
+        END { exit !found }
+    ' "$hba_file"; then
+        has_ipv6=true
+    fi
+
+    if [ "$has_ipv4" = true ] && [ "$has_ipv6" = true ]; then
+        print_info "PostgreSQL localhost authentication rules already configured"
+        return 0
+    fi
+
+    local backup_file="${hba_file}.betterdesk-backup-$(date +%Y%m%d%H%M%S)"
+    if ! sudo cp -p "$hba_file" "$backup_file" || ! sudo chmod 600 "$backup_file"; then
+        print_error "Could not back up PostgreSQL pg_hba.conf before editing"
+        return 1
+    fi
+
+    local temp_file
+    if ! temp_file=$(mktemp "${TMPDIR:-/tmp}/betterdesk-pg-hba.XXXXXX"); then
+        print_error "Could not create a temporary PostgreSQL pg_hba.conf"
+        return 1
+    fi
+
+    local add_ipv4=0
+    local add_ipv6=0
+    [ "$has_ipv4" = false ] && add_ipv4=1
+    [ "$has_ipv6" = false ] && add_ipv6=1
+
+    if ! awk \
+        -v add_ipv4="$add_ipv4" \
+        -v add_ipv6="$add_ipv6" \
+        -v rule_ipv4="$rule_ipv4" \
+        -v rule_ipv6="$rule_ipv6" '
+        function add_rules() {
+            if (inserted) {
+                return
+            }
+            if (add_ipv4) {
+                print rule_ipv4
+            }
+            if (add_ipv6) {
+                print rule_ipv6
+            }
+            inserted=1
+        }
+        {
+            if ($0 !~ /^[[:space:]]*#/ && $0 !~ /^[[:space:]]*$/) {
+                add_rules()
+            }
+            print
+        }
+        END {
+            if (!inserted) {
+                add_rules()
+            }
+        }
+    ' "$hba_file" > "$temp_file"; then
+        rm -f "$temp_file"
+        print_error "Could not prepare PostgreSQL pg_hba.conf"
+        return 1
+    fi
+
+    if ! sudo cp "$temp_file" "$hba_file"; then
+        rm -f "$temp_file"
+        print_error "Could not update PostgreSQL pg_hba.conf"
+        print_info "The original file remains available at: $backup_file"
+        return 1
+    fi
+    rm -f "$temp_file"
+
+    if ! systemctl reload postgresql 2>/dev/null && ! service postgresql reload 2>/dev/null; then
+        print_error "Could not reload PostgreSQL after updating pg_hba.conf"
+        print_info "The original file remains available at: $backup_file"
+        return 1
+    fi
+
+    print_success "Configured PostgreSQL localhost authentication for BetterDesk"
+    return 0
+}
+
 #===============================================================================
 # Service Management Functions (Enhanced v2.1.2)
 #===============================================================================
@@ -3313,6 +3442,11 @@ setup_postgresql_database() {
         print_warning "Database might already exist"
     }
     
+    if ! ensure_postgresql_local_hba_rules; then
+        print_error "PostgreSQL authentication setup failed"
+        return 1
+    fi
+
     # Build connection URI
     POSTGRESQL_URI="postgres://$POSTGRESQL_USER:$POSTGRESQL_PASS@$POSTGRESQL_HOST:$POSTGRESQL_PORT/$POSTGRESQL_DB?sslmode=disable"
     

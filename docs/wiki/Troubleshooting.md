@@ -125,6 +125,20 @@ sudo systemctl restart betterdesk-console
 
 **Solution:** Update install scripts to current 3.5.x. They preserve database configuration via `preserve_database_config()`.
 
+### PostgreSQL authentication fails during installation
+
+**Cause:** The PostgreSQL role and database were created successfully, but the server does not have a matching localhost password rule in `pg_hba.conf`. This is common with fresh Rocky Linux or RHEL-compatible PostgreSQL installations.
+
+**Solution:** Update to the current installer and retry. Native local PostgreSQL setup now adds database- and role-specific rules for `127.0.0.1/32` and `::1/128`, reloads PostgreSQL, and tests the TCP connection. For a remote PostgreSQL host, configure its `pg_hba.conf` on the database server instead; BetterDesk intentionally does not edit remote authentication policy.
+
+To inspect the active configuration file:
+
+```bash
+sudo -u postgres psql -Atqc 'SHOW hba_file;'
+```
+
+Only use loopback-scoped `scram-sha-256` rules for this local setup. Do not open PostgreSQL with `trust` or a network-wide `host all all` rule.
+
 ### Auth Database Destroyed After Update
 
 **Cause:** Older install scripts unconditionally deleted `auth.db` and regenerated admin password on every update.
