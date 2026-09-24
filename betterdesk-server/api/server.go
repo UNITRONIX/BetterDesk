@@ -363,6 +363,8 @@ func (s *Server) Start(ctx context.Context) error {
 	// Config (server.config permission)
 	mux.HandleFunc("GET /api/config/{key}", s.requirePermission(auth.PermServerConfig, s.handleGetConfig))
 	mux.HandleFunc("PUT /api/config/{key}", s.requirePermission(auth.PermServerConfig, s.handleSetConfig))
+	mux.HandleFunc("GET /api/connection/config", s.requirePermission(auth.PermServerConfig, s.handleGetConnectionConfig))
+	mux.HandleFunc("PUT /api/connection/config", s.requirePermission(auth.PermServerConfig, s.handleSetConnectionConfig))
 
 	// Auth (public — no auth required, handled by middleware exclusion)
 	mux.HandleFunc("POST /api/auth/login", s.handleLogin)
@@ -719,14 +721,15 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		payload["clock_synced"] = s.timeSync.IsSynced()
 	}
 	if s.cfg != nil {
+		connection := s.cfg.ConnectionSettings()
 		payload["connection"] = map[string]any{
-			"p2p_first":                  s.cfg.P2PFirst,
-			"always_use_relay":           s.cfg.AlwaysUseRelay,
-			"p2p_fallback_ms":            s.cfg.P2PFallbackMs,
-			"same_nat_relay":             s.cfg.SameNATRelay,
-			"allow_shared_nat_initiator": s.cfg.AllowSharedNATInitiator,
-			"logged_in_only_initiator":   s.cfg.LoggedInOnlyInitiator,
-			"operator_only_outbound":     s.cfg.OperatorOnlyOutbound,
+			"p2p_first":                  connection.P2PFirst,
+			"always_use_relay":           connection.AlwaysUseRelay,
+			"p2p_fallback_ms":            connection.P2PFallbackMs,
+			"same_nat_relay":             connection.SameNATRelay,
+			"allow_shared_nat_initiator": connection.AllowSharedNATInitiator,
+			"logged_in_only_initiator":   connection.LoggedInOnlyInitiator,
+			"operator_only_outbound":     connection.OperatorOnlyOutbound,
 			"relay_servers":              s.cfg.RelayServers,
 		}
 	}

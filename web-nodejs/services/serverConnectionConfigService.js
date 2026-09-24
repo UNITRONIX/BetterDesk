@@ -1,8 +1,8 @@
 /**
  * BetterDesk Console — server P2P / relay connection mode configuration.
  *
- * Persists global connection strategy via systemd Environment= lines or
- * docker-compose.yml server environment variables.
+ * Persists global connection strategy via the split-Docker Go API, systemd
+ * Environment= lines, or docker-compose.yml server environment variables.
  */
 
 'use strict';
@@ -16,6 +16,7 @@ const {
     canUsePrivilegedUpdate,
     invokePrivilegedUpdate,
 } = require('../lib/privilegedUpdateHelper');
+const { apiClient } = require('./betterdeskApi');
 
 const CONSOLE_ROOT = path.join(__dirname, '..');
 const REPO_ROOT = path.join(CONSOLE_ROOT, '..');
@@ -45,6 +46,11 @@ const DEFAULTS = {
 
 function isDockerRuntime() {
     return fs.existsSync('/.dockerenv') || process.env.DOCKER === 'true';
+}
+
+function isDockerSplitDeployment() {
+    return config.isDocker === true
+        && String(process.env.BETTERDESK_DOCKER_LAYOUT || '').trim().toLowerCase() === 'split';
 }
 
 function systemdUnitExists() {
@@ -357,7 +363,37 @@ async function readDockerSettings() {
     return settingsFromEnv(parseDockerComposeEnvironment(content), 'docker');
 }
 
+function settingsFromApi(data) {
+    const fallback = Number(data?.p2p_fallback_ms);
+    return {
+        mode: data?.mode === 'relay_only' ? 'relay_only' : 'p2p_first',
+        p2p_fallback_ms: Number.isFinite(fallback) && fallback >= 0 && fallback <= 30000
+            ? fallback
+            : DEFAULTS.p2p_fallback_ms,
+        same_nat_relay: data?.same_nat_relay !== false,
+        allow_shared_nat_initiator: data?.allow_shared_nat_initiator === true,
+        logged_in_only_initiator: data?.logged_in_only_initiator === true,
+        operator_only_outbound: data?.operator_only_outbound === true,
+        source: 'go-api',
+        writable: true,
+    };
+}
+
+async function readSplitDockerSettings() {
+    const response = await apiClient.get('/connection/config');
+    return settingsFromApi(response.data?.config || response.data || {});
+}
+
 async function getConnectionMode() {
+    if (isDockerSplitDeployment()) {
+        try {
+            return await readSplitDockerSettings();
+        } catch (err) {
+            console.error('Failed to read split-Docker connection settings:', err.message);
+            return { ...DEFAULTS, source: 'go-api', writable: false };
+        }
+    }
+
     const source = detectDeploymentSource();
     try {
         if (source === 'systemd') return await readSystemdSettings();
@@ -411,11 +447,6 @@ async function writeDockerSettings(settings) {
 }
 
 async function setConnectionMode(settings) {
-    const source = detectDeploymentSource();
-    if (source === 'defaults') {
-        throw new Error('not_configurable');
-    }
-
     const normalized = {
         mode: settings.mode === 'relay_only' ? 'relay_only' : 'p2p_first',
         p2p_fallback_ms: Number(settings.p2p_fallback_ms),
@@ -424,6 +455,24 @@ async function setConnectionMode(settings) {
         logged_in_only_initiator: settings.logged_in_only_initiator === true,
         operator_only_outbound: settings.operator_only_outbound === true
     };
+
+    if (isDockerSplitDeployment()) {
+        const response = await apiClient.put('/connection/config', normalized);
+        const data = response.data || {};
+        const persisted = data.config || data;
+        return {
+            source: 'go-api',
+            settings: settingsFromApi(persisted),
+            restart: null,
+            restartRequired: null,
+            dockerMode: true,
+        };
+    }
+
+    const source = detectDeploymentSource();
+    if (source === 'defaults') {
+        throw new Error('not_configurable');
+    }
 
     if (source === 'systemd') {
         return { ...(await writeSystemdSettings(normalized)), source: 'systemd', settings: normalized };
@@ -477,8 +526,10 @@ module.exports = {
     patchSystemdEnvironment,
     parseDockerComposeEnvironment,
     patchDockerComposeEnvironment,
+    isDockerSplitDeployment,
     modeFromEnvVars,
     settingsFromEnv,
+    settingsFromApi,
     envVarsFromSettings,
     getConnectionMode,
     setConnectionMode,

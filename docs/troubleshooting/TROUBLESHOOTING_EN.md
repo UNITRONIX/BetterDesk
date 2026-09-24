@@ -542,7 +542,7 @@ Clients need **outbound UDP 21116** to the server (and often between peers after
 
 ### Panel configuration
 
-- **Settings → Connection strategy** — global `P2P first` vs `Relay only` (requires server restart)
+- **Settings → Connection strategy** — global `P2P first` vs `Relay only`. In split Docker, changes are persisted in the shared Go database and applied live; native systemd/compose deployments retain the existing restart flow.
 - **Policies → Network → Block Direct P2P** — per-organization relay-only enforcement
 
 Web browser remote clients always use relay (no UDP hole punch in browsers).
