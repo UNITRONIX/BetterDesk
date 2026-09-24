@@ -185,3 +185,74 @@ describe('RDTouch tablet input', () => {
         expect(sent.some((message) => message.mouseEvent.mask === 10)).toBe(false);
     });
 });
+
+describe('RDRenderer mobile resize', () => {
+    function loadRenderer() {
+        const sandbox = {
+            console,
+            window: null,
+            devicePixelRatio: 2,
+            document: {
+                createElement: () => ({
+                    getContext: () => ({})
+                })
+            }
+        };
+        sandbox.window = sandbox;
+        const code = fs.readFileSync(
+            path.join(__dirname, '../public/js/rdclient/renderer.js'),
+            'utf8'
+        );
+        vm.runInNewContext(code, sandbox);
+        return sandbox.RDRenderer;
+    }
+
+    function makeCanvas() {
+        let width = 800;
+        let height = 400;
+        let assignments = 0;
+        let rect = { width: 400, height: 200 };
+        const canvas = {
+            style: { width: '400px', height: '200px' },
+            parentElement: {
+                getBoundingClientRect: () => rect
+            },
+            getContext: () => ({
+                fillRect() {},
+                drawImage() {}
+            })
+        };
+        Object.defineProperties(canvas, {
+            width: {
+                get: () => width,
+                set: (value) => { width = value; assignments++; }
+            },
+            height: {
+                get: () => height,
+                set: (value) => { height = value; assignments++; }
+            }
+        });
+        return {
+            canvas,
+            setRect: (next) => { rect = next; },
+            getAssignments: () => assignments
+        };
+    }
+
+    it('does not clear the canvas when visual viewport size is unchanged', () => {
+        const Renderer = loadRenderer();
+        const harness = makeCanvas();
+        const renderer = new Renderer(harness.canvas);
+        let refreshes = 0;
+        renderer.onResizeRefresh = () => { refreshes++; };
+
+        renderer.resize();
+        expect(harness.getAssignments()).toBe(0);
+        expect(refreshes).toBe(0);
+
+        harness.setRect({ width: 420, height: 200 });
+        renderer.resize();
+        expect(harness.getAssignments()).toBe(2);
+        expect(refreshes).toBe(1);
+    });
+});

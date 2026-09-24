@@ -81,7 +81,6 @@
         if (!global.visualViewport || typeof onResize !== 'function') return;
         var handler = function() { onResize(); };
         global.visualViewport.addEventListener('resize', handler, { passive: true });
-        global.visualViewport.addEventListener('scroll', handler, { passive: true });
         global.addEventListener('betterdesk:visual-viewport-change', handler);
         handler();
     }
