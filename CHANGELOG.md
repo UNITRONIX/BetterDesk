@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.132] — 2026-09-24
+
+### Changed
 - **Split Docker connection strategy (#432):** Settings → Connection strategy is now writable in the legacy split Docker layout. The Go server persists the validated P2P/relay and initiator policy in the shared `server_config` database and applies it live; environment values remain the bootstrap fallback when no panel value exists. Native systemd/compose deployments keep their existing persistence and restart flow.
 
 ---
@@ -3756,3 +3763,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.129]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.128...v3.5.129
 [3.5.130]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.129...v3.5.130
 [3.5.131]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.130...v3.5.131
+[3.5.132]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.131...v3.5.132
