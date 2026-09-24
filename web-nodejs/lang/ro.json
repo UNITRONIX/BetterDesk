@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "Text afișat pe butonul de conectare (de exemplu, Azure AD, Okta)",
         "oidc_issuer_url": "Emitentul URL",
         "oidc_issuer_url_hint": "Emitent OpenID Connect URL (descoperirea va fi automată)",
+        "oidc_allowed_private_cidrs": "Rețele OIDC private permise",
+        "oidc_allowed_private_cidrs_hint": "IP-uri/CIDR-uri opționale separate prin virgulă pentru un IdP local (de exemplu 10.20.0.0/16). Lăsați necompletat pentru a bloca în continuare destinațiile private.",
         "oidc_client_id": "ID client",
         "oidc_client_secret": "Secretul clientului",
         "oidc_redirect_url": "Redirecționare URL (apel invers)",

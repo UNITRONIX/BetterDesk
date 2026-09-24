@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "Kirjautumispainikkeessa näkyvä teksti (esim. Azure AD, Okta)",
         "oidc_issuer_url": "Liikkeeseenlaskija URL",
         "oidc_issuer_url_hint": "OpenID Connect -myöntäjä URL (löytö tapahtuu automaattisesti)",
+        "oidc_allowed_private_cidrs": "Sallitut yksityiset OIDC-verkot",
+        "oidc_allowed_private_cidrs_hint": "Valinnainen pilkuilla eroteltu IP/CIDR-lista paikalliselle IdP:lle (esim. 10.20.0.0/16). Jätä tyhjäksi, jos yksityiset kohteet halutaan estää.",
         "oidc_client_id": "Asiakastunnus",
         "oidc_client_secret": "Asiakkaan salaisuus",
         "oidc_redirect_url": "Uudelleenohjaus URL (takaisinsoitto)",

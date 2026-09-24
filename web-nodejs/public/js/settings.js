@@ -4872,6 +4872,7 @@
         _oidcWasEnabled = !!data.enabled;
         setVal('oidc-display-name', data.display_name);
         setVal('oidc-issuer-url', data.issuer_url);
+        setVal('oidc-allowed-private-cidrs', data.allowed_private_cidrs);
         setVal('oidc-client-id', data.client_id);
         setVal('oidc-client-secret', data.client_secret);
         setVal('oidc-redirect-url', data.redirect_url || '');
@@ -4912,6 +4913,7 @@
             enabled: getChecked('oidc-enabled'),
             display_name: getVal('oidc-display-name'),
             issuer_url: getVal('oidc-issuer-url'),
+            allowed_private_cidrs: getVal('oidc-allowed-private-cidrs'),
             client_id: getVal('oidc-client-id'),
             client_secret: getVal('oidc-client-secret'),
             redirect_url: getVal('oidc-redirect-url'),
@@ -4967,7 +4969,10 @@
 
             const result = await Utils.api('/api/settings/oidc/test', {
                 method: 'POST',
-                body: { issuer_url: issuerUrl }
+                body: {
+                    issuer_url: issuerUrl,
+                    allowed_private_cidrs: document.getElementById('oidc-allowed-private-cidrs')?.value?.trim() || ''
+                }
             });
 
             if (resultEl) {

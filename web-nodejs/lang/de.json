@@ -560,6 +560,8 @@
         "oidc_display_name_hint": "Text auf der Anmeldeschaltfläche (z. B. Azure AD, Okta)",
         "oidc_issuer_url": "Aussteller-URL",
         "oidc_issuer_url_hint": "Aussteller-URL von OpenID Connect (Discovery erfolgt automatisch)",
+        "oidc_allowed_private_cidrs": "Erlaubte private OIDC-Netzwerke",
+        "oidc_allowed_private_cidrs_hint": "Optionale, durch Kommas getrennte IPs/CIDRs für einen lokalen IdP (z. B. 10.20.0.0/16). Leer lassen, um private Ziele weiterhin zu blockieren.",
         "oidc_client_id": "Client-ID",
         "oidc_client_secret": "Client-Secret",
         "oidc_redirect_url": "Weiterleitungs-URL (Callback)",

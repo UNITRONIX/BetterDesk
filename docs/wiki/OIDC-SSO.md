@@ -23,6 +23,7 @@ Configure **OpenID Connect (OIDC) / OAuth2** single sign-on so operators log in 
 | **Identity provider** | Preset or custom |
 | **Button display name** | e.g. "Sign in with Azure AD" |
 | **Issuer URL** | OIDC issuer (`.well-known/openid-configuration` fetched automatically) |
+| **Allowed private OIDC networks** | Optional comma-separated RFC1918/IPv6 ULA IPs or CIDRs for an on-premises/DMZ IdP (for example `10.20.0.0/16`); empty keeps private destinations blocked |
 | **Client ID** | OAuth2 client ID from your IdP |
 | **Client secret** | OAuth2 client secret |
 | **Redirect URL** | Must match IdP exactly — path `/api/auth/oidc/callback` (or `/api/oidc/callback`). **Preferred:** your panel public URL (e.g. `https://your-server:5443/api/auth/oidc/callback`) — the console proxies the callback to Go. Direct Go/Client API (`:21114` / `:21121`) also works. |
@@ -33,6 +34,9 @@ Configure **OpenID Connect (OIDC) / OAuth2** single sign-on so operators log in 
 
 > [!IMPORTANT]
 > When using HTTPS behind a reverse proxy, set `TRUST_PROXY=true` in `.env` so redirect URLs and cookies use the correct scheme.
+
+> [!WARNING]
+> Private-network access is an explicit exception to the default SSRF protection. Add only the exact IdP address or smallest required CIDR. Loopback, link-local, multicast, unspecified, and metadata addresses remain blocked even when an allowlist is configured. The allowlist applies to discovery, token, and UserInfo requests and is also enforced after redirects.
 
 You can also set **`PANEL_PUBLIC_URL`** in the console `.env` as a fallback panel origin for OIDC session redirects.
 

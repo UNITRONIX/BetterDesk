@@ -568,6 +568,8 @@
         "oidc_display_name_hint": "登錄按鈕上顯示的文本 (例如 Azure AD、Okta)",
         "oidc_issuer_url": "發行者 URL",
         "oidc_issuer_url_hint": "OpenID Connect 發行者 URL (將自動發現)",
+        "oidc_allowed_private_cidrs": "允許的 OIDC 私有網路",
+        "oidc_allowed_private_cidrs_hint": "供內部 IdP 使用的選用 IP/CIDR（以逗號分隔，例如 10.20.0.0/16）。留空可繼續封鎖私有目的地。",
         "oidc_client_id": "客戶端 ID",
         "oidc_client_secret": "客戶端密鑰",
         "oidc_redirect_url": "重定向 URL (回調)",

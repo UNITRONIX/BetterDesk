@@ -564,6 +564,8 @@
         "oidc_display_name_hint": "Tekst wyświetlany na przycisku logowania (np. Azure AD, Okta)",
         "oidc_issuer_url": "URL wystawcy",
         "oidc_issuer_url_hint": "URL wystawcy OpenID Connect (odkrywanie będzie automatyczne)",
+        "oidc_allowed_private_cidrs": "Dozwolone prywatne sieci OIDC",
+        "oidc_allowed_private_cidrs_hint": "Opcjonalna lista adresów IP/CIDR oddzielonych przecinkami dla lokalnego dostawcy IdP (np. 10.20.0.0/16). Pozostaw puste, aby blokować prywatne adresy.",
         "oidc_client_id": "ID klienta",
         "oidc_client_secret": "Sekret klienta",
         "oidc_redirect_url": "URL przekierowania (Callback)",

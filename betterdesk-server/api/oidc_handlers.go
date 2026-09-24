@@ -95,6 +95,9 @@ func (s *Server) loadOIDCConfigFromDB() *auth.OIDCConfig {
 	if v := getString("oidc.allow_signup"); v != "" {
 		cfg.AllowSignup = v == "true"
 	}
+	if v := getString("oidc.allowed_private_cidrs"); v != "" {
+		cfg.AllowedPrivateCIDRs = v
+	}
 
 	return cfg
 }
@@ -172,6 +175,9 @@ func (s *Server) saveOIDCConfigToDB(cfg *auth.OIDCConfig) error {
 	if err := setBool("oidc.allow_signup", cfg.AllowSignup); err != nil {
 		return err
 	}
+	if err := set("oidc.allowed_private_cidrs", cfg.AllowedPrivateCIDRs); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -245,6 +251,10 @@ func (s *Server) handleSaveOIDCConfig(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Redirect URL is required"})
 			return
 		}
+	}
+	if err := auth.ValidateOIDCAllowedPrivateCIDRs(cfg.AllowedPrivateCIDRs); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
 	}
 
 	if err := s.saveOIDCConfigToDB(&cfg); err != nil {
@@ -517,7 +527,8 @@ func (s *Server) handleGetOIDCEnabled(w http.ResponseWriter, r *http.Request) {
 // POST /api/auth/oidc/test
 func (s *Server) handleTestOIDCDiscovery(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		IssuerURL string `json:"issuer_url"`
+		IssuerURL           string `json:"issuer_url"`
+		AllowedPrivateCIDRs string `json:"allowed_private_cidrs"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
@@ -530,7 +541,7 @@ func (s *Server) handleTestOIDCDiscovery(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Test by directly fetching the discovery document
-	result, err := auth.TestOIDCDiscovery(r.Context(), body.IssuerURL)
+	result, err := auth.TestOIDCDiscoveryWithPrivateCIDRs(r.Context(), body.IssuerURL, body.AllowedPrivateCIDRs)
 	if err != nil {
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"success": false,
@@ -540,10 +551,10 @@ func (s *Server) handleTestOIDCDiscovery(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"success":               true,
-		"issuer":                result.Issuer,
+		"success":                true,
+		"issuer":                 result.Issuer,
 		"authorization_endpoint": result.AuthorizationEndpoint,
-		"token_endpoint":        result.TokenEndpoint,
-		"userinfo_endpoint":     result.UserinfoEndpoint,
+		"token_endpoint":         result.TokenEndpoint,
+		"userinfo_endpoint":      result.UserinfoEndpoint,
 	})
 }

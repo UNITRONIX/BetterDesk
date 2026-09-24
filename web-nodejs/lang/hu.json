@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "A bejelentkezési gombon megjelenő szöveg (pl. Azure AD, Okta)",
         "oidc_issuer_url": "Kibocsátó URL",
         "oidc_issuer_url_hint": "OpenID Connect kibocsátó URL (a felderítés automatikus lesz)",
+        "oidc_allowed_private_cidrs": "Engedélyezett privát OIDC-hálózatok",
+        "oidc_allowed_private_cidrs_hint": "Opcionális, vesszővel elválasztott IP/CIDR-lista helyi IdP-hez (például 10.20.0.0/16). Hagyja üresen a privát célpontok blokkolásához.",
         "oidc_client_id": "Ügyfél-azonosító",
         "oidc_client_secret": "Ügyfél titka",
         "oidc_redirect_url": "URL átirányítása (visszahívás)",

@@ -567,6 +567,8 @@
         "oidc_display_name_hint": "النص المعروض على زر تسجيل الدخول (على سبيل المثال Azure AD، Okta)",
         "oidc_issuer_url": "المُصدر URL",
         "oidc_issuer_url_hint": "جهة إصدار OpenID Connect URL (سيكون الاكتشاف تلقائيًا)",
+        "oidc_allowed_private_cidrs": "شبكات OIDC الخاصة المسموح بها",
+        "oidc_allowed_private_cidrs_hint": "عناوين IP أو CIDR اختيارية مفصولة بفواصل لموفر هوية داخلي (مثل 10.20.0.0/16). اتركها فارغة لإبقاء الوجهات الخاصة محظورة.",
         "oidc_client_id": "معرف العميل",
         "oidc_client_secret": "سر العميل",
         "oidc_redirect_url": "إعادة توجيه URL (رد الاتصال)",

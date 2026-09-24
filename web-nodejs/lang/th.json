@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "ข้อความที่แสดงบนปุ่มเข้าสู่ระบบ (เช่น Azure AD, Okta)",
         "oidc_issuer_url": "ผู้ออก URL",
         "oidc_issuer_url_hint": "ผู้ออก OpenID Connect URL (การค้นพบจะเป็นไปโดยอัตโนมัติ)",
+        "oidc_allowed_private_cidrs": "เครือข่าย OIDC ส่วนตัวที่อนุญาต",
+        "oidc_allowed_private_cidrs_hint": "IP/CIDR ที่คั่นด้วยจุลภาคสำหรับ IdP ภายในองค์กร (เช่น 10.20.0.0/16) ปล่อยว่างไว้เพื่อบล็อกปลายทางส่วนตัวต่อไป",
         "oidc_client_id": "รหัสลูกค้า",
         "oidc_client_secret": "ความลับของลูกค้า",
         "oidc_redirect_url": "เปลี่ยนเส้นทาง URL (โทรกลับ)",

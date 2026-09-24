@@ -560,6 +560,8 @@
         "oidc_display_name_hint": "Text zobrazený na přihlašovacím tlačítku (např. Azure AD, Okta)",
         "oidc_issuer_url": "Adresa URL vydavatele",
         "oidc_issuer_url_hint": "Adresa URL vydavatele OpenID Connect (discovery proběhne automaticky)",
+        "oidc_allowed_private_cidrs": "Povolené privátní sítě OIDC",
+        "oidc_allowed_private_cidrs_hint": "Volitelné IP adresy/CIDR oddělené čárkami pro místního poskytovatele IdP (např. 10.20.0.0/16). Ponechte prázdné pro blokování privátních cílů.",
         "oidc_client_id": "ID klienta",
         "oidc_client_secret": "Tajný klíč klienta",
         "oidc_redirect_url": "Adresa URL přesměrování (callback)",

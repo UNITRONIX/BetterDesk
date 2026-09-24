@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "लॉगिन बटन पर दिखाया गया टेक्स्ट (उदाहरण के लिए Azure AD, Okta)",
         "oidc_issuer_url": "जारीकर्ता URL",
         "oidc_issuer_url_hint": "OpenID कनेक्ट जारीकर्ता URL (खोज स्वचालित होगी)",
+        "oidc_allowed_private_cidrs": "अनुमत निजी OIDC नेटवर्क",
+        "oidc_allowed_private_cidrs_hint": "स्थानीय IdP के लिए वैकल्पिक, अल्पविराम से अलग किए गए IP/CIDR (जैसे 10.20.0.0/16)। निजी गंतव्यों को अवरुद्ध रखने के लिए खाली छोड़ें।",
         "oidc_client_id": "ग्राहक आईडी",
         "oidc_client_secret": "ग्राहक रहस्य",
         "oidc_redirect_url": "URL को पुनर्निर्देशित करें (कॉलबैक)",
