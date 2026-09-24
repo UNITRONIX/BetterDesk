@@ -588,6 +588,17 @@
                 // LDAP/OIDC accounts are managed by the identity provider:
                 // password cannot be set locally and the role is provider-mapped.
                 const provider = (user.auth_provider || 'local').toLowerCase();
+                const isExternalAccount = provider === 'ldap' || provider === 'oidc';
+                if (isExternalAccount && roleSelect) {
+                    roleSelect.disabled = true;
+                    const roleGroup = roleSelect.closest('.form-group');
+                    if (roleGroup) {
+                        const hint = document.createElement('span');
+                        hint.className = 'form-hint';
+                        hint.textContent = _('users.provider_managed_hint');
+                        roleGroup.appendChild(hint);
+                    }
+                }
                 if (provider !== 'local') {
                     if (passwordInput) {
                         passwordInput.value = '';
@@ -720,8 +731,14 @@
         try {
             if (editingUserId) {
                 // Update existing user
-                const data = { role, email, groupGuids, folderIds, peerIds, strategyGuid };
-                if (password) data.password = password;
+                const user = users.find(item => Number(item.id) === Number(editingUserId));
+                const provider = (user?.auth_provider || 'local').toLowerCase();
+                const isExternalAccount = provider === 'ldap' || provider === 'oidc';
+                const data = { email, groupGuids, folderIds, peerIds, strategyGuid };
+                if (!isExternalAccount) {
+                    data.role = role;
+                    if (password) data.password = password;
+                }
                 
                 await Utils.api(`/api/users/${editingUserId}`, {
                     method: 'PATCH',
