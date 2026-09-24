@@ -82,6 +82,12 @@ class RDClient {
         this._peerEncoding = null;            // peer SupportedEncoding from handshake
         this._windowsSessions = { sessions: [], currentSid: 0 };
         this._preferCodec = opts.preferCodec || 'Auto';
+        this._mobileRuntime = RDClient.isMobileRuntime();
+        if (this._mobileRuntime && this._preferCodec === 'Auto') {
+            // H.264 is the most consistently hardware-accelerated codec on
+            // tablet browsers and remains available in the HTTP fallback.
+            this._preferCodec = 'H264';
+        }
         this._adaptivePaused = false;         // true once the user picks codec/quality manually
         this._codecFallbackDone = false;      // one automatic downgrade per session
 
@@ -91,6 +97,9 @@ class RDClient {
         this._peerEncryptionConfirmed = false; // Whether peer has started encrypting
         this._keyExchangePending = false;  // True when we have keys ready but haven't sent PublicKey yet
         this._keyExchangeDone = false;     // True after PublicKey was sent and crypto enabled
+        this._sessionStartedAt = null;
+        this._lastDisconnect = null;
+        this._lastError = null;
 
         // Settings
         this.renderer.setScaleMode(opts.scaleMode || 'fit');
@@ -131,8 +140,30 @@ class RDClient {
         return typeof window !== 'undefined' && window.BetterDesk && window.BetterDesk.debugRelay === true;
     }
 
+    static isMobileRuntime() {
+        try {
+            const capabilities = typeof window !== 'undefined' ? window.DeviceCapabilities : null;
+            return !!(capabilities
+                && capabilities.isTouch()
+                && !capabilities.isPhone());
+        } catch (_) {
+            return false;
+        }
+    }
+
     _debugRelay(...args) {
         if (RDClient.isRelayDebug()) console.log(...args);
+    }
+
+    _getInitialStreamFps() {
+        const requested = Number(this.opts.fps) > 0 ? Number(this.opts.fps) : 60;
+        // WebCodecs is unavailable on the HTTP path, and JMuxer/MSE on
+        // mobile browsers is not reliable at 60fps. The toolbar can still
+        // explicitly raise FPS after the session is stable.
+        if (!RDVideo.isSupported() || this._mobileRuntime) {
+            return Math.min(requested, 30);
+        }
+        return requested;
     }
 
     // ---- Main Connection Flow ----
@@ -260,12 +291,23 @@ class RDClient {
 
             // Step 11: Setup relay message handler BEFORE sending anything
             this.conn.on('relay:message', (data) => this._handleRelayData(data));
-            this.conn.on('relay:close', () => {
+            this.conn.on('relay:close', (code, wsReason, closeInfo) => {
                 if (this._state !== 'disconnected' && this._state !== 'error') {
-                    this._handleDisconnect('Relay connection closed');
+                    const suffix = code || wsReason
+                        ? ` (WebSocket ${code || 0}${wsReason ? `: ${wsReason}` : ''})`
+                        : '';
+                    this._handleDisconnect('Relay connection closed' + suffix, {
+                        source: 'relay',
+                        closeCode: code || 0,
+                        closeReason: wsReason || '',
+                        closeInfo: closeInfo || null
+                    });
                 }
             });
-            this.conn.on('relay:error', (e) => this._handleDisconnect('Relay error: ' + e.message));
+            this.conn.on('relay:error', (e) => this._handleDisconnect('Relay error: ' + e.message, {
+                source: 'relay-error',
+                error: e && e.message ? e.message : String(e)
+            }));
 
             // Step 12: Send RequestRelay to hbbr (relay expects this as first message for pairing)
             this._emit('log', `Connecting to relay (uuid: ${relayUUID.substring(0, 8)}...)...`);
@@ -437,7 +479,7 @@ class RDClient {
                 myId: 'betterdesk-web-' + Date.now().toString(36),
                 myName: this.opts.myName || this.opts.myName || 'BetterDesk Web',
                 disableAudio: this.opts.disableAudio || false,
-                fps: this.opts.fps || 60,
+                fps: this._getInitialStreamFps(),
                 imageQuality: this.opts.imageQuality || 'Best',
                 codecAbilities: this._codecAbilities,
                 preferCodec: this._preferCodec
@@ -1232,7 +1274,10 @@ class RDClient {
 
     _handleMisc(misc) {
         if (misc.closeReason) {
-            this._handleDisconnect('Remote: ' + misc.closeReason);
+            this._handleDisconnect('Remote: ' + misc.closeReason, {
+                source: 'peer',
+                peerReason: String(misc.closeReason)
+            });
             return;
         }
         if (misc.chatMessage) {
@@ -1268,14 +1313,18 @@ class RDClient {
      */
     _startSession() {
         this._setState('streaming');
+        this._sessionStartedAt = Date.now();
+        this._lastDisconnect = null;
+        this._lastError = null;
         this._codecFallbackDone = false;
         this.conn.setConnected();
 
         // Enable file transfer
         this.fileTransfer.enable();
-        this.ensureFileConnection().catch(function (err) {
-            console.warn('[RDClient] File transfer preconnect:', err.message || err);
-        });
+        // File transfer is opened lazily by the file modal. Keeping it out of
+        // the initial mobile handshake avoids a second rendezvous + relay burst
+        // that can hit the per-IP proxy limit and is unnecessary for desktop
+        // control sessions.
 
         // Initialize video decoder callbacks
         this.video.onFrame = (frame) => this.renderer.pushFrame(frame);
@@ -1318,7 +1367,7 @@ class RDClient {
         }
 
         // Tell peer our desired FPS and image quality after session establishment
-        const fps = this.opts.fps || 60;
+        const fps = this._getInitialStreamFps();
         this._savedActiveFps = fps;
         const quality = this.opts.imageQuality || 'Best';
         this._sendPeerMessage(this.proto.buildOptionMisc({
@@ -1327,7 +1376,7 @@ class RDClient {
         }));
         this._sendPeerMessage(this.proto.buildMisc(
             'autoAdjustFps',
-            this.opts.fpsMode === 'adaptive' ? 60 : 0
+            !RDVideo.isSupported() ? 0 : (this.opts.fpsMode === 'adaptive' ? 60 : 0)
         ));
 
         // Proactively request an initial keyframe so the decoder can start
@@ -1410,13 +1459,18 @@ class RDClient {
      * Demotes after 2 consecutive bad samples, promotes after 3 good.
      */
     _startAdaptiveQuality() {
-        const tiers = [
-            { id: 0, quality: 'Low',      fps: 30 },
-            { id: 1, quality: 'Balanced', fps: 30 },
-            { id: 2, quality: 'Balanced', fps: 45 },
-            { id: 3, quality: 'Best',     fps: 45 },
-            { id: 4, quality: 'Best',     fps: 60 }
-        ];
+        const tiers = !RDVideo.isSupported()
+            ? [
+                { id: 0, quality: 'Low',      fps: 30 },
+                { id: 1, quality: 'Balanced', fps: 30 }
+            ]
+            : [
+                { id: 0, quality: 'Low',      fps: 30 },
+                { id: 1, quality: 'Balanced', fps: 30 },
+                { id: 2, quality: 'Balanced', fps: 45 },
+                { id: 3, quality: 'Best',     fps: 45 },
+                { id: 4, quality: 'Best',     fps: 60 }
+            ];
         // Start near tier 1 (Balanced@30) to match opts
         let current = 1;
         let badCount = 0;
@@ -1520,6 +1574,14 @@ class RDClient {
     _handleError(err) {
         console.error('[RDClient]', err);
         const msg = err && err.message ? err.message : String(err);
+        this._lastError = {
+            message: msg,
+            at: Date.now(),
+            state: this._state,
+            codec: this.video ? this.video.currentCodec : null
+        };
+        this._debugRelay('[RDClient] Session error:', JSON.stringify(this._lastError));
+        this._emit('diagnostics', { type: 'error', ...this._lastError });
         // Detect peer-offline scenarios where the agent is reachable through
         // bd-signal/CDAP but not through the RustDesk relay (no peer registration).
         // In that case, signal the UI that a CDAP fallback viewer is available.
@@ -1532,11 +1594,32 @@ class RDClient {
         this._setState('error');
     }
 
-    _handleDisconnect(reason) {
+    _handleDisconnect(reason, meta = {}) {
+        const stateBefore = this._state;
+        const info = {
+            type: 'disconnect',
+            reason: String(reason || 'Connection closed'),
+            source: meta.source || 'unknown',
+            stateBefore,
+            at: Date.now(),
+            durationMs: this._sessionStartedAt
+                ? Math.max(0, Date.now() - this._sessionStartedAt)
+                : null,
+            transport: 'rd',
+            secureContext: typeof window !== 'undefined' ? window.isSecureContext === true : null,
+            codec: this.video ? this.video.currentCodec : null,
+            closeCode: meta.closeCode || null,
+            closeReason: meta.closeReason || '',
+            peerReason: meta.peerReason || '',
+            error: meta.error || ''
+        };
+        this._lastDisconnect = info;
+        this._debugRelay('[RDClient] Session disconnect:', JSON.stringify(info));
+        this._emit('diagnostics', info);
         this._emit('log', `Disconnected: ${reason}`);
         this._cleanup();
         this._setState('disconnected');
-        this._emit('disconnected', reason);
+        this._emit('disconnected', reason, info);
     }
 
     _cleanup() {
@@ -1977,9 +2060,11 @@ class RDClient {
 
         var c = config[preset] || config.balanced;
         const mode = this.opts.fpsMode || '30';
-        const customFps = mode === '60' || mode === 'adaptive'
-            ? 60
-            : mode === '30' ? 30 : c.customFps;
+        const customFps = !RDVideo.isSupported()
+            ? 30
+            : mode === '60' || mode === 'adaptive'
+                ? 60
+                : mode === '30' ? 30 : c.customFps;
         this._adaptivePaused = mode !== 'adaptive';
         this._savedActiveFps = customFps;
         this.opts.qualityPreset = preset;
@@ -1995,7 +2080,7 @@ class RDClient {
         const value = ['30', '60', 'adaptive'].includes(String(mode))
             ? String(mode)
             : '30';
-        const fps = value === '30' ? 30 : 60;
+        const fps = !RDVideo.isSupported() ? 30 : (value === '30' ? 30 : 60);
         this.opts.fpsMode = value;
         this.opts.fps = fps;
         this.opts.adaptiveQuality = value === 'adaptive';
@@ -2006,7 +2091,7 @@ class RDClient {
         this._sendPeerMessage(this.proto.buildOptionMisc({ customFps: fps }));
         this._sendPeerMessage(this.proto.buildMisc(
             'autoAdjustFps',
-            value === 'adaptive' ? 60 : 0
+            !RDVideo.isSupported() ? 0 : (value === 'adaptive' ? 60 : 0)
         ));
         if (value === 'adaptive') {
             if (!this._adaptiveInterval) this._startAdaptiveQuality();
@@ -2301,7 +2386,12 @@ class RDClient {
             video: this.video.getStats(),
             audio: this.audio.getStats(),
             renderer: this.renderer.getStats(),
-            connection: this.conn.state
+            connection: this.conn.state,
+            diagnostics: {
+                lastClose: this.conn._lastClose || null,
+                lastDisconnect: this._lastDisconnect,
+                lastError: this._lastError
+            }
         };
     }
 }

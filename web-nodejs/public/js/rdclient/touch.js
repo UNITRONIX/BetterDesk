@@ -20,7 +20,10 @@ class RDTouch {
         this.enabled = false;
         this._activeTouches = new Map();
         this._touchpadLast = null;
+        this._touchpadStart = null;
         this._longPressTimer = null;
+        this._longPressTriggered = false;
+        this._directPressed = false;
         this._lastMoveTime = 0;
         this._moveThrottleMs = 16;
 
@@ -55,6 +58,10 @@ class RDTouch {
         c.style.touchAction = '';
         clearTimeout(this._longPressTimer);
         this._activeTouches.clear();
+        this._touchpadLast = null;
+        this._touchpadStart = null;
+        this._longPressTriggered = false;
+        this._directPressed = false;
         this.enabled = false;
     }
 
@@ -105,18 +112,27 @@ class RDTouch {
         if (this.mode === 'touchpad') {
             if (e.touches.length === 1) {
                 this._touchpadLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                this._touchpadStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }
             return;
         }
 
         for (let i = 0; i < e.changedTouches.length; i++) {
             const touch = e.changedTouches[i];
-            this._activeTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
+            this._activeTouches.set(touch.identifier, {
+                x: touch.clientX,
+                y: touch.clientY,
+                startX: touch.clientX,
+                startY: touch.clientY
+            });
 
             if (e.touches.length === 1) {
+                this._directPressed = false;
                 const pos = this._posFromTouch(touch);
                 if (!pos) continue;
+                this._longPressTriggered = false;
                 this._longPressTimer = setTimeout(() => {
+                    this._longPressTriggered = true;
                     this._sendButton(RDInput.MOUSE_TYPE_DOWN, RDInput.MOUSE_BUTTON_RIGHT, pos.x, pos.y);
                     this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_RIGHT, pos.x, pos.y);
                 }, 550);
@@ -170,6 +186,13 @@ class RDTouch {
         if (!touch) return;
         const pos = this._posFromTouch(touch);
         if (!pos) return;
+        const active = this._activeTouches.get(touch.identifier);
+        if (active && !this._directPressed && !this._longPressTriggered
+            && (Math.abs(touch.clientX - active.startX) > 8
+                || Math.abs(touch.clientY - active.startY) > 8)) {
+            this._sendButton(RDInput.MOUSE_TYPE_DOWN, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
+            this._directPressed = true;
+        }
         this._sendMove(pos.x, pos.y);
     }
 
@@ -177,18 +200,17 @@ class RDTouch {
         if (!this.enabled) return;
         e.preventDefault();
         clearTimeout(this._longPressTimer);
+        const longPressTriggered = this._longPressTriggered;
+        this._longPressTriggered = false;
         this._pinchMidY = null;
         this._touchpadPinchDy = null;
 
         if (this.mode === 'touchpad') {
-            if (e.touches.length === 0) {
-                this._touchpadLast = null;
-            }
             if (e.changedTouches.length === 1 && e.touches.length === 0) {
                 const touch = e.changedTouches[0];
-                const moved = this._touchpadLast && (
-                    Math.abs(touch.clientX - this._touchpadLast.x) > 8 ||
-                    Math.abs(touch.clientY - this._touchpadLast.y) > 8
+                const moved = this._touchpadStart && (
+                    Math.abs(touch.clientX - this._touchpadStart.x) > 8 ||
+                    Math.abs(touch.clientY - this._touchpadStart.y) > 8
                 );
                 if (!moved && this._touchpadCursor) {
                     const p = this._touchpadCursor;
@@ -196,17 +218,26 @@ class RDTouch {
                     this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_LEFT, p.x, p.y);
                 }
             }
+            if (e.touches.length === 0) {
+                this._touchpadLast = null;
+                this._touchpadStart = null;
+            }
             return;
         }
 
         for (let i = 0; i < e.changedTouches.length; i++) {
             const touch = e.changedTouches[i];
             this._activeTouches.delete(touch.identifier);
-            if (e.touches.length === 0) {
+            if (e.touches.length === 0 && !longPressTriggered) {
                 const pos = this._posFromTouch(touch);
                 if (!pos) continue;
-                this._sendButton(RDInput.MOUSE_TYPE_DOWN, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
-                this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
+                if (this._directPressed) {
+                    this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
+                } else {
+                    this._sendButton(RDInput.MOUSE_TYPE_DOWN, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
+                    this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
+                }
+                this._directPressed = false;
             }
         }
     }

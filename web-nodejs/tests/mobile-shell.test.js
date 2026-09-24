@@ -108,3 +108,80 @@ describe('DeviceCapabilities', () => {
         assert.strictEqual(DC.isTablet(), true);
     });
 });
+
+describe('RDTouch tablet input', () => {
+    function loadTouch() {
+        const sandbox = {
+            console,
+            performance: { now: () => 100 },
+            setTimeout,
+            clearTimeout,
+            RDInput: {
+                MOUSE_TYPE_DOWN: 1,
+                MOUSE_TYPE_UP: 2,
+                MOUSE_TYPE_WHEEL: 3,
+                MOUSE_BUTTON_LEFT: 1,
+                MOUSE_BUTTON_RIGHT: 2,
+                MOUSE_BUTTON_MIDDLE: 4,
+            },
+        };
+        const code = fs.readFileSync(
+            path.join(__dirname, '../public/js/rdclient/touch.js'),
+            'utf8'
+        );
+        vm.runInNewContext(code + '\nthis.RDTouch = RDTouch;', sandbox);
+        return sandbox.RDTouch;
+    }
+
+    function makeTouchHarness() {
+        const listeners = {};
+        const canvas = {
+            style: {},
+            addEventListener(type, handler) { listeners[type] = handler; },
+            removeEventListener() {},
+            getBoundingClientRect: () => ({ left: 0, top: 0 }),
+        };
+        const renderer = {
+            remoteWidth: 1920,
+            remoteHeight: 1080,
+            canvasToRemote: (x, y) => ({ x, y }),
+        };
+        const sent = [];
+        const Touch = loadTouch();
+        const touch = new Touch(canvas, renderer, (message) => sent.push(message));
+        touch.start();
+        return { touch, listeners, sent };
+    }
+
+    function eventFor(touchPoint, touches) {
+        return {
+            touches: touches || [touchPoint],
+            changedTouches: [touchPoint],
+            preventDefault() {},
+        };
+    }
+
+    it('maps a single direct touch into a left click', () => {
+        const { listeners, sent } = makeTouchHarness();
+        const point = { identifier: 1, clientX: 100, clientY: 120 };
+
+        listeners.touchstart(eventFor(point));
+        listeners.touchend(eventFor(point, []));
+
+        expect(sent.map((message) => message.mouseEvent.mask)).toEqual([9, 10]);
+    });
+
+    it('does not click after a touchpad drag', () => {
+        const { touch, listeners, sent } = makeTouchHarness();
+        touch.setMode('touchpad');
+        const start = { identifier: 1, clientX: 100, clientY: 120 };
+        const moved = { identifier: 1, clientX: 140, clientY: 120 };
+
+        listeners.touchstart(eventFor(start));
+        listeners.touchmove(eventFor(moved));
+        listeners.touchend(eventFor(moved, []));
+
+        expect(sent.some((message) => message.mouseEvent.mask === 9)).toBe(false);
+        expect(sent.some((message) => message.mouseEvent.mask === 10)).toBe(false);
+    });
+});

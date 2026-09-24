@@ -70,9 +70,92 @@ describe('RDConnection native relay WebSocket transport', () => {
         sockets[0].onopen();
         await expect(opening).resolves.toBe(sockets[0]);
     });
+
+    test('preserves WebSocket close code and reason for relay diagnostics', async () => {
+        const sockets = [];
+        class MockWebSocket {
+            static OPEN = 1;
+
+            constructor(url) {
+                this.url = url;
+                sockets.push(this);
+            }
+        }
+
+        const sandbox = loadBrowserScript('public/js/rdclient/connection.js', {
+            location: { protocol: 'http:', host: 'console.example.test' },
+            WebSocket: MockWebSocket,
+        });
+        const connection = new sandbox.RDConnection();
+        const closes = [];
+        connection.on('relay:close', (...args) => closes.push(args));
+        const opening = connection.connectRelay();
+
+        sockets[0].onopen();
+        await expect(opening).resolves.toBe(sockets[0]);
+        sockets[0].onclose({ code: 1008, reason: 'Too many connections' });
+
+        expect(connection._lastClose).toMatchObject({
+            kind: 'relay',
+            code: 1008,
+            reason: 'Too many connections',
+        });
+        expect(closes[0][0]).toBe(1008);
+        expect(closes[0][1]).toBe('Too many connections');
+        expect(closes[0][2]).toMatchObject({ kind: 'relay', code: 1008 });
+    });
 });
 
 describe('RDClient raw relay messages', () => {
+    test('emits structured diagnostics for peer and relay disconnects', () => {
+        const RDClient = loadBrowserScript('public/js/rdclient/client.js').RDClient;
+        const client = Object.create(RDClient.prototype);
+        const emitted = [];
+        client._state = 'streaming';
+        client._sessionStartedAt = Date.now() - 1000;
+        client.video = { currentCodec: 'h264' };
+        client._cleanup = jest.fn();
+        client._setState = jest.fn();
+        client._debugRelay = jest.fn();
+        client._emit = (event, ...args) => emitted.push([event, ...args]);
+
+        client._handleDisconnect('Relay connection closed (WebSocket 1008: Too many connections)', {
+            source: 'relay',
+            closeCode: 1008,
+            closeReason: 'Too many connections',
+        });
+
+        const diagnostic = emitted.find((entry) => entry[0] === 'diagnostics')[1];
+        expect(diagnostic).toMatchObject({
+            type: 'disconnect',
+            source: 'relay',
+            closeCode: 1008,
+            closeReason: 'Too many connections',
+            codec: 'h264',
+        });
+        expect(client._lastDisconnect).toBe(diagnostic);
+    });
+
+    test('caps initial tablet and HTTP stream FPS at 30', () => {
+        const sandbox = loadBrowserScript('public/js/rdclient/client.js', {
+            RDVideo: { isSupported: () => true },
+            DeviceCapabilities: {
+                isTouch: () => true,
+                isPhone: () => false,
+            },
+        });
+        expect(sandbox.RDClient.isMobileRuntime()).toBe(true);
+
+        const client = Object.create(sandbox.RDClient.prototype);
+        client.opts = { fps: 60 };
+        client._mobileRuntime = true;
+        expect(client._getInitialStreamFps()).toBe(30);
+
+        client._mobileRuntime = false;
+        sandbox.RDVideo.isSupported = () => false;
+        expect(client._getInitialStreamFps()).toBe(30);
+    });
+
     test('does not add TCP framing to native WS messages', () => {
         const RDClient = loadBrowserScript('public/js/rdclient/client.js').RDClient;
         const client = Object.create(RDClient.prototype);
