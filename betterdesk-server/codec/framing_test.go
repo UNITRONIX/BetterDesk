@@ -211,7 +211,22 @@ func TestZeroLengthFrame(t *testing.T) {
 
 	_, err := ReadFrame(conn, 0)
 	if err == nil {
-		t.Error("expected error for zero-length frame, got nil")
+		t.Error("expected control frame error for zero-length frame, got nil")
+	}
+}
+
+func TestZeroLengthRawFrame(t *testing.T) {
+	conn := newTestConn()
+
+	// RustDesk BytesCodec permits an empty raw payload as a valid 0x00 frame.
+	conn.readBuf.Write([]byte{0x00})
+
+	got, err := ReadRawBytesMax(conn, 0, MaxPeerFrameSize)
+	if err != nil {
+		t.Fatalf("ReadRawBytesMax: %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("expected empty payload, got %d bytes", len(got))
 	}
 }
 

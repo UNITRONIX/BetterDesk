@@ -29,7 +29,11 @@ const MAX_RELAY_FRAME_SIZE = 64 * 1024 * 1024;
 function encodeRelayFrame(data) {
     const payload = Buffer.isBuffer(data) ? data : Buffer.from(data);
     const len = payload.length;
-    if (len <= 0 || len > MAX_RELAY_FRAME_SIZE) {
+    // RustDesk BytesCodec uses a single 0x00 header for a valid empty
+    // payload. Empty frames are meaningful for raw relay data (for example
+    // empty file blocks) and must not be confused with an invalid protobuf
+    // control frame.
+    if (len > MAX_RELAY_FRAME_SIZE) {
         throw new Error(`invalid relay frame size: ${len}`);
     }
 
@@ -86,7 +90,7 @@ function createRelayFrameDecoder() {
                     encoded += buffer[offset + i] * (2 ** (8 * i));
                 }
                 const payloadLen = Math.floor(encoded / 4);
-                if (payloadLen <= 0 || payloadLen > MAX_RELAY_FRAME_SIZE) {
+                if (payloadLen > MAX_RELAY_FRAME_SIZE) {
                     throw new Error(`invalid relay payload length: ${payloadLen}`);
                 }
                 if (dataLen - offset - headerLen < payloadLen) break;
@@ -366,7 +370,6 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
         if (!tcp.destroyed) {
             // Ensure we send Buffer, not string
             const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
-            if (messageTransport && buf.length === 0) return;
             try {
                 tcp.write(messageTransport ? encodeRelayFrame(buf) : buf);
             } catch (err) {

@@ -26,14 +26,18 @@ describe('wsRelay RustDesk message/TCP framing bridge', () => {
         });
     });
 
-    test('rejects empty WebSocket payloads', () => {
-        expect(() => _relayFraming.encodeRelayFrame(Buffer.alloc(0)))
-            .toThrow('invalid relay frame size');
+    test('round-trips an empty RustDesk raw payload', () => {
+        const frame = _relayFraming.encodeRelayFrame(Buffer.alloc(0));
+        expect(frame).toEqual(Buffer.from([0]));
+
+        const decoder = _relayFraming.createRelayFrameDecoder();
+        const decoded = decoder.feed(frame);
+        expect(decoded).toHaveLength(1);
+        expect(decoded[0]).toHaveLength(0);
     });
 
-    test('rejects a zero-length TCP frame', () => {
+    test('accepts a fragmented zero-length TCP frame', () => {
         const decoder = _relayFraming.createRelayFrameDecoder();
-        expect(() => decoder.feed(Buffer.from([0])))
-            .toThrow('invalid relay payload length');
+        expect(decoder.feed(Buffer.from([0]))).toEqual([Buffer.alloc(0)]);
     });
 });
