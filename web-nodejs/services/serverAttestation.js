@@ -18,6 +18,9 @@ const { getResourceSnapshot } = require('./serverManagement');
 const betterdeskApi = require('./betterdeskApi');
 
 const SETTINGS_KEY = 'server_attestation_result';
+const BADGE_CONFIG_KEY = 'server_attestation_badge_config';
+const BADGE_TITLE_MAX_LENGTH = 96;
+const BADGE_LABEL_MAX_LENGTH = 32;
 const THRESHOLD = 80;
 const STABILIZE_THRESHOLD = 70;
 const MAX_CONNECTIONS = 500;
@@ -37,6 +40,17 @@ const TIER_THRESHOLDS = [
     { tier: 'iron', min: 26 },
     { tier: 'bronze', min: 1 }
 ];
+const BADGE_TIERS = Object.freeze(['bronze', 'iron', 'platinum', 'titanium', 'obsidian']);
+const DEFAULT_BADGE_CONFIG = Object.freeze({
+    badgeTitle: '',
+    tierLabels: Object.freeze({
+        bronze: '',
+        iron: '',
+        platinum: '',
+        titanium: '',
+        obsidian: ''
+    })
+});
 
 let protoPromise = null;
 let runState = {
@@ -408,15 +422,123 @@ async function saveResult(result) {
     await db.setSetting(SETTINGS_KEY, JSON.stringify(result));
 }
 
-function buildPublicSummary(result) {
+let cachedBadgeConfig = null;
+
+function normalizeBadgeText(value, maxLength) {
+    return String(value == null ? '' : value)
+        .replace(/[\u0000-\u001f\u007f]/g, '')
+        .trim()
+        .slice(0, maxLength);
+}
+
+function normalizeBadgeConfig(input) {
+    let source = input;
+    if (typeof source === 'string') {
+        try {
+            source = JSON.parse(source);
+        } catch (_) {
+            source = {};
+        }
+    }
+    if (!source || typeof source !== 'object' || Array.isArray(source)) source = {};
+
+    const configuredLabels = source.tierLabels && typeof source.tierLabels === 'object'
+        ? source.tierLabels
+        : {};
+    const tierLabels = {};
+    for (const tier of BADGE_TIERS) {
+        tierLabels[tier] = normalizeBadgeText(configuredLabels[tier], BADGE_LABEL_MAX_LENGTH);
+    }
+
+    return {
+        badgeTitle: normalizeBadgeText(source.badgeTitle, BADGE_TITLE_MAX_LENGTH),
+        tierLabels
+    };
+}
+
+async function getBadgeConfig() {
+    if (cachedBadgeConfig) {
+        return { ...cachedBadgeConfig, tierLabels: { ...cachedBadgeConfig.tierLabels } };
+    }
+    try {
+        const raw = await db.getSetting(BADGE_CONFIG_KEY);
+        cachedBadgeConfig = normalizeBadgeConfig(raw);
+    } catch (_) {
+        cachedBadgeConfig = normalizeBadgeConfig(DEFAULT_BADGE_CONFIG);
+    }
+    return { ...cachedBadgeConfig, tierLabels: { ...cachedBadgeConfig.tierLabels } };
+}
+
+async function saveBadgeConfig(input) {
+    const normalized = normalizeBadgeConfig(input);
+    await db.setSetting(BADGE_CONFIG_KEY, JSON.stringify(normalized));
+    cachedBadgeConfig = normalized;
+    return { ...normalized, tierLabels: { ...normalized.tierLabels } };
+}
+
+function defaultTranslation(translate, key, fallback) {
+    if (typeof translate !== 'function') return fallback;
+    const value = translate(key);
+    return value && value !== key ? value : fallback;
+}
+
+function resolveBadgePresentation(config, {
+    tier = null,
+    translate,
+    brandName = 'BetterDesk'
+} = {}) {
+    const normalized = normalizeBadgeConfig(config);
+    const brand = normalizeBadgeText(brandName, BADGE_TITLE_MAX_LENGTH) || 'BetterDesk';
+    const tierLabels = {};
+    for (const tierId of BADGE_TIERS) {
+        tierLabels[tierId] = normalized.tierLabels[tierId]
+            || defaultTranslation(translate, `server_attestation.tier_${tierId}`, tierId.toUpperCase());
+    }
+    const badgeTitle = normalized.badgeTitle
+        || defaultTranslation(
+            translate,
+            'server_attestation.badge_tooltip',
+            `${brand} Server Attestation`
+        );
+
+    return {
+        brand,
+        badgeTitle,
+        tierLabels,
+        tierLabel: tier && tierLabels[tier] ? tierLabels[tier] : null
+    };
+}
+
+async function getBadgePresentation(options = {}) {
+    const config = await getBadgeConfig();
+    return resolveBadgePresentation(config, options);
+}
+
+function buildPublicSummary(result, presentation = null) {
     if (!result || !result.tier) {
-        return { tier: null, maxConnections: 0, testedAt: null, valid: false };
+        return {
+            tier: null,
+            maxConnections: 0,
+            testedAt: null,
+            valid: false,
+            ...(presentation ? {
+                brand: presentation.brand,
+                badgeTitle: presentation.badgeTitle,
+                tierLabels: presentation.tierLabels
+            } : {})
+        };
     }
     return {
         tier: result.tier,
         maxConnections: result.maxConnections || 0,
         testedAt: result.testedAt || result.completedAt || null,
-        valid: result.valid !== false
+        valid: result.valid !== false,
+        ...(presentation ? {
+            brand: presentation.brand,
+            badgeTitle: presentation.badgeTitle,
+            tierLabel: presentation.tierLabel,
+            tierLabels: presentation.tierLabels
+        } : {})
     };
 }
 
@@ -667,9 +789,19 @@ refreshCachedResult().catch(() => {});
 module.exports = {
     THRESHOLD,
     TIER_THRESHOLDS,
+    BADGE_CONFIG_KEY,
+    BADGE_TIERS,
+    BADGE_TITLE_MAX_LENGTH,
+    BADGE_LABEL_MAX_LENGTH,
+    DEFAULT_BADGE_CONFIG,
     determineTier,
     getLastResult,
     saveResult,
+    normalizeBadgeConfig,
+    getBadgeConfig,
+    saveBadgeConfig,
+    resolveBadgePresentation,
+    getBadgePresentation,
     buildPublicSummary,
     getStatus,
     refreshCachedResult,

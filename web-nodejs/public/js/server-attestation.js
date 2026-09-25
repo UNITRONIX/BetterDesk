@@ -10,6 +10,15 @@
 
     let pollTimer = null;
     let lastResult = null;
+    let badgeConfig = {
+        badgeTitle: '',
+        tierLabels: {}
+    };
+    let badgePresentation = {
+        brand: 'BetterDesk',
+        badgeTitle: '',
+        tierLabels: {}
+    };
 
     function csrfHeaders(extra) {
         const h = Object.assign({}, extra || {});
@@ -37,6 +46,9 @@
 
     function tierLabel(tier) {
         if (!tier) return tr('server_attestation.tier_none', 'UNRATED');
+        if (badgePresentation.tierLabels && badgePresentation.tierLabels[tier]) {
+            return badgePresentation.tierLabels[tier];
+        }
         return tr('server_attestation.tier_' + tier, tier.toUpperCase());
     }
 
@@ -44,6 +56,9 @@
         const hero = document.querySelector('.sa-hero .bd-attest-badge');
         if (!hero) return;
         hero.className = 'bd-attest-badge bd-attest-badge--large ' + (tier ? ('bd-attest-tier-' + tier) : 'bd-attest-tier-none');
+        hero.title = badgePresentation.badgeTitle || tr('server_attestation.badge_tooltip', 'BetterDesk Server Attestation');
+        const brandEl = hero.querySelector('.bd-attest-brand');
+        if (brandEl) brandEl.textContent = badgePresentation.brand || 'BetterDesk';
         const tierEl = hero.querySelector('.bd-attest-tier');
         if (tierEl) tierEl.textContent = tierLabel(tier);
         let connEl = hero.querySelector('.bd-attest-conn');
@@ -56,6 +71,91 @@
             connEl.textContent = maxConnections + ' ' + tr('server_attestation.connections_short', 'conn.');
         } else if (connEl) {
             connEl.remove();
+        }
+    }
+
+    function applyBadgePresentation(presentation) {
+        if (!presentation) return;
+        badgePresentation = Object.assign({}, badgePresentation, presentation, {
+            tierLabels: Object.assign({}, badgePresentation.tierLabels, presentation.tierLabels || {})
+        });
+        if (lastResult) {
+            updateBadge(lastResult.tier, lastResult.maxConnections);
+        } else {
+            const hero = document.querySelector('.sa-hero .bd-attest-badge');
+            if (hero) {
+                hero.title = badgePresentation.badgeTitle || tr('server_attestation.badge_tooltip', 'BetterDesk Server Attestation');
+                const brandEl = hero.querySelector('.bd-attest-brand');
+                if (brandEl) brandEl.textContent = badgePresentation.brand || 'BetterDesk';
+            }
+        }
+
+        const guideLabels = document.querySelectorAll('.sa-tier-guide .bd-attest-tier');
+        const tiers = ['bronze', 'iron', 'platinum', 'titanium', 'obsidian'];
+        guideLabels.forEach((element, index) => {
+            const label = badgePresentation.tierLabels[tiers[index]];
+            if (label) element.textContent = label;
+        });
+        document.querySelectorAll('.sa-tier-guide .bd-attest-brand').forEach((element) => {
+            element.textContent = badgePresentation.brand || 'BetterDesk';
+        });
+    }
+
+    function populateBadgeConfig(config) {
+        badgeConfig = {
+            badgeTitle: config && config.badgeTitle ? config.badgeTitle : '',
+            tierLabels: Object.assign({}, config && config.tierLabels)
+        };
+        const title = document.getElementById('sa-badge-title');
+        if (title) title.value = badgeConfig.badgeTitle;
+        ['bronze', 'iron', 'platinum', 'titanium', 'obsidian'].forEach((tier) => {
+            const input = document.getElementById('sa-tier-' + tier);
+            if (input) input.value = badgeConfig.tierLabels[tier] || '';
+        });
+    }
+
+    async function loadBadgeConfig() {
+        try {
+            const res = await fetch('/api/server-attestation/badge-config', { credentials: 'same-origin' });
+            const data = await res.json();
+            if (!data.success) return;
+            populateBadgeConfig(data.config || {});
+            applyBadgePresentation(data.presentation);
+        } catch (err) {
+            console.error('[ServerAttestation] badge config load error', err);
+        }
+    }
+
+    async function saveBadgeConfig() {
+        const payload = {
+            badgeTitle: document.getElementById('sa-badge-title')?.value || '',
+            tierLabels: {}
+        };
+        ['bronze', 'iron', 'platinum', 'titanium', 'obsidian'].forEach((tier) => {
+            payload.tierLabels[tier] = document.getElementById('sa-tier-' + tier)?.value || '';
+        });
+        const status = document.getElementById('sa-badge-settings-status');
+        const button = document.getElementById('sa-save-badge-btn');
+        if (button) button.disabled = true;
+        if (status) status.textContent = tr('server_attestation.badge_settings_saving', 'Saving…');
+        try {
+            const res = await fetch('/api/server-attestation/badge-config', {
+                method: 'PUT',
+                credentials: 'same-origin',
+                headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Failed to save badge settings');
+            populateBadgeConfig(data.config || payload);
+            applyBadgePresentation(data.presentation);
+            if (status) status.textContent = tr('server_attestation.badge_settings_saved', 'Badge settings saved');
+            notify('success', tr('server_attestation.badge_settings_saved', 'Badge settings saved'));
+        } catch (err) {
+            if (status) status.textContent = err.message;
+            notify('error', err.message);
+        } finally {
+            if (button) button.disabled = false;
         }
     }
 
@@ -195,6 +295,7 @@
         document.getElementById('sa-run-btn')?.addEventListener('click', runBenchmark);
         document.getElementById('sa-abort-btn')?.addEventListener('click', abortBenchmark);
         document.getElementById('sa-download-btn')?.addEventListener('click', downloadReport);
+        document.getElementById('sa-save-badge-btn')?.addEventListener('click', saveBadgeConfig);
 
         try {
             const res = await fetch('/api/server-attestation/status', { credentials: 'same-origin' });
@@ -205,6 +306,7 @@
                 pollTimer = setInterval(pollStatus, 2000);
             }
         } catch (_) { /* ignore */ }
+        loadBadgeConfig();
     }
 
     if (document.readyState === 'loading') {

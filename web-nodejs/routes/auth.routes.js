@@ -8,6 +8,7 @@ const router = express.Router();
 const authService = require('../services/authService');
 const db = require('../services/database');
 const betterdeskApi = require('../services/betterdeskApi');
+const brandingService = require('../services/brandingService');
 const userSync = require('../services/userSync');
 let serverAttestation;
 try {
@@ -16,7 +17,8 @@ try {
     console.warn('[auth] serverAttestation unavailable:', err.message);
     serverAttestation = {
         getLastResult: async () => null,
-        buildPublicSummary: () => ({ tier: null, maxConnections: null })
+        buildPublicSummary: () => ({ tier: null, maxConnections: null }),
+        getBadgePresentation: async () => null
     };
 }
 const { guestOnly, requireAuth } = require('../middleware/auth');
@@ -56,7 +58,12 @@ router.get('/login', guestOnly, async (req, res) => {
     let attestationBadge = { tier: null, maxConnections: null };
     try {
         const last = await serverAttestation.getLastResult();
-        attestationBadge = serverAttestation.buildPublicSummary(last);
+        const presentation = await serverAttestation.getBadgePresentation({
+            tier: last && last.tier,
+            translate: req.t,
+            brandName: brandingService.getBranding().appName
+        });
+        attestationBadge = serverAttestation.buildPublicSummary(last, presentation);
     } catch (_) { /* optional */ }
 
     if (useDesktop) {
