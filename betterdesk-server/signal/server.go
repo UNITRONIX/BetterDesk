@@ -1274,7 +1274,7 @@ func (s *Server) getPendingRelayByUUID(uuid string) *pendingUUID {
 // maybeWarnSharedNATRelayDisabled logs when SAME_NAT_RELAY is off and several
 // live peers share one public IP — a silent failure mode for office NATs (#399).
 func (s *Server) maybeWarnSharedNATRelayDisabled() {
-	if s == nil || s.cfg == nil || s.cfg.SameNATRelay || s.peers == nil {
+	if s == nil || s.cfg == nil || s.cfg.ConnectionSettings().SameNATRelay || s.peers == nil {
 		return
 	}
 	const minInterval = 10 * time.Minute
@@ -1321,7 +1321,7 @@ func (s *Server) maybeWarnSharedNATRelayDisabled() {
 // punching and the genuine PunchHoleResponse was delivered). Any pre-existing
 // pending punch for the same initiator is replaced.
 func (s *Server) schedulePunchFallback(initiatorKey string, fallback func()) {
-	delay := time.Duration(s.cfg.P2PFallbackMs) * time.Millisecond
+	delay := time.Duration(s.cfg.ConnectionSettings().P2PFallbackMs) * time.Millisecond
 	if delay <= 0 {
 		delay = 2 * time.Second
 	}

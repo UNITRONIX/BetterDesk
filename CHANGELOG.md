@@ -5,6 +5,56 @@
 
 ---
 
+## [3.5.133] — 2026-09-24
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.132] — 2026-09-24
+
+### Changed
+- **Split Docker connection strategy (#432):** Settings → Connection strategy is now writable in the legacy split Docker layout. The Go server persists the validated P2P/relay and initiator policy in the shared `server_config` database and applies it live; environment values remain the bootstrap fallback when no panel value exists. Native systemd/compose deployments keep their existing persistence and restart flow.
+- **PostgreSQL installer authentication:** Native local PostgreSQL setup now adds idempotent, loopback-only `pg_hba.conf` rules for the BetterDesk role and database before testing the TCP/password connection, fixing fresh Rocky Linux/RHEL-compatible installations.
+
+---
+
+## [3.5.131] — 2026-09-24
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.130] — 2026-09-24
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.129] — 2026-09-24
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.128] — 2026-09-24
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.127] — 2026-09-24
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.5.126] — 2026-09-22
 
 ### Added
@@ -3716,3 +3766,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.124]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.123...v3.5.124
 [3.5.125]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.124...v3.5.125
 [3.5.126]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.125...v3.5.126
+[3.5.127]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.126...v3.5.127
+[3.5.128]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.127...v3.5.128
+[3.5.129]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.128...v3.5.129
+[3.5.130]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.129...v3.5.130
+[3.5.131]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.130...v3.5.131
+[3.5.132]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.131...v3.5.132
+[3.5.133]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.132...v3.5.133

@@ -560,6 +560,8 @@
         "oidc_display_name_hint": "로그인 버튼에 표시되는 텍스트(예: Azure AD, Okta)",
         "oidc_issuer_url": "발급자 URL",
         "oidc_issuer_url_hint": "OpenID Connect 발급자 URL(검색은 자동으로 수행됨)",
+        "oidc_allowed_private_cidrs": "허용된 비공개 OIDC 네트워크",
+        "oidc_allowed_private_cidrs_hint": "온프레미스 IdP용 선택적 IP/CIDR 목록(쉼표로 구분, 예: 10.20.0.0/16)입니다. 비공개 대상 차단을 유지하려면 비워 두세요.",
         "oidc_client_id": "클라이언트 ID",
         "oidc_client_secret": "클라이언트 비밀번호",
         "oidc_redirect_url": "URL 리디��션(콜백)",

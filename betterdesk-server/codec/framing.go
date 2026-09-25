@@ -199,14 +199,14 @@ func ReadRawBytesMax(conn net.Conn, timeout time.Duration, maxLen int) ([]byte, 
 		return nil, err
 	}
 
-	if payloadLen == 0 {
-		return nil, fmt.Errorf("codec: zero-length payload")
-	}
 	if payloadLen > maxLen {
 		return nil, fmt.Errorf("codec: payload too large (%d > %d)", payloadLen, maxLen)
 	}
 
 	payload := make([]byte, payloadLen)
+	if payloadLen == 0 {
+		return payload, nil
+	}
 	if _, err := io.ReadFull(conn, payload); err != nil {
 		return nil, err
 	}

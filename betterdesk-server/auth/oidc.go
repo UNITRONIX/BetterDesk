@@ -29,26 +29,27 @@ import (
 // OIDCConfig holds all OIDC provider settings.
 // Stored in server_config table with "oidc." prefix.
 type OIDCConfig struct {
-	Enabled          bool   `json:"enabled"`
-	DisplayName      string `json:"display_name"`      // Button label, e.g. "Google", "Azure AD"
-	IssuerURL        string `json:"issuer_url"`        // e.g. "https://accounts.google.com"
-	ClientID         string `json:"client_id"`         // OAuth2 client ID
-	ClientSecret     string `json:"client_secret"`     // OAuth2 client secret
-	RedirectURL      string `json:"redirect_url"`      // e.g. "https://betterdesk.example.com/api/auth/oidc/callback"
-	PanelURL         string `json:"panel_url"`         // e.g. "https://betterdesk.example.com" (Node console origin)
-	Scopes           string `json:"scopes"`            // space-separated, default "openid profile email"
-	UsePKCE          bool   `json:"use_pkce"`          // enable PKCE (S256)
-	AutoDiscovery    bool   `json:"auto_discovery"`    // use .well-known/openid-configuration
-	AuthorizationURL string `json:"authorization_url"` // manual: authorization endpoint
-	TokenURL         string `json:"token_url"`         // manual: token endpoint
-	UserinfoURL      string `json:"userinfo_url"`      // manual: userinfo endpoint
-	ClaimUsername    string `json:"claim_username"`    // claim for username (default: preferred_username)
-	ClaimEmail       string `json:"claim_email"`       // claim for email (default: email)
-	ClaimName        string `json:"claim_name"`        // claim for display name (default: name)
-	ClaimGroups      string `json:"claim_groups"`      // claim for groups (default: groups)
-	DefaultRole      string `json:"default_role"`      // role for users without group mapping (default: viewer)
-	GroupRoleMap     string `json:"group_role_map"`    // pipe-delimited: "GroupName=role|GroupName=role"
-	AllowSignup      bool   `json:"allow_signup"`      // allow auto-creation of new users
+	Enabled             bool   `json:"enabled"`
+	DisplayName         string `json:"display_name"`          // Button label, e.g. "Google", "Azure AD"
+	IssuerURL           string `json:"issuer_url"`            // e.g. "https://accounts.google.com"
+	ClientID            string `json:"client_id"`             // OAuth2 client ID
+	ClientSecret        string `json:"client_secret"`         // OAuth2 client secret
+	RedirectURL         string `json:"redirect_url"`          // e.g. "https://betterdesk.example.com/api/auth/oidc/callback"
+	PanelURL            string `json:"panel_url"`             // e.g. "https://betterdesk.example.com" (Node console origin)
+	Scopes              string `json:"scopes"`                // space-separated, default "openid profile email"
+	UsePKCE             bool   `json:"use_pkce"`              // enable PKCE (S256)
+	AutoDiscovery       bool   `json:"auto_discovery"`        // use .well-known/openid-configuration
+	AuthorizationURL    string `json:"authorization_url"`     // manual: authorization endpoint
+	TokenURL            string `json:"token_url"`             // manual: token endpoint
+	UserinfoURL         string `json:"userinfo_url"`          // manual: userinfo endpoint
+	ClaimUsername       string `json:"claim_username"`        // claim for username (default: preferred_username)
+	ClaimEmail          string `json:"claim_email"`           // claim for email (default: email)
+	ClaimName           string `json:"claim_name"`            // claim for display name (default: name)
+	ClaimGroups         string `json:"claim_groups"`          // claim for groups (default: groups)
+	DefaultRole         string `json:"default_role"`          // role for users without group mapping (default: viewer)
+	GroupRoleMap        string `json:"group_role_map"`        // pipe-delimited: "GroupName=role|GroupName=role"
+	AllowSignup         bool   `json:"allow_signup"`          // allow auto-creation of new users
+	AllowedPrivateCIDRs string `json:"allowed_private_cidrs"` // optional RFC1918/IPv6 ULA OIDC networks
 }
 
 // OIDC flow kinds stored in OAuth state.
@@ -237,7 +238,12 @@ func (p *OIDCProvider) discover() {
 	}
 
 	discoveryURL := strings.TrimRight(issuer, "/") + "/.well-known/openid-configuration"
-	resp, err := fetchValidatedHTTPGet(p.client, discoveryURL)
+	policy, err := newOIDCFetchPolicy(cfg.AllowedPrivateCIDRs)
+	if err != nil {
+		log.Printf("[OIDC] Invalid private network allowlist: %v", err)
+		return
+	}
+	resp, err := fetchValidatedHTTPGetWithPolicy(context.Background(), p.client, discoveryURL, policy)
 	if err != nil {
 		log.Printf("[OIDC] Discovery failed for %s: %v", issuer, err)
 		return
@@ -461,6 +467,10 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 	p.mu.RLock()
 	cfg := *p.config
 	p.mu.RUnlock()
+	policy, err := newOIDCFetchPolicy(cfg.AllowedPrivateCIDRs)
+	if err != nil {
+		return nil, fmt.Errorf("invalid private network allowlist: %w", err)
+	}
 
 	// Token exchange
 	params := url.Values{
@@ -476,14 +486,11 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 		params.Set("code_verifier", stateEntry.CodeVerifier)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", tokenEP, strings.NewReader(params.Encode()))
-	if err != nil {
-		return nil, fmt.Errorf("create token request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := p.client.Do(req)
+	reqBody := strings.NewReader(params.Encode())
+	resp, err := fetchValidatedHTTPPostWithPolicy(ctx, p.client, tokenEP, reqBody, policy, http.Header{
+		"Content-Type": {"application/x-www-form-urlencoded"},
+		"Accept":       {"application/json"},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("token request failed: %w", err)
 	}
@@ -605,13 +612,17 @@ func (p *OIDCProvider) fetchUserInfo(ctx context.Context, accessToken string) (m
 		return nil, fmt.Errorf("userinfo endpoint not available")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", userinfoEP, nil)
+	p.mu.RLock()
+	cfg := *p.config
+	p.mu.RUnlock()
+	policy, err := newOIDCFetchPolicy(cfg.AllowedPrivateCIDRs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid private network allowlist: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
 
-	resp, err := p.client.Do(req)
+	resp, err := fetchValidatedHTTPGetWithHeaders(ctx, p.client, userinfoEP, policy, http.Header{
+		"Authorization": {"Bearer " + accessToken},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -988,11 +999,22 @@ type OIDCDiscoveryResult struct {
 	UserinfoEndpoint      string `json:"userinfo_endpoint"`
 }
 
-// TestOIDCDiscovery fetches and validates an OIDC discovery document.
+// TestOIDCDiscovery fetches and validates an OIDC discovery document using the
+// default-deny private-network policy.
 func TestOIDCDiscovery(ctx context.Context, issuerURL string) (*OIDCDiscoveryResult, error) {
+	return TestOIDCDiscoveryWithPrivateCIDRs(ctx, issuerURL, "")
+}
+
+// TestOIDCDiscoveryWithPrivateCIDRs is the operator-facing discovery test with
+// the same explicit private-network allowlist used by the live provider.
+func TestOIDCDiscoveryWithPrivateCIDRs(ctx context.Context, issuerURL, allowedPrivateCIDRs string) (*OIDCDiscoveryResult, error) {
+	policy, err := newOIDCFetchPolicy(allowedPrivateCIDRs)
+	if err != nil {
+		return nil, fmt.Errorf("private network allowlist: %w", err)
+	}
 	discoveryURL := strings.TrimRight(issuerURL, "/") + "/.well-known/openid-configuration"
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := fetchValidatedHTTPGetContext(ctx, client, discoveryURL)
+	resp, err := fetchValidatedHTTPGetWithPolicy(ctx, client, discoveryURL, policy)
 	if err != nil {
 		return nil, fmt.Errorf("discovery URL: %w", err)
 	}

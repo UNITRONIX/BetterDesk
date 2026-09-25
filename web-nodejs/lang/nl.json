@@ -560,6 +560,8 @@
         "oidc_display_name_hint": "Tekst op de aanmeldknop (bijv. Azure AD, Okta)",
         "oidc_issuer_url": "Issuer-URL",
         "oidc_issuer_url_hint": "Issuer-URL van OpenID Connect (discovery gebeurt automatisch)",
+        "oidc_allowed_private_cidrs": "Toegestane private OIDC-netwerken",
+        "oidc_allowed_private_cidrs_hint": "Optionele, door komma's gescheiden IP's/CIDR's voor een lokale IdP (bijvoorbeeld 10.20.0.0/16). Laat leeg om privébestemmingen te blijven blokkeren.",
         "oidc_client_id": "Client-ID",
         "oidc_client_secret": "Clientgeheim",
         "oidc_redirect_url": "Omleidings-URL (callback)",

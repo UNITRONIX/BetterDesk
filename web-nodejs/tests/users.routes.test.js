@@ -219,6 +219,49 @@ describe('Users Routes', () => {
         });
     });
 
+    it.each(['ldap', 'oidc'])('updates %s user group membership without provider-managed fields', async (authProvider) => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: `${authProvider}-user`,
+            role: 'operator',
+            auth_provider: authProvider,
+        });
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ groupGuids: ['volunteers'] });
+
+        expect(res.status).toBe(200);
+        expect(mockDb.setUserGroupMemberships).toHaveBeenCalledWith(12, ['volunteers']);
+        expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+    });
+
+    it.each(['ldap', 'oidc'])('rejects %s user role changes', async (authProvider) => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: `${authProvider}-user`,
+            role: 'operator',
+            auth_provider: authProvider,
+        });
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ role: 'admin', groupGuids: ['volunteers'] });
+
+        expect(res.status).toBe(400);
+        expect(res.body.success).toBe(false);
+        expect(mockDb.setUserGroupMemberships).not.toHaveBeenCalled();
+        expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+    });
+
     it('returns 500 when peer grant setter is unavailable (no silent no-op)', async () => {
         const previous = mockDb.setUserPeerGrants;
         mockDb.setUserPeerGrants = undefined;

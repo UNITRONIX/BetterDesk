@@ -821,6 +821,7 @@ func (s *Server) processIDChange(msg *pb.RegisterPk) *pb.RendezvousMessage {
 
 // handlePunchHoleRequest processes a hole-punch request from the initiator.
 func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDPAddr) {
+	connection := s.cfg.ConnectionSettings()
 	targetID := msg.Id
 	if targetID == "" {
 		return
@@ -902,7 +903,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 	s.storePendingUUID(targetID, raddr, "", initiatorID)
 
 	// If force relay or always use relay
-	if msg.ForceRelay || s.cfg.AlwaysUseRelay || hairpin ||
+	if msg.ForceRelay || connection.AlwaysUseRelay || hairpin ||
 		isLegacyOutboundInitiator(initiatorID) ||
 		s.shouldForceRelayForPeers(initiatorID, targetID) ||
 		s.requiresRelayOnlyCompatibility(targetID) {
@@ -979,7 +980,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 	// this relay-capable response so the client can fall back to relay instead
 	// of hanging. handlePunchHoleSent cancels the fallback once the genuine
 	// response is forwarded.
-	if s.cfg.P2PFirst && !sameNetwork && len(phr.SocketAddr) > 0 {
+	if connection.P2PFirst && !sameNetwork && len(phr.SocketAddr) > 0 {
 		raddrCopy := *raddr
 		s.schedulePunchFallback(normalizeAddrKey(raddr.String()), func() {
 			log.Printf("[signal] P2P-first: target %s did not complete hole punch in time, sending relay fallback to %s",
@@ -1010,6 +1011,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 // they arrive later — this provides an update but is no longer required for the
 // initiator to proceed.
 func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAddr) *pb.RendezvousMessage {
+	connection := s.cfg.ConnectionSettings()
 	if raddr == nil {
 		log.Printf("[signal] PunchHoleRequest (TCP): nil address, ignoring")
 		return nil
@@ -1087,7 +1089,7 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 	// PunchHoleResponse), generate their own UUID, and connect to relay with it
 	// — while the target connects with the server's UUID. This broke relay
 	// pairing every time (Issue #66).
-	if msg.ForceRelay || s.cfg.AlwaysUseRelay || hairpin ||
+	if msg.ForceRelay || connection.AlwaysUseRelay || hairpin ||
 		isLegacyOutboundInitiator(initiatorID) ||
 		s.shouldForceRelayForPeers(initiatorID, targetID) ||
 		s.requiresRelayOnlyCompatibility(targetID) {
@@ -1180,7 +1182,7 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 	// over it. If the target stays silent past the grace period, the scheduled
 	// fallback forwards this relay-capable response so the client can fall back
 	// to relay instead of hanging (preserving the Phase 7 timeout fix).
-	if s.cfg.P2PFirst && !sameNetwork && len(phr.SocketAddr) > 0 {
+	if connection.P2PFirst && !sameNetwork && len(phr.SocketAddr) > 0 {
 		initiatorKey := normalizeAddrKey(raddr.String())
 		s.schedulePunchFallback(initiatorKey, func() {
 			log.Printf("[signal] P2P-first (TCP): target %s did not complete hole punch in time, forwarding relay fallback to %s",
@@ -1643,6 +1645,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 // 5. Adjust relay_server if needed
 // 6. Forward to initiator via their stored TCP connection (tcpPunchConns)
 func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAddr *net.UDPAddr) {
+	connection := s.cfg.ConnectionSettings()
 	rr := msg.GetRelayResponse()
 	if rr == nil || len(rr.SocketAddr) == 0 {
 		return
@@ -1766,7 +1769,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		initiatorID = panelWebRemoteInitiatorID
 		log.Printf("[signal] RelayResponse forward: initiator %s authorized via signal-proxy allowlist", initiatorAddr)
 	}
-	if initiatorID == "" && initiatorAddr != nil && s.cfg != nil && s.cfg.AllowSharedNATInitiator &&
+	if initiatorID == "" && initiatorAddr != nil && connection.AllowSharedNATInitiator &&
 		s.peers != nil && s.peers.CountByIP(initiatorAddr.IP) > 1 {
 		initiatorID = sharedNATInitiatorID
 		log.Printf("[signal] RelayResponse forward: shared-NAT initiator %s authorized as %s", initiatorAddr, sharedNATInitiatorID)
@@ -2143,11 +2146,12 @@ func (s *Server) authorizeRelayTicket(relayUUID, initiatorID, targetID string) b
 // bridged to hbbs. Shared-NAT synthetic initiators similarly skip peer-row
 // checks (opt-in connectivity tradeoff documented in enrollment docs).
 func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token string, udpPort int32) (string, bool) {
+	connection := s.cfg.ConnectionSettings()
 	if raddr == nil {
 		return "", false
 	}
-	operatorOnly := s.cfg != nil && s.cfg.OperatorOnlyOutbound
-	loginOnly := s.cfg != nil && (s.cfg.LoggedInOnlyInitiator || operatorOnly)
+	operatorOnly := connection.OperatorOnlyOutbound
+	loginOnly := connection.LoggedInOnlyInitiator || operatorOnly
 
 	// The panel proxy is already authenticated at the WebSocket upgrade. Keep
 	// Web Remote working in login-only mode without requiring a stock-client
@@ -2244,7 +2248,7 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 	case 1:
 		return s.finalizeAuthorizedInitiator(live[0].ID, raddr, targetID, live[0].Banned, false)
 	default:
-		if s.cfg != nil && s.cfg.AllowSharedNATInitiator {
+		if connection.AllowSharedNATInitiator {
 			log.Printf("[signal] shared-NAT initiator from %s authorized as %s (%d live peers at this IP)",
 				raddr.IP, sharedNATInitiatorID, len(live))
 			return sharedNATInitiatorID, true
@@ -2601,7 +2605,7 @@ func (s *Server) selectPeerRelayServer(defaultRelay string, a, b *net.UDPAddr) (
 		return defaultRelay, false, false
 	}
 
-	if s.cfg.SameNATRelay && isSamePublicIP(a, b) {
+	if s.cfg.ConnectionSettings().SameNATRelay && isSamePublicIP(a, b) {
 		return s.getRelayServer(), false, true
 	}
 	if isSameNetwork(a, b, s.lanNet) {

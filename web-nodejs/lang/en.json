@@ -597,6 +597,8 @@
         "oidc_display_name_hint": "Text shown on the login button (e.g. Azure AD, Okta)",
         "oidc_issuer_url": "Issuer URL",
         "oidc_issuer_url_hint": "OpenID Connect issuer URL (discovery will be automatic)",
+        "oidc_allowed_private_cidrs": "Allowed private OIDC networks",
+        "oidc_allowed_private_cidrs_hint": "Optional comma-separated IPs/CIDRs for an on-premises IdP (for example 10.20.0.0/16). Leave empty to keep private destinations blocked.",
         "oidc_client_id": "Client ID",
         "oidc_client_secret": "Client Secret",
         "oidc_redirect_url": "Redirect URL (Callback)",

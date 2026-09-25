@@ -9,6 +9,7 @@ on:
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
       - 'scripts/test-betterdesk-node-install.sh'
+      - 'scripts/test-postgresql-hba.sh'
       - 'scripts/installer-protocol-check.js'
       - 'web-nodejs/lib/safePath.js'
       - 'web-nodejs/services/updateService.js'
@@ -26,6 +27,7 @@ on:
       - 'betterdesk.ps1'
       - 'betterdesk-docker.sh'
       - 'scripts/test-betterdesk-node-install.sh'
+      - 'scripts/test-postgresql-hba.sh'
       - 'scripts/installer-protocol-check.js'
       - 'web-nodejs/lib/safePath.js'
       - 'web-nodejs/services/updateService.js'
@@ -61,16 +63,20 @@ jobs:
             install.sh \
             betterdesk.sh \
             betterdesk-docker.sh \
-            scripts/test-betterdesk-node-install.sh)
+            scripts/test-betterdesk-node-install.sh \
+            scripts/test-postgresql-hba.sh)
       - name: Run ShellCheck
         run: |
           shellcheck --severity=error \
             install.sh \
             betterdesk.sh \
             betterdesk-docker.sh \
-            scripts/test-betterdesk-node-install.sh
+            scripts/test-betterdesk-node-install.sh \
+            scripts/test-postgresql-hba.sh
       - name: Test native Node.js installer recovery
         run: bash scripts/test-betterdesk-node-install.sh
+      - name: Test PostgreSQL pg_hba.conf setup
+        run: bash scripts/test-postgresql-hba.sh
 
   powershell-static:
     name: PowerShell installer syntax

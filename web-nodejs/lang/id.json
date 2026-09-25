@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "Teks yang ditampilkan pada tombol masuk (misalnya Azure AD, Okta)",
         "oidc_issuer_url": "Penerbit URL",
         "oidc_issuer_url_hint": "Penerbit OpenID Connect URL (penemuan akan otomatis)",
+        "oidc_allowed_private_cidrs": "Jaringan OIDC privat yang diizinkan",
+        "oidc_allowed_private_cidrs_hint": "IP/CIDR opsional dipisahkan koma untuk IdP lokal (misalnya 10.20.0.0/16). Kosongkan untuk tetap memblokir tujuan privat.",
         "oidc_client_id": "ID Klien",
         "oidc_client_secret": "Rahasia Klien",
         "oidc_redirect_url": "Pengalihan URL (Panggilan Balik)",

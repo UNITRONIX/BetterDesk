@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "Oturum açma düğmesinde gösterilen metin (ör. Azure AD, Okta)",
         "oidc_issuer_url": "Verici URL",
         "oidc_issuer_url_hint": "OpenID Connect veren URL (keşif otomatik olacaktır)",
+        "oidc_allowed_private_cidrs": "İzin verilen özel OIDC ağları",
+        "oidc_allowed_private_cidrs_hint": "Yerel bir IdP için isteğe bağlı, virgülle ayrılmış IP/CIDR değerleri (örneğin 10.20.0.0/16). Özel hedefleri engellemeye devam etmek için boş bırakın.",
         "oidc_client_id": "Müşteri Kimliği",
         "oidc_client_secret": "Müşteri Sırrı",
         "oidc_redirect_url": "URL'yi yönlendir (Geri arama)",

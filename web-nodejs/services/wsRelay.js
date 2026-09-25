@@ -29,7 +29,11 @@ const MAX_RELAY_FRAME_SIZE = 64 * 1024 * 1024;
 function encodeRelayFrame(data) {
     const payload = Buffer.isBuffer(data) ? data : Buffer.from(data);
     const len = payload.length;
-    if (len <= 0 || len > MAX_RELAY_FRAME_SIZE) {
+    // RustDesk BytesCodec uses a single 0x00 header for a valid empty
+    // payload. Empty frames are meaningful for raw relay data (for example
+    // empty file blocks) and must not be confused with an invalid protobuf
+    // control frame.
+    if (len > MAX_RELAY_FRAME_SIZE) {
         throw new Error(`invalid relay frame size: ${len}`);
     }
 
@@ -86,7 +90,7 @@ function createRelayFrameDecoder() {
                     encoded += buffer[offset + i] * (2 ** (8 * i));
                 }
                 const payloadLen = Math.floor(encoded / 4);
-                if (payloadLen <= 0 || payloadLen > MAX_RELAY_FRAME_SIZE) {
+                if (payloadLen > MAX_RELAY_FRAME_SIZE) {
                     throw new Error(`invalid relay payload length: ${payloadLen}`);
                 }
                 if (dataLen - offset - headerLen < payloadLen) break;
@@ -316,11 +320,14 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
     let idleTimer = null;
     const messageTransport = options.messageTransport === true;
     const relayDecoder = messageTransport ? createRelayFrameDecoder() : null;
+    let cleanupCause = 'unknown';
+    let wsCloseCode = null;
+    let wsCloseReason = '';
     const resetIdleTimer = () => {
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
             console.log(`WS proxy [${label}]: Idle timeout for ${clientIp}`);
-            cleanup();
+            cleanup('idle-timeout');
         }, IDLE_TIMEOUT_MS);
     };
 
@@ -331,11 +338,11 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
 
     tcp.on('error', (err) => {
         console.error(`WS proxy [${label}]: TCP error (${targetHost}:${targetPort}):`, err.message);
-        cleanup();
+        cleanup('tcp-error', { error: err.message });
     });
 
-    tcp.on('close', () => {
-        cleanup();
+    tcp.on('close', (hadError) => {
+        cleanup('tcp-close', { hadError: !!hadError });
     });
 
     // TCP -> WebSocket
@@ -352,7 +359,7 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
                 }
             } catch (err) {
                 console.error(`WS proxy [${label}]: invalid relay TCP frame:`, err.message);
-                cleanup();
+                cleanup('invalid-tcp-frame', { error: err.message });
             }
         }
     });
@@ -363,29 +370,31 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
         if (!tcp.destroyed) {
             // Ensure we send Buffer, not string
             const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
-            if (messageTransport && buf.length === 0) return;
             try {
                 tcp.write(messageTransport ? encodeRelayFrame(buf) : buf);
             } catch (err) {
                 console.error(`WS proxy [${label}]: invalid relay WS frame:`, err.message);
-                cleanup();
+                cleanup('invalid-ws-frame', { error: err.message });
             }
         }
     });
 
-    ws.on('close', () => {
-        cleanup();
+    ws.on('close', (code, reason) => {
+        wsCloseCode = Number.isFinite(code) ? code : null;
+        wsCloseReason = reason ? Buffer.from(reason).toString('utf8') : '';
+        cleanup('ws-close');
     });
 
     ws.on('error', (err) => {
         console.error(`WS proxy [${label}]: WebSocket error:`, err.message);
-        cleanup();
+        cleanup('ws-error', { error: err.message });
     });
 
     let cleaned = false;
-    function cleanup() {
+    function cleanup(cause = 'unknown', details = {}) {
         if (cleaned) return;
         cleaned = true;
+        cleanupCause = cause;
 
         if (idleTimer) clearTimeout(idleTimer);
 
@@ -403,6 +412,14 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
         } else {
             connectionsPerIp.set(clientIp, count - 1);
         }
+
+        const closeSuffix = wsCloseCode == null
+            ? ''
+            : ` code=${wsCloseCode}${wsCloseReason ? ` reason=${JSON.stringify(wsCloseReason)}` : ''}`;
+        const detailSuffix = details.error
+            ? ` error=${JSON.stringify(String(details.error))}`
+            : '';
+        console.log(`WS proxy [${label}]: closed for ${clientIp} cause=${cleanupCause}${closeSuffix}${detailSuffix}`);
     }
 }
 

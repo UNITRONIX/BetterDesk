@@ -2135,21 +2135,24 @@ router.put('/api/settings/connection-mode', requireAuth, requirePermission('serv
             operator_only_outbound: body.operator_only_outbound
         });
 
-        const pending = restartCoordinator.registerChange(req, {
-            key: 'connection-mode',
-            label: req.t('settings.connection_mode_title'),
-            rollback: {
-                type: 'connection-mode',
-                settings: {
-                    mode: previous.mode,
-                    p2p_fallback_ms: previous.p2p_fallback_ms,
-                    same_nat_relay: previous.same_nat_relay,
-                    allow_shared_nat_initiator: previous.allow_shared_nat_initiator,
-                    logged_in_only_initiator: previous.logged_in_only_initiator,
-                    operator_only_outbound: previous.operator_only_outbound,
+        let pending = null;
+        if (result.source !== 'go-api') {
+            pending = restartCoordinator.registerChange(req, {
+                key: 'connection-mode',
+                label: req.t('settings.connection_mode_title'),
+                rollback: {
+                    type: 'connection-mode',
+                    settings: {
+                        mode: previous.mode,
+                        p2p_fallback_ms: previous.p2p_fallback_ms,
+                        same_nat_relay: previous.same_nat_relay,
+                        allow_shared_nat_initiator: previous.allow_shared_nat_initiator,
+                        logged_in_only_initiator: previous.logged_in_only_initiator,
+                        operator_only_outbound: previous.operator_only_outbound,
+                    }
                 }
-            }
-        });
+            });
+        }
 
         await db.logAction(
             req.session?.userId,

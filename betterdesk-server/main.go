@@ -79,6 +79,45 @@ func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
 	log.Printf("Restored time-sync configuration from DB")
 }
 
+func applyPersistedConnectionSettings(cfg *config.Config, database db.Database) {
+	raw, err := database.GetConfig(config.PersistedConnectionSettingsKey)
+	if err != nil || strings.TrimSpace(raw) == "" {
+		return
+	}
+
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &fields); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted connection configuration: %v", err)
+		return
+	}
+	for _, key := range []string{
+		"mode",
+		"p2p_fallback_ms",
+		"same_nat_relay",
+		"allow_shared_nat_initiator",
+		"logged_in_only_initiator",
+		"operator_only_outbound",
+	} {
+		if _, ok := fields[key]; !ok {
+			log.Printf("WARN: Ignoring incomplete persisted connection configuration: missing %s", key)
+			return
+		}
+	}
+
+	var persisted config.ConnectionSettings
+	if err := json.Unmarshal([]byte(raw), &persisted); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted connection configuration: %v", err)
+		return
+	}
+	if err := persisted.Validate(); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted connection configuration values: %v", err)
+		return
+	}
+
+	cfg.ApplyConnectionSettings(persisted)
+	log.Printf("Restored connection strategy configuration from DB: mode=%s fallback=%dms", persisted.Mode, persisted.P2PFallbackMs)
+}
+
 func init() {
 	if Version == "dev" {
 		if v := productversion.Product(); v != "" && v != "dev" {
@@ -190,6 +229,7 @@ func main() {
 		log.Fatalf("Failed to ensure client_sessions schema: %v", err)
 	}
 	applyPersistedTimeSyncConfig(cfg, database)
+	applyPersistedConnectionSettings(cfg, database)
 
 	// Load API key from .api_key file or API_KEY env var and sync to database.
 	// This ensures the Node.js console and Go server share the same API key
@@ -366,6 +406,7 @@ func main() {
 		log.Printf("[reload] Reloading configuration from environment")
 		cfg.LoadEnv()
 		applyPersistedTimeSyncConfig(cfg, database)
+		applyPersistedConnectionSettings(cfg, database)
 		return nil
 	})
 

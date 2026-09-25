@@ -560,6 +560,8 @@
         "oidc_display_name_hint": "ログイン ボタンに表示されるテキスト (例: Azure AD、Okta)",
         "oidc_issuer_url": "発行者 URL",
         "oidc_issuer_url_hint": "OpenID Connect 発行者 URL (検出は自動的に行われます)",
+        "oidc_allowed_private_cidrs": "許可するプライベート OIDC ネットワーク",
+        "oidc_allowed_private_cidrs_hint": "オンプレミス IdP 用の任意の IP/CIDR（カンマ区切り、例: 10.20.0.0/16）。空欄の場合、プライベート宛先は引き続きブロックされます。",
         "oidc_client_id": "クライアントID",
         "oidc_client_secret": "クライアントシークレット",
         "oidc_redirect_url": "URL リダイレクト (コールバック)",

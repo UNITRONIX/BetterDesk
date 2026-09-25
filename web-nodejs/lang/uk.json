@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "Текст, який відображається на кнопці входу (наприклад, Azure AD, Okta)",
         "oidc_issuer_url": "Емітент URL",
         "oidc_issuer_url_hint": "Емітент OpenID Connect URL (виявлення буде автоматичним)",
+        "oidc_allowed_private_cidrs": "Дозволені приватні мережі OIDC",
+        "oidc_allowed_private_cidrs_hint": "Необов’язкові IP/CIDR, розділені комами, для локального IdP (наприклад, 10.20.0.0/16). Залиште порожнім, щоб і надалі блокувати приватні адресати.",
         "oidc_client_id": "ID клієнта",
         "oidc_client_secret": "Секрет клієнта",
         "oidc_redirect_url": "Перенаправлення URL (Зворотний дзвінок)",

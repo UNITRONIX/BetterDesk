@@ -12,6 +12,7 @@
     let _restartPollTimer = null;
     let _restartPollAttempts = 0;
     let _connectionModeSnapshot = null;
+    let _connectionModeWritable = false;
     
     document.addEventListener('DOMContentLoaded', init);
     
@@ -900,6 +901,7 @@
             if (sourceEl) {
                 const src = data.source || data.deployment || 'defaults';
                 const writable = data.writable !== false && src !== 'defaults';
+                _connectionModeWritable = writable;
                 sourceEl.textContent = writable
                     ? (_('settings.connection_mode_source_saved') || 'Saved in') + ': ' + src
                     : (_('settings.connection_mode_source_defaults') || 'Using server defaults (not writable from panel)');
@@ -925,6 +927,7 @@
             _connectionModeSnapshot = getConnectionModePayload();
         } catch (err) {
             console.error('Failed to load connection mode:', err);
+            _connectionModeWritable = false;
             if (sourceEl) sourceEl.textContent = _('errors.server_error');
         }
     }
@@ -962,14 +965,17 @@
                 Notifications.success(resp.message || _('settings.connection_mode_saved'));
             }
             await loadConnectionMode();
-            if (resp.restartRequired) showRestartPrompt(resp.restartRequired);
+            const result = resp.data || resp;
+            if (result.restartRequired) showRestartPrompt(result.restartRequired);
         } catch (err) {
             console.error('Save connection mode failed:', err);
             if (typeof Notifications !== 'undefined') {
                 Notifications.error(err.message || _('errors.server_error'));
             }
         } finally {
-            [saveBtn, saveRestartBtn].forEach((b) => { if (b) b.disabled = false; });
+            [saveBtn, saveRestartBtn].forEach((b) => {
+                if (b) b.disabled = !_connectionModeWritable;
+            });
         }
     }
 
@@ -4872,6 +4878,7 @@
         _oidcWasEnabled = !!data.enabled;
         setVal('oidc-display-name', data.display_name);
         setVal('oidc-issuer-url', data.issuer_url);
+        setVal('oidc-allowed-private-cidrs', data.allowed_private_cidrs);
         setVal('oidc-client-id', data.client_id);
         setVal('oidc-client-secret', data.client_secret);
         setVal('oidc-redirect-url', data.redirect_url || '');
@@ -4912,6 +4919,7 @@
             enabled: getChecked('oidc-enabled'),
             display_name: getVal('oidc-display-name'),
             issuer_url: getVal('oidc-issuer-url'),
+            allowed_private_cidrs: getVal('oidc-allowed-private-cidrs'),
             client_id: getVal('oidc-client-id'),
             client_secret: getVal('oidc-client-secret'),
             redirect_url: getVal('oidc-redirect-url'),
@@ -4967,7 +4975,10 @@
 
             const result = await Utils.api('/api/settings/oidc/test', {
                 method: 'POST',
-                body: { issuer_url: issuerUrl }
+                body: {
+                    issuer_url: issuerUrl,
+                    allowed_private_cidrs: document.getElementById('oidc-allowed-private-cidrs')?.value?.trim() || ''
+                }
             });
 
             if (resultEl) {

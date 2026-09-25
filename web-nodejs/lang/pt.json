@@ -560,6 +560,8 @@
         "oidc_display_name_hint": "Texto mostrado no botão de login (por exemplo, Azure AD, Okta)",
         "oidc_issuer_url": "URL do emissor",
         "oidc_issuer_url_hint": "URL do emissor OpenID Connect (a descoberta é automática)",
+        "oidc_allowed_private_cidrs": "Redes OIDC privadas permitidas",
+        "oidc_allowed_private_cidrs_hint": "IPs/CIDR opcionais separados por vírgulas para um IdP local (por exemplo, 10.20.0.0/16). Deixe vazio para continuar bloqueando destinos privados.",
         "oidc_client_id": "ID do cliente",
         "oidc_client_secret": "Segredo do cliente",
         "oidc_redirect_url": "URL de redirecionamento (callback)",

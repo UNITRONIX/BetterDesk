@@ -139,6 +139,32 @@ func TestLoadEnv_OperatorOnlyOutbound(t *testing.T) {
 	}
 }
 
+func TestConnectionSettingsSnapshotConcurrentApply(t *testing.T) {
+	cfg := DefaultConfig()
+	done := make(chan struct{})
+
+	go func() {
+		for i := 0; i < 1000; i++ {
+			cfg.ApplyConnectionSettings(ConnectionSettings{
+				Mode:           "relay_only",
+				P2PFallbackMs:  3000,
+				SameNATRelay:   false,
+				P2PFirst:       false,
+				AlwaysUseRelay: true,
+			})
+		}
+		close(done)
+	}()
+
+	for i := 0; i < 1000; i++ {
+		settings := cfg.ConnectionSettings()
+		if settings.P2PFallbackMs < 0 {
+			t.Fatalf("invalid snapshot: %+v", settings)
+		}
+	}
+	<-done
+}
+
 func TestLoadEnv_EnrollmentModeExplicitByDefault(t *testing.T) {
 	t.Setenv("ENROLLMENT_MODE", "open")
 	t.Setenv("ENROLLMENT_MODE_ENV_OVERRIDE", "")

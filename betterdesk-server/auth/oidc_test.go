@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,14 +16,22 @@ import (
 
 func TestMain(m *testing.M) {
 	orig := oidcHostResolver
+	origLookup := oidcHostLookup
 	oidcHostResolver = func(ctx context.Context, host string) error {
 		if host == "127.0.0.1" || strings.EqualFold(host, "localhost") {
 			return nil
 		}
 		return resolveOIDCFetchHost(ctx, host)
 	}
+	oidcHostLookup = func(ctx context.Context, host string, policy oidcFetchPolicy) ([]net.IP, error) {
+		if host == "127.0.0.1" || strings.EqualFold(host, "localhost") {
+			return []net.IP{net.ParseIP("127.0.0.1")}, nil
+		}
+		return lookupOIDCFetchHostAddrs(ctx, host, policy)
+	}
 	code := m.Run()
 	oidcHostResolver = orig
+	oidcHostLookup = origLookup
 	os.Exit(code)
 }
 
@@ -264,9 +273,9 @@ func TestParseJWTPayload(t *testing.T) {
 	payload := map[string]interface{}{
 		"sub":                "user123",
 		"preferred_username": "john.doe",
-		"email":             "john@example.com",
-		"name":             "John Doe",
-		"groups":           []string{"admins", "users"},
+		"email":              "john@example.com",
+		"name":               "John Doe",
+		"groups":             []string{"admins", "users"},
 	}
 	payloadJSON, _ := json.Marshal(payload)
 	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)

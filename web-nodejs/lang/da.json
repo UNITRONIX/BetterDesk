@@ -566,6 +566,8 @@
         "oidc_display_name_hint": "Tekst vist på login-knappen (f.eks. Azure AD, Okta)",
         "oidc_issuer_url": "Udsteder URL",
         "oidc_issuer_url_hint": "OpenID Connect-udsteder URL (opdagelsen vil være automatisk)",
+        "oidc_allowed_private_cidrs": "Tilladte private OIDC-netværk",
+        "oidc_allowed_private_cidrs_hint": "Valgfri kommasepareret liste over IP-adresser/CIDR for en lokal IdP (f.eks. 10.20.0.0/16). Lad feltet være tomt for at blokere private destinationer.",
         "oidc_client_id": "Klient-id",
         "oidc_client_secret": "Klientens hemmelighed",
         "oidc_redirect_url": "Omdiriger URL (tilbagekald)",

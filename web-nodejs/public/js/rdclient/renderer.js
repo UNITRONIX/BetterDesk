@@ -76,11 +76,29 @@ class RDRenderer {
 
         const rect = container.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
+        const width = Math.round(rect.width * dpr);
+        const height = Math.round(rect.height * dpr);
+        if (width <= 0 || height <= 0) return;
 
-        this.canvas.width = rect.width * dpr;
-        this.canvas.height = rect.height * dpr;
-        this.canvas.style.width = rect.width + 'px';
-        this.canvas.style.height = rect.height + 'px';
+        const cssWidth = rect.width + 'px';
+        const cssHeight = rect.height + 'px';
+        const dimensionsChanged = this.canvas.width !== width
+            || this.canvas.height !== height
+            || this.canvas.style.width !== cssWidth
+            || this.canvas.style.height !== cssHeight;
+
+        // Assigning canvas.width/height clears the bitmap. Mobile browsers
+        // emit visualViewport scroll events while a finger moves, so avoid
+        // clearing the remote desktop when its actual viewport is unchanged.
+        if (!dimensionsChanged) {
+            this._updateTransform();
+            return;
+        }
+
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.canvas.style.width = cssWidth;
+        this.canvas.style.height = cssHeight;
 
         this._updateTransform();
 

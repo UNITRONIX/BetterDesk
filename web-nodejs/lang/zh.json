@@ -487,6 +487,8 @@
         "oidc_display_name_hint": "登录按钮上显示的文本 (例如 Azure AD、Okta)",
         "oidc_issuer_url": "发行者 URL",
         "oidc_issuer_url_hint": "OpenID Connect 发行者 URL (将自动发现)",
+        "oidc_allowed_private_cidrs": "允许的 OIDC 私有网络",
+        "oidc_allowed_private_cidrs_hint": "用于本地 IdP 的可选 IP/CIDR（以逗号分隔，例如 10.20.0.0/16）。留空可继续阻止私有目标。",
         "oidc_client_id": "客户端 ID",
         "oidc_client_secret": "客户端密钥",
         "oidc_redirect_url": "重定向 URL (回调)",

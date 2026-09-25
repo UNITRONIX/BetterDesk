@@ -166,6 +166,22 @@ If no frames arrive for 5 seconds, the client automatically requests a `refreshV
 - Audio quality depends on network bandwidth
 - Some keyboard shortcuts may be intercepted by the browser (e.g., Ctrl+W)
 
+### Mobile and tablet performance
+
+- HTTPS remains the preferred path on tablets. After the browser accepts a
+  custom certificate, `window.isSecureContext` can enable WebCodecs and the
+  browser's hardware decoder when supported.
+- HTTP remains supported through the H.264/JMuxer fallback. The client starts
+  that path at 30 FPS and does not enable server-side adaptive FPS above that
+  limit, preventing MSE queue growth on mobile browsers.
+- Touch tablets start remote control at 30 FPS for a stable handshake. On
+  HTTPS, adaptive quality can promote a capable device to 45/60 FPS; the
+  toolbar can also change quality, FPS, and codec manually.
+- These choices are automatic; no browser variables or manual device profile
+  are required. The disconnect status includes the WebSocket close code/reason
+  when the relay is the source, while peer-initiated closes retain the remote
+  reason.
+
 ---
 
 ## See also
