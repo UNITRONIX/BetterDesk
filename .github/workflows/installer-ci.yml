@@ -63,6 +63,7 @@ jobs:
             install.sh \
             betterdesk.sh \
             betterdesk-docker.sh \
+            scripts/test-native-installer.sh \
             scripts/test-betterdesk-node-install.sh \
             scripts/test-postgresql-hba.sh)
       - name: Run ShellCheck
@@ -71,10 +72,13 @@ jobs:
             install.sh \
             betterdesk.sh \
             betterdesk-docker.sh \
+            scripts/test-native-installer.sh \
             scripts/test-betterdesk-node-install.sh \
             scripts/test-postgresql-hba.sh
       - name: Test native Node.js installer recovery
         run: bash scripts/test-betterdesk-node-install.sh
+      - name: Test native installer watchdog and clone recovery
+        run: bash scripts/test-native-installer.sh
       - name: Test PostgreSQL pg_hba.conf setup
         run: bash scripts/test-postgresql-hba.sh
 

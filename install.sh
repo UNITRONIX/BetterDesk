@@ -550,10 +550,70 @@ uninstall_docker_mode() {
 
 # ── Native install ────────────────────────────────────────────────────────────
 
+native_backup_source() {
+    local source_dir="$1"
+    local backup_dir="${source_dir}.backup.$(date +%Y%m%d%H%M%S).$$"
+
+    while [ -e "$backup_dir" ]; do
+        backup_dir="${source_dir}.backup.$(date +%Y%m%d%H%M%S).${RANDOM}"
+    done
+    if ! mv "$source_dir" "$backup_dir"; then
+        print_error "Could not preserve existing native source at ${source_dir}"
+        return 1
+    fi
+    printf '%s\n' "$backup_dir"
+}
+
+native_clone_source() {
+    local repo_dir="$1"
+    local backup_dir="${2:-}"
+    local staging_parent
+    local staging_repo
+
+    mkdir -p "$INSTALL_DIR"
+    staging_parent=$(mktemp -d "${INSTALL_DIR}/.source-clone.XXXXXX")
+    staging_repo="${staging_parent}/source"
+
+    if ! git clone --depth 1 --branch "$BETTERDESK_BRANCH" \
+        "https://github.com/${BETTERDESK_REPO}.git" "$staging_repo"; then
+        rm -rf "$staging_parent"
+        if [ -n "$backup_dir" ] && [ ! -e "$repo_dir" ]; then
+            mv "$backup_dir" "$repo_dir" 2>/dev/null || true
+        fi
+        return 1
+    fi
+
+    # The native update path keeps local Go runtime data beside the source.
+    # Carry it forward without replacing anything created by the fresh clone.
+    if [ -n "$backup_dir" ] \
+        && [ -d "$backup_dir/betterdesk-server/data" ] \
+        && [ ! -e "$staging_repo/betterdesk-server/data" ]; then
+        if ! cp -a "$backup_dir/betterdesk-server/data" "$staging_repo/betterdesk-server/"; then
+            rm -rf "$staging_parent"
+            if [ -n "$backup_dir" ]; then
+                mv "$backup_dir" "$repo_dir" 2>/dev/null || true
+            fi
+            return 1
+        fi
+    fi
+
+    if ! mv "$staging_repo" "$repo_dir"; then
+        rm -rf "$staging_parent"
+        if [ -n "$backup_dir" ]; then
+            mv "$backup_dir" "$repo_dir" 2>/dev/null || true
+        fi
+        return 1
+    fi
+    rm -rf "$staging_parent"
+    return 0
+}
+
 install_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
     local relay
     local commit_sha
+    local source_backup=""
+    local checkout_error=""
 
     log "BetterDesk native installer v${VERSION}"
     log "Native install branch: ${BETTERDESK_BRANCH} (override with --branch)"
@@ -565,18 +625,42 @@ install_native_mode() {
         log "Updating existing clone in ${repo_dir} to ${BETTERDESK_BRANCH}..."
         git -C "$repo_dir" remote set-url origin "https://github.com/${BETTERDESK_REPO}.git" || true
         git -C "$repo_dir" fetch --depth 1 origin "$BETTERDESK_BRANCH"
-        # Shallow clones previously pinned to another branch need a hard reset.
-        if ! git -C "$repo_dir" checkout -B "$BETTERDESK_BRANCH" "FETCH_HEAD"; then
-            warn "Could not switch existing clone to ${BETTERDESK_BRANCH}; recloning..."
-            rm -rf "$repo_dir"
-            git clone --depth 1 --branch "$BETTERDESK_BRANCH" \
-                "https://github.com/${BETTERDESK_REPO}.git" "$repo_dir"
+        # Shallow clones previously pinned to another branch need a branch switch.
+        checkout_error=$(mktemp)
+        if git -C "$repo_dir" checkout -B "$BETTERDESK_BRANCH" "FETCH_HEAD" 2>"$checkout_error"; then
+            rm -f "$checkout_error"
+        else
+            warn "Could not switch existing clone to ${BETTERDESK_BRANCH}."
+            if [ -n "$(git -C "$repo_dir" status --short 2>/dev/null || true)" ]; then
+                warn "The existing clone contains local changes; preserving it before recloning."
+                cat "$checkout_error" >&2 || true
+            else
+                warn "Git checkout failed; preserving the existing clone before recloning."
+                cat "$checkout_error" >&2 || true
+            fi
+            rm -f "$checkout_error"
+            if ! source_backup=$(native_backup_source "$repo_dir"); then
+                die "Cannot preserve ${repo_dir}; refusing to remove the existing native source"
+            fi
+            if ! native_clone_source "$repo_dir" "$source_backup"; then
+                die "Could not clone ${BETTERDESK_REPO}@${BETTERDESK_BRANCH}; original source preserved at ${source_backup}"
+            fi
+            warn "Previous native source preserved at ${source_backup}"
         fi
     else
         log "Cloning ${BETTERDESK_REPO} (${BETTERDESK_BRANCH})..."
-        rm -rf "$repo_dir"
-        git clone --depth 1 --branch "$BETTERDESK_BRANCH" \
-            "https://github.com/${BETTERDESK_REPO}.git" "$repo_dir"
+        if [ -e "$repo_dir" ]; then
+            if ! source_backup=$(native_backup_source "$repo_dir"); then
+                die "Cannot preserve ${repo_dir}; refusing to remove the existing native source"
+            fi
+            warn "Existing non-Git source preserved at ${source_backup}"
+        fi
+        if ! native_clone_source "$repo_dir" "$source_backup"; then
+            die "Could not clone ${BETTERDESK_REPO}@${BETTERDESK_BRANCH}; original source preserved at ${source_backup:-none}"
+        fi
+        if [ -n "$source_backup" ]; then
+            warn "Previous native source preserved at ${source_backup}"
+        fi
     fi
 
     commit_sha=$(git -C "$repo_dir" rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -699,4 +783,6 @@ main() {
     esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

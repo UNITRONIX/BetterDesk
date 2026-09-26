@@ -191,6 +191,13 @@ GO_MIN_VERSION="1.26.6"
 GO_DOWNLOAD_VERSION="1.26.6"
 # Maximum time allowed for the first module download on a native install.
 GO_MODULE_DOWNLOAD_TIMEOUT="${GO_MODULE_DOWNLOAD_TIMEOUT:-600}"
+# Maximum time allowed to validate the downloaded module graph.
+GO_MODULE_GRAPH_TIMEOUT="${GO_MODULE_GRAPH_TIMEOUT:-120}"
+# Maximum time allowed to compile the Go server.
+GO_BUILD_TIMEOUT="${GO_BUILD_TIMEOUT:-1800}"
+# Heartbeat/deadline settings for bounded Go commands.
+GO_COMMAND_HEARTBEAT_INTERVAL="${GO_COMMAND_HEARTBEAT_INTERVAL:-15}"
+GO_COMMAND_KILL_AFTER="${GO_COMMAND_KILL_AFTER:-15}"
 # Short HTTPS probe before go mod download (fail fast on blocked proxy/DNS).
 GO_MODULE_PREFLIGHT_TIMEOUT="${GO_MODULE_PREFLIGHT_TIMEOUT:-20}"
 # Set when preflight detects IPv4 OK but IPv6 broken (common on GCP VMs).
@@ -3106,7 +3113,94 @@ _go_kill_process_group() {
     fi
 }
 
-# Run go mod download with a hard bash process-group deadline (primary guard).
+# Run a Go command with a hard deadline and visible progress.
+_run_go_command_bounded() {
+    local label="$1"
+    local deadline="$2"
+    shift 2
+    local command_pid=""
+    local command_pgid=""
+    local heartbeat_pid=""
+    local elapsed=0
+    local status=0
+    local heartbeat_interval="${GO_COMMAND_HEARTBEAT_INTERVAL}"
+    local kill_after="${GO_COMMAND_KILL_AFTER}"
+
+    case "$heartbeat_interval" in
+        ''|*[!0-9]*) heartbeat_interval=15 ;;
+    esac
+    case "$kill_after" in
+        ''|*[!0-9]*) kill_after=15 ;;
+    esac
+
+    if command -v setsid &> /dev/null; then
+        setsid "$@" &
+    else
+        "$@" &
+    fi
+    command_pid=$!
+
+    if command -v ps &> /dev/null; then
+        command_pgid=$(ps -o pgid= -p "$command_pid" 2>/dev/null | tr -d ' ' || true)
+        case "$command_pgid" in
+            ''|*[!0-9]*) command_pgid="" ;;
+        esac
+    fi
+
+    print_info "${label} started (PID ${command_pid}, deadline ${deadline}s)"
+
+    (
+        heartbeat_elapsed=0
+        while kill -0 "$command_pid" 2>/dev/null; do
+            sleep "$heartbeat_interval"
+            if ! kill -0 "$command_pid" 2>/dev/null; then
+                break
+            fi
+            heartbeat_elapsed=$((heartbeat_elapsed + heartbeat_interval))
+            printf 'ℹ  still %s... %ss elapsed (watchdog active)\n' \
+                "$label" "$heartbeat_elapsed" >&2
+        done
+    ) &
+    heartbeat_pid=$!
+
+    while kill -0 "$command_pid" 2>/dev/null; do
+        if [ "$elapsed" -ge "$deadline" ]; then
+            print_error "${label} exceeded ${deadline}s"
+            if [ -n "$command_pgid" ] && [ "$command_pgid" -gt 1 ] 2>/dev/null; then
+                _go_kill_process_group "$command_pgid" "$label"
+            else
+                kill -TERM "$command_pid" 2>/dev/null || true
+                sleep "$kill_after"
+                if kill -0 "$command_pid" 2>/dev/null; then
+                    kill -KILL "$command_pid" 2>/dev/null || true
+                fi
+            fi
+            status=124
+            break
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    if [ "$status" -ne 124 ]; then
+        if wait "$command_pid"; then
+            status=0
+        else
+            status=$?
+        fi
+    else
+        wait "$command_pid" 2>/dev/null || true
+    fi
+
+    if [ -n "$heartbeat_pid" ]; then
+        kill "$heartbeat_pid" 2>/dev/null || true
+        wait "$heartbeat_pid" 2>/dev/null || true
+    fi
+
+    return "$status"
+}
+
+# Run go mod download with a hard bash deadline (primary guard).
 # GNU timeout alone was insufficient on some cloud VMs (#371).
 _run_go_mod_download_bounded() {
     local deadline="${GO_MODULE_DOWNLOAD_TIMEOUT}"
@@ -3175,14 +3269,6 @@ _run_go_mod_download_bounded() {
         wait "$heartbeat_pid" 2>/dev/null || true
     fi
 
-    # Keep IPv6 disabled until we confirm the module graph is readable.
-    if [ "$status" -eq 0 ]; then
-        if ! go list -m all >/dev/null 2>&1; then
-            print_error "go mod download reported success but 'go list -m all' failed"
-            status=1
-        fi
-    fi
-
     _go_ipv4_force_end
     return "$status"
 }
@@ -3230,8 +3316,8 @@ compile_go_server() {
         return 1
     fi
 
-    # Download dependencies. Keep this visible and hard-bounded (bash PGID watchdog).
-    print_info "Downloading Go modules (timeout: ${GO_MODULE_DOWNLOAD_TIMEOUT}s, kill-after: 15s, setsid watchdog)..."
+    # Download dependencies. Keep this visible and hard-bounded (bash watchdog).
+    print_info "Downloading Go modules (timeout: ${GO_MODULE_DOWNLOAD_TIMEOUT}s, kill-after: 15s, process watchdog)..."
     local module_download_status=0
     # Keep the command in the if condition so `set -e` does not abort before
     # we can capture the actual watchdog/download exit status. Do not use `!`
@@ -3252,9 +3338,43 @@ compile_go_server() {
         print_error "On GCP/cloud VMs with broken IPv6, confirm IPv4 works: curl -4 -I https://proxy.golang.org/"
         return 1
     fi
+
+    print_info "Go module download completed; validating module graph (timeout: ${GO_MODULE_GRAPH_TIMEOUT}s)..."
+    local module_graph_status=0
+    if _run_go_command_bounded "validating Go module graph" "$GO_MODULE_GRAPH_TIMEOUT" go list -m all; then
+        module_graph_status=0
+    else
+        module_graph_status=$?
+    fi
+    if [ "$module_graph_status" -ne 0 ]; then
+        if [ "$module_graph_status" -eq 124 ] || [ "$module_graph_status" -eq 137 ]; then
+            print_error "Go module graph validation timed out after ${GO_MODULE_GRAPH_TIMEOUT}s"
+        else
+            print_error "Go module graph validation failed (exit code ${module_graph_status})"
+        fi
+        print_error "The module cache may be incomplete; retry the native installation after checking GOPROXY and disk space"
+        return 1
+    fi
+    print_success "Go module graph validated"
     
     # Build with optimizations
-    CGO_ENABLED=0 go build -ldflags="-s -w -X main.Version=${VERSION}" -o "$output_name" .
+    print_info "Building BetterDesk server (timeout: ${GO_BUILD_TIMEOUT}s)..."
+    local build_status=0
+    if _run_go_command_bounded "building Go server" "$GO_BUILD_TIMEOUT" \
+        env CGO_ENABLED=0 "$go_bin" build \
+        -ldflags="-s -w -X main.Version=${VERSION}" -o "$output_name" .; then
+        build_status=0
+    else
+        build_status=$?
+    fi
+    if [ "$build_status" -ne 0 ]; then
+        if [ "$build_status" -eq 124 ] || [ "$build_status" -eq 137 ]; then
+            print_error "Go server build timed out after ${GO_BUILD_TIMEOUT}s"
+        else
+            print_error "Go server build failed (exit code ${build_status})"
+        fi
+        return 1
+    fi
     
     if [ -f "$output_name" ]; then
         chmod +x "$output_name"
@@ -8369,5 +8489,8 @@ main() {
     done
 }
 
-# Run
-main "$@"
+# Run only when executed directly; this also lets installer tests source the
+# bounded command helpers without starting the interactive manager.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi
