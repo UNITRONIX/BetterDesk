@@ -80,4 +80,17 @@ describe('Docker admin bootstrap contract', () => {
         expect(contents).toContain('export DB_URL="${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}"');
         expect(contents).toContain('export DB_URL="${DATABASE_URL:-${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}}"');
     });
+
+    test.each([
+        'docker-compose.yml',
+        'docker-compose.single.yml',
+        'docker-compose.quick.yml',
+        'docker-compose.quick.single.yml',
+        'docker-compose.quick.macvlan.yml',
+        'docker-compose.quick.single.macvlan.yml',
+    ])('%s exposes optional TRUST_PROXY configuration', composeFile => {
+        const contents = fs.readFileSync(path.join(repoRoot, composeFile), 'utf8');
+
+        expect(contents).toContain('TRUST_PROXY=${TRUST_PROXY:-}');
+    });
 });

@@ -843,6 +843,51 @@ function readAdminCredentialsFile() {
 }
 
 /**
+ * Docker's Go server owns first-admin creation when both services use the
+ * consolidated primary database. Waiting here prevents Node.js from racing
+ * Go on an empty database and creating a second, independently managed
+ * bootstrap account.
+ */
+function dockerUsesGoOwnedAdminBootstrap() {
+    if (String(process.env.DOCKER || '').toLowerCase() !== 'true') return false;
+
+    const dbType = String(process.env.DB_TYPE || config.dbType || 'sqlite').toLowerCase();
+    if (dbType === 'postgres' || dbType === 'postgresql') return true;
+
+    const authMode = String(process.env.SQLITE_AUTH_DB_MODE || '').toLowerCase();
+    if (authMode === 'legacy') return false;
+    if (authMode === 'consolidated') return true;
+
+    // The console entrypoint removes an empty orphan auth.db before Node.js
+    // starts. A remaining file is treated as an intentional legacy store.
+    const legacyAuthPath = config.authDbPath || path.join(config.dataDir || '/app/data', 'auth.db');
+    return !fs.existsSync(legacyAuthPath);
+}
+
+async function waitForDockerBootstrapAdmin() {
+    if (!dockerUsesGoOwnedAdminBootstrap()) return false;
+    if (await db.hasUsers()) return true;
+
+    const maxWaitMs = Math.max(
+        1_000,
+        Number.parseInt(process.env.DOCKER_ADMIN_BOOTSTRAP_WAIT_MS || '30000', 10) || 30_000
+    );
+    const pollMs = Math.min(1_000, maxWaitMs);
+    const deadline = Date.now() + maxWaitMs;
+
+    authLog.info(`[AUTH] Waiting for Go server to create the Docker bootstrap admin (up to ${maxWaitMs}ms)...`);
+    while (Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, Math.min(pollMs, deadline - Date.now())));
+        if (await db.hasUsers()) return true;
+    }
+
+    throw new Error(
+        'Docker bootstrap admin was not created by the Go server before the timeout; ' +
+        'refusing to generate a second independent admin account'
+    );
+}
+
+/**
  * Create default admin user if no users exist.
  * In PostgreSQL mode, the Go server may have already created the admin user
  * with a PBKDF2 hash. In that case, we migrate the hash to bcrypt format
@@ -863,7 +908,8 @@ async function ensureDefaultAdmin() {
 
     authLog.info(`[AUTH] ensureDefaultAdmin: checking for existing users...`);
 
-    if (await db.hasUsers()) {
+    const hasUsers = await waitForDockerBootstrapAdmin();
+    if (hasUsers || await db.hasUsers()) {
         // Users exist — check if the admin's hash needs migration from PBKDF2 to bcrypt.
         // This handles the case where the Go server created the user first (PostgreSQL shared DB).
         if (defaultPassword) {

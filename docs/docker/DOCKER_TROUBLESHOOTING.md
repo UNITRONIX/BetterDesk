@@ -448,7 +448,7 @@ If no file is found yet, wait for first boot to finish and check `docker compose
 
 **Cause:** On first boot without `ADMIN_PASSWORD`, the Go server and Node.js console could each generate a random password. The credentials file then did not match the password hash stored for the admin user. Fresh SQLite installations use the centralized `/opt/rustdesk/db_v2.sqlite3` store (and PostgreSQL installations use the primary PostgreSQL database); `auth.db` is only a legacy migration path.
 
-**Also common:** wiping only the `/opt/rustdesk` bind mount or volume while keeping `/app/data` (`console-data`). An old `auth.db` forces legacy panel authentication with a stale password hash, while bootstrap regenerates `.admin_credentials` on the rustesk volume. Current `:dev` images fail fast on this split state at container start.
+**Also common:** wiping only the `/opt/rustdesk` bind mount or volume while keeping `/app/data` (`console-data`). An old `auth.db` forces legacy panel authentication with a stale password hash, while bootstrap regenerates `.admin_credentials` on the RustDesk volume. Current `:dev` images fail fast on the most dangerous split state at container start.
 
 **Also common:** commenting out `INIT_ADMIN_PASS` / `DEFAULT_ADMIN_PASSWORD` / `ADMIN_PASSWORD` in `docker-compose*.yml`. `ADMIN_PASSWORD=… docker compose up -d` on the host only passes the password into the container when those `${ADMIN_PASSWORD}` lines are present in the compose file.
 
@@ -468,7 +468,48 @@ ADMIN_PASSWORD='YourSecurePassword123' docker compose up -d
 
 Do not delete only the `/opt/rustdesk` bind mount while keeping `console-data`: that is not a clean reset. Do not use a credentials file to overwrite an existing user's password; use the normal password-reset procedure instead.
 
-**Fix:** Pull/rebuild current `:dev` images (or wait for the next GHCR tag). On ARM64 prefer the split layout images. The split entrypoints elect one creator for the shared credentials file and both services reuse it. Setting `ADMIN_PASSWORD` before first start remains the deterministic option — keep the `INIT_ADMIN_*` / `DEFAULT_ADMIN_*` / `ADMIN_PASSWORD` env mappings in your compose file. Check `docker logs` for `Bootstrap: INIT_ADMIN_PASS/DEFAULT_ADMIN_PASSWORD set=yes|no` (password itself is never logged).
+**Fix:** Pull/rebuild current `:dev` images (or wait for the next GHCR tag). On ARM64 prefer the split layout images. The split entrypoints elect one creator for the shared credentials file, and the Node.js console now waits for the Go server to create the first admin in the consolidated database instead of creating a competing account. Setting `ADMIN_PASSWORD` before first start remains the deterministic option — keep the `INIT_ADMIN_*` / `DEFAULT_ADMIN_*` / `ADMIN_PASSWORD` env mappings in your compose file. Check `docker logs` for `Bootstrap: INIT_ADMIN_PASS/DEFAULT_ADMIN_PASSWORD set=yes|no` (password itself is never logged).
+
+**Diagnose before wiping data:** First determine whether the failure is authentication, CSRF, rate limiting, or session persistence. Run this against a disposable or maintenance window deployment; replace `<PASSWORD>` locally and do not paste it into an issue:
+
+```bash
+# Inspect both possible identity stores and the credential file.
+docker compose exec console sh -lc '
+  ls -la /opt/rustdesk/.admin_credentials /opt/rustdesk/db_v2.sqlite3 /app/data/auth.db 2>&1
+  sqlite3 /opt/rustdesk/db_v2.sqlite3 \
+    "SELECT username, substr(password_hash,1,30), role FROM users;"
+  if [ -f /app/data/auth.db ]; then
+    sqlite3 /app/data/auth.db \
+      "SELECT username, substr(password_hash,1,30), role FROM users;"
+  fi
+'
+
+# Capture the CSRF token from the login page, then log in from inside the
+# console container so Nginx Proxy Manager is not part of this test.
+docker compose exec console sh -lc '
+  curl -sS -c /tmp/bd-cookies http://127.0.0.1:5000/login > /tmp/bd-login.html
+  grep -o "csrfToken: '[^']*'" /tmp/bd-login.html
+  # Copy the token printed above into <CSRF_TOKEN>.
+  curl -i -sS -b /tmp/bd-cookies -c /tmp/bd-cookies \
+    -H "Content-Type: application/json" \
+    -H "X-CSRF-Token: <CSRF_TOKEN>" \
+    --data "{\"username\":\"admin\",\"password\":\"<PASSWORD>\"}" \
+    http://127.0.0.1:5000/api/auth/login
+  curl -i -sS -b /tmp/bd-cookies http://127.0.0.1:5000/api/auth/verify
+'
+
+docker compose logs console 2>&1 | grep -E '\[AUTH\]|CSRF|Too many login|rate'
+```
+
+Interpret the result as follows:
+
+- `401` plus `password mismatch` or `user not found`: wrong identity store, stale hash, or bootstrap state.
+- `403` or a CSRF error: cookie/token or proxy handling, not the password hash.
+- `429`: login rate limiting; set `TRUST_PROXY=1` for one trusted reverse proxy so client IPs are not collapsed to the NPM address.
+- `200` from login followed by `401` from `/api/auth/verify`: session/cookie persistence or proxy headers.
+- `200` from both requests: the database credentials work; compare NPM access, forwarded headers, and browser cookies.
+
+When the console is behind Nginx Proxy Manager, set `TRUST_PROXY=1` in the console service and ensure NPM forwards `X-Forwarded-Proto`, `X-Forwarded-For`, and WebSocket upgrade headers. This fixes proxy/session diagnostics and rate-limit attribution; it does not by itself repair a mismatched SQLite password hash.
 
 ### Problem: `betterdesk-show-admin-credentials: executable file not found`
 
