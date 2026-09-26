@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.138] — 2026-09-26
+
+### Changed
 - **Hardened Docker startup on app-owned bind mounts (#424):** All-in-one and split entrypoints now inspect data files as the `betterdesk` user, so existing `.api_key`, `.admin_credentials`, SQLite databases, and enrollment markers are not mistaken for missing files when `cap_drop: ALL` is used with `0700` bind mounts. Bootstrap also always exports the admin variables required by supervisord, without generating replacement credentials for an existing database.
 
 ---
@@ -3805,3 +3812,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.135]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.134...v3.5.135
 [3.5.136]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.135...v3.5.136
 [3.5.137]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.136...v3.5.137
+[3.5.138]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.137...v3.5.138
