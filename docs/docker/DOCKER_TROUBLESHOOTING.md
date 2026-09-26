@@ -604,6 +604,55 @@ docker run ... \
   ghcr.io/unitronix/betterdesk:<tag>
 ```
 
+### Problem: Hardened bind mounts regenerate `.api_key` or restart after credentials cleanup (#424)
+
+**Symptom:** An all-in-one container uses `cap_drop: [ALL]`, a bind-mounted
+`/opt/rustdesk` owned by UID/GID `10001:10001` with mode `0700`, and logs
+`Auto-generated API key` on every restart. If `.admin_credentials` was removed
+from an installation that already has users, the container may also enter a
+supervisord restart loop with an `ENV_DEFAULT_ADMIN_*` or `ENV_INIT_ADMIN_*`
+format-string error.
+
+**Cause:** Root cannot traverse a `0700` app-owned directory after
+`CAP_DAC_READ_SEARCH` and `CAP_DAC_OVERRIDE` are dropped. Older images tested
+for files as root, so existing app-owned files looked absent. Older bootstrap
+paths could also leave the variables required by supervisord undefined.
+
+**Fix:** Pull/rebuild the current all-in-one or split images and recreate the
+container:
+
+```bash
+docker compose pull
+docker compose up -d --force-recreate
+```
+
+Current entrypoints perform data-file existence checks as `betterdesk` and
+export empty admin defaults when no replacement password is appropriate. Do
+not add `DAC_READ_SEARCH` just to work around this issue and do not delete
+`.admin_credentials` to change a password; use the normal password-reset flow.
+For custom bind mounts, keep the data directory accessible to the container's
+configured `PUID`/`PGID` (defaults to `10001:10001`) and keep it private, for
+example:
+
+```bash
+chown -R 10001:10001 ./betterdesk-data
+chmod 700 ./betterdesk-data
+```
+
+**Verify after updating:**
+
+```bash
+first_key=$(docker compose exec -T -u betterdesk betterdesk \
+  sh -c 'cat /opt/rustdesk/.api_key')
+docker compose restart betterdesk
+docker compose up -d --wait
+second_key=$(docker compose exec -T -u betterdesk betterdesk \
+  sh -c 'cat /opt/rustdesk/.api_key')
+test "$first_key" = "$second_key"
+docker compose logs betterdesk 2>&1 \
+  | grep -E 'ENV_(DEFAULT_ADMIN|INIT_ADMIN)|Auto-generated API key' || true
+```
+
 ### Problem: Browser shows `SSL_ERROR_RX_RECORD_TOO_LONG` (or Chrome “ERR_SSL_PROTOCOL_ERROR”)
 
 **Symptom:** After a fresh Docker install or `docker compose pull`, Firefox Advanced details show:

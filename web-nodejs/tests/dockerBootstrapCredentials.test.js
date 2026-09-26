@@ -16,6 +16,21 @@ function sourceBootstrap(env) {
     });
 }
 
+function sourceBootstrapExports(env) {
+    const scriptPath = bootstrapScript.replace(/\\/g, '/');
+    return spawnSync(
+        'sh',
+        [
+            '-c',
+            `. "${scriptPath}" >/dev/null 2>&1; printf "%s|%s|%s|%s\\n" "$INIT_ADMIN_USER" "$DEFAULT_ADMIN_USERNAME" "$INIT_ADMIN_PASS" "$DEFAULT_ADMIN_PASSWORD"`,
+        ],
+        {
+            env: { ...process.env, ...env },
+            encoding: 'utf8',
+        }
+    );
+}
+
 (hasPosixShell ? describe : describe.skip)('Docker bootstrap-admin-credentials', () => {
     let tempDir;
 
@@ -59,6 +74,39 @@ function sourceBootstrap(env) {
         expect(result.status).toBe(0);
         const credentials = fs.readFileSync(path.join(tempDir, '.admin_credentials'), 'utf8');
         expect(credentials).toContain('Admin Password: replacement-password-123');
+    });
+
+    test('exports supervisord admin variables when no password is available', () => {
+        const result = sourceBootstrapExports({
+            RUSTDESK_PATH: tempDir,
+            DB_PATH: path.join(tempDir, 'missing.sqlite'),
+            INIT_ADMIN_USER: '',
+            INIT_ADMIN_PASS: '',
+            DEFAULT_ADMIN_USERNAME: '',
+            DEFAULT_ADMIN_PASSWORD: '',
+            ADMIN_USERNAME: '',
+            ADMIN_PASSWORD: '',
+        });
+
+        expect(result.status).toBe(0);
+        expect(result.stdout.trim()).toBe('admin|admin||');
+    });
+
+    test('keeps configured admin values synchronized across services', () => {
+        const result = sourceBootstrapExports({
+            RUSTDESK_PATH: tempDir,
+            INIT_ADMIN_USER: 'operator',
+            INIT_ADMIN_PASS: 'configured-password-123',
+            DEFAULT_ADMIN_USERNAME: '',
+            DEFAULT_ADMIN_PASSWORD: '',
+            ADMIN_USERNAME: '',
+            ADMIN_PASSWORD: '',
+        });
+
+        expect(result.status).toBe(0);
+        expect(result.stdout.trim()).toBe(
+            'operator|operator|configured-password-123|configured-password-123'
+        );
     });
 });
 

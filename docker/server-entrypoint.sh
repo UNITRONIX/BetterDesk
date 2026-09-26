@@ -27,7 +27,7 @@ fi
 # Fix ownership before bootstrap writes .admin_credentials (issue #385).
 if [ "$(id -u)" = "0" ]; then
     chown -R betterdesk:betterdesk "$DATA_DIR" 2>/dev/null || true
-    if [ -f "$DATA_DIR/id_ed25519" ]; then
+    if file_exists_as_betterdesk "$DATA_DIR/id_ed25519"; then
         chmod 600 "$DATA_DIR/id_ed25519"
         chown betterdesk:betterdesk "$DATA_DIR/id_ed25519"
     fi
@@ -48,22 +48,22 @@ panel_auth_db_ready() {
     if [ -z "$auth_path" ]; then
         return 0
     fi
-    if [ ! -f "$auth_path" ] && [ "${SQLITE_AUTH_DB_MODE:-}" != "legacy" ]; then
+    if ! file_exists_as_betterdesk "$auth_path" && [ "${SQLITE_AUTH_DB_MODE:-}" != "legacy" ]; then
         echo "Panel auth.db not present — using the primary SQLite database"
         return 0
     fi
-    if [ -f "$auth_path" ]; then
+    if file_exists_as_betterdesk "$auth_path"; then
         echo "Panel auth.db ready: $auth_path"
         return 0
     fi
     echo "Waiting for panel auth.db at $auth_path (console container)..."
     retries=0
     max_retries=90
-    while [ ! -f "$auth_path" ] && [ "$retries" -lt "$max_retries" ]; do
+    while ! file_exists_as_betterdesk "$auth_path" && [ "$retries" -lt "$max_retries" ]; do
         sleep 2
         retries=$((retries + 1))
     done
-    if [ ! -f "$auth_path" ]; then
+    if ! file_exists_as_betterdesk "$auth_path"; then
         echo "WARN: panel auth.db not found after ${max_retries} attempts — RustDesk folders/groups may be unavailable"
         return 0
     fi
@@ -84,8 +84,9 @@ if [ -n "${ENROLLMENT_MODE:-}" ]; then
 else
     export ENROLLMENT_MODE_ENV_OVERRIDE="N"
     ENROLLMENT_SENTINEL="$DATA_DIR/.enrollment_initialized"
-    if [ ! -f "$ENROLLMENT_SENTINEL" ]; then
-        if [ -f "$DATA_DIR/db_v2.sqlite3" ] || [ -f "$DATA_DIR/id_ed25519" ]; then
+    if ! file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"; then
+        if file_exists_as_betterdesk "$DATA_DIR/db_v2.sqlite3" \
+            || file_exists_as_betterdesk "$DATA_DIR/id_ed25519"; then
             : # pre-existing volume — keep current enrollment policy
         else
             export ENROLLMENT_MODE="managed"

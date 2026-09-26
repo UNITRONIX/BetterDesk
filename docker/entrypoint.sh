@@ -59,7 +59,7 @@ touch_as_betterdesk() {
 
 # Bootstrap API key (shared between Go server and Node.js console)
 API_KEY_FILE="/opt/rustdesk/.api_key"
-if [ -z "${API_KEY:-}" ] && [ ! -f "$API_KEY_FILE" ]; then
+if [ -z "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
     if command -v openssl >/dev/null 2>&1; then
         API_KEY=$(openssl rand -hex 32)
     else
@@ -67,7 +67,7 @@ if [ -z "${API_KEY:-}" ] && [ ! -f "$API_KEY_FILE" ]; then
     fi
     write_as_betterdesk "$API_KEY_FILE" "$API_KEY"
     echo "Auto-generated API key → $API_KEY_FILE"
-elif [ -n "${API_KEY:-}" ] && [ ! -f "$API_KEY_FILE" ]; then
+elif [ -n "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
     write_as_betterdesk "$API_KEY_FILE" "$API_KEY"
     echo "API key from env → $API_KEY_FILE"
 fi
@@ -83,8 +83,9 @@ if [ -n "${ENROLLMENT_MODE:-}" ]; then
 else
     export ENROLLMENT_MODE_ENV_OVERRIDE="N"
     ENROLLMENT_SENTINEL="/opt/rustdesk/.enrollment_initialized"
-    if [ ! -f "$ENROLLMENT_SENTINEL" ]; then
-        if [ -f /opt/rustdesk/db_v2.sqlite3 ] || [ -f /opt/rustdesk/id_ed25519 ]; then
+    if ! file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"; then
+        if file_exists_as_betterdesk /opt/rustdesk/db_v2.sqlite3 \
+            || file_exists_as_betterdesk /opt/rustdesk/id_ed25519; then
             echo "Enrollment:   preserving existing policy (pre-existing volume)"
         else
             export ENROLLMENT_MODE="managed"
@@ -111,7 +112,7 @@ if ! touch_as_betterdesk /opt/rustdesk/.write_test 2>/dev/null; then
 fi
 rm -f /opt/rustdesk/.write_test 2>/dev/null || true
 # Fix private key permissions (volume mounts may preserve wrong UID/mode)
-if [ -f /opt/rustdesk/id_ed25519 ]; then
+if file_exists_as_betterdesk /opt/rustdesk/id_ed25519; then
     chmod 600 /opt/rustdesk/id_ed25519 2>/dev/null || true
     chown betterdesk:betterdesk /opt/rustdesk/id_ed25519 2>/dev/null || true
 fi
@@ -145,7 +146,7 @@ fi
 # service starts. It produces candidate/backup snapshots and aborts the
 # container start on conflict instead of ever creating or overwriting auth.db.
 if [ "${MIGRATE_SQLITE_AUTH_DB:-N}" = "Y" ] && [ "${DB_TYPE}" != "postgres" ] && [ "${DB_TYPE}" != "postgresql" ]; then
-    if [ ! -f "${AUTH_DB_PATH}" ]; then
+    if ! file_exists_as_betterdesk "${AUTH_DB_PATH}"; then
         echo "ERROR: MIGRATE_SQLITE_AUTH_DB=Y but legacy auth.db is missing: ${AUTH_DB_PATH}"
         exit 1
     fi

@@ -29,11 +29,11 @@ guard_sqlite_auth_split() {
     _auth_db="${AUTH_DB_PATH:-${DATA_DIR:-/app/data}/auth.db}"
     _primary_db="${DB_PATH:-${DB_URL:-/opt/rustdesk/db_v2.sqlite3}}"
 
-    [ -f "$_auth_db" ] || return 0
+    file_exists_as_betterdesk "$_auth_db" || return 0
     command -v sqlite3 >/dev/null 2>&1 || return 0
 
     _has_consolidation_marker=0
-    if [ -f "$_primary_db" ]; then
+    if file_exists_as_betterdesk "$_primary_db"; then
         if _guard_run_as_betterdesk sqlite3 "$_primary_db" \
             "SELECT 1 FROM betterdesk_migrations WHERE name='sqlite_auth_consolidation_v1' AND status='complete' LIMIT 1;" 2>/dev/null | grep -q 1; then
             _has_consolidation_marker=1
@@ -54,7 +54,7 @@ guard_sqlite_auth_split() {
     fi
 
     _primary_users=0
-    if [ -f "$_primary_db" ]; then
+    if file_exists_as_betterdesk "$_primary_db"; then
         _primary_users=$(_guard_run_as_betterdesk sqlite3 "$_primary_db" \
             "SELECT COUNT(*) FROM users;" 2>/dev/null || echo "0")
         case "$_primary_users" in

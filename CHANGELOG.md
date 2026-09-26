@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Hardened Docker startup on app-owned bind mounts (#424):** All-in-one and split entrypoints now inspect data files as the `betterdesk` user, so existing `.api_key`, `.admin_credentials`, SQLite databases, and enrollment markers are not mistaken for missing files when `cap_drop: ALL` is used with `0700` bind mounts. Bootstrap also always exports the admin variables required by supervisord, without generating replacement credentials for an existing database.
 
 ---
 

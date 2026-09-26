@@ -10,6 +10,7 @@ on:
       - 'betterdesk-docker.sh'
       - 'scripts/test-betterdesk-node-install.sh'
       - 'scripts/test-postgresql-hba.sh'
+      - 'scripts/test-docker-hardening.sh'
       - 'scripts/installer-protocol-check.js'
       - 'web-nodejs/lib/safePath.js'
       - 'web-nodejs/services/updateService.js'
@@ -28,6 +29,7 @@ on:
       - 'betterdesk-docker.sh'
       - 'scripts/test-betterdesk-node-install.sh'
       - 'scripts/test-postgresql-hba.sh'
+      - 'scripts/test-docker-hardening.sh'
       - 'scripts/installer-protocol-check.js'
       - 'web-nodejs/lib/safePath.js'
       - 'web-nodejs/services/updateService.js'
@@ -65,7 +67,8 @@ jobs:
             betterdesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-betterdesk-node-install.sh \
-            scripts/test-postgresql-hba.sh)
+            scripts/test-postgresql-hba.sh \
+            scripts/test-docker-hardening.sh)
       - name: Run ShellCheck
         run: |
           shellcheck --severity=error \
@@ -74,7 +77,8 @@ jobs:
             betterdesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-betterdesk-node-install.sh \
-            scripts/test-postgresql-hba.sh
+            scripts/test-postgresql-hba.sh \
+            scripts/test-docker-hardening.sh
       - name: Test native Node.js installer recovery
         run: bash scripts/test-betterdesk-node-install.sh
       - name: Test native installer watchdog and clone recovery
@@ -162,6 +166,18 @@ jobs:
             docker-compose.quick.single.macvlan.yml; do
             docker compose -f "$file" config --quiet
           done
+
+  docker-hardening-smoke:
+    name: Docker hardened bind-mount smoke
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BETTERDESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify hardened bind mounts and restart behavior
+        run: bash scripts/test-docker-hardening.sh
 
   docker-runtime-smoke:
     name: Docker runtime smoke

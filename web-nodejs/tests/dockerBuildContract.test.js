@@ -81,6 +81,52 @@ describe('Docker admin bootstrap contract', () => {
         expect(contents).toContain('export DB_URL="${DATABASE_URL:-${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}}"');
     });
 
+    test('hardened Docker checks app-owned paths as betterdesk', () => {
+        const bootstrap = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'bootstrap-admin-credentials.sh'),
+            'utf8'
+        );
+        const entrypoint = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'entrypoint.sh'),
+            'utf8'
+        );
+        const guard = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'guard-sqlite-auth-split.sh'),
+            'utf8'
+        );
+
+        expect(bootstrap).toContain('file_exists_as_betterdesk()');
+        expect(bootstrap).toContain('path_exists_as_betterdesk()');
+        expect(bootstrap).toContain('file_exists_as_betterdesk "$_file"');
+        expect(bootstrap).toContain('file_exists_as_betterdesk "$_primary_db"');
+        expect(bootstrap).toContain('path_exists_as_betterdesk "$CREDS_FILE"');
+        expect(entrypoint).toContain('file_exists_as_betterdesk "$API_KEY_FILE"');
+        expect(entrypoint).toContain('file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"');
+        expect(guard).toContain('file_exists_as_betterdesk "$_auth_db"');
+        expect(guard).toContain('file_exists_as_betterdesk "$_primary_db"');
+    });
+
+    test('AIO supervisord admin variables are always exported by bootstrap', () => {
+        const bootstrap = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'bootstrap-admin-credentials.sh'),
+            'utf8'
+        );
+        const supervisor = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'supervisord.conf'),
+            'utf8'
+        );
+
+        expect(bootstrap).toContain('ensure_admin_exports()');
+        expect(bootstrap).toContain('export INIT_ADMIN_USER=');
+        expect(bootstrap).toContain('export INIT_ADMIN_PASS=');
+        expect(bootstrap).toContain('export DEFAULT_ADMIN_USERNAME=');
+        expect(bootstrap).toContain('export DEFAULT_ADMIN_PASSWORD=');
+        expect(supervisor).toContain('%(ENV_DEFAULT_ADMIN_USERNAME)s');
+        expect(supervisor).toContain('%(ENV_DEFAULT_ADMIN_PASSWORD)s');
+        expect(supervisor).toContain('%(ENV_INIT_ADMIN_USER)s');
+        expect(supervisor).toContain('%(ENV_INIT_ADMIN_PASS)s');
+    });
+
     test.each([
         'docker-compose.yml',
         'docker-compose.single.yml',

@@ -13,11 +13,11 @@ ensure_betterdesk_user
 if [ "$(id -u)" = "0" ]; then
     chown -R betterdesk:betterdesk /app/data 2>/dev/null || true
     # Fix permissions on sensitive files
-    if [ -f /app/data/.session_secret ]; then
+    if file_exists_as_betterdesk /app/data/.session_secret; then
         chmod 600 /app/data/.session_secret
         chown betterdesk:betterdesk /app/data/.session_secret
     fi
-    if [ -f /app/data/auth.db ]; then
+    if file_exists_as_betterdesk /app/data/auth.db; then
         chown betterdesk:betterdesk /app/data/auth.db
     fi
     # /opt/rustdesk may be mounted read-only from server volume — only fix if writable

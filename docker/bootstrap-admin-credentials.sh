@@ -27,6 +27,15 @@ fi
 
 ADMIN_USER="${INIT_ADMIN_USER:-${DEFAULT_ADMIN_USERNAME:-admin}}"
 
+ensure_admin_exports() {
+    export INIT_ADMIN_USER="${INIT_ADMIN_USER:-${DEFAULT_ADMIN_USERNAME:-admin}}"
+    export DEFAULT_ADMIN_USERNAME="${DEFAULT_ADMIN_USERNAME:-$INIT_ADMIN_USER}"
+    export DEFAULT_ADMIN_PASSWORD="${DEFAULT_ADMIN_PASSWORD:-${INIT_ADMIN_PASS:-}}"
+    export INIT_ADMIN_PASS="${INIT_ADMIN_PASS:-$DEFAULT_ADMIN_PASSWORD}"
+}
+
+ensure_admin_exports
+
 sync_exports() {
     export INIT_ADMIN_USER="${INIT_ADMIN_USER:-$ADMIN_USER}"
     export DEFAULT_ADMIN_USERNAME="${DEFAULT_ADMIN_USERNAME:-$ADMIN_USER}"
@@ -47,9 +56,17 @@ run_as_betterdesk() {
     fi
 }
 
+file_exists_as_betterdesk() {
+    run_as_betterdesk test -f "$1"
+}
+
+path_exists_as_betterdesk() {
+    run_as_betterdesk test -e "$1"
+}
+
 parse_creds_password() {
     _file="$1"
-    if [ ! -f "$_file" ]; then
+    if ! file_exists_as_betterdesk "$_file"; then
         return 1
     fi
     # The file is intentionally mode 0600 and owned by betterdesk. Root in
@@ -112,7 +129,7 @@ primary_database_has_users() {
     case "$_primary_db" in
         postgres://*|postgresql://*) return 1 ;;
     esac
-    if [ ! -f "$_primary_db" ] || ! command -v sqlite3 >/dev/null 2>&1; then
+    if ! file_exists_as_betterdesk "$_primary_db" || ! command -v sqlite3 >/dev/null 2>&1; then
         return 1
     fi
     _user_count=$(run_as_betterdesk sqlite3 "$_primary_db" \
@@ -152,7 +169,7 @@ if [ -n "${INIT_ADMIN_PASS:-}" ] || [ -n "${DEFAULT_ADMIN_PASSWORD:-}" ]; then
     if [ -n "$_env_pass" ]; then
         echo "Bootstrap: INIT_ADMIN_PASS/DEFAULT_ADMIN_PASSWORD set=yes (password not logged)"
         run_as_betterdesk mkdir -p "$CREDS_DIR" 2>/dev/null || true
-        if [ ! -f "$CREDS_FILE" ] && ! primary_database_has_users; then
+        if ! file_exists_as_betterdesk "$CREDS_FILE" && ! primary_database_has_users; then
             write_bootstrap_credentials "$_env_pass" " (ADMIN_PASSWORD)"
             echo "Bootstrap admin credentials → ${CREDS_FILE} (from ADMIN_PASSWORD / INIT_ADMIN_PASS)"
         elif ! primary_database_has_users; then
@@ -200,7 +217,7 @@ if run_as_betterdesk mkdir "$LOCK_DIR" 2>/dev/null; then
         echo "      No replacement bootstrap password was generated; use password reset." >&2
         return 0 2>/dev/null || exit 0
     fi
-    if [ -e "$CREDS_FILE" ]; then
+    if path_exists_as_betterdesk "$CREDS_FILE"; then
         cleanup_bootstrap_lock
         trap - EXIT HUP INT TERM
         echo "ERROR: ${CREDS_FILE} exists but does not contain a readable admin password." >&2
