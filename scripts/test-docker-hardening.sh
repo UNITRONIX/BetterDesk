@@ -7,10 +7,38 @@ IMAGE="${BETTERDESK_HARDENING_IMAGE:-ghcr.io/unitronix/betterdesk:${IMAGE_TAG}}"
 PROJECT="betterdesk-hardening-$RANDOM"
 TEST_DIR="$(mktemp -d)"
 OVERRIDE_FILE="$TEST_DIR/compose.override.yml"
+if command -v cygpath >/dev/null 2>&1; then
+    DOCKER_TEST_DIR="$(cygpath -m "$TEST_DIR")"
+else
+    DOCKER_TEST_DIR="$TEST_DIR"
+fi
 
 fail() {
     printf 'FAIL: %s\n' "$*" >&2
+    if [[ -f "$OVERRIDE_FILE" ]] && command -v docker >/dev/null 2>&1; then
+        docker compose -p "$PROJECT" \
+            -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+            -f "$OVERRIDE_FILE" logs --tail=120 >&2 || true
+        docker compose -p "$PROJECT" \
+            -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+            -f "$OVERRIDE_FILE" exec -T -u betterdesk betterdesk \
+            sh -c 'ls -la /opt/rustdesk; sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELECT COUNT(*) FROM users;"' >&2 || true
+        ls -la "$TEST_DIR/rustdesk" >&2 || true
+    fi
     exit 1
+}
+
+wait_for_bootstrap_admin() {
+    for _ in {1..30}; do
+        if docker compose -p "$PROJECT" \
+            -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+            -f "$OVERRIDE_FILE" logs 2>&1 \
+            | grep -Eq 'INITIAL ADMIN CREDENTIALS|Admin password hash migrated|Default admin user created'; then
+            return 0
+        fi
+        sleep 1
+    done
+    fail "container did not bootstrap an admin user"
 }
 
 cleanup() {
@@ -32,8 +60,8 @@ services:
   betterdesk:
     image: ${IMAGE}
     volumes:
-      - ${TEST_DIR}/rustdesk:/opt/rustdesk
-      - ${TEST_DIR}/console:/app/data
+      - "${DOCKER_TEST_DIR}/rustdesk:/opt/rustdesk"
+      - "${DOCKER_TEST_DIR}/console:/app/data"
 EOF
 
 if [[ "$IMAGE" == ghcr.io/* ]]; then
@@ -54,6 +82,8 @@ docker run --rm \
 docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" up -d --wait
+
+wait_for_bootstrap_admin
 
 first_key=$(docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
@@ -79,7 +109,9 @@ second_key=$(docker compose -p "$PROJECT" \
 docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T -u betterdesk betterdesk \
-    rm -f /opt/rustdesk/.admin_credentials
+    sh -c 'rm -f /opt/rustdesk/.admin_credentials'
+[ ! -e "$TEST_DIR/rustdesk/.admin_credentials" ] \
+    || fail "credentials file could not be removed from the bind mount"
 docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" restart betterdesk
