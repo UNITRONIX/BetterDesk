@@ -783,6 +783,8 @@ main() {
     esac
 }
 
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+# BASH_SOURCE[0] is unset when this script is piped into `bash` (the
+# documented `curl ... | sudo bash` path), so default it to $0 under nounset.
+if [[ "${BASH_SOURCE[0]:-$0}" == "$0" ]]; then
     main "$@"
 fi

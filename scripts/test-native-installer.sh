@@ -85,6 +85,15 @@ printf 'unexpected fake git invocation: %s\n' "$*" >&2
 exit 1
 FAKE_GIT
     chmod +x "$fake_bin/git"
+    cat > "$fake_bin/id" <<'FAKE_ID'
+#!/usr/bin/env bash
+if [ "${1:-}" = "-u" ]; then
+    printf '0\n'
+    exit 0
+fi
+exec /usr/bin/id "$@"
+FAKE_ID
+    chmod +x "$fake_bin/id"
 
     export PATH="$fake_bin:$PATH"
     export INSTALL_DIR="$install_dir"
@@ -121,6 +130,13 @@ FAKE_GIT
         fail "failed clone returned success"
     fi
     [ -d "$repo_dir/.git" ] || fail "original source was not restored after clone failure"
+
+    local piped_output
+    if ! piped_output=$(cat "$SCRIPT_ROOT/install.sh" | bash -s -- --native); then
+        fail "piped native installer invocation failed: ${piped_output}"
+    fi
+    [[ "$piped_output" == *"Native installation finished."* ]] \
+        || fail "piped native installer did not reach main: ${piped_output}"
 )
 
 test_bounded_go_commands
