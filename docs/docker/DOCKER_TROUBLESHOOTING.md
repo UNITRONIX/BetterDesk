@@ -473,15 +473,45 @@ Do not delete only the `/opt/rustdesk` bind mount while keeping `console-data`: 
 **Diagnose before wiping data:** First determine whether the failure is authentication, CSRF, rate limiting, or session persistence. Run this against a disposable or maintenance window deployment; replace `<PASSWORD>` locally and do not paste it into an issue:
 
 ```bash
-# Inspect both possible identity stores and the credential file.
+# Confirm the effective paths in both services. A credentials file is not
+# itself an identity store, and a custom split compose must keep these paths
+# aligned.
+docker compose exec server sh -lc '
+  printf "server DB_TYPE=%s DB_URL=%s DB_PATH=%s AUTH_DB_PATH=%s\n" \
+    "$DB_TYPE" "$DB_URL" "$DB_PATH" "$AUTH_DB_PATH"
+'
 docker compose exec console sh -lc '
-  ls -la /opt/rustdesk/.admin_credentials /opt/rustdesk/db_v2.sqlite3 /app/data/auth.db 2>&1
-  sqlite3 /opt/rustdesk/db_v2.sqlite3 \
-    "SELECT username, substr(password_hash,1,30), role FROM users;"
-  if [ -f /app/data/auth.db ]; then
-    sqlite3 /app/data/auth.db \
-      "SELECT username, substr(password_hash,1,30), role FROM users;"
-  fi
+  printf "console DB_TYPE=%s DB_URL=%s DB_PATH=%s AUTH_DB_PATH=%s SQLITE_AUTH_DB_MODE=%s\n" \
+    "$DB_TYPE" "$DB_URL" "$DB_PATH" "$AUTH_DB_PATH" "$SQLITE_AUTH_DB_MODE"
+'
+
+# Inspect every possible identity store and the credential file. On a fresh
+# consolidated SQLite install, db_v2.sqlite3 contains the admin row and
+# /app/data/auth.db should be absent.
+docker compose exec console sh -lc '
+  for db in /opt/rustdesk/db_v2.sqlite3 /app/data/db_v2.sqlite3 /app/data/auth.db; do
+    if [ -f "$db" ]; then
+      echo "=== $db ==="
+      sqlite3 "$db" \
+        "SELECT username, substr(password_hash,1,30), role FROM users;"
+    else
+      echo "=== $db: absent ==="
+    fi
+  done
+  echo "=== credentials ==="
+  ls -la /opt/rustdesk/.admin_credentials /app/data/.admin_credentials 2>&1
+'
+
+# Also inspect the paths from the server container. This catches a custom
+# compose file where Go and Node.js resolve different SQLite files.
+docker compose exec server sh -lc '
+  for db in /opt/rustdesk/db_v2.sqlite3 /app/data/db_v2.sqlite3 /app/data/auth.db; do
+    if [ -f "$db" ]; then
+      echo "=== $db ==="
+      sqlite3 "$db" \
+        "SELECT username, substr(password_hash,1,30), role FROM users;"
+    fi
+  done
 '
 
 # Capture the CSRF token from the login page, then log in from inside the
@@ -510,6 +540,25 @@ Interpret the result as follows:
 - `200` from both requests: the database credentials work; compare NPM access, forwarded headers, and browser cookies.
 
 When the console is behind Nginx Proxy Manager, set `TRUST_PROXY=1` in the console service and ensure NPM forwards `X-Forwarded-Proto`, `X-Forwarded-For`, and WebSocket upgrade headers. This fixes proxy/session diagnostics and rate-limit attribution; it does not by itself repair a mismatched SQLite password hash.
+
+For a custom split Compose file, keep the database contract explicit on both
+services:
+
+```yaml
+services:
+  server:
+    environment:
+      - DB_URL=/opt/rustdesk/db_v2.sqlite3
+  console:
+    environment:
+      - DB_PATH=/opt/rustdesk/db_v2.sqlite3
+      - TRUST_PROXY=${TRUST_PROXY:-}
+```
+
+Do not set only the console `DB_PATH` and rely on the Go server's working
+directory. Do not point the console at `/app/data/db_v2.sqlite3` while the
+server uses `/opt/rustdesk/db_v2.sqlite3`; those are independent SQLite files
+even when both containers share the same host deployment.
 
 ### Problem: `betterdesk-show-admin-credentials: executable file not found`
 

@@ -27,13 +27,14 @@ fi
 # Fix ownership before bootstrap writes .admin_credentials (issue #385).
 if [ "$(id -u)" = "0" ]; then
     chown -R betterdesk:betterdesk "$DATA_DIR" 2>/dev/null || true
-    if file_exists_as_betterdesk "$DATA_DIR/id_ed25519"; then
+    if [ -f "$DATA_DIR/id_ed25519" ]; then
         chmod 600 "$DATA_DIR/id_ed25519"
         chown betterdesk:betterdesk "$DATA_DIR/id_ed25519"
     fi
 fi
 
-# Pre-bootstrap shared admin password before console / Go race (issue #385).
+# Load shared bootstrap helpers before any app-owned path checks. The helper
+# definitions are also used by the panel and enrollment checks below.
 # shellcheck source=/docker/bootstrap-admin-credentials.sh
 . /docker/bootstrap-admin-credentials.sh
 

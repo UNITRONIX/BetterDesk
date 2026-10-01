@@ -13,16 +13,16 @@ ensure_betterdesk_user
 if [ "$(id -u)" = "0" ]; then
     chown -R betterdesk:betterdesk /app/data 2>/dev/null || true
     # Fix permissions on sensitive files
-    if file_exists_as_betterdesk /app/data/.session_secret; then
+    if [ -f /app/data/.session_secret ]; then
         chmod 600 /app/data/.session_secret
         chown betterdesk:betterdesk /app/data/.session_secret
     fi
-    if file_exists_as_betterdesk /app/data/auth.db; then
+    if [ -f /app/data/auth.db ]; then
         chown betterdesk:betterdesk /app/data/auth.db
     fi
     # /opt/rustdesk may be mounted read-only from server volume — only fix if writable
     chown -R betterdesk:betterdesk /opt/rustdesk 2>/dev/null || true
-    # Import shared bootstrap password from server volume (issue #385).
+    # Load shared bootstrap helpers after volume ownership is corrected.
     # shellcheck source=/docker/bootstrap-admin-credentials.sh
     . /docker/bootstrap-admin-credentials.sh
     # shellcheck source=/docker/guard-sqlite-auth-split.sh

@@ -106,6 +106,17 @@ describe('Docker admin bootstrap contract', () => {
         expect(guard).toContain('file_exists_as_betterdesk "$_primary_db"');
     });
 
+    test('split entrypoints source path helpers before using them', () => {
+        for (const entrypoint of ['docker/server-entrypoint.sh', 'docker/console-entrypoint.sh']) {
+            const contents = fs.readFileSync(path.join(repoRoot, entrypoint), 'utf8');
+            const bootstrapSource = contents.indexOf('. /docker/bootstrap-admin-credentials.sh');
+            const firstHelperUse = contents.indexOf('file_exists_as_betterdesk ');
+
+            expect(bootstrapSource).toBeGreaterThanOrEqual(0);
+            expect(firstHelperUse === -1 || firstHelperUse > bootstrapSource).toBe(true);
+        }
+    });
+
     test('AIO supervisord admin variables are always exported by bootstrap', () => {
         const bootstrap = fs.readFileSync(
             path.join(repoRoot, 'docker', 'bootstrap-admin-credentials.sh'),
