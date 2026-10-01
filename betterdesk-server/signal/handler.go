@@ -114,11 +114,6 @@ func relayAdvertisedAddr(s *Server, correlationAddr *net.UDPAddr, initiatorID st
 
 	if s != nil && s.peers != nil && initiatorID != "" {
 		if entry := s.peers.Get(initiatorID); entry != nil {
-			if entry.UDPAddr != nil {
-				addr := *entry.UDPAddr
-				addr.IP = append(net.IP(nil), entry.UDPAddr.IP...)
-				return &addr
-			}
 			host := entry.IP
 			if parsedHost, _, err := net.SplitHostPort(host); err == nil {
 				host = parsedHost
@@ -1011,6 +1006,10 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 // they arrive later — this provides an update but is no longer required for the
 // initiator to proceed.
 func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAddr) *pb.RendezvousMessage {
+	return s.handlePunchHoleRequestTCPWithHint(msg, raddr, peer.ConnTCP)
+}
+
+func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, raddr *net.UDPAddr, initiatorHint peer.ConnType) *pb.RendezvousMessage {
 	connection := s.cfg.ConnectionSettings()
 	if raddr == nil {
 		log.Printf("[signal] PunchHoleRequest (TCP): nil address, ignoring")
@@ -1122,10 +1121,14 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 	}
 
 	// Forward PunchHole to the TARGET peer (supports UDP, TCP, and WebSocket targets).
+	advertisedAddr := relayAdvertisedAddr(s, raddr, initiatorID, initiatorHint)
+	if advertisedAddr == nil {
+		return s.punchHoleUnauthorizedResponse()
+	}
 	punchHole := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHole{
 			PunchHole: &pb.PunchHole{
-				SocketAddr:   crypto.EncodeAddr(raddr),
+				SocketAddr:   crypto.EncodeAddr(advertisedAddr),
 				RelayServer:  relayServer,
 				NatType:      msg.NatType,
 				UdpPort:      msg.UdpPort,
@@ -1484,8 +1487,10 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 // Previous behavior (sending nothing back and waiting for the target's
 // RelayResponse) caused timeouts for TCP signaling clients (e.g. logged-in users).
 //
-// initiatorHint is ConnTCP for native TCP signal or ConnWS for WebSocket Mode;
-// if the initiator is registered, their stored ConnType wins.
+// initiatorHint is ConnTCP for native TCP signal or ConnWS for WebSocket Mode.
+// The active connection is authoritative: a peer may retain a stale
+// registration type while a new WebSocket session is already handling this
+// request.
 func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initiatorHint peer.ConnType) *pb.RendezvousMessage {
 	if raddr == nil {
 		log.Printf("[signal] RequestRelay (TCP): nil address, ignoring")
@@ -1544,8 +1549,10 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	// information for relay address selection and diagnostics, but do not
 	// refuse the pair here.
 	initiatorType := initiatorHint
-	if initiator := s.peers.Get(initiatorID); initiator != nil {
-		initiatorType = initiator.ConnType
+	if initiatorHint != peer.ConnWS {
+		if initiator := s.peers.Get(initiatorID); initiator != nil {
+			initiatorType = initiator.ConnType
+		}
 	}
 	if relayTransportMismatch(initiatorType, target.ConnType) {
 		log.Printf("[signal] RequestRelay (TCP): mixed transport initiator=%s target=%s (%s vs %s) — relay will bridge framing",

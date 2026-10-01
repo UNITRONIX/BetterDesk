@@ -268,7 +268,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 				continue
 			}
 			s.registerWSPunchConn(remoteAddr, wsc)
-			resp := s.handlePunchHoleRequestTCP(msg.GetPunchHoleRequest(), fakeAddr)
+			resp := s.handlePunchHoleRequestTCPWithHint(msg.GetPunchHoleRequest(), fakeAddr, peer.ConnWS)
 			if resp != nil {
 				wsc.WriteMessage(resp)
 			}

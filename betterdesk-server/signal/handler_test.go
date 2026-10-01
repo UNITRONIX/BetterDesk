@@ -64,6 +64,7 @@ func TestRelayAdvertisedAddrUsesWSClientIPWithoutProxyPort(t *testing.T) {
 	srv.peers.Put(&peer.Entry{
 		ID:       "WSADDR01",
 		IP:       "203.0.113.50:41000",
+		UDPAddr:  udpAddr("3.0.113.99", 54321),
 		ConnType: peer.ConnWS,
 		LastReg:  time.Now(),
 	})
@@ -77,6 +78,78 @@ func TestRelayAdvertisedAddrUsesWSClientIPWithoutProxyPort(t *testing.T) {
 	}
 	if got.Port != 0 {
 		t.Fatalf("advertised port = %d, want 0 instead of proxy port", got.Port)
+	}
+}
+
+func TestRequestRelayTCPUsesActiveWSTransportForAdvertisement(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	putOnlinePeer(srv, "WSTGTADDR", "198.51.100.60", 52000, peer.ConnTCP)
+	srv.peers.Put(&peer.Entry{
+		ID:       "WSINITADDR",
+		IP:       "203.0.113.50:41000",
+		UDPAddr:  udpAddr("3.0.113.99", 54321),
+		ConnType: peer.ConnTCP,
+		LastReg:  time.Now(),
+	})
+
+	const relayUUID = "ws-active-transport-address"
+	resp := srv.handleRequestRelayTCP(
+		&pb.RequestRelay{Id: "WSTGTADDR", Uuid: relayUUID},
+		udpAddr("203.0.113.50", 41000),
+		peer.ConnWS,
+	)
+	if rr := resp.GetRelayResponse(); rr == nil || rr.RefuseReason != "" {
+		t.Fatalf("RequestRelay response = %+v", resp)
+	}
+
+	pending := srv.getPendingRelayByUUID(relayUUID)
+	if pending == nil {
+		t.Fatal("expected pending relay entry")
+	}
+	if pending.advertisedAddr != normalizeAddrKey("203.0.113.50:0") {
+		t.Fatalf("advertised address = %q, want %q", pending.advertisedAddr, normalizeAddrKey("203.0.113.50:0"))
+	}
+}
+
+func TestPunchHoleTCPUsesWSSAdvertisedAddress(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.cfg.P2PFirst = false
+	recv, targetAddr := attachTestUDPPair(t, srv)
+	srv.peers.Put(&peer.Entry{
+		ID:       "WSINITPUNCH",
+		IP:       "203.0.113.51:41000",
+		UDPAddr:  udpAddr("3.0.113.98", 54320),
+		ConnType: peer.ConnTCP,
+		LastReg:  time.Now(),
+	})
+	srv.peers.Put(&peer.Entry{
+		ID:         "WSTGTPUNCH",
+		IP:         targetAddr.String(),
+		UDPAddr:    targetAddr,
+		ConnType:   peer.ConnUDP,
+		LastReg:    time.Now(),
+		StatusTier: peer.StatusOnline,
+	})
+
+	resp := srv.handlePunchHoleRequestTCPWithHint(
+		&pb.PunchHoleRequest{Id: "WSTGTPUNCH"},
+		udpAddr("203.0.113.51", 41000),
+		peer.ConnWS,
+	)
+	if phr := resp.GetPunchHoleResponse(); phr == nil || phr.Failure != 0 {
+		t.Fatalf("PunchHole response = %+v", resp)
+	}
+
+	forwarded := readUDPRendezvous(t, recv).GetPunchHole()
+	if forwarded == nil {
+		t.Fatal("expected PunchHole on target UDP")
+	}
+	decoded, err := cryptopkg.DecodeAddr(forwarded.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode PunchHole socket_addr: %v", err)
+	}
+	if !decoded.IP.Equal(net.ParseIP("203.0.113.51")) || decoded.Port != 0 {
+		t.Fatalf("PunchHole socket_addr = %s, want 203.0.113.51:0", decoded)
 	}
 }
 
@@ -2347,6 +2420,13 @@ func TestHandleRequestRelayTCPForwardsUDPWhenConnTCP(t *testing.T) {
 	}
 	if req.Uuid != relayUUID {
 		t.Fatalf("relay UUID = %q, want %q", req.Uuid, relayUUID)
+	}
+	decoded, err := cryptopkg.DecodeAddr(req.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode RequestRelay socket_addr: %v", err)
+	}
+	if !decoded.IP.Equal(net.ParseIP("127.0.0.1")) || decoded.Port != 51001 {
+		t.Fatalf("RequestRelay socket_addr = %s, want 127.0.0.1:51001", decoded)
 	}
 }
 
