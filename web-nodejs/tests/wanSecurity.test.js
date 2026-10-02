@@ -96,6 +96,16 @@ describe('WAN API path whitelist', () => {
     test('allows both current-user methods used by clients', () => {
         expect(runWhitelist('/api/currentUser', 'GET').nextCalled).toBe(true);
         expect(runWhitelist('/api/currentUser', 'POST').nextCalled).toBe(true);
+        expect(runWhitelist('/api/currentUser', 'OPTIONS').nextCalled).toBe(true);
+    });
+
+    test('rejects unsupported current-user methods', () => {
+        for (const method of ['PUT', 'DELETE']) {
+            const result = runWhitelist('/api/currentUser', method);
+
+            expect(result.nextCalled).toBe(false);
+            expect(result.statusCode).toBe(405);
+        }
     });
 
     test('continues rejecting unknown paths', () => {
