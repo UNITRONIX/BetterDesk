@@ -50,7 +50,7 @@
       checksGrid.innerHTML = checks.map(c => {
         const passed = c.pass ?? c.passed;
         const cls = passed ? 'pass' : (c.warn ? 'warn' : 'fail');
-        const icon = passed ? 'check_circle' : (c.warn ? 'warning' : 'cancel');
+        const icon = passed ? 'check_circle' : (c.warn ? 'warning' : 'error');
         const badge = passed ? _('security_audit.pass') : (c.warn ? _('security_audit.warning') : _('security_audit.fail'));
         return `<div class="secaudit-check">
           <span class="material-icons secaudit-check-icon ${cls}">${icon}</span>
