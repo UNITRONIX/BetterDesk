@@ -47,6 +47,9 @@ const HISTORY_LIMIT = 500; // in-memory fallback
 
 // device_id → { agentWs, operatorWss, messages (fallback ring buffer) }
 const rooms = new Map();
+// Standalone panel operators are not attached to a device room. Keep a
+// separate index so device-originated events can reach the chat inbox.
+const panelOperators = new Set();
 
 // Reference to betterdeskApi for Go server calls
 let goApi = null;
@@ -80,6 +83,42 @@ function sendTo(ws, data) {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(data));
     }
+}
+
+function broadcastToPanelOperators(data, excludeWs = null, room = null) {
+    const text = JSON.stringify(data);
+    panelOperators.forEach((ws) => {
+        // A device-scoped operator already receives the frame through its room.
+        if (ws === excludeWs || (room && room.operatorWss.has(ws))) return;
+        if (ws.readyState === WebSocket.OPEN) ws.send(text);
+    });
+}
+
+function fallbackContacts(currentDeviceId) {
+    const contacts = [{
+        id: 'operator',
+        name: 'Support',
+        hostname: '',
+        online: true,
+        last_seen: Date.now(),
+        unread: 0,
+        avatar_color: '#4f6ef7',
+        role: 'operator',
+    }];
+    for (const [did, room] of rooms) {
+        if (did !== currentDeviceId && room.agentWs?.readyState === WebSocket.OPEN) {
+            contacts.push({
+                id: did,
+                name: did,
+                hostname: '',
+                online: true,
+                last_seen: Date.now(),
+                unread: 0,
+                avatar_color: '',
+            });
+        }
+    }
+    return contacts;
 }
 
 function setupPing(ws) {
@@ -155,6 +194,8 @@ function handleAgentConnection(ws, deviceId) {
     log.info(`Agent connected: ${deviceId}`);
     broadcast(room, { type: 'status', agent_connected: true }, ws);
     broadcast(room, { type: 'presence', device_id: deviceId, online: true }, ws);
+    broadcastToPanelOperators({ type: 'status', device_id: deviceId, agent_connected: true }, null, room);
+    broadcastToPanelOperators({ type: 'presence', device_id: deviceId, online: true }, null, room);
 
     // Send history from DB
     loadHistory(deviceId).then(data => {
@@ -221,16 +262,21 @@ function handleAgentConnection(ws, deviceId) {
                 };
                 appendMessage(room, msg);
                 broadcast(room, msg, ws);
+                broadcastToPanelOperators(msg, ws, room);
                 persistMessage(msg);
                 break;
             }
 
             case 'typing':
-                broadcast(room, {
+                {
+                    const typing = {
                     type: 'typing',
                     from: deviceId,
                     conversation_id: frame.conversation_id || 'operator',
-                }, ws);
+                    };
+                    broadcast(room, typing, ws);
+                    broadcastToPanelOperators(typing, ws, room);
+                }
                 break;
 
             case 'get_contacts':
@@ -238,32 +284,7 @@ function handleAgentConnection(ws, deviceId) {
                     if (data && data.contacts && data.contacts.length > 0) {
                         sendTo(ws, { type: 'contacts', contacts: data.contacts });
                     } else {
-                        // Fallback: return at least the operator contact and any connected agents
-                        const fallbackContacts = [{
-                            id: 'operator',
-                            name: 'Support',
-                            hostname: '',
-                            online: true,
-                            last_seen: Date.now(),
-                            unread: 0,
-                            avatar_color: '#4f6ef7',
-                            role: 'operator',
-                        }];
-                        // Add other connected agents as contacts
-                        for (const [did, room] of rooms) {
-                            if (did !== deviceId && room.agentWs && room.agentWs.readyState === WebSocket.OPEN) {
-                                fallbackContacts.push({
-                                    id: did,
-                                    name: did,
-                                    hostname: '',
-                                    online: true,
-                                    last_seen: Date.now(),
-                                    unread: 0,
-                                    avatar_color: '',
-                                });
-                            }
-                        }
-                        sendTo(ws, { type: 'contacts', contacts: fallbackContacts });
+                        sendTo(ws, { type: 'contacts', contacts: fallbackContacts(deviceId) });
                     }
                 });
                 break;
@@ -308,23 +329,31 @@ function handleAgentConnection(ws, deviceId) {
 
             // E2E key exchange: relay public key to operators
             case 'key_exchange':
-                broadcast(room, {
+                {
+                    const keyExchange = {
                     type: 'key_exchange',
                     from: deviceId,
                     public_key: frame.public_key,
                     conversation_id: frame.conversation_id || deviceId,
-                }, ws);
+                    };
+                    broadcast(room, keyExchange, ws);
+                    broadcastToPanelOperators(keyExchange, ws, room);
+                }
                 break;
 
             // Read receipts
             case 'read_receipt':
-                broadcast(room, {
+                {
+                    const receipt = {
                     type: 'read_receipt',
                     from: deviceId,
                     message_ids: frame.message_ids || [],
                     conversation_id: frame.conversation_id || deviceId,
                     timestamp: Date.now(),
-                }, ws);
+                    };
+                    broadcast(room, receipt, ws);
+                    broadcastToPanelOperators(receipt, ws, room);
+                }
                 if (goApi && frame.conversation_id) {
                     goApi.post('/chat/read', {
                         conversation_id: frame.conversation_id,
@@ -336,18 +365,23 @@ function handleAgentConnection(ws, deviceId) {
 
             // Online presence broadcast
             case 'presence_update':
-                broadcast(room, {
+                {
+                    const presence = {
                     type: 'presence',
                     device_id: deviceId,
                     online: frame.online !== false,
                     status: frame.status || 'available',
                     timestamp: Date.now(),
-                }, ws);
+                    };
+                    broadcast(room, presence, ws);
+                    broadcastToPanelOperators(presence, ws, room);
+                }
                 break;
 
             // Encrypted file share: relay encrypted file metadata
             case 'file_share':
-                broadcast(room, {
+                {
+                    const fileShare = {
                     type: 'file_share',
                     from: deviceId,
                     from_name: frame.from_name || deviceId,
@@ -357,7 +391,10 @@ function handleAgentConnection(ws, deviceId) {
                     file_size: frame.file_size || 0,
                     encrypted_metadata: frame.encrypted_metadata || '',
                     timestamp: Date.now(),
-                }, ws);
+                    };
+                    broadcast(room, fileShare, ws);
+                    broadcastToPanelOperators(fileShare, ws, room);
+                }
                 break;
 
             default:
@@ -371,6 +408,8 @@ function handleAgentConnection(ws, deviceId) {
             log.info(`Agent disconnected: ${deviceId}`);
             broadcast(room, { type: 'status', agent_connected: false });
             broadcast(room, { type: 'presence', device_id: deviceId, online: false });
+            broadcastToPanelOperators({ type: 'status', device_id: deviceId, agent_connected: false }, null, room);
+            broadcastToPanelOperators({ type: 'presence', device_id: deviceId, online: false }, null, room);
         }
     });
 
@@ -384,22 +423,37 @@ function handleAgentConnection(ws, deviceId) {
 function handleOperatorConnection(ws, deviceId, operatorName) {
     const room = getRoom(deviceId);
     room.operatorWss.add(ws);
+    const isPanel = deviceId === 'panel';
+    if (isPanel) panelOperators.add(ws);
 
     log.info(`Operator ${operatorName} connected to ${deviceId}`);
-
-    // Send DB history
-    loadHistory(deviceId).then(data => {
-        if (data && data.messages) {
-            sendTo(ws, { type: 'history', conversation_id: deviceId, messages: data.messages });
-        } else {
-            sendTo(ws, { type: 'history', messages: room.messages });
-        }
-    });
 
     sendTo(ws, {
         type: 'status',
         agent_connected: !!room.agentWs && room.agentWs.readyState === WebSocket.OPEN,
     });
+
+    // The standalone panel is a directory, not a device conversation. Load its
+    // real users and devices immediately so the sidebar is useful on first open.
+    if (isPanel) {
+        loadContacts('panel').then(data => {
+            sendTo(ws, {
+                type: 'contacts',
+                contacts: data?.contacts?.length ? data.contacts : fallbackContacts('panel'),
+            });
+        });
+        loadGroups('panel').then(data => {
+            if (data?.groups) sendTo(ws, { type: 'groups', groups: data.groups });
+        });
+    } else {
+        loadHistory(deviceId).then(data => {
+            if (data && data.messages) {
+                sendTo(ws, { type: 'history', conversation_id: deviceId, messages: data.messages });
+            } else {
+                sendTo(ws, { type: 'history', messages: room.messages });
+            }
+        });
+    }
 
     setupPing(ws);
 
@@ -409,69 +463,187 @@ function handleOperatorConnection(ws, deviceId, operatorName) {
         try { frame = JSON.parse(data.toString()); } catch { return; }
 
         switch (frame.type) {
+            case 'hello':
+                sendTo(ws, {
+                    type: 'welcome',
+                    device_id: deviceId,
+                    server_time: Date.now(),
+                    capabilities: ['multi_conversation', 'contacts', 'groups', 'history', 'e2e_encryption', 'read_receipts', 'typing', 'presence', 'file_share'],
+                });
+                break;
+
+            case 'get_contacts':
+                loadContacts(frame.device_id || deviceId).then(data => {
+                    sendTo(ws, {
+                        type: 'contacts',
+                        contacts: data?.contacts?.length ? data.contacts : fallbackContacts(deviceId),
+                    });
+                });
+                break;
+
+            case 'get_groups':
+                loadGroups(frame.device_id || deviceId).then(data => {
+                    if (data?.groups) sendTo(ws, { type: 'groups', groups: data.groups });
+                });
+                break;
+
+            case 'get_history':
+                loadHistory(frame.conversation_id || deviceId).then(data => {
+                    if (data && data.messages) {
+                        sendTo(ws, {
+                            type: 'history',
+                            conversation_id: frame.conversation_id,
+                            messages: data.messages,
+                        });
+                    } else if (frame.conversation_id && frame.conversation_id === deviceId) {
+                        sendTo(ws, { type: 'history', conversation_id: deviceId, messages: room.messages });
+                    }
+                });
+                break;
+
             case 'message': {
+                const conversationId = frame.conversation_id || deviceId;
+                const targetRoom = rooms.get(conversationId);
                 const msg = {
                     type: 'message',
                     id: Date.now(),
                     from: 'operator',
                     from_name: operatorName,
-                    conversation_id: frame.conversation_id || deviceId,
+                    conversation_id: conversationId,
                     operator: operatorName,
+                    to_id: conversationId,
                     text: String(frame.text || '').slice(0, 2048),
                     timestamp: Date.now(),
                 };
-                appendMessage(room, msg);
-                broadcast(room, msg, ws);
+                appendMessage(targetRoom || room, msg);
+                if (targetRoom && targetRoom !== room) {
+                    // Deliver to the selected device and any device-scoped
+                    // clients. The panel socket receives an explicit echo.
+                    broadcast(targetRoom, msg, ws);
+                } else if (isPanel) {
+                    broadcastToPanelOperators(msg, ws);
+                } else {
+                    broadcast(room, msg, ws);
+                }
+                sendTo(ws, msg);
                 persistMessage(msg);
                 break;
             }
 
-            case 'typing':
-                broadcast(room, {
+            case 'typing': {
+                const conversationId = frame.conversation_id || deviceId;
+                const targetRoom = rooms.get(conversationId);
+                const typing = {
                     type: 'typing',
                     from: 'operator',
                     operator: operatorName,
-                    conversation_id: frame.conversation_id || deviceId,
-                }, ws);
+                    conversation_id: conversationId,
+                };
+                if (targetRoom && targetRoom !== room) broadcast(targetRoom, typing, ws);
+                else if (isPanel) broadcastToPanelOperators(typing, ws);
+                else broadcast(room, typing, ws);
                 break;
+            }
 
             // E2E key exchange: relay operator public key to agents
-            case 'key_exchange':
-                broadcast(room, {
+            case 'key_exchange': {
+                const conversationId = frame.conversation_id || deviceId;
+                const targetRoom = rooms.get(conversationId);
+                const keyExchange = {
                     type: 'key_exchange',
                     from: 'operator',
                     operator: operatorName,
                     public_key: frame.public_key,
-                    conversation_id: frame.conversation_id || deviceId,
-                }, ws);
+                    conversation_id: conversationId,
+                };
+                if (targetRoom && targetRoom !== room) broadcast(targetRoom, keyExchange, ws);
+                else if (isPanel) broadcastToPanelOperators(keyExchange, ws);
+                else broadcast(room, keyExchange, ws);
                 break;
+            }
 
             // Read receipts from operator
-            case 'read_receipt':
-                broadcast(room, {
+            case 'read_receipt': {
+                const conversationId = frame.conversation_id || deviceId;
+                const targetRoom = rooms.get(conversationId);
+                const receipt = {
                     type: 'read_receipt',
                     from: 'operator',
                     operator: operatorName,
                     message_ids: frame.message_ids || [],
-                    conversation_id: frame.conversation_id || deviceId,
+                    conversation_id: conversationId,
                     timestamp: Date.now(),
-                }, ws);
+                };
+                if (targetRoom && targetRoom !== room) broadcast(targetRoom, receipt, ws);
+                else if (isPanel) broadcastToPanelOperators(receipt, ws);
+                else broadcast(room, receipt, ws);
+                if (goApi && conversationId) {
+                    goApi.post('/chat/read', {
+                        conversation_id: conversationId,
+                        reader_id: operatorName,
+                        message_ids: frame.message_ids || [],
+                    }).catch(() => {});
+                }
+                break;
+            }
+
+            case 'mark_read':
+                if (goApi && frame.conversation_id) {
+                    goApi.post('/chat/read', {
+                        conversation_id: frame.conversation_id,
+                        reader_id: operatorName,
+                    }).catch(() => {});
+                }
                 break;
 
+            case 'create_group':
+                if (goApi && frame.name && Array.isArray(frame.member_ids)) {
+                    goApi.post('/chat/groups', {
+                        name: String(frame.name).slice(0, 120),
+                        members: frame.member_ids,
+                        created_by: operatorName,
+                    }).then(resp => {
+                        sendTo(ws, { type: 'group_created', ...resp.data });
+                        return loadGroups(deviceId);
+                    }).then(data => {
+                        if (data?.groups) sendTo(ws, { type: 'groups', groups: data.groups });
+                    }).catch(() => {});
+                }
+                break;
+
+            case 'presence_update': {
+                const presence = {
+                    type: 'presence',
+                    device_id: `operator:${operatorName}`,
+                    online: frame.online !== false,
+                    status: frame.status || 'available',
+                    timestamp: Date.now(),
+                };
+                if (isPanel) broadcastToPanelOperators(presence, ws);
+                else broadcast(room, presence, ws);
+                break;
+            }
+
             // Encrypted file share from operator
-            case 'file_share':
-                broadcast(room, {
+            case 'file_share': {
+                const conversationId = frame.conversation_id || deviceId;
+                const targetRoom = rooms.get(conversationId);
+                const fileShare = {
                     type: 'file_share',
                     from: 'operator',
                     from_name: operatorName,
-                    conversation_id: frame.conversation_id || deviceId,
+                    conversation_id: conversationId,
                     file_id: frame.file_id || ('file_' + Date.now()),
                     file_name_encrypted: frame.file_name_encrypted || '',
                     file_size: frame.file_size || 0,
                     encrypted_metadata: frame.encrypted_metadata || '',
                     timestamp: Date.now(),
-                }, ws);
+                };
+                if (targetRoom && targetRoom !== room) broadcast(targetRoom, fileShare, ws);
+                else if (isPanel) broadcastToPanelOperators(fileShare, ws);
+                else broadcast(room, fileShare, ws);
                 break;
+            }
 
             default:
                 break;
@@ -480,6 +652,7 @@ function handleOperatorConnection(ws, deviceId, operatorName) {
 
     ws.on('close', () => {
         room.operatorWss.delete(ws);
+        panelOperators.delete(ws);
         log.info(`Operator ${operatorName} left ${deviceId}`);
     });
 

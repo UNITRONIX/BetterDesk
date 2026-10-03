@@ -395,7 +395,7 @@ html[data-a11y-pause-animations="true"] *::after {
 
 .bd-a11y-body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+    grid-template-columns: minmax(0, 1fr);
     flex: 1;
     min-height: 0;
     overflow: hidden;
@@ -405,12 +405,6 @@ html[data-a11y-pause-animations="true"] *::after {
     padding: var(--space-lg);
     overflow-y: auto;
     border-right: 1px solid var(--border-primary);
-}
-
-.bd-a11y-preview-wrap {
-    padding: var(--space-lg);
-    background: var(--bg-primary);
-    overflow-y: auto;
 }
 
 .bd-a11y-section {
@@ -523,42 +517,6 @@ html[data-a11y-pause-animations="true"] *::after {
 .bd-a11y-toggle[aria-pressed="true"] {
     background: var(--accent-blue-muted);
     border-color: var(--accent-blue);
-}
-
-.bd-a11y-preview {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--space-md);
-}
-
-.bd-a11y-preview h3 {
-    margin-bottom: var(--space-sm);
-}
-
-.bd-a11y-preview p {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-sm);
-}
-
-.bd-a11y-preview-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-sm);
-    padding: var(--space-sm) 0;
-    border-top: 1px solid var(--border-primary);
-}
-
-.bd-a11y-preview-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--accent-green);
-    border-radius: var(--radius-full);
-    color: var(--accent-green);
-    padding: 2px 8px;
-    font-size: var(--font-size-xs);
 }
 
 .bd-a11y-footer {

@@ -185,7 +185,7 @@
             loadStats(),
             loadServerStatus()
         ]);
-        loadHealthOverview(stats, status);
+        loadHealthOverview(status);
     }
     
     /**
@@ -734,24 +734,15 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     /**
      * Load health overview data
      */
-    async function loadHealthOverview(stats, status) {
+    async function loadHealthOverview(status) {
         try {
-            if (!stats) {
-                const data = await fetchApi('/api/stats');
-                stats = data.devices || data.data?.devices || data;
-            }
-            
-            setText('health-online', stats.online ?? 0);
-            setText('health-alerts', stats.banned ?? 0);
-            setText('health-connections', stats.total ?? 0);
-            
             // Server uptime from status
             try {
                 status = status || await fetchApi('/api/server/status');
                 const uptime = status.uptime || status.data?.uptime;
-                setText('health-uptime', uptime ? formatUptime(uptime) : '-');
+                setText('stat-uptime', uptime ? formatUptime(uptime) : '-');
             } catch {
-                setText('health-uptime', '-');
+                setText('stat-uptime', '-');
             }
         } catch (err) {
             console.error('Health overview error:', err);

@@ -41,6 +41,7 @@ const { initChatRelay } = require('./services/chatRelay');
 const { apiClient: goApiClient } = require('./services/betterdeskApi');
 const { initRemoteRelay } = require('./services/remoteRelay');
 const { initCdapTerminalProxy } = require('./services/cdapTerminalProxy');
+const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
 const { initMeshAshxProxy } = require('./services/meshAshxProxy');
 const { startDiscoveryService } = require('./services/lanDiscovery');
@@ -558,6 +559,15 @@ async function startServer() {
 
         // Initialize CDAP Terminal WebSocket proxy (browser ↔ Go server)
         initCdapTerminalProxy(server, sessionMiddleware);
+
+        // Initialize Server Management terminal WebSocket (browser ↔ host shell)
+        initServerTerminalProxy(server, sessionMiddleware, {
+            logAction: (...args) => {
+                void Promise.resolve().then(() => db.logAction(...args)).catch((err) => {
+                    console.warn('[srv-term] audit log failed:', err.message);
+                });
+            }
+        });
 
         // Initialize CDAP Media WebSocket proxies (desktop, video, file browser)
         initCdapMediaProxies(server, sessionMiddleware);

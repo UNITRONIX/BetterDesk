@@ -3594,6 +3594,7 @@
                     <div class="update-wizard-meta">
                         <span class="update-wizard-step" id="update-modal-step">${Utils.escapeHtml(stepLabel)}</span>
                         <span class="update-wizard-detail" id="update-modal-detail">${Utils.escapeHtml(_('updates.preparing'))}</span>
+                    <span class="update-wizard-percent" id="update-modal-percent">0%</span>
                     </div>
                 </div>
                 <div class="update-wizard-phases update-phases">${items}</div>
@@ -3666,6 +3667,19 @@
             .replace('{total}', String(UPDATE_PHASES.length));
     }
 
+    function updateUpdateProgress() {
+        const terminalStates = new Set(['done', 'skipped', 'warning', 'error']);
+        const completed = UPDATE_PHASES.reduce((count, phase) => {
+            const state = document.querySelector(`[data-phase-state="${phase.id}"]`)?.dataset?.state;
+            return count + (terminalStates.has(state) ? 1 : 0);
+        }, 0);
+        const percent = Math.round((completed / UPDATE_PHASES.length) * 100);
+        const bar = document.getElementById('update-modal-bar');
+        const label = document.getElementById('update-modal-percent');
+        if (bar) bar.style.width = `${percent}%`;
+        if (label) label.textContent = `${percent}%`;
+    }
+
     function setUpdatePhase(phaseId, state, detail) {
         // state: 'pending' | 'active' | 'done' | 'warning' | 'error' | 'skipped'
         const row = document.querySelector(`.update-phase[data-phase="${phaseId}"]`);
@@ -3710,14 +3724,7 @@
             if (det) det.textContent = detail;
         }
         updateUpdateStepCounter(phaseId, state);
-        const idx = UPDATE_PHASES.findIndex(p => p.id === phaseId);
-        if (idx >= 0) {
-            const pct = state === 'done' ? Math.round(((idx + 1) / UPDATE_PHASES.length) * 100)
-                : state === 'active' ? Math.round((idx / UPDATE_PHASES.length) * 100)
-                : null;
-            const bar = document.getElementById('update-modal-bar');
-            if (bar && pct !== null) bar.style.width = pct + '%';
-        }
+        updateUpdateProgress();
     }
 
     function logUpdate(line) {
@@ -3994,21 +4001,10 @@
         setUpdatePhase('confirm', 'done');
         if (createBackup) setUpdatePhase('backup', 'active', _('updates.creating_backup'));
         else setUpdatePhase('backup', 'skipped', _('updates.backup_skipped'));
+        if (!hasServerUpdate) setUpdatePhase('console', 'active', _('updates.downloading'));
         logUpdate(`Starting update to ${_updateState.remoteSHA.slice(0, 7)}…`);
 
         try {
-            setTimeout(() => {
-                setUpdatePhase('backup', 'done');
-                setUpdatePhase('console', 'active', _('updates.downloading'));
-            }, 800);
-
-            if (hasServerUpdate) {
-                setTimeout(() => {
-                    setUpdatePhase('console', 'done');
-                    setUpdatePhase('server', 'active', _('updates.server_processing'));
-                }, 4000);
-            }
-
             const result = await Utils.api('/api/settings/updates/install', {
                 method: 'POST',
                 body: { remoteSHA: _updateState.remoteSHA, createBackup }

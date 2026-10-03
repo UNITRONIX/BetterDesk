@@ -102,6 +102,11 @@
     color: var(--accent-orange, #ff9800);
 }
 
+.dashboard-stat-icon.uptime {
+    background: var(--accent-purple-muted, rgba(163, 113, 247, 0.1));
+    color: var(--accent-purple, #a371f7);
+}
+
 .dashboard-stat-content {
     flex: 1;
 }
