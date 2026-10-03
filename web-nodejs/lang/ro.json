@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "Stare de sincronizare",
+        "add_remote_target": "Adaugă țintă RDP/VNC",
         "sync_success": "Starea a fost sincronizată cu succes",
         "empty_title": "Nu s-au găsit dispozitive",
         "empty_text": "Niciun dispozitiv nu se potrivește cu filtrele dvs. actuale",

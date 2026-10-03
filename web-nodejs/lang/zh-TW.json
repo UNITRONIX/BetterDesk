@@ -226,6 +226,7 @@
         "of": "/",
         "per_page": "每頁",
         "sync_status": "同步狀態",
+        "add_remote_target": "新增 RDP/VNC 目標",
         "sync_success": "狀態同步成功",
         "empty_title": "未找到設備",
         "empty_text": "沒有符合當前篩選條件的設備",

@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "Senkronizasyon Durumu",
+        "add_remote_target": "RDP/VNC hedefi ekle",
         "sync_success": "Durum başarıyla senkronize edildi",
         "empty_title": "Hiçbir cihaz bulunamadı",
         "empty_text": "Mevcut filtrelerinizle eşleşen cihaz yok",

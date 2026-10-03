@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "Szinkronizálás állapota",
+        "add_remote_target": "RDP/VNC-cél hozzáadása",
         "sync_success": "Az állapot sikeresen szinkronizálva",
         "empty_title": "Nem találhatók eszközök",
         "empty_text": "Egyetlen eszköz sem felel meg a jelenlegi szűrőknek",

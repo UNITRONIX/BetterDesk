@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "Status Sinkronisasi",
+        "add_remote_target": "Tambahkan target RDP/VNC",
         "sync_success": "Status berhasil disinkronkan",
         "empty_title": "Tidak ada perangkat yang ditemukan",
         "empty_text": "Tidak ada perangkat yang cocok dengan filter Anda saat ini",

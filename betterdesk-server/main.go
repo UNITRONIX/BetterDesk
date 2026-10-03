@@ -507,6 +507,13 @@ func main() {
 		} else {
 			log.Printf("Org peer credential vault ready (AES-GCM)")
 		}
+		if cfg.RemoteTargetVaultKey == "" {
+			log.Printf("[warn] remote target credential vault disabled: REMOTE_TARGET_VAULT_KEY is not configured")
+		} else if err := apiSrv.InitRemoteTargetCredentialVault(cfg.RemoteTargetVaultKey); err != nil {
+			log.Printf("[warn] remote target credential vault disabled: %v", err)
+		} else {
+			log.Printf("Remote target credential vault ready (AES-GCM)")
+		}
 
 		// LDAP provider (loads config from DB, hot-reloadable via API)
 		apiSrv.InitLDAP()
@@ -613,6 +620,11 @@ func main() {
 		}
 		if err := apiSrv.InitPeerCredentialVault(vaultKey); err != nil {
 			log.Printf("[warn] org peer credential vault disabled: %v", err)
+		}
+		if cfg.RemoteTargetVaultKey == "" {
+			log.Printf("[warn] remote target credential vault disabled: REMOTE_TARGET_VAULT_KEY is not configured")
+		} else if err := apiSrv.InitRemoteTargetCredentialVault(cfg.RemoteTargetVaultKey); err != nil {
+			log.Printf("[warn] remote target credential vault disabled: %v", err)
 		}
 		apiSrv.InitLDAP()
 		apiSrv.InitOIDC()

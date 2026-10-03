@@ -2411,6 +2411,7 @@ merge_console_env() {
     local database_url=""
     local admin_password="${ADMIN_PASSWORD:-}"
     local session_secret=""
+    local remote_target_vault_key=""
     local subst_file="/tmp/betterdesk-env-subst-$$.json"
     local go_port="${GO_API_PORT:-21114}"
     local client_port="${CLIENT_API_PORT:-21121}"
@@ -2447,6 +2448,12 @@ merge_console_env() {
             session_secret=$(openssl rand -hex 32)
         fi
     fi
+    if [ -f "$CONSOLE_PATH/.env" ]; then
+        remote_target_vault_key=$(grep -m1 '^REMOTE_TARGET_VAULT_KEY=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+    fi
+    if [ -z "$remote_target_vault_key" ]; then
+        remote_target_vault_key=$(openssl rand -hex 32)
+    fi
 
     local fresh_flag=""
     [ "$fresh_install" = "true" ] && fresh_flag="--fresh"
@@ -2464,6 +2471,8 @@ merge_console_env() {
     export BD_SUBST_API_PORT="$client_port"
     export BD_SUBST_DEFAULT_ADMIN_PASSWORD="$admin_password"
     export BD_SUBST_SESSION_SECRET="$session_secret"
+    export BD_SUBST_REMOTE_TARGET_VAULT_KEY="$remote_target_vault_key"
+    export BD_SUBST_GUACD_ADDRESS="127.0.0.1:4822"
     export BD_SUBST_SSL_CERT_PATH="$ssl_dir/betterdesk.crt"
     export BD_SUBST_SSL_KEY_PATH="$ssl_dir/betterdesk.key"
 
@@ -3940,6 +3949,11 @@ install_nodejs_console() {
     fi
     if [ -f "$SCRIPT_DIR/VERSION" ]; then
         cp -a "$SCRIPT_DIR/VERSION" "$CONSOLE_PATH/VERSION" 2>/dev/null || true
+    fi
+    if [ -d "$SCRIPT_DIR/remote-gateway" ]; then
+        mkdir -p "$CONSOLE_PATH/remote-gateway"
+        cp -a "$SCRIPT_DIR/remote-gateway/." "$CONSOLE_PATH/remote-gateway/"
+        print_info "Installed RDP/VNC gateway module contract"
     fi
     
     # Install npm dependencies

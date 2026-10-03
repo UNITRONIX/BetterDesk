@@ -220,6 +220,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "同期ステータス",
+        "add_remote_target": "RDP/VNC ターゲットを追加",
         "sync_success": "ステータスは正常に同期されました",
         "empty_title": "デバイスが見つかりません",
         "empty_text": "現在のフィルターに一致するデバイスはありません",

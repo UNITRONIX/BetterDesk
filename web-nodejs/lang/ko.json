@@ -220,6 +220,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "동기화 상태",
+        "add_remote_target": "RDP/VNC 대상 추가",
         "sync_success": "상태가 성공적으로 동기화되었습니다.",
         "empty_title": "기기를 찾을 수 없습니다.",
         "empty_text": "현재 필터와 일치하는 기기가 없습니다.",

@@ -220,6 +220,7 @@
         "showing": "显示",
         "of": "/",
         "sync_status": "同步状态",
+        "add_remote_target": "添加 RDP/VNC 目标",
         "sync_success": "状态同步成功",
         "empty_title": "未找到设备",
         "empty_text": "没有符合当前筛选条件的设备",

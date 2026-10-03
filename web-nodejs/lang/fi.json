@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "Synkronoinnin tila",
+        "add_remote_target": "Lisää RDP/VNC-kohde",
         "sync_success": "Tila synkronoitu onnistuneesti",
         "empty_title": "Laitteita ei löytynyt",
         "empty_text": "Yksikään laite ei vastaa nykyisiä suodattimiasi",

@@ -220,6 +220,7 @@
         "showing": "Weergave",
         "of": "van",
         "sync_status": "Synchronisatiestatus",
+        "add_remote_target": "RDP/VNC-doel toevoegen",
         "sync_success": "Status succesvol gesynchroniseerd",
         "empty_title": "Geen apparaten gevonden",
         "empty_text": "Geen apparaten voldoen aan de huidige filters",

@@ -77,6 +77,34 @@ func (s *SQLiteDB) Migrate() error {
 			value TEXT DEFAULT ''
 		)`,
 
+		// Manually configured RDP/VNC endpoints. Secrets are encrypted by the API
+		// layer; this table intentionally stores only ciphertext and metadata.
+		`CREATE TABLE IF NOT EXISTS remote_targets (
+			id TEXT PRIMARY KEY,
+			org_id TEXT NOT NULL DEFAULT '',
+			name TEXT NOT NULL,
+			protocol TEXT NOT NULL CHECK (protocol IN ('rdp', 'vnc')),
+			platform TEXT NOT NULL DEFAULT '',
+			host TEXT NOT NULL,
+			port INTEGER NOT NULL,
+			username TEXT NOT NULL DEFAULT '',
+			credential_mode TEXT NOT NULL DEFAULT 'prompt',
+			credential_ciphertext TEXT NOT NULL DEFAULT '',
+			credential_nonce TEXT NOT NULL DEFAULT '',
+			credential_key_id TEXT NOT NULL DEFAULT '',
+			tls_mode TEXT NOT NULL DEFAULT 'preferred',
+			cert_fingerprint TEXT NOT NULL DEFAULT '',
+			enabled INTEGER NOT NULL DEFAULT 1,
+			last_test_at TEXT DEFAULT NULL,
+			last_test_status TEXT NOT NULL DEFAULT '',
+			last_test_error TEXT NOT NULL DEFAULT '',
+			created_by TEXT NOT NULL DEFAULT '',
+			created_at TEXT DEFAULT (datetime('now')),
+			updated_at TEXT DEFAULT (datetime('now'))
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_remote_targets_org ON remote_targets(org_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_remote_targets_enabled ON remote_targets(enabled)`,
+
 		`CREATE TABLE IF NOT EXISTS id_change_history (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			old_id TEXT NOT NULL,

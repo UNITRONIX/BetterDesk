@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "सिंक स्थिति",
+        "add_remote_target": "RDP/VNC लक्ष्य जोड़ें",
         "sync_success": "स्थिति सफलतापूर्वक समन्वयित हुई",
         "empty_title": "कोई यंत्र नहीं मिले",
         "empty_text": "कोई भी उपकरण आपके वर्तमान फ़िल्टर से मेल नहीं खाता",

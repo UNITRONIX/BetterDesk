@@ -4,6 +4,11 @@
 
 (function() {
     'use strict';
+
+    function remoteText(key, fallback) {
+        const value = _(key);
+        return value && value !== key ? value : fallback;
+    }
     
     // Fallback if Utils.sanitizeColor is missing (old utils.js on server)
     function _sanitizeColorFallback(c) {
@@ -42,6 +47,8 @@
             case 'iot':      return 'sensors';
             case 'os_agent': return 'terminal';
             case 'mesh_agent': return 'hub';
+            case 'rdp':      return 'desktop_windows';
+            case 'vnc':      return 'computer';
             case 'mobile':   return 'phone_android';
             case 'rustdesk': return 'connected_tv';
             default:         return 'devices';
@@ -53,6 +60,8 @@
             case 'betterdesk': return 'BetterDesk';
             case 'betterdesk-support': return 'BetterDesk Support';
             case 'rustdesk': return 'RustDesk';
+            case 'rdp': return 'RDP';
+            case 'vnc': return 'VNC';
             default: return type || '-';
         }
     }
@@ -134,6 +143,7 @@
         initTagFilter();
         initSorting();
         initSync();
+        document.getElementById('add-remote-target-btn')?.addEventListener('click', () => showRemoteTargetModal());
         initFolders();
         initDeviceGroups();
         initStrategies();
@@ -377,6 +387,30 @@
     function buildDeviceMenuItemsHtml(device) {
         const eid = Utils.escapeHtml(device.id);
         const banned = !!device.banned;
+        if (device.remote_target) {
+            return `
+            <button type="button" class="kebab-menu-item connect-desktop" data-action="web-remote" data-id="${eid}">
+                <span class="material-icons">screen_share</span>
+                <span>${_('actions.web_remote') || 'Web Remote'}</span>
+            </button>
+            <button type="button" class="kebab-menu-item info" data-action="details" data-id="${eid}">
+                <span class="material-icons">info</span>
+                <span>${_('actions.details')}</span>
+            </button>
+            <button type="button" class="kebab-menu-item" data-action="edit" data-id="${eid}">
+                <span class="material-icons">edit</span>
+                <span>${_('actions.edit')}</span>
+            </button>
+            <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
+                <span class="material-icons">hub</span>
+                <span>${_('devices.manage_groups') || 'Manage Groups'}</span>
+            </button>
+            <div class="kebab-divider"></div>
+            <button type="button" class="kebab-menu-item danger" data-action="delete" data-id="${eid}">
+                <span class="material-icons">delete</span>
+                <span>${_('actions.delete')}</span>
+            </button>`;
+        }
         if (device.soft_deleted) {
             return `
             <button type="button" class="kebab-menu-item info" data-action="details" data-id="${eid}">
@@ -1245,7 +1279,11 @@
                 break;
                 
             case 'edit':
-                showEditModal(deviceId);
+                if (devices.find(d => d.id === deviceId)?.remote_target) {
+                    showRemoteTargetModal(deviceId);
+                } else {
+                    showEditModal(deviceId);
+                }
                 break;
 
             case 'groups':
@@ -1262,7 +1300,11 @@
                 break;
                 
             case 'delete':
-                await deleteDevice(deviceId);
+                if (devices.find(d => d.id === deviceId)?.remote_target) {
+                    await deleteRemoteTarget(deviceId);
+                } else {
+                    await deleteDevice(deviceId);
+                }
                 break;
 
             case 'restore':
@@ -1277,6 +1319,183 @@
                 showAccessPolicyModal(deviceId);
                 break;
         }
+    }
+
+    async function deleteRemoteTarget(deviceId) {
+        const confirmed = await Modal.confirm({
+            title: remoteText('devices.remote_delete_title', 'Delete remote target'),
+            message: remoteText('devices.remote_delete_confirm', 'Delete this RDP/VNC target?'),
+            confirmLabel: _('actions.delete'),
+            danger: true
+        });
+        if (!confirmed) return;
+        try {
+            await Utils.api(`/api/remote-targets/${encodeURIComponent(deviceId)}`, { method: 'DELETE' });
+            Notifications.success(_('devices.delete_success') || 'Remote target deleted');
+            loadDevices();
+        } catch (error) {
+            Notifications.error(error.message || _('errors.delete_failed'));
+        }
+    }
+
+    async function submitRemoteTargetForm(deviceId) {
+        const form = document.getElementById('remote-target-form');
+        if (!form) return;
+        const currentDevice = deviceId && devices.find(d => d.id === deviceId);
+        const payload = {
+            name: form.elements.name.value.trim(),
+            protocol: form.elements.protocol.value,
+            platform: form.elements.platform.value.trim(),
+            host: form.elements.host.value.trim(),
+            port: Number(form.elements.port.value),
+            username: form.elements.username.value.trim(),
+            credential_mode: form.elements.credential_mode.value,
+            tls_mode: form.elements.tls_mode.value,
+            cert_fingerprint: form.elements.cert_fingerprint.value.trim(),
+            enabled: form.elements.enabled.checked
+        };
+        const password = form.elements.password.value;
+        if (payload.credential_mode === 'saved' && !password && currentDevice?.credential_mode !== 'saved') {
+            Notifications.error(remoteText('devices.remote_password_required', 'Enter a password to save credentials'));
+            return;
+        }
+        try {
+            const url = deviceId
+                ? `/api/remote-targets/${encodeURIComponent(deviceId)}`
+                : '/api/remote-targets';
+            const savedTarget = await Utils.api(url, {
+                method: deviceId ? 'PATCH' : 'POST',
+                body: payload
+            });
+            const targetId = deviceId || savedTarget?.id;
+            if (payload.credential_mode === 'saved' && password) {
+                await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
+                    method: 'PUT',
+                    body: { username: payload.username, password }
+                });
+            } else if (payload.credential_mode !== 'saved' && currentDevice?.credential_mode === 'saved') {
+                await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
+                    method: 'DELETE'
+                });
+            }
+            Modal.close();
+            Notifications.success(remoteText('devices.remote_saved', 'Remote target saved'));
+            loadDevices();
+        } catch (error) {
+            Notifications.error(error.message || _('errors.save_failed'));
+        }
+    }
+
+    async function testRemoteTargetForm() {
+        const form = document.getElementById('remote-target-form');
+        if (!form) return;
+        const payload = {
+            name: form.elements.name.value.trim(),
+            protocol: form.elements.protocol.value,
+            platform: form.elements.platform.value.trim(),
+            host: form.elements.host.value.trim(),
+            port: Number(form.elements.port.value),
+            username: form.elements.username.value.trim(),
+            credential_mode: form.elements.credential_mode.value,
+            tls_mode: form.elements.tls_mode.value,
+            cert_fingerprint: form.elements.cert_fingerprint.value.trim()
+        };
+        try {
+            await Utils.api('/api/remote-targets/test', { method: 'POST', body: payload });
+            Notifications.success(remoteText('devices.remote_test_success', 'Connection test succeeded'));
+        } catch (error) {
+            Notifications.error(error.message || remoteText('devices.remote_test_failed', 'Connection test failed'));
+        }
+    }
+
+    function showRemoteTargetModal(deviceId = null) {
+        const device = deviceId && devices.find(d => d.id === deviceId);
+        const title = device
+            ? remoteText('devices.remote_edit_title', 'Edit RDP/VNC target')
+            : remoteText('devices.remote_add_title', 'Add RDP/VNC target');
+        const escape = (value) => Utils.escapeHtml(String(value ?? ''));
+        const content = `
+            <form id="remote-target-form" class="remote-target-form">
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_name', 'Display name')}</label>
+                    <input class="form-input" name="name" required maxlength="160" value="${escape(device?.name || device?.display_name || '')}">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_protocol', 'Technology')}</label>
+                        <select class="form-input" name="protocol">
+                            <option value="rdp" ${device?.remote_protocol === 'rdp' ? 'selected' : ''}>RDP</option>
+                            <option value="vnc" ${device?.remote_protocol === 'vnc' ? 'selected' : ''}>VNC</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_platform', 'Operating system')}</label>
+                        <input class="form-input" name="platform" maxlength="80" placeholder="Windows / Linux" value="${escape(device?.platform || '')}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_host', 'Host or IP')}</label>
+                        <input class="form-input" name="host" required maxlength="253" value="${escape(device?.host || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_port', 'Port')}</label>
+                        <input class="form-input" name="port" type="number" min="1" max="65535" required value="${escape(device?.port || (device?.remote_protocol === 'vnc' ? 5900 : 3389))}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_username', 'Username')}</label>
+                        <input class="form-input" name="username" autocomplete="username" value="${escape(device?.username || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_credentials', 'Password')}</label>
+                        <select class="form-input" name="credential_mode">
+                            <option value="prompt">${remoteText('devices.remote_prompt_password', 'Ask every session')}</option>
+                            <option value="saved">${remoteText('devices.remote_save_password', 'Save securely')}</option>
+                            <option value="none">${remoteText('devices.remote_no_password', 'No password')}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_password', 'Password')}</label>
+                    <input class="form-input" name="password" type="password" autocomplete="new-password" placeholder="${remoteText('devices.remote_password_hint', 'Leave empty to keep the saved password')}">
+                </div>
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_tls', 'Certificate policy')}</label>
+                    <select class="form-input" name="tls_mode">
+                        <option value="required">${remoteText('devices.remote_tls_required', 'Require TLS')}</option>
+                        <option value="preferred">${remoteText('devices.remote_tls_preferred', 'Prefer TLS')}</option>
+                        <option value="disabled">${remoteText('devices.remote_tls_disabled', 'Disable TLS')}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_fingerprint', 'Trusted certificate fingerprint')}</label>
+                    <input class="form-input" name="cert_fingerprint" maxlength="128" placeholder="SHA-256 fingerprint" value="${escape(device?.cert_fingerprint || '')}">
+                    <small class="form-help">${remoteText('devices.remote_fingerprint_hint', 'Leave empty to require confirmation on first connection.')}</small>
+                </div>
+                <label class="toggle-row">
+                    <input type="checkbox" name="enabled" ${device?.enabled !== false ? 'checked' : ''}>
+                    <span>${remoteText('devices.remote_enabled', 'Enabled')}</span>
+                </label>
+            </form>`;
+        Modal.show({
+            title,
+            content,
+            size: 'medium',
+            buttons: [
+                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: remoteText('devices.remote_test', 'Test connection'), class: 'btn-secondary', onClick: () => testRemoteTargetForm() },
+                { label: _('actions.save'), class: 'btn-primary', onClick: () => submitRemoteTargetForm(deviceId) }
+            ],
+            onOpen: () => {
+                const form = document.getElementById('remote-target-form');
+                if (!form) return;
+                if (device?.credential_mode) form.elements.credential_mode.value = device.credential_mode;
+                if (device?.tls_mode) form.elements.tls_mode.value = device.tls_mode;
+                form.elements.host.focus();
+            }
+        });
     }
     
     /**

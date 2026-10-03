@@ -21,6 +21,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'blocklist.edit',
         'user.view',
         'device.view',
+        'remote_target.view',
         'audit.view', 'metrics.view',
         'enrollment.manage',
     ]),
@@ -30,6 +31,8 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'user.view', 'user.create', 'user.edit', 'user.delete',
         'org.create', 'org.edit', 'org.delete', 'org.manage_users', 'org.manage_devices',
         'device.view', 'device.connect', 'device.edit', 'device.delete',
+        'remote_target.view', 'remote_target.connect', 'remote_target.edit',
+        'remote_target.delete', 'remote_target.test',
         'guest.create',
         'device.ban', 'device.change_id', 'device.connection_mode',
         'audit.view', 'metrics.view',
@@ -42,6 +45,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
 
     operator: new Set([
         'device.view', 'device.connect', 'device.edit', 'device.connection_mode',
+        'remote_target.view', 'remote_target.connect', 'remote_target.test',
         'guest.create',
         'user.view',
         'audit.view', 'metrics.view',
@@ -53,6 +57,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
     ]),
     viewer: new Set([
         'device.view',
+        'remote_target.view',
         'audit.view', 'metrics.view',
         'cdap.view',
         'chat.access',
@@ -70,7 +75,9 @@ function isProRole(role) {
 
 function proRoleBlocksPermission(role, permission) {
     if (!isProRole(role)) return false;
-    return permission.startsWith('device.') || permission === 'org.manage_devices';
+    return permission.startsWith('device.')
+        || permission.startsWith('remote_target.')
+        || permission === 'org.manage_devices';
 }
 
 // Roles that have full admin privileges (bypass all permission checks).

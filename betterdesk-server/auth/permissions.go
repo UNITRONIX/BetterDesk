@@ -18,6 +18,11 @@ const (
 	PermDeviceBan            = "device.ban"    // ban/unban
 	PermDeviceChangeID       = "device.change_id"
 	PermDeviceConnectionMode = "device.connection_mode" // normal <-> incoming-only
+	PermRemoteTargetView     = "remote_target.view"
+	PermRemoteTargetConnect  = "remote_target.connect"
+	PermRemoteTargetEdit     = "remote_target.edit"
+	PermRemoteTargetDelete   = "remote_target.delete"
+	PermRemoteTargetTest     = "remote_target.test"
 
 	// User management permissions
 	PermUserView   = "user.view"
@@ -74,6 +79,8 @@ const (
 var AllPermissions = []string{
 	PermDeviceView, PermDeviceConnect, PermGuestCreate, PermDeviceEdit, PermDeviceDelete,
 	PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
+	PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetEdit,
+	PermRemoteTargetDelete, PermRemoteTargetTest,
 	PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
 	PermServerConfig, PermServerKeys, PermServerAttestation,
 	PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
@@ -109,6 +116,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermBlocklistEdit,
 		PermUserView,   // read-only
 		PermDeviceView, // read-only
+		PermRemoteTargetView,
 		PermAuditView,
 		PermMetricsView,
 		PermEnrollmentManage,
@@ -121,6 +129,8 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
 		PermGuestCreate,
 		PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
+		PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetEdit,
+		PermRemoteTargetDelete, PermRemoteTargetTest,
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
 		PermMeshTerminal, PermMeshFiles, PermMeshPower,
@@ -132,6 +142,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 
 	RoleOperator: buildPermMap([]string{
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceConnectionMode,
+		PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetTest,
 		PermGuestCreate,
 		PermUserView,
 		PermAuditView, PermMetricsView,
@@ -143,6 +154,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 	}),
 	RoleViewer: buildPermMap([]string{
 		PermDeviceView,
+		PermRemoteTargetView,
 		PermAuditView, PermMetricsView,
 		PermCDAPView,
 		PermChatAccess,
@@ -171,7 +183,9 @@ func IsProRole(role string) bool {
 // ProRoleBlocksPermission reports permissions the pro role must never hold,
 // even via DB overrides (device inventory and org device assignment).
 func ProRoleBlocksPermission(permission string) bool {
-	return strings.HasPrefix(permission, "device.") || permission == PermOrgManageDevices
+	return strings.HasPrefix(permission, "device.") ||
+		strings.HasPrefix(permission, "remote_target.") ||
+		permission == PermOrgManageDevices
 }
 
 // RoleHasPermission checks whether a role (by name) has a specific permission

@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "Trạng thái đồng bộ hóa",
+        "add_remote_target": "Thêm đích RDP/VNC",
         "sync_success": "Đã đồng bộ hóa trạng thái thành công",
         "empty_title": "Không tìm thấy thiết bị nào",
         "empty_text": "Không có thiết bị nào phù hợp với bộ lọc hiện tại của bạn",

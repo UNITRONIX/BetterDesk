@@ -89,6 +89,7 @@ type Server struct {
 	timeSync          *timesync.Service
 	billing           *billing.Service
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
+	remoteTargetVault *peervault.Vault // Dedicated AES-GCM vault for RDP/VNC credentials
 	httpSrv           *http.Server
 	wg                sync.WaitGroup
 	version           string
@@ -223,6 +224,17 @@ func (s *Server) InitPeerCredentialVault(secret string) error {
 	return nil
 }
 
+// InitRemoteTargetCredentialVault configures the dedicated RDP/VNC credential
+// vault. Unlike the legacy peer vault, this never falls back to JWT secrets.
+func (s *Server) InitRemoteTargetCredentialVault(secret string) error {
+	v, err := peervault.New(secret)
+	if err != nil {
+		return err
+	}
+	s.remoteTargetVault = v
+	return nil
+}
+
 // SetKeyPair sets the Ed25519 keypair for the server (used for signing IdPk).
 func (s *Server) SetKeyPair(kp *crypto.KeyPair) {
 	s.keyPair = kp
@@ -296,6 +308,19 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceConnectionMode, s.handleSetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requireRole(auth.RoleOperator, s.handleIssueSupportSessionGrant))
 	mux.HandleFunc("GET /api/peers/{id}/policy", s.handleGetPeerPolicy)
+
+	// Manually configured RDP/VNC targets.
+	mux.HandleFunc("GET /api/remote-targets", s.requirePermission(auth.PermRemoteTargetView, s.handleListRemoteTargets))
+	mux.HandleFunc("POST /api/remote-targets", s.requirePermission(auth.PermRemoteTargetEdit, s.handleCreateRemoteTarget))
+	mux.HandleFunc("POST /api/remote-targets/test", s.requirePermission(auth.PermRemoteTargetTest, s.handleTestRemoteTarget))
+	mux.HandleFunc("GET /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetView, s.handleGetRemoteTargetCredentialStatus))
+	mux.HandleFunc("PUT /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleSetRemoteTargetCredentials))
+	mux.HandleFunc("DELETE /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleClearRemoteTargetCredentials))
+	mux.HandleFunc("POST /api/remote-targets/{id}/certificate/accept", s.requirePermission(auth.PermRemoteTargetConnect, s.handleAcceptRemoteTargetCertificate))
+	mux.HandleFunc("GET /api/remote-targets/{id}/tunnel", s.requirePermission(auth.PermRemoteTargetConnect, s.handleRemoteTargetTunnel))
+	mux.HandleFunc("GET /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetView, s.handleGetRemoteTarget))
+	mux.HandleFunc("PATCH /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetEdit, s.handleUpdateRemoteTarget))
+	mux.HandleFunc("DELETE /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetDelete, s.handleDeleteRemoteTarget))
 
 	// Blocklist management
 	mux.HandleFunc("GET /api/blocklist", s.requirePermission(auth.PermBlocklistEdit, s.handleListBlocklist))

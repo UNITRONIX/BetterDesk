@@ -230,6 +230,7 @@
         "of": "of",
         "per_page": "Per page",
         "sync_status": "Sync Status",
+        "add_remote_target": "Add RDP/VNC target",
         "sync_success": "Status synchronized successfully",
         "empty_title": "No devices found",
         "empty_text": "No devices match your current filters",

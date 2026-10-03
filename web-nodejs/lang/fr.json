@@ -226,6 +226,7 @@
         "of": "of",
         "per_page": "Pro Seite",
         "sync_status": "État de synchronisation",
+        "add_remote_target": "Ajouter une cible RDP/VNC",
         "sync_success": "Statut synchronisé avec succès",
         "empty_title": "Aucun appareil trouvé",
         "empty_text": "Aucun appareil ne correspond à vos filtres actuels",

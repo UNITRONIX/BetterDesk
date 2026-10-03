@@ -35,6 +35,32 @@ type Peer struct {
 	HeartbeatSeq int64      `json:"-"`                        // internal heartbeat counter
 }
 
+// RemoteTarget represents a manually configured RDP or VNC endpoint.
+// Credentials are stored encrypted and are never included in JSON responses.
+type RemoteTarget struct {
+	ID                   string     `json:"id"`
+	OrgID                string     `json:"org_id,omitempty"`
+	Name                 string     `json:"name"`
+	Protocol             string     `json:"protocol"` // rdp or vnc
+	Platform             string     `json:"platform,omitempty"`
+	Host                 string     `json:"host"`
+	Port                 int        `json:"port"`
+	Username             string     `json:"username,omitempty"`
+	CredentialMode       string     `json:"credential_mode"` // saved, prompt, none
+	CredentialCiphertext string     `json:"-"`
+	CredentialNonce      string     `json:"-"`
+	CredentialKeyID      string     `json:"-"`
+	TLSMode              string     `json:"tls_mode"` // required, preferred, disabled
+	CertFingerprint      string     `json:"cert_fingerprint,omitempty"`
+	Enabled              bool       `json:"enabled"`
+	LastTestAt           *time.Time `json:"last_test_at,omitempty"`
+	LastTestStatus       string     `json:"last_test_status,omitempty"`
+	LastTestError        string     `json:"last_test_error,omitempty"`
+	CreatedBy            string     `json:"created_by,omitempty"`
+	CreatedAt            time.Time  `json:"created_at"`
+	UpdatedAt            time.Time  `json:"updated_at"`
+}
+
 // ServerConfig stores runtime configuration in the database.
 type ServerConfig struct {
 	Key   string `json:"key"`
@@ -508,6 +534,13 @@ type Database interface {
 
 	// Peer field updates
 	UpdatePeerFields(id string, fields map[string]string) error
+
+	// Manually configured RDP/VNC targets
+	CreateRemoteTarget(target *RemoteTarget) error
+	GetRemoteTarget(id string) (*RemoteTarget, error)
+	ListRemoteTargets(orgID string, includeDisabled bool) ([]*RemoteTarget, error)
+	UpdateRemoteTarget(target *RemoteTarget) error
+	DeleteRemoteTarget(id string) error
 
 	// Ban system
 	BanPeer(id string, reason string) error

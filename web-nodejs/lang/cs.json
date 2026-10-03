@@ -220,6 +220,7 @@
         "showing": "Zobrazuji",
         "of": "z",
         "sync_status": "Stav synchronizace",
+        "add_remote_target": "Přidat cíl RDP/VNC",
         "sync_success": "Stav úspěšně synchronizován",
         "empty_title": "Žádná zařízení nenalezena",
         "empty_text": "Žádná zařízení neodpovídají aktuálním filtrům",

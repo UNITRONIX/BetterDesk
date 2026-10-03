@@ -220,6 +220,7 @@
         "showing": "A mostrar",
         "of": "de",
         "sync_status": "Estado de sincronização",
+        "add_remote_target": "Adicionar destino RDP/VNC",
         "sync_success": "Estado sincronizado com sucesso",
         "empty_title": "Nenhum dispositivo encontrado",
         "empty_text": "Nenhum dispositivo corresponde aos filtros atuais",

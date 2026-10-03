@@ -796,6 +796,7 @@ function Merge-ConsoleEnv {
 
     $adminPassword = $env:ADMIN_PASSWORD
     $sessionSecret = ""
+    $remoteTargetVaultKey = ""
 
     if ($FreshInstall) {
         if (-not $adminPassword) {
@@ -815,6 +816,14 @@ function Merge-ConsoleEnv {
         if (-not $sessionSecret) {
             $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
         }
+    }
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (Test-Path $envFile) {
+        $rtLine = Select-String -Path $envFile -Pattern '^REMOTE_TARGET_VAULT_KEY=' -SimpleMatch | Select-Object -First 1
+        $remoteTargetVaultKey = if ($rtLine) { ($rtLine.Line -split '=', 2)[1].Trim() } else { "" }
+    }
+    if (-not $remoteTargetVaultKey) {
+        $remoteTargetVaultKey = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
     }
 
     $goPort = if ($script:GO_API_PORT) { $script:GO_API_PORT } else { 21114 }
@@ -840,6 +849,8 @@ function Merge-ConsoleEnv {
     $env:BD_SUBST_API_PORT = [string]$clientPort
     $env:BD_SUBST_DEFAULT_ADMIN_PASSWORD = [string]$adminPassword
     $env:BD_SUBST_SESSION_SECRET = [string]$sessionSecret
+    $env:BD_SUBST_REMOTE_TARGET_VAULT_KEY = [string]$remoteTargetVaultKey
+    $env:BD_SUBST_GUACD_ADDRESS = "127.0.0.1:4822"
     $env:BD_SUBST_SSL_CERT_PATH = Join-Path $sslDir "betterdesk.crt"
     $env:BD_SUBST_SSL_KEY_PATH = Join-Path $sslDir "betterdesk.key"
 
@@ -1546,6 +1557,11 @@ function Install-NodeJsConsole {
     $versionSrc = Join-Path $script:ScriptDir "VERSION"
     if (Test-Path $versionSrc) {
         Copy-Item -Path $versionSrc -Destination (Join-Path $script:CONSOLE_PATH "VERSION") -Force -ErrorAction SilentlyContinue
+    }
+    $remoteGatewaySrc = Join-Path $script:ScriptDir "remote-gateway"
+    if (Test-Path $remoteGatewaySrc) {
+        Copy-Item -Path $remoteGatewaySrc -Destination (Join-Path $script:CONSOLE_PATH "remote-gateway") -Recurse -Force
+        Print-Info "Installed RDP/VNC gateway module contract"
     }
     
     # Install npm dependencies

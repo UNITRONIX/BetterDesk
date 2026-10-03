@@ -1,0 +1,70 @@
+name: Remote Gateway Dependency Update
+
+on:
+  schedule:
+    - cron: '47 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: remote-gateway-dependency-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check for an existing update PR
+        id: existing-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          count=$(gh pr list --base dev --head automation/remote-gateway-update --state open --json number --jq 'length')
+          echo "exists=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare the pinned manifest update
+        if: steps.existing-pr.outputs.exists != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/update_remote_gateway.py
+
+      - name: Verify the prepared manifest
+        if: steps.existing-pr.outputs.exists != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/verify_remote_gateway.py
+
+      - name: Create reviewed update PR
+        if: steps.existing-pr.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet -- remote-gateway/manifest.json; then
+            echo "No update PR required"
+            exit 0
+          fi
+          git switch -c automation/remote-gateway-update
+          git config user.name "betterdesk-gateway-bot"
+          git config user.email "betterdesk-gateway-bot@users.noreply.github.com"
+          git add remote-gateway/manifest.json
+          git commit -m "chore(remote-gateway): update pinned upstream source"
+          git push --set-upstream origin automation/remote-gateway-update
+          gh pr create \
+            --base dev \
+            --head automation/remote-gateway-update \
+            --title "chore(remote-gateway): update pinned upstream source" \
+            --body "Automated candidate update. CI must verify checksums, licenses, SBOM and gateway tests before merge."

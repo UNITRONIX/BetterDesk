@@ -220,6 +220,7 @@
         "showing": "Pokazuję",
         "of": "z",
         "sync_status": "Synchronizuj status",
+        "add_remote_target": "Dodaj cel RDP/VNC",
         "sync_success": "Status zsynchronizowany",
         "empty_title": "Nie znaleziono urządzeń",
         "empty_text": "Żadne urządzenie nie pasuje do filtrów",

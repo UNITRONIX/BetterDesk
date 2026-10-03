@@ -220,6 +220,7 @@
         "showing": "Anzeige",
         "of": "von",
         "sync_status": "Synchronisierungsstatus",
+        "add_remote_target": "RDP/VNC-Ziel hinzufügen",
         "sync_success": "Status erfolgreich synchronisiert",
         "empty_title": "Keine Geräte gefunden",
         "empty_text": "Keine Geräte entsprechen Ihren aktuellen Filtern",

@@ -1,0 +1,47 @@
+name: Remote Gateway Supply Chain
+
+on:
+  pull_request:
+    paths:
+      - 'remote-gateway/**'
+      - 'scripts/verify_remote_gateway.py'
+      - '.github/workflows/remote-gateway-supply-chain.yml'
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-pinned-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify pinned upstream source, checksums and licenses
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/verify_remote_gateway.py --check-upstream
+
+      - name: Verify manifest is valid JSON
+        run: |
+          python3 -m json.tool remote-gateway/manifest.json >/dev/null
+          python3 -m json.tool remote-gateway/license-audit.json >/dev/null
+
+  go-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: betterdesk-server/go.mod
+          cache-dependency-path: betterdesk-server/go.sum
+
+      - name: Test remote-target gateway security
+        working-directory: betterdesk-server
+        run: go test ./api -run 'RemoteTarget|Guac' -count=1

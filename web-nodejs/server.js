@@ -44,6 +44,7 @@ const { initCdapTerminalProxy } = require('./services/cdapTerminalProxy');
 const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
 const { initMeshAshxProxy } = require('./services/meshAshxProxy');
+const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
@@ -573,6 +574,7 @@ async function startServer() {
         initCdapMediaProxies(server, sessionMiddleware);
 
         initMeshAshxProxy(server, sessionMiddleware);
+        initRemoteTargetGateway(server, sessionMiddleware);
 
         // Initialize real-time device status push (Go event bus → browser)
         initDeviceStatusPush(server, sessionMiddleware, config.betterdeskApiUrl, config.betterdeskApiKey);

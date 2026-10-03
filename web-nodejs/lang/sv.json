@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "Synkroniseringsstatus",
+        "add_remote_target": "Lägg till RDP/VNC-mål",
         "sync_success": "Status har synkroniserats",
         "empty_title": "Inga enheter hittades",
         "empty_text": "Inga enheter matchar dina nuvarande filter",

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "review_status": "blocked",
+  "policy": "Only Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause and ISC runtime dependencies are permitted.",
+  "components": [
+    {
+      "name": "Apache Guacamole server",
+      "repository": "apache/guacamole-server",
+      "version": "1.6.0",
+      "license": "Apache-2.0",
+      "protocols": [
+        "rdp",
+        "vnc"
+      ],
+      "status": "approved-source-only"
+    },
+    {
+      "name": "FreeRDP",
+      "repository": "FreeRDP/FreeRDP",
+      "license": "Apache-2.0",
+      "protocols": [
+        "rdp"
+      ],
+      "status": "requires-runtime-build-verification"
+    },
+    {
+      "name": "LibVNCServer",
+      "repository": "LibVNC/libvncserver",
+      "license": "GPL-2.0",
+      "protocols": [
+        "vnc"
+      ],
+      "status": "rejected"
+    }
+  ],
+  "runtime_activation": {
+    "rdp": false,
+    "vnc": false,
+    "reason": "A signed runtime artifact and complete transitive SBOM/license review are still required."
+  }
+}

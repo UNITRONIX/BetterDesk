@@ -226,6 +226,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "สถานะการซิงค์",
+        "add_remote_target": "เพิ่มเป้าหมาย RDP/VNC",
         "sync_success": "ซิงโครไนซ์สถานะเรียบร้อยแล้ว",
         "empty_title": "ไม่พบอุปกรณ์",
         "empty_text": "ไม่มีอุปกรณ์ที่ตรงกับตัวกรองปัจจุบันของคุณ",

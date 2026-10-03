@@ -68,7 +68,12 @@ type Config struct {
 	JWTSecret string // Secret key for JWT signing (auto-generated if empty)
 	// OrgPeerVaultKey encrypts recoverable org peer passwords at rest (#367).
 	// Falls back to JWT secret when empty (installers should set a dedicated key).
-	OrgPeerVaultKey         string
+	OrgPeerVaultKey string
+	// RemoteTargetVaultKey encrypts RDP/VNC credentials. It is deliberately
+	// independent from JWT and the org peer vault; no fallback is allowed.
+	RemoteTargetVaultKey string
+	// GuacdAddress is the loopback address of the managed Guacamole daemon.
+	GuacdAddress            string
 	JWTExpiry               int    // JWT token expiry in hours (default 24)
 	ClientSessionExpiryDays int    // RustDesk client session TTL in days (default 7)
 	ClientSessionSliding    bool   // Extend client session on activity (default true)
@@ -295,6 +300,7 @@ func DefaultConfig() *Config {
 		MeshCoreVersion:           "1.2.0",
 		MeshAgentCertFile:         "mesh_agent_server.pem",
 		MeshRateLimit:             30,
+		GuacdAddress:              "127.0.0.1:4822",
 		SignalRateLimitPerIP:      IPRateLimitRegistrations,
 		SameNATRelay:              true,  // issue #121: auto-fallback to relay on shared public IP
 		AllowSharedNATInitiator:   false, // issue #399: opt-in stock multi-NAT initiator
@@ -408,6 +414,12 @@ func (c *Config) LoadEnv() {
 	}
 	if v := os.Getenv("ORG_PEER_VAULT_KEY"); v != "" {
 		c.OrgPeerVaultKey = v
+	}
+	if v := os.Getenv("REMOTE_TARGET_VAULT_KEY"); v != "" {
+		c.RemoteTargetVaultKey = v
+	}
+	if v := os.Getenv("GUACD_ADDRESS"); v != "" {
+		c.GuacdAddress = v
 	}
 	if v := os.Getenv("JWT_EXPIRY_HOURS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {

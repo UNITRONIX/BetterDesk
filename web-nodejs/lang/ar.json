@@ -227,6 +227,7 @@
         "showing": "Showing",
         "of": "of",
         "sync_status": "حالة المزامنة",
+        "add_remote_target": "إضافة هدف RDP/VNC",
         "sync_success": "تمت مزامنة الحالة بنجاح",
         "empty_title": "لم يتم العثور على أي أجهزة",
         "empty_text": "لا توجد أجهزة تتطابق مع عوامل التصفية الحالية",
