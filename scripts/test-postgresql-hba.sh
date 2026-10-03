@@ -11,7 +11,9 @@ STATE_DIR="$TEST_ROOT/state"
 mkdir -p "$FAKE_BIN" "$STATE_DIR"
 trap 'rm -rf "$TEST_ROOT"' EXIT
 
-sed '$d' "$INSTALLER" > "$FUNCTIONS_FILE"
+# The installer has a direct-execution guard, so source the complete file
+# instead of deleting an assumed final line.
+cp "$INSTALLER" "$FUNCTIONS_FILE"
 
 cat > "$FAKE_BIN/sudo" <<'EOF'
 #!/usr/bin/env bash

@@ -435,17 +435,18 @@ function Generate-Checksums {
         $checksumFile = "CHECKSUMS.md"
         $dateNow = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         
-        $content = @"
-# BetterDesk Server - Binary Checksums
-
-Generated: $dateNow
-RustDesk Base Version: $Script:RustDeskVersion
-BetterDesk Version: 2.0.0
-
-## SHA256 Checksums
-
-``````
-"@
+        $content = @(
+            '# BetterDesk Server - Binary Checksums'
+            ''
+            "Generated: $dateNow"
+            "RustDesk Base Version: $Script:RustDeskVersion"
+            'BetterDesk Version: 2.0.0'
+            ''
+            '## SHA256 Checksums'
+            ''
+            '```'
+        ) -join [Environment]::NewLine
+        $content += [Environment]::NewLine
         
         $binaries = Get-ChildItem -Filter "hbbs-*" -File
         $binaries += Get-ChildItem -Filter "hbbr-*" -File
@@ -455,11 +456,11 @@ BetterDesk Version: 2.0.0
             $content += "$hash  $($binary.Name)`n"
         }
         
-        $content += "```"
+        $content += '```'
         
         $content | Out-File -FilePath $checksumFile -Encoding UTF8
         
-        Write-Success "Checksums saved to: $Script:OutputDir\$checksumFile"
+        Write-Success ("Checksums saved to: {0}\{1}" -f $Script:OutputDir, $checksumFile)
     } catch {
         Write-Warning2 "Could not generate checksums: $_"
     } finally {

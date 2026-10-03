@@ -14,6 +14,13 @@ class RDConnection {
         const loc = window.location;
         const wsProtocol = loc.protocol === 'https:' ? 'wss:' : 'ws:';
         this.wsBase = opts.baseUrl || `${wsProtocol}//${loc.host}`;
+        this.deviceId = String(opts.deviceId || '');
+        this.guestSessionId = String(opts.guestSessionId || '');
+        if (!this.guestSessionId && this.deviceId) {
+            this.guestSessionId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+                ? window.crypto.randomUUID()
+                : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+        }
 
         /** @type {WebSocket|null} */
         this.rendezvousWs = null;
@@ -35,7 +42,13 @@ class RDConnection {
         try {
             const q = new URLSearchParams(window.location.search);
             const token = q.get('guest') || q.get('t') || window.__guestToken || '';
-            if (token) return `?guest=${encodeURIComponent(token)}`;
+            if (token) {
+                const params = new URLSearchParams();
+                params.set('guest', token);
+                if (this.deviceId) params.set('peer_id', this.deviceId);
+                if (this.guestSessionId) params.set('guest_session', this.guestSessionId);
+                return `?${params.toString()}`;
+            }
         } catch (_) { /* ignore */ }
         return '';
     }

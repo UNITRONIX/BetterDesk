@@ -47,7 +47,7 @@ class RDClient {
         this._connectionParams = resolvedTimeouts.connection || opts.connection || null;
 
         // Sub-modules
-        this.conn = new RDConnection();
+        this.conn = new RDConnection({ deviceId: this.deviceId });
         this.proto = new RDProtocol();
         this.crypto = new RDCrypto();
         this.video = new RDVideo();

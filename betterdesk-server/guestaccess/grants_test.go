@@ -3,6 +3,7 @@ package guestaccess
 import (
 	"encoding/json"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -73,5 +74,36 @@ func TestExpiry(t *testing.T) {
 	}
 	if _, err := store.Validate(token, "PEER01"); err == nil {
 		t.Fatal("expected expired")
+	}
+}
+
+func TestConsumeEnforcesPeerAndMaxUsesAtomically(t *testing.T) {
+	store := newStore(t)
+	token, grant, err := store.Create([]string{"PEER01"}, "alice", 30, false, "", 2)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+
+	const attempts = 8
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	successes := 0
+	for i := 0; i < attempts; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := store.Consume(token, "PEER01"); err == nil {
+				mu.Lock()
+				successes++
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+	if successes != grant.MaxUses {
+		t.Fatalf("successful consumes = %d, want %d", successes, grant.MaxUses)
+	}
+	if _, err := store.Consume(token, "OTHER"); err == nil {
+		t.Fatal("expected peer outside grant to be rejected")
 	}
 }

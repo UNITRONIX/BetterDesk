@@ -30,6 +30,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'user.view', 'user.create', 'user.edit', 'user.delete',
         'org.create', 'org.edit', 'org.delete', 'org.manage_users', 'org.manage_devices',
         'device.view', 'device.connect', 'device.edit', 'device.delete',
+        'guest.create',
         'device.ban', 'device.change_id', 'device.connection_mode',
         'audit.view', 'metrics.view',
         'cdap.view', 'cdap.command',
@@ -41,6 +42,7 @@ const DEFAULT_ROLE_PERMISSIONS = {
 
     operator: new Set([
         'device.view', 'device.connect', 'device.edit', 'device.connection_mode',
+        'guest.create',
         'user.view',
         'audit.view', 'metrics.view',
         'cdap.view', 'cdap.command',
@@ -54,6 +56,10 @@ const DEFAULT_ROLE_PERMISSIONS = {
         'audit.view', 'metrics.view',
         'cdap.view',
         'chat.access',
+    ]),
+    guest_issuer: new Set([
+        'device.view',
+        'guest.create',
     ]),
     pro: new Set(),
 };

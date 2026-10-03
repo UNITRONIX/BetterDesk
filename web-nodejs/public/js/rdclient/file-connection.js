@@ -18,7 +18,7 @@ class RDFileConnection {
         if (!opts.deviceId) throw new Error('deviceId required');
         this.deviceId = opts.deviceId;
         this.opts = opts;
-        this.conn = new RDConnection();
+        this.conn = new RDConnection({ deviceId: this.deviceId });
         this.proto = opts.proto || new RDProtocol();
         this.crypto = new RDCrypto();
         this._state = 'idle'; // idle | connecting | authenticating | ready | error | disconnected
@@ -115,7 +115,7 @@ class RDFileConnection {
             if (this.conn) {
                 try { this.conn.close(); } catch (_e) { /* ignore */ }
             }
-            this.conn = new RDConnection();
+            this.conn = new RDConnection({ deviceId: this.deviceId });
             this.crypto = new RDCrypto();
             this._setState('connecting');
             this._emit('log', 'Opening file transfer session…');

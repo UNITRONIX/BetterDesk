@@ -40,6 +40,7 @@ type Grant struct {
 
 // PublicGrant is safe metadata returned by validate (no secrets).
 type PublicGrant struct {
+	ID        string    `json:"id"`
 	Valid     bool      `json:"valid"`
 	PeerIDs   []string  `json:"peer_ids"`
 	ViewOnly  bool      `json:"view_only"`
@@ -167,14 +168,6 @@ func (s *Store) loadByHash(tokenHash string) (*Grant, error) {
 	return &g, nil
 }
 
-func (s *Store) save(tokenHash string, g *Grant) error {
-	b, err := json.Marshal(g)
-	if err != nil {
-		return err
-	}
-	return s.DB.SetConfig(s.configKey(tokenHash), string(b))
-}
-
 func (g *Grant) allowsPeer(peerID string) bool {
 	peerID = strings.TrimSpace(peerID)
 	for _, id := range g.PeerIDs {
@@ -224,45 +217,96 @@ func (s *Store) Validate(token, peerID string) (*Grant, error) {
 	return g, nil
 }
 
-// Touch increments use_count after a successful session open (optional).
-func (s *Store) Touch(token string) error {
+// Consume atomically reserves one successful session opening for a peer.
+// The compare-and-swap loop is required because grant payloads are stored as
+// JSON in a shared config row and both SQLite and PostgreSQL may serve
+// concurrent WebSocket upgrades.
+func (s *Store) Consume(token, peerID string) (*Grant, error) {
+	return s.consume(token, peerID, true)
+}
+
+func (s *Store) consume(token, peerID string, enforcePeer bool) (*Grant, error) {
 	token = strings.TrimSpace(token)
+	peerID = strings.TrimSpace(peerID)
 	if token == "" {
-		return fmt.Errorf("missing guest token")
+		return nil, fmt.Errorf("missing guest token")
 	}
+	if enforcePeer && peerID == "" {
+		return nil, fmt.Errorf("missing guest peer")
+	}
+
 	tokenHash := hashToken(token)
-	g, err := s.loadByHash(tokenHash)
-	if err != nil {
-		return err
+	key := s.configKey(tokenHash)
+	for attempt := 0; attempt < 8; attempt++ {
+		raw, err := s.DB.GetConfig(key)
+		if err != nil || raw == "" {
+			return nil, fmt.Errorf("invalid or expired guest link")
+		}
+		var g Grant
+		if err := json.Unmarshal([]byte(raw), &g); err != nil {
+			return nil, fmt.Errorf("invalid guest grant")
+		}
+		if err := g.isActive(); err != nil {
+			return nil, err
+		}
+		if enforcePeer && !g.allowsPeer(peerID) {
+			return nil, fmt.Errorf("guest link does not allow this device")
+		}
+		g.UseCount++
+		replacement, err := json.Marshal(&g)
+		if err != nil {
+			return nil, err
+		}
+		swapped, err := s.DB.CompareAndSwapConfig(key, raw, string(replacement))
+		if err != nil {
+			return nil, err
+		}
+		if swapped {
+			return &g, nil
+		}
+		time.Sleep(time.Millisecond)
 	}
-	g.UseCount++
-	return s.save(tokenHash, g)
+	return nil, fmt.Errorf("guest link update conflicted")
+}
+
+// Touch increments use_count after a successful session open (legacy helper).
+func (s *Store) Touch(token string) error {
+	_, err := s.consume(token, "", false)
+	return err
 }
 
 // RevokeByID marks a grant revoked. Returns true if found.
 func (s *Store) RevokeByID(id, createdBy string, admin bool) (bool, error) {
-	entries, err := s.DB.ListConfigByPrefix(configPrefix)
-	if err != nil {
-		return false, err
-	}
-	for _, e := range entries {
-		var g Grant
-		if err := json.Unmarshal([]byte(e.Value), &g); err != nil {
-			continue
-		}
-		if g.ID != id {
-			continue
-		}
-		if !admin && createdBy != "" && g.CreatedBy != createdBy {
-			return false, fmt.Errorf("forbidden")
-		}
-		now := time.Now().UTC()
-		g.RevokedAt = &now
-		tokenHash := strings.TrimPrefix(e.Key, configPrefix)
-		if err := s.save(tokenHash, &g); err != nil {
+	for attempt := 0; attempt < 8; attempt++ {
+		entries, err := s.DB.ListConfigByPrefix(configPrefix)
+		if err != nil {
 			return false, err
 		}
-		return true, nil
+		for _, e := range entries {
+			var g Grant
+			if err := json.Unmarshal([]byte(e.Value), &g); err != nil {
+				continue
+			}
+			if g.ID != id {
+				continue
+			}
+			if !admin && createdBy != "" && g.CreatedBy != createdBy {
+				return false, fmt.Errorf("forbidden")
+			}
+			now := time.Now().UTC()
+			g.RevokedAt = &now
+			replacement, err := json.Marshal(&g)
+			if err != nil {
+				return false, err
+			}
+			swapped, err := s.DB.CompareAndSwapConfig(e.Key, e.Value, string(replacement))
+			if err != nil {
+				return false, err
+			}
+			if swapped {
+				return true, nil
+			}
+		}
 	}
 	return false, nil
 }
@@ -295,6 +339,7 @@ func (s *Store) ListActive(createdBy string, admin bool) ([]*Grant, error) {
 // ToPublic builds the public validate response.
 func ToPublic(g *Grant) PublicGrant {
 	return PublicGrant{
+		ID:        g.ID,
 		Valid:     true,
 		PeerIDs:   append([]string(nil), g.PeerIDs...),
 		ViewOnly:  g.ViewOnly,

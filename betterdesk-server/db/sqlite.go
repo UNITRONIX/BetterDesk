@@ -1484,6 +1484,24 @@ func (s *SQLiteDB) SetConfig(key, value string) error {
 	return err
 }
 
+// CompareAndSwapConfig updates a configuration value only when it still
+// matches expected. It is used for atomic counters stored as JSON payloads.
+func (s *SQLiteDB) CompareAndSwapConfig(key, expected, replacement string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	result, err := s.db.Exec(
+		`UPDATE server_config SET value = ?
+		 WHERE key = ? AND value = ?`,
+		replacement, key, expected,
+	)
+	if err != nil {
+		return false, err
+	}
+	n, err := result.RowsAffected()
+	return n == 1, err
+}
+
 // DeleteConfig removes a configuration key.
 func (s *SQLiteDB) DeleteConfig(key string) error {
 	s.mu.Lock()

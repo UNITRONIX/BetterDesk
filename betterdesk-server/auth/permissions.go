@@ -12,6 +12,7 @@ const (
 	// Device permissions
 	PermDeviceView           = "device.view"
 	PermDeviceConnect        = "device.connect"
+	PermGuestCreate          = "guest.create"
 	PermDeviceEdit           = "device.edit"   // notes, tags, display name
 	PermDeviceDelete         = "device.delete" // soft-delete + revoke
 	PermDeviceBan            = "device.ban"    // ban/unban
@@ -71,7 +72,7 @@ const (
 
 // AllPermissions is the complete list of permission strings for validation.
 var AllPermissions = []string{
-	PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
+	PermDeviceView, PermDeviceConnect, PermGuestCreate, PermDeviceEdit, PermDeviceDelete,
 	PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
 	PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
 	PermServerConfig, PermServerKeys, PermServerAttestation,
@@ -118,6 +119,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
 		PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
+		PermGuestCreate,
 		PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
@@ -130,6 +132,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 
 	RoleOperator: buildPermMap([]string{
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceConnectionMode,
+		PermGuestCreate,
 		PermUserView,
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand,
@@ -144,7 +147,8 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermCDAPView,
 		PermChatAccess,
 	}),
-	RolePro: buildPermMap([]string{}),
+	RolePro:         buildPermMap([]string{}),
+	RoleGuestIssuer: buildPermMap([]string{PermDeviceView, PermGuestCreate}),
 	// Device credentials authenticate an agent to its own transport only.
 	// They never confer panel/API permissions.
 	RoleDevice: buildPermMap([]string{}),

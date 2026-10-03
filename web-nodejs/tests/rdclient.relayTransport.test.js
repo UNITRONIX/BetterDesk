@@ -11,6 +11,7 @@ function loadBrowserScript(relativePath, globals = {}) {
         Uint8Array,
         ArrayBuffer,
         URL,
+        URLSearchParams,
         ...globals,
     };
     sandbox.window = sandbox;
@@ -67,6 +68,37 @@ describe('RDConnection native relay WebSocket transport', () => {
         expect(sockets[0].url).toBe(
             'wss://console.example.test/ws/relay?transport=message'
         );
+        sockets[0].onopen();
+        await expect(opening).resolves.toBe(sockets[0]);
+    });
+
+    test('binds guest relay URLs to the target and logical session', async () => {
+        const sockets = [];
+        class MockWebSocket {
+            static OPEN = 1;
+
+            constructor(url) {
+                this.url = url;
+                sockets.push(this);
+            }
+        }
+
+        const sandbox = loadBrowserScript('public/js/rdclient/connection.js', {
+            location: {
+                protocol: 'https:',
+                host: 'console.example.test',
+                search: '?guest=guest-token',
+            },
+            crypto: { randomUUID: () => 'guest-session-1' },
+            __guestToken: 'guest-token',
+            WebSocket: MockWebSocket,
+        });
+        const connection = new sandbox.RDConnection({ deviceId: 'TARGET01' });
+        const opening = connection.connectRelay();
+
+        expect(new URL(sockets[0].url).searchParams.get('guest')).toBe('guest-token');
+        expect(new URL(sockets[0].url).searchParams.get('peer_id')).toBe('TARGET01');
+        expect(new URL(sockets[0].url).searchParams.get('guest_session')).toBe('guest-session-1');
         sockets[0].onopen();
         await expect(opening).resolves.toBe(sockets[0]);
     });

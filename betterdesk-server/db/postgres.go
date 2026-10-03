@@ -1311,6 +1311,20 @@ func (pg *PostgresDB) SetConfig(key, value string) error {
 	return err
 }
 
+// CompareAndSwapConfig updates a configuration value only when it still
+// matches expected. It is used for atomic counters stored as JSON payloads.
+func (pg *PostgresDB) CompareAndSwapConfig(key, expected, replacement string) (bool, error) {
+	result, err := pg.pool.Exec(pg.ctx,
+		`UPDATE server_config SET value = $1
+		 WHERE key = $2 AND value = $3`,
+		replacement, key, expected,
+	)
+	if err != nil {
+		return false, err
+	}
+	return result.RowsAffected() == 1, nil
+}
+
 // DeleteConfig removes a configuration key.
 func (pg *PostgresDB) DeleteConfig(key string) error {
 	_, err := pg.pool.Exec(pg.ctx, `DELETE FROM server_config WHERE key = $1`, key)

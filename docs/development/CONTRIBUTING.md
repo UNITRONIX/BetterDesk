@@ -79,6 +79,52 @@ go test -race -count=1 ./...
 go vet ./...
 ```
 
+### Local-only diagnostic gate
+
+Before enabling the local hooks, install the required local tools:
+
+- Node.js and npm versions accepted by `web-nodejs/package.json`
+- Go accepted by `betterdesk-server/go.mod` and `govulncheck`
+- Docker Desktop with the Compose plugin and the `postgres:16-alpine` image
+- Bash, ShellCheck, PowerShell, ripgrep, gitleaks, Trivy
+- Python 3.9+ and `pip-audit` for the SDK and bridge manifests
+
+On Windows, run the one-time setup from PowerShell:
+
+```powershell
+.\scripts\setup-local-gates.ps1
+```
+
+The setup stores `core.hooksPath` in this clone's local Git configuration.
+It does not change the repository or GitHub workflows. Both `pre-commit` and
+`pre-push` then run the complete local gate:
+
+```powershell
+npm run local:gate
+```
+
+The gate runs the Node.js console and SDK tests, Go vet/race/vulnerability
+checks/builds, Python compilation/tests and `pip-audit`, all npm audits,
+gitleaks, the sensitive-path scan, Trivy filesystem and local-image scans,
+installer syntax/unit checks, protocol/i18n/provenance/version checks, Compose
+validation, isolated PostgreSQL tests, and local Docker health/login/restart
+smoke tests. It creates JSON and Markdown diagnostics in
+`.local-test-results/`.
+
+The gate fails closed. Missing required tools, failed tests, unexpected skips,
+security findings, unavailable Docker/PostgreSQL, or incomplete integration
+checks block the operation with a non-zero exit code. Use
+`npm run local:gate:dry-run` only to inspect the categories; it is not a
+passing test result. `--no-verify` bypasses Git's hooks and must be treated as
+an exceptional, explicitly documented action.
+
+The Docker smoke tests build images from this checkout and use temporary
+containers and volumes. They do not run a native installation, touch
+`/opt`/`C:\BetterDeskConsole`, restart host services, call GitHub Actions, or
+test an external RustDesk client. Those host/client lifecycle checks remain
+manual checks in a disposable VM and are shown as explicit boundaries in the
+local report.
+
 Read [BetterDesk Update Flow](../important/betterdesk-update-flow.md) before
 changing update, installer, service, or deployment behavior.
 

@@ -11,7 +11,9 @@ mkdir -p "$FAKE_BIN" "$STATE_DIR"
 trap 'rm -rf "$TEST_ROOT"' EXIT
 
 # Load the production functions without invoking the interactive installer.
-sed '$d' "$INSTALLER" > "$FUNCTIONS_FILE"
+# The installer has a direct-execution guard, so sourcing the complete file is
+# safer than deleting an assumed final line.
+cp "$INSTALLER" "$FUNCTIONS_FILE"
 
 cat > "$FAKE_BIN/curl" <<'EOF'
 #!/usr/bin/env bash

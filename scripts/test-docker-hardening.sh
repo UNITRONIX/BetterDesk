@@ -7,6 +7,15 @@ IMAGE="${BETTERDESK_HARDENING_IMAGE:-ghcr.io/unitronix/betterdesk:${IMAGE_TAG}}"
 PROJECT="betterdesk-hardening-$RANDOM"
 TEST_DIR="$(mktemp -d)"
 OVERRIDE_FILE="$TEST_DIR/compose.override.yml"
+DOCKER_BIN="${BETTERDESK_DOCKER_BIN:-}"
+if [[ -z "$DOCKER_BIN" ]]; then
+    DOCKER_BIN="$(command -v docker 2>/dev/null || command -v docker.exe 2>/dev/null || true)"
+fi
+
+docker() {
+    "$DOCKER_BIN" "$@"
+}
+
 if command -v cygpath >/dev/null 2>&1; then
     DOCKER_TEST_DIR="$(cygpath -m "$TEST_DIR")"
 else
@@ -15,7 +24,7 @@ fi
 
 fail() {
     printf 'FAIL: %s\n' "$*" >&2
-    if [[ -f "$OVERRIDE_FILE" ]] && command -v docker >/dev/null 2>&1; then
+    if [[ -f "$OVERRIDE_FILE" ]] && [[ -n "$DOCKER_BIN" ]]; then
         docker compose -p "$PROJECT" \
             -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
             -f "$OVERRIDE_FILE" logs --tail=120 >&2 || true
@@ -49,7 +58,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+if [[ -z "$DOCKER_BIN" ]] || ! docker info >/dev/null 2>&1; then
     printf 'SKIP: Docker is not available\n'
     exit 0
 fi

@@ -123,6 +123,7 @@ docs/_internal/
 .coverage
 htmlcov/
 .pytest_cache/
+.local-test-results/
 test_*.sh
 verify_*.sh
 TESTING.local.md

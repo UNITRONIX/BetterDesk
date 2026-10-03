@@ -541,6 +541,7 @@ type Database interface {
 	// Config
 	GetConfig(key string) (string, error)
 	SetConfig(key, value string) error
+	CompareAndSwapConfig(key, expected, replacement string) (bool, error)
 	DeleteConfig(key string) error
 	ListConfigByPrefix(prefix string) ([]ServerConfig, error)
 

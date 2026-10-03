@@ -15,6 +15,7 @@ const {
     attachGuestGrant,
     peerAllowedByGrant,
 } = require('../middleware/guestAccess');
+const { invalidateGuestGrant } = require('../services/wsRelay');
 const { rdClientPageLimiter } = require('../middleware/rateLimiter');
 
 async function assertPeersInScope(req, peerIds) {
@@ -25,7 +26,7 @@ async function assertPeersInScope(req, peerIds) {
 
 // --- Operator APIs ---
 
-router.post('/api/guest/access-links', requireAuth, requirePermission('device.connect'), async (req, res) => {
+router.post('/api/guest/access-links', requireAuth, requirePermission('guest.create'), async (req, res) => {
     try {
         const peerIds = Array.isArray(req.body?.peer_ids) ? req.body.peer_ids.map(String) : [];
         if (!peerIds.length) {
@@ -47,13 +48,20 @@ router.post('/api/guest/access-links', requireAuth, requirePermission('device.co
     }
 });
 
-router.get('/api/guest/access-links', requireAuth, requirePermission('device.connect'), async (req, res) => {
+router.get('/api/guest/access-links', requireAuth, requirePermission('guest.create'), async (req, res) => {
     return proxyToGo(betterdeskApi.apiClient, req, res, 'GET', '/guest/access-links');
 });
 
-router.delete('/api/guest/access-links/:id', requireAuth, requirePermission('device.connect'), async (req, res) => {
+router.delete('/api/guest/access-links/:id', requireAuth, requirePermission('guest.create'), async (req, res) => {
     const id = encodeURIComponent(req.params.id);
-    return proxyToGo(betterdeskApi.apiClient, req, res, 'DELETE', `/guest/access-links/${id}`);
+    try {
+        const result = await betterdeskApi.apiClient.delete(`/guest/access-links/${id}`);
+        invalidateGuestGrant(req.params.id);
+        return res.status(result.status || 200).json(result.data);
+    } catch (err) {
+        const status = err.response?.status || 500;
+        return res.status(status).json(err.response?.data || { error: err.message });
+    }
 });
 
 // --- Public guest APIs (token-gated; no panel session) ---
