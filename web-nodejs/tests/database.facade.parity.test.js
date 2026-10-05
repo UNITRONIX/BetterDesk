@@ -11,6 +11,8 @@ const REQUIRED_FACADE_METHODS = [
     'getUserStrategyGuid',
     'setUserStrategyAssignment',
     'resolveUserAssignmentKey',
+    'prepareAgentBundleGeneration',
+    'promoteAgentBundleGeneration',
 ];
 
 describe('database.js facade parity (Issue #380)', () => {

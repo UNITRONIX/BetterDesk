@@ -224,6 +224,10 @@ const facade = {
     listAgentBundleBuildsForHash: (hash) => adapter.listAgentBundleBuildsForHash(hash),
     getAgentBundleBuild:        (q) => adapter.getAgentBundleBuild(q),
     upsertAgentBundleBuild:     (data) => adapter.upsertAgentBundleBuild(data),
+    prepareAgentBundleGeneration: (bundleId, data) =>
+        adapter.prepareAgentBundleGeneration(bundleId, data),
+    promoteAgentBundleGeneration: (brandingHash) =>
+        adapter.promoteAgentBundleGeneration(brandingHash),
 
     // ---- User Groups ----
     getAllUserGroups:    () => adapter.getAllUserGroups(),
