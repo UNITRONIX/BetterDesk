@@ -35,6 +35,79 @@
     gap: 10px;
 }
 
+.gen-operation-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: grid;
+    place-items: center;
+}
+
+.gen-operation-modal.hidden {
+    display: none;
+}
+
+.gen-operation-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.68);
+}
+
+.gen-operation-dialog {
+    position: relative;
+    width: min(440px, calc(100vw - 32px));
+    padding: 28px;
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.14));
+    border-radius: 14px;
+    background: var(--color-bg-card, #17202b);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.gen-operation-dialog h2 {
+    margin: 0 0 8px;
+}
+
+.gen-operation-dialog p {
+    margin: 0 0 16px;
+    line-height: 1.45;
+}
+
+.gen-operation-spinner {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 18px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--color-primary, #4dabf7);
+    border-radius: 50%;
+    animation: gen-operation-spin 0.8s linear infinite;
+}
+
+.gen-operation-progress {
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.gen-operation-progress span {
+    display: block;
+    width: 38%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-primary, #4dabf7);
+    animation: gen-operation-progress 1.5s ease-in-out infinite;
+}
+
+@keyframes gen-operation-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes gen-operation-progress {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(330%); }
+}
+
 .generator-layout {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -228,6 +301,28 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+}
+
+.build-progress {
+    height: 6px;
+    overflow: hidden;
+    margin-top: 10px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.build-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-primary, #4dabf7);
+    transition: width 0.35s ease;
+}
+
+.build-progress-meta {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--color-text-muted, #94a3b8);
 }
 
 .build-error {

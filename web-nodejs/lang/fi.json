@@ -877,6 +877,7 @@
         "module_seed_missing": "Signing seed missing (plain JSON Phase A)",
         "module_error_prefix": "Error",
         "module_no_release": "No GitHub release with generator templates found. Publish BetterDesk-Client release assets first.",
+        "module_stub_warning": "Stub-mallit (ei ty?p?yt?bin??rej?) ? koontiversiot ep?onnistuvat, kunnes t?ysi Client-julkaisu on asennettu",
         "bundle_name": "Paketin nimi",
         "bundle_name_hint": "Vain sisäinen tarra – ei näytetä loppukäyttäjille.",
         "short_link": "Lyhyt latauslinkki",

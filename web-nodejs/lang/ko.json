@@ -871,6 +871,7 @@
         "module_seed_missing": "Signing seed missing (plain JSON Phase A)",
         "module_error_prefix": "Error",
         "module_no_release": "No GitHub release with generator templates found. Publish BetterDesk-Client release assets first.",
+        "module_stub_warning": "?? ???(???? ???? ??) ? ?? Client ???? ??? ??? ??? ?????",
         "bundle_name": "번들 이름",
         "bundle_name_hint": "내부 라벨만 — 최종 사용자에게는 표시되지 않습니다.",
         "short_link": "짧은 다운로드 링크",

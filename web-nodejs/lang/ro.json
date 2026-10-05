@@ -877,6 +877,7 @@
         "module_seed_missing": "Signing seed missing (plain JSON Phase A)",
         "module_error_prefix": "Error",
         "module_no_release": "No GitHub release with generator templates found. Publish BetterDesk-Client release assets first.",
+        "module_stub_warning": "?abloane stub (f?r? binare desktop) ? buildurile vor e?ua p?n? la instalarea unei versiuni complete de Client",
         "bundle_name": "Numele pachetului",
         "bundle_name_hint": "Numai etichetă internă — nu este afișată utilizatorilor finali.",
         "short_link": "Link de descărcare scurt",

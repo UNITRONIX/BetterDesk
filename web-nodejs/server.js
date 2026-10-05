@@ -592,12 +592,29 @@ async function startServer() {
         // Defer build workers until after listen + event-bus WS connect settle
         // (#353): toolchain/DB work racing native addon init can abort Node 24.
         setImmediate(() => {
-            // BetterDesk Support Generator — patches Client templates with custom.txt.
-            // Disabled when AGENT_BUILD_WORKER=off (small consoles without templates).
+            // BetterDesk Support Generator — local embedded Client builder.
+            // Disabled when AGENT_BUILD_WORKER=off.
             if (process.env.AGENT_BUILD_WORKER !== 'off') {
                 try {
                     const clientTemplateWorker = require('./services/clientTemplateWorker');
                     clientTemplateWorker.startWorker();
+                    if (String(
+                        process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+                    ).trim().toLowerCase() === 'embedded') {
+                        const clientBuilder = require('./services/clientBuilderService');
+                        clientBuilder.syncAndQueueRebuilds()
+                            .then((result) => {
+                                if (result.queued) {
+                                    console.log(
+                                        `[server] BetterDesk-Client ${result.sha} changed; `
+                                        + 'embedded Support rebuild queued'
+                                    );
+                                }
+                            })
+                            .catch((err) => {
+                                console.warn('[server] BetterDesk-Client sync/rebuild deferred:', err.message);
+                            });
+                    }
                 } catch (err) {
                     console.warn('[server] client template worker disabled:', err.message);
                 }

@@ -7,12 +7,9 @@
  *   - hashing the normalized branding (Phase 2 build-artifact cache key)
  *   - generating short, URL-safe bundle IDs
  *
- * The build pipeline itself (Tauri cross-compile, dpkg-deb, rpmbuild,
- * appimagetool, cargo-xwin + wine) is intentionally NOT implemented here.
- * Phase 1 stores the bundle definition + serves a public download portal
- * that reports each platform as "pending". Phase 2 will plug a queue
- * into this service and start producing real artifacts keyed by
- * `branding_hash`.
+ * The build pipeline is owned by clientTemplateWorker/localClientBuilder.
+ * This service validates profiles and provides deterministic config
+ * fingerprints for the local embedded build queue.
  */
 
 'use strict';
@@ -22,7 +19,7 @@ const config = require('../config/config');
 const conn = require('./agentBundleConnection');
 
 // Supported delivery targets. The portal renders one card per entry.
-// BetterDesk Support Generator patches portable desktop templates + custom.txt.
+// BetterDesk Support Generator builds incoming-only Client binaries.
 const PLATFORMS = [
     { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip + installer)' },
     { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip + installer)' },
