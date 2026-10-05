@@ -648,15 +648,23 @@ async function _runOne(buildRow) {
     }
 }
 
-function _findManifestArtifact(root, manifest, platform, arch) {
+function _artifactExtension(platform, format) {
+    if (String(platform).toLowerCase() === 'windows') return '.zip';
+    if (format === 'deb') return '.deb';
+    if (format === 'rpm') return '.rpm';
+    if (format === 'arch') return '.pkg.tar.zst';
+    return '.tar.gz';
+}
+
+function _findManifestArtifact(root, manifest, platform, arch, format = 'portable') {
     const providerArch = {
         x64: 'x86_64',
         amd64: 'x86_64',
         arm64: 'aarch64',
     }[String(arch).toLowerCase()] || String(arch).toLowerCase();
-    const target = `${String(platform).toLowerCase()}/${providerArch}`;
+    const target = `${String(platform).toLowerCase()}/${providerArch}/${format}`;
     const assets = (manifest?.assets || []).filter((asset) => (
-        `${String(asset.platform || '').toLowerCase()}/${String(asset.arch || '').toLowerCase()}` === target
+        `${String(asset.platform || '').toLowerCase()}/${String(asset.arch || '').toLowerCase()}/${String(asset.format || 'portable').toLowerCase()}` === target
     ));
     if (assets.length !== 1) {
         throw new Error(`embedded_manifest_asset_target_count_invalid:${platform}/${arch}`);
@@ -664,7 +672,7 @@ function _findManifestArtifact(root, manifest, platform, arch) {
     const assetName = assets[0].name;
     const candidate = path.resolve(root, assetName);
     const relative = path.relative(path.resolve(root), candidate);
-    const expectedExt = String(platform).toLowerCase() === 'windows' ? '.zip' : '.tar.gz';
+    const expectedExt = _artifactExtension(platform, format);
     if (
         !relative
         || relative.startsWith(`..${path.sep}`)
@@ -691,7 +699,7 @@ function _failedPlatformsForError(message, buildRow) {
         : bundleService.PLATFORMS;
 }
 
-async function _assertEmbeddedArtifact(artifactPath) {
+async function _assertEmbeddedArtifact(artifactPath, format = 'portable') {
     if (artifactPath.endsWith('.zip')) {
         const zip = new AdmZip(artifactPath);
         for (const entry of zip.getEntries()) {
@@ -702,8 +710,15 @@ async function _assertEmbeddedArtifact(artifactPath) {
         }
         return;
     }
+    const command = format === 'deb' ? 'dpkg-deb'
+        : format === 'rpm' ? 'rpm'
+            : 'tar';
+    const args = format === 'deb' ? ['-c', artifactPath]
+        : format === 'rpm' ? ['-qlp', artifactPath]
+            : format === 'arch' ? ['--zstd', '-tf', artifactPath]
+                : ['-tzf', artifactPath];
     const listing = await new Promise((resolve, reject) => {
-        const child = spawn('tar', ['-tzf', artifactPath], {
+        const child = spawn(command, args, {
             cwd: path.dirname(artifactPath),
             stdio: ['ignore', 'pipe', 'pipe'],
             windowsHide: true,
@@ -827,11 +842,11 @@ async function _runEmbeddedOne(buildRow) {
         const manifest = await _validateEmbeddedManifest(result.outputDir, buildRow);
         await fsp.mkdir(ARTIFACT_ROOT, { recursive: true });
         const availableTargets = new Set((manifest.assets || []).map((asset) => (
-            `${asset.platform}/${asset.arch}`
+            `${asset.platform}/${asset.arch}/${asset.format || 'portable'}`
         )));
         const localProvider = manifest.builder === 'betterdesk-local';
         for (const platform of buildPlatforms) {
-            const targetKey = `${platform.platform}/${platform.arch === 'x64' ? 'x86_64' : 'aarch64'}`;
+            const targetKey = `${platform.platform}/${platform.arch === 'x64' ? 'x86_64' : 'aarch64'}/${platform.format}`;
             if (!availableTargets.has(targetKey)) {
                 if (!localProvider) {
                     throw new Error(`embedded_build_target_missing:${targetKey}`);
@@ -858,10 +873,11 @@ async function _runEmbeddedOne(buildRow) {
                 result.outputDir,
                 manifest,
                 platform.platform,
-                platform.arch
+                platform.arch,
+                platform.format
             );
-            await _assertEmbeddedArtifact(sourceArtifact);
-            const ext = platform.platform === 'windows' ? 'zip' : 'tar.gz';
+            await _assertEmbeddedArtifact(sourceArtifact, platform.format);
+            const ext = _artifactExtension(platform.platform, platform.format).slice(1);
             const artifactPath = path.join(
                 ARTIFACT_ROOT,
                 `betterdesk-support-${buildRow.branding_hash.slice(0, 12)}-${platform.platform}-${platform.arch}.${ext}`

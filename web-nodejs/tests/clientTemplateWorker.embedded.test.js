@@ -67,6 +67,35 @@ describe('clientTemplateWorker embedded artifacts', () => {
         )).toBe(selected);
     });
 
+    test('selects a package asset by target and format', () => {
+        const selected = path.join(root, 'betterdesk-support-linux-x86_64.deb');
+        fs.writeFileSync(selected, 'selected');
+        fs.writeFileSync(path.join(root, 'betterdesk-support-linux-x86_64.tar.gz'), 'portable');
+
+        expect(worker._internals.findManifestArtifact(
+            root,
+            {
+                assets: [
+                    {
+                        name: 'betterdesk-support-linux-x86_64.tar.gz',
+                        platform: 'linux',
+                        arch: 'x86_64',
+                        format: 'portable',
+                    },
+                    {
+                        name: 'betterdesk-support-linux-x86_64.deb',
+                        platform: 'linux',
+                        arch: 'x86_64',
+                        format: 'deb',
+                    },
+                ],
+            },
+            'linux',
+            'x64',
+            'deb',
+        )).toBe(selected);
+    });
+
     test('exposes only locally supported target platforms', () => {
         expect(worker.getAvailablePlatforms()).toEqual([
             { platform: 'linux', arch: 'x64', format: 'portable', label: 'Linux x64' },

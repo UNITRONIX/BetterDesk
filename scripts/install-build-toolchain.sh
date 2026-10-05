@@ -90,7 +90,7 @@ install_apt() {
         libgl1-mesa-dev libx11-dev libxcursor-dev libxrandr-dev \
         libxinerama-dev libxi-dev libxxf86vm-dev libxkbcommon-dev \
         libwayland-dev libdecor-0-dev \
-        nsis dpkg-dev rpm fakeroot msitools p7zip-full \
+        nsis dpkg-dev rpm fakeroot msitools p7zip-full zstd \
         libfuse2t64 \
         mingw-w64 gcc-mingw-w64-x86-64
     # Node.js: prefer existing install (NodeSource bundles npm; the Ubuntu npm
@@ -111,7 +111,7 @@ install_dnf() {
         libXi-devel libXxf86vm-devel mesa-libGL-devel libxkbcommon-devel \
         wayland-devel libdecor-devel \
         mingw64-gcc mingw64-gcc-c++ \
-        nsis rpm-build dpkg fuse-libs msitools p7zip-full \
+        nsis rpm-build dpkg fuse-libs msitools p7zip-full zstd \
         nodejs npm || true
 }
 

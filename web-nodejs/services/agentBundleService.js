@@ -24,7 +24,13 @@ const PLATFORMS = [
     { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip + installer)' },
     { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip + installer)' },
     { platform: 'linux',   arch: 'x64',   format: 'portable', label: 'Linux x64 portable (.tar.gz)' },
+    { platform: 'linux',   arch: 'x64',   format: 'deb',      label: 'Debian/Ubuntu x64 package (.deb)' },
+    { platform: 'linux',   arch: 'x64',   format: 'rpm',      label: 'Fedora/RHEL/openSUSE x64 package (.rpm)' },
+    { platform: 'linux',   arch: 'x64',   format: 'arch',     label: 'Arch Linux x64 package (.pkg.tar.zst)' },
     { platform: 'linux',   arch: 'arm64', format: 'portable', label: 'Linux ARM64 portable (.tar.gz)' },
+    { platform: 'linux',   arch: 'arm64', format: 'deb',      label: 'Debian/Ubuntu ARM64 package (.deb)' },
+    { platform: 'linux',   arch: 'arm64', format: 'rpm',      label: 'Fedora/RHEL/openSUSE ARM64 package (.rpm)' },
+    { platform: 'linux',   arch: 'arm64', format: 'arch',     label: 'Arch Linux ARM64 package (.pkg.tar.zst)' },
     { platform: 'macos',   arch: 'x64',   format: 'portable', label: 'macOS Intel portable (.tar.gz)' },
     { platform: 'macos',   arch: 'arm64', format: 'portable', label: 'macOS Apple Silicon portable (.tar.gz)' },
 ];

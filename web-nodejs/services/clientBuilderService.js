@@ -692,6 +692,7 @@ async function runGithubActionsBuild(request, requestPath, outputDir) {
                 generation_id: request.generationId,
                 config_b64: request.signed_config_b64,
                 client_commit: request.clientCommit || state.installedCommit,
+                targets_json: JSON.stringify(request.targets || []),
             },
         }
     );

@@ -170,6 +170,29 @@ function providerArch(arch) {
     return arch === 'x64' ? 'x86_64' : 'aarch64';
 }
 
+function commandAvailable(name) {
+    const candidates = [
+        ...(process.env.PATH || '')
+            .split(path.delimiter)
+            .filter(Boolean)
+            .map((dir) => path.join(dir, name)),
+        `/usr/bin/${name}`,
+        `/usr/sbin/${name}`,
+        `/bin/${name}`,
+        `/usr/local/bin/${name}`,
+    ];
+    return candidates.some((candidate) => fs.existsSync(candidate));
+}
+
+function linuxPackageFormats() {
+    if (process.platform !== 'linux') return [];
+    const formats = ['portable'];
+    if (commandAvailable('dpkg-deb')) formats.push('deb');
+    if (commandAvailable('rpmbuild')) formats.push('rpm');
+    if (commandAvailable('tar') && commandAvailable('zstd')) formats.push('arch');
+    return formats;
+}
+
 function localToolchainStatus() {
     const missing = [];
     if (!toolPath('cargo', process.env.BETTERDESK_CLIENT_CARGO)) missing.push('cargo');
@@ -180,21 +203,28 @@ function localToolchainStatus() {
     } else if (!fs.existsSync(path.join(vcpkgRoot, process.platform === 'win32' ? 'vcpkg.exe' : 'vcpkg'))) {
         missing.push('VCPKG_ROOT');
     }
-    return { ready: missing.length === 0, missing };
+    return {
+        ready: missing.length === 0,
+        missing,
+        packageFormats: linuxPackageFormats(),
+    };
 }
 
 function getCapabilities() {
     const host = hostTarget();
     const toolchain = localToolchainStatus();
+    const formats = host.platform === 'linux'
+        ? toolchain.packageFormats
+        : ['portable'];
     return {
         mode: 'local',
         host,
         toolchain,
-        targets: toolchain.ready ? [{
+        targets: toolchain.ready ? formats.map((format) => ({
             platform: host.platform,
             arch: host.arch,
-            format: 'portable',
-        }] : [],
+            format,
+        })) : [],
     };
 }
 
@@ -239,9 +269,140 @@ function assertNoExternalConfig(root) {
     }
 }
 
+function packageVersion(request) {
+    const commit = String(request.clientCommit || '').toLowerCase();
+    return `0.0.0.${commit.slice(0, 12).replace(/[^a-f0-9]/g, '') || 'local'}`;
+}
+
+async function prepareLinuxBundle(source, target) {
+    const arch = providerArch(target.arch);
+    const targetName = `linux-${arch}-${target.format}`;
+    const stage = path.join(outputDir, 'stage', targetName);
+    await fsp.rm(stage, { recursive: true, force: true });
+    await fsp.mkdir(stage, { recursive: true });
+    await fsp.cp(source, path.join(stage, 'bundle'), { recursive: true });
+    assertNoExternalConfig(stage);
+    return { arch, targetName, stage };
+}
+
+async function packageLinuxDeb(request, target, bundle) {
+    const root = path.join(outputDir, 'packages', `${bundle.targetName}-deb`);
+    await fsp.rm(root, { recursive: true, force: true });
+    await fsp.mkdir(path.join(root, 'DEBIAN'), { recursive: true });
+    await fsp.mkdir(path.join(root, 'opt', 'betterdesk-support'), { recursive: true });
+    await fsp.cp(path.join(bundle.stage, 'bundle'), path.join(root, 'opt', 'betterdesk-support'), { recursive: true });
+    await fsp.mkdir(path.join(root, 'usr', 'bin'), { recursive: true });
+    await fsp.symlink('/opt/betterdesk-support/betterdesk', path.join(root, 'usr', 'bin', 'betterdesk'));
+    await fsp.writeFile(path.join(root, 'DEBIAN', 'control'), [
+        'Package: betterdesk-support',
+        `Version: ${packageVersion(request)}`,
+        `Architecture: ${target.arch === 'arm64' ? 'arm64' : 'amd64'}`,
+        'Section: net',
+        'Priority: optional',
+        'Maintainer: BetterDesk',
+        'Description: BetterDesk Support client',
+        ' Embedded support client with signed server configuration.',
+        '',
+    ].join('\n'));
+    const artifact = path.join(
+        outputDir,
+        `betterdesk-support-${request.generationId}-linux-${bundle.arch}.deb`
+    );
+    const result = await run('dpkg-deb', ['--build', root, artifact], { env: process.env });
+    if (result.code !== 0) throw new Error(`local_builder_deb_failed:${result.stderr.slice(-2000)}`);
+    return artifact;
+}
+
+async function packageLinuxRpm(request, target, bundle) {
+    const top = path.join(outputDir, 'packages', `${bundle.targetName}-rpm`);
+    const specDir = path.join(top, 'SPECS');
+    const sourceDirForRpm = path.join(top, 'SOURCES');
+    await fsp.rm(top, { recursive: true, force: true });
+    await fsp.mkdir(specDir, { recursive: true });
+    await fsp.mkdir(sourceDirForRpm, { recursive: true });
+    await fsp.cp(bundle.stage, path.join(sourceDirForRpm, 'bundle'), { recursive: true });
+    const version = packageVersion(request);
+    const spec = [
+        'Name: betterdesk-support',
+        `Version: ${version}`,
+        'Release: 1',
+        'Summary: BetterDesk Support client',
+        'License: AGPL-3.0',
+        `BuildArch: ${target.arch === 'arm64' ? 'aarch64' : 'x86_64'}`,
+        '%description',
+        'BetterDesk Support client with signed server configuration.',
+        '%prep',
+        '%build',
+        '%install',
+        'mkdir -p %{buildroot}/opt/betterdesk-support',
+        'cp -a %{_sourcedir}/bundle/bundle/. %{buildroot}/opt/betterdesk-support/',
+        'mkdir -p %{buildroot}/usr/bin',
+        'ln -s /opt/betterdesk-support/betterdesk %{buildroot}/usr/bin/betterdesk',
+        '%files',
+        '/opt/betterdesk-support',
+        '/usr/bin/betterdesk',
+        '%changelog',
+        '* Mon Oct 05 2026 BetterDesk <support@betterdesk.local> - 0.0.0-1',
+        '- Build signed BetterDesk Support client.',
+        '',
+    ].join('\n');
+    const specPath = path.join(specDir, 'betterdesk-support.spec');
+    await fsp.writeFile(specPath, spec);
+    const result = await run('rpmbuild', [
+        '--define', `_topdir ${top}`,
+        '-bb',
+        specPath,
+    ], { env: process.env });
+    if (result.code !== 0) throw new Error(`local_builder_rpm_failed:${result.stderr.slice(-2000)}`);
+    const rpmArch = target.arch === 'arm64' ? 'aarch64' : 'x86_64';
+    const artifact = path.join(
+        outputDir,
+        `betterdesk-support-${request.generationId}-linux-${bundle.arch}.rpm`
+    );
+    const built = path.join(top, 'RPMS', rpmArch, `betterdesk-support-${version}-1.${rpmArch}.rpm`);
+    if (!fs.existsSync(built)) throw new Error(`local_builder_rpm_output_missing:${built}`);
+    await fsp.rename(built, artifact);
+    return artifact;
+}
+
+async function packageLinuxArch(request, target, bundle) {
+    const root = path.join(outputDir, 'packages', `${bundle.targetName}-arch`);
+    await fsp.rm(root, { recursive: true, force: true });
+    await fsp.mkdir(path.join(root, 'opt', 'betterdesk-support'), { recursive: true });
+    await fsp.cp(
+        path.join(bundle.stage, 'bundle'),
+        path.join(root, 'opt', 'betterdesk-support'),
+        { recursive: true }
+    );
+    await fsp.mkdir(path.join(root, 'usr', 'bin'), { recursive: true });
+    await fsp.symlink('/opt/betterdesk-support/betterdesk', path.join(root, 'usr', 'bin', 'betterdesk'));
+    const arch = target.arch === 'arm64' ? 'aarch64' : 'x86_64';
+    await fsp.writeFile(path.join(root, '.PKGINFO'), [
+        'pkgname = betterdesk-support',
+        'pkgbase = betterdesk-support',
+        'pkgver = 0.0.0-1',
+        'pkgdesc = BetterDesk Support client',
+        'url = https://betterdesk.eu',
+        'builddate = 1791158400',
+        'packager = BetterDesk',
+        `arch = ${arch}`,
+        '',
+    ].join('\n'));
+    const artifact = path.join(
+        outputDir,
+        `betterdesk-support-${request.generationId}-linux-${bundle.arch}.pkg.tar.zst`
+    );
+    const result = await run('tar', ['--zstd', '-cf', artifact, '.'], {
+        cwd: root,
+        env: process.env,
+    });
+    if (result.code !== 0) throw new Error(`local_builder_arch_failed:${result.stderr.slice(-2000)}`);
+    return artifact;
+}
+
 async function packageTarget(request, target) {
     const arch = providerArch(target.arch);
-    const targetName = `${target.platform}-${arch}`;
+    const targetName = `${target.platform}-${arch}-${target.format}`;
     const stage = path.join(outputDir, 'stage', targetName);
     await fsp.rm(stage, { recursive: true, force: true });
     await fsp.mkdir(stage, { recursive: true });
@@ -271,15 +432,14 @@ async function packageTarget(request, target) {
 
     let source;
     if (target.platform === 'linux') {
-        source = path.join(
-            sourceDir,
-            'flutter',
-            'build',
-            'linux',
-            target.arch,
-            'release',
-            'bundle'
-        );
+        const linuxBundleCandidates = [
+            path.join(sourceDir, 'flutter', 'build', 'linux', target.arch, 'release', 'bundle'),
+            // BetterDesk-Client's build.py currently uses the Flutter x64
+            // directory name for Linux even when the native host is ARM64.
+            path.join(sourceDir, 'flutter', 'build', 'linux', 'x64', 'release', 'bundle'),
+        ];
+        source = linuxBundleCandidates.find((candidate) => fs.existsSync(candidate))
+            || linuxBundleCandidates[0];
     } else {
         source = path.join(
             sourceDir,
@@ -293,6 +453,13 @@ async function packageTarget(request, target) {
         );
     }
     if (!fs.existsSync(source)) throw new Error(`local_builder_output_missing:${source}`);
+    if (target.platform === 'linux' && target.format !== 'portable') {
+        const bundle = await prepareLinuxBundle(source, target);
+        if (target.format === 'deb') return packageLinuxDeb(request, target, bundle);
+        if (target.format === 'rpm') return packageLinuxRpm(request, target, bundle);
+        if (target.format === 'arch') return packageLinuxArch(request, target, bundle);
+        throw new Error(`local_builder_format_unsupported:${target.format}`);
+    }
     await fsp.cp(source, path.join(stage, path.basename(source)), { recursive: true });
     assertNoExternalConfig(stage);
     const archivePath = path.join(
@@ -315,16 +482,25 @@ async function main() {
     if (request.product_sku !== 'betterdesk-support' || !request.signed_config_b64) {
         throw new Error('local_builder_support_payload_required');
     }
-    if (!Array.isArray(request.targets) || request.targets.length !== 1) {
-        throw new Error('local_builder_single_target_required');
+    if (!Array.isArray(request.targets) || request.targets.length === 0) {
+        throw new Error('local_builder_targets_required');
     }
-
     const host = hostTarget();
-    const target = request.targets.find((candidate) => (
-        candidate.platform === host.platform && candidate.arch === host.arch
-    ));
-    if (!target) {
+    const targets = request.targets
+        .filter((candidate) => (
+            candidate.platform === host.platform && candidate.arch === host.arch
+        ))
+        .map((candidate) => ({ ...candidate, format: candidate.format || 'portable' }));
+    if (!targets.length) {
         throw new Error(`local_builder_target_unsupported:${request.targets[0]?.platform || 'unknown'}/${request.targets[0]?.arch || 'unknown'}`);
+    }
+    const available = new Set(getCapabilities().targets.map((candidate) => (
+        `${candidate.platform}/${candidate.arch}/${candidate.format}`
+    )));
+    for (const target of targets) {
+        if (!available.has(`${target.platform}/${target.arch}/${target.format}`)) {
+            throw new Error(`local_builder_format_unsupported:${target.format || 'portable'}`);
+        }
     }
     await fsp.mkdir(outputDir, { recursive: true });
     ensureBuildCapacity();
@@ -356,7 +532,10 @@ async function main() {
         throw new Error(`local_builder_compile_failed:${build.stderr.slice(-4000)}`);
     }
     progress(78, 'packaging');
-    const artifact = await packageTarget(request, target);
+    const artifacts = [];
+    for (const target of targets) {
+        artifacts.push({ target, path: await packageTarget(request, target) });
+    }
     progress(94, 'verifying');
     const manifest = {
         schema_version: 1,
@@ -364,13 +543,14 @@ async function main() {
         generation_id: request.generationId,
         client_commit: request.clientCommit || null,
         external_config: false,
-        assets: [{
+        assets: await Promise.all(artifacts.map(async ({ target, path: artifact }) => ({
             name: path.basename(artifact),
             sha256: await sha256(artifact),
             size: (await fsp.stat(artifact)).size,
             platform: target.platform,
             arch: providerArch(target.arch),
-        }],
+            format: target.format || 'portable',
+        }))),
         builder: 'betterdesk-local',
     };
     await fsp.writeFile(
