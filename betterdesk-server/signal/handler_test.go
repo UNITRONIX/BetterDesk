@@ -385,6 +385,37 @@ func TestProcessRegisterPkPreservesPersistedIdentityAfterRestart(t *testing.T) {
 	}
 }
 
+func TestRegisterPeerHeartbeatHydratesPersistedPK(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	storedPK := bytes.Repeat([]byte{0x6B}, 32)
+	if err := database.UpsertPeer(&db.Peer{
+		ID:     "HEARTPK1",
+		PK:     storedPK,
+		Status: "ONLINE",
+	}); err != nil {
+		t.Fatalf("UpsertPeer: %v", err)
+	}
+
+	srv.peers.Put(&peer.Entry{
+		ID:         "HEARTPK1",
+		ConnType:   peer.ConnTCP,
+		LastReg:    time.Now(),
+		StatusTier: peer.StatusOnline,
+	})
+	srv.handleRegisterPeer(&pb.RegisterPeer{
+		Id:     "HEARTPK1",
+		Serial: 2,
+	}, udpAddr("203.0.113.121", 49121))
+
+	entry := srv.peers.Get("HEARTPK1")
+	if entry == nil || !bytes.Equal(entry.PK, storedPK) {
+		t.Fatalf("heartbeat did not hydrate PK: %+v", entry)
+	}
+	if entry.ConnType != peer.ConnUDP {
+		t.Fatalf("heartbeat ConnType = %s, want udp", entry.ConnType)
+	}
+}
+
 func TestProcessRegisterPkFirstEnrollmentStoresIdentity(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
 	firstUUID := []byte("first-enrollment")
@@ -881,6 +912,29 @@ func TestHandleRequestRelayTCPSamePublicIPIgnoresPrivateRelayHint(t *testing.T) 
 	}
 	if rr.RelayServer != "198.51.100.20:21117" {
 		t.Fatalf("relay = %q, want public relay", rr.RelayServer)
+	}
+}
+
+func TestHandleRequestRelayTCPSamePublicIPWithUDPTargetForcesPublicRelay(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.localIP.Store("198.51.100.21")
+	srv.lanIP.Store("10.0.0.21")
+
+	targetAddr := udpAddr("203.0.113.45", 52000)
+	initiatorAddr := udpAddr("203.0.113.45", 51000)
+	putOnlinePeer(srv, "TARGET121UDP", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+	putOnlinePeer(srv, "INIT121UDP", initiatorAddr.IP.String(), initiatorAddr.Port, peer.ConnTCP)
+
+	resp := srv.handleRequestRelayTCP(&pb.RequestRelay{
+		Id:   "TARGET121UDP",
+		Uuid: "same-public-udp-target-relay",
+	}, initiatorAddr, peer.ConnTCP)
+	rr := resp.GetRelayResponse()
+	if rr == nil || rr.RefuseReason != "" {
+		t.Fatalf("relay response = %+v, want accepted", resp)
+	}
+	if rr.RelayServer != "198.51.100.21:21117" {
+		t.Fatalf("relay server = %q, want public relay", rr.RelayServer)
 	}
 }
 

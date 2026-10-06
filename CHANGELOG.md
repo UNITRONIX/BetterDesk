@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Relay hairpin identity hydration:** when an online peer is restored from the database before its `RegisterPk` handshake, UDP/TCP relay and `RelayResponse` forwarding now reload the persisted public key instead of emitting an unsigned `signedPk=0` response. Shared-public-IP sessions continue to use the public relay path for issue #121.
 
 ---
 

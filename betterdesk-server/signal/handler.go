@@ -196,6 +196,34 @@ func (s *Server) targetAcceptsInboundSession(targetID string) bool {
 	return state != db.PeerIDSoftDeleted
 }
 
+// peerPublicKey returns the live peer key and hydrates it from durable storage
+// when the peer map was populated before RegisterPk completed (or after a
+// signal-server restart). A persisted key is only used when the in-memory
+// entry is empty; an active entry can never be replaced by database data.
+func (s *Server) peerPublicKey(peerID string, entry *peer.Entry) []byte {
+	if entry != nil && len(entry.PK) > 0 {
+		return entry.PK
+	}
+	if s == nil || s.db == nil || peerID == "" {
+		return nil
+	}
+
+	stored, err := s.db.GetPeer(peerID)
+	if err != nil {
+		log.Printf("[signal] Failed to load PK for %s from database: %v", peerID, err)
+		return nil
+	}
+	if stored == nil || len(stored.PK) == 0 {
+		return nil
+	}
+
+	pk := append([]byte(nil), stored.PK...)
+	if s.peers != nil && s.peers.SetPKIfEmpty(peerID, pk) {
+		log.Printf("[signal] Loaded PK from database for %s (%d bytes)", peerID, len(pk))
+	}
+	return pk
+}
+
 // requiresRelayOnlyCompatibility keeps the temporary RustDesk-compatible
 // support-agent path on relay transport. Direct transport has no equivalent
 // server-bound session grant yet, so allowing P2P would create an
@@ -443,8 +471,11 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 		// Update heartbeat
 		s.peers.UpdateHeartbeat(id, raddr, msg.Serial)
 
-		// Respond: don't need PK (we already have it)
-		requestPk := len(existing.PK) == 0
+		// A peer can be back in memory after a restart before its RegisterPk
+		// arrives. Restore the durable identity before deciding whether to
+		// request it again, so relay responses can be signed immediately.
+		livePK := s.peerPublicKey(id, existing)
+		requestPk := len(livePK) == 0
 		resp := &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RegisterPeerResponse{
 				RegisterPeerResponse: &pb.RegisterPeerResponse{
@@ -938,8 +969,9 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 
 	// Sign the target's PK with server's Ed25519 key for E2E verification.
 	var signedPk []byte
-	if len(target.PK) > 0 {
-		signed, err := s.kp.SignIdPk(targetID, target.PK)
+	targetPK := s.peerPublicKey(targetID, target)
+	if len(targetPK) > 0 {
+		signed, err := s.kp.SignIdPk(targetID, targetPK)
 		if err != nil {
 			log.Printf("[signal] PunchHole: failed to sign PK for %s: %v", targetID, err)
 		} else {
@@ -1095,8 +1127,9 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 		log.Printf("[signal] PunchHole (TCP): force relay for %s (returning SYMMETRIC to let client drive relay UUID)", targetID)
 
 		var signedPk []byte
-		if len(target.PK) > 0 {
-			signed, err := s.kp.SignIdPk(target.ID, target.PK)
+		targetPK := s.peerPublicKey(targetID, target)
+		if len(targetPK) > 0 {
+			signed, err := s.kp.SignIdPk(target.ID, targetPK)
 			if err != nil {
 				log.Printf("[signal] PunchHole (TCP): failed to sign PK for %s: %v", targetID, err)
 			} else {
@@ -1144,8 +1177,9 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 
 	// Sign the target's PK with server's Ed25519 key for E2E verification.
 	var signedPk []byte
-	if len(target.PK) > 0 {
-		signed, err := s.kp.SignIdPk(targetID, target.PK)
+	targetPK := s.peerPublicKey(targetID, target)
+	if len(targetPK) > 0 {
+		signed, err := s.kp.SignIdPk(targetID, targetPK)
 		if err != nil {
 			log.Printf("[signal] PunchHole (TCP): failed to sign PK for %s: %v", targetID, err)
 		} else {
@@ -1247,9 +1281,11 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	}
 
 	if targetID != "" {
-		if target := s.peers.Get(targetID); target != nil && len(target.PK) > 0 {
+		target := s.peers.Get(targetID)
+		targetPK := s.peerPublicKey(targetID, target)
+		if target != nil && len(targetPK) > 0 {
 			// Sign the PK with server's Ed25519 key (enables client E2E verification)
-			signed, err := s.kp.SignIdPk(targetID, target.PK)
+			signed, err := s.kp.SignIdPk(targetID, targetPK)
 			if err != nil {
 				log.Printf("[signal] Failed to sign PK for %s: %v", targetID, err)
 			} else {
@@ -1453,8 +1489,9 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 
 	// Sign the target's PK for E2E encryption verification
 	var signedPk []byte
-	if len(target.PK) > 0 {
-		signed, err := s.kp.SignIdPk(targetID, target.PK)
+	targetPK := s.peerPublicKey(targetID, target)
+	if len(targetPK) > 0 {
+		signed, err := s.kp.SignIdPk(targetID, targetPK)
 		if err != nil {
 			log.Printf("[signal] Failed to sign PK for %s: %v", targetID, err)
 		} else {
@@ -1612,8 +1649,9 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 
 	// Sign the target's PK for E2E encryption verification
 	var signedPk []byte
-	if len(target.PK) > 0 {
-		signed, err := s.kp.SignIdPk(targetID, target.PK)
+	targetPK := s.peerPublicKey(targetID, target)
+	if len(targetPK) > 0 {
+		signed, err := s.kp.SignIdPk(targetID, targetPK)
 		if err != nil {
 			log.Printf("[signal] RequestRelay (TCP): failed to sign PK for %s: %v", targetID, err)
 		} else {
@@ -1801,9 +1839,11 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	}
 
 	var signedPk []byte
-	if target := s.peers.Get(targetID); target != nil && len(target.PK) > 0 {
+	target := s.peers.Get(targetID)
+	targetPK := s.peerPublicKey(targetID, target)
+	if target != nil && len(targetPK) > 0 {
 		// Sign the PK with server's Ed25519 key (enables client E2E verification)
-		signed, err := s.kp.SignIdPk(targetID, target.PK)
+		signed, err := s.kp.SignIdPk(targetID, targetPK)
 		if err != nil {
 			log.Printf("[signal] Failed to sign PK for %s in RelayResponse: %v", targetID, err)
 		} else {
@@ -2019,8 +2059,9 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 	// Format: [64-byte Ed25519 signature][serialized IdPk protobuf] — NaCl combined mode.
 	// Without signing, clients cannot verify target identity and E2E will fail.
 	var signedPk []byte
-	if len(target.PK) > 0 {
-		signed, err := s.kp.SignIdPk(target.ID, target.PK)
+	targetPK := s.peerPublicKey(target.ID, target)
+	if len(targetPK) > 0 {
+		signed, err := s.kp.SignIdPk(target.ID, targetPK)
 		if err != nil {
 			log.Printf("[signal] sendRelayResponse: failed to sign PK for %s: %v", target.ID, err)
 		} else {

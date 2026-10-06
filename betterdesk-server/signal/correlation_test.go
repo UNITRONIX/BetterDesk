@@ -1,12 +1,14 @@
 package signal
 
 import (
+	"bytes"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/config"
 	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
+	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/peer"
 	pb "github.com/unitronix/betterdesk-server/proto"
 	"github.com/unitronix/betterdesk-server/relay"
@@ -178,6 +180,58 @@ func TestRelayResponseForwardUsesPendingInitiatorOnSharedNAT(t *testing.T) {
 	}
 	if relay.AuthorizeRelayPair(relayUUID, "OFFICE_OTHER", "EXT_TARGET") {
 		t.Fatal("must not rebind ticket to wrong same-NAT peer")
+	}
+}
+
+func TestRelayResponseForwardHydratesPKAndUsesUDP(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	kp, err := cryptopkg.GenerateKeyPair()
+	if err != nil {
+		t.Fatalf("GenerateKeyPair: %v", err)
+	}
+	srv.kp = kp
+
+	targetID := "UDP_PK_TARGET"
+	initiatorID := "UDP_PK_INIT"
+	targetAddr := udpAddr("198.51.100.122", 58002)
+	relayUUID := "udp-pk-hydration-forward"
+	targetPK := bytes.Repeat([]byte{0x39}, 32)
+	if err := database.UpsertPeer(&db.Peer{
+		ID:     targetID,
+		PK:     targetPK,
+		Status: "ONLINE",
+	}); err != nil {
+		t.Fatalf("UpsertPeer: %v", err)
+	}
+
+	recv, initiatorAddr := attachTestUDPPair(t, srv)
+	putOnlinePeer(srv, initiatorID, initiatorAddr.IP.String(), initiatorAddr.Port, peer.ConnUDP)
+	putOnlinePeer(srv, targetID, targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+	srv.storePendingUUID(targetID, initiatorAddr, relayUUID, initiatorID)
+
+	srv.handleRelayResponseForward(&pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_RelayResponse{
+			RelayResponse: &pb.RelayResponse{
+				SocketAddr: cryptopkg.EncodeAddr(initiatorAddr),
+				Uuid:       relayUUID,
+				Union:      &pb.RelayResponse_Id{Id: targetID},
+			},
+		},
+	}, targetAddr)
+
+	forwarded := readUDPRendezvous(t, recv).GetRelayResponse()
+	if forwarded == nil {
+		t.Fatal("expected RelayResponse over UDP")
+	}
+	expected, err := kp.SignIdPk(targetID, targetPK)
+	if err != nil {
+		t.Fatalf("SignIdPk: %v", err)
+	}
+	if !bytes.Equal(forwarded.GetPk(), expected) {
+		t.Fatalf("forwarded signed PK length = %d, want %d", len(forwarded.GetPk()), len(expected))
+	}
+	if entry := srv.peers.Get(targetID); entry == nil || !bytes.Equal(entry.PK, targetPK) {
+		t.Fatalf("target PK was not hydrated in peer map: %+v", entry)
 	}
 }
 
