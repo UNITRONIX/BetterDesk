@@ -2287,6 +2287,64 @@
     function showEditModal(deviceId) {
         const device = devices.find(d => d.id === deviceId);
         if (!device) return;
+
+        const editTags = new Set(normalizeTags(device.tags));
+        const editTagInputId = 'edit-tag-input';
+        const editTagsSelectedId = 'edit-tags-selected';
+        const editTagOptionsId = 'edit-tag-options';
+        const editTagSuggestionsId = 'edit-tag-suggestions';
+        const renderEditTags = () => {
+            const selectedEl = document.getElementById(editTagsSelectedId);
+            const optionsEl = document.getElementById(editTagOptionsId);
+            if (!selectedEl || !optionsEl) return;
+
+            selectedEl.innerHTML = editTags.size
+                ? [...editTags].map(tag => `
+                    <span class="device-edit-tag-pill">
+                        ${Utils.escapeHtml(tag)}
+                        <button type="button" class="device-edit-tag-remove"
+                                data-edit-tag-remove="${Utils.escapeHtml(tag)}"
+                                title="${Utils.escapeHtml(_('actions.delete'))}">
+                            <span class="material-icons">close</span>
+                        </button>
+                    </span>
+                `).join('')
+                : `<span class="form-hint">${Utils.escapeHtml(_('device_detail.no_tags'))}</span>`;
+
+            optionsEl.innerHTML = availableTags
+                .filter(tag => tag && ![...editTags].some(selected => selected.toLowerCase() === tag.toLowerCase()))
+                .map(tag => `
+                    <button type="button" class="device-edit-tag-option"
+                            data-edit-tag-option="${Utils.escapeHtml(tag)}">
+                        <span class="material-icons">add</span>${Utils.escapeHtml(tag)}
+                    </button>
+                `).join('');
+
+            selectedEl.querySelectorAll('[data-edit-tag-remove]').forEach(button => {
+                button.addEventListener('click', () => {
+                    editTags.delete(button.dataset.editTagRemove);
+                    renderEditTags();
+                });
+            });
+            optionsEl.querySelectorAll('[data-edit-tag-option]').forEach(button => {
+                button.addEventListener('click', () => {
+                    editTags.add(button.dataset.editTagOption);
+                    renderEditTags();
+                });
+            });
+        };
+        const addEditTag = () => {
+            const input = document.getElementById(editTagInputId);
+            const tag = input?.value.trim();
+            if (!tag) return;
+            if ([...editTags].some(existing => existing.toLowerCase() === tag.toLowerCase())) {
+                Notifications.warning(_('device_detail.tag_exists'));
+                return;
+            }
+            editTags.add(tag);
+            if (input) input.value = '';
+            renderEditTags();
+        };
         
         Modal.show({
             title: _('devices.edit_title'),
@@ -2310,6 +2368,22 @@
                         <label for="edit-note">${_('devices.note')}</label>
                         <textarea id="edit-note" class="form-input" rows="2" 
                                   placeholder="${_('devices.note_placeholder')}" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
+                    </div>
+                    <div class="device-info-item full-width device-edit-tags-field">
+                        <label for="${editTagInputId}">${_('device_detail.tags')}</label>
+                        <div id="${editTagsSelectedId}" class="device-edit-tags-selected"></div>
+                        <div id="${editTagOptionsId}" class="device-edit-tag-options"></div>
+                        <div class="device-edit-tag-input-row">
+                            <input type="text" id="${editTagInputId}" class="form-input"
+                                   list="${editTagSuggestionsId}"
+                                   placeholder="${_('device_detail.tag_placeholder')}" maxlength="50">
+                            <datalist id="${editTagSuggestionsId}">
+                                ${availableTags.map(tag => `<option value="${Utils.escapeHtml(tag)}"></option>`).join('')}
+                            </datalist>
+                            <button type="button" class="btn btn-secondary btn-sm" id="edit-tag-add-btn">
+                                <span class="material-icons">add</span>${_('device_detail.add_tag')}
+                            </button>
+                        </div>
                     </div>
                     <div class="device-info-item">
                         <label>${_('devices.username')}</label>
@@ -2337,6 +2411,7 @@
                 { label: _('actions.save'), class: 'btn-primary', onClick: async () => {
                     const displayName = document.getElementById('edit-display-name').value.trim();
                     const note = document.getElementById('edit-note').value.trim();
+                    const tags = [...editTags];
                     const saveBtn = document.querySelector('.modal-overlay.open [data-btn-index="0"]');
                     const closeBtn = document.querySelector('.modal-overlay.open [data-btn-index="1"]');
                     const restoreButtons = () => {
@@ -2359,15 +2434,23 @@
                             body: JSON.stringify({ display_name: displayName, note }),
                             headers: { 'Content-Type': 'application/json' }
                         });
+                        const tagResult = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/tags`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ tags }),
+                            headers: { 'Content-Type': 'application/json' }
+                        });
 
                         device.display_name = displayName;
                         device.note = note;
+                        device.tags = tagResult?.tags || tags;
+                        availableTags = Array.from(new Set(availableTags.concat(device.tags))).sort((a, b) => a.localeCompare(b));
                         applyFilters();
                         document.dispatchEvent(new CustomEvent('devices:updated', {
                             detail: {
                                 id: device.id,
                                 display_name: displayName,
-                                note: note
+                                note: note,
+                                tags: device.tags
                             }
                         }));
 
@@ -2385,7 +2468,19 @@
                 }},
                 { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
             ],
-            size: 'medium'
+            size: 'medium',
+            onOpen: () => {
+                renderEditTags();
+                const input = document.getElementById(editTagInputId);
+                const addButton = document.getElementById('edit-tag-add-btn');
+                addButton?.addEventListener('click', addEditTag);
+                input?.addEventListener('keydown', event => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        addEditTag();
+                    }
+                });
+            }
         });
     }
 

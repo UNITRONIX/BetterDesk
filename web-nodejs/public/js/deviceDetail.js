@@ -22,6 +22,9 @@ const DeviceDetail = (function () {
         if (typeof detail.note === 'string') {
             device.note = detail.note;
         }
+        if (Array.isArray(detail.tags)) {
+            device.tags = detail.tags;
+        }
         if (typeof detail.online === 'boolean' || detail.status || detail.live_status) {
             device.online = detail.online ?? device.online;
             device.status = detail.status || device.status;
