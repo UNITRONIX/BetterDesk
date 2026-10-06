@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.151] — 2026-10-06
+
+### Changed
 - **Relay hairpin identity hydration:** when an online peer is restored from the database before its `RegisterPk` handshake, UDP/TCP relay and `RelayResponse` forwarding now reload the persisted public key instead of emitting an unsigned `signedPk=0` response. Shared-public-IP sessions continue to use the public relay path for issue #121.
 
 ---
@@ -3909,3 +3916,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.148]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.147...v3.5.148
 [3.5.149]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.148...v3.5.149
 [3.5.150]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.149...v3.5.150
+[3.5.151]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.150...v3.5.151
