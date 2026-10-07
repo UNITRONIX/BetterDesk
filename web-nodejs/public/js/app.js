@@ -280,6 +280,14 @@
                             detail: data,
                         }));
                     }
+                    if (data.type === 'registration_changed') {
+                        // Approval creates the Go peer immediately, but the
+                        // Devices page may otherwise wait for its 60s
+                        // reconciliation timer before showing it.
+                        window.dispatchEvent(new CustomEvent('app:refresh', {
+                            detail: data,
+                        }));
+                    }
                     window.dispatchEvent(new CustomEvent('betterdesk:panel-event', {
                         detail: data,
                     }));

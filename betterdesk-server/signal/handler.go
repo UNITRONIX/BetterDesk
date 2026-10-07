@@ -183,9 +183,17 @@ func (s *Server) targetAcceptsInboundSession(targetID string) bool {
 		log.Printf("[signal] Target %s database lookup failed: %v", targetID, err)
 		return false
 	}
+	// Keep a pending signal transport alive so approval can take effect
+	// immediately, but never allow that transport to receive sessions before
+	// the durable managed-enrollment approval exists.
+	if s.isPendingEnrollment(targetID) {
+		return false
+	}
 	if p != nil {
 		return !p.Banned && !p.Disabled && !p.SoftDeleted
 	}
+	// Unknown compatibility peers that are not in the pending queue retain the
+	// historical behavior.
 	state, err := s.db.GetPeerIDState(targetID)
 	if err != nil {
 		log.Printf("[signal] Target %s state lookup failed: %v", targetID, err)
@@ -194,6 +202,45 @@ func (s *Server) targetAcceptsInboundSession(targetID string) bool {
 	// A target that was never stored by the BetterDesk inventory can still use
 	// compatibility signaling in open mode; a known soft-deleted ID cannot.
 	return state != db.PeerIDSoftDeleted
+}
+
+// isPendingEnrollment reports whether a managed device is waiting for
+// operator approval. It is intentionally based on the durable queue rather
+// than the in-memory peer map, which can be empty after a restart.
+func (s *Server) isPendingEnrollment(peerID string) bool {
+	if s == nil || s.db == nil || peerID == "" || s.cfg.EnrollmentMode != config.EnrollmentModeManaged {
+		return false
+	}
+	pending, err := s.db.GetConfig("pending_device_" + peerID)
+	return err == nil && pending != ""
+}
+
+// retainPendingSignalPeer keeps the client's live signal transport while it
+// waits for approval. The transport is not usable for sessions until
+// targetAcceptsInboundSession sees the approved DB peer row. This removes the
+// approval-to-reconnect race without granting pending devices access.
+func (s *Server) retainPendingSignalPeer(id, remoteAddr string, udpAddr *net.UDPAddr, serial int32, connType peer.ConnType) *peer.Entry {
+	if s == nil || s.peers == nil || id == "" {
+		return nil
+	}
+	now := time.Now()
+	entry := &peer.Entry{
+		ID:              id,
+		IP:              remoteAddr,
+		UDPAddr:         udpAddr,
+		Serial:          serial,
+		ConnType:        connType,
+		LastReg:         now,
+		FirstSeen:       now,
+		HeartbeatCount:  1,
+		StatusTier:      peer.StatusOnline,
+		LastStatusCheck: now,
+	}
+	if entry.IP == "" && udpAddr != nil {
+		entry.IP = udpAddr.String()
+	}
+	s.peers.Put(entry)
+	return entry
 }
 
 // peerPublicKey returns the live peer key and hydrates it from durable storage
@@ -500,6 +547,18 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 	// NEW PEER — Dual Key System enrollment check.
 	if !s.checkEnrollmentPermission(id, raddr.IP.String()) {
 		log.Printf("[signal] Rejected new peer %s from %s (enrollment policy)", id, raddr.IP)
+		if s.isPendingEnrollment(id) {
+			// Keep the UDP endpoint registered, but do not request its key
+			// until approval. The next heartbeat after approval will request
+			// RegisterPk on the same live transport.
+			s.retainPendingSignalPeer(id, raddr.String(), raddr, msg.Serial, peer.ConnUDP)
+			s.sendUDP(&pb.RendezvousMessage{
+				Union: &pb.RendezvousMessage_RegisterPeerResponse{
+					RegisterPeerResponse: &pb.RegisterPeerResponse{RequestPk: false},
+				},
+			}, raddr)
+			log.Printf("[signal] Retained pending peer transport: %s from %s", id, raddr)
+		}
 		if s.auditLog != nil {
 			s.auditLog.Log(audit.ActionPeerRegistrationRejected, raddr.IP.String(), id, map[string]string{
 				"reason": "enrollment_policy",
@@ -656,7 +715,12 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 	}
 	if existingPeer == nil && !s.checkEnrollmentPermission(id, clientHost) {
 		log.Printf("[signal] Rejected new peer PK registration: %s from %s (enrollment policy)", id, clientHost)
-		s.peers.Remove(id)
+		// A pending managed peer may already have a retained signal transport.
+		// Keep it so approval can authorize the existing connection; an
+		// untracked registration is still removed as before.
+		if !s.isPendingEnrollment(id) || s.peers.Get(id) == nil {
+			s.peers.Remove(id)
+		}
 		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 	}
 
@@ -2034,6 +2098,17 @@ func splitAndTrim(s string) []string {
 // handleOnlineRequest checks which peers are online (TCP port 21115).
 func (s *Server) handleOnlineRequest(msg *pb.OnlineRequest) *pb.RendezvousMessage {
 	states := s.peers.OnlineStates(msg.Peers, config.RegTimeout)
+	// A retained pending transport is only an internal bridge for the
+	// approval transition. Do not advertise it as online to other clients.
+	for i, id := range msg.Peers {
+		if !s.isPendingEnrollment(id) {
+			continue
+		}
+		byteIndex := i / 8
+		if byteIndex < len(states) {
+			states[byteIndex] &^= 1 << uint(7-(i%8))
+		}
+	}
 
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_OnlineResponse{

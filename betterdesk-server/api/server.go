@@ -931,6 +931,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		Status        int         `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
 		StatusText    string      `json:"status_text"` // Original string status for admin panel
 		LiveOnline    bool        `json:"live_online"`
+		SignalReady   bool        `json:"signal_ready"` // Live signal transport is registered
 		LiveStatus    peer.Status `json:"live_status"`
 		Platform      string      `json:"platform"`
 		CDAPConnected bool        `json:"cdap_connected"`
@@ -941,6 +942,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 	result := make([]peerResponse, len(peers))
 	for i, p := range peers {
 		liveOnline := s.peers.IsOnline(p.ID, config.RegTimeout)
+		signalReady := liveOnline
 		liveStatus := peer.StatusOffline
 		if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
 			liveStatus = snap.Status
@@ -979,6 +981,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 			Status:        statusInt,
 			StatusText:    p.Status,
 			LiveOnline:    liveOnline,
+			SignalReady:   signalReady,
 			LiveStatus:    liveStatus,
 			Platform:      p.OS,
 			CDAPConnected: cdapConnected,
@@ -1088,6 +1091,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		Status        int         `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
 		StatusText    string      `json:"status_text"` // Original string status for admin panel
 		LiveOnline    bool        `json:"live_online"`
+		SignalReady   bool        `json:"signal_ready"` // Live signal transport is registered
 		LiveStatus    peer.Status `json:"live_status"`
 		Platform      string      `json:"platform"`
 		CDAPConnected bool        `json:"cdap_connected"`
@@ -1099,12 +1103,14 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	if p.Disabled {
 		statusInt = 0
 	}
+	signalReady := s.peers.IsOnline(p.ID, config.RegTimeout)
 
 	writeJSON(w, http.StatusOK, singlePeerResponse{
 		Peer:          p,
 		Status:        statusInt,
 		StatusText:    p.Status,
 		LiveOnline:    liveOnline,
+		SignalReady:   signalReady,
 		LiveStatus:    liveStatus,
 		Platform:      p.OS,
 		CDAPConnected: cdapConnected,

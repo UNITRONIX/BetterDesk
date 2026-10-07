@@ -678,10 +678,11 @@ async function syncOnlineStatus(/* db */) {
  *   id, uuid, pk, ip, user, hostname, os, version, status,
  *   nat_type, last_online, created_at, disabled, banned,
  *   ban_reason, banned_at, soft_deleted, deleted_at, note, tags,
- *   live_online (bool), live_status ("online"|"degraded"|"critical"|"offline")
+ *   live_online (bool), signal_ready (bool),
+ *   live_status ("online"|"degraded"|"critical"|"offline")
  *
  * Panel expected shape: id, hostname, username, platform, ip, note,
- *   online (bool), banned (bool), created_at, last_online, ban_reason,
+ *   online (bool), signal_ready (bool), banned (bool), created_at, last_online, ban_reason,
  *   folder_id, tags[], status_tier, uuid, disabled, os, version
  */
 const NO_SIGNAL_THRESHOLD_MS = 5 * 60 * 1000;
@@ -725,6 +726,7 @@ function normalisePeer(peer) {
         ip: peer.ip || '',
         note: peer.note || '',
         online: liveOnline,
+        signal_ready: peer.signal_ready !== false && liveOnline,
         banned,
         // os_agent / CDAP endpoints use HTTP heartbeat + CDAP WS, not RustDesk UDP
         // :21116 — don't show "No signal" when CDAP is connected.

@@ -20,6 +20,8 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const layout = read('views', 'layouts', 'main.ejs');
     const automation = read('public', 'js', 'automation.js');
     const appJs = read('public', 'js', 'app.js');
+    const devicesJs = read('public', 'js', 'devices.js');
+    const registrationRoutes = read('routes', 'registration.routes.js');
     const notifCenter = read('public', 'js', 'notif-center.js');
     const uiShell = read('public', 'js', 'ui-shell.js');
     const classicNavbar = read('views', 'partials', 'navbar.ejs');
@@ -85,6 +87,14 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(notifCenter, /dom\.badge\.hidden = true/);
         assert.match(notifCenter, /dom\.badge\.setAttribute\('aria-hidden', 'true'\)/);
         assert.match(topbar, /id="notif-badge" hidden aria-hidden="true"/);
+    });
+
+    it('refreshes the Devices list after managed or LAN approval', () => {
+        assert.match(appJs, /data\.type === 'registration_changed'/);
+        assert.match(appJs, /new CustomEvent\('app:refresh'/);
+        assert.match(devicesJs, /window\.addEventListener\('app:refresh'/);
+        assert.match(registrationRoutes, /publishPanelEvent\(\{/);
+        assert.match(registrationRoutes, /type: 'registration_changed'/);
     });
 
     it('uses UX 3.5 as the only shell without beta or classic switch controls', () => {

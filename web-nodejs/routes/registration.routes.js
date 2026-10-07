@@ -357,6 +357,21 @@ router.put('/api/registrations/:id/approve', requirePermission('enrollment.appro
             }
         }
 
+        // Keep the Devices page in sync with the separate LAN registration
+        // store. Managed Go approvals already arrive through the Go event bus.
+        publishPanelEvent({
+            type: 'registration_changed',
+            registration: {
+                source: 'lan',
+                id,
+                device_id: reg.device_id,
+                hostname: reg.hostname,
+                platform: reg.platform,
+                status: 'approved',
+            },
+            timestamp: Date.now(),
+        });
+
         // Log the approval
         try {
             await db.logAction(
