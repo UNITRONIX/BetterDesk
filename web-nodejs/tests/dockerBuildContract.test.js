@@ -80,4 +80,89 @@ describe('Docker admin bootstrap contract', () => {
         expect(contents).toContain('export DB_URL="${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}"');
         expect(contents).toContain('export DB_URL="${DATABASE_URL:-${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}}"');
     });
+
+    test('hardened Docker checks app-owned paths as betterdesk', () => {
+        const bootstrap = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'bootstrap-admin-credentials.sh'),
+            'utf8'
+        );
+        const entrypoint = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'entrypoint.sh'),
+            'utf8'
+        );
+        const guard = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'guard-sqlite-auth-split.sh'),
+            'utf8'
+        );
+
+        expect(bootstrap).toContain('file_exists_as_betterdesk()');
+        expect(bootstrap).toContain('path_exists_as_betterdesk()');
+        expect(bootstrap).toContain('file_exists_as_betterdesk "$_file"');
+        expect(bootstrap).toContain('file_exists_as_betterdesk "$_primary_db"');
+        expect(bootstrap).toContain('path_exists_as_betterdesk "$CREDS_FILE"');
+        expect(entrypoint).toContain('file_exists_as_betterdesk "$API_KEY_FILE"');
+        expect(entrypoint).toContain('file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"');
+        expect(guard).toContain('file_exists_as_betterdesk "$_auth_db"');
+        expect(guard).toContain('file_exists_as_betterdesk "$_primary_db"');
+    });
+
+    test('Docker entrypoints source path helpers before using them', () => {
+        for (const entrypoint of [
+            'docker/server-entrypoint.sh',
+            'docker/console-entrypoint.sh',
+            'docker/entrypoint.sh',
+        ]) {
+            const contents = fs.readFileSync(path.join(repoRoot, entrypoint), 'utf8');
+            const bootstrapSource = contents.indexOf('. /docker/bootstrap-admin-credentials.sh');
+            const firstHelperUse = contents.indexOf('file_exists_as_betterdesk ');
+
+            expect(bootstrapSource).toBeGreaterThanOrEqual(0);
+            expect(firstHelperUse === -1 || firstHelperUse > bootstrapSource).toBe(true);
+        }
+    });
+
+    test('Docker entrypoints source bootstrap before the SQLite guard', () => {
+        for (const entrypoint of ['docker/console-entrypoint.sh', 'docker/entrypoint.sh']) {
+            const contents = fs.readFileSync(path.join(repoRoot, entrypoint), 'utf8');
+            const bootstrapSource = contents.indexOf('. /docker/bootstrap-admin-credentials.sh');
+            const guardSource = contents.indexOf('. /docker/guard-sqlite-auth-split.sh');
+
+            expect(bootstrapSource).toBeGreaterThanOrEqual(0);
+            expect(guardSource).toBeGreaterThan(bootstrapSource);
+        }
+    });
+
+    test('AIO supervisord admin variables are always exported by bootstrap', () => {
+        const bootstrap = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'bootstrap-admin-credentials.sh'),
+            'utf8'
+        );
+        const supervisor = fs.readFileSync(
+            path.join(repoRoot, 'docker', 'supervisord.conf'),
+            'utf8'
+        );
+
+        expect(bootstrap).toContain('ensure_admin_exports()');
+        expect(bootstrap).toContain('export INIT_ADMIN_USER=');
+        expect(bootstrap).toContain('export INIT_ADMIN_PASS=');
+        expect(bootstrap).toContain('export DEFAULT_ADMIN_USERNAME=');
+        expect(bootstrap).toContain('export DEFAULT_ADMIN_PASSWORD=');
+        expect(supervisor).toContain('%(ENV_DEFAULT_ADMIN_USERNAME)s');
+        expect(supervisor).toContain('%(ENV_DEFAULT_ADMIN_PASSWORD)s');
+        expect(supervisor).toContain('%(ENV_INIT_ADMIN_USER)s');
+        expect(supervisor).toContain('%(ENV_INIT_ADMIN_PASS)s');
+    });
+
+    test.each([
+        'docker-compose.yml',
+        'docker-compose.single.yml',
+        'docker-compose.quick.yml',
+        'docker-compose.quick.single.yml',
+        'docker-compose.quick.macvlan.yml',
+        'docker-compose.quick.single.macvlan.yml',
+    ])('%s exposes optional TRUST_PROXY configuration', composeFile => {
+        const contents = fs.readFileSync(path.join(repoRoot, composeFile), 'utf8');
+
+        expect(contents).toContain('TRUST_PROXY=${TRUST_PROXY:-}');
+    });
 });

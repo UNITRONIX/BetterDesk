@@ -7,12 +7,9 @@
  *   - hashing the normalized branding (Phase 2 build-artifact cache key)
  *   - generating short, URL-safe bundle IDs
  *
- * The build pipeline itself (Tauri cross-compile, dpkg-deb, rpmbuild,
- * appimagetool, cargo-xwin + wine) is intentionally NOT implemented here.
- * Phase 1 stores the bundle definition + serves a public download portal
- * that reports each platform as "pending". Phase 2 will plug a queue
- * into this service and start producing real artifacts keyed by
- * `branding_hash`.
+ * The build pipeline is owned by clientTemplateWorker/localClientBuilder.
+ * This service validates profiles and provides deterministic config
+ * fingerprints for the local embedded build queue.
  */
 
 'use strict';
@@ -22,12 +19,18 @@ const config = require('../config/config');
 const conn = require('./agentBundleConnection');
 
 // Supported delivery targets. The portal renders one card per entry.
-// BetterDesk Support Generator patches portable desktop templates + custom.txt.
+// BetterDesk Support Generator builds incoming-only Client binaries.
 const PLATFORMS = [
     { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip + installer)' },
     { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip + installer)' },
     { platform: 'linux',   arch: 'x64',   format: 'portable', label: 'Linux x64 portable (.tar.gz)' },
+    { platform: 'linux',   arch: 'x64',   format: 'deb',      label: 'Debian/Ubuntu x64 package (.deb)' },
+    { platform: 'linux',   arch: 'x64',   format: 'rpm',      label: 'Fedora/RHEL/openSUSE x64 package (.rpm)' },
+    { platform: 'linux',   arch: 'x64',   format: 'arch',     label: 'Arch Linux x64 package (.pkg.tar.zst)' },
     { platform: 'linux',   arch: 'arm64', format: 'portable', label: 'Linux ARM64 portable (.tar.gz)' },
+    { platform: 'linux',   arch: 'arm64', format: 'deb',      label: 'Debian/Ubuntu ARM64 package (.deb)' },
+    { platform: 'linux',   arch: 'arm64', format: 'rpm',      label: 'Fedora/RHEL/openSUSE ARM64 package (.rpm)' },
+    { platform: 'linux',   arch: 'arm64', format: 'arch',     label: 'Arch Linux ARM64 package (.pkg.tar.zst)' },
     { platform: 'macos',   arch: 'x64',   format: 'portable', label: 'macOS Intel portable (.tar.gz)' },
     { platform: 'macos',   arch: 'arm64', format: 'portable', label: 'macOS Apple Silicon portable (.tar.gz)' },
 ];

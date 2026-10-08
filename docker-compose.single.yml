@@ -45,6 +45,8 @@ services:
       - console-data:/app/data
     environment:
       - NODE_ENV=production
+      # Set TRUST_PROXY=1 when the panel is behind one reverse proxy.
+      - TRUST_PROXY=${TRUST_PROXY:-}
       - PORT=5000
       - HOST=0.0.0.0
       - API_HOST=0.0.0.0

@@ -227,8 +227,42 @@ describe('wsRelay — security: session validation on WS upgrade', () => {
         await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
         address = server.address();
 
-        const result = await rawUpgrade(address, '/ws/rendezvous?guest=not-a-real-token');
+        const result = await rawUpgrade(
+            address,
+            '/ws/rendezvous?guest=not-a-real-token&peer_id=TARGET01&guest_session=test-session'
+        );
         expect(result.statusLine).toBe('HTTP/1.1 401 Unauthorized');
+    });
+
+    test('rejects guest upgrade without a target binding', async () => {
+        const noSession = (req, _res, next) => {
+            req.session = null;
+            next();
+        };
+
+        const { initWsProxy } = require('../services/wsRelay');
+        server = http.createServer((req, res) => { res.writeHead(404); res.end(); });
+        initWsProxy(server, noSession);
+
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        address = server.address();
+
+        const result = await rawUpgrade(address, '/ws/rendezvous?guest=valid-token');
+        expect(result.statusLine).toBe('HTTP/1.1 403 Forbidden');
+    });
+
+    test('does not trust a guest page when the protobuf target changes', () => {
+        const protobuf = require('protobufjs');
+        const root = protobuf.loadSync(require('path').join(__dirname, '../protos/rendezvous.proto'));
+        const type = root.lookupType('hbb.RendezvousMessage');
+        const payload = type.encode(type.create({
+            punchHoleRequest: { id: 'OTHER01' },
+        })).finish();
+        const { _guestProtocol } = require('../services/wsRelay');
+        const message = _guestProtocol.decodeRendezvousPayload(payload);
+
+        expect(_guestProtocol.guestTargetMatches(message, 'TARGET01')).toBe(false);
+        expect(_guestProtocol.guestTargetMatches(message, 'OTHER01')).toBe(true);
     });
 
     // ── Test: non-ws-relay paths are not handled by initWsProxy ──────────────

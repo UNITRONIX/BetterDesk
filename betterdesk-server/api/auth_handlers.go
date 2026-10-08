@@ -1185,7 +1185,8 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			path == "/api/devices/register" || path == "/api/devices/register/status" ||
 			path == "/api/devices/self/access-policy" || path == "/api/devices/self/help-request" ||
 			path == "/api/devices/self/totp" ||
-			path == "/api/guest/access-links/validate" || path == "/api/guest/access-links/peers" {
+			path == "/api/guest/access-links/validate" ||
+			path == "/api/guest/access-links/peers" {
 			next.ServeHTTP(w, r)
 			return
 		}

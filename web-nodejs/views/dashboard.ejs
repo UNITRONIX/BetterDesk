@@ -81,6 +81,18 @@
                                 <div class="dashboard-stat-label">${_('dashboard.offline_devices')}</div>
                             </div>
                         </article>
+
+                        <article class="dashboard-stat-card">
+                            <div class="dashboard-stat-icon uptime">
+                                <span class="material-icons" aria-hidden="true">schedule</span>
+                            </div>
+                            <div class="dashboard-stat-content">
+                                <div class="dashboard-stat-value" id="stat-uptime">
+                                    <span class="skeleton skeleton-text"></span>
+                                </div>
+                                <div class="dashboard-stat-label">${_('dashboard.server_uptime')}</div>
+                            </div>
+                        </article>
                     </section>
 
                     <section class="client-config-card" aria-labelledby="client-config-title">
@@ -315,46 +327,7 @@
                     </section>
                 </main>
 
-                <aside class="dashboard-side-panel" aria-label="${_('dashboard.attention_panel')} ${_('dashboard.activity_feed')}">
-                    <section class="attention-section">
-                        <div class="section-header">
-                            <h2 class="section-title">
-                                <span class="material-icons" aria-hidden="true">priority_high</span>
-                                ${_('dashboard.attention_panel')}
-                            </h2>
-                        </div>
-                        <div class="attention-list">
-                            <div class="attention-item attention-online">
-                                <span class="material-icons" aria-hidden="true">cloud_done</span>
-                                <div>
-                                    <strong id="health-online">-</strong>
-                                    <span>${_('dashboard.devices_online')}</span>
-                                </div>
-                            </div>
-                            <div class="attention-item attention-alerts">
-                                <span class="material-icons" aria-hidden="true">warning</span>
-                                <div>
-                                    <strong id="health-alerts">-</strong>
-                                    <span>${_('dashboard.banned')}</span>
-                                </div>
-                            </div>
-                            <div class="attention-item attention-connections">
-                                <span class="material-icons" aria-hidden="true">sync_alt</span>
-                                <div>
-                                    <strong id="health-connections">-</strong>
-                                    <span>${_('dashboard.total_devices') || _('dashboard.devices')}</span>
-                                </div>
-                            </div>
-                            <div class="attention-item attention-uptime">
-                                <span class="material-icons" aria-hidden="true">schedule</span>
-                                <div>
-                                    <strong id="health-uptime">-</strong>
-                                    <span>${_('dashboard.server_uptime')}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
+                <aside class="dashboard-side-panel" aria-label="${_('dashboard.activity_feed')}">
                     <section class="activity-feed-section">
                         <div class="section-header">
                             <h2 class="section-title">

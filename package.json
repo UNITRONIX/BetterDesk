@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "i18n:check": "node web-nodejs/scripts/i18n-check.js --system web-nodejs"
+    "i18n:check": "node web-nodejs/scripts/i18n-check.js --system web-nodejs",
+    "local:gate": "node scripts/local-gate.js",
+    "local:gate:dry-run": "node scripts/local-gate.js --dry-run",
+    "test:local-gate": "node --test scripts/local-gate.test.js"
   },
   "devDependencies": {
     "vitest": "^3.2.5"

@@ -233,6 +233,26 @@ func (m *Map) Put(e *Entry) *Entry {
 	return old
 }
 
+// SetPKIfEmpty hydrates a peer's persisted public key without replacing an
+// identity that is already present in memory. It returns true when the key was
+// stored, or when the peer already had a key.
+func (m *Map) SetPKIfEmpty(id string, pk []byte) bool {
+	if m == nil || id == "" || len(pk) == 0 {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	if len(e.PK) > 0 {
+		return true
+	}
+	e.PK = append([]byte(nil), pk...)
+	return true
+}
+
 // UpdateHeartbeat refreshes the heartbeat timestamp and address for a peer.
 // Returns false if the peer is not in the map.
 func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {

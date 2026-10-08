@@ -23,15 +23,22 @@
 - **Migration:** a root operator must rerun the ensure script once to replace older broad sudoers entries and remove any legacy `ExecStartPre=+...linux-ensure-console-user.js` line from the console unit. Verify with `sudo visudo -cf /etc/sudoers.d/betterdesk-console-updates` and `sudo systemctl cat betterdesk-console`.
 - **Windows path root (#272):** `resolveProjectRoot()` must never resolve to a drive root (`C:\`). Default layout `C:\BetterDeskConsole` + `C:\BetterDesk` writes Scripts & Docker files under the console directory. `ensureParentDirForFile()` skips `mkdir` on filesystem roots (Node throws `EPERM` on `mkdir('C:\\')`). NSSM OpenService Access Denied when restarting `BetterDeskServer` is non-critical — restart the Go service manually or via `betterdesk.ps1` if needed.
 
-### Support Agent generator phase
+### Embedded Support Client rebuild phase
 
-When an update changes Support Agent inputs, `applyUpdate()` records
-`.agent_rebuild_pending` with the deployed commit and returns without syncing
-or queueing agent builds. After the console restarts,
-`agentBuildWorker.processPendingRebuildOnStartup()` synchronizes the complete
-agent source tree first and then requeues non-revoked Support Agent bundles.
-The worker retries safely if either step fails, while Agent Client and RdClient
-workers remain independent.
+When embedded Client generation is enabled, `applyUpdate()` checks the pinned
+BetterDesk-Client ref separately from the BetterDesk ref. A changed Client
+commit is downloaded into `data/modules/betterdesk-client-builder/` outside
+the BetterDesk checkout, verified, and passed to the embedded build provider.
+The worker then queues one new generation for every non-revoked Support
+configuration. Each generation contains every target exposed by the active
+build provider and is promoted only after every artifact passes its
+manifest/checksum/SKU and no-`custom.txt` checks. The built-in local provider
+is host-only; it does not queue unsupported cross-platform targets.
+
+The update does not rebuild on every download. Existing public links continue
+to serve their previous active generation until the replacement is complete.
+After a restart, `clientBuilderService.syncAndQueueRebuilds()` resumes
+retryable work without changing an active link to a partial generation.
 
 ## Issue #158 — server build / config preservation
 

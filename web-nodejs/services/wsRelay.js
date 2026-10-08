@@ -14,6 +14,8 @@
 const WebSocket = require('ws');
 const net = require('net');
 const os = require('os');
+const path = require('path');
+const protobuf = require('protobufjs');
 const config = require('../config/config');
 const { enforceOrigin } = require('../middleware/wsOrigin');
 const { roleHasPermission } = require('../middleware/auth');
@@ -25,6 +27,88 @@ const MAX_CONNECTIONS_PER_IP = 5;
 const IDLE_TIMEOUT_MS = 120000;
 // RustDesk desktop frames can exceed the small control-message limit.
 const MAX_RELAY_FRAME_SIZE = 64 * 1024 * 1024;
+const GUEST_REVALIDATION_INTERVAL_MS = 15000;
+
+// grant_id → active bridge cleanup callbacks. This is intentionally local for
+// immediate revocation in the current panel process; each bridge also
+// revalidates against Go so revocations made by another process are enforced.
+const activeGuestBridges = new Map();
+const guestSessionStates = new Map();
+let rendezvousType = null;
+
+function getRendezvousType() {
+    if (!rendezvousType) {
+        const root = protobuf.loadSync(path.join(__dirname, '../protos/rendezvous.proto'));
+        rendezvousType = root.lookupType('hbb.RendezvousMessage');
+    }
+    return rendezvousType;
+}
+
+function decodeRendezvousPayload(payload) {
+    try {
+        return getRendezvousType().decode(payload);
+    } catch {
+        return null;
+    }
+}
+
+function guestTargetMatches(message, peerId) {
+    if (!message || !peerId) return false;
+    const request = message.punchHoleRequest || message.requestRelay;
+    return !request || String(request.id || '') === peerId;
+}
+
+function registerGuestBridge(grantId, cleanup) {
+    if (!grantId || typeof cleanup !== 'function') return () => {};
+    let bridges = activeGuestBridges.get(grantId);
+    if (!bridges) {
+        bridges = new Set();
+        activeGuestBridges.set(grantId, bridges);
+    }
+    bridges.add(cleanup);
+    return () => {
+        bridges.delete(cleanup);
+        if (bridges.size === 0) activeGuestBridges.delete(grantId);
+    };
+}
+
+function invalidateGuestGrant(grantId) {
+    const normalizedId = String(grantId || '');
+    const bridges = activeGuestBridges.get(normalizedId);
+    for (const key of guestSessionStates.keys()) {
+        if (key.startsWith(`${normalizedId}\0`)) guestSessionStates.delete(key);
+    }
+    if (!bridges) return 0;
+    for (const cleanup of [...bridges]) cleanup('guest-grant-revoked');
+    return bridges.size;
+}
+
+async function consumeGuestSession(grant, token, peerId, sessionId) {
+    const key = `${grant.id || 'unknown'}\0${sessionId}`;
+    const existing = guestSessionStates.get(key);
+    if (existing) return existing;
+
+    const pending = (async () => {
+        const betterdeskApi = require('./betterdeskApi');
+        await betterdeskApi.apiClient.post('/guest/access-links/consume', {
+            token,
+            peer_id: peerId,
+        });
+        const expiresAt = new Date(grant.expires_at).getTime();
+        const lifetime = Number.isFinite(expiresAt)
+            ? Math.max(1000, expiresAt - Date.now())
+            : GUEST_REVALIDATION_INTERVAL_MS;
+        setTimeout(() => guestSessionStates.delete(key), lifetime).unref?.();
+        return true;
+    })();
+    guestSessionStates.set(key, pending);
+    try {
+        return await pending;
+    } catch (err) {
+        guestSessionStates.delete(key);
+        throw err;
+    }
+}
 
 function encodeRelayFrame(data) {
     const payload = Buffer.isBuffer(data) ? data : Buffer.from(data);
@@ -190,11 +274,13 @@ function initWsProxy(server, sessionMiddleware) {
                     let hasGuest = false;
                     if (!hasUser) {
                         let guestToken = '';
+                        let guestPeerId = '';
                         try {
                             // Prefer ?guest= on WS URL (session pages always append it for guests)
                             guestToken = String(
                                 url.searchParams.get('guest') || url.searchParams.get('t') || ''
                             ).trim();
+                            guestPeerId = String(url.searchParams.get('peer_id') || '').trim();
                             if (!guestToken) {
                                 const { GUEST_COOKIE } = require('../middleware/guestAccess');
                                 const raw = request.headers.cookie || '';
@@ -212,11 +298,22 @@ function initWsProxy(server, sessionMiddleware) {
                         }
 
                         if (guestToken) {
+                            const guestSessionId = String(
+                                url.searchParams.get('guest_session') || ''
+                            ).trim();
+                            if (!guestPeerId || !/^[A-Za-z0-9_-]{3,64}$/.test(guestPeerId)
+                                || !guestSessionId || guestSessionId.length > 128) {
+                                console.warn(`WS proxy: rejected guest upgrade without valid peer_id for ${pathname}`);
+                                socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                                socket.destroy();
+                                return;
+                            }
                             try {
-                                // Must validate against Go store — non-empty guest= alone is not auth.
+                                // Must validate against Go store and bind the token to
+                                // the requested peer — non-empty guest= alone is not auth.
                                 const betterdeskApi = require('./betterdeskApi');
                                 const result = await betterdeskApi.apiClient.get('/guest/access-links/validate', {
-                                    params: { token: guestToken },
+                                    params: { token: guestToken, peer_id: guestPeerId },
                                     timeout: 5000,
                                 });
                                 const data = result.data || {};
@@ -224,6 +321,8 @@ function initWsProxy(server, sessionMiddleware) {
                                     hasGuest = true;
                                     request.guestToken = guestToken;
                                     request.guestGrant = data;
+                                    request.guestPeerId = guestPeerId;
+                                    request.guestSessionId = guestSessionId;
                                 }
                             } catch (err) {
                                 console.warn(
@@ -283,13 +382,22 @@ function initWsProxy(server, sessionMiddleware) {
 
     // Rendezvous connections
     rendezvousWss.on('connection', (ws, req) => {
-        handleProxyConnection(ws, req, hbbsHost, hbbsPort, 'rendezvous');
+        handleProxyConnection(ws, req, hbbsHost, hbbsPort, 'rendezvous', {
+            guestGrant: req.guestGrant,
+            guestToken: req.guestToken,
+            guestPeerId: req.guestPeerId,
+            guestSessionId: req.guestSessionId,
+        });
     });
 
     // Relay connections
     relayWss.on('connection', (ws, req) => {
         handleProxyConnection(ws, req, hbbrHost, hbbrPort, 'relay', {
             messageTransport: ws._betterdeskMessageTransport === true,
+            guestGrant: req.guestGrant,
+            guestToken: req.guestToken,
+            guestPeerId: req.guestPeerId,
+            guestSessionId: req.guestSessionId,
         });
     });
 
@@ -320,6 +428,19 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
     let idleTimer = null;
     const messageTransport = options.messageTransport === true;
     const relayDecoder = messageTransport ? createRelayFrameDecoder() : null;
+    const guestGrant = options.guestGrant || null;
+    const guestToken = String(options.guestToken || '').trim();
+    const guestPeerId = String(options.guestPeerId || '').trim();
+    const guestRendezvousDecoder = guestGrant && label === 'rendezvous'
+        ? createRelayFrameDecoder()
+        : null;
+    let guestRelayBuffer = Buffer.alloc(0);
+    let guestRelayValidated = false;
+    let guestSessionConsumed = false;
+    let guestOpenedAt = 0;
+    let guestOpenedReported = false;
+    let guestValidationTimer = null;
+    let unregisterGuestBridge = () => {};
     let cleanupCause = 'unknown';
     let wsCloseCode = null;
     let wsCloseReason = '';
@@ -330,6 +451,26 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
             cleanup('idle-timeout');
         }, IDLE_TIMEOUT_MS);
     };
+
+    function reportGuestEvent(event, reason = '') {
+        if (!guestGrant || !guestPeerId) return;
+        const betterdeskApi = require('./betterdeskApi');
+        const duration = guestOpenedAt
+            ? Math.max(0, Date.now() - guestOpenedAt)
+            : 0;
+        betterdeskApi.apiClient.post('/guest/access-links/events', {
+            event,
+            grant_id: guestGrant.id || '',
+            peer_id: guestPeerId,
+            session_id: options.guestSessionId || '',
+            transport: label,
+            source_ip: clientIp,
+            duration_ms: duration,
+            reason,
+        }).catch((err) => {
+            console.warn(`WS proxy [${label}]: guest audit event failed: ${err.message || err}`);
+        });
+    }
 
     // Connect to target TCP server
     const tcp = net.createConnection({ host: targetHost, port: targetPort }, () => {
@@ -366,17 +507,80 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
 
     // WebSocket -> TCP
     ws.on('message', (data) => {
-        resetIdleTimer();
-        if (!tcp.destroyed) {
-            // Ensure we send Buffer, not string
-            const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
-            try {
-                tcp.write(messageTransport ? encodeRelayFrame(buf) : buf);
-            } catch (err) {
-                console.error(`WS proxy [${label}]: invalid relay WS frame:`, err.message);
-                cleanup('invalid-ws-frame', { error: err.message });
+        void (async () => {
+            resetIdleTimer();
+            if (!tcp.destroyed) {
+                // Ensure we send Buffer, not string
+                const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
+                try {
+                    let isGuestSessionOpening = false;
+                    if (guestGrant) {
+                        if (label === 'rendezvous') {
+                            for (const payload of guestRendezvousDecoder.feed(buf)) {
+                                const message = decodeRendezvousPayload(payload);
+                                if (!message || !guestTargetMatches(message, guestPeerId)) {
+                                    console.warn(
+                                        `WS proxy [${label}]: guest target mismatch for grant ${guestGrant.id || 'unknown'}`
+                                    );
+                                    cleanup('guest-target-mismatch');
+                                    return;
+                                }
+                                if (message.punchHoleRequest || message.requestRelay) {
+                                    isGuestSessionOpening = true;
+                                }
+                            }
+                        } else if (!guestRelayValidated) {
+                            if (guestRelayBuffer.length + buf.length > 1024 * 1024) {
+                                cleanup('guest-invalid-relay-frame');
+                                return;
+                            }
+                            guestRelayBuffer = Buffer.concat([guestRelayBuffer, buf]);
+                            const message = decodeRendezvousPayload(guestRelayBuffer);
+                            if (!message) return;
+                            const request = message.requestRelay;
+                            if (!request || String(request.id || '') !== guestPeerId) {
+                                console.warn(
+                                    `WS proxy [${label}]: guest relay target mismatch for grant ${guestGrant.id || 'unknown'}`
+                                );
+                                cleanup('guest-target-mismatch');
+                                return;
+                            }
+                            guestRelayValidated = true;
+                            isGuestSessionOpening = true;
+                        }
+                    }
+
+                    if (guestGrant && isGuestSessionOpening && !guestSessionConsumed) {
+                        try {
+                            await consumeGuestSession(
+                                guestGrant,
+                                guestToken,
+                                guestPeerId,
+                                options.guestSessionId
+                            );
+                            if (cleaned) return;
+                            guestSessionConsumed = true;
+                            guestOpenedAt = Date.now();
+                            if (!guestOpenedReported) {
+                                guestOpenedReported = true;
+                                reportGuestEvent('opened');
+                            }
+                        } catch (err) {
+                            console.warn(
+                                `WS proxy [${label}]: guest session rejected: ${err.message || err}`
+                            );
+                            cleanup('guest-use-rejected');
+                            return;
+                        }
+                    }
+
+                    tcp.write(messageTransport ? encodeRelayFrame(buf) : buf);
+                } catch (err) {
+                    console.error(`WS proxy [${label}]: invalid relay WS frame:`, err.message);
+                    cleanup('invalid-ws-frame', { error: err.message });
+                }
             }
-        }
+        })();
     });
 
     ws.on('close', (code, reason) => {
@@ -397,6 +601,9 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
         cleanupCause = cause;
 
         if (idleTimer) clearTimeout(idleTimer);
+        if (guestValidationTimer) clearTimeout(guestValidationTimer);
+        unregisterGuestBridge();
+        if (guestOpenedReported) reportGuestEvent('closed', cause);
 
         if (!tcp.destroyed) {
             tcp.destroy();
@@ -421,9 +628,48 @@ function handleProxyConnection(ws, req, targetHost, targetPort, label, options =
             : '';
         console.log(`WS proxy [${label}]: closed for ${clientIp} cause=${cleanupCause}${closeSuffix}${detailSuffix}`);
     }
+
+    if (guestGrant && guestToken && guestPeerId) {
+        unregisterGuestBridge = registerGuestBridge(guestGrant.id, cleanup);
+
+        const revalidateGuestGrant = async () => {
+            if (cleaned) return;
+            try {
+                const betterdeskApi = require('./betterdeskApi');
+                const result = await betterdeskApi.apiClient.get('/guest/access-links/validate', {
+                    params: { token: guestToken, peer_id: guestPeerId },
+                    timeout: 5000,
+                });
+                if (!result.data?.valid) {
+                    cleanup('guest-grant-invalid');
+                    return;
+                }
+            } catch (err) {
+                console.warn(
+                    `WS proxy [${label}]: guest grant revalidation failed: ${err.message || err}`
+                );
+                // A failed dependency check is not proof of revocation. Retry
+                // until the grant's own expiry, then close deterministically.
+            }
+            if (cleaned) return;
+            const expiresAt = new Date(guestGrant.expires_at).getTime();
+            const remaining = Number.isFinite(expiresAt) ? expiresAt - Date.now() : 0;
+            if (remaining <= 0) {
+                cleanup('guest-grant-expired');
+                return;
+            }
+            guestValidationTimer = setTimeout(
+                revalidateGuestGrant,
+                Math.min(GUEST_REVALIDATION_INTERVAL_MS, remaining)
+            );
+        };
+        revalidateGuestGrant();
+    }
 }
 
 module.exports = {
     initWsProxy,
+    invalidateGuestGrant,
+    _guestProtocol: { decodeRendezvousPayload, guestTargetMatches },
     _relayFraming: { encodeRelayFrame, createRelayFrameDecoder, MAX_RELAY_FRAME_SIZE },
 };

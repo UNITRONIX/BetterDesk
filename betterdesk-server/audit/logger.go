@@ -69,6 +69,8 @@ const (
 	ActionOrgPeerCredentialSet   Action = "org_peer_credential_set"
 	ActionOrgPeerCredentialClear Action = "org_peer_credential_clear"
 	ActionOrgPeerCredentialFetch Action = "org_peer_credential_fetch"
+	ActionGuestSessionOpened     Action = "guest_session_opened"
+	ActionGuestSessionClosed     Action = "guest_session_closed"
 )
 
 // Event represents a single audit log entry.

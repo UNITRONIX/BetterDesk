@@ -15,10 +15,11 @@ const (
 	RoleGlobalAdmin = "global_admin"
 
 	// Legacy global roles (backward-compatible)
-	RoleAdmin    = "admin" // maps to super_admin in permission terms
-	RoleOperator = "operator"
-	RoleViewer   = "viewer"
-	RolePro      = "pro" // API-only RustDesk PRO activation; no device access
+	RoleAdmin       = "admin" // maps to super_admin in permission terms
+	RoleOperator    = "operator"
+	RoleViewer      = "viewer"
+	RolePro         = "pro"          // API-only RustDesk PRO activation; no device access
+	RoleGuestIssuer = "guest_issuer" // device view + temporary guest link issuance
 
 	// RoleDevice is an internal, device-scoped principal used for authenticated
 	// agents. It is intentionally not a user-assignable role.
@@ -42,6 +43,8 @@ func RoleLevel(role string) int {
 		return 1
 	case RolePro:
 		return 0
+	case RoleGuestIssuer:
+		return 1
 	case RoleDevice:
 		return 0
 	default:
@@ -71,7 +74,8 @@ func CanAssignRole(callerRole, targetRole string) bool {
 	// Global Admin can assign roles below global_admin
 	// (operator, viewer, pro — NOT super_admin, server_admin, global_admin, admin)
 	case callerRole == RoleGlobalAdmin:
-		return targetRole == RoleOperator || targetRole == RoleViewer || targetRole == RolePro
+		return targetRole == RoleOperator || targetRole == RoleViewer || targetRole == RolePro ||
+			targetRole == RoleGuestIssuer
 
 	// Server Admin cannot assign any roles
 	case callerRole == RoleServerAdmin:
@@ -103,7 +107,7 @@ func IsDeviceRole(role string) bool {
 func ValidRole(r string) bool {
 	switch r {
 	case RoleSuperAdmin, RoleServerAdmin, RoleGlobalAdmin,
-		RoleAdmin, RoleOperator, RoleViewer, RolePro:
+		RoleAdmin, RoleOperator, RoleViewer, RolePro, RoleGuestIssuer:
 		return true
 	}
 	return false

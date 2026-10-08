@@ -722,6 +722,36 @@ body.ux35-is-resizing {
     }
 }
 
+/* Keep Settings chrome compact across the full UX 3.5 mobile shell.
+   The mobile shell remains active through 1024px, while the phone-only
+   rules above previously left the 768-1024px range with desktop spacing. */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .ux35-page .ux35-content > .page-header,
+    .ux35-page .ux35-content > .settings-header {
+        margin-bottom: var(--ux35-space-3);
+    }
+
+    .ux35-page .settings-shell-nav .settings-shell-tab,
+    .ux35-page .settings-shell-nav .settings-tab {
+        padding: 6px 12px;
+        min-height: 36px;
+        align-items: center;
+    }
+
+    .ux35-page .settings-shell-nav .settings-shell-tab .material-icons,
+    .ux35-page .settings-shell-nav .settings-tab .material-icons {
+        font-size: 18px;
+        line-height: 1;
+        width: 18px;
+        height: 18px;
+    }
+
+    .ux35-page .settings-shell-nav-track.mobile-tabs-scroll {
+        padding-bottom: 0;
+        gap: 4px;
+    }
+}
+
 /* Topbar dropdowns inherit shell text; force readable panels in both themes */
 .ux35-topbar .lang-dropdown,
 .ux35-topbar .notif-dropdown {

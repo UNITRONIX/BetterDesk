@@ -5,6 +5,155 @@
 
 ---
 
+## [3.5.154] — 2026-10-08
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.153] — 2026-10-08
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.152] — 2026-10-07
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.151] — 2026-10-06
+
+### Changed
+- **Relay hairpin identity hydration:** when an online peer is restored from the database before its `RegisterPk` handshake, UDP/TCP relay and `RelayResponse` forwarding now reload the persisted public key instead of emitting an unsigned `signedPk=0` response. Shared-public-IP sessions continue to use the public relay path for issue #121.
+
+---
+
+## [3.5.150] — 2026-10-06
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.149] — 2026-10-05
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.148] — 2026-10-05
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.147] — 2026-10-05
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.146] — 2026-10-03
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.145] — 2026-10-03
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.144] — 2026-10-03
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.143] — 2026-10-03
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.142] — 2026-10-01
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.141] — 2026-10-01
+
+### Changed
+- **Docker split-entrypoint startup:** load the shared path helpers before
+  server and console checks, removing the `file_exists_as_betterdesk: not found`
+  error reported on 3.5.140 (Refs #437).
+
+---
+
+## [3.5.140] — 2026-09-26
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.139] — 2026-09-26
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.138] — 2026-09-26
+
+### Changed
+- **Hardened Docker startup on app-owned bind mounts (#424):** All-in-one and split entrypoints now inspect data files as the `betterdesk` user, so existing `.api_key`, `.admin_credentials`, SQLite databases, and enrollment markers are not mistaken for missing files when `cap_drop: ALL` is used with `0700` bind mounts. Bootstrap also always exports the admin variables required by supervisord, without generating replacement credentials for an existing database.
+
+---
+
+## [3.5.137] — 2026-09-26
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.136] — 2026-09-26
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.135] — 2026-09-26
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.134] — 2026-09-25
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.5.133] — 2026-09-24
 
 ### Changed
@@ -3773,3 +3922,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.131]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.130...v3.5.131
 [3.5.132]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.131...v3.5.132
 [3.5.133]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.132...v3.5.133
+[3.5.134]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.133...v3.5.134
+[3.5.135]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.134...v3.5.135
+[3.5.136]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.135...v3.5.136
+[3.5.137]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.136...v3.5.137
+[3.5.138]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.137...v3.5.138
+[3.5.139]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.138...v3.5.139
+[3.5.140]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.139...v3.5.140
+[3.5.141]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.140...v3.5.141
+[3.5.142]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.141...v3.5.142
+[3.5.143]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.142...v3.5.143
+[3.5.144]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.143...v3.5.144
+[3.5.145]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.144...v3.5.145
+[3.5.146]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.145...v3.5.146
+[3.5.147]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.146...v3.5.147
+[3.5.148]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.147...v3.5.148
+[3.5.149]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.148...v3.5.149
+[3.5.150]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.149...v3.5.150
+[3.5.151]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.150...v3.5.151
+[3.5.152]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.151...v3.5.152
+[3.5.153]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.152...v3.5.153
+[3.5.154]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.153...v3.5.154

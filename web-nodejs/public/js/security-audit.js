@@ -48,9 +48,10 @@
       const checksGrid = document.getElementById('checks-grid');
       const checks = d.checks || [];
       checksGrid.innerHTML = checks.map(c => {
-        const cls = c.pass ? 'pass' : (c.warn ? 'warn' : 'fail');
-        const icon = c.pass ? 'check_circle' : (c.warn ? 'warning' : 'cancel');
-        const badge = c.pass ? _('security_audit.pass') : (c.warn ? _('security_audit.warning') : _('security_audit.fail'));
+        const passed = c.pass ?? c.passed;
+        const cls = passed ? 'pass' : (c.warn ? 'warn' : 'fail');
+        const icon = passed ? 'check_circle' : (c.warn ? 'warning' : 'error');
+        const badge = passed ? _('security_audit.pass') : (c.warn ? _('security_audit.warning') : _('security_audit.fail'));
         return `<div class="secaudit-check">
           <span class="material-icons secaudit-check-icon ${cls}">${icon}</span>
           <span class="secaudit-check-name">${esc(c.name)}</span>
@@ -68,10 +69,13 @@
         { label: _('security_audit.tls_wss'), value: tls.wss }
       ];
       tlsGrid.innerHTML = tlsItems.map(t => {
+        const known = typeof t.value === 'boolean';
         const en = t.value === true;
         return `<div class="secaudit-tls-card">
           <div class="tls-label">${esc(t.label)}</div>
-          <div class="tls-value ${en ? 'enabled' : 'disabled'}">${en ? _('security_audit.enabled') : _('security_audit.disabled')}</div>
+          <div class="tls-value ${!known ? '' : en ? 'enabled' : 'disabled'}">${
+            !known ? '—' : en ? _('security_audit.enabled') : _('security_audit.disabled')
+          }</div>
         </div>`;
       }).join('');
     } catch (e) {
@@ -103,7 +107,7 @@
             <td>${esc(ev.actor || ev.user || '—')}</td>
             <td>${esc(ev.target || ev.resource || '—')}</td>
             <td>${esc(ev.ip || '—')}</td>
-            <td>${esc(ev.details || ev.detail || '—')}</td>
+            <td>${esc(formatDetails(ev.details || ev.detail || '—'))}</td>
           </tr>`;
         }).join('');
       }
@@ -130,7 +134,7 @@
     try {
       const res = await fetch('/api/panel/security-audit/hardening');
       const json = await res.json();
-      const items = json.data || json.items || json;
+      const items = json.data || json.items || json.priorities || json;
       const list = document.getElementById('hardening-list');
       if (!Array.isArray(items) || !items.length) {
         list.innerHTML = `<div class="secaudit-empty"><span class="material-icons">shield</span>${_('security_audit.no_hardening')}</div>`;
@@ -180,7 +184,9 @@
 
       const vulns = d.vulnerabilities || [];
       const list = document.getElementById('vuln-list');
-      if (!vulns.length) {
+      if (d.scan_available === false) {
+        list.innerHTML = `<div class="secaudit-empty"><span class="material-icons">hourglass_empty</span>${_('security_audit.vuln_hint')}</div>`;
+      } else if (!vulns.length) {
         list.innerHTML = `<div class="secaudit-empty"><span class="material-icons">verified</span>${_('security_audit.no_vulns')}</div>`;
       } else {
         list.innerHTML = vulns.map(v => `
@@ -201,6 +207,10 @@
   function formatTime(t) {
     if (!t) return '—';
     try { return new Date(t).toLocaleString(); } catch { return t; }
+  }
+  function formatDetails(details) {
+    if (!details || typeof details !== 'object') return details;
+    return Object.entries(details).map(([key, value]) => `${key}=${value}`).join(', ');
   }
   function actionClass(a) {
     if (!a) return 'info';

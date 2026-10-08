@@ -58,6 +58,21 @@
             </div>
         </div>
 
+        <div id="gen-operation-modal" class="gen-operation-modal hidden" aria-hidden="true">
+            <div class="gen-operation-backdrop"></div>
+            <div class="gen-operation-dialog" role="dialog" aria-modal="true"
+                 aria-labelledby="gen-operation-title">
+                <div class="gen-operation-spinner" aria-hidden="true"></div>
+                <h2 id="gen-operation-title">BetterDesk Client builder</h2>
+                <p id="gen-operation-message">Preparing the operation…</p>
+                <div class="gen-operation-progress" role="progressbar"
+                     aria-label="Builder progress">
+                    <span></span>
+                </div>
+                <p id="gen-operation-detail" class="text-muted"></p>
+            </div>
+        </div>
+
         <div id="gen-main" class="generator-layout hidden">
             <!-- Left column: bundle list -->
             <aside class="generator-bundles card">

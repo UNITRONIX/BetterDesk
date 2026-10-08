@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "module": "betterdesk-rdp-vnc-gateway",
+  "status": "pinned-source-license-review",
+  "update_policy": "ci-verified-pr-only",
+  "runtime_enabled": false,
+  "listen": "127.0.0.1:4822",
+  "required_env": [
+    "GUACD_ADDRESS",
+    "REMOTE_TARGET_VAULT_KEY"
+  ],
+  "permitted_licenses": [
+    "Apache-2.0",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC"
+  ],
+  "allowed_hosts": [
+    "api.github.com",
+    "codeload.github.com",
+    "github.com"
+  ],
+  "dependencies": [
+    {
+      "id": "guacamole-server",
+      "repository": "apache/guacamole-server",
+      "version": "1.6.0",
+      "commit": "1f664e08feae6e7d15d8146b78acab2e6fb470ae",
+      "source_url": "https://codeload.github.com/apache/guacamole-server/tar.gz/1f664e08feae6e7d15d8146b78acab2e6fb470ae",
+      "source_sha256": "e433201074dc0262364f5dbcbe100e7c950f4947ffa0f78aaefeecf733653d3e",
+      "license": "Apache-2.0",
+      "license_files": [
+        "LICENSE",
+        "NOTICE"
+      ]
+    }
+  ],
+  "protocols": {
+    "rdp": {
+      "status": "license-review-required",
+      "required_dependency_licenses": [
+        "Apache-2.0",
+        "MIT",
+        "BSD-2-Clause",
+        "BSD-3-Clause",
+        "ISC"
+      ]
+    },
+    "vnc": {
+      "status": "blocked",
+      "reason": "The LibVNCServer dependency is GPL-2.0 and does not satisfy the BetterDesk permissive-license policy."
+    }
+  },
+  "runtime_artifact": {
+    "source": "Pinned upstream build produced by BetterDesk CI",
+    "version": "",
+    "sha256": "",
+    "sbom": "",
+    "license_report": "remote-gateway/license-audit.json"
+  },
+  "fail_closed_when_unverified": true
+}

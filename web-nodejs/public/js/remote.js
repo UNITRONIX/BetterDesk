@@ -4,7 +4,7 @@
  * Supports multiple concurrent RDClient sessions
  */
 
-/* global RDClient, RDVideo, CDAPSession */
+/* global RDClient, RDVideo, CDAPSession, RemoteTargetSession */
 
 (function () {
     'use strict';
@@ -32,6 +32,7 @@
         const t = String(caps.transport || 'rd').toLowerCase();
         if (t === 'mesh') return 'mesh';
         if (t === 'cdap') return 'cdap';
+        if (t === 'rdp' || t === 'vnc') return t;
         return 'rd';
     }
 
@@ -100,6 +101,9 @@
         }
         if (name === 'cdap' && typeof CDAPSession === 'function') {
             return new CDAPSession(canvas, opts);
+        }
+        if ((name === 'rdp' || name === 'vnc') && typeof RemoteTargetSession === 'function') {
+            return new RemoteTargetSession(canvas, opts);
         }
         return new RDClient(canvas, opts);
     }
@@ -907,6 +911,26 @@
             session.loginError.style.display = 'block';
             session.passwordInput.value = '';
             if (isActive(session)) session.passwordInput.focus();
+        });
+
+        c.on('certificate_required', async (details) => {
+            const fingerprint = String(details?.fingerprint || '');
+            if (!fingerprint) return;
+            const accepted = window.confirm(
+                t('remote.certificate_confirm',
+                    'The remote certificate is not trusted. Trust fingerprint ' + fingerprint + '?')
+            );
+            if (!accepted) return;
+            try {
+                await Utils.api('/api/remote-targets/' + encodeURIComponent(session.deviceId) + '/certificate/accept', {
+                    method: 'POST',
+                    body: { fingerprint }
+                });
+                c.disconnect();
+                c.connect();
+            } catch (error) {
+                setSessionStatus(session, 'error', error.message || 'Certificate was not trusted');
+            }
         });
 
         c.on('2fa_error', (error) => {

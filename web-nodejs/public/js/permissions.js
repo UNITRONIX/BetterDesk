@@ -28,7 +28,9 @@
             icon: 'devices',
             permissions: [
                 'device.view', 'device.connect', 'device.edit',
-                'device.delete', 'device.ban', 'device.change_id', 'device.connection_mode'
+                'device.delete', 'device.ban', 'device.change_id', 'device.connection_mode',
+                'remote_target.view', 'remote_target.connect', 'remote_target.edit',
+                'remote_target.delete', 'remote_target.test'
             ]
         },
         {

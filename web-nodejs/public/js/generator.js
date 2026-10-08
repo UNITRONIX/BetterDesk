@@ -73,11 +73,72 @@
 
     const $ = (id) => document.getElementById(id);
     const els = {};
+    let operationPollTimer = null;
+    let operationErrorTimer = null;
+
+    function stopOperationPoll() {
+        if (operationPollTimer) {
+            clearInterval(operationPollTimer);
+            operationPollTimer = null;
+        }
+    }
+
+    function hideOperationModal() {
+        stopOperationPoll();
+        if (operationErrorTimer) clearTimeout(operationErrorTimer);
+        operationErrorTimer = null;
+        if (els['gen-operation-modal']) {
+            els['gen-operation-modal'].classList.add('hidden');
+            els['gen-operation-modal'].setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    function showOperationModal(title, message, { poll = false } = {}) {
+        if (!els['gen-operation-modal']) return;
+        if (operationErrorTimer) clearTimeout(operationErrorTimer);
+        operationErrorTimer = null;
+        els['gen-operation-title'].textContent = title;
+        els['gen-operation-message'].textContent = message;
+        els['gen-operation-detail'].textContent = '';
+        els['gen-operation-modal'].classList.remove('hidden');
+        els['gen-operation-modal'].setAttribute('aria-hidden', 'false');
+        if (poll) {
+            stopOperationPoll();
+            operationPollTimer = setInterval(async () => {
+                try {
+                    const data = await api('GET', '/api/generator/module/status');
+                    const status = data.data || {};
+                    const phase = status.phase || status.status || 'working';
+                    const phaseText = {
+                        syncing_source: 'Downloading BetterDesk-Client source…',
+                        syncing_submodules: 'Downloading Client submodules…',
+                        ready: 'Source synchronization complete.',
+                        error: status.error || 'Builder reported an error.',
+                    }[phase] || `Builder status: ${phase}`;
+                    els['gen-operation-detail'].textContent = phaseText;
+                } catch (err) {
+                    els['gen-operation-detail'].textContent = `Status check failed: ${err.message}`;
+                }
+            }, 2000);
+        }
+    }
+
+    function showOperationError(error) {
+        stopOperationPoll();
+        if (!els['gen-operation-modal']) return;
+        els['gen-operation-title'].textContent = 'Builder operation failed';
+        els['gen-operation-message'].textContent = error.message || String(error);
+        els['gen-operation-detail'].textContent = 'Check the console log and server builder status, then try again.';
+        els['gen-operation-modal'].classList.remove('hidden');
+        els['gen-operation-modal'].setAttribute('aria-hidden', 'false');
+        operationErrorTimer = setTimeout(hideOperationModal, 7000);
+    }
 
     function cacheEls() {
         [
             'gen-module-gate', 'gen-module-status', 'gen-accept-terms', 'gen-install-module',
             'gen-install-local-file',
+            'gen-operation-modal', 'gen-operation-title', 'gen-operation-message', 'gen-operation-detail',
             'gen-finish-install', 'gen-main',
             'gen-legacy-leftovers', 'gen-legacy-leftovers-list', 'gen-legacy-hint',
             'gen-new-support', 'gen-bundle-list', 'gen-editor-title', 'gen-revoke-btn', 'gen-delete-btn',
@@ -321,6 +382,13 @@
             const key = `${b.platform}/${b.arch}/${b.format}`;
             const label = (state.platforms.find((p) => platformKey(p) === key) || {}).label || key;
             const err = b.error_message ? `<div class="build-error">${escapeText(b.error_message)}</div>` : '';
+            const percent = Math.max(0, Math.min(100, Number(b.progress_percent || 0)));
+            const progress = b.status === 'building'
+                ? `<div class="build-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
+                    <span style="width:${percent}%"></span>
+                </div>
+                <div class="build-progress-meta">${percent}% · ${escapeText(b.progress_phase || 'building')}</div>`
+                : '';
             const retry = !isCurrentLegacy() && b.status === 'failed'
                 ? `<button type="button" class="btn btn-sm btn-secondary gen-retry-build"
                     data-platform="${escapeText(b.platform)}" data-arch="${escapeText(b.arch)}" data-format="${escapeText(b.format)}">Retry</button>`
@@ -331,6 +399,7 @@
                     <span class="build-status badge">${escapeText(buildStatusLabel(b.status))}</span>
                     ${retry}
                 </div>
+                ${progress}
                 ${err}
             </div>`;
         }).join('');
@@ -494,6 +563,7 @@
     function renderModuleStatus(status) {
         state.moduleStatus = status;
         state.moduleReady = !!(status && status.ready);
+        const embedded = status && status.mode === 'embedded';
         const el = els['gen-module-status'];
         if (!el) return;
         const parts = [
@@ -502,14 +572,29 @@
                 ? t('generator.module_terms_ok', 'Terms accepted')
                 : t('generator.module_terms_pending', 'Terms not accepted'),
             status.templatesPresent
-                ? t('generator.module_templates_ok', 'Templates present')
-                : t('generator.module_templates_missing', 'Templates missing'),
+                ? (embedded
+                    ? 'BetterDesk-Client source present'
+                    : t('generator.module_templates_ok', 'Templates present'))
+                : (embedded
+                    ? 'BetterDesk-Client source missing'
+                    : t('generator.module_templates_missing', 'Templates missing')),
             status.installedVersion
                 ? t('generator.module_version', 'Version {{v}}').replace('{{v}}', status.installedVersion)
                 : null,
             status.signingSeedPresent
                 ? t('generator.module_seed_ok', 'Signing seed present')
-                : t('generator.module_seed_missing', 'Signing seed missing — Support builds disabled'),
+                : (t('generator.module_seed_missing', 'Signing seed missing — Support builds disabled')
+                    + (status.signingSeedPath ? ` (${status.signingSeedPath})` : '')),
+            status.mode === 'embedded'
+                ? (status.providerConfigured
+                    ? 'Embedded build provider configured'
+                    : 'Configure GitHub Actions token or a trusted local provider')
+                : null,
+            status.mode === 'embedded' && status.buildCapabilities?.mode === 'local'
+                ? `Local targets: ${(status.buildCapabilities.targets || [])
+                    .map((p) => `${p.platform}/${p.arch}`)
+                    .join(', ') || 'none — check Cargo, Flutter and vcpkg'}`
+                : null,
             status.error
                 ? t('generator.module_error_prefix', 'Error') + ': ' + status.error
                 : null,
@@ -526,10 +611,17 @@
         const installLabel = els['gen-install-module']
             && els['gen-install-module'].querySelector('.gen-install-label');
         if (els['gen-install-module']) {
-            els['gen-install-module'].disabled = !status.termsAccepted || status.status === 'downloading';
+            const seedMissing = embedded && !status.signingSeedPresent;
+            els['gen-install-module'].disabled = !status.termsAccepted
+                || status.status === 'downloading'
+                || seedMissing;
             const label = status.status === 'downloading'
                 ? t('generator.module_downloading', 'Downloading…')
-                : t('generator.module_install', 'Install from GitHub');
+                : seedMissing
+                    ? 'Configure signing seed first'
+                : (embedded
+                    ? 'Sync BetterDesk-Client source'
+                    : t('generator.module_install', 'Install from GitHub'));
             if (installLabel) installLabel.textContent = label;
             else {
                 // Keep icon; replace trailing text nodes if label span missing
@@ -541,6 +633,8 @@
         }
         if (els['gen-install-local-file']) {
             els['gen-install-local-file'].disabled = !status.termsAccepted || status.status === 'downloading';
+            const localLabel = els['gen-install-local-file'].closest('label');
+            if (localLabel) localLabel.classList.toggle('hidden', !!embedded);
         }
         if (els['gen-finish-install']) {
             els['gen-finish-install'].classList.toggle('hidden', !status.ready);
@@ -714,12 +808,15 @@
 
         if (els['gen-accept-terms']) {
             els['gen-accept-terms'].addEventListener('click', async () => {
+                showOperationModal('Accepting terms', 'Saving AGPL acceptance…');
                 try {
                     await api('POST', '/api/generator/module/accept-terms');
                     notify.success(t('generator.module_terms_ok', 'Terms accepted'));
                     await refreshModuleStatus();
+                    hideOperationModal();
                 } catch (err) {
                     notify.error(err.message);
+                    showOperationError(err);
                 }
             });
         }
@@ -728,12 +825,19 @@
             els['gen-install-module'].addEventListener('click', async () => {
                 try {
                     els['gen-install-module'].disabled = true;
-                    notify.info(t('generator.module_downloading', 'Downloading templates from GitHub…'));
+                    showOperationModal(
+                        'Synchronizing BetterDesk-Client',
+                        'The server is downloading the pinned Client source and submodules. This can take several minutes.',
+                        { poll: true }
+                    );
+                    notify.info('Synchronizing BetterDesk-Client source…');
                     await api('POST', '/api/generator/module/install', {});
                     notify.success(t('generator.module_installed', 'Module installed'));
                     await refreshModuleStatus();
+                    hideOperationModal();
                 } catch (err) {
                     notify.error(err.message);
+                    showOperationError(err);
                     await refreshModuleStatus();
                 }
             });

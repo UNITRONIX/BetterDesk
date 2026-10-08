@@ -1,16 +1,29 @@
 <%
     var saTier = (typeof lastResult !== 'undefined' && lastResult && lastResult.tier)
         ? String(lastResult.tier).toLowerCase() : '';
+    var saBadge = (typeof badgePresentation !== 'undefined' && badgePresentation) ? badgePresentation : {};
+    var saBadgeConfig = (typeof badgeConfig !== 'undefined' && badgeConfig) ? badgeConfig : {};
+    var saTierLabels = saBadge.tierLabels || {};
+    var saBrandName = saBadge.brand || (typeof branding !== 'undefined' && branding && branding.appName) || 'BetterDesk';
+    var saBadgeTitle = saBadge.badgeTitle || _('server_attestation.badge_tooltip') || 'BetterDesk Server Attestation';
     var saTierLabel = saTier
-        ? (_('server_attestation.tier_' + saTier) || saTier.toUpperCase())
+        ? (saBadge.tierLabel || saTierLabels[saTier] || _('server_attestation.tier_' + saTier) || saTier.toUpperCase())
         : (_('server_attestation.tier_none') || 'UNRATED');
     var saTierClass = saTier ? ('bd-attest-tier-' + saTier) : 'bd-attest-tier-none';
     var saMaxConn = (typeof lastResult !== 'undefined' && lastResult) ? lastResult.maxConnections : null;
     var saHasResult = typeof lastResult !== 'undefined' && lastResult;
+    var saEsc = function (value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
     var saHeroBadge = ''
-        + '<div class="bd-attest-badge bd-attest-badge--large ' + saTierClass + '" title="' + (_('server_attestation.badge_tooltip') || 'BetterDesk Server Attestation') + '">'
-        + '<div class="bd-attest-brand">BetterDesk</div>'
-        + '<div class="bd-attest-tier">' + saTierLabel + '</div>'
+        + '<div class="bd-attest-badge bd-attest-badge--large ' + saTierClass + '" title="' + saEsc(saBadgeTitle) + '">'
+        + '<div class="bd-attest-brand">' + saEsc(saBrandName) + '</div>'
+        + '<div class="bd-attest-tier">' + saEsc(saTierLabel) + '</div>'
         + (saMaxConn ? ('<div class="bd-attest-conn">' + saMaxConn + ' ' + (_('server_attestation.connections_short') || 'conn.') + '</div>') : '')
         + '</div>';
 %>
@@ -67,6 +80,60 @@
             </button>
         </div>
 
+        <div class="sa-card sa-card-wide sa-badge-settings">
+            <div class="sa-card-header">
+                <span class="material-icons">edit</span>
+                <h3>${_('server_attestation.badge_settings_title')}</h3>
+            </div>
+            <p class="sa-settings-desc">${_('server_attestation.badge_settings_desc')}</p>
+            <div class="sa-badge-settings-grid">
+                <label class="sa-badge-field">
+                    <span>${_('server_attestation.badge_title')}</span>
+                    <input id="sa-badge-title" class="form-input" type="text" maxlength="96"
+                           value="${saEsc(saBadgeConfig.badgeTitle || '')}"
+                           placeholder="${saEsc(saBadgeTitle)}">
+                    <small>${_('server_attestation.badge_title_hint')}</small>
+                </label>
+                <label class="sa-badge-field">
+                    <span>${_('server_attestation.tier_name_bronze')}</span>
+                    <input id="sa-tier-bronze" class="form-input" type="text" maxlength="32"
+                           value="${saEsc(saBadgeConfig.tierLabels && saBadgeConfig.tierLabels.bronze || '')}"
+                           placeholder="${saEsc(saTierLabels.bronze || _('server_attestation.tier_bronze'))}">
+                </label>
+                <label class="sa-badge-field">
+                    <span>${_('server_attestation.tier_name_iron')}</span>
+                    <input id="sa-tier-iron" class="form-input" type="text" maxlength="32"
+                           value="${saEsc(saBadgeConfig.tierLabels && saBadgeConfig.tierLabels.iron || '')}"
+                           placeholder="${saEsc(saTierLabels.iron || _('server_attestation.tier_iron'))}">
+                </label>
+                <label class="sa-badge-field">
+                    <span>${_('server_attestation.tier_name_platinum')}</span>
+                    <input id="sa-tier-platinum" class="form-input" type="text" maxlength="32"
+                           value="${saEsc(saBadgeConfig.tierLabels && saBadgeConfig.tierLabels.platinum || '')}"
+                           placeholder="${saEsc(saTierLabels.platinum || _('server_attestation.tier_platinum'))}">
+                </label>
+                <label class="sa-badge-field">
+                    <span>${_('server_attestation.tier_name_titanium')}</span>
+                    <input id="sa-tier-titanium" class="form-input" type="text" maxlength="32"
+                           value="${saEsc(saBadgeConfig.tierLabels && saBadgeConfig.tierLabels.titanium || '')}"
+                           placeholder="${saEsc(saTierLabels.titanium || _('server_attestation.tier_titanium'))}">
+                </label>
+                <label class="sa-badge-field">
+                    <span>${_('server_attestation.tier_name_obsidian')}</span>
+                    <input id="sa-tier-obsidian" class="form-input" type="text" maxlength="32"
+                           value="${saEsc(saBadgeConfig.tierLabels && saBadgeConfig.tierLabels.obsidian || '')}"
+                           placeholder="${saEsc(saTierLabels.obsidian || _('server_attestation.tier_obsidian'))}">
+                </label>
+            </div>
+            <div class="sa-badge-settings-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="sa-save-badge-btn">
+                    <span class="material-icons">save</span>
+                    ${_('server_attestation.save_badge_settings')}
+                </button>
+                <span class="sa-badge-settings-status" id="sa-badge-settings-status" aria-live="polite"></span>
+            </div>
+        </div>
+
         <div class="sa-progress hidden" id="sa-progress">
             <div class="sa-progress-bar"><div class="sa-progress-fill" id="sa-progress-fill"></div></div>
             <p class="sa-progress-text" id="sa-progress-text"></p>
@@ -103,23 +170,23 @@
                 </div>
                 <div class="sa-tier-guide">
                     <div class="sa-tier-row">
-                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-bronze"><div class="bd-attest-brand">BetterDesk</div><div class="bd-attest-tier">${_('server_attestation.tier_bronze')}</div></div>
+                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-bronze"><div class="bd-attest-brand">${saEsc(saBrandName)}</div><div class="bd-attest-tier">${saEsc(saTierLabels.bronze || _('server_attestation.tier_bronze'))}</div></div>
                         <p>${_('server_attestation.tier_bronze_desc')}</p>
                     </div>
                     <div class="sa-tier-row">
-                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-iron"><div class="bd-attest-brand">BetterDesk</div><div class="bd-attest-tier">${_('server_attestation.tier_iron')}</div></div>
+                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-iron"><div class="bd-attest-brand">${saEsc(saBrandName)}</div><div class="bd-attest-tier">${saEsc(saTierLabels.iron || _('server_attestation.tier_iron'))}</div></div>
                         <p>${_('server_attestation.tier_iron_desc')}</p>
                     </div>
                     <div class="sa-tier-row">
-                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-platinum"><div class="bd-attest-brand">BetterDesk</div><div class="bd-attest-tier">${_('server_attestation.tier_platinum')}</div></div>
+                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-platinum"><div class="bd-attest-brand">${saEsc(saBrandName)}</div><div class="bd-attest-tier">${saEsc(saTierLabels.platinum || _('server_attestation.tier_platinum'))}</div></div>
                         <p>${_('server_attestation.tier_platinum_desc')}</p>
                     </div>
                     <div class="sa-tier-row">
-                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-titanium"><div class="bd-attest-brand">BetterDesk</div><div class="bd-attest-tier">${_('server_attestation.tier_titanium')}</div></div>
+                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-titanium"><div class="bd-attest-brand">${saEsc(saBrandName)}</div><div class="bd-attest-tier">${saEsc(saTierLabels.titanium || _('server_attestation.tier_titanium'))}</div></div>
                         <p>${_('server_attestation.tier_titanium_desc')}</p>
                     </div>
                     <div class="sa-tier-row">
-                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-obsidian"><div class="bd-attest-brand">BetterDesk</div><div class="bd-attest-tier">${_('server_attestation.tier_obsidian')}</div></div>
+                        <div class="bd-attest-badge bd-attest-badge--sm bd-attest-tier-obsidian"><div class="bd-attest-brand">${saEsc(saBrandName)}</div><div class="bd-attest-tier">${saEsc(saTierLabels.obsidian || _('server_attestation.tier_obsidian'))}</div></div>
                         <p>${_('server_attestation.tier_obsidian_desc')}</p>
                     </div>
                 </div>

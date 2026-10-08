@@ -41,8 +41,10 @@ const { initChatRelay } = require('./services/chatRelay');
 const { apiClient: goApiClient } = require('./services/betterdeskApi');
 const { initRemoteRelay } = require('./services/remoteRelay');
 const { initCdapTerminalProxy } = require('./services/cdapTerminalProxy');
+const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
 const { initMeshAshxProxy } = require('./services/meshAshxProxy');
+const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
@@ -559,10 +561,20 @@ async function startServer() {
         // Initialize CDAP Terminal WebSocket proxy (browser ↔ Go server)
         initCdapTerminalProxy(server, sessionMiddleware);
 
+        // Initialize Server Management terminal WebSocket (browser ↔ host shell)
+        initServerTerminalProxy(server, sessionMiddleware, {
+            logAction: (...args) => {
+                void Promise.resolve().then(() => db.logAction(...args)).catch((err) => {
+                    console.warn('[srv-term] audit log failed:', err.message);
+                });
+            }
+        });
+
         // Initialize CDAP Media WebSocket proxies (desktop, video, file browser)
         initCdapMediaProxies(server, sessionMiddleware);
 
         initMeshAshxProxy(server, sessionMiddleware);
+        initRemoteTargetGateway(server, sessionMiddleware);
 
         // Initialize real-time device status push (Go event bus → browser)
         initDeviceStatusPush(server, sessionMiddleware, config.betterdeskApiUrl, config.betterdeskApiKey);
@@ -580,12 +592,29 @@ async function startServer() {
         // Defer build workers until after listen + event-bus WS connect settle
         // (#353): toolchain/DB work racing native addon init can abort Node 24.
         setImmediate(() => {
-            // BetterDesk Support Generator — patches Client templates with custom.txt.
-            // Disabled when AGENT_BUILD_WORKER=off (small consoles without templates).
+            // BetterDesk Support Generator — local embedded Client builder.
+            // Disabled when AGENT_BUILD_WORKER=off.
             if (process.env.AGENT_BUILD_WORKER !== 'off') {
                 try {
                     const clientTemplateWorker = require('./services/clientTemplateWorker');
                     clientTemplateWorker.startWorker();
+                    if (String(
+                        process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+                    ).trim().toLowerCase() === 'embedded') {
+                        const clientBuilder = require('./services/clientBuilderService');
+                        clientBuilder.syncAndQueueRebuilds()
+                            .then((result) => {
+                                if (result.queued) {
+                                    console.log(
+                                        `[server] BetterDesk-Client ${result.sha} changed; `
+                                        + 'embedded Support rebuild queued'
+                                    );
+                                }
+                            })
+                            .catch((err) => {
+                                console.warn('[server] BetterDesk-Client sync/rebuild deferred:', err.message);
+                            });
+                    }
                 } catch (err) {
                     console.warn('[server] client template worker disabled:', err.message);
                 }

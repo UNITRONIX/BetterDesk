@@ -183,6 +183,70 @@ describe('Chat Relay Protocol', () => {
         }));
     });
 
+    it('loads real device contacts into the standalone operator panel', async () => {
+        const deviceId = nextDeviceId();
+        await connect(`/ws/chat/${deviceId}`);
+        const panel = await connect('/ws/chat-operator/panel');
+
+        panel.send(JSON.stringify({ type: 'get_contacts', device_id: 'panel' }));
+        const contactsFrame = await waitForMessage(panel, (msg) => {
+            return msg.type === 'contacts'
+                && Array.isArray(msg.contacts)
+                && msg.contacts.some((contact) => contact.id === deviceId);
+        });
+
+        expect(contactsFrame.contacts.some((contact) => contact.id === deviceId)).toBe(true);
+        expect(contactsFrame.contacts.some((contact) => contact.id === 'operator')).toBe(true);
+    });
+
+    it('routes standalone panel messages to the selected device and echoes them back', async () => {
+        const deviceId = nextDeviceId();
+        const agent = await connect(`/ws/chat/${deviceId}`);
+        const panel = await connect('/ws/chat-operator/panel');
+
+        const agentMessage = waitForMessage(agent, (msg) => {
+            return msg.type === 'message' && msg.text === 'hello device';
+        });
+        const panelEcho = waitForMessage(panel, (msg) => {
+            return msg.type === 'message' && msg.text === 'hello device';
+        });
+
+        panel.send(JSON.stringify({
+            type: 'message',
+            conversation_id: deviceId,
+            text: 'hello device',
+        }));
+
+        const [message, echo] = await Promise.all([agentMessage, panelEcho]);
+        expect(message.from).toBe('operator');
+        expect(message.conversation_id).toBe(deviceId);
+        expect(echo.from_name).toBe('operator1');
+        expect(goApi.post).toHaveBeenCalledWith('/chat/messages', expect.objectContaining({
+            conversation_id: deviceId,
+            to_id: deviceId,
+            text: 'hello device',
+        }));
+    });
+
+    it('forwards device messages to standalone panel operators', async () => {
+        const deviceId = nextDeviceId();
+        const agent = await connect(`/ws/chat/${deviceId}`);
+        const panel = await connect('/ws/chat-operator/panel');
+
+        const panelMessage = waitForMessage(panel, (msg) => {
+            return msg.type === 'message' && msg.text === 'hello panel';
+        });
+        agent.send(JSON.stringify({
+            type: 'message',
+            conversation_id: deviceId,
+            text: 'hello panel',
+        }));
+
+        const message = await panelMessage;
+        expect(message.from).toBe(deviceId);
+        expect(message.conversation_id).toBe(deviceId);
+    });
+
     it('relays operator key exchange frames to the connected agent', async () => {
         const deviceId = nextDeviceId();
         const agent = await connect(`/ws/chat/${deviceId}`);

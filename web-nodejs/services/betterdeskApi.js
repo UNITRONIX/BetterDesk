@@ -407,6 +407,137 @@ async function updatePeer(id, fields) {
     }
 }
 
+// ========================== Remote targets ==================================
+
+function normaliseRemoteTarget(target) {
+    const value = target || {};
+    const protocol = String(value.protocol || '').toLowerCase();
+    return {
+        ...value,
+        id: String(value.id || ''),
+        hostname: value.name || value.host || '',
+        display_name: value.name || value.host || '',
+        platform: value.platform || '',
+        os: value.platform || '',
+        device_type: protocol,
+        remote_target: true,
+        remote_protocol: protocol,
+        soft_deleted: value.enabled === false,
+        online: false,
+        status: value.enabled === false ? 'DISABLED' : 'OFFLINE',
+        last_online: value.last_test_at || '',
+        note: value.host ? `${value.host}:${value.port || ''}` : '',
+    };
+}
+
+async function getAllRemoteTargets(options = {}) {
+    try {
+        const { data } = await apiClient.get('/remote-targets', {
+            params: {
+                org_id: options.orgId || '',
+                include_disabled: options.includeDisabled ? 'true' : 'false'
+            }
+        });
+        const targets = Array.isArray(data) ? data : (data.targets || []);
+        return targets.map(normaliseRemoteTarget);
+    } catch (err) {
+        console.warn('BetterDesk API getAllRemoteTargets error:', err.message);
+        return [];
+    }
+}
+
+async function testRemoteTarget(payload) {
+    try {
+        const { data } = await apiClient.post('/remote-targets/test', payload);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+async function getRemoteTarget(id) {
+    try {
+        const { data } = await apiClient.get(`/remote-targets/${encodeURIComponent(id)}`);
+        return normaliseRemoteTarget(data);
+    } catch (_) {
+        return null;
+    }
+}
+
+async function createRemoteTarget(payload) {
+    try {
+        const { data } = await apiClient.post('/remote-targets', payload);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+async function updateRemoteTarget(id, payload) {
+    try {
+        const { data } = await apiClient.patch(`/remote-targets/${encodeURIComponent(id)}`, payload);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+async function deleteRemoteTarget(id) {
+    try {
+        const { data } = await apiClient.delete(`/remote-targets/${encodeURIComponent(id)}`);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+async function getRemoteTargetCredentialStatus(id) {
+    try {
+        const { data } = await apiClient.get(`/remote-targets/${encodeURIComponent(id)}/credentials`);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+async function setRemoteTargetCredentials(id, payload) {
+    try {
+        const { data } = await apiClient.put(`/remote-targets/${encodeURIComponent(id)}/credentials`, payload);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+async function clearRemoteTargetCredentials(id) {
+    try {
+        const { data } = await apiClient.delete(`/remote-targets/${encodeURIComponent(id)}/credentials`);
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+async function acceptRemoteTargetCertificate(id, fingerprint) {
+    try {
+        const { data } = await apiClient.post(
+            `/remote-targets/${encodeURIComponent(id)}/certificate/accept`,
+            { fingerprint }
+        );
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
 /**
  * GET /api/tags/:tag/peers
  */
@@ -547,10 +678,11 @@ async function syncOnlineStatus(/* db */) {
  *   id, uuid, pk, ip, user, hostname, os, version, status,
  *   nat_type, last_online, created_at, disabled, banned,
  *   ban_reason, banned_at, soft_deleted, deleted_at, note, tags,
- *   live_online (bool), live_status ("online"|"degraded"|"critical"|"offline")
+ *   live_online (bool), signal_ready (bool),
+ *   live_status ("online"|"degraded"|"critical"|"offline")
  *
  * Panel expected shape: id, hostname, username, platform, ip, note,
- *   online (bool), banned (bool), created_at, last_online, ban_reason,
+ *   online (bool), signal_ready (bool), banned (bool), created_at, last_online, ban_reason,
  *   folder_id, tags[], status_tier, uuid, disabled, os, version
  */
 const NO_SIGNAL_THRESHOLD_MS = 5 * 60 * 1000;
@@ -594,6 +726,7 @@ function normalisePeer(peer) {
         ip: peer.ip || '',
         note: peer.note || '',
         online: liveOnline,
+        signal_ready: peer.signal_ready !== false && liveOnline,
         banned,
         // os_agent / CDAP endpoints use HTTP heartbeat + CDAP WS, not RustDesk UDP
         // :21116 — don't show "No signal" when CDAP is connected.
@@ -1412,6 +1545,17 @@ module.exports = {
     getPeersByTag,
     // Peer update
     updatePeer,
+    // RDP/VNC remote targets
+    getAllRemoteTargets,
+    testRemoteTarget,
+    getRemoteTarget,
+    createRemoteTarget,
+    updateRemoteTarget,
+    deleteRemoteTarget,
+    getRemoteTargetCredentialStatus,
+    setRemoteTargetCredentials,
+    clearRemoteTargetCredentials,
+    acceptRemoteTargetCertificate,
     // Audit
     getAuditEvents,
     getClientAuditConnections,

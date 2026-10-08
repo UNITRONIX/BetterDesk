@@ -2706,6 +2706,26 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
         saveLocalSHA(remoteSHA);
         results.shaSaved = true;
 
+        // BetterDesk-Client is an external runtime module. When embedded
+        // generation is enabled, synchronize its pinned source during the
+        // same panel update and queue all existing Support configs. The
+        // worker promotes a new generation only after every target succeeds,
+        // so an interrupted update cannot break an active download link.
+        if (String(
+            process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+        ).trim().toLowerCase() === 'embedded') {
+            try {
+                const clientBuilder = require('./clientBuilderService');
+                results.clientRebuild = await clientBuilder.syncAndQueueRebuilds();
+            } catch (clientErr) {
+                results.clientRebuild = {
+                    queued: false,
+                    error: clientErr.message || String(clientErr),
+                };
+                console.warn(`[UPDATE] BetterDesk-Client sync/rebuild deferred: ${clientErr.message}`);
+            }
+        }
+
         // ---- Pull remote VERSION file ----
         try {
             const versionContent = await ghDownloadFile(GITHUB_OWNER, GITHUB_REPO, remoteSHA, 'VERSION');

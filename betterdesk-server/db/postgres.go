@@ -113,6 +113,34 @@ func (pg *PostgresDB) Migrate() error {
 			value TEXT NOT NULL DEFAULT ''
 		)`,
 
+		// Manually configured RDP/VNC endpoints. Secrets are encrypted by the API
+		// layer; this table intentionally stores only ciphertext and metadata.
+		`CREATE TABLE IF NOT EXISTS remote_targets (
+			id TEXT PRIMARY KEY,
+			org_id TEXT NOT NULL DEFAULT '',
+			name TEXT NOT NULL,
+			protocol TEXT NOT NULL CHECK (protocol IN ('rdp', 'vnc')),
+			platform TEXT NOT NULL DEFAULT '',
+			host TEXT NOT NULL,
+			port INTEGER NOT NULL,
+			username TEXT NOT NULL DEFAULT '',
+			credential_mode TEXT NOT NULL DEFAULT 'prompt',
+			credential_ciphertext TEXT NOT NULL DEFAULT '',
+			credential_nonce TEXT NOT NULL DEFAULT '',
+			credential_key_id TEXT NOT NULL DEFAULT '',
+			tls_mode TEXT NOT NULL DEFAULT 'preferred',
+			cert_fingerprint TEXT NOT NULL DEFAULT '',
+			enabled BOOLEAN NOT NULL DEFAULT TRUE,
+			last_test_at TIMESTAMPTZ,
+			last_test_status TEXT NOT NULL DEFAULT '',
+			last_test_error TEXT NOT NULL DEFAULT '',
+			created_by TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_remote_targets_org ON remote_targets(org_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_remote_targets_enabled ON remote_targets(enabled)`,
+
 		`CREATE TABLE IF NOT EXISTS id_change_history (
 			id         BIGSERIAL PRIMARY KEY,
 			old_id     TEXT NOT NULL,
@@ -1309,6 +1337,20 @@ func (pg *PostgresDB) SetConfig(key, value string) error {
 		`INSERT INTO server_config (key, value) VALUES ($1, $2)
 		 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, key, value)
 	return err
+}
+
+// CompareAndSwapConfig updates a configuration value only when it still
+// matches expected. It is used for atomic counters stored as JSON payloads.
+func (pg *PostgresDB) CompareAndSwapConfig(key, expected, replacement string) (bool, error) {
+	result, err := pg.pool.Exec(pg.ctx,
+		`UPDATE server_config SET value = $1
+		 WHERE key = $2 AND value = $3`,
+		replacement, key, expected,
+	)
+	if err != nil {
+		return false, err
+	}
+	return result.RowsAffected() == 1, nil
 }
 
 // DeleteConfig removes a configuration key.

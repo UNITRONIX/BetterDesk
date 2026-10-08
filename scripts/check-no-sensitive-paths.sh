@@ -5,8 +5,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-if ! command -v rg >/dev/null 2>&1; then
-  echo "ERROR: ripgrep (rg) is required" >&2
+RG_BIN="${BETTERDESK_RG_BIN:-}"
+if [[ -z "$RG_BIN" ]]; then
+  RG_BIN="$(command -v rg 2>/dev/null || command -v rg.exe 2>/dev/null || true)"
+fi
+if [[ -z "$RG_BIN" ]]; then
+  echo "ERROR: ripgrep (rg or rg.exe) is required" >&2
   exit 1
 fi
 
@@ -30,7 +34,7 @@ PATTERNS=(
 
 FAIL=0
 for pat in "${PATTERNS[@]}"; do
-  if matches=$(rg -n "$pat" "${SCAN_PATHS[@]}" \
+  if matches=$("$RG_BIN" -n "$pat" "${SCAN_PATHS[@]}" \
     --glob '!docs/private/**' \
     --glob '!scripts/check-no-sensitive-paths.sh' \
     --glob '!*.plan.md' 2>/dev/null); then

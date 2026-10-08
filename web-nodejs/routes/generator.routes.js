@@ -20,12 +20,16 @@ const keyService = require('../services/keyService');
 const bundleService = require('../services/agentBundleService');
 const clientTemplateWorker = require('../services/clientTemplateWorker');
 const supportModule = require('../services/supportGeneratorModule');
+const clientBuilder = require('../services/clientBuilderService');
 const db = require('../services/database');
 const config = require('../config/config');
 const brandingService = require('../services/brandingService');
 const conn = require('../services/agentBundleConnection');
 const clientConfigHost = require('../services/clientConfigHost');
 const { PRODUCT_TYPES, normalizeProductType, isBetterDeskSupportBundle } = require('../lib/generatorBuildTypes');
+const EMBEDDED_MODE = String(
+    process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+).trim().toLowerCase() === 'embedded';
 const moduleUpload = multer({
     storage: multer.diskStorage({
         destination: (_req, _file, cb) => {
@@ -71,7 +75,34 @@ function serializeBundle(row) {
         updated_at:      row.updated_at,
         download_url:    `/d/${publicId}`,
         product_type:    normalizeProductType(row.product_type),
+        client_commit:   row.client_commit || null,
+        active_generation_hash: row.active_generation_hash || row.branding_hash || null,
     };
+}
+
+function activeBuildHash(row) {
+    return row?.active_generation_hash || row?.branding_hash || '';
+}
+
+function generatorReady() {
+    return EMBEDDED_MODE ? clientBuilder.isReady() : supportModule.isReady();
+}
+
+function generatorNotReadyError() {
+    return EMBEDDED_MODE
+        ? 'betterdesk_client_builder_not_ready'
+        : 'module_not_ready';
+}
+
+function currentClientRevision() {
+    if (!EMBEDDED_MODE) return null;
+    const commit = String(clientBuilder.readState().installedCommit || '').trim();
+    return /^[a-f0-9]{40}$/i.test(commit) ? commit : null;
+}
+
+function generationForConfig(configFingerprint, clientCommit = currentClientRevision()) {
+    if (!EMBEDDED_MODE || !clientCommit) return configFingerprint;
+    return clientBuilder.generationKey(configFingerprint, clientCommit);
 }
 
 async function resolvePublicBundle(publicId) {
@@ -100,8 +131,8 @@ async function resolveBundleSlug({ preferred, name, fallbackId, excludeBundleId 
 }
 
 /**
- * Inject server host / API / public key for BetterDesk Support custom.txt builds.
- * Branding colors/logos are no longer baked into installers — Client Branding API
+ * Prepare the signed server profile for BetterDesk Support embedded builds.
+ * Branding colors/logos are not embedded in the binary — Client Branding API
  * supplies runtime appearance.
  */
 async function finalizeSupportBranding(input) {
@@ -158,6 +189,19 @@ function resolveBuildWorker() {
     return clientTemplateWorker;
 }
 
+function availablePlatformKeys() {
+    return new Set(clientTemplateWorker.getAvailablePlatforms().map((p) => (
+        `${p.platform}/${p.arch}/${p.format}`
+    )));
+}
+
+function filterAvailableBuilds(builds) {
+    const keys = availablePlatformKeys();
+    return (builds || []).filter((build) => (
+        keys.has(`${build.platform}/${build.arch}/${build.format}`)
+    ));
+}
+
 // =========================================================================
 //  Generator page
 // =========================================================================
@@ -177,7 +221,9 @@ router.get('/generator', requireAuth, requireAdmin, (req, res) => {
 
 router.get('/api/generator/module/status', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const status = await supportModule.getStatus();
+        const status = EMBEDDED_MODE
+            ? await clientBuilder.getStatus()
+            : await supportModule.getStatus();
         res.json({ success: true, data: status });
     } catch (err) {
         console.error('[generator] module status error:', err);
@@ -187,7 +233,9 @@ router.get('/api/generator/module/status', requireAuth, requireAdmin, async (req
 
 router.post('/api/generator/module/accept-terms', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const state = await supportModule.acceptTerms();
+        const state = EMBEDDED_MODE
+            ? await clientBuilder.acceptTerms()
+            : await supportModule.acceptTerms();
         res.json({ success: true, data: state });
     } catch (err) {
         console.error('[generator] accept-terms error:', err);
@@ -197,6 +245,21 @@ router.post('/api/generator/module/accept-terms', requireAuth, requireAdmin, asy
 
 router.post('/api/generator/module/install', requireAuth, requireAdmin, async (req, res) => {
     try {
+        if (EMBEDDED_MODE) {
+            clientBuilder.ensureSigningKeySync();
+            if (!require('../services/supportGeneratorModule').isSigningSeedValid()) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'custom_client_signing_seed_required',
+                });
+            }
+            const state = await clientBuilder.syncSource({
+                repo: req.body?.repo,
+                ref: req.body?.ref || req.body?.tag,
+                force: true,
+            });
+            return res.json({ success: true, data: state });
+        }
         const repo = req.body?.repo ? String(req.body.repo).trim() : undefined;
         const tag = req.body?.tag ? String(req.body.tag).trim() : undefined;
         const state = await supportModule.installFromGitHub({ repo, tag });
@@ -235,6 +298,12 @@ router.post(
     async (req, res) => {
         const uploaded = req.file?.path;
         try {
+            if (EMBEDDED_MODE) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'embedded_builder_requires_client_source_sync',
+                });
+            }
             if (!uploaded) {
                 return res.status(400).json({ success: false, error: 'generator_archive_required' });
             }
@@ -275,8 +344,8 @@ router.get('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
         const row = await db.getAgentBundle(req.params.bundleId);
         if (!row) return res.status(404).json({ success: false, error: req.t('errors.not_found') });
         const bundle = serializeBundle(row);
-        const builds = await db.listAgentBundleBuildsForHash(row.branding_hash);
-        bundle.builds = builds || [];
+        const builds = await db.listAgentBundleBuildsForHash(activeBuildHash(row));
+        bundle.builds = filterAvailableBuilds(builds);
         res.json({ success: true, data: { bundle } });
     } catch (err) {
         console.error('[generator] get bundle error:', err);
@@ -301,8 +370,8 @@ router.get('/api/generator/defaults', requireAuth, requireAdmin, async (req, res
 
 router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res) => {
     try {
-        if (!supportModule.isReady()) {
-            return res.status(400).json({ success: false, error: 'module_not_ready' });
+        if (!generatorReady()) {
+            return res.status(400).json({ success: false, error: generatorNotReadyError() });
         }
         const name = String(req.body.name || '').trim().slice(0, 100);
         if (!name) {
@@ -329,13 +398,17 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
         }
         const normalized = await finalizeSupportBranding(base);
         normalized.bundle_id = bundleId;
-        const brandingHash = bundleService.hashBranding(normalized);
+        const configFingerprint = bundleService.hashBranding(normalized);
+        const clientCommit = currentClientRevision();
+        const brandingHash = generationForConfig(configFingerprint, clientCommit);
         const created = await db.createAgentBundle({
             bundleId,
             slug: slugResult.slug,
             name,
             branding: JSON.stringify(normalized),
             brandingHash,
+            configFingerprint,
+            clientCommit,
             createdBy: req.session?.userId || null,
             productType,
         });
@@ -361,8 +434,8 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
 
 router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async (req, res) => {
     try {
-        if (!supportModule.isReady()) {
-            return res.status(400).json({ success: false, error: 'module_not_ready' });
+        if (!generatorReady()) {
+            return res.status(400).json({ success: false, error: generatorNotReadyError() });
         }
         const existing = await db.getAgentBundle(req.params.bundleId);
         if (!existing) return res.status(404).json({ success: false, error: req.t('errors.not_found') });
@@ -377,7 +450,13 @@ router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
         }
         const normalized = await finalizeSupportBranding(base);
         normalized.bundle_id = req.params.bundleId;
-        const brandingHash = bundleService.hashBranding(normalized);
+        const configFingerprint = bundleService.hashBranding(normalized);
+        const clientCommit = currentClientRevision();
+        const existingFingerprint = existing.config_fingerprint || existing.branding_hash;
+        const configChanged = existingFingerprint !== configFingerprint;
+        const brandingHash = configChanged
+            ? generationForConfig(configFingerprint, clientCommit)
+            : existing.branding_hash;
         let slug = existing.slug || '';
         if (req.body.slug !== undefined) {
             const slugResult = await resolveBundleSlug({
@@ -409,8 +488,10 @@ router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
             slug,
             branding: JSON.stringify(normalized),
             brandingHash,
+            configFingerprint,
+            clientCommit: clientCommit || existing.client_commit || null,
         });
-        if (existing.branding_hash !== brandingHash) {
+        if (existing.branding_hash !== brandingHash || configChanged) {
             const platformsFilter = Array.isArray(req.body.platforms) ? req.body.platforms : null;
             resolveBuildWorker().enqueueBuildsForHash(brandingHash, {
                 platforms: platformsFilter,
@@ -432,8 +513,8 @@ router.post('/api/generator/bundles/:bundleId/rebuild', requireAuth, requireAdmi
         if (row.revoked) {
             return res.status(400).json({ success: false, error: req.t('generator.errors.rebuild_revoked') });
         }
-        if (!supportModule.isReady()) {
-            return res.status(400).json({ success: false, error: 'module_not_ready' });
+        if (!generatorReady()) {
+            return res.status(400).json({ success: false, error: generatorNotReadyError() });
         }
         const platformsFilter = Array.isArray(req.body?.platforms) ? req.body.platforms : null;
         const result = await resolveBuildWorker().rebuildBundleById(
@@ -449,7 +530,7 @@ router.post('/api/generator/bundles/:bundleId/rebuild', requireAuth, requireAdmi
             success: true,
             data: {
                 queued: result.platforms,
-                builds: builds || [],
+                builds: filterAvailableBuilds(builds),
             },
         });
     } catch (err) {
@@ -472,12 +553,12 @@ router.post(
             if (!row.branding_hash) {
                 return res.status(400).json({ success: false, error: req.t('generator.errors.missing_hash') });
             }
-            if (!supportModule.isReady()) {
-                return res.status(400).json({ success: false, error: 'module_not_ready' });
+            if (!generatorReady()) {
+                return res.status(400).json({ success: false, error: generatorNotReadyError() });
             }
             const worker = resolveBuildWorker();
             const result = await worker.requeuePlatformBuild(
-                row.branding_hash,
+                activeBuildHash(row),
                 req.params.platform,
                 req.params.arch,
                 req.params.format
@@ -488,7 +569,7 @@ router.post(
                     : 'errors.bad_request';
                 return res.status(400).json({ success: false, error: req.t(errKey) });
             }
-            const listHash = result.brandingHash || row.branding_hash;
+            const listHash = result.brandingHash || activeBuildHash(row);
             const builds = await db.listAgentBundleBuildsForHash(listHash);
             res.json({ success: true, data: { builds: builds || [] } });
         } catch (err) {
@@ -543,7 +624,7 @@ router.post('/api/generator/preview', requireAuth, requireAdmin, async (req, res
 });
 
 router.get('/api/generator/platforms', requireAuth, requireAdmin, (req, res) => {
-    res.json({ success: true, data: { platforms: bundleService.PLATFORMS } });
+    res.json({ success: true, data: { platforms: clientTemplateWorker.getAvailablePlatforms() } });
 });
 
 // =========================================================================
@@ -560,12 +641,14 @@ router.get('/d/:publicId', async (req, res) => {
             });
         }
         const bundle = serializeBundle(row);
-        const builds = await db.listAgentBundleBuildsForHash(row.branding_hash);
+        const builds = filterAvailableBuilds(
+            await db.listAgentBundleBuildsForHash(activeBuildHash(row))
+        );
         const buildMap = {};
         for (const b of (builds || [])) {
             buildMap[`${b.platform}/${b.arch}/${b.format}`] = b.status;
         }
-        const platforms = bundleService.PLATFORMS.map(p => ({
+        const platforms = clientTemplateWorker.getAvailablePlatforms().map(p => ({
             ...p,
             status: buildMap[`${p.platform}/${p.arch}/${p.format}`] || 'pending',
         }));
@@ -593,7 +676,9 @@ router.get('/api/d/:publicId/manifest', async (req, res) => {
     try {
         const row = await resolvePublicBundle(req.params.publicId);
         if (!row || row.revoked) return res.status(404).json({ success: false });
-        const builds = await db.listAgentBundleBuildsForHash(row.branding_hash);
+        const builds = filterAvailableBuilds(
+            await db.listAgentBundleBuildsForHash(activeBuildHash(row))
+        );
         const buildMap = {};
         for (const b of (builds || [])) {
             buildMap[`${b.platform}/${b.arch}/${b.format}`] = {
@@ -602,7 +687,7 @@ router.get('/api/d/:publicId/manifest', async (req, res) => {
                 sha256: b.artifact_sha256 || null,
             };
         }
-        const platforms = bundleService.PLATFORMS.map(p => ({
+        const platforms = clientTemplateWorker.getAvailablePlatforms().map(p => ({
             ...p,
             ...(buildMap[`${p.platform}/${p.arch}/${p.format}`] || { status: 'pending' }),
         }));
@@ -626,13 +711,13 @@ router.get('/api/d/:publicId/download/:platform/:arch/:format', async (req, res)
     try {
         const row = await resolvePublicBundle(req.params.publicId);
         if (!row || row.revoked) return res.status(404).json({ success: false });
-        const build = await db.getAgentBundleBuild({
-            brandingHash: row.branding_hash,
+        const build = await resolveBuildWorker().getReadyArtifact({
+            brandingHash: activeBuildHash(row),
             platform: req.params.platform,
             arch: req.params.arch,
             format: req.params.format,
         });
-        if (!build || build.status !== 'ready' || !build.artifact_path) {
+        if (!build || !build.artifact_path) {
             return res.status(503).json({
                 success: false,
                 error: 'build_pending',

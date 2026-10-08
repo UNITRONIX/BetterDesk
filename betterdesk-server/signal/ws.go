@@ -268,7 +268,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 				continue
 			}
 			s.registerWSPunchConn(remoteAddr, wsc)
-			resp := s.handlePunchHoleRequestTCP(msg.GetPunchHoleRequest(), fakeAddr)
+			resp := s.handlePunchHoleRequestTCPWithHint(msg.GetPunchHoleRequest(), fakeAddr, peer.ConnWS)
 			if resp != nil {
 				wsc.WriteMessage(resp)
 			}
@@ -540,6 +540,18 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 
 	if !s.checkEnrollmentPermission(id, clientHost) {
 		log.Printf("[signal] Rejected new WS peer %s from %s (enrollment policy)", id, clientHost)
+		if s.isPendingEnrollment(id) {
+			// Keep the authenticated WS transport alive while approval is
+			// pending. Session delivery remains blocked by
+			// targetAcceptsInboundSession until the DB peer row exists.
+			s.retainPendingSignalPeer(id, remoteAddr, nil, msg.Serial, peer.ConnWS)
+			log.Printf("[signal] Retained pending WS peer transport: %s from %s", id, remoteAddr)
+			return &pb.RendezvousMessage{
+				Union: &pb.RendezvousMessage_RegisterPeerResponse{
+					RegisterPeerResponse: &pb.RegisterPeerResponse{RequestPk: false},
+				},
+			}
+		}
 		return nil
 	}
 

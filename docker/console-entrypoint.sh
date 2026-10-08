@@ -22,7 +22,7 @@ if [ "$(id -u)" = "0" ]; then
     fi
     # /opt/rustdesk may be mounted read-only from server volume — only fix if writable
     chown -R betterdesk:betterdesk /opt/rustdesk 2>/dev/null || true
-    # Import shared bootstrap password from server volume (issue #385).
+    # Load shared bootstrap helpers after volume ownership is corrected.
     # shellcheck source=/docker/bootstrap-admin-credentials.sh
     . /docker/bootstrap-admin-credentials.sh
     # shellcheck source=/docker/guard-sqlite-auth-split.sh

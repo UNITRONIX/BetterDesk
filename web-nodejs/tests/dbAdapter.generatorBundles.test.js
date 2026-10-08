@@ -89,9 +89,40 @@ describe('dbAdapter generator bundle compatibility', () => {
         check.close();
 
         expect(columns).toContain('product_type');
+        expect(columns).toContain('config_fingerprint');
+        expect(columns).toContain('active_generation_hash');
         expect(legacyRow.product_type).toBe('betterdesk-support');
         expect(created.product_type).toBe('betterdesk-support');
         expect(client.product_type).toBe('betterdesk-support');
         expect(build.status).toBe('queued');
+    });
+
+    test('keeps the previous generation active until promotion', async () => {
+        const { getAdapter } = require('../services/dbAdapter');
+        adapter = getAdapter();
+        await adapter.init();
+
+        await adapter.createAgentBundle({
+            bundleId: 'generation-bundle',
+            slug: 'generation-bundle',
+            name: 'Generation bundle',
+            branding: '{}',
+            brandingHash: 'generation-v2',
+            configFingerprint: 'config-v1',
+            clientCommit: 'a'.repeat(40),
+            productType: 'betterdesk-support',
+        });
+        const staged = await adapter.prepareAgentBundleGeneration('generation-bundle', {
+            brandingHash: 'generation-v3',
+            configFingerprint: 'config-v1',
+            clientCommit: 'b'.repeat(40),
+        });
+
+        expect(staged.branding_hash).toBe('generation-v3');
+        expect(staged.active_generation_hash).toBeNull();
+
+        const promoted = await adapter.promoteAgentBundleGeneration('generation-v3');
+        expect(promoted).toHaveLength(1);
+        expect(promoted[0].active_generation_hash).toBe('generation-v3');
     });
 });

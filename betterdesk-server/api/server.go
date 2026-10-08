@@ -89,6 +89,7 @@ type Server struct {
 	timeSync          *timesync.Service
 	billing           *billing.Service
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
+	remoteTargetVault *peervault.Vault // Dedicated AES-GCM vault for RDP/VNC credentials
 	httpSrv           *http.Server
 	wg                sync.WaitGroup
 	version           string
@@ -223,6 +224,17 @@ func (s *Server) InitPeerCredentialVault(secret string) error {
 	return nil
 }
 
+// InitRemoteTargetCredentialVault configures the dedicated RDP/VNC credential
+// vault. Unlike the legacy peer vault, this never falls back to JWT secrets.
+func (s *Server) InitRemoteTargetCredentialVault(secret string) error {
+	v, err := peervault.New(secret)
+	if err != nil {
+		return err
+	}
+	s.remoteTargetVault = v
+	return nil
+}
+
 // SetKeyPair sets the Ed25519 keypair for the server (used for signing IdPk).
 func (s *Server) SetKeyPair(kp *crypto.KeyPair) {
 	s.keyPair = kp
@@ -296,6 +308,19 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceConnectionMode, s.handleSetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requireRole(auth.RoleOperator, s.handleIssueSupportSessionGrant))
 	mux.HandleFunc("GET /api/peers/{id}/policy", s.handleGetPeerPolicy)
+
+	// Manually configured RDP/VNC targets.
+	mux.HandleFunc("GET /api/remote-targets", s.requirePermission(auth.PermRemoteTargetView, s.handleListRemoteTargets))
+	mux.HandleFunc("POST /api/remote-targets", s.requirePermission(auth.PermRemoteTargetEdit, s.handleCreateRemoteTarget))
+	mux.HandleFunc("POST /api/remote-targets/test", s.requirePermission(auth.PermRemoteTargetTest, s.handleTestRemoteTarget))
+	mux.HandleFunc("GET /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetView, s.handleGetRemoteTargetCredentialStatus))
+	mux.HandleFunc("PUT /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleSetRemoteTargetCredentials))
+	mux.HandleFunc("DELETE /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleClearRemoteTargetCredentials))
+	mux.HandleFunc("POST /api/remote-targets/{id}/certificate/accept", s.requirePermission(auth.PermRemoteTargetConnect, s.handleAcceptRemoteTargetCertificate))
+	mux.HandleFunc("GET /api/remote-targets/{id}/tunnel", s.requirePermission(auth.PermRemoteTargetConnect, s.handleRemoteTargetTunnel))
+	mux.HandleFunc("GET /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetView, s.handleGetRemoteTarget))
+	mux.HandleFunc("PATCH /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetEdit, s.handleUpdateRemoteTarget))
+	mux.HandleFunc("DELETE /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetDelete, s.handleDeleteRemoteTarget))
 
 	// Blocklist management
 	mux.HandleFunc("GET /api/blocklist", s.requirePermission(auth.PermBlocklistEdit, s.handleListBlocklist))
@@ -586,10 +611,12 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/mesh/share/validate", s.handleMeshShareValidate)
 
 	// Guest Access Links (temporary RdClient allowlist links)
-	mux.HandleFunc("POST /api/guest/access-links", s.requirePermission(auth.PermDeviceConnect, s.handleGuestAccessCreate))
-	mux.HandleFunc("GET /api/guest/access-links", s.requirePermission(auth.PermDeviceConnect, s.handleGuestAccessList))
-	mux.HandleFunc("DELETE /api/guest/access-links/{id}", s.requirePermission(auth.PermDeviceConnect, s.handleGuestAccessRevoke))
+	mux.HandleFunc("POST /api/guest/access-links", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessCreate))
+	mux.HandleFunc("GET /api/guest/access-links", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessList))
+	mux.HandleFunc("DELETE /api/guest/access-links/{id}", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessRevoke))
 	mux.HandleFunc("GET /api/guest/access-links/validate", s.handleGuestAccessValidate)
+	mux.HandleFunc("POST /api/guest/access-links/consume", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessConsume))
+	mux.HandleFunc("POST /api/guest/access-links/events", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessEvent))
 	mux.HandleFunc("GET /api/guest/access-links/peers", s.handleGuestAccessPeers)
 	mux.HandleFunc("POST /api/mesh/devices/{id}/tcp", s.requirePermission(auth.PermDeviceConnect, s.handleMeshTcpRelay))
 	mux.HandleFunc("POST /api/mesh/devices/{id}/udp", s.requirePermission(auth.PermDeviceConnect, s.handleMeshUdpRelay))
@@ -904,6 +931,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		Status        int         `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
 		StatusText    string      `json:"status_text"` // Original string status for admin panel
 		LiveOnline    bool        `json:"live_online"`
+		SignalReady   bool        `json:"signal_ready"` // Live signal transport is registered
 		LiveStatus    peer.Status `json:"live_status"`
 		Platform      string      `json:"platform"`
 		CDAPConnected bool        `json:"cdap_connected"`
@@ -914,6 +942,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 	result := make([]peerResponse, len(peers))
 	for i, p := range peers {
 		liveOnline := s.peers.IsOnline(p.ID, config.RegTimeout)
+		signalReady := liveOnline
 		liveStatus := peer.StatusOffline
 		if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
 			liveStatus = snap.Status
@@ -952,6 +981,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 			Status:        statusInt,
 			StatusText:    p.Status,
 			LiveOnline:    liveOnline,
+			SignalReady:   signalReady,
 			LiveStatus:    liveStatus,
 			Platform:      p.OS,
 			CDAPConnected: cdapConnected,
@@ -1061,6 +1091,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		Status        int         `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
 		StatusText    string      `json:"status_text"` // Original string status for admin panel
 		LiveOnline    bool        `json:"live_online"`
+		SignalReady   bool        `json:"signal_ready"` // Live signal transport is registered
 		LiveStatus    peer.Status `json:"live_status"`
 		Platform      string      `json:"platform"`
 		CDAPConnected bool        `json:"cdap_connected"`
@@ -1072,12 +1103,14 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	if p.Disabled {
 		statusInt = 0
 	}
+	signalReady := s.peers.IsOnline(p.ID, config.RegTimeout)
 
 	writeJSON(w, http.StatusOK, singlePeerResponse{
 		Peer:          p,
 		Status:        statusInt,
 		StatusText:    p.Status,
 		LiveOnline:    liveOnline,
+		SignalReady:   signalReady,
 		LiveStatus:    liveStatus,
 		Platform:      p.OS,
 		CDAPConnected: cdapConnected,

@@ -7,6 +7,7 @@
  */
 
 const fs = require('fs');
+const crypto = require('crypto');
 
 /** Keys never overwritten when explicitly merging with overwritePaths (unused on update). */
 const PROTECTED_KEYS = new Set([
@@ -17,6 +18,7 @@ const PROTECTED_KEYS = new Set([
     'DB_TYPE',
     'DB_PATH',
     'ORG_PEER_VAULT_KEY',
+    'REMOTE_TARGET_VAULT_KEY',
     'JWT_SECRET'
 ]);
 
@@ -95,6 +97,11 @@ function buildEnvSubstitutions(opts = {}) {
     const dbType = pick('DB_TYPE', config.dbType, 'sqlite');
     const sslCert = pick('SSL_CERT_PATH', config.sslCertPath, rustdeskDir ? `${rustdeskDir}/ssl/betterdesk.crt` : '');
     const sslKey = pick('SSL_KEY_PATH', config.sslKeyPath, rustdeskDir ? `${rustdeskDir}/ssl/betterdesk.key` : '');
+    const remoteTargetVaultKey = pick(
+        'REMOTE_TARGET_VAULT_KEY',
+        config.remoteTargetVaultKey,
+        crypto.randomBytes(32).toString('base64url')
+    );
 
     const goApiBase = `http://localhost:${goPort}/api`;
 
@@ -113,6 +120,8 @@ function buildEnvSubstitutions(opts = {}) {
         DEFAULT_ADMIN_PASSWORD: pick('DEFAULT_ADMIN_PASSWORD', ''),
         SESSION_SECRET: pick('SESSION_SECRET', config.sessionSecret, ''),
         ORG_PEER_VAULT_KEY: pick('ORG_PEER_VAULT_KEY', ''),
+        REMOTE_TARGET_VAULT_KEY: remoteTargetVaultKey,
+        GUACD_ADDRESS: pick('GUACD_ADDRESS', '127.0.0.1:4822'),
         SSL_CERT_PATH: sslCert,
         SSL_KEY_PATH: sslKey
     };

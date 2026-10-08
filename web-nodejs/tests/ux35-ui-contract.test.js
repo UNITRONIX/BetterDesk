@@ -9,8 +9,10 @@ const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 
 describe('UX 3.5 mobile and accessibility contracts', () => {
     const mobileCss = read('public', 'css', 'mobile-shell.css');
+    const pagesCss = read('public', 'css', 'pages.css');
     const ux35Css = read('public', 'css', 'ux35.css');
     const shellJs = read('public', 'js', 'ux35-shell.js');
+    const settingsJs = read('public', 'js', 'settings.js');
     const mobileJs = read('public', 'js', 'mobile-nav.js');
     const topbar = read('views', 'partials', 'ux35-topbar.ejs');
     const bottomNav = read('views', 'partials', 'mobile-bottom-nav.ejs');
@@ -18,9 +20,12 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const layout = read('views', 'layouts', 'main.ejs');
     const automation = read('public', 'js', 'automation.js');
     const appJs = read('public', 'js', 'app.js');
+    const devicesJs = read('public', 'js', 'devices.js');
+    const registrationRoutes = read('routes', 'registration.routes.js');
     const notifCenter = read('public', 'js', 'notif-center.js');
     const uiShell = read('public', 'js', 'ui-shell.js');
     const classicNavbar = read('views', 'partials', 'navbar.ejs');
+    const settingsView = read('views', 'settings.ejs');
 
     it('keeps classic mobile height rules out of the UX 3.5 scroll region', () => {
         assert.match(mobileCss, /\.app-layout \.main-content/);
@@ -84,11 +89,33 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(topbar, /id="notif-badge" hidden aria-hidden="true"/);
     });
 
+    it('refreshes the Devices list after managed or LAN approval', () => {
+        assert.match(appJs, /data\.type === 'registration_changed'/);
+        assert.match(appJs, /new CustomEvent\('app:refresh'/);
+        assert.match(devicesJs, /window\.addEventListener\('app:refresh'/);
+        assert.match(registrationRoutes, /publishPanelEvent\(\{/);
+        assert.match(registrationRoutes, /type: 'registration_changed'/);
+    });
+
     it('uses UX 3.5 as the only shell without beta or classic switch controls', () => {
         assert.match(layout, /const shell = 'ux35'/);
         assert.match(uiShell, /return 'ux35'/);
         assert.doesNotMatch(topbar, /ux35-beta-chip|data-ui-shell-switch/);
         assert.doesNotMatch(topbar, /beta_tooltip|beta_badge/);
         assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
+    });
+
+    it('keeps Settings navigation sticky, horizontally scrollable, and compact on mobile shell widths', () => {
+        assert.match(settingsView, /<nav class="settings-shell-nav" role="tablist"/);
+        assert.match(settingsView, /class="settings-shell-nav-track mobile-tabs-scroll"/);
+        assert.match(pagesCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*sticky/);
+        assert.match(pagesCss, /\.settings-shell-nav-track\.mobile-tabs-scroll\s*\{[\s\S]*?padding-bottom:\s*0/);
+        assert.match(ux35Css, /@media \(min-width: 768px\) and \(max-width: 1024px\)/);
+        assert.match(
+            ux35Css,
+            /@media \(min-width: 768px\) and \(max-width: 1024px\)[\s\S]*?\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?min-height:\s*36px/
+        );
+        assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
+        assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);
     });
 });

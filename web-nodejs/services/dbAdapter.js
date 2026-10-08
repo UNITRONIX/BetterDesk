@@ -1028,6 +1028,9 @@ function createSqliteAdapter(config) {
                 name TEXT NOT NULL,
                 branding TEXT NOT NULL DEFAULT '{}',
                 branding_hash TEXT NOT NULL DEFAULT '',
+                config_fingerprint TEXT NOT NULL DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                active_generation_hash TEXT DEFAULT NULL,
                 created_by INTEGER DEFAULT NULL,
                 product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
                 revoked INTEGER NOT NULL DEFAULT 0,
@@ -1049,6 +1052,11 @@ function createSqliteAdapter(config) {
                 artifact_size INTEGER DEFAULT 0,
                 artifact_sha256 TEXT DEFAULT NULL,
                 error_message TEXT DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                generation_id TEXT DEFAULT NULL,
+                config_fingerprint TEXT DEFAULT NULL,
+                progress_percent INTEGER NOT NULL DEFAULT 0,
+                progress_phase TEXT DEFAULT '',
                 started_at TEXT DEFAULT NULL,
                 finished_at TEXT DEFAULT NULL,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -1058,6 +1066,32 @@ function createSqliteAdapter(config) {
             CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_hash ON agent_bundle_builds (branding_hash);
             CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_status ON agent_bundle_builds (status);
         `);
+        const bundleColumns = new Set(
+            db.prepare('PRAGMA table_info(agent_bundles)').all().map(c => c.name)
+        );
+        for (const [column, type] of [
+            ['config_fingerprint', "TEXT NOT NULL DEFAULT ''"],
+            ['client_commit', 'TEXT DEFAULT NULL'],
+            ['active_generation_hash', 'TEXT DEFAULT NULL'],
+        ]) {
+            if (!bundleColumns.has(column)) {
+                db.exec(`ALTER TABLE agent_bundles ADD COLUMN ${column} ${type}`);
+            }
+        }
+        const buildColumns = new Set(
+            db.prepare('PRAGMA table_info(agent_bundle_builds)').all().map(c => c.name)
+        );
+        for (const [column, type] of [
+            ['client_commit', 'TEXT DEFAULT NULL'],
+            ['generation_id', 'TEXT DEFAULT NULL'],
+            ['config_fingerprint', 'TEXT DEFAULT NULL'],
+            ['progress_percent', 'INTEGER NOT NULL DEFAULT 0'],
+            ['progress_phase', "TEXT DEFAULT ''"],
+        ]) {
+            if (!buildColumns.has(column)) {
+                db.exec(`ALTER TABLE agent_bundle_builds ADD COLUMN ${column} ${type}`);
+            }
+        }
         migrateAgentBundleSlugsSqlite(db);
         migrateAgentBundleProductTypesSqlite(db);
     }
@@ -3623,31 +3657,96 @@ function createSqliteAdapter(config) {
             return excludeBundleId ? row.bundle_id !== excludeBundleId : true;
         },
 
-        async createAgentBundle({ bundleId, slug, name, branding, brandingHash, createdBy, productType }) {
+        async createAgentBundle({
+            bundleId,
+            slug,
+            name,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+            createdBy,
+            productType,
+        }) {
             const db = openMain();
             const r = db.prepare(`
-                INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash, created_by, product_type)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO agent_bundles (
+                    bundle_id, slug, name, branding, branding_hash,
+                    config_fingerprint, client_commit, created_by, product_type
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
                 bundleId,
                 slug || null,
                 name,
                 branding,
                 brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
                 createdBy || null,
                 normalizeProductType(productType)
             );
             return db.prepare('SELECT * FROM agent_bundles WHERE id = ?').get(r.lastInsertRowid);
         },
 
-        async updateAgentBundle(bundleId, { name, slug, branding, brandingHash }) {
+        async updateAgentBundle(bundleId, {
+            name,
+            slug,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
             const db = openMain();
             db.prepare(`
                 UPDATE agent_bundles
-                SET name = ?, slug = ?, branding = ?, branding_hash = ?, updated_at = datetime('now')
+                SET name = ?, slug = ?, branding = ?, branding_hash = ?,
+                    config_fingerprint = ?, client_commit = ?, updated_at = datetime('now')
                 WHERE bundle_id = ?
-            `).run(name, slug || null, branding, brandingHash, bundleId);
+            `).run(
+                name,
+                slug || null,
+                branding,
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId
+            );
             return db.prepare('SELECT * FROM agent_bundles WHERE bundle_id = ?').get(bundleId) || null;
+        },
+
+        async prepareAgentBundleGeneration(bundleId, {
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
+            const db = openMain();
+            db.prepare(`
+                UPDATE agent_bundles
+                SET branding_hash = ?, config_fingerprint = ?, client_commit = ?,
+                    updated_at = datetime('now')
+                WHERE bundle_id = ?
+            `).run(
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId
+            );
+            return db.prepare('SELECT * FROM agent_bundles WHERE bundle_id = ?').get(bundleId) || null;
+        },
+
+        async promoteAgentBundleGeneration(brandingHash) {
+            const db = openMain();
+            db.prepare(`
+                UPDATE agent_bundles
+                SET active_generation_hash = ?, updated_at = datetime('now')
+                WHERE branding_hash = ? AND revoked = 0
+            `).run(brandingHash, brandingHash);
+            return db.prepare(`
+                SELECT * FROM agent_bundles
+                WHERE branding_hash = ? AND revoked = 0
+                ORDER BY created_at DESC
+            `).all(brandingHash);
         },
 
         async setAgentBundleRevoked(bundleId, revoked) {
@@ -3683,27 +3782,52 @@ function createSqliteAdapter(config) {
             `).get(brandingHash, platform, arch, format) || null;
         },
 
-        async upsertAgentBundleBuild({ brandingHash, platform, arch, format, status, artifactPath, artifactSize, artifactSha256, errorMessage }) {
+        async upsertAgentBundleBuild({
+            brandingHash,
+            platform,
+            arch,
+            format,
+            status,
+            artifactPath,
+            artifactSize,
+            artifactSha256,
+            errorMessage,
+            clientCommit,
+            generationId,
+            configFingerprint,
+            progressPercent,
+            progressPhase,
+        }) {
             const db = openMain();
             const buildStatus = normalizeBuildStatus(status);
             db.prepare(`
                 INSERT INTO agent_bundle_builds (
                     branding_hash, platform, arch, format, status,
                     artifact_path, artifact_size, artifact_sha256, error_message,
+                    client_commit, generation_id, config_fingerprint,
+                    progress_percent, progress_phase,
                     started_at, finished_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ${buildStatus === 'building' ? "datetime('now')" : 'NULL'}, ${buildStatus === 'ready' || buildStatus === 'failed' ? "datetime('now')" : 'NULL'})
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ${buildStatus === 'building' ? "datetime('now')" : 'NULL'}, ${buildStatus === 'ready' || buildStatus === 'failed' ? "datetime('now')" : 'NULL'})
                 ON CONFLICT(branding_hash, platform, arch, format) DO UPDATE SET
                     status = excluded.status,
                     artifact_path = COALESCE(excluded.artifact_path, agent_bundle_builds.artifact_path),
                     artifact_size = COALESCE(excluded.artifact_size, agent_bundle_builds.artifact_size),
                     artifact_sha256 = COALESCE(excluded.artifact_sha256, agent_bundle_builds.artifact_sha256),
                     error_message = excluded.error_message,
+                    client_commit = COALESCE(excluded.client_commit, agent_bundle_builds.client_commit),
+                    generation_id = COALESCE(excluded.generation_id, agent_bundle_builds.generation_id),
+                    config_fingerprint = COALESCE(excluded.config_fingerprint, agent_bundle_builds.config_fingerprint),
+                    progress_percent = excluded.progress_percent,
+                    progress_phase = excluded.progress_phase,
                     started_at = CASE WHEN excluded.status = 'building' THEN datetime('now') ELSE agent_bundle_builds.started_at END,
                     finished_at = CASE WHEN excluded.status IN ('ready','failed') THEN datetime('now') ELSE agent_bundle_builds.finished_at END,
                     updated_at = datetime('now')
             `).run(
                 brandingHash, platform, arch, format, buildStatus,
-                artifactPath || null, artifactSize || 0, artifactSha256 || null, errorMessage || ''
+                artifactPath || null, artifactSize || 0, artifactSha256 || null, errorMessage || '',
+                clientCommit || null, generationId || null, configFingerprint || null,
+                Math.max(0, Math.min(100, Number(progressPercent || 0))),
+                String(progressPhase || '')
             );
             return this.getAgentBundleBuild({ brandingHash, platform, arch, format });
         },
@@ -4251,6 +4375,9 @@ function createPostgresAdapter() {
                 name TEXT NOT NULL,
                 branding TEXT NOT NULL DEFAULT '{}',
                 branding_hash TEXT NOT NULL DEFAULT '',
+                config_fingerprint TEXT NOT NULL DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                active_generation_hash TEXT DEFAULT NULL,
                 created_by INTEGER DEFAULT NULL,
                 product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
                 revoked BOOLEAN NOT NULL DEFAULT FALSE,
@@ -4259,6 +4386,9 @@ function createPostgresAdapter() {
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
         `);
+        await q("ALTER TABLE agent_bundles ADD COLUMN IF NOT EXISTS config_fingerprint TEXT NOT NULL DEFAULT ''");
+        await q('ALTER TABLE agent_bundles ADD COLUMN IF NOT EXISTS client_commit TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_bundles ADD COLUMN IF NOT EXISTS active_generation_hash TEXT DEFAULT NULL');
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundles_bundle_id ON agent_bundles (bundle_id)');
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundles_hash ON agent_bundles (branding_hash)');
         try {
@@ -4331,6 +4461,11 @@ function createPostgresAdapter() {
                 artifact_size BIGINT DEFAULT 0,
                 artifact_sha256 TEXT DEFAULT NULL,
                 error_message TEXT DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                generation_id TEXT DEFAULT NULL,
+                config_fingerprint TEXT DEFAULT NULL,
+                progress_percent INTEGER NOT NULL DEFAULT 0,
+                progress_phase TEXT DEFAULT '',
                 started_at TIMESTAMPTZ DEFAULT NULL,
                 finished_at TIMESTAMPTZ DEFAULT NULL,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -4338,6 +4473,11 @@ function createPostgresAdapter() {
                 UNIQUE(branding_hash, platform, arch, format)
             )
         `);
+        await q('ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS client_commit TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS generation_id TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS config_fingerprint TEXT DEFAULT NULL');
+        await q("ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS progress_percent INTEGER NOT NULL DEFAULT 0");
+        await q("ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS progress_phase TEXT DEFAULT ''");
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_hash ON agent_bundle_builds (branding_hash)');
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_status ON agent_bundle_builds (status)');
 
@@ -7000,10 +7140,23 @@ function createPostgresAdapter() {
             return excludeBundleId ? row.bundle_id !== excludeBundleId : true;
         },
 
-        async createAgentBundle({ bundleId, slug, name, branding, brandingHash, createdBy, productType }) {
+        async createAgentBundle({
+            bundleId,
+            slug,
+            name,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+            createdBy,
+            productType,
+        }) {
             return one(`
-                INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash, created_by, product_type)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                INSERT INTO agent_bundles (
+                    bundle_id, slug, name, branding, branding_hash,
+                    config_fingerprint, client_commit, created_by, product_type
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 RETURNING *
             `, [
                 bundleId,
@@ -7011,18 +7164,68 @@ function createPostgresAdapter() {
                 name,
                 branding,
                 brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
                 createdBy || null,
                 normalizeProductType(productType),
             ]);
         },
 
-        async updateAgentBundle(bundleId, { name, slug, branding, brandingHash }) {
+        async updateAgentBundle(bundleId, {
+            name,
+            slug,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
             return one(`
                 UPDATE agent_bundles
-                SET name = $1, slug = $2, branding = $3, branding_hash = $4, updated_at = NOW()
-                WHERE bundle_id = $5
+                SET name = $1, slug = $2, branding = $3, branding_hash = $4,
+                    config_fingerprint = $5, client_commit = $6, updated_at = NOW()
+                WHERE bundle_id = $7
                 RETURNING *
-            `, [name, slug || null, branding, brandingHash, bundleId]);
+            `, [
+                name,
+                slug || null,
+                branding,
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId,
+            ]);
+        },
+
+        async prepareAgentBundleGeneration(bundleId, {
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
+            return one(`
+                UPDATE agent_bundles
+                SET branding_hash = $1, config_fingerprint = $2,
+                    client_commit = $3, updated_at = NOW()
+                WHERE bundle_id = $4
+                RETURNING *
+            `, [
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId,
+            ]);
+        },
+
+        async promoteAgentBundleGeneration(brandingHash) {
+            await q(`
+                UPDATE agent_bundles
+                SET active_generation_hash = $1, updated_at = NOW()
+                WHERE branding_hash = $1 AND revoked = FALSE
+            `, [brandingHash]);
+            return all(`
+                SELECT * FROM agent_bundles
+                WHERE branding_hash = $1 AND revoked = FALSE
+                ORDER BY created_at DESC
+            `, [brandingHash]);
         },
 
         async setAgentBundleRevoked(bundleId, revoked) {
@@ -7058,15 +7261,33 @@ function createPostgresAdapter() {
             `, [brandingHash, platform, arch, format]);
         },
 
-        async upsertAgentBundleBuild({ brandingHash, platform, arch, format, status, artifactPath, artifactSize, artifactSha256, errorMessage }) {
+        async upsertAgentBundleBuild({
+            brandingHash,
+            platform,
+            arch,
+            format,
+            status,
+            artifactPath,
+            artifactSize,
+            artifactSha256,
+            errorMessage,
+            clientCommit,
+            generationId,
+            configFingerprint,
+            progressPercent,
+            progressPhase,
+        }) {
             const buildStatus = normalizeBuildStatus(status);
             return one(`
                 INSERT INTO agent_bundle_builds (
                     branding_hash, platform, arch, format, status,
                     artifact_path, artifact_size, artifact_sha256, error_message,
+                    client_commit, generation_id, config_fingerprint,
+                    progress_percent, progress_phase,
                     started_at, finished_at
                 ) VALUES (
                     $1, $2, $3, $4, $5, $6, $7, $8, $9,
+                    $10, $11, $12, $13, $14,
                     CASE WHEN $5 = 'building' THEN NOW() ELSE NULL END,
                     CASE WHEN $5 IN ('ready','failed') THEN NOW() ELSE NULL END
                 )
@@ -7076,11 +7297,31 @@ function createPostgresAdapter() {
                     artifact_size = COALESCE(EXCLUDED.artifact_size, agent_bundle_builds.artifact_size),
                     artifact_sha256 = COALESCE(EXCLUDED.artifact_sha256, agent_bundle_builds.artifact_sha256),
                     error_message = EXCLUDED.error_message,
+                    client_commit = COALESCE(EXCLUDED.client_commit, agent_bundle_builds.client_commit),
+                    generation_id = COALESCE(EXCLUDED.generation_id, agent_bundle_builds.generation_id),
+                    config_fingerprint = COALESCE(EXCLUDED.config_fingerprint, agent_bundle_builds.config_fingerprint),
+                    progress_percent = EXCLUDED.progress_percent,
+                    progress_phase = EXCLUDED.progress_phase,
                     started_at = CASE WHEN EXCLUDED.status = 'building' THEN NOW() ELSE agent_bundle_builds.started_at END,
                     finished_at = CASE WHEN EXCLUDED.status IN ('ready','failed') THEN NOW() ELSE agent_bundle_builds.finished_at END,
                     updated_at = NOW()
                 RETURNING *
-            `, [brandingHash, platform, arch, format, buildStatus, artifactPath || null, artifactSize || 0, artifactSha256 || null, errorMessage || '']);
+            `, [
+                brandingHash,
+                platform,
+                arch,
+                format,
+                buildStatus,
+                artifactPath || null,
+                artifactSize || 0,
+                artifactSha256 || null,
+                errorMessage || '',
+                clientCommit || null,
+                generationId || null,
+                configFingerprint || null,
+                Math.max(0, Math.min(100, Number(progressPercent || 0))),
+                String(progressPhase || ''),
+            ]);
         },
 
         // ---- Integration Housekeeping ----

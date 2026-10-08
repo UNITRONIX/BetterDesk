@@ -168,6 +168,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--space-md);
+    min-width: 0;
     padding: var(--space-md);
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
@@ -177,7 +179,10 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    min-width: 0;
+    flex: 0 1 45%;
     color: var(--text-secondary);
+    overflow-wrap: anywhere;
 }
 
 .server-info-label .material-icons {
@@ -185,9 +190,22 @@
 }
 
 .server-info-value {
+    min-width: 0;
+    max-width: 55%;
+    flex: 1 1 55%;
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
     color: var(--text-primary);
+    text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.server-info-value code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 
 /* Settings page */
@@ -2022,6 +2040,14 @@
     flex-wrap: wrap;
 }
 
+.restore-warning-box {
+    margin-bottom: var(--space-md);
+}
+
+.restore-warning-box + .backup-actions {
+    margin-top: var(--space-md);
+}
+
 .restore-options {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -2306,6 +2332,13 @@
 .update-wizard-step {
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+.update-wizard-percent {
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
     white-space: nowrap;
     flex: 0 0 auto;
 }

@@ -64,6 +64,7 @@ func TestRelayAdvertisedAddrUsesWSClientIPWithoutProxyPort(t *testing.T) {
 	srv.peers.Put(&peer.Entry{
 		ID:       "WSADDR01",
 		IP:       "203.0.113.50:41000",
+		UDPAddr:  udpAddr("3.0.113.99", 54321),
 		ConnType: peer.ConnWS,
 		LastReg:  time.Now(),
 	})
@@ -77,6 +78,78 @@ func TestRelayAdvertisedAddrUsesWSClientIPWithoutProxyPort(t *testing.T) {
 	}
 	if got.Port != 0 {
 		t.Fatalf("advertised port = %d, want 0 instead of proxy port", got.Port)
+	}
+}
+
+func TestRequestRelayTCPUsesActiveWSTransportForAdvertisement(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	putOnlinePeer(srv, "WSTGTADDR", "198.51.100.60", 52000, peer.ConnTCP)
+	srv.peers.Put(&peer.Entry{
+		ID:       "WSINITADDR",
+		IP:       "203.0.113.50:41000",
+		UDPAddr:  udpAddr("3.0.113.99", 54321),
+		ConnType: peer.ConnTCP,
+		LastReg:  time.Now(),
+	})
+
+	const relayUUID = "ws-active-transport-address"
+	resp := srv.handleRequestRelayTCP(
+		&pb.RequestRelay{Id: "WSTGTADDR", Uuid: relayUUID},
+		udpAddr("203.0.113.50", 41000),
+		peer.ConnWS,
+	)
+	if rr := resp.GetRelayResponse(); rr == nil || rr.RefuseReason != "" {
+		t.Fatalf("RequestRelay response = %+v", resp)
+	}
+
+	pending := srv.getPendingRelayByUUID(relayUUID)
+	if pending == nil {
+		t.Fatal("expected pending relay entry")
+	}
+	if pending.advertisedAddr != normalizeAddrKey("203.0.113.50:0") {
+		t.Fatalf("advertised address = %q, want %q", pending.advertisedAddr, normalizeAddrKey("203.0.113.50:0"))
+	}
+}
+
+func TestPunchHoleTCPUsesWSSAdvertisedAddress(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.cfg.P2PFirst = false
+	recv, targetAddr := attachTestUDPPair(t, srv)
+	srv.peers.Put(&peer.Entry{
+		ID:       "WSINITPUNCH",
+		IP:       "203.0.113.51:41000",
+		UDPAddr:  udpAddr("3.0.113.98", 54320),
+		ConnType: peer.ConnTCP,
+		LastReg:  time.Now(),
+	})
+	srv.peers.Put(&peer.Entry{
+		ID:         "WSTGTPUNCH",
+		IP:         targetAddr.String(),
+		UDPAddr:    targetAddr,
+		ConnType:   peer.ConnUDP,
+		LastReg:    time.Now(),
+		StatusTier: peer.StatusOnline,
+	})
+
+	resp := srv.handlePunchHoleRequestTCPWithHint(
+		&pb.PunchHoleRequest{Id: "WSTGTPUNCH"},
+		udpAddr("203.0.113.51", 41000),
+		peer.ConnWS,
+	)
+	if phr := resp.GetPunchHoleResponse(); phr == nil || phr.Failure != 0 {
+		t.Fatalf("PunchHole response = %+v", resp)
+	}
+
+	forwarded := readUDPRendezvous(t, recv).GetPunchHole()
+	if forwarded == nil {
+		t.Fatal("expected PunchHole on target UDP")
+	}
+	decoded, err := cryptopkg.DecodeAddr(forwarded.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode PunchHole socket_addr: %v", err)
+	}
+	if !decoded.IP.Equal(net.ParseIP("203.0.113.51")) || decoded.Port != 0 {
+		t.Fatalf("PunchHole socket_addr = %s, want 203.0.113.51:0", decoded)
 	}
 }
 
@@ -118,6 +191,114 @@ func TestProcessRegisterPkManagedRejectsUnknownPeer(t *testing.T) {
 	}
 }
 
+func TestManagedApprovalRetainsSignalTransportAndEnablesInboundRelay(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
+	kp, err := cryptopkg.GenerateKeyPair()
+	if err != nil {
+		t.Fatalf("GenerateKeyPair: %v", err)
+	}
+	srv.kp = kp
+	recv, targetAddr := attachTestUDPPair(t, srv)
+
+	// The client registers before approval. Managed enrollment must retain the
+	// live endpoint, but must not make it reachable while it is pending.
+	srv.handleRegisterPeer(&pb.RegisterPeer{Id: "APPROVED1", Serial: 1}, targetAddr)
+	// Consume the registration response; the final relay assertion should read
+	// the RequestRelay frame, not the pending RegisterPeerResponse.
+	readUDPRendezvous(t, recv)
+	if srv.peers.Get("APPROVED1") == nil {
+		t.Fatal("pending peer transport should remain in the signal map")
+	}
+	if srv.targetAcceptsInboundSession("APPROVED1") {
+		t.Fatal("pending peer must not accept inbound sessions")
+	}
+	if pending, _ := database.GetConfig("pending_device_APPROVED1"); pending == "" {
+		t.Fatal("pending peer should remain in the managed enrollment queue")
+	}
+
+	// A client may send RegisterPk during the pending interval. Reject the
+	// key for now, but preserve the live transport for the later approval.
+	if got := registerPkResult(srv.processRegisterPk(newRegisterPk("APPROVED1"), targetAddr.String())); got != pb.RegisterPkResponse_NOT_SUPPORT {
+		t.Fatalf("pending RegisterPk = %v, want NOT_SUPPORT", got)
+	}
+	if srv.peers.Get("APPROVED1") == nil {
+		t.Fatal("pending RegisterPk must not discard the retained transport")
+	}
+
+	if err := database.UpsertPeer(&db.Peer{
+		ID:     "APPROVED1",
+		UUID:   "test-uuid-APPROVED1",
+		Status: "ONLINE",
+	}); err != nil {
+		t.Fatalf("approve peer: %v", err)
+	}
+	if err := database.DeleteConfig("pending_device_APPROVED1"); err != nil {
+		t.Fatalf("clear pending enrollment: %v", err)
+	}
+
+	// The next key registration uses the retained endpoint and completes the
+	// signal-side transition without requiring delete + re-approve.
+	if got := registerPkResult(srv.processRegisterPk(newRegisterPk("APPROVED1"), targetAddr.String())); got != pb.RegisterPkResponse_OK {
+		t.Fatalf("approved RegisterPk = %v, want OK", got)
+	}
+	if !srv.targetAcceptsInboundSession("APPROVED1") {
+		t.Fatal("approved peer should accept inbound sessions")
+	}
+
+	if err := database.UpsertPeer(&db.Peer{ID: "INITAPP1", Status: "ONLINE", IP: "198.51.100.121"}); err != nil {
+		t.Fatalf("approve initiator: %v", err)
+	}
+	putOnlinePeer(srv, "INITAPP1", "198.51.100.121", 51001, peer.ConnTCP)
+
+	resp := srv.handleRequestRelayTCP(
+		&pb.RequestRelay{Id: "APPROVED1", Uuid: "approved-inbound-relay"},
+		udpAddr("198.51.100.121", 51001),
+		peer.ConnTCP,
+	)
+	if rr := resp.GetRelayResponse(); rr == nil || rr.RefuseReason != "" {
+		t.Fatalf("approved inbound relay response = %+v", resp)
+	}
+	if request := readUDPRendezvous(t, recv).GetRequestRelay(); request == nil {
+		t.Fatal("approved target should receive RequestRelay on retained transport")
+	}
+}
+
+func TestManagedHeartbeatOnlyDoesNotMakeTargetReachable(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
+
+	if err := database.UpsertPeer(&db.Peer{ID: "HEARTBEAT1", Status: "ONLINE", IP: "203.0.113.122"}); err != nil {
+		t.Fatalf("approve target: %v", err)
+	}
+	if err := database.UpsertPeer(&db.Peer{ID: "INITHEART1", Status: "ONLINE", IP: "198.51.100.122"}); err != nil {
+		t.Fatalf("approve initiator: %v", err)
+	}
+	// Simulate a recent HTTP heartbeat without a RegisterPeer/RegisterPk
+	// transport. The DB row must not make the target routable by itself.
+	if err := database.UpdatePeerStatus("HEARTBEAT1", "ONLINE", "203.0.113.122"); err != nil {
+		t.Fatalf("update target heartbeat: %v", err)
+	}
+	putOnlinePeer(srv, "INITHEART1", "198.51.100.122", 51002, peer.ConnTCP)
+
+	resp := srv.handleRequestRelayTCP(
+		&pb.RequestRelay{Id: "HEARTBEAT1", Uuid: "heartbeat-only-relay"},
+		udpAddr("198.51.100.122", 51002),
+		peer.ConnTCP,
+	)
+	if rr := resp.GetRelayResponse(); rr == nil || rr.RefuseReason != "Target offline" {
+		t.Fatalf("heartbeat-only relay response = %+v, want Target offline", resp)
+	}
+}
+
+func TestManagedPendingTransportIsNotAdvertisedOnline(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeManaged)
+	srv.handleRegisterPeer(&pb.RegisterPeer{Id: "PENDINGON1", Serial: 1}, udpAddr("203.0.113.123", 51234))
+
+	resp := srv.handleOnlineRequest(&pb.OnlineRequest{Peers: []string{"PENDINGON1"}})
+	if states := resp.GetOnlineResponse().GetStates(); len(states) != 1 || states[0] != 0 {
+		t.Fatalf("pending online states = %v, want [0]", states)
+	}
+}
+
 func TestProcessRegisterPkLockedDoesNotQueueUnknownPeer(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeLocked)
 
@@ -135,15 +316,19 @@ func TestProcessRegisterPkLockedDoesNotQueueUnknownPeer(t *testing.T) {
 	}
 }
 
-func TestHandleRegisterPeerWSManagedRejectsUnknownPeer(t *testing.T) {
+func TestHandleRegisterPeerWSManagedRetainsPendingTransport(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 
 	resp := srv.handleRegisterPeerWS(&pb.RegisterPeer{Id: "WSDENY1", Serial: 1}, "203.0.113.11:51234")
-	if resp != nil {
-		t.Fatalf("handleRegisterPeerWS returned response for rejected peer: %+v", resp)
+	if resp == nil || resp.GetRegisterPeerResponse() == nil || resp.GetRegisterPeerResponse().GetRequestPk() {
+		t.Fatalf("handleRegisterPeerWS should retain pending transport without requesting PK: %+v", resp)
 	}
 	if entry := srv.peers.Get("WSDENY1"); entry != nil {
-		t.Fatalf("unknown WS peer remained in memory: %+v", entry)
+		if entry.ConnType != peer.ConnWS {
+			t.Fatalf("pending WS peer transport type = %s, want ws", entry.ConnType)
+		}
+	} else {
+		t.Fatal("pending WS peer transport should remain in memory")
 	}
 	peer, err := database.GetPeer("WSDENY1")
 	if err != nil {
@@ -151,6 +336,9 @@ func TestHandleRegisterPeerWSManagedRejectsUnknownPeer(t *testing.T) {
 	}
 	if peer != nil {
 		t.Fatalf("unknown WS peer was persisted: %+v", peer)
+	}
+	if pending, err := database.GetConfig("pending_device_WSDENY1"); err != nil || pending == "" {
+		t.Fatalf("pending WS peer queue = %q, err=%v", pending, err)
 	}
 }
 
@@ -309,6 +497,37 @@ func TestProcessRegisterPkPreservesPersistedIdentityAfterRestart(t *testing.T) {
 		Pk:   storedPK,
 	}, "203.0.113.10:50123")); got != pb.RegisterPkResponse_OK {
 		t.Fatalf("matching persisted identity = %v, want OK", got)
+	}
+}
+
+func TestRegisterPeerHeartbeatHydratesPersistedPK(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	storedPK := bytes.Repeat([]byte{0x6B}, 32)
+	if err := database.UpsertPeer(&db.Peer{
+		ID:     "HEARTPK1",
+		PK:     storedPK,
+		Status: "ONLINE",
+	}); err != nil {
+		t.Fatalf("UpsertPeer: %v", err)
+	}
+
+	srv.peers.Put(&peer.Entry{
+		ID:         "HEARTPK1",
+		ConnType:   peer.ConnTCP,
+		LastReg:    time.Now(),
+		StatusTier: peer.StatusOnline,
+	})
+	srv.handleRegisterPeer(&pb.RegisterPeer{
+		Id:     "HEARTPK1",
+		Serial: 2,
+	}, udpAddr("203.0.113.121", 49121))
+
+	entry := srv.peers.Get("HEARTPK1")
+	if entry == nil || !bytes.Equal(entry.PK, storedPK) {
+		t.Fatalf("heartbeat did not hydrate PK: %+v", entry)
+	}
+	if entry.ConnType != peer.ConnUDP {
+		t.Fatalf("heartbeat ConnType = %s, want udp", entry.ConnType)
 	}
 }
 
@@ -808,6 +1027,29 @@ func TestHandleRequestRelayTCPSamePublicIPIgnoresPrivateRelayHint(t *testing.T) 
 	}
 	if rr.RelayServer != "198.51.100.20:21117" {
 		t.Fatalf("relay = %q, want public relay", rr.RelayServer)
+	}
+}
+
+func TestHandleRequestRelayTCPSamePublicIPWithUDPTargetForcesPublicRelay(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.localIP.Store("198.51.100.21")
+	srv.lanIP.Store("10.0.0.21")
+
+	targetAddr := udpAddr("203.0.113.45", 52000)
+	initiatorAddr := udpAddr("203.0.113.45", 51000)
+	putOnlinePeer(srv, "TARGET121UDP", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+	putOnlinePeer(srv, "INIT121UDP", initiatorAddr.IP.String(), initiatorAddr.Port, peer.ConnTCP)
+
+	resp := srv.handleRequestRelayTCP(&pb.RequestRelay{
+		Id:   "TARGET121UDP",
+		Uuid: "same-public-udp-target-relay",
+	}, initiatorAddr, peer.ConnTCP)
+	rr := resp.GetRelayResponse()
+	if rr == nil || rr.RefuseReason != "" {
+		t.Fatalf("relay response = %+v, want accepted", resp)
+	}
+	if rr.RelayServer != "198.51.100.21:21117" {
+		t.Fatalf("relay server = %q, want public relay", rr.RelayServer)
 	}
 }
 
@@ -2347,6 +2589,13 @@ func TestHandleRequestRelayTCPForwardsUDPWhenConnTCP(t *testing.T) {
 	}
 	if req.Uuid != relayUUID {
 		t.Fatalf("relay UUID = %q, want %q", req.Uuid, relayUUID)
+	}
+	decoded, err := cryptopkg.DecodeAddr(req.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode RequestRelay socket_addr: %v", err)
+	}
+	if !decoded.IP.Equal(net.ParseIP("127.0.0.1")) || decoded.Port != 51001 {
+		t.Fatalf("RequestRelay socket_addr = %s, want 127.0.0.1:51001", decoded)
 	}
 }
 

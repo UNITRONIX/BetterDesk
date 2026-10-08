@@ -8,6 +8,8 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const attestation = require('../services/serverAttestation');
+const brandingService = require('../services/brandingService');
+const db = require('../services/database');
 
 const REQUIRED_PERMISSION = 'server.attestation';
 const auth = [requireAuth, requirePermission(REQUIRED_PERMISSION)];
@@ -19,13 +21,21 @@ let runPromise = null;
 router.get('/server-attestation', ...auth, async (req, res) => {
     try {
         const lastResult = await attestation.getLastResult();
+        const badgeConfig = await attestation.getBadgeConfig();
+        const badgePresentation = attestation.resolveBadgePresentation(badgeConfig, {
+            tier: lastResult && lastResult.tier,
+            translate: req.t,
+            brandName: brandingService.getBranding().appName
+        });
         res.render('server-attestation', {
             title: req.t('server_attestation.title'),
             pageStyles: ['server-attestation'],
             pageScripts: ['server-attestation'],
             currentPage: 'server-attestation',
             breadcrumb: [{ label: req.t('server_attestation.title') }],
-            lastResult
+            lastResult,
+            badgeConfig,
+            badgePresentation
         });
     } catch (err) {
         console.error('[ServerAttestation] page render failed:', err);
@@ -85,12 +95,54 @@ router.get('/api/server-attestation/result', ...auth, async (req, res) => {
     }
 });
 
+router.get('/api/server-attestation/badge-config', ...auth, async (req, res) => {
+    try {
+        const config = await attestation.getBadgeConfig();
+        const presentation = attestation.resolveBadgePresentation(config, {
+            translate: req.t,
+            brandName: brandingService.getBranding().appName
+        });
+        res.json({ success: true, config, presentation });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.put('/api/server-attestation/badge-config', ...auth, async (req, res) => {
+    try {
+        if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+            return res.status(400).json({ success: false, error: 'Invalid badge configuration' });
+        }
+        const config = await attestation.saveBadgeConfig(req.body);
+        const badgePresentation = attestation.resolveBadgePresentation(config, {
+            tier: null,
+            translate: req.t,
+            brandName: brandingService.getBranding().appName
+        });
+        await db.logAction(
+            req.session?.userId,
+            'server_attestation_badge_updated',
+            'Updated Server Attestation badge labels',
+            req.ip
+        );
+        res.json({ success: true, config, presentation: badgePresentation });
+    } catch (err) {
+        console.error('[ServerAttestation] badge config save failed:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ─── Public badge API (login page) ───────────────────────────────────────────
 
 router.get('/api/public/server-attestation', async (req, res) => {
     try {
         const result = await attestation.getLastResult();
-        res.json(attestation.buildPublicSummary(result));
+        const presentation = await attestation.getBadgePresentation({
+            tier: result && result.tier,
+            translate: req.t,
+            brandName: brandingService.getBranding().appName
+        });
+        res.json(attestation.buildPublicSummary(result, presentation));
     } catch (_) {
         res.json({ tier: null, maxConnections: 0, testedAt: null, valid: false });
     }

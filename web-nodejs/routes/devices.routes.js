@@ -89,6 +89,147 @@ router.get('/api/devices', requireAuth, requirePermission('device.view'), async 
 });
 
 /**
+ * RDP/VNC remote targets use a dedicated API but share the devices list scope.
+ */
+router.get('/api/remote-targets', requireAuth, requirePermission('remote_target.view'), async (req, res) => {
+    try {
+        const targets = await betterdeskApi.getAllRemoteTargets({
+            includeDisabled: req.query.include_disabled === 'true'
+        });
+        const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, targets);
+        const visible = deviceGroupService.filterDevicesByScope(targets, scope);
+        for (const target of visible) {
+            target.groups = await db.getDeviceGroupsForPeer(target.id).catch(() => []);
+        }
+        res.json({ success: true, data: { targets: visible, total: visible.length } });
+    } catch (err) {
+        console.error('Get remote targets error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/remote-targets', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const payload = plainBodyObject(req.body || {});
+        const result = await betterdeskApi.createRemoteTarget(payload);
+        res.status(result.success ? 201 : 400).json(result);
+    } catch (err) {
+        console.error('Create remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/remote-targets/test', requireAuth, requirePermission('remote_target.test'), async (req, res) => {
+    try {
+        const result = await betterdeskApi.testRemoteTarget(plainBodyObject(req.body || {}));
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Test remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.get('/api/remote-targets/:id', requireAuth, requirePermission('remote_target.view'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        target.groups = await db.getDeviceGroupsForPeer(target.id).catch(() => []);
+        res.json({ success: true, data: target });
+    } catch (err) {
+        console.error('Get remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.patch('/api/remote-targets/:id', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const current = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!current) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, current)) return;
+        const result = await betterdeskApi.updateRemoteTarget(
+            req.params.id,
+            plainBodyObject(req.body || {})
+        );
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Update remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.get('/api/remote-targets/:id/credentials', requireAuth, requirePermission('remote_target.view'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.getRemoteTargetCredentialStatus(req.params.id);
+        res.status(result.success ? 200 : 502).json(result);
+    } catch (err) {
+        console.error('Get remote target credential status error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.put('/api/remote-targets/:id/credentials', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.setRemoteTargetCredentials(
+            req.params.id,
+            plainBodyObject(req.body || {})
+        );
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Set remote target credentials error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.delete('/api/remote-targets/:id/credentials', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.clearRemoteTargetCredentials(req.params.id);
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Clear remote target credentials error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/remote-targets/:id/certificate/accept', requireAuth, requirePermission('remote_target.connect'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.acceptRemoteTargetCertificate(
+            req.params.id,
+            String(req.body?.fingerprint || '')
+        );
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Accept remote target certificate error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.delete('/api/remote-targets/:id', requireAuth, requirePermission('remote_target.delete'), async (req, res) => {
+    try {
+        const current = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!current) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, current)) return;
+        const result = await betterdeskApi.deleteRemoteTarget(req.params.id);
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Delete remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
  * GET /api/tags - Get all visible device tags.
  */
 router.get('/api/tags', requireAuth, requirePermission('device.view'), async (req, res) => {
