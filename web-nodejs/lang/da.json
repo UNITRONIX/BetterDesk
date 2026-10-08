@@ -4085,6 +4085,7 @@
             "trust_os_hint": "Brug systemd-timesyncd/chrony-status når UDP NTP er blokeret (DMZ/firewall).",
             "save": "Gem NTP-indstillinger",
             "saved": "Urindstillinger gemt. Genstart af Go-server startet.",
+            "saved_hot_reload": "Urindstillingerne blev gemt og anvendt uden genstart af tjenesten.",
             "save_restart": "Gem NTP og genstart Go-serveren? Aktive sessioner kan kort afbrydes.",
             "status_offset": "Afvigelse",
             "status_server": "NTP-kilde",

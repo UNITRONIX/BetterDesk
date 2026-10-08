@@ -4083,6 +4083,7 @@
             "trust_os_hint": "Utiliser l'état systemd-timesyncd/chrony quand l'UDP NTP est bloqué (DMZ/pare-feu).",
             "save": "Enregistrer les paramètres NTP",
             "saved": "Paramètres d'horloge enregistrés. Redémarrage du serveur Go lancé.",
+            "saved_hot_reload": "Les paramètres de l’horloge ont été enregistrés et appliqués sans redémarrer le service.",
             "save_restart": "Enregistrer le NTP et redémarrer le serveur Go ? Les sessions actives peuvent se déconnecter brièvement.",
             "status_offset": "Décalage",
             "status_server": "Source NTP",

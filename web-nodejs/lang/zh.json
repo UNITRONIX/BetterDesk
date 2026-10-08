@@ -4079,6 +4079,7 @@
             "trust_os_hint": "UDP NTP 被阻止时使用 systemd-timesyncd/chrony 状态。",
             "save": "保存 NTP 设置",
             "saved": "时钟设置已保存。已启动 Go 服务器重启。",
+            "saved_hot_reload": "时钟设置已保存，并已在不重启服务的情况下应用。",
             "save_restart": "保存 NTP 并重启 Go 服务器？活动会话可能短暂断开。",
             "status_offset": "偏移",
             "status_server": "NTP 来源",

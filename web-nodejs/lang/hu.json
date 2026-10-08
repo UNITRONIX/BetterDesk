@@ -4085,6 +4085,7 @@
             "trust_os_hint": "Használja a systemd-timesyncd/chrony állapotot, ha az UDP NTP blokkolva van.",
             "save": "NTP beállítások mentése",
             "saved": "Óra beállítások mentve. Go szerver újraindítás elindítva.",
+            "saved_hot_reload": "Az órabeállítások mentve és a szolgáltatás újraindítása nélkül alkalmazva.",
             "save_restart": "Mentse az NTP-t és indítsa újra a Go szervert? Az aktív munkamenetek rövid ideig megszakadhatnak.",
             "status_offset": "Eltérés",
             "status_server": "NTP forrás",

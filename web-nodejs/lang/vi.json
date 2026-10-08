@@ -4085,6 +4085,7 @@
             "trust_os_hint": "Dùng trạng thái systemd-timesyncd/chrony khi UDP NTP bị chặn.",
             "save": "Lưu cài đặt NTP",
             "saved": "Đã lưu cài đặt đồng hồ. Đang khởi động lại máy chủ Go.",
+            "saved_hot_reload": "Đã lưu và áp dụng cài đặt đồng hồ mà không cần khởi động lại dịch vụ.",
             "save_restart": "Lưu NTP và khởi động lại máy chủ Go? Phiên đang hoạt động có thể ngắt tạm thời.",
             "status_offset": "Độ lệch",
             "status_server": "Nguồn NTP",

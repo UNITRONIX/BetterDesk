@@ -4085,6 +4085,7 @@
             "trust_os_hint": "Folosește starea systemd-timesyncd/chrony când UDP NTP este blocat.",
             "save": "Salvează setările NTP",
             "saved": "Setările ceasului salvate. Repornire server Go inițiată.",
+            "saved_hot_reload": "Setările ceasului au fost salvate și aplicate fără repornirea serviciului.",
             "save_restart": "Salvezi NTP și repornești serverul Go? Sesiunile active se pot deconecta scurt.",
             "status_offset": "Abatere",
             "status_server": "Sursă NTP",

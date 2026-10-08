@@ -4085,6 +4085,7 @@
             "trust_os_hint": "Bruk systemd-timesyncd/chrony-status når UDP NTP er blokkert.",
             "save": "Lagre NTP-innstillinger",
             "saved": "Klokkeinnstillinger lagret. Omstart av Go-server startet.",
+            "saved_hot_reload": "Klokkeinnstillingene ble lagret og tatt i bruk uten å starte tjenesten på nytt.",
             "save_restart": "Lagre NTP og start Go-server på nytt? Aktive økter kan kort kobles fra.",
             "status_offset": "Avvik",
             "status_server": "NTP-kilde",

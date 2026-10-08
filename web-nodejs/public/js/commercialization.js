@@ -3,6 +3,7 @@
 (function () {
     const page = document.querySelector('.commercialization-page');
     if (!page) return;
+    let clockDockerMode = false;
 
     function t(key, fallback) {
         if (typeof window.__ === 'function') {
@@ -172,6 +173,7 @@
     async function loadClockSettings() {
         try {
             const data = await api('/api/panel/billing/clock/settings');
+            clockDockerMode = data.dockerMode === true;
             const settings = data.settings || {};
             const serversEl = document.getElementById('clock-ntp-servers');
             const skewEl = document.getElementById('clock-max-skew');
@@ -644,11 +646,13 @@
     });
 
     document.getElementById('btn-save-clock-settings')?.addEventListener('click', async () => {
-        const ok = window.confirm(t(
-            'commercialization.clock.save_restart',
-            'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.'
-        ));
-        if (!ok) return;
+        if (!clockDockerMode) {
+            const ok = window.confirm(t(
+                'commercialization.clock.save_restart',
+                'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.'
+            ));
+            if (!ok) return;
+        }
         try {
             const result = await api('/api/panel/billing/clock/settings', {
                 method: 'PUT',
@@ -659,7 +663,17 @@
                     trust_os_ntp: document.getElementById('clock-trust-os')?.checked !== false
                 }
             });
-            notifySuccess(t('commercialization.clock.saved', 'Clock settings saved. Go server restart initiated.'));
+            if (result?.dockerMode === true) {
+                clockDockerMode = true;
+            }
+            notifySuccess(t(
+                result?.dockerMode === true
+                    ? 'commercialization.clock.saved_hot_reload'
+                    : 'commercialization.clock.saved',
+                result?.dockerMode === true
+                    ? 'Clock settings saved and applied without a service restart.'
+                    : 'Clock settings saved. Go server restart initiated.'
+            ));
             if (result?.restartRequired && window.BetterDeskRestart) {
                 window.BetterDeskRestart.handle(result.restartRequired);
             }

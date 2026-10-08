@@ -4079,6 +4079,7 @@
             "trust_os_hint": "Gebruik systemd-timesyncd/chrony-status wanneer UDP NTP geblokkeerd is.",
             "save": "NTP-instellingen opslaan",
             "saved": "Klokinstellingen opgeslagen. Herstart Go-server gestart.",
+            "saved_hot_reload": "Klokinstellingen zijn opgeslagen en toegepast zonder de service opnieuw te starten.",
             "save_restart": "NTP opslaan en Go-server herstarten? Actieve sessies kunnen kort verbreken.",
             "status_offset": "Offset",
             "status_server": "NTP-bron",

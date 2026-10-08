@@ -4079,6 +4079,7 @@
             "trust_os_hint": "UDP NTPがブロックされている場合は systemd-timesyncd/chrony の状態を使用。",
             "save": "NTP設定を保存",
             "saved": "時計設定を保存しました。Goサーバーの再起動を開始しました。",
+            "saved_hot_reload": "時計設定を保存し、サービスを再起動せずに適用しました。",
             "save_restart": "NTPを保存してGoサーバーを再起動しますか？アクティブなセッションが一時的に切断される場合があります。",
             "status_offset": "オフセット",
             "status_server": "NTPソース",

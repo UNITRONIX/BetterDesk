@@ -4079,6 +4079,7 @@
             "trust_os_hint": "Použít stav systemd-timesyncd/chrony, když je UDP NTP blokováno (DMZ/firewall).",
             "save": "Uložit nastavení NTP",
             "saved": "Nastavení hodin uloženo. Restart Go serveru spuštěn.",
+            "saved_hot_reload": "Nastavení hodin bylo uloženo a použito bez restartu služby.",
             "save_restart": "Uložit NTP a restartovat Go server? Aktivní relace se mohou krátce odpojit.",
             "status_offset": "Odchylka",
             "status_server": "Zdroj NTP",

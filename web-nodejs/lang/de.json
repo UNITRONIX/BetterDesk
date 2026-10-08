@@ -4079,6 +4079,7 @@
             "trust_os_hint": "systemd-timesyncd/chrony-Status nutzen, wenn UDP-NTP blockiert ist (DMZ/Firewall).",
             "save": "NTP-Einstellungen speichern",
             "saved": "Uhreinstellungen gespeichert. Go-Server-Neustart gestartet.",
+            "saved_hot_reload": "Uhreinstellungen wurden gespeichert und ohne Neustart des Dienstes angewendet.",
             "save_restart": "NTP speichern und Go-Server neu starten? Aktive Sitzungen können kurz trennen.",
             "status_offset": "Abweichung",
             "status_server": "NTP-Quelle",

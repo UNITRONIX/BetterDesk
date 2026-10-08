@@ -43,7 +43,11 @@ router.post('/api/panel/billing/timesync/check', requireAuth, requirePermission(
 
 router.get('/api/panel/billing/clock/settings', requireAuth, requirePermission('billing.view'), async (req, res) => {
     try {
-        res.json({ success: true, settings: await billingClockConfig.getRuntimeClockSettings() });
+        res.json({
+            success: true,
+            settings: await billingClockConfig.getRuntimeClockSettings(),
+            dockerMode: billingClockConfig.isDockerSplitDeployment(),
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

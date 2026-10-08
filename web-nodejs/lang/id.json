@@ -4085,6 +4085,7 @@
             "trust_os_hint": "Gunakan status systemd-timesyncd/chrony saat UDP NTP diblokir (DMZ/firewall).",
             "save": "Simpan pengaturan NTP",
             "saved": "Pengaturan jam disimpan. Restart server Go dimulai.",
+            "saved_hot_reload": "Pengaturan jam disimpan dan diterapkan tanpa memulai ulang layanan.",
             "save_restart": "Simpan NTP dan restart server Go? Sesi aktif mungkin terputus sebentar.",
             "status_offset": "Offset",
             "status_server": "Sumber NTP",

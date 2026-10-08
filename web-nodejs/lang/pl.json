@@ -4079,6 +4079,7 @@
             "trust_os_hint": "Użyj statusu systemd-timesyncd/chrony, gdy UDP NTP jest blokowane (DMZ/firewall).",
             "save": "Zapisz ustawienia NTP",
             "saved": "Ustawienia zegara zapisane. Uruchomiono restart serwera Go.",
+            "saved_hot_reload": "Ustawienia zegara zapisano i zastosowano bez restartowania usługi.",
             "save_restart": "Zapisać NTP i zrestartować serwer Go? Aktywne sesje mogą się chwilowo rozłączyć.",
             "status_offset": "Odchylenie",
             "status_server": "Źródło NTP",

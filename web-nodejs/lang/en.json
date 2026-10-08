@@ -4136,6 +4136,7 @@
             "trust_os_hint": "Use systemd-timesyncd/chrony status when UDP NTP to public servers is blocked (DMZ/firewall).",
             "save": "Save NTP settings",
             "saved": "Clock settings saved. Go server restart initiated.",
+            "saved_hot_reload": "Clock settings saved and applied without a service restart.",
             "checked": "Clock check completed",
             "save_restart": "Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.",
             "status_offset": "Offset",

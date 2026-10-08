@@ -4086,6 +4086,7 @@
             "trust_os_hint": "استخدم حالة systemd-timesyncd/chrony عند حظر UDP NTP (DMZ/جدار ناري).",
             "save": "حفظ إعدادات NTP",
             "saved": "تم حفظ إعدادات الساعة. بدء إعادة تشغيل خادم Go.",
+            "saved_hot_reload": "تم حفظ إعدادات الساعة وتطبيقها دون إعادة تشغيل الخدمة.",
             "save_restart": "حفظ إعدادات NTP وإعادة تشغيل خادم Go؟ قد تنقطع الجلسات النشطة briefly.",
             "status_offset": "الانحراف",
             "status_server": "مصدر NTP",

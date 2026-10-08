@@ -4079,6 +4079,7 @@
             "trust_os_hint": "Usar estado systemd-timesyncd/chrony quando UDP NTP estiver bloqueado.",
             "save": "Guardar definições NTP",
             "saved": "Definições de relógio guardadas. Reinício do servidor Go iniciado.",
+            "saved_hot_reload": "As configurações do relógio foram salvas e aplicadas sem reiniciar o serviço.",
             "save_restart": "Guardar NTP e reiniciar o servidor Go? Sessões ativas podem desligar-se brevemente.",
             "status_offset": "Desvio",
             "status_server": "Fonte NTP",

@@ -4085,6 +4085,7 @@
             "trust_os_hint": "Käytä systemd-timesyncd/chrony-tilaa kun UDP NTP on estetty (DMZ/palomuuri).",
             "save": "Tallenna NTP-asetukset",
             "saved": "Kelloasetukset tallennettu. Go-palvelimen uudelleenkäynnistys käynnistetty.",
+            "saved_hot_reload": "Kelloasetukset tallennettiin ja otettiin käyttöön ilman palvelun uudelleenkäynnistystä.",
             "save_restart": "Tallenna NTP ja käynnistä Go-palvelin uudelleen? Aktiiviset istunnot voivat katketa hetkeksi.",
             "status_offset": "Ero",
             "status_server": "NTP-lähde",
