@@ -92,7 +92,9 @@
 ## [3.5.141] — 2026-10-01
 
 ### Changed
-- _(none yet)_
+- **Docker split-entrypoint startup:** load the shared path helpers before
+  server and console checks, removing the `file_exists_as_betterdesk: not found`
+  error reported on 3.5.140 (Refs #437).
 
 ---
 

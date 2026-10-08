@@ -106,14 +106,29 @@ describe('Docker admin bootstrap contract', () => {
         expect(guard).toContain('file_exists_as_betterdesk "$_primary_db"');
     });
 
-    test('split entrypoints source path helpers before using them', () => {
-        for (const entrypoint of ['docker/server-entrypoint.sh', 'docker/console-entrypoint.sh']) {
+    test('Docker entrypoints source path helpers before using them', () => {
+        for (const entrypoint of [
+            'docker/server-entrypoint.sh',
+            'docker/console-entrypoint.sh',
+            'docker/entrypoint.sh',
+        ]) {
             const contents = fs.readFileSync(path.join(repoRoot, entrypoint), 'utf8');
             const bootstrapSource = contents.indexOf('. /docker/bootstrap-admin-credentials.sh');
             const firstHelperUse = contents.indexOf('file_exists_as_betterdesk ');
 
             expect(bootstrapSource).toBeGreaterThanOrEqual(0);
             expect(firstHelperUse === -1 || firstHelperUse > bootstrapSource).toBe(true);
+        }
+    });
+
+    test('Docker entrypoints source bootstrap before the SQLite guard', () => {
+        for (const entrypoint of ['docker/console-entrypoint.sh', 'docker/entrypoint.sh']) {
+            const contents = fs.readFileSync(path.join(repoRoot, entrypoint), 'utf8');
+            const bootstrapSource = contents.indexOf('. /docker/bootstrap-admin-credentials.sh');
+            const guardSource = contents.indexOf('. /docker/guard-sqlite-auth-split.sh');
+
+            expect(bootstrapSource).toBeGreaterThanOrEqual(0);
+            expect(guardSource).toBeGreaterThan(bootstrapSource);
         }
     });
 
