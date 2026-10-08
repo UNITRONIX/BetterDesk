@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -102,15 +103,17 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	remoteAddr := wsEffectiveRemoteAddr(r, s.cfg)
+
 	// Cap message size for video frames (H.265 IDR can exceed the old 8 MiB limit).
 	ws.SetReadLimit(MaxWSRelayMessage)
 
-	wsc := codec.NewWSConn(ws, s.ctx, r.RemoteAddr)
+	wsc := codec.NewWSConn(ws, s.ctx, remoteAddr)
 
 	// Read the first message — must be RequestRelay or HealthCheck
 	msg, err := wsc.ReadMessage()
 	if err != nil {
-		log.Printf("[relay] WS ReadMessage failed from %s: %v", r.RemoteAddr, err)
+		log.Printf("[relay] WS ReadMessage failed from %s: %v", remoteAddr, err)
 		wsc.Close()
 		return
 	}
@@ -123,7 +126,7 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 		if err := wsc.WriteMessage(resp); err != nil {
-			log.Printf("[relay] WS health check response failed to %s: %v", r.RemoteAddr, err)
+			log.Printf("[relay] WS health check response failed to %s: %v", remoteAddr, err)
 		}
 		wsc.Close()
 		return
@@ -131,18 +134,18 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 
 	rr := msg.GetRequestRelay()
 	if rr == nil || rr.Uuid == "" {
-		log.Printf("[relay] WS missing or empty UUID from %s (rejecting)", r.RemoteAddr)
+		log.Printf("[relay] WS missing or empty UUID from %s (rejecting)", remoteAddr)
 		wsc.Close()
 		return
 	}
 
 	uuid := rr.Uuid
-	if !s.claimRelayUUID(uuid, r.RemoteAddr) {
-		log.Printf("[relay] WS unauthorized relay UUID from %s (rejecting)", r.RemoteAddr)
+	if !s.claimRelayUUID(uuid, remoteAddr) {
+		log.Printf("[relay] WS unauthorized relay UUID from %s (rejecting)", remoteAddr)
 		wsc.Close()
 		return
 	}
-	log.Printf("[relay] WS connection from %s for UUID %s", r.RemoteAddr, relayUUIDLogID(uuid))
+	log.Printf("[relay] WS connection from %s for UUID %s", remoteAddr, relayUUIDLogID(uuid))
 
 	// Keep the raw WebSocket for message-preserving bidirectional copy.
 	// Do NOT wrap with websocket.NetConn + io.Copy: NetConn.Write creates a new
@@ -150,11 +153,61 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 	// video frames — clients then fail with decryption error (#293).
 	s.pairIncomingConn(&pendingConn{
 		ws:        ws,
-		remote:    r.RemoteAddr,
+		remote:    remoteAddr,
 		transport: relayTransportWS,
 		created:   timeNow(),
 		done:      make(chan struct{}),
 	}, uuid)
+}
+
+// wsEffectiveRemoteAddr returns the client address for WS relay registration.
+// When TrustProxy is enabled and the direct peer is in TRUSTED_PROXIES, prefer
+// X-Real-IP then the first X-Forwarded-For hop. 
+func wsEffectiveRemoteAddr(r *http.Request, cfg *config.Config) string {
+	if r == nil {
+		return ""
+	}
+	if cfg == nil || !cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
+		return r.RemoteAddr
+	}
+	fwd := strings.TrimSpace(r.Header.Get("X-Real-IP"))
+	if fwd == "" {
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			fwd = strings.TrimSpace(strings.SplitN(xff, ",", 2)[0])
+		}
+	}
+	if fwd == "" {
+		return r.RemoteAddr
+	}
+	return joinForwardedClientAddr(fwd, r.RemoteAddr)
+}
+
+// joinForwardedClientAddr builds a host:port session key from a forwarded
+// client address and the direct RemoteAddr (used for the port when the
+// forwarded value is IP-only). Non-IP hostnames and port 0 are rejected.
+func joinForwardedClientAddr(fwd, remoteAddr string) string {
+	if host, port, err := net.SplitHostPort(fwd); err == nil {
+		if port == "" || port == "0" {
+			return remoteAddr
+		}
+		ip := net.ParseIP(host)
+		if ip == nil {
+			return remoteAddr
+		}
+		return net.JoinHostPort(ip.String(), port)
+	}
+	// Bracketed IPv6 without port: "[2001:db8::1]"
+	if len(fwd) >= 2 && fwd[0] == '[' && fwd[len(fwd)-1] == ']' {
+		fwd = fwd[1 : len(fwd)-1]
+	}
+	if ip := net.ParseIP(fwd); ip != nil {
+		_, port, err := net.SplitHostPort(remoteAddr)
+		if err != nil || port == "" || port == "0" {
+			return remoteAddr
+		}
+		return net.JoinHostPort(ip.String(), port)
+	}
+	return remoteAddr
 }
 
 func isLoopbackOrigin(origin string) bool {
