@@ -55,6 +55,10 @@ class RDClient {
         this.renderer = new RDRenderer(canvas);
         this.input = new RDInput(canvas, this.renderer, (msg) => this._sendPeerMessage(msg));
         this._fileConnection = null;
+        this._file2FAPending = false;
+        this._desktopOTP = null;
+        this._desktopOTPTimer = null;
+        this._autoFile2FATimer = null;
         this._fileTransferRuntimePromise = null;
         this._sessionPassword = '';
         this.fileTransfer = new RDFileTransfer({
@@ -413,20 +417,46 @@ class RDClient {
                     this.fileTransfer.handleSendConfirm(action.sendConfirm);
                 }
             });
-            this._fileConnection.on('2fa_required', () => this._emit('2fa_required'));
-            this._fileConnection.on('2fa_error', (err) => this._emit('2fa_error', err));
-            this._fileConnection.on('login_error', (err) => this._emit('login_error', err));
+            // Keep the desktop authentication event and submit2FA() API contracts.
+            // A file-transfer challenge must be answered on its own relay.
+            const fileConnection = this._fileConnection;
+            const requireFile2FA = (event, error) => {
+                if (this._fileConnection !== fileConnection) return;
+                this._clearAutoFile2FA();
+                this._file2FAPending = true;
+                this._syncInputCapture();
+                if (event === '2fa_required_filetransfer'
+                    && this._tryDesktopOTPForFiles(fileConnection)) return;
+                this._emit(event, error);
+            };
+            this._fileConnection.on('2fa_required',
+                () => requireFile2FA('2fa_required_filetransfer'));
+            this._fileConnection.on('2fa_error',
+                (err) => requireFile2FA('2fa_error_filetransfer', err));
+            this._fileConnection.on('ready', () => {
+                if (this._fileConnection === fileConnection) {
+                    this._finishFile2FA('2fa_success_filetransfer');
+                }
+            });
+            this._fileConnection.on('error', (err) => {
+                if (this._fileConnection !== fileConnection) return;
+                this._finishFile2FA('2fa_cancelled_filetransfer');
+                this._emit('filetransfer_error', err);
+            });
             this._fileConnection.on('disconnected', () => {
-                if (this._fileConnection && this._fileConnection.state !== 'ready') {
+                if (this._fileConnection === fileConnection && fileConnection.state !== 'ready') {
+                    this._finishFile2FA('2fa_cancelled_filetransfer');
                     this._fileConnection = null;
+                    fileConnection.disconnect();
                 }
             });
         }
         if (this._fileConnection.state === 'ready') return;
+        const connectingFile = this._fileConnection;
         try {
-            await this._fileConnection.connect(this._sessionPassword || '');
+            await connectingFile.connect(this._sessionPassword || '');
         } catch (err) {
-            this.disconnectFileConnection();
+            if (this._fileConnection === connectingFile) this.disconnectFileConnection();
             throw err;
         }
     }
@@ -439,9 +469,74 @@ class RDClient {
     }
 
     disconnectFileConnection() {
+        this._clearDesktopOTP();
+        this._finishFile2FA('2fa_cancelled_filetransfer');
         if (this._fileConnection) {
             this._fileConnection.disconnect();
             this._fileConnection = null;
+        }
+    }
+
+    _finishFile2FA(event) {
+        this._clearDesktopOTP();
+        this._clearAutoFile2FA();
+        if (!this._file2FAPending) return;
+        this._file2FAPending = false;
+        this._syncInputCapture();
+        this._emit(event);
+    }
+
+    _clearDesktopOTP() {
+        if (this._desktopOTPTimer) clearTimeout(this._desktopOTPTimer);
+        this._desktopOTPTimer = null;
+        if (this._desktopOTP) this._desktopOTP.code = '';
+        this._desktopOTP = null;
+    }
+
+    _rememberDesktopOTP(code) {
+        this._clearDesktopOTP();
+        const value = String(code || '').trim();
+        if (!/^\d{6}$/.test(value)) return;
+        this._desktopOTP = { code: value, accepted: false, expiresAt: Date.now() + 15000 };
+        this._desktopOTPTimer = setTimeout(() => this._clearDesktopOTP(), 15000);
+    }
+
+    _clearAutoFile2FA() {
+        if (this._autoFile2FATimer) clearTimeout(this._autoFile2FATimer);
+        this._autoFile2FATimer = null;
+    }
+
+    _tryDesktopOTPForFiles(fileConnection) {
+        const otp = this._desktopOTP;
+        if (!otp || !otp.accepted || Date.now() >= otp.expiresAt) {
+            this._clearDesktopOTP();
+            return false;
+        }
+        const code = otp.code;
+        // Consume once, before sending. Never retain an OTP for reconnects.
+        this._clearDesktopOTP();
+        try {
+            fileConnection.submit2FA(code);
+        } catch (_err) {
+            return false;
+        }
+        this._autoFile2FATimer = setTimeout(() => {
+            this._autoFile2FATimer = null;
+            if (this._fileConnection !== fileConnection || !this._file2FAPending) return;
+            // No automatic reply: allow a manual retry on the same file relay.
+            if (fileConnection.state === 'authenticating') fileConnection._setState('waiting_2fa');
+            this._emit('2fa_required_filetransfer');
+        }, 5000);
+        return true;
+    }
+
+    /** Submit a file-transfer OTP without changing the desktop state. */
+    submitFileTransfer2FA(code) {
+        if (!this._file2FAPending || !this._fileConnection) return;
+        try {
+            this._fileConnection.submit2FA(code);
+        } catch (err) {
+            this._emit('2fa_error_filetransfer', err.message || String(err));
         }
     }
 
@@ -503,6 +598,7 @@ class RDClient {
      */
     submit2FA(code) {
         try {
+            if (this._state === 'waiting_2fa') this._rememberDesktopOTP(code);
             this._setState('authenticating');
             this._emit('log', 'Verifying 2FA code...');
 
@@ -510,6 +606,7 @@ class RDClient {
             this._sendPeerMessage(this.proto.buildAuth2FA(code.trim()));
             this._debugRelay('[RDClient] Auth2FA sent');
         } catch (err) {
+            this._clearDesktopOTP();
             this._handleError(err);
         }
     }
@@ -1134,6 +1231,7 @@ class RDClient {
         }).substring(0, 500));
 
         if (resp.error && resp.error.length > 0) {
+            this._clearDesktopOTP();
             this._debugRelay('[RDClient] Login error: ' + resp.error);
 
             // RustDesk peer errors: REQUIRE_2FA = "2FA Required", LOGIN_MSG_2FA_WRONG = "Wrong 2FA Code"
@@ -1156,6 +1254,7 @@ class RDClient {
         }
 
         // Login successful
+        if (this._desktopOTP) this._desktopOTP.accepted = true;
         this._peerInfo = resp.peerInfo || null;
         this._debugRelay('[RDClient] Login successful, peerInfo:', this._peerInfo ? 'present' : 'null');
         this._processPeerInfo(this._peerInfo);
@@ -1640,12 +1739,12 @@ class RDClient {
             this._adaptiveInterval = null;
         }
 
+        this.disconnectFileConnection();
         this.input.stop();
         this.renderer.stopRenderLoop();
         this.video.close();
         this.audio.close();
         this.fileTransfer.disable();
-        this.disconnectFileConnection();
         this._sessionPassword = '';
         this.conn.close();
         this._codecFallbackDone = false;
@@ -2326,7 +2425,8 @@ class RDClient {
 
     /** @private Sync input listeners with session/tab and view-only state */
     _syncInputCapture() {
-        const shouldCapture = this._sessionActive && !this._viewOnly && this._state === 'streaming';
+        const shouldCapture = this._sessionActive && !this._viewOnly
+            && !this._file2FAPending && this._state === 'streaming';
         if (shouldCapture) {
             this.input.start();
         } else {
