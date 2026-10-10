@@ -208,6 +208,32 @@ func RoleHasPermission(role, permission string) bool {
 	return perms[permission]
 }
 
+// OverrideLookup reports a stored permission override for a role: (granted, nil)
+// when a row exists, or a non-nil error when there is none.
+type OverrideLookup func(role, permission string) (bool, error)
+
+// EffectiveRoleHasPermission resolves a permission the same way the API
+// middleware does: hard pro/device blocks, then super-admin bypass, then a DB
+// override when one exists, then the built-in defaults. Custom roles have no
+// defaults, so they only hold permissions granted through overrides.
+func EffectiveRoleHasPermission(lookup OverrideLookup, role, permission string) bool {
+	if IsDeviceRole(role) {
+		return false
+	}
+	if IsProRole(role) && ProRoleBlocksPermission(permission) {
+		return false
+	}
+	if IsSuperAdminRole(role) {
+		return true
+	}
+	if lookup != nil {
+		if granted, err := lookup(role, permission); err == nil {
+			return granted
+		}
+	}
+	return RoleHasPermission(role, permission)
+}
+
 // ValidPermission returns true if the given string is a recognized permission.
 func ValidPermission(p string) bool {
 	for _, v := range AllPermissions {

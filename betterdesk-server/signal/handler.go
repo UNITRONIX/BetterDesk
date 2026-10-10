@@ -2465,7 +2465,7 @@ func (s *Server) authorizeViaClientToken(token string, raddr *net.UDPAddr, targe
 			})
 			return "", false
 		}
-		if !auth.RoleHasPermission(user.Role, auth.PermDeviceConnect) {
+		if !auth.EffectiveRoleHasPermission(s.db.HasRolePermission, user.Role, auth.PermDeviceConnect) {
 			s.logUnauthorizedInitiatorDetails(raddr, sess.ClientID, targetID, "initiator_role_denied", map[string]string{
 				"username": user.Username,
 				"role":     user.Role,

@@ -248,7 +248,7 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 	users, err := s.db.ListUsers()
 	if err == nil {
 		for _, u := range users {
-			if auth.RoleHasPermission(u.Role, auth.PermChatAccess) {
+			if s.roleHasPermission(u.Role, auth.PermChatAccess) {
 				contacts = append(contacts, contact{
 					ID:          "operator:" + u.Username,
 					Name:        u.Username,
