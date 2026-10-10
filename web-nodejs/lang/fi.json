@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Mukautetut roolit",
+        "role_desc_custom": "Mukautettu rooli. Sen oikeudet määritetään Oikeudet-sivulla."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Hyväksy ilmoittautuminen",
         "perm_chat_access": "Chat-pääsy",
         "perm_branding_edit": "Muokkaa brändäystä",
-        "perm_server_attestation": "Palvelimen suorituskykytodistus"
+        "perm_server_attestation": "Palvelimen suorituskykytodistus",
+        "create_role": "Luo rooli",
+        "delete_role": "Poista rooli",
+        "custom_roles": "Mukautetut roolit",
+        "builtin_roles": "Sisäänrakennetut roolit",
+        "role_name": "Roolin nimi",
+        "role_name_hint": "2-32 pientä kirjainta, numeroa tai alaviivaa, alkaen kirjaimella.",
+        "role_description": "Kuvaus",
+        "copy_from": "Pohjana",
+        "copy_from_none": "Ei oikeuksia",
+        "role_created": "Rooli luotu",
+        "role_deleted": "Rooli poistettu",
+        "confirm_delete_role": "Poistetaanko tämä mukautettu rooli? Roolin käyttäjät on ensin siirrettävä toiseen rooliin.",
+        "invalid_role_name": "Virheellinen roolin nimi",
+        "description_too_long": "Kuvaus on liian pitkä",
+        "custom_role_tag": "Mukautettu rooli",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Laskutus",
+        "cat_other": "Muut"
     },
     "notifications": {
         "title": "Ilmoitukset",

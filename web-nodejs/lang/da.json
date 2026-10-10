@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Brugerdefinerede roller",
+        "role_desc_custom": "Brugerdefineret rolle. Dens tilladelser konfigureres på siden Tilladelser."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Godkend tilmelding",
         "perm_chat_access": "Chatadgang",
         "perm_branding_edit": "Rediger branding",
-        "perm_server_attestation": "Serverydelsesattest"
+        "perm_server_attestation": "Serverydelsesattest",
+        "create_role": "Opret rolle",
+        "delete_role": "Slet rolle",
+        "custom_roles": "Brugerdefinerede roller",
+        "builtin_roles": "Indbyggede roller",
+        "role_name": "Rollenavn",
+        "role_name_hint": "2-32 små bogstaver, tal eller understregninger, der starter med et bogstav.",
+        "role_description": "Beskrivelse",
+        "copy_from": "Start fra",
+        "copy_from_none": "Ingen tilladelser",
+        "role_created": "Rolle oprettet",
+        "role_deleted": "Rolle slettet",
+        "confirm_delete_role": "Slet denne brugerdefinerede rolle? Brugere med rollen skal først flyttes til en anden rolle.",
+        "invalid_role_name": "Ugyldigt rollenavn",
+        "description_too_long": "Beskrivelsen er for lang",
+        "custom_role_tag": "Brugerdefineret rolle",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Fakturering",
+        "cat_other": "Andet"
     },
     "notifications": {
         "title": "Meddelelser",

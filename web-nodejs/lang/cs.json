@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Vlastní role",
+        "role_desc_custom": "Vlastní role. Její oprávnění se nastavují na stránce Oprávnění."
     },
     "folders": {
         "title": "Složky",
@@ -3837,7 +3839,25 @@
         "perm_enrollment_approve": "Schvalovat registrace",
         "perm_chat_access": "Přístup k chatu",
         "perm_branding_edit": "Upravit branding",
-        "perm_server_attestation": "Atest wydajnosci servera"
+        "perm_server_attestation": "Atest wydajnosci servera",
+        "create_role": "Vytvořit roli",
+        "delete_role": "Smazat roli",
+        "custom_roles": "Vlastní role",
+        "builtin_roles": "Vestavěné role",
+        "role_name": "Název role",
+        "role_name_hint": "2-32 malých písmen, číslic nebo podtržítek, začínající písmenem.",
+        "role_description": "Popis",
+        "copy_from": "Vycházet z",
+        "copy_from_none": "Žádná oprávnění",
+        "role_created": "Role vytvořena",
+        "role_deleted": "Role smazána",
+        "confirm_delete_role": "Smazat tuto vlastní roli? Uživatele s touto rolí je nejprve nutné přesunout do jiné role.",
+        "invalid_role_name": "Neplatný název role",
+        "description_too_long": "Popis je příliš dlouhý",
+        "custom_role_tag": "Vlastní role",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Fakturace",
+        "cat_other": "Ostatní"
     },
     "notifications": {
         "title": "Oznámení",

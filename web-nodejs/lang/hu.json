@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Egyéni szerepkörök",
+        "role_desc_custom": "Egyéni szerepkör. Jogosultságai a Jogosultságok oldalon állíthatók be."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Beiratkozás jóváhagyása",
         "perm_chat_access": "Chat hozzáférés",
         "perm_branding_edit": "Márkajelzés szerkesztése",
-        "perm_server_attestation": "Szerver teljesítmény tanúsítás"
+        "perm_server_attestation": "Szerver teljesítmény tanúsítás",
+        "create_role": "Szerepkör létrehozása",
+        "delete_role": "Szerepkör törlése",
+        "custom_roles": "Egyéni szerepkörök",
+        "builtin_roles": "Beépített szerepkörök",
+        "role_name": "Szerepkör neve",
+        "role_name_hint": "2-32 kisbetű, számjegy vagy aláhúzás, betűvel kezdve.",
+        "role_description": "Leírás",
+        "copy_from": "Kiindulás",
+        "copy_from_none": "Nincs jogosultság",
+        "role_created": "Szerepkör létrehozva",
+        "role_deleted": "Szerepkör törölve",
+        "confirm_delete_role": "Törli ezt az egyéni szerepkört? A hozzárendelt felhasználókat előbb másik szerepkörbe kell áthelyezni.",
+        "invalid_role_name": "Érvénytelen szerepkörnév",
+        "description_too_long": "A leírás túl hosszú",
+        "custom_role_tag": "Egyéni szerepkör",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Számlázás",
+        "cat_other": "Egyéb"
     },
     "notifications": {
         "title": "Értesítések",

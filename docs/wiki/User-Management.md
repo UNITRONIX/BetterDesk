@@ -40,6 +40,8 @@ super_admin / admin     → everything
 | **pro** | Client API (port 21121) only — no panel permissions |
 
 Custom overrides are stored in the `role_permissions` table (grant or revoke individual permissions per role).
+You can also create **custom roles** on the Permissions page and hide users from any role by
+revoking `user.view`. See [[Organizations and RBAC|Organizations-and-RBAC]].
 
 ---
 

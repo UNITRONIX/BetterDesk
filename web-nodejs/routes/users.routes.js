@@ -13,7 +13,8 @@ const userSync = require('../services/userSync');
 const userScopeService = require('../services/userScopeService');
 const deviceGroupService = require('../services/deviceGroupService');
 const serverBackend = require('../services/serverBackend');
-const { requireAuth, requirePermission, roleHasPermission, isSuperAdminRole } = require('../middleware/auth');
+const { requireAuth, requirePermission, requireAnyPermission, isSuperAdminRole } = require('../middleware/auth');
+const rolePermissionStore = require('../services/rolePermissionStore');
 const { passwordChangeLimiter } = require('../middleware/rateLimiter');
 
 // ---------------------------------------------------------------------------
@@ -265,9 +266,22 @@ const VALID_USER_ROLES = new Set([
 ]);
 
 /**
+ * Built-in role or a custom role defined on the Permissions page. Refreshes the
+ * custom-role cache once on a miss so a role created on another console
+ * instance is accepted without waiting for the periodic refresh.
+ */
+async function isAssignableRole(role) {
+    if (typeof role !== 'string' || !role) return false;
+    if (VALID_USER_ROLES.has(role) || rolePermissionStore.isCustomRole(role)) return true;
+    await rolePermissionStore.refresh();
+    return rolePermissionStore.isCustomRole(role);
+}
+
+/**
  * Mirrors betterdesk-server/auth.CanAssignRole. The role hierarchy is
  * branched: global_admin is not permitted to create or promote server-level
- * roles, even though it can manage users.
+ * roles, even though it can manage users. Custom roles can be granted any
+ * permission, so only super admins may assign them.
  */
 function canAssignUserRole(callerRole, targetRole) {
     if (isSuperAdminRole(callerRole)) return true;
@@ -284,14 +298,6 @@ function rejectUnauthorizedRoleAssignment(res) {
         success: false,
         error: 'Cannot assign a role higher than your own',
     });
-}
-
-function requireAnyPermission(...permissions) {
-    return function(req, res, next) {
-        const role = req.session && req.session.user && req.session.user.role;
-        if (permissions.some(permission => roleHasPermission(role, permission))) return next();
-        return res.status(403).json({ success: false, error: `Permission denied: ${permissions.join(' or ')}` });
-    };
 }
 
 /**
@@ -467,7 +473,16 @@ router.post('/api/users', requireAuth, requirePermission('user.create'), passwor
         // Validate role (7-role hierarchy — Phase 52) and apply the same
         // branched assignment boundaries as the Go API before any local write
         // or asynchronous user sync.
-        const userRole = VALID_USER_ROLES.has(role) ? role : 'viewer';
+        let userRole = 'viewer';
+        if (role) {
+            if (!await isAssignableRole(role)) {
+                return res.status(400).json({
+                    success: false,
+                    error: req.t('users.invalid_role')
+                });
+            }
+            userRole = role;
+        }
         if (!canAssignUserRole(req.session.user?.role, userRole)) {
             return rejectUnauthorizedRoleAssignment(res);
         }
@@ -578,7 +593,7 @@ router.patch('/api/users/:id', requireAuth, requirePermission('user.edit'), asyn
         
         // Update role if provided
         if (role) {
-            if (!VALID_USER_ROLES.has(role)) {
+            if (!await isAssignableRole(role)) {
                 return res.status(400).json({
                     success: false,
                     error: req.t('users.invalid_role')

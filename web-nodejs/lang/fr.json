@@ -1212,7 +1212,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Rôles personnalisés",
+        "role_desc_custom": "Rôle personnalisé. Ses permissions se configurent sur la page Permissions."
     },
     "folders": {
         "title": "Tableau de bord",
@@ -2641,7 +2643,25 @@
         "perm_enrollment_manage": "Manage enrollment",
         "perm_enrollment_approve": "Approve enrollment",
         "perm_chat_access": "Chat access",
-        "perm_branding_edit": "Edit branding"
+        "perm_branding_edit": "Edit branding",
+        "create_role": "Créer un rôle",
+        "delete_role": "Supprimer le rôle",
+        "custom_roles": "Rôles personnalisés",
+        "builtin_roles": "Rôles intégrés",
+        "role_name": "Nom du rôle",
+        "role_name_hint": "2 à 32 lettres minuscules, chiffres ou tirets bas, en commençant par une lettre.",
+        "role_description": "Description",
+        "copy_from": "Partir de",
+        "copy_from_none": "Aucune permission",
+        "role_created": "Rôle créé",
+        "role_deleted": "Rôle supprimé",
+        "confirm_delete_role": "Supprimer ce rôle personnalisé ? Les utilisateurs qui l'ont doivent d'abord être déplacés vers un autre rôle.",
+        "invalid_role_name": "Nom de rôle invalide",
+        "description_too_long": "La description est trop longue",
+        "custom_role_tag": "Rôle personnalisé",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Facturation",
+        "cat_other": "Autres"
     },
     "tokens": {
         "title": "Tableau de bord",

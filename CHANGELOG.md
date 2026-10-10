@@ -1,7 +1,13 @@
 ## [Unreleased]
 
-### Changed
-- _(none yet)_
+### Added
+- **Custom roles:** The Permissions page can create, describe and delete custom server roles alongside the built-in ones. A custom role starts empty or from a copy of an existing role's effective permissions, its permissions are toggled like any other role, and only super admins can assign it to users. Roles still assigned to users cannot be deleted. New Go endpoints: `POST /api/roles`, `PATCH /api/roles/{role}`, `DELETE /api/roles/{role}`; new `custom_roles` table (additive on SQLite and PostgreSQL).
+
+### Fixed
+- **Permission overrides now apply in the web console:** Toggling a permission on the Permissions page (for example revoking `user.view` to hide users from a role) previously only affected the Go API; the console's routes, sidebar and WebSocket relays kept using the built-in defaults. The console now mirrors overrides and custom roles from the Go server (refreshed every 30 seconds and immediately after each change).
+- **Go permission checks honour overrides everywhere:** Users-list visibility in the RustDesk client API, peer/group listings, chat contacts and operator-only signalling now resolve permissions through DB overrides instead of built-in defaults only.
+- **Organization member visibility:** Console org endpoints proxied with the API key no longer expose every organization and member list to any logged-in user. Non-admins see only organizations they belong to; member lists show everyone only to roles with `user.view` or `org.manage_users` and to org owners/admins, other members see only themselves. The Go `GET /api/org` list now also returns all orgs to `super_admin` and `global_admin` JWTs.
+- **Custom role sync:** User mirroring between the console and the Go server keeps custom role names instead of downgrading them to `viewer`.
 
 ---
 

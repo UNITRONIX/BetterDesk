@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Peran kustom",
+        "role_desc_custom": "Peran kustom. Izinnya diatur di halaman Izin."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Menyetujui pendaftaran",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Sunting merek",
-        "perm_server_attestation": "Sertifikasi kinerja server"
+        "perm_server_attestation": "Sertifikasi kinerja server",
+        "create_role": "Buat peran",
+        "delete_role": "Hapus peran",
+        "custom_roles": "Peran kustom",
+        "builtin_roles": "Peran bawaan",
+        "role_name": "Nama peran",
+        "role_name_hint": "2-32 huruf kecil, angka, atau garis bawah, diawali huruf.",
+        "role_description": "Deskripsi",
+        "copy_from": "Mulai dari",
+        "copy_from_none": "Tanpa izin",
+        "role_created": "Peran dibuat",
+        "role_deleted": "Peran dihapus",
+        "confirm_delete_role": "Hapus peran kustom ini? Pengguna dengan peran ini harus dipindahkan ke peran lain terlebih dahulu.",
+        "invalid_role_name": "Nama peran tidak valid",
+        "description_too_long": "Deskripsi terlalu panjang",
+        "custom_role_tag": "Peran kustom",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Penagihan",
+        "cat_other": "Lainnya"
     },
     "notifications": {
         "title": "Pemberitahuan",

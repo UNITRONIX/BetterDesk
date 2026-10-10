@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Özel roller",
+        "role_desc_custom": "Özel rol. İzinleri İzinler sayfasında yapılandırılır."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Kaydı onayla",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Markalamayı düzenle",
-        "perm_server_attestation": "Sunucu performans onayı"
+        "perm_server_attestation": "Sunucu performans onayı",
+        "create_role": "Rol oluştur",
+        "delete_role": "Rolü sil",
+        "custom_roles": "Özel roller",
+        "builtin_roles": "Yerleşik roller",
+        "role_name": "Rol adı",
+        "role_name_hint": "Harfle başlayan 2-32 küçük harf, rakam veya alt çizgi.",
+        "role_description": "Açıklama",
+        "copy_from": "Başlangıç",
+        "copy_from_none": "İzin yok",
+        "role_created": "Rol oluşturuldu",
+        "role_deleted": "Rol silindi",
+        "confirm_delete_role": "Bu özel rol silinsin mi? Bu role atanmış kullanıcılar önce başka bir role taşınmalıdır.",
+        "invalid_role_name": "Geçersiz rol adı",
+        "description_too_long": "Açıklama çok uzun",
+        "custom_role_tag": "Özel rol",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Faturalama",
+        "cat_other": "Diğer"
     },
     "notifications": {
         "title": "Bildirimler",

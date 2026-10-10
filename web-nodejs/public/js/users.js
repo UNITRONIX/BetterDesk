@@ -16,6 +16,8 @@
     let foldersLoaded = false;
     let strategies = [];
     let strategiesLoaded = false;
+    // Custom roles from the Permissions page: [{ name, description }]
+    let customRoles = [];
     let editingUserId = null;
     // Cache: userId -> [{ id, org_id, name, org_name, role }]
     const userOrgsCache = new Map();
@@ -31,6 +33,7 @@
         loadUserGroups();
         loadFolders();
         loadStrategies();
+        loadCustomRoles();
         loadUsers();
         initEventListeners();
         focusUserGroupsFromHash();
@@ -203,8 +206,49 @@
         const role = document.getElementById('user-role')?.value || 'viewer';
         const descEl = document.getElementById('user-role-desc');
         if (!descEl) return;
+        const custom = customRoles.find(r => r.name === role);
+        if (custom) {
+            descEl.textContent = custom.description || _('users.role_desc_custom');
+            return;
+        }
         const key = ROLE_DESC_KEYS[role];
         descEl.textContent = key ? (_(key) || '') : '';
+    }
+
+    /** Translated built-in role label, or the raw name for custom roles. */
+    function roleLabel(role) {
+        const key = 'users.role_' + role;
+        const label = _(key);
+        return label && label !== key ? label : String(role || '');
+    }
+
+    async function loadCustomRoles() {
+        try {
+            const resp = await Utils.api('/api/panel/roles');
+            const data = resp && resp.data ? resp.data : resp;
+            customRoles = (data && Array.isArray(data.roles) ? data.roles : [])
+                .filter(r => r && r.is_custom)
+                .map(r => ({ name: r.name, description: r.description || '' }));
+            if (users.length) renderUsers();
+        } catch (_err) {
+            customRoles = [];
+        }
+    }
+
+    /** Add custom roles to the role select inside the open user modal. */
+    function appendCustomRoleOptions() {
+        const select = document.getElementById('user-role');
+        if (!select || !customRoles.length || select.querySelector('optgroup[data-custom-roles]')) return;
+        const group = document.createElement('optgroup');
+        group.label = _('users.custom_roles');
+        group.dataset.customRoles = '1';
+        for (const role of customRoles) {
+            const opt = document.createElement('option');
+            opt.value = role.name;
+            opt.textContent = role.name;
+            group.appendChild(opt);
+        }
+        select.appendChild(group);
     }
 
     async function loadEffectiveScopeCounts() {
@@ -423,7 +467,6 @@
                 pro: 'star'
             };
             const roleIcon = roleIcons[user.role] || 'person';
-            const roleLabelKey = 'users.role_' + user.role;
             const provider = (user.auth_provider || 'local').toLowerCase();
             const providerLabel = _('users.provider_' + provider) || provider;
             const isLocal = provider === 'local';
@@ -443,7 +486,7 @@
                 <td>${user.email ? Utils.escapeHtml(user.email) : '<span class="text-muted">—</span>'}</td>
                 <td>
                     <span class="role-badge ${String(user.role || '').replace(/[^a-z0-9_-]/gi, '')}">
-                        ${Utils.escapeHtml(_(roleLabelKey))}
+                        ${Utils.escapeHtml(roleLabel(user.role))}
                     </span>
                 </td>
                 <td>
@@ -629,6 +672,8 @@
      * Initialize form listeners
      */
     function initFormListeners() {
+        appendCustomRoleOptions();
+
         // Password visibility toggle
         document.querySelector('.toggle-password')?.addEventListener('click', function() {
             const input = document.getElementById('user-password');

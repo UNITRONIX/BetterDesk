@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "कस्टम भूमिकाएं",
+        "role_desc_custom": "कस्टम भूमिका। इसकी अनुमतियां अनुमतियां पृष्ठ पर सेट की जाती हैं।"
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "नामांकन स्वीकृत करें",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "ब्रांडिंग संपादित करें",
-        "perm_server_attestation": "सर्वर प्रदर्शन प्रमाणीकरण"
+        "perm_server_attestation": "सर्वर प्रदर्शन प्रमाणीकरण",
+        "create_role": "भूमिका बनाएं",
+        "delete_role": "भूमिका हटाएं",
+        "custom_roles": "कस्टम भूमिकाएं",
+        "builtin_roles": "अंतर्निहित भूमिकाएं",
+        "role_name": "भूमिका का नाम",
+        "role_name_hint": "अक्षर से शुरू होने वाले 2-32 छोटे अक्षर, अंक या अंडरस्कोर।",
+        "role_description": "विवरण",
+        "copy_from": "इससे शुरू करें",
+        "copy_from_none": "कोई अनुमति नहीं",
+        "role_created": "भूमिका बनाई गई",
+        "role_deleted": "भूमिका हटाई गई",
+        "confirm_delete_role": "यह कस्टम भूमिका हटाएं? इस भूमिका वाले उपयोगकर्ताओं को पहले किसी दूसरी भूमिका में ले जाना होगा।",
+        "invalid_role_name": "अमान्य भूमिका नाम",
+        "description_too_long": "विवरण बहुत लंबा है",
+        "custom_role_tag": "कस्टम भूमिका",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "बिलिंग",
+        "cat_other": "अन्य"
     },
     "notifications": {
         "title": "सूचनाएं",

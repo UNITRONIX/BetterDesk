@@ -1216,7 +1216,9 @@
         "all_orgs_assigned": "User is already a member of every organization.",
         "email": "Email",
         "email_placeholder": "operator@example.com",
-        "email_hint": "Used for help request notifications when the user is assigned to device folders or groups."
+        "email_hint": "Used for help request notifications when the user is assigned to device folders or groups.",
+        "custom_roles": "Custom roles",
+        "role_desc_custom": "Custom role. Its permissions are configured on the Permissions page."
     },
     "folders": {
         "title": "Folders",
@@ -2683,7 +2685,25 @@
         "perm_enrollment_manage": "Manage enrollment",
         "perm_enrollment_approve": "Approve enrollment",
         "perm_chat_access": "Chat access",
-        "perm_branding_edit": "Edit branding"
+        "perm_branding_edit": "Edit branding",
+        "create_role": "Create role",
+        "delete_role": "Delete role",
+        "custom_roles": "Custom roles",
+        "builtin_roles": "Built-in roles",
+        "role_name": "Role name",
+        "role_name_hint": "2-32 lowercase letters, digits or underscores, starting with a letter.",
+        "role_description": "Description",
+        "copy_from": "Start from",
+        "copy_from_none": "No permissions",
+        "role_created": "Role created",
+        "role_deleted": "Role deleted",
+        "confirm_delete_role": "Delete this custom role? Users assigned to it must be moved to another role first.",
+        "invalid_role_name": "Invalid role name",
+        "description_too_long": "Description is too long",
+        "custom_role_tag": "Custom role",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Billing",
+        "cat_other": "Other"
     },
     "tokens": {
         "title": "Device Tokens",

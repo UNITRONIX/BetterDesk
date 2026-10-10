@@ -371,6 +371,56 @@ describe('Users Routes', () => {
         expect(mockUserSync.mirrorUpdate).not.toHaveBeenCalled();
     });
 
+    describe('custom roles', () => {
+        const rolePermissionStore = require('../services/rolePermissionStore');
+
+        beforeEach(() => {
+            rolePermissionStore.setState({ roles: [{ name: 'helpdesk', is_custom: true }] });
+        });
+
+        afterAll(() => rolePermissionStore.reset());
+
+        it('lets super_admin create a user with a custom role', async () => {
+            mockDb.createUser.mockResolvedValue({ id: 23, username: 'helper1', role: 'helpdesk' });
+            const app = createTestApp();
+            withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+            app.use(usersRoutes);
+
+            const res = await request(app)
+                .post('/api/users')
+                .send({ username: 'helper1', password: 'StrongPass123!', role: 'helpdesk' });
+
+            expect(res.status).toBe(200);
+            expect(mockDb.createUser.mock.calls[0][2]).toBe('helpdesk');
+        });
+
+        it('does not let global_admin assign a custom role', async () => {
+            mockDb.getUserById.mockResolvedValue({ id: 12, username: 'operator1', role: 'operator', auth_provider: 'local' });
+            const app = createTestApp();
+            withAuth(app, { id: 1, username: 'global-admin', role: 'global_admin' });
+            app.use(usersRoutes);
+
+            const res = await request(app).patch('/api/users/12').send({ role: 'helpdesk' });
+
+            expect(res.status).toBe(403);
+            expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+        });
+
+        it('rejects roles that do not exist', async () => {
+            const app = createTestApp();
+            withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+            app.use(usersRoutes);
+
+            const res = await request(app)
+                .post('/api/users')
+                .send({ username: 'ghost1', password: 'StrongPass123!', role: 'no_such_role' });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toBe('users.invalid_role');
+            expect(mockDb.createUser).not.toHaveBeenCalled();
+        });
+    });
+
     it('maps unique username constraint errors to username_exists', async () => {
         const uniqueErr = new Error('duplicate key value violates unique constraint "users_username_key"');
         uniqueErr.code = '23505';

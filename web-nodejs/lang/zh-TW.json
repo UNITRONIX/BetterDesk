@@ -1212,7 +1212,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "自訂角色",
+        "role_desc_custom": "自訂角色。其權限在「權限」頁面中設定。"
     },
     "folders": {
         "title": "文件夾",
@@ -2641,7 +2643,25 @@
         "perm_enrollment_manage": "管理註冊",
         "perm_enrollment_approve": "審批註冊",
         "perm_chat_access": "聊天訪問",
-        "perm_branding_edit": "編輯品牌"
+        "perm_branding_edit": "編輯品牌",
+        "create_role": "建立角色",
+        "delete_role": "刪除角色",
+        "custom_roles": "自訂角色",
+        "builtin_roles": "內建角色",
+        "role_name": "角色名稱",
+        "role_name_hint": "2-32 個小寫字母、數字或底線，以字母開頭。",
+        "role_description": "描述",
+        "copy_from": "基於",
+        "copy_from_none": "無權限",
+        "role_created": "角色已建立",
+        "role_deleted": "角色已刪除",
+        "confirm_delete_role": "刪除此自訂角色？必須先將指派了該角色的使用者移到其他角色。",
+        "invalid_role_name": "角色名稱無效",
+        "description_too_long": "描述過長",
+        "custom_role_tag": "自訂角色",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "計費",
+        "cat_other": "其他"
     },
     "tokens": {
         "title": "設備令牌",

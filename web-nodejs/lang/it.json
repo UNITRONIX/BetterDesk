@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Ruoli personalizzati",
+        "role_desc_custom": "Ruolo personalizzato. I suoi permessi si configurano nella pagina Permessi."
     },
     "folders": {
         "title": "Cartelle",
@@ -3837,7 +3839,25 @@
         "perm_enrollment_approve": "Approvare registrazioni",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Modificare branding",
-        "perm_server_attestation": "Attestazione prestazioni du serveur"
+        "perm_server_attestation": "Attestazione prestazioni du serveur",
+        "create_role": "Crea ruolo",
+        "delete_role": "Elimina ruolo",
+        "custom_roles": "Ruoli personalizzati",
+        "builtin_roles": "Ruoli predefiniti",
+        "role_name": "Nome ruolo",
+        "role_name_hint": "Da 2 a 32 lettere minuscole, cifre o trattini bassi, iniziando con una lettera.",
+        "role_description": "Descrizione",
+        "copy_from": "Parti da",
+        "copy_from_none": "Nessun permesso",
+        "role_created": "Ruolo creato",
+        "role_deleted": "Ruolo eliminato",
+        "confirm_delete_role": "Eliminare questo ruolo personalizzato? Gli utenti assegnati devono prima essere spostati su un altro ruolo.",
+        "invalid_role_name": "Nome ruolo non valido",
+        "description_too_long": "La descrizione è troppo lunga",
+        "custom_role_tag": "Ruolo personalizzato",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Fatturazione",
+        "cat_other": "Altro"
     },
     "notifications": {
         "title": "Notifiche",
