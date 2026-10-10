@@ -1208,7 +1208,9 @@
         "pro_strategy_label": "Strategia RustDesk Pro",
         "pro_strategy_hint": "Opcjonalna strategia kontroli dostępu dla funkcji Pro w kliencie (osobno od roli panelu).",
         "pro_strategy_none": "Brak",
-        "column_scope": "Zakres"
+        "column_scope": "Zakres",
+        "custom_roles": "Role własne",
+        "role_desc_custom": "Rola własna. Jej uprawnienia konfiguruje się na stronie Uprawnienia."
     },
     "folders": {
         "title": "Foldery",
@@ -2637,7 +2639,25 @@
         "perm_enrollment_manage": "Zarządzanie rejestracją",
         "perm_enrollment_approve": "Zatwierdzanie rejestracji",
         "perm_chat_access": "Dostęp do czatu",
-        "perm_branding_edit": "Edycja brandingu"
+        "perm_branding_edit": "Edycja brandingu",
+        "create_role": "Utwórz rolę",
+        "delete_role": "Usuń rolę",
+        "custom_roles": "Role własne",
+        "builtin_roles": "Role wbudowane",
+        "role_name": "Nazwa roli",
+        "role_name_hint": "2-32 małe litery, cyfry lub podkreślenia, zaczynając od litery.",
+        "role_description": "Opis",
+        "copy_from": "Zacznij od",
+        "copy_from_none": "Brak uprawnień",
+        "role_created": "Rola utworzona",
+        "role_deleted": "Rola usunięta",
+        "confirm_delete_role": "Usunąć tę rolę własną? Użytkowników przypisanych do niej trzeba najpierw przenieść do innej roli.",
+        "invalid_role_name": "Nieprawidłowa nazwa roli",
+        "description_too_long": "Opis jest za długi",
+        "custom_role_tag": "Rola własna",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Rozliczenia",
+        "cat_other": "Inne"
     },
     "tokens": {
         "title": "Tokeny urządzeń",

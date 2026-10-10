@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Roluri personalizate",
+        "role_desc_custom": "Rol personalizat. Permisiunile lui se configurează pe pagina Permisiuni."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Aprobați înscrierea",
         "perm_chat_access": "Acces chat",
         "perm_branding_edit": "Editați brandingul",
-        "perm_server_attestation": "Atestare performanță server"
+        "perm_server_attestation": "Atestare performanță server",
+        "create_role": "Creează rol",
+        "delete_role": "Șterge rolul",
+        "custom_roles": "Roluri personalizate",
+        "builtin_roles": "Roluri predefinite",
+        "role_name": "Numele rolului",
+        "role_name_hint": "2-32 litere mici, cifre sau liniuțe de subliniere, începând cu o literă.",
+        "role_description": "Descriere",
+        "copy_from": "Pornește de la",
+        "copy_from_none": "Fără permisiuni",
+        "role_created": "Rol creat",
+        "role_deleted": "Rol șters",
+        "confirm_delete_role": "Ștergeți acest rol personalizat? Utilizatorii care îl au trebuie mutați mai întâi într-un alt rol.",
+        "invalid_role_name": "Nume de rol invalid",
+        "description_too_long": "Descrierea este prea lungă",
+        "custom_role_tag": "Rol personalizat",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Facturare",
+        "cat_other": "Altele"
     },
     "notifications": {
         "title": "Notificări",

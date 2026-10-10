@@ -102,6 +102,15 @@ type RolePermission struct {
 	Granted    bool   `json:"granted"`    // true = allowed, false = denied
 }
 
+// CustomRole is an operator-defined server role. Unlike built-in roles it has
+// no default permissions: every grant is a row in role_permissions.
+type CustomRole struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreatedBy   string `json:"created_by"`
+	CreatedAt   string `json:"created_at"`
+}
+
 // ClientSession represents a RustDesk desktop client login session (opaque bearer token).
 type ClientSession struct {
 	ID         int64  `json:"id"`
@@ -720,6 +729,14 @@ type Database interface {
 	SetRolePermission(role, permission string, granted bool) error
 	DeleteRolePermission(role, permission string) error
 	HasRolePermission(role, permission string) (bool, error)
+
+	// Custom roles (operator-defined, permissions stored in role_permissions)
+	ListCustomRoles() ([]*CustomRole, error)
+	GetCustomRole(name string) (*CustomRole, error)
+	CreateCustomRole(role *CustomRole, permissions []string) error
+	UpdateCustomRole(name, description string) error
+	DeleteCustomRole(name string) error
+	CountUsersWithRole(role string) (int, error)
 
 	// Org-scoped device queries (RBAC Phase 52 — data scoping)
 	ListPeersForOrg(orgID string, includeDeleted bool) ([]*Peer, error)

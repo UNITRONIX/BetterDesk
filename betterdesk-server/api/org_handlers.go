@@ -147,8 +147,8 @@ func (s *Server) handleListOrgs(w http.ResponseWriter, r *http.Request) {
 		orgs = []*db.Organization{}
 	}
 
-	// Data scoping: non-admin users only see orgs they belong to
-	if userRole != auth.RoleAdmin {
+	// Data scoping: users who cannot administer every org only see orgs they belong to.
+	if !auth.IsSuperAdminRole(userRole) && userRole != auth.RoleGlobalAdmin {
 		var filtered []*db.Organization
 		for _, org := range orgs {
 			member, err := s.db.GetOrgUserByUsername(org.ID, username)
@@ -376,25 +376,32 @@ func (s *Server) handleListOrgUsers(w http.ResponseWriter, r *http.Request) {
 		users = []*db.OrgUser{}
 	}
 
-	// Org User scope: can only see themselves.
-	callerRole := getRoleFromCtx(r)
-	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerUsername := getUsernameFromCtx(r)
-		callerOrgUser, _ := s.db.GetOrgUserByUsername(orgID, callerUsername)
-		if callerOrgUser != nil && callerOrgUser.Role == db.OrgRoleUser {
-			filtered := []*db.OrgUser{}
-			for _, u := range users {
-				if u.Username == callerUsername {
-					filtered = append(filtered, u)
-					break
-				}
+	// Member visibility: server roles with user.view or org.manage_users (after
+	// Permissions-page overrides) and org owners/admins see every member;
+	// everyone else only sees themselves.
+	callerUsername := getUsernameFromCtx(r)
+	if !s.canSeeAllOrgMembers(orgID, getRoleFromCtx(r), callerUsername) {
+		filtered := []*db.OrgUser{}
+		for _, u := range users {
+			if u.Username == callerUsername {
+				filtered = append(filtered, u)
+				break
 			}
-			users = filtered
 		}
+		users = filtered
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{"users": users})
+}
+
+// canSeeAllOrgMembers reports whether the caller may list every member of an org.
+func (s *Server) canSeeAllOrgMembers(orgID, callerRole, callerUsername string) bool {
+	if s.roleHasPermission(callerRole, auth.PermUserView) || s.roleHasPermission(callerRole, auth.PermOrgManageUsers) {
+		return true
+	}
+	callerOrgUser, _ := s.db.GetOrgUserByUsername(orgID, callerUsername)
+	return callerOrgUser != nil && (callerOrgUser.Role == db.OrgRoleOwner || callerOrgUser.Role == db.OrgRoleAdmin)
 }
 
 // PUT /api/org/{id}/users/{uid}

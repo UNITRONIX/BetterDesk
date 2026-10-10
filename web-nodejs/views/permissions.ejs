@@ -34,6 +34,14 @@
                     </div>
                 </div>
                 <div class="toolbar-right">
+                    <button class="btn btn-primary" id="btn-create-role">
+                        <span class="material-icons">add</span>
+                        ${_('permissions.create_role')}
+                    </button>
+                    <button class="btn btn-danger hidden" id="btn-delete-role">
+                        <span class="material-icons">delete</span>
+                        ${_('permissions.delete_role')}
+                    </button>
                     <button class="btn btn-secondary" id="btn-reset-overrides" disabled>
                         <span class="material-icons">restart_alt</span>
                         ${_('permissions.reset_overrides')}

@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "บทบาทที่กำหนดเอง",
+        "role_desc_custom": "บทบาทที่กำหนดเอง ตั้งค่าสิทธิ์ได้ที่หน้าสิทธิ์"
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "อนุมัติการลงทะเบียน",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "แก้ไขการสร้างแบรนด์",
-        "perm_server_attestation": "การรับรองประสิทธิภาพเซิร์ฟเวอร์"
+        "perm_server_attestation": "การรับรองประสิทธิภาพเซิร์ฟเวอร์",
+        "create_role": "สร้างบทบาท",
+        "delete_role": "ลบบทบาท",
+        "custom_roles": "บทบาทที่กำหนดเอง",
+        "builtin_roles": "บทบาทในตัว",
+        "role_name": "ชื่อบทบาท",
+        "role_name_hint": "ตัวพิมพ์เล็ก ตัวเลข หรือขีดล่าง 2-32 ตัว ขึ้นต้นด้วยตัวอักษร",
+        "role_description": "คำอธิบาย",
+        "copy_from": "เริ่มจาก",
+        "copy_from_none": "ไม่มีสิทธิ์",
+        "role_created": "สร้างบทบาทแล้ว",
+        "role_deleted": "ลบบทบาทแล้ว",
+        "confirm_delete_role": "ลบบทบาทที่กำหนดเองนี้หรือไม่ ต้องย้ายผู้ใช้ที่มีบทบาทนี้ไปยังบทบาทอื่นก่อน",
+        "invalid_role_name": "ชื่อบทบาทไม่ถูกต้อง",
+        "description_too_long": "คำอธิบายยาวเกินไป",
+        "custom_role_tag": "บทบาทที่กำหนดเอง",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "การเรียกเก็บเงิน",
+        "cat_other": "อื่น ๆ"
     },
     "notifications": {
         "title": "การแจ้งเตือน",

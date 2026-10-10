@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Anpassade roller",
+        "role_desc_custom": "Anpassad roll. Dess behörigheter konfigureras på sidan Behörigheter."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Godkänn registrering",
         "perm_chat_access": "Chatttåtkomst",
         "perm_branding_edit": "Redigera varumärke",
-        "perm_server_attestation": "Serverprestandaattest"
+        "perm_server_attestation": "Serverprestandaattest",
+        "create_role": "Skapa roll",
+        "delete_role": "Ta bort roll",
+        "custom_roles": "Anpassade roller",
+        "builtin_roles": "Inbyggda roller",
+        "role_name": "Rollnamn",
+        "role_name_hint": "2-32 gemener, siffror eller understreck, som börjar med en bokstav.",
+        "role_description": "Beskrivning",
+        "copy_from": "Utgå från",
+        "copy_from_none": "Inga behörigheter",
+        "role_created": "Roll skapad",
+        "role_deleted": "Roll borttagen",
+        "confirm_delete_role": "Ta bort den här anpassade rollen? Användare med rollen måste först flyttas till en annan roll.",
+        "invalid_role_name": "Ogiltigt rollnamn",
+        "description_too_long": "Beskrivningen är för lång",
+        "custom_role_tag": "Anpassad roll",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Fakturering",
+        "cat_other": "Övrigt"
     },
     "notifications": {
         "title": "Aviseringar",

@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Vai trò tùy chỉnh",
+        "role_desc_custom": "Vai trò tùy chỉnh. Quyền của vai trò được cấu hình trên trang Quyền."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Phê duyệt đăng ký",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Chỉnh sửa thương hiệu",
-        "perm_server_attestation": "Chứng nhận hiệu suất máy chủ"
+        "perm_server_attestation": "Chứng nhận hiệu suất máy chủ",
+        "create_role": "Tạo vai trò",
+        "delete_role": "Xóa vai trò",
+        "custom_roles": "Vai trò tùy chỉnh",
+        "builtin_roles": "Vai trò tích hợp",
+        "role_name": "Tên vai trò",
+        "role_name_hint": "2-32 chữ thường, chữ số hoặc dấu gạch dưới, bắt đầu bằng một chữ cái.",
+        "role_description": "Mô tả",
+        "copy_from": "Bắt đầu từ",
+        "copy_from_none": "Không có quyền",
+        "role_created": "Đã tạo vai trò",
+        "role_deleted": "Đã xóa vai trò",
+        "confirm_delete_role": "Xóa vai trò tùy chỉnh này? Người dùng được gán vai trò này phải được chuyển sang vai trò khác trước.",
+        "invalid_role_name": "Tên vai trò không hợp lệ",
+        "description_too_long": "Mô tả quá dài",
+        "custom_role_tag": "Vai trò tùy chỉnh",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Thanh toán",
+        "cat_other": "Khác"
     },
     "notifications": {
         "title": "Thông báo",

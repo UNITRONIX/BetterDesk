@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Aangepaste rollen",
+        "role_desc_custom": "Aangepaste rol. De machtigingen worden ingesteld op de pagina Machtigingen."
     },
     "folders": {
         "title": "Mappen",
@@ -3837,7 +3839,25 @@
         "perm_enrollment_approve": "Registraties goedkeuren",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Branding bewerken",
-        "perm_server_attestation": "Server-Prestatieattestierung"
+        "perm_server_attestation": "Server-Prestatieattestierung",
+        "create_role": "Rol maken",
+        "delete_role": "Rol verwijderen",
+        "custom_roles": "Aangepaste rollen",
+        "builtin_roles": "Ingebouwde rollen",
+        "role_name": "Rolnaam",
+        "role_name_hint": "2-32 kleine letters, cijfers of underscores, beginnend met een letter.",
+        "role_description": "Beschrijving",
+        "copy_from": "Beginnen vanaf",
+        "copy_from_none": "Geen machtigingen",
+        "role_created": "Rol gemaakt",
+        "role_deleted": "Rol verwijderd",
+        "confirm_delete_role": "Deze aangepaste rol verwijderen? Gebruikers met deze rol moeten eerst naar een andere rol worden verplaatst.",
+        "invalid_role_name": "Ongeldige rolnaam",
+        "description_too_long": "Beschrijving is te lang",
+        "custom_role_tag": "Aangepaste rol",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Facturering",
+        "cat_other": "Overig"
     },
     "notifications": {
         "title": "Meldingen",

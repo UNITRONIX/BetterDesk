@@ -107,6 +107,17 @@ INSERT INTO role_permissions (role, permission, granted) VALUES ('viewer', 'chat
 ```
 
 The `requirePermission` middleware checks DB overrides first, then falls back to defaults.
+In Go, use `Server.roleHasPermission` (or `auth.EffectiveRoleHasPermission`) rather than
+`auth.RoleHasPermission`, which only knows the defaults. The Node.js console mirrors the
+overrides through `services/rolePermissionStore.js`, so `roleHasPermission()` in
+`middleware/auth.js` resolves them too.
+
+### Custom Roles
+
+Operators can define extra roles in the `custom_roles` table (Permissions page →
+*Create role*). Custom roles have no defaults; all of their permissions are
+`role_permissions` rows. Only super admins can assign them, and an assigned role
+cannot be deleted. See the [Organizations and RBAC wiki page](../wiki/Organizations-and-RBAC.md).
 
 ## Security Protections
 

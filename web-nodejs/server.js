@@ -470,6 +470,12 @@ async function startServer() {
         const brandingService = require('./services/brandingService');
         await brandingService.loadBranding();
 
+        // Load Permissions-page overrides and custom roles before syncing users
+        // so custom role assignments are recognised (refreshed periodically).
+        const rolePermissionStore = require('./services/rolePermissionStore');
+        await rolePermissionStore.refresh();
+        rolePermissionStore.start();
+
         // Recover/sync global users before deciding whether a default admin is needed.
         // This protects upgrades where local auth.db was recreated but Go still has users.
         await userSync.backfillFromGo();

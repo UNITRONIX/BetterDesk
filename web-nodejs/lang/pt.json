@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Funções personalizadas",
+        "role_desc_custom": "Função personalizada. As permissões dela são configuradas na página Permissões."
     },
     "folders": {
         "title": "Pastas",
@@ -3837,7 +3839,25 @@
         "perm_enrollment_approve": "Aprovar registros",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Editar marca",
-        "perm_server_attestation": "Certificação de desempenho do servidor"
+        "perm_server_attestation": "Certificação de desempenho do servidor",
+        "create_role": "Criar função",
+        "delete_role": "Excluir função",
+        "custom_roles": "Funções personalizadas",
+        "builtin_roles": "Funções integradas",
+        "role_name": "Nome da função",
+        "role_name_hint": "2 a 32 letras minúsculas, dígitos ou sublinhados, começando com uma letra.",
+        "role_description": "Descrição",
+        "copy_from": "Começar a partir de",
+        "copy_from_none": "Sem permissões",
+        "role_created": "Função criada",
+        "role_deleted": "Função excluída",
+        "confirm_delete_role": "Excluir esta função personalizada? Os usuários atribuídos a ela devem ser movidos para outra função primeiro.",
+        "invalid_role_name": "Nome de função inválido",
+        "description_too_long": "A descrição é muito longa",
+        "custom_role_tag": "Função personalizada",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Faturamento",
+        "cat_other": "Outros"
     },
     "notifications": {
         "title": "Notificações",

@@ -16,7 +16,7 @@ import (
 // allowedIDs is non-nil when the role is limited to address-book inventory.
 func (s *Server) loadRustDeskPeerByID(username, role string) (peerByID map[string]*db.Peer, allowedIDs map[string]bool) {
 	peerByID = make(map[string]*db.Peer)
-	if !canBrowseRustDeskInventory(role) {
+	if !s.canBrowseRustDeskInventory(role) {
 		allowedIDs = s.addressBookPeerIDs(username)
 		if len(allowedIDs) == 0 {
 			return peerByID, allowedIDs
@@ -56,7 +56,7 @@ func (s *Server) loadRustDeskPeerByID(username, role string) (peerByID map[strin
 func (s *Server) buildRustDeskPeerList(r *http.Request) ([]map[string]any, int) {
 	username := getUsernameFromCtx(r)
 	role := getRoleFromCtx(r)
-	if username == "" || role == auth.RolePro || !auth.RoleHasPermission(role, auth.PermDeviceView) {
+	if username == "" || role == auth.RolePro || !s.roleHasPermission(role, auth.PermDeviceView) {
 		return nil, 0
 	}
 
@@ -67,7 +67,7 @@ func (s *Server) buildRustDeskPeerList(r *http.Request) ([]map[string]any, int) 
 
 	var allowedIDs map[string]bool
 	peerByID, allowedIDs := s.loadRustDeskPeerByID(username, role)
-	if !canBrowseRustDeskInventory(role) && len(allowedIDs) == 0 {
+	if !s.canBrowseRustDeskInventory(role) && len(allowedIDs) == 0 {
 		return nil, 0
 	}
 
@@ -92,7 +92,7 @@ func (s *Server) buildRustDeskPeerList(r *http.Request) ([]map[string]any, int) 
 	}
 
 	visiblePeer := s.rustDeskVisiblePeerSet(user, role, peerByID)
-	if !canBrowseRustDeskInventory(role) {
+	if !s.canBrowseRustDeskInventory(role) {
 		filtered := make(map[string]*db.Peer, len(allowedIDs))
 		for id := range allowedIDs {
 			if p, ok := peerByID[id]; ok {
@@ -147,8 +147,8 @@ func (s *Server) buildRustDeskPeerList(r *http.Request) ([]map[string]any, int) 
 	return result, total
 }
 
-func canBrowseRustDeskInventory(role string) bool {
-	return role != auth.RolePro && auth.RoleHasPermission(role, auth.PermDeviceView)
+func (s *Server) canBrowseRustDeskInventory(role string) bool {
+	return role != auth.RolePro && s.roleHasPermission(role, auth.PermDeviceView)
 }
 
 func (s *Server) addressBookPeerIDs(username string) map[string]bool {
@@ -536,7 +536,7 @@ func (s *Server) collectRustDeskTags(r *http.Request, username string, role stri
 		ab.Tags = []string{}
 	}
 
-	if role == auth.RolePro || !auth.RoleHasPermission(role, auth.PermDeviceView) {
+	if role == auth.RolePro || !s.roleHasPermission(role, auth.PermDeviceView) {
 		return ab.Tags
 	}
 

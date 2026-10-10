@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Benutzerdefinierte Rollen",
+        "role_desc_custom": "Benutzerdefinierte Rolle. Ihre Berechtigungen werden auf der Seite Berechtigungen festgelegt."
     },
     "folders": {
         "title": "Dashboard",
@@ -3837,7 +3839,25 @@
         "perm_enrollment_approve": "Registrierungen genehmigen",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Branding bearbeiten",
-        "perm_server_attestation": "Server-Leistungsattestierung"
+        "perm_server_attestation": "Server-Leistungsattestierung",
+        "create_role": "Rolle erstellen",
+        "delete_role": "Rolle löschen",
+        "custom_roles": "Benutzerdefinierte Rollen",
+        "builtin_roles": "Integrierte Rollen",
+        "role_name": "Rollenname",
+        "role_name_hint": "2-32 Kleinbuchstaben, Ziffern oder Unterstriche, beginnend mit einem Buchstaben.",
+        "role_description": "Beschreibung",
+        "copy_from": "Ausgehend von",
+        "copy_from_none": "Keine Berechtigungen",
+        "role_created": "Rolle erstellt",
+        "role_deleted": "Rolle gelöscht",
+        "confirm_delete_role": "Diese benutzerdefinierte Rolle löschen? Zugewiesene Benutzer müssen zuerst einer anderen Rolle zugeordnet werden.",
+        "invalid_role_name": "Ungültiger Rollenname",
+        "description_too_long": "Beschreibung ist zu lang",
+        "custom_role_tag": "Benutzerdefinierte Rolle",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Abrechnung",
+        "cat_other": "Sonstiges"
     },
     "notifications": {
         "title": "Benachrichtigungen",

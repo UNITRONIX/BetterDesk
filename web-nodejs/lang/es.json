@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Roles personalizados",
+        "role_desc_custom": "Rol personalizado. Sus permisos se configuran en la página Permisos."
     },
     "folders": {
         "title": "Panel",
@@ -3837,7 +3839,25 @@
         "perm_enrollment_approve": "Aprobar registros",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "Editar marca",
-        "perm_server_attestation": "Certificación de rendimiento del servidor"
+        "perm_server_attestation": "Certificación de rendimiento del servidor",
+        "create_role": "Crear rol",
+        "delete_role": "Eliminar rol",
+        "custom_roles": "Roles personalizados",
+        "builtin_roles": "Roles integrados",
+        "role_name": "Nombre del rol",
+        "role_name_hint": "De 2 a 32 letras minúsculas, dígitos o guiones bajos, empezando por una letra.",
+        "role_description": "Descripción",
+        "copy_from": "Partir de",
+        "copy_from_none": "Sin permisos",
+        "role_created": "Rol creado",
+        "role_deleted": "Rol eliminado",
+        "confirm_delete_role": "¿Eliminar este rol personalizado? Primero hay que mover a otro rol a los usuarios que lo tienen asignado.",
+        "invalid_role_name": "Nombre de rol no válido",
+        "description_too_long": "La descripción es demasiado larga",
+        "custom_role_tag": "Rol personalizado",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Facturación",
+        "cat_other": "Otros"
     },
     "notifications": {
         "title": "Notificaciones",

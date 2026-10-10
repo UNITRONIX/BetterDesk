@@ -471,6 +471,9 @@ func (s *Server) Start(ctx context.Context) error {
 
 	// Roles and permissions (RBAC Phase 52)
 	mux.HandleFunc("GET /api/roles", s.requirePermission(auth.PermUserView, s.handleListRoles))
+	mux.HandleFunc("POST /api/roles", s.requirePermission(auth.PermServerConfig, s.handleCreateCustomRole))
+	mux.HandleFunc("PATCH /api/roles/{role}", s.requirePermission(auth.PermServerConfig, s.handleUpdateCustomRole))
+	mux.HandleFunc("DELETE /api/roles/{role}", s.requirePermission(auth.PermServerConfig, s.handleDeleteCustomRole))
 	mux.HandleFunc("GET /api/roles/{role}/permissions", s.requirePermission(auth.PermUserView, s.handleGetRolePermissions))
 	mux.HandleFunc("GET /api/role-permissions", s.requirePermission(auth.PermServerConfig, s.handleListRolePermissionOverrides))
 	mux.HandleFunc("POST /api/role-permissions", s.requirePermission(auth.PermServerConfig, s.handleSetRolePermission))

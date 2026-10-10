@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "カスタムロール",
+        "role_desc_custom": "カスタムロールです。権限は権限ページで設定します。"
     },
     "folders": {
         "title": "Folders",
@@ -3837,7 +3839,25 @@
         "perm_enrollment_approve": "登録の承認",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "ブランドの編集",
-        "perm_server_attestation": "サーバー性能認定"
+        "perm_server_attestation": "サーバー性能認定",
+        "create_role": "ロールを作成",
+        "delete_role": "ロールを削除",
+        "custom_roles": "カスタムロール",
+        "builtin_roles": "組み込みロール",
+        "role_name": "ロール名",
+        "role_name_hint": "英字で始まる 2〜32 文字の小文字英字、数字、アンダースコア。",
+        "role_description": "説明",
+        "copy_from": "元にするロール",
+        "copy_from_none": "権限なし",
+        "role_created": "ロールを作成しました",
+        "role_deleted": "ロールを削除しました",
+        "confirm_delete_role": "このカスタムロールを削除しますか？割り当てられているユーザーを先に別のロールへ移動してください。",
+        "invalid_role_name": "無効なロール名です",
+        "description_too_long": "説明が長すぎます",
+        "custom_role_tag": "カスタムロール",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "請求",
+        "cat_other": "その他"
     },
     "notifications": {
         "title": "通知",

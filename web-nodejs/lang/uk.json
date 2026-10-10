@@ -1201,7 +1201,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "Власні ролі",
+        "role_desc_custom": "Власна роль. Її дозволи налаштовуються на сторінці Дозволи."
     },
     "folders": {
         "title": "Folders",
@@ -3843,7 +3845,25 @@
         "perm_enrollment_approve": "Підтвердити реєстрацію",
         "perm_chat_access": "Доступ до чату",
         "perm_branding_edit": "Редагувати брендинг",
-        "perm_server_attestation": "Атестація продуктивності сервера"
+        "perm_server_attestation": "Атестація продуктивності сервера",
+        "create_role": "Створити роль",
+        "delete_role": "Видалити роль",
+        "custom_roles": "Власні ролі",
+        "builtin_roles": "Вбудовані ролі",
+        "role_name": "Назва ролі",
+        "role_name_hint": "2-32 малі літери, цифри або підкреслення, що починаються з літери.",
+        "role_description": "Опис",
+        "copy_from": "На основі",
+        "copy_from_none": "Без дозволів",
+        "role_created": "Роль створено",
+        "role_deleted": "Роль видалено",
+        "confirm_delete_role": "Видалити цю власну роль? Користувачів із цією роллю спершу потрібно перенести в іншу роль.",
+        "invalid_role_name": "Недійсна назва ролі",
+        "description_too_long": "Опис задовгий",
+        "custom_role_tag": "Власна роль",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "Розрахунки",
+        "cat_other": "Інше"
     },
     "notifications": {
         "title": "Сповіщення",

@@ -1195,7 +1195,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "自定义角色",
+        "role_desc_custom": "自定义角色。其权限在“权限”页面中配置。"
     },
     "folders": {
         "title": "文件夹",
@@ -2624,7 +2626,25 @@
         "perm_enrollment_approve": "审批注册",
         "perm_chat_access": "聊天访问",
         "perm_branding_edit": "编辑品牌",
-        "perm_server_attestation": "服务器性能认证"
+        "perm_server_attestation": "服务器性能认证",
+        "create_role": "创建角色",
+        "delete_role": "删除角色",
+        "custom_roles": "自定义角色",
+        "builtin_roles": "内置角色",
+        "role_name": "角色名称",
+        "role_name_hint": "2-32 个小写字母、数字或下划线，以字母开头。",
+        "role_description": "描述",
+        "copy_from": "基于",
+        "copy_from_none": "无权限",
+        "role_created": "角色已创建",
+        "role_deleted": "角色已删除",
+        "confirm_delete_role": "删除此自定义角色？必须先将分配了该角色的用户移到其他角色。",
+        "invalid_role_name": "角色名称无效",
+        "description_too_long": "描述过长",
+        "custom_role_tag": "自定义角色",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "计费",
+        "cat_other": "其他"
     },
     "tokens": {
         "title": "设备令牌",

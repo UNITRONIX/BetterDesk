@@ -27,7 +27,7 @@
             id: 'device',
             icon: 'devices',
             permissions: [
-                'device.view', 'device.connect', 'device.edit',
+                'device.view', 'device.connect', 'guest.create', 'device.edit',
                 'device.delete', 'device.ban', 'device.change_id', 'device.connection_mode',
                 'remote_target.view', 'remote_target.connect', 'remote_target.edit',
                 'remote_target.delete', 'remote_target.test'
@@ -62,6 +62,11 @@
             permissions: ['cdap.view', 'cdap.command', 'cdap.terminal', 'cdap.files']
         },
         {
+            id: 'mesh',
+            icon: 'terminal',
+            permissions: ['mesh.terminal', 'mesh.files', 'mesh.power']
+        },
+        {
             id: 'enrollment',
             icon: 'how_to_reg',
             permissions: ['enrollment.manage', 'enrollment.approve']
@@ -75,12 +80,32 @@
             id: 'branding',
             icon: 'palette',
             permissions: ['branding.edit']
+        },
+        {
+            id: 'billing',
+            icon: 'receipt_long',
+            permissions: ['billing.view', 'billing.manage', 'billing.reports', 'billing.export']
         }
     ];
 
+    /** Categories plus an "other" bucket for permissions the server knows but this page does not. */
+    function categoriesForRender() {
+        const known = new Set();
+        for (const cat of CATEGORIES) for (const p of cat.permissions) known.add(p);
+        const other = allPermissions.filter(p => !known.has(p));
+        const cats = CATEGORIES.map(cat => ({
+            ...cat,
+            permissions: allPermissions.length
+                ? cat.permissions.filter(p => allPermissions.includes(p))
+                : cat.permissions
+        })).filter(cat => cat.permissions.length);
+        if (other.length) cats.push({ id: 'other', icon: 'more_horiz', permissions: other });
+        return cats;
+    }
+
     // ── State ──────────────────────────────────────────────────────────
 
-    let allRoles = [];            // [{name, level, is_super_admin, permissions}]
+    let allRoles = [];            // [{name, level, is_super_admin, is_custom, description, permissions}]
     let allPermissions = [];      // ['device.view', ...]
     let overrides = [];           // [{role, permission, granted}]
     let selectedRole = '';
@@ -111,6 +136,12 @@
         viewer: 'visibility',
         pro: 'star'
     };
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 
     function roleLabel(name) {
         const key = 'users.role_' + name;
@@ -165,15 +196,29 @@
         if (!sel) return;
 
         // Keep the placeholder
-        sel.innerHTML = '<option value="" disabled selected>' + _('permissions.select_role_placeholder') + '</option>';
-        for (const role of allRoles) {
-            const opt = document.createElement('option');
-            opt.value = role.name;
-            opt.textContent = roleLabel(role.name);
-            sel.appendChild(opt);
+        sel.innerHTML = '<option value="" disabled selected>' + escapeHtml(_('permissions.select_role_placeholder')) + '</option>';
+        const groups = [
+            { label: _('permissions.builtin_roles'), roles: allRoles.filter(r => !r.is_custom) },
+            { label: _('permissions.custom_roles'), roles: allRoles.filter(r => r.is_custom) }
+        ];
+        for (const group of groups) {
+            if (!group.roles.length) continue;
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = group.label;
+            for (const role of group.roles) {
+                const opt = document.createElement('option');
+                opt.value = role.name;
+                opt.textContent = roleLabel(role.name);
+                optgroup.appendChild(opt);
+            }
+            sel.appendChild(optgroup);
         }
 
-        if (selectedRole) sel.value = selectedRole;
+        if (selectedRole && allRoles.some(r => r.name === selectedRole)) {
+            sel.value = selectedRole;
+        } else {
+            selectedRole = '';
+        }
     }
 
     function renderRoleInfo(role) {
@@ -186,10 +231,17 @@
         if (!banner) return;
 
         nameEl.textContent = roleLabel(role.name);
-        levelEl.textContent = _('permissions.level') + ' ' + role.level +
-            (role.is_super_admin ? ' — ' + _('permissions.super_admin_tag') : '') +
-            (role.is_server_level ? ' — ' + _('permissions.server_level_tag') : '');
-        iconEl.textContent = ROLE_ICONS[role.name] || 'shield';
+        if (role.is_custom) {
+            levelEl.textContent = _('permissions.custom_role_tag') +
+                (role.description ? ' — ' + role.description : '');
+        } else {
+            levelEl.textContent = _('permissions.level') + ' ' + role.level +
+                (role.is_super_admin ? ' — ' + _('permissions.super_admin_tag') : '') +
+                (role.is_server_level ? ' — ' + _('permissions.server_level_tag') : '');
+        }
+        iconEl.textContent = role.is_custom ? 'badge' : (ROLE_ICONS[role.name] || 'shield');
+        const deleteBtn = document.getElementById('btn-delete-role');
+        if (deleteBtn) deleteBtn.classList.toggle('hidden', !role.is_custom);
 
         const grantedCount = Object.keys(effectivePerms).length;
         permCount.textContent = grantedCount + '/' + allPermissions.length;
@@ -228,7 +280,7 @@
         for (const p of defaults) defaultSet[p] = true;
 
         let html = '';
-        for (const cat of CATEGORIES) {
+        for (const cat of categoriesForRender()) {
             html += `<div class="perm-category">
                 <div class="perm-category-header">
                     <span class="material-icons">${cat.icon}</span>
@@ -370,6 +422,122 @@
         }
     }
 
+    function selectRole(name) {
+        const sel = document.getElementById('role-select');
+        if (!sel) return;
+        sel.value = name;
+        sel.dispatchEvent(new Event('change'));
+    }
+
+    function onCreateRole() {
+        if (!window.Modal) return;
+        const copyOptions = allRoles
+            .filter(r => !r.is_super_admin)
+            .map(r => '<option value="' + escapeHtml(r.name) + '">' + escapeHtml(roleLabel(r.name)) + '</option>')
+            .join('');
+        const content = `
+            <form id="create-role-form" class="modal-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="new-role-name">${escapeHtml(_('permissions.role_name'))}</label>
+                    <input type="text" id="new-role-name" class="form-input" required maxlength="32"
+                        pattern="[a-z][a-z0-9_]{1,31}" placeholder="helpdesk">
+                    <span class="form-hint">${escapeHtml(_('permissions.role_name_hint'))}</span>
+                </div>
+                <div class="form-group">
+                    <label for="new-role-description">${escapeHtml(_('permissions.role_description'))}</label>
+                    <input type="text" id="new-role-description" class="form-input" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label for="new-role-copy">${escapeHtml(_('permissions.copy_from'))}</label>
+                    <select id="new-role-copy" class="form-select">
+                        <option value="">${escapeHtml(_('permissions.copy_from_none'))}</option>
+                        ${copyOptions}
+                    </select>
+                </div>
+            </form>`;
+
+        async function submit() {
+            const nameInput = document.getElementById('new-role-name');
+            const name = (nameInput?.value || '').trim().toLowerCase();
+            if (!/^[a-z][a-z0-9_]{1,31}$/.test(name)) {
+                showToast(_('permissions.invalid_role_name'), 'error');
+                nameInput?.focus();
+                return;
+            }
+            const body = {
+                name,
+                description: (document.getElementById('new-role-description')?.value || '').trim(),
+                copy_from: document.getElementById('new-role-copy')?.value || ''
+            };
+            try {
+                const resp = await apiFetch('/api/panel/roles', { method: 'POST', body: JSON.stringify(body) });
+                if (!resp || resp.success === false) {
+                    showToast((resp && resp.error) || _('common.error'), 'error');
+                    return;
+                }
+                window.Modal.close();
+                showToast(_('permissions.role_created'), 'success');
+                await Promise.all([loadRoles(), loadOverrides()]);
+                selectRole(name);
+            } catch (err) {
+                showToast(_('common.error'), 'error');
+            }
+        }
+
+        window.Modal.show({
+            title: _('permissions.create_role'),
+            content,
+            size: 'medium',
+            buttons: [
+                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => window.Modal.close() },
+                { label: _('permissions.create_role'), class: 'btn-primary', onClick: submit }
+            ],
+            onOpen: () => {
+                const form = document.getElementById('create-role-form');
+                form?.addEventListener('submit', (e) => { e.preventDefault(); submit(); });
+                document.getElementById('new-role-name')?.focus();
+            }
+        });
+    }
+
+    async function onDeleteRole() {
+        const role = allRoles.find(r => r.name === selectedRole);
+        if (!role || !role.is_custom) return;
+        const ok = window.Modal && typeof window.Modal.confirm === 'function'
+            ? await window.Modal.confirm({
+                title: _('permissions.delete_role'),
+                message: _('permissions.confirm_delete_role'),
+                confirmLabel: _('permissions.delete_role'),
+                danger: true
+            })
+            : confirm(_('permissions.confirm_delete_role'));
+        if (!ok) return;
+
+        try {
+            const resp = await apiFetch('/api/panel/roles/' + encodeURIComponent(role.name), { method: 'DELETE' });
+            if (!resp || resp.success === false) {
+                showToast((resp && resp.error) || _('common.error'), 'error');
+                return;
+            }
+            showToast(_('permissions.role_deleted'), 'success');
+            selectedRole = '';
+            await Promise.all([loadRoles(), loadOverrides()]);
+            resetSelection();
+        } catch (err) {
+            showToast(_('common.error'), 'error');
+        }
+    }
+
+    function resetSelection() {
+        document.getElementById('role-info-banner')?.classList.add('hidden');
+        document.getElementById('permissions-matrix')?.classList.add('hidden');
+        document.getElementById('permissions-locked')?.classList.add('hidden');
+        document.getElementById('permissions-empty')?.classList.remove('hidden');
+        document.getElementById('btn-delete-role')?.classList.add('hidden');
+        const resetBtn = document.getElementById('btn-reset-overrides');
+        if (resetBtn) resetBtn.disabled = true;
+    }
+
     function showToast(message, type) {
         if (window.Toast && typeof window.Toast[type] === 'function') {
             window.Toast[type]('', message);
@@ -397,6 +565,12 @@
 
         const resetBtn = document.getElementById('btn-reset-overrides');
         if (resetBtn) resetBtn.addEventListener('click', onResetAllOverrides);
+
+        const createBtn = document.getElementById('btn-create-role');
+        if (createBtn) createBtn.addEventListener('click', onCreateRole);
+
+        const deleteBtn = document.getElementById('btn-delete-role');
+        if (deleteBtn) deleteBtn.addEventListener('click', onDeleteRole);
     }
 
     document.addEventListener('DOMContentLoaded', init);

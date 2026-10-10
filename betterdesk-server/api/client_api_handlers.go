@@ -579,7 +579,7 @@ func normalizeClientTags(value any) []string {
 }
 
 func (s *Server) syncAddressBookTagsToPeers(username, role, abType, data string) {
-	if role == auth.RolePro || !auth.RoleHasPermission(role, auth.PermDeviceEdit) {
+	if role == auth.RolePro || !s.roleHasPermission(role, auth.PermDeviceEdit) {
 		return
 	}
 

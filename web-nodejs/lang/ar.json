@@ -1202,7 +1202,9 @@
         "pro_strategy_label": "RustDesk Pro strategy",
         "pro_strategy_hint": "Optional access-control strategy for RustDesk Pro client features (separate from panel role).",
         "pro_strategy_none": "None",
-        "column_scope": "Scope"
+        "column_scope": "Scope",
+        "custom_roles": "أدوار مخصصة",
+        "role_desc_custom": "دور مخصص. تُضبط صلاحياته في صفحة الصلاحيات."
     },
     "folders": {
         "title": "Folders",
@@ -3844,7 +3846,25 @@
         "perm_enrollment_approve": "الموافقة على الالتحاق",
         "perm_chat_access": "Chat access",
         "perm_branding_edit": "تحرير العلامات التجارية",
-        "perm_server_attestation": "اعتماد أداء الخادم"
+        "perm_server_attestation": "اعتماد أداء الخادم",
+        "create_role": "إنشاء دور",
+        "delete_role": "حذف الدور",
+        "custom_roles": "أدوار مخصصة",
+        "builtin_roles": "أدوار مدمجة",
+        "role_name": "اسم الدور",
+        "role_name_hint": "من 2 إلى 32 حرفًا صغيرًا أو رقمًا أو شرطة سفلية، ويبدأ بحرف.",
+        "role_description": "الوصف",
+        "copy_from": "البدء من",
+        "copy_from_none": "بدون صلاحيات",
+        "role_created": "تم إنشاء الدور",
+        "role_deleted": "تم حذف الدور",
+        "confirm_delete_role": "هل تريد حذف هذا الدور المخصص؟ يجب نقل المستخدمين المعيّنين له إلى دور آخر أولاً.",
+        "invalid_role_name": "اسم دور غير صالح",
+        "description_too_long": "الوصف طويل جدًا",
+        "custom_role_tag": "دور مخصص",
+        "cat_mesh": "MeshCentral",
+        "cat_billing": "الفوترة",
+        "cat_other": "أخرى"
     },
     "notifications": {
         "title": "إشعارات",
