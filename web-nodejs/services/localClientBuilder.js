@@ -17,31 +17,56 @@ const crypto = require('crypto');
 const { spawn } = require('child_process');
 const AdmZip = require('adm-zip');
 
+const IS_WINDOWS = process.platform === 'win32';
 const requestPath = path.resolve(process.argv[2] || '');
 const sourceDir = path.resolve(process.env.BETTERDESK_CLIENT_SOURCE_DIR || '');
 const outputDir = path.resolve(process.env.BETTERDESK_CLIENT_OUTPUT_DIR || '');
 
+function executableNames(name) {
+    if (!IS_WINDOWS || /\.(exe|bat|cmd)$/i.test(name)) return [name];
+    return [`${name}.exe`, `${name}.bat`, `${name}.cmd`, name];
+}
+
+function candidatePaths(name, root) {
+    if (!root) return [];
+    return executableNames(name).map((executable) => path.join(root, executable));
+}
+
 function toolPath(name, configured) {
-    const candidates = [
-        configured,
-        process.env.BETTERDESK_CLIENT_TOOLCHAIN_BIN
-            ? path.join(process.env.BETTERDESK_CLIENT_TOOLCHAIN_BIN, name)
-            : '',
-        `/opt/betterdesk-toolchain/bin/${name}`,
-        `/opt/betterdesk-toolchain/cargo/bin/${name}`,
-        `/opt/flutter-3.24.5/bin/${name}`,
+    const configuredCandidate = configured ? [configured] : [];
+    const roots = [
+        process.env.BETTERDESK_CLIENT_TOOLCHAIN_BIN,
+        ...(IS_WINDOWS
+            ? [
+                process.env.BETTERDESK_CLIENT_TOOLCHAIN_ROOT
+                    ? path.join(process.env.BETTERDESK_CLIENT_TOOLCHAIN_ROOT, 'bin')
+                    : '',
+                'C:\\tools\\flutter-3.24.5\\bin',
+                'C:\\tools\\LLVM-15.0.6\\bin',
+            ]
+            : [
+                '/opt/betterdesk-toolchain/bin',
+                '/opt/betterdesk-toolchain/cargo/bin',
+                '/opt/flutter-3.24.5/bin',
+            ]),
         ...(process.env.PATH || '')
             .split(path.delimiter)
-            .filter(Boolean)
-            .map((dir) => path.join(dir, name)),
+            .filter(Boolean),
     ].filter(Boolean);
+    const candidates = configuredCandidate.concat(
+        roots.flatMap((root) => candidatePaths(name, root))
+    );
     return candidates.find((candidate) => fs.existsSync(candidate)) || '';
 }
 
 function resolveVcpkgRoot() {
     const configured = String(process.env.VCPKG_ROOT || '').trim();
-    if (configured) return configured;
-    const conventional = process.platform === 'win32' ? 'C:\\vcpkg' : '/opt/vcpkg';
+    if (configured) {
+        return /(?:^|[\\/])vcpkg(?:\.exe)?$/i.test(configured)
+            ? path.dirname(configured)
+            : configured;
+    }
+    const conventional = IS_WINDOWS ? 'C:\\vcpkg' : '/opt/vcpkg';
     return fs.existsSync(path.join(conventional, process.platform === 'win32' ? 'vcpkg.exe' : 'vcpkg'))
         ? conventional
         : '';
@@ -50,8 +75,13 @@ function resolveVcpkgRoot() {
 function buildEnvironment() {
     const cargo = toolPath('cargo', process.env.BETTERDESK_CLIENT_CARGO);
     const flutter = toolPath('flutter', process.env.BETTERDESK_CLIENT_FLUTTER);
+    const python = toolPath(
+        IS_WINDOWS ? 'python' : 'python3',
+        process.env.BETTERDESK_CLIENT_PYTHON
+    );
     if (!cargo) throw new Error('local_builder_toolchain_missing:cargo');
     if (!flutter) throw new Error('local_builder_toolchain_missing:flutter');
+    if (!python) throw new Error('local_builder_toolchain_missing:python');
     const vcpkgRoot = resolveVcpkgRoot();
     if (!vcpkgRoot) {
         throw new Error('local_builder_toolchain_missing:VCPKG_ROOT');
@@ -63,18 +93,36 @@ function buildEnvironment() {
     const flutterDir = path.dirname(flutter);
     const dartDir = path.join(flutterDir, 'cache', 'dart-sdk', 'bin');
     const pubCache = process.env.PUB_CACHE
-        || path.join(process.env.BETTERDESK_CLIENT_TOOLCHAIN_BIN || '/opt/betterdesk-toolchain', 'flutter-pub-cache');
+        || path.join(
+            process.env.BETTERDESK_CLIENT_TOOLCHAIN_ROOT
+                || (IS_WINDOWS ? 'C:\\ProgramData\\BetterDesk\\toolchain' : '/opt/betterdesk-toolchain'),
+            'flutter-pub-cache'
+        );
     const pubBin = path.join(pubCache, 'bin');
-    const libclangPath = process.env.LIBCLANG_PATH
-        || (fs.existsSync('/usr/lib/llvm-18/lib') ? '/usr/lib/llvm-18/lib' : '');
+    const configuredLibclang = String(process.env.LIBCLANG_PATH || '').trim();
+    const defaultLibclang = IS_WINDOWS
+        ? path.join(process.env.BETTERDESK_CLIENT_LLVM_ROOT || 'C:\\tools\\LLVM-15.0.6', 'bin')
+        : (fs.existsSync('/usr/lib/llvm-18/lib') ? '/usr/lib/llvm-18/lib' : '');
+    const configuredLibclangReady = IS_WINDOWS
+        ? fs.existsSync(path.join(configuredLibclang, 'libclang.dll'))
+        : fs.existsSync(configuredLibclang);
+    const defaultLibclangReady = IS_WINDOWS
+        ? fs.existsSync(path.join(defaultLibclang, 'libclang.dll'))
+        : fs.existsSync(defaultLibclang);
+    const libclangPath = IS_WINDOWS
+        ? (defaultLibclangReady ? defaultLibclang : (configuredLibclangReady ? configuredLibclang : ''))
+        : (configuredLibclangReady ? configuredLibclang : (defaultLibclangReady ? defaultLibclang : ''));
     return {
         ...process.env,
         VCPKG_ROOT: vcpkgRoot,
         PUB_CACHE: pubCache,
+        BETTERDESK_CLIENT_PYTHON: python,
         ...(libclangPath ? { LIBCLANG_PATH: libclangPath } : {}),
         PATH: [
             binDir,
             flutterDir,
+            path.dirname(python),
+            libclangPath ? (IS_WINDOWS ? libclangPath : path.dirname(libclangPath)) : '',
             fs.existsSync(dartDir) ? dartDir : '',
             pubBin,
             process.env.PATH || '',
@@ -89,11 +137,21 @@ async function ensureFlutterRustBridge(sourceDir, environment) {
     if (fs.existsSync(bridgeRust) && fs.existsSync(bridgeDart)) return;
 
     const codegenRoot = process.env.BETTERDESK_CLIENT_BRIDGE_CODEGEN_ROOT
-        || '/opt/betterdesk-toolchain/bridge-codegen';
-    const codegen = path.join(codegenRoot, 'bin', 'flutter_rust_bridge_codegen');
+        || path.join(
+            process.env.BETTERDESK_CLIENT_TOOLCHAIN_ROOT
+                || (IS_WINDOWS ? 'C:\\ProgramData\\BetterDesk\\toolchain' : '/opt/betterdesk-toolchain'),
+            'bridge-codegen'
+        );
+    const codegen = toolPath(
+        'flutter_rust_bridge_codegen',
+        path.join(codegenRoot, 'bin', 'flutter_rust_bridge_codegen')
+    );
+    const cargo = toolPath('cargo', environment.BETTERDESK_CLIENT_CARGO);
+    const flutter = toolPath('flutter', environment.BETTERDESK_CLIENT_FLUTTER);
+    const dart = toolPath('dart', path.join(path.dirname(flutter), 'cache', 'dart-sdk', 'bin', 'dart'));
     await fsp.mkdir(codegenRoot, { recursive: true });
     if (!fs.existsSync(codegen)) {
-        const install = await run('cargo', [
+        const install = await run(cargo, [
             'install', 'flutter_rust_bridge_codegen',
             '--version', '1.80.1',
             '--features', 'uuid',
@@ -105,14 +163,14 @@ async function ensureFlutterRustBridge(sourceDir, environment) {
         }
     }
 
-    const pub = await run('flutter', ['pub', 'get'], {
+    const pub = await run(flutter, ['pub', 'get'], {
         cwd: path.join(sourceDir, 'flutter'),
         env: environment,
     });
     if (pub.code !== 0) {
         throw new Error(`local_builder_flutter_pub_get_failed:${pub.stderr.slice(-4000)}`);
     }
-    const ffigen = await run('dart', [
+    const ffigen = await run(dart, [
         'pub', 'global', 'activate', 'ffigen', '--version', '5.0.1',
     ], { cwd: sourceDir, env: environment });
     if (ffigen.code !== 0) {
@@ -123,7 +181,9 @@ async function ensureFlutterRustBridge(sourceDir, environment) {
         '--dart-output', './flutter/lib/generated_bridge.dart',
         '--c-output', './flutter/macos/Runner/bridge_generated.h',
     ];
-    if (fs.existsSync('/usr/lib/llvm-18')) {
+    if (IS_WINDOWS && environment.LIBCLANG_PATH) {
+        codegenArgs.push('--llvm-path', path.dirname(environment.LIBCLANG_PATH));
+    } else if (fs.existsSync('/usr/lib/llvm-18')) {
         codegenArgs.push('--llvm-path', '/usr/lib/llvm-18');
     }
     const generated = await run(codegen, codegenArgs, { cwd: sourceDir, env: environment });
@@ -138,12 +198,34 @@ async function ensureFlutterRustBridge(sourceDir, environment) {
     }
 }
 
-function ensureBuildCapacity() {
+async function ensureBuildCapacity() {
     const minimumMb = Math.max(
         512,
         Number.parseInt(process.env.BETTERDESK_CLIENT_BUILD_MIN_FREE_MB || '3072', 10)
     );
-    const stats = fs.statfsSync(outputDir);
+    let stats;
+    try {
+        stats = fs.statfsSync(outputDir);
+    } catch (error) {
+        if (!IS_WINDOWS) throw error;
+        const drive = path.parse(outputDir).root.replace(/[\\:]/g, '');
+        const result = await run(
+            'powershell.exe',
+            ['-NoProfile', '-NonInteractive', '-Command', `(Get-PSDrive -Name ${drive}).Free`],
+            { cwd: outputDir, env: process.env }
+        );
+        const freeBytes = Number.parseInt(result.stdout.trim(), 10);
+        if (result.code !== 0 || !Number.isFinite(freeBytes)) {
+            throw new Error(`local_builder_disk_space_check_failed:${error.message}`);
+        }
+        const freeMb = Math.floor(freeBytes / (1024 * 1024));
+        if (freeMb < minimumMb) {
+            throw new Error(
+                `local_builder_disk_space_insufficient:${freeMb}MB<${minimumMb}MB`
+            );
+        }
+        return freeMb;
+    }
     const freeMb = Math.floor((Number(stats.bavail) * Number(stats.bsize)) / (1024 * 1024));
     if (freeMb < minimumMb) {
         throw new Error(
@@ -151,6 +233,51 @@ function ensureBuildCapacity() {
         );
     }
     return freeMb;
+}
+
+async function loadVisualStudioEnvironment(environment) {
+    if (!IS_WINDOWS) return environment;
+    const vsDevCmd = environment.BETTERDESK_CLIENT_VSDEVCMD
+        || process.env.BETTERDESK_CLIENT_VSDEVCMD;
+    if (!vsDevCmd) return environment;
+    if (!fs.existsSync(vsDevCmd)) {
+        throw new Error('local_builder_toolchain_invalid:BETTERDESK_CLIENT_VSDEVCMD');
+    }
+    const arch = hostTarget().arch === 'arm64' ? 'arm64' : 'x64';
+    const command = `call ${path.basename(vsDevCmd)} -arch=${arch} -host_arch=${arch} && set`;
+    const result = await run(
+        process.env.ComSpec || 'cmd.exe',
+        ['/d', '/c', command],
+        { cwd: path.dirname(vsDevCmd), env: environment }
+    );
+    if (result.code !== 0) {
+        throw new Error(`local_builder_visual_studio_environment_failed:${result.stderr.slice(-4000)}`);
+    }
+    const visualStudioEnvironment = {};
+    for (const line of result.stdout.split(/\r?\n/)) {
+        const separator = line.indexOf('=');
+        if (separator > 0) {
+            visualStudioEnvironment[line.slice(0, separator)] = line.slice(separator + 1);
+        }
+    }
+    const visualStudioPath = [
+        environment.LIBCLANG_PATH,
+        visualStudioEnvironment.PATH || environment.PATH || '',
+    ]
+        .join(path.delimiter)
+        .split(path.delimiter)
+        .filter((entry) => entry && !/msys|mingw/i.test(entry))
+        .join(path.delimiter);
+    return {
+        ...environment,
+        ...visualStudioEnvironment,
+        // VsDevCmd may expose an unrelated MSYS libclang. Keep the pinned
+        // LLVM/vcpkg/tool paths selected by the BetterDesk provider.
+        ...(environment.LIBCLANG_PATH ? { LIBCLANG_PATH: environment.LIBCLANG_PATH } : {}),
+        ...(environment.VCPKG_ROOT ? { VCPKG_ROOT: environment.VCPKG_ROOT } : {}),
+        ...(environment.PUB_CACHE ? { PUB_CACHE: environment.PUB_CACHE } : {}),
+        PATH: visualStudioPath,
+    };
 }
 
 function fail(message) {
@@ -171,17 +298,7 @@ function providerArch(arch) {
 }
 
 function commandAvailable(name) {
-    const candidates = [
-        ...(process.env.PATH || '')
-            .split(path.delimiter)
-            .filter(Boolean)
-            .map((dir) => path.join(dir, name)),
-        `/usr/bin/${name}`,
-        `/usr/sbin/${name}`,
-        `/bin/${name}`,
-        `/usr/local/bin/${name}`,
-    ];
-    return candidates.some((candidate) => fs.existsSync(candidate));
+    return Boolean(toolPath(name));
 }
 
 function linuxPackageFormats() {
@@ -197,11 +314,50 @@ function localToolchainStatus() {
     const missing = [];
     if (!toolPath('cargo', process.env.BETTERDESK_CLIENT_CARGO)) missing.push('cargo');
     if (!toolPath('flutter', process.env.BETTERDESK_CLIENT_FLUTTER)) missing.push('flutter');
+    if (!toolPath(IS_WINDOWS ? 'python' : 'python3', process.env.BETTERDESK_CLIENT_PYTHON)) {
+        missing.push('python');
+    }
     const vcpkgRoot = resolveVcpkgRoot();
     if (!vcpkgRoot) {
         missing.push('VCPKG_ROOT');
     } else if (!fs.existsSync(path.join(vcpkgRoot, process.platform === 'win32' ? 'vcpkg.exe' : 'vcpkg'))) {
         missing.push('VCPKG_ROOT');
+    }
+    if (IS_WINDOWS) {
+        const vsDevCmd = process.env.BETTERDESK_CLIENT_VSDEVCMD;
+        const msvcAvailable = Boolean(
+            toolPath('cl', process.env.BETTERDESK_CLIENT_CL)
+            || process.env.VCINSTALLDIR
+            || process.env.VSINSTALLDIR
+            || (vsDevCmd && fs.existsSync(vsDevCmd))
+        );
+        if (!msvcAvailable) missing.push('msvc');
+        const sdkRoots = [
+            process.env.BETTERDESK_CLIENT_WINDOWS_SDK_DIR,
+            process.env.WindowsSdkDir,
+            process.env['ProgramFiles(x86)']
+                ? path.join(process.env['ProgramFiles(x86)'], 'Windows Kits', '10')
+                : '',
+            process.env.ProgramFiles
+                ? path.join(process.env.ProgramFiles, 'Windows Kits', '10')
+                : '',
+        ].filter(Boolean);
+        if (!sdkRoots.some((root) => fs.existsSync(path.join(root, 'Include')))) {
+            missing.push('windows-sdk');
+        }
+        const llvmRoot = process.env.BETTERDESK_CLIENT_LLVM_ROOT
+            || (process.env.ProgramFiles ? path.join(process.env.ProgramFiles, 'LLVM') : '');
+        const llvmBins = [
+            process.env.LIBCLANG_PATH,
+            llvmRoot ? path.join(llvmRoot, 'bin') : '',
+            path.join('C:\\tools\\LLVM-15.0.6', 'bin'),
+        ].filter(Boolean);
+        if (!llvmBins.some((llvmBin) => (
+            fs.existsSync(path.join(llvmBin, 'clang.exe'))
+            && fs.existsSync(path.join(llvmBin, 'libclang.dll'))
+        ))) {
+            missing.push('llvm');
+        }
     }
     return {
         ready: missing.length === 0,
@@ -229,12 +385,14 @@ function getCapabilities() {
 }
 
 function run(command, args, options = {}) {
+    const isBatchCommand = IS_WINDOWS && /\.(bat|cmd)$/i.test(String(command));
     return new Promise((resolve, reject) => {
         const child = spawn(command, args, {
             cwd: options.cwd,
             env: options.env,
             stdio: ['ignore', 'pipe', 'pipe'],
             windowsHide: true,
+            ...(isBatchCommand ? { shell: true } : {}),
         });
         let stdout = '';
         let stderr = '';
@@ -478,7 +636,8 @@ async function main() {
     if (!fs.existsSync(requestPath) || !fs.existsSync(path.join(sourceDir, 'build.py'))) {
         throw new Error('local_builder_source_or_request_missing');
     }
-    const request = JSON.parse(await fsp.readFile(requestPath, 'utf8'));
+    const requestText = (await fsp.readFile(requestPath, 'utf8')).replace(/^\uFEFF/, '');
+    const request = JSON.parse(requestText);
     if (request.product_sku !== 'betterdesk-support' || !request.signed_config_b64) {
         throw new Error('local_builder_support_payload_required');
     }
@@ -503,18 +662,22 @@ async function main() {
         }
     }
     await fsp.mkdir(outputDir, { recursive: true });
-    ensureBuildCapacity();
-    const toolchainEnv = buildEnvironment();
+    await ensureBuildCapacity();
+    let toolchainEnv = buildEnvironment();
+    toolchainEnv = await loadVisualStudioEnvironment(toolchainEnv);
     const progress = (percent, phase) => {
         console.log(`BETTERDESK_BUILD_PROGRESS|${percent}|${phase}`);
     };
     progress(5, 'preparing');
     await ensureFlutterRustBridge(sourceDir, toolchainEnv);
-    const python = process.platform === 'win32' ? 'python' : 'python3';
+    const python = toolPath(
+        IS_WINDOWS ? 'python' : 'python3',
+        toolchainEnv.BETTERDESK_CLIENT_PYTHON
+    );
     const args = ['build.py', '--flutter'];
     if (
         String(process.env.BETTERDESK_CLIENT_BUILD_HWCODEC || '').trim().toLowerCase() === 'on'
-        && process.env.VCPKG_ROOT
+        && toolchainEnv.VCPKG_ROOT
     ) {
         args.push('--hwcodec');
     }
@@ -568,5 +731,7 @@ if (require.main === module) {
 module.exports = {
     hostTarget,
     providerArch,
+    buildEnvironment,
+    loadVisualStudioEnvironment,
     getCapabilities,
 };

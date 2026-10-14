@@ -5,6 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
+const net = require('net');
 const authService = require('../services/authService');
 const db = require('../services/database');
 const betterdeskApi = require('../services/betterdeskApi');
@@ -37,6 +38,22 @@ function isSafeReturnUrl(u) {
     if (!u.startsWith('/')) return false;
     if (u.startsWith('//') || u.startsWith('/\\')) return false;
     return true;
+}
+
+function isPrivateClientIp(rawIp) {
+    let ip = String(rawIp || '').trim().toLowerCase();
+    if (ip.startsWith('::ffff:')) ip = ip.slice(7);
+    if (net.isIP(ip) === 4) {
+        const octets = ip.split('.').map(Number);
+        return octets[0] === 10 ||
+            (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+            (octets[0] === 192 && octets[1] === 168) ||
+            octets[0] === 127;
+    }
+    if (net.isIP(ip) === 6) {
+        return ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd');
+    }
+    return false;
 }
 
 async function bestEffortUserSync(action, label) {
@@ -328,7 +345,10 @@ router.get('/api/auth/oidc/status', async (req, res) => {
         if (!result.success) {
             return res.json({ enabled: false });
         }
-        res.json(result.data);
+        res.json({
+            ...result.data,
+            local_bypass: isPrivateClientIp(req.ip || req.socket?.remoteAddress)
+        });
     } catch (err) {
         res.json({ enabled: false });
     }

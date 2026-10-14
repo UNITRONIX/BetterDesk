@@ -30,6 +30,7 @@ import (
 // Stored in server_config table with "oidc." prefix.
 type OIDCConfig struct {
 	Enabled             bool   `json:"enabled"`
+	PreferSSO           bool   `json:"prefer_sso"`            // launch SSO automatically when enabled
 	DisplayName         string `json:"display_name"`          // Button label, e.g. "Google", "Azure AD"
 	IssuerURL           string `json:"issuer_url"`            // e.g. "https://accounts.google.com"
 	ClientID            string `json:"client_id"`             // OAuth2 client ID
@@ -65,6 +66,7 @@ type OIDCResult struct {
 	DisplayName   string
 	Email         string
 	Role          string
+	RoleFromGroup bool
 	Groups        []string
 	IDToken       string // raw ID token for audit
 	ReturnURL     string // post-login relative path from OAuth state
@@ -584,8 +586,9 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 		return nil, fmt.Errorf("could not determine username from OIDC claims")
 	}
 
-	// Map groups to role
-	result.Role = p.resolveRole(result.Groups)
+	// Map groups to role. The source flag lets provisioning distinguish an
+	// explicit group mapping from the configured fallback role.
+	result.Role, result.RoleFromGroup = p.resolveRoleWithSource(result.Groups)
 	result.ReturnURL = returnURL
 	result.Flow = flow
 	result.ClientID = clientID
@@ -646,24 +649,34 @@ func (p *OIDCProvider) fetchUserInfo(ctx context.Context, accessToken string) (m
 
 // resolveRole maps OIDC groups to a BetterDesk role using the configured group-role map.
 func (p *OIDCProvider) resolveRole(groups []string) string {
+	role, _ := p.resolveRoleWithSource(groups)
+	return role
+}
+
+// resolveRoleWithSource maps groups to a role and reports whether a configured
+// group mapping matched. The fallback role is an initial/default role only;
+// callers can preserve an administrator's local override when no group matched.
+func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 	p.mu.RLock()
 	cfg := *p.config
 	p.mu.RUnlock()
 
 	if len(groups) == 0 || cfg.GroupRoleMap == "" {
-		return cfg.DefaultRole
+		return cfg.DefaultRole, false
 	}
 
 	roleMap := parseGroupRoleMap(cfg.GroupRoleMap)
 	if len(roleMap) == 0 {
-		return cfg.DefaultRole
+		return cfg.DefaultRole, false
 	}
 
 	bestRole := cfg.DefaultRole
 	bestLevel := roleLevel(bestRole)
+	matched := false
 
 	for _, group := range groups {
 		if role, ok := roleMap[group]; ok {
+			matched = true
 			if lvl := roleLevel(role); lvl > bestLevel {
 				bestRole = role
 				bestLevel = lvl
@@ -671,7 +684,7 @@ func (p *OIDCProvider) resolveRole(groups []string) string {
 		}
 	}
 
-	return bestRole
+	return bestRole, matched
 }
 
 // cleanupStates removes expired state entries every 5 minutes.

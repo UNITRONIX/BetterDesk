@@ -5,6 +5,38 @@
 
 ---
 
+## [3.5.158] — 2026-10-14
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.157] — 2026-10-12
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.156] — 2026-10-12
+
+### Changed
+- **OIDC SSO-first login and role administration (#443):** OIDC can now launch
+  SSO automatically, while `/login?autoLaunch=0` and private network access
+  retain the local password form for recovery. Administrators can change roles
+  for OIDC users; the selected role persists unless an explicit OIDC group-role
+  mapping matches on a later login. Password changes remain provider-managed.
+
+---
+
+## [3.5.155] — 2026-10-10
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.5.154] — 2026-10-08
 
 ### Changed
@@ -3943,3 +3975,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.152]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.151...v3.5.152
 [3.5.153]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.152...v3.5.153
 [3.5.154]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.153...v3.5.154
+[3.5.155]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.154...v3.5.155
+[3.5.156]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.155...v3.5.156
+[3.5.157]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.156...v3.5.157
+[3.5.158]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.157...v3.5.158

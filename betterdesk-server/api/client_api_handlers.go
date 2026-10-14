@@ -406,10 +406,17 @@ func normalizeAbDataField(data json.RawMessage) string {
 			dataStr = unquoted
 		}
 	}
-	if dataStr == "" || dataStr == "null" {
+	if strings.TrimSpace(dataStr) == "" || strings.TrimSpace(dataStr) == "null" {
 		dataStr = "{}"
 	}
 	return dataStr
+}
+
+func normalizeAddressBookResponse(data string) string {
+	if strings.TrimSpace(data) == "" || strings.TrimSpace(data) == "null" {
+		return "{}"
+	}
+	return data
 }
 
 // handleClientAddressBook handles address book get/set for RustDesk clients.
@@ -441,6 +448,7 @@ func (s *Server) handleClientAddressBook(w http.ResponseWriter, r *http.Request)
 		}
 		// Enforce device-group / folder ACL on Address Book peers (org merge + stale entries).
 		data = s.applyDeviceScopeToAddressBook(r, username, role, data)
+		data = normalizeAddressBookResponse(data)
 		writeJSON(w, http.StatusOK, map[string]any{"data": data, "licensed_devices": 0})
 
 	case http.MethodPost:
@@ -495,6 +503,7 @@ func (s *Server) handleClientAddressBookPersonal(w http.ResponseWriter, r *http.
 			data = s.mergeAdminTagsIntoAB(data)
 		}
 		data = s.applyDeviceScopeToAddressBook(r, username, role, data)
+		data = normalizeAddressBookResponse(data)
 		writeJSON(w, http.StatusOK, map[string]any{"data": data})
 
 	case http.MethodPost:

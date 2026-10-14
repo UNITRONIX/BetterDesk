@@ -65,23 +65,120 @@ function _parseBranding(raw) {
 
 function _availablePlatforms() {
     const all = bundleService.PLATFORMS || [];
-    if (!EMBEDDED_MODE) return all;
+    if (!EMBEDDED_MODE) {
+        return all.filter((p) => p.format === 'portable' && (() => {
+            try {
+                return !!supportModule.resolveTemplateDir(p.platform, p.arch);
+            } catch (_) {
+                return false;
+            }
+        })());
+    }
     const capabilities = clientBuilder.getBuildCapabilities();
-    if (capabilities.mode === 'remote') return all;
     const supported = new Set((capabilities.targets || []).map((p) => (
         `${p.platform}/${p.arch}/${p.format}`
     )));
     return all.filter((p) => supported.has(`${p.platform}/${p.arch}/${p.format}`));
 }
 
+function _platformKey(platform) {
+    return `${platform.platform}/${platform.arch}/${platform.format}`;
+}
+
+function _platformStatusReason(platform, capabilities) {
+    if (!EMBEDDED_MODE) return 'template_missing';
+    if (capabilities.mode === 'remote') {
+        return capabilities.targets?.length
+            ? 'provider_target_unavailable'
+            : 'provider_targets_missing';
+    }
+    if (!capabilities.toolchain?.ready) {
+        return capabilities.toolchain?.missing?.length
+            ? `local_builder_toolchain_missing:${capabilities.toolchain.missing.join(',')}`
+            : 'local_builder_toolchain_missing';
+    }
+    const supported = new Set((capabilities.targets || []).map(_platformKey));
+    return supported.has(_platformKey(platform)) ? null : 'provider_host_only';
+}
+
+function getPlatformStatus() {
+    const all = bundleService.PLATFORMS || [];
+    const capabilities = EMBEDDED_MODE
+        ? clientBuilder.getBuildCapabilities()
+        : { mode: 'legacy-template', targets: null, toolchain: { ready: true, missing: [] } };
+    const available = new Set(_availablePlatforms().map(_platformKey));
+    return all.map((platform) => ({
+        ...platform,
+        available: available.has(_platformKey(platform)),
+        reason: available.has(_platformKey(platform))
+            ? null
+            : _platformStatusReason(platform, capabilities),
+        provider: capabilities.mode,
+    }));
+}
+
 function _filterPlatforms(only) {
     const all = _availablePlatforms();
-    if (!Array.isArray(only) || only.length === 0) return all;
+    if (only === null || only === undefined) return all;
+    if (!Array.isArray(only) || only.length === 0) return [];
     return all.filter((p) => only.some((o) => (
         String(o.platform || o.os || '') === p.platform
         && String(o.arch || 'x64') === p.arch
         && String(o.format || 'portable') === p.format
     )));
+}
+
+function _buildError(code, details = []) {
+    const error = new Error(code);
+    error.code = code;
+    error.details = details;
+    return error;
+}
+
+function validatePlatformSelection(selection) {
+    const available = _availablePlatforms();
+    if (!available.length) {
+        return {
+            valid: false,
+            error: 'local_builder_no_supported_targets',
+            details: [],
+            available,
+        };
+    }
+    if (selection === null || selection === undefined) {
+        return { valid: true, selected: available, unsupported: [], available };
+    }
+    if (!Array.isArray(selection) || selection.length === 0) {
+        return {
+            valid: false,
+            error: 'platforms_required',
+            details: ['platforms_required'],
+            available,
+        };
+    }
+    const requested = selection.map((platform) => ({
+        platform: String(platform?.platform || platform?.os || ''),
+        arch: String(platform?.arch || 'x64'),
+        format: String(platform?.format || 'portable'),
+    }));
+    const availableKeys = new Set(available.map(_platformKey));
+    const requestedKeys = [...new Set(requested.map(_platformKey))];
+    const unsupported = requestedKeys.filter((key) => !availableKeys.has(key));
+    if (unsupported.length) {
+        return {
+            valid: false,
+            error: 'unsupported_platform',
+            details: unsupported,
+            unsupported,
+            available,
+        };
+    }
+    return {
+        valid: true,
+        selected: available.filter((platform) => requestedKeys.includes(_platformKey(platform))),
+        unsupported: [],
+        available,
+    };
 }
 
 function _hostPlatformKey() {
@@ -95,10 +192,10 @@ function _hostPlatformKey() {
 async function enqueueBuildsForHash(brandingHash, { force = false, platforms: onlyPlatforms = null } = {}) {
     if (!brandingHash) throw new Error('brandingHash required');
     if (EMBEDDED_MODE && !clientBuilder.isReady()) {
-        throw new Error('betterdesk_client_builder_not_ready');
+        throw _buildError('betterdesk_client_builder_not_ready');
     }
     if (!EMBEDDED_MODE && !supportModule.isReady()) {
-        throw new Error('support_generator_module_not_ready');
+        throw _buildError('support_generator_module_not_ready');
     }
     if (!EMBEDDED_MODE && !supportModule.templatesHaveBinaries()) {
         throw new Error(
@@ -106,9 +203,13 @@ async function enqueueBuildsForHash(brandingHash, { force = false, platforms: on
             + 'Publish a full Client release with generator-templates, then reinstall the module.'
         );
     }
-    const platforms = _filterPlatforms(onlyPlatforms);
+    const platformSelection = validatePlatformSelection(onlyPlatforms);
+    if (!platformSelection.valid) {
+        throw _buildError(platformSelection.error, platformSelection.details);
+    }
+    const platforms = platformSelection.selected;
     if (!platforms.length) {
-        throw new Error('local_builder_no_supported_targets');
+        throw _buildError('local_builder_no_supported_targets');
     }
     for (const p of platforms) {
         const existing = await db.getAgentBundleBuild({
@@ -226,6 +327,10 @@ function getBuildWorkerStatus() {
             label: p.label,
         })),
         capabilities: EMBEDDED_MODE ? clientBuilder.getBuildCapabilities() : null,
+        platformCatalog: getPlatformStatus(),
+        buildReady: EMBEDDED_MODE
+            ? !!clientBuilder.getBuildReadiness().buildReady
+            : !!moduleStatus.ready,
         activeBuilds: _activeBuilds,
         startupReady: _startupReady,
     };
@@ -740,7 +845,7 @@ async function _assertEmbeddedArtifact(artifactPath, format = 'portable') {
     }
 }
 
-async function _validateEmbeddedManifest(outputDir, buildRow) {
+async function _validateEmbeddedManifest(outputDir, buildRow, requiredPlatforms = []) {
     const manifestPath = path.join(outputDir, 'manifest.json');
     let manifest;
     try {
@@ -761,20 +866,55 @@ async function _validateEmbeddedManifest(outputDir, buildRow) {
     ) {
         throw new Error('embedded_manifest_client_commit_mismatch');
     }
-    if (!Array.isArray(manifest.assets)) throw new Error('embedded_manifest_assets_missing');
+    if (!Array.isArray(manifest.assets) || manifest.assets.length === 0) {
+        throw new Error('embedded_manifest_assets_missing');
+    }
+    const validTargets = new Set((bundleService.PLATFORMS || []).map((platform) => (
+        `${platform.platform}/${platform.arch === 'x64' ? 'x86_64' : 'aarch64'}/${platform.format}`
+    )));
+    const names = new Set();
+    const targetKeys = new Set();
     for (const asset of manifest.assets) {
-        if (!asset || typeof asset.name !== 'string' || !/^[a-zA-Z0-9._-]+$/.test(asset.name)) {
+        if (
+            !asset
+            || typeof asset.name !== 'string'
+            || !/^[a-zA-Z0-9._-]+$/.test(asset.name)
+            || names.has(asset.name)
+            || typeof asset.platform !== 'string'
+            || typeof asset.arch !== 'string'
+            || typeof asset.format !== 'string'
+        ) {
             throw new Error('embedded_manifest_asset_invalid');
+        }
+        names.add(asset.name);
+        const targetKey = `${asset.platform.toLowerCase()}/${asset.arch.toLowerCase()}/${asset.format.toLowerCase()}`;
+        if (!validTargets.has(targetKey) || targetKeys.has(targetKey)) {
+            throw new Error(`embedded_manifest_asset_target_invalid:${targetKey}`);
+        }
+        targetKeys.add(targetKey);
+        if (!/^[a-f0-9]{64}$/i.test(String(asset.sha256 || ''))) {
+            throw new Error(`embedded_manifest_asset_checksum_missing:${asset.name}`);
+        }
+        if (!Number.isSafeInteger(asset.size) || asset.size < 1) {
+            throw new Error(`embedded_manifest_asset_size_invalid:${asset.name}`);
         }
         const assetPath = path.join(outputDir, asset.name);
         if (!fs.existsSync(assetPath) || !fs.statSync(assetPath).isFile()) {
             throw new Error(`embedded_manifest_asset_missing:${asset.name}`);
         }
-        if (asset.sha256) {
-            const actual = await _sha256OfFile(assetPath);
-            if (actual.toLowerCase() !== String(asset.sha256).toLowerCase()) {
-                throw new Error(`embedded_manifest_asset_checksum_mismatch:${asset.name}`);
-            }
+        const stat = fs.statSync(assetPath);
+        if (stat.size !== asset.size) {
+            throw new Error(`embedded_manifest_asset_size_mismatch:${asset.name}`);
+        }
+        const actual = await _sha256OfFile(assetPath);
+        if (actual.toLowerCase() !== String(asset.sha256).toLowerCase()) {
+            throw new Error(`embedded_manifest_asset_checksum_mismatch:${asset.name}`);
+        }
+    }
+    for (const platform of requiredPlatforms) {
+        const targetKey = `${platform.platform}/${platform.arch === 'x64' ? 'x86_64' : 'aarch64'}/${platform.format}`;
+        if (!targetKeys.has(targetKey)) {
+            throw new Error(`embedded_manifest_required_target_missing:${targetKey}`);
         }
     }
     return manifest;
@@ -839,35 +979,15 @@ async function _runEmbeddedOne(buildRow) {
                 });
             },
         });
-        const manifest = await _validateEmbeddedManifest(result.outputDir, buildRow);
+        const manifest = await _validateEmbeddedManifest(result.outputDir, buildRow, buildPlatforms);
         await fsp.mkdir(ARTIFACT_ROOT, { recursive: true });
         const availableTargets = new Set((manifest.assets || []).map((asset) => (
             `${asset.platform}/${asset.arch}/${asset.format || 'portable'}`
         )));
-        const localProvider = manifest.builder === 'betterdesk-local';
         for (const platform of buildPlatforms) {
             const targetKey = `${platform.platform}/${platform.arch === 'x64' ? 'x86_64' : 'aarch64'}/${platform.format}`;
             if (!availableTargets.has(targetKey)) {
-                if (!localProvider) {
-                    throw new Error(`embedded_build_target_missing:${targetKey}`);
-                }
-                await db.upsertAgentBundleBuild({
-                    brandingHash: buildRow.branding_hash,
-                    platform: platform.platform,
-                    arch: platform.arch,
-                    format: platform.format,
-                    status: 'failed',
-                    artifactPath: null,
-                    artifactSize: 0,
-                    artifactSha256: null,
-                    errorMessage: `local_builder_target_unavailable:${targetKey}`,
-                    clientCommit: buildRow._bundle?.client_commit || null,
-                    generationId,
-                    configFingerprint: buildRow._bundle?.config_fingerprint || null,
-                    progressPercent: 0,
-                    progressPhase: 'target_unavailable',
-                });
-                continue;
+                throw new Error(`embedded_build_target_missing:${targetKey}`);
             }
             const sourceArtifact = _findManifestArtifact(
                 result.outputDir,
@@ -956,13 +1076,17 @@ module.exports = {
     stopWorker,
     getBuildWorkerStatus,
     getAvailablePlatforms: _availablePlatforms,
+    getPlatformStatus,
+    validatePlatformSelection,
     getReadyArtifact,
     _internals: {
         isSupportProduct: _isSupportProduct,
         buildCustomTxtContent: _buildCustomTxtContent,
         findCustomTxtTarget: _findCustomTxtTarget,
         filterPlatforms: _filterPlatforms,
+        platformStatus: getPlatformStatus,
         findManifestArtifact: _findManifestArtifact,
+        validateEmbeddedManifest: _validateEmbeddedManifest,
         failedPlatformsForError: _failedPlatformsForError,
         hasWindowsSupportInstallers: windowsSupportInstaller.hasWindowsSupportInstallers,
         isArtifactPathSafe: _isArtifactPathSafe,

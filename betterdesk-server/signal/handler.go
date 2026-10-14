@@ -99,9 +99,9 @@ func encodePeerSocketAddr(entry *peer.Entry) []byte {
 // relayAdvertisedAddr returns the endpoint that a target RustDesk client will
 // see in RequestRelay.socket_addr. Native UDP/TCP clients have a real endpoint
 // and keep the existing address unchanged. WebSocket clients do not expose a
-// usable UDP source port through the WSS proxy, so advertise the registered
-// client IP (or the trusted current IP) with port 0 instead of leaking the
-// proxy's ephemeral TCP port. The live correlation address remains separate.
+// usable UDP source port through the WSS proxy, so advertise the trusted live
+// correlation IP with port 0 instead of leaking the proxy's ephemeral TCP
+// port or reusing a stale address from the peer registry.
 func relayAdvertisedAddr(s *Server, correlationAddr *net.UDPAddr, initiatorID string, initiatorType peer.ConnType) *net.UDPAddr {
 	if correlationAddr == nil {
 		return nil
@@ -110,18 +110,6 @@ func relayAdvertisedAddr(s *Server, correlationAddr *net.UDPAddr, initiatorID st
 		addr := *correlationAddr
 		addr.IP = append(net.IP(nil), correlationAddr.IP...)
 		return &addr
-	}
-
-	if s != nil && s.peers != nil && initiatorID != "" {
-		if entry := s.peers.Get(initiatorID); entry != nil {
-			host := entry.IP
-			if parsedHost, _, err := net.SplitHostPort(host); err == nil {
-				host = parsedHost
-			}
-			if ip := net.ParseIP(strings.Trim(host, "[]")); ip != nil {
-				return &net.UDPAddr{IP: ip}
-			}
-		}
 	}
 
 	addr := &net.UDPAddr{IP: append(net.IP(nil), correlationAddr.IP...)}

@@ -6,7 +6,7 @@ Configure **OpenID Connect (OIDC) / OAuth2** single sign-on so operators log in 
 
 ## Overview
 
-- Optional — local username/password login remains available unless disabled
+- Optional — local username/password login remains available unless SSO-first is enabled
 - Panel login at **http://your-server:5000**
 - Desktop client login via API server (typically port **21114** / **21121**) when OIDC is enabled
 - IdP callback handled by the Go server API (typically port **21114** or **21121** in Docker)
@@ -31,6 +31,12 @@ Configure **OpenID Connect (OIDC) / OAuth2** single sign-on so operators log in 
 | **Scopes** | Default `openid profile email` |
 | **Use PKCE** | Recommended for public clients |
 | **Auto provisioning** | Create local user on first SSO login (if enabled) |
+| **Prefer SSO login** | Automatically launch the IdP when opening `/login`; disabled by default |
+
+When **Prefer SSO login** is enabled, use `/login?autoLaunch=0` to show the
+local username/password form. Requests from private network addresses also
+keep the local form available for emergency administration. This only changes
+the login-page experience; it does not disable the password API.
 
 > [!IMPORTANT]
 > When using HTTPS behind a reverse proxy, set `TRUST_PROXY=true` in `.env` so redirect URLs and cookies use the correct scheme.
@@ -85,7 +91,12 @@ See [REVERSE_PROXY.md](../setup/REVERSE_PROXY.md).
 
 - First SSO login may create a user (if auto-provisioning enabled)
 - If auto-provisioning is **disabled**, users must exist in BetterDesk first — otherwise login fails with `oidc_no_account`
-- Map IdP groups to server roles manually after first login (or via future automation)
+- New users receive the configured default role (Viewer by default), or the
+  role from a matching group map.
+- Administrators can change an OIDC user's role under **Users**. If no OIDC
+  group mapping matches on a later login, the manually selected role is
+  preserved. A matching group mapping remains authoritative and updates the
+  role.
 
 ---
 

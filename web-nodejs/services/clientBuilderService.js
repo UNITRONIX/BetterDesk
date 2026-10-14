@@ -21,11 +21,46 @@ const AdmZip = require('adm-zip');
 const nacl = require('tweetnacl');
 
 const config = require('../config/config');
+
+function loadBuildEnvironment() {
+    const envFile = process.env.BETTERDESK_BUILD_ENV_FILE || '/etc/betterdesk/build.env';
+    try {
+        if (!fs.existsSync(envFile)) return;
+        const text = fs.readFileSync(envFile, 'utf8');
+        for (const line of text.split(/\r?\n/)) {
+            const match = /^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
+            if (!match) continue;
+            const [, key, value] = match;
+            if (process.env[key] === undefined) process.env[key] = value;
+        }
+    } catch (err) {
+        console.warn('[clientBuilderService] could not load build env file:', err.message);
+    }
+}
+
+loadBuildEnvironment();
+
 const localClientBuilder = require('./localClientBuilder');
 
 const DEFAULT_REPO = 'UNITRONIX/BetterDesk-Client';
 const DEFAULT_REF = 'master';
 const MAX_RESPONSE_BYTES = 64 * 1024 * 1024;
+const PROVIDER_TARGETS_ENV = 'BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON';
+const PROVIDER_TARGETS_FILE_ENV = 'BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE';
+const PROVIDER_TARGETS = new Set([
+    'windows/x64/portable',
+    'windows/arm64/portable',
+    'linux/x64/portable',
+    'linux/x64/deb',
+    'linux/x64/rpm',
+    'linux/x64/arch',
+    'linux/arm64/portable',
+    'linux/arm64/deb',
+    'linux/arm64/rpm',
+    'linux/arm64/arch',
+    'macos/x64/portable',
+    'macos/arm64/portable',
+]);
 const BUILD_TIMEOUT_MS = Math.max(
     60_000,
     Number.parseInt(process.env.BETTERDESK_CLIENT_BUILD_TIMEOUT_MS || '3600000', 10)
@@ -544,6 +579,47 @@ function externalProviderCommand() {
     return String(process.env.BETTERDESK_CLIENT_BUILD_COMMAND || '').trim();
 }
 
+function normalizeProviderTarget(raw) {
+    const platform = String(raw?.platform || raw?.os || '').trim().toLowerCase();
+    const arch = String(raw?.arch || 'x64').trim().toLowerCase();
+    const format = String(raw?.format || 'portable').trim().toLowerCase();
+    const key = `${platform}/${arch}/${format}`;
+    if (!PROVIDER_TARGETS.has(key)) return null;
+    return { platform, arch, format };
+}
+
+function configuredProviderTargets() {
+    let raw = String(process.env[PROVIDER_TARGETS_ENV] || '').trim();
+    if (!raw) {
+        const filePath = String(process.env[PROVIDER_TARGETS_FILE_ENV] || '').trim();
+        if (filePath) {
+            try {
+                raw = fs.readFileSync(filePath, 'utf8');
+            } catch (err) {
+                return {
+                    targets: [],
+                    error: `provider_targets_file_unreadable:${err.code || 'unknown'}`,
+                };
+            }
+        }
+    }
+    if (!raw) return { targets: [], error: 'provider_targets_missing' };
+    try {
+        const parsed = JSON.parse(raw);
+        const values = Array.isArray(parsed) ? parsed : parsed?.targets;
+        if (!Array.isArray(values)) return { targets: [], error: 'provider_targets_invalid' };
+        const targets = [...new Map(
+            values.map(normalizeProviderTarget)
+                .filter(Boolean)
+                .map((target) => [`${target.platform}/${target.arch}/${target.format}`, target])
+        ).values()];
+        if (!targets.length) return { targets: [], error: 'provider_targets_invalid' };
+        return { targets, error: null };
+    } catch (_) {
+        return { targets: [], error: 'provider_targets_invalid' };
+    }
+}
+
 function githubActionsEnabled() {
     return String(process.env.BETTERDESK_CLIENT_GITHUB_ACTIONS || 'off').trim().toLowerCase() !== 'off';
 }
@@ -563,14 +639,44 @@ function usesRemoteProvider() {
 
 function getBuildCapabilities() {
     if (usesRemoteProvider()) {
+        const configured = configuredProviderTargets();
         return {
             mode: 'remote',
-            targets: null,
+            provider: externalProviderCommand() ? 'command' : 'github-actions',
+            targets: configured.targets,
             host: null,
-            toolchain: { ready: true, missing: [] },
+            toolchain: {
+                ready: configured.targets.length > 0,
+                missing: configured.targets.length ? [] : [configured.error || 'provider_targets_missing'],
+            },
+            buildReady: configured.targets.length > 0,
+            reason: configured.targets.length ? null : configured.error || 'provider_targets_missing',
         };
     }
-    return localClientBuilder.getCapabilities();
+    const capabilities = localClientBuilder.getCapabilities();
+    return {
+        ...capabilities,
+        buildReady: !!(
+            capabilities.toolchain?.ready
+            && Array.isArray(capabilities.targets)
+            && capabilities.targets.length > 0
+        ),
+        reason: capabilities.toolchain?.ready
+            ? (capabilities.targets?.length ? null : 'local_builder_no_supported_targets')
+            : 'local_builder_toolchain_missing',
+    };
+}
+
+function getBuildReadiness() {
+    const sourceReady = isReady();
+    const capabilities = getBuildCapabilities();
+    const buildReady = sourceReady && capabilities.buildReady;
+    return {
+        sourceReady,
+        buildReady,
+        reason: sourceReady ? capabilities.reason : 'betterdesk_client_builder_not_ready',
+        capabilities,
+    };
 }
 
 function signingSeedPresent() {
@@ -599,7 +705,11 @@ async function acceptTerms() {
 }
 
 async function runBuild(request, { onProgress } = {}) {
-    if (!isReady()) throw new Error('betterdesk_client_builder_not_ready');
+    const readiness = getBuildReadiness();
+    if (!readiness.sourceReady) throw new Error('betterdesk_client_builder_not_ready');
+    if (!readiness.buildReady) {
+        throw new Error(readiness.reason || 'betterdesk_client_builder_no_supported_targets');
+    }
     const signingKey = prepareClientSigningPublicKey();
     request = { ...request, signing_public_key: signingKey.publicKey };
     const requestId = String(request?.generationId || '').trim();
@@ -763,6 +873,7 @@ async function runGithubActionsBuild(request, requestPath, outputDir) {
 async function getStatus() {
     const state = readState();
     const signingKey = ensureSigningKeySync();
+    const buildReadiness = getBuildReadiness();
     let remote = null;
     let updateError = null;
     try {
@@ -782,7 +893,9 @@ async function getStatus() {
         signingKeyGenerated: !!signingKey.generated,
         signingPublicKey: signingKey.publicKey,
         signingSeedPath: signingSeedPath(),
-        ready: isReady(),
+        ready: buildReadiness.sourceReady,
+        buildReady: buildReadiness.buildReady,
+        buildReadiness,
         remoteCommit: remote?.sha || null,
         updateAvailable: !!(remote?.sha && remote.sha !== state.installedCommit),
         updateError,
@@ -814,6 +927,8 @@ module.exports = {
     syncAndQueueRebuilds,
     getStatus,
     getBuildCapabilities,
+    getBuildReadiness,
+    configuredProviderTargets,
     isReady,
     runBuild,
     generationKey,

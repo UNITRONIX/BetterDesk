@@ -240,12 +240,12 @@ describe('Users Routes', () => {
         expect(mockDb.updateUserRole).not.toHaveBeenCalled();
     });
 
-    it.each(['ldap', 'oidc'])('rejects %s user role changes', async (authProvider) => {
+    it('rejects LDAP user role changes', async () => {
         mockDb.getUserById.mockResolvedValue({
             id: 12,
-            username: `${authProvider}-user`,
+            username: 'ldap-user',
             role: 'operator',
-            auth_provider: authProvider,
+            auth_provider: 'ldap',
         });
 
         const app = createTestApp();
@@ -260,6 +260,27 @@ describe('Users Routes', () => {
         expect(res.body.success).toBe(false);
         expect(mockDb.setUserGroupMemberships).not.toHaveBeenCalled();
         expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+    });
+
+    it('allows administrators to change an OIDC user role', async () => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: 'oidc-user',
+            role: 'viewer',
+            auth_provider: 'oidc',
+        });
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ role: 'admin' });
+
+        expect(res.status).toBe(200);
+        expect(mockDb.updateUserRole).toHaveBeenCalledWith(12, 'admin');
+        expect(mockUserSync.mirrorUpdate).toHaveBeenCalledWith('oidc-user', { role: 'admin' });
     });
 
     it('returns 500 when peer grant setter is unavailable (no silent no-op)', async () => {

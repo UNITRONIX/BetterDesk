@@ -70,4 +70,85 @@ describe('clientBuilderService', () => {
         expect(fs.readFileSync(seedPath, 'utf8').trim()).toMatch(/^[A-Za-z0-9+/]+=*$/);
         expect(JSON.stringify(builder.readState())).not.toContain(key.seed);
     });
+
+    test('loads the installer environment without overriding explicit process values', () => {
+        const envDir = fs.mkdtempSync(path.join(os.tmpdir(), 'betterdesk-build-env-'));
+        const envFile = path.join(envDir, 'build.env');
+        const previousFile = process.env.BETTERDESK_BUILD_ENV_FILE;
+        const previousCargo = process.env.BETTERDESK_CLIENT_CARGO;
+        const previousVcpkg = process.env.VCPKG_ROOT;
+        try {
+            fs.writeFileSync(envFile, [
+                'BETTERDESK_CLIENT_CARGO=/opt/cargo/bin/cargo',
+                'VCPKG_ROOT=/opt/vcpkg',
+            ].join('\n'));
+            process.env.BETTERDESK_BUILD_ENV_FILE = envFile;
+            process.env.BETTERDESK_CLIENT_CARGO = '/explicit/cargo';
+            delete process.env.VCPKG_ROOT;
+            jest.resetModules();
+            const reloaded = require('../services/clientBuilderService');
+            expect(process.env.BETTERDESK_CLIENT_CARGO).toBe('/explicit/cargo');
+            expect(process.env.VCPKG_ROOT).toBe('/opt/vcpkg');
+            expect(reloaded.getBuildCapabilities).toBeDefined();
+        } finally {
+            if (previousFile === undefined) delete process.env.BETTERDESK_BUILD_ENV_FILE;
+            else process.env.BETTERDESK_BUILD_ENV_FILE = previousFile;
+            if (previousCargo === undefined) delete process.env.BETTERDESK_CLIENT_CARGO;
+            else process.env.BETTERDESK_CLIENT_CARGO = previousCargo;
+            if (previousVcpkg === undefined) delete process.env.VCPKG_ROOT;
+            else process.env.VCPKG_ROOT = previousVcpkg;
+            fs.rmSync(envDir, { recursive: true, force: true });
+        }
+    });
+
+    test('reports only explicitly configured targets for a remote provider', () => {
+        const previousCommand = process.env.BETTERDESK_CLIENT_BUILD_COMMAND;
+        const previousTargets = process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON;
+        try {
+            process.env.BETTERDESK_CLIENT_BUILD_COMMAND = 'trusted-remote-provider';
+            process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON = JSON.stringify({
+                targets: [
+                    { platform: 'windows', arch: 'x64', format: 'portable' },
+                    { platform: 'linux', arch: 'arm64', format: 'deb' },
+                    { platform: 'not-supported', arch: 'x64', format: 'portable' },
+                ],
+            });
+
+            expect(builder.getBuildCapabilities()).toMatchObject({
+                mode: 'remote',
+                provider: 'command',
+                buildReady: true,
+                targets: [
+                    { platform: 'windows', arch: 'x64', format: 'portable' },
+                    { platform: 'linux', arch: 'arm64', format: 'deb' },
+                ],
+            });
+        } finally {
+            if (previousCommand === undefined) delete process.env.BETTERDESK_CLIENT_BUILD_COMMAND;
+            else process.env.BETTERDESK_CLIENT_BUILD_COMMAND = previousCommand;
+            if (previousTargets === undefined) delete process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON;
+            else process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON = previousTargets;
+        }
+    });
+
+    test('does not advertise a remote provider without target capabilities', () => {
+        const previousCommand = process.env.BETTERDESK_CLIENT_BUILD_COMMAND;
+        const previousTargets = process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON;
+        try {
+            process.env.BETTERDESK_CLIENT_BUILD_COMMAND = 'trusted-remote-provider';
+            delete process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON;
+
+            expect(builder.getBuildCapabilities()).toMatchObject({
+                mode: 'remote',
+                buildReady: false,
+                targets: [],
+                reason: 'provider_targets_missing',
+            });
+        } finally {
+            if (previousCommand === undefined) delete process.env.BETTERDESK_CLIENT_BUILD_COMMAND;
+            else process.env.BETTERDESK_CLIENT_BUILD_COMMAND = previousCommand;
+            if (previousTargets === undefined) delete process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON;
+            else process.env.BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON = previousTargets;
+        }
+    });
 });

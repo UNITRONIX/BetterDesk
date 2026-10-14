@@ -15,8 +15,11 @@
 const express = require('express');
 const router  = express.Router();
 const crypto  = require('crypto');
+const path    = require('path');
 const db      = require('../services/database');
 const { requireAuth, requirePermission } = require('../middleware/auth');
+const genericAgentReleases = require('../services/genericAgentReleaseService');
+const betterdeskApi = require('../services/betterdeskApi');
 
 // Shared auth.db handle used for agent_templates (kept alongside users)
 let _templatesReady = false;
@@ -208,6 +211,93 @@ router.delete('/api/agent-templates/:id', requireAuth, requirePermission('enroll
     }
 });
 
+// ────────────────────────────────────────────────────────────────────────────
+// Generic Support Agent releases — imported from GitHub, served locally
+// ────────────────────────────────────────────────────────────────────────────
+
+router.get('/api/agent-releases', requireAuth, requirePermission('enrollment.manage'), async (_req, res) => {
+    try {
+        res.json({ success: true, releases: await genericAgentReleases.listCached() });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message, releases: [] });
+    }
+});
+
+router.get('/api/agent-releases/signing-status', requireAuth, requirePermission('enrollment.manage'), (_req, res) => {
+    res.json({
+        success: true,
+        fingerprint: genericAgentReleases.signingKeyFingerprint(),
+        source: process.env.BETTERDESK_SUPPORT_RELEASE_PUBLIC_KEY
+            ? 'environment'
+            : 'bundled',
+    });
+});
+
+router.post('/api/agent-releases/sync', requireAuth, requirePermission('enrollment.manage'), async (req, res) => {
+    try {
+        const imported = await genericAgentReleases.importLatest();
+        try {
+            await db.logAction(req.session.userId, 'generic_agent_release_imported',
+                `Imported generic Support Agent release ${imported.tag}`, req.ip);
+        } catch (_) {}
+        res.status(201).json({
+            success: true,
+            tag: imported.tag,
+            manifest: imported.manifest,
+        });
+    } catch (e) {
+        res.status(502).json({ success: false, error: e.message });
+    }
+});
+
+router.post('/api/agent-pairing/activate', requireAuth, requirePermission('enrollment.approve'), async (req, res) => {
+    const deviceId = String(req.body?.device_id || '').trim().slice(0, 128);
+    const displayName = String(req.body?.display_name || '').trim().slice(0, 120);
+    const folderId = Number.parseInt(req.body?.folder_id, 10) || 0;
+    if (!/^[A-Za-z0-9_.:-]{3,128}$/.test(deviceId)) {
+        return res.status(400).json({ success: false, error: 'invalid_device_id' });
+    }
+    try {
+        const pending = await betterdeskApi.getEnrollmentPending();
+        const isPending = (pending.data || []).some((item) => (
+            String(item.device_id || '') === deviceId
+        ));
+        if (isPending) {
+            const approved = await betterdeskApi.approveEnrollment(
+                deviceId,
+                displayName,
+                'standard',
+                ''
+            );
+            if (!approved.success) return res.status(502).json(approved);
+        } else {
+            const updated = await betterdeskApi.updatePeer(deviceId, {
+                display_name: displayName,
+                note: displayName,
+            });
+            if (!updated.success) return res.status(502).json(updated);
+        }
+        if (folderId > 0 && typeof db.assignDeviceToFolder === 'function') {
+            await db.assignDeviceToFolder(deviceId, folderId);
+        }
+        await db.logAction(
+            req.session.userId,
+            'generic_agent_activated',
+            `Activated generic Support Agent ${deviceId}`,
+            req.ip
+        );
+        return res.json({ success: true, device_id: deviceId });
+    } catch (e) {
+        return res.status(502).json({ success: false, error: e.message });
+    }
+});
+
+router.get('/downloads/generic-agent/:tag/:name', async (req, res) => {
+    const file = await genericAgentReleases.resolveAsset(req.params.tag, req.params.name);
+    if (!file) return res.status(404).send('Agent release asset not found');
+    return res.download(file, path.basename(file));
+});
+
 /**
  * POST /api/bd/enroll — agent enrollment using a template token.
  * Body: { enrollment_token, device_id, device_name, sysinfo }
@@ -263,15 +353,23 @@ router.get('/portal', (req, res) => {
  * The actual binaries are served from /downloads/ (static). This endpoint
  * just enumerates metadata.
  */
-router.get('/api/portal/installers', (req, res) => {
+router.get('/api/portal/installers', async (req, res) => {
     const base = req.protocol + '://' + req.get('host');
+    const cached = await genericAgentReleases.listCached();
+    const latest = cached[0];
+    const installers = latest
+        ? latest.manifest.assets.map((asset) => ({
+            platform: asset.platform,
+            arch: asset.arch,
+            url: `${base}/downloads/generic-agent/${encodeURIComponent(latest.tag)}/${encodeURIComponent(asset.name)}`,
+            format: asset.format || 'portable',
+            release: latest.tag,
+        }))
+        : [];
     res.json({
         success: true,
-        installers: [
-            { platform: 'windows', arch: 'x64', url: `${base}/downloads/BetterDesk_Agent_x64-setup.exe`, format: 'nsis' },
-            { platform: 'linux',   arch: 'x64', url: `${base}/downloads/betterdesk-agent-linux-amd64`,   format: 'binary' },
-            { platform: 'linux',   arch: 'arm64', url: `${base}/downloads/betterdesk-agent-linux-arm64`, format: 'binary' },
-        ],
+        release: latest?.tag || null,
+        installers,
     });
 });
 

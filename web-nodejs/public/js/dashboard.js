@@ -24,6 +24,22 @@
     let showIntuneScriptHandler = null;
     let showClientQrButton = null;
     let showClientQrHandler = null;
+    let activateAgentQrButton = null;
+    let activateAgentQrHandler = null;
+    let activationModal = null;
+    let activationCloseButton = null;
+    let activationStopButton = null;
+    let activationFileButton = null;
+    let activationFileInput = null;
+    let activationSubmitButton = null;
+    let activationVideo = null;
+    let activationStatus = null;
+    let activationForm = null;
+    let activationNameInput = null;
+    let activationFolderSelect = null;
+    let activationStream = null;
+    let activationTimer = null;
+    let activationDeviceId = '';
     let clientConfigHostInput = null;
     let applyClientHostButton = null;
     let applyClientHostHandler = null;
@@ -108,6 +124,8 @@
         showClientQrHandler = showClientConfigQr;
         showClientQrButton?.addEventListener('click', showClientQrHandler);
 
+        initAgentActivation();
+
         clientConfigHostInput = findById('client-config-host-input');
         applyClientHostButton = findById('apply-client-host-btn');
         applyClientHostHandler = () => loadClientConfig({ persistHost: true });
@@ -144,6 +162,10 @@
         if (copyDeployStringButton && copyDeployStringHandler) copyDeployStringButton.removeEventListener('click', copyDeployStringHandler);
         if (showIntuneScriptButton && showIntuneScriptHandler) showIntuneScriptButton.removeEventListener('click', showIntuneScriptHandler);
         if (showClientQrButton && showClientQrHandler) showClientQrButton.removeEventListener('click', showClientQrHandler);
+        if (activateAgentQrButton && activateAgentQrHandler) {
+            activateAgentQrButton.removeEventListener('click', activateAgentQrHandler);
+        }
+        stopAgentActivation();
         if (applyClientHostButton && applyClientHostHandler) applyClientHostButton.removeEventListener('click', applyClientHostHandler);
         clientConfigCopyButtons.forEach(button => {
             const handler = clientConfigCopyHandlers.get(button);
@@ -169,6 +191,8 @@
         showIntuneScriptHandler = null;
         showClientQrButton = null;
         showClientQrHandler = null;
+        activateAgentQrButton = null;
+        activateAgentQrHandler = null;
         clientConfigHostInput = null;
         applyClientHostButton = null;
         applyClientHostHandler = null;
@@ -746,6 +770,197 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             }
         } catch (err) {
             console.error('Health overview error:', err);
+        }
+    }
+
+    function initAgentActivation() {
+        activateAgentQrButton = findById('activate-agent-qr-btn');
+        activationModal = findById('dashboard-agent-activation-modal');
+        if (!activateAgentQrButton || !activationModal) return;
+        activateAgentQrHandler = openAgentActivation;
+        activateAgentQrButton.addEventListener('click', activateAgentQrHandler);
+        activationCloseButton = findById('dashboard-agent-activation-close');
+        activationStopButton = findById('dashboard-agent-activation-stop');
+        activationFileButton = findById('dashboard-agent-activation-file-btn');
+        activationFileInput = findById('dashboard-agent-activation-file');
+        activationSubmitButton = findById('dashboard-agent-activation-submit');
+        activationVideo = findById('dashboard-agent-activation-video');
+        activationStatus = findById('dashboard-agent-activation-status');
+        activationForm = findById('dashboard-agent-activation-form');
+        activationNameInput = findById('dashboard-agent-activation-name');
+        activationFolderSelect = findById('dashboard-agent-activation-folder');
+        activationCloseButton?.addEventListener('click', closeAgentActivation);
+        activationStopButton?.addEventListener('click', closeAgentActivation);
+        activationFileButton?.addEventListener('click', () => activationFileInput?.click());
+        activationFileInput?.addEventListener('change', scanAgentQrImage);
+        activationSubmitButton?.addEventListener('click', submitAgentActivation);
+    }
+
+    async function openAgentActivation() {
+        if (!activationModal) return;
+        activationModal.hidden = false;
+        activationModal.style.display = 'flex';
+        activationForm.hidden = true;
+        activationDeviceId = '';
+        setActivationStatus(_('dashboard.activate_agent_scanning'));
+        await startAgentActivationCamera();
+    }
+
+    function closeAgentActivation() {
+        stopAgentActivation();
+        if (activationModal) {
+            activationModal.hidden = true;
+            activationModal.style.display = 'none';
+        }
+    }
+
+    function stopAgentActivation() {
+        if (activationTimer) clearInterval(activationTimer);
+        activationTimer = null;
+        if (activationStream) {
+            activationStream.getTracks().forEach(track => track.stop());
+            activationStream = null;
+        }
+        if (activationVideo) activationVideo.srcObject = null;
+    }
+
+    function setActivationStatus(message, error = false) {
+        if (!activationStatus) return;
+        activationStatus.textContent = message || '';
+        activationStatus.classList.toggle('is-error', !!error);
+    }
+
+    async function startAgentActivationCamera() {
+        if (!('BarcodeDetector' in window) || !navigator.mediaDevices?.getUserMedia) {
+            setActivationStatus(_('dashboard.activate_agent_camera_unavailable'));
+            return;
+        }
+        try {
+            activationStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false,
+            });
+            activationVideo.srcObject = activationStream;
+            await activationVideo.play();
+            const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+            activationTimer = setInterval(async () => {
+                if (!activationVideo || activationVideo.readyState < 2) return;
+                try {
+                    const codes = await detector.detect(activationVideo);
+                    if (codes.length && codes[0].rawValue) {
+                        await handleAgentQrPayload(codes[0].rawValue);
+                    }
+                } catch (_) { /* camera frame may be unavailable */ }
+            }, 250);
+        } catch (error) {
+            setActivationStatus(error.name === 'NotAllowedError'
+                ? _('dashboard.activate_agent_camera_denied')
+                : _('dashboard.activate_agent_camera_unavailable'), true);
+        }
+    }
+
+    async function scanAgentQrImage(event) {
+        const file = event.target.files?.[0];
+        if (!file || !('BarcodeDetector' in window)) {
+            setActivationStatus(_('dashboard.activate_agent_camera_unavailable'), true);
+            return;
+        }
+        try {
+            const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+            const bitmap = await createImageBitmap(file);
+            const codes = await detector.detect(bitmap);
+            bitmap.close?.();
+            if (!codes.length || !codes[0].rawValue) throw new Error('QR not found');
+            await handleAgentQrPayload(codes[0].rawValue);
+        } catch (_) {
+            setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+        } finally {
+            event.target.value = '';
+        }
+    }
+
+    async function handleAgentQrPayload(rawValue) {
+        let payload;
+        try {
+            payload = JSON.parse(rawValue);
+        } catch (_) {
+            setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+            return;
+        }
+        if (payload?.type !== 'betterdesk-agent-pairing'
+            || payload.version !== 1
+            || typeof payload.device_id !== 'string'
+            || !payload.device_id.trim()) {
+            setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+            return;
+        }
+        if (payload.server) {
+            try {
+                if (new URL(payload.server).host !== window.location.host) {
+                    setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+                    return;
+                }
+            } catch (_) {
+                setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+                return;
+            }
+        }
+        stopAgentActivation();
+        activationDeviceId = payload.device_id.trim();
+        setActivationStatus(_('dashboard.activate_agent_loading'));
+        try {
+            const result = await fetchApi('/api/enrollment/pending');
+            const pending = result?.data || [];
+            const match = pending.find(item => String(item.device_id || '') === activationDeviceId);
+            activationNameInput.value = match?.hostname || activationDeviceId;
+            await loadActivationFolders();
+            activationForm.hidden = false;
+            setActivationStatus(_('dashboard.activate_agent_ready'));
+        } catch (error) {
+            setActivationStatus(error.message || _('errors.server_error'), true);
+        }
+    }
+
+    async function loadActivationFolders() {
+        if (!activationFolderSelect) return;
+        try {
+            const result = await fetchApi('/api/folders');
+            const folders = result?.data?.folders || result?.folders || [];
+            activationFolderSelect.querySelectorAll('option:not([value="0"])')
+                .forEach(option => option.remove());
+            folders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = String(folder.id);
+                option.textContent = folder.name || folder.label || `#${folder.id}`;
+                activationFolderSelect.appendChild(option);
+            });
+        } catch (_) { /* folder assignment is optional */ }
+    }
+
+    async function submitAgentActivation() {
+        if (!activationDeviceId) return;
+        activationSubmitButton.disabled = true;
+        setActivationStatus(_('dashboard.activate_agent_submitting'));
+        try {
+            const result = await Utils.api(
+                '/api/agent-pairing/activate',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        device_id: activationDeviceId,
+                        display_name: activationNameInput.value.trim(),
+                        folder_id: Number(activationFolderSelect.value || 0),
+                    }),
+                }
+            );
+            if (!result?.success) throw new Error(result?.error || _('errors.server_error'));
+            setActivationStatus(_('dashboard.activate_agent_success'));
+            activationForm.hidden = true;
+            setTimeout(closeAgentActivation, 1200);
+        } catch (error) {
+            setActivationStatus(error.message || _('errors.server_error'), true);
+        } finally {
+            activationSubmitButton.disabled = false;
         }
     }
     

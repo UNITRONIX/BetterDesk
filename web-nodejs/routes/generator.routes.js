@@ -94,6 +94,55 @@ function generatorNotReadyError() {
         : 'module_not_ready';
 }
 
+function generatorBuildErrorKey(code) {
+    const keys = {
+        platforms_required: 'platforms_required',
+        unsupported_platform: 'unsupported_platform',
+        local_builder_no_supported_targets: 'no_supported_targets',
+        local_builder_toolchain_missing: 'toolchain_missing',
+        betterdesk_client_builder_not_ready: 'validation_failed',
+        support_generator_module_not_ready: 'validation_failed',
+    };
+    return keys[code] ? `generator.errors.${keys[code]}` : 'errors.bad_request';
+}
+
+function sendGeneratorBuildError(req, res, error, status = 400) {
+    const code = String(error?.code || error?.message || 'build_request_invalid').split(':', 1)[0];
+    const details = ['platforms_required', 'unsupported_platform'].includes(code)
+        && Array.isArray(error?.details) && error.details.length
+        ? error.details
+        : [];
+    return res.status(status).json({
+        success: false,
+        error: req.t(generatorBuildErrorKey(code)),
+        code,
+        details,
+    });
+}
+
+function sendGeneratorNotReady(req, res) {
+    const code = generatorNotReadyError();
+    return res.status(400).json({
+        success: false,
+        error: req.t(generatorBuildErrorKey(code)),
+        code,
+        details: [],
+    });
+}
+
+function validateGeneratorPlatforms(req, res) {
+    const requested = Array.isArray(req.body?.platforms) ? req.body.platforms : null;
+    const result = clientTemplateWorker.validatePlatformSelection(requested);
+    if (!result.valid) {
+        const error = new Error(result.error);
+        error.code = result.error;
+        error.details = result.details;
+        sendGeneratorBuildError(req, res, error);
+        return null;
+    }
+    return result;
+}
+
 function currentClientRevision() {
     if (!EMBEDDED_MODE) return null;
     const commit = String(clientBuilder.readState().installedCommit || '').trim();
@@ -371,8 +420,10 @@ router.get('/api/generator/defaults', requireAuth, requireAdmin, async (req, res
 router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res) => {
     try {
         if (!generatorReady()) {
-            return res.status(400).json({ success: false, error: generatorNotReadyError() });
+            return sendGeneratorNotReady(req, res);
         }
+        const platformSelection = validateGeneratorPlatforms(req, res);
+        if (!platformSelection) return;
         const name = String(req.body.name || '').trim().slice(0, 100);
         if (!name) {
             return res.status(400).json({ success: false, error: req.t('generator.errors.name_required') });
@@ -415,15 +466,11 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
         const platformsFilter = Array.isArray(req.body.platforms) ? req.body.platforms : null;
         try {
             await resolveBuildWorker().enqueueBuildsForHash(brandingHash, {
-                platforms: platformsFilter,
+                platforms: platformsFilter || platformSelection.selected,
             });
         } catch (e) {
             console.error('[generator] enqueue builds failed:', e.message);
-            return res.json({
-                success: true,
-                warning: e.message,
-                data: { bundle: serializeBundle(created) },
-            });
+            return sendGeneratorBuildError(req, res, e, 503);
         }
         res.json({ success: true, data: { bundle: serializeBundle(created) } });
     } catch (err) {
@@ -435,8 +482,10 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
 router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async (req, res) => {
     try {
         if (!generatorReady()) {
-            return res.status(400).json({ success: false, error: generatorNotReadyError() });
+            return sendGeneratorNotReady(req, res);
         }
+        const platformSelection = validateGeneratorPlatforms(req, res);
+        if (!platformSelection) return;
         const existing = await db.getAgentBundle(req.params.bundleId);
         if (!existing) return res.status(404).json({ success: false, error: req.t('errors.not_found') });
         const name = String(req.body.name || existing.name).trim().slice(0, 100);
@@ -492,7 +541,9 @@ router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
             clientCommit: clientCommit || existing.client_commit || null,
         });
         if (existing.branding_hash !== brandingHash || configChanged) {
-            const platformsFilter = Array.isArray(req.body.platforms) ? req.body.platforms : null;
+            const platformsFilter = Array.isArray(req.body.platforms)
+                ? req.body.platforms
+                : platformSelection.selected;
             resolveBuildWorker().enqueueBuildsForHash(brandingHash, {
                 platforms: platformsFilter,
             }).catch((e) => {
@@ -514,9 +565,11 @@ router.post('/api/generator/bundles/:bundleId/rebuild', requireAuth, requireAdmi
             return res.status(400).json({ success: false, error: req.t('generator.errors.rebuild_revoked') });
         }
         if (!generatorReady()) {
-            return res.status(400).json({ success: false, error: generatorNotReadyError() });
+            return sendGeneratorNotReady(req, res);
         }
         const platformsFilter = Array.isArray(req.body?.platforms) ? req.body.platforms : null;
+        const platformSelection = validateGeneratorPlatforms(req, res);
+        if (!platformSelection) return;
         const result = await resolveBuildWorker().rebuildBundleById(
             req.params.bundleId,
             platformsFilter ? { platforms: platformsFilter } : undefined
@@ -624,7 +677,15 @@ router.post('/api/generator/preview', requireAuth, requireAdmin, async (req, res
 });
 
 router.get('/api/generator/platforms', requireAuth, requireAdmin, (req, res) => {
-    res.json({ success: true, data: { platforms: clientTemplateWorker.getAvailablePlatforms() } });
+    const capabilities = EMBEDDED_MODE ? clientBuilder.getBuildCapabilities() : null;
+    res.json({
+        success: true,
+        data: {
+            platforms: clientTemplateWorker.getPlatformStatus(),
+            availablePlatforms: clientTemplateWorker.getAvailablePlatforms(),
+            capabilities,
+        },
+    });
 });
 
 // =========================================================================

@@ -558,7 +558,7 @@ router.patch('/api/users/:id', requireAuth, requirePermission('user.edit'), asyn
                 error: req.t('users.provider_managed_hint')
             });
         }
-        if (isExternalAccount && role) {
+        if (provider === 'ldap' && role) {
             return res.status(400).json({
                 success: false,
                 error: req.t('users.provider_managed_hint')

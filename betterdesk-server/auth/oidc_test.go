@@ -267,6 +267,23 @@ func TestResolveRole(t *testing.T) {
 	}
 }
 
+func TestResolveRoleWithSource(t *testing.T) {
+	p := NewOIDCProvider(&OIDCConfig{
+		GroupRoleMap: "admins=admin|ops=operator",
+		DefaultRole:  "viewer",
+	})
+
+	role, matched := p.resolveRoleWithSource([]string{"users"})
+	if role != "viewer" || matched {
+		t.Fatalf("unmatched role = %q, matched = %v; want viewer, false", role, matched)
+	}
+
+	role, matched = p.resolveRoleWithSource([]string{"ops"})
+	if role != "operator" || !matched {
+		t.Fatalf("mapped role = %q, matched = %v; want operator, true", role, matched)
+	}
+}
+
 // TestParseJWTPayload verifies JWT payload extraction.
 func TestParseJWTPayload(t *testing.T) {
 	// Build a fake JWT with header.payload.signature

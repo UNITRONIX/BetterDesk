@@ -21,8 +21,8 @@ const conn = require('./agentBundleConnection');
 // Supported delivery targets. The portal renders one card per entry.
 // BetterDesk Support Generator builds incoming-only Client binaries.
 const PLATFORMS = [
-    { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip + installer)' },
-    { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip + installer)' },
+    { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip)' },
+    { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip)' },
     { platform: 'linux',   arch: 'x64',   format: 'portable', label: 'Linux x64 portable (.tar.gz)' },
     { platform: 'linux',   arch: 'x64',   format: 'deb',      label: 'Debian/Ubuntu x64 package (.deb)' },
     { platform: 'linux',   arch: 'x64',   format: 'rpm',      label: 'Fedora/RHEL/openSUSE x64 package (.rpm)' },

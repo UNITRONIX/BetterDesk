@@ -1844,7 +1844,12 @@
                                     <input type="checkbox" id="oidc-allow-signup" class="toggle-switch" checked>
                                     <span>${_('settings.oidc_allow_signup')}</span>
                                 </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" id="oidc-prefer-sso" class="toggle-switch">
+                                    <span>${_('settings.oidc_prefer_sso')}</span>
+                                </label>
                             </div>
+                            <small class="form-hint">${_('settings.oidc_prefer_sso_hint')}</small>
 
                             <!-- Manual endpoints (shown when auto_discovery is off) -->
                             <div id="oidc-manual-endpoints" style="display: none;">

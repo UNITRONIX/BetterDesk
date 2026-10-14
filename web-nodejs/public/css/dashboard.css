@@ -1088,6 +1088,72 @@
     font-weight: 500;
 }
 
+.dashboard-agent-activation-modal[hidden] {
+    display: none;
+}
+
+.dashboard-agent-activation-dialog {
+    width: min(100% - 24px, 560px);
+}
+
+.dashboard-agent-activation-body {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.dashboard-agent-activation-reader {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-height: 54vh;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: #0b1220;
+}
+
+.dashboard-agent-activation-reader video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dashboard-agent-activation-frame {
+    position: absolute;
+    inset: 22%;
+    border: 3px solid var(--accent-blue);
+    border-radius: 18px;
+    box-shadow: 0 0 0 999px rgb(0 0 0 / 28%);
+    pointer-events: none;
+}
+
+.dashboard-agent-activation-file {
+    display: none;
+}
+
+.dashboard-agent-activation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.dashboard-agent-activation-status {
+    min-height: 1.3em;
+    color: var(--text-secondary);
+}
+
+.dashboard-agent-activation-status.is-error {
+    color: var(--accent-red, #b91c1c);
+}
+
+.dashboard-agent-activation-form {
+    display: grid;
+    gap: var(--space-sm);
+}
+
+.dashboard-agent-activation-form[hidden] {
+    display: none;
+}
+
 @media (max-width: 1280px) {
     .dashboard-stats,
     .quick-actions {

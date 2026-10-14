@@ -4883,6 +4883,7 @@
         setChecked('oidc-use-pkce', data.use_pkce);
         setChecked('oidc-auto-discovery', data.auto_discovery !== false);
         setChecked('oidc-allow-signup', data.allow_signup !== false);
+        setChecked('oidc-prefer-sso', data.prefer_sso === true);
         setVal('oidc-authorization-url', data.authorization_url);
         setVal('oidc-token-url', data.token_url);
         setVal('oidc-userinfo-url', data.userinfo_url);
@@ -4924,6 +4925,7 @@
             use_pkce: getChecked('oidc-use-pkce'),
             auto_discovery: getChecked('oidc-auto-discovery'),
             allow_signup: getChecked('oidc-allow-signup'),
+            prefer_sso: getChecked('oidc-prefer-sso'),
             authorization_url: getVal('oidc-authorization-url'),
             token_url: getVal('oidc-token-url'),
             userinfo_url: getVal('oidc-userinfo-url'),

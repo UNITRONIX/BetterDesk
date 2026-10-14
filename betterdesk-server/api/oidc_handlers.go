@@ -39,6 +39,7 @@ func (s *Server) loadOIDCConfigFromDB() *auth.OIDCConfig {
 	}
 
 	cfg.Enabled = getBool("oidc.enabled")
+	cfg.PreferSSO = getBool("oidc.prefer_sso")
 	if v := getString("oidc.display_name"); v != "" {
 		cfg.DisplayName = v
 	}
@@ -116,6 +117,9 @@ func (s *Server) saveOIDCConfigToDB(cfg *auth.OIDCConfig) error {
 	}
 
 	if err := setBool("oidc.enabled", cfg.Enabled); err != nil {
+		return err
+	}
+	if err := setBool("oidc.prefer_sso", cfg.PreferSSO); err != nil {
 		return err
 	}
 	if err := set("oidc.display_name", cfg.DisplayName); err != nil {
@@ -284,9 +288,14 @@ func (s *Server) handleOIDCLoginStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	preferSSO := false
+	if s.db != nil {
+		preferSSO = s.loadOIDCConfigFromDB().PreferSSO
+	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"enabled":      true,
 		"display_name": s.oidcProvider.GetDisplayName(),
+		"prefer_sso":   preferSSO,
 	})
 }
 

@@ -58,6 +58,14 @@ support and for believing in open, self-hostable remote-management software.
 
 Thank you, Redspin! 🙏
 
+### muopc ([@muopc](https://github.com/muopc))
+
+**muopc** backed BetterDesk with a one-time sponsorship via
+[GitHub Sponsors](https://github.com/sponsors/UNITRONIX). We are grateful for the
+support and for believing in open, self-hostable remote-management software.
+
+Thank you, muopc! 🙏
+
 ---
 
 ## 💖 How to Sponsor
@@ -200,4 +208,4 @@ belongs to the creator.
 
 ---
 
-*Last updated: 2026-07-31*
+*Last updated: 2026-10-12*

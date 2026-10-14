@@ -585,11 +585,10 @@
                 const emailInput = document.getElementById('user-email');
                 if (emailInput) emailInput.value = user.email || '';
                 if (passwordInput) passwordInput.placeholder = _('users.password_leave_empty');
-                // LDAP/OIDC accounts are managed by the identity provider:
-                // password cannot be set locally and the role is provider-mapped.
+                // LDAP accounts are fully provider-managed. OIDC passwords remain
+                // provider-managed, while the panel role can be overridden.
                 const provider = (user.auth_provider || 'local').toLowerCase();
-                const isExternalAccount = provider === 'ldap' || provider === 'oidc';
-                if (isExternalAccount && roleSelect) {
+                if (provider === 'ldap' && roleSelect) {
                     roleSelect.disabled = true;
                     const roleGroup = roleSelect.closest('.form-group');
                     if (roleGroup) {
@@ -609,7 +608,7 @@
                     if (passwordGroup) {
                         const hint = document.createElement('span');
                         hint.className = 'form-hint';
-                        hint.textContent = _('users.provider_managed_hint');
+                        hint.textContent = _('users.password_managed_by_provider');
                         passwordGroup.appendChild(hint);
                     }
                 }
@@ -733,10 +732,11 @@
                 // Update existing user
                 const user = users.find(item => Number(item.id) === Number(editingUserId));
                 const provider = (user?.auth_provider || 'local').toLowerCase();
-                const isExternalAccount = provider === 'ldap' || provider === 'oidc';
                 const data = { email, groupGuids, folderIds, peerIds, strategyGuid };
-                if (!isExternalAccount) {
+                if (provider !== 'ldap') {
                     data.role = role;
+                }
+                if (provider === 'local' && password) {
                     if (password) data.password = password;
                 }
                 

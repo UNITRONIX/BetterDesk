@@ -73,6 +73,26 @@
             </div>
         </div>
 
+        <section class="card generic-agent-release-card" id="gen-generic-releases">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons" aria-hidden="true">cloud_download</span>
+                    Generic incoming-only agents
+                </h2>
+                <button type="button" class="btn btn-secondary btn-sm" id="gen-sync-generic-release">
+                    <span class="material-icons" aria-hidden="true">sync</span>
+                    Import latest release
+                </button>
+            </div>
+            <div class="card-body">
+                <p class="form-hint">Import a signed GitHub Actions release once, then serve verified agent files locally from this BetterDesk instance.</p>
+                <div id="gen-generic-release-list" class="generic-agent-release-list">
+                    <span class="text-muted">No release imported yet.</span>
+                </div>
+                <p id="gen-generic-release-status" class="form-hint" role="status"></p>
+            </div>
+        </section>
+
         <div id="gen-main" class="generator-layout hidden">
             <!-- Left column: bundle list -->
             <aside class="generator-bundles card">
@@ -127,6 +147,7 @@
 
                     <div id="gen-editor-form" class="editor-form hidden">
                         <div id="gen-legacy-hint" class="gen-legacy-hint hidden">${_('generator.legacy_hint')}</div>
+                        <div id="gen-build-capability-status" class="gen-build-capability-status hidden" role="status"></div>
                         <div class="editor-fields">
                             <div class="form-group">
                                 <label class="form-label" for="gen-name">${_('generator.bundle_name')}</label>
