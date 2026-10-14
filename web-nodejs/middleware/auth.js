@@ -3,6 +3,8 @@
  * Protects routes that require authentication
  */
 
+const rolePermissionStore = require('../services/rolePermissionStore');
+
 // Default role-permission map (mirrors Go auth/permissions.go — Phase 52+)
 //
 // Role hierarchy (branched, not strictly linear):
@@ -91,14 +93,20 @@ function isSuperAdminRole(role) {
 }
 
 /**
- * Check if a role has a specific permission by default.
+ * Check if a role has a specific permission.
+ * Mirrors Go auth.EffectiveRoleHasPermission: pro block, super-admin bypass,
+ * stored override (Permissions page), then built-in defaults. Custom roles
+ * have no defaults, so they only hold permissions granted via overrides.
  * @param {string} role
  * @param {string} permission
  * @returns {boolean}
  */
 function roleHasPermission(role, permission) {
+    if (!role || role === 'device') return false;
     if (proRoleBlocksPermission(role, permission)) return false;
     if (isSuperAdminRole(role)) return true;
+    const override = rolePermissionStore.getOverride(role, permission);
+    if (override !== undefined) return override;
     const perms = DEFAULT_ROLE_PERMISSIONS[role];
     if (!perms) return false;
     return perms.has(permission);
@@ -318,8 +326,37 @@ function requireAdmin(req, res, next) {
 }
 
 /**
+ * Require at least one of the given permissions.
+ * @param {...string} permissions
+ */
+function requireAnyPermission(...permissions) {
+    return function(req, res, next) {
+        if (!req.session || !req.session.userId) {
+            if (req.path.startsWith('/api/')) {
+                return res.status(401).json({ success: false, error: 'Unauthorized' });
+            }
+            return res.redirect('/login');
+        }
+
+        const role = req.session.user && req.session.user.role;
+        if (!permissions.some(permission => roleHasPermission(role, permission))) {
+            if (req.path.startsWith('/api/')) {
+                return res.status(403).json({ success: false, error: `Permission denied: ${permissions.join(' or ')}` });
+            }
+            return res.status(403).render('errors/403', {
+                title: 'Forbidden',
+                message: 'You do not have permission to access this resource'
+            });
+        }
+
+        res.locals.user = req.session.user;
+        next();
+    };
+}
+
+/**
  * Require a specific granular permission (RBAC Phase 52).
- * Uses the default role-permission map. Admin role always passes.
+ * Honours Permissions-page overrides and custom roles. Admin role always passes.
  * @param {string} permission - e.g. 'device.view', 'user.edit'
  */
 function requirePermission(permission) {
@@ -352,6 +389,7 @@ module.exports = {
     requireRole,
     requireAdmin,
     requirePermission,
+    requireAnyPermission,
     requireRdClientAuth,
     rdClientGuestOnly,
     normalizeRdClientReturnUrl,

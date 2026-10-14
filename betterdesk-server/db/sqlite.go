@@ -394,6 +394,14 @@ func (s *SQLiteDB) Migrate() error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON role_permissions(role)`,
 
+		// Custom server roles — permissions come only from role_permissions rows
+		`CREATE TABLE IF NOT EXISTS custom_roles (
+			name TEXT PRIMARY KEY,
+			description TEXT NOT NULL DEFAULT '',
+			created_by TEXT NOT NULL DEFAULT '',
+			created_at TEXT NOT NULL DEFAULT (datetime('now'))
+		)`,
+
 		// Audit logs (RustDesk client reporting — API-port consolidation Phase A)
 		`CREATE TABLE IF NOT EXISTS audit_connections (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2643,6 +2651,120 @@ func (s *SQLiteDB) HasRolePermission(role, permission string) (bool, error) {
 		return false, fmt.Errorf("no override")
 	}
 	return granted, err
+}
+
+// --- Custom roles ---
+
+// ListCustomRoles returns all operator-defined roles ordered by name.
+func (s *SQLiteDB) ListCustomRoles() ([]*CustomRole, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(`SELECT name, description, created_by, created_at FROM custom_roles ORDER BY name`)
+	if err != nil {
+		return nil, fmt.Errorf("db: ListCustomRoles: %w", err)
+	}
+	defer rows.Close()
+
+	var roles []*CustomRole
+	for rows.Next() {
+		r := &CustomRole{}
+		if err := rows.Scan(&r.Name, &r.Description, &r.CreatedBy, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		roles = append(roles, r)
+	}
+	return roles, rows.Err()
+}
+
+// GetCustomRole returns a custom role by name, or (nil, nil) when it does not exist.
+func (s *SQLiteDB) GetCustomRole(name string) (*CustomRole, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	r := &CustomRole{}
+	err := s.db.QueryRow(`SELECT name, description, created_by, created_at FROM custom_roles WHERE name = ?`, name).
+		Scan(&r.Name, &r.Description, &r.CreatedBy, &r.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+// CreateCustomRole inserts a custom role and its initial permission grants atomically.
+func (s *SQLiteDB) CreateCustomRole(role *CustomRole, permissions []string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(`INSERT INTO custom_roles (name, description, created_by) VALUES (?, ?, ?)`,
+		role.Name, role.Description, role.CreatedBy); err != nil {
+		return err
+	}
+	// Clear stale overrides left behind by an earlier role with the same name.
+	if _, err := tx.Exec(`DELETE FROM role_permissions WHERE role = ?`, role.Name); err != nil {
+		return err
+	}
+	for _, p := range permissions {
+		if _, err := tx.Exec(`INSERT INTO role_permissions (role, permission, granted) VALUES (?, ?, 1)`,
+			role.Name, p); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// UpdateCustomRole changes the description of a custom role.
+func (s *SQLiteDB) UpdateCustomRole(name, description string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, err := s.db.Exec(`UPDATE custom_roles SET description = ? WHERE name = ?`, description, name)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+// DeleteCustomRole removes a custom role and its permission rows.
+func (s *SQLiteDB) DeleteCustomRole(name string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(`DELETE FROM custom_roles WHERE name = ?`, name); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM role_permissions WHERE role = ?`, name); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// CountUsersWithRole returns how many user accounts are assigned the role.
+func (s *SQLiteDB) CountUsersWithRole(role string) (int, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var n int
+	err := s.db.QueryRow(`SELECT COUNT(*) FROM users WHERE role = ?`, role).Scan(&n)
+	return n, err
 }
 
 // --- Org-scoped device queries (RBAC Phase 52) ---

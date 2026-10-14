@@ -408,6 +408,13 @@ func (pg *PostgresDB) Migrate() error {
 			UNIQUE(role, permission)
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON role_permissions(role)`,
+		// Custom server roles — permissions come only from role_permissions rows
+		`CREATE TABLE IF NOT EXISTS custom_roles (
+			name        TEXT PRIMARY KEY,
+			description TEXT NOT NULL DEFAULT '',
+			created_by  TEXT NOT NULL DEFAULT '',
+			created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
 
 		`CREATE TABLE IF NOT EXISTS access_policies (
 			peer_id TEXT PRIMARY KEY,
@@ -2312,6 +2319,101 @@ func (pg *PostgresDB) HasRolePermission(role, permission string) (bool, error) {
 		return false, fmt.Errorf("no override")
 	}
 	return granted, err
+}
+
+// --- Custom roles ---
+
+func (pg *PostgresDB) ListCustomRoles() ([]*CustomRole, error) {
+	rows, err := pg.pool.Query(pg.ctx,
+		`SELECT name, description, created_by, created_at::TEXT FROM custom_roles ORDER BY name`)
+	if err != nil {
+		return nil, fmt.Errorf("db: ListCustomRoles: %w", err)
+	}
+	defer rows.Close()
+
+	var roles []*CustomRole
+	for rows.Next() {
+		r := &CustomRole{}
+		if err := rows.Scan(&r.Name, &r.Description, &r.CreatedBy, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		roles = append(roles, r)
+	}
+	return roles, rows.Err()
+}
+
+func (pg *PostgresDB) GetCustomRole(name string) (*CustomRole, error) {
+	r := &CustomRole{}
+	err := pg.pool.QueryRow(pg.ctx,
+		`SELECT name, description, created_by, created_at::TEXT FROM custom_roles WHERE name = $1`, name).
+		Scan(&r.Name, &r.Description, &r.CreatedBy, &r.CreatedAt)
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (pg *PostgresDB) CreateCustomRole(role *CustomRole, permissions []string) error {
+	tx, err := pg.pool.Begin(pg.ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(pg.ctx)
+
+	if _, err := tx.Exec(pg.ctx,
+		`INSERT INTO custom_roles (name, description, created_by) VALUES ($1, $2, $3)`,
+		role.Name, role.Description, role.CreatedBy); err != nil {
+		return err
+	}
+	// Clear stale overrides left behind by an earlier role with the same name.
+	if _, err := tx.Exec(pg.ctx, `DELETE FROM role_permissions WHERE role = $1`, role.Name); err != nil {
+		return err
+	}
+	for _, p := range permissions {
+		if _, err := tx.Exec(pg.ctx,
+			`INSERT INTO role_permissions (role, permission, granted) VALUES ($1, $2, TRUE)`,
+			role.Name, p); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(pg.ctx)
+}
+
+func (pg *PostgresDB) UpdateCustomRole(name, description string) error {
+	tag, err := pg.pool.Exec(pg.ctx,
+		`UPDATE custom_roles SET description = $1 WHERE name = $2`, description, name)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+	return nil
+}
+
+func (pg *PostgresDB) DeleteCustomRole(name string) error {
+	tx, err := pg.pool.Begin(pg.ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(pg.ctx)
+
+	if _, err := tx.Exec(pg.ctx, `DELETE FROM custom_roles WHERE name = $1`, name); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(pg.ctx, `DELETE FROM role_permissions WHERE role = $1`, name); err != nil {
+		return err
+	}
+	return tx.Commit(pg.ctx)
+}
+
+func (pg *PostgresDB) CountUsersWithRole(role string) (int, error) {
+	var n int
+	err := pg.pool.QueryRow(pg.ctx, `SELECT COUNT(*) FROM users WHERE role = $1`, role).Scan(&n)
+	return n, err
 }
 
 func (pg *PostgresDB) ListPeersForOrg(orgID string, includeDeleted bool) ([]*Peer, error) {

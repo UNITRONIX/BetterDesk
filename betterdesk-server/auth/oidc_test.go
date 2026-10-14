@@ -316,9 +316,9 @@ func TestParseJWTPayload(t *testing.T) {
 // TestDiscoveryRetryAfterFailure verifies that auto-discovery retries when the
 // IdP is unreachable on the first attempt (#411).
 func TestDiscoveryRetryAfterFailure(t *testing.T) {
-	origInterval := oidcDiscoveryRetryInterval
-	oidcDiscoveryRetryInterval = 40 * time.Millisecond
-	defer func() { oidcDiscoveryRetryInterval = origInterval }()
+	origInterval := oidcDiscoveryRetryNanos.Load()
+	oidcDiscoveryRetryNanos.Store(int64(40 * time.Millisecond))
+	defer oidcDiscoveryRetryNanos.Store(origInterval)
 
 	var attempts atomic.Int32
 	var srvURL string

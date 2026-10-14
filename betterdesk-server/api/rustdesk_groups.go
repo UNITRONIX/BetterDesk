@@ -24,7 +24,7 @@ func (s *Server) buildRustDeskDeviceGroups(r *http.Request) []rustDeskGroup {
 	if username == "" {
 		return nil
 	}
-	if role == auth.RolePro || !auth.RoleHasPermission(role, auth.PermDeviceView) {
+	if role == auth.RolePro || !s.roleHasPermission(role, auth.PermDeviceView) {
 		return nil
 	}
 

@@ -35,7 +35,7 @@ const express = require('express');
 const router = express.Router();
 const { apiClient } = require('../services/betterdeskApi');
 const { assertSafeApiId } = require('../lib/goApiPath');
-const { requireAuth, requirePermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
 const userSync = require('../services/userSync');
 const db = require('../services/database');
 const serverBackend = require('../services/serverBackend');
@@ -87,6 +87,69 @@ async function goApiProxySafe(req, res, method, pathBuilder, body) {
     }
 }
 
+// ---------------------------------------------------------------------------
+//  Org data scoping
+//
+//  The Go API is called with the console's API key, so its per-user org
+//  scoping does not apply to proxied requests. These helpers enforce the same
+//  rules here: panel org administrators reach every org, everyone else only
+//  the orgs they are a member of, and member lists follow user.view.
+// ---------------------------------------------------------------------------
+
+const ORG_ADMIN_PERMISSIONS = ['org.create', 'org.edit', 'org.delete', 'org.manage_users', 'org.manage_devices'];
+
+function sessionRole(req) {
+    return req.session?.user?.role;
+}
+
+function sessionUsername(req) {
+    return req.session?.user?.username || '';
+}
+
+function canAccessAllOrgs(req) {
+    const role = sessionRole(req);
+    return ORG_ADMIN_PERMISSIONS.some(perm => roleHasPermission(role, perm));
+}
+
+function canSeeAllOrgMembers(req) {
+    const role = sessionRole(req);
+    return roleHasPermission(role, 'user.view') || roleHasPermission(role, 'org.manage_users');
+}
+
+async function fetchOrgUsers(orgId) {
+    const resp = await apiClient({ method: 'get', url: orgApiPath(orgId, '/users') });
+    return Array.isArray(resp.data?.users) ? resp.data.users : [];
+}
+
+/** The caller's membership record in an org, or null. */
+async function findOrgMembership(req, orgId) {
+    const username = sessionUsername(req);
+    if (!username) return null;
+    const users = await fetchOrgUsers(orgId);
+    return users.find(u => u && u.username === username) || null;
+}
+
+function forwardGoError(res, err) {
+    if (err.message && /^Invalid /.test(err.message)) {
+        return res.status(400).json({ error: err.message });
+    }
+    const status = err.response?.status || 500;
+    const data = err.response?.data || { error: 'Go server unreachable' };
+    return res.status(status).json(data);
+}
+
+/** Org admins pass; other callers must be a member of :id. */
+async function requireOrgAccess(req, res, next) {
+    if (canAccessAllOrgs(req)) return next();
+    try {
+        const membership = await findOrgMembership(req, req.params.id);
+        if (membership) return next();
+        return res.status(403).json({ error: 'Not a member of this organization' });
+    } catch (err) {
+        return forwardGoError(res, err);
+    }
+}
+
 async function resolveGoMemberId(userId) {
     const resolved = await userSync.resolveGoUserId(userId);
     return resolved || userId;
@@ -129,9 +192,20 @@ router.get('/organizations/:id', requireAuth, (req, res) => {
 // ---------------------------------------------------------------------------
 
 // Organizations CRUD
-router.get('/api/panel/org', requireAuth, (req, res) => goApiProxy(req, res, 'get', '/org'));
+router.get('/api/panel/org', requireAuth, async (req, res) => {
+    if (canAccessAllOrgs(req)) return goApiProxy(req, res, 'get', '/org');
+    try {
+        const resp = await apiClient({ method: 'get', url: '/org' });
+        const orgs = Array.isArray(resp.data?.organizations) ? resp.data.organizations : [];
+        const membership = await Promise.all(orgs.map(org =>
+            findOrgMembership(req, org.id).catch(() => null)));
+        res.json({ organizations: orgs.filter((_, i) => membership[i]) });
+    } catch (err) {
+        forwardGoError(res, err);
+    }
+});
 router.post('/api/panel/org', requireAuth, requirePermission('org.create'), (req, res) => goApiProxy(req, res, 'post', '/org', req.body));
-router.get('/api/panel/org/:id', requireAuth, (req, res) =>
+router.get('/api/panel/org/:id', requireAuth, requireOrgAccess, (req, res) =>
     goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id)));
 router.put('/api/panel/org/:id', requireAuth, requirePermission('org.edit'), (req, res) =>
     goApiProxySafe(req, res, 'put', () => orgApiPath(req.params.id), req.body));
@@ -139,8 +213,25 @@ router.delete('/api/panel/org/:id', requireAuth, requirePermission('org.delete')
     goApiProxySafe(req, res, 'delete', () => orgApiPath(req.params.id)));
 
 // Org Users
-router.get('/api/panel/org/:id/users', requireAuth, (req, res) =>
-    goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id, '/users')));
+router.get('/api/panel/org/:id/users', requireAuth, async (req, res) => {
+    try {
+        const users = await fetchOrgUsers(req.params.id);
+        if (canSeeAllOrgMembers(req)) return res.json({ users });
+
+        // Without user.view / org.manage_users: org owners and admins still see
+        // their members; any other member only sees themselves.
+        const username = sessionUsername(req);
+        const self = users.find(u => u && u.username === username);
+        if (!self) {
+            if (canAccessAllOrgs(req)) return res.json({ users: [] });
+            return res.status(403).json({ error: 'Not a member of this organization' });
+        }
+        if (self.role === 'owner' || self.role === 'admin') return res.json({ users });
+        return res.json({ users: [self] });
+    } catch (err) {
+        return forwardGoError(res, err);
+    }
+});
 router.post('/api/panel/org/:id/users', requireAuth, requirePermission('org.manage_users'), (req, res) =>
     goApiProxySafe(req, res, 'post', () => orgApiPath(req.params.id, '/users'), req.body));
 router.put('/api/panel/org/:id/users/:uid', requireAuth, requirePermission('org.manage_users'), (req, res) =>
@@ -174,25 +265,25 @@ router.get('/api/panel/org/:id/invitations', requireAuth, requirePermission('org
 // Devices
 router.post('/api/panel/org/:id/devices', requireAuth, requirePermission('org.manage_devices'), (req, res) =>
     goApiProxySafe(req, res, 'post', () => orgApiPath(req.params.id, '/devices'), req.body));
-router.get('/api/panel/org/:id/devices', requireAuth, (req, res) =>
+router.get('/api/panel/org/:id/devices', requireAuth, requireOrgAccess, (req, res) =>
     goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id, '/devices')));
 router.delete('/api/panel/org/:id/devices/:did', requireAuth, requirePermission('org.manage_devices'), (req, res) =>
     goApiProxySafe(req, res, 'delete', () => orgDeviceApiPath(req.params.id, req.params.did)));
 
 // Settings
-router.get('/api/panel/org/:id/settings', requireAuth, (req, res) =>
+router.get('/api/panel/org/:id/settings', requireAuth, requireOrgAccess, (req, res) =>
     goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id, '/settings')));
 router.put('/api/panel/org/:id/settings', requireAuth, requirePermission('org.edit'), (req, res) =>
     goApiProxySafe(req, res, 'put', () => orgApiPath(req.params.id, '/settings'), req.body));
 
 // Shared organization address book (Issue #190)
-router.get('/api/panel/org/:id/address-book', requireAuth, (req, res) =>
+router.get('/api/panel/org/:id/address-book', requireAuth, requireOrgAccess, (req, res) =>
     goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id, '/address-book')));
 router.put('/api/panel/org/:id/address-book', requireAuth, requirePermission('org.edit'), (req, res) =>
     goApiProxySafe(req, res, 'put', () => orgApiPath(req.params.id, '/address-book'), req.body));
 
 // Encrypted org peer credential vault (#367)
-router.get('/api/panel/org/:id/peer-credentials', requireAuth, (req, res) =>
+router.get('/api/panel/org/:id/peer-credentials', requireAuth, requireOrgAccess, (req, res) =>
     goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id, '/peer-credentials')));
 router.put('/api/panel/org/:id/peer-credentials/:peerId', requireAuth, requirePermission('org.edit'), (req, res) =>
     goApiProxySafe(req, res, 'put', () => orgApiPath(req.params.id, `/peer-credentials/${encodeURIComponent(req.params.peerId)}`), req.body));
@@ -203,7 +294,7 @@ router.delete('/api/panel/org/:id/peer-credentials/:peerId', requireAuth, requir
  * GET /api/panel/org/:id/device-groups
  * Device and user groups linked to this organization (team_id = org id).
  */
-router.get('/api/panel/org/:id/device-groups', requireAuth, async (req, res) => {
+router.get('/api/panel/org/:id/device-groups', requireAuth, requireOrgAccess, async (req, res) => {
     try {
         const orgId = assertSafeApiId(req.params.id, 'orgId');
         const devices = await serverBackend.getAllDevices({});

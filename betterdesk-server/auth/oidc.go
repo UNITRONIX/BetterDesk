@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -124,9 +125,14 @@ type oidcAuthCode struct {
 	CreatedAt time.Time
 }
 
-// oidcDiscoveryRetryInterval is how often discovery is retried while it has not
-// yet succeeded (IdP unreachable at boot). Overridable in tests.
-var oidcDiscoveryRetryInterval = 2 * time.Minute
+// oidcDiscoveryRetryNanos is how often discovery is retried while it has not
+// yet succeeded (IdP unreachable at boot). Atomic so tests can shorten it while
+// retry goroutines from other providers are still reading it.
+var oidcDiscoveryRetryNanos atomic.Int64
+
+func init() {
+	oidcDiscoveryRetryNanos.Store(int64(2 * time.Minute))
+}
 
 // OIDCProvider manages OIDC authentication.
 type OIDCProvider struct {
@@ -212,7 +218,7 @@ func (p *OIDCProvider) discoveryRetryLoop() {
 	if p.needsDiscovery() {
 		p.discover()
 	}
-	ticker := time.NewTicker(oidcDiscoveryRetryInterval)
+	ticker := time.NewTicker(time.Duration(oidcDiscoveryRetryNanos.Load()))
 	defer ticker.Stop()
 	for range ticker.C {
 		if p.needsDiscovery() {

@@ -101,6 +101,29 @@ func (s *Server) requirePanelAdmin(handler http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// roleHasPermission resolves a permission for role including DB overrides and
+// custom roles. Use it instead of auth.RoleHasPermission, which only knows the
+// built-in defaults.
+func (s *Server) roleHasPermission(role, perm string) bool {
+	var lookup auth.OverrideLookup
+	if s.db != nil {
+		lookup = s.db.HasRolePermission
+	}
+	return auth.EffectiveRoleHasPermission(lookup, role, perm)
+}
+
+// isKnownRole reports whether role is a built-in role or an existing custom role.
+func (s *Server) isKnownRole(role string) bool {
+	if auth.ValidRole(role) {
+		return true
+	}
+	if s.db == nil || !auth.ValidCustomRoleName(role) {
+		return false
+	}
+	cr, err := s.db.GetCustomRole(role)
+	return err == nil && cr != nil
+}
+
 // requirePermission wraps a handler to enforce a specific granular permission.
 // Checks custom DB overrides first, then falls back to default role permissions.
 func (s *Server) requirePermission(perm string, handler http.HandlerFunc) http.HandlerFunc {
@@ -119,29 +142,7 @@ func (s *Server) requirePermission(perm string, handler http.HandlerFunc) http.H
 			return
 		}
 
-		// Super admin (and legacy admin) always has all permissions
-		if auth.IsSuperAdminRole(userRole) {
-			handler(w, r)
-			return
-		}
-
-		// Check DB-stored custom permission overrides first
-		if s.db != nil {
-			granted, err := s.db.HasRolePermission(userRole, perm)
-			if err == nil {
-				if granted && !(auth.IsProRole(userRole) && auth.ProRoleBlocksPermission(perm)) {
-					handler(w, r)
-					return
-				}
-				// explicit deny in DB — reject even if default says yes
-				writeJSON(w, http.StatusForbidden, map[string]string{"error": "Insufficient permissions"})
-				return
-			}
-			// err != nil means no override found — fall through to defaults
-		}
-
-		// Fall back to built-in default role permissions
-		if auth.RoleHasPermission(userRole, perm) {
+		if s.roleHasPermission(userRole, perm) {
 			handler(w, r)
 			return
 		}
@@ -530,7 +531,7 @@ func (s *Server) handleUsersWithClientFallback(w http.ResponseWriter, r *http.Re
 		}
 
 		// If user has user.view permission, return full list
-		if auth.IsSuperAdminRole(role) || auth.RoleHasPermission(role, auth.PermUserView) {
+		if s.roleHasPermission(role, auth.PermUserView) {
 			s.handleClientUsersList(w, r)
 			return
 		}
@@ -595,7 +596,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	if body.Role == "" {
 		body.Role = auth.RoleViewer
 	}
-	if !auth.ValidRole(body.Role) {
+	if !s.isKnownRole(body.Role) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid role"})
 		return
 	}
@@ -676,7 +677,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		user.PasswordHash = hash
 	}
 	if body.Role != "" {
-		if !auth.ValidRole(body.Role) {
+		if !s.isKnownRole(body.Role) {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid role"})
 			return
 		}

@@ -27,9 +27,11 @@ const crypto = require('crypto');
 const { apiClient } = require('./betterdeskApi');
 const { assertSafeApiId } = require('../lib/goApiPath');
 const db = require('./database');
+const rolePermissionStore = require('./rolePermissionStore');
 
-// Roles supported by the Go server (auth/roles.go). Anything outside this
-// list is downgraded to 'viewer' so the mirror call does not fail.
+// Built-in roles supported by the Go server (auth/roles.go). Custom roles from
+// the Permissions page are passed through as well; anything else is
+// downgraded to 'viewer' so the mirror call does not fail.
 const GO_VALID_ROLES = new Set([
     'super_admin',
     'admin',
@@ -41,7 +43,8 @@ const GO_VALID_ROLES = new Set([
 ]);
 
 function normalizeRole(role) {
-    return GO_VALID_ROLES.has(role) ? role : 'viewer';
+    if (GO_VALID_ROLES.has(role) || rolePermissionStore.isCustomRole(role)) return role;
+    return 'viewer';
 }
 
 function normalizeUsername(username) {

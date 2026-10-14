@@ -62,6 +62,48 @@ Permissions replace simple role gates. Examples:
 | Other | `audit.view`, `chat.access`, `enrollment.manage`, … |
 
 Default mappings per role are built in; overrides live in the `role_permissions` table.
+Overrides set on the **Permissions** page apply to the Go API and to the web console
+(routes, sidebar, WebSocket relays). The console refreshes them every 30 seconds and
+immediately after a change made through it.
+
+---
+
+## Custom roles
+
+Besides the built-in roles you can create your own on **Permissions → Create role**:
+
+| Field | Notes |
+|-------|-------|
+| Name | 2–32 lowercase letters, digits or `_`, starting with a letter. Built-in names, `device`, `owner` and `user` are reserved |
+| Description | Optional, up to 200 characters |
+| Start from | Copy the current effective permissions of an existing role, or start with none |
+
+- A custom role has **no default permissions**: every permission it holds is a row in
+  `role_permissions`, toggled on the Permissions page like any other role.
+- Only `super_admin` / `admin` can assign a custom role to a user.
+- A custom role still assigned to users cannot be deleted (409); reassign the users first.
+- Custom role definitions live in the `custom_roles` table.
+
+| Endpoint | Permission | Purpose |
+|----------|-----------|---------|
+| `GET /api/roles` | `user.view` | Built-in and custom roles (`is_custom`, `description`, `user_count`) |
+| `POST /api/roles` | `server.config` | Create (`name`, `description`, `copy_from`, `permissions`) |
+| `PATCH /api/roles/{role}` | `server.config` | Update description |
+| `DELETE /api/roles/{role}` | `server.config` | Delete an unused custom role |
+
+---
+
+## Hiding users from a role
+
+User visibility follows the `user.view` permission. Revoke it for a role on the
+Permissions page to hide:
+
+- the **Users** page, sidebar entry and `/api/users`;
+- other members in organization member lists.
+
+Organization member lists show everyone to roles with `user.view` or
+`org.manage_users` and to org **owners**/**admins**. Any other org member sees only
+themselves.
 
 ---
 
@@ -71,8 +113,8 @@ Default mappings per role are built in; overrides live in the `role_permissions`
 |----------|----------|
 | `GET /api/peers` | Org users see only their org's devices |
 | `GET /api/peers/{id}` | `peerOrgScopeCheck()` — 403 if wrong org |
-| `GET /api/orgs` | Non-admins see only orgs they belong to |
-| Org user list | Regular users see themselves; org admins see all members |
+| `GET /api/org` | Super/global admins (and console users with an `org.*` permission) see all orgs; others only orgs they belong to |
+| Org user list | `user.view` / `org.manage_users` or org owner/admin: all members; others: themselves |
 
 ---
 

@@ -1,5 +1,7 @@
 package auth
 
+import "regexp"
+
 // Server-level role constants (global scope).
 //
 // Hierarchy (branched — not strictly linear):
@@ -103,7 +105,30 @@ func IsDeviceRole(role string) bool {
 	return role == RoleDevice
 }
 
-// ValidRole returns true if the given string is a recognised role.
+// customRoleNamePattern limits custom role names to identifiers that are safe in
+// URLs, JWT claims and the users.role column.
+var customRoleNamePattern = regexp.MustCompile(`^[a-z][a-z0-9_]{1,31}$`)
+
+// reservedRoleNames cannot be used for custom roles: org-scoped JWTs carry org
+// role names ("owner", "user") in the role claim, so a server role with the
+// same name would leak its permissions to org members.
+var reservedRoleNames = map[string]bool{
+	RoleDevice: true,
+	"owner":    true,
+	"user":     true,
+}
+
+// ValidCustomRoleName reports whether name may be used for a new custom role.
+// Built-in, internal and org role names are reserved.
+func ValidCustomRoleName(name string) bool {
+	if !customRoleNamePattern.MatchString(name) {
+		return false
+	}
+	return !ValidRole(name) && !reservedRoleNames[name]
+}
+
+// ValidRole returns true if the given string is a recognised built-in role.
+// Custom roles live in the database; see api.Server.isKnownRole.
 func ValidRole(r string) bool {
 	switch r {
 	case RoleSuperAdmin, RoleServerAdmin, RoleGlobalAdmin,
