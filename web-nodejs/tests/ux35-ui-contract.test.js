@@ -26,6 +26,7 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const uiShell = read('public', 'js', 'ui-shell.js');
     const classicNavbar = read('views', 'partials', 'navbar.ejs');
     const settingsView = read('views', 'settings.ejs');
+    const loginJs = read('public', 'js', 'login.js');
 
     it('keeps classic mobile height rules out of the UX 3.5 scroll region', () => {
         assert.match(mobileCss, /\.app-layout \.main-content/);
@@ -117,5 +118,11 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         );
         assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
         assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);
+    });
+
+    it('keeps OIDC password recovery explicit on the login page', () => {
+        assert.match(loginJs, /params\.get\('autoLaunch'\) === '0'/);
+        assert.match(loginJs, /data\.prefer_sso && !passwordBypass && !data\.local_bypass && !hasOidcError/);
+        assert.match(loginJs, /window\.location\.replace\('\/api\/auth\/oidc\/authorize'\)/);
     });
 });

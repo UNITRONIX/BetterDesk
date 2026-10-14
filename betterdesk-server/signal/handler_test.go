@@ -63,7 +63,7 @@ func TestRelayAdvertisedAddrUsesWSClientIPWithoutProxyPort(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.peers.Put(&peer.Entry{
 		ID:       "WSADDR01",
-		IP:       "203.0.113.50:41000",
+		IP:       "198.51.100.77:41000",
 		UDPAddr:  udpAddr("3.0.113.99", 54321),
 		ConnType: peer.ConnWS,
 		LastReg:  time.Now(),

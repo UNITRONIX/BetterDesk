@@ -326,6 +326,39 @@ describe('Auth Routes', () => {
         });
     });
 
+    describe('GET /api/auth/oidc/status', () => {
+        it('keeps the password fallback for direct private-network access', async () => {
+            betterdeskApi.getOIDCStatus.mockResolvedValue({
+                success: true,
+                data: { enabled: true, prefer_sso: true, display_name: 'Example IdP' },
+            });
+
+            const res = await request(app).get('/api/auth/oidc/status');
+
+            expect(res.status).toBe(200);
+            expect(res.body).toMatchObject({
+                enabled: true,
+                prefer_sso: true,
+                local_bypass: true,
+            });
+        });
+
+        it('does not classify a public client as local when the proxy is trusted', async () => {
+            app.set('trust proxy', 1);
+            betterdeskApi.getOIDCStatus.mockResolvedValue({
+                success: true,
+                data: { enabled: true, prefer_sso: true },
+            });
+
+            const res = await request(app)
+                .get('/api/auth/oidc/status')
+                .set('X-Forwarded-For', '203.0.113.25');
+
+            expect(res.status).toBe(200);
+            expect(res.body.local_bypass).toBe(false);
+        });
+    });
+
     describe('GET /api/auth/oidc/session', () => {
         it('redirects to oidc_invalid when code is missing', async () => {
             const res = await request(app).get('/api/auth/oidc/session');

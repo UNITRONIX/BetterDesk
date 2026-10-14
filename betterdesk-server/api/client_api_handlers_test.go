@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -334,6 +335,47 @@ func TestHandleClientAddressBookGetReturnsStoredData(t *testing.T) {
 	data, ok := resp["data"].(string)
 	if !ok || data == "" {
 		t.Fatalf("expected string data field, got %#v", resp["data"])
+	}
+}
+
+func TestHandleClientAddressBookGetNormalizesEmptyStoredData(t *testing.T) {
+	database := testSetupDB(t)
+	defer database.Close()
+	if err := database.SaveAddressBook("alice", "legacy", ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SaveAddressBook("alice", "personal", "   "); err != nil {
+		t.Fatal(err)
+	}
+
+	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
+
+	for _, endpoint := range []string{"/api/ab", "/api/ab/personal"} {
+		req := httptest.NewRequest(http.MethodGet, endpoint, nil)
+		req = withClientUser(req, "alice", "admin")
+		rec := httptest.NewRecorder()
+
+		if endpoint == "/api/ab" {
+			srv.handleClientAddressBook(rec, req)
+		} else {
+			srv.handleClientAddressBookPersonal(rec, req)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s status = %d, want 200; body = %s", endpoint, rec.Code, rec.Body.String())
+		}
+		var resp map[string]any
+		if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+			t.Fatalf("%s response is not JSON: %v", endpoint, err)
+		}
+		got, ok := resp["data"].(string)
+		if !ok || strings.TrimSpace(got) == "" {
+			t.Fatalf("%s data = %#v, want parseable empty address book", endpoint, resp["data"])
+		}
+		var addressBook map[string]any
+		if err := json.Unmarshal([]byte(got), &addressBook); err != nil {
+			t.Fatalf("%s data is not valid JSON: %v", endpoint, err)
+		}
 	}
 }
 
