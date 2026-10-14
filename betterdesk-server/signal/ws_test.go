@@ -634,15 +634,23 @@ func TestWSRequestRelayFirstFrameIsRelayResponse(t *testing.T) {
 	defer srv.Stop()
 	time.Sleep(200 * time.Millisecond)
 
-	targetAddr := &net.UDPAddr{IP: net.ParseIP("198.51.100.20"), Port: 21116}
-	srv.PeerMap().Put(&peer.Entry{
-		ID:       "RELAYTGT",
-		PK:       make([]byte, 32),
-		IP:       targetAddr.String(),
-		UDPAddr:  targetAddr,
-		ConnType: peer.ConnWS, // same transport family as WS initiator (#290)
-		LastReg:  time.Now(),
-	})
+	targetWS, _, err := websocket.Dial(ctx, "ws://127.0.0.1:29192/ws/id", nil)
+	if err != nil {
+		t.Fatalf("target WS dial: %v", err)
+	}
+	defer targetWS.CloseNow()
+	targetReg := &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_RegisterPeer{
+			RegisterPeer: &pb.RegisterPeer{Id: "RELAYTGT", Serial: 1},
+		},
+	}
+	data, _ := proto.Marshal(targetReg)
+	if err := targetWS.Write(ctx, websocket.MessageBinary, data); err != nil {
+		t.Fatalf("target WS register write: %v", err)
+	}
+	if resp := readWSProtoSkippingKeepAlive(t, ctx, targetWS); resp.GetRegisterPeerResponse() == nil {
+		t.Fatalf("expected target RegisterPeerResponse, got: %v", resp)
+	}
 	// Pre-authorize initiator by IP so RequestRelay can be the first WS frame
 	// (preserves #276 first-frame assertion) while satisfying #302.
 	srv.PeerMap().Put(&peer.Entry{
@@ -667,7 +675,7 @@ func TestWSRequestRelayFirstFrameIsRelayResponse(t *testing.T) {
 			},
 		},
 	}
-	data, _ := proto.Marshal(req)
+	data, _ = proto.Marshal(req)
 	if err := ws.Write(ctx, websocket.MessageBinary, data); err != nil {
 		t.Fatalf("WS RequestRelay write: %v", err)
 	}
@@ -695,6 +703,24 @@ func TestWSRequestRelayFirstFrameIsRelayResponse(t *testing.T) {
 	}
 	if resp.GetRelayResponse().Uuid != "11111111-1111-1111-1111-111111111111" {
 		t.Fatalf("RelayResponse uuid = %q", resp.GetRelayResponse().Uuid)
+	}
+	relayed := readWSProtoSkippingKeepAlive(t, ctx, targetWS).GetRequestRelay()
+	if relayed == nil {
+		t.Fatal("target should receive RequestRelay over its WebSocket")
+	}
+	advertised, err := crypto.DecodeAddr(relayed.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode target RequestRelay socket_addr: %v", err)
+	}
+	if !advertised.IP.Equal(net.ParseIP("127.0.0.1")) || advertised.Port != 0 {
+		t.Fatalf("target RequestRelay socket_addr = %s, want 127.0.0.1:0", advertised)
+	}
+	targetMetadata, err := crypto.DecodeAddr(resp.GetRelayResponse().SocketAddr)
+	if err != nil {
+		t.Fatalf("decode initiator RelayResponse socket_addr: %v", err)
+	}
+	if !targetMetadata.IP.Equal(net.ParseIP("127.0.0.1")) || targetMetadata.Port != 0 {
+		t.Fatalf("initiator RelayResponse socket_addr = %s, want 127.0.0.1:0", targetMetadata)
 	}
 }
 

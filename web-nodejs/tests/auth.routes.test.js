@@ -357,6 +357,20 @@ describe('Auth Routes', () => {
             expect(res.status).toBe(200);
             expect(res.body.local_bypass).toBe(false);
         });
+
+        it('does not trust a forwarded public IP when the proxy is not trusted', async () => {
+            betterdeskApi.getOIDCStatus.mockResolvedValue({
+                success: true,
+                data: { enabled: true, prefer_sso: true },
+            });
+
+            const res = await request(app)
+                .get('/api/auth/oidc/status')
+                .set('X-Forwarded-For', '203.0.113.25');
+
+            expect(res.status).toBe(200);
+            expect(res.body.local_bypass).toBe(true);
+        });
     });
 
     describe('GET /api/auth/oidc/session', () => {

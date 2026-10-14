@@ -230,6 +230,13 @@ func TestRelayResponseForwardHydratesPKAndUsesUDP(t *testing.T) {
 	if !bytes.Equal(forwarded.GetPk(), expected) {
 		t.Fatalf("forwarded signed PK length = %d, want %d", len(forwarded.GetPk()), len(expected))
 	}
+	decoded, err := cryptopkg.DecodeAddr(forwarded.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode forwarded socket_addr: %v", err)
+	}
+	if !decoded.IP.Equal(targetAddr.IP) || decoded.Port != targetAddr.Port {
+		t.Fatalf("forwarded socket_addr = %s, want %s", decoded, targetAddr)
+	}
 	if entry := srv.peers.Get(targetID); entry == nil || !bytes.Equal(entry.PK, targetPK) {
 		t.Fatalf("target PK was not hydrated in peer map: %+v", entry)
 	}
