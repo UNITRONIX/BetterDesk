@@ -524,11 +524,23 @@ body.app-page.ux35-page {
 
 /* Settings shell: horizontal tabs readable over branding wallpaper; bleed cancels content padding */
 .ux35-page .settings-shell-nav {
-    --settings-nav-bleed: var(--ux35-content-padding-lg);
+    --settings-nav-bleed: 0px;
     --settings-nav-bleed-x: var(--ux35-content-padding-lg);
     position: sticky;
+    top: 0;
+    padding-top: 0;
+    margin-top: 0;
     z-index: 2;
     background-color: color-mix(in srgb, var(--bg-primary) 92%, transparent);
+}
+.ux35-page .settings-shell-nav-track {
+    align-items: center;
+    min-height: 44px;
+}
+.ux35-page .settings-shell-nav .settings-shell-tab,
+.ux35-page .settings-shell-nav .settings-tab {
+    justify-content: center;
+    line-height: 1.2;
 }
 .ux35-page .settings-search,
 .ux35-page .settings-panel,
@@ -694,7 +706,6 @@ body.ux35-is-resizing {
         margin-bottom: var(--ux35-space-3);
     }
     .ux35-page .settings-shell-nav {
-        --settings-nav-bleed: var(--ux35-content-padding);
         --settings-nav-bleed-x: var(--ux35-content-padding);
     }
     /* #396 follow-up: tighter mobile tabs, vertically centered icons/labels */
@@ -712,6 +723,7 @@ body.ux35-is-resizing {
         height: 18px;
     }
     .ux35-page .settings-shell-nav-track.mobile-tabs-scroll {
+        min-height: 36px;
         padding-bottom: 0;
         gap: 4px;
     }
@@ -747,6 +759,7 @@ body.ux35-is-resizing {
     }
 
     .ux35-page .settings-shell-nav-track.mobile-tabs-scroll {
+        min-height: 36px;
         padding-bottom: 0;
         gap: 4px;
     }

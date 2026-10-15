@@ -96,6 +96,32 @@ func encodePeerSocketAddr(entry *peer.Entry) []byte {
 	return crypto.EncodeAddr(&net.UDPAddr{IP: ip, Port: int(portNumber)})
 }
 
+// encodeRelayResponsePeerSocketAddr returns metadata for an initiator-facing
+// RelayResponse. WebSocket peers have no reachable UDP endpoint, so preserve
+// their trusted IP while suppressing the reverse proxy's ephemeral port.
+func encodeRelayResponsePeerSocketAddr(entry *peer.Entry) []byte {
+	if entry == nil {
+		return nil
+	}
+	if entry.ConnType != peer.ConnWS {
+		return encodePeerSocketAddr(entry)
+	}
+	if entry.UDPAddr != nil {
+		addr := *entry.UDPAddr
+		addr.Port = 0
+		return crypto.EncodeAddr(&addr)
+	}
+	host, _, err := net.SplitHostPort(strings.TrimSpace(entry.IP))
+	if err != nil {
+		return nil
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return nil
+	}
+	return crypto.EncodeAddr(&net.UDPAddr{IP: ip})
+}
+
 // relayAdvertisedAddr returns the endpoint that a target RustDesk client will
 // see in RequestRelay.socket_addr. Native UDP/TCP clients have a real endpoint
 // and keep the existing address unchanged. WebSocket clients do not expose a
@@ -1557,6 +1583,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	resp := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
+				SocketAddr:  encodeRelayResponsePeerSocketAddr(target),
 				Uuid:        relayUUID,
 				RelayServer: relayServer,
 				Union:       &pb.RelayResponse_Pk{Pk: signedPk},
@@ -1717,6 +1744,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
+				SocketAddr:  encodeRelayResponsePeerSocketAddr(target),
 				Uuid:        relayUUID,
 				RelayServer: relayServer,
 				Union:       &pb.RelayResponse_Pk{Pk: signedPk},
@@ -1908,8 +1936,11 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		log.Printf("[signal] WARNING: RelayResponse forward — no PK available for target %q (sender=%s)", targetID, senderAddr)
 	}
 
-	// Modify the RelayResponse in-place (matching Rust hbbs behavior).
-	rr.SocketAddr = nil
+	// The incoming socket_addr routes the response back to the initiator and
+	// must not be forwarded as-is. Replace it with the target's server-derived
+	// compatibility address so clients can decode the remote peer metadata
+	// without receiving the initiator's routing address.
+	rr.SocketAddr = encodeRelayResponsePeerSocketAddr(target)
 	rr.SocketAddrV6 = nil
 
 	// LAN detection: use LAN relay only for genuine LAN cases. Shared public IP

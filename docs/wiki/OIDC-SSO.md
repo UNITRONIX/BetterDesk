@@ -38,6 +38,22 @@ local username/password form. Requests from private network addresses also
 keep the local form available for emergency administration. This only changes
 the login-page experience; it does not disable the password API.
 
+The panel decides whether a request is local from the client IP that Express
+sees. If the panel is behind Nginx, Nginx Proxy Manager, Cloudflare Tunnel, or
+another reverse proxy, set `TRUST_PROXY=1` (or `Y`) on the **console** and
+ensure the proxy forwards `X-Forwarded-For`. Otherwise the panel sees the
+proxy's private/loopback address and deliberately keeps the password form
+visible. Verify the effective decision with:
+
+```text
+GET /api/auth/oidc/status
+```
+
+For SSO-first access, the response must contain `enabled: true`,
+`prefer_sso: true`, and `local_bypass: false`. Do not enable proxy trust on a
+panel that is directly reachable by untrusted clients, because forwarded
+headers must only be accepted from a controlled proxy.
+
 > [!IMPORTANT]
 > When using HTTPS behind a reverse proxy, set `TRUST_PROXY=true` in `.env` so redirect URLs and cookies use the correct scheme.
 

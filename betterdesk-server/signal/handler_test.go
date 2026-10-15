@@ -2599,6 +2599,55 @@ func TestHandleRequestRelayTCPForwardsUDPWhenConnTCP(t *testing.T) {
 	}
 }
 
+func TestRequestRelayResponseCarriesServerDerivedTargetAddress(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	targetAddr := udpAddr("198.51.100.210", 52010)
+	initiatorAddr := udpAddr("203.0.113.210", 51010)
+	putOnlinePeer(srv, "TARGETMETA415", targetAddr.IP.String(), targetAddr.Port, peer.ConnTCP)
+	putOnlinePeer(srv, "INITMETA415", initiatorAddr.IP.String(), initiatorAddr.Port, peer.ConnTCP)
+
+	resp := srv.handleRequestRelayTCP(&pb.RequestRelay{
+		Id:   "TARGETMETA415",
+		Uuid: "relay-response-target-address",
+	}, initiatorAddr, peer.ConnTCP)
+	rr := resp.GetRelayResponse()
+	if rr == nil || rr.RefuseReason != "" {
+		t.Fatalf("relay response = %+v, want accepted response", resp)
+	}
+
+	decoded, err := cryptopkg.DecodeAddr(rr.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode RelayResponse socket_addr: %v", err)
+	}
+	if !decoded.IP.Equal(targetAddr.IP) || decoded.Port != targetAddr.Port {
+		t.Fatalf("RelayResponse socket_addr = %s, want %s", decoded, targetAddr)
+	}
+
+	wsTarget := &peer.Entry{
+		ID:         "TARGETWSMETA415",
+		IP:         "198.51.100.211:61234",
+		ConnType:   peer.ConnWS,
+		LastReg:    time.Now(),
+		StatusTier: peer.StatusOnline,
+	}
+	srv.peers.Put(wsTarget)
+	resp = srv.handleRequestRelayTCP(&pb.RequestRelay{
+		Id:   wsTarget.ID,
+		Uuid: "relay-response-ws-target-address",
+	}, initiatorAddr, peer.ConnTCP)
+	rr = resp.GetRelayResponse()
+	if rr == nil || rr.RefuseReason != "" {
+		t.Fatalf("WebSocket target relay response = %+v, want accepted response", resp)
+	}
+	decoded, err = cryptopkg.DecodeAddr(rr.SocketAddr)
+	if err != nil {
+		t.Fatalf("decode WebSocket RelayResponse socket_addr: %v", err)
+	}
+	if !decoded.IP.Equal(net.ParseIP("198.51.100.211")) || decoded.Port != 0 {
+		t.Fatalf("WebSocket RelayResponse socket_addr = %s, want 198.51.100.211:0", decoded)
+	}
+}
+
 func TestSendToPeerTCPWithoutTransportDrops(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.peers.Put(&peer.Entry{

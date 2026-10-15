@@ -111,6 +111,15 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(settingsView, /class="settings-shell-nav-track mobile-tabs-scroll"/);
         assert.match(pagesCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*sticky/);
         assert.match(pagesCss, /\.settings-shell-nav-track\.mobile-tabs-scroll\s*\{[\s\S]*?padding-bottom:\s*0/);
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*0px[\s\S]*?top:\s*0[\s\S]*?margin-top:\s*0/
+        );
+        assert.match(ux35Css, /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?align-items:\s*center/);
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?justify-content:\s*center[\s\S]*?line-height:\s*1\.2/
+        );
         assert.match(ux35Css, /@media \(min-width: 768px\) and \(max-width: 1024px\)/);
         assert.match(
             ux35Css,
