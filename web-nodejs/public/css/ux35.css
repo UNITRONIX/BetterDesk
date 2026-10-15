@@ -765,6 +765,17 @@ body.ux35-is-resizing {
     }
 }
 
+/* Desktop keeps the original vertical bleed so the Settings bar does not
+ * introduce a top gap or lose its content alignment above the mobile shell. */
+@media (min-width: 1025px) {
+    .ux35-page .settings-shell-nav {
+        --settings-nav-bleed: var(--ux35-content-padding-lg);
+        top: calc(-1 * var(--settings-nav-bleed));
+        padding-top: var(--settings-nav-bleed);
+        margin-top: calc(-1 * var(--settings-nav-bleed));
+    }
+}
+
 /* Topbar dropdowns inherit shell text; force readable panels in both themes */
 .ux35-topbar .lang-dropdown,
 .ux35-topbar .notif-dropdown {

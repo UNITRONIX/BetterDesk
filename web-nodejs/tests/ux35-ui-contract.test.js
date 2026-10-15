@@ -125,6 +125,10 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
             ux35Css,
             /@media \(min-width: 768px\) and \(max-width: 1024px\)[\s\S]*?\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?min-height:\s*36px/
         );
+        assert.match(
+            ux35Css,
+            /@media \(min-width: 1025px\)[\s\S]*?\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding-lg\)[\s\S]*?top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)[\s\S]*?margin-top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)/
+        );
         assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
         assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);
     });
