@@ -934,6 +934,7 @@
         });
 
         c.on('2fa_error', (error) => {
+            session.tfaSource = 'desktop';
             session.tfaError.textContent = error || (_('remote.2fa_invalid') || 'Invalid code');
             session.tfaError.style.display = 'block';
             session.tfaInput.value = '';
@@ -943,6 +944,7 @@
         });
 
         c.on('2fa_required', () => {
+            session.tfaSource = 'desktop';
             session.passwordOverlay.style.display = 'none';
             session.connectionOverlay.style.display = 'none';
             session.tfaOverlay.style.display = 'flex';
@@ -952,9 +954,42 @@
             if (isActive(session)) setToolbarChromeVisible(false);
         });
 
+        // Reuse the input UI, but keep the file-transfer event/API separate.
+        const showFile2FA = (error) => {
+            session.tfaSource = 'filetransfer';
+            session.tfaError.textContent = error || '';
+            session.tfaError.style.display = error ? 'block' : 'none';
+            session.tfaInput.value = '';
+            session.tfaOverlay.style.display = 'flex';
+            window.__fileTransferModal?.setAuthenticationPending(session, true);
+            if (isActive(session)) {
+                session.tfaInput.focus();
+                setToolbarChromeVisible(false);
+            }
+        };
+        const finishFile2FA = () => {
+            if (session.tfaSource === 'filetransfer') {
+                session.tfaOverlay.style.display = 'none';
+                session.tfaInput.value = '';
+                session.tfaSource = null;
+            }
+            window.__fileTransferModal?.setAuthenticationPending(session, false);
+            if (isActive(session)) syncToolbarChrome(session);
+        };
+        c.on('2fa_required_filetransfer', () => showFile2FA());
+        c.on('2fa_error_filetransfer', (error) => showFile2FA(error));
+        c.on('2fa_success_filetransfer', finishFile2FA);
+        c.on('2fa_cancelled_filetransfer', finishFile2FA);
+        c.on('filetransfer_error', (error) => {
+            if (isActive(session)) showToast(error, 'error');
+        });
+
         c.on('login_success', () => {
             session.passwordOverlay.style.display = 'none';
-            session.tfaOverlay.style.display = 'none';
+            if (session.tfaSource !== 'filetransfer') {
+                session.tfaOverlay.style.display = 'none';
+                session.tfaSource = null;
+            }
             session.passwordInput.blur();
             if (window.RdClientSecureStore && session.rememberPeerCheckbox) {
                 var pw = session.passwordInput.value;
@@ -1097,7 +1132,13 @@
                     return;
                 }
                 session.tfaError.style.display = 'none';
-                if (session.client) session.client.submit2FA(code);
+                if (session.client) {
+                    if (session.tfaSource === 'filetransfer') {
+                        session.client.submitFileTransfer2FA(code);
+                    } else {
+                        session.client.submit2FA(code);
+                    }
+                }
             });
 
         session.tfaInput?.addEventListener('keydown', (e) => {
