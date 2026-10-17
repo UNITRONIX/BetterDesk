@@ -186,9 +186,9 @@ done
 GO_SERVER_SOURCE="$SCRIPT_DIR/betterdesk-server"
 
 # Minimum Go version required for compilation (must match betterdesk-server/go.mod).
-GO_MIN_VERSION="1.26.6"
+GO_MIN_VERSION="1.26.9"
 # Point release downloaded when system Go is missing/outdated (must exist on go.dev/dl).
-GO_DOWNLOAD_VERSION="1.26.6"
+GO_DOWNLOAD_VERSION="1.26.9"
 # Maximum time allowed for the first module download on a native install.
 GO_MODULE_DOWNLOAD_TIMEOUT="${GO_MODULE_DOWNLOAD_TIMEOUT:-600}"
 # Maximum time allowed to validate the downloaded module graph.

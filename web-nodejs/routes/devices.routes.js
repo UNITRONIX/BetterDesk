@@ -517,7 +517,7 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
                 device.telemetry = telemetry.data;
             }
         } catch (e) {
-            console.warn(`[API:DEVICE] Telemetry lookup failed for ${req.params.id}:`, e.message);
+            console.warn('[API:DEVICE] Telemetry lookup failed:', req.params.id, e.message);
         }
 
         try {
@@ -530,7 +530,7 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
                 };
             }
         } catch (e) {
-            console.warn(`[API:DEVICE] Connection mode lookup failed for ${req.params.id}:`, e.message);
+            console.warn('[API:DEVICE] Connection mode lookup failed:', req.params.id, e.message);
         }
 
         // Enrich with device group memberships

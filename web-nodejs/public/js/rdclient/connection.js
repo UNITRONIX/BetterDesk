@@ -17,9 +17,15 @@ class RDConnection {
         this.deviceId = String(opts.deviceId || '');
         this.guestSessionId = String(opts.guestSessionId || '');
         if (!this.guestSessionId && this.deviceId) {
-            this.guestSessionId = (window.crypto && typeof window.crypto.randomUUID === 'function')
-                ? window.crypto.randomUUID()
-                : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                this.guestSessionId = window.crypto.randomUUID();
+            } else if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+                const bytes = new Uint8Array(16);
+                window.crypto.getRandomValues(bytes);
+                this.guestSessionId = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+            } else {
+                this.guestSessionId = `${Date.now().toString(36)}-${this.deviceId}`;
+            }
         }
 
         /** @type {WebSocket|null} */

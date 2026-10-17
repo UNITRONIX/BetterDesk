@@ -1535,7 +1535,7 @@ const GO_TOOLCHAIN_DIR = path.join(config.dataDir, 'go-toolchain');
 // Minimum Go version required to build the server. Keep this aligned with the
 // toolchain pinned in betterdesk-server/go.mod so builds do not trigger a
 // hidden automatic toolchain download.
-const GO_MIN_VERSION = '1.26.6';
+const GO_MIN_VERSION = '1.26.9';
 
 function getToolchainKey() {
     const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';

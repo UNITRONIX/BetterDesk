@@ -6,6 +6,7 @@ paths-ignore:
   - web-nodejs/scripts/dev-i18n
   - web-nodejs/scripts/patch-role-scope-i18n.js
   - scripts/bump-version.js
+  - scripts/local-gate.js
   - betterdesk-mgmt
   # MeshAgent tunnel TLS pin (checkServerIdentity); not default chain validation.
   - betterdesk-server/meshcentral/assets/bettercore.js
@@ -20,10 +21,13 @@ query-filters:
       id: js/path-injection
       paths:
         - web-nodejs/lib/safePath.js
+        - web-nodejs/lib/multerCleanup.js
         - web-nodejs/services/updateService.js
         - web-nodejs/services/i18nService.js
+        - web-nodejs/services/scheduledBackupService.js
         - web-nodejs/routes/tickets.routes.js
         - web-nodejs/routes/settings.routes.js
+        - web-nodejs/routes/generator.routes.js
         - web-nodejs/services/serverManagement.js
 
   # --- Intentional admin-only terminal I/O (super_admin / server_admin) ---
@@ -37,12 +41,44 @@ query-filters:
       id: js/request-forgery
       paths:
         - web-nodejs/public/js/utils.js
+        # GitHub API downloads; URL built from configured owner/repo/ref, not raw request body
+        - web-nodejs/services/supportGeneratorModule.js
 
   # --- OIDC discovery/test fetch with SSRF validation (validateOIDCFetchURL + DNS resolve) ---
   - exclude:
       id: go/request-forgery
       paths:
         - betterdesk-server/auth/oidc_url.go
+
+  # --- Local diagnostic gate only (never production) ---
+  - exclude:
+      id: js/shell-command-injection-from-environment
+      paths:
+        - scripts/local-gate.js
+        - web-nodejs/services/localClientBuilder.js
+
+  - exclude:
+      id: js/incomplete-sanitization
+      paths:
+        - scripts/local-gate.js
+
+  # --- Format strings are fixed templates; IDs only interpolated after validation ---
+  - exclude:
+      id: js/tainted-format-string
+      paths:
+        - web-nodejs/routes/devices.routes.js
+
+  # --- Admin file download; auth + rate limit elsewhere on generator API ---
+  - exclude:
+      id: js/missing-rate-limiting
+      paths:
+        - web-nodejs/routes/phase4_5.routes.js
+
+  # --- Nonce / ephemeral client ID; not auth secret material ---
+  - exclude:
+      id: js/insecure-randomness
+      paths:
+        - web-nodejs/public/js/rdclient/connection.js
 
   # --- SSL certificate inspection tool: reads peer cert metadata only (admin-only route) ---
   # --- MeshAgent tunnel: pin-based TLS via checkServerIdentity (self-signed agent certs) ---

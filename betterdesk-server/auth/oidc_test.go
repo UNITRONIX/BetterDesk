@@ -1,4 +1,4 @@
-package auth
+﻿package auth
 
 import (
 	"context"
@@ -35,6 +35,15 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// newTestOIDCProvider creates a provider and registers Close on t.Cleanup so
+// discovery/cleanup goroutines do not outlive the test (race detector).
+func newTestOIDCProvider(t *testing.T, cfg *OIDCConfig) *OIDCProvider {
+	t.Helper()
+	p := NewOIDCProvider(cfg)
+	t.Cleanup(p.Close)
+	return p
+}
+
 // TestNewOIDCProvider verifies that a provider is correctly created.
 func TestNewOIDCProvider(t *testing.T) {
 	cfg := &OIDCConfig{
@@ -42,7 +51,7 @@ func TestNewOIDCProvider(t *testing.T) {
 		ClientID:  "test-client",
 		IssuerURL: "https://example.com",
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 	if p == nil {
 		t.Fatal("expected non-nil provider")
 	}
@@ -57,7 +66,7 @@ func TestOIDCProviderDisabled(t *testing.T) {
 		Enabled: true,
 		// ClientID is empty
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 	if p.IsEnabled() {
 		t.Error("expected provider to be disabled without client_id")
 	}
@@ -75,7 +84,7 @@ func TestOIDCProviderGetDisplayName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewOIDCProvider(&OIDCConfig{DisplayName: tt.display})
+			p := newTestOIDCProvider(t, &OIDCConfig{DisplayName: tt.display})
 			got := p.GetDisplayName()
 			if got != tt.expected {
 				t.Errorf("got %q, want %q", got, tt.expected)
@@ -86,7 +95,7 @@ func TestOIDCProviderGetDisplayName(t *testing.T) {
 
 // TestOIDCProviderUpdateConfig verifies config hot-reload.
 func TestOIDCProviderUpdateConfig(t *testing.T) {
-	p := NewOIDCProvider(&OIDCConfig{Enabled: false})
+	p := newTestOIDCProvider(t, &OIDCConfig{Enabled: false})
 	if p.IsEnabled() {
 		t.Fatal("should start disabled")
 	}
@@ -106,7 +115,7 @@ func TestBuildAuthURL(t *testing.T) {
 		AuthorizationURL: "https://idp.example.com/authorize",
 		UsePKCE:          true,
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 
 	authURL, state, err := p.BuildAuthURL("/dashboard")
 	if err != nil {
@@ -149,7 +158,7 @@ func TestBuildAuthURLNoPKCE(t *testing.T) {
 		AuthorizationURL: "https://idp.example.com/authorize",
 		UsePKCE:          false,
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 
 	authURL, _, err := p.BuildAuthURL("/")
 	if err != nil {
@@ -167,14 +176,14 @@ func TestBuildAuthURLNoEndpoint(t *testing.T) {
 		ClientID: "client",
 		// No AuthorizationURL and no discovery
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 	_, _, err := p.BuildAuthURL("/")
 	if err == nil {
 		t.Error("expected error when no authorization endpoint configured")
 	}
 }
 
-// TestGetReturnURL verifies state → returnURL mapping.
+// TestGetReturnURL verifies state â†’ returnURL mapping.
 func TestGetReturnURL(t *testing.T) {
 	cfg := &OIDCConfig{
 		Enabled:          true,
@@ -183,7 +192,7 @@ func TestGetReturnURL(t *testing.T) {
 		Scopes:           "openid",
 		AuthorizationURL: "https://idp.example.com/authorize",
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 
 	_, state, err := p.BuildAuthURL("/my-page")
 	if err != nil {
@@ -202,7 +211,7 @@ func TestGetReturnURL(t *testing.T) {
 	}
 }
 
-// TestResolveRole verifies group → role mapping.
+// TestResolveRole verifies group â†’ role mapping.
 func TestResolveRole(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -258,7 +267,7 @@ func TestResolveRole(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &OIDCConfig{GroupRoleMap: tt.roleMap, DefaultRole: tt.defaultRole}
-			p := NewOIDCProvider(cfg)
+			p := newTestOIDCProvider(t, cfg)
 			got := p.resolveRole(tt.groups)
 			if got != tt.expected {
 				t.Errorf("resolveRole(%v) = %q, want %q", tt.groups, got, tt.expected)
@@ -268,7 +277,7 @@ func TestResolveRole(t *testing.T) {
 }
 
 func TestResolveRoleWithSource(t *testing.T) {
-	p := NewOIDCProvider(&OIDCConfig{
+	p := newTestOIDCProvider(t, &OIDCConfig{
 		GroupRoleMap: "admins=admin|ops=operator",
 		DefaultRole:  "viewer",
 	})
@@ -316,9 +325,8 @@ func TestParseJWTPayload(t *testing.T) {
 // TestDiscoveryRetryAfterFailure verifies that auto-discovery retries when the
 // IdP is unreachable on the first attempt (#411).
 func TestDiscoveryRetryAfterFailure(t *testing.T) {
-	origInterval := oidcDiscoveryRetryInterval
-	oidcDiscoveryRetryInterval = 40 * time.Millisecond
-	defer func() { oidcDiscoveryRetryInterval = origInterval }()
+	restoreInterval := setOIDCDiscoveryRetryIntervalForTest(40 * time.Millisecond)
+	t.Cleanup(restoreInterval)
 
 	var attempts atomic.Int32
 	var srvURL string
@@ -342,7 +350,7 @@ func TestDiscoveryRetryAfterFailure(t *testing.T) {
 	defer srv.Close()
 	srvURL = srv.URL
 
-	p := NewOIDCProvider(&OIDCConfig{
+	p := newTestOIDCProvider(t, &OIDCConfig{
 		Enabled:       true,
 		AutoDiscovery: true,
 		IssuerURL:     srv.URL,
@@ -408,7 +416,7 @@ func TestTestOIDCDiscoveryInvalidURL(t *testing.T) {
 
 // TestExchangeCodeInvalidState verifies that invalid state is rejected.
 func TestExchangeCodeInvalidState(t *testing.T) {
-	p := NewOIDCProvider(&OIDCConfig{
+	p := newTestOIDCProvider(t, &OIDCConfig{
 		Enabled:  true,
 		ClientID: "client",
 		TokenURL: "http://localhost/token",
@@ -432,7 +440,7 @@ func TestCleanupStates(t *testing.T) {
 		RedirectURL:      "http://localhost/callback",
 		Scopes:           "openid",
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 
 	// Create a state entry
 	_, state, _ := p.BuildAuthURL("/")
@@ -534,7 +542,7 @@ func TestExchangeCodePreservesReturnURL(t *testing.T) {
 		Scopes:           "openid",
 		ClaimUsername:    "preferred_username",
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 
 	_, state, err := p.BuildAuthURL("/dashboard")
 	if err != nil {
@@ -552,7 +560,7 @@ func TestExchangeCodePreservesReturnURL(t *testing.T) {
 		t.Errorf("Username = %q, want sso-user", result.Username)
 	}
 
-	// State is consumed — GetReturnURL should no longer find it.
+	// State is consumed â€” GetReturnURL should no longer find it.
 	if got := p.GetReturnURL(state); got != "" {
 		t.Errorf("GetReturnURL after ExchangeCode = %q, want empty", got)
 	}
@@ -567,7 +575,7 @@ func TestBuildClientAuthURLAndPending(t *testing.T) {
 		AuthorizationURL: "https://idp.example.com/authorize",
 		Scopes:           "openid profile email",
 	}
-	p := NewOIDCProvider(cfg)
+	p := newTestOIDCProvider(t, cfg)
 
 	if tok := p.ClientLoginOptionToken(); tok != "oidc/Azure AD" {
 		t.Fatalf("ClientLoginOptionToken = %q", tok)
@@ -609,7 +617,7 @@ func TestBuildClientAuthURLAndPending(t *testing.T) {
 }
 
 func TestClientPendingRejectsMismatchDevice(t *testing.T) {
-	p := NewOIDCProvider(&OIDCConfig{
+	p := newTestOIDCProvider(t, &OIDCConfig{
 		Enabled: true, ClientID: "c",
 		AuthorizationURL: "https://idp.example.com/a",
 		RedirectURL:      "http://localhost/cb",
@@ -647,7 +655,7 @@ func TestExchangeCodePreservesClientFlow(t *testing.T) {
 	}))
 	defer tokenSrv.Close()
 
-	p := NewOIDCProvider(&OIDCConfig{
+	p := newTestOIDCProvider(t, &OIDCConfig{
 		Enabled: true, ClientID: "client",
 		RedirectURL:      "http://localhost/callback",
 		AuthorizationURL: "https://idp.example.com/authorize",
@@ -674,3 +682,4 @@ func TestExchangeCodePreservesClientFlow(t *testing.T) {
 		t.Fatalf("Username = %q", result.Username)
 	}
 }
+
