@@ -275,10 +275,10 @@
 
 [data-theme="light"],
 .theme-light {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f6f8fa;
+    --bg-primary: #f0f2f5;
+    --bg-secondary: #ffffff;
     --bg-tertiary: #eaeef2;
-    --bg-elevated: #d0d7de;
+    --bg-elevated: #ffffff;
     --bg-overlay: rgba(0, 0, 0, 0.4);
 
     --text-primary: #1f2328;
@@ -334,10 +334,10 @@
 /* Auto theme (follow OS) */
 @media (prefers-color-scheme: light) {
     [data-theme="auto"] {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f6f8fa;
+        --bg-primary: #f0f2f5;
+        --bg-secondary: #ffffff;
         --bg-tertiary: #eaeef2;
-        --bg-elevated: #d0d7de;
+        --bg-elevated: #ffffff;
         --bg-overlay: rgba(0, 0, 0, 0.4);
         --text-primary: #1f2328;
         --text-secondary: #656d76;

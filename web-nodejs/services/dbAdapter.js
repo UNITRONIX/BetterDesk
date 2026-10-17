@@ -23,9 +23,12 @@
 // ---------------------------------------------------------------------------
 
 const path = require('path');
+const fs = require('fs');
 const agentBundleService = require('./agentBundleService');
 const { hashAccessToken } = require('../lib/tokenHash');
 const { redactAuditDetails } = require('../lib/logRedact');
+const { normalizeProductType, normalizeBuildStatus } = require('../lib/generatorBuildTypes');
+const { assertSafeSqlIdent, isSafeSqlIdent } = require('../lib/safeSqlIdent');
 
 // Lazy-loaded drivers — keeps startup fast when one backend isn't installed.
 let _sqlite = null;
@@ -201,6 +204,7 @@ function createSqliteAdapter(config) {
     const Database = getSqliteDriver();
     let mainDb = null;
     let authDb = null;
+    let authUsesMain = false;
 
     /** open helper */
     function openMain() {
@@ -212,14 +216,67 @@ function createSqliteAdapter(config) {
         return mainDb;
     }
 
+    /**
+     * New installs use db_v2.sqlite3 as the only SQLite store. Existing
+     * installations continue to use auth.db until the Go migration writes its
+     * completion marker; this prevents an accidental empty-store cutover.
+     */
+    function authStorageIsConsolidated() {
+        if ((process.env.SQLITE_AUTH_DB_MODE || '').toLowerCase() === 'legacy') return false;
+        if ((process.env.SQLITE_AUTH_DB_MODE || '').toLowerCase() === 'consolidated') return true;
+        const legacyPath = config.authDbPath || path.join(config.dataDir, 'auth.db');
+        if (!fs.existsSync(legacyPath)) return true;
+        try {
+            const db = openMain();
+            const markerTable = db.prepare(`
+                SELECT 1 FROM sqlite_master
+                WHERE type = 'table' AND name = 'betterdesk_migrations'
+            `).get();
+            if (!markerTable) return false;
+            return !!db.prepare(`
+                SELECT 1 FROM betterdesk_migrations
+                WHERE name = 'sqlite_auth_consolidation_v1' AND status = 'complete'
+            `).get();
+        } catch (_) {
+            // Fail safely: preserve the existing legacy store when its
+            // consolidation state cannot be determined.
+            return false;
+        }
+    }
+
     function openAuth() {
         if (authDb) return authDb;
-        const authDbPath = path.join(config.dataDir, 'auth.db');
-        authDb = new Database(authDbPath, { readonly: false, fileMustExist: false });
+        if (authStorageIsConsolidated()) {
+            authDb = openMain();
+            authUsesMain = true;
+            return authDb;
+        }
+        const authDbPath = config.authDbPath || path.join(config.dataDir, 'auth.db');
+        // Existing legacy paths must already exist. Never recreate a missing
+        // auth.db, otherwise a failed/misconfigured migration could silently
+        // create a second identity store.
+        if (!fs.existsSync(authDbPath)) {
+            throw new Error(`Legacy auth database is missing: ${authDbPath}`);
+        }
+        authDb = new Database(authDbPath, { readonly: false, fileMustExist: true });
         authDb.pragma('busy_timeout = 5000');
         authDb.pragma('journal_mode = WAL');
         authDb.pragma('foreign_keys = ON');
         return authDb;
+    }
+
+    function usesUsernameAddressBooks(db = openAuth()) {
+        try {
+            return db.prepare('PRAGMA table_info(address_books)').all()
+                .some((column) => column.name === 'username');
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function usernameForUserId(db, userId) {
+        const user = db.prepare('SELECT username FROM users WHERE id = ?').get(userId);
+        return user ? user.username : null;
     }
 
     // ---- Schema bootstrap ----
@@ -933,6 +990,36 @@ function createSqliteAdapter(config) {
         }
     }
 
+    function migrateAgentBundleProductTypesSqlite(db) {
+        try {
+            const cols = new Set(db.prepare('PRAGMA table_info(agent_bundles)').all().map(c => c.name));
+            if (!cols.has('product_type')) {
+                db.exec("ALTER TABLE agent_bundles ADD COLUMN product_type TEXT NOT NULL DEFAULT 'betterdesk-support'");
+                console.log('[DB] Migration: added agent_bundles.product_type');
+            }
+            // SQLite cannot alter a column default in place. Normalize legacy
+            // values now; callers still accept aliases for older deployments.
+            db.exec(`
+                UPDATE agent_bundles
+                SET product_type = CASE LOWER(TRIM(COALESCE(product_type, '')))
+                    WHEN 'betterdesk-support' THEN 'betterdesk-support'
+                    WHEN 'betterdesk_support' THEN 'betterdesk-support'
+                    WHEN 'rdclient' THEN 'betterdesk-support'
+                    WHEN 'agent-client' THEN 'betterdesk-support'
+                    WHEN 'agent_client' THEN 'betterdesk-support'
+                    WHEN 'support-agent' THEN 'betterdesk-support'
+                    WHEN 'support_agent' THEN 'betterdesk-support'
+                    WHEN 'agent' THEN 'betterdesk-support'
+                    ELSE 'betterdesk-support'
+                END
+                WHERE product_type IS NULL
+                   OR LOWER(TRIM(product_type)) NOT IN ('betterdesk-support')
+            `);
+        } catch (e) {
+            console.warn('[DB] Migration agent_bundles.product_type error:', e.message);
+        }
+    }
+
     function ensureAgentBundleTables(db) {
         db.exec(`
             CREATE TABLE IF NOT EXISTS agent_bundles (
@@ -942,7 +1029,11 @@ function createSqliteAdapter(config) {
                 name TEXT NOT NULL,
                 branding TEXT NOT NULL DEFAULT '{}',
                 branding_hash TEXT NOT NULL DEFAULT '',
+                config_fingerprint TEXT NOT NULL DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                active_generation_hash TEXT DEFAULT NULL,
                 created_by INTEGER DEFAULT NULL,
+                product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
                 revoked INTEGER NOT NULL DEFAULT 0,
                 download_count INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -962,6 +1053,11 @@ function createSqliteAdapter(config) {
                 artifact_size INTEGER DEFAULT 0,
                 artifact_sha256 TEXT DEFAULT NULL,
                 error_message TEXT DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                generation_id TEXT DEFAULT NULL,
+                config_fingerprint TEXT DEFAULT NULL,
+                progress_percent INTEGER NOT NULL DEFAULT 0,
+                progress_phase TEXT DEFAULT '',
                 started_at TEXT DEFAULT NULL,
                 finished_at TEXT DEFAULT NULL,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -971,16 +1067,34 @@ function createSqliteAdapter(config) {
             CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_hash ON agent_bundle_builds (branding_hash);
             CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_status ON agent_bundle_builds (status);
         `);
-        migrateAgentBundleSlugsSqlite(db);
-        try {
-            const cols = new Set(db.prepare('PRAGMA table_info(agent_bundles)').all().map(c => c.name));
-            if (!cols.has('product_type')) {
-                db.exec("ALTER TABLE agent_bundles ADD COLUMN product_type TEXT NOT NULL DEFAULT 'agent'");
-                console.log('[DB] Migration: added agent_bundles.product_type');
+        const bundleColumns = new Set(
+            db.prepare('PRAGMA table_info(agent_bundles)').all().map(c => c.name)
+        );
+        for (const [column, type] of [
+            ['config_fingerprint', "TEXT NOT NULL DEFAULT ''"],
+            ['client_commit', 'TEXT DEFAULT NULL'],
+            ['active_generation_hash', 'TEXT DEFAULT NULL'],
+        ]) {
+            if (!bundleColumns.has(column)) {
+                db.exec(`ALTER TABLE agent_bundles ADD COLUMN ${column} ${type}`);
             }
-        } catch (e) {
-            console.warn('[DB] Migration agent_bundles.product_type error:', e.message);
         }
+        const buildColumns = new Set(
+            db.prepare('PRAGMA table_info(agent_bundle_builds)').all().map(c => c.name)
+        );
+        for (const [column, type] of [
+            ['client_commit', 'TEXT DEFAULT NULL'],
+            ['generation_id', 'TEXT DEFAULT NULL'],
+            ['config_fingerprint', 'TEXT DEFAULT NULL'],
+            ['progress_percent', 'INTEGER NOT NULL DEFAULT 0'],
+            ['progress_phase', "TEXT DEFAULT ''"],
+        ]) {
+            if (!buildColumns.has(column)) {
+                db.exec(`ALTER TABLE agent_bundle_builds ADD COLUMN ${column} ${type}`);
+            }
+        }
+        migrateAgentBundleSlugsSqlite(db);
+        migrateAgentBundleProductTypesSqlite(db);
     }
 
     // -- Multi-tenancy tables ----------------------------------------------
@@ -1137,11 +1251,27 @@ function createSqliteAdapter(config) {
         }
     }
 
+    function isCurrentPeerIdSqlite(id) {
+        const db = openMain();
+        try {
+            const peersTbl = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='peers'").get();
+            if (peersTbl) {
+                return !!db.prepare('SELECT 1 FROM peers WHERE id = ? LIMIT 1').get(id);
+            }
+        } catch (_) {}
+        try {
+            return !!db.prepare('SELECT 1 FROM peer WHERE id = ? LIMIT 1').get(id);
+        } catch (_) {
+            return false;
+        }
+    }
+
     /**
      * Identity-aware rename guard — mirrors Go signal rejectRenamedPeerRegistration (#213).
      * @returns {{ reject: boolean, new_id?: string }}
      */
     function shouldRejectRenamedPeerRegistrationSqlite(oldId, { uuid, pk, ip } = {}) {
+        if (isCurrentPeerIdSqlite(oldId)) return { reject: false };
         const newId = (() => {
             try {
                 const db = openMain();
@@ -1268,8 +1398,31 @@ function createSqliteAdapter(config) {
         },
 
         async close() {
+            if (authDb && !authUsesMain) { authDb.close(); }
+            authDb = null;
+            authUsesMain = false;
             if (mainDb) { mainDb.close(); mainDb = null; }
-            if (authDb) { authDb.close(); authDb = null; }
+        },
+
+        /**
+         * Shared better-sqlite3 handle for db_v2.sqlite3 (#353).
+         * Callers must not close this — adapter.close() owns lifecycle.
+         */
+        getSqliteMainDb() {
+            return openMain();
+        },
+
+        /** Absolute/configured path for the shared main SQLite file. */
+        getSqliteDbPath() {
+            return config.dbPath;
+        },
+
+        /**
+         * Shared auth SQLite handle (main DB when consolidated, else auth.db).
+         * Callers must not close this — adapter.close() owns lifecycle.
+         */
+        getSqliteAuthDb() {
+            return openAuth();
         },
 
         // ---- Peers ----
@@ -1387,6 +1540,7 @@ function createSqliteAdapter(config) {
         getRenamedPeerId(oldId) {
             try {
                 const db = openMain();
+                if (isCurrentPeerIdSqlite(oldId)) return null;
                 const tbl = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='id_change_history'").get();
                 if (!tbl) return null;
                 const row = db.prepare('SELECT new_id FROM id_change_history WHERE old_id = ? ORDER BY rowid DESC LIMIT 1').get(oldId);
@@ -1650,10 +1804,28 @@ function createSqliteAdapter(config) {
         // ---- Address books ----
 
         async getAddressBook(userId, abType = 'legacy') {
-            return openAuth().prepare('SELECT * FROM address_books WHERE user_id = ? AND ab_type = ?').get(userId, abType) || null;
+            const db = openAuth();
+            if (usesUsernameAddressBooks(db)) {
+                const username = usernameForUserId(db, userId);
+                return username
+                    ? db.prepare('SELECT * FROM address_books WHERE username = ? AND ab_type = ?').get(username, abType) || null
+                    : null;
+            }
+            return db.prepare('SELECT * FROM address_books WHERE user_id = ? AND ab_type = ?').get(userId, abType) || null;
         },
         async saveAddressBook(userId, abType, data) {
-            openAuth().prepare(`
+            const db = openAuth();
+            if (usesUsernameAddressBooks(db)) {
+                const username = usernameForUserId(db, userId);
+                if (!username) return;
+                db.prepare(`
+                    INSERT INTO address_books (username, ab_type, data, updated_at)
+                    VALUES (?, ?, ?, datetime('now'))
+                    ON CONFLICT(username, ab_type) DO UPDATE SET data = excluded.data, updated_at = datetime('now')
+                `).run(username, abType, data);
+                return;
+            }
+            db.prepare(`
                 INSERT INTO address_books (user_id, ab_type, data, updated_at)
                 VALUES (?, ?, ?, datetime('now'))
                 ON CONFLICT(user_id, ab_type) DO UPDATE SET data = excluded.data, updated_at = datetime('now')
@@ -1859,9 +2031,15 @@ function createSqliteAdapter(config) {
             return openAuth().prepare('SELECT * FROM users ORDER BY id').all();
         },
         async getAllAddressBooks() {
-            return openAuth().prepare(
-                'SELECT user_id, ab_type, data, updated_at FROM address_books ORDER BY user_id'
-            ).all();
+            const db = openAuth();
+            if (usesUsernameAddressBooks(db)) {
+                return db.prepare(`
+                    SELECT u.id AS user_id, ab.ab_type, ab.data, ab.updated_at
+                    FROM address_books ab INNER JOIN users u ON u.username = ab.username
+                    ORDER BY u.id
+                `).all();
+            }
+            return db.prepare('SELECT user_id, ab_type, data, updated_at FROM address_books ORDER BY user_id').all();
         },
         async restoreUsers(users) {
             const db = openAuth();
@@ -1885,7 +2063,10 @@ function createSqliteAdapter(config) {
         async getBackupStats() {
             const db = openAuth();
             const c = (tbl) => {
-                try { return db.prepare(`SELECT COUNT(*) as c FROM ${tbl}`).get().c; }
+                try {
+                    const safe = assertSafeSqlIdent(tbl);
+                    return db.prepare(`SELECT COUNT(*) as c FROM ${safe}`).get().c;
+                }
                 catch (_) { return 0; }
             };
             return {
@@ -1900,7 +2081,9 @@ function createSqliteAdapter(config) {
          * Used by full backups for a 1:1 raw file copy. Returns null for PostgreSQL.
          */
         getDatabaseFilePath() {
-            return path.join(config.dataDir, 'auth.db');
+            return authStorageIsConsolidated()
+                ? config.dbPath
+                : (config.authDbPath || path.join(config.dataDir, 'auth.db'));
         },
 
         /**
@@ -1915,9 +2098,11 @@ function createSqliteAdapter(config) {
             ).all();
             const tables = {};
             for (const { name } of tableRows) {
+                if (!isSafeSqlIdent(name)) continue;
                 try {
-                    const rows = db.prepare(`SELECT * FROM "${name}"`).all();
-                    tables[name] = rows.map((row) => {
+                    const safe = assertSafeSqlIdent(name);
+                    const rows = db.prepare(`SELECT * FROM "${safe}"`).all();
+                    tables[safe] = rows.map((row) => {
                         const out = {};
                         for (const [k, v] of Object.entries(row)) {
                             out[k] = Buffer.isBuffer(v) ? { __buf__: v.toString('base64') } : v;
@@ -1946,13 +2131,16 @@ function createSqliteAdapter(config) {
             db.pragma('foreign_keys = OFF');
             try {
                 for (const [name, rows] of Object.entries(tables)) {
-                    if (!liveTables.has(name) || !Array.isArray(rows)) { result.skipped.push(name); continue; }
-                    const cols = new Set(db.prepare(`PRAGMA table_info("${name}")`).all().map((c) => c.name));
+                    if (!isSafeSqlIdent(name) || !liveTables.has(name) || !Array.isArray(rows)) {
+                        result.skipped.push(name); continue;
+                    }
+                    const safe = assertSafeSqlIdent(name);
+                    const cols = new Set(db.prepare(`PRAGMA table_info("${safe}")`).all().map((c) => c.name));
                     try {
                         const tx = db.transaction(() => {
-                            db.prepare(`DELETE FROM "${name}"`).run();
+                            db.prepare(`DELETE FROM "${safe}"`).run();
                             for (const row of rows) {
-                                const keys = Object.keys(row).filter((k) => cols.has(k));
+                                const keys = Object.keys(row).filter((k) => cols.has(k) && isSafeSqlIdent(k));
                                 if (keys.length === 0) continue;
                                 const vals = keys.map((k) => {
                                     const v = row[k];
@@ -1963,12 +2151,12 @@ function createSqliteAdapter(config) {
                                 });
                                 const placeholders = keys.map(() => '?').join(', ');
                                 db.prepare(
-                                    `INSERT OR REPLACE INTO "${name}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`
+                                    `INSERT OR REPLACE INTO "${safe}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`
                                 ).run(...vals);
                             }
                         });
                         tx();
-                        result.restored.push(name);
+                        result.restored.push(safe);
                     } catch (err) {
                         result.warnings.push(`Table ${name}: ${err.message}`);
                     }
@@ -3160,6 +3348,24 @@ function createSqliteAdapter(config) {
             return guid;
         },
 
+        _ensureUserGuidSqlite(userId) {
+            const id = Number(userId);
+            if (!Number.isFinite(id) || id <= 0) return null;
+            const row = openAuth().prepare(`
+                SELECT id, COALESCE(guid, '') AS guid FROM users WHERE id = ?
+            `).get(id);
+            if (!row) return null;
+            if (row.guid) return row.guid;
+            const crypto = require('crypto');
+            const guid = crypto.randomUUID();
+            openAuth().prepare('UPDATE users SET guid = ? WHERE id = ?').run(guid, row.id);
+            return guid;
+        },
+
+        async ensureUserGuid(userId) {
+            return this._ensureUserGuidSqlite(userId);
+        },
+
         async resolvePeerAssignmentKey(ref) {
             const key = String(ref || '').trim();
             if (!key) throw new Error('empty peer reference');
@@ -3381,7 +3587,15 @@ function createSqliteAdapter(config) {
         // ---- Address Book Tags ----
 
         async getAddressBookTags(userId) {
-            const row = openAuth().prepare('SELECT data FROM address_books WHERE user_id = ? AND ab_type = ?').get(userId, 'legacy');
+            const db = openAuth();
+            const row = usesUsernameAddressBooks(db)
+                ? (() => {
+                    const username = usernameForUserId(db, userId);
+                    return username
+                        ? db.prepare('SELECT data FROM address_books WHERE username = ? AND ab_type = ?').get(username, 'legacy')
+                        : null;
+                })()
+                : db.prepare('SELECT data FROM address_books WHERE user_id = ? AND ab_type = ?').get(userId, 'legacy');
             if (!row) return [];
             try { return JSON.parse(row.data).tags || []; } catch { return []; }
         },
@@ -3452,23 +3666,96 @@ function createSqliteAdapter(config) {
             return excludeBundleId ? row.bundle_id !== excludeBundleId : true;
         },
 
-        async createAgentBundle({ bundleId, slug, name, branding, brandingHash, createdBy, productType }) {
+        async createAgentBundle({
+            bundleId,
+            slug,
+            name,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+            createdBy,
+            productType,
+        }) {
             const db = openMain();
             const r = db.prepare(`
-                INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash, created_by, product_type)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            `).run(bundleId, slug || null, name, branding, brandingHash, createdBy || null, productType || 'agent');
+                INSERT INTO agent_bundles (
+                    bundle_id, slug, name, branding, branding_hash,
+                    config_fingerprint, client_commit, created_by, product_type
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+                bundleId,
+                slug || null,
+                name,
+                branding,
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                createdBy || null,
+                normalizeProductType(productType)
+            );
             return db.prepare('SELECT * FROM agent_bundles WHERE id = ?').get(r.lastInsertRowid);
         },
 
-        async updateAgentBundle(bundleId, { name, slug, branding, brandingHash }) {
+        async updateAgentBundle(bundleId, {
+            name,
+            slug,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
             const db = openMain();
             db.prepare(`
                 UPDATE agent_bundles
-                SET name = ?, slug = ?, branding = ?, branding_hash = ?, updated_at = datetime('now')
+                SET name = ?, slug = ?, branding = ?, branding_hash = ?,
+                    config_fingerprint = ?, client_commit = ?, updated_at = datetime('now')
                 WHERE bundle_id = ?
-            `).run(name, slug || null, branding, brandingHash, bundleId);
+            `).run(
+                name,
+                slug || null,
+                branding,
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId
+            );
             return db.prepare('SELECT * FROM agent_bundles WHERE bundle_id = ?').get(bundleId) || null;
+        },
+
+        async prepareAgentBundleGeneration(bundleId, {
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
+            const db = openMain();
+            db.prepare(`
+                UPDATE agent_bundles
+                SET branding_hash = ?, config_fingerprint = ?, client_commit = ?,
+                    updated_at = datetime('now')
+                WHERE bundle_id = ?
+            `).run(
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId
+            );
+            return db.prepare('SELECT * FROM agent_bundles WHERE bundle_id = ?').get(bundleId) || null;
+        },
+
+        async promoteAgentBundleGeneration(brandingHash) {
+            const db = openMain();
+            db.prepare(`
+                UPDATE agent_bundles
+                SET active_generation_hash = ?, updated_at = datetime('now')
+                WHERE branding_hash = ? AND revoked = 0
+            `).run(brandingHash, brandingHash);
+            return db.prepare(`
+                SELECT * FROM agent_bundles
+                WHERE branding_hash = ? AND revoked = 0
+                ORDER BY created_at DESC
+            `).all(brandingHash);
         },
 
         async setAgentBundleRevoked(bundleId, revoked) {
@@ -3504,28 +3791,52 @@ function createSqliteAdapter(config) {
             `).get(brandingHash, platform, arch, format) || null;
         },
 
-        async upsertAgentBundleBuild({ brandingHash, platform, arch, format, status, artifactPath, artifactSize, artifactSha256, errorMessage }) {
+        async upsertAgentBundleBuild({
+            brandingHash,
+            platform,
+            arch,
+            format,
+            status,
+            artifactPath,
+            artifactSize,
+            artifactSha256,
+            errorMessage,
+            clientCommit,
+            generationId,
+            configFingerprint,
+            progressPercent,
+            progressPhase,
+        }) {
             const db = openMain();
-            const ts = (status === 'building') ? "datetime('now')" : 'started_at';
-            const finishTs = (status === 'ready' || status === 'failed') ? "datetime('now')" : 'finished_at';
+            const buildStatus = normalizeBuildStatus(status);
             db.prepare(`
                 INSERT INTO agent_bundle_builds (
                     branding_hash, platform, arch, format, status,
                     artifact_path, artifact_size, artifact_sha256, error_message,
+                    client_commit, generation_id, config_fingerprint,
+                    progress_percent, progress_phase,
                     started_at, finished_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ${status === 'building' ? "datetime('now')" : 'NULL'}, ${status === 'ready' || status === 'failed' ? "datetime('now')" : 'NULL'})
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ${buildStatus === 'building' ? "datetime('now')" : 'NULL'}, ${buildStatus === 'ready' || buildStatus === 'failed' ? "datetime('now')" : 'NULL'})
                 ON CONFLICT(branding_hash, platform, arch, format) DO UPDATE SET
                     status = excluded.status,
                     artifact_path = COALESCE(excluded.artifact_path, agent_bundle_builds.artifact_path),
                     artifact_size = COALESCE(excluded.artifact_size, agent_bundle_builds.artifact_size),
                     artifact_sha256 = COALESCE(excluded.artifact_sha256, agent_bundle_builds.artifact_sha256),
                     error_message = excluded.error_message,
+                    client_commit = COALESCE(excluded.client_commit, agent_bundle_builds.client_commit),
+                    generation_id = COALESCE(excluded.generation_id, agent_bundle_builds.generation_id),
+                    config_fingerprint = COALESCE(excluded.config_fingerprint, agent_bundle_builds.config_fingerprint),
+                    progress_percent = excluded.progress_percent,
+                    progress_phase = excluded.progress_phase,
                     started_at = CASE WHEN excluded.status = 'building' THEN datetime('now') ELSE agent_bundle_builds.started_at END,
                     finished_at = CASE WHEN excluded.status IN ('ready','failed') THEN datetime('now') ELSE agent_bundle_builds.finished_at END,
                     updated_at = datetime('now')
             `).run(
-                brandingHash, platform, arch, format, status,
-                artifactPath || null, artifactSize || 0, artifactSha256 || null, errorMessage || ''
+                brandingHash, platform, arch, format, buildStatus,
+                artifactPath || null, artifactSize || 0, artifactSha256 || null, errorMessage || '',
+                clientCommit || null, generationId || null, configFingerprint || null,
+                Math.max(0, Math.min(100, Number(progressPercent || 0))),
+                String(progressPhase || '')
             );
             return this.getAgentBundleBuild({ brandingHash, platform, arch, format });
         },
@@ -4073,13 +4384,20 @@ function createPostgresAdapter() {
                 name TEXT NOT NULL,
                 branding TEXT NOT NULL DEFAULT '{}',
                 branding_hash TEXT NOT NULL DEFAULT '',
+                config_fingerprint TEXT NOT NULL DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                active_generation_hash TEXT DEFAULT NULL,
                 created_by INTEGER DEFAULT NULL,
+                product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
                 revoked BOOLEAN NOT NULL DEFAULT FALSE,
                 download_count INTEGER NOT NULL DEFAULT 0,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
         `);
+        await q("ALTER TABLE agent_bundles ADD COLUMN IF NOT EXISTS config_fingerprint TEXT NOT NULL DEFAULT ''");
+        await q('ALTER TABLE agent_bundles ADD COLUMN IF NOT EXISTS client_commit TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_bundles ADD COLUMN IF NOT EXISTS active_generation_hash TEXT DEFAULT NULL');
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundles_bundle_id ON agent_bundles (bundle_id)');
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundles_hash ON agent_bundles (branding_hash)');
         try {
@@ -4105,6 +4423,41 @@ function createPostgresAdapter() {
         } catch (e) {
             console.warn('[DB] Migration agent_bundles.slug error:', e.message);
         }
+        try {
+            const productTypeCols = await all(
+                `SELECT is_nullable, column_default FROM information_schema.columns
+                 WHERE table_name = 'agent_bundles' AND column_name = 'product_type'`
+            );
+            if (productTypeCols.length === 0) {
+                await q("ALTER TABLE agent_bundles ADD COLUMN product_type TEXT NOT NULL DEFAULT 'betterdesk-support'");
+                console.log('[DB] Migration: added agent_bundles.product_type');
+            } else {
+                await q(`
+                    UPDATE agent_bundles
+                    SET product_type = CASE LOWER(TRIM(COALESCE(product_type, '')))
+                        WHEN 'betterdesk-support' THEN 'betterdesk-support'
+                        WHEN 'betterdesk_support' THEN 'betterdesk-support'
+                        WHEN 'rdclient' THEN 'betterdesk-support'
+                        WHEN 'agent-client' THEN 'betterdesk-support'
+                        WHEN 'agent_client' THEN 'betterdesk-support'
+                        WHEN 'support-agent' THEN 'betterdesk-support'
+                        WHEN 'support_agent' THEN 'betterdesk-support'
+                        WHEN 'agent' THEN 'betterdesk-support'
+                        ELSE 'betterdesk-support'
+                    END
+                    WHERE product_type IS NULL
+                       OR LOWER(TRIM(product_type)) NOT IN ('betterdesk-support')
+                `);
+                if (productTypeCols[0].is_nullable === 'YES') {
+                    await q('ALTER TABLE agent_bundles ALTER COLUMN product_type SET NOT NULL');
+                }
+                if (!String(productTypeCols[0].column_default || '').includes('betterdesk-support')) {
+                    await q("ALTER TABLE agent_bundles ALTER COLUMN product_type SET DEFAULT 'betterdesk-support'");
+                }
+            }
+        } catch (e) {
+            console.warn('[DB] Migration agent_bundles.product_type error:', e.message);
+        }
         await q(`
             CREATE TABLE IF NOT EXISTS agent_bundle_builds (
                 id SERIAL PRIMARY KEY,
@@ -4117,6 +4470,11 @@ function createPostgresAdapter() {
                 artifact_size BIGINT DEFAULT 0,
                 artifact_sha256 TEXT DEFAULT NULL,
                 error_message TEXT DEFAULT '',
+                client_commit TEXT DEFAULT NULL,
+                generation_id TEXT DEFAULT NULL,
+                config_fingerprint TEXT DEFAULT NULL,
+                progress_percent INTEGER NOT NULL DEFAULT 0,
+                progress_phase TEXT DEFAULT '',
                 started_at TIMESTAMPTZ DEFAULT NULL,
                 finished_at TIMESTAMPTZ DEFAULT NULL,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -4124,6 +4482,11 @@ function createPostgresAdapter() {
                 UNIQUE(branding_hash, platform, arch, format)
             )
         `);
+        await q('ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS client_commit TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS generation_id TEXT DEFAULT NULL');
+        await q('ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS config_fingerprint TEXT DEFAULT NULL');
+        await q("ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS progress_percent INTEGER NOT NULL DEFAULT 0");
+        await q("ALTER TABLE agent_bundle_builds ADD COLUMN IF NOT EXISTS progress_phase TEXT DEFAULT ''");
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_hash ON agent_bundle_builds (branding_hash)');
         await q('CREATE INDEX IF NOT EXISTS idx_agent_bundle_builds_status ON agent_bundle_builds (status)');
 
@@ -4494,11 +4857,24 @@ function createPostgresAdapter() {
         }
     }
 
+    async function isCurrentPeerIdPg(id) {
+        try {
+            return !!(await q1('SELECT 1 AS present FROM peers WHERE id = $1 LIMIT 1', [id]));
+        } catch (_) {
+            try {
+                return !!(await q1('SELECT 1 AS present FROM peer WHERE id = $1 LIMIT 1', [id]));
+            } catch (_) {
+                return false;
+            }
+        }
+    }
+
     /**
      * Identity-aware rename guard — mirrors Go signal rejectRenamedPeerRegistration (#213).
      * @returns {Promise<{ reject: boolean, new_id?: string }>}
      */
     async function shouldRejectRenamedPeerRegistrationPg(oldId, { uuid, pk, ip } = {}) {
+        if (await isCurrentPeerIdPg(oldId)) return { reject: false };
         let newId = null;
         try {
             const row = await q1('SELECT new_id FROM id_change_history WHERE old_id = $1 ORDER BY id DESC LIMIT 1', [oldId]);
@@ -4710,6 +5086,7 @@ function createPostgresAdapter() {
          */
         async getRenamedPeerId(oldId) {
             try {
+                if (await isCurrentPeerIdPg(oldId)) return null;
                 const row = await q1('SELECT new_id FROM id_change_history WHERE old_id = $1 ORDER BY id DESC LIMIT 1', [oldId]);
                 return row ? row.new_id : null;
             } catch (_) { return null; }
@@ -5186,7 +5563,10 @@ function createPostgresAdapter() {
         },
         async getBackupStats() {
             const c = async (tbl) => {
-                try { return +(await one(`SELECT COUNT(*) AS c FROM ${tbl}`)).c; }
+                try {
+                    const safe = assertSafeSqlIdent(tbl);
+                    return +(await one(`SELECT COUNT(*) AS c FROM ${safe}`)).c;
+                }
                 catch (_) { return 0; }
             };
             return {
@@ -5215,10 +5595,11 @@ function createPostgresAdapter() {
             );
             const tables = {};
             for (const { table_name } of tableRows) {
-                if (!/^[A-Za-z0-9_]+$/.test(table_name)) continue;
+                if (!isSafeSqlIdent(table_name)) continue;
                 try {
-                    const rows = await all(`SELECT * FROM "${table_name}"`);
-                    tables[table_name] = rows.map((row) => {
+                    const safe = assertSafeSqlIdent(table_name);
+                    const rows = await all(`SELECT * FROM "${safe}"`);
+                    tables[safe] = rows.map((row) => {
                         const out = {};
                         for (const [k, v] of Object.entries(row)) {
                             out[k] = Buffer.isBuffer(v) ? { __buf__: v.toString('base64') } : v;
@@ -5247,19 +5628,20 @@ function createPostgresAdapter() {
                 // Relax FK ordering for the bulk reload (best-effort; ignored if not permitted).
                 try { await client.query("SET session_replication_role = 'replica'"); } catch (_) { /* ignore */ }
                 for (const [name, rows] of Object.entries(tables)) {
-                    if (!liveTables.has(name) || !Array.isArray(rows) || !/^[A-Za-z0-9_]+$/.test(name)) {
+                    if (!isSafeSqlIdent(name) || !liveTables.has(name) || !Array.isArray(rows)) {
                         result.skipped.push(name); continue;
                     }
+                    const safe = assertSafeSqlIdent(name);
                     const colRes = await client.query(
                         `SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=$1`,
-                        [name]
+                        [safe]
                     );
                     const cols = new Set(colRes.rows.map((r) => r.column_name));
                     try {
                         await client.query('BEGIN');
-                        await client.query(`DELETE FROM "${name}"`);
+                        await client.query(`DELETE FROM "${safe}"`);
                         for (const row of rows) {
-                            const keys = Object.keys(row).filter((k) => cols.has(k));
+                            const keys = Object.keys(row).filter((k) => cols.has(k) && isSafeSqlIdent(k));
                             if (keys.length === 0) continue;
                             const vals = keys.map((k) => {
                                 const v = row[k];
@@ -5270,12 +5652,12 @@ function createPostgresAdapter() {
                             });
                             const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
                             await client.query(
-                                `INSERT INTO "${name}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`,
+                                `INSERT INTO "${safe}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`,
                                 vals
                             );
                         }
                         await client.query('COMMIT');
-                        result.restored.push(name);
+                        result.restored.push(safe);
                     } catch (err) {
                         try { await client.query('ROLLBACK'); } catch (_) { /* ignore */ }
                         result.warnings.push(`Table ${name}: ${err.message}`);
@@ -6452,6 +6834,25 @@ function createPostgresAdapter() {
             return guid;
         },
 
+        async _ensureUserGuidPg(userId) {
+            const id = Number(userId);
+            if (!Number.isFinite(id) || id <= 0) return null;
+            await q("ALTER TABLE users ADD COLUMN IF NOT EXISTS guid TEXT DEFAULT ''");
+            const row = await one(`
+                SELECT id, COALESCE(guid, '') AS guid FROM users WHERE id = $1
+            `, [id]);
+            if (!row) return null;
+            if (row.guid) return row.guid;
+            const crypto = require('crypto');
+            const guid = crypto.randomUUID();
+            await q('UPDATE users SET guid = $1 WHERE id = $2', [guid, row.id]);
+            return guid;
+        },
+
+        async ensureUserGuid(userId) {
+            return this._ensureUserGuidPg(userId);
+        },
+
         async resolvePeerAssignmentKey(ref) {
             const key = String(ref || '').trim();
             if (!key) throw new Error('empty peer reference');
@@ -6753,21 +7154,92 @@ function createPostgresAdapter() {
             return excludeBundleId ? row.bundle_id !== excludeBundleId : true;
         },
 
-        async createAgentBundle({ bundleId, slug, name, branding, brandingHash, createdBy }) {
+        async createAgentBundle({
+            bundleId,
+            slug,
+            name,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+            createdBy,
+            productType,
+        }) {
             return one(`
-                INSERT INTO agent_bundles (bundle_id, slug, name, branding, branding_hash, created_by)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO agent_bundles (
+                    bundle_id, slug, name, branding, branding_hash,
+                    config_fingerprint, client_commit, created_by, product_type
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 RETURNING *
-            `, [bundleId, slug || null, name, branding, brandingHash, createdBy || null]);
+            `, [
+                bundleId,
+                slug || null,
+                name,
+                branding,
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                createdBy || null,
+                normalizeProductType(productType),
+            ]);
         },
 
-        async updateAgentBundle(bundleId, { name, slug, branding, brandingHash }) {
+        async updateAgentBundle(bundleId, {
+            name,
+            slug,
+            branding,
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
             return one(`
                 UPDATE agent_bundles
-                SET name = $1, slug = $2, branding = $3, branding_hash = $4, updated_at = NOW()
-                WHERE bundle_id = $5
+                SET name = $1, slug = $2, branding = $3, branding_hash = $4,
+                    config_fingerprint = $5, client_commit = $6, updated_at = NOW()
+                WHERE bundle_id = $7
                 RETURNING *
-            `, [name, slug || null, branding, brandingHash, bundleId]);
+            `, [
+                name,
+                slug || null,
+                branding,
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId,
+            ]);
+        },
+
+        async prepareAgentBundleGeneration(bundleId, {
+            brandingHash,
+            configFingerprint,
+            clientCommit,
+        }) {
+            return one(`
+                UPDATE agent_bundles
+                SET branding_hash = $1, config_fingerprint = $2,
+                    client_commit = $3, updated_at = NOW()
+                WHERE bundle_id = $4
+                RETURNING *
+            `, [
+                brandingHash,
+                configFingerprint || brandingHash,
+                clientCommit || null,
+                bundleId,
+            ]);
+        },
+
+        async promoteAgentBundleGeneration(brandingHash) {
+            await q(`
+                UPDATE agent_bundles
+                SET active_generation_hash = $1, updated_at = NOW()
+                WHERE branding_hash = $1 AND revoked = FALSE
+            `, [brandingHash]);
+            return all(`
+                SELECT * FROM agent_bundles
+                WHERE branding_hash = $1 AND revoked = FALSE
+                ORDER BY created_at DESC
+            `, [brandingHash]);
         },
 
         async setAgentBundleRevoked(bundleId, revoked) {
@@ -6803,14 +7275,33 @@ function createPostgresAdapter() {
             `, [brandingHash, platform, arch, format]);
         },
 
-        async upsertAgentBundleBuild({ brandingHash, platform, arch, format, status, artifactPath, artifactSize, artifactSha256, errorMessage }) {
+        async upsertAgentBundleBuild({
+            brandingHash,
+            platform,
+            arch,
+            format,
+            status,
+            artifactPath,
+            artifactSize,
+            artifactSha256,
+            errorMessage,
+            clientCommit,
+            generationId,
+            configFingerprint,
+            progressPercent,
+            progressPhase,
+        }) {
+            const buildStatus = normalizeBuildStatus(status);
             return one(`
                 INSERT INTO agent_bundle_builds (
                     branding_hash, platform, arch, format, status,
                     artifact_path, artifact_size, artifact_sha256, error_message,
+                    client_commit, generation_id, config_fingerprint,
+                    progress_percent, progress_phase,
                     started_at, finished_at
                 ) VALUES (
                     $1, $2, $3, $4, $5, $6, $7, $8, $9,
+                    $10, $11, $12, $13, $14,
                     CASE WHEN $5 = 'building' THEN NOW() ELSE NULL END,
                     CASE WHEN $5 IN ('ready','failed') THEN NOW() ELSE NULL END
                 )
@@ -6820,11 +7311,31 @@ function createPostgresAdapter() {
                     artifact_size = COALESCE(EXCLUDED.artifact_size, agent_bundle_builds.artifact_size),
                     artifact_sha256 = COALESCE(EXCLUDED.artifact_sha256, agent_bundle_builds.artifact_sha256),
                     error_message = EXCLUDED.error_message,
+                    client_commit = COALESCE(EXCLUDED.client_commit, agent_bundle_builds.client_commit),
+                    generation_id = COALESCE(EXCLUDED.generation_id, agent_bundle_builds.generation_id),
+                    config_fingerprint = COALESCE(EXCLUDED.config_fingerprint, agent_bundle_builds.config_fingerprint),
+                    progress_percent = EXCLUDED.progress_percent,
+                    progress_phase = EXCLUDED.progress_phase,
                     started_at = CASE WHEN EXCLUDED.status = 'building' THEN NOW() ELSE agent_bundle_builds.started_at END,
                     finished_at = CASE WHEN EXCLUDED.status IN ('ready','failed') THEN NOW() ELSE agent_bundle_builds.finished_at END,
                     updated_at = NOW()
                 RETURNING *
-            `, [brandingHash, platform, arch, format, status, artifactPath || null, artifactSize || 0, artifactSha256 || null, errorMessage || '']);
+            `, [
+                brandingHash,
+                platform,
+                arch,
+                format,
+                buildStatus,
+                artifactPath || null,
+                artifactSize || 0,
+                artifactSha256 || null,
+                errorMessage || '',
+                clientCommit || null,
+                generationId || null,
+                configFingerprint || null,
+                Math.max(0, Math.min(100, Number(progressPercent || 0))),
+                String(progressPhase || ''),
+            ]);
         },
 
         // ---- Integration Housekeeping ----
@@ -6867,4 +7378,19 @@ function getAdapter(config) {
     return _adapter;
 }
 
-module.exports = { getAdapter, DB_TYPE };
+/**
+ * Return the process-wide SQLite main handle when the adapter is already
+ * initialized for the same path. Does not create an adapter (#353).
+ * @param {string} dbPath
+ * @returns {import('better-sqlite3').Database|null}
+ */
+function getSharedSqliteMainDbIfReady(dbPath) {
+    if (!_adapter || typeof _adapter.getSqliteMainDb !== 'function') return null;
+    if (typeof _adapter.getSqliteDbPath !== 'function') return null;
+    const adapterPath = _adapter.getSqliteDbPath();
+    if (!dbPath || !adapterPath) return null;
+    if (path.resolve(String(adapterPath)) !== path.resolve(String(dbPath))) return null;
+    return _adapter.getSqliteMainDb();
+}
+
+module.exports = { getAdapter, getSharedSqliteMainDbIfReady, DB_TYPE };

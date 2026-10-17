@@ -158,6 +158,7 @@ router.get('/api/dashboard/client-config', requireAuth, async (req, res) => {
                 client_server_host: endpoints.host,
                 endpoint_sources: endpoints.sources,
                 env_override_active: endpoints.env_override_active,
+                phone_unreachable_host: clientConfigHost.isPhoneUnreachableHost(endpoints.host),
                 qr
             }
         });
@@ -241,6 +242,22 @@ router.get('/api/dashboard/activity', requireAuth, async (req, res) => {
             }
         } catch {}
         
+        // Fallback: panel console audit_log (Settings → Audit)
+        if (events.length === 0) {
+            try {
+                const logs = await db.getAuditLogs(10, 0);
+                for (const row of (logs || [])) {
+                    events.push({
+                        action: row.action || 'info',
+                        action_label: row.action || 'Event',
+                        device_id: '',
+                        details: row.details || row.ip_address || '',
+                        timestamp: row.created_at || row.timestamp
+                    });
+                }
+            } catch {}
+        }
+
         // Fallback: recent connections from local DB
         if (events.length === 0) {
             try {
@@ -260,7 +277,7 @@ router.get('/api/dashboard/activity', requireAuth, async (req, res) => {
         res.json({ success: true, events });
     } catch (err) {
         console.error('Dashboard activity error:', err);
-        res.json({ success: true, events: [] });
+        res.status(500).json({ success: false, events: [], error: 'activity_unavailable' });
     }
 });
 

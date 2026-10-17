@@ -14,6 +14,19 @@ class RDConnection {
         const loc = window.location;
         const wsProtocol = loc.protocol === 'https:' ? 'wss:' : 'ws:';
         this.wsBase = opts.baseUrl || `${wsProtocol}//${loc.host}`;
+        this.deviceId = String(opts.deviceId || '');
+        this.guestSessionId = String(opts.guestSessionId || '');
+        if (!this.guestSessionId && this.deviceId) {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                this.guestSessionId = window.crypto.randomUUID();
+            } else if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+                const bytes = new Uint8Array(16);
+                window.crypto.getRandomValues(bytes);
+                this.guestSessionId = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+            } else {
+                this.guestSessionId = `${Date.now().toString(36)}-${this.deviceId}`;
+            }
+        }
 
         /** @type {WebSocket|null} */
         this.rendezvousWs = null;
@@ -22,6 +35,7 @@ class RDConnection {
 
         this._state = 'disconnected'; // disconnected | rendezvous | relay | connected | error
         this._listeners = {};
+        this._lastClose = null;
     }
 
     get state() { return this._state; }
@@ -34,7 +48,13 @@ class RDConnection {
         try {
             const q = new URLSearchParams(window.location.search);
             const token = q.get('guest') || q.get('t') || window.__guestToken || '';
-            if (token) return `?guest=${encodeURIComponent(token)}`;
+            if (token) {
+                const params = new URLSearchParams();
+                params.set('guest', token);
+                if (this.deviceId) params.set('peer_id', this.deviceId);
+                if (this.guestSessionId) params.set('guest_session', this.guestSessionId);
+                return `?${params.toString()}`;
+            }
         } catch (_) { /* ignore */ }
         return '';
     }
@@ -58,6 +78,17 @@ class RDConnection {
         if (arr) arr.forEach(fn => fn(...args));
     }
 
+    _recordClose(kind, event) {
+        const info = {
+            kind,
+            code: event && Number.isFinite(event.code) ? event.code : 0,
+            reason: event && event.reason ? String(event.reason) : '',
+            at: Date.now()
+        };
+        this._lastClose = info;
+        return info;
+    }
+
     // ---- Rendezvous connection ----
 
     /**
@@ -74,6 +105,7 @@ class RDConnection {
 
             ws.onopen = () => {
                 this.rendezvousWs = ws;
+                this._lastClose = null;
                 this._emit('rendezvous:open');
                 resolve(ws);
             };
@@ -85,7 +117,8 @@ class RDConnection {
 
             ws.onclose = (e) => {
                 this.rendezvousWs = null;
-                this._emit('rendezvous:close', e.code, e.reason);
+                const info = this._recordClose('rendezvous', e);
+                this._emit('rendezvous:close', info.code, info.reason, info);
             };
 
             ws.onmessage = (e) => {
@@ -123,13 +156,15 @@ class RDConnection {
     connectRelay() {
         return new Promise((resolve, reject) => {
             this._setState('relay');
-            const url = `${this.wsBase}/ws/relay${this._guestQuerySuffix()}`;
+            const guestQuery = this._guestQuerySuffix();
+            const url = `${this.wsBase}/ws/relay${guestQuery}${guestQuery ? '&' : '?'}transport=message`;
 
             const ws = new WebSocket(url);
             ws.binaryType = 'arraybuffer';
 
             ws.onopen = () => {
                 this.relayWs = ws;
+                this._lastClose = null;
                 this._emit('relay:open');
                 resolve(ws);
             };
@@ -141,10 +176,11 @@ class RDConnection {
 
             ws.onclose = (e) => {
                 this.relayWs = null;
-                this._emit('relay:close', e.code, e.reason);
+                const info = this._recordClose('relay', e);
+                this._emit('relay:close', info.code, info.reason, info);
                 if (this._state === 'connected') {
                     this._setState('disconnected');
-                    this._emit('disconnected', e.reason || 'Connection closed');
+                    this._emit('disconnected', info.reason || 'Connection closed', info);
                 }
             };
 

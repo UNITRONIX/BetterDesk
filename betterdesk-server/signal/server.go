@@ -24,8 +24,8 @@ import (
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/events"
 	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
 	"github.com/unitronix/betterdesk-server/policy"
+	pb "github.com/unitronix/betterdesk-server/proto"
 	"github.com/unitronix/betterdesk-server/ratelimit"
 	"github.com/unitronix/betterdesk-server/security"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -44,13 +44,17 @@ type tcpPunchConn struct {
 	peerID    string    // set after RegisterPk on this TCP session (#327)
 }
 
-// pendingUUID tracks a relay UUID that was sent to a target device.
-// Some RustDesk clients don't echo the UUID back in RelayResponse, causing
-// relay pairing to fail. We store the UUID so we can recover it when the
-// target responds with an empty UUID.
+// pendingUUID tracks a relay session correlation for RelayResponse forwarding
+// (#399). Some RustDesk clients omit the UUID in RelayResponse; others omit
+// initiator identity. We store both so the reverse path does not fall back to
+// unsafe FindByIP on shared NAT.
 type pendingUUID struct {
-	uuid      string
-	createdAt time.Time
+	uuid            string
+	targetID        string
+	initiatorID     string
+	correlationAddr string
+	advertisedAddr  string
+	createdAt       time.Time
 }
 
 // pendingPunch tracks a scheduled P2P-first fallback for an initiator that is
@@ -74,6 +78,25 @@ func (pc *tcpPunchConn) writeProto(msg *pb.RendezvousMessage) error {
 		return pc.secure.WriteMessage(msg)
 	}
 	return codec.WriteRawProto(pc.conn, msg)
+}
+
+// tcpPunchConnForPeer returns a keep-alive TCP signal connection bound to peerID
+// (RegisterPk / punch session). Used to deliver PunchHole/RequestRelay to
+// TCP-only targets that have no UDP heartbeat.
+func (s *Server) tcpPunchConnForPeer(peerID string) *tcpPunchConn {
+	if s == nil || peerID == "" {
+		return nil
+	}
+	var found *tcpPunchConn
+	s.tcpPunchConns.Range(func(_, value any) bool {
+		pc, ok := value.(*tcpPunchConn)
+		if ok && pc != nil && pc.peerID == peerID {
+			found = pc
+			return false
+		}
+		return true
+	})
+	return found
 }
 
 // Server is the main signal server instance.
@@ -105,15 +128,28 @@ type Server struct {
 	// matching avoids delivering signed PKs to the wrong peer behind shared NAT.
 	wsPunchConns sync.Map // map[string]*codec.WSConn
 
-	// pendingRelayUUIDs tracks the UUID we send to each target when forwarding
-	// RequestRelay or PunchHole (force-relay). Some RustDesk clients respond with
-	// an empty UUID in RelayResponse — this map lets us recover the original UUID
-	// so relay pairing succeeds. Key=targetID, Value=*pendingUUID.
+	// pendingRelayUUIDs tracks relay session correlation by target + initiator
+	// endpoint (#399). Key=targetID + initiator endpoint, Value=*pendingUUID.
+	// Including the endpoint prevents parallel sessions to one target from
+	// borrowing each other's UUID / initiator identity.
 	pendingRelayUUIDs sync.Map // map[string]*pendingUUID
+
+	// pendingRelayByUUID indexes the same pendingUUID entries by relay UUID so
+	// RelayResponse can recover target/initiator when socket_addr correlation
+	// is incomplete (#399).
+	pendingRelayByUUID sync.Map // map[string]*pendingUUID
+
+	// pendingRelayByAdvertised indexes the address sent in RequestRelay.socket_addr
+	// back to the pending session. This keeps legacy clients without a UUID
+	// correlated after WebSocket mode stops advertising the proxy port.
+	pendingRelayByAdvertised sync.Map // map[targetID + "\x00" + advertisedAddr]*pendingUUID
 
 	// pendingPunches tracks P2P-first fallback timers per initiator address
 	// (issue #157). Key=normalizeAddrKey(initiatorAddr), Value=*pendingPunch.
 	pendingPunches sync.Map // map[string]*pendingPunch
+
+	// lastSharedNATWarnUnixNano rate-limits SAME_NAT_RELAY=false warnings (#399).
+	lastSharedNATWarnUnixNano atomic.Int64
 
 	// localIP is the server's detected public IP address (via external service).
 	// Used to build the relay server address when -relay-servers is not set.
@@ -123,6 +159,10 @@ type Server struct {
 	// Used for LAN relay advertisements when both peers are on the same network.
 	lanIP atomic.Value // stores string
 
+	// lanNet is the optional LAN CIDR from MASK / -mask (issue #404). When nil,
+	// peer subnet checks fall back to the historic IPv4 /24 comparison.
+	lanNet *net.IPNet
+
 	// networkPolicy resolves org-level block_direct_p2p / allowed relay servers.
 	networkPolicy *policy.NetworkResolver
 
@@ -131,7 +171,7 @@ type Server struct {
 
 // New creates a new signal server instance.
 func New(cfg *config.Config, kp *crypto.KeyPair, database db.Database) *Server {
-	return &Server{
+	s := &Server{
 		cfg:           cfg,
 		kp:            kp,
 		db:            database,
@@ -139,6 +179,26 @@ func New(cfg *config.Config, kp *crypto.KeyPair, database db.Database) *Server {
 		eventBus:      events.NewBus(),
 		networkPolicy: policy.NewNetworkResolver(database),
 	}
+	if cfg != nil {
+		s.lanNet = parseLANMask(cfg.Mask)
+	}
+	return s
+}
+
+// parseLANMask parses MASK / -mask (e.g. "192.168.0.0/16"). Empty or invalid
+// values yield nil so callers keep the default /24 LAN detection behaviour.
+func parseLANMask(mask string) *net.IPNet {
+	mask = strings.TrimSpace(mask)
+	if mask == "" {
+		return nil
+	}
+	_, network, err := net.ParseCIDR(mask)
+	if err != nil {
+		log.Printf("[signal] WARN: invalid MASK %q (%v); falling back to /24 LAN detection", mask, err)
+		return nil
+	}
+	log.Printf("[signal] LAN MASK configured: %s", network.String())
+	return network
 }
 
 // SetBlocklist sets the blocklist used by the signal server.
@@ -347,6 +407,7 @@ func (s *Server) Start(ctx context.Context) error {
 	go s.heartbeatCleaner()
 	go s.cleanupTCPPunchConns()
 	s.startPeerIDChangeListener()
+	s.maybeWarnSharedNATRelayDisabled()
 
 	return nil
 }
@@ -457,7 +518,9 @@ func normalizeAddrKey(addr string) string {
 
 // handleTCPConn handles a single TCP signal connection.
 // Matches Rust hbbs behavior: reads framed protobuf in a loop.
-// PunchHoleRequest and RequestRelay keep the connection alive; others close after handling.
+// PunchHoleRequest, RequestRelay, and RegisterPk keep the connection alive
+// (RegisterPk so #327 viewer-only PunchHole can use tcpSessionPeerID on the
+// same session); other message types close after handling.
 //
 // When in keep-alive mode the connection is registered in tcpPunchConns so that
 // RelayResponse messages from the target peer can be forwarded here.  Go's
@@ -660,6 +723,9 @@ func (s *Server) logAndCheckKeepAlive(msg *pb.RendezvousMessage, addrKey string,
 		return true
 	case msg.GetRegisterPk() != nil:
 		log.Printf("[signal] TCP msg from %s%s: RegisterPk (id=%s)", addrKey, tag, msg.GetRegisterPk().Id)
+		// Keep alive so bindTCPSessionPeer + a following PunchHole/RequestRelay
+		// on this connection can authorize without IP-only FindByIP (#302/#327).
+		return true
 	case msg.GetFetchLocalAddr() != nil:
 		log.Printf("[signal] TCP msg from %s%s: FetchLocalAddr", addrKey, tag)
 	case msg.GetLocalAddr() != nil:
@@ -995,6 +1061,14 @@ func (s *Server) cleanupTCPPunchConns() {
 				pu := value.(*pendingUUID)
 				if now.Sub(pu.createdAt) > maxTTL {
 					s.pendingRelayUUIDs.Delete(key)
+					if pu.uuid != "" {
+						s.pendingRelayByUUID.Delete(pu.uuid)
+					}
+					if pu.advertisedAddr != "" {
+						s.pendingRelayByAdvertised.Delete(
+							pendingRelayAdvertisedKey(pu.targetID, pu.advertisedAddr),
+						)
+					}
 					uuidEvicted++
 				}
 				return true
@@ -1002,6 +1076,8 @@ func (s *Server) cleanupTCPPunchConns() {
 			if uuidEvicted > 0 {
 				log.Printf("[signal] Pending relay UUIDs cleanup: evicted %d stale entries", uuidEvicted)
 			}
+
+			s.maybeWarnSharedNATRelayDisabled()
 
 			// Safety sweep for pendingPunches (issue #157). Entries normally
 			// self-remove when the fallback fires or is cancelled; this only
@@ -1027,36 +1103,216 @@ func (s *Server) cleanupTCPPunchConns() {
 	}
 }
 
-// sendUDP sends a protobuf message to a UDP address.
-func (s *Server) sendUDP(msg *pb.RendezvousMessage, addr *net.UDPAddr) {
+// sendUDP sends a protobuf message to a UDP address. Returns false when the
+// UDP socket is unavailable or the write fails (tests often have a nil udpConn).
+func (s *Server) sendUDP(msg *pb.RendezvousMessage, addr *net.UDPAddr) bool {
+	if s == nil || s.udpConn == nil || msg == nil || addr == nil {
+		return false
+	}
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		log.Printf("[signal] marshal error: %v", err)
-		return
+		return false
 	}
 	if _, err := s.udpConn.WriteToUDP(data, addr); err != nil {
 		log.Printf("[signal] UDP send to %s: %v", addr, err)
+		return false
+	}
+	return true
+}
+
+// pendingRelayKey isolates a target's relay session by the initiator endpoint.
+// RustDesk's socket_addr is the only stable correlation field available from
+// old clients that omit the UUID in RelayResponse.
+func pendingRelayKey(targetID string, initiatorAddr *net.UDPAddr) string {
+	if initiatorAddr == nil {
+		return targetID + "\x00"
+	}
+	return targetID + "\x00" + normalizeAddrKey(initiatorAddr.String())
+}
+
+func pendingRelayAdvertisedKey(targetID, advertisedAddr string) string {
+	return targetID + "\x00" + normalizeAddrKey(advertisedAddr)
+}
+
+// storePendingUUID stores relay session correlation for later RelayResponse
+// forwarding (#399). uuid may be empty when PunchHole has not minted a relay
+// ticket yet; initiatorID should still be recorded so the reverse path does
+// not resolve via FindByIP on shared NAT.
+func (s *Server) storePendingUUID(targetID string, initiatorAddr *net.UDPAddr, uuid, initiatorID string) {
+	s.storePendingRelay(targetID, initiatorAddr, initiatorAddr, uuid, initiatorID)
+}
+
+// storePendingRelay stores both addresses involved in a relay session.
+// correlationAddr identifies the live TCP/WS connection inside the server;
+// advertisedAddr is the endpoint encoded into RequestRelay.socket_addr and
+// therefore visible to the target client. They are normally identical for
+// native UDP/TCP clients, but differ for WSS sessions behind a proxy.
+func (s *Server) storePendingRelay(targetID string, correlationAddr, advertisedAddr *net.UDPAddr, uuid, initiatorID string) {
+	if targetID == "" && uuid == "" {
+		return
+	}
+	key := pendingRelayKey(targetID, correlationAddr)
+	entry := &pendingUUID{
+		uuid:            uuid,
+		targetID:        targetID,
+		initiatorID:     initiatorID,
+		correlationAddr: "",
+		advertisedAddr:  "",
+		createdAt:       time.Now(),
+	}
+	if correlationAddr != nil {
+		entry.correlationAddr = normalizeAddrKey(correlationAddr.String())
+	}
+	if advertisedAddr != nil {
+		entry.advertisedAddr = normalizeAddrKey(advertisedAddr.String())
+	}
+	// Merge with an existing entry for the same endpoint so a later UUID
+	// fill-in does not wipe initiator identity (or vice versa).
+	if prev, ok := s.pendingRelayUUIDs.Load(key); ok {
+		if old, ok := prev.(*pendingUUID); ok && old != nil {
+			if entry.uuid == "" {
+				entry.uuid = old.uuid
+			}
+			if entry.initiatorID == "" {
+				entry.initiatorID = old.initiatorID
+			}
+			if entry.targetID == "" {
+				entry.targetID = old.targetID
+			}
+			if entry.correlationAddr == "" {
+				entry.correlationAddr = old.correlationAddr
+			}
+			if entry.advertisedAddr == "" {
+				entry.advertisedAddr = old.advertisedAddr
+			}
+			if old.uuid != "" && old.uuid != entry.uuid {
+				s.pendingRelayByUUID.Delete(old.uuid)
+			}
+			if old.advertisedAddr != "" && old.advertisedAddr != entry.advertisedAddr {
+				s.pendingRelayByAdvertised.Delete(
+					pendingRelayAdvertisedKey(old.targetID, old.advertisedAddr),
+				)
+			}
+		}
+	}
+	s.pendingRelayUUIDs.Store(key, entry)
+	if entry.uuid != "" {
+		s.pendingRelayByUUID.Store(entry.uuid, entry)
+	}
+	if entry.advertisedAddr != "" {
+		s.pendingRelayByAdvertised.Store(
+			pendingRelayAdvertisedKey(entry.targetID, entry.advertisedAddr),
+			entry,
+		)
 	}
 }
 
-// storePendingUUID stores a relay UUID that we sent/are sending to a target.
-// When the target responds with RelayResponse containing empty UUID, we can
-// look up this stored UUID to maintain relay pairing.
-func (s *Server) storePendingUUID(targetID, uuid string) {
-	s.pendingRelayUUIDs.Store(targetID, &pendingUUID{
-		uuid:      uuid,
-		createdAt: time.Now(),
+// getPendingRelay returns the pending session for target + initiator endpoint.
+func (s *Server) getPendingRelay(targetID string, initiatorAddr *net.UDPAddr) *pendingUUID {
+	if val, ok := s.pendingRelayUUIDs.Load(pendingRelayKey(targetID, initiatorAddr)); ok {
+		if pu, ok := val.(*pendingUUID); ok {
+			return pu
+		}
+	}
+	return nil
+}
+
+// getPendingRelayByAdvertised looks up a legacy relay response using the
+// address that the target echoed from RequestRelay.socket_addr.
+func (s *Server) getPendingRelayByAdvertised(targetID string, advertisedAddr *net.UDPAddr) *pendingUUID {
+	if advertisedAddr == nil {
+		return nil
+	}
+	if targetID != "" {
+		if val, ok := s.pendingRelayByAdvertised.Load(
+			pendingRelayAdvertisedKey(targetID, advertisedAddr.String()),
+		); ok {
+			if pu, ok := val.(*pendingUUID); ok {
+				return pu
+			}
+		}
+		return nil
+	}
+
+	want := normalizeAddrKey(advertisedAddr.String())
+	var found *pendingUUID
+	s.pendingRelayByAdvertised.Range(func(_, value any) bool {
+		pu, ok := value.(*pendingUUID)
+		if !ok || pu == nil || pu.advertisedAddr != want {
+			return true
+		}
+		found = pu
+		return false
 	})
+	return found
 }
 
 // getPendingUUID retrieves the pending UUID for a target device (without removing it).
 // The UUID remains available for subsequent retry attempts; cleanup happens via ticker.
-// Returns empty string if no pending UUID exists for this target.
-func (s *Server) getPendingUUID(targetID string) string {
-	if val, ok := s.pendingRelayUUIDs.Load(targetID); ok {
-		return val.(*pendingUUID).uuid
+// Returns empty string if no pending UUID exists for this target and initiator.
+func (s *Server) getPendingUUID(targetID string, initiatorAddr *net.UDPAddr) string {
+	if pu := s.getPendingRelay(targetID, initiatorAddr); pu != nil {
+		return pu.uuid
 	}
 	return ""
+}
+
+// getPendingRelayByUUID looks up a pending session by relay UUID (#399).
+func (s *Server) getPendingRelayByUUID(uuid string) *pendingUUID {
+	if uuid == "" {
+		return nil
+	}
+	if val, ok := s.pendingRelayByUUID.Load(uuid); ok {
+		if pu, ok := val.(*pendingUUID); ok {
+			return pu
+		}
+	}
+	return nil
+}
+
+// maybeWarnSharedNATRelayDisabled logs when SAME_NAT_RELAY is off and several
+// live peers share one public IP — a silent failure mode for office NATs (#399).
+func (s *Server) maybeWarnSharedNATRelayDisabled() {
+	if s == nil || s.cfg == nil || s.cfg.ConnectionSettings().SameNATRelay || s.peers == nil {
+		return
+	}
+	const minInterval = 10 * time.Minute
+	now := time.Now().UnixNano()
+	if last := s.lastSharedNATWarnUnixNano.Load(); last != 0 && time.Duration(now-last) < minInterval {
+		return
+	}
+	counts := make(map[string]int)
+	s.peers.ForEach(func(e *peer.Entry) {
+		if e == nil || e.IsExpired(config.RegTimeout) {
+			return
+		}
+		var ip string
+		if e.UDPAddr != nil && e.UDPAddr.IP != nil {
+			ip = e.UDPAddr.IP.String()
+		} else if host, _, err := net.SplitHostPort(e.IP); err == nil {
+			ip = host
+		} else if e.IP != "" {
+			ip = e.IP
+		}
+		if ip != "" {
+			counts[ip]++
+		}
+	})
+	for ip, n := range counts {
+		if n < 2 {
+			continue
+		}
+		last := s.lastSharedNATWarnUnixNano.Load()
+		if last != 0 && time.Duration(now-last) < minInterval {
+			return
+		}
+		if !s.lastSharedNATWarnUnixNano.CompareAndSwap(last, now) {
+			return
+		}
+		log.Printf("[signal] WARNING: SAME_NAT_RELAY is disabled but %d live peers share public IP %s — same-site sessions often fail without hairpin NAT (issues #121/#399). Enable SAME_NAT_RELAY=Y or -same-nat-relay", n, ip)
+		return
+	}
 }
 
 // schedulePunchFallback registers a delayed P2P-first fallback for an
@@ -1065,7 +1321,7 @@ func (s *Server) getPendingUUID(targetID string) string {
 // punching and the genuine PunchHoleResponse was delivered). Any pre-existing
 // pending punch for the same initiator is replaced.
 func (s *Server) schedulePunchFallback(initiatorKey string, fallback func()) {
-	delay := time.Duration(s.cfg.P2PFallbackMs) * time.Millisecond
+	delay := time.Duration(s.cfg.ConnectionSettings().P2PFallbackMs) * time.Millisecond
 	if delay <= 0 {
 		delay = 2 * time.Second
 	}

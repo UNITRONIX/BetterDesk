@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   BetterDesk Console Manager v3.5.4
+#   BetterDesk Console Manager v3.5.168
 #   All-in-One Interactive Tool for Docker
 #
 #   Features:
@@ -28,7 +28,7 @@
 set -e
 
 # Version
-VERSION="3.5.4"
+VERSION="3.5.168"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Default paths (can be overridden by environment variables)
@@ -91,6 +91,9 @@ DIM='\033[2m'
 LOG_FILE="/tmp/betterdesk_docker_$(date +%Y%m%d_%H%M%S).log"
 CLI_ACTION=""
 NONINTERACTIVE=false
+CHECK_CAPABILITIES=false
+REPAIR_PERMISSIONS=false
+MANAGED_CONFIG_CHANGES=()
 
 #===============================================================================
 # SELinux / Volume Helper Functions
@@ -189,6 +192,19 @@ parse_cli_args() {
                 CLI_ACTION="repair-permissions"
                 NONINTERACTIVE=true
                 shift
+                ;;
+            --check-permissions|--check-capabilities)
+                CHECK_CAPABILITIES=true
+                NONINTERACTIVE=true
+                shift
+                ;;
+            --set-config)
+                if [ $# -lt 2 ] || [[ "$2" != *=* ]]; then
+                    print_error "--set-config requires KEY=VALUE"
+                    exit 1
+                fi
+                MANAGED_CONFIG_CHANGES+=("$2")
+                shift 2
                 ;;
             -h|--help)
                 usage
@@ -448,6 +464,81 @@ check_docker_compose() {
         return 0
     fi
     return 1
+}
+
+#===============================================================================
+# Management capabilities and allowlisted runtime configuration
+#===============================================================================
+
+management_cli_path() {
+    if [ -f "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js" ]; then
+        printf '%s\n' "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js"
+    elif [ -f "$SCRIPT_DIR/scripts/management-cli.js" ]; then
+        printf '%s\n' "$SCRIPT_DIR/scripts/management-cli.js"
+    else
+        return 1
+    fi
+}
+
+check_management_capabilities() {
+    print_step "Checking Docker management capabilities..."
+    local failures=0
+    check_docker || { print_error "Docker daemon is unavailable"; failures=$((failures + 1)); }
+    check_docker_compose || { print_error "Docker Compose is unavailable"; failures=$((failures + 1)); }
+    [ -f "$COMPOSE_FILE" ] || { print_error "Compose file is missing: $COMPOSE_FILE"; failures=$((failures + 1)); }
+    [ -d "$DATA_DIR" ] && [ -w "$DATA_DIR" ] || {
+        print_error "Data directory is not writable: $DATA_DIR"
+        failures=$((failures + 1))
+    }
+    mkdir -p "$BACKUP_DIR" 2>/dev/null || true
+    [ -w "$BACKUP_DIR" ] || {
+        print_error "Backup directory is not writable: $BACKUP_DIR"
+        failures=$((failures + 1))
+    }
+    if [ -f "$COMPOSE_FILE" ] && check_docker_compose; then
+        $COMPOSE_CMD -f "$COMPOSE_FILE" config >/dev/null 2>&1 || {
+            print_error "Docker Compose configuration is invalid"
+            failures=$((failures + 1))
+        }
+    fi
+    if [ "$failures" -eq 0 ]; then
+        print_success "Docker management capabilities are ready"
+        return 0
+    fi
+    print_warning "$failures Docker management capability check(s) failed"
+    return 1
+}
+
+repair_management_permissions() {
+    print_step "Repairing Docker management permissions..."
+    create_data_directory "$DATA_DIR" || return 1
+    create_data_directory "$BACKUP_DIR" || return 1
+    if [ -f "$COMPOSE_FILE" ]; then
+        chmod 0644 "$COMPOSE_FILE" 2>/dev/null || true
+    fi
+    if [ -f "$(docker_update_env_file 2>/dev/null || true)" ]; then
+        chmod 0600 "$(docker_update_env_file)" 2>/dev/null || true
+    fi
+    check_management_capabilities
+}
+
+apply_managed_config() {
+    local cli
+    cli=$(management_cli_path 2>/dev/null) || {
+        print_error "Management configuration tool is missing"
+        return 1
+    }
+    [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ] || {
+        print_error "No allowlisted configuration changes supplied"
+        return 1
+    }
+    print_step "Applying allowlisted Docker configuration..."
+    BETTERDESK_CONSOLE_PATH="$SCRIPT_DIR/web-nodejs" \
+        BETTERDESK_PATH="$DATA_DIR" DATA_DIR="$DATA_DIR" \
+        node "$cli" set "${MANAGED_CONFIG_CHANGES[@]}"
+    cd "$SCRIPT_DIR"
+    $COMPOSE_CMD -f "$COMPOSE_FILE" up -d
+    start_containers
 }
 
 # Auto-detect data directory
@@ -1210,8 +1301,28 @@ start_containers() {
     elif [ "$SERVER_RUNNING" = true ] && [ "$CONSOLE_RUNNING" = true ]; then
         print_success "All containers running"
     else
-        print_warning "Some containers might not be working properly"
+        print_error "Required BetterDesk containers are not running"
+        return 1
     fi
+
+    local api_port="21114"
+    if [ "$DOCKER_LAYOUT" = "single" ] || [ "$AIO_RUNNING" = true ]; then
+        api_port="21121"
+    fi
+    local health_deadline=60
+    while [ "$health_deadline" -gt 0 ]; do
+        if curl -fsS --max-time 3 "http://127.0.0.1:${api_port}/api/health" >/dev/null 2>&1 \
+            && curl -fsS --max-time 3 "http://127.0.0.1:5000/health" >/dev/null 2>&1; then
+            print_success "API and web console health checks passed"
+            return 0
+        fi
+        sleep 2
+        health_deadline=$((health_deadline - 2))
+    done
+
+    print_error "BetterDesk containers started but health checks failed"
+    print_info "Inspect logs with: $COMPOSE_CMD -f $COMPOSE_FILE logs --tail=100"
+    return 1
 }
 
 stop_containers() {
@@ -1252,22 +1363,12 @@ create_admin_user() {
     local target_container
     target_container=$(resolve_panel_container)
 
-    docker exec -u betterdesk "$target_container" node /app/scripts/reset-password.js "$admin_password" admin 2>/dev/null || {
-        # If script fails, try via environment variable approach
-        print_info "Setting admin password via API..."
-        
-        # The console will create admin:admin by default on first run
-        # We need to change it to a secure random password
-        sleep 2
-        
-        # Use curl to change password (requires internal API)
-        # If this fails, admin will use default password which must be changed
-        docker exec -u betterdesk "$target_container" sh -c "
-            if [ -f /app/scripts/reset-password.js ]; then
-                node /app/scripts/reset-password.js '$admin_password' admin 2>/dev/null
-            fi
-        " 2>/dev/null || true
-    }
+    if ! docker exec -u betterdesk "$target_container" \
+        node /app/scripts/reset-password.js "$admin_password" admin 2>/dev/null; then
+        print_error "Could not set the admin password safely"
+        print_info "The installation is incomplete; inspect container logs before retrying"
+        return 1
+    fi
 
     echo ""
     echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
@@ -1420,6 +1521,33 @@ docker_update_env_file() {
     else
         echo "$SCRIPT_DIR/web-nodejs/.env"
     fi
+}
+
+# Resolve container app UID/GID (PUID/PGID). Prefer process env, then compose .env, else 10001.
+resolve_docker_puid_pgid() {
+    local env_file val
+    DOCKER_PUID="${PUID:-}"
+    DOCKER_PGID="${PGID:-}"
+    env_file=$(docker_update_env_file)
+    if [ -z "$DOCKER_PUID" ] && [ -f "$SCRIPT_DIR/.env" ]; then
+        val=$(grep -E '^PUID=' "$SCRIPT_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r"')
+        [ -n "$val" ] && DOCKER_PUID="$val"
+    fi
+    if [ -z "$DOCKER_PGID" ] && [ -f "$SCRIPT_DIR/.env" ]; then
+        val=$(grep -E '^PGID=' "$SCRIPT_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r"')
+        [ -n "$val" ] && DOCKER_PGID="$val"
+    fi
+    if [ -z "$DOCKER_PUID" ] && [ -f "$env_file" ]; then
+        val=$(grep -E '^PUID=' "$env_file" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r"')
+        [ -n "$val" ] && DOCKER_PUID="$val"
+    fi
+    if [ -z "$DOCKER_PGID" ] && [ -f "$env_file" ]; then
+        val=$(grep -E '^PGID=' "$env_file" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r"')
+        [ -n "$val" ] && DOCKER_PGID="$val"
+    fi
+    DOCKER_PUID="${DOCKER_PUID:-10001}"
+    DOCKER_PGID="${DOCKER_PGID:-10001}"
+    export DOCKER_PUID DOCKER_PGID
 }
 
 read_update_github_branch_from_env() {
@@ -1632,6 +1760,7 @@ do_update() {
     echo ""
     
     detect_installation
+    check_management_capabilities || print_warning "Docker update may need the management repair action first"
     
     if [ "$INSTALL_STATUS" = "none" ]; then
         print_error "BetterDesk Docker is not installed!"
@@ -1700,6 +1829,7 @@ do_update() {
 
 do_repair() {
     detect_installation
+    check_management_capabilities || print_warning "Docker repair capability check reported blockers"
     
     local _menu_items=(
         $'Rebuild images\tRecreate the Docker images'
@@ -1783,11 +1913,12 @@ repair_named_volume_permissions() {
         return 0
     fi
 
-    print_info "Repairing Docker volume permissions: $volume"
-    docker run --rm -v "$volume:/target" alpine:3.22 sh -c '
+    resolve_docker_puid_pgid
+    print_info "Repairing Docker volume permissions: $volume (uid=${DOCKER_PUID} gid=${DOCKER_PGID})"
+    docker run --rm -v "$volume:/target" -e "PUID=${DOCKER_PUID}" -e "PGID=${DOCKER_PGID}" alpine:3.22 sh -c '
         set -e
         mkdir -p /target
-        chown -R 10001:10001 /target
+        chown -R "${PUID}:${PGID}" /target
         chmod -R u+rwX,g+rwX /target
     ' >/dev/null 2>&1 || {
         print_warning "Could not repair volume $volume (Docker may need to pull alpine:3.22)"
@@ -1799,6 +1930,7 @@ repair_docker_permissions() {
     print_step "Repairing Docker data permissions..."
 
     auto_detect_docker_paths
+    resolve_docker_puid_pgid
 
     if [ -n "$DATA_DIR" ]; then
         create_data_directory "$DATA_DIR" || {
@@ -1806,9 +1938,9 @@ repair_docker_permissions() {
             return 1
         }
 
-        # Containers drop to uid/gid 10001. Keep secrets readable to the
+        # Containers drop to PUID/PGID (default 10001). Keep secrets readable to the
         # container user without making them world-readable.
-        chown -R 10001:10001 "$DATA_DIR" 2>/dev/null || true
+        chown -R "${DOCKER_PUID}:${DOCKER_PGID}" "$DATA_DIR" 2>/dev/null || true
         chmod 755 "$DATA_DIR" 2>/dev/null || true
         for secret in ".api_key" ".admin_credentials" "id_ed25519"; do
             if [ -f "$DATA_DIR/$secret" ]; then
@@ -1818,7 +1950,7 @@ repair_docker_permissions() {
         if [ -f "$DATA_DIR/id_ed25519.pub" ]; then
             chmod 644 "$DATA_DIR/id_ed25519.pub" 2>/dev/null || true
         fi
-        print_success "Host data directory permissions repaired: $DATA_DIR"
+        print_success "Host data directory permissions repaired: $DATA_DIR (uid=${DOCKER_PUID} gid=${DOCKER_PGID})"
     fi
 
     local repaired_volumes=0
@@ -2194,7 +2326,7 @@ do_reset_password() {
     # Single-container layout uses "betterdesk", not "betterdesk-console" (#299).
     local panel_container
     panel_container=$(resolve_panel_container)
-    # Run as betterdesk: auth.db is mode 0600 / UID 10001; root lacks CAP_DAC_OVERRIDE (#299).
+    # Run as betterdesk: auth.db is mode 0600 / owned by PUID (default 10001); root lacks CAP_DAC_OVERRIDE (#299).
     docker exec -u betterdesk "$panel_container" node /app/scripts/reset-password.js "$new_password" admin 2>/dev/null || {
         print_warning "reset-password.js failed, trying inline fallback..."
         docker exec -u betterdesk -e RESET_ADMIN_PASSWORD="$new_password" "$panel_container" node -e "
@@ -2621,7 +2753,13 @@ do_uninstall() {
     
     print_step "Stopping containers..."
     cd "$SCRIPT_DIR"
-    $COMPOSE_CMD down -v 2>/dev/null || true
+    if confirm "Remove Docker volumes (this deletes named-volume data)?"; then
+        $COMPOSE_CMD down -v 2>/dev/null || true
+        print_info "Docker volumes removed"
+    else
+        $COMPOSE_CMD down 2>/dev/null || true
+        print_info "Docker volumes preserved"
+    fi
     
     if confirm "Remove Docker images?"; then
         docker rmi betterdesk-server betterdesk-console 2>/dev/null || true
@@ -3566,6 +3704,7 @@ show_menu() {
     echo "  M. 🔄 Migrate from existing RustDesk"
     echo "  P. 🐘 Migrate SQLite → PostgreSQL"
     echo "  S. ⚙️  Settings (paths)"
+    echo "  A. 🛡️  Management capabilities and server settings"
     echo "  0. ❌ Exit"
     echo ""
 }
@@ -3579,7 +3718,7 @@ main() {
     # Check docker compose. Diagnostics can still return useful evidence without
     # Compose, but repair actions need it for safe stack restarts.
     if ! check_docker_compose; then
-        if [ "$CLI_ACTION" = "diagnose" ]; then
+        if [ "$CLI_ACTION" = "diagnose" ] || [ "$CHECK_CAPABILITIES" = true ]; then
             print_warning "Docker Compose is not available; diagnostics will be partial"
             COMPOSE_CMD="docker compose"
         else
@@ -3608,9 +3747,19 @@ main() {
             ;;
         repair-permissions)
             repair_docker_permissions
+            repair_management_permissions
             exit $?
             ;;
     esac
+
+    if [ "$CHECK_CAPABILITIES" = true ] || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+        local management_rc=0
+        check_management_capabilities || management_rc=$?
+        if [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+            apply_managed_config || management_rc=$?
+        fi
+        exit "$management_rc"
+    fi
     
     # Action tokens map 1:1 to the classic case dispatch below, so both the
     # arrow-key TUI and the numeric fallback share the exact same handlers.
@@ -3628,9 +3777,10 @@ main() {
         $'Migrate from RustDesk\tImport an existing RustDesk deployment'
         $'SQLite -> PostgreSQL\tMigrate the database backend'
         $'Settings (paths)\tConfigure install paths'
+        $'Management capabilities\tCheck permissions and change allowlisted server settings'
         $'Exit\tQuit the manager'
     )
-    local menu_actions=( 1 2 3 4 5 6 7 8 9 C M P S 0 )
+    local menu_actions=( 1 2 3 4 5 6 7 8 9 C M P S A 0 )
 
     while true; do
         local choice=""
@@ -3661,6 +3811,11 @@ main() {
             [Mm]) do_migrate ;;
             [Pp]) do_migrate_postgresql ;;
             [Ss]) configure_docker_paths ;;
+            [Aa])
+                check_management_capabilities || true
+                repair_management_permissions
+                press_enter
+                ;;
             0) 
                 echo ""
                 print_info "Goodbye!"

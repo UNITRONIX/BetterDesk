@@ -16,6 +16,11 @@ const { spawn } = require('child_process');
 const db = require('./database');
 const bundleService = require('./agentBundleService');
 const config = require('../config/config');
+const {
+    PRODUCT_TYPES,
+    normalizeProductType,
+    isQueuedBuildStatus,
+} = require('../lib/generatorBuildTypes');
 
 try {
     const envFile = process.env.BETTERDESK_BUILD_ENV_FILE || '/etc/betterdesk/build.env';
@@ -42,6 +47,7 @@ const ARTIFACT_ROOT = process.env.AGENT_CLIENT_ARTIFACT_DIR
     || path.join(config.dataDir || '/opt/BetterDeskConsole/data', 'agent-client-builds');
 const POLL_INTERVAL_MS = parseInt(process.env.AGENT_CLIENT_BUILD_POLL_MS || '8000', 10);
 const BUILD_TIMEOUT_MS = parseInt(process.env.AGENT_CLIENT_BUILD_TIMEOUT_MS || (45 * 60 * 1000), 10);
+const IS_WINDOWS = process.platform === 'win32';
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
 function _resolveSourceRoot() {
@@ -118,6 +124,11 @@ const SIDECAR_NAMES = {
     'linux/x64': 'betterdesk-agent-x86_64-unknown-linux-gnu',
     'windows/x64': 'betterdesk-agent-x86_64-pc-windows-msvc.exe',
 };
+
+function _isAgentClientBundle(_bundle) {
+    // Product types collapsed to betterdesk-support; agent-client worker is unused.
+    return false;
+}
 
 let _pollTimer = null;
 let _running = false;
@@ -199,10 +210,9 @@ async function _ensureAgentLib() {
 }
 
 async function _buildSidecar(profile, destPath) {
-    const agentBuildWorker = require('./agentBuildWorker');
-    const goBin = typeof agentBuildWorker.getGoBin === 'function'
-        ? agentBuildWorker.getGoBin()
-        : null;
+    // Prefer PATH / common Go locations (legacy agentBuildWorker removed).
+    const goBin = process.env.GO_BIN
+        || (IS_WINDOWS ? 'go.exe' : 'go');
     if (!goBin) throw new Error('Go toolchain not available for sidecar build');
 
     const agentLib = await _ensureAgentLib();
@@ -338,10 +348,10 @@ async function _listPendingAgentClientBuilds(limit) {
     const bundles = await db.listAgentBundles();
     const out = [];
     for (const b of bundles) {
-        if (b.revoked || (b.product_type || 'agent') !== 'agent-client') continue;
+        if (b.revoked || !_isAgentClientBundle(b)) continue;
         const builds = await db.listAgentBundleBuildsForHash(b.branding_hash);
         for (const r of builds) {
-            if (r.status === 'pending') out.push(r);
+            if (isQueuedBuildStatus(r.status)) out.push(r);
             if (out.length >= limit) break;
         }
         if (out.length >= limit) break;
@@ -353,7 +363,7 @@ async function _hasAgentClientBuildInProgress() {
     if (_activeBuilds > 0) return true;
     const bundles = await db.listAgentBundles();
     for (const b of bundles) {
-        if ((b.product_type || 'agent') !== 'agent-client' || b.revoked) continue;
+        if (!_isAgentClientBundle(b) || b.revoked) continue;
         const builds = await db.listAgentBundleBuildsForHash(b.branding_hash);
         if (builds.some((r) => r.status === 'building')) return true;
     }
@@ -374,7 +384,7 @@ async function enqueueBuildsForHash(brandingHash, { force = false } = {}) {
             platform: p.platform,
             arch: p.arch,
             format: p.format,
-            status: 'pending',
+            status: 'queued',
             artifactPath: existing?.artifact_path || null,
             artifactSize: existing?.artifact_size || 0,
             artifactSha256: existing?.artifact_sha256 || null,
@@ -383,14 +393,55 @@ async function enqueueBuildsForHash(brandingHash, { force = false } = {}) {
     }
 }
 
+async function requeueAllBundleBuilds() {
+    const bundles = await db.listAgentBundles({ includeRevoked: false });
+    const hashes = [...new Set(
+        bundles
+            .filter((bundle) => !bundle.revoked && _isAgentClientBundle(bundle))
+            .map((bundle) => bundle.branding_hash)
+            .filter(Boolean)
+    )];
+    for (const hash of hashes) {
+        await enqueueBuildsForHash(hash, { force: true });
+    }
+    return { bundles: hashes.length };
+}
+
 async function rebuildBundleById(bundleId) {
     const row = await db.getAgentBundle(bundleId);
     if (!row) return { success: false, error: 'not_found' };
-    if ((row.product_type || 'agent') !== 'agent-client') {
+    if (!_isAgentClientBundle(row)) {
         return { success: false, error: 'not_agent_client' };
     }
+    if (!row.branding_hash) return { success: false, error: 'missing_hash' };
     await enqueueBuildsForHash(row.branding_hash, { force: true });
     return { success: true, platforms: (bundleService.PLATFORMS || []).length };
+}
+
+async function requeuePlatformBuild(brandingHash, platform, arch, format) {
+    if (!brandingHash || !platform || !arch || !format) {
+        return { success: false, error: 'missing_args' };
+    }
+    const allowed = (bundleService.PLATFORMS || []).some(
+        (p) => p.platform === platform && p.arch === arch && p.format === format
+    );
+    if (!allowed) return { success: false, error: 'unsupported_platform' };
+    const bundle = await _findBundleForHash(brandingHash);
+    if (!bundle || !_isAgentClientBundle(bundle)) {
+        return { success: false, error: 'not_agent_client' };
+    }
+    await db.upsertAgentBundleBuild({
+        brandingHash,
+        platform,
+        arch,
+        format,
+        status: 'queued',
+        artifactPath: null,
+        artifactSize: 0,
+        artifactSha256: null,
+        errorMessage: '',
+    });
+    return { success: true };
 }
 
 async function _runOne(buildRow) {
@@ -399,7 +450,7 @@ async function _runOne(buildRow) {
     if (!profile) throw new Error(`unsupported profile ${key}`);
 
     const bundleRow = await _findBundleForHash(buildRow.branding_hash);
-    if (!bundleRow || (bundleRow.product_type || 'agent') !== 'agent-client') {
+    if (!bundleRow || !_isAgentClientBundle(bundleRow)) {
         throw new Error('not an agent-client bundle');
     }
 
@@ -507,5 +558,11 @@ module.exports = {
     startWorker,
     stopWorker,
     enqueueBuildsForHash,
+    requeueAllBundleBuilds,
     rebuildBundleById,
+    requeuePlatformBuild,
+    _internals: {
+        isAgentClientBundle: _isAgentClientBundle,
+        listPendingBuilds: _listPendingAgentClientBuilds,
+    },
 };

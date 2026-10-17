@@ -1,5 +1,11 @@
 # 🎯 RustDesk Client Generator - Quick Start
 
+> **Current implementation:** this quick start is retained for historical
+> reference. The active generator builds incoming-only BetterDesk Support
+> bundles from BetterDesk-Client. Follow
+> [Client-Generator.md](../wiki/Client-Generator.md) for the supported
+> platform matrix and the host-only/local-provider limitations.
+
 ## 📌 What is the Client Generator?
 
 The Client Generator is a feature that enables **automatic creation of ready-to-use RustDesk clients** for various platforms (Windows, Linux, Android, macOS). 

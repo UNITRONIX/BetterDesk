@@ -1,0 +1,2974 @@
+{
+  "nested": {
+    "hbb": {
+      "options": {
+        "go_package": "github.com/unitronix/betterdesk-server/proto"
+      },
+      "nested": {
+        "RegisterPeer": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "serial": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "ConnType": {
+          "values": {
+            "DEFAULT_CONN": 0,
+            "FILE_TRANSFER": 1,
+            "PORT_FORWARD": 2,
+            "RDP": 3,
+            "VIEW_CAMERA": 4,
+            "TERMINAL": 5
+          }
+        },
+        "RegisterPeerResponse": {
+          "fields": {
+            "requestPk": {
+              "type": "bool",
+              "id": 2
+            }
+          }
+        },
+        "PunchHoleRequest": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "natType": {
+              "type": "NatType",
+              "id": 2
+            },
+            "licenceKey": {
+              "type": "string",
+              "id": 3
+            },
+            "connType": {
+              "type": "ConnType",
+              "id": 4
+            },
+            "token": {
+              "type": "string",
+              "id": 5
+            },
+            "version": {
+              "type": "string",
+              "id": 6
+            },
+            "udpPort": {
+              "type": "int32",
+              "id": 7
+            },
+            "forceRelay": {
+              "type": "bool",
+              "id": 8
+            },
+            "upnpPort": {
+              "type": "int32",
+              "id": 9
+            },
+            "socketAddrV6": {
+              "type": "bytes",
+              "id": 10
+            }
+          }
+        },
+        "ControlPermissions": {
+          "fields": {
+            "permissions": {
+              "type": "uint64",
+              "id": 1
+            }
+          },
+          "nested": {
+            "Permission": {
+              "values": {
+                "keyboard": 0,
+                "remote_printer": 1,
+                "clipboard": 2,
+                "file": 3,
+                "audio": 4,
+                "camera": 5,
+                "terminal": 6,
+                "tunnel": 7,
+                "restart": 8,
+                "recording": 9,
+                "block_input": 10,
+                "remote_modify": 11
+              }
+            }
+          }
+        },
+        "PunchHole": {
+          "fields": {
+            "socketAddr": {
+              "type": "bytes",
+              "id": 1
+            },
+            "relayServer": {
+              "type": "string",
+              "id": 2
+            },
+            "natType": {
+              "type": "NatType",
+              "id": 3
+            },
+            "udpPort": {
+              "type": "int32",
+              "id": 4
+            },
+            "forceRelay": {
+              "type": "bool",
+              "id": 5
+            },
+            "upnpPort": {
+              "type": "int32",
+              "id": 6
+            },
+            "socketAddrV6": {
+              "type": "bytes",
+              "id": 7
+            },
+            "controlPermissions": {
+              "type": "ControlPermissions",
+              "id": 8
+            }
+          }
+        },
+        "TestNatRequest": {
+          "fields": {
+            "serial": {
+              "type": "int32",
+              "id": 1
+            }
+          }
+        },
+        "TestNatResponse": {
+          "fields": {
+            "port": {
+              "type": "int32",
+              "id": 1
+            },
+            "cu": {
+              "type": "ConfigUpdate",
+              "id": 2
+            }
+          }
+        },
+        "NatType": {
+          "values": {
+            "UNKNOWN_NAT": 0,
+            "ASYMMETRIC": 1,
+            "SYMMETRIC": 2
+          }
+        },
+        "PunchHoleSent": {
+          "fields": {
+            "socketAddr": {
+              "type": "bytes",
+              "id": 1
+            },
+            "id": {
+              "type": "string",
+              "id": 2
+            },
+            "relayServer": {
+              "type": "string",
+              "id": 3
+            },
+            "natType": {
+              "type": "NatType",
+              "id": 4
+            },
+            "version": {
+              "type": "string",
+              "id": 5
+            },
+            "upnpPort": {
+              "type": "int32",
+              "id": 6
+            },
+            "socketAddrV6": {
+              "type": "bytes",
+              "id": 7
+            }
+          }
+        },
+        "RegisterPk": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "uuid": {
+              "type": "bytes",
+              "id": 2
+            },
+            "pk": {
+              "type": "bytes",
+              "id": 3
+            },
+            "oldId": {
+              "type": "string",
+              "id": 4
+            },
+            "noRegisterDevice": {
+              "type": "bool",
+              "id": 5
+            }
+          }
+        },
+        "RegisterPkResponse": {
+          "fields": {
+            "result": {
+              "type": "Result",
+              "id": 1
+            },
+            "keepAlive": {
+              "type": "int32",
+              "id": 2
+            }
+          },
+          "nested": {
+            "Result": {
+              "values": {
+                "OK": 0,
+                "UUID_MISMATCH": 2,
+                "ID_EXISTS": 3,
+                "TOO_FREQUENT": 4,
+                "INVALID_ID_FORMAT": 5,
+                "NOT_SUPPORT": 6,
+                "SERVER_ERROR": 7
+              }
+            }
+          }
+        },
+        "PunchHoleResponse": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "natType",
+                "isLocal"
+              ]
+            }
+          },
+          "fields": {
+            "socketAddr": {
+              "type": "bytes",
+              "id": 1
+            },
+            "pk": {
+              "type": "bytes",
+              "id": 2
+            },
+            "failure": {
+              "type": "Failure",
+              "id": 3
+            },
+            "relayServer": {
+              "type": "string",
+              "id": 4
+            },
+            "natType": {
+              "type": "NatType",
+              "id": 5
+            },
+            "isLocal": {
+              "type": "bool",
+              "id": 6
+            },
+            "otherFailure": {
+              "type": "string",
+              "id": 7
+            },
+            "feedback": {
+              "type": "int32",
+              "id": 8
+            },
+            "isUdp": {
+              "type": "bool",
+              "id": 9
+            },
+            "upnpPort": {
+              "type": "int32",
+              "id": 10
+            },
+            "socketAddrV6": {
+              "type": "bytes",
+              "id": 11
+            }
+          },
+          "nested": {
+            "Failure": {
+              "values": {
+                "ID_NOT_EXIST": 0,
+                "OFFLINE": 2,
+                "LICENSE_MISMATCH": 3,
+                "LICENSE_OVERUSE": 4
+              }
+            }
+          }
+        },
+        "ConfigUpdate": {
+          "fields": {
+            "serial": {
+              "type": "int32",
+              "id": 1
+            },
+            "rendezvousServers": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "RequestRelay": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "uuid": {
+              "type": "string",
+              "id": 2
+            },
+            "socketAddr": {
+              "type": "bytes",
+              "id": 3
+            },
+            "relayServer": {
+              "type": "string",
+              "id": 4
+            },
+            "secure": {
+              "type": "bool",
+              "id": 5
+            },
+            "licenceKey": {
+              "type": "string",
+              "id": 6
+            },
+            "connType": {
+              "type": "ConnType",
+              "id": 7
+            },
+            "token": {
+              "type": "string",
+              "id": 8
+            },
+            "controlPermissions": {
+              "type": "ControlPermissions",
+              "id": 9
+            }
+          }
+        },
+        "RelayResponse": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "id",
+                "pk"
+              ]
+            }
+          },
+          "fields": {
+            "socketAddr": {
+              "type": "bytes",
+              "id": 1
+            },
+            "uuid": {
+              "type": "string",
+              "id": 2
+            },
+            "relayServer": {
+              "type": "string",
+              "id": 3
+            },
+            "id": {
+              "type": "string",
+              "id": 4
+            },
+            "pk": {
+              "type": "bytes",
+              "id": 5
+            },
+            "refuseReason": {
+              "type": "string",
+              "id": 6
+            },
+            "version": {
+              "type": "string",
+              "id": 7
+            },
+            "feedback": {
+              "type": "int32",
+              "id": 9
+            },
+            "socketAddrV6": {
+              "type": "bytes",
+              "id": 10
+            },
+            "upnpPort": {
+              "type": "int32",
+              "id": 11
+            }
+          }
+        },
+        "SoftwareUpdate": {
+          "fields": {
+            "url": {
+              "type": "string",
+              "id": 1
+            }
+          }
+        },
+        "FetchLocalAddr": {
+          "fields": {
+            "socketAddr": {
+              "type": "bytes",
+              "id": 1
+            },
+            "relayServer": {
+              "type": "string",
+              "id": 2
+            },
+            "socketAddrV6": {
+              "type": "bytes",
+              "id": 3
+            },
+            "controlPermissions": {
+              "type": "ControlPermissions",
+              "id": 4
+            }
+          }
+        },
+        "LocalAddr": {
+          "fields": {
+            "socketAddr": {
+              "type": "bytes",
+              "id": 1
+            },
+            "localAddr": {
+              "type": "bytes",
+              "id": 2
+            },
+            "relayServer": {
+              "type": "string",
+              "id": 3
+            },
+            "id": {
+              "type": "string",
+              "id": 4
+            },
+            "version": {
+              "type": "string",
+              "id": 5
+            },
+            "socketAddrV6": {
+              "type": "bytes",
+              "id": 6
+            }
+          }
+        },
+        "PeerDiscovery": {
+          "fields": {
+            "cmd": {
+              "type": "string",
+              "id": 1
+            },
+            "mac": {
+              "type": "string",
+              "id": 2
+            },
+            "id": {
+              "type": "string",
+              "id": 3
+            },
+            "username": {
+              "type": "string",
+              "id": 4
+            },
+            "hostname": {
+              "type": "string",
+              "id": 5
+            },
+            "platform": {
+              "type": "string",
+              "id": 6
+            },
+            "misc": {
+              "type": "string",
+              "id": 7
+            }
+          }
+        },
+        "OnlineRequest": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "peers": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "OnlineResponse": {
+          "fields": {
+            "states": {
+              "type": "bytes",
+              "id": 1
+            }
+          }
+        },
+        "KeyExchange": {
+          "fields": {
+            "keys": {
+              "rule": "repeated",
+              "type": "bytes",
+              "id": 1
+            }
+          }
+        },
+        "HealthCheck": {
+          "fields": {
+            "token": {
+              "type": "string",
+              "id": 1
+            }
+          }
+        },
+        "HeaderEntry": {
+          "fields": {
+            "name": {
+              "type": "string",
+              "id": 1
+            },
+            "value": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "HttpProxyRequest": {
+          "fields": {
+            "method": {
+              "type": "string",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "headers": {
+              "rule": "repeated",
+              "type": "HeaderEntry",
+              "id": 3
+            },
+            "body": {
+              "type": "bytes",
+              "id": 4
+            }
+          }
+        },
+        "HttpProxyResponse": {
+          "fields": {
+            "status": {
+              "type": "int32",
+              "id": 1
+            },
+            "headers": {
+              "rule": "repeated",
+              "type": "HeaderEntry",
+              "id": 2
+            },
+            "body": {
+              "type": "bytes",
+              "id": 3
+            },
+            "error": {
+              "type": "string",
+              "id": 4
+            }
+          }
+        },
+        "RendezvousMessage": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "registerPeer",
+                "registerPeerResponse",
+                "punchHoleRequest",
+                "punchHole",
+                "punchHoleSent",
+                "punchHoleResponse",
+                "fetchLocalAddr",
+                "localAddr",
+                "configureUpdate",
+                "registerPk",
+                "registerPkResponse",
+                "softwareUpdate",
+                "requestRelay",
+                "relayResponse",
+                "testNatRequest",
+                "testNatResponse",
+                "peerDiscovery",
+                "onlineRequest",
+                "onlineResponse",
+                "keyExchange",
+                "hc",
+                "httpProxyRequest",
+                "httpProxyResponse"
+              ]
+            }
+          },
+          "fields": {
+            "registerPeer": {
+              "type": "RegisterPeer",
+              "id": 6
+            },
+            "registerPeerResponse": {
+              "type": "RegisterPeerResponse",
+              "id": 7
+            },
+            "punchHoleRequest": {
+              "type": "PunchHoleRequest",
+              "id": 8
+            },
+            "punchHole": {
+              "type": "PunchHole",
+              "id": 9
+            },
+            "punchHoleSent": {
+              "type": "PunchHoleSent",
+              "id": 10
+            },
+            "punchHoleResponse": {
+              "type": "PunchHoleResponse",
+              "id": 11
+            },
+            "fetchLocalAddr": {
+              "type": "FetchLocalAddr",
+              "id": 12
+            },
+            "localAddr": {
+              "type": "LocalAddr",
+              "id": 13
+            },
+            "configureUpdate": {
+              "type": "ConfigUpdate",
+              "id": 14
+            },
+            "registerPk": {
+              "type": "RegisterPk",
+              "id": 15
+            },
+            "registerPkResponse": {
+              "type": "RegisterPkResponse",
+              "id": 16
+            },
+            "softwareUpdate": {
+              "type": "SoftwareUpdate",
+              "id": 17
+            },
+            "requestRelay": {
+              "type": "RequestRelay",
+              "id": 18
+            },
+            "relayResponse": {
+              "type": "RelayResponse",
+              "id": 19
+            },
+            "testNatRequest": {
+              "type": "TestNatRequest",
+              "id": 20
+            },
+            "testNatResponse": {
+              "type": "TestNatResponse",
+              "id": 21
+            },
+            "peerDiscovery": {
+              "type": "PeerDiscovery",
+              "id": 22
+            },
+            "onlineRequest": {
+              "type": "OnlineRequest",
+              "id": 23
+            },
+            "onlineResponse": {
+              "type": "OnlineResponse",
+              "id": 24
+            },
+            "keyExchange": {
+              "type": "KeyExchange",
+              "id": 25
+            },
+            "hc": {
+              "type": "HealthCheck",
+              "id": 26
+            },
+            "httpProxyRequest": {
+              "type": "HttpProxyRequest",
+              "id": 27
+            },
+            "httpProxyResponse": {
+              "type": "HttpProxyResponse",
+              "id": 28
+            }
+          }
+        },
+        "EncodedVideoFrame": {
+          "fields": {
+            "data": {
+              "type": "bytes",
+              "id": 1
+            },
+            "key": {
+              "type": "bool",
+              "id": 2
+            },
+            "pts": {
+              "type": "int64",
+              "id": 3
+            }
+          }
+        },
+        "EncodedVideoFrames": {
+          "fields": {
+            "frames": {
+              "rule": "repeated",
+              "type": "EncodedVideoFrame",
+              "id": 1
+            }
+          }
+        },
+        "RGB": {
+          "fields": {
+            "compress": {
+              "type": "bool",
+              "id": 1
+            }
+          }
+        },
+        "YUV": {
+          "fields": {
+            "compress": {
+              "type": "bool",
+              "id": 1
+            },
+            "stride": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "Chroma": {
+          "values": {
+            "I420": 0,
+            "I444": 1
+          }
+        },
+        "VideoFrame": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "vp9s",
+                "rgb",
+                "yuv",
+                "h264s",
+                "h265s",
+                "vp8s",
+                "av1s"
+              ]
+            }
+          },
+          "fields": {
+            "vp9s": {
+              "type": "EncodedVideoFrames",
+              "id": 6
+            },
+            "rgb": {
+              "type": "RGB",
+              "id": 7
+            },
+            "yuv": {
+              "type": "YUV",
+              "id": 8
+            },
+            "h264s": {
+              "type": "EncodedVideoFrames",
+              "id": 10
+            },
+            "h265s": {
+              "type": "EncodedVideoFrames",
+              "id": 11
+            },
+            "vp8s": {
+              "type": "EncodedVideoFrames",
+              "id": 12
+            },
+            "av1s": {
+              "type": "EncodedVideoFrames",
+              "id": 13
+            },
+            "display": {
+              "type": "int32",
+              "id": 14
+            }
+          }
+        },
+        "IdPk": {
+          "fields": {
+            "id": {
+              "type": "string",
+              "id": 1
+            },
+            "pk": {
+              "type": "bytes",
+              "id": 2
+            }
+          }
+        },
+        "DisplayInfo": {
+          "fields": {
+            "x": {
+              "type": "sint32",
+              "id": 1
+            },
+            "y": {
+              "type": "sint32",
+              "id": 2
+            },
+            "width": {
+              "type": "int32",
+              "id": 3
+            },
+            "height": {
+              "type": "int32",
+              "id": 4
+            },
+            "name": {
+              "type": "string",
+              "id": 5
+            },
+            "online": {
+              "type": "bool",
+              "id": 6
+            },
+            "cursorEmbedded": {
+              "type": "bool",
+              "id": 7
+            },
+            "originalResolution": {
+              "type": "Resolution",
+              "id": 8
+            },
+            "scale": {
+              "type": "double",
+              "id": 9
+            }
+          }
+        },
+        "PortForward": {
+          "fields": {
+            "host": {
+              "type": "string",
+              "id": 1
+            },
+            "port": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "FileTransfer": {
+          "fields": {
+            "dir": {
+              "type": "string",
+              "id": 1
+            },
+            "showHidden": {
+              "type": "bool",
+              "id": 2
+            }
+          }
+        },
+        "ViewCamera": {
+          "fields": {}
+        },
+        "OSLogin": {
+          "fields": {
+            "username": {
+              "type": "string",
+              "id": 1
+            },
+            "password": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "LoginRequest": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "fileTransfer",
+                "portForward",
+                "viewCamera",
+                "terminal"
+              ]
+            }
+          },
+          "fields": {
+            "username": {
+              "type": "string",
+              "id": 1
+            },
+            "password": {
+              "type": "bytes",
+              "id": 2
+            },
+            "myId": {
+              "type": "string",
+              "id": 4
+            },
+            "myName": {
+              "type": "string",
+              "id": 5
+            },
+            "option": {
+              "type": "OptionMessage",
+              "id": 6
+            },
+            "fileTransfer": {
+              "type": "FileTransfer",
+              "id": 7
+            },
+            "portForward": {
+              "type": "PortForward",
+              "id": 8
+            },
+            "viewCamera": {
+              "type": "ViewCamera",
+              "id": 15
+            },
+            "terminal": {
+              "type": "Terminal",
+              "id": 16
+            },
+            "videoAckRequired": {
+              "type": "bool",
+              "id": 9
+            },
+            "sessionId": {
+              "type": "uint64",
+              "id": 10
+            },
+            "version": {
+              "type": "string",
+              "id": 11
+            },
+            "osLogin": {
+              "type": "OSLogin",
+              "id": 12
+            },
+            "myPlatform": {
+              "type": "string",
+              "id": 13
+            },
+            "hwid": {
+              "type": "bytes",
+              "id": 14
+            }
+          }
+        },
+        "Terminal": {
+          "fields": {
+            "serviceId": {
+              "type": "string",
+              "id": 1
+            }
+          }
+        },
+        "Auth2FA": {
+          "fields": {
+            "code": {
+              "type": "string",
+              "id": 1
+            },
+            "hwid": {
+              "type": "bytes",
+              "id": 2
+            }
+          }
+        },
+        "ChatMessage": {
+          "fields": {
+            "text": {
+              "type": "string",
+              "id": 1
+            }
+          }
+        },
+        "Features": {
+          "fields": {
+            "privacyMode": {
+              "type": "bool",
+              "id": 1
+            },
+            "terminal": {
+              "type": "bool",
+              "id": 2
+            }
+          }
+        },
+        "CodecAbility": {
+          "fields": {
+            "vp8": {
+              "type": "bool",
+              "id": 1
+            },
+            "vp9": {
+              "type": "bool",
+              "id": 2
+            },
+            "av1": {
+              "type": "bool",
+              "id": 3
+            },
+            "h264": {
+              "type": "bool",
+              "id": 4
+            },
+            "h265": {
+              "type": "bool",
+              "id": 5
+            }
+          }
+        },
+        "SupportedEncoding": {
+          "fields": {
+            "h264": {
+              "type": "bool",
+              "id": 1
+            },
+            "h265": {
+              "type": "bool",
+              "id": 2
+            },
+            "vp8": {
+              "type": "bool",
+              "id": 3
+            },
+            "av1": {
+              "type": "bool",
+              "id": 4
+            },
+            "i444": {
+              "type": "CodecAbility",
+              "id": 5
+            }
+          }
+        },
+        "PeerInfo": {
+          "fields": {
+            "username": {
+              "type": "string",
+              "id": 1
+            },
+            "hostname": {
+              "type": "string",
+              "id": 2
+            },
+            "platform": {
+              "type": "string",
+              "id": 3
+            },
+            "displays": {
+              "rule": "repeated",
+              "type": "DisplayInfo",
+              "id": 4
+            },
+            "currentDisplay": {
+              "type": "int32",
+              "id": 5
+            },
+            "sasEnabled": {
+              "type": "bool",
+              "id": 6
+            },
+            "version": {
+              "type": "string",
+              "id": 7
+            },
+            "features": {
+              "type": "Features",
+              "id": 9
+            },
+            "encoding": {
+              "type": "SupportedEncoding",
+              "id": 10
+            },
+            "resolutions": {
+              "type": "SupportedResolutions",
+              "id": 11
+            },
+            "platformAdditions": {
+              "type": "string",
+              "id": 12
+            },
+            "windowsSessions": {
+              "type": "WindowsSessions",
+              "id": 13
+            }
+          }
+        },
+        "WindowsSession": {
+          "fields": {
+            "sid": {
+              "type": "uint32",
+              "id": 1
+            },
+            "name": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "LoginResponse": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "error",
+                "peerInfo"
+              ]
+            }
+          },
+          "fields": {
+            "error": {
+              "type": "string",
+              "id": 1
+            },
+            "peerInfo": {
+              "type": "PeerInfo",
+              "id": 2
+            },
+            "enableTrustedDevices": {
+              "type": "bool",
+              "id": 3
+            }
+          }
+        },
+        "TouchScaleUpdate": {
+          "fields": {
+            "scale": {
+              "type": "int32",
+              "id": 1
+            }
+          }
+        },
+        "TouchPanStart": {
+          "fields": {
+            "x": {
+              "type": "int32",
+              "id": 1
+            },
+            "y": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "TouchPanUpdate": {
+          "fields": {
+            "x": {
+              "type": "int32",
+              "id": 1
+            },
+            "y": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "TouchPanEnd": {
+          "fields": {
+            "x": {
+              "type": "int32",
+              "id": 1
+            },
+            "y": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "TouchEvent": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "scaleUpdate",
+                "panStart",
+                "panUpdate",
+                "panEnd"
+              ]
+            }
+          },
+          "fields": {
+            "scaleUpdate": {
+              "type": "TouchScaleUpdate",
+              "id": 1
+            },
+            "panStart": {
+              "type": "TouchPanStart",
+              "id": 2
+            },
+            "panUpdate": {
+              "type": "TouchPanUpdate",
+              "id": 3
+            },
+            "panEnd": {
+              "type": "TouchPanEnd",
+              "id": 4
+            }
+          }
+        },
+        "PointerDeviceEvent": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "touchEvent"
+              ]
+            }
+          },
+          "fields": {
+            "touchEvent": {
+              "type": "TouchEvent",
+              "id": 1
+            },
+            "modifiers": {
+              "rule": "repeated",
+              "type": "ControlKey",
+              "id": 2
+            }
+          }
+        },
+        "MouseEvent": {
+          "fields": {
+            "mask": {
+              "type": "int32",
+              "id": 1
+            },
+            "x": {
+              "type": "sint32",
+              "id": 2
+            },
+            "y": {
+              "type": "sint32",
+              "id": 3
+            },
+            "modifiers": {
+              "rule": "repeated",
+              "type": "ControlKey",
+              "id": 4
+            }
+          }
+        },
+        "KeyboardMode": {
+          "values": {
+            "Legacy": 0,
+            "Map": 1,
+            "Translate": 2,
+            "Auto": 3
+          }
+        },
+        "ControlKey": {
+          "values": {
+            "Unknown": 0,
+            "Alt": 1,
+            "Backspace": 2,
+            "CapsLock": 3,
+            "Control": 4,
+            "Delete": 5,
+            "DownArrow": 6,
+            "End": 7,
+            "Escape": 8,
+            "F1": 9,
+            "F10": 10,
+            "F11": 11,
+            "F12": 12,
+            "F2": 13,
+            "F3": 14,
+            "F4": 15,
+            "F5": 16,
+            "F6": 17,
+            "F7": 18,
+            "F8": 19,
+            "F9": 20,
+            "Home": 21,
+            "LeftArrow": 22,
+            "Meta": 23,
+            "Option": 24,
+            "PageDown": 25,
+            "PageUp": 26,
+            "Return": 27,
+            "RightArrow": 28,
+            "Shift": 29,
+            "Space": 30,
+            "Tab": 31,
+            "UpArrow": 32,
+            "Numpad0": 33,
+            "Numpad1": 34,
+            "Numpad2": 35,
+            "Numpad3": 36,
+            "Numpad4": 37,
+            "Numpad5": 38,
+            "Numpad6": 39,
+            "Numpad7": 40,
+            "Numpad8": 41,
+            "Numpad9": 42,
+            "Cancel": 43,
+            "Clear": 44,
+            "Menu": 45,
+            "Pause": 46,
+            "Kana": 47,
+            "Hangul": 48,
+            "Junja": 49,
+            "Final": 50,
+            "Hanja": 51,
+            "Kanji": 52,
+            "Convert": 53,
+            "Select": 54,
+            "Print": 55,
+            "Execute": 56,
+            "Snapshot": 57,
+            "Insert": 58,
+            "Help": 59,
+            "Sleep": 60,
+            "Separator": 61,
+            "Scroll": 62,
+            "NumLock": 63,
+            "RWin": 64,
+            "Apps": 65,
+            "Multiply": 66,
+            "Add": 67,
+            "Subtract": 68,
+            "Decimal": 69,
+            "Divide": 70,
+            "Equals": 71,
+            "NumpadEnter": 72,
+            "RShift": 73,
+            "RControl": 74,
+            "RAlt": 75,
+            "VolumeMute": 76,
+            "VolumeUp": 77,
+            "VolumeDown": 78,
+            "Power": 79,
+            "CtrlAltDel": 100,
+            "LockScreen": 101
+          }
+        },
+        "KeyEvent": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "controlKey",
+                "chr",
+                "unicode",
+                "seq",
+                "win2winHotkey"
+              ]
+            }
+          },
+          "fields": {
+            "down": {
+              "type": "bool",
+              "id": 1
+            },
+            "press": {
+              "type": "bool",
+              "id": 2
+            },
+            "controlKey": {
+              "type": "ControlKey",
+              "id": 3
+            },
+            "chr": {
+              "type": "uint32",
+              "id": 4
+            },
+            "unicode": {
+              "type": "uint32",
+              "id": 5
+            },
+            "seq": {
+              "type": "string",
+              "id": 6
+            },
+            "win2winHotkey": {
+              "type": "uint32",
+              "id": 7
+            },
+            "modifiers": {
+              "rule": "repeated",
+              "type": "ControlKey",
+              "id": 8
+            },
+            "mode": {
+              "type": "KeyboardMode",
+              "id": 9
+            }
+          }
+        },
+        "CursorData": {
+          "fields": {
+            "id": {
+              "type": "uint64",
+              "id": 1
+            },
+            "hotx": {
+              "type": "sint32",
+              "id": 2
+            },
+            "hoty": {
+              "type": "sint32",
+              "id": 3
+            },
+            "width": {
+              "type": "int32",
+              "id": 4
+            },
+            "height": {
+              "type": "int32",
+              "id": 5
+            },
+            "colors": {
+              "type": "bytes",
+              "id": 6
+            }
+          }
+        },
+        "CursorPosition": {
+          "fields": {
+            "x": {
+              "type": "sint32",
+              "id": 1
+            },
+            "y": {
+              "type": "sint32",
+              "id": 2
+            }
+          }
+        },
+        "Hash": {
+          "fields": {
+            "salt": {
+              "type": "string",
+              "id": 1
+            },
+            "challenge": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "ClipboardFormat": {
+          "values": {
+            "Text": 0,
+            "Rtf": 1,
+            "Html": 2,
+            "ImageRgba": 21,
+            "ImagePng": 22,
+            "ImageSvg": 23,
+            "Special": 31
+          }
+        },
+        "Clipboard": {
+          "fields": {
+            "compress": {
+              "type": "bool",
+              "id": 1
+            },
+            "content": {
+              "type": "bytes",
+              "id": 2
+            },
+            "width": {
+              "type": "int32",
+              "id": 3
+            },
+            "height": {
+              "type": "int32",
+              "id": 4
+            },
+            "format": {
+              "type": "ClipboardFormat",
+              "id": 5
+            },
+            "specialName": {
+              "type": "string",
+              "id": 6
+            }
+          }
+        },
+        "MultiClipboards": {
+          "fields": {
+            "clipboards": {
+              "rule": "repeated",
+              "type": "Clipboard",
+              "id": 1
+            }
+          }
+        },
+        "FileType": {
+          "values": {
+            "Dir": 0,
+            "DirLink": 2,
+            "DirDrive": 3,
+            "File": 4,
+            "FileLink": 5
+          }
+        },
+        "FileEntry": {
+          "fields": {
+            "entryType": {
+              "type": "FileType",
+              "id": 1
+            },
+            "name": {
+              "type": "string",
+              "id": 2
+            },
+            "isHidden": {
+              "type": "bool",
+              "id": 3
+            },
+            "size": {
+              "type": "uint64",
+              "id": 4
+            },
+            "modifiedTime": {
+              "type": "uint64",
+              "id": 5
+            }
+          }
+        },
+        "FileDirectory": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "entries": {
+              "rule": "repeated",
+              "type": "FileEntry",
+              "id": 3
+            }
+          }
+        },
+        "ReadDir": {
+          "fields": {
+            "path": {
+              "type": "string",
+              "id": 1
+            },
+            "includeHidden": {
+              "type": "bool",
+              "id": 2
+            }
+          }
+        },
+        "ReadAllFiles": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "includeHidden": {
+              "type": "bool",
+              "id": 3
+            }
+          }
+        },
+        "FileRename": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "newName": {
+              "type": "string",
+              "id": 3
+            }
+          }
+        },
+        "FileAction": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "readDir",
+                "send",
+                "receive",
+                "create",
+                "removeDir",
+                "removeFile",
+                "allFiles",
+                "cancel",
+                "sendConfirm",
+                "rename"
+              ]
+            }
+          },
+          "fields": {
+            "readDir": {
+              "type": "ReadDir",
+              "id": 1
+            },
+            "send": {
+              "type": "FileTransferSendRequest",
+              "id": 2
+            },
+            "receive": {
+              "type": "FileTransferReceiveRequest",
+              "id": 3
+            },
+            "create": {
+              "type": "FileDirCreate",
+              "id": 4
+            },
+            "removeDir": {
+              "type": "FileRemoveDir",
+              "id": 5
+            },
+            "removeFile": {
+              "type": "FileRemoveFile",
+              "id": 6
+            },
+            "allFiles": {
+              "type": "ReadAllFiles",
+              "id": 7
+            },
+            "cancel": {
+              "type": "FileTransferCancel",
+              "id": 8
+            },
+            "sendConfirm": {
+              "type": "FileTransferSendConfirmRequest",
+              "id": 9
+            },
+            "rename": {
+              "type": "FileRename",
+              "id": 10
+            }
+          }
+        },
+        "FileTransferCancel": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            }
+          }
+        },
+        "FileResponse": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "dir",
+                "block",
+                "error",
+                "done",
+                "digest"
+              ]
+            }
+          },
+          "fields": {
+            "dir": {
+              "type": "FileDirectory",
+              "id": 1
+            },
+            "block": {
+              "type": "FileTransferBlock",
+              "id": 2
+            },
+            "error": {
+              "type": "FileTransferError",
+              "id": 3
+            },
+            "done": {
+              "type": "FileTransferDone",
+              "id": 4
+            },
+            "digest": {
+              "type": "FileTransferDigest",
+              "id": 5
+            }
+          }
+        },
+        "FileTransferDigest": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "fileNum": {
+              "type": "sint32",
+              "id": 2
+            },
+            "lastModified": {
+              "type": "uint64",
+              "id": 3
+            },
+            "fileSize": {
+              "type": "uint64",
+              "id": 4
+            },
+            "isUpload": {
+              "type": "bool",
+              "id": 5
+            },
+            "isIdentical": {
+              "type": "bool",
+              "id": 6
+            },
+            "transferredSize": {
+              "type": "uint64",
+              "id": 7
+            },
+            "isResume": {
+              "type": "bool",
+              "id": 8
+            }
+          }
+        },
+        "FileTransferBlock": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "fileNum": {
+              "type": "sint32",
+              "id": 2
+            },
+            "data": {
+              "type": "bytes",
+              "id": 3
+            },
+            "compressed": {
+              "type": "bool",
+              "id": 4
+            },
+            "blkId": {
+              "type": "uint32",
+              "id": 5
+            }
+          }
+        },
+        "FileTransferError": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "error": {
+              "type": "string",
+              "id": 2
+            },
+            "fileNum": {
+              "type": "sint32",
+              "id": 3
+            }
+          }
+        },
+        "FileTransferSendRequest": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "includeHidden": {
+              "type": "bool",
+              "id": 3
+            },
+            "fileNum": {
+              "type": "int32",
+              "id": 4
+            }
+          }
+        },
+        "FileTransferSendConfirmRequest": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "skip",
+                "offsetBlk"
+              ]
+            }
+          },
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "fileNum": {
+              "type": "sint32",
+              "id": 2
+            },
+            "skip": {
+              "type": "bool",
+              "id": 3
+            },
+            "offsetBlk": {
+              "type": "uint32",
+              "id": 4
+            }
+          }
+        },
+        "FileTransferDone": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "fileNum": {
+              "type": "sint32",
+              "id": 2
+            }
+          }
+        },
+        "FileTransferReceiveRequest": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "files": {
+              "rule": "repeated",
+              "type": "FileEntry",
+              "id": 3
+            },
+            "fileNum": {
+              "type": "int32",
+              "id": 4
+            },
+            "totalSize": {
+              "type": "uint64",
+              "id": 5
+            }
+          }
+        },
+        "FileRemoveDir": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "recursive": {
+              "type": "bool",
+              "id": 3
+            }
+          }
+        },
+        "FileRemoveFile": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            },
+            "fileNum": {
+              "type": "sint32",
+              "id": 3
+            }
+          }
+        },
+        "FileDirCreate": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "path": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "Resolution": {
+          "fields": {
+            "width": {
+              "type": "int32",
+              "id": 1
+            },
+            "height": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "DisplayResolution": {
+          "fields": {
+            "display": {
+              "type": "int32",
+              "id": 1
+            },
+            "resolution": {
+              "type": "Resolution",
+              "id": 2
+            }
+          }
+        },
+        "SupportedResolutions": {
+          "fields": {
+            "resolutions": {
+              "rule": "repeated",
+              "type": "Resolution",
+              "id": 1
+            }
+          }
+        },
+        "SwitchDisplay": {
+          "fields": {
+            "display": {
+              "type": "int32",
+              "id": 1
+            },
+            "x": {
+              "type": "sint32",
+              "id": 2
+            },
+            "y": {
+              "type": "sint32",
+              "id": 3
+            },
+            "width": {
+              "type": "int32",
+              "id": 4
+            },
+            "height": {
+              "type": "int32",
+              "id": 5
+            },
+            "cursorEmbedded": {
+              "type": "bool",
+              "id": 6
+            },
+            "resolutions": {
+              "type": "SupportedResolutions",
+              "id": 7
+            },
+            "originalResolution": {
+              "type": "Resolution",
+              "id": 8
+            }
+          }
+        },
+        "CaptureDisplays": {
+          "fields": {
+            "add": {
+              "rule": "repeated",
+              "type": "int32",
+              "id": 1
+            },
+            "sub": {
+              "rule": "repeated",
+              "type": "int32",
+              "id": 2
+            },
+            "set": {
+              "rule": "repeated",
+              "type": "int32",
+              "id": 3
+            }
+          }
+        },
+        "ToggleVirtualDisplay": {
+          "fields": {
+            "display": {
+              "type": "int32",
+              "id": 1
+            },
+            "on": {
+              "type": "bool",
+              "id": 2
+            }
+          }
+        },
+        "TogglePrivacyMode": {
+          "fields": {
+            "implKey": {
+              "type": "string",
+              "id": 1
+            },
+            "on": {
+              "type": "bool",
+              "id": 2
+            }
+          }
+        },
+        "PermissionInfo": {
+          "fields": {
+            "permission": {
+              "type": "Permission",
+              "id": 1
+            },
+            "enabled": {
+              "type": "bool",
+              "id": 2
+            }
+          },
+          "nested": {
+            "Permission": {
+              "values": {
+                "Keyboard": 0,
+                "Clipboard": 2,
+                "Audio": 3,
+                "File": 4,
+                "Restart": 5,
+                "Recording": 6,
+                "BlockInput": 7
+              }
+            }
+          }
+        },
+        "ImageQuality": {
+          "values": {
+            "NotSet": 0,
+            "Low": 2,
+            "Balanced": 3,
+            "Best": 4
+          }
+        },
+        "SupportedDecoding": {
+          "fields": {
+            "abilityVp9": {
+              "type": "int32",
+              "id": 1
+            },
+            "abilityH264": {
+              "type": "int32",
+              "id": 2
+            },
+            "abilityH265": {
+              "type": "int32",
+              "id": 3
+            },
+            "prefer": {
+              "type": "PreferCodec",
+              "id": 4
+            },
+            "abilityVp8": {
+              "type": "int32",
+              "id": 5
+            },
+            "abilityAv1": {
+              "type": "int32",
+              "id": 6
+            },
+            "i444": {
+              "type": "CodecAbility",
+              "id": 7
+            },
+            "preferChroma": {
+              "type": "Chroma",
+              "id": 8
+            }
+          },
+          "nested": {
+            "PreferCodec": {
+              "values": {
+                "Auto": 0,
+                "VP9": 1,
+                "H264": 2,
+                "H265": 3,
+                "VP8": 4,
+                "AV1": 5
+              }
+            }
+          }
+        },
+        "OptionMessage": {
+          "fields": {
+            "imageQuality": {
+              "type": "ImageQuality",
+              "id": 1
+            },
+            "lockAfterSessionEnd": {
+              "type": "BoolOption",
+              "id": 2
+            },
+            "showRemoteCursor": {
+              "type": "BoolOption",
+              "id": 3
+            },
+            "privacyMode": {
+              "type": "BoolOption",
+              "id": 4
+            },
+            "blockInput": {
+              "type": "BoolOption",
+              "id": 5
+            },
+            "customImageQuality": {
+              "type": "int32",
+              "id": 6
+            },
+            "disableAudio": {
+              "type": "BoolOption",
+              "id": 7
+            },
+            "disableClipboard": {
+              "type": "BoolOption",
+              "id": 8
+            },
+            "enableFileTransfer": {
+              "type": "BoolOption",
+              "id": 9
+            },
+            "supportedDecoding": {
+              "type": "SupportedDecoding",
+              "id": 10
+            },
+            "customFps": {
+              "type": "int32",
+              "id": 11
+            },
+            "disableKeyboard": {
+              "type": "BoolOption",
+              "id": 12
+            },
+            "followRemoteCursor": {
+              "type": "BoolOption",
+              "id": 15
+            },
+            "followRemoteWindow": {
+              "type": "BoolOption",
+              "id": 16
+            },
+            "disableCamera": {
+              "type": "BoolOption",
+              "id": 17
+            },
+            "terminalPersistent": {
+              "type": "BoolOption",
+              "id": 18
+            },
+            "showMyCursor": {
+              "type": "BoolOption",
+              "id": 19
+            }
+          },
+          "nested": {
+            "BoolOption": {
+              "values": {
+                "NotSet": 0,
+                "No": 1,
+                "Yes": 2
+              }
+            }
+          }
+        },
+        "TestDelay": {
+          "fields": {
+            "time": {
+              "type": "int64",
+              "id": 1
+            },
+            "fromClient": {
+              "type": "bool",
+              "id": 2
+            },
+            "lastDelay": {
+              "type": "uint32",
+              "id": 3
+            },
+            "targetBitrate": {
+              "type": "uint32",
+              "id": 4
+            }
+          }
+        },
+        "PublicKey": {
+          "fields": {
+            "asymmetricValue": {
+              "type": "bytes",
+              "id": 1
+            },
+            "symmetricValue": {
+              "type": "bytes",
+              "id": 2
+            }
+          }
+        },
+        "SignedId": {
+          "fields": {
+            "id": {
+              "type": "bytes",
+              "id": 1
+            }
+          }
+        },
+        "AudioFormat": {
+          "fields": {
+            "sampleRate": {
+              "type": "uint32",
+              "id": 1
+            },
+            "channels": {
+              "type": "uint32",
+              "id": 2
+            }
+          }
+        },
+        "AudioFrame": {
+          "fields": {
+            "data": {
+              "type": "bytes",
+              "id": 1
+            }
+          }
+        },
+        "MessageBox": {
+          "fields": {
+            "msgtype": {
+              "type": "string",
+              "id": 1
+            },
+            "title": {
+              "type": "string",
+              "id": 2
+            },
+            "text": {
+              "type": "string",
+              "id": 3
+            },
+            "link": {
+              "type": "string",
+              "id": 4
+            }
+          }
+        },
+        "BackNotification": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "privacyModeState",
+                "blockInputState"
+              ]
+            }
+          },
+          "fields": {
+            "privacyModeState": {
+              "type": "PrivacyModeState",
+              "id": 1
+            },
+            "blockInputState": {
+              "type": "BlockInputState",
+              "id": 2
+            },
+            "details": {
+              "type": "string",
+              "id": 3
+            },
+            "implKey": {
+              "type": "string",
+              "id": 4
+            }
+          },
+          "nested": {
+            "BlockInputState": {
+              "values": {
+                "BlkStateUnknown": 0,
+                "BlkOnSucceeded": 2,
+                "BlkOnFailed": 3,
+                "BlkOffSucceeded": 4,
+                "BlkOffFailed": 5
+              }
+            },
+            "PrivacyModeState": {
+              "values": {
+                "PrvStateUnknown": 0,
+                "PrvOnByOther": 2,
+                "PrvNotSupported": 3,
+                "PrvOnSucceeded": 4,
+                "PrvOnFailedDenied": 5,
+                "PrvOnFailedPlugin": 6,
+                "PrvOnFailed": 7,
+                "PrvOffSucceeded": 8,
+                "PrvOffByPeer": 9,
+                "PrvOffFailed": 10,
+                "PrvOffUnknown": 11
+              }
+            }
+          }
+        },
+        "ElevationRequestWithLogon": {
+          "fields": {
+            "username": {
+              "type": "string",
+              "id": 1
+            },
+            "password": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "ElevationRequest": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "direct",
+                "logon"
+              ]
+            }
+          },
+          "fields": {
+            "direct": {
+              "type": "bool",
+              "id": 1
+            },
+            "logon": {
+              "type": "ElevationRequestWithLogon",
+              "id": 2
+            }
+          }
+        },
+        "SwitchSidesRequest": {
+          "fields": {
+            "uuid": {
+              "type": "bytes",
+              "id": 1
+            }
+          }
+        },
+        "SwitchSidesResponse": {
+          "fields": {
+            "uuid": {
+              "type": "bytes",
+              "id": 1
+            },
+            "lr": {
+              "type": "LoginRequest",
+              "id": 2
+            }
+          }
+        },
+        "SwitchBack": {
+          "fields": {}
+        },
+        "WindowsSessions": {
+          "fields": {
+            "sessions": {
+              "rule": "repeated",
+              "type": "WindowsSession",
+              "id": 1
+            },
+            "currentSid": {
+              "type": "uint32",
+              "id": 2
+            }
+          }
+        },
+        "MessageQuery": {
+          "fields": {
+            "switchDisplay": {
+              "type": "int32",
+              "id": 1
+            }
+          }
+        },
+        "VoiceCallRequest": {
+          "fields": {
+            "reqTimestamp": {
+              "type": "int64",
+              "id": 1
+            },
+            "isConnect": {
+              "type": "bool",
+              "id": 2
+            }
+          }
+        },
+        "VoiceCallResponse": {
+          "fields": {
+            "accepted": {
+              "type": "bool",
+              "id": 1
+            },
+            "reqTimestamp": {
+              "type": "int64",
+              "id": 2
+            },
+            "ackTimestamp": {
+              "type": "int64",
+              "id": 3
+            }
+          }
+        },
+        "ScreenshotRequest": {
+          "fields": {
+            "display": {
+              "type": "int32",
+              "id": 1
+            },
+            "sid": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "ScreenshotResponse": {
+          "fields": {
+            "sid": {
+              "type": "string",
+              "id": 1
+            },
+            "msg": {
+              "type": "string",
+              "id": 2
+            },
+            "data": {
+              "type": "bytes",
+              "id": 3
+            }
+          }
+        },
+        "Misc": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "chatMessage",
+                "switchDisplay",
+                "permissionInfo",
+                "option",
+                "audioFormat",
+                "closeReason",
+                "refreshVideo",
+                "videoReceived",
+                "backNotification",
+                "restartRemoteDevice",
+                "uac",
+                "foregroundWindowElevated",
+                "stopService",
+                "elevationRequest",
+                "elevationResponse",
+                "portableServiceRunning",
+                "switchSidesRequest",
+                "switchBack",
+                "changeResolution",
+                "fullSpeedFps",
+                "autoAdjustFps",
+                "clientRecordStatus",
+                "captureDisplays",
+                "refreshVideoDisplay",
+                "toggleVirtualDisplay",
+                "togglePrivacyMode",
+                "supportedEncoding",
+                "selectedSid",
+                "changeDisplayResolution",
+                "messageQuery",
+                "followCurrentDisplay"
+              ]
+            }
+          },
+          "fields": {
+            "chatMessage": {
+              "type": "ChatMessage",
+              "id": 4
+            },
+            "switchDisplay": {
+              "type": "SwitchDisplay",
+              "id": 5
+            },
+            "permissionInfo": {
+              "type": "PermissionInfo",
+              "id": 6
+            },
+            "option": {
+              "type": "OptionMessage",
+              "id": 7
+            },
+            "audioFormat": {
+              "type": "AudioFormat",
+              "id": 8
+            },
+            "closeReason": {
+              "type": "string",
+              "id": 9
+            },
+            "refreshVideo": {
+              "type": "bool",
+              "id": 10
+            },
+            "videoReceived": {
+              "type": "bool",
+              "id": 12
+            },
+            "backNotification": {
+              "type": "BackNotification",
+              "id": 13
+            },
+            "restartRemoteDevice": {
+              "type": "bool",
+              "id": 14
+            },
+            "uac": {
+              "type": "bool",
+              "id": 15
+            },
+            "foregroundWindowElevated": {
+              "type": "bool",
+              "id": 16
+            },
+            "stopService": {
+              "type": "bool",
+              "id": 17
+            },
+            "elevationRequest": {
+              "type": "ElevationRequest",
+              "id": 18
+            },
+            "elevationResponse": {
+              "type": "string",
+              "id": 19
+            },
+            "portableServiceRunning": {
+              "type": "bool",
+              "id": 20
+            },
+            "switchSidesRequest": {
+              "type": "SwitchSidesRequest",
+              "id": 21
+            },
+            "switchBack": {
+              "type": "SwitchBack",
+              "id": 22
+            },
+            "changeResolution": {
+              "type": "Resolution",
+              "id": 24
+            },
+            "fullSpeedFps": {
+              "type": "uint32",
+              "id": 27
+            },
+            "autoAdjustFps": {
+              "type": "uint32",
+              "id": 28
+            },
+            "clientRecordStatus": {
+              "type": "bool",
+              "id": 29
+            },
+            "captureDisplays": {
+              "type": "CaptureDisplays",
+              "id": 30
+            },
+            "refreshVideoDisplay": {
+              "type": "int32",
+              "id": 31
+            },
+            "toggleVirtualDisplay": {
+              "type": "ToggleVirtualDisplay",
+              "id": 32
+            },
+            "togglePrivacyMode": {
+              "type": "TogglePrivacyMode",
+              "id": 33
+            },
+            "supportedEncoding": {
+              "type": "SupportedEncoding",
+              "id": 34
+            },
+            "selectedSid": {
+              "type": "uint32",
+              "id": 35
+            },
+            "changeDisplayResolution": {
+              "type": "DisplayResolution",
+              "id": 36
+            },
+            "messageQuery": {
+              "type": "MessageQuery",
+              "id": 37
+            },
+            "followCurrentDisplay": {
+              "type": "int32",
+              "id": 38
+            }
+          }
+        },
+        "Message": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "signedId",
+                "publicKey",
+                "testDelay",
+                "videoFrame",
+                "loginRequest",
+                "loginResponse",
+                "hash",
+                "mouseEvent",
+                "audioFrame",
+                "cursorData",
+                "cursorPosition",
+                "cursorId",
+                "keyEvent",
+                "clipboard",
+                "fileAction",
+                "fileResponse",
+                "misc",
+                "cliprdr",
+                "messageBox",
+                "switchSidesResponse",
+                "voiceCallRequest",
+                "voiceCallResponse",
+                "peerInfo",
+                "pointerDeviceEvent",
+                "auth_2fa",
+                "multiClipboards",
+                "screenshotRequest",
+                "screenshotResponse"
+              ]
+            }
+          },
+          "fields": {
+            "signedId": {
+              "type": "SignedId",
+              "id": 3
+            },
+            "publicKey": {
+              "type": "PublicKey",
+              "id": 4
+            },
+            "testDelay": {
+              "type": "TestDelay",
+              "id": 5
+            },
+            "videoFrame": {
+              "type": "VideoFrame",
+              "id": 6
+            },
+            "loginRequest": {
+              "type": "LoginRequest",
+              "id": 7
+            },
+            "loginResponse": {
+              "type": "LoginResponse",
+              "id": 8
+            },
+            "hash": {
+              "type": "Hash",
+              "id": 9
+            },
+            "mouseEvent": {
+              "type": "MouseEvent",
+              "id": 10
+            },
+            "audioFrame": {
+              "type": "AudioFrame",
+              "id": 11
+            },
+            "cursorData": {
+              "type": "CursorData",
+              "id": 12
+            },
+            "cursorPosition": {
+              "type": "CursorPosition",
+              "id": 13
+            },
+            "cursorId": {
+              "type": "uint64",
+              "id": 14
+            },
+            "keyEvent": {
+              "type": "KeyEvent",
+              "id": 15
+            },
+            "clipboard": {
+              "type": "Clipboard",
+              "id": 16
+            },
+            "fileAction": {
+              "type": "FileAction",
+              "id": 17
+            },
+            "fileResponse": {
+              "type": "FileResponse",
+              "id": 18
+            },
+            "misc": {
+              "type": "Misc",
+              "id": 19
+            },
+            "cliprdr": {
+              "type": "Cliprdr",
+              "id": 20
+            },
+            "messageBox": {
+              "type": "MessageBox",
+              "id": 21
+            },
+            "switchSidesResponse": {
+              "type": "SwitchSidesResponse",
+              "id": 22
+            },
+            "voiceCallRequest": {
+              "type": "VoiceCallRequest",
+              "id": 23
+            },
+            "voiceCallResponse": {
+              "type": "VoiceCallResponse",
+              "id": 24
+            },
+            "peerInfo": {
+              "type": "PeerInfo",
+              "id": 25
+            },
+            "pointerDeviceEvent": {
+              "type": "PointerDeviceEvent",
+              "id": 26
+            },
+            "auth_2fa": {
+              "type": "Auth2FA",
+              "id": 27
+            },
+            "multiClipboards": {
+              "type": "MultiClipboards",
+              "id": 28
+            },
+            "screenshotRequest": {
+              "type": "ScreenshotRequest",
+              "id": 29
+            },
+            "screenshotResponse": {
+              "type": "ScreenshotResponse",
+              "id": 30
+            }
+          }
+        },
+        "Cliprdr": {
+          "oneofs": {
+            "union": {
+              "oneof": [
+                "ready",
+                "formatList",
+                "formatListResponse",
+                "formatDataRequest",
+                "formatDataResponse",
+                "fileContentsRequest",
+                "fileContentsResponse",
+                "tryEmpty",
+                "files"
+              ]
+            }
+          },
+          "fields": {
+            "ready": {
+              "type": "CliprdrMonitorReady",
+              "id": 1
+            },
+            "formatList": {
+              "type": "CliprdrServerFormatList",
+              "id": 2
+            },
+            "formatListResponse": {
+              "type": "CliprdrServerFormatListResponse",
+              "id": 3
+            },
+            "formatDataRequest": {
+              "type": "CliprdrServerFormatDataRequest",
+              "id": 4
+            },
+            "formatDataResponse": {
+              "type": "CliprdrServerFormatDataResponse",
+              "id": 5
+            },
+            "fileContentsRequest": {
+              "type": "CliprdrFileContentsRequest",
+              "id": 6
+            },
+            "fileContentsResponse": {
+              "type": "CliprdrFileContentsResponse",
+              "id": 7
+            },
+            "tryEmpty": {
+              "type": "CliprdrTryEmpty",
+              "id": 8
+            },
+            "files": {
+              "type": "CliprdrFiles",
+              "id": 9
+            }
+          }
+        },
+        "CliprdrMonitorReady": {
+          "fields": {}
+        },
+        "CliprdrFormat": {
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 2
+            },
+            "format": {
+              "type": "string",
+              "id": 3
+            }
+          }
+        },
+        "CliprdrServerFormatList": {
+          "fields": {
+            "formats": {
+              "rule": "repeated",
+              "type": "CliprdrFormat",
+              "id": 2
+            }
+          }
+        },
+        "CliprdrServerFormatListResponse": {
+          "fields": {
+            "msgFlags": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "CliprdrServerFormatDataRequest": {
+          "fields": {
+            "requestedFormatId": {
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "CliprdrServerFormatDataResponse": {
+          "fields": {
+            "msgFlags": {
+              "type": "int32",
+              "id": 2
+            },
+            "formatData": {
+              "type": "bytes",
+              "id": 3
+            }
+          }
+        },
+        "CliprdrFileContentsRequest": {
+          "fields": {
+            "streamId": {
+              "type": "int32",
+              "id": 2
+            },
+            "listIndex": {
+              "type": "int32",
+              "id": 3
+            },
+            "dwFlags": {
+              "type": "int32",
+              "id": 4
+            },
+            "nPositionLow": {
+              "type": "int32",
+              "id": 5
+            },
+            "nPositionHigh": {
+              "type": "int32",
+              "id": 6
+            },
+            "cbRequested": {
+              "type": "int32",
+              "id": 7
+            },
+            "haveClipDataId": {
+              "type": "bool",
+              "id": 8
+            },
+            "clipDataId": {
+              "type": "int32",
+              "id": 9
+            }
+          }
+        },
+        "CliprdrFileContentsResponse": {
+          "fields": {
+            "msgFlags": {
+              "type": "int32",
+              "id": 3
+            },
+            "streamId": {
+              "type": "int32",
+              "id": 4
+            },
+            "requestedData": {
+              "type": "bytes",
+              "id": 5
+            }
+          }
+        },
+        "CliprdrTryEmpty": {
+          "fields": {}
+        },
+        "CliprdrFile": {
+          "fields": {
+            "name": {
+              "type": "string",
+              "id": 1
+            },
+            "size": {
+              "type": "uint64",
+              "id": 2
+            }
+          }
+        },
+        "CliprdrFiles": {
+          "fields": {
+            "files": {
+              "rule": "repeated",
+              "type": "CliprdrFile",
+              "id": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

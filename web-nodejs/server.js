@@ -20,12 +20,21 @@ const { redactUrlForLog } = require('./lib/logRedact');
 const logger = require('./lib/logger');
 const securityMiddleware = require('./middleware/security');
 const { initI18n } = require('./middleware/i18n');
-const { apiLimiter, widgetLimiter, panelPreferenceLimiter, getPanelPollMountPaths } = require('./middleware/rateLimiter');
+const {
+    apiLimiter,
+    widgetLimiter,
+    panelReadLimiter,
+    panelPreferenceLimiter,
+    getPanelPollMountPaths,
+    getPanelReadMountPaths
+} = require('./middleware/rateLimiter');
 const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
 const { roleHasPermission, isSuperAdminRole } = require('./middleware/auth');
 const authService = require('./services/authService');
 const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
+const scheduledBackupService = require('./services/scheduledBackupService');
+const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
 const { initWsProxy } = require('./services/wsRelay');
 const { initBdRelay } = require('./services/bdRelay');
@@ -33,11 +42,14 @@ const { initChatRelay } = require('./services/chatRelay');
 const { apiClient: goApiClient } = require('./services/betterdeskApi');
 const { initRemoteRelay } = require('./services/remoteRelay');
 const { initCdapTerminalProxy } = require('./services/cdapTerminalProxy');
+const { initServerTerminalProxy } = require('./services/serverTerminalProxy');
 const { initCdapMediaProxies } = require('./services/cdapMediaProxy');
 const { initMeshAshxProxy } = require('./services/meshAshxProxy');
+const { initRemoteTargetGateway } = require('./services/remoteTargetGateway');
 const { startDiscoveryService } = require('./services/lanDiscovery');
 const { initDeviceStatusPush } = require('./services/deviceStatusPush');
 const { initHelpRequestEmailService } = require('./services/helpRequestEmailService');
+const { loadSupporters } = require('./services/supportersService');
 const routes = require('./routes');
 const rustdeskApiRoutes = require('./routes/rustdesk-api.routes');
 const bdApiRoutes = require('./routes/bd-api.routes');
@@ -108,17 +120,28 @@ app.use(cookieParser());
 // Use a different cookie name in HTTP mode to avoid collision with stale
 // Secure cookies left over from a previous HTTPS configuration (Issue #82).
 //
-// MemoryStore is intentional for the single-process console (GitHub #295).
-// express-session warns in production that MemoryStore is not for multi-process
-// or HA; BetterDesk runs one Node panel per host. Shared store (PostgreSQL/Redis)
-// is planned only for multi-instance HA — see docs/enterprise/IMPLEMENTATION_PLAN.md.
+// Store sessions in the selected BetterDesk database. This makes logout,
+// password/role changes and process restarts enforceable without another
+// hidden auth database.
 const SESSION_COOKIE = config.httpsEnabled ? 'betterdesk.sid' : 'bd.sid';
+const persistentSessionStore = new DatabaseSessionStore({
+    config,
+    ttlMs: config.sessionMaxAge
+});
+persistentSessionStore.ready.catch((err) => {
+    logger.error('[Session] Persistent session store initialization failed:', err.message);
+});
+const sessionCleanupTimer = setInterval(
+    () => persistentSessionStore.cleanup((err) => err && logger.warn('[Session] Cleanup failed:', err.message)),
+    Math.max(60 * 60 * 1000, config.sessionMaxAge)
+);
+sessionCleanupTimer.unref?.();
 const sessionMiddleware = session({
     secret: config.sessionSecret,
     name: SESSION_COOKIE,
     resave: false,
     saveUninitialized: false,
-    store: new session.MemoryStore(),
+    store: persistentSessionStore,
     cookie: {
         secure: config.httpsEnabled,
         httpOnly: true,
@@ -127,6 +150,9 @@ const sessionMiddleware = session({
     }
 });
 app.use(sessionMiddleware);
+// Generate the double-submit token before routes that need route-level CSRF
+// protection, including the session-authenticated notification endpoints.
+app.use(csrfTokenProvider);
 
 // Cache version — changes on every restart/deployment, stable during runtime.
 // Used in ?v= query strings so browsers cache assets per deployment.
@@ -166,6 +192,9 @@ app.use('/wallpapers', express.static(path.join(__dirname, 'wallpapers'), {
 for (const p of getPanelPollMountPaths()) {
     app.use(p, widgetLimiter);
 }
+for (const p of getPanelReadMountPaths()) {
+    app.use(p, panelReadLimiter);
+}
 app.use('/api/panel', widgetLimiter);
 app.use('/api/desktop/layout', panelPreferenceLimiter);
 app.use('/api/', apiLimiter);
@@ -175,8 +204,9 @@ app.use('/api/', apiLimiter);
 // dedicated WAN-facing port (21121) with additional hardening.
 app.use(rustdeskApiRoutes);
 
-// BetterDesk Desktop Client API — device-facing endpoints that use
-// Bearer token or X-Device-Id header, not browser CSRF cookies.
+// BetterDesk Desktop Client API — device-facing endpoints use Bearer tokens
+// (the initial registration endpoint is the only X-Device-Id compatibility
+// path), not browser CSRF cookies.
 app.use('/api/bd', bdApiRoutes);
 
 // i18n middleware
@@ -186,24 +216,10 @@ app.use(initI18n());
 // Used by Desktop Mode to load pages inside floating windows (iframes)
 app.use((req, res, next) => {
     res.locals.embed = req.query.embed === '1';
-    // UI shell: classic (rail+flyout, default) | ux35 (full-list sidebar)
-    // Cookie remembers last choice; ?ui=classic|ux35 overrides and persists.
-    const UI_SHELL_COOKIE = 'bd_ui_shell';
-    let uiShell = 'classic';
-    const q = String(req.query.ui || '').toLowerCase();
-    if (q === 'ux35' || q === 'classic') {
-        uiShell = q;
-        res.cookie(UI_SHELL_COOKIE, uiShell, {
-            maxAge: 365 * 24 * 60 * 60 * 1000,
-            sameSite: 'lax',
-            httpOnly: false,
-            path: '/'
-        });
-    } else {
-        const raw = String(req.cookies?.[UI_SHELL_COOKIE] || '').toLowerCase();
-        if (raw === 'ux35' || raw === 'classic') uiShell = raw;
-    }
-    res.locals.uiShell = uiShell;
+    // UX 3.5 is the only supported console shell. Legacy `ui` query
+    // parameters and `bd_ui_shell=classic` cookies are intentionally ignored.
+    res.locals.uiShell = 'ux35';
+    res.locals.supporters = loadSupporters();
     // Inject permission helper for EJS templates (sidebar/button visibility)
     const role = req.session?.user?.role;
     res.locals.hasPermission = (perm) => role ? roleHasPermission(role, perm) : false;
@@ -215,7 +231,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// CSRF protection — generate token for views, validate on POST/PUT/DELETE/PATCH.
+// CSRF protection — validate on POST/PUT/DELETE/PATCH.
 // Skip CSRF for device-facing API routes (/api/bd/*) — these MUST authenticate
 // via Bearer access token (session-cookie fallback is rejected in requireDeviceAuth).
 //
@@ -225,7 +241,6 @@ app.use((req, res, next) => {
 // non-browser HTTP client, so it is unsafe as a CSRF-bypass signal. Tauri
 // desktop clients receive the CSRF token via `csrfTokenProvider` and must
 // echo it back in the `X-CSRF-Token` header (csrf-csrf double-submit).
-app.use(csrfTokenProvider);
 app.use((req, res, next) => {
     if (req.path.startsWith('/api/bd/')) {
         return next();
@@ -547,10 +562,20 @@ async function startServer() {
         // Initialize CDAP Terminal WebSocket proxy (browser ↔ Go server)
         initCdapTerminalProxy(server, sessionMiddleware);
 
+        // Initialize Server Management terminal WebSocket (browser ↔ host shell)
+        initServerTerminalProxy(server, sessionMiddleware, {
+            logAction: (...args) => {
+                void Promise.resolve().then(() => db.logAction(...args)).catch((err) => {
+                    console.warn('[srv-term] audit log failed:', err.message);
+                });
+            }
+        });
+
         // Initialize CDAP Media WebSocket proxies (desktop, video, file browser)
         initCdapMediaProxies(server, sessionMiddleware);
 
         initMeshAshxProxy(server, sessionMiddleware);
+        initRemoteTargetGateway(server, sessionMiddleware);
 
         // Initialize real-time device status push (Go event bus → browser)
         initDeviceStatusPush(server, sessionMiddleware, config.betterdeskApiUrl, config.betterdeskApiKey);
@@ -565,33 +590,37 @@ async function startServer() {
             console.warn('[server] mDNS panel discovery disabled:', err.message);
         }
 
-        // Start branded agent installer build worker (Generator Agenta / Phase 2).
-        // Disabled when AGENT_BUILD_WORKER=off — useful for hosts without the
-        // build toolchain (e.g. small consoles that only proxy to a build node).
-        if (process.env.AGENT_BUILD_WORKER !== 'off') {
-            try {
-                const agentBuildWorker = require('./services/agentBuildWorker');
-                agentBuildWorker.startWorker();
-            } catch (err) {
-                console.warn('[server] agent build worker disabled:', err.message);
+        // Defer build workers until after listen + event-bus WS connect settle
+        // (#353): toolchain/DB work racing native addon init can abort Node 24.
+        setImmediate(() => {
+            // BetterDesk Support Generator — local embedded Client builder.
+            // Disabled when AGENT_BUILD_WORKER=off.
+            if (process.env.AGENT_BUILD_WORKER !== 'off') {
+                try {
+                    const clientTemplateWorker = require('./services/clientTemplateWorker');
+                    clientTemplateWorker.startWorker();
+                    if (String(
+                        process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+                    ).trim().toLowerCase() === 'embedded') {
+                        const clientBuilder = require('./services/clientBuilderService');
+                        clientBuilder.syncAndQueueRebuilds()
+                            .then((result) => {
+                                if (result.queued) {
+                                    console.log(
+                                        `[server] BetterDesk-Client ${result.sha} changed; `
+                                        + 'embedded Support rebuild queued'
+                                    );
+                                }
+                            })
+                            .catch((err) => {
+                                console.warn('[server] BetterDesk-Client sync/rebuild deferred:', err.message);
+                            });
+                    }
+                } catch (err) {
+                    console.warn('[server] client template worker disabled:', err.message);
+                }
             }
-        }
-        if (process.env.RDCLIENT_BUILD_WORKER !== 'off') {
-            try {
-                const rdclientBuildWorker = require('./services/rdclientBuildWorker');
-                rdclientBuildWorker.startWorker();
-            } catch (err) {
-                console.warn('[server] rdclient build worker disabled:', err.message);
-            }
-        }
-        if (process.env.AGENT_CLIENT_BUILD_WORKER !== 'off') {
-            try {
-                const agentClientBuildWorker = require('./services/agentClientBuildWorker');
-                agentClientBuildWorker.startWorker();
-            } catch (err) {
-                console.warn('[server] agent-client build worker disabled:', err.message);
-            }
-        }
+        });
         
         // ============ RustDesk Client API (WAN :21121 → Go :21114 proxy) ============
         let apiServer = null;
@@ -619,6 +648,7 @@ async function startServer() {
                 // Silent fail
             }
         }, 60 * 60 * 1000); // Every hour
+        scheduledBackupService.start();
         
         // ============ Periodic Online Status Sync ============
         const syncInterval = parseInt(process.env.STATUS_SYNC_INTERVAL, 10) || 15; // seconds
@@ -656,6 +686,7 @@ async function startServer() {
             console.log(`\n${signal} received. Shutting down gracefully...`);
             clearInterval(housekeepingInterval);
             clearInterval(statusSyncInterval);
+            scheduledBackupService.stop();
             
             const closePromises = [new Promise(r => server.close(r))];
             if (apiServer) {

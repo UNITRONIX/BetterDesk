@@ -4,8 +4,8 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
 
-let apiClient;
-try { apiClient = require('../services/betterdeskApi'); } catch (e) { apiClient = null; }
+let apiClient = null;
+try { ({ apiClient } = require('../services/betterdeskApi')); } catch (e) { apiClient = null; }
 
 function goApiProxy(req, res, method, path, body) {
   if (!apiClient || !apiClient[method]) {
@@ -37,27 +37,40 @@ router.get('/security-audit', requireAuth, requirePermission('audit.view'), (req
 // ── API: Security overview ───────────────────────────────────
 router.get('/api/panel/security-audit/overview', requireAuth, requirePermission('audit.view'), async (req, res) => {
   try {
-    const [healthRes, keysRes, auditRes] = await Promise.allSettled([
+    const [healthRes, keysRes, auditRes, blocklistRes] = await Promise.allSettled([
       apiClient ? apiClient.get('/health') : Promise.reject('no api'),
       apiClient ? apiClient.get('/keys') : Promise.reject('no api'),
-      apiClient ? apiClient.get('/audit/events?limit=100') : Promise.reject('no api')
+      apiClient ? apiClient.get('/audit/events?limit=500') : Promise.reject('no api'),
+      apiClient ? apiClient.get('/blocklist') : Promise.reject('no api')
     ]);
 
     const health = healthRes.status === 'fulfilled' ? (healthRes.value.data || healthRes.value) : {};
     const keys = keysRes.status === 'fulfilled' ? (keysRes.value.data || keysRes.value) : [];
     const auditEvents = auditRes.status === 'fulfilled' ? (auditRes.value.data || auditRes.value) : [];
+    const blocklist = blocklistRes.status === 'fulfilled'
+      ? (blocklistRes.value.data || blocklistRes.value)
+      : {};
 
     const events = Array.isArray(auditEvents) ? auditEvents : (auditEvents.events || []);
+    const since = Date.now() - 24 * 60 * 60 * 1000;
+    const recentEvents = events.filter((event) => {
+      const timestamp = Date.parse(event.timestamp || event.created_at || '');
+      return Number.isNaN(timestamp) || timestamp >= since;
+    });
 
-    const failedLogins = events.filter(e => e.action === 'login_failed' || e.action === 'auth_failed').length;
-    const bans = events.filter(e => e.action === 'peer_banned' || e.action === 'ip_banned').length;
+    const failedLogins = recentEvents.filter(e =>
+      ['login_failed', 'auth_failed', 'auth_login_failed'].includes(e.action)
+    ).length;
+    const bans = Number.isFinite(Number(blocklist.count))
+      ? Number(blocklist.count)
+      : Array.isArray(blocklist.entries) ? blocklist.entries.length : 0;
     const configChanges = events.filter(e => e.action === 'config_changed' || e.action === 'setting_changed').length;
 
     const keyList = Array.isArray(keys) ? keys : (keys.keys || []);
     const oldKeys = keyList.filter(k => {
       if (!k.created_at) return false;
       const age = Date.now() - new Date(k.created_at).getTime();
-      return age > 30 * 24 * 60 * 60 * 1000;
+      return age > 90 * 24 * 60 * 60 * 1000;
     });
 
     let score = 100;
@@ -65,28 +78,31 @@ router.get('/api/panel/security-audit/overview', requireAuth, requirePermission(
     else if (failedLogins > 5) score -= 5;
     if (bans > 0) score -= 10;
     if (oldKeys.length > 0) score -= 10;
-    if (!health.tls_signal) score -= 10;
-    if (!health.tls_relay) score -= 10;
+    if (!health.tls) score -= 10;
     score = Math.max(0, Math.min(100, score));
 
     const checks = [
-      { id: 'tls_signal', name: 'TLS Signal Server', passed: !!health.tls_signal },
-      { id: 'tls_relay', name: 'TLS Relay Server', passed: !!health.tls_relay },
-      { id: 'csrf', name: 'CSRF Protection', passed: true },
-      { id: 'rate_limit', name: 'Rate Limiting', passed: true },
-      { id: 'session_fixation', name: 'Session Fixation Prevention', passed: true },
-      { id: 'api_key_age', name: 'API Key Rotation (< 30 days)', passed: oldKeys.length === 0 },
-      { id: 'failed_logins', name: 'Low Failed Login Rate', passed: failedLogins < 10 },
-      { id: 'no_bans', name: 'No Recent Bans', passed: bans === 0 },
-      { id: 'totp_available', name: 'TOTP 2FA Available', passed: true },
-      { id: 'csp_headers', name: 'CSP Headers', passed: true }
+      { id: 'tls_api', name: 'API TLS', pass: !!health.tls },
+      { id: 'api_key_age', name: 'API Key Rotation (< 90 days)', pass: oldKeys.length === 0 },
+      { id: 'failed_logins', name: 'Low Failed Login Rate', pass: failedLogins < 10 },
+      { id: 'no_bans', name: 'No Active Bans', pass: bans === 0 },
+      { id: 'audit_log', name: 'Audit Logging', pass: auditRes.status === 'fulfilled' },
+      { id: 'blocklist', name: 'Blocklist Available', pass: blocklistRes.status === 'fulfilled' }
     ];
+
+    const forwardedProto = String(req.headers['x-forwarded-proto'] || '')
+      .split(',')[0].trim().toLowerCase();
+    const secureWebSocket = req.secure === true
+      || req.protocol === 'https'
+      || forwardedProto === 'https';
 
     res.json({
       score,
       checks,
       stats: { failed_logins: failedLogins, bans, config_changes: configChanges, api_keys: keyList.length, old_keys: oldKeys.length },
-      tls: { signal: !!health.tls_signal, relay: !!health.tls_relay, api: !!health.tls_api }
+      // Signal/relay TLS is not reported by the Go health endpoint. Keep it
+      // unknown instead of displaying a false "Disabled" status.
+      tls: { signal: null, relay: null, api: !!health.tls, wss: secureWebSocket }
     });
   } catch (err) {
     res.json({ score: 0, checks: [], stats: {}, tls: {} });
@@ -139,7 +155,15 @@ router.get('/api/panel/security-audit/vulnerabilities', requireAuth, requirePerm
       deps.nodejs.total = Object.keys(allDeps).length;
     } catch (e) { /* ignore */ }
 
-    res.json({ dependencies: deps, last_scan: new Date().toISOString() });
+    // Dependency inventory is available locally, but this endpoint does not
+    // run npm audit or govulncheck. Do not present an inventory as a clean scan.
+    res.json({
+      scan_available: false,
+      counts: { critical: 0, high: 0, medium: 0, low: 0, total: 0 },
+      vulnerabilities: [],
+      dependencies: deps,
+      last_scan: null
+    });
   } catch (err) {
     res.json({ dependencies: {}, last_scan: null });
   }

@@ -3,9 +3,11 @@
 const fs = require('fs');
 const net = require('net');
 const path = require('path');
+const config = require('../config/config');
 const { upsertEnvKey } = require('../lib/envMerge');
 const updateService = require('./updateService');
 const serverConnectionConfigService = require('./serverConnectionConfigService');
+const { apiClient } = require('./betterdeskApi');
 
 const CONSOLE_ROOT = path.join(__dirname, '..');
 const ENV_PATH = path.join(CONSOLE_ROOT, '.env');
@@ -106,6 +108,17 @@ function getClockSettings() {
     return settingsFromEnvContent(content);
 }
 
+function isDockerSplitDeployment() {
+    return config.isDocker === true
+        && String(process.env.BETTERDESK_DOCKER_LAYOUT || '').trim().toLowerCase() === 'split';
+}
+
+async function getRuntimeClockSettings() {
+    if (!isDockerSplitDeployment()) return getClockSettings();
+    const response = await apiClient.get('/timesync/config');
+    return normalizeSettings(response.data || {});
+}
+
 function writeClockSettingsToEnv(settings) {
     const normalized = validateSettings(settings);
     let content = fs.existsSync(ENV_PATH) ? fs.readFileSync(ENV_PATH, 'utf8') : '';
@@ -117,8 +130,26 @@ function writeClockSettingsToEnv(settings) {
     return normalized;
 }
 
+function restoreClockSettings(settings) {
+    return writeClockSettingsToEnv(settings);
+}
+
 async function saveClockSettings(settings, opts = {}) {
-    const normalized = writeClockSettingsToEnv(settings);
+    const normalized = validateSettings(settings);
+    if (isDockerSplitDeployment()) {
+        const response = await apiClient.put('/timesync/config', normalized);
+        const data = response.data || {};
+        if (data.error) throw new Error(data.error);
+        return {
+            settings: normalizeSettings(data.config || normalized),
+            serviceConfig: null,
+            status: data.status || null,
+            restart: null,
+            dockerMode: true,
+        };
+    }
+
+    writeClockSettingsToEnv(normalized);
     const serviceConfig = updateService.sanitizeGoServerServiceConfig();
     const result = {
         settings: normalized,
@@ -143,5 +174,8 @@ module.exports = {
     validateSettings,
     settingsFromEnvContent,
     getClockSettings,
+    getRuntimeClockSettings,
+    isDockerSplitDeployment,
+    restoreClockSettings,
     saveClockSettings,
 };

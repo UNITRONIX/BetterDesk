@@ -65,6 +65,13 @@
     border-bottom: 1px solid var(--border-secondary);
 }
 
+/* Folders + groups only (strategies stay outside so sticky never covers the device list) */
+.devices-chip-bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md, 1rem);
+}
+
 /* ==================== Folder Tiles ==================== */
 
 .folders-bar {
@@ -1341,6 +1348,90 @@ td.column-hidden {
     min-height: 48px;
 }
 
+.device-edit-tags-field {
+    align-items: stretch;
+}
+
+.device-edit-tags-selected,
+.device-edit-tag-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.device-edit-tags-selected {
+    min-height: 24px;
+}
+
+.device-edit-tag-pill,
+.device-edit-tag-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    line-height: 18px;
+}
+
+.device-edit-tag-pill {
+    padding: 3px 7px 3px 9px;
+    background: var(--accent-blue-muted);
+    color: var(--accent-blue);
+}
+
+.device-edit-tag-remove {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.device-edit-tag-remove:hover {
+    opacity: 1;
+}
+
+.device-edit-tag-remove .material-icons {
+    font-size: 14px;
+}
+
+.device-edit-tag-options {
+    margin-top: 2px;
+}
+
+.device-edit-tag-option {
+    padding: 3px 8px;
+    border: 1px solid var(--border-primary);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.device-edit-tag-option:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.device-edit-tag-option .material-icons {
+    font-size: 14px;
+}
+
+.device-edit-tag-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.device-edit-tag-input-row .form-input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
 /* ID change warning */
 .id-change-warning {
     display: flex;
@@ -1406,12 +1497,31 @@ td.column-hidden {
     }
 }
 
-/* Mobile: keep folders + groups together when scrolling the device list */
-@media (max-width: 1024px) {
-    body.is-mobile-shell .devices-page .devices-tile-bars {
+/*
+ * Tablet: sticky folders+groups only (not strategies / whole tile-bars).
+ * Phone (≤600): no sticky chips — toolbar is the single sticky level (#410).
+ */
+@media (min-width: 601px) and (max-width: 1024px) {
+    body.is-mobile-shell .devices-page .devices-chip-bars {
         position: sticky;
         top: 0;
         z-index: 10;
+        background: var(--bg-primary);
+        padding-bottom: var(--space-sm);
+    }
+}
+
+@media (max-width: 1024px) {
+    body.is-mobile-shell .devices-page .devices-tile-bars {
+        position: static;
+        z-index: auto;
+    }
+}
+
+/* Touch / Desktop-site on mobile shell: hide floating hscroll (blocks taps near bottom nav) */
+@media (max-width: 1024px) {
+    body.is-touch.is-mobile-shell .devices-hscroll-float {
+        display: none !important;
     }
 }
 
@@ -1538,16 +1648,16 @@ td.column-hidden {
         font-size: 24px;
     }
 
-    /* Mobile bottom sheet for kebab menu */
+    /* Mobile bottom sheet for kebab menu — clear bottom nav (#410) */
     .kebab-menu {
         position: fixed;
         top: auto;
         right: 16px;
-        bottom: 16px;
+        bottom: calc(16px + var(--mobile-chrome-bottom, 56px));
         left: 16px;
         min-width: auto;
         border-radius: var(--radius-lg);
-        max-height: 60vh;
+        max-height: min(60vh, calc(100vh - var(--mobile-chrome-bottom, 56px) - 48px));
         overflow-y: auto;
     }
 
@@ -1560,13 +1670,13 @@ td.column-hidden {
         font-size: 22px;
     }
 
-    /* Overlay backdrop for mobile bottom sheet */
+    /* Overlay backdrop for mobile bottom sheet — above bottom nav while open (#410) */
     .kebab-overlay {
         display: none;
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.5);
-        z-index: 199;
+        z-index: calc(var(--z-sticky, 200) + 5);
     }
 
     .kebab-overlay.open {

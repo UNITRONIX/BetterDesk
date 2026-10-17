@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "type": "betterdesk-theme",
+  "displayName": "BetterDesk Dark",
   "branding": {
     "appName": "BetterDesk",
     "appDescription": "BetterDesk Server Management",

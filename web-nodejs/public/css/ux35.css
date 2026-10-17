@@ -40,7 +40,7 @@ body.app-page.ux35-page {
     padding: 0 var(--ux35-space-4);
     gap: var(--ux35-space-3);
     z-index: 40;
-    border-bottom: 1px solid var(--ux35-border);
+    border-bottom: 1px solid var(--ux35-topbar-border, #30363d);
     font-family: var(--ux35-font-chrome);
     flex-shrink: 0;
 }
@@ -70,14 +70,41 @@ body.app-page.ux35-page {
     white-space: nowrap;
     color: inherit;
     text-decoration: none;
+    min-height: var(--ux35-control-size);
 }
 
-.ux35-topbar-logo .material-icons { font-size: 22px; }
-.ux35-topbar-logo img { height: 24px; width: auto; }
-.ux35-topbar-logo .brand-text-accent { opacity: 0.85; }
+.ux35-topbar-logo .material-icons {
+    font-size: 22px;
+    line-height: 1;
+    width: 22px;
+    height: 22px;
+}
+.ux35-topbar-logo img {
+    width: 28px;
+    height: 28px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+}
+.ux35-topbar-logo .sidebar-logo-svg {
+    display: flex;
+    align-items: center;
+    line-height: 0;
+}
+.ux35-topbar-logo .brand-text-logo {
+    color: var(--ux35-topbar-fg);
+}
+.ux35-topbar-logo .brand-text-accent {
+    color: var(--ux35-topbar-fg-muted);
+    opacity: 1;
+}
 
 .ux35-topbar-menu-btn {
     display: none;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--ux35-control-size);
+    min-height: var(--ux35-control-size);
     background: none;
     border: none;
     color: var(--ux35-topbar-fg-muted);
@@ -85,8 +112,13 @@ body.app-page.ux35-page {
     border-radius: var(--ux35-radius-sm);
     cursor: pointer;
 }
-.ux35-topbar-menu-btn:hover { background: rgba(255, 255, 255, 0.12); color: var(--ux35-topbar-fg); }
-.ux35-topbar-menu-btn .material-icons { font-size: 22px; }
+.ux35-topbar-menu-btn:hover { background: var(--ux35-topbar-hover, rgba(255, 255, 255, 0.12)); color: var(--ux35-topbar-fg); }
+.ux35-topbar-menu-btn .material-icons {
+    font-size: 22px;
+    line-height: 1;
+    width: 22px;
+    height: 22px;
+}
 
 .ux35-topbar-breadcrumb {
     display: flex;
@@ -112,26 +144,43 @@ body.app-page.ux35-page {
     align-items: center;
     gap: 4px;
 }
+.ux35-topbar-action-list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.ux35-topbar-actions-menu-btn { display: none; }
 
 .ux35-topbar-btn {
     background: none;
     border: none;
     color: var(--ux35-topbar-fg-muted);
+    min-width: var(--ux35-control-size);
+    min-height: var(--ux35-control-size);
     padding: 6px;
     border-radius: var(--ux35-radius-sm);
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     position: relative;
     transition: background var(--ux35-motion-fast), color var(--ux35-motion-fast);
 }
-.ux35-topbar-btn:hover { background: rgba(127, 127, 127, 0.18); color: var(--ux35-topbar-fg); }
-.ux35-topbar-btn .material-icons { font-size: 20px; }
+.ux35-topbar-btn:hover { background: var(--ux35-topbar-hover, rgba(255, 255, 255, 0.12)); color: var(--ux35-topbar-fg); }
+.ux35-topbar-btn .material-icons {
+    font-size: 20px;
+    line-height: 1;
+    color: inherit;
+}
 
-[data-theme="light"] .ux35-topbar-btn:hover,
-[data-theme="light"] .ux35-topbar-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
-    color: #fff;
+/* Keyboard focus uses the active brand color without relying on hover. */
+.ux35-topbar-btn:focus-visible,
+.ux35-topbar-menu-btn:focus-visible,
+.ux35-sidebar-item:focus-visible,
+.ux35-sidebar-resize:focus-visible {
+    outline: 2px solid var(--ux35-focus-ring, var(--ux35-primary));
+    outline-offset: -2px;
+    box-shadow: 0 0 0 3px var(--ux35-active-bg);
 }
 
 .ux35-topbar .notif-badge {
@@ -149,6 +198,10 @@ body.app-page.ux35-page {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 0 0 2px var(--ux35-topbar-bg);
+}
+.ux35-topbar .notif-badge[hidden] {
+    display: none !important;
 }
 
 .ux35-topbar .lang-selector,
@@ -219,11 +272,71 @@ body.app-page.ux35-page {
     padding: 10px 16px 4px;
 }
 
+.ux35-sidebar-filter {
+    padding: 8px 12px 4px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--ux35-sidebar-bg);
+}
+.ux35-sidebar-filter-input {
+    width: 100%;
+    min-height: 32px;
+    font-size: 12px;
+    padding: 6px 10px;
+}
+.ux35-sidebar-heading-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+}
+.ux35-sidebar-heading-toggle .ux35-section-chevron {
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0.7;
+}
+.ux35-sidebar-section.is-collapsed .ux35-sidebar-item {
+    display: none !important;
+}
+.ux35-sidebar-section.is-collapsed .ux35-section-chevron {
+    transform: rotate(-90deg);
+}
+.ux35-sidebar-section.is-filter-hidden,
+.ux35-sidebar-item.is-filter-hidden {
+    display: none !important;
+}
+.ux35-sidebar-section.is-filter-empty {
+    display: none !important;
+}
+
+.client-config-env-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent-yellow-muted, rgba(210, 153, 34, 0.15));
+    color: var(--accent-yellow, #9a6700);
+    white-space: nowrap;
+}
+.client-config-host-env-link {
+    margin: 6px 0 0;
+    font-size: 12px;
+}
+
 .ux35-sidebar-item {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 7px 16px;
+    min-height: var(--ux35-nav-item-min-height);
     font-size: 13px;
     color: var(--ux35-text);
     cursor: pointer;
@@ -320,17 +433,30 @@ body.app-page.ux35-page {
 .ux35-sidebar-resize {
     position: absolute;
     top: 0;
-    right: 0;
-    width: 4px;
+    right: -6px;
+    width: 16px;
     height: 100%;
     cursor: col-resize;
     z-index: 5;
     touch-action: none;
 }
+.ux35-sidebar-resize::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 6px;
+    width: 4px;
+    background: transparent;
+}
 .ux35-sidebar-resize:hover,
 .ux35-sidebar-resize.active {
+    background: color-mix(in srgb, var(--ux35-primary) 18%, transparent);
+}
+.ux35-sidebar-resize:hover::after,
+.ux35-sidebar-resize.active::after {
     background: var(--ux35-primary);
-    opacity: 0.35;
+    opacity: 0.55;
 }
 .ux35-sidebar { position: relative; }
 
@@ -396,12 +522,26 @@ body.app-page.ux35-page {
     margin-bottom: var(--ux35-card-gap);
 }
 
-.ux35-content .settings-tabs {
-    gap: var(--ux35-space-2);
+/* Settings shell: horizontal tabs readable over branding wallpaper; bleed cancels content padding */
+.ux35-page .settings-shell-nav {
+    --settings-nav-bleed: 0px;
+    --settings-nav-bleed-x: var(--ux35-content-padding-lg);
+    position: sticky;
+    top: 0;
+    padding-top: 0;
+    margin-top: 0;
+    z-index: 2;
+    background-color: color-mix(in srgb, var(--bg-primary) 92%, transparent);
 }
-
-/* Settings shell: readable over branding wallpaper */
-.ux35-page .settings-shell-nav,
+.ux35-page .settings-shell-nav-track {
+    align-items: center;
+    min-height: 44px;
+}
+.ux35-page .settings-shell-nav .settings-shell-tab,
+.ux35-page .settings-shell-nav .settings-tab {
+    justify-content: center;
+    line-height: 1.2;
+}
 .ux35-page .settings-search,
 .ux35-page .settings-panel,
 .ux35-page .settings-section,
@@ -439,7 +579,7 @@ body.app-page.ux35-page {
 
 /* Solid content surfaces — defeat main.css glass on cards/forms inside UX 3.5 */
 .ux35-page .ux35-content :is(
-    .card, .stat-card, .modal, .toast, .settings-section, .settings-tab,
+    .card, .stat-card, .modal, .toast, .settings-section,
     .settings-panel, .settings-search, .dropdown-menu, .table,
     .form-input, .form-select, .form-textarea, .bd-glass-surface,
     .audit-log-container, .public-key-display, .server-info-item
@@ -450,6 +590,16 @@ body.app-page.ux35-page {
 }
 .ux35-page .ux35-content :is(.form-input, .form-select, .form-textarea) {
     background: var(--bg-tertiary);
+}
+
+/* Light mode: stronger field borders (low-contrast gray-on-white fix) */
+[data-theme="light"] .ux35-page .ux35-content :is(.form-input, .form-select, .form-textarea),
+[data-theme="light"] .ux35-page .settings-search {
+    border-color: #8c959f;
+}
+[data-theme="light"] .ux35-page .ux35-content :is(.form-input, .form-select, .form-textarea):focus,
+[data-theme="light"] .ux35-page .settings-search:focus-within {
+    border-color: var(--accent-blue, #0969da);
 }
 
 /* Embed: no chrome */
@@ -507,14 +657,122 @@ body.ux35-is-resizing {
 }
 
 @media (max-width: 767px) {
+    .ux35-topbar {
+        gap: var(--ux35-space-2);
+    }
+    .ux35-beta-chip {
+        display: none;
+    }
+    .ux35-topbar-actions-menu-btn {
+        display: flex;
+    }
+    .ux35-topbar-btn,
+    .ux35-topbar-menu-btn,
+    .ux35-sidebar-item {
+        min-width: var(--ux35-control-size-touch);
+        min-height: var(--ux35-control-size-touch);
+    }
+    .ux35-topbar-action-list {
+        position: fixed;
+        top: calc(var(--ux35-topbar-height) + var(--safe-top, 0px) + var(--ux35-space-2));
+        right: calc(var(--safe-right, 0px) + var(--ux35-space-2));
+        z-index: 60;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        min-width: 52px;
+        padding: var(--ux35-space-2);
+        border: 1px solid var(--ux35-topbar-border);
+        border-radius: var(--ux35-radius);
+        background: var(--ux35-topbar-bg);
+        box-shadow: var(--shadow-lg);
+    }
+    .ux35-topbar-action-list.is-open {
+        display: flex;
+    }
+    .ux35-topbar-action-list > .ux35-topbar-btn,
+    .ux35-topbar-action-list > .lang-selector,
+    .ux35-topbar-action-list > .notif-wrapper {
+        display: flex;
+        justify-content: center;
+    }
     .ux35-content {
         padding: var(--ux35-content-padding);
         padding-bottom: calc(var(--ux35-content-padding) + 72px);
+    }
+    /* Tighten header→tabs gap on phone; bleed still cancels content padding when sticky */
+    .ux35-page .ux35-content > .page-header,
+    .ux35-page .ux35-content > .settings-header {
+        margin-bottom: var(--ux35-space-3);
+    }
+    .ux35-page .settings-shell-nav {
+        --settings-nav-bleed-x: var(--ux35-content-padding);
+    }
+    /* #396 follow-up: tighter mobile tabs, vertically centered icons/labels */
+    .ux35-page .settings-shell-nav .settings-shell-tab,
+    .ux35-page .settings-shell-nav .settings-tab {
+        padding: 6px 12px;
+        min-height: 36px;
+        align-items: center;
+    }
+    .ux35-page .settings-shell-nav .settings-shell-tab .material-icons,
+    .ux35-page .settings-shell-nav .settings-tab .material-icons {
+        font-size: 18px;
+        line-height: 1;
+        width: 18px;
+        height: 18px;
+    }
+    .ux35-page .settings-shell-nav-track.mobile-tabs-scroll {
+        min-height: 36px;
+        padding-bottom: 0;
+        gap: 4px;
     }
     .ux35-sidebar {
         width: min(86vw, 280px);
         min-width: min(86vw, 280px);
         max-width: 280px;
+    }
+}
+
+/* Keep Settings chrome compact across the full UX 3.5 mobile shell.
+   The mobile shell remains active through 1024px, while the phone-only
+   rules above previously left the 768-1024px range with desktop spacing. */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .ux35-page .ux35-content > .page-header,
+    .ux35-page .ux35-content > .settings-header {
+        margin-bottom: var(--ux35-space-3);
+    }
+
+    .ux35-page .settings-shell-nav .settings-shell-tab,
+    .ux35-page .settings-shell-nav .settings-tab {
+        padding: 6px 12px;
+        min-height: 36px;
+        align-items: center;
+    }
+
+    .ux35-page .settings-shell-nav .settings-shell-tab .material-icons,
+    .ux35-page .settings-shell-nav .settings-tab .material-icons {
+        font-size: 18px;
+        line-height: 1;
+        width: 18px;
+        height: 18px;
+    }
+
+    .ux35-page .settings-shell-nav-track.mobile-tabs-scroll {
+        min-height: 36px;
+        padding-bottom: 0;
+        gap: 4px;
+    }
+}
+
+/* Desktop keeps the original vertical bleed so the Settings bar does not
+ * introduce a top gap or lose its content alignment above the mobile shell. */
+@media (min-width: 1025px) {
+    .ux35-page .settings-shell-nav {
+        --settings-nav-bleed: var(--ux35-content-padding-lg);
+        top: calc(-1 * var(--settings-nav-bleed));
+        padding-top: var(--settings-nav-bleed);
+        margin-top: calc(-1 * var(--settings-nav-bleed));
     }
 }
 

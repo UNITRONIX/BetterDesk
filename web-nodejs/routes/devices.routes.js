@@ -9,7 +9,7 @@ const serverBackend = require('../services/serverBackend');
 const betterdeskApi = require('../services/betterdeskApi');
 const addressBookSync = require('../services/rustdeskAddressBookSync');
 const deviceGroupService = require('../services/deviceGroupService');
-const { requireAuth, requirePermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
 /**
@@ -85,6 +85,147 @@ router.get('/api/devices', requireAuth, requirePermission('device.view'), async 
             success: false,
             error: req.t('errors.server_error')
         });
+    }
+});
+
+/**
+ * RDP/VNC remote targets use a dedicated API but share the devices list scope.
+ */
+router.get('/api/remote-targets', requireAuth, requirePermission('remote_target.view'), async (req, res) => {
+    try {
+        const targets = await betterdeskApi.getAllRemoteTargets({
+            includeDisabled: req.query.include_disabled === 'true'
+        });
+        const scope = await deviceGroupService.getDeviceScopeForUser(db, req.session.user, targets);
+        const visible = deviceGroupService.filterDevicesByScope(targets, scope);
+        for (const target of visible) {
+            target.groups = await db.getDeviceGroupsForPeer(target.id).catch(() => []);
+        }
+        res.json({ success: true, data: { targets: visible, total: visible.length } });
+    } catch (err) {
+        console.error('Get remote targets error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/remote-targets', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const payload = plainBodyObject(req.body || {});
+        const result = await betterdeskApi.createRemoteTarget(payload);
+        res.status(result.success ? 201 : 400).json(result);
+    } catch (err) {
+        console.error('Create remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/remote-targets/test', requireAuth, requirePermission('remote_target.test'), async (req, res) => {
+    try {
+        const result = await betterdeskApi.testRemoteTarget(plainBodyObject(req.body || {}));
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Test remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.get('/api/remote-targets/:id', requireAuth, requirePermission('remote_target.view'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        target.groups = await db.getDeviceGroupsForPeer(target.id).catch(() => []);
+        res.json({ success: true, data: target });
+    } catch (err) {
+        console.error('Get remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.patch('/api/remote-targets/:id', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const current = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!current) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, current)) return;
+        const result = await betterdeskApi.updateRemoteTarget(
+            req.params.id,
+            plainBodyObject(req.body || {})
+        );
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Update remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.get('/api/remote-targets/:id/credentials', requireAuth, requirePermission('remote_target.view'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.getRemoteTargetCredentialStatus(req.params.id);
+        res.status(result.success ? 200 : 502).json(result);
+    } catch (err) {
+        console.error('Get remote target credential status error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.put('/api/remote-targets/:id/credentials', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.setRemoteTargetCredentials(
+            req.params.id,
+            plainBodyObject(req.body || {})
+        );
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Set remote target credentials error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.delete('/api/remote-targets/:id/credentials', requireAuth, requirePermission('remote_target.edit'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.clearRemoteTargetCredentials(req.params.id);
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Clear remote target credentials error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/remote-targets/:id/certificate/accept', requireAuth, requirePermission('remote_target.connect'), async (req, res) => {
+    try {
+        const target = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!target) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, target)) return;
+        const result = await betterdeskApi.acceptRemoteTargetCertificate(
+            req.params.id,
+            String(req.body?.fingerprint || '')
+        );
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Accept remote target certificate error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.delete('/api/remote-targets/:id', requireAuth, requirePermission('remote_target.delete'), async (req, res) => {
+    try {
+        const current = await betterdeskApi.getRemoteTarget(req.params.id);
+        if (!current) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, current)) return;
+        const result = await betterdeskApi.deleteRemoteTarget(req.params.id);
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (err) {
+        console.error('Delete remote target error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });
 
@@ -317,9 +458,26 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             const sysinfo = await db.getPeerSysinfo(req.params.id);
             if (sysinfo) {
                 device.sysinfo = sysinfo;
+            } else if (device.hostname || device.platform || device.version) {
+                // BetterDesk keeps the canonical peer record in Go. Populate
+                // the legacy panel shape when peer_sysinfo is not mirrored.
+                device.sysinfo = {
+                    hostname: device.hostname || '',
+                    platform: device.platform || device.os || '',
+                    os_full: device.os || device.platform || '',
+                    version: device.version || ''
+                };
             }
         } catch (e) {
-            // sysinfo table may not exist yet — silently skip
+            // sysinfo table may not exist yet; the Go peer still has basics.
+            if (device.hostname || device.platform || device.version) {
+                device.sysinfo = {
+                    hostname: device.hostname || '',
+                    platform: device.platform || device.os || '',
+                    os_full: device.os || device.platform || '',
+                    version: device.version || ''
+                };
+            }
         }
 
         // Enrich with latest heartbeat metrics
@@ -352,6 +510,29 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             // silently skip
         }
 
+        // Enrich with BetterDesk telemetry snapshots and capability/status data.
+        try {
+            const telemetry = await betterdeskApi.getPeerTelemetry(req.params.id);
+            if (telemetry?.success && telemetry.data) {
+                device.telemetry = telemetry.data;
+            }
+        } catch (e) {
+            console.warn('[API:DEVICE] Telemetry lookup failed:', req.params.id, e.message);
+        }
+
+        try {
+            const mode = await betterdeskApi.getConnectionMode(req.params.id);
+            if (mode?.success && mode.data) {
+                const role = req.session.user && req.session.user.role;
+                device.connection_mode = {
+                    ...mode.data,
+                    can_change: roleHasPermission(role, 'device.connection_mode')
+                };
+            }
+        } catch (e) {
+            console.warn('[API:DEVICE] Connection mode lookup failed:', req.params.id, e.message);
+        }
+
         // Enrich with device group memberships
         try {
             const groups = await db.getDeviceGroupsForPeer(req.params.id);
@@ -372,6 +553,42 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             success: false,
             error: req.t('errors.server_error')
         });
+    }
+});
+
+/**
+ * POST /api/devices/:id/telemetry/refresh
+ * Queue a rate-limited hardware inventory refresh on the device.
+ */
+router.post('/api/devices/:id/telemetry/refresh', requireAuth, requirePermission('device.edit'), async (req, res) => {
+    try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+        const result = await betterdeskApi.refreshPeerHardware(req.params.id);
+        res.status(result?.success === false ? 502 : 202).json(result);
+    } catch (err) {
+        console.error('Queue hardware refresh error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * POST /api/devices/:id/telemetry/command
+ * Queue an allowlisted command for heartbeat delivery.
+ */
+router.post('/api/devices/:id/telemetry/command', requireAuth, requirePermission('device.edit'), async (req, res) => {
+    try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+        const command = typeof req.body?.command === 'string' ? req.body.command : '';
+        const args = req.body?.args && typeof req.body.args === 'object' ? req.body.args : {};
+        const result = await betterdeskApi.queuePeerTelemetryCommand(req.params.id, command, args);
+        res.status(result?.success === false ? 400 : 202).json(result);
+    } catch (err) {
+        console.error('Queue telemetry command error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });
 
@@ -503,6 +720,55 @@ router.post('/api/devices/:id/restore', requireAuth, requirePermission('device.d
         res.json({ success: true, data: result.data || result });
     } catch (err) {
         console.error('Restore device error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * POST /api/devices/:id/connection-mode
+ * Queue a reversible desktop connection-mode command.
+ */
+router.post('/api/devices/:id/connection-mode', requireAuth, requirePermission('device.connection_mode'), async (req, res) => {
+    try {
+        const id = req.params.id;
+        const device = await serverBackend.getDeviceById(id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
+        const mode = typeof req.body?.mode === 'string' ? req.body.mode.trim() : '';
+        const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 500) : '';
+        if (mode !== 'normal' && mode !== 'incoming-only') {
+            return res.status(400).json({ success: false, error: req.t('device_detail.connection_mode_failed') });
+        }
+        if (!reason) {
+            return res.status(400).json({ success: false, error: req.t('device_detail.connection_mode_reason') });
+        }
+
+        const result = await betterdeskApi.setConnectionMode(id, {
+            mode,
+            reason,
+            operator_id: String(req.session.userId || ''),
+            operator_name: (req.session.user && req.session.user.username) || ''
+        });
+        if (!result?.success) {
+            return res.status(result?.status || 502).json({
+                success: false,
+                error: result?.error || req.t('device_detail.connection_mode_failed')
+            });
+        }
+
+        const previous = result.data?.command?.previous_mode || result.data?.policy?.effective_mode || '';
+        await db.logAction(
+            req.session.userId,
+            'device_connection_mode',
+            `Device ${id} connection mode ${previous} -> ${mode}; reason: ${reason}; revision: ${result.data?.command?.revision || ''}; command: ${result.data?.command?.command_id || ''}`,
+            req.ip
+        );
+        res.json({ success: true, data: result.data });
+    } catch (err) {
+        console.error('Set connection mode error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });
@@ -802,6 +1068,31 @@ router.delete('/api/devices/:id/access-policy', requireAuth, requirePermission('
     }
 });
 
+/**
+ * GET /api/devices/:id/connect-password — org vault preset for Web Remote auto-fill (#367).
+ * Returns password only for authenticated operators; never logs the secret.
+ */
+router.get('/api/devices/:id/connect-password', requireAuth, requirePermission('device.view'), async (req, res) => {
+    try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+        const goApi = require('../services/betterdeskApi');
+        const result = await goApi.getPeerConnectPassword(req.params.id);
+        res.json(result);
+    } catch (err) {
+        const status = err.response?.status || 500;
+        if (status === 404) {
+            return res.status(404).json({ password_set: false });
+        }
+        if (status === 403) {
+            return res.status(403).json({ error: 'forbidden' });
+        }
+        console.error('Get connect password error:', err.message || err);
+        res.status(500).json({ success: false, error: 'Failed to get connect password' });
+    }
+});
+
 // ===========================================================================
 //  Phase 2 — Live agent introspection (services, processes, events, files,
 //  terminal, screenshot, activity). All endpoints proxy a command request to
@@ -821,6 +1112,51 @@ async function proxyAgentRequest(req, res, type, payload = null, timeoutMs = 150
         res.json({ success: true, data });
     } catch (err) {
         const msg = err && err.message ? err.message : 'agent_error';
+        const commandMap = {
+            'services.list': 'collect.services',
+            'processes.list': 'collect.processes',
+            'events.list': 'collect.events',
+            'activity.get': 'collect.activity',
+            'files.browse': 'files.browse',
+            'files.read': 'files.read',
+        };
+        const snapshotMap = {
+            'services.list': 'services',
+            'processes.list': 'processes',
+            'events.list': 'events',
+            'activity.get': 'activity',
+            'files.browse': 'files',
+        };
+        if (msg === 'agent_offline' && snapshotMap[type]) {
+            try {
+                const telemetry = await betterdeskApi.getPeerTelemetry(req.params.id);
+                const snapshot = telemetry?.data?.snapshots?.[snapshotMap[type]];
+                if (snapshot?.data) {
+                    return res.json({
+                        success: true,
+                        cached: true,
+                        collected_at: snapshot.collected_at,
+                        data: snapshot.data,
+                    });
+                }
+            } catch (_) {
+                // Fall through to a queued collection request.
+            }
+        }
+        if (msg === 'agent_offline' && commandMap[type]) {
+            const queued = await betterdeskApi.queuePeerTelemetryCommand(
+                req.params.id,
+                commandMap[type],
+                payload || {}
+            );
+            if (queued?.success !== false) {
+                return res.status(202).json({
+                    success: true,
+                    pending: true,
+                    data: { pending: true, command: commandMap[type] },
+                });
+            }
+        }
         const status = msg === 'agent_offline' ? 503
             : msg === 'agent_timeout' ? 504
             : 502;

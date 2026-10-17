@@ -13,7 +13,7 @@
  *   client.disconnect();
  */
 
-/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard */
+/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDPunchHoleResponse, RDConnectionParams */
 
 // eslint-disable-next-line no-unused-vars
 class RDClient {
@@ -32,8 +32,22 @@ class RDClient {
         this.deviceId = opts.deviceId;
         this.opts = opts;
 
+        const timeoutResolver = (typeof RDConnectionParams !== 'undefined' && RDConnectionParams.resolveConnectTimeouts)
+            ? RDConnectionParams.resolveConnectTimeouts
+            : null;
+        const resolvedTimeouts = timeoutResolver
+            ? timeoutResolver(opts.connection)
+            : { rendezvousMs: 30000, signalRelayMs: 15000, connection: opts.connection || null };
+        this._rendezvousTimeoutMs = Number(opts.rendezvousTimeoutMs) > 0
+            ? Number(opts.rendezvousTimeoutMs)
+            : resolvedTimeouts.rendezvousMs;
+        this._signalRelayTimeoutMs = Number(opts.signalRelayTimeoutMs) > 0
+            ? Number(opts.signalRelayTimeoutMs)
+            : resolvedTimeouts.signalRelayMs;
+        this._connectionParams = resolvedTimeouts.connection || opts.connection || null;
+
         // Sub-modules
-        this.conn = new RDConnection();
+        this.conn = new RDConnection({ deviceId: this.deviceId });
         this.proto = new RDProtocol();
         this.crypto = new RDCrypto();
         this.video = new RDVideo();
@@ -41,6 +55,7 @@ class RDClient {
         this.renderer = new RDRenderer(canvas);
         this.input = new RDInput(canvas, this.renderer, (msg) => this._sendPeerMessage(msg));
         this._fileConnection = null;
+        this._fileTransferRuntimePromise = null;
         this._sessionPassword = '';
         this.fileTransfer = new RDFileTransfer({
             proto: this.proto,
@@ -58,15 +73,21 @@ class RDClient {
         this._pingInterval = null;
         this._statsInterval = null;
 
-        // Stream decoders for RustDesk variable-length frame codec (TCP reassembly)
+        // Rendezvous is bridged to TCP and needs BytesCodec reassembly.
+        // Relay WebSocket messages are already complete payloads.
         this._rendezvousDecoder = null;
-        this._relayDecoder = null;
 
         // Codec / quality control
         this._codecAbilities = null;          // probed VideoDecoder support map
         this._peerEncoding = null;            // peer SupportedEncoding from handshake
         this._windowsSessions = { sessions: [], currentSid: 0 };
         this._preferCodec = opts.preferCodec || 'Auto';
+        this._mobileRuntime = RDClient.isMobileRuntime();
+        if (this._mobileRuntime && this._preferCodec === 'Auto') {
+            // H.264 is the most consistently hardware-accelerated codec on
+            // tablet browsers and remains available in the HTTP fallback.
+            this._preferCodec = 'H264';
+        }
         this._adaptivePaused = false;         // true once the user picks codec/quality manually
         this._codecFallbackDone = false;      // one automatic downgrade per session
 
@@ -76,6 +97,9 @@ class RDClient {
         this._peerEncryptionConfirmed = false; // Whether peer has started encrypting
         this._keyExchangePending = false;  // True when we have keys ready but haven't sent PublicKey yet
         this._keyExchangeDone = false;     // True after PublicKey was sent and crypto enabled
+        this._sessionStartedAt = null;
+        this._lastDisconnect = null;
+        this._lastError = null;
 
         // Settings
         this.renderer.setScaleMode(opts.scaleMode || 'fit');
@@ -116,8 +140,30 @@ class RDClient {
         return typeof window !== 'undefined' && window.BetterDesk && window.BetterDesk.debugRelay === true;
     }
 
+    static isMobileRuntime() {
+        try {
+            const capabilities = typeof window !== 'undefined' ? window.DeviceCapabilities : null;
+            return !!(capabilities
+                && capabilities.isTouch()
+                && !capabilities.isPhone());
+        } catch (_) {
+            return false;
+        }
+    }
+
     _debugRelay(...args) {
         if (RDClient.isRelayDebug()) console.log(...args);
+    }
+
+    _getInitialStreamFps() {
+        const requested = Number(this.opts.fps) > 0 ? Number(this.opts.fps) : 60;
+        // WebCodecs is unavailable on the HTTP path, and JMuxer/MSE on
+        // mobile browsers is not reliable at 60fps. The toolbar can still
+        // explicitly raise FPS after the session is stable.
+        if (!RDVideo.isSupported() || this._mobileRuntime) {
+            return Math.min(requested, 30);
+        }
+        return requested;
     }
 
     // ---- Main Connection Flow ----
@@ -150,13 +196,25 @@ class RDClient {
 
             // Step 3: Create stream decoders for TCP frame reassembly
             this._rendezvousDecoder = this.proto.createStreamDecoder();
-            this._relayDecoder = this.proto.createStreamDecoder();
 
             // Step 4: Connect to rendezvous server via WS proxy
             this._emit('log', 'Connecting to rendezvous server...');
+            if (this._connectionParams) {
+                this._debugRelay('[RDClient] Connection policy:', JSON.stringify({
+                    p2p_first: this._connectionParams.p2p_first,
+                    always_use_relay: this._connectionParams.always_use_relay,
+                    p2p_fallback_ms: this._connectionParams.p2p_fallback_ms,
+                    same_nat_relay: this._connectionParams.same_nat_relay,
+                    relay_servers: this._connectionParams.relay_servers || '',
+                    forceRelay: true,
+                    rendezvousTimeoutMs: this._rendezvousTimeoutMs,
+                    signalRelayTimeoutMs: this._signalRelayTimeoutMs
+                }));
+            }
             await this.conn.connectRendezvous();
 
             // Step 5: Send PunchHoleRequest (with server public key for licence validation)
+            // Browser Web Remote always force_relay=true (no UDP hole punch).
             this._emit('log', `Requesting connection to ${this.deviceId}...`);
             const punchHole = this.proto.buildPunchHoleRequest(this.deviceId, this.opts.serverPubKey);
             const punchData = this.proto.encodeRendezvous(punchHole);
@@ -233,12 +291,23 @@ class RDClient {
 
             // Step 11: Setup relay message handler BEFORE sending anything
             this.conn.on('relay:message', (data) => this._handleRelayData(data));
-            this.conn.on('relay:close', () => {
+            this.conn.on('relay:close', (code, wsReason, closeInfo) => {
                 if (this._state !== 'disconnected' && this._state !== 'error') {
-                    this._handleDisconnect('Relay connection closed');
+                    const suffix = code || wsReason
+                        ? ` (WebSocket ${code || 0}${wsReason ? `: ${wsReason}` : ''})`
+                        : '';
+                    this._handleDisconnect('Relay connection closed' + suffix, {
+                        source: 'relay',
+                        closeCode: code || 0,
+                        closeReason: wsReason || '',
+                        closeInfo: closeInfo || null
+                    });
                 }
             });
-            this.conn.on('relay:error', (e) => this._handleDisconnect('Relay error: ' + e.message));
+            this.conn.on('relay:error', (e) => this._handleDisconnect('Relay error: ' + e.message, {
+                source: 'relay-error',
+                error: e && e.message ? e.message : String(e)
+            }));
 
             // Step 12: Send RequestRelay to hbbr (relay expects this as first message for pairing)
             this._emit('log', `Connecting to relay (uuid: ${relayUUID.substring(0, 8)}...)...`);
@@ -248,7 +317,7 @@ class RDClient {
                 relayServer,
                 this.opts.serverPubKey
             );
-            const relayData = this.proto.encodeRendezvous(requestRelay);
+            const relayData = this.proto.serializeRendezvous(requestRelay);
             this.conn.sendRelay(relayData);
 
             // Step 13: Wait for target's SignedId (first message from relay)
@@ -270,17 +339,71 @@ class RDClient {
         return !!(this._fileConnection && this._fileConnection.state === 'ready');
     }
 
-    async ensureFileConnection() {
-        if (typeof RDFileConnection !== 'function') {
-            throw new Error('File transfer module not loaded');
+    _loadRuntimeScript(path, ready) {
+        if (ready()) return Promise.resolve();
+        if (typeof document === 'undefined' || !document.head) {
+            return Promise.reject(new Error('File transfer runtime is unavailable'));
         }
+
+        return new Promise((resolve, reject) => {
+            const existing = document.querySelector(`script[data-rd-runtime="${path}"]`);
+            const script = existing || document.createElement('script');
+            const finish = () => ready()
+                ? resolve()
+                : reject(new Error(`Could not load ${path}`));
+
+            script.addEventListener('load', finish, { once: true });
+            script.addEventListener('error', () => reject(new Error(`Could not load ${path}`)), { once: true });
+            if (existing) return;
+
+            const clientScript = Array.from(document.scripts || []).find((node) =>
+                node.src && node.src.includes('/js/rdclient/client.js')
+            );
+            let versionQuery = '';
+            if (clientScript && clientScript.src) {
+                try {
+                    versionQuery = new URL(clientScript.src, window.location.href).search;
+                } catch (_e) {
+                    versionQuery = '';
+                }
+            }
+            script.src = path + versionQuery;
+            script.async = false;
+            script.dataset.rdRuntime = path;
+            document.head.appendChild(script);
+        });
+    }
+
+    _loadFileTransferRuntime() {
+        const hasConnection = () => typeof window !== 'undefined'
+            && typeof window.RDFileConnection === 'function';
+        const hasCompression = () => typeof window !== 'undefined'
+            && typeof window.RDCompress === 'function';
+        if (hasConnection() && hasCompression()) return Promise.resolve();
+        if (this._fileTransferRuntimePromise) return this._fileTransferRuntimePromise;
+
+        this._fileTransferRuntimePromise = Promise.resolve()
+            .then(() => this._loadRuntimeScript('/js/rdclient/compress.js', hasCompression))
+            .then(() => this._loadRuntimeScript('/js/rdclient/file-connection.js', hasConnection))
+            .catch((err) => {
+                this._fileTransferRuntimePromise = null;
+                throw err;
+            });
+        return this._fileTransferRuntimePromise;
+    }
+
+    async ensureFileConnection() {
+        await this._loadFileTransferRuntime();
         if (!this.proto.loaded) await this.proto.load();
         if (!this._fileConnection) {
-            this._fileConnection = new RDFileConnection({
+            this._fileConnection = new window.RDFileConnection({
                 deviceId: this.deviceId,
                 serverPubKey: this.opts.serverPubKey || '',
                 myName: this.opts.myName || 'BetterDesk Web',
-                proto: this.proto
+                proto: this.proto,
+                connection: this._connectionParams || this.opts.connection || null,
+                rendezvousTimeoutMs: this._rendezvousTimeoutMs,
+                signalRelayTimeoutMs: this._signalRelayTimeoutMs
             });
             this._fileConnection.on('file_response', (resp) => {
                 this.fileTransfer.handleFileResponse(resp);
@@ -356,7 +479,7 @@ class RDClient {
                 myId: 'betterdesk-web-' + Date.now().toString(36),
                 myName: this.opts.myName || this.opts.myName || 'BetterDesk Web',
                 disableAudio: this.opts.disableAudio || false,
-                fps: this.opts.fps || 60,
+                fps: this._getInitialStreamFps(),
                 imageQuality: this.opts.imageQuality || 'Best',
                 codecAbilities: this._codecAbilities,
                 preferCodec: this._preferCodec
@@ -414,10 +537,11 @@ class RDClient {
      */
     _waitForRendezvousResponse() {
         return new Promise((resolve, reject) => {
+            const waitMs = this._rendezvousTimeoutMs || 30000;
             const timeout = setTimeout(() => {
                 this.conn.off('rendezvous:message', handler);
-                reject(new Error('Rendezvous response timeout (30s) - target device may be offline'));
-            }, 30000);
+                reject(new Error(`Rendezvous response timeout (${Math.round(waitMs / 1000)}s) - target device may be offline`));
+            }, waitMs);
 
             const handler = (rawData) => {
                 // Decode frames from raw TCP data via stream decoder
@@ -456,30 +580,39 @@ class RDClient {
                                 hasPk: !!(resp.pk && resp.pk.length),
                                 natType: resp.natType
                             }));
-                            // Check for failure:
-                            // Proto3 default enum = 0 (ID_NOT_EXIST), so we check if we got
-                            // a relay server or socket_addr to determine success
-                            const hasRelay = resp.relayServer && resp.relayServer.length > 0;
-                            const hasSocket = resp.socketAddr && resp.socketAddr.length > 0;
-
-                            if (hasRelay || hasSocket) {
-                                resolve({
-                                    relayServer: resp.relayServer || '',
-                                    uuid: resp.uuid || '',
-                                    pk: resp.pk || null,
-                                    natType: resp.natType
-                                });
+                            // Proto3 default failure=0 (ID_NOT_EXIST); #405 may set OFFLINE
+                            // while still filling relay_server — honor explicit failures.
+                            const interpreted = (typeof RDPunchHoleResponse !== 'undefined'
+                                && RDPunchHoleResponse.interpretPunchHoleResponse)
+                                ? RDPunchHoleResponse.interpretPunchHoleResponse(resp)
+                                : null;
+                            if (interpreted) {
+                                resolve(interpreted);
                             } else {
-                                const failureNames = {
-                                    0: 'Device not found',     // ID_NOT_EXIST
-                                    2: 'Device offline',       // OFFLINE
-                                    3: 'License mismatch',     // LICENSE_MISMATCH
-                                    4: 'Too many connections'  // LICENSE_OVERUSE
-                                };
-                                const reason = resp.otherFailure
-                                    || failureNames[resp.failure]
-                                    || `Unknown error (code: ${resp.failure})`;
-                                resolve({ error: reason });
+                                const hasRelay = resp.relayServer && resp.relayServer.length > 0;
+                                const hasSocket = resp.socketAddr && resp.socketAddr.length > 0;
+                                const failure = Number(resp.failure) || 0;
+                                if ((failure === 2 || failure === 3 || failure === 4 || resp.otherFailure)
+                                    || !(hasRelay || hasSocket)) {
+                                    const failureNames = {
+                                        0: 'Device not found',
+                                        2: 'Device offline',
+                                        3: 'License mismatch',
+                                        4: 'Too many connections'
+                                    };
+                                    resolve({
+                                        error: resp.otherFailure
+                                            || failureNames[failure]
+                                            || `Unknown error (code: ${failure})`
+                                    });
+                                } else {
+                                    resolve({
+                                        relayServer: resp.relayServer || '',
+                                        uuid: resp.uuid || '',
+                                        pk: resp.pk || null,
+                                        natType: resp.natType
+                                    });
+                                }
                             }
                             return;
                         }
@@ -534,10 +667,11 @@ class RDClient {
      */
     _waitForSignalRelayResponse() {
         return new Promise((resolve, reject) => {
+            const waitMs = this._signalRelayTimeoutMs || 15000;
             const timeout = setTimeout(() => {
                 this.conn.off('rendezvous:message', handler);
-                reject(new Error('RelayResponse timeout (15s) — target device may be unreachable'));
-            }, 15000);
+                reject(new Error(`RelayResponse timeout (${Math.round(waitMs / 1000)}s) — target device may be unreachable`));
+            }, waitMs);
 
             const handler = (rawData) => {
                 const frames = this._rendezvousDecoder.feed(rawData);
@@ -592,22 +726,19 @@ class RDClient {
     }
 
     /**
-     * Handle raw incoming relay data (TCP chunks via WebSocket)
-     * Uses stream decoder for frame reassembly, then dispatches each complete message.
+     * Handle one raw RustDesk payload from the native relay WebSocket.
      *
-     * After hbbr pairs both peers (by UUID), the relay operates in raw mode — just
-     * bridging TCP bytes. However, the FIRST framed message from hbbr is a
-     * RendezvousMessage.RelayResponse confirmation (not a peer Message).
-     * We detect and skip it, then process all subsequent frames as peer Messages.
+     * Mixed WebSocket/TCP sessions are translated by hbbr, so the browser
+     * must not add or decode a TCP length header here.
      *
      * @param {ArrayBuffer} rawData
      */
     _handleRelayData(rawData) {
         try {
-            const frames = this._relayDecoder.feed(rawData);
-            for (const frame of frames) {
-                this._handleRelayMessage(frame);
-            }
+            const payload = rawData instanceof ArrayBuffer
+                ? new Uint8Array(rawData)
+                : new Uint8Array(rawData);
+            if (payload.length > 0) this._handleRelayMessage(payload);
         } catch (err) {
             console.warn('[RDClient] Error decoding relay data:', err.message);
         }
@@ -617,8 +748,7 @@ class RDClient {
      * Handle a single decoded relay frame (protobuf bytes).
      *
      * Frame sequence on a relay connection:
-     *   #1: hbbr RelayResponse confirmation (RendezvousMessage — skip this)
-     *   #2: Target's SignedId (Message, unencrypted)
+     *   #1: Target's SignedId (Message, unencrypted)
      *   #3+: Target's Hash, TestDelay etc. — may be plaintext OR encrypted
      *        depending on whether the target has processed our PublicKey yet
      *   #N:  Once peer encryption is confirmed, all subsequent frames are encrypted
@@ -631,7 +761,7 @@ class RDClient {
      *     happen since we haven’t sent it yet in this flow) or peer uses some
      *     other encryption setup — handled via speculative decrypt.
      *
-     * @param {Uint8Array} frameData - Raw protobuf bytes (frame header already stripped)
+     * @param {Uint8Array} frameData - Raw protobuf bytes from one WS message
      */
     _handleRelayMessage(frameData) {
         try {
@@ -643,8 +773,7 @@ class RDClient {
                 this._debugRelay(`[RDClient] Relay frame #${idx}: ${frameData.length} bytes [${hex20}]`);
             }
 
-            // The relay server (hbbr) sends a RendezvousMessage.RelayResponse
-            // as the first frame after pairing both peers.  Skip it.
+            // Tolerate older servers that injected a RelayResponse first.
             if (!this._relayConfirmReceived) {
                 this._relayConfirmReceived = true;
                 try {
@@ -837,6 +966,12 @@ class RDClient {
         // File response (directory listing, transfer blocks, digest, done, error)
         if (msg.fileResponse) {
             this.fileTransfer.handleFileResponse(msg.fileResponse);
+            return;
+        }
+
+        // Cliprdr file clipboard (Explorer copy → remote paste on desktop)
+        if (msg.cliprdr) {
+            void this._handleCliprdr(msg.cliprdr);
             return;
         }
 
@@ -1139,7 +1274,10 @@ class RDClient {
 
     _handleMisc(misc) {
         if (misc.closeReason) {
-            this._handleDisconnect('Remote: ' + misc.closeReason);
+            this._handleDisconnect('Remote: ' + misc.closeReason, {
+                source: 'peer',
+                peerReason: String(misc.closeReason)
+            });
             return;
         }
         if (misc.chatMessage) {
@@ -1175,14 +1313,18 @@ class RDClient {
      */
     _startSession() {
         this._setState('streaming');
+        this._sessionStartedAt = Date.now();
+        this._lastDisconnect = null;
+        this._lastError = null;
         this._codecFallbackDone = false;
         this.conn.setConnected();
 
         // Enable file transfer
         this.fileTransfer.enable();
-        this.ensureFileConnection().catch(function (err) {
-            console.warn('[RDClient] File transfer preconnect:', err.message || err);
-        });
+        // File transfer is opened lazily by the file modal. Keeping it out of
+        // the initial mobile handshake avoids a second rendezvous + relay burst
+        // that can hit the per-IP proxy limit and is unnecessary for desktop
+        // control sessions.
 
         // Initialize video decoder callbacks
         this.video.onFrame = (frame) => this.renderer.pushFrame(frame);
@@ -1225,19 +1367,27 @@ class RDClient {
         }
 
         // Tell peer our desired FPS and image quality after session establishment
-        const fps = this.opts.fps || 60;
+        const fps = this._getInitialStreamFps();
         this._savedActiveFps = fps;
         const quality = this.opts.imageQuality || 'Best';
         this._sendPeerMessage(this.proto.buildOptionMisc({
             customFps: fps,
             imageQuality: quality
         }));
+        this._sendPeerMessage(this.proto.buildMisc(
+            'autoAdjustFps',
+            !RDVideo.isSupported() ? 0 : (this.opts.fpsMode === 'adaptive' ? 60 : 0)
+        ));
 
         // Proactively request an initial keyframe so the decoder can start
         // immediately even if we joined an already-running stream on a delta.
         this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
 
         this._advertiseSupportedEncoding();
+
+        if (typeof RDCliprdr !== 'undefined' && RDCliprdr.isSupported()) {
+            void RDCliprdr.initClient(this);
+        }
 
         // Start ping interval
         this._pingInterval = setInterval(() => {
@@ -1309,13 +1459,18 @@ class RDClient {
      * Demotes after 2 consecutive bad samples, promotes after 3 good.
      */
     _startAdaptiveQuality() {
-        const tiers = [
-            { id: 0, quality: 'Low',      fps: 30 },
-            { id: 1, quality: 'Balanced', fps: 30 },
-            { id: 2, quality: 'Balanced', fps: 45 },
-            { id: 3, quality: 'Best',     fps: 45 },
-            { id: 4, quality: 'Best',     fps: 60 }
-        ];
+        const tiers = !RDVideo.isSupported()
+            ? [
+                { id: 0, quality: 'Low',      fps: 30 },
+                { id: 1, quality: 'Balanced', fps: 30 }
+            ]
+            : [
+                { id: 0, quality: 'Low',      fps: 30 },
+                { id: 1, quality: 'Balanced', fps: 30 },
+                { id: 2, quality: 'Balanced', fps: 45 },
+                { id: 3, quality: 'Best',     fps: 45 },
+                { id: 4, quality: 'Best',     fps: 60 }
+            ];
         // Start near tier 1 (Balanced@30) to match opts
         let current = 1;
         let badCount = 0;
@@ -1384,7 +1539,15 @@ class RDClient {
      * @param {Object} msgObj - Message object (will be encoded as Message protobuf)
      */
     _sendPeerMessage(msgObj) {
-        if (!this.proto.loaded) return;
+        if (!this.proto.loaded) {
+            if (msgObj && (msgObj.clipboard || msgObj.cliprdr)) {
+                console.warn('[RDClient] Dropped clipboard/cliprdr message — proto not loaded yet');
+            }
+            return;
+        }
+        if (msgObj && (msgObj.clipboard || msgObj.cliprdr)) {
+            this._debugRelay('[RDClient] Sending', msgObj.clipboard ? 'clipboard' : 'cliprdr.' + Object.keys(msgObj.cliprdr)[0], msgObj);
+        }
 
         // Step 1: Serialize to raw protobuf bytes (no frame header)
         let data = this.proto.serializeMessage(msgObj);
@@ -1394,11 +1557,8 @@ class RDClient {
             data = this.crypto.processOutgoing(data);
         }
 
-        // Step 3: Add frame header to the (possibly encrypted) bytes
-        const framed = this.proto.frameBytes(data);
-
-        // Step 4: Send over relay WebSocket
-        this.conn.sendRelay(framed);
+        // Native relay WebSocket framing carries one raw payload per message.
+        this.conn.sendRelay(data);
     }
 
     // ---- State & Cleanup ----
@@ -1414,6 +1574,14 @@ class RDClient {
     _handleError(err) {
         console.error('[RDClient]', err);
         const msg = err && err.message ? err.message : String(err);
+        this._lastError = {
+            message: msg,
+            at: Date.now(),
+            state: this._state,
+            codec: this.video ? this.video.currentCodec : null
+        };
+        this._debugRelay('[RDClient] Session error:', JSON.stringify(this._lastError));
+        this._emit('diagnostics', { type: 'error', ...this._lastError });
         // Detect peer-offline scenarios where the agent is reachable through
         // bd-signal/CDAP but not through the RustDesk relay (no peer registration).
         // In that case, signal the UI that a CDAP fallback viewer is available.
@@ -1426,11 +1594,32 @@ class RDClient {
         this._setState('error');
     }
 
-    _handleDisconnect(reason) {
+    _handleDisconnect(reason, meta = {}) {
+        const stateBefore = this._state;
+        const info = {
+            type: 'disconnect',
+            reason: String(reason || 'Connection closed'),
+            source: meta.source || 'unknown',
+            stateBefore,
+            at: Date.now(),
+            durationMs: this._sessionStartedAt
+                ? Math.max(0, Date.now() - this._sessionStartedAt)
+                : null,
+            transport: 'rd',
+            secureContext: typeof window !== 'undefined' ? window.isSecureContext === true : null,
+            codec: this.video ? this.video.currentCodec : null,
+            closeCode: meta.closeCode || null,
+            closeReason: meta.closeReason || '',
+            peerReason: meta.peerReason || '',
+            error: meta.error || ''
+        };
+        this._lastDisconnect = info;
+        this._debugRelay('[RDClient] Session disconnect:', JSON.stringify(info));
+        this._emit('diagnostics', info);
         this._emit('log', `Disconnected: ${reason}`);
         this._cleanup();
         this._setState('disconnected');
-        this._emit('disconnected', reason);
+        this._emit('disconnected', reason, info);
     }
 
     _cleanup() {
@@ -1460,11 +1649,12 @@ class RDClient {
         this._sessionPassword = '';
         this.conn.close();
         this._codecFallbackDone = false;
-        if (this._relayDecoder) {
-            this._relayDecoder.reset();
-        }
         if (this._rendezvousDecoder) {
             this._rendezvousDecoder.reset();
+        }
+        if (typeof RDCliprdr !== 'undefined' && RDCliprdr.isSupported()) {
+            RDCliprdr.stopPolling(this);
+            void RDCliprdr.clearLocalCache();
         }
     }
 
@@ -1483,6 +1673,31 @@ class RDClient {
     async _sendClipboard(text) {
         const msg = await this.proto.buildClipboard(text);
         this._sendPeerMessage(msg);
+    }
+
+    /**
+     * Sync local file clipboard to remote (desktop Cliprdr).
+     * @returns {Promise<{hasFiles?: boolean, signature?: string, busy?: boolean}|void>}
+     */
+    syncCliprdrFiles() {
+        if (typeof RDCliprdr === 'undefined' || !RDCliprdr.isSupported()) {
+            return Promise.resolve({ hasFiles: false, signature: '', busy: false });
+        }
+        return RDCliprdr.syncLocalFiles(this);
+    }
+
+    /**
+     * @param {string[]} paths
+     * @param {{x?: number, y?: number}|null} [position]
+     */
+    syncCliprdrPaths(paths, position) {
+        if (typeof RDCliprdr === 'undefined' || !RDCliprdr.isSupported()) return;
+        void RDCliprdr.syncPaths(this, paths, position || null);
+    }
+
+    _handleCliprdr(cliprdr) {
+        if (typeof RDCliprdr === 'undefined' || !RDCliprdr.isSupported()) return;
+        void RDCliprdr.handleMessage(this, cliprdr);
     }
 
     /**
@@ -1700,7 +1915,9 @@ class RDClient {
         }
         this._windowsSessions = this._parseWindowsSessions(info);
         if (this.input && info.platform) {
-            this.input.setPeerPlatform(info.platform);
+            if (typeof this.input.setPeerPlatform === 'function') {
+                this.input.setPeerPlatform(info.platform);
+            }
         }
     }
 
@@ -1757,14 +1974,18 @@ class RDClient {
      * Release stuck remote modifiers / keys (toolbar recovery).
      */
     resetKeyboard() {
-        if (this.input) this.input.resetKeyboard();
+        if (this.input && typeof this.input.resetKeyboard === 'function') {
+            this.input.resetKeyboard();
+        }
     }
 
     /**
      * @param {'Legacy'|'Map'|'Auto'} mode
      */
     setKeyboardMode(mode) {
-        if (this.input) this.input.setKeyboardMode(mode);
+        if (this.input && typeof this.input.setKeyboardMode === 'function') {
+            this.input.setKeyboardMode(mode);
+        }
     }
 
     /**
@@ -1838,11 +2059,46 @@ class RDClient {
         };
 
         var c = config[preset] || config.balanced;
-        this._adaptivePaused = true; // explicit user choice — stop auto-adjusting
-        this._savedActiveFps = c.customFps;
+        const mode = this.opts.fpsMode || '30';
+        const customFps = !RDVideo.isSupported()
+            ? 30
+            : mode === '60' || mode === 'adaptive'
+                ? 60
+                : mode === '30' ? 30 : c.customFps;
+        this._adaptivePaused = mode !== 'adaptive';
+        this._savedActiveFps = customFps;
         this.opts.qualityPreset = preset;
-        this._sendPeerMessage(this.proto.buildOptionMisc({ imageQuality: c.imageQuality, customFps: c.customFps }));
+        this._sendPeerMessage(this.proto.buildOptionMisc({ imageQuality: c.imageQuality, customFps: customFps }));
         this._emit('quality_changed', preset);
+    }
+
+    /**
+     * Set the stream FPS mode.
+     * @param {'30'|'60'|'adaptive'} mode
+     */
+    setFpsMode(mode) {
+        const value = ['30', '60', 'adaptive'].includes(String(mode))
+            ? String(mode)
+            : '30';
+        const fps = !RDVideo.isSupported() ? 30 : (value === '30' ? 30 : 60);
+        this.opts.fpsMode = value;
+        this.opts.fps = fps;
+        this.opts.adaptiveQuality = value === 'adaptive';
+        this._savedActiveFps = fps;
+        this._adaptivePaused = value !== 'adaptive';
+        if (this._state !== 'streaming') return;
+
+        this._sendPeerMessage(this.proto.buildOptionMisc({ customFps: fps }));
+        this._sendPeerMessage(this.proto.buildMisc(
+            'autoAdjustFps',
+            !RDVideo.isSupported() ? 0 : (value === 'adaptive' ? 60 : 0)
+        ));
+        if (value === 'adaptive') {
+            if (!this._adaptiveInterval) this._startAdaptiveQuality();
+        } else if (this._adaptiveInterval) {
+            clearInterval(this._adaptiveInterval);
+            this._adaptiveInterval = null;
+        }
     }
 
     // ---- Codec Control ----
@@ -2130,7 +2386,12 @@ class RDClient {
             video: this.video.getStats(),
             audio: this.audio.getStats(),
             renderer: this.renderer.getStats(),
-            connection: this.conn.state
+            connection: this.conn.state,
+            diagnostics: {
+                lastClose: this.conn._lastClose || null,
+                lastDisconnect: this._lastDisconnect,
+                lastError: this._lastError
+            }
         };
     }
 }

@@ -17,10 +17,16 @@ const mockDb = {
     getUserGroupsForUser: jest.fn(),
     setUserGroupMemberships: jest.fn(),
     updateUserProfile: jest.fn().mockResolvedValue(undefined),
+    updateUserRole: jest.fn().mockResolvedValue(undefined),
     createUser: jest.fn(),
     deleteUser: jest.fn().mockResolvedValue(undefined),
     countAdmins: jest.fn().mockResolvedValue(2),
     logAction: jest.fn().mockResolvedValue(undefined),
+    getUserPeerGrants: jest.fn().mockResolvedValue([]),
+    setUserPeerGrants: jest.fn().mockResolvedValue(undefined),
+    getUserStrategyGuid: jest.fn().mockResolvedValue(''),
+    setUserStrategyAssignment: jest.fn().mockResolvedValue(''),
+    getAllFolders: jest.fn().mockResolvedValue([]),
 };
 
 const mockUserSync = {
@@ -67,6 +73,11 @@ describe('Users Routes', () => {
         ));
         mockDb.setUserGroupMemberships.mockResolvedValue([]);
         mockDb.createUser.mockResolvedValue({ id: 22, username: 'viewer1', role: 'viewer' });
+        mockDb.getUserPeerGrants.mockResolvedValue([]);
+        mockDb.setUserPeerGrants.mockResolvedValue(undefined);
+        mockDb.getUserStrategyGuid.mockResolvedValue('');
+        mockDb.setUserStrategyAssignment.mockResolvedValue('');
+        mockDb.getAllFolders.mockResolvedValue([]);
     });
 
     it('backfills Go users before returning the System Users list', async () => {
@@ -159,6 +170,226 @@ describe('Users Routes', () => {
         expect(res.status).toBe(200);
         expect(mockDb.createUser).toHaveBeenCalledWith('viewer1', 'hashed', 'viewer');
         expect(mockDb.setUserGroupMemberships).toHaveBeenCalledWith(22, ['volunteers']);
+    });
+
+    it('persists peerIds when creating a user (Issue #380)', async () => {
+        mockDb.getUserPeerGrants.mockResolvedValue(['1234567']);
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'global_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .post('/api/users')
+            .send({
+                username: 'viewer1',
+                password: 'StrongPass123!',
+                role: 'operator',
+                peerIds: ['1234567'],
+            });
+
+        expect(res.status).toBe(200);
+        expect(mockDb.setUserPeerGrants).toHaveBeenCalledWith(22, ['1234567']);
+        expect(res.body.data.peer_grants).toEqual(['1234567']);
+    });
+
+    it('persists peerIds when updating a user (Issue #380)', async () => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: 'operator1',
+            role: 'operator',
+            auth_provider: 'local',
+        });
+        mockDb.getUserPeerGrants.mockResolvedValue(['1234567', '7654321']);
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ peerIds: ['1234567', '7654321'] });
+
+        expect(res.status).toBe(200);
+        expect(mockDb.setUserPeerGrants).toHaveBeenCalledWith(12, ['1234567', '7654321']);
+        expect(res.body.data).toMatchObject({
+            id: 12,
+            username: 'operator1',
+            peer_grants: ['1234567', '7654321'],
+        });
+    });
+
+    it.each(['ldap', 'oidc'])('updates %s user group membership without provider-managed fields', async (authProvider) => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: `${authProvider}-user`,
+            role: 'operator',
+            auth_provider: authProvider,
+        });
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ groupGuids: ['volunteers'] });
+
+        expect(res.status).toBe(200);
+        expect(mockDb.setUserGroupMemberships).toHaveBeenCalledWith(12, ['volunteers']);
+        expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+    });
+
+    it('rejects LDAP user role changes', async () => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: 'ldap-user',
+            role: 'operator',
+            auth_provider: 'ldap',
+        });
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ role: 'admin', groupGuids: ['volunteers'] });
+
+        expect(res.status).toBe(400);
+        expect(res.body.success).toBe(false);
+        expect(mockDb.setUserGroupMemberships).not.toHaveBeenCalled();
+        expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+    });
+
+    it('allows administrators to change an OIDC user role', async () => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: 'oidc-user',
+            role: 'viewer',
+            auth_provider: 'oidc',
+        });
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ role: 'admin' });
+
+        expect(res.status).toBe(200);
+        expect(mockDb.updateUserRole).toHaveBeenCalledWith(12, 'admin');
+        expect(mockUserSync.mirrorUpdate).toHaveBeenCalledWith('oidc-user', { role: 'admin' });
+    });
+
+    it('returns 500 when peer grant setter is unavailable (no silent no-op)', async () => {
+        const previous = mockDb.setUserPeerGrants;
+        mockDb.setUserPeerGrants = undefined;
+
+        try {
+            const app = createTestApp();
+            withAuth(app, { id: 1, username: 'admin', role: 'global_admin' });
+            app.use(usersRoutes);
+
+            const res = await request(app)
+                .post('/api/users')
+                .send({
+                    username: 'viewer1',
+                    password: 'StrongPass123!',
+                    role: 'operator',
+                    peerIds: ['1234567'],
+                });
+
+            expect(res.status).toBe(500);
+            expect(res.body.success).toBe(false);
+            expect(String(res.body.error || '')).toMatch(/peer grants|setUserPeerGrants/i);
+            expect(mockDb.createUser).not.toHaveBeenCalled();
+        } finally {
+            mockDb.setUserPeerGrants = previous;
+        }
+    });
+
+    it('returns 500 when strategy assignment setter is unavailable', async () => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: 'operator1',
+            role: 'operator',
+            auth_provider: 'local',
+        });
+        const previous = mockDb.setUserStrategyAssignment;
+        mockDb.setUserStrategyAssignment = undefined;
+
+        try {
+            const app = createTestApp();
+            withAuth(app, { id: 1, username: 'admin', role: 'super_admin' });
+            app.use(usersRoutes);
+
+            const res = await request(app)
+                .patch('/api/users/12')
+                .send({ strategyGuid: 'strat-1', role: 'viewer' });
+
+            expect(res.status).toBe(500);
+            expect(res.body.success).toBe(false);
+            expect(String(res.body.error || '')).toMatch(/strategy|setUserStrategyAssignment/i);
+            expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+        } finally {
+            mockDb.setUserStrategyAssignment = previous;
+        }
+    });
+
+    it('returns peer_grants on the System Users list (Issue #380)', async () => {
+        mockDb.getUserPeerGrants.mockImplementation(async (userId) => (
+            Number(userId) === 12 ? ['1234567'] : []
+        ));
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'admin', role: 'server_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app).get('/api/users');
+
+        expect(res.status).toBe(200);
+        expect(mockDb.getUserPeerGrants).toHaveBeenCalled();
+        expect(res.body.data.users[1].peer_grants).toEqual(['1234567']);
+        expect(res.body.data.users[0].peer_grants).toEqual([]);
+    });
+
+    it('does not let global_admin create a super_admin user', async () => {
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'global-admin', role: 'global_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .post('/api/users')
+            .send({ username: 'elevated1', password: 'StrongPass123!', role: 'super_admin' });
+
+        expect(res.status).toBe(403);
+        expect(res.body.success).toBe(false);
+        expect(mockDb.createUser).not.toHaveBeenCalled();
+        expect(mockUserSync.mirrorCreate).not.toHaveBeenCalled();
+    });
+
+    it('does not let global_admin promote a user to super_admin', async () => {
+        mockDb.getUserById.mockResolvedValue({
+            id: 12,
+            username: 'operator1',
+            role: 'operator',
+            auth_provider: 'local',
+        });
+
+        const app = createTestApp();
+        withAuth(app, { id: 1, username: 'global-admin', role: 'global_admin' });
+        app.use(usersRoutes);
+
+        const res = await request(app)
+            .patch('/api/users/12')
+            .send({ role: 'super_admin' });
+
+        expect(res.status).toBe(403);
+        expect(res.body.success).toBe(false);
+        expect(mockDb.updateUserRole).not.toHaveBeenCalled();
+        expect(mockUserSync.mirrorUpdate).not.toHaveBeenCalled();
     });
 
     it('maps unique username constraint errors to username_exists', async () => {

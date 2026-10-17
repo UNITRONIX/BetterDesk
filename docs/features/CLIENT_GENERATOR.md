@@ -1,5 +1,11 @@
 # RustDesk Client Generator
 
+> **Current implementation:** the active panel generator creates incoming-only
+> BetterDesk Support bundles from the pinned BetterDesk-Client source. This
+> historical page describes the retired generic RustDesk/template workflow;
+> use [Client-Generator.md](../wiki/Client-Generator.md) for current
+> platforms, provider capabilities, API behaviour and troubleshooting.
+
 ## Overview
 
 The Client Generator is an integrated feature of the BetterDesk Console that allows you to create custom RustDesk clients with pre-configured settings. This eliminates the need for users to manually configure their clients and ensures consistent deployment across your organization.
@@ -215,6 +221,19 @@ Planned improvements:
 - Configuration templates
 - Version tracking and rollback
 - Client update management
+
+### Native client scope
+
+The current onboarding path uses generated RustDesk packages with BetterDesk
+server settings embedded or supplied through the configuration QR/deploy
+string. A separate BetterDesk-native Windows or Android client is not implied
+by this generator and must be planned as its own product scope.
+
+Before implementation, that scope must define the supported platforms and
+architectures, remote-control and enrollment flows, signing and update
+infrastructure, server trust and authentication model, data collection,
+distribution, and compatibility requirements. No unsigned or unreviewed
+client binary should be introduced through the panel generator.
 
 ## Support
 

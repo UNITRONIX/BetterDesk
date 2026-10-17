@@ -62,6 +62,10 @@ function goApiProxy(req, res) {
     };
 
     const proxyReq = transport.request(opts, (proxyRes) => {
+        if (res.headersSent || res.destroyed) {
+            proxyRes.resume();
+            return;
+        }
         const outHeaders = { ...proxyRes.headers };
         delete outHeaders['transfer-encoding'];
         res.writeHead(proxyRes.statusCode, outHeaders);
@@ -77,7 +81,7 @@ function goApiProxy(req, res) {
 
     proxyReq.on('error', (err) => {
         console.error(`[rustdesk-api-proxy] ${req.method} ${req.path} → ${target.origin}: ${err.message}`);
-        if (!res.headersSent) {
+        if (!res.headersSent && !res.destroyed) {
             res.status(502).json({ error: 'Bad Gateway' });
         }
     });

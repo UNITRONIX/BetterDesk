@@ -209,9 +209,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 	remoteAddr := wsc.RemoteAddr()
 	peerID := ""
 	wsc.SetKeepAliveHandler(func() {
-		if peerID != "" {
-			s.peers.TouchHeartbeat(peerID)
-		}
+		s.peers.TouchWSHeartbeat(wsc)
 	})
 	keepAliveDone := make(chan struct{})
 	registered := make(chan struct{})
@@ -240,9 +238,10 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 
 		switch {
 		case msg.GetRegisterPeer() != nil:
-			peerID = msg.GetRegisterPeer().Id
-			resp := s.handleRegisterPeerWS(msg.GetRegisterPeer(), remoteAddr)
+			registerPeer := msg.GetRegisterPeer()
+			resp := s.handleRegisterPeerWS(registerPeer, remoteAddr)
 			if resp != nil {
+				peerID = registerPeer.Id
 				bindPeerWSConn(s, peerID, wsc)
 				s.registerWSPunchConn(remoteAddr, wsc)
 				notifyRegistered()
@@ -250,10 +249,11 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 			}
 
 		case msg.GetRegisterPk() != nil:
-			peerID = msg.GetRegisterPk().Id
-			resp := s.processRegisterPk(msg.GetRegisterPk(), remoteAddr)
+			registerPK := msg.GetRegisterPk()
+			resp := s.processRegisterPk(registerPK, remoteAddr)
 			if resp != nil {
 				if rpk := resp.GetRegisterPkResponse(); rpk != nil && rpk.GetResult() == pb.RegisterPkResponse_OK {
+					peerID = registerPK.Id
 					bindPeerWSConn(s, peerID, wsc)
 					s.registerWSPunchConn(remoteAddr, wsc)
 					notifyRegistered()
@@ -268,7 +268,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 				continue
 			}
 			s.registerWSPunchConn(remoteAddr, wsc)
-			resp := s.handlePunchHoleRequestTCP(msg.GetPunchHoleRequest(), fakeAddr)
+			resp := s.handlePunchHoleRequestTCPWithHint(msg.GetPunchHoleRequest(), fakeAddr, peer.ConnWS)
 			if resp != nil {
 				wsc.WriteMessage(resp)
 			}
@@ -500,13 +500,19 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 		// Reject banned peers — do not heartbeat or respond
 		if existing.Banned {
 			log.Printf("[signal] Rejected banned WS peer heartbeat: %s from %s", id, remoteAddr)
+			s.revokeBannedPeerAccess(id, nil)
 			return nil
 		}
 		if s.rejectIfPeerSoftDeleted(id, clientHost) {
 			return nil
 		}
-		if banned, _ := s.db.IsPeerBanned(id); banned {
+		if banned, err := s.db.IsPeerBanned(id); err != nil || banned {
+			if err != nil {
+				log.Printf("[signal] Failed ban check for WS peer heartbeat %s: %v", id, err)
+				return nil
+			}
 			log.Printf("[signal] Rejected banned WS peer heartbeat: %s from %s", id, remoteAddr)
+			s.revokeBannedPeerAccess(id, nil)
 			return nil
 		}
 
@@ -534,13 +540,30 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 
 	if !s.checkEnrollmentPermission(id, clientHost) {
 		log.Printf("[signal] Rejected new WS peer %s from %s (enrollment policy)", id, clientHost)
+		if s.isPendingEnrollment(id) {
+			// Keep the authenticated WS transport alive while approval is
+			// pending. Session delivery remains blocked by
+			// targetAcceptsInboundSession until the DB peer row exists.
+			s.retainPendingSignalPeer(id, remoteAddr, nil, msg.Serial, peer.ConnWS)
+			log.Printf("[signal] Retained pending WS peer transport: %s from %s", id, remoteAddr)
+			return &pb.RendezvousMessage{
+				Union: &pb.RendezvousMessage_RegisterPeerResponse{
+					RegisterPeerResponse: &pb.RegisterPeerResponse{RequestPk: false},
+				},
+			}
+		}
 		return nil
 	}
 
 	// Check if this peer is banned in the database (e.g. removed from memory
 	// map after ban but trying to re-register via WS)
-	if banned, _ := s.db.IsPeerBanned(id); banned {
+	if banned, err := s.db.IsPeerBanned(id); err != nil || banned {
+		if err != nil {
+			log.Printf("[signal] Failed ban check for WS peer registration %s: %v", id, err)
+			return nil
+		}
 		log.Printf("[signal] Rejected banned WS peer registration: %s from %s", id, remoteAddr)
+		s.revokeBannedPeerAccess(id, nil)
 		return nil
 	}
 
@@ -580,32 +603,56 @@ func (s *Server) sendToWSPeer(id string, msg *pb.RendezvousMessage) error {
 	return wsc.WriteMessage(msg)
 }
 
-// sendToPeer sends a protobuf message to a peer using whatever transport it's connected on.
-func (s *Server) sendToPeer(id string, msg *pb.RendezvousMessage) {
+// sendToPeer delivers a protobuf message on the best available transport.
+// WebSocket peers stay on WS. Native peers with a UDP heartbeat address are
+// sent UDP even when ConnType was stamped TCP by RegisterPk (#382). Returns
+// true if a transport accepted the message.
+func (s *Server) sendToPeer(id string, msg *pb.RendezvousMessage) bool {
 	entry := s.peers.Get(id)
 	if entry == nil {
-		return
+		log.Printf("[signal] sendToPeer: peer %s not in map", id)
+		return false
 	}
 
-	switch entry.ConnType {
-	case peer.ConnUDP:
-		if entry.UDPAddr != nil {
-			s.sendUDP(msg, entry.UDPAddr)
-		}
-	case peer.ConnWS:
+	if entry.ConnType == peer.ConnWS {
 		if entry.WSConn != nil {
 			wsc, ok := entry.WSConn.(*codec.WSConn)
 			if ok {
 				if err := wsc.WriteMessage(msg); err != nil {
 					log.Printf("[signal] WS send to %s: %v", id, err)
+					return false
 				}
+				return true
 			}
 		}
-	case peer.ConnTCP:
-		if entry.TCPConn != nil {
-			if err := codec.WriteRawProto(entry.TCPConn, msg); err != nil {
-				log.Printf("[signal] TCP send to %s: %v", id, err)
-			}
-		}
+		log.Printf("[signal] sendToPeer: no WS transport for %s", id)
+		return false
 	}
+
+	if entry.UDPAddr != nil {
+		if s.sendUDP(msg, entry.UDPAddr) {
+			return true
+		}
+		log.Printf("[signal] sendToPeer: UDP send failed for %s (%s)", id, entry.UDPAddr)
+		return false
+	}
+
+	if pc := s.tcpPunchConnForPeer(id); pc != nil {
+		if err := pc.writeProto(msg); err != nil {
+			log.Printf("[signal] TCP punch send to %s: %v", id, err)
+			return false
+		}
+		return true
+	}
+
+	if entry.TCPConn != nil {
+		if err := codec.WriteRawProto(entry.TCPConn, msg); err != nil {
+			log.Printf("[signal] TCP send to %s: %v", id, err)
+			return false
+		}
+		return true
+	}
+
+	log.Printf("[signal] sendToPeer: no transport for %s (connType=%s)", id, entry.ConnType)
+	return false
 }

@@ -100,14 +100,21 @@ func (g *Gateway) HandleQualityReport(ctx context.Context, sessionID string, pay
 
 	// Determine session type (desktop or video)
 	var deviceConn *DeviceConn
+	adaptive := true
 	if val, ok := g.desktopSessions.Load(sessionID); ok {
 		ds := val.(*DesktopSession)
 		deviceConn = ds.deviceConn
+		ds.mu.Lock()
+		adaptive = ds.FpsMode == "adaptive"
+		ds.mu.Unlock()
 	} else if val, ok := g.videoSessions.Load(sessionID); ok {
 		vs := val.(*VideoSession)
 		deviceConn = vs.deviceConn
 	}
 	if deviceConn == nil {
+		return
+	}
+	if !adaptive {
 		return
 	}
 

@@ -1,8 +1,8 @@
 /**
  * BetterDesk Console — server P2P / relay connection mode configuration.
  *
- * Persists global connection strategy via systemd Environment= lines or
- * docker-compose.yml server environment variables.
+ * Persists global connection strategy via the split-Docker Go API, systemd
+ * Environment= lines, or docker-compose.yml server environment variables.
  */
 
 'use strict';
@@ -12,22 +12,45 @@ const fsp = require('fs').promises;
 const path = require('path');
 const config = require('../config/config');
 const updateService = require('./updateService');
+const {
+    canUsePrivilegedUpdate,
+    invokePrivilegedUpdate,
+} = require('../lib/privilegedUpdateHelper');
+const { apiClient } = require('./betterdeskApi');
 
 const CONSOLE_ROOT = path.join(__dirname, '..');
 const REPO_ROOT = path.join(CONSOLE_ROOT, '..');
 const SYSTEMD_SERVER_UNIT = '/etc/systemd/system/betterdesk-server.service';
+/** Drop-in written by privileged broker — overrides unit Environment= lines. */
+const SYSTEMD_CONNECTION_DROPIN = '/etc/systemd/system/betterdesk-server.service.d/50-betterdesk-connection.conf';
 const DOCKER_COMPOSE_PATH = path.join(REPO_ROOT, 'docker-compose.yml');
 
-const MANAGED_ENV_KEYS = ['P2P_FIRST', 'ALWAYS_USE_RELAY', 'P2P_FALLBACK_MS', 'SAME_NAT_RELAY'];
+const MANAGED_ENV_KEYS = [
+    'P2P_FIRST',
+    'ALWAYS_USE_RELAY',
+    'P2P_FALLBACK_MS',
+    'SAME_NAT_RELAY',
+    'ALLOW_SHARED_NAT_INITIATOR',
+    'LOGGED_IN_ONLY_INITIATOR',
+    'OPERATOR_ONLY_OUTBOUND'
+];
 
 const DEFAULTS = {
     mode: 'p2p_first',
     p2p_fallback_ms: 2000,
-    same_nat_relay: true
+    same_nat_relay: true,
+    allow_shared_nat_initiator: false,
+    logged_in_only_initiator: false,
+    operator_only_outbound: false
 };
 
 function isDockerRuntime() {
     return fs.existsSync('/.dockerenv') || process.env.DOCKER === 'true';
+}
+
+function isDockerSplitDeployment() {
+    return config.isDocker === true
+        && String(process.env.BETTERDESK_DOCKER_LAYOUT || '').trim().toLowerCase() === 'split';
 }
 
 function systemdUnitExists() {
@@ -87,20 +110,29 @@ function envVarsFromSettings(settings) {
     const mode = settings.mode === 'relay_only' ? 'relay_only' : 'p2p_first';
     const fallbackMs = Number(settings.p2p_fallback_ms);
     const sameNatRelay = settings.same_nat_relay !== false;
+    const allowSharedNat = settings.allow_shared_nat_initiator === true;
+    const loggedInOnly = settings.logged_in_only_initiator === true;
+    const operatorOnly = settings.operator_only_outbound === true;
 
     if (mode === 'relay_only') {
         return {
             P2P_FIRST: 'N',
             ALWAYS_USE_RELAY: 'Y',
             P2P_FALLBACK_MS: String(Number.isFinite(fallbackMs) && fallbackMs >= 0 ? fallbackMs : DEFAULTS.p2p_fallback_ms),
-            SAME_NAT_RELAY: yn(sameNatRelay)
+            SAME_NAT_RELAY: yn(sameNatRelay),
+            ALLOW_SHARED_NAT_INITIATOR: yn(allowSharedNat),
+            LOGGED_IN_ONLY_INITIATOR: yn(loggedInOnly),
+            OPERATOR_ONLY_OUTBOUND: yn(operatorOnly)
         };
     }
     return {
         P2P_FIRST: 'Y',
         ALWAYS_USE_RELAY: 'N',
         P2P_FALLBACK_MS: String(Number.isFinite(fallbackMs) && fallbackMs >= 0 ? fallbackMs : DEFAULTS.p2p_fallback_ms),
-        SAME_NAT_RELAY: yn(sameNatRelay)
+        SAME_NAT_RELAY: yn(sameNatRelay),
+        ALLOW_SHARED_NAT_INITIATOR: yn(allowSharedNat),
+        LOGGED_IN_ONLY_INITIATOR: yn(loggedInOnly),
+        OPERATOR_ONLY_OUTBOUND: yn(operatorOnly)
     };
 }
 
@@ -306,6 +338,9 @@ function settingsFromEnv(env, source) {
         mode,
         p2p_fallback_ms: p2pFallbackMs,
         same_nat_relay: parseYn(env.SAME_NAT_RELAY, DEFAULTS.same_nat_relay),
+        allow_shared_nat_initiator: parseYn(env.ALLOW_SHARED_NAT_INITIATOR, DEFAULTS.allow_shared_nat_initiator),
+        logged_in_only_initiator: parseYn(env.LOGGED_IN_ONLY_INITIATOR, DEFAULTS.logged_in_only_initiator),
+        operator_only_outbound: parseYn(env.OPERATOR_ONLY_OUTBOUND, DEFAULTS.operator_only_outbound),
         source,
         writable: source !== 'defaults'
     };
@@ -313,7 +348,14 @@ function settingsFromEnv(env, source) {
 
 async function readSystemdSettings() {
     const content = await fsp.readFile(SYSTEMD_SERVER_UNIT, 'utf8');
-    return settingsFromEnv(parseSystemdEnvironment(content), 'systemd');
+    const env = parseSystemdEnvironment(content);
+    try {
+        const dropin = await fsp.readFile(SYSTEMD_CONNECTION_DROPIN, 'utf8');
+        Object.assign(env, parseSystemdEnvironment(dropin));
+    } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
+    }
+    return settingsFromEnv(env, 'systemd');
 }
 
 async function readDockerSettings() {
@@ -321,7 +363,37 @@ async function readDockerSettings() {
     return settingsFromEnv(parseDockerComposeEnvironment(content), 'docker');
 }
 
+function settingsFromApi(data) {
+    const fallback = Number(data?.p2p_fallback_ms);
+    return {
+        mode: data?.mode === 'relay_only' ? 'relay_only' : 'p2p_first',
+        p2p_fallback_ms: Number.isFinite(fallback) && fallback >= 0 && fallback <= 30000
+            ? fallback
+            : DEFAULTS.p2p_fallback_ms,
+        same_nat_relay: data?.same_nat_relay !== false,
+        allow_shared_nat_initiator: data?.allow_shared_nat_initiator === true,
+        logged_in_only_initiator: data?.logged_in_only_initiator === true,
+        operator_only_outbound: data?.operator_only_outbound === true,
+        source: 'go-api',
+        writable: true,
+    };
+}
+
+async function readSplitDockerSettings() {
+    const response = await apiClient.get('/connection/config');
+    return settingsFromApi(response.data?.config || response.data || {});
+}
+
 async function getConnectionMode() {
+    if (isDockerSplitDeployment()) {
+        try {
+            return await readSplitDockerSettings();
+        } catch (err) {
+            console.error('Failed to read split-Docker connection settings:', err.message);
+            return { ...DEFAULTS, source: 'go-api', writable: false };
+        }
+    }
+
     const source = detectDeploymentSource();
     try {
         if (source === 'systemd') return await readSystemdSettings();
@@ -333,11 +405,37 @@ async function getConnectionMode() {
 }
 
 async function writeSystemdSettings(settings) {
-    const content = await fsp.readFile(SYSTEMD_SERVER_UNIT, 'utf8');
     const vars = envVarsFromSettings(settings);
-    const next = patchSystemdEnvironment(content, vars);
-    await fsp.writeFile(SYSTEMD_SERVER_UNIT, next, { encoding: 'utf8', mode: 0o644 });
-    return { path: SYSTEMD_SERVER_UNIT, vars };
+
+    // Prefer a systemd drop-in via the fixed root broker. Direct writes to the
+    // main unit fail with EACCES when the console runs as betterdesk (typical).
+    if (canUsePrivilegedUpdate()) {
+        const result = invokePrivilegedUpdate({
+            action: 'write_connection_env',
+            vars,
+        });
+        return {
+            path: result.path || SYSTEMD_CONNECTION_DROPIN,
+            vars,
+            method: 'privileged_dropin',
+        };
+    }
+
+    try {
+        const content = await fsp.readFile(SYSTEMD_SERVER_UNIT, 'utf8');
+        const next = patchSystemdEnvironment(content, vars);
+        await fsp.writeFile(SYSTEMD_SERVER_UNIT, next, { encoding: 'utf8', mode: 0o644 });
+        return { path: SYSTEMD_SERVER_UNIT, vars, method: 'unit_direct' };
+    } catch (err) {
+        if (err.code === 'EACCES' || err.code === 'EPERM') {
+            throw new Error(
+                `Cannot write systemd connection settings (permission denied on ${SYSTEMD_SERVER_UNIT}). `
+                + 'Run once as root: sudo node /opt/BetterDeskConsole/scripts/linux-ensure-console-user.js '
+                + 'then retry — or set ALLOW_SHARED_NAT_INITIATOR via a systemd drop-in.'
+            );
+        }
+        throw err;
+    }
 }
 
 async function writeDockerSettings(settings) {
@@ -349,16 +447,32 @@ async function writeDockerSettings(settings) {
 }
 
 async function setConnectionMode(settings) {
+    const normalized = {
+        mode: settings.mode === 'relay_only' ? 'relay_only' : 'p2p_first',
+        p2p_fallback_ms: Number(settings.p2p_fallback_ms),
+        same_nat_relay: settings.same_nat_relay !== false,
+        allow_shared_nat_initiator: settings.allow_shared_nat_initiator === true,
+        logged_in_only_initiator: settings.logged_in_only_initiator === true,
+        operator_only_outbound: settings.operator_only_outbound === true
+    };
+
+    if (isDockerSplitDeployment()) {
+        const response = await apiClient.put('/connection/config', normalized);
+        const data = response.data || {};
+        const persisted = data.config || data;
+        return {
+            source: 'go-api',
+            settings: settingsFromApi(persisted),
+            restart: null,
+            restartRequired: null,
+            dockerMode: true,
+        };
+    }
+
     const source = detectDeploymentSource();
     if (source === 'defaults') {
         throw new Error('not_configurable');
     }
-
-    const normalized = {
-        mode: settings.mode === 'relay_only' ? 'relay_only' : 'p2p_first',
-        p2p_fallback_ms: Number(settings.p2p_fallback_ms),
-        same_nat_relay: settings.same_nat_relay !== false
-    };
 
     if (source === 'systemd') {
         return { ...(await writeSystemdSettings(normalized)), source: 'systemd', settings: normalized };
@@ -405,12 +519,17 @@ function restartServer() {
 module.exports = {
     DEFAULTS,
     MANAGED_ENV_KEYS,
+    SYSTEMD_SERVER_UNIT,
+    SYSTEMD_CONNECTION_DROPIN,
     detectDeploymentSource,
     parseSystemdEnvironment,
     patchSystemdEnvironment,
     parseDockerComposeEnvironment,
     patchDockerComposeEnvironment,
+    isDockerSplitDeployment,
     modeFromEnvVars,
+    settingsFromEnv,
+    settingsFromApi,
     envVarsFromSettings,
     getConnectionMode,
     setConnectionMode,

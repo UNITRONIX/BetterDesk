@@ -4,9 +4,11 @@
 
 const {
     isPanelPollRequest,
+    isPanelReadRequest,
     isPanelPreferenceWrite,
     resolveApiPath,
-    PANEL_POLL_PATHS
+    PANEL_POLL_PATHS,
+    PANEL_READ_PATHS
 } = require('../middleware/rateLimiter');
 
 describe('rateLimiter panel poll paths', () => {
@@ -29,6 +31,14 @@ describe('rateLimiter panel poll paths', () => {
         expect(PANEL_POLL_PATHS.has('/api/tags')).toBe(true);
         expect(PANEL_POLL_PATHS.has('/api/device-groups')).toBe(true);
         expect(PANEL_POLL_PATHS.has('/api/bd/notifications')).toBe(true);
+    });
+
+    it('classifies lightweight settings reads separately from mutations', () => {
+        expect(PANEL_READ_PATHS.has('/api/settings/branding')).toBe(true);
+        expect(isPanelReadRequest({ method: 'GET', path: '/api/settings/branding' })).toBe(true);
+        expect(isPanelReadRequest({ method: 'HEAD', path: '/api/settings/info' })).toBe(true);
+        expect(isPanelReadRequest({ method: 'POST', path: '/api/settings/branding' })).toBe(false);
+        expect(isPanelReadRequest({ method: 'GET', path: '/api/settings/backup' })).toBe(false);
     });
 
     it('classifies /api/panel/* GET as panel poll via prefix', () => {
@@ -73,6 +83,13 @@ describe('rateLimiter panel poll paths', () => {
             path: '/desktop/layout',
             baseUrl: '/api',
             originalUrl: '/api/desktop/layout'
+        })).toBe(true);
+
+        expect(isPanelReadRequest({
+            method: 'GET',
+            path: '/settings/branding',
+            baseUrl: '/api',
+            originalUrl: '/api/settings/branding'
         })).toBe(true);
     });
 });

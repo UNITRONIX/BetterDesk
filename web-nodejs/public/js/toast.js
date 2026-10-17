@@ -59,7 +59,7 @@
         toast.className = 'toast toast-' + type;
 
         var html =
-            '<span class="material-icons toast-icon">' + (iconMap[type] || 'info') + '</span>' +
+            '<span class="material-icons toast-icon" aria-hidden="true">' + (iconMap[type] || 'info') + '</span>' +
             '<div class="toast-body">' +
                 '<div class="toast-title">' + _escapeHtml(title) + '</div>' +
                 (message ? '<div class="toast-message">' + _escapeHtml(message) + '</div>' : '') +

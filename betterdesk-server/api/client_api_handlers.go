@@ -42,6 +42,44 @@ type tfaSession struct {
 	createdAt  time.Time
 }
 
+type clientHeartbeatRequest struct {
+	ID                 string          `json:"id"`
+	UUID               string          `json:"uuid"`
+	CPU                float64         `json:"cpu"`
+	Memory             float64         `json:"memory"`
+	Disk               float64         `json:"disk"`
+	ModifiedAt         int64           `json:"modified_at"`
+	TelemetrySchema    int             `json:"telemetry_schema"`
+	ProductSKU         string          `json:"product_sku"`
+	ConnMode           string          `json:"conn_mode"`
+	Capabilities       []string        `json:"capabilities"`
+	EffectiveConnMode  string          `json:"effective_conn_mode"`
+	PolicyRevision     int64           `json:"policy_revision"`
+	PolicyStatus       string          `json:"policy_status"`
+	LastCommandID      string          `json:"last_command_id"`
+	PolicyError        string          `json:"policy_error"`
+	Telemetry          json.RawMessage `json:"telemetry"`
+	TelemetryEnvelope  json.RawMessage `json:"telemetry_envelope"`
+	BetterDeskEnvelope json.RawMessage `json:"betterdesk_envelope"`
+}
+
+func classifyBetterDeskDevice(productSKU, connMode string) string {
+	switch productSKU {
+	case "betterdesk-support":
+		return "betterdesk-support"
+	case "betterdesk-desktop":
+		// Incoming-only is a reversible desktop policy, not a Support Agent.
+		return "betterdesk"
+	}
+	if connMode == "incoming-only" {
+		return "betterdesk-support"
+	}
+	if productSKU == "" {
+		return ""
+	}
+	return "betterdesk"
+}
+
 // tfaSessionStore is a concurrency-safe in-memory store for pending 2FA sessions.
 // Sessions expire after 5 minutes.
 type tfaSessionStore struct {
@@ -368,10 +406,17 @@ func normalizeAbDataField(data json.RawMessage) string {
 			dataStr = unquoted
 		}
 	}
-	if dataStr == "" || dataStr == "null" {
+	if strings.TrimSpace(dataStr) == "" || strings.TrimSpace(dataStr) == "null" {
 		dataStr = "{}"
 	}
 	return dataStr
+}
+
+func normalizeAddressBookResponse(data string) string {
+	if strings.TrimSpace(data) == "" || strings.TrimSpace(data) == "null" {
+		return "{}"
+	}
+	return data
 }
 
 // handleClientAddressBook handles address book get/set for RustDesk clients.
@@ -394,6 +439,7 @@ func (s *Server) handleClientAddressBook(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		data = s.mergeOrgAddressBooksIntoAB(r, data)
+		data = s.injectOrgPeerCredentialsIntoAB(r, data)
 		if !auth.IsProRole(role) {
 			// Merge admin-set tags from peers table into AB (#76 TAG sync)
 			data = s.mergeAdminTagsIntoAB(data)
@@ -402,6 +448,7 @@ func (s *Server) handleClientAddressBook(w http.ResponseWriter, r *http.Request)
 		}
 		// Enforce device-group / folder ACL on Address Book peers (org merge + stale entries).
 		data = s.applyDeviceScopeToAddressBook(r, username, role, data)
+		data = normalizeAddressBookResponse(data)
 		writeJSON(w, http.StatusOK, map[string]any{"data": data, "licensed_devices": 0})
 
 	case http.MethodPost:
@@ -456,6 +503,7 @@ func (s *Server) handleClientAddressBookPersonal(w http.ResponseWriter, r *http.
 			data = s.mergeAdminTagsIntoAB(data)
 		}
 		data = s.applyDeviceScopeToAddressBook(r, username, role, data)
+		data = normalizeAddressBookResponse(data)
 		writeJSON(w, http.StatusOK, map[string]any{"data": data})
 
 	case http.MethodPost:
@@ -848,27 +896,19 @@ func (s *Server) handleClientGroupPeers(w http.ResponseWriter, r *http.Request) 
 
 // handleClientHeartbeat accepts heartbeat pings from RustDesk clients.
 // POST /api/heartbeat
-// Request:  { "id": "DEVICE_ID", "uuid": "...", "cpu": 42, "memory": 55, "disk": 30 }
-// Response: { "modified_at": "2026-...", "sysinfo": true } (if sysinfo needed)
-//
-//	{ "modified_at": "2026-..." }                   (normal ACK)
+// Request:  { "id": "DEVICE_ID", "uuid": "...", "modified_at": 0, ... }
+// Response: { "modified_at": <i64 ms>, "strategy"?: { "config_options": {...} }, "sysinfo"?: true }
 func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// BD-2026-001: Rate-limit heartbeat requests per IP
 	clientIP := s.remoteIP(r)
 	if !s.heartbeatLimiter.Allow(clientIP) {
-		writeJSON(w, http.StatusOK, map[string]string{"modified_at": time.Now().UTC().Format(time.RFC3339)})
+		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
 
-	var body struct {
-		ID     string  `json:"id"`
-		UUID   string  `json:"uuid"`
-		CPU    float64 `json:"cpu"`
-		Memory float64 `json:"memory"`
-		Disk   float64 `json:"disk"`
-	}
+	var body clientHeartbeatRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusOK, map[string]string{"modified_at": time.Now().UTC().Format(time.RFC3339)})
+		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
 
@@ -877,24 +917,60 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		deviceID = body.UUID
 	}
 	if deviceID == "" || !peerIDRegexp.MatchString(deviceID) {
-		writeJSON(w, http.StatusOK, map[string]string{"modified_at": time.Now().UTC().Format(time.RFC3339)})
+		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
 
 	// Verify peer exists
 	peer, err := s.db.GetPeer(deviceID)
 	if err != nil || peer == nil {
-		writeJSON(w, http.StatusOK, map[string]string{"modified_at": time.Now().UTC().Format(time.RFC3339)})
+		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
 
 	if peer.Banned {
-		writeJSON(w, http.StatusOK, map[string]string{"error": "BANNED"})
+		writeJSON(w, http.StatusOK, map[string]any{"error": "BANNED", "modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
-
+	var responsePublicKey *[32]byte
+	envelopeVerified := false
+	if len(body.BetterDeskEnvelope) > 0 {
+		opened, err := s.openTelemetryEnvelope(deviceID, body.BetterDeskEnvelope)
+		if err != nil {
+			log.Printf("[api] BetterDesk heartbeat envelope rejected for %s: %v", deviceID, err)
+			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+			return
+		}
+		var inner clientHeartbeatRequest
+		if err := json.Unmarshal(opened.Payload, &inner); err != nil || (inner.ID != "" && inner.ID != deviceID) {
+			log.Printf("[api] BetterDesk heartbeat payload rejected for %s", deviceID)
+			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+			return
+		}
+		body = inner
+		responsePublicKey = opened.ResponsePublicKey
+		envelopeVerified = true
+		s.rememberSecureClientKey(deviceID, responsePublicKey)
+		s.rememberVerifiedIdentity(deviceID, body)
+		s.processConnectionModeAck(deviceID, body)
+	} else {
+		s.rememberUnverifiedIdentity(deviceID, body)
+	}
+	if len(body.TelemetryEnvelope) > 0 {
+		decrypted, err := s.openTelemetryEnvelope(deviceID, body.TelemetryEnvelope)
+		if err != nil {
+			log.Printf("[api] telemetry envelope rejected for %s: %v", deviceID, err)
+			body.Telemetry = nil
+		} else {
+			body.Telemetry = decrypted.Payload
+		}
+	}
 	// Update peer status to ONLINE
 	_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP)
+	// HTTP heartbeats are also a liveness signal for BetterDesk clients that
+	// do not maintain a UDP/WebSocket signal connection. Refresh the in-memory
+	// peer map so the signal heartbeat cleaner does not mark them offline again.
+	s.peers.TouchHeartbeat(deviceID)
 
 	// If the user logged in before the peer row existed, bind owner now.
 	db.ApplyActiveSessionOwner(s.db, deviceID, body.UUID)
@@ -905,19 +981,37 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 			log.Printf("[api] Failed to save peer metrics for %s: %v", deviceID, err)
 		}
 	}
+	if len(body.Telemetry) > 0 {
+		s.saveClientTelemetry(deviceID, body.Telemetry)
+	}
+
+	serverModifiedAt := s.clientBrandingModifiedAt()
+	resp := map[string]any{
+		"modified_at": serverModifiedAt,
+	}
+	if commands := s.telemetryCommandsForDevice(deviceID); len(commands) > 0 {
+		resp["telemetry_commands"] = commands
+	}
 
 	// Request sysinfo if hostname is empty (never received)
 	if peer.Hostname == "" {
-		writeJSON(w, http.StatusOK, map[string]any{
-			"modified_at": time.Now().UTC().Format(time.RFC3339),
-			"sysinfo":     true,
-		})
-		return
+		resp["sysinfo"] = true
 	}
 
-	resp := map[string]any{
-		"modified_at": time.Now().UTC().Format(time.RFC3339),
+	// Support Agent branding is fetched through BetterDesk's richer API. Do not
+	// push generic RustDesk config_options to an incoming-only client: those
+	// options can contain connection or lockdown settings that conflict with
+	// its signed profile. Connection mode itself is never placed here.
+	if body.ModifiedAt != serverModifiedAt && !s.withholdClientStrategy(deviceID, body, peer.DeviceType, envelopeVerified) {
+		branding := s.loadBrandingConfig()
+		opts := branding.Profiles.RustDesk.ConfigOptions
+		if len(opts) > 0 {
+			resp["strategy"] = map[string]any{
+				"config_options": opts,
+			}
+		}
 	}
+
 	if policy, err := s.db.GetAccessPolicy(deviceID); err == nil && policy != nil {
 		resp["access_policy"] = map[string]any{
 			"unattended_enabled": policy.UnattendedEnabled,
@@ -925,7 +1019,18 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 			"schedule_enabled":   policy.ScheduleEnabled,
 		}
 	}
-	writeJSON(w, http.StatusOK, resp)
+	// connection_mode_command is added only inside the sealed envelope.
+	s.writeHeartbeatResponse(w, deviceID, resp, responsePublicKey)
+}
+
+// clientBrandingModifiedAt returns branding revision as Unix ms for heartbeat cursors.
+func (s *Server) clientBrandingModifiedAt() int64 {
+	cfg := s.loadBrandingConfig()
+	if ms := brandingRevisionMillis(cfg); ms > 0 {
+		return ms
+	}
+	// Stable non-zero when no branding saved yet so clients can latch a cursor.
+	return 1
 }
 
 // handleClientSysinfo receives hardware/software info from RustDesk clients.
@@ -943,12 +1048,14 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		ID       string `json:"id"`
-		UUID     string `json:"uuid"`
-		Hostname string `json:"hostname"`
-		Platform string `json:"platform"`
-		OS       string `json:"os"`
-		Version  string `json:"version"`
+		ID         string `json:"id"`
+		UUID       string `json:"uuid"`
+		Hostname   string `json:"hostname"`
+		Platform   string `json:"platform"`
+		OS         string `json:"os"`
+		Version    string `json:"version"`
+		ProductSKU string `json:"product_sku"`
+		ConnMode   string `json:"conn_mode"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		w.Header().Set("Content-Type", "text/plain")
@@ -979,6 +1086,7 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
 		return
 	}
+	s.classifyPeerFromClient(deviceID, body.ProductSKU, body.ConnMode, false)
 
 	// Use platform or os field (RustDesk client may send either)
 	osValue := body.Platform

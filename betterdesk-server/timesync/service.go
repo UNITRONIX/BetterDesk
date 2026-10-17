@@ -10,17 +10,22 @@ import (
 	"github.com/unitronix/betterdesk-server/db"
 )
 
+// PersistedConfigKey is the server_config key used for panel-managed
+// time-sync overrides. It is intentionally a single allowlisted record so
+// updates are persisted atomically from the panel's point of view.
+const PersistedConfigKey = "timesync_config"
+
 // Status is the last known clock synchronization state.
 type Status struct {
-	Synced         bool      `json:"synced"`
-	OffsetMS       int64     `json:"offset_ms"`
-	LastCheckAt    time.Time `json:"last_check_at"`
-	NTPServer      string    `json:"ntp_server,omitempty"`
-	Stratum        uint8     `json:"stratum,omitempty"`
-	MaxSkewMS      int64     `json:"max_skew_ms"`
-	RequireSync    bool      `json:"require_sync_for_billing"`
-	LastError      string    `json:"last_error,omitempty"`
-	OSClockSynced  *bool     `json:"os_clock_synced,omitempty"`
+	Synced        bool      `json:"synced"`
+	OffsetMS      int64     `json:"offset_ms"`
+	LastCheckAt   time.Time `json:"last_check_at"`
+	NTPServer     string    `json:"ntp_server,omitempty"`
+	Stratum       uint8     `json:"stratum,omitempty"`
+	MaxSkewMS     int64     `json:"max_skew_ms"`
+	RequireSync   bool      `json:"require_sync_for_billing"`
+	LastError     string    `json:"last_error,omitempty"`
+	OSClockSynced *bool     `json:"os_clock_synced,omitempty"`
 }
 
 // Config controls periodic NTP checks.
@@ -126,6 +131,13 @@ func (s *Service) ApplyConfig(cfg Config) {
 	s.cfg.TrustOSNTP = cfg.TrustOSNTP
 	s.status.MaxSkewMS = s.cfg.MaxSkew.Milliseconds()
 	s.status.RequireSync = s.cfg.RequireSync
+}
+
+// GetConfig returns the active NTP and billing clock configuration.
+func (s *Service) GetConfig() Config {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.cfg
 }
 
 // CheckNow runs an immediate NTP check against configured servers.

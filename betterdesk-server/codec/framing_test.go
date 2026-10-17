@@ -180,6 +180,29 @@ func TestFrameTooLarge(t *testing.T) {
 	}
 }
 
+func TestWriteReadRawBytesMaxPeerFrame(t *testing.T) {
+	// Peer relay frames may exceed MaxFrameSize (64 KiB) but stay under MaxPeerFrameSize (#397).
+	conn := newTestConn()
+	payload := make([]byte, MaxFrameSize+1024)
+	for i := range payload {
+		payload[i] = byte(i % 251)
+	}
+	if err := WriteRawBytesMax(conn, payload, MaxPeerFrameSize); err != nil {
+		t.Fatalf("WriteRawBytesMax: %v", err)
+	}
+	conn.readBuf = bytes.NewBuffer(conn.writeBuf.Bytes())
+	got, err := ReadRawBytesMax(conn, 0, MaxPeerFrameSize)
+	if err != nil {
+		t.Fatalf("ReadRawBytesMax: %v", err)
+	}
+	if !bytes.Equal(got, payload) {
+		t.Fatalf("round-trip mismatch: len got=%d want=%d", len(got), len(payload))
+	}
+	if err := WriteRawBytesMax(conn, make([]byte, MaxPeerFrameSize+1), MaxPeerFrameSize); err == nil {
+		t.Fatal("expected error for payload above MaxPeerFrameSize")
+	}
+}
+
 func TestZeroLengthFrame(t *testing.T) {
 	conn := newTestConn()
 
@@ -188,7 +211,22 @@ func TestZeroLengthFrame(t *testing.T) {
 
 	_, err := ReadFrame(conn, 0)
 	if err == nil {
-		t.Error("expected error for zero-length frame, got nil")
+		t.Error("expected control frame error for zero-length frame, got nil")
+	}
+}
+
+func TestZeroLengthRawFrame(t *testing.T) {
+	conn := newTestConn()
+
+	// RustDesk BytesCodec permits an empty raw payload as a valid 0x00 frame.
+	conn.readBuf.Write([]byte{0x00})
+
+	got, err := ReadRawBytesMax(conn, 0, MaxPeerFrameSize)
+	if err != nil {
+		t.Fatalf("ReadRawBytesMax: %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("expected empty payload, got %d bytes", len(got))
 	}
 }
 

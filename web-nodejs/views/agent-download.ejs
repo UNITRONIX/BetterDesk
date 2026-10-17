@@ -21,8 +21,8 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= esc(companyName) %> — <%= t('download.title') %></title>
     <link rel="stylesheet" href="/css/agent-download.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='Arial'%3EB%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/css/material-icons-local.css">
+    <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
     <style>
         :root {
             --brand-primary: <%= esc(primary) %>;
@@ -58,9 +58,11 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'
         <section class="portal-intro">
             <h2><%= t('download.choose_platform') %></h2>
             <p><%= t('download.choose_platform_hint') %></p>
-            <% if (typeof productType !== 'undefined') { %>
+            <% if (typeof productType !== 'undefined' && !brand.hide_product_type) { %>
                 <p class="portal-product-type">
-                    <% if (productType === 'rdclient') { %>
+                    <% if (brand.product_label) { %>
+                        <%= esc(brand.product_label) %>
+                    <% } else if (productType === 'rdclient') { %>
                         <%= t('download.product_rdclient') %>
                     <% } else if (productType === 'support-agent') { %>
                         <%= t('download.product_support_agent') %>

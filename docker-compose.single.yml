@@ -45,6 +45,8 @@ services:
       - console-data:/app/data
     environment:
       - NODE_ENV=production
+      # Set TRUST_PROXY=1 when the panel is behind one reverse proxy.
+      - TRUST_PROXY=${TRUST_PROXY:-}
       - PORT=5000
       - HOST=0.0.0.0
       - API_HOST=0.0.0.0
@@ -55,21 +57,34 @@ services:
       - BETTERDESK_API_URL=http://127.0.0.1:21121/api
       - RUSTDESK_PATH=/opt/rustdesk
       - DATA_DIR=/app/data
+      - BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-UNITRONIX/BetterDesk-Client}
+      - BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
+      - BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
+      - BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}
+      - AGENT_ARTIFACT_DIR=/app/data/agent-builds
+      - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
+      - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
+      - AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
       - DB_PATH=/opt/rustdesk/db_v2.sqlite3
       - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
       - API_KEY_PATH=/opt/rustdesk/.api_key
       - SESSION_SECRET=${SESSION_SECRET:-}
       - DOCKER=true
+      # Optional: map betterdesk to host bind-mount owner (Synology etc.). Default 10001.
+      - PUID=${PUID:-10001}
+      - PGID=${PGID:-10001}
       # Database — defaults to SQLite; set via .env or command line for PostgreSQL
       - DB_TYPE=${DB_TYPE:-sqlite}
       - DATABASE_URL=${DATABASE_URL:-}
       - DB_URL=${DATABASE_URL:-}
+      - SQLITE_AUTH_DB_MODE=${SQLITE_AUTH_DB_MODE:-}
       # Relay server address (public IP or domain).
       # Auto-detected if not set. MUST be set if auto-detection returns
       # Docker internal IP (172.x.x.x) — remote relay connections will fail otherwise.
       - RELAY_SERVERS=${RELAY_SERVERS:-}
       # Raise this for very large NAT/proxy deployments; 0 disables signal rate limiting.
       - SIGNAL_RATE_LIMIT_PER_IP=${SIGNAL_RATE_LIMIT_PER_IP:-20}
+      - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
       # Enrollment policy. Fresh volumes default to "managed" (operator approves
       # new devices); pre-existing volumes keep their current mode. Override with
       # "open", "managed", or "locked".
@@ -80,8 +95,11 @@ services:
       - BILLING_TRUST_OS_NTP=${BILLING_TRUST_OS_NTP:-Y}
       # Panel folders/groups for RustDesk client (SQLite — same container as console).
       - AUTH_DB_PATH=/app/data/auth.db
-      # Admin credentials (first run only; existing users are not overwritten):
+      # Admin credentials (first run only; existing users are not overwritten).
+      # Do NOT comment these out — ADMIN_PASSWORD on the host shell only reaches
+      # the container when referenced here (issue #385).
       #   ADMIN_PASSWORD=YourSecurePassword123 docker compose -f docker-compose.single.yml up -d --build
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - INIT_ADMIN_USER=${ADMIN_USERNAME:-admin}
       - INIT_ADMIN_PASS=${ADMIN_PASSWORD:-}
       - DEFAULT_ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
@@ -111,8 +129,10 @@ services:
     container_name: betterdesk-postgres
     environment:
       - POSTGRES_USER=betterdesk
-      # BD-2026-007: PG_PASSWORD MUST be set explicitly — do not use default values in production
-      - POSTGRES_PASSWORD=${PG_PASSWORD:?PG_PASSWORD must be set for PostgreSQL}
+      # Compose interpolates profile variables even when the profile is disabled.
+      # Keep SQLite/default validation usable without a secret; the postgres
+      # profile still requires PG_PASSWORD to be set before it is started.
+      - POSTGRES_PASSWORD=${PG_PASSWORD:-}
       - POSTGRES_DB=betterdesk
     volumes:
       - postgres-data:/var/lib/postgresql/data

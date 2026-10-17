@@ -983,7 +983,7 @@ html.rd-desk-desktop {
 }
 
 /* Mobile / tablet: allow full-page scroll with safe areas */
-@media (max-width: 1024px) {
+@media (max-width: 1024px), (max-height: 720px) {
     html.rd-desk-desktop {
         height: auto;
         max-height: none;

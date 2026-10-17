@@ -75,6 +75,12 @@ async function getAllDevices(filters = {}) {
         let peers = await betterdeskApi.getAllPeers({
             includeDeleted: !!filters.includeDeleted
         });
+        const remoteTargets = typeof betterdeskApi.getAllRemoteTargets === 'function'
+            ? await betterdeskApi.getAllRemoteTargets({
+                includeDisabled: !!filters.includeDeleted
+            })
+            : [];
+        peers = peers.concat(remoteTargets);
 
         // Overlay folder_id from auth.db assignments (Go server doesn't track folders)
         try {
@@ -143,6 +149,9 @@ async function getAllDevices(filters = {}) {
 }
 
 async function getDeviceById(id, options = {}) {
+    if (String(id || '').startsWith('rt_')) {
+        return betterdeskApi.getRemoteTarget(id);
+    }
     const peer = options.includeDeleted
         ? await betterdeskApi.getPeerIncludingDeleted(id)
         : await betterdeskApi.getPeer(id);

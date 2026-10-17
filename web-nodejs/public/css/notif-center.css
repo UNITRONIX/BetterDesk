@@ -28,6 +28,10 @@
     pointer-events: none;
 }
 
+.notif-badge[hidden] {
+    display: none !important;
+}
+
 /* Real-time arrival pulse (400ms). */
 @keyframes notif-pulse {
     0%   { transform: scale(1); }

@@ -10,19 +10,19 @@
 
     <!-- Tab navigation -->
     <div class="fleet-tabs">
-        <button class="fleet-tab ${activeTab === 'resources' ? 'active' : ''}" data-tab="resources" onclick="Fleet.switchTab('resources')">
+        <button class="fleet-tab ${activeTab === 'resources' ? 'active' : ''}" data-tab="resources" data-bd-call="Fleet.switchTab" data-bd-args='["resources"]'>
             <span class="material-icons">dns</span>
             <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_resources') : 'Resources' }</span>
         </button>
-        <button class="fleet-tab ${activeTab === 'tasks' ? 'active' : ''}" data-tab="tasks" onclick="Fleet.switchTab('tasks')">
+        <button class="fleet-tab ${activeTab === 'tasks' ? 'active' : ''}" data-tab="tasks" data-bd-call="Fleet.switchTab" data-bd-args='["tasks"]'>
             <span class="material-icons">schedule_send</span>
             <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_tasks') : 'Tasks' }</span>
         </button>
-        <button class="fleet-tab ${activeTab === 'builder' ? 'active' : ''}" data-tab="builder" onclick="Fleet.switchTab('builder')">
+        <button class="fleet-tab ${activeTab === 'builder' ? 'active' : ''}" data-tab="builder" data-bd-call="Fleet.switchTab" data-bd-args='["builder"]'>
             <span class="material-icons">account_tree</span>
             <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_builder') : 'Workflow Builder' }</span>
         </button>
-        <button class="fleet-tab ${activeTab === 'compliance' ? 'active' : ''}" data-tab="compliance" onclick="Fleet.switchTab('compliance')">
+        <button class="fleet-tab ${activeTab === 'compliance' ? 'active' : ''}" data-tab="compliance" data-bd-call="Fleet.switchTab" data-bd-args='["compliance"]'>
             <span class="material-icons">verified_user</span>
             <span>${ typeof req !== 'undefined' ? req.t('fleet.tab_compliance') : 'Compliance' }</span>
         </button>
@@ -32,10 +32,10 @@
     <div class="fleet-panel" id="panel-resources" style="display: ${activeTab === 'resources' ? 'block' : 'none'};">
         <div class="fleet-toolbar">
             <div class="fleet-toolbar-left">
-                <select id="res-org-select" class="fleet-select" onchange="Fleet.onResOrgChange()">
+                <select id="res-org-select" class="fleet-select" data-bd-call="Fleet.onResOrgChange" data-bd-on="change">
                     <option value="">` + _('fleet.select_org_placeholder') + `</option>
                 </select>
-                <select id="res-type-filter" class="fleet-select" onchange="Fleet.loadResources()">
+                <select id="res-type-filter" class="fleet-select" data-bd-call="Fleet.loadResources" data-bd-on="change">
                     <option value="">` + _('fleet.all_types') + `</option>
                     <option value="printer">` + _('fleet.type_printer') + `</option>
                     <option value="network_drive">` + _('fleet.type_network_drive') + `</option>
@@ -44,7 +44,7 @@
                     <option value="proxy">` + _('fleet.type_proxy') + `</option>
                 </select>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="Fleet.showResourceModal()">
+            <button class="btn btn-primary btn-sm" data-bd-call="Fleet.showResourceModal">
                 <span class="material-icons">add</span> ` + _('fleet.add_resource') + `
             </button>
         </div>
@@ -74,7 +74,7 @@
     <div class="fleet-panel" id="panel-tasks" style="display: ${activeTab === 'tasks' ? 'block' : 'none'};">
         <div class="fleet-toolbar">
             <div class="fleet-toolbar-left">
-                <select id="task-status-filter" class="fleet-select" onchange="Fleet.loadTasks()">
+                <select id="task-status-filter" class="fleet-select" data-bd-call="Fleet.loadTasks" data-bd-on="change">
                     <option value="">` + _('fleet.all_statuses') + `</option>
                     <option value="pending">` + _('fleet.status_pending') + `</option>
                     <option value="running">` + _('fleet.status_running') + `</option>
@@ -83,7 +83,7 @@
                 </select>
                 <input type="text" class="fleet-search" id="task-search" placeholder="` + _('fleet.search_tasks') + `" onkeyup="Fleet.filterTasks()">
             </div>
-            <button class="btn btn-primary btn-sm" onclick="Fleet.showTaskModal()">
+            <button class="btn btn-primary btn-sm" data-bd-call="Fleet.showTaskModal">
                 <span class="material-icons">add</span> ` + _('fleet.create_task') + `
             </button>
         </div>
@@ -114,7 +114,7 @@
             <div class="fleet-output-header">
                 <span class="material-icons">terminal</span>
                 <span id="task-output-title">` + _('fleet.task_output') + `</span>
-                <button class="btn-icon" onclick="Fleet.closeOutput()"><span class="material-icons">close</span></button>
+                <button class="btn-icon" data-bd-call="Fleet.closeOutput"><span class="material-icons">close</span></button>
             </div>
             <pre class="fleet-output-pre" id="task-output-pre"></pre>
         </div>
@@ -124,24 +124,24 @@
     <div class="fleet-panel" id="panel-builder" style="display: ${activeTab === 'builder' ? 'block' : 'none'};">
         <div class="fleet-toolbar">
             <div class="fleet-toolbar-left">
-                <select id="workflow-select" class="fleet-select" onchange="Fleet.loadWorkflow()">
+                <select id="workflow-select" class="fleet-select" data-bd-call="Fleet.loadWorkflow" data-bd-on="change">
                     <option value="">` + _('fleet.select_workflow') + `</option>
                 </select>
             </div>
             <div class="fleet-toolbar-right">
-                <button class="btn btn-secondary btn-sm" onclick="Fleet.newWorkflow()">
+                <button class="btn btn-secondary btn-sm" data-bd-call="Fleet.newWorkflow">
                     <span class="material-icons">add</span> ` + _('fleet.new_workflow') + `
                 </button>
-                <button class="btn btn-secondary btn-sm" onclick="Fleet.saveWorkflow()">
+                <button class="btn btn-secondary btn-sm" data-bd-call="Fleet.saveWorkflow">
                     <span class="material-icons">save</span> ` + _('fleet.save') + `
                 </button>
-                <button class="btn btn-secondary btn-sm" onclick="Fleet.exportWorkflow()">
+                <button class="btn btn-secondary btn-sm" data-bd-call="Fleet.exportWorkflow">
                     <span class="material-icons">file_download</span> ` + _('fleet.export') + `
                 </button>
-                <button class="btn btn-primary btn-sm" onclick="Fleet.executeWorkflow(false)">
+                <button class="btn btn-primary btn-sm" data-bd-call="Fleet.executeWorkflow" data-bd-args='[false]'>
                     <span class="material-icons">play_arrow</span> ` + _('fleet.execute') + `
                 </button>
-                <button class="btn btn-outline btn-sm" onclick="Fleet.executeWorkflow(true)">
+                <button class="btn btn-outline btn-sm" data-bd-call="Fleet.executeWorkflow" data-bd-args='[true]'>
                     <span class="material-icons">science</span> ` + _('fleet.dry_run') + `
                 </button>
             </div>
@@ -222,10 +222,10 @@
             <div class="builder-canvas-wrap">
                 <svg id="builder-canvas" class="builder-canvas"></svg>
                 <div class="builder-zoom">
-                    <button class="btn-icon" onclick="FleetBuilder.zoomIn()"><span class="material-icons">zoom_in</span></button>
+                    <button class="btn-icon" data-bd-call="FleetBuilder.zoomIn"><span class="material-icons">zoom_in</span></button>
                     <span id="builder-zoom-level">100%</span>
-                    <button class="btn-icon" onclick="FleetBuilder.zoomOut()"><span class="material-icons">zoom_out</span></button>
-                    <button class="btn-icon" onclick="FleetBuilder.zoomReset()"><span class="material-icons">fit_screen</span></button>
+                    <button class="btn-icon" data-bd-call="FleetBuilder.zoomOut"><span class="material-icons">zoom_out</span></button>
+                    <button class="btn-icon" data-bd-call="FleetBuilder.zoomReset"><span class="material-icons">fit_screen</span></button>
                 </div>
             </div>
 
@@ -233,7 +233,7 @@
             <div class="builder-properties" id="builder-props" style="display:none;">
                 <div class="props-header">
                     <span id="props-title">` + _('fleet.node_properties') + `</span>
-                    <button class="btn-icon" onclick="FleetBuilder.closeProps()"><span class="material-icons">close</span></button>
+                    <button class="btn-icon" data-bd-call="FleetBuilder.closeProps"><span class="material-icons">close</span></button>
                 </div>
                 <div id="props-body"></div>
             </div>
@@ -244,11 +244,11 @@
     <div class="fleet-panel" id="panel-compliance" style="display: ${activeTab === 'compliance' ? 'block' : 'none'};">
         <div class="fleet-toolbar">
             <div class="fleet-toolbar-left">
-                <select id="comp-org-select" class="fleet-select" onchange="Fleet.loadCompliance()">
+                <select id="comp-org-select" class="fleet-select" data-bd-call="Fleet.loadCompliance" data-bd-on="change">
                     <option value="">` + _('fleet.all_organizations') + `</option>
                 </select>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="Fleet.scanAll()">
+            <button class="btn btn-secondary btn-sm" data-bd-call="Fleet.scanAll">
                 <span class="material-icons">radar</span> ` + _('fleet.scan_all') + `
             </button>
         </div>
@@ -314,7 +314,7 @@
     <div class="modal-dialog">
         <div class="modal-header">
             <h3 id="res-modal-title">` + _('fleet.add_resource') + `</h3>
-            <button class="btn-icon" onclick="Fleet.closeResourceModal()"><span class="material-icons">close</span></button>
+            <button class="btn-icon" data-bd-call="Fleet.closeResourceModal"><span class="material-icons">close</span></button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="res-edit-id">
@@ -324,7 +324,7 @@
             </div>
             <div class="form-group">
                 <label>` + _('fleet.col_type') + `</label>
-                <select id="res-type" class="form-control" onchange="Fleet.onResTypeChange()">
+                <select id="res-type" class="form-control" data-bd-call="Fleet.onResTypeChange" data-bd-on="change">
                     <option value="printer">` + _('fleet.type_printer') + `</option>
                     <option value="network_drive">` + _('fleet.type_network_drive') + `</option>
                     <option value="dns">` + _('fleet.type_dns') + `</option>
@@ -350,8 +350,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="Fleet.closeResourceModal()">` + _('fleet.cancel') + `</button>
-            <button class="btn btn-primary" onclick="Fleet.saveResource()">` + _('fleet.save') + `</button>
+            <button class="btn btn-secondary" data-bd-call="Fleet.closeResourceModal">` + _('fleet.cancel') + `</button>
+            <button class="btn btn-primary" data-bd-call="Fleet.saveResource">` + _('fleet.save') + `</button>
         </div>
     </div>
 </div>
@@ -361,7 +361,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-header">
             <h3 id="task-modal-title">` + _('fleet.create_task') + `</h3>
-            <button class="btn-icon" onclick="Fleet.closeTaskModal()"><span class="material-icons">close</span></button>
+            <button class="btn-icon" data-bd-call="Fleet.closeTaskModal"><span class="material-icons">close</span></button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="task-edit-id">
@@ -389,7 +389,7 @@
             <div class="form-group">
                 <label>` + _('fleet.col_schedule') + `</label>
                 <div class="form-row">
-                    <select id="task-schedule-type" class="form-control flex-1" onchange="Fleet.onScheduleTypeChange()">
+                    <select id="task-schedule-type" class="form-control flex-1" data-bd-call="Fleet.onScheduleTypeChange" data-bd-on="change">
                         <option value="immediate">` + _('fleet.schedule_immediate') + `</option>
                         <option value="once">` + _('fleet.schedule_once') + `</option>
                         <option value="cron">` + _('fleet.schedule_cron') + `</option>
@@ -413,8 +413,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="Fleet.closeTaskModal()">` + _('fleet.cancel') + `</button>
-            <button class="btn btn-primary" onclick="Fleet.saveTask()">` + _('fleet.save') + `</button>
+            <button class="btn btn-secondary" data-bd-call="Fleet.closeTaskModal">` + _('fleet.cancel') + `</button>
+            <button class="btn btn-primary" data-bd-call="Fleet.saveTask">` + _('fleet.save') + `</button>
         </div>
     </div>
 </div>

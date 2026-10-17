@@ -26,6 +26,16 @@ function buildServerInfoPayload(req) {
     };
 }
 
+function buildConfigQrPayload(qrDataUrl, endpoints) {
+    return {
+        qr: qrDataUrl,
+        server_id: endpoints.host,
+        relay_server: endpoints.relay,
+        api_url: endpoints.api,
+        phone_unreachable_host: clientConfigHost.isPhoneUnreachableHost(endpoints.host),
+    };
+}
+
 /**
  * GET /keys - Keys management page
  */
@@ -67,26 +77,24 @@ router.get('/api/keys/public', requireAuth, async (req, res) => {
 
 /**
  * GET /api/keys/public/qr - Get server config as QR code
- * Generates a QR code in rustdesk://config/<base64-json> format
- * that the RustDesk mobile app can scan to auto-configure.
+ * Generates a QR code in rustdesk://config/<reversed-deploy-string> format
+ * that the RustDesk mobile app can scan to auto-configure (#368).
  */
 router.get('/api/keys/public/qr', requireAuth, async (req, res) => {
     try {
         const endpoints = resolveClientEndpoints(req);
         const qrDataUrl = await keyService.getServerConfigQR(endpoints);
-        
+
         if (!qrDataUrl) {
             return res.status(404).json({
                 success: false,
                 error: req.t('keys.not_found')
             });
         }
-        
+
         res.json({
             success: true,
-            data: {
-                qr: qrDataUrl
-            }
+            data: buildConfigQrPayload(qrDataUrl, endpoints)
         });
     } catch (err) {
         console.error('Get public key QR error:', err);
@@ -179,19 +187,17 @@ router.get('/api/keys/qr', requireAuth, async (req, res) => {
     try {
         const endpoints = resolveClientEndpoints(req);
         const qrDataUrl = await keyService.getServerConfigQR(endpoints);
-        
+
         if (!qrDataUrl) {
             return res.status(404).json({
                 success: false,
                 error: req.t('keys.not_found')
             });
         }
-        
+
         res.json({
             success: true,
-            data: {
-                qr: qrDataUrl
-            }
+            data: buildConfigQrPayload(qrDataUrl, endpoints)
         });
     } catch (err) {
         console.error('Get public key QR error:', err);

@@ -6,19 +6,20 @@
   breadcrumb,
   body: `
 <div class="secaudit-container">
+  <h1 class="page-title secaudit-page-title">${_('nav.security_audit') || _('security_audit.title') || title}</h1>
   <!-- Tab bar -->
   <div class="secaudit-tabs">
-    <button class="secaudit-tab ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" onclick="SecurityAudit.switchTab('overview')">
-      <span class="material-icons">dashboard</span> ${_('security_audit.tab_overview')}
+    <button class="secaudit-tab ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" data-bd-call="SecurityAudit.switchTab" data-bd-args='["overview"]'>
+      <span class="material-icons" aria-hidden="true">dashboard</span> ${_('security_audit.tab_overview')}
     </button>
-    <button class="secaudit-tab ${activeTab === 'events' ? 'active' : ''}" data-tab="events" onclick="SecurityAudit.switchTab('events')">
-      <span class="material-icons">history</span> ${_('security_audit.tab_events')}
+    <button class="secaudit-tab ${activeTab === 'events' ? 'active' : ''}" data-tab="events" data-bd-call="SecurityAudit.switchTab" data-bd-args='["events"]'>
+      <span class="material-icons" aria-hidden="true">history</span> ${_('security_audit.tab_events')}
     </button>
-    <button class="secaudit-tab ${activeTab === 'hardening' ? 'active' : ''}" data-tab="hardening" onclick="SecurityAudit.switchTab('hardening')">
-      <span class="material-icons">shield</span> ${_('security_audit.tab_hardening')}
+    <button class="secaudit-tab ${activeTab === 'hardening' ? 'active' : ''}" data-tab="hardening" data-bd-call="SecurityAudit.switchTab" data-bd-args='["hardening"]'>
+      <span class="material-icons" aria-hidden="true">shield</span> ${_('security_audit.tab_hardening')}
     </button>
-    <button class="secaudit-tab ${activeTab === 'vulnerabilities' ? 'active' : ''}" data-tab="vulnerabilities" onclick="SecurityAudit.switchTab('vulnerabilities')">
-      <span class="material-icons">bug_report</span> ${_('security_audit.tab_vulnerabilities')}
+    <button class="secaudit-tab ${activeTab === 'vulnerabilities' ? 'active' : ''}" data-tab="vulnerabilities" data-bd-call="SecurityAudit.switchTab" data-bd-args='["vulnerabilities"]'>
+      <span class="material-icons" aria-hidden="true">bug_report</span> ${_('security_audit.tab_vulnerabilities')}
     </button>
   </div>
 
@@ -50,7 +51,7 @@
   <!-- Events panel -->
   <div class="secaudit-panel" id="panel-events" style="display: ${activeTab === 'events' ? 'block' : 'none'}">
     <div class="secaudit-toolbar">
-      <select class="secaudit-select" id="event-filter" onchange="SecurityAudit.filterEvents()">
+      <select class="secaudit-select" id="event-filter" data-bd-call="SecurityAudit.filterEvents" data-bd-on="change">
         <option value="">${_('security_audit.all_events')}</option>
         <option value="login_failed">${_('security_audit.event_login_failed')}</option>
         <option value="login_success">${_('security_audit.event_login_success')}</option>
@@ -59,7 +60,7 @@
         <option value="config_changed">${_('security_audit.event_config_changed')}</option>
         <option value="key_created">${_('security_audit.event_key_created')}</option>
       </select>
-      <button class="secaudit-btn" onclick="SecurityAudit.loadEvents()"><span class="material-icons">refresh</span> ${_('security_audit.refresh')}</button>
+      <button class="secaudit-btn" data-bd-call="SecurityAudit.loadEvents"><span class="material-icons">refresh</span> ${_('security_audit.refresh')}</button>
     </div>
     <div class="secaudit-table-wrap">
       <table class="secaudit-table">

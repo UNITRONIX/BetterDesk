@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/events"
 )
@@ -247,7 +248,7 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 	users, err := s.db.ListUsers()
 	if err == nil {
 		for _, u := range users {
-			if u.Role == "admin" || u.Role == "operator" {
+			if auth.RoleHasPermission(u.Role, auth.PermChatAccess) {
 				contacts = append(contacts, contact{
 					ID:          "operator:" + u.Username,
 					Name:        u.Username,

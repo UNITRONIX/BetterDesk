@@ -6,7 +6,10 @@
 # Stage 2: Production image with only runtime deps
 
 # ---- Build stage ----
-FROM node:24-alpine AS build
+# TEMPORARY: Node 24.19.0 triggers a native better-sqlite3 cleanup-hook
+# assertion during Statement GC. Keep the production console on the latest
+# Node 22 LTS patch until the Node 24 backport is released and validated.
+FROM node:22.23.2-alpine3.24 AS build
 
 WORKDIR /app
 
@@ -21,11 +24,11 @@ COPY web-nodejs/package.json web-nodejs/package-lock.json* ./
 RUN npm ci --omit=dev
 
 # ---- Production stage ----
-FROM node:24-alpine
+FROM node:22.23.2-alpine3.24
 
 LABEL maintainer="UNITRONIX"
 LABEL description="BetterDesk Console - Web Management Panel"
-LABEL version="3.5.4"
+LABEL version="3.5.168"
 
 WORKDIR /app
 
@@ -35,7 +38,8 @@ RUN apk add --no-cache \
     curl \
     tini \
     su-exec \
-    || { sleep 2 && apk add --no-cache sqlite curl tini su-exec; } \
+    shadow \
+    || { sleep 2 && apk add --no-cache sqlite curl tini su-exec shadow; } \
     && addgroup -g 10001 -S betterdesk \
     && adduser -u 10001 -S -G betterdesk betterdesk
 
@@ -52,10 +56,13 @@ ENV BETTERDESK_UPDATE_MODE=image
 RUN printf '%s\n' "${BETTERDESK_COMMIT_SHA}" > /app/.image-commit
 
 # Copy entrypoint scripts
+COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 COPY docker/console-entrypoint.sh /console-entrypoint.sh
+COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
+COPY docker/guard-sqlite-auth-split.sh /docker/guard-sqlite-auth-split.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
-RUN chmod +x /app/docker-entrypoint.sh /console-entrypoint.sh /usr/local/bin/betterdesk-show-admin-credentials
+RUN chmod +x /ensure-app-user.sh /app/docker-entrypoint.sh /console-entrypoint.sh /docker/bootstrap-admin-credentials.sh /docker/guard-sqlite-auth-split.sh /usr/local/bin/betterdesk-show-admin-credentials
 
 # Create data directories
 RUN mkdir -p /app/data /opt/rustdesk && \

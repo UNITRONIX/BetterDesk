@@ -98,7 +98,7 @@
         // Version
         const verEl = document.getElementById('cdap-device-version');
         if (verEl && info.manifest?.device?.firmware_version) {
-            verEl.innerHTML = `<span class="material-icons">info_outline</span><span>v${escapeHtml(info.manifest.device.firmware_version)}</span>`;
+            verEl.innerHTML = `<span class="material-icons">info</span><span>v${escapeHtml(info.manifest.device.firmware_version)}</span>`;
         }
 
         // Uptime

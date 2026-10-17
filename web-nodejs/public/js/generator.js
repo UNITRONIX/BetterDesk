@@ -1,6 +1,6 @@
 /* =========================================================================
-   Agent Generator (Phase 1: panel + preview + bundle CRUD)
-   Build artifacts not yet produced; /api/d/.../download returns 503.
+   BetterDesk Support Generator
+   Module install gate + simple custom.txt template bundles.
    ========================================================================= */
 
 (function () {
@@ -10,11 +10,27 @@
         const tr = window.t ? window.t(k) : k;
         return (tr && tr !== k) ? tr : (def != null ? def : k);
     };
+    const errorMessage = (error, fallback) => {
+        const data = error && error.data;
+        if (data && data.error) return data.error;
+        const raw = String((data && (data.code || data.error)) || (error && error.message) || '');
+        const code = raw.split(':', 1)[0];
+        const keys = {
+            local_builder_no_supported_targets: 'no_supported_targets',
+            local_builder_toolchain_missing: 'toolchain_missing',
+            provider_host_only: 'platform_unavailable',
+            template_missing: 'platform_unavailable',
+        };
+        const translationKey = keys[code] || code;
+        return code
+            ? t(`generator.errors.${translationKey}`, fallback || t('errors.bad_request', 'The request could not be completed.'))
+            : (fallback || t('errors.server_error', 'The request could not be completed.'));
+    };
     const notify = window.Notifications || { success: console.log, error: console.error, warning: console.warn, info: console.info };
     const csrf = () => (window.BetterDesk && window.BetterDesk.csrfToken) || '';
 
     async function api(method, url, body) {
-        const headers = { 'Accept': 'application/json' };
+        const headers = { Accept: 'application/json' };
         const writeMethods = method === 'POST' || method === 'PUT' || method === 'PATCH';
         if (writeMethods) headers['Content-Type'] = 'application/json';
         if (method !== 'GET' && method !== 'HEAD') headers['X-CSRF-Token'] = csrf();
@@ -36,67 +52,143 @@
         return data;
     }
 
+    async function uploadModuleArchive(file) {
+        const form = new FormData();
+        form.append('archive', file, file.name);
+        const res = await fetch('/api/generator/module/install-local', {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'X-CSRF-Token': csrf() },
+            credentials: 'same-origin',
+            body: form,
+        });
+        const data = (res.headers.get('content-type') || '').includes('application/json')
+            ? await res.json()
+            : null;
+        if (!res.ok || (data && data.success === false)) {
+            const err = new Error((data && data.error) || `HTTP ${res.status}`);
+            err.data = data;
+            throw err;
+        }
+        return data;
+    }
+
     const state = {
         bundles: [],
         currentId: null,
         currentBundle: null,
         currentBuilds: [],
-        platformLabels: {},
+        platforms: [],
+        selectedPlatforms: new Set(),
         dirty: false,
         slugManual: false,
-        previewTimer: null,
         buildsPollTimer: null,
-        productType: 'agent-client',
+        moduleReady: false,
+        buildReady: false,
+        moduleStatus: null,
+        platformCapabilities: null,
+        productType: 'betterdesk-support',
     };
 
     const $ = (id) => document.getElementById(id);
     const els = {};
+    let operationPollTimer = null;
+    let operationErrorTimer = null;
 
-    function cacheEls() {
-        ['gen-new-bundle', 'gen-bundle-list', 'gen-editor-title', 'gen-revoke-btn', 'gen-delete-btn', 'gen-save-btn',
-         'gen-rebuild-btn', 'gen-builds-list', 'gen-builds-summary',
-         'gen-empty-state', 'gen-editor-form',
-         'gen-name', 'gen-slug', 'gen-company', 'gen-short-text', 'gen-email', 'gen-phone', 'gen-url',
-         'gen-server-host', 'gen-use-https', 'gen-token-mask',
-         'gen-logo', 'gen-logo-clear', 'gen-primary', 'gen-accent', 'gen-bg', 'gen-surface', 'gen-text', 'gen-text-muted', 'gen-status-ready', 'gen-header-text', 'gen-lang', 'gen-unattended',
-         'gen-download-info', 'gen-download-url', 'gen-copy-link', 'gen-open-link',
-         'gen-preview', 'gen-prev-body-logo', 'gen-prev-name', 'gen-prev-text', 'gen-prev-pw-row', 'gen-prev-contact',
-         'gen-validation-errors'
-        ].forEach(id => { els[id] = $(id); });
+    function stopOperationPoll() {
+        if (operationPollTimer) {
+            clearInterval(operationPollTimer);
+            operationPollTimer = null;
+        }
     }
 
-    const DEFAULT_BRANDING = {
-        company_name: '',
-        short_text: '',
-        contact_email: '',
-        contact_phone: '',
-        contact_url: '',
-        logo_data_url: '',
-        primary_color: '#2563eb',
-        accent_color:  '#1e293b',
-        background_color: '#0f172a',
-        surface_color: '#1e293b',
-        text_color: '#e2e8f0',
-        text_muted_color: '#94a3b8',
-        status_ready_color: '#22c55e',
-        header_text_color: '#ffffff',
-        allow_unattended: false,
-        default_lang: 'en',
+    function hideOperationModal() {
+        stopOperationPoll();
+        if (operationErrorTimer) clearTimeout(operationErrorTimer);
+        operationErrorTimer = null;
+        if (els['gen-operation-modal']) {
+            els['gen-operation-modal'].classList.add('hidden');
+            els['gen-operation-modal'].setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    function showOperationModal(title, message, { poll = false } = {}) {
+        if (!els['gen-operation-modal']) return;
+        if (operationErrorTimer) clearTimeout(operationErrorTimer);
+        operationErrorTimer = null;
+        els['gen-operation-title'].textContent = title;
+        els['gen-operation-message'].textContent = message;
+        els['gen-operation-detail'].textContent = '';
+        els['gen-operation-modal'].classList.remove('hidden');
+        els['gen-operation-modal'].setAttribute('aria-hidden', 'false');
+        if (poll) {
+            stopOperationPoll();
+            operationPollTimer = setInterval(async () => {
+                try {
+                    const data = await api('GET', '/api/generator/module/status');
+                    const status = data.data || {};
+                    const phase = status.phase || status.status || 'working';
+                    const phaseText = {
+                        syncing_source: 'Downloading BetterDesk-Client source…',
+                        syncing_submodules: 'Downloading Client submodules…',
+                        ready: 'Source synchronization complete.',
+                        error: status.error || 'Builder reported an error.',
+                    }[phase] || `Builder status: ${phase}`;
+                    els['gen-operation-detail'].textContent = phaseText;
+                } catch (err) {
+                    els['gen-operation-detail'].textContent = `Status check failed: ${err.message}`;
+                }
+            }, 2000);
+        }
+    }
+
+    function showOperationError(error) {
+        stopOperationPoll();
+        if (!els['gen-operation-modal']) return;
+        els['gen-operation-title'].textContent = 'Builder operation failed';
+        els['gen-operation-message'].textContent = errorMessage(error, 'The builder operation failed.');
+        els['gen-operation-detail'].textContent = 'Check the console log and server builder status, then try again.';
+        els['gen-operation-modal'].classList.remove('hidden');
+        els['gen-operation-modal'].setAttribute('aria-hidden', 'false');
+        operationErrorTimer = setTimeout(hideOperationModal, 7000);
+    }
+
+    function cacheEls() {
+        [
+            'gen-module-gate', 'gen-module-status', 'gen-accept-terms', 'gen-install-module',
+            'gen-install-local-file',
+            'gen-operation-modal', 'gen-operation-title', 'gen-operation-message', 'gen-operation-detail',
+            'gen-finish-install', 'gen-main',
+            'gen-sync-generic-release', 'gen-generic-release-list', 'gen-generic-release-status',
+            'gen-legacy-leftovers', 'gen-legacy-leftovers-list', 'gen-legacy-hint',
+            'gen-new-support', 'gen-bundle-list', 'gen-editor-title', 'gen-revoke-btn', 'gen-delete-btn',
+            'gen-save-btn', 'gen-rebuild-btn', 'gen-builds-list', 'gen-builds-summary', 'gen-platforms',
+            'gen-empty-state', 'gen-editor-form',
+            'gen-name', 'gen-slug', 'gen-app-name',
+            'gen-server-host', 'gen-relay-host', 'gen-use-https', 'gen-api-port', 'gen-public-key',
+            'gen-install-service', 'gen-autostart',
+            'gen-build-capability-status',
+            'gen-download-info', 'gen-download-url', 'gen-copy-link', 'gen-open-link',
+            'gen-validation-errors',
+        ].forEach((id) => { els[id] = $(id); });
+    }
+
+    let connectionDefaults = {
         server_host: '',
+        relay_host: '',
         use_https: true,
+        api_port: '21114',
+        public_key: '',
+        app_name: 'BetterDesk Support Agent',
     };
 
-    let logoDataUrl = '';
-    let connectionDefaults = { server_host: '', use_https: true };
-
     const SLUG_TRANSLIT = {
-        'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
-        'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss', 'æ': 'ae', 'ø': 'o', 'å': 'a',
-        'č': 'c', 'ď': 'd', 'ě': 'e', 'ň': 'n', 'ř': 'r', 'š': 's', 'ť': 't', 'ů': 'u', 'ý': 'y', 'ž': 'z',
+        ą: 'a', ć: 'c', ę: 'e', ł: 'l', ń: 'n', ó: 'o', ś: 's', ź: 'z', ż: 'z',
+        ä: 'a', ö: 'o', ü: 'u', ß: 'ss', æ: 'ae', ø: 'o', å: 'a',
+        č: 'c', ď: 'd', ě: 'e', ň: 'n', ř: 'r', š: 's', ť: 't', ů: 'u', ý: 'y', ž: 'z',
     };
 
     function slugifyName(name) {
-        let slug = String(name || '').trim().toLowerCase().split('').map(ch => SLUG_TRANSLIT[ch] ?? ch).join('');
+        let slug = String(name || '').trim().toLowerCase().split('').map((ch) => SLUG_TRANSLIT[ch] ?? ch).join('');
         slug = slug.replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
         if (slug.length > 32) slug = slug.slice(0, 32).replace(/-$/, '');
         return slug;
@@ -137,52 +229,191 @@
 
     function readBranding() {
         return {
-            company_name: els['gen-company'].value.trim(),
-            short_text:   els['gen-short-text'].value.trim(),
-            contact_email: els['gen-email'].value.trim(),
-            contact_phone: els['gen-phone'].value.trim(),
-            contact_url:   els['gen-url'].value.trim(),
-            logo_data_url: logoDataUrl,
-            primary_color: els['gen-primary'].value,
-            accent_color:  els['gen-accent'].value,
-            background_color: els['gen-bg'].value,
-            surface_color: els['gen-surface'].value,
-            text_color: els['gen-text'].value,
-            text_muted_color: els['gen-text-muted'].value,
-            status_ready_color: els['gen-status-ready'].value,
-            header_text_color: els['gen-header-text'].value,
-            allow_unattended: !!els['gen-unattended'].checked,
-            default_lang: els['gen-lang'].value,
+            app_name: els['gen-app-name'].value.trim(),
+            company_name: els['gen-app-name'].value.trim(),
             server_host: els['gen-server-host'].value.trim(),
-            use_https: !!els['gen-use-https'].checked,
+            relay_host: els['gen-relay-host'].value.trim(),
+            use_https: !!(els['gen-use-https'] && els['gen-use-https'].checked),
+            api_port: els['gen-api-port'].value.trim(),
+            public_key: els['gen-public-key'].value.trim(),
+            disable_settings: true,
+            install_service: !!(els['gen-install-service'] && els['gen-install-service'].checked),
+            autostart: !!(els['gen-autostart'] && els['gen-autostart'].checked),
         };
     }
 
     function writeBranding(b) {
-        b = Object.assign({}, DEFAULT_BRANDING, connectionDefaults, b || {});
-        els['gen-server-host'].value = b.server_host || b.server?.address?.replace(/^https?:\/\//, '').split(':')[0] || '';
-        els['gen-use-https'].checked = b.use_https ?? (b.server?.address?.startsWith('https://') ?? true);
-        if (els['gen-token-mask']) {
-            els['gen-token-mask'].value = t('generator.enrollment_per_device', 'Per device — approve in Registrations');
+        b = Object.assign({}, connectionDefaults, b || {});
+        els['gen-app-name'].value = b.app_name || b.company_name || connectionDefaults.app_name || '';
+        els['gen-server-host'].value = b.server_host
+            || (b.server?.address ? String(b.server.address).replace(/^https?:\/\//, '').split(':')[0] : '')
+            || '';
+        els['gen-relay-host'].value = b.relay_host || '';
+        els['gen-use-https'].checked = b.use_https ?? connectionDefaults.use_https ?? true;
+        els['gen-api-port'].value = b.api_port || connectionDefaults.api_port || '';
+        els['gen-public-key'].value = b.public_key || b.server_key || b.server?.public_key || connectionDefaults.public_key || '';
+        if (els['gen-install-service']) els['gen-install-service'].checked = !!b.install_service;
+        if (els['gen-autostart']) els['gen-autostart'].checked = !!b.autostart;
+    }
+
+    function platformKey(p) {
+        return `${p.platform}/${p.arch}/${p.format}`;
+    }
+
+    function renderPlatforms() {
+        if (!els['gen-platforms']) return;
+        els['gen-platforms'].innerHTML = state.platforms.map((p) => {
+            const key = platformKey(p);
+            const available = p.available !== false;
+            const checked = available && state.selectedPlatforms.has(key) ? 'checked' : '';
+            const disabled = available ? '' : 'disabled';
+            const reason = available
+                ? ''
+                : `<small class="platform-unavailable">${escapeText(platformReason(p))}</small>`;
+            return `<label class="platform-check${available ? '' : ' is-unavailable'}">
+                <input type="checkbox" data-platform="${escapeText(p.platform)}" data-arch="${escapeText(p.arch)}" data-format="${escapeText(p.format)}" data-available="${available}" ${checked} ${disabled}>
+                <span>${escapeText(p.label || key)}</span>
+                ${reason}
+            </label>`;
+        }).join('');
+        els['gen-platforms'].querySelectorAll('input[type=checkbox]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const key = `${input.dataset.platform}/${input.dataset.arch}/${input.dataset.format}`;
+                if (input.checked) state.selectedPlatforms.add(key);
+                else state.selectedPlatforms.delete(key);
+                markDirty();
+            });
+        });
+    }
+
+    function selectedPlatformPayload() {
+        return state.platforms.filter((p) => (
+            p.available !== false && state.selectedPlatforms.has(platformKey(p))
+        ));
+    }
+
+    function selectAllPlatforms() {
+        state.selectedPlatforms = new Set(
+            state.platforms.filter((p) => p.available !== false).map(platformKey)
+        );
+        renderPlatforms();
+    }
+
+    function platformReason(platform) {
+        const reason = String(platform && platform.reason || '');
+        if (reason.startsWith('local_builder_toolchain_missing:')) {
+            const tools = reason.split(':', 2)[1].replace(/,/g, ', ');
+            return t('generator.errors.toolchain_missing', 'Required build tools are missing: {{tools}}')
+                .replace('{{tools}}', tools);
         }
-        els['gen-company'].value = b.company_name || '';
-        els['gen-short-text'].value = b.short_text || '';
-        els['gen-email'].value = b.contact_email || '';
-        els['gen-phone'].value = b.contact_phone || '';
-        els['gen-url'].value   = b.contact_url || '';
-        els['gen-primary'].value = b.primary_color || '#2563eb';
-        els['gen-accent'].value  = b.accent_color  || '#1e293b';
-        els['gen-bg'].value = b.background_color || '#0f172a';
-        els['gen-surface'].value = b.surface_color || '#1e293b';
-        els['gen-text'].value = b.text_color || '#e2e8f0';
-        els['gen-text-muted'].value = b.text_muted_color || '#94a3b8';
-        els['gen-status-ready'].value = b.status_ready_color || '#22c55e';
-        els['gen-header-text'].value = b.header_text_color || '#ffffff';
-        els['gen-unattended'].checked = !!b.allow_unattended;
-        els['gen-lang'].value = b.default_lang || 'en';
-        logoDataUrl = b.logo_data_url || '';
-        els['gen-logo'].value = '';
-        els['gen-logo-clear'].classList.toggle('hidden', !logoDataUrl);
+        if (reason === 'local_builder_toolchain_missing') {
+            return t('generator.errors.no_supported_targets', 'The local build toolchain is not ready.');
+        }
+        if (reason === 'provider_host_only') {
+            return t('generator.errors.platform_unavailable', 'This target requires a cross-platform build provider.');
+        }
+        if (reason === 'template_missing') {
+            return t('generator.errors.platform_unavailable', 'A verified client template is not installed.');
+        }
+        if (reason === 'provider_targets_missing') {
+            return t('generator.errors.no_supported_targets', 'No build targets are currently available. Check the builder configuration.');
+        }
+        if (reason === 'provider_target_unavailable') {
+            return t('generator.errors.platform_unavailable', 'This target is not available from the configured builder.');
+        }
+        return t('generator.errors.platform_unavailable', 'This target is not available from the configured builder.');
+    }
+
+    function renderBuildCapabilityStatus() {
+        const el = els['gen-build-capability-status'];
+        if (!el) return;
+        const available = state.platforms.filter((p) => p.available !== false);
+        const shouldShow = state.moduleReady && (!state.buildReady || available.length === 0);
+        if (!shouldShow) {
+            el.classList.add('hidden');
+            el.textContent = '';
+            return;
+        }
+        const missing = state.platformCapabilities
+            && state.platformCapabilities.toolchain
+            && state.platformCapabilities.toolchain.missing;
+        const remoteTargetsMissing = state.platformCapabilities
+            && state.platformCapabilities.mode === 'remote'
+            && (!Array.isArray(state.platformCapabilities.targets)
+                || state.platformCapabilities.targets.length === 0);
+        const detail = remoteTargetsMissing
+            ? t('generator.errors.no_supported_targets', 'No build targets are currently available. Check the builder configuration.')
+            : Array.isArray(missing) && missing.length
+            ? t('generator.errors.toolchain_missing', 'Required build tools are missing: {{tools}}')
+                .replace('{{tools}}', missing.join(', '))
+            : t('generator.errors.no_supported_targets', 'No build targets are currently available. Check the builder configuration.');
+        el.classList.remove('hidden');
+        el.classList.add('is-error');
+        el.textContent = detail;
+    }
+
+    function isLegacyBundle(bundle) {
+        return !!(bundle && bundle.legacy);
+    }
+
+    function leftoverBundles() {
+        return (state.bundles || []).filter(isLegacyBundle);
+    }
+
+    function isCurrentLegacy() {
+        return isLegacyBundle(state.currentBundle);
+    }
+
+    function setFormLocked(locked) {
+        ['gen-name', 'gen-slug', 'gen-app-name', 'gen-server-host', 'gen-relay-host', 'gen-api-port',
+            'gen-use-https', 'gen-install-service', 'gen-autostart']
+            .forEach((id) => {
+                if (els[id]) els[id].disabled = !!locked;
+            });
+        if (els['gen-platforms']) {
+            els['gen-platforms'].querySelectorAll('input').forEach((input) => {
+                input.disabled = !!locked || input.dataset.available === 'false';
+            });
+        }
+    }
+
+    function applyLegacyEditorMode(isLegacy) {
+        if (els['gen-legacy-hint']) els['gen-legacy-hint'].classList.toggle('hidden', !isLegacy);
+        setFormLocked(isLegacy);
+        if (els['gen-save-btn']) {
+            els['gen-save-btn'].classList.toggle('hidden', !!isLegacy);
+            if (isLegacy) els['gen-save-btn'].disabled = true;
+        }
+        if (els['gen-rebuild-btn']) els['gen-rebuild-btn'].classList.toggle('hidden', !!isLegacy);
+    }
+
+    function markDirty() {
+        if (isCurrentLegacy() || !state.moduleReady || !state.buildReady) return;
+        state.dirty = true;
+        if (els['gen-save-btn']) els['gen-save-btn'].disabled = false;
+    }
+
+    function clearDirty() {
+        state.dirty = false;
+        if (els['gen-save-btn']) els['gen-save-btn'].disabled = !state.buildReady;
+    }
+
+    function showValidation(errors) {
+        if (!els['gen-validation-errors']) return;
+        if (!errors || !errors.length) {
+            els['gen-validation-errors'].classList.add('hidden');
+            els['gen-validation-errors'].innerHTML = '';
+            return;
+        }
+        els['gen-validation-errors'].classList.remove('hidden');
+        els['gen-validation-errors'].innerHTML = `<ul>${errors.map((e) => {
+            const value = String(e);
+            const code = value.split(':', 1)[0];
+            const message = value.includes('/')
+                ? `${t('generator.errors.platform_unavailable', 'This target is not available from the configured builder.')} (${value})`
+                : t(`generator.errors.${code}`, value);
+            return `<li>${escapeText(message)}</li>`;
+        }).join('')}</ul>`;
     }
 
     function escapeText(s) {
@@ -191,82 +422,237 @@
         return d.innerHTML;
     }
 
-    function renderPreview() {
-        const b = readBranding();
-        const frame = els['gen-preview'].querySelector('.agent-preview-frame');
-        if (frame) {
-            frame.style.setProperty('--brand-primary', b.primary_color);
-            frame.style.setProperty('--brand-accent',  b.accent_color);
-            frame.style.setProperty('--brand-bg', b.background_color || '#0f172a');
-            frame.style.setProperty('--brand-surface', b.surface_color || '#1e293b');
-            frame.style.setProperty('--brand-text', b.text_color || '#e2e8f0');
-            frame.style.setProperty('--brand-text-muted', b.text_muted_color || '#94a3b8');
-            frame.style.setProperty('--brand-status-ready', b.status_ready_color || '#22c55e');
-            frame.style.setProperty('--brand-header-text', b.header_text_color || '#ffffff');
+    function renderBundleList() {
+        if (!els['gen-bundle-list']) return;
+        if (!state.bundles.length) {
+            els['gen-bundle-list'].innerHTML = `<p class="text-muted">${t('generator.no_bundles', 'No bundles yet')}</p>`;
+            return;
         }
-        const logoEl = els['gen-prev-body-logo'];
-        if (b.logo_data_url) {
-            logoEl.innerHTML = `<img src="${escapeText(b.logo_data_url)}" alt="">`;
-        } else {
-            logoEl.innerHTML = '<span class="material-icons">support_agent</span>';
+        els['gen-bundle-list'].innerHTML = state.bundles.map((b) => {
+            const active = state.currentId === b.bundle_id ? 'active' : '';
+            const revoked = b.revoked ? 'revoked' : '';
+            const badge = isLegacyBundle(b)
+                ? `<span class="badge-product--legacy">${escapeText(t('generator.legacy_badge', 'Legacy'))}</span>`
+                : '';
+            return `<button type="button" class="bundle-item ${active} ${revoked}" data-id="${escapeText(b.bundle_id)}">
+                <span class="bundle-item-title">
+                    <span class="bundle-item-name">${escapeText(b.name)}</span>
+                    ${badge}
+                </span>
+                <span class="bundle-item-meta">${escapeText(b.slug || b.public_id || '')}</span>
+            </button>`;
+        }).join('');
+        els['gen-bundle-list'].querySelectorAll('.bundle-item').forEach((btn) => {
+            btn.addEventListener('click', () => openBundle(btn.dataset.id));
+        });
+    }
+
+    function buildStatusLabel(status) {
+        const s = String(status || 'pending').toLowerCase();
+        if (s === 'ready') return t('generator.build_ready', 'Ready');
+        if (s === 'building') return t('generator.build_building', 'Building');
+        if (s === 'queued' || s === 'pending') return t('generator.build_queued', 'Queued');
+        if (s === 'failed') return t('generator.build_failed', 'Failed');
+        return s;
+    }
+
+    function renderBuilds() {
+        if (!els['gen-builds-list']) return;
+        const builds = state.currentBuilds || [];
+        if (!builds.length) {
+            els['gen-builds-list'].innerHTML = `<p class="text-muted">${t('generator.builds_empty', 'No builds yet — save to queue platforms.')}</p>`;
+            if (els['gen-builds-summary']) els['gen-builds-summary'].textContent = '';
+            return;
         }
-        els['gen-prev-name'].textContent = b.company_name || t('generator.preview_default_name', 'BetterDesk Support');
-        els['gen-prev-text'].textContent = b.short_text || '';
-        els['gen-prev-pw-row'].classList.remove('hidden');
-        const parts = [];
-        if (b.contact_email) parts.push(b.contact_email);
-        if (b.contact_phone) parts.push(b.contact_phone);
-        if (b.contact_url)   parts.push(b.contact_url);
-        els['gen-prev-contact'].textContent = parts.join(' • ');
+        const ready = builds.filter((b) => b.status === 'ready').length;
+        if (els['gen-builds-summary']) {
+            els['gen-builds-summary'].textContent = `${ready}/${builds.length} ready`;
+        }
+        els['gen-builds-list'].innerHTML = builds.map((b) => {
+            const key = `${b.platform}/${b.arch}/${b.format}`;
+            const label = (state.platforms.find((p) => platformKey(p) === key) || {}).label || key;
+            const err = b.error_message ? `<div class="build-error">${escapeText(b.error_message)}</div>` : '';
+            const percent = Math.max(0, Math.min(100, Number(b.progress_percent || 0)));
+            const progress = b.status === 'building'
+                ? `<div class="build-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
+                    <span style="width:${percent}%"></span>
+                </div>
+                <div class="build-progress-meta">${percent}% · ${escapeText(b.progress_phase || 'building')}</div>`
+                : '';
+            const retry = !isCurrentLegacy() && b.status === 'failed'
+                ? `<button type="button" class="btn btn-sm btn-secondary gen-retry-build"
+                    data-platform="${escapeText(b.platform)}" data-arch="${escapeText(b.arch)}" data-format="${escapeText(b.format)}">Retry</button>`
+                : '';
+            return `<div class="build-row status-${escapeText(b.status)}">
+                <div class="build-row-main">
+                    <span class="build-label">${escapeText(label)}</span>
+                    <span class="build-status badge">${escapeText(buildStatusLabel(b.status))}</span>
+                    ${retry}
+                </div>
+                ${progress}
+                ${err}
+            </div>`;
+        }).join('');
+        els['gen-builds-list'].querySelectorAll('.gen-retry-build').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                if (!state.currentId || state.currentId === 'new') return;
+                try {
+                    const { platform, arch, format } = btn.dataset;
+                    await api('POST', `/api/generator/bundles/${state.currentId}/rebuild/${platform}/${arch}/${format}`);
+                    notify.success(t('generator.rebuild_queued', 'Rebuild queued'));
+                    await refreshBuilds();
+                } catch (err) {
+                    notify.error(errorMessage(err));
+                }
+            });
+        });
     }
 
-    function schedulePreview() {
-        if (state.previewTimer) clearTimeout(state.previewTimer);
-        state.previewTimer = setTimeout(renderPreview, 60);
+    function setEditorVisible(show) {
+        els['gen-empty-state'].classList.toggle('hidden', show);
+        els['gen-editor-form'].classList.toggle('hidden', !show);
     }
 
-    function markDirty() {
-        state.dirty = true;
-        els['gen-save-btn'].disabled = false;
-        schedulePreview();
+    function setEditorForNew() {
+        if (!state.moduleReady || !state.buildReady) {
+            notify.error(t('generator.errors.no_supported_targets', 'No build targets are currently available.'));
+            return;
+        }
+        stopBuildsPoll();
+        state.currentId = 'new';
+        state.currentBundle = null;
+        state.currentBuilds = [];
+        state.slugManual = false;
+        state.productType = 'betterdesk-support';
+        setEditorVisible(true);
+        applyLegacyEditorMode(false);
+        els['gen-editor-title'].textContent = t('generator.new_bundle', 'New BetterDesk Support');
+        els['gen-name'].value = '';
+        els['gen-slug'].value = '';
+        writeBranding(connectionDefaults);
+        selectAllPlatforms();
+        els['gen-download-info'].classList.add('hidden');
+        els['gen-revoke-btn'].classList.add('hidden');
+        els['gen-delete-btn'].classList.add('hidden');
+        els['gen-rebuild-btn'].classList.add('hidden');
+        showValidation([]);
+        renderBuilds();
+        markDirty();
+        renderBundleList();
+        updateDownloadLinkPreview();
     }
 
-    function fmtDate(iso) {
-        if (!iso) return '';
-        const d = new Date(iso);
-        if (isNaN(d.getTime())) return iso;
-        return d.toLocaleDateString();
+    async function openBundle(id) {
+        try {
+            const data = await api('GET', `/api/generator/bundles/${id}`);
+            const bundle = data.data.bundle;
+            state.currentId = bundle.bundle_id;
+            state.currentBundle = bundle;
+            state.currentBuilds = bundle.builds || [];
+            state.slugManual = true;
+            state.productType = 'betterdesk-support';
+            setEditorVisible(true);
+            applyLegacyEditorMode(isLegacyBundle(bundle));
+            els['gen-editor-title'].textContent = bundle.name;
+            els['gen-name'].value = bundle.name || '';
+            els['gen-slug'].value = bundle.slug || '';
+            writeBranding(bundle.branding || {});
+            selectAllPlatforms();
+            setFormLocked(isLegacyBundle(bundle));
+            els['gen-download-info'].classList.remove('hidden');
+            els['gen-revoke-btn'].classList.remove('hidden');
+            els['gen-delete-btn'].classList.remove('hidden');
+            els['gen-rebuild-btn'].classList.toggle('hidden', isLegacyBundle(bundle));
+            els['gen-revoke-btn'].textContent = bundle.revoked
+                ? t('generator.unrevoke', 'Restore')
+                : t('generator.revoke', 'Revoke');
+            showValidation([]);
+            clearDirty();
+            renderBuilds();
+            renderBundleList();
+            updateDownloadLinkPreview();
+            if (isLegacyBundle(bundle)) stopBuildsPoll();
+            else startBuildsPoll();
+        } catch (err) {
+            notify.error(errorMessage(err));
+        }
     }
 
-    function platformKey(p, a, f) {
-        return `${p}/${a}/${f}`;
-    }
-
-    function platformLabel(p, a, f) {
-        return state.platformLabels[platformKey(p, a, f)]
-            || `${p} ${a} ${f}`;
-    }
-
-    function statusLabel(status) {
-        const map = {
-            ready: t('generator.build_status_ready', 'Ready'),
-            pending: t('generator.build_status_pending', 'Queued'),
-            building: t('generator.build_status_building', 'Building'),
-            failed: t('generator.build_status_failed', 'Failed'),
+    async function saveBundle() {
+        if (isCurrentLegacy() || !state.moduleReady || !state.buildReady) {
+            notify.error(t('generator.errors.no_supported_targets', 'No build targets are currently available.'));
+            return;
+        }
+        if (!selectedPlatformPayload().length) {
+            notify.error(t('generator.errors.platforms_required', 'Select at least one platform to build'));
+            return;
+        }
+        const name = els['gen-name'].value.trim();
+        if (!name) {
+            notify.error(t('generator.errors.name_required', 'Name is required'));
+            return;
+        }
+        const payload = {
+            name,
+            slug: readSlugInput(),
+            product_type: 'betterdesk-support',
+            branding: readBranding(),
+            platforms: selectedPlatformPayload(),
         };
-        return map[status] || status;
-    }
-
-    function summarizeBuilds(builds) {
-        const counts = { ready: 0, pending: 0, building: 0, failed: 0 };
-        for (const b of builds || []) {
-            if (counts[b.status] != null) counts[b.status]++;
+        try {
+            let data;
+            if (state.currentId === 'new') {
+                data = await api('POST', '/api/generator/bundles', payload);
+            } else {
+                data = await api('PUT', `/api/generator/bundles/${state.currentId}`, payload);
+            }
+            if (data && data.warning) {
+                notify.warning(errorMessage({ data: { error: data.warning } }));
+            } else {
+                notify.success(t('generator.saved', 'Saved'));
+            }
+            showValidation([]);
+            await loadBundles();
+            await openBundle(data.data.bundle.bundle_id);
+        } catch (err) {
+            const details = err.data && (err.data.details || err.data.errors);
+            if (details) showValidation(details);
+            notify.error(errorMessage(err));
         }
-        return counts;
     }
 
-    function buildsNeedPoll(builds) {
-        return (builds || []).some(b => b.status === 'pending' || b.status === 'building');
+    async function loadBundles() {
+        const data = await api('GET', '/api/generator/bundles?includeRevoked=1&includeLegacy=1');
+        state.bundles = (data.data && data.data.bundles) || [];
+        renderBundleList();
+        applyGeneratorLayout();
+    }
+
+    async function loadPlatforms() {
+        const data = await api('GET', '/api/generator/platforms');
+        state.platforms = (data.data && data.data.platforms) || [];
+        state.platformCapabilities = (data.data && data.data.capabilities) || null;
+        selectAllPlatforms();
+        renderBuildCapabilityStatus();
+    }
+
+    async function loadDefaults() {
+        const data = await api('GET', '/api/generator/defaults');
+        connectionDefaults = Object.assign(connectionDefaults, data.data || {});
+    }
+
+    async function refreshBuilds() {
+        if (!state.currentId || state.currentId === 'new') return;
+        try {
+            const data = await api('GET', `/api/generator/bundles/${state.currentId}`);
+            state.currentBuilds = (data.data.bundle && data.data.bundle.builds) || [];
+            renderBuilds();
+        } catch (_) { /* ignore poll errors */ }
+    }
+
+    function startBuildsPoll() {
+        stopBuildsPoll();
+        state.buildsPollTimer = setInterval(refreshBuilds, 4000);
     }
 
     function stopBuildsPoll() {
@@ -276,445 +662,400 @@
         }
     }
 
-    function scheduleBuildsPoll() {
-        stopBuildsPoll();
-        if (!state.currentId || state.currentId === 'new') return;
-        if (!buildsNeedPoll(state.currentBuilds)) return;
-        state.buildsPollTimer = setInterval(() => {
-            refreshBuilds().catch(() => {});
-        }, 5000);
-    }
+    function renderModuleStatus(status) {
+        state.moduleStatus = status;
+        state.moduleReady = !!(status && status.ready);
+        state.buildReady = status && status.buildReady !== undefined
+            ? !!status.buildReady
+            : state.moduleReady;
+        state.platformCapabilities = status && status.buildCapabilities || null;
+        const embedded = status && status.mode === 'embedded';
+        const el = els['gen-module-status'];
+        if (!el) return;
+        const parts = [
+            t('generator.module_status_label', 'Status') + ': ' + (status.status || 'unknown'),
+            status.termsAccepted
+                ? t('generator.module_terms_ok', 'Terms accepted')
+                : t('generator.module_terms_pending', 'Terms not accepted'),
+            status.templatesPresent
+                ? (embedded
+                    ? 'BetterDesk-Client source present'
+                    : t('generator.module_templates_ok', 'Templates present'))
+                : (embedded
+                    ? 'BetterDesk-Client source missing'
+                    : t('generator.module_templates_missing', 'Templates missing')),
+            status.installedVersion
+                ? t('generator.module_version', 'Version {{v}}').replace('{{v}}', status.installedVersion)
+                : null,
+            status.signingSeedPresent
+                ? t('generator.module_seed_ok', 'Signing seed present')
+                : (t('generator.module_seed_missing', 'Signing seed missing — Support builds disabled')
+                    + (status.signingSeedPath ? ` (${status.signingSeedPath})` : '')),
+            status.mode === 'embedded'
+                ? (status.providerConfigured
+                    ? 'Embedded build provider configured'
+                    : 'Configure GitHub Actions token or a trusted local provider')
+                : null,
+            status.mode === 'embedded' && status.buildCapabilities?.mode === 'local'
+                ? `Local targets: ${(status.buildCapabilities.targets || [])
+                    .map((p) => `${p.platform}/${p.arch}`)
+                    .join(', ') || 'none — check Cargo, Flutter and vcpkg'}`
+                : null,
+            status.mode === 'embedded' && status.buildReady === false
+                ? t('generator.errors.no_supported_targets', 'No build targets are currently available. Check the builder configuration.')
+                : null,
+            status.error
+                ? t('generator.module_error_prefix', 'Error') + ': ' + status.error
+                : null,
+            status.warning && !status.binariesPresent
+                ? t('generator.module_stub_warning', 'Stub templates (no desktop binaries) — rebuilds will fail until a full Client release is installed')
+                : null,
+        ].filter(Boolean);
+        el.textContent = parts.join(' · ');
+        el.classList.toggle('is-error', status.status === 'error');
 
-    function renderBuilds(builds) {
-        state.currentBuilds = builds || [];
-        const listEl = els['gen-builds-list'];
-        const summaryEl = els['gen-builds-summary'];
-        if (!listEl) return;
-
-        if (!builds || !builds.length) {
-            listEl.innerHTML = `<p class="text-muted">${escapeText(t('generator.builds_empty', 'No builds queued yet'))}</p>`;
-            summaryEl.classList.add('hidden');
-            stopBuildsPoll();
-            return;
+        if (els['gen-accept-terms']) {
+            els['gen-accept-terms'].disabled = !!status.termsAccepted;
         }
-
-        const counts = summarizeBuilds(builds);
-        summaryEl.textContent = t('generator.builds_summary', '{{ready}} ready · {{pending}} queued · {{building}} building · {{failed}} failed')
-            .replace('{{ready}}', counts.ready)
-            .replace('{{pending}}', counts.pending)
-            .replace('{{building}}', counts.building)
-            .replace('{{failed}}', counts.failed);
-        summaryEl.classList.remove('hidden');
-
-        const rows = [...builds].sort((a, b) => {
-            const la = platformLabel(a.platform, a.arch, a.format);
-            const lb = platformLabel(b.platform, b.arch, b.format);
-            return la.localeCompare(lb);
-        });
-
-        listEl.innerHTML = `
-            <table class="builds-table">
-                <thead>
-                    <tr>
-                        <th>${escapeText(t('generator.builds_title', 'Client builds'))}</th>
-                        <th>${escapeText(t('common.status', 'Status'))}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rows.map(b => {
-                        const err = b.error_message ? `<div class="build-error" title="${escapeText(b.error_message)}">${escapeText(b.error_message)}</div>` : '';
-                        return `
-                            <tr class="build-row build-row--${escapeText(b.status)}">
-                                <td>${escapeText(platformLabel(b.platform, b.arch, b.format))}${err}</td>
-                                <td><span class="build-badge build-badge--${escapeText(b.status)}">${escapeText(statusLabel(b.status))}</span></td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        `;
-
-        scheduleBuildsPoll();
-    }
-
-    async function refreshBuilds() {
-        if (!state.currentId || state.currentId === 'new') return;
-        const res = await api('GET', `/api/generator/bundles/${encodeURIComponent(state.currentId)}`);
-        if (res && res.data && res.data.bundle) {
-            state.currentBundle = res.data.bundle;
-            renderBuilds(res.data.bundle.builds || []);
-        }
-    }
-
-    async function rebuildAllBuilds() {
-        if (!state.currentBundle || state.currentId === 'new') return;
-        if (!confirm(t('generator.rebuild_confirm', 'Rebuild all platform installers for this bundle?'))) return;
-        const btn = els['gen-rebuild-btn'];
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = `<span class="material-icons spinning">sync</span> ${escapeText(t('generator.rebuilding_all', 'Queuing rebuilds…'))}`;
-        }
-        try {
-            const res = await api('POST', `/api/generator/bundles/${encodeURIComponent(state.currentId)}/rebuild`);
-            notify.success(t('generator.rebuild_queued', 'All platform builds queued'));
-            renderBuilds((res && res.data && res.data.builds) || []);
-        } catch (e) {
-            notify.error(e.message);
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = `<span class="material-icons">sync</span> ${escapeText(t('generator.rebuild_all', 'Rebuild all'))}`;
+        const installLabel = els['gen-install-module']
+            && els['gen-install-module'].querySelector('.gen-install-label');
+        if (els['gen-install-module']) {
+            const seedMissing = embedded && !status.signingSeedPresent;
+            els['gen-install-module'].disabled = !status.termsAccepted
+                || status.status === 'downloading'
+                || seedMissing;
+            const label = status.status === 'downloading'
+                ? t('generator.module_downloading', 'Downloading…')
+                : seedMissing
+                    ? 'Configure signing seed first'
+                : (embedded
+                    ? 'Sync BetterDesk-Client source'
+                    : t('generator.module_install', 'Install from GitHub'));
+            if (installLabel) installLabel.textContent = label;
+            else {
+                // Keep icon; replace trailing text nodes if label span missing
+                const icon = els['gen-install-module'].querySelector('.material-icons');
+                els['gen-install-module'].textContent = '';
+                if (icon) els['gen-install-module'].appendChild(icon);
+                els['gen-install-module'].appendChild(document.createTextNode(' ' + label));
             }
         }
+        if (els['gen-install-local-file']) {
+            els['gen-install-local-file'].disabled = !status.termsAccepted || status.status === 'downloading';
+            const localLabel = els['gen-install-local-file'].closest('label');
+            if (localLabel) localLabel.classList.toggle('hidden', !!embedded);
+        }
+        if (els['gen-finish-install']) {
+            els['gen-finish-install'].classList.toggle('hidden', !status.ready);
+        }
+        renderBuildCapabilityStatus();
     }
 
-    function renderBundleList() {
-        const root = els['gen-bundle-list'];
-        if (!state.bundles.length) {
-            root.innerHTML = `<p class="text-muted">${escapeText(t('generator.no_bundles', 'No bundles yet'))}</p>`;
+    function leftoverPublicId(bundle) {
+        return bundle.slug || bundle.public_id || bundle.bundle_id || '';
+    }
+
+    function renderLeftoverGateList() {
+        const wrap = els['gen-legacy-leftovers'];
+        const list = els['gen-legacy-leftovers-list'];
+        if (!wrap || !list) return;
+        const leftovers = leftoverBundles();
+        const show = leftovers.length > 0 && !state.moduleReady;
+        wrap.classList.toggle('hidden', !show);
+        if (!show) {
+            list.innerHTML = '';
             return;
         }
-        root.innerHTML = '';
-        state.bundles.forEach(bundle => {
-            const item = document.createElement('div');
-            item.className = 'bundle-item';
-            if (bundle.bundle_id === state.currentId) item.classList.add('active');
-            item.dataset.bundleId = bundle.bundle_id;
-            const revokedBadge = bundle.revoked
-                ? `<span class="badge-revoked">${escapeText(t('generator.revoked', 'Revoked'))}</span>`
-                : '';
-            const pt = bundle.product_type || 'agent-client';
-            const productBadge = pt === 'rdclient'
-                ? `<span class="badge-product">${escapeText(t('generator.product_rdclient', 'RdClient'))}</span>`
-                : pt === 'support-agent' || pt === 'agent'
-                    ? `<span class="badge-product">${escapeText(t('generator.product_support_agent', 'Support'))}</span>`
-                    : `<span class="badge-product">${escapeText(t('generator.product_agent_client', 'Agent Client'))}</span>`;
-            item.innerHTML = `
-                <div class="bundle-item-title">
-                    ${escapeText(bundle.name || bundle.bundle_id)}
-                    ${productBadge}
-                    ${revokedBadge}
+        list.innerHTML = leftovers.map((b) => {
+            const publicId = leftoverPublicId(b);
+            const revokeLabel = b.revoked
+                ? t('generator.unrevoke', 'Restore')
+                : t('generator.revoke', 'Revoke');
+            return `<div class="gen-legacy-row" data-id="${escapeText(b.bundle_id)}">
+                <div>
+                    <div class="bundle-item-title">
+                        <span class="bundle-item-name">${escapeText(b.name)}</span>
+                        <span class="badge-product--legacy">${escapeText(t('generator.legacy_badge', 'Legacy'))}</span>
+                    </div>
+                    <div class="bundle-item-meta">${escapeText(publicId ? `/d/${publicId}` : '')}</div>
                 </div>
-                <div class="bundle-item-meta">
-                    <span>${escapeText(fmtDate(bundle.created_at))}</span>
-                    <span>↓ ${bundle.download_count || 0}</span>
+                <div class="gen-legacy-row-actions">
+                    <a class="btn btn-secondary btn-sm" href="${escapeText(publicId ? `/d/${publicId}` : '#')}" target="_blank" rel="noopener">${escapeText(t('generator.open_portal', 'Open'))}</a>
+                    <button type="button" class="btn btn-warning btn-sm" data-action="revoke">${escapeText(revokeLabel)}</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-action="delete">${escapeText(t('common.delete', 'Delete'))}</button>
                 </div>
-            `;
-            item.addEventListener('click', () => selectBundle(bundle.bundle_id));
-            root.appendChild(item);
+            </div>`;
+        }).join('');
+        list.querySelectorAll('.gen-legacy-row').forEach((row) => {
+            const id = row.dataset.id;
+            const bundle = leftovers.find((b) => b.bundle_id === id);
+            const revokeBtn = row.querySelector('[data-action="revoke"]');
+            const deleteBtn = row.querySelector('[data-action="delete"]');
+            if (revokeBtn) {
+                revokeBtn.addEventListener('click', () => revokeBundle(id, !(bundle && bundle.revoked)));
+            }
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => deleteBundle(id));
+            }
         });
     }
 
-    async function loadBundles() {
+    function applyGeneratorLayout() {
+        const ready = !!state.moduleReady;
+        if (els['gen-module-gate']) els['gen-module-gate'].classList.toggle('hidden', ready);
+        if (els['gen-main']) els['gen-main'].classList.toggle('hidden', !ready);
+        if (els['gen-new-support']) {
+            els['gen-new-support'].classList.toggle('hidden', !ready);
+            els['gen-new-support'].disabled = !state.buildReady;
+            els['gen-new-support'].title = state.buildReady
+                ? t('generator.new_bundle', 'New Support')
+                : t('generator.errors.no_supported_targets', 'No build targets are currently available.');
+        }
+        renderBuildCapabilityStatus();
+        renderLeftoverGateList();
+    }
+
+    async function refreshModuleStatus() {
+        const data = await api('GET', '/api/generator/module/status');
+        const status = data.data || {};
+        renderModuleStatus(status);
+        applyGeneratorLayout();
+        return status;
+    }
+
+    async function revokeBundle(id, revoked) {
+        if (!id) return;
+        const confirmKey = revoked ? 'generator.confirm_revoke' : 'generator.confirm_unrevoke';
+        const confirmDef = revoked
+            ? 'Revoke this bundle? The download link will stop working.'
+            : 'Re-enable this bundle?';
+        if (!window.confirm(t(confirmKey, confirmDef))) return;
         try {
-            const res = await api('GET', '/api/generator/bundles');
-            state.bundles = (res && res.data && res.data.bundles) || [];
-            renderBundleList();
-        } catch (e) {
-            notify.error(e.message, t('generator.title', 'Generator'));
-        }
-    }
-
-    function showEditor() {
-        els['gen-empty-state'].classList.add('hidden');
-        els['gen-editor-form'].classList.remove('hidden');
-    }
-
-    function hideEditor() {
-        els['gen-empty-state'].classList.remove('hidden');
-        els['gen-editor-form'].classList.add('hidden');
-        els['gen-revoke-btn'].classList.add('hidden');
-        els['gen-delete-btn'].classList.add('hidden');
-        els['gen-download-info'].classList.add('hidden');
-        els['gen-save-btn'].disabled = true;
-    }
-
-    function setEditorForNew(productType) {
-        state.currentId = 'new';
-        state.currentBundle = null;
-        state.currentBuilds = [];
-        state.dirty = false;
-        state.slugManual = false;
-        state.productType = productType || 'agent-client';
-        stopBuildsPoll();
-        const titleKey = state.productType === 'rdclient'
-            ? 'generator.rdclient_new_bundle'
-            : state.productType === 'support-agent'
-                ? 'generator.support_agent_new_bundle'
-                : 'generator.agent_client_new_bundle';
-        els['gen-editor-title'].innerHTML = `<span class="material-icons">add_circle</span> ${escapeText(t(titleKey, 'New bundle'))}`;
-        els['gen-name'].value = '';
-        if (els['gen-slug']) els['gen-slug'].value = '';
-        writeBranding(DEFAULT_BRANDING);
-        els['gen-revoke-btn'].classList.add('hidden');
-        els['gen-delete-btn'].classList.add('hidden');
-        els['gen-download-info'].classList.remove('hidden');
-        const buildsSection = $('gen-builds-section');
-        if (buildsSection) buildsSection.classList.add('hidden');
-        els['gen-download-url'].value = '';
-        if (els['gen-open-link']) {
-            els['gen-open-link'].href = '#';
-            els['gen-open-link'].classList.add('disabled');
-        }
-        els['gen-save-btn'].disabled = false;
-        clearErrors();
-        showEditor();
-        renderBundleList();
-        renderPreview();
-        els['gen-name'].focus();
-    }
-
-    function setEditorForBundle(bundle) {
-        state.currentId = bundle.bundle_id;
-        state.currentBundle = bundle;
-        state.productType = bundle.product_type || 'agent-client';
-        state.dirty = false;
-        state.slugManual = true;
-        stopBuildsPoll();
-        els['gen-editor-title'].innerHTML = `<span class="material-icons">edit</span> ${escapeText(bundle.name || bundle.bundle_id)}`;
-        els['gen-name'].value = bundle.name || '';
-        if (els['gen-slug']) els['gen-slug'].value = bundle.slug || bundle.public_id || '';
-        writeBranding(bundle.branding);
-        els['gen-revoke-btn'].classList.remove('hidden');
-        els['gen-revoke-btn'].innerHTML = bundle.revoked
-            ? `<span class="material-icons">undo</span> ${escapeText(t('generator.unrevoke', 'Unrevoke'))}`
-            : `<span class="material-icons">block</span> ${escapeText(t('generator.revoke', 'Revoke'))}`;
-        els['gen-delete-btn'].classList.remove('hidden');
-        els['gen-save-btn'].disabled = true;
-        updateDownloadLinkPreview();
-        els['gen-download-info'].classList.remove('hidden');
-        const buildsSection = $('gen-builds-section');
-        if (buildsSection) buildsSection.classList.remove('hidden');
-        renderBuilds(bundle.builds || []);
-        clearErrors();
-        showEditor();
-        renderBundleList();
-        renderPreview();
-    }
-
-    async function selectBundle(bundleId) {
-        if (state.dirty && !confirm(t('generator.unsaved_confirm', 'Discard unsaved changes?'))) return;
-        try {
-            const res = await api('GET', `/api/generator/bundles/${encodeURIComponent(bundleId)}`);
-            setEditorForBundle(res.data.bundle);
-        } catch (e) {
-            notify.error(e.message);
-        }
-    }
-
-    function clearErrors() {
-        els['gen-validation-errors'].classList.add('hidden');
-        els['gen-validation-errors'].innerHTML = '';
-    }
-
-    function fmtError(key) {
-        if (!key) return '';
-        const translated = t(`generator.errors.${key}`, null);
-        return translated || key;
-    }
-
-    function showErrors(errors) {
-        if (!errors || !errors.length) { clearErrors(); return; }
-        const items = errors.map(e => `<li>${escapeText(fmtError(e))}</li>`).join('');
-        els['gen-validation-errors'].innerHTML = `
-            <strong>${escapeText(t('generator.errors.validation_failed', 'Validation failed'))}</strong>
-            <ul>${items}</ul>
-        `;
-        els['gen-validation-errors'].classList.remove('hidden');
-    }
-
-    async function saveBundle() {
-        clearErrors();
-        const payload = {
-            name: els['gen-name'].value.trim(),
-            slug: readSlugInput(),
-            branding: readBranding(),
-            product_type: state.productType || 'agent',
-        };
-        if (!payload.name) {
-            showErrors([t('generator.errors.name_required', 'Bundle name is required')]);
-            return;
-        }
-        els['gen-save-btn'].disabled = true;
-        try {
-            let res;
-            if (state.currentId === 'new') {
-                res = await api('POST', '/api/generator/bundles', payload);
-                notify.success(t('generator.created', 'Bundle created'));
-            } else {
-                res = await api('PUT', `/api/generator/bundles/${encodeURIComponent(state.currentId)}`, payload);
-                notify.success(t('generator.saved', 'Bundle saved'));
-            }
+            await api('POST', `/api/generator/bundles/${id}/revoke`, { revoked });
+            notify.success(revoked
+                ? t('generator.revoked_ok', 'Bundle revoked')
+                : t('generator.unrevoked_ok', 'Bundle re-enabled'));
             await loadBundles();
-            if (res && res.data && res.data.bundle) {
-                setEditorForBundle(res.data.bundle);
-            }
-        } catch (e) {
-            const errs = (e.data && e.data.errors) || [e.message];
-            showErrors(errs);
-            els['gen-save-btn'].disabled = false;
+            if (state.currentId === id) await openBundle(id);
+        } catch (err) {
+            notify.error(errorMessage(err));
         }
     }
 
-    async function toggleRevoke() {
-        if (!state.currentBundle) return;
-        const newState = !state.currentBundle.revoked;
-        const confirmMsg = newState
-            ? t('generator.confirm_revoke', 'Revoke this bundle? The download link will stop working.')
-            : t('generator.confirm_unrevoke', 'Re-enable this bundle?');
-        if (!confirm(confirmMsg)) return;
+    async function deleteBundle(id) {
+        if (!id) return;
+        if (!window.confirm(t('generator.confirm_delete', 'Delete this bundle permanently? This cannot be undone.'))) return;
         try {
-            const res = await api('POST', `/api/generator/bundles/${encodeURIComponent(state.currentId)}/revoke`, { revoked: newState });
-            notify.success(newState ? t('generator.revoked_ok', 'Bundle revoked') : t('generator.unrevoked_ok', 'Bundle re-enabled'));
-            await loadBundles();
-            if (res && res.data && res.data.bundle) setEditorForBundle(res.data.bundle);
-        } catch (e) {
-            notify.error(e.message);
-        }
-    }
-
-    async function deleteBundle() {
-        if (!state.currentBundle) return;
-        if (!confirm(t('generator.confirm_delete', 'Delete this bundle permanently? This cannot be undone.'))) return;
-        try {
-            await api('DELETE', `/api/generator/bundles/${encodeURIComponent(state.currentId)}`);
+            await api('DELETE', `/api/generator/bundles/${id}`);
             notify.success(t('generator.deleted', 'Bundle deleted'));
-            state.currentId = null;
-            state.currentBundle = null;
-            state.dirty = false;
-            hideEditor();
+            if (state.currentId === id) {
+                state.currentId = null;
+                state.currentBundle = null;
+                if (els['gen-empty-state']) setEditorVisible(false);
+                stopBuildsPoll();
+            }
             await loadBundles();
-        } catch (e) {
-            notify.error(e.message);
-        }
-    }
-
-    function onLogoChange(ev) {
-        const file = ev.target.files && ev.target.files[0];
-        if (!file) return;
-        if (!/^image\//.test(file.type)) {
-            notify.error(t('generator.errors.logo_invalid', 'Logo must be an image file'));
-            els['gen-logo'].value = '';
-            return;
-        }
-        if (file.size > 256 * 1024) {
-            notify.error(t('generator.errors.logo_too_large', 'Logo must be 256KB or smaller'));
-            els['gen-logo'].value = '';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-            logoDataUrl = reader.result;
-            els['gen-logo-clear'].classList.remove('hidden');
-            markDirty();
-        };
-        reader.onerror = () => notify.error(t('generator.errors.logo_read_failed', 'Failed to read logo file'));
-        reader.readAsDataURL(file);
-    }
-
-    function clearLogo() {
-        logoDataUrl = '';
-        els['gen-logo'].value = '';
-        els['gen-logo-clear'].classList.add('hidden');
-        markDirty();
-    }
-
-    function copyDownloadLink() {
-        const url = els['gen-download-url'].value;
-        if (!url) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(
-                () => notify.success(t('generator.link_copied', 'Link copied')),
-                () => fallbackCopy(url)
-            );
-        } else {
-            fallbackCopy(url);
-        }
-    }
-
-    function fallbackCopy(text) {
-        els['gen-download-url'].select();
-        try {
-            document.execCommand('copy');
-            notify.success(t('generator.link_copied', 'Link copied'));
-        } catch (_) {
-            notify.warning(t('generator.copy_failed', 'Could not copy automatically; please copy manually'));
-        }
-    }
-
-    async function loadConnectionDefaults() {
-        try {
-            const res = await api('GET', '/api/generator/defaults');
-            const d = (res && res.data) || {};
-            connectionDefaults = {
-                server_host: d.server_host || '',
-                use_https: d.use_https !== false,
-            };
-        } catch (_) {
-            connectionDefaults = { server_host: '', use_https: true };
-        }
-    }
-
-    async function loadPlatformLabels() {
-        try {
-            const res = await api('GET', '/api/generator/platforms');
-            const platforms = (res && res.data && res.data.platforms) || [];
-            state.platformLabels = {};
-            platforms.forEach(p => {
-                state.platformLabels[platformKey(p.platform, p.arch, p.format)] = p.label;
-            });
-        } catch (_) {
-            state.platformLabels = {};
+        } catch (err) {
+            notify.error(errorMessage(err));
         }
     }
 
     function bindEvents() {
-        els['gen-new-bundle'].addEventListener('click', () => setEditorForNew('agent-client'));
-        const supportBtn = $('gen-new-support');
-        if (supportBtn) supportBtn.addEventListener('click', () => setEditorForNew('support-agent'));
-        const rdBtn = $('gen-new-rdclient');
-        if (rdBtn) rdBtn.addEventListener('click', () => setEditorForNew('rdclient'));
-        els['gen-save-btn'].addEventListener('click', saveBundle);
-        els['gen-rebuild-btn'].addEventListener('click', rebuildAllBuilds);
-        els['gen-revoke-btn'].addEventListener('click', toggleRevoke);
-        els['gen-delete-btn'].addEventListener('click', deleteBundle);
-        els['gen-logo'].addEventListener('change', onLogoChange);
-        els['gen-logo-clear'].addEventListener('click', clearLogo);
-        els['gen-copy-link'].addEventListener('click', copyDownloadLink);
-
+        if (els['gen-sync-generic-release']) {
+            els['gen-sync-generic-release'].addEventListener('click', syncGenericRelease);
+        }
+        if (els['gen-new-support']) {
+            els['gen-new-support'].addEventListener('click', () => setEditorForNew());
+        }
+        if (els['gen-save-btn']) {
+            els['gen-save-btn'].addEventListener('click', () => saveBundle());
+        }
         if (els['gen-name']) {
-            els['gen-name'].addEventListener('input', () => {
-                syncSlugFromName();
-                markDirty();
-            });
+            els['gen-name'].addEventListener('input', () => { syncSlugFromName(); markDirty(); });
         }
         if (els['gen-slug']) {
             els['gen-slug'].addEventListener('input', () => {
                 state.slugManual = true;
-                els['gen-slug'].value = els['gen-slug'].value.toLowerCase().replace(/[^a-z0-9-]/g, '');
                 updateDownloadLinkPreview();
                 markDirty();
             });
         }
-
-        [         'gen-company', 'gen-short-text', 'gen-email', 'gen-phone', 'gen-url',
-         'gen-server-host', 'gen-use-https',
-         'gen-primary', 'gen-accent', 'gen-bg', 'gen-surface', 'gen-text', 'gen-text-muted', 'gen-status-ready', 'gen-header-text', 'gen-lang', 'gen-unattended'
-        ].forEach(id => {
-            const el = els[id];
-            if (!el) return;
-            const evt = (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'color') ? 'change' : 'input';
-            el.addEventListener(evt, markDirty);
+        ['gen-app-name', 'gen-server-host', 'gen-relay-host', 'gen-api-port'].forEach((id) => {
+            if (els[id]) els[id].addEventListener('input', markDirty);
         });
+        if (els['gen-use-https']) els['gen-use-https'].addEventListener('change', markDirty);
+
+        if (els['gen-copy-link']) {
+            els['gen-copy-link'].addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(els['gen-download-url'].value);
+                    notify.success(t('common.copied', 'Copied'));
+                } catch (_) {
+                    notify.error(t('common.copy_failed', 'Copy failed'));
+                }
+            });
+        }
+
+        if (els['gen-revoke-btn']) {
+            els['gen-revoke-btn'].addEventListener('click', () => {
+                if (!state.currentId || state.currentId === 'new') return;
+                revokeBundle(state.currentId, !(state.currentBundle && state.currentBundle.revoked));
+            });
+        }
+
+        if (els['gen-delete-btn']) {
+            els['gen-delete-btn'].addEventListener('click', () => {
+                if (!state.currentId || state.currentId === 'new') return;
+                deleteBundle(state.currentId);
+            });
+        }
+
+        if (els['gen-rebuild-btn']) {
+            els['gen-rebuild-btn'].addEventListener('click', async () => {
+                if (!state.currentId || state.currentId === 'new' || isCurrentLegacy()
+                    || !state.moduleReady || !state.buildReady) return;
+                try {
+                    await api('POST', `/api/generator/bundles/${state.currentId}/rebuild`, {
+                        platforms: selectedPlatformPayload(),
+                    });
+                    notify.success(t('generator.rebuild_queued', 'Rebuild queued'));
+                    await refreshBuilds();
+                    startBuildsPoll();
+                } catch (err) {
+                    notify.error(errorMessage(err));
+                }
+            });
+        }
+
+        if (els['gen-accept-terms']) {
+            els['gen-accept-terms'].addEventListener('click', async () => {
+                showOperationModal('Accepting terms', 'Saving AGPL acceptance…');
+                try {
+                    await api('POST', '/api/generator/module/accept-terms');
+                    notify.success(t('generator.module_terms_ok', 'Terms accepted'));
+                    await refreshModuleStatus();
+                    hideOperationModal();
+                } catch (err) {
+                    notify.error(errorMessage(err));
+                    showOperationError(err);
+                }
+            });
+        }
+
+        if (els['gen-install-module']) {
+            els['gen-install-module'].addEventListener('click', async () => {
+                try {
+                    els['gen-install-module'].disabled = true;
+                    showOperationModal(
+                        'Synchronizing BetterDesk-Client',
+                        'The server is downloading the pinned Client source and submodules. This can take several minutes.',
+                        { poll: true }
+                    );
+                    notify.info('Synchronizing BetterDesk-Client source…');
+                    await api('POST', '/api/generator/module/install', {});
+                    notify.success(t('generator.module_installed', 'Module installed'));
+                    await refreshModuleStatus();
+                    hideOperationModal();
+                } catch (err) {
+                    notify.error(errorMessage(err));
+                    showOperationError(err);
+                    await refreshModuleStatus();
+                }
+            });
+        }
+
+        if (els['gen-install-local-file']) {
+            els['gen-install-local-file'].addEventListener('change', async () => {
+                const input = els['gen-install-local-file'];
+                const file = input.files && input.files[0];
+                if (!file) return;
+                try {
+                    input.disabled = true;
+                    notify.info('Installing local generator package…');
+                    await uploadModuleArchive(file);
+                    notify.success(t('generator.module_installed', 'Module installed'));
+                    await refreshModuleStatus();
+                } catch (err) {
+                    notify.error(errorMessage(err));
+                    await refreshModuleStatus();
+                } finally {
+                    input.value = '';
+                }
+            });
+        }
+
+        if (els['gen-finish-install']) {
+            els['gen-finish-install'].addEventListener('click', async () => {
+                const status = await refreshModuleStatus();
+                if (status.ready) {
+                    await initGeneratorMain();
+                }
+            });
+        }
+    }
+
+    async function initGeneratorMain() {
+        await loadDefaults();
+        await loadPlatforms();
+        await loadBundles();
+    }
+
+    async function loadGenericReleases() {
+        if (!els['gen-generic-release-list']) return;
+        try {
+            const data = await api('GET', '/api/agent-releases');
+            const releases = data.releases || [];
+            els['gen-generic-release-list'].innerHTML = releases.length
+                ? releases.map((release) => `
+                    <div class="generic-agent-release-item">
+                        <div><strong>${escapeText(release.tag)}</strong>
+                            <div class="text-muted">${(release.manifest.assets || []).length} platform artifacts</div>
+                        </div>
+                        <span class="status-badge ready">verified</span>
+                    </div>
+                `).join('')
+                : '<span class="text-muted">No release imported yet.</span>';
+        } catch (error) {
+            els['gen-generic-release-status'].textContent = errorMessage(error);
+        }
+    }
+
+    async function syncGenericRelease() {
+        const button = els['gen-sync-generic-release'];
+        if (button) button.disabled = true;
+        if (els['gen-generic-release-status']) {
+            els['gen-generic-release-status'].textContent = 'Importing and verifying the latest signed release…';
+        }
+        try {
+            const result = await api('POST', '/api/agent-releases/sync', {});
+            if (els['gen-generic-release-status']) {
+                els['gen-generic-release-status'].textContent = `Imported ${result.tag}.`;
+            }
+            await loadGenericReleases();
+        } catch (error) {
+            if (els['gen-generic-release-status']) {
+                els['gen-generic-release-status'].textContent = errorMessage(error);
+            }
+            notify.error(errorMessage(error));
+        } finally {
+            if (button) button.disabled = false;
+        }
     }
 
     async function init() {
         cacheEls();
-        if (!els['gen-bundle-list']) return;
         bindEvents();
-        await loadConnectionDefaults();
-        await loadPlatformLabels();
-        loadBundles();
+        loadGenericReleases();
+        try {
+            const status = await refreshModuleStatus();
+            await loadBundles();
+            if (status.ready) {
+                await initGeneratorMain();
+            }
+        } catch (err) {
+            notify.error(errorMessage(err));
+            applyGeneratorLayout();
+        }
     }
 
     if (document.readyState === 'loading') {

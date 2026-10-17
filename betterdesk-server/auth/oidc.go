@@ -23,32 +23,35 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
 // OIDCConfig holds all OIDC provider settings.
 // Stored in server_config table with "oidc." prefix.
 type OIDCConfig struct {
-	Enabled          bool   `json:"enabled"`
-	DisplayName      string `json:"display_name"`      // Button label, e.g. "Google", "Azure AD"
-	IssuerURL        string `json:"issuer_url"`        // e.g. "https://accounts.google.com"
-	ClientID         string `json:"client_id"`         // OAuth2 client ID
-	ClientSecret     string `json:"client_secret"`     // OAuth2 client secret
-	RedirectURL      string `json:"redirect_url"`      // e.g. "https://betterdesk.example.com/api/auth/oidc/callback"
-	PanelURL         string `json:"panel_url"`         // e.g. "https://betterdesk.example.com" (Node console origin)
-	Scopes           string `json:"scopes"`            // space-separated, default "openid profile email"
-	UsePKCE          bool   `json:"use_pkce"`          // enable PKCE (S256)
-	AutoDiscovery    bool   `json:"auto_discovery"`    // use .well-known/openid-configuration
-	AuthorizationURL string `json:"authorization_url"` // manual: authorization endpoint
-	TokenURL         string `json:"token_url"`         // manual: token endpoint
-	UserinfoURL      string `json:"userinfo_url"`      // manual: userinfo endpoint
-	ClaimUsername    string `json:"claim_username"`    // claim for username (default: preferred_username)
-	ClaimEmail       string `json:"claim_email"`       // claim for email (default: email)
-	ClaimName        string `json:"claim_name"`        // claim for display name (default: name)
-	ClaimGroups      string `json:"claim_groups"`      // claim for groups (default: groups)
-	DefaultRole      string `json:"default_role"`      // role for users without group mapping (default: viewer)
-	GroupRoleMap     string `json:"group_role_map"`    // pipe-delimited: "GroupName=role|GroupName=role"
-	AllowSignup      bool   `json:"allow_signup"`      // allow auto-creation of new users
+	Enabled             bool   `json:"enabled"`
+	PreferSSO           bool   `json:"prefer_sso"`            // launch SSO automatically when enabled
+	DisplayName         string `json:"display_name"`          // Button label, e.g. "Google", "Azure AD"
+	IssuerURL           string `json:"issuer_url"`            // e.g. "https://accounts.google.com"
+	ClientID            string `json:"client_id"`             // OAuth2 client ID
+	ClientSecret        string `json:"client_secret"`         // OAuth2 client secret
+	RedirectURL         string `json:"redirect_url"`          // e.g. "https://betterdesk.example.com/api/auth/oidc/callback"
+	PanelURL            string `json:"panel_url"`             // e.g. "https://betterdesk.example.com" (Node console origin)
+	Scopes              string `json:"scopes"`                // space-separated, default "openid profile email"
+	UsePKCE             bool   `json:"use_pkce"`              // enable PKCE (S256)
+	AutoDiscovery       bool   `json:"auto_discovery"`        // use .well-known/openid-configuration
+	AuthorizationURL    string `json:"authorization_url"`     // manual: authorization endpoint
+	TokenURL            string `json:"token_url"`             // manual: token endpoint
+	UserinfoURL         string `json:"userinfo_url"`          // manual: userinfo endpoint
+	ClaimUsername       string `json:"claim_username"`        // claim for username (default: preferred_username)
+	ClaimEmail          string `json:"claim_email"`           // claim for email (default: email)
+	ClaimName           string `json:"claim_name"`            // claim for display name (default: name)
+	ClaimGroups         string `json:"claim_groups"`          // claim for groups (default: groups)
+	DefaultRole         string `json:"default_role"`          // role for users without group mapping (default: viewer)
+	GroupRoleMap        string `json:"group_role_map"`        // pipe-delimited: "GroupName=role|GroupName=role"
+	AllowSignup         bool   `json:"allow_signup"`          // allow auto-creation of new users
+	AllowedPrivateCIDRs string `json:"allowed_private_cidrs"` // optional RFC1918/IPv6 ULA OIDC networks
 }
 
 // OIDC flow kinds stored in OAuth state.
@@ -64,6 +67,7 @@ type OIDCResult struct {
 	DisplayName   string
 	Email         string
 	Role          string
+	RoleFromGroup bool
 	Groups        []string
 	IDToken       string // raw ID token for audit
 	ReturnURL     string // post-login relative path from OAuth state
@@ -121,15 +125,42 @@ type oidcAuthCode struct {
 	CreatedAt time.Time
 }
 
+// oidcDiscoveryRetryIntervalNs is how often discovery is retried while it has
+// not yet succeeded (IdP unreachable at boot). Stored as nanoseconds so tests
+// can override it without racing discoveryRetryLoop readers (atomic).
+var oidcDiscoveryRetryIntervalNs atomic.Int64
+
+func init() {
+	oidcDiscoveryRetryIntervalNs.Store(int64(2 * time.Minute))
+}
+
+func oidcDiscoveryRetryDuration() time.Duration {
+	ns := oidcDiscoveryRetryIntervalNs.Load()
+	if ns <= 0 {
+		return 2 * time.Minute
+	}
+	return time.Duration(ns)
+}
+
+// setOIDCDiscoveryRetryIntervalForTest overrides the retry interval for tests.
+// The returned restore function puts the previous value back.
+func setOIDCDiscoveryRetryIntervalForTest(d time.Duration) (restore func()) {
+	prev := oidcDiscoveryRetryIntervalNs.Swap(int64(d))
+	return func() { oidcDiscoveryRetryIntervalNs.Store(prev) }
+}
+
 // OIDCProvider manages OIDC authentication.
 type OIDCProvider struct {
 	mu            sync.RWMutex
+	discoverMu    sync.Mutex // serializes discover() (boot / UpdateConfig / retry)
 	config        *OIDCConfig
 	discovery     *oidcDiscovery
 	states        map[string]*oidcState         // state → oidcState
 	codes         map[string]*oidcAuthCode      // one-time auth codes for panel exchange
 	clientPending map[string]*ClientOIDCPending // state/code → RustDesk client OIDC pending
 	client        *http.Client
+	stop          chan struct{}
+	stopOnce      sync.Once
 }
 
 // NewOIDCProvider creates a new OIDC provider with the given configuration.
@@ -140,13 +171,21 @@ func NewOIDCProvider(cfg *OIDCConfig) *OIDCProvider {
 		codes:         make(map[string]*oidcAuthCode),
 		clientPending: make(map[string]*ClientOIDCPending),
 		client:        &http.Client{Timeout: 15 * time.Second},
+		stop:          make(chan struct{}),
 	}
-	if cfg.Enabled && cfg.AutoDiscovery && cfg.IssuerURL != "" {
-		go p.discover()
-	}
+	// Immediate discover + periodic retry while discovery remains nil (see #411).
+	go p.discoveryRetryLoop()
 	// Start state cleanup goroutine
 	go p.cleanupStates()
 	return p
+}
+
+// Close stops background discovery/cleanup goroutines. Safe to call multiple times.
+func (p *OIDCProvider) Close() {
+	if p == nil {
+		return
+	}
+	p.stopOnce.Do(func() { close(p.stop) })
 }
 
 // IsEnabled returns whether OIDC authentication is active.
@@ -187,18 +226,64 @@ func (p *OIDCProvider) GetDisplayName() string {
 	return "SSO"
 }
 
+// needsDiscovery reports whether auto-discovery should still be attempted.
+func (p *OIDCProvider) needsDiscovery() bool {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.config != nil &&
+		p.config.Enabled &&
+		p.config.AutoDiscovery &&
+		p.config.IssuerURL != "" &&
+		p.discovery == nil
+}
+
+// discoveryRetryLoop attempts discovery immediately, then retries on an interval
+// until it succeeds (or OIDC / auto-discovery is disabled). Self-heals when the
+// IdP is unreachable at process start (#411). Exits when Close() is called.
+func (p *OIDCProvider) discoveryRetryLoop() {
+	if p.needsDiscovery() {
+		p.discover()
+	}
+	ticker := time.NewTicker(oidcDiscoveryRetryDuration())
+	defer ticker.Stop()
+	for {
+		select {
+		case <-p.stop:
+			return
+		case <-ticker.C:
+			if p.needsDiscovery() {
+				p.discover()
+			}
+			ticker.Reset(oidcDiscoveryRetryDuration())
+		}
+	}
+}
+
 // discover fetches the OIDC discovery document from issuer_url/.well-known/openid-configuration.
 func (p *OIDCProvider) discover() {
+	p.discoverMu.Lock()
+	defer p.discoverMu.Unlock()
+
 	p.mu.RLock()
-	issuer := p.config.IssuerURL
+	cfg := p.config
+	var issuer string
+	if cfg != nil {
+		issuer = cfg.IssuerURL
+	}
+	enabled := cfg != nil && cfg.Enabled && cfg.AutoDiscovery && issuer != ""
 	p.mu.RUnlock()
 
-	if issuer == "" {
+	if !enabled {
 		return
 	}
 
 	discoveryURL := strings.TrimRight(issuer, "/") + "/.well-known/openid-configuration"
-	resp, err := fetchValidatedHTTPGet(p.client, discoveryURL)
+	policy, err := newOIDCFetchPolicy(cfg.AllowedPrivateCIDRs)
+	if err != nil {
+		log.Printf("[OIDC] Invalid private network allowlist: %v", err)
+		return
+	}
+	resp, err := fetchValidatedHTTPGetWithPolicy(context.Background(), p.client, discoveryURL, policy)
 	if err != nil {
 		log.Printf("[OIDC] Discovery failed for %s: %v", issuer, err)
 		return
@@ -223,10 +308,13 @@ func (p *OIDCProvider) discover() {
 	}
 
 	p.mu.Lock()
-	p.discovery = &disc
+	// Apply only if config still matches the issuer we fetched (avoid stale
+	// write racing UpdateConfig).
+	if p.config != nil && p.config.Enabled && p.config.AutoDiscovery && p.config.IssuerURL == issuer {
+		p.discovery = &disc
+		log.Printf("[OIDC] Discovery OK: auth=%s, token=%s", disc.AuthorizationEndpoint, disc.TokenEndpoint)
+	}
 	p.mu.Unlock()
-
-	log.Printf("[OIDC] Discovery OK: auth=%s, token=%s", disc.AuthorizationEndpoint, disc.TokenEndpoint)
 }
 
 // getAuthEndpoint returns the authorization endpoint URL.
@@ -419,6 +507,10 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 	p.mu.RLock()
 	cfg := *p.config
 	p.mu.RUnlock()
+	policy, err := newOIDCFetchPolicy(cfg.AllowedPrivateCIDRs)
+	if err != nil {
+		return nil, fmt.Errorf("invalid private network allowlist: %w", err)
+	}
 
 	// Token exchange
 	params := url.Values{
@@ -434,14 +526,11 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 		params.Set("code_verifier", stateEntry.CodeVerifier)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", tokenEP, strings.NewReader(params.Encode()))
-	if err != nil {
-		return nil, fmt.Errorf("create token request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := p.client.Do(req)
+	reqBody := strings.NewReader(params.Encode())
+	resp, err := fetchValidatedHTTPPostWithPolicy(ctx, p.client, tokenEP, reqBody, policy, http.Header{
+		"Content-Type": {"application/x-www-form-urlencoded"},
+		"Accept":       {"application/json"},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("token request failed: %w", err)
 	}
@@ -535,8 +624,9 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 		return nil, fmt.Errorf("could not determine username from OIDC claims")
 	}
 
-	// Map groups to role
-	result.Role = p.resolveRole(result.Groups)
+	// Map groups to role. The source flag lets provisioning distinguish an
+	// explicit group mapping from the configured fallback role.
+	result.Role, result.RoleFromGroup = p.resolveRoleWithSource(result.Groups)
 	result.ReturnURL = returnURL
 	result.Flow = flow
 	result.ClientID = clientID
@@ -563,13 +653,17 @@ func (p *OIDCProvider) fetchUserInfo(ctx context.Context, accessToken string) (m
 		return nil, fmt.Errorf("userinfo endpoint not available")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", userinfoEP, nil)
+	p.mu.RLock()
+	cfg := *p.config
+	p.mu.RUnlock()
+	policy, err := newOIDCFetchPolicy(cfg.AllowedPrivateCIDRs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid private network allowlist: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
 
-	resp, err := p.client.Do(req)
+	resp, err := fetchValidatedHTTPGetWithHeaders(ctx, p.client, userinfoEP, policy, http.Header{
+		"Authorization": {"Bearer " + accessToken},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -593,24 +687,34 @@ func (p *OIDCProvider) fetchUserInfo(ctx context.Context, accessToken string) (m
 
 // resolveRole maps OIDC groups to a BetterDesk role using the configured group-role map.
 func (p *OIDCProvider) resolveRole(groups []string) string {
+	role, _ := p.resolveRoleWithSource(groups)
+	return role
+}
+
+// resolveRoleWithSource maps groups to a role and reports whether a configured
+// group mapping matched. The fallback role is an initial/default role only;
+// callers can preserve an administrator's local override when no group matched.
+func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 	p.mu.RLock()
 	cfg := *p.config
 	p.mu.RUnlock()
 
 	if len(groups) == 0 || cfg.GroupRoleMap == "" {
-		return cfg.DefaultRole
+		return cfg.DefaultRole, false
 	}
 
 	roleMap := parseGroupRoleMap(cfg.GroupRoleMap)
 	if len(roleMap) == 0 {
-		return cfg.DefaultRole
+		return cfg.DefaultRole, false
 	}
 
 	bestRole := cfg.DefaultRole
 	bestLevel := roleLevel(bestRole)
+	matched := false
 
 	for _, group := range groups {
 		if role, ok := roleMap[group]; ok {
+			matched = true
 			if lvl := roleLevel(role); lvl > bestLevel {
 				bestRole = role
 				bestLevel = lvl
@@ -618,34 +722,40 @@ func (p *OIDCProvider) resolveRole(groups []string) string {
 		}
 	}
 
-	return bestRole
+	return bestRole, matched
 }
 
 // cleanupStates removes expired state entries every 5 minutes.
+// Exits when Close() is called.
 func (p *OIDCProvider) cleanupStates() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
-	for range ticker.C {
-		p.mu.Lock()
-		now := time.Now()
-		for k, v := range p.states {
-			if now.Sub(v.CreatedAt) > 15*time.Minute {
-				delete(p.states, k)
+	for {
+		select {
+		case <-p.stop:
+			return
+		case <-ticker.C:
+			p.mu.Lock()
+			now := time.Now()
+			for k, v := range p.states {
+				if now.Sub(v.CreatedAt) > 15*time.Minute {
+					delete(p.states, k)
+				}
 			}
-		}
-		// Auth codes are short-lived (60s); anything older is stale.
-		for k, v := range p.codes {
-			if now.Sub(v.CreatedAt) > 60*time.Second {
-				delete(p.codes, k)
+			// Auth codes are short-lived (60s); anything older is stale.
+			for k, v := range p.codes {
+				if now.Sub(v.CreatedAt) > 60*time.Second {
+					delete(p.codes, k)
+				}
 			}
-		}
-		// Client OIDC pending (auth + poll window ~3–10 min).
-		for k, v := range p.clientPending {
-			if now.Sub(v.CreatedAt) > 10*time.Minute {
-				delete(p.clientPending, k)
+			// Client OIDC pending (auth + poll window ~3–10 min).
+			for k, v := range p.clientPending {
+				if now.Sub(v.CreatedAt) > 10*time.Minute {
+					delete(p.clientPending, k)
+				}
 			}
+			p.mu.Unlock()
 		}
-		p.mu.Unlock()
 	}
 }
 
@@ -946,11 +1056,22 @@ type OIDCDiscoveryResult struct {
 	UserinfoEndpoint      string `json:"userinfo_endpoint"`
 }
 
-// TestOIDCDiscovery fetches and validates an OIDC discovery document.
+// TestOIDCDiscovery fetches and validates an OIDC discovery document using the
+// default-deny private-network policy.
 func TestOIDCDiscovery(ctx context.Context, issuerURL string) (*OIDCDiscoveryResult, error) {
+	return TestOIDCDiscoveryWithPrivateCIDRs(ctx, issuerURL, "")
+}
+
+// TestOIDCDiscoveryWithPrivateCIDRs is the operator-facing discovery test with
+// the same explicit private-network allowlist used by the live provider.
+func TestOIDCDiscoveryWithPrivateCIDRs(ctx context.Context, issuerURL, allowedPrivateCIDRs string) (*OIDCDiscoveryResult, error) {
+	policy, err := newOIDCFetchPolicy(allowedPrivateCIDRs)
+	if err != nil {
+		return nil, fmt.Errorf("private network allowlist: %w", err)
+	}
 	discoveryURL := strings.TrimRight(issuerURL, "/") + "/.well-known/openid-configuration"
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := fetchValidatedHTTPGetContext(ctx, client, discoveryURL)
+	resp, err := fetchValidatedHTTPGetWithPolicy(ctx, client, discoveryURL, policy)
 	if err != nil {
 		return nil, fmt.Errorf("discovery URL: %w", err)
 	}

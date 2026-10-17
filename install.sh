@@ -8,15 +8,18 @@
 # Docker legacy (two-container split images):
 #   curl -fsSL .../install.sh | sudo bash -s -- --split
 #
-# Native (git clone + betterdesk.sh --auto):
+# Native stable (git clone + betterdesk.sh --auto):
 #   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash -s -- --native
+#
+# Native Development channel (this file on the `dev` branch defaults to --branch dev):
+#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/install.sh | sudo bash -s -- --native
 #
 # Options (pass after "bash -s --"):
 #   --docker | --native          Installation mode (default: docker)
 #   --split                      Legacy two-container layout (server + console images)
 #   --install-dir PATH             Install directory (default: /opt/betterdesk)
-#   --version TAG                  Docker image tag / release baseline (default: 3.5.4)
-#   --branch BRANCH                Git branch for native install (default: main)
+#   --version TAG                  Docker image tag / release baseline (default: 3.5.168)
+#   --branch BRANCH                Git branch for native install (default: this installer channel)
 #   --relay-mode auto|local|public Relay auto-detection strategy
 #   --relay-servers IP[:port]      Fixed relay address (overrides --relay-mode)
 #   --admin-password PASS          Set admin password (Docker: ADMIN_PASSWORD env)
@@ -25,6 +28,8 @@
 #   --rescue                       Safe repair: permissions, restart, health checks
 #   --diagnose                     Read-only diagnostics for Docker deployments
 #   --repair-permissions           Only repair Docker data/volume permissions
+#   --check-permissions            Check update/config/restart capabilities
+#   --set-config KEY=VALUE         Apply an allowlisted runtime setting
 #   --purge                        With --uninstall: also remove Docker volumes
 #   --uninstall                    Remove BetterDesk Docker installation
 #   --help                         Show usage
@@ -38,8 +43,12 @@ set -euo pipefail
 
 VERSION="1.0.0"
 BETTERDESK_REPO="${BETTERDESK_REPO:-UNITRONIX/BetterDesk}"
-BETTERDESK_BRANCH="${BETTERDESK_BRANCH:-main}"
-BETTERDESK_VERSION="${BETTERDESK_VERSION:-3.5.4}"
+# Must match the GitHub branch that serves this install.sh URL
+# (.../dev/install.sh → dev, .../main/install.sh → main). Override with
+# --branch / BETTERDESK_BRANCH. Flip to "main" when releasing this file on main.
+BETTERDESK_INSTALLER_CHANNEL="dev"
+BETTERDESK_BRANCH="${BETTERDESK_BRANCH:-$BETTERDESK_INSTALLER_CHANNEL}"
+BETTERDESK_VERSION="${BETTERDESK_VERSION:-3.5.168}"
 BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/betterdesk}"
 INSTALL_MODE="docker"
@@ -53,6 +62,8 @@ DO_UNINSTALL=false
 DO_PURGE=false
 DO_RESCUE=false
 RESCUE_ACTION="rescue"
+CHECK_CAPABILITIES=false
+MANAGED_CONFIG_CHANGES=()
 
 # Docker quick-start ports (single: 21121 API; split adds 21114)
 DOCKER_PORTS_SINGLE="21115 21116 21117 21118 21119 21121 5000"
@@ -79,7 +90,7 @@ warn() { echo -e "${C_YELLOW}!${C_RESET} $*" >&2; }
 die()  { echo -e "${C_RED}✗${C_RESET} $*" >&2; exit 1; }
 
 usage() {
-    sed -n '4,27p' "$0" | sed 's/^# \?//'
+    sed -n '4,33p' "$0" | sed 's/^# \?//'
     exit 0
 }
 
@@ -101,6 +112,12 @@ while [ $# -gt 0 ]; do
         --rescue) DO_RESCUE=true; RESCUE_ACTION="rescue"; shift ;;
         --diagnose|--diagnostics) DO_RESCUE=true; RESCUE_ACTION="diagnose"; shift ;;
         --repair-permissions) DO_RESCUE=true; RESCUE_ACTION="repair-permissions"; shift ;;
+        --check-permissions|--check-capabilities) CHECK_CAPABILITIES=true; shift ;;
+        --set-config)
+            [ $# -ge 2 ] && [[ "$2" == *=* ]] || die "--set-config requires KEY=VALUE"
+            MANAGED_CONFIG_CHANGES+=("$2")
+            shift 2
+            ;;
         --purge) DO_PURGE=true; shift ;;
         --uninstall) DO_UNINSTALL=true; shift ;;
         -h|--help) usage ;;
@@ -448,6 +465,13 @@ install_docker_mode() {
 BETTERDESK_IMAGE_TAG=${BETTERDESK_VERSION}
 BETTERDESK_DOCKER_LAYOUT=${DOCKER_LAYOUT}
 RELAY_SERVERS=${relay}
+BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-UNITRONIX/BetterDesk-Client}
+BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
+BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
+BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}
+AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
+AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
+AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
 EOF
     if [ -n "$ADMIN_PASSWORD" ]; then
         printf 'ADMIN_PASSWORD=%s\n' "$ADMIN_PASSWORD" >> "$env_file"
@@ -463,8 +487,12 @@ EOF
     configure_firewall
 
     log "Waiting for services..."
-    wait_for_http "$api_health_url" "BetterDesk API" 90 || true
-    wait_for_http "http://127.0.0.1:5000/login" "Web console" 60 || true
+    local health_failed=0
+    wait_for_http "$api_health_url" "BetterDesk API" 90 || health_failed=1
+    wait_for_http "http://127.0.0.1:5000/login" "Web console" 60 || health_failed=1
+    if [ "$health_failed" -ne 0 ]; then
+        die "BetterDesk containers did not pass health checks; inspect ${compose_dir}/docker-compose.yml logs before retrying"
+    fi
 
     print_docker_summary "$relay"
 }
@@ -522,26 +550,121 @@ uninstall_docker_mode() {
 
 # ── Native install ────────────────────────────────────────────────────────────
 
+native_backup_source() {
+    local source_dir="$1"
+    local backup_dir="${source_dir}.backup.$(date +%Y%m%d%H%M%S).$$"
+
+    while [ -e "$backup_dir" ]; do
+        backup_dir="${source_dir}.backup.$(date +%Y%m%d%H%M%S).${RANDOM}"
+    done
+    if ! mv "$source_dir" "$backup_dir"; then
+        print_error "Could not preserve existing native source at ${source_dir}"
+        return 1
+    fi
+    printf '%s\n' "$backup_dir"
+}
+
+native_clone_source() {
+    local repo_dir="$1"
+    local backup_dir="${2:-}"
+    local staging_parent
+    local staging_repo
+
+    mkdir -p "$INSTALL_DIR"
+    staging_parent=$(mktemp -d "${INSTALL_DIR}/.source-clone.XXXXXX")
+    staging_repo="${staging_parent}/source"
+
+    if ! git clone --depth 1 --branch "$BETTERDESK_BRANCH" \
+        "https://github.com/${BETTERDESK_REPO}.git" "$staging_repo"; then
+        rm -rf "$staging_parent"
+        if [ -n "$backup_dir" ] && [ ! -e "$repo_dir" ]; then
+            mv "$backup_dir" "$repo_dir" 2>/dev/null || true
+        fi
+        return 1
+    fi
+
+    # The native update path keeps local Go runtime data beside the source.
+    # Carry it forward without replacing anything created by the fresh clone.
+    if [ -n "$backup_dir" ] \
+        && [ -d "$backup_dir/betterdesk-server/data" ] \
+        && [ ! -e "$staging_repo/betterdesk-server/data" ]; then
+        if ! cp -a "$backup_dir/betterdesk-server/data" "$staging_repo/betterdesk-server/"; then
+            rm -rf "$staging_parent"
+            if [ -n "$backup_dir" ]; then
+                mv "$backup_dir" "$repo_dir" 2>/dev/null || true
+            fi
+            return 1
+        fi
+    fi
+
+    if ! mv "$staging_repo" "$repo_dir"; then
+        rm -rf "$staging_parent"
+        if [ -n "$backup_dir" ]; then
+            mv "$backup_dir" "$repo_dir" 2>/dev/null || true
+        fi
+        return 1
+    fi
+    rm -rf "$staging_parent"
+    return 0
+}
+
 install_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
     local relay
+    local commit_sha
+    local source_backup=""
+    local checkout_error=""
 
     log "BetterDesk native installer v${VERSION}"
+    log "Native install branch: ${BETTERDESK_BRANCH} (override with --branch)"
 
     require_command git
     relay=$(resolve_relay_address)
 
     if [ -d "$repo_dir/.git" ]; then
-        log "Updating existing clone in ${repo_dir}..."
+        log "Updating existing clone in ${repo_dir} to ${BETTERDESK_BRANCH}..."
+        git -C "$repo_dir" remote set-url origin "https://github.com/${BETTERDESK_REPO}.git" || true
         git -C "$repo_dir" fetch --depth 1 origin "$BETTERDESK_BRANCH"
-        git -C "$repo_dir" checkout "$BETTERDESK_BRANCH"
-        git -C "$repo_dir" pull --ff-only origin "$BETTERDESK_BRANCH" || true
+        # Shallow clones previously pinned to another branch need a branch switch.
+        checkout_error=$(mktemp)
+        if git -C "$repo_dir" checkout -B "$BETTERDESK_BRANCH" "FETCH_HEAD" 2>"$checkout_error"; then
+            rm -f "$checkout_error"
+        else
+            warn "Could not switch existing clone to ${BETTERDESK_BRANCH}."
+            if [ -n "$(git -C "$repo_dir" status --short 2>/dev/null || true)" ]; then
+                warn "The existing clone contains local changes; preserving it before recloning."
+                cat "$checkout_error" >&2 || true
+            else
+                warn "Git checkout failed; preserving the existing clone before recloning."
+                cat "$checkout_error" >&2 || true
+            fi
+            rm -f "$checkout_error"
+            if ! source_backup=$(native_backup_source "$repo_dir"); then
+                die "Cannot preserve ${repo_dir}; refusing to remove the existing native source"
+            fi
+            if ! native_clone_source "$repo_dir" "$source_backup"; then
+                die "Could not clone ${BETTERDESK_REPO}@${BETTERDESK_BRANCH}; original source preserved at ${source_backup}"
+            fi
+            warn "Previous native source preserved at ${source_backup}"
+        fi
     else
         log "Cloning ${BETTERDESK_REPO} (${BETTERDESK_BRANCH})..."
-        rm -rf "$repo_dir"
-        git clone --depth 1 --branch "$BETTERDESK_BRANCH" \
-            "https://github.com/${BETTERDESK_REPO}.git" "$repo_dir"
+        if [ -e "$repo_dir" ]; then
+            if ! source_backup=$(native_backup_source "$repo_dir"); then
+                die "Cannot preserve ${repo_dir}; refusing to remove the existing native source"
+            fi
+            warn "Existing non-Git source preserved at ${source_backup}"
+        fi
+        if ! native_clone_source "$repo_dir" "$source_backup"; then
+            die "Could not clone ${BETTERDESK_REPO}@${BETTERDESK_BRANCH}; original source preserved at ${source_backup:-none}"
+        fi
+        if [ -n "$source_backup" ]; then
+            warn "Previous native source preserved at ${source_backup}"
+        fi
     fi
+
+    commit_sha=$(git -C "$repo_dir" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    log "Using ${BETTERDESK_REPO}@${BETTERDESK_BRANCH} (${commit_sha})"
 
     chmod +x "${repo_dir}/betterdesk.sh"
 
@@ -555,9 +678,30 @@ install_native_mode() {
     ok "Native installation finished. See ${repo_dir} for logs and credentials."
 }
 
+uninstall_native_mode() {
+    local repo_dir="${INSTALL_DIR}/source"
+    local native_installer="${repo_dir}/betterdesk.sh"
+
+    require_root
+    if [ ! -x "$native_installer" ]; then
+        die "Native installer not found at ${native_installer}; nothing was removed"
+    fi
+
+    log "Running native uninstall (data is preserved unless --purge is supplied)..."
+    local args=(--auto --uninstall)
+    if [ "$DO_PURGE" = true ]; then
+        args+=(--purge)
+    fi
+    (cd "$repo_dir" && "$native_installer" "${args[@]}")
+}
+
 rescue_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
 
+    if [ "$RESCUE_ACTION" = "repair-permissions" ] && [ -x "$repo_dir/betterdesk.sh" ]; then
+        "$repo_dir/betterdesk.sh" --repair-permissions
+        return $?
+    fi
     warn "Native rescue is handled by betterdesk.sh on the installed host."
     if [ -x "$repo_dir/betterdesk.sh" ]; then
         echo "Run the interactive native repair toolkit with:"
@@ -569,6 +713,33 @@ rescue_native_mode() {
     die "Native checkout not found at ${repo_dir}. Re-run without --rescue to install, or use --docker for Docker rescue."
 }
 
+run_native_management_action() {
+    local repo_dir="${INSTALL_DIR}/source"
+    local native_installer="${repo_dir}/betterdesk.sh"
+    [ -x "$native_installer" ] || die "Native BetterDesk manager not found at ${native_installer}"
+    local args=()
+    [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
+    [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
+    local change
+    for change in "${MANAGED_CONFIG_CHANGES[@]}"; do
+        args+=(--set-config "$change")
+    done
+    "$native_installer" "${args[@]}"
+}
+
+run_docker_management_action() {
+    local manager="${INSTALL_DIR}/docker/betterdesk-docker.sh"
+    [ -x "$manager" ] || die "Docker BetterDesk manager not found at ${manager}"
+    local args=()
+    [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
+    [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
+    local change
+    for change in "${MANAGED_CONFIG_CHANGES[@]}"; do
+        args+=(--set-config "$change")
+    done
+    "$manager" "${args[@]}"
+}
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 main() {
@@ -577,11 +748,24 @@ main() {
     echo ""
 
     if [ "$DO_UNINSTALL" = true ]; then
-        uninstall_docker_mode
+        case "$INSTALL_MODE" in
+            docker) uninstall_docker_mode ;;
+            native) uninstall_native_mode ;;
+            *) die "Unknown install mode: $INSTALL_MODE" ;;
+        esac
         exit 0
     fi
 
     require_root
+
+    if [ "$CHECK_CAPABILITIES" = true ] || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+        case "$INSTALL_MODE" in
+            docker) run_docker_management_action ;;
+            native) run_native_management_action ;;
+            *) die "Unknown install mode: $INSTALL_MODE" ;;
+        esac
+        exit $?
+    fi
 
     if [ "$DO_RESCUE" = true ]; then
         case "$INSTALL_MODE" in
@@ -599,4 +783,8 @@ main() {
     esac
 }
 
-main "$@"
+# BASH_SOURCE[0] is unset when this script is piped into `bash` (the
+# documented `curl ... | sudo bash` path), so default it to $0 under nounset.
+if [[ "${BASH_SOURCE[0]:-$0}" == "$0" ]]; then
+    main "$@"
+fi

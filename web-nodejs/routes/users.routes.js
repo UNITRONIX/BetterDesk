@@ -33,6 +33,15 @@ async function goApiProxy(req, res, method, path, body) {
     }
 }
 
+/** Expose only expected client-facing errors; keep unexpected 500s generic. */
+function clientErrorMessage(err, req) {
+    if (err.status === 400) return err.message;
+    if (err.code === 'PEER_GRANTS_UNAVAILABLE' || err.code === 'STRATEGY_ASSIGNMENT_UNAVAILABLE') {
+        return err.message;
+    }
+    return req.t('errors.server_error');
+}
+
 async function resolveGoUserIdOrRespond(req, res) {
     const userId = parseInt(req.params.id, 10);
     if (isNaN(userId) || userId <= 0) {
@@ -155,13 +164,14 @@ async function serializeUserForList(u) {
 }
 
 async function applyUserScopeFromBody(userId, username, body) {
+    assertUserScopeWritersAvailable(body);
     if (Object.prototype.hasOwnProperty.call(body || {}, 'folderIds')) {
         await userScopeService.syncUserFolderAccess(db, username, body.folderIds);
     }
     if (Object.prototype.hasOwnProperty.call(body || {}, 'peerIds')) {
         await userScopeService.syncUserPeerGrants(db, userId, body.peerIds);
     }
-    if (Object.prototype.hasOwnProperty.call(body || {}, 'strategyGuid') && typeof db.setUserStrategyAssignment === 'function') {
+    if (Object.prototype.hasOwnProperty.call(body || {}, 'strategyGuid')) {
         const strategyGuid = await db.setUserStrategyAssignment(userId, body.strategyGuid || '');
         if (await serverBackend.isBetterDesk()) {
             try {
@@ -177,9 +187,32 @@ async function applyUserScopeFromBody(userId, username, body) {
                     }
                 });
             } catch (err) {
+                // Local assignment already persisted; Go mirror stays best-effort.
                 console.warn('[users] Strategy assign Go sync failed:', err.message);
             }
         }
+    }
+}
+
+/** Fail before create/update writes when required scope writers are missing (#380). */
+function assertUserScopeWritersAvailable(body) {
+    if (Object.prototype.hasOwnProperty.call(body || {}, 'peerIds')
+        && typeof db.setUserPeerGrants !== 'function') {
+        const error = new Error(
+            'Per-user device grants are unavailable (database.setUserPeerGrants missing). Refusing to silently no-op.'
+        );
+        error.status = 500;
+        error.code = 'PEER_GRANTS_UNAVAILABLE';
+        throw error;
+    }
+    if (Object.prototype.hasOwnProperty.call(body || {}, 'strategyGuid')
+        && typeof db.setUserStrategyAssignment !== 'function') {
+        const error = new Error(
+            'Per-user strategy assignment is unavailable (database.setUserStrategyAssignment missing). Refusing to silently no-op.'
+        );
+        error.status = 500;
+        error.code = 'STRATEGY_ASSIGNMENT_UNAVAILABLE';
+        throw error;
     }
 }
 
@@ -219,6 +252,38 @@ function normalizeUserEmail(value) {
         throw err;
     }
     return trimmed;
+}
+
+const VALID_USER_ROLES = new Set([
+    'super_admin',
+    'admin',
+    'server_admin',
+    'global_admin',
+    'operator',
+    'viewer',
+    'pro',
+]);
+
+/**
+ * Mirrors betterdesk-server/auth.CanAssignRole. The role hierarchy is
+ * branched: global_admin is not permitted to create or promote server-level
+ * roles, even though it can manage users.
+ */
+function canAssignUserRole(callerRole, targetRole) {
+    if (isSuperAdminRole(callerRole)) return true;
+    if (callerRole === 'global_admin') {
+        return targetRole === 'operator'
+            || targetRole === 'viewer'
+            || targetRole === 'pro';
+    }
+    return false;
+}
+
+function rejectUnauthorizedRoleAssignment(res) {
+    return res.status(403).json({
+        success: false,
+        error: 'Cannot assign a role higher than your own',
+    });
 }
 
 function requireAnyPermission(...permissions) {
@@ -399,9 +464,16 @@ router.post('/api/users', requireAuth, requirePermission('user.create'), passwor
             });
         }
         
-        // Validate role (7-role hierarchy — Phase 52)
-        const validRoles = ['super_admin', 'admin', 'server_admin', 'global_admin', 'operator', 'viewer', 'pro'];
-        const userRole = validRoles.includes(role) ? role : 'viewer';
+        // Validate role (7-role hierarchy — Phase 52) and apply the same
+        // branched assignment boundaries as the Go API before any local write
+        // or asynchronous user sync.
+        const userRole = VALID_USER_ROLES.has(role) ? role : 'viewer';
+        if (!canAssignUserRole(req.session.user?.role, userRole)) {
+            return rejectUnauthorizedRoleAssignment(res);
+        }
+
+        // Refuse create before write if peer/strategy scope cannot be persisted (#380).
+        assertUserScopeWritersAvailable(req.body);
         
         // Hash password
         const passwordHash = await authService.hashPassword(password);
@@ -453,7 +525,7 @@ router.post('/api/users', requireAuth, requirePermission('user.create'), passwor
         }
         res.status(err.status || 500).json({
             success: false,
-            error: err.status === 400 ? err.message : req.t('errors.server_error')
+            error: clientErrorMessage(err, req)
         });
     }
 });
@@ -486,7 +558,7 @@ router.patch('/api/users/:id', requireAuth, requirePermission('user.edit'), asyn
                 error: req.t('users.provider_managed_hint')
             });
         }
-        if (isExternalAccount && role) {
+        if (provider === 'ldap' && role) {
             return res.status(400).json({
                 success: false,
                 error: req.t('users.provider_managed_hint')
@@ -500,15 +572,20 @@ router.patch('/api/users/:id', requireAuth, requirePermission('user.edit'), asyn
                 error: req.t('users.cannot_demote_self')
             });
         }
+
+        // Refuse update before mutating the user when scope writers are missing (#380).
+        assertUserScopeWritersAvailable(req.body);
         
         // Update role if provided
         if (role) {
-            const validRoles = ['super_admin', 'admin', 'server_admin', 'global_admin', 'operator', 'viewer', 'pro'];
-            if (!validRoles.includes(role)) {
+            if (!VALID_USER_ROLES.has(role)) {
                 return res.status(400).json({
                     success: false,
                     error: req.t('users.invalid_role')
                 });
+            }
+            if (!canAssignUserRole(req.session.user?.role, role)) {
+                return rejectUnauthorizedRoleAssignment(res);
             }
             await db.updateUserRole(userId, role);
             // Mirror role change to Go (Issue #125)
@@ -542,13 +619,18 @@ router.patch('/api/users/:id', requireAuth, requirePermission('user.edit'), asyn
         
         // Log action
         await db.logAction(req.session.userId, 'user_updated', `Updated user: ${user.username}`, req.ip);
-        
-        res.json({ success: true });
+
+        // Return refreshed scope so clients can verify peerIds/folderIds/strategy without a second GET (#380).
+        const updated = await db.getUserById(userId);
+        res.json({
+            success: true,
+            data: await serializeUserForList(updated || user)
+        });
     } catch (err) {
         console.error('Update user error:', err);
         res.status(err.status || 500).json({
             success: false,
-            error: err.status === 400 ? err.message : req.t('errors.server_error')
+            error: clientErrorMessage(err, req)
         });
     }
 });

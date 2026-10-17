@@ -1,7 +1,7 @@
 ﻿#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    BetterDesk Console Manager v3.5.4 - All-in-One Interactive Tool for Windows
+    BetterDesk Console Manager v3.5.168 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
@@ -28,6 +28,12 @@
 
 .PARAMETER Auto
     Run installation in automatic mode (non-interactive)
+
+.PARAMETER Uninstall
+    Stop services and remove the native installation; data is preserved by default
+
+.PARAMETER Purge
+    With -Uninstall, also remove installation data and keys
 
 .PARAMETER SkipVerify
     Skip SHA256 verification of binaries
@@ -57,6 +63,15 @@
     Run the Windows services as LocalSystem (legacy). By default the services
     run under low-privilege per-service virtual accounts (privilege separation).
 
+.PARAMETER CheckPermissions
+    Report whether BetterDesk can update files, change configuration and control services.
+
+.PARAMETER RepairPermissions
+    Repair BetterDesk ACLs and recheck management capabilities.
+
+.PARAMETER SetConfig
+    Apply one or more allowlisted .env settings as KEY=VALUE.
+
 .EXAMPLE
     .\betterdesk.ps1
     Interactive mode
@@ -84,6 +99,8 @@
 
 param(
     [switch]$Auto,
+    [switch]$Uninstall,
+    [switch]$Purge,
     [switch]$SkipVerify,
     [switch]$Minimal,
     [switch]$NodeJs,
@@ -95,6 +112,9 @@ param(
     [string]$RelayMode = "",
     [string]$RelayServers = "",
     [switch]$RunAsRoot,
+    [switch]$CheckPermissions,
+    [switch]$RepairPermissions,
+    [string[]]$SetConfig = @(),
     [switch]$Flask  # Deprecated, kept for backward compatibility
 )
 
@@ -102,13 +122,18 @@ param(
 # Configuration
 #===============================================================================
 
-$script:VERSION = "3.5.4"
+$script:VERSION = "3.5.168"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Auto mode flags
 $script:AUTO_MODE = $Auto
+$script:UNINSTALL_MODE = $Uninstall
+$script:PURGE_MODE = $Purge
 $script:SKIP_VERIFY = $SkipVerify
 $script:MINIMAL_MODE = $Minimal
+$script:CHECK_PERMISSIONS = $CheckPermissions
+$script:REPAIR_PERMISSIONS = $RepairPermissions
+$script:MANAGED_CONFIG_CHANGES = @($SetConfig)
 
 # Privilege separation (default). The installer needs Administrator, but the
 # services run under low-privilege per-service virtual accounts (NT SERVICE\...)
@@ -144,8 +169,9 @@ $script:RELAY_SERVERS = if ($RelayServers) { $RelayServers } elseif ($env:RELAY_
 
 # Go server configuration
 $script:GO_SERVER_SOURCE = Join-Path $script:ScriptDir "betterdesk-server"
-$script:GO_MIN_VERSION = "1.25"
-$script:GO_DOWNLOAD_VERSION = "1.26.4"
+# Must match the toolchain pinned in betterdesk-server/go.mod.
+$script:GO_MIN_VERSION = "1.26.9"
+$script:GO_DOWNLOAD_VERSION = "1.26.9"
 # Legacy Rust checksums (deprecated, kept for migration purposes)
 $script:HBBS_WINDOWS_X86_64_SHA256 = "B790FA44CAC7482A057ED322412F6D178FB33F3B05327BFA753416E9879BD62F"
 $script:HBBR_WINDOWS_X86_64_SHA256 = "368C71E8D3AEF4C5C65177FBBBB99EA045661697A89CB7C2A703759C575E8E9F"
@@ -269,6 +295,113 @@ function Print-Step {
     Write-Host "[>] " -ForegroundColor Magenta -NoNewline
     Write-Host $Message
     Write-Log "STEP: $Message"
+}
+
+#===============================================================================
+# Management capabilities and allowlisted runtime configuration
+#===============================================================================
+
+function Get-ManagementCliPath {
+    $candidates = @(
+        (Join-Path $script:CONSOLE_PATH "scripts\management-cli.js"),
+        (Join-Path $script:ScriptDir "web-nodejs\scripts\management-cli.js")
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate) { return $candidate }
+    }
+    return $null
+}
+
+function Invoke-ManagementCli {
+    param(
+        [Parameter(Mandatory = $true)][string]$Action,
+        [string[]]$Arguments = @()
+    )
+    $cli = Get-ManagementCliPath
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $cli -or -not $node) {
+        Print-Error "Management capability tool or Node.js is unavailable"
+        return $false
+    }
+    $oldConsolePath = $env:BETTERDESK_CONSOLE_PATH
+    $oldServerPath = $env:BETTERDESK_PATH
+    $oldDataDir = $env:DATA_DIR
+    $env:BETTERDESK_CONSOLE_PATH = $script:CONSOLE_PATH
+    $env:BETTERDESK_PATH = $script:RUSTDESK_PATH
+    $env:DATA_DIR = Join-Path $script:CONSOLE_PATH "data"
+    & $node.Source $cli $Action @Arguments
+    $ok = ($LASTEXITCODE -eq 0)
+    $env:BETTERDESK_CONSOLE_PATH = $oldConsolePath
+    $env:BETTERDESK_PATH = $oldServerPath
+    $env:DATA_DIR = $oldDataDir
+    return $ok
+}
+
+function Test-ManagementCapabilities {
+    Print-Step "Checking BetterDesk management capabilities..."
+    $ok = Invoke-ManagementCli -Action "check"
+    if ($ok) {
+        Print-Success "BetterDesk management capabilities are ready"
+    } else {
+        Print-Warning "One or more management capabilities are blocked; see the report above"
+    }
+    return $ok
+}
+
+function Repair-ManagementPermissions {
+    Print-Step "Repairing BetterDesk management permissions..."
+    foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
+        if (Test-Path $path) {
+            & icacls $path /inheritance:e /grant "Administrators:(OI)(CI)F" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
+        } else {
+            New-Item -ItemType Directory -Path $path -Force | Out-Null
+        }
+    }
+    if (Test-Path $script:CONSOLE_PATH) {
+        & icacls $script:CONSOLE_PATH /grant "NT SERVICE\BetterDeskConsole:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
+    }
+    if (Test-Path $script:RUSTDESK_PATH) {
+        & icacls $script:RUSTDESK_PATH /grant "NT SERVICE\BetterDeskServer:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
+    }
+    $generatorRoot = Join-Path $script:CONSOLE_PATH "data"
+    foreach ($path in @(
+        (Join-Path $generatorRoot "modules\betterdesk-support-generator"),
+        (Join-Path $generatorRoot "agent-builds"),
+        (Join-Path $generatorRoot "build-cache\support-templates"),
+        (Join-Path $generatorRoot ".generator-uploads")
+    )) {
+        New-Item -ItemType Directory -Path $path -Force | Out-Null
+        & icacls $path /inheritance:e /grant "NT SERVICE\BetterDeskConsole:(OI)(CI)M" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
+    }
+    foreach ($path in @(
+        (Join-Path $script:CONSOLE_PATH ".env"),
+        (Join-Path $script:RUSTDESK_PATH ".api_key"),
+        (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")
+    )) {
+        if (Test-Path $path) {
+            & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" "NT SERVICE\BetterDeskConsole:R" 2>$null | Out-Null
+        }
+    }
+    $seed = Join-Path $generatorRoot "modules\betterdesk-support-generator\custom-client-signing.seed"
+    if (Test-Path $seed) {
+        & icacls $seed /inheritance:r /grant:r "SYSTEM:F" "NT SERVICE\BetterDeskConsole:R" 2>$null | Out-Null
+    }
+    Test-ManagementCapabilities | Out-Null
+}
+
+function Set-ManagedConfiguration {
+    if (-not $script:MANAGED_CONFIG_CHANGES -or $script:MANAGED_CONFIG_CHANGES.Count -eq 0) {
+        Print-Error "No allowlisted configuration changes supplied"
+        return $false
+    }
+    Print-Step "Applying allowlisted BetterDesk configuration..."
+    if (-not (Invoke-ManagementCli -Action "set" -Arguments $script:MANAGED_CONFIG_CHANGES)) {
+        return $false
+    }
+    & "$env:SystemRoot\System32\sc.exe" control $script:SERVER_SERVICE paramchange 2>$null | Out-Null
+    Restart-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+    Restart-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
+    return (Start-ServicesWithVerification)
 }
 
 function Press-Enter {
@@ -663,6 +796,7 @@ function Merge-ConsoleEnv {
 
     $adminPassword = $env:ADMIN_PASSWORD
     $sessionSecret = ""
+    $remoteTargetVaultKey = ""
 
     if ($FreshInstall) {
         if (-not $adminPassword) {
@@ -682,6 +816,14 @@ function Merge-ConsoleEnv {
         if (-not $sessionSecret) {
             $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
         }
+    }
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (Test-Path $envFile) {
+        $rtLine = Select-String -Path $envFile -Pattern '^REMOTE_TARGET_VAULT_KEY=' -SimpleMatch | Select-Object -First 1
+        $remoteTargetVaultKey = if ($rtLine) { ($rtLine.Line -split '=', 2)[1].Trim() } else { "" }
+    }
+    if (-not $remoteTargetVaultKey) {
+        $remoteTargetVaultKey = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
     }
 
     $goPort = if ($script:GO_API_PORT) { $script:GO_API_PORT } else { 21114 }
@@ -707,6 +849,8 @@ function Merge-ConsoleEnv {
     $env:BD_SUBST_API_PORT = [string]$clientPort
     $env:BD_SUBST_DEFAULT_ADMIN_PASSWORD = [string]$adminPassword
     $env:BD_SUBST_SESSION_SECRET = [string]$sessionSecret
+    $env:BD_SUBST_REMOTE_TARGET_VAULT_KEY = [string]$remoteTargetVaultKey
+    $env:BD_SUBST_GUACD_ADDRESS = "127.0.0.1:4822"
     $env:BD_SUBST_SSL_CERT_PATH = Join-Path $sslDir "betterdesk.crt"
     $env:BD_SUBST_SSL_KEY_PATH = Join-Path $sslDir "betterdesk.key"
 
@@ -947,8 +1091,11 @@ function Test-GoInstalled {
     }
     $minMajor = Get-GoVersionPart -Version $script:GO_MIN_VERSION -Index 0
     $minMinor = Get-GoVersionPart -Version $script:GO_MIN_VERSION -Index 1
+    $minPatch = Get-GoVersionPart -Version $script:GO_MIN_VERSION -Index 2
     
-    if ($currentMajor -gt $minMajor -or ($currentMajor -eq $minMajor -and $currentMinor -ge $minMinor)) {
+    if ($currentMajor -gt $minMajor -or
+        ($currentMajor -eq $minMajor -and $currentMinor -gt $minMinor) -or
+        ($currentMajor -eq $minMajor -and $currentMinor -eq $minMinor -and $currentPatch -ge $minPatch)) {
         return $true
     }
     
@@ -1410,6 +1557,11 @@ function Install-NodeJsConsole {
     $versionSrc = Join-Path $script:ScriptDir "VERSION"
     if (Test-Path $versionSrc) {
         Copy-Item -Path $versionSrc -Destination (Join-Path $script:CONSOLE_PATH "VERSION") -Force -ErrorAction SilentlyContinue
+    }
+    $remoteGatewaySrc = Join-Path $script:ScriptDir "remote-gateway"
+    if (Test-Path $remoteGatewaySrc) {
+        Copy-Item -Path $remoteGatewaySrc -Destination (Join-Path $script:CONSOLE_PATH "remote-gateway") -Recurse -Force
+        Print-Info "Installed RDP/VNC gateway module contract"
     }
     
     # Install npm dependencies
@@ -2586,6 +2738,32 @@ function Test-ServiceHealth {
     return $true
 }
 
+function Test-HttpEndpoint {
+    param(
+        [Parameter(Mandatory = $true)][string]$Url,
+        [int]$TimeoutSeconds = 30
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        try {
+            $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -MaximumRedirection 3
+            # A 3xx response is valid for a panel configured to redirect HTTP
+            # to HTTPS; the listener is reachable and the operator can use
+            # the protocol-specific check from the installer menu.
+            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
+                return $true
+            }
+        } catch {
+            # The service may still be warming up; retry until the deadline.
+        }
+        Start-Sleep -Seconds 1
+    } while ((Get-Date) -lt $deadline)
+
+    Print-Error "HTTP health check failed: $Url"
+    return $false
+}
+
 function Start-ServicesWithVerification {
     Print-Step "Starting services with health verification..."
     
@@ -2672,6 +2850,29 @@ function Start-ServicesWithVerification {
     }
     
     Start-Sleep -Seconds 2
+    $healthOk = $true
+    if (-not (Test-HttpEndpoint -Url "http://127.0.0.1:$($script:GO_API_PORT)/api/health")) {
+        $healthOk = $false
+    }
+    if (-not (Test-HttpEndpoint -Url "http://127.0.0.1:5000/health")) {
+        $healthOk = $false
+    }
+    $protocolScript = Join-Path $script:ScriptDir "scripts\installer-protocol-check.js"
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if ($node -and (Test-Path $protocolScript)) {
+        & $node.Source $protocolScript `
+            --api-url "http://127.0.0.1:$($script:GO_API_PORT)/api/health" `
+            --panel-url "http://127.0.0.1:5000/health" `
+            --port "127.0.0.1:21116" | ForEach-Object { Print-Info "$_" }
+        if ($LASTEXITCODE -ne 0) {
+            $healthOk = $false
+        }
+    }
+    if (-not $healthOk) {
+        Print-Error "Services are running but HTTP health verification failed"
+        return $false
+    }
+
     Print-Success "All services started and verified"
     
     return $true
@@ -3010,6 +3211,68 @@ function Read-UpdateGitHubBranchFromEnv {
     }
 }
 
+function Resolve-UpdateRemoteSha {
+    param([Parameter(Mandatory = $true)][string]$CloneDir)
+
+    $remoteSha = ""
+    $git = Get-Command git -ErrorAction SilentlyContinue
+    if ($git -and (Test-Path (Join-Path $CloneDir ".git"))) {
+        $remoteSha = ((& git -C $CloneDir rev-parse HEAD 2>$null) | Select-Object -First 1).Trim()
+    }
+    if ($remoteSha -notmatch '^[0-9a-fA-F]{40}$' -and $git) {
+        $remoteSha = ((& git ls-remote `
+            "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO).git" `
+            "refs/heads/$($script:UPDATE_GITHUB_BRANCH)" 2>$null) |
+            Select-Object -First 1)
+        if ($remoteSha -is [array]) { $remoteSha = $remoteSha[0] }
+        if ($remoteSha) { $remoteSha = ($remoteSha -split '\s+')[0] }
+    }
+    if ($remoteSha -notmatch '^[0-9a-fA-F]{40}$') {
+        try {
+            $encodedBranch = [Uri]::EscapeDataString($script:UPDATE_GITHUB_BRANCH)
+            $apiUrl = "https://api.github.com/repos/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/commits?sha=$encodedBranch&per_page=1"
+            $commit = Invoke-RestMethod -Uri $apiUrl -Headers @{ Accept = "application/vnd.github+json" } -TimeoutSec 30
+            $firstCommit = if ($commit -is [array]) { $commit[0] } else { $commit }
+            $remoteSha = [string]$firstCommit.sha
+        } catch {
+            $remoteSha = ""
+        }
+    }
+
+    if ($remoteSha -match '^[0-9a-fA-F]{40}$') {
+        return $remoteSha
+    }
+    return $null
+}
+
+function Stage-SupportAgentSource {
+    param([Parameter(Mandatory = $true)][string]$CloneDir)
+
+    $base = Join-Path $script:CONSOLE_PATH "agent-source"
+    $sources = @(
+        @{ Name = "betterdesk-support-agent"; Required = "build.sh" },
+        @{ Name = "betterdesk-agent"; Required = "go.mod" },
+        @{ Name = "betterdesk-server"; Required = "go.mod" }
+    )
+    $staged = 0
+    foreach ($item in $sources) {
+        $source = Join-Path $CloneDir $item.Name
+        $destination = Join-Path $base $item.Name
+        if (-not (Test-Path (Join-Path $source $item.Required))) {
+            Print-Warning "Support-agent source missing: $source"
+            continue
+        }
+        New-Item -ItemType Directory -Path $base -Force | Out-Null
+        Remove-Item -Path $destination -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Path $destination -Force | Out-Null
+        Get-ChildItem -Path $source -Force |
+            Where-Object { $_.Name -notin @(".git", "dist", "data") } |
+            Copy-Item -Destination $destination -Recurse -Force
+        $staged++
+    }
+    return ($staged -gt 0)
+}
+
 function Write-UpdateGitHubBranchToEnv {
     param([Parameter(Mandatory = $true)][ValidateSet('main', 'dev')][string]$Branch)
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
@@ -3099,6 +3362,8 @@ function Invoke-TerminalProjectUpdate {
 function Update-FromGitHub {
     $cloneDir = Join-Path $env:TEMP "betterdesk-update-$PID"
     $script:ServerBuildFailed = $false
+    $previousGoSource = ""
+    $remoteSha = ""
 
     Read-UpdateGitHubBranchFromEnv
 
@@ -3167,6 +3432,14 @@ function Update-FromGitHub {
         return $false
     }
 
+    $remoteSha = Resolve-UpdateRemoteSha -CloneDir $cloneDir
+    if (-not $remoteSha) {
+        Print-Error "Could not resolve the downloaded commit SHA; refusing an untracked update"
+        Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
+        return $false
+    }
+    Print-Info "Downloaded commit: $($remoteSha.Substring(0, 7))"
+
     # Read remote version
     $remoteVersion = ""
     $versionFile = Join-Path $cloneDir "VERSION"
@@ -3181,8 +3454,13 @@ function Update-FromGitHub {
     Print-Step "Updating Go server source..."
     $goServerSource = $script:GO_SERVER_SOURCE
     if (Test-Path $goServerSource) {
-        $backupName = "$goServerSource.pre-update.$PID"
-        Rename-Item -Path $goServerSource -NewName $backupName -ErrorAction SilentlyContinue
+        $previousGoSource = "$goServerSource.pre-update.$PID"
+        try {
+            Rename-Item -Path $goServerSource -NewName $previousGoSource -ErrorAction Stop
+        } catch {
+            $previousGoSource = ""
+            Print-Warning "Could not stage the previous Go source tree; update will continue in place"
+        }
     }
     $sourceDir = Join-Path $cloneDir "betterdesk-server"
     # Copy the *contents* into a guaranteed-existing destination. Copying the
@@ -3194,11 +3472,10 @@ function Update-FromGitHub {
     Copy-Item -Path "$sourceDir\*" -Destination $goServerSource -Recurse -Force
 
     # Restore any local data/ directory from old source
-    $oldDataDir = "$goServerSource.pre-update.$PID\data"
-    if (Test-Path $oldDataDir) {
+    $oldDataDir = if ($previousGoSource) { Join-Path $previousGoSource "data" } else { "" }
+    if ($oldDataDir -and (Test-Path $oldDataDir)) {
         Copy-Item -Path "$oldDataDir\*" -Destination (Join-Path $goServerSource "data") -Recurse -Force -ErrorAction SilentlyContinue
     }
-    Remove-Item -Path "$goServerSource.pre-update.$PID" -Recurse -Force -ErrorAction SilentlyContinue
     Print-Success "Go server source updated"
 
     # Compile Go server
@@ -3298,10 +3575,12 @@ function Update-FromGitHub {
     # ---- Step 4: Update installer scripts ----
     Print-Step "Updating installer scripts..."
     $scriptFiles = @(
-        "betterdesk.sh", "betterdesk.ps1", "betterdesk-docker.sh",
+        "install.sh", "betterdesk.sh", "betterdesk.ps1", "betterdesk-docker.sh",
         "docker-compose.yml", "docker-compose.single.yml", "docker-compose.quick.yml",
         "docker-compose.quick.single.yml", "docker-compose.quick.single.macvlan.yml",
-        "Dockerfile", "Dockerfile.server", "Dockerfile.console", "VERSION"
+        "Dockerfile", "Dockerfile.server", "Dockerfile.console", "docker-entrypoint.sh",
+        "docker\entrypoint.sh", "docker\server-entrypoint.sh", "docker\console-entrypoint.sh",
+        "docker\supervisord.conf", "scripts\installer-protocol-check.js", "VERSION"
     )
     $scriptsUpdated = 0
     foreach ($sf in $scriptFiles) {
@@ -3313,36 +3592,52 @@ function Update-FromGitHub {
     }
     Print-Success "$scriptsUpdated installer files updated"
 
-    # ---- Step 5: Update SHA tracking for in-app updater ----
-    $gitCmd2 = Get-Command git -ErrorAction SilentlyContinue
-    if ($gitCmd2 -and (Test-Path (Join-Path $cloneDir ".git"))) {
-        try {
-            $remoteSha = (& git -C $cloneDir rev-parse HEAD 2>$null).Trim()
-            if ($remoteSha) {
-                $dataDir = Join-Path $script:CONSOLE_PATH "data"
-                if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir -Force | Out-Null }
-                Set-Content -Path (Join-Path $dataDir ".update_sha") -Value $remoteSha
-                Set-Content -Path (Join-Path $dataDir ".agent_source_sha") -Value $remoteSha
-                Remove-Item -Path (Join-Path $dataDir ".last_update_result.json") -Force -ErrorAction SilentlyContinue
-                Print-Info "SHA tracking updated: $($remoteSha.Substring(0, 7))"
-            }
-        } catch { }
+    # Stage agent sources where the console build worker expects them. This
+    # keeps Windows update parity with the Linux installer and avoids a full
+    # repository checkout on the production host.
+    Print-Step "Staging support-agent source for Generator builds..."
+    if (Stage-SupportAgentSource -CloneDir $cloneDir) {
+        $dataDir = Join-Path $script:CONSOLE_PATH "data"
+        if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir -Force | Out-Null }
+        $pending = @{ reason = "betterdesk.ps1 update"; at = (Get-Date).ToUniversalTime().ToString("o") } |
+            ConvertTo-Json -Compress
+        Set-Content -Path (Join-Path $dataDir ".agent_rebuild_pending") -Value $pending -Encoding UTF8
+        Print-Info "Generator bundles will rebuild after console restart"
+    } else {
+        Print-Warning "Support-agent source staging skipped"
     }
 
-    # ---- Step 6: Update VERSION file ----
+    if ($script:ServerBuildFailed) {
+        if ($previousGoSource -and (Test-Path $previousGoSource)) {
+            Remove-Item -Path $goServerSource -Recurse -Force -ErrorAction SilentlyContinue
+            try {
+                Rename-Item -Path $previousGoSource -NewName $goServerSource -ErrorAction Stop
+            } catch {
+                Print-Warning "Could not restore the previous Go source tree"
+            }
+        }
+        Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
+        Print-Error "Go server binary was not rebuilt — update incomplete for server component"
+        return $false
+    }
+
+    # Only mark the update complete after the server build/deploy succeeded.
+    $dataDir = Join-Path $script:CONSOLE_PATH "data"
+    if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir -Force | Out-Null }
+    Set-Content -Path (Join-Path $dataDir ".update_sha") -Value $remoteSha
+    Set-Content -Path (Join-Path $dataDir ".agent_source_sha") -Value $remoteSha
+    Remove-Item -Path (Join-Path $dataDir ".last_update_result.json") -Force -ErrorAction SilentlyContinue
+    Print-Info "SHA tracking updated: $($remoteSha.Substring(0, 7))"
+
     if ($remoteVersion -and (Test-Path (Join-Path $cloneDir "VERSION"))) {
         Copy-Item -Path (Join-Path $cloneDir "VERSION") -Destination (Join-Path $script:ScriptDir "VERSION") -Force -ErrorAction SilentlyContinue
         Copy-Item -Path (Join-Path $cloneDir "VERSION") -Destination (Join-Path $script:CONSOLE_PATH "VERSION") -Force -ErrorAction SilentlyContinue
     }
-
-    # Cleanup
     Remove-Item -Recurse -Force $cloneDir -ErrorAction SilentlyContinue
-
-    Print-Success "All project files updated from GitHub"
-    if ($script:ServerBuildFailed) {
-        Print-Error "Go server binary was not rebuilt — update incomplete for server component"
-        return $false
+    if ($previousGoSource) {
+        Remove-Item -Path $previousGoSource -Recurse -Force -ErrorAction SilentlyContinue
     }
+    Print-Success "All project files updated from GitHub"
     return $true
 }
 
@@ -3352,6 +3647,7 @@ function Do-Update {
     Write-Host ""
     
     Detect-Installation
+    Test-ManagementCapabilities | Out-Null
     
     if ($script:INSTALL_STATUS -eq "none") {
         Print-Error "BetterDesk is not installed!"
@@ -3490,6 +3786,7 @@ function Do-Repair {
     Write-Host ""
     
     Detect-Installation
+    Test-ManagementCapabilities | Out-Null
     
     # CRITICAL: Preserve database configuration before any repair operation
     # This prevents PostgreSQL -> SQLite switch when regenerating service files
@@ -3525,77 +3822,57 @@ function Do-Repair {
 }
 
 function Repair-Binaries {
-    Print-Step "Repairing binaries (enhanced v2.1.2)..."
-    
-    # Verify binaries exist
-    $binSource = Join-Path $script:ScriptDir "hbbs-patch-v2"
-    $hbbsPath = Join-Path $binSource "hbbs-windows-x86_64.exe"
-    $hbbrPath = Join-Path $binSource "hbbr-windows-x86_64.exe"
-    
-    if (-not (Test-Path $hbbsPath) -or -not (Test-Path $hbbrPath)) {
-        Print-Error "BetterDesk binaries not found in $binSource"
+    Print-Step "Repairing BetterDesk server binaries..."
+
+    # The supported installer architecture uses one Go binary. Do not gate
+    # repairs on hbbs-patch-v2: those legacy RustDesk artifacts are absent from
+    # fresh Go installations and are not needed by betterdesk-server.exe.
+    $goSourceDir = $script:GO_SERVER_SOURCE
+    $goSourceBinary = Join-Path $goSourceDir "betterdesk-server.exe"
+    $installedGoBinary = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
+    $goSourceAvailable = (Test-Path $goSourceBinary) -or (Test-Path (Join-Path $goSourceDir "go.mod"))
+
+    if ($goSourceAvailable) {
+        if (-not (Install-Binaries -ForceRecompile)) {
+            Print-Error "Failed to compile or install betterdesk-server.exe"
+            return
+        }
+    } elseif (Test-Path $installedGoBinary) {
+        # A binary-only installation can still be repaired by validating and
+        # restarting it. Rebuilding requires the source tree or a later update.
+        try {
+            $header = [System.IO.File]::ReadAllBytes($installedGoBinary)[0..1]
+            if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+                Print-Error "Invalid Windows executable: $installedGoBinary"
+                return
+            }
+        } catch {
+            Print-Error "Unable to validate $installedGoBinary`: $($_.Exception.Message)"
+            return
+        }
+        Print-Info "Validated existing Go server binary (source tree not present)"
+    } elseif ((Test-Path (Join-Path $script:RUSTDESK_PATH "hbbs.exe")) -and
+              (Test-Path (Join-Path $script:RUSTDESK_PATH "hbbr.exe"))) {
+        Print-Warning "Legacy RustDesk binaries detected; no Go source or Go binary is available."
+        Print-Info "Run an update or fresh Go installation to migrate this deployment."
+        if (-not (Start-ServicesWithVerification)) {
+            Print-Error "Legacy services failed to start after repair"
+            return
+        }
+        Print-Success "Legacy services verified; no Go binary was changed."
+        return
+    } else {
+        Print-Error "No BetterDesk server binary or source tree found."
+        Print-Info "Run a fresh installation or update before repairing binaries."
         return
     }
-    
-    # Backup current binaries
-    $timestamp = Get-Date -Format "yyyyMMddHHmmss"
-    if (Test-Path "$script:RUSTDESK_PATH\hbbs.exe") {
-        Copy-Item "$script:RUSTDESK_PATH\hbbs.exe" "$script:RUSTDESK_PATH\hbbs.exe.backup.$timestamp" -ErrorAction SilentlyContinue
-    }
-    if (Test-Path "$script:RUSTDESK_PATH\hbbr.exe") {
-        Copy-Item "$script:RUSTDESK_PATH\hbbr.exe" "$script:RUSTDESK_PATH\hbbr.exe.backup.$timestamp" -ErrorAction SilentlyContinue
-    }
-    
-    # Stop services and wait
-    Stop-AllServices
-    Start-Sleep -Seconds 3
-    
-    # Extra check - make sure files are not locked
-    $hbbsLocked = $false
-    $hbbrLocked = $false
-    
-    try {
-        if (Test-Path "$script:RUSTDESK_PATH\betterdesk-server.exe") {
-            $stream = [System.IO.File]::Open("$script:RUSTDESK_PATH\betterdesk-server.exe", 'Open', 'ReadWrite', 'None')
-            $stream.Close()
-        } elseif (Test-Path "$script:RUSTDESK_PATH\hbbs.exe") {
-            $stream = [System.IO.File]::Open("$script:RUSTDESK_PATH\hbbs.exe", 'Open', 'ReadWrite', 'None')
-            $stream.Close()
-        }
-    } catch {
-        $hbbsLocked = $true
-        Print-Warning "Server binary is still locked, killing stale processes..."
-        Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force
-        Get-Process -Name "hbbs" -ErrorAction SilentlyContinue | Stop-Process -Force
-        Start-Sleep -Seconds 2
-    }
-    
-    try {
-        # Legacy hbbr check (Go server no longer uses separate relay binary)
-        if (Test-Path "$script:RUSTDESK_PATH\hbbr.exe") {
-            $stream = [System.IO.File]::Open("$script:RUSTDESK_PATH\hbbr.exe", 'Open', 'ReadWrite', 'None')
-            $stream.Close()
-        }
-    } catch {
-        $hbbrLocked = $true
-        Print-Warning "hbbr.exe is still locked, killing stale processes..."
-        Get-Process -Name "hbbr" -ErrorAction SilentlyContinue | Stop-Process -Force
-        Start-Sleep -Seconds 2
-    }
-    
-    # Install binaries
-    if (-not (Install-Binaries)) {
-        Print-Error "Failed to install binaries"
-        return
-    }
-    
-    # Start with verification
+
     if (-not (Start-ServicesWithVerification)) {
-        Print-Error "Services failed to start after repair"
+        Print-Error "Services failed to start after binary repair"
         return
     }
-    
-    Print-Success "Binaries repaired and verified!"
+
+    Print-Success "BetterDesk server binaries repaired and verified!"
 }
 
 function Repair-Database {
@@ -4459,11 +4736,13 @@ function Do-Uninstall {
     Print-Warning "This operation will remove BetterDesk Console!"
     Write-Host ""
     
-    if (-not (Confirm-Action "Are you sure you want to continue?")) {
-        return
+    if (-not $script:AUTO_MODE -and -not $script:UNINSTALL_MODE) {
+        if (-not (Confirm-Action "Are you sure you want to continue?")) {
+            return
+        }
     }
     
-    if (Confirm-Action "Create backup before uninstall?") {
+    if ($script:AUTO_MODE -or (Confirm-Action "Create backup before uninstall?")) {
         Do-BackupSilent
     }
     
@@ -4472,28 +4751,61 @@ function Do-Uninstall {
     
     Print-Step "Removing services..."
     
-    # Remove Windows services (NSSM)
-    $nssmPath = Get-Command nssm -ErrorAction SilentlyContinue
-    if ($nssmPath) {
-        $nssm = if ($nssmPath -is [System.Management.Automation.ApplicationInfo]) { $nssmPath.Source } else { $nssmPath }
+    # Remove Windows services (NSSM). Installations may keep NSSM beside the
+    # installer instead of putting it on PATH.
+    $nssmCommand = Get-Command nssm -ErrorAction SilentlyContinue
+    $nssmCandidates = @()
+    if ($nssmCommand) {
+        $nssmCandidates += if ($nssmCommand -is [System.Management.Automation.ApplicationInfo]) {
+            $nssmCommand.Source
+        } else {
+            [string]$nssmCommand
+        }
+    }
+    $nssmCandidates += Join-Path $script:ScriptDir "tools\nssm.exe"
+    $nssm = $nssmCandidates |
+        Where-Object { $_ -and (Test-Path $_) } |
+        Select-Object -First 1
+    if ($nssm) {
+        & $nssm remove $script:SERVER_SERVICE confirm 2>$null
         & $nssm remove $script:HBBS_SERVICE confirm 2>$null
         & $nssm remove $script:HBBR_SERVICE confirm 2>$null
         & $nssm remove $script:CONSOLE_SERVICE confirm 2>$null
     }
+
+    # Also remove services directly when NSSM is unavailable or a stale
+    # service definition survived an earlier uninstall.
+    foreach ($serviceName in @(
+        $script:SERVER_SERVICE,
+        $script:HBBS_SERVICE,
+        $script:HBBR_SERVICE,
+        $script:CONSOLE_SERVICE,
+        "BetterDeskAPI"
+    )) {
+        if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
+            Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
+            sc.exe delete $serviceName 2>$null | Out-Null
+        }
+    }
     
     # Remove scheduled tasks
+    Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $script:HBBS_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $script:HBBR_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $script:CONSOLE_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     
-    if (Confirm-Action "Remove installation files ($script:RUSTDESK_PATH)?") {
+    if ($script:PURGE_MODE -or (-not $script:AUTO_MODE -and (Confirm-Action "Remove installation files ($script:RUSTDESK_PATH)?"))) {
         Remove-Item -Path $script:RUSTDESK_PATH -Recurse -Force -ErrorAction SilentlyContinue
         Print-Info "Removed: $script:RUSTDESK_PATH"
+    } else {
+        Print-Info "Preserved server data: $script:RUSTDESK_PATH"
     }
     
-    if (Confirm-Action "Remove Web Console ($script:CONSOLE_PATH)?") {
+    if ($script:PURGE_MODE -or (-not $script:AUTO_MODE -and (Confirm-Action "Remove Web Console ($script:CONSOLE_PATH)?"))) {
         Remove-Item -Path $script:CONSOLE_PATH -Recurse -Force -ErrorAction SilentlyContinue
         Print-Info "Removed: $script:CONSOLE_PATH"
+    } else {
+        Print-Info "Preserved console data: $script:CONSOLE_PATH"
     }
     
     Print-Success "BetterDesk has been uninstalled"
@@ -5825,6 +6137,7 @@ function Show-Menu {
     Write-Host "  T. Toggle HTTP/HTTPS mode"
     Write-Host "  M. Database migration"
     Write-Host "  S. Settings (paths)"
+    Write-Host "  P. Management capabilities and server settings"
     Write-Host "  0. Exit"
     Write-Host ""
 }
@@ -5835,11 +6148,28 @@ function Main {
     Auto-DetectPaths
     Write-Host ""
     Start-Sleep -Seconds 1
+
+    if ($script:CHECK_PERMISSIONS -or $script:REPAIR_PERMISSIONS -or
+        ($script:MANAGED_CONFIG_CHANGES -and $script:MANAGED_CONFIG_CHANGES.Count -gt 0)) {
+        if ($script:REPAIR_PERMISSIONS) { Repair-ManagementPermissions }
+        $capabilitiesOk = Test-ManagementCapabilities
+        if ($script:MANAGED_CONFIG_CHANGES -and $script:MANAGED_CONFIG_CHANGES.Count -gt 0) {
+            if (-not (Set-ManagedConfiguration)) { $capabilitiesOk = $false }
+        }
+        exit ([int](-not $capabilitiesOk))
+    }
     
+    if ($script:UNINSTALL_MODE -and -not $script:AUTO_MODE) {
+        Do-Uninstall
+        exit 0
+    }
+
     # Auto mode - run installation directly
     if ($script:AUTO_MODE) {
         Print-Info "Running in AUTO mode..."
-        if ($script:MINIMAL_MODE) {
+        if ($script:UNINSTALL_MODE) {
+            Do-Uninstall
+        } elseif ($script:MINIMAL_MODE) {
             Do-InstallMinimal
         } else {
             Do-Install
@@ -5863,9 +6193,10 @@ function Main {
             "Toggle HTTP/HTTPS`tSwitch protocol mode",
             "Database migration`tMigrate between backends",
             "Settings (paths)`tConfigure install paths",
+            "Management capabilities`tCheck permissions and change allowlisted server settings",
             "Exit`tQuit the manager"
         )
-        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "0")
+        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "P", "0")
 
         $choice = ""
         if (Test-TuiAvailable) {
@@ -5900,6 +6231,24 @@ function Main {
             "m" { Do-MigrateDatabase }
             "S" { Configure-Paths }
             "s" { Configure-Paths }
+            "P" {
+                Print-Header
+                Test-ManagementCapabilities | Out-Null
+                $managementChoice = Read-Host "Choose: 1=repair permissions, 2=set KEY=VALUE, Enter=back"
+                if ($managementChoice -eq "1") {
+                    Repair-ManagementPermissions
+                } elseif ($managementChoice -eq "2") {
+                    $script:MANAGED_CONFIG_CHANGES = @(Read-Host "KEY=VALUE (repeat manually via comma-separated values)" -ErrorAction SilentlyContinue)
+                    $script:MANAGED_CONFIG_CHANGES = @($script:MANAGED_CONFIG_CHANGES -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+                    Set-ManagedConfiguration | Out-Null
+                }
+                Press-Enter
+            }
+            "p" {
+                Print-Header
+                Test-ManagementCapabilities | Out-Null
+                Press-Enter
+            }
             "0" {
                 Write-Host ""
                 Print-Info "Goodbye!"

@@ -364,7 +364,7 @@
         let html = `
             <div class="form-group">
                 <label>Label</label>
-                <input class="form-control" value="${esc(node.label)}" onchange="FleetBuilder.updateNodeProp('${node.id}','label',this.value)">
+                <input class="form-control" value="${esc(node.label)}" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","label"]' data-bd-on="change" data-bd-value="1">
             </div>`;
 
         // Type-specific fields
@@ -390,7 +390,7 @@
         }
         if (node.type === 'action_script') {
             html += `<div class="form-group"><label>Script</label>
-                <textarea class="form-control code-textarea" rows="5" onchange="FleetBuilder.updateNodeProp('${node.id}','script',this.value)">${esc(node.config.script || '')}</textarea></div>`;
+                <textarea class="form-control code-textarea" rows="5" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","script"]' data-bd-on="change" data-bd-value="1">${esc(node.config.script || '')}</textarea></div>`;
             html += selectField(node, 'shell', 'Shell', ['bash', 'powershell', 'cmd', 'python']);
         }
         if (node.type === 'action_install') {
@@ -422,7 +422,7 @@
         }
 
         html += `<div class="form-group" style="margin-top:16px;">
-            <button class="btn btn-secondary btn-sm" onclick="FleetBuilder.removeSelected()" style="width:100%">
+            <button class="btn btn-secondary btn-sm" data-bd-call="FleetBuilder.removeSelected" style="width:100%">
                 <span class="material-icons" style="font-size:14px;vertical-align:middle;">delete</span> Delete Node
             </button></div>`;
         return html;
@@ -431,14 +431,14 @@
     function field(node, key, label, placeholder) {
         return `<div class="form-group"><label>${esc(label)}</label>
             <input class="form-control" placeholder="${esc(placeholder)}" value="${esc(node.config[key] || '')}"
-                onchange="FleetBuilder.updateNodeProp('${node.id}','${key}',this.value)">
+                data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","${key}"]' data-bd-on="change" data-bd-value="1">
         </div>`;
     }
 
     function selectField(node, key, label, opts) {
         const val = node.config[key] || '';
         return `<div class="form-group"><label>${esc(label)}</label>
-            <select class="form-control" onchange="FleetBuilder.updateNodeProp('${node.id}','${key}',this.value)">
+            <select class="form-control" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","${key}"]' data-bd-on="change" data-bd-value="1">
                 ${opts.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
             </select></div>`;
     }

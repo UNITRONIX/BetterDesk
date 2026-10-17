@@ -24,6 +24,22 @@
     let showIntuneScriptHandler = null;
     let showClientQrButton = null;
     let showClientQrHandler = null;
+    let activateAgentQrButton = null;
+    let activateAgentQrHandler = null;
+    let activationModal = null;
+    let activationCloseButton = null;
+    let activationStopButton = null;
+    let activationFileButton = null;
+    let activationFileInput = null;
+    let activationSubmitButton = null;
+    let activationVideo = null;
+    let activationStatus = null;
+    let activationForm = null;
+    let activationNameInput = null;
+    let activationFolderSelect = null;
+    let activationStream = null;
+    let activationTimer = null;
+    let activationDeviceId = '';
     let clientConfigHostInput = null;
     let applyClientHostButton = null;
     let applyClientHostHandler = null;
@@ -44,8 +60,7 @@
         'dashboard.tip_2fa',
         'dashboard.tip_bulk_actions',
         'dashboard.tip_theme',
-        'dashboard.tip_cdap',
-        'dashboard.tip_tutorials'
+        'dashboard.tip_cdap'
     ];
     
     function init(root) {
@@ -109,6 +124,8 @@
         showClientQrHandler = showClientConfigQr;
         showClientQrButton?.addEventListener('click', showClientQrHandler);
 
+        initAgentActivation();
+
         clientConfigHostInput = findById('client-config-host-input');
         applyClientHostButton = findById('apply-client-host-btn');
         applyClientHostHandler = () => loadClientConfig({ persistHost: true });
@@ -145,6 +162,10 @@
         if (copyDeployStringButton && copyDeployStringHandler) copyDeployStringButton.removeEventListener('click', copyDeployStringHandler);
         if (showIntuneScriptButton && showIntuneScriptHandler) showIntuneScriptButton.removeEventListener('click', showIntuneScriptHandler);
         if (showClientQrButton && showClientQrHandler) showClientQrButton.removeEventListener('click', showClientQrHandler);
+        if (activateAgentQrButton && activateAgentQrHandler) {
+            activateAgentQrButton.removeEventListener('click', activateAgentQrHandler);
+        }
+        stopAgentActivation();
         if (applyClientHostButton && applyClientHostHandler) applyClientHostButton.removeEventListener('click', applyClientHostHandler);
         clientConfigCopyButtons.forEach(button => {
             const handler = clientConfigCopyHandlers.get(button);
@@ -170,6 +191,8 @@
         showIntuneScriptHandler = null;
         showClientQrButton = null;
         showClientQrHandler = null;
+        activateAgentQrButton = null;
+        activateAgentQrHandler = null;
         clientConfigHostInput = null;
         applyClientHostButton = null;
         applyClientHostHandler = null;
@@ -186,7 +209,7 @@
             loadStats(),
             loadServerStatus()
         ]);
-        loadHealthOverview(stats, status);
+        loadHealthOverview(status);
     }
     
     /**
@@ -506,19 +529,33 @@
 
     function updateClientHostControls(config) {
         const hintEl = findById('client-config-host-hint');
+        const badgeEl = findById('client-config-env-badge');
+        const linkEl = findById('client-config-host-env-link');
         const envOverride = Boolean(config?.env_override_active);
 
         if (clientConfigHostInput) {
             clientConfigHostInput.disabled = envOverride;
+            if (envOverride) {
+                clientConfigHostInput.title = _('dashboard.client_server_host_env_hint');
+            } else {
+                clientConfigHostInput.removeAttribute('title');
+            }
         }
         if (applyClientHostButton) {
             applyClientHostButton.disabled = envOverride;
+            if (envOverride) {
+                applyClientHostButton.title = _('dashboard.client_server_host_env_hint');
+            } else {
+                applyClientHostButton.removeAttribute('title');
+            }
         }
         if (hintEl) {
             hintEl.textContent = envOverride
                 ? _('dashboard.client_server_host_env_hint')
                 : _('dashboard.client_server_host_hint');
         }
+        if (badgeEl) badgeEl.hidden = !envOverride;
+        if (linkEl) linkEl.hidden = !envOverride;
     }
 
     async function copyClientConfigField(elementId, button) {
@@ -632,6 +669,10 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             return;
         }
 
+        const warn = clientConfig.phone_unreachable_host
+            ? `<p class="client-config-qr-warn">${escapeHtml(_('dashboard.client_config_qr_unreachable_host'))}</p>`
+            : '';
+
         Modal.show({
             title: _('dashboard.client_config_qr_title'),
             content: `
@@ -640,6 +681,7 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
                         <img src="${escapeHtml(clientConfig.qr)}" alt="${escapeHtml(_('dashboard.client_config_qr_title'))}" width="300" height="300">
                     </div>
                     <p>${escapeHtml(_('dashboard.client_config_qr_hint'))}</p>
+                    ${warn}
                 </div>
             `,
             buttons: [
@@ -667,7 +709,10 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             const events = data.events || data.data?.events || [];
             
             if (events.length === 0) {
-                container.innerHTML = `<div class="activity-empty">${_('dashboard.no_recent_activity')}</div>`;
+                container.innerHTML = `<div class="activity-empty">
+                    <p>${_('dashboard.no_recent_activity')}</p>
+                    <a class="btn btn-secondary btn-sm" href="/settings#audit">${_('dashboard.view_audit_log') || _('nav.settings')}</a>
+                </div>`;
                 return;
             }
             
@@ -680,52 +725,242 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
                     'ban': { icon: 'block', cls: 'ban' },
                     'unban': { icon: 'check_circle', cls: 'unban' },
                     'file_transfer': { icon: 'upload_file', cls: 'file' },
-                    'alarm': { icon: 'warning', cls: 'alert' }
+                    'alarm': { icon: 'warning', cls: 'alert' },
+                    'branding_update': { icon: 'palette', cls: 'connect' },
+                    'theme_toggle': { icon: 'dark_mode', cls: 'connect' }
                 };
                 const info = iconMap[ev.action] || { icon: 'info', cls: 'connect' };
                 const timeAgo = formatTimeAgo(ev.timestamp || ev.created_at);
                 const detail = ev.device_id || ev.peer_id || ev.details || '';
+                const actionLabel = (window.Utils && Utils.formatAuditAction)
+                    ? Utils.formatAuditAction(ev.action, ev.action_label || ev.action)
+                    : (ev.action_label || ev.action || '');
                 
                 return `<div class="activity-item stagger-item">
                     <div class="activity-icon ${info.cls}">
-                        <span class="material-icons">${info.icon}</span>
+                        <span class="material-icons" aria-hidden="true">${info.icon}</span>
                     </div>
                     <div class="activity-content">
-                        <div class="activity-text">${escapeHtml(ev.action_label || ev.action)}${detail ? ' — <strong>' + escapeHtml(String(detail)) + '</strong>' : ''}</div>
+                        <div class="activity-text">${escapeHtml(actionLabel)}${detail ? ' — <strong>' + escapeHtml(String(detail)) + '</strong>' : ''}</div>
                         <div class="activity-time">${timeAgo}</div>
                     </div>
                 </div>`;
             }).join('');
         } catch (err) {
             console.error('Activity feed error:', err);
-            container.innerHTML = `<div class="activity-empty">${_('dashboard.no_recent_activity')}</div>`;
+            container.innerHTML = `<div class="activity-empty">
+                <p>${_('dashboard.activity_load_error') || _('errors.server_error')}</p>
+                <a class="btn btn-secondary btn-sm" href="/settings#audit">${_('dashboard.view_audit_log') || _('nav.settings')}</a>
+            </div>`;
         }
     }
     
     /**
      * Load health overview data
      */
-    async function loadHealthOverview(stats, status) {
+    async function loadHealthOverview(status) {
         try {
-            if (!stats) {
-                const data = await fetchApi('/api/stats');
-                stats = data.devices || data.data?.devices || data;
-            }
-            
-            setText('health-online', stats.online ?? 0);
-            setText('health-alerts', stats.banned ?? 0);
-            setText('health-connections', stats.total ?? 0);
-            
             // Server uptime from status
             try {
                 status = status || await fetchApi('/api/server/status');
                 const uptime = status.uptime || status.data?.uptime;
-                setText('health-uptime', uptime ? formatUptime(uptime) : '-');
+                setText('stat-uptime', uptime ? formatUptime(uptime) : '-');
             } catch {
-                setText('health-uptime', '-');
+                setText('stat-uptime', '-');
             }
         } catch (err) {
             console.error('Health overview error:', err);
+        }
+    }
+
+    function initAgentActivation() {
+        activateAgentQrButton = findById('activate-agent-qr-btn');
+        activationModal = findById('dashboard-agent-activation-modal');
+        if (!activateAgentQrButton || !activationModal) return;
+        activateAgentQrHandler = openAgentActivation;
+        activateAgentQrButton.addEventListener('click', activateAgentQrHandler);
+        activationCloseButton = findById('dashboard-agent-activation-close');
+        activationStopButton = findById('dashboard-agent-activation-stop');
+        activationFileButton = findById('dashboard-agent-activation-file-btn');
+        activationFileInput = findById('dashboard-agent-activation-file');
+        activationSubmitButton = findById('dashboard-agent-activation-submit');
+        activationVideo = findById('dashboard-agent-activation-video');
+        activationStatus = findById('dashboard-agent-activation-status');
+        activationForm = findById('dashboard-agent-activation-form');
+        activationNameInput = findById('dashboard-agent-activation-name');
+        activationFolderSelect = findById('dashboard-agent-activation-folder');
+        activationCloseButton?.addEventListener('click', closeAgentActivation);
+        activationStopButton?.addEventListener('click', closeAgentActivation);
+        activationFileButton?.addEventListener('click', () => activationFileInput?.click());
+        activationFileInput?.addEventListener('change', scanAgentQrImage);
+        activationSubmitButton?.addEventListener('click', submitAgentActivation);
+    }
+
+    async function openAgentActivation() {
+        if (!activationModal) return;
+        activationModal.hidden = false;
+        activationModal.style.display = 'flex';
+        activationForm.hidden = true;
+        activationDeviceId = '';
+        setActivationStatus(_('dashboard.activate_agent_scanning'));
+        await startAgentActivationCamera();
+    }
+
+    function closeAgentActivation() {
+        stopAgentActivation();
+        if (activationModal) {
+            activationModal.hidden = true;
+            activationModal.style.display = 'none';
+        }
+    }
+
+    function stopAgentActivation() {
+        if (activationTimer) clearInterval(activationTimer);
+        activationTimer = null;
+        if (activationStream) {
+            activationStream.getTracks().forEach(track => track.stop());
+            activationStream = null;
+        }
+        if (activationVideo) activationVideo.srcObject = null;
+    }
+
+    function setActivationStatus(message, error = false) {
+        if (!activationStatus) return;
+        activationStatus.textContent = message || '';
+        activationStatus.classList.toggle('is-error', !!error);
+    }
+
+    async function startAgentActivationCamera() {
+        if (!('BarcodeDetector' in window) || !navigator.mediaDevices?.getUserMedia) {
+            setActivationStatus(_('dashboard.activate_agent_camera_unavailable'));
+            return;
+        }
+        try {
+            activationStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false,
+            });
+            activationVideo.srcObject = activationStream;
+            await activationVideo.play();
+            const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+            activationTimer = setInterval(async () => {
+                if (!activationVideo || activationVideo.readyState < 2) return;
+                try {
+                    const codes = await detector.detect(activationVideo);
+                    if (codes.length && codes[0].rawValue) {
+                        await handleAgentQrPayload(codes[0].rawValue);
+                    }
+                } catch (_) { /* camera frame may be unavailable */ }
+            }, 250);
+        } catch (error) {
+            setActivationStatus(error.name === 'NotAllowedError'
+                ? _('dashboard.activate_agent_camera_denied')
+                : _('dashboard.activate_agent_camera_unavailable'), true);
+        }
+    }
+
+    async function scanAgentQrImage(event) {
+        const file = event.target.files?.[0];
+        if (!file || !('BarcodeDetector' in window)) {
+            setActivationStatus(_('dashboard.activate_agent_camera_unavailable'), true);
+            return;
+        }
+        try {
+            const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+            const bitmap = await createImageBitmap(file);
+            const codes = await detector.detect(bitmap);
+            bitmap.close?.();
+            if (!codes.length || !codes[0].rawValue) throw new Error('QR not found');
+            await handleAgentQrPayload(codes[0].rawValue);
+        } catch (_) {
+            setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+        } finally {
+            event.target.value = '';
+        }
+    }
+
+    async function handleAgentQrPayload(rawValue) {
+        let payload;
+        try {
+            payload = JSON.parse(rawValue);
+        } catch (_) {
+            setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+            return;
+        }
+        if (payload?.type !== 'betterdesk-agent-pairing'
+            || payload.version !== 1
+            || typeof payload.device_id !== 'string'
+            || !payload.device_id.trim()) {
+            setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+            return;
+        }
+        if (payload.server) {
+            try {
+                if (new URL(payload.server).host !== window.location.host) {
+                    setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+                    return;
+                }
+            } catch (_) {
+                setActivationStatus(_('dashboard.activate_agent_qr_invalid'), true);
+                return;
+            }
+        }
+        stopAgentActivation();
+        activationDeviceId = payload.device_id.trim();
+        setActivationStatus(_('dashboard.activate_agent_loading'));
+        try {
+            const result = await fetchApi('/api/enrollment/pending');
+            const pending = result?.data || [];
+            const match = pending.find(item => String(item.device_id || '') === activationDeviceId);
+            activationNameInput.value = match?.hostname || activationDeviceId;
+            await loadActivationFolders();
+            activationForm.hidden = false;
+            setActivationStatus(_('dashboard.activate_agent_ready'));
+        } catch (error) {
+            setActivationStatus(error.message || _('errors.server_error'), true);
+        }
+    }
+
+    async function loadActivationFolders() {
+        if (!activationFolderSelect) return;
+        try {
+            const result = await fetchApi('/api/folders');
+            const folders = result?.data?.folders || result?.folders || [];
+            activationFolderSelect.querySelectorAll('option:not([value="0"])')
+                .forEach(option => option.remove());
+            folders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = String(folder.id);
+                option.textContent = folder.name || folder.label || `#${folder.id}`;
+                activationFolderSelect.appendChild(option);
+            });
+        } catch (_) { /* folder assignment is optional */ }
+    }
+
+    async function submitAgentActivation() {
+        if (!activationDeviceId) return;
+        activationSubmitButton.disabled = true;
+        setActivationStatus(_('dashboard.activate_agent_submitting'));
+        try {
+            const result = await Utils.api(
+                '/api/agent-pairing/activate',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        device_id: activationDeviceId,
+                        display_name: activationNameInput.value.trim(),
+                        folder_id: Number(activationFolderSelect.value || 0),
+                    }),
+                }
+            );
+            if (!result?.success) throw new Error(result?.error || _('errors.server_error'));
+            setActivationStatus(_('dashboard.activate_agent_success'));
+            activationForm.hidden = true;
+            setTimeout(closeAgentActivation, 1200);
+        } catch (error) {
+            setActivationStatus(error.message || _('errors.server_error'), true);
+        } finally {
+            activationSubmitButton.disabled = false;
         }
     }
     

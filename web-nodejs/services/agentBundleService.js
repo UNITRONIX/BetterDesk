@@ -7,12 +7,9 @@
  *   - hashing the normalized branding (Phase 2 build-artifact cache key)
  *   - generating short, URL-safe bundle IDs
  *
- * The build pipeline itself (Tauri cross-compile, dpkg-deb, rpmbuild,
- * appimagetool, cargo-xwin + wine) is intentionally NOT implemented here.
- * Phase 1 stores the bundle definition + serves a public download portal
- * that reports each platform as "pending". Phase 2 will plug a queue
- * into this service and start producing real artifacts keyed by
- * `branding_hash`.
+ * The build pipeline is owned by clientTemplateWorker/localClientBuilder.
+ * This service validates profiles and provides deterministic config
+ * fingerprints for the local embedded build queue.
  */
 
 'use strict';
@@ -22,13 +19,20 @@ const config = require('../config/config');
 const conn = require('./agentBundleConnection');
 
 // Supported delivery targets. The portal renders one card per entry.
+// BetterDesk Support Generator builds incoming-only Client binaries.
 const PLATFORMS = [
-    { platform: 'windows', arch: 'x64', format: 'portable',  label: 'Windows portable (.exe)' },
-    { platform: 'windows', arch: 'x64', format: 'installed', label: 'Windows installed (.msi)' },
-    { platform: 'linux',   arch: 'x64', format: 'portable',  label: 'Linux universal portable (.tar.gz)' },
-    { platform: 'linux',   arch: 'x64', format: 'appimage',  label: 'Linux portable (AppImage)' },
-    { platform: 'linux',   arch: 'x64', format: 'installed', label: 'Linux Debian/Ubuntu (.deb)' },
-    { platform: 'linux',   arch: 'x64', format: 'rpm',       label: 'Linux Fedora/RHEL (.rpm)' },
+    { platform: 'windows', arch: 'x64',   format: 'portable', label: 'Windows x64 portable (.zip)' },
+    { platform: 'windows', arch: 'arm64', format: 'portable', label: 'Windows ARM64 portable (.zip)' },
+    { platform: 'linux',   arch: 'x64',   format: 'portable', label: 'Linux x64 portable (.tar.gz)' },
+    { platform: 'linux',   arch: 'x64',   format: 'deb',      label: 'Debian/Ubuntu x64 package (.deb)' },
+    { platform: 'linux',   arch: 'x64',   format: 'rpm',      label: 'Fedora/RHEL/openSUSE x64 package (.rpm)' },
+    { platform: 'linux',   arch: 'x64',   format: 'arch',     label: 'Arch Linux x64 package (.pkg.tar.zst)' },
+    { platform: 'linux',   arch: 'arm64', format: 'portable', label: 'Linux ARM64 portable (.tar.gz)' },
+    { platform: 'linux',   arch: 'arm64', format: 'deb',      label: 'Debian/Ubuntu ARM64 package (.deb)' },
+    { platform: 'linux',   arch: 'arm64', format: 'rpm',      label: 'Fedora/RHEL/openSUSE ARM64 package (.rpm)' },
+    { platform: 'linux',   arch: 'arm64', format: 'arch',     label: 'Arch Linux ARM64 package (.pkg.tar.zst)' },
+    { platform: 'macos',   arch: 'x64',   format: 'portable', label: 'macOS Intel portable (.tar.gz)' },
+    { platform: 'macos',   arch: 'arm64', format: 'portable', label: 'macOS Apple Silicon portable (.tar.gz)' },
 ];
 
 const SUPPORTED_LANGS = [
@@ -73,6 +77,22 @@ const MAX_LOGO_BYTES = 10 * 1024 * 1024;  // 10 MB encoded
 const MAX_SHORT_TEXT = 500;
 const MAX_NAME       = 100;
 const MAX_CONTACT    = 200;
+const MAX_PRODUCT_LABEL = 200;
+
+/** Portal-only fields — stored with branding JSON but excluded from build cache hash. */
+const PORTAL_ONLY_BRANDING_KEYS = Object.freeze(['product_label', 'hide_product_type']);
+
+/**
+ * Optional white-label overrides for the public download portal product line.
+ * Does not affect installer artifacts (omitted from hashBranding).
+ */
+function applyPortalProductFields(input, out) {
+    out.product_label = clip(
+        input.product_label || input.productLabel || '',
+        MAX_PRODUCT_LABEL
+    );
+    out.hide_product_type = !!(input.hide_product_type ?? input.hideProductType ?? false);
+}
 
 function clip(input, max) {
     if (typeof input !== 'string') return '';
@@ -106,10 +126,22 @@ function validateBranding(input = {}) {
     const errors = [];
     const out = {};
 
-    out.company_name = clip(input.company_name || input.companyName, MAX_NAME);
-    if (!out.company_name) errors.push('company_name_required');
+    out.app_name = clip(input.app_name || input.appName || input.company_name || input.companyName, MAX_NAME);
+    out.company_name = clip(input.company_name || input.companyName || out.app_name, MAX_NAME);
+    // Optional for quick Support creation — defaults to product name.
+    if (!out.company_name) {
+        out.company_name = 'BetterDesk Support Agent';
+    }
+    if (!out.app_name) {
+        out.app_name = out.company_name;
+    }
+    out.relay_host = clip(input.relay_host || input.relayHost || input.relay_server || '', 253);
+    out.api_server = clip(input.api_server || input.apiServer || '', MAX_CONTACT);
+    out.api_port = clip(String(input.api_port || input.apiPort || ''), 8);
+    out.disable_settings = input.disable_settings !== false && input.disableSettings !== false;
 
     out.short_text   = clip(input.short_text   || input.shortText,   MAX_SHORT_TEXT);
+    applyPortalProductFields(input, out);
     out.contact_email = clip(input.contact_email || input.contactEmail, MAX_CONTACT);
     out.contact_phone = clip(input.contact_phone || input.contactPhone, MAX_CONTACT);
     out.contact_url   = clip(input.contact_url   || input.contactUrl,   MAX_CONTACT);
@@ -147,20 +179,20 @@ function validateBranding(input = {}) {
     }
     out.primary_color = out.primary_color.toLowerCase();
 
-    out.accent_color = (input.accent_color || input.accentColor || '#1e293b');
+    out.accent_color = (input.accent_color || input.accentColor || '#e0f2fe');
     if (!HEX_COLOR.test(out.accent_color)) {
         errors.push('accent_color_invalid');
-        out.accent_color = '#1e293b';
+        out.accent_color = '#e0f2fe';
     }
     out.accent_color = out.accent_color.toLowerCase();
 
     const colorFields = [
-        ['background_color', '#0f172a', 'background_color'],
-        ['surface_color', '#1e293b', 'surface_color'],
-        ['text_color', '#e2e8f0', 'text_color'],
-        ['text_muted_color', '#94a3b8', 'text_muted_color'],
+        ['background_color', '#ffffff', 'background_color'],
+        ['surface_color', '#f3f4f6', 'surface_color'],
+        ['text_color', '#1f2937', 'text_color'],
+        ['text_muted_color', '#6b7280', 'text_muted_color'],
         ['status_ready_color', '#22c55e', 'status_ready_color'],
-        ['header_text_color', '#ffffff', 'header_text_color'],
+        ['header_text_color', '#1f2937', 'header_text_color'],
     ];
     for (const [key, fallback, errKey] of colorFields) {
         const alt = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -173,6 +205,21 @@ function validateBranding(input = {}) {
     }
 
     out.allow_unattended = !!(input.allow_unattended ?? input.allowUnattended ?? false);
+    out.install_service = !!(input.install_service ?? input.installService ?? false);
+    out.autostart = !!(input.autostart ?? input.autoStart ?? false);
+    if (out.autostart) out.install_service = true;
+
+    // Incoming capability defaults (Support Agent). Omitted keys default to true.
+    const capsIn = input.capabilities && typeof input.capabilities === 'object' ? input.capabilities : {};
+    const cap = (v, d = true) => (v === undefined || v === null ? d : !!v);
+    out.capabilities = {
+        desktop:   cap(capsIn.desktop, true),
+        files:     cap(capsIn.files, true),
+        clipboard: cap(capsIn.clipboard, true),
+        audio:     cap(capsIn.audio, true),
+        terminal:  cap(capsIn.terminal, true),
+        restart:   cap(capsIn.restart, true),
+    };
 
     out.default_lang = String(input.default_lang || input.defaultLang || 'en');
     if (!SUPPORTED_LANGS.includes(out.default_lang)) {
@@ -191,7 +238,10 @@ function validateBranding(input = {}) {
     } else {
         errors.push('server_host_required');
     }
-    out.use_https = !!(input.use_https ?? input.useHttps ?? conn.defaultUseHttps());
+    // HTTPS/WSS is recommended for public internet; HTTP/WS is allowed for
+    // LAN/IP deployments (RustDesk-style). Session crypto stays on the
+    // signal/relay protocol layer; the signed profile still binds endpoints.
+    out.use_https = !!(input.use_https ?? input.useHttps ?? true);
 
     // Never accept enrollment_token from the browser — issued by backend only.
     if (input.server && typeof input.server === 'object') {
@@ -211,9 +261,15 @@ function validateBranding(input = {}) {
  * Stable hash of normalized branding. Sorts keys recursively so logically
  * identical branding produces an identical hash regardless of insertion order.
  * Used as the Phase 2 cache key — bundles sharing this hash reuse artifacts.
+ * Portal-only keys (product_label, hide_product_type) are omitted so changing
+ * download-page copy does not invalidate installer builds.
  */
 function hashBranding(normalized) {
-    const json = stableStringify(normalized || {});
+    const forHash = { ...(normalized || {}) };
+    for (const key of PORTAL_ONLY_BRANDING_KEYS) {
+        delete forHash[key];
+    }
+    const json = stableStringify(forHash);
     return crypto.createHash('sha256').update(json).digest('hex');
 }
 
@@ -322,24 +378,42 @@ function publicBundleId(row) {
 /** Default branding used as a starting point in the editor. */
 function defaultBranding() {
     return {
+        app_name: 'BetterDesk Support Agent',
         company_name: '',
         short_text: '',
+        product_label: '',
+        hide_product_type: false,
         contact_email: '',
         contact_phone: '',
         contact_url: '',
         logo_data_url: '',
         primary_color: '#2563eb',
-        accent_color: '#1e293b',
-        background_color: '#0f172a',
-        surface_color: '#1e293b',
-        text_color: '#e2e8f0',
-        text_muted_color: '#94a3b8',
+        accent_color: '#e0f2fe',
+        background_color: '#ffffff',
+        surface_color: '#f3f4f6',
+        text_color: '#1f2937',
+        text_muted_color: '#6b7280',
         status_ready_color: '#22c55e',
-        header_text_color: '#ffffff',
+        header_text_color: '#1f2937',
         allow_unattended: false,
+        install_service: false,
+        autostart: false,
+        disable_settings: true,
+        capabilities: {
+            desktop: true,
+            files: true,
+            clipboard: true,
+            audio: true,
+            terminal: true,
+            restart: true,
+        },
         default_lang: 'en',
         server_host: '',
-        use_https: conn.defaultUseHttps(),
+        relay_host: '',
+        api_server: '',
+        api_port: '',
+        use_https: true,
+        public_key: '',
         server: { address: '', api_url: '', public_key: '' },
     };
 }
@@ -352,6 +426,7 @@ function validateRdclientBranding(input = {}) {
     const out = {};
 
     out.company_name = clip(input.company_name || input.companyName || 'BetterDesk RdClient', MAX_NAME);
+    applyPortalProductFields(input, out);
     out.server_host = clip(input.server_host || input.serverHost, 253);
     out.use_https = input.use_https !== false && input.useHttps !== false;
 
@@ -383,6 +458,8 @@ module.exports = {
     LOCALE_LABELS,
     MAX_SLUG_LENGTH,
     MIN_SLUG_LENGTH,
+    MAX_PRODUCT_LABEL,
+    PORTAL_ONLY_BRANDING_KEYS,
     validateBranding,
     validateRdclientBranding,
     hashBranding,

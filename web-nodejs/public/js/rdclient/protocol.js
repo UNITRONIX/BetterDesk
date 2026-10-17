@@ -17,77 +17,99 @@ class RDProtocol {
     }
 
     /**
-     * Load and parse .proto files
+     * Bind CSP-safe static protobuf (BetterDeskProtos) — no runtime .proto parse / eval.
      */
     async load() {
         if (this.loaded) return;
 
-        this.protoRoot = await protobuf.load([
-            '/protos/rendezvous.proto',
-            '/protos/message.proto'
-        ]);
+        const root = (typeof BetterDeskProtos !== 'undefined' && BetterDeskProtos)
+            || (typeof window !== 'undefined' && window.BetterDeskProtos)
+            || null;
+        if (!root || !root.hbb) {
+            throw new Error('BetterDeskProtos missing — run npm run protocols:rdclient');
+        }
+        this.protoRoot = root;
+        const hbb = root.hbb;
+        const type = (name) => {
+            const t = hbb[name];
+            if (!t) throw new Error(`Missing static proto type hbb.${name}`);
+            return t;
+        };
+        /** Static enums are plain value maps; shim .values for existing call sites. */
+        const enumType = (e) => {
+            if (!e) throw new Error('Missing static proto enum');
+            return e.values ? e : { values: e };
+        };
 
-        // Cache commonly used message types
-        this.types.RendezvousMessage = this.protoRoot.lookupType('hbb.RendezvousMessage');
-        this.types.Message = this.protoRoot.lookupType('hbb.Message');
-        this.types.PunchHoleRequest = this.protoRoot.lookupType('hbb.PunchHoleRequest');
-        this.types.PunchHoleResponse = this.protoRoot.lookupType('hbb.PunchHoleResponse');
-        this.types.RequestRelay = this.protoRoot.lookupType('hbb.RequestRelay');
-        this.types.RelayResponse = this.protoRoot.lookupType('hbb.RelayResponse');
-        this.types.LoginRequest = this.protoRoot.lookupType('hbb.LoginRequest');
-        this.types.LoginResponse = this.protoRoot.lookupType('hbb.LoginResponse');
-        this.types.SignedId = this.protoRoot.lookupType('hbb.SignedId');
-        this.types.PublicKey = this.protoRoot.lookupType('hbb.PublicKey');
-        this.types.Hash = this.protoRoot.lookupType('hbb.Hash');
-        this.types.MouseEvent = this.protoRoot.lookupType('hbb.MouseEvent');
-        this.types.KeyEvent = this.protoRoot.lookupType('hbb.KeyEvent');
-        this.types.VideoFrame = this.protoRoot.lookupType('hbb.VideoFrame');
-        this.types.AudioFrame = this.protoRoot.lookupType('hbb.AudioFrame');
-        this.types.CursorData = this.protoRoot.lookupType('hbb.CursorData');
-        this.types.CursorPosition = this.protoRoot.lookupType('hbb.CursorPosition');
-        this.types.TestDelay = this.protoRoot.lookupType('hbb.TestDelay');
-        this.types.Misc = this.protoRoot.lookupType('hbb.Misc');
-        this.types.OptionMessage = this.protoRoot.lookupType('hbb.OptionMessage');
-        this.types.SupportedDecoding = this.protoRoot.lookupType('hbb.SupportedDecoding');
-        this.types.Clipboard = this.protoRoot.lookupType('hbb.Clipboard');
-        this.types.PeerInfo = this.protoRoot.lookupType('hbb.PeerInfo');
-        this.types.IdPk = this.protoRoot.lookupType('hbb.IdPk');
-        this.types.Resolution = this.protoRoot.lookupType('hbb.Resolution');
-        this.types.ChatMessage = this.protoRoot.lookupType('hbb.ChatMessage');
-        this.types.TogglePrivacyMode = this.protoRoot.lookupType('hbb.TogglePrivacyMode');
-        this.types.SwitchDisplay = this.protoRoot.lookupType('hbb.SwitchDisplay');
-        this.types.Auth2FA = this.protoRoot.lookupType('hbb.Auth2FA');
+        this.types.RendezvousMessage = type('RendezvousMessage');
+        this.types.Message = type('Message');
+        this.types.PunchHoleRequest = type('PunchHoleRequest');
+        this.types.PunchHoleResponse = type('PunchHoleResponse');
+        this.types.RequestRelay = type('RequestRelay');
+        this.types.RelayResponse = type('RelayResponse');
+        this.types.LoginRequest = type('LoginRequest');
+        this.types.LoginResponse = type('LoginResponse');
+        this.types.SignedId = type('SignedId');
+        this.types.PublicKey = type('PublicKey');
+        this.types.Hash = type('Hash');
+        this.types.MouseEvent = type('MouseEvent');
+        this.types.KeyEvent = type('KeyEvent');
+        this.types.VideoFrame = type('VideoFrame');
+        this.types.AudioFrame = type('AudioFrame');
+        this.types.CursorData = type('CursorData');
+        this.types.CursorPosition = type('CursorPosition');
+        this.types.TestDelay = type('TestDelay');
+        this.types.Misc = type('Misc');
+        this.types.OptionMessage = type('OptionMessage');
+        this.types.SupportedDecoding = type('SupportedDecoding');
+        this.types.Clipboard = type('Clipboard');
+        this.types.PeerInfo = type('PeerInfo');
+        this.types.IdPk = type('IdPk');
+        this.types.Resolution = type('Resolution');
+        this.types.ChatMessage = type('ChatMessage');
+        this.types.TogglePrivacyMode = type('TogglePrivacyMode');
+        this.types.SwitchDisplay = type('SwitchDisplay');
+        this.types.Auth2FA = type('Auth2FA');
 
-        // File transfer types
-        this.types.FileAction = this.protoRoot.lookupType('hbb.FileAction');
-        this.types.FileResponse = this.protoRoot.lookupType('hbb.FileResponse');
-        this.types.FileDirectory = this.protoRoot.lookupType('hbb.FileDirectory');
-        this.types.FileEntry = this.protoRoot.lookupType('hbb.FileEntry');
-        this.types.ReadDir = this.protoRoot.lookupType('hbb.ReadDir');
-        this.types.FileTransferSendRequest = this.protoRoot.lookupType('hbb.FileTransferSendRequest');
-        this.types.FileTransferReceiveRequest = this.protoRoot.lookupType('hbb.FileTransferReceiveRequest');
-        this.types.FileTransferBlock = this.protoRoot.lookupType('hbb.FileTransferBlock');
-        this.types.FileTransferDigest = this.protoRoot.lookupType('hbb.FileTransferDigest');
-        this.types.FileTransferDone = this.protoRoot.lookupType('hbb.FileTransferDone');
-        this.types.FileTransferCancel = this.protoRoot.lookupType('hbb.FileTransferCancel');
-        this.types.FileTransferSendConfirmRequest = this.protoRoot.lookupType('hbb.FileTransferSendConfirmRequest');
-        this.types.FileTransferError = this.protoRoot.lookupType('hbb.FileTransferError');
-        this.types.FileDirCreate = this.protoRoot.lookupType('hbb.FileDirCreate');
-        this.types.FileRemoveDir = this.protoRoot.lookupType('hbb.FileRemoveDir');
-        this.types.FileRemoveFile = this.protoRoot.lookupType('hbb.FileRemoveFile');
-        this.types.FileRename = this.protoRoot.lookupType('hbb.FileRename');
-        this.types.FileTransfer = this.protoRoot.lookupType('hbb.FileTransfer');
+        this.types.FileAction = type('FileAction');
+        this.types.FileResponse = type('FileResponse');
+        this.types.FileDirectory = type('FileDirectory');
+        this.types.FileEntry = type('FileEntry');
+        this.types.ReadDir = type('ReadDir');
+        this.types.FileTransferSendRequest = type('FileTransferSendRequest');
+        this.types.FileTransferReceiveRequest = type('FileTransferReceiveRequest');
+        this.types.FileTransferBlock = type('FileTransferBlock');
+        this.types.FileTransferDigest = type('FileTransferDigest');
+        this.types.FileTransferDone = type('FileTransferDone');
+        this.types.FileTransferCancel = type('FileTransferCancel');
+        this.types.FileTransferSendConfirmRequest = type('FileTransferSendConfirmRequest');
+        this.types.FileTransferError = type('FileTransferError');
+        this.types.FileDirCreate = type('FileDirCreate');
+        this.types.FileRemoveDir = type('FileRemoveDir');
+        this.types.FileRemoveFile = type('FileRemoveFile');
+        this.types.FileRename = type('FileRename');
+        this.types.FileTransfer = type('FileTransfer');
 
-        // Enums
+        this.types.Cliprdr = type('Cliprdr');
+        this.types.CliprdrMonitorReady = type('CliprdrMonitorReady');
+        this.types.CliprdrFormat = type('CliprdrFormat');
+        this.types.CliprdrServerFormatList = type('CliprdrServerFormatList');
+        this.types.CliprdrServerFormatListResponse = type('CliprdrServerFormatListResponse');
+        this.types.CliprdrServerFormatDataRequest = type('CliprdrServerFormatDataRequest');
+        this.types.CliprdrServerFormatDataResponse = type('CliprdrServerFormatDataResponse');
+        this.types.CliprdrFileContentsRequest = type('CliprdrFileContentsRequest');
+        this.types.CliprdrFileContentsResponse = type('CliprdrFileContentsResponse');
+        this.types.CliprdrTryEmpty = type('CliprdrTryEmpty');
+
         this.enums = {};
-        this.enums.ConnType = this.protoRoot.lookupEnum('hbb.ConnType');
-        this.enums.NatType = this.protoRoot.lookupEnum('hbb.NatType');
-        this.enums.ControlKey = this.protoRoot.lookupEnum('hbb.ControlKey');
-        this.enums.KeyboardMode = this.protoRoot.lookupEnum('hbb.KeyboardMode');
-        this.enums.ImageQuality = this.protoRoot.lookupEnum('hbb.ImageQuality');
-        this.enums.ClipboardFormat = this.protoRoot.lookupEnum('hbb.ClipboardFormat');
-        this.enums.FileType = this.protoRoot.lookupEnum('hbb.FileType');
-        this.enums.PreferCodec = this.protoRoot.lookupEnum('hbb.SupportedDecoding.PreferCodec');
+        this.enums.ConnType = enumType(hbb.ConnType);
+        this.enums.NatType = enumType(hbb.NatType);
+        this.enums.ControlKey = enumType(hbb.ControlKey);
+        this.enums.KeyboardMode = enumType(hbb.KeyboardMode);
+        this.enums.ImageQuality = enumType(hbb.ImageQuality);
+        this.enums.ClipboardFormat = enumType(hbb.ClipboardFormat);
+        this.enums.FileType = enumType(hbb.FileType);
+        this.enums.PreferCodec = enumType(hbb.SupportedDecoding && hbb.SupportedDecoding.PreferCodec);
 
         this.loaded = true;
     }
@@ -99,9 +121,18 @@ class RDProtocol {
      * (used for direct rendezvous communication, no encryption)
      */
     encodeRendezvous(msgObj) {
+        return this._encodeFrame(this.serializeRendezvous(msgObj));
+    }
+
+    /**
+     * Serialize a RendezvousMessage without a TCP BytesCodec header.
+     * Native RustDesk WebSocket relay endpoints use one protobuf payload per
+     * binary WebSocket message.
+     */
+    serializeRendezvous(msgObj) {
         const msg = this.types.RendezvousMessage.create(msgObj);
         const buf = this.types.RendezvousMessage.encode(msg).finish();
-        return this._encodeFrame(buf);
+        return buf;
     }
 
     /**
@@ -154,7 +185,7 @@ class RDProtocol {
     }
 
     // Client version advertised to RustDesk peers (keep in sync with product baseline)
-    static CLIENT_VERSION = 'BetterDesk-Web/1.4.8';
+    static CLIENT_VERSION = 'BetterDesk-Web/1.4.9';
 
     /**
      * Build PunchHoleRequest for connecting to a device
@@ -384,6 +415,167 @@ class RDProtocol {
                 compress: packed.compress,
                 content: packed.content,
                 format: this.enums.ClipboardFormat.values.Text
+            }
+        };
+    }
+
+    /**
+     * Build Cliprdr MonitorReady (initialize file clipboard channel)
+     * @returns {Object}
+     */
+    buildCliprdrMonitorReady() {
+        return {
+            cliprdr: {
+                ready: {}
+            }
+        };
+    }
+
+    /**
+     * Build Cliprdr FormatList advertising file descriptor + contents formats
+     * @param {Object} [names] - optional native format id/name map from desktop bridge
+     * @returns {Object}
+     */
+    buildCliprdrFormatList(names) {
+        const fdId = names && (names.fileDescriptorFormatId != null || names.file_descriptor_format_id != null)
+            ? Number(names.fileDescriptorFormatId != null ? names.fileDescriptorFormatId : names.file_descriptor_format_id)
+            : 49334;
+        const fdName = names && (names.fileDescriptorFormatName || names.file_descriptor_format_name)
+            ? String(names.fileDescriptorFormatName || names.file_descriptor_format_name)
+            : 'FileGroupDescriptorW';
+        const fcId = names && (names.fileContentsFormatId != null || names.file_contents_format_id != null)
+            ? Number(names.fileContentsFormatId != null ? names.fileContentsFormatId : names.file_contents_format_id)
+            : 49267;
+        const fcName = names && (names.fileContentsFormatName || names.file_contents_format_name)
+            ? String(names.fileContentsFormatName || names.file_contents_format_name)
+            : 'FileContents';
+        return {
+            cliprdr: {
+                formatList: {
+                    formats: [
+                        { id: fdId, format: fdName },
+                        { id: fcId, format: fcName }
+                    ]
+                }
+            }
+        };
+    }
+
+    /**
+     * @param {number} requestedFormatId
+     * @returns {Object}
+     */
+    buildCliprdrFormatDataRequest(requestedFormatId) {
+        return {
+            cliprdr: {
+                formatDataRequest: {
+                    requestedFormatId: requestedFormatId
+                }
+            }
+        };
+    }
+
+    /**
+     * @param {Object} opts
+     * @param {number} opts.streamId
+     * @param {number} opts.listIndex
+     * @param {number} opts.dwFlags
+     * @param {number} [opts.nPositionLow]
+     * @param {number} [opts.nPositionHigh]
+     * @param {number} [opts.cbRequested]
+     * @param {boolean} [opts.haveClipDataId]
+     * @param {number} [opts.clipDataId]
+     * @returns {Object}
+     */
+    buildCliprdrFileContentsRequest(opts = {}) {
+        return {
+            cliprdr: {
+                fileContentsRequest: {
+                    streamId: opts.streamId || 0,
+                    listIndex: opts.listIndex || 0,
+                    dwFlags: opts.dwFlags || 0,
+                    nPositionLow: opts.nPositionLow || 0,
+                    nPositionHigh: opts.nPositionHigh || 0,
+                    cbRequested: opts.cbRequested || 0,
+                    haveClipDataId: !!opts.haveClipDataId,
+                    clipDataId: opts.clipDataId || 0
+                }
+            }
+        };
+    }
+
+    /**
+     * @param {number} msgFlags
+     * @param {Uint8Array|ArrayBuffer|number[]} formatData
+     * @returns {Object}
+     */
+    buildCliprdrFormatDataResponse(msgFlags, formatData) {
+        const bytes = formatData instanceof Uint8Array
+            ? formatData
+            : (typeof formatData === 'string'
+                // Callers must pass binary; string here is almost always mistaken base64.
+                // `new Uint8Array(string)` is length 0 — refuse silent empty FormatData.
+                ? (typeof LocalFiles !== 'undefined' && LocalFiles.coerceBinaryPayload
+                    ? LocalFiles.coerceBinaryPayload(formatData)
+                    : new Uint8Array(0))
+                : (Array.isArray(formatData) || formatData instanceof ArrayBuffer
+                    ? new Uint8Array(formatData)
+                    : new Uint8Array(0)));
+        return {
+            cliprdr: {
+                formatDataResponse: {
+                    msgFlags: msgFlags,
+                    formatData: bytes
+                }
+            }
+        };
+    }
+
+    /**
+     * @param {number} msgFlags
+     * @param {number} streamId
+     * @param {Uint8Array|ArrayBuffer|number[]} requestedData
+     * @returns {Object}
+     */
+    buildCliprdrFileContentsResponse(msgFlags, streamId, requestedData) {
+        const bytes = requestedData instanceof Uint8Array
+            ? requestedData
+            : (typeof requestedData === 'string'
+                ? (typeof LocalFiles !== 'undefined' && LocalFiles.coerceBinaryPayload
+                    ? LocalFiles.coerceBinaryPayload(requestedData)
+                    : new Uint8Array(0))
+                : (Array.isArray(requestedData) || requestedData instanceof ArrayBuffer
+                    ? new Uint8Array(requestedData)
+                    : new Uint8Array(0)));
+        return {
+            cliprdr: {
+                fileContentsResponse: {
+                    msgFlags: msgFlags,
+                    streamId: streamId,
+                    requestedData: bytes
+                }
+            }
+        };
+    }
+
+    /**
+     * @param {number} msgFlags
+     * @returns {Object}
+     */
+    buildCliprdrFormatListResponse(msgFlags) {
+        return {
+            cliprdr: {
+                formatListResponse: {
+                    msgFlags: msgFlags
+                }
+            }
+        };
+    }
+
+    buildCliprdrTryEmpty() {
+        return {
+            cliprdr: {
+                tryEmpty: {}
             }
         };
     }
@@ -674,12 +866,21 @@ class RDProtocol {
      * @returns {Object}
      */
     buildFileBlock(id, fileNum, data, compressed, blkId) {
+        const bytes = data instanceof Uint8Array
+            ? data
+            : (typeof data === 'string'
+                ? (typeof LocalFiles !== 'undefined' && LocalFiles.coerceBinaryPayload
+                    ? LocalFiles.coerceBinaryPayload(data)
+                    : new Uint8Array(0))
+                : (Array.isArray(data) || data instanceof ArrayBuffer
+                    ? new Uint8Array(data)
+                    : new Uint8Array(0)));
         return {
             fileResponse: {
                 block: {
                     id: id,
                     fileNum: fileNum,
-                    data: data,
+                    data: bytes,
                     compressed: !!compressed,
                     blkId: blkId || 0
                 }

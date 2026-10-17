@@ -43,6 +43,7 @@ const betterdeskApi = require('../services/betterdeskApi');
 const addressBookSync = require('../services/rustdeskAddressBookSync');
 const deviceGroupService = require('../services/deviceGroupService');
 const config = require('../config/config');
+const { goApiProxy } = require('../middleware/goApiProxy');
 const { roleHasPermission } = require('../middleware/auth');
 
 // After the API-port consolidation the RustDesk clients report audit events to
@@ -188,6 +189,15 @@ function canBrowseDeviceInventory(user) {
 function canSyncDeviceTags(user) {
     return user && user.role !== 'pro' && roleHasPermission(user.role, 'device.edit');
 }
+
+// Bootstrap endpoint used by BetterDesk clients before user authentication.
+// The panel origin must expose the same signed key as the dedicated Go API.
+router.get('/api/telemetry/key', (req, res) => {
+    if (config.serverBackend !== 'betterdesk') {
+        return res.status(503).json({ error: 'telemetry_key_unavailable' });
+    }
+    return goApiProxy(req, res);
+});
 
 function isReachableRustDeskDevice(device) {
     if (!device || device.banned || device.disabled) return false;

@@ -10,12 +10,19 @@ import "strings"
 // Permission constants define every discrete action in the system.
 const (
 	// Device permissions
-	PermDeviceView     = "device.view"
-	PermDeviceConnect  = "device.connect"
-	PermDeviceEdit     = "device.edit"   // notes, tags, display name
-	PermDeviceDelete   = "device.delete" // soft-delete + revoke
-	PermDeviceBan      = "device.ban"    // ban/unban
-	PermDeviceChangeID = "device.change_id"
+	PermDeviceView           = "device.view"
+	PermDeviceConnect        = "device.connect"
+	PermGuestCreate          = "guest.create"
+	PermDeviceEdit           = "device.edit"   // notes, tags, display name
+	PermDeviceDelete         = "device.delete" // soft-delete + revoke
+	PermDeviceBan            = "device.ban"    // ban/unban
+	PermDeviceChangeID       = "device.change_id"
+	PermDeviceConnectionMode = "device.connection_mode" // normal <-> incoming-only
+	PermRemoteTargetView     = "remote_target.view"
+	PermRemoteTargetConnect  = "remote_target.connect"
+	PermRemoteTargetEdit     = "remote_target.edit"
+	PermRemoteTargetDelete   = "remote_target.delete"
+	PermRemoteTargetTest     = "remote_target.test"
 
 	// User management permissions
 	PermUserView   = "user.view"
@@ -24,8 +31,8 @@ const (
 	PermUserDelete = "user.delete"
 
 	// Server configuration
-	PermServerConfig     = "server.config"     // read/write server_config
-	PermServerKeys       = "server.keys"       // manage API keys
+	PermServerConfig      = "server.config"      // read/write server_config
+	PermServerKeys        = "server.keys"        // manage API keys
 	PermServerAttestation = "server.attestation" // run/view server performance attestation
 
 	// Organization permissions
@@ -62,16 +69,18 @@ const (
 	PermBrandingEdit = "branding.edit"
 
 	// Billing / commercialization
-	PermBillingView   = "billing.view"
-	PermBillingManage = "billing.manage"
+	PermBillingView    = "billing.view"
+	PermBillingManage  = "billing.manage"
 	PermBillingReports = "billing.reports"
-	PermBillingExport = "billing.export"
+	PermBillingExport  = "billing.export"
 )
 
 // AllPermissions is the complete list of permission strings for validation.
 var AllPermissions = []string{
-	PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
-	PermDeviceBan, PermDeviceChangeID,
+	PermDeviceView, PermDeviceConnect, PermGuestCreate, PermDeviceEdit, PermDeviceDelete,
+	PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
+	PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetEdit,
+	PermRemoteTargetDelete, PermRemoteTargetTest,
 	PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
 	PermServerConfig, PermServerKeys, PermServerAttestation,
 	PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
@@ -88,13 +97,14 @@ var AllPermissions = []string{
 // Custom overrides from the DB take precedence.
 //
 // Role scoping (Discussion #99):
-//   super_admin  — all permissions, manages other super admins
-//   server_admin — server infrastructure only, read-only user list
-//   global_admin — all-org user/device/org management, NO server access
-//   admin        — legacy alias, equivalent to super_admin
-//   operator     — day-to-day device ops + chat
-//   viewer       — read-only dashboards
-//   pro          — API-only RustDesk PRO activation; no device or org device access
+//
+//	super_admin  — all permissions, manages other super admins
+//	server_admin — server infrastructure only, read-only user list
+//	global_admin — all-org user/device/org management, NO server access
+//	admin        — legacy alias, equivalent to super_admin
+//	operator     — day-to-day device ops + chat
+//	viewer       — read-only dashboards
+//	pro          — API-only RustDesk PRO activation; no device or org device access
 var DefaultRolePermissions = map[string]map[string]bool{
 	RoleSuperAdmin: buildPermMap(AllPermissions),
 	RoleAdmin:      buildPermMap(AllPermissions), // legacy admin = super_admin
@@ -106,6 +116,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermBlocklistEdit,
 		PermUserView,   // read-only
 		PermDeviceView, // read-only
+		PermRemoteTargetView,
 		PermAuditView,
 		PermMetricsView,
 		PermEnrollmentManage,
@@ -116,7 +127,10 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
 		PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
-		PermDeviceBan, PermDeviceChangeID,
+		PermGuestCreate,
+		PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
+		PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetEdit,
+		PermRemoteTargetDelete, PermRemoteTargetTest,
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
 		PermMeshTerminal, PermMeshFiles, PermMeshPower,
@@ -127,7 +141,9 @@ var DefaultRolePermissions = map[string]map[string]bool{
 	}),
 
 	RoleOperator: buildPermMap([]string{
-		PermDeviceView, PermDeviceConnect, PermDeviceEdit,
+		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceConnectionMode,
+		PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetTest,
+		PermGuestCreate,
 		PermUserView,
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand,
@@ -138,11 +154,16 @@ var DefaultRolePermissions = map[string]map[string]bool{
 	}),
 	RoleViewer: buildPermMap([]string{
 		PermDeviceView,
+		PermRemoteTargetView,
 		PermAuditView, PermMetricsView,
 		PermCDAPView,
 		PermChatAccess,
 	}),
-	RolePro: buildPermMap([]string{}),
+	RolePro:         buildPermMap([]string{}),
+	RoleGuestIssuer: buildPermMap([]string{PermDeviceView, PermGuestCreate}),
+	// Device credentials authenticate an agent to its own transport only.
+	// They never confer panel/API permissions.
+	RoleDevice: buildPermMap([]string{}),
 }
 
 // buildPermMap converts a slice of permission strings into a lookup map.
@@ -162,13 +183,18 @@ func IsProRole(role string) bool {
 // ProRoleBlocksPermission reports permissions the pro role must never hold,
 // even via DB overrides (device inventory and org device assignment).
 func ProRoleBlocksPermission(permission string) bool {
-	return strings.HasPrefix(permission, "device.") || permission == PermOrgManageDevices
+	return strings.HasPrefix(permission, "device.") ||
+		strings.HasPrefix(permission, "remote_target.") ||
+		permission == PermOrgManageDevices
 }
 
 // RoleHasPermission checks whether a role (by name) has a specific permission
 // according to default role mappings. Returns true for super_admin and legacy admin.
 // For DB-overridden permissions, use the Database.HasRolePermission method instead.
 func RoleHasPermission(role, permission string) bool {
+	if IsDeviceRole(role) {
+		return false
+	}
 	if IsProRole(role) && ProRoleBlocksPermission(permission) {
 		return false
 	}

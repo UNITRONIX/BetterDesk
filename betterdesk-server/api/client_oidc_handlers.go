@@ -199,7 +199,10 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 	}
 
 	changed := false
-	if result.Role != "" && result.Role != user.Role {
+	// A group mapping is an explicit IdP authorization decision. The default
+	// role is only for provisioning and must not undo a role chosen by a
+	// BetterDesk administrator on later logins.
+	if result.RoleFromGroup && result.Role != "" && result.Role != user.Role {
 		user.Role = result.Role
 		changed = true
 		log.Printf("[OIDC] Updated role for %s to %s", result.Username, result.Role)

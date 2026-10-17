@@ -17,14 +17,15 @@ import (
 type Action string
 
 const (
-	ActionPeerBanned       Action = "peer_banned"
-	ActionPeerUnbanned     Action = "peer_unbanned"
-	ActionPeerDeleted      Action = "peer_deleted"
-	ActionPeerRevoked      Action = "peer_revoked"
-	ActionPeerRestored     Action = "peer_restored"
-	ActionPeerUpdated      Action = "peer_updated"
-	ActionPeerIDChanged    Action = "peer_id_changed"
-	ActionPeerTagsUpdated  Action = "peer_tags_updated"
+	ActionPeerBanned            Action = "peer_banned"
+	ActionPeerUnbanned          Action = "peer_unbanned"
+	ActionPeerDeleted           Action = "peer_deleted"
+	ActionPeerRevoked           Action = "peer_revoked"
+	ActionPeerRestored          Action = "peer_restored"
+	ActionPeerUpdated           Action = "peer_updated"
+	ActionPeerIDChanged         Action = "peer_id_changed"
+	ActionPeerTagsUpdated       Action = "peer_tags_updated"
+	ActionConnectionModeChanged Action = "connection_mode_changed"
 	// ActionEnrollmentPending is logged when an unknown device is placed into
 	// the pending enrollment queue (managed mode) awaiting operator approval.
 	ActionEnrollmentPending Action = "enrollment_pending"
@@ -37,27 +38,39 @@ const (
 	// ActionConnectionDenied is logged when PunchHole/RequestRelay is refused
 	// because the initiator is not an authorized/enrolled peer (#302).
 	ActionConnectionDenied Action = "connection_denied"
-	ActionBlocklistAdd     Action = "blocklist_add"
-	ActionBlocklistRemove  Action = "blocklist_remove"
-	ActionConfigChanged    Action = "config_changed"
-	ActionAdminLogin       Action = "admin_login"
-	ActionServerStart      Action = "server_start"
-	ActionServerStop       Action = "server_stop"
-	ActionBlocklistReload  Action = "blocklist_reload"
-	ActionStatusTransition Action = "status_transition"
-	ActionAuthLogin        Action = "auth_login"
-	ActionAuthLoginFailed  Action = "auth_login_failed"
-	ActionUserCreated      Action = "user_created"
-	ActionUserUpdated      Action = "user_updated"
-	ActionUserDeleted      Action = "user_deleted"
-	ActionAPIKeyCreated    Action = "apikey_created"
-	ActionAPIKeyRevoked    Action = "apikey_revoked"
-	ActionSysinfoUpdated   Action = "sysinfo_updated"
-	ActionSysinfoError     Action = "sysinfo_error"
+	// ActionConnectionAllowed is logged when PunchHole/RequestRelay passes
+	// initiator authorization, including operator-only session checks (#425).
+	ActionConnectionAllowed      Action = "connection_allowed"
+	ActionBlocklistAdd           Action = "blocklist_add"
+	ActionBlocklistRemove        Action = "blocklist_remove"
+	ActionConfigChanged          Action = "config_changed"
+	ActionAdminLogin             Action = "admin_login"
+	ActionServerStart            Action = "server_start"
+	ActionServerStop             Action = "server_stop"
+	ActionBlocklistReload        Action = "blocklist_reload"
+	ActionStatusTransition       Action = "status_transition"
+	ActionAuthLogin              Action = "auth_login"
+	ActionAuthLoginFailed        Action = "auth_login_failed"
+	ActionUserCreated            Action = "user_created"
+	ActionUserUpdated            Action = "user_updated"
+	ActionUserDeleted            Action = "user_deleted"
+	ActionAPIKeyCreated          Action = "apikey_created"
+	ActionAPIKeyRevoked          Action = "apikey_revoked"
+	ActionSysinfoUpdated         Action = "sysinfo_updated"
+	ActionSysinfoError           Action = "sysinfo_error"
+	ActionTelemetrySnapshotError Action = "telemetry_snapshot_error"
+	ActionTelemetryCommandResult Action = "telemetry_command_result"
+	ActionTelemetryCommandQueued Action = "telemetry_command_queued"
 	// Help requests and chat (raised by agent devices via CDAP).
 	ActionHelpRequestCreated Action = "help_request_created"
 	ActionHelpRequestUpdated Action = "help_request_updated"
 	ActionChatMessage        Action = "chat_message"
+	// Org peer credential vault (#367) — never include password material in Details.
+	ActionOrgPeerCredentialSet   Action = "org_peer_credential_set"
+	ActionOrgPeerCredentialClear Action = "org_peer_credential_clear"
+	ActionOrgPeerCredentialFetch Action = "org_peer_credential_fetch"
+	ActionGuestSessionOpened     Action = "guest_session_opened"
+	ActionGuestSessionClosed     Action = "guest_session_closed"
 )
 
 // Event represents a single audit log entry.

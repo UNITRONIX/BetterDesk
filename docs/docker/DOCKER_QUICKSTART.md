@@ -55,7 +55,7 @@ docker compose up -d
 docker compose exec betterdesk betterdesk-show-admin-credentials
 ```
 
-**Done!** Open http://localhost:5000 and log in with `admin` / (password from step 3).
+**Done!** Open **http://localhost:5000** (plain HTTP — not `https://`) and log in with `admin` / (password from step 3). The default image does not terminate TLS on port 5000; using `https://…:5000` often yields Firefox `SSL_ERROR_RX_RECORD_TOO_LONG` — see [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-browser-shows-ssl_error_rx_record_too_long-or-chrome-err_ssl_protocol_error).
 
 If `cat /opt/rustdesk/.admin_credentials` returns **Permission denied**, use `betterdesk-show-admin-credentials` above (or `docker compose exec -u betterdesk betterdesk …`) — see [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-permission-denied-reading-admin_credentials).
 
@@ -72,11 +72,12 @@ Split layout uses API port **21114**; the official single container uses **21121
 ### Pin or change image version
 
 ```bash
-# Explicit version (recommended for production)
+# Explicit release version (recommended for production — matches install.sh / compose default)
 export BETTERDESK_IMAGE_TAG=3.0.0
 docker compose pull && docker compose up -d
 
-# Track rolling latest from main branch builds
+# Rolling tip of the last successful *stable* GHCR publish (release / main)
+# Not the same as “newest CHANGELOG line” until that release’s images are published
 export BETTERDESK_IMAGE_TAG=latest
 docker compose pull && docker compose up -d
 ```
@@ -135,9 +136,27 @@ ADMIN_PASSWORD=YourSecurePass123 docker compose up -d
 ```
 
 `ADMIN_PASSWORD` only seeds the first admin account. If the container has
-already created `auth.db` / the admin user, changing the environment variable on
-restart will not overwrite the stored password. Use the panel password reset
-flow, or recreate the Docker volumes for a fresh install.
+already created the admin user in `db_v2.sqlite3` (or PostgreSQL), changing the
+environment variable on restart will not overwrite the stored password. Use
+the panel password reset flow, or recreate the Docker volumes for a fresh
+install.
+
+Keep the compose `INIT_ADMIN_*` / `DEFAULT_ADMIN_*` / `ADMIN_PASSWORD=${ADMIN_PASSWORD:-}`
+mappings uncommented — otherwise the host shell variable never reaches the
+container (issue #385).
+
+### Image architectures (`:dev` vs ARM)
+
+| Image | `:dev` platforms | Notes |
+|-------|------------------|-------|
+| `ghcr.io/unitronix/betterdesk` (AIO) | **amd64 only** | Multi-arch AIO on `:dev` often hits the GitHub Actions time limit |
+| `betterdesk-server` / `betterdesk-console` | amd64 + arm64 | Prefer [docker-compose.quick.yml](../../docker-compose.quick.yml) on ARM hosts |
+| `betterdesk` `latest` / release tags | amd64 + arm64 | Stable channel |
+
+On **linux/arm64**, use the split quick-start compose, build AIO locally from
+`docker-compose.single.yml`, or pin a multi-arch tip tag (e.g. `dev-arm`) when
+published. Do not expect a fresh `betterdesk:dev` pull to refresh ARM layers
+while AIO `:dev` remains amd64-only.
 
 ### PostgreSQL Instead of SQLite
 
@@ -164,6 +183,8 @@ volumes:
 ```
 
 ### SSL/TLS
+
+By default the web panel is **HTTP on port 5000**. Do not open `https://…:5000` unless you have enabled panel HTTPS or put a reverse proxy in front — otherwise browsers report `SSL_ERROR_RX_RECORD_TOO_LONG` / `ERR_SSL_PROTOCOL_ERROR` ([troubleshooting](DOCKER_TROUBLESHOOTING.md#problem-browser-shows-ssl_error_rx_record_too_long-or-chrome-err_ssl_protocol_error)).
 
 See [HTTPS_SETUP.md](../setup/HTTPS_SETUP.md) for full instructions.
 
@@ -193,7 +214,7 @@ docker compose pull && docker compose up -d
 
 | Channel | Typical `BETTERDESK_IMAGE_TAG` |
 |---------|--------------------------------|
-| Stable (`main`) | `latest` or a release version (e.g. `3.4.3`) |
+| Stable (`main`) | **Pin a release semver** (e.g. `3.5.65` — compose / `install.sh` default). Optional: `latest` = last successful stable image publish on GHCR (may lag a git release until CI publishes). |
 | Development (`dev`) | `dev` |
 
 Then: `docker compose pull && docker compose up -d`. In-app “Install update” stays disabled for official image deployments.
@@ -248,10 +269,10 @@ If you customized an older quick-start file before **3.0.0**, apply these change
 
 | Setting | Required in 3.0.0+ |
 |---------|-------------------|
-| `depends_on` | `condition: service_started` — **not** `service_healthy` (avoids deadlock with `auth.db`) |
+| `depends_on` | `condition: service_started` — **not** `service_healthy` |
 | Server healthcheck | Keep enabled, or remove `service_healthy` from `depends_on` |
 | Console `DB_PATH` | `/app/data/db_v2.sqlite3` |
-| Server `AUTH_DB_PATH` | `/app/data/auth.db` |
+| Server `AUTH_DB_PATH` | `/app/data/auth.db` only for legacy panel sync |
 | Server volume | `console-data:/app/data:ro` |
 | `network_mode: service:server` | Use `127.0.0.1` in `BETTERDESK_API_URL`, `WS_HBBS_HOST`, `WS_HBBR_HOST` (Docker DNS is unavailable) |
 | Image tag | Pin `BETTERDESK_IMAGE_TAG` (e.g. `3.2.14`), not unversioned `latest` |

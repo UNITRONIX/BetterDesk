@@ -71,7 +71,15 @@
     }
 
     function copyBtn(text) {
-        return '<button class="result-copy-btn" onclick="navigator.clipboard.writeText(\'' + escapeJsString(text) + '\')"><span class="material-icons">content_copy</span> ' + t('common.copy', 'Copy') + '</button>';
+        return '<button class="result-copy-btn" type="button" data-bd-copy="' + escapeAttr(text) + '"><span class="material-icons">content_copy</span> ' + t('common.copy', 'Copy') + '</button>';
+    }
+
+    function escapeAttr(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 
     // ── Tab switching ───────────────────────────────────────────────────
@@ -375,7 +383,7 @@
 
             el.innerHTML = '<div class="password-display">' +
                 '<span class="password-value">' + esc(d.password) + '</span>' +
-                '<button class="result-copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)"><span class="material-icons">content_copy</span></button>' +
+                '<button class="result-copy-btn" type="button" data-bd-copy><span class="material-icons">content_copy</span></button>' +
                 '</div>' +
                 '<div class="entropy-bar"><div class="entropy-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
                 '<div class="password-meta">' +

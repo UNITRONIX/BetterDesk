@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync, execFileSync } = require('child_process');
 
 const SERVER_BINARY_NAME = 'betterdesk-server';
 const ALLOWED_TARGET_DIRS = [
@@ -143,16 +142,34 @@ function validateDeployRequest(sourcePath, targetPath, options = {}) {
 
 /**
  * Atomic replace for a running Linux executable (rename over directory entry).
+ * @param {string} sourceReal
+ * @param {string} targetPath
+ * @param {{ backupDir?: string }} [options]  Optional writable dir when target dir denies bak writes
  * @returns {{ success: boolean, backupPath?: string|null, error?: string }}
  */
-function deployServerBinaryAtomic(sourceReal, targetPath) {
+function deployServerBinaryAtomic(sourceReal, targetPath, options = {}) {
     let backupPath = null;
     if (fs.existsSync(targetPath)) {
-        backupPath = `${targetPath}.bak.${Date.now()}`;
+        const stamp = Date.now();
+        const primaryBak = `${targetPath}.bak.${stamp}`;
         try {
-            fs.copyFileSync(targetPath, backupPath);
+            fs.copyFileSync(targetPath, primaryBak);
+            backupPath = primaryBak;
         } catch (err) {
-            return { success: false, error: `Backup failed: ${err.message}` };
+            const permDenied = err && (err.code === 'EACCES' || err.code === 'EPERM'
+                || /permission denied/i.test(String(err.message || '')));
+            const backupDir = options.backupDir ? path.resolve(options.backupDir) : null;
+            if (permDenied && backupDir) {
+                try {
+                    fs.mkdirSync(backupDir, { recursive: true });
+                    backupPath = path.join(backupDir, `${path.basename(targetPath)}.bak.${stamp}`);
+                    fs.copyFileSync(targetPath, backupPath);
+                } catch (fallbackErr) {
+                    return { success: false, error: `Backup failed: ${fallbackErr.message}` };
+                }
+            } else {
+                return { success: false, error: `Backup failed: ${err.message}` };
+            }
         }
     }
 
@@ -193,21 +210,15 @@ function canWriteDirectory(dirPath) {
 }
 
 function canUsePrivilegedDeploy(scriptPath) {
-    if (process.platform !== 'linux' || !scriptPath || !fs.existsSync(scriptPath)) {
-        return false;
-    }
+    if (process.platform !== 'linux') return false;
     if (typeof process.getuid === 'function' && process.getuid() === 0) {
         return true;
     }
-    try {
-        execFileSync('sudo', ['-n', scriptPath, '--check'], {
-            timeout: 5000,
-            stdio: 'pipe',
-        });
-        return true;
-    } catch (_e) {
-        return false;
-    }
+    // A binary built in the console user's writable tree cannot safely be
+    // promoted to a root-owned path without a separately verified signature.
+    // Require the operator to run the deploy helper as root instead.
+    void scriptPath;
+    return false;
 }
 
 /**

@@ -39,6 +39,10 @@ const ALLOWED_PATHS = new Set([
     '/api/heartbeat',
     '/api/sysinfo',
     '/api/sysinfo_ver',
+    '/api/telemetry/key',
+    '/api/branding',
+    '/api/devices/register',
+    '/api/devices/register/status',
     '/api/peers',
     // Phase 2: Audit
     '/api/audit',
@@ -62,6 +66,8 @@ const ALLOWED_PATHS = new Set([
     '/api/software',
     '/api/software/client-download-link',
     // Security: server key distribution
+    '/api/health',
+    '/api/server/pubkey',
     '/api/server-key',
     '/api/server-key/fingerprint',
     // RustDesk PRO group endpoints (Flutter client queries after login)
@@ -87,7 +93,7 @@ const ALLOWED_PATH_PATTERNS = [
 const ALLOWED_METHODS = {
     '/api/login': 'POST',
     '/api/logout': 'POST',
-    '/api/currentUser': 'GET',
+    '/api/currentUser': '*',
     '/api/login-options': 'GET',
     '/api/oidc/auth': 'POST',
     '/api/oidc/auth-query': 'GET',
@@ -96,6 +102,10 @@ const ALLOWED_METHODS = {
     '/api/heartbeat': 'POST',
     '/api/sysinfo': 'POST',
     '/api/sysinfo_ver': 'POST',
+    '/api/telemetry/key': 'GET',
+    '/api/branding': 'GET',
+    '/api/devices/register': 'POST',
+    '/api/devices/register/status': 'GET',
     '/api/peers': 'GET',
     '/api/audit': 'GET',
     '/api/audit/conn': '*',
@@ -114,6 +124,8 @@ const ALLOWED_METHODS = {
     '/api/users': 'GET',
     '/api/software': 'GET',
     '/api/software/client-download-link': 'GET',
+    '/api/health': 'GET',
+    '/api/server/pubkey': 'GET',
     '/api/server-key': 'GET',
     '/api/server-key/fingerprint': 'GET',
     '/api/group': '*',
@@ -129,6 +141,7 @@ const ALLOWED_METHODS = {
  */
 const PATH_BODY_LIMITS = {
     '/api/login': 4096,           // 4KB — login with deviceInfo payload
+    '/api/heartbeat': 8192,       // 8KB — device metrics and telemetry
     '/api/oidc/auth': 4096,       // 4KB — OIDC start with deviceInfo
     '/api/sysinfo': 8192,         // 8KB — sysinfo with displays/encoding data
     '/api/sysinfo_ver': 512,      // 512B — version check (id + hash only)

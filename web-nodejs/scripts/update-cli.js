@@ -9,14 +9,6 @@ const yes = args.has('--yes') || args.has('-y') || args.has('--auto');
 const dryRun = args.has('--check') || args.has('--dry-run');
 const createBackup = !args.has('--no-backup');
 
-function getOptionValue(name, fallback) {
-    const prefix = `${name}=`;
-    const found = process.argv.slice(2).find(arg => arg.startsWith(prefix));
-    return found ? found.slice(prefix.length) : fallback;
-}
-
-const serverStrategy = getOptionValue('--server-strategy', 'auto');
-
 function step(index, total, message) {
     console.log(`[${index}/${total}] ${message}`);
 }
@@ -110,15 +102,14 @@ async function main() {
 
     step(3, 6, createBackup ? 'Creating backup and applying files' : 'Applying files without backup');
     const result = await updateService.applyUpdate(check.remoteSHA, changedData, {
-        createBackup,
-        serverStrategy
+        createBackup
     });
 
     step(4, 6, 'Summarizing result');
     summarizeResult(result);
 
     // Distinguish critical failures (file download/write errors) from
-    // non-critical ones (server binary not available — source was still
+    // non-critical ones (server binary deployment problems — source was still
     // applied). See issue #154: server binary failures caused infinite
     // update loop because SHA was never saved.
     const criticalFailures = (result.failed || []).filter(f =>
@@ -134,7 +125,7 @@ async function main() {
         return;
     }
     if (nonCriticalFailures.length) {
-        console.log(`\n${nonCriticalFailures.length} non-critical issue(s) (server binary not built/downloaded).`);
+        console.log(`\n${nonCriticalFailures.length} non-critical issue(s) (server binary not built or deployed).`);
         console.log('Console and script files were applied successfully. Rebuild Go server manually if needed.');
     }
 

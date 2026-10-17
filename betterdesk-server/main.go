@@ -7,6 +7,7 @@ import (
 	cryptoRand "crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -41,7 +42,81 @@ import (
 var (
 	Version   = "dev"
 	BuildDate = "unknown"
+
+	runSQLiteAuthConsolidation       bool
+	sqliteAuthConsolidationDryRun    bool
+	sqliteAuthConsolidationBackupDir string
+	sqliteAuthConsolidationRollback  string
 )
+
+type persistedTimeSyncConfig struct {
+	NTPServers         string `json:"ntp_servers"`
+	MaxSkewMS          int    `json:"max_skew_ms"`
+	RequireSyncedClock bool   `json:"require_synced_clock"`
+	TrustOSNTP         bool   `json:"trust_os_ntp"`
+}
+
+func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
+	raw, err := database.GetConfig(timesync.PersistedConfigKey)
+	if err != nil || strings.TrimSpace(raw) == "" {
+		return
+	}
+
+	var persisted persistedTimeSyncConfig
+	if err := json.Unmarshal([]byte(raw), &persisted); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted time-sync configuration: %v", err)
+		return
+	}
+	if strings.TrimSpace(persisted.NTPServers) == "" || persisted.MaxSkewMS <= 0 || persisted.MaxSkewMS > 600000 {
+		log.Printf("WARN: Ignoring invalid persisted time-sync configuration values")
+		return
+	}
+
+	cfg.NTPServers = persisted.NTPServers
+	cfg.BillingMaxClockSkewMS = persisted.MaxSkewMS
+	cfg.BillingRequireSyncedClock = persisted.RequireSyncedClock
+	cfg.BillingTrustOSNTP = persisted.TrustOSNTP
+	log.Printf("Restored time-sync configuration from DB")
+}
+
+func applyPersistedConnectionSettings(cfg *config.Config, database db.Database) {
+	raw, err := database.GetConfig(config.PersistedConnectionSettingsKey)
+	if err != nil || strings.TrimSpace(raw) == "" {
+		return
+	}
+
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &fields); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted connection configuration: %v", err)
+		return
+	}
+	for _, key := range []string{
+		"mode",
+		"p2p_fallback_ms",
+		"same_nat_relay",
+		"allow_shared_nat_initiator",
+		"logged_in_only_initiator",
+		"operator_only_outbound",
+	} {
+		if _, ok := fields[key]; !ok {
+			log.Printf("WARN: Ignoring incomplete persisted connection configuration: missing %s", key)
+			return
+		}
+	}
+
+	var persisted config.ConnectionSettings
+	if err := json.Unmarshal([]byte(raw), &persisted); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted connection configuration: %v", err)
+		return
+	}
+	if err := persisted.Validate(); err != nil {
+		log.Printf("WARN: Ignoring invalid persisted connection configuration values: %v", err)
+		return
+	}
+
+	cfg.ApplyConnectionSettings(persisted)
+	log.Printf("Restored connection strategy configuration from DB: mode=%s fallback=%dms", persisted.Mode, persisted.P2PFallbackMs)
+}
 
 func init() {
 	if Version == "dev" {
@@ -57,6 +132,31 @@ func main() {
 	// Configure log format (must be before any log output)
 	logCleanup := logging.Setup(cfg.LogFormat, cfg.LogLevel)
 	defer logCleanup()
+
+	if sqliteAuthConsolidationRollback != "" {
+		if err := db.RollbackSQLiteAuth(cfg.DBPath, sqliteAuthConsolidationRollback); err != nil {
+			log.Fatalf("SQLite auth consolidation rollback failed: %v", err)
+		}
+		log.Printf("SQLite auth consolidation rollback completed")
+		return
+	}
+	if runSQLiteAuthConsolidation {
+		report, err := db.ConsolidateSQLiteAuth(db.SQLiteAuthConsolidationOptions{
+			DBPath:     cfg.DBPath,
+			AuthDBPath: cfg.AuthDBPath,
+			BackupDir:  sqliteAuthConsolidationBackupDir,
+			DryRun:     sqliteAuthConsolidationDryRun,
+		})
+		if err != nil {
+			log.Fatalf("SQLite auth consolidation failed: %v", err)
+		}
+		encoded, err := json.Marshal(report)
+		if err != nil {
+			log.Fatalf("Encode SQLite auth consolidation report: %v", err)
+		}
+		fmt.Println(string(encoded))
+		return
+	}
 
 	log.Printf("========================================")
 	log.Printf("  BetterDesk Server %s", Version)
@@ -128,6 +228,8 @@ func main() {
 	if err := database.EnsureClientSessionsSchema(); err != nil {
 		log.Fatalf("Failed to ensure client_sessions schema: %v", err)
 	}
+	applyPersistedTimeSyncConfig(cfg, database)
+	applyPersistedConnectionSettings(cfg, database)
 
 	// Load API key from .api_key file or API_KEY env var and sync to database.
 	// This ensures the Node.js console and Go server share the same API key
@@ -141,10 +243,18 @@ func main() {
 
 	log.Printf("Database initialized successfully")
 
-	// Restore enrollment mode from DB (persisted via handleSetEnrollmentMode)
-	if storedMode, _ := database.GetConfig("enrollment_mode"); storedMode != "" {
-		cfg.EnrollmentMode = storedMode
-		log.Printf("Restored enrollment mode from DB: %s", storedMode)
+	// Explicit ENROLLMENT_MODE is deployment configuration and wins over a
+	// stale value persisted by the panel. Entrypoint-generated defaults are
+	// marked non-explicit so the panel remains authoritative there.
+	enrollmentSource, enrollmentModeErr := applyEnrollmentMode(cfg, database)
+	if enrollmentModeErr != nil {
+		log.Printf("WARN: Failed to reconcile enrollment mode: %v", enrollmentModeErr)
+	}
+	switch enrollmentSource {
+	case "environment":
+		log.Printf("Enrollment mode from explicit environment: %s", cfg.EnrollmentMode)
+	case "database":
+		log.Printf("Restored enrollment mode from DB: %s", cfg.EnrollmentMode)
 	}
 	if cfg.EnrollmentMode != "" && cfg.EnrollmentMode != "open" {
 		log.Printf("Enrollment restriction active: mode=%s (new devices need token/approval)", cfg.EnrollmentMode)
@@ -208,8 +318,17 @@ func main() {
 			adminUser = "admin"
 		}
 		adminPass := cfg.InitAdminPass
+		adminPasswordGenerated := false
+		adminPasswordFromFile := false
 		if adminPass == "" {
-			adminPass, _ = auth.GenerateRandomString(16)
+			dbDir := filepath.Dir(cfg.DBPath)
+			if existingPass := readBootstrapAdminPassword(dbDir); existingPass != "" {
+				adminPass = existingPass
+				adminPasswordFromFile = true
+			} else {
+				adminPass, _ = auth.GenerateRandomString(16)
+				adminPasswordGenerated = true
+			}
 		}
 		hash, err := auth.HashPassword(adminPass)
 		if err != nil {
@@ -226,13 +345,15 @@ func main() {
 		log.Printf("========================================")
 		log.Printf("  INITIAL ADMIN CREDENTIALS")
 		log.Printf("  Username: %s", adminUser)
-		if cfg.InitAdminPass == "" {
+		if adminPasswordGenerated {
 			dbDir := filepath.Dir(cfg.DBPath)
 			credsFile, err := writeBootstrapAdminCredentials(dbDir, adminUser, adminPass)
 			if err != nil {
 				log.Fatalf("Failed to write credentials file: %v", err)
 			}
 			log.Printf("  Password: written to %s (mode 0600)", credsFile)
+		} else if adminPasswordFromFile {
+			log.Printf("  Password: loaded from existing bootstrap credentials file")
 		} else {
 			log.Printf("  Password: *** (user-provided, not logged)")
 		}
@@ -241,7 +362,7 @@ func main() {
 		log.Printf("========================================")
 	}
 
-    // Initialize per-IP relay connection limiter
+	// Initialize per-IP relay connection limiter
 	var connLimiter *ratelimit.ConnLimiter
 	if cfg.RelayMaxConnsIP > 0 {
 		connLimiter = ratelimit.NewConnLimiterFromInt(cfg.RelayMaxConnsIP)
@@ -284,6 +405,8 @@ func main() {
 	reloadHandler.OnReload(func() error {
 		log.Printf("[reload] Reloading configuration from environment")
 		cfg.LoadEnv()
+		applyPersistedTimeSyncConfig(cfg, database)
+		applyPersistedConnectionSettings(cfg, database)
 		return nil
 	})
 
@@ -365,7 +488,7 @@ func main() {
 		defer relaySrv.Stop()
 
 		apiSrv := api.New(cfg, database, sig.PeerMap(), relaySrv, Version)
-		defer attachPanelSync(apiSrv, billingSvc, database, cfg.AuthDBPath)()
+		defer attachPanelSync(apiSrv, billingSvc, database, cfg.DBPath, cfg.AuthDBPath)()
 		apiSrv.SetBlocklist(blocklist)
 		apiSrv.SetBandwidthLimiter(bwLimiter)
 		apiSrv.SetAuditLogger(auditLogger)
@@ -375,6 +498,22 @@ func main() {
 		apiSrv.SetKeyPair(kp)
 		apiSrv.SetTimeSyncService(timeSyncSvc)
 		apiSrv.SetBillingService(billingSvc)
+		vaultKey := cfg.OrgPeerVaultKey
+		if vaultKey == "" {
+			vaultKey = jwtSecret
+		}
+		if err := apiSrv.InitPeerCredentialVault(vaultKey); err != nil {
+			log.Printf("[warn] org peer credential vault disabled: %v", err)
+		} else {
+			log.Printf("Org peer credential vault ready (AES-GCM)")
+		}
+		if cfg.RemoteTargetVaultKey == "" {
+			log.Printf("[warn] remote target credential vault disabled: REMOTE_TARGET_VAULT_KEY is not configured")
+		} else if err := apiSrv.InitRemoteTargetCredentialVault(cfg.RemoteTargetVaultKey); err != nil {
+			log.Printf("[warn] remote target credential vault disabled: %v", err)
+		} else {
+			log.Printf("Remote target credential vault ready (AES-GCM)")
+		}
 
 		// LDAP provider (loads config from DB, hot-reloadable via API)
 		apiSrv.InitLDAP()
@@ -388,6 +527,9 @@ func main() {
 			cdapGw.SetBlocklist(blocklist)
 			cdapGw.SetAuditLogger(auditLogger)
 			cdapGw.SetJWTManager(jwtManager)
+			if err := cdapGw.SetSessionGrantPrivateKey(kp.PrivateKey); err != nil {
+				log.Fatalf("Failed to configure CDAP session grant signer: %v", err)
+			}
 			cdapGw.SetVersion(Version)
 			apiSrv.SetCDAPGateway(cdapGw)
 		}
@@ -464,7 +606,7 @@ func main() {
 		defer sig.Stop()
 
 		apiSrv := api.New(cfg, database, sig.PeerMap(), nil, Version)
-		defer attachPanelSync(apiSrv, billingSvc, database, cfg.AuthDBPath)()
+		defer attachPanelSync(apiSrv, billingSvc, database, cfg.DBPath, cfg.AuthDBPath)()
 		apiSrv.SetBlocklist(blocklist)
 		apiSrv.SetBandwidthLimiter(bwLimiter)
 		apiSrv.SetAuditLogger(auditLogger)
@@ -472,6 +614,18 @@ func main() {
 		apiSrv.SetMetrics(mc)
 		apiSrv.SetJWTManager(jwtManager)
 		apiSrv.SetKeyPair(kp)
+		vaultKey := cfg.OrgPeerVaultKey
+		if vaultKey == "" {
+			vaultKey = jwtSecret
+		}
+		if err := apiSrv.InitPeerCredentialVault(vaultKey); err != nil {
+			log.Printf("[warn] org peer credential vault disabled: %v", err)
+		}
+		if cfg.RemoteTargetVaultKey == "" {
+			log.Printf("[warn] remote target credential vault disabled: REMOTE_TARGET_VAULT_KEY is not configured")
+		} else if err := apiSrv.InitRemoteTargetCredentialVault(cfg.RemoteTargetVaultKey); err != nil {
+			log.Printf("[warn] remote target credential vault disabled: %v", err)
+		}
 		apiSrv.InitLDAP()
 		apiSrv.InitOIDC()
 		if err := apiSrv.Start(ctx); err != nil {
@@ -513,6 +667,39 @@ func main() {
 	log.Printf("Server stopped")
 }
 
+func resolveEnrollmentMode(configuredMode, storedMode string, envOverride bool) (string, string) {
+	if envOverride {
+		return configuredMode, "environment"
+	}
+	switch storedMode {
+	case config.EnrollmentModeOpen, config.EnrollmentModeManaged, config.EnrollmentModeLocked:
+		return storedMode, "database"
+	default:
+		return configuredMode, "configuration"
+	}
+}
+
+func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, error) {
+	storedMode, err := database.GetConfig("enrollment_mode")
+	if err != nil {
+		return "configuration", err
+	}
+
+	resolvedMode, source := resolveEnrollmentMode(
+		cfg.EnrollmentMode,
+		storedMode,
+		cfg.EnrollmentModeEnvOverride,
+	)
+	cfg.EnrollmentMode = resolvedMode
+
+	if source == "environment" && storedMode != resolvedMode {
+		if err := database.SetConfig("enrollment_mode", resolvedMode); err != nil {
+			return source, err
+		}
+	}
+	return source, nil
+}
+
 func ensureScopedAPIKey(database db.Database, apiKey string) error {
 	if strings.TrimSpace(apiKey) == "" {
 		return nil
@@ -547,10 +734,42 @@ func writeBootstrapAdminCredentials(dbDir, adminUser, adminPass string) (string,
 		"Admin Username: %s\nAdmin Password: %s\n\nChange this password immediately and delete this file!\n",
 		adminUser, adminPass,
 	)
-	if err := os.WriteFile(credsFile, []byte(credsContent), 0600); err != nil {
+	file, err := os.OpenFile(credsFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		if os.IsExist(err) {
+			return credsFile, nil
+		}
+		return "", err
+	}
+	if _, err := file.WriteString(credsContent); err != nil {
+		_ = file.Close()
+		_ = os.Remove(credsFile)
+		return "", err
+	}
+	if err := file.Close(); err != nil {
+		_ = os.Remove(credsFile)
 		return "", err
 	}
 	return credsFile, nil
+}
+
+func readBootstrapAdminPassword(dbDir string) string {
+	if dbDir == "" || dbDir == "." {
+		dbDir = "."
+	}
+	contents, err := os.ReadFile(filepath.Join(dbDir, ".admin_credentials"))
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(string(contents), "\n") {
+		if strings.HasPrefix(line, "Admin Password:") {
+			password := strings.TrimSpace(strings.TrimPrefix(line, "Admin Password:"))
+			if password != "" {
+				return password
+			}
+		}
+	}
+	return ""
 }
 
 func syncAPIKeyToServerConfig(database db.Database, apiKey string) (string, error) {
@@ -708,8 +927,9 @@ func resolveAuthDBPath(explicit, dbPath string) string {
 	return explicit
 }
 
-// attachPanelSync wires RustDesk group/folder sync to PostgreSQL or legacy auth.db.
-func attachPanelSync(apiSrv *api.Server, billingSvc *billing.Service, database db.Database, authDBPath string) func() {
+// attachPanelSync wires RustDesk group/folder sync to PostgreSQL, the
+// consolidated SQLite store, or a legacy auth.db during the migration window.
+func attachPanelSync(apiSrv *api.Server, billingSvc *billing.Service, database db.Database, primaryDBPath, authDBPath string) func() {
 	if pg, ok := database.(*db.PostgresDB); ok {
 		apiSrv.SetPanelStore(pg)
 		if billingSvc != nil {
@@ -717,6 +937,15 @@ func attachPanelSync(apiSrv *api.Server, billingSvc *billing.Service, database d
 		}
 		log.Printf("RustDesk panel sync: PostgreSQL (device groups, folders, ACL)")
 		return func() {}
+	}
+	if _, ok := database.(*db.SQLiteDB); ok {
+		consolidated, err := db.SQLiteAuthConsolidated(primaryDBPath)
+		if err != nil {
+			log.Printf("WARN: cannot determine SQLite consolidation state: %v", err)
+		} else if consolidated {
+			authDBPath = primaryDBPath
+			log.Printf("RustDesk panel sync: consolidated SQLite database")
+		}
 	}
 	if strings.TrimSpace(authDBPath) == "" {
 		log.Printf("WARN: no panel sync source — device groups/folders unavailable to RustDesk client")
@@ -757,6 +986,10 @@ func parseFlags() *config.Config {
 	flag.IntVar(&cfg.AdminPort, "admin-port", cfg.AdminPort, "TCP admin interface port (0 = disabled)")
 	flag.StringVar(&cfg.JWTSecret, "jwt-secret", cfg.JWTSecret, "JWT signing secret (auto-generated if empty)")
 	flag.IntVar(&cfg.JWTExpiry, "jwt-expiry", cfg.JWTExpiry, "JWT token expiry in hours (default 24)")
+	flag.BoolVar(&runSQLiteAuthConsolidation, "migrate-sqlite-auth", false, "Safely consolidate legacy auth.db into the selected SQLite DB, then exit")
+	flag.BoolVar(&sqliteAuthConsolidationDryRun, "migrate-sqlite-auth-dry-run", false, "Validate legacy auth.db consolidation without modifying databases")
+	flag.StringVar(&sqliteAuthConsolidationBackupDir, "migrate-sqlite-auth-backup-dir", "", "Directory for SQLite auth consolidation backups")
+	flag.StringVar(&sqliteAuthConsolidationRollback, "rollback-sqlite-auth", "", "Restore the selected SQLite DB from a consolidation snapshot, then exit")
 	flag.StringVar(&cfg.AdminPassword, "admin-password", cfg.AdminPassword, "Password for admin TCP interface")
 	flag.BoolVar(&cfg.ForceHTTPS, "force-https", cfg.ForceHTTPS, "Reject non-TLS API requests")
 	flag.BoolVar(&cfg.TrustProxy, "trust-proxy", cfg.TrustProxy, "Trust X-Forwarded-For/X-Real-IP headers from reverse proxy (requires --trusted-proxies)")
@@ -764,6 +997,9 @@ func parseFlags() *config.Config {
 	flag.IntVar(&cfg.RelayMaxConnsIP, "relay-max-conns-ip", cfg.RelayMaxConnsIP, "Max relay connections per IP (0 = unlimited)")
 	flag.IntVar(&cfg.SignalRateLimitPerIP, "signal-rate-limit-per-ip", cfg.SignalRateLimitPerIP, "Max signal registrations per IP per minute (0 = unlimited; raise for large NAT deployments — issue #122)")
 	flag.BoolVar(&cfg.SameNATRelay, "same-nat-relay", cfg.SameNATRelay, "Auto-fallback to relay when both peers share the same public IP (avoids NAT hairpin failures — issue #121)")
+	flag.BoolVar(&cfg.AllowSharedNATInitiator, "allow-shared-nat-initiator", cfg.AllowSharedNATInitiator, "Allow PunchHole/RequestRelay when multiple live peers share the initiator public IP without token/udp_port (synthetic shared-nat-initiator — issue #399; default off)")
+	flag.BoolVar(&cfg.LoggedInOnlyInitiator, "logged-in-only-initiator", cfg.LoggedInOnlyInitiator, "Require a valid BetterDesk client login token for stock PunchHole/RequestRelay initiators (issue #414; default off)")
+	flag.BoolVar(&cfg.OperatorOnlyOutbound, "operator-only-outbound", cfg.OperatorOnlyOutbound, "Require a valid Admin/Operator client session for stock PunchHole/RequestRelay initiators (issue #425; default off)")
 	flag.BoolVar(&cfg.P2PFirst, "p2p-first", cfg.P2PFirst, "Wait for the target's hole punch before answering the initiator so direct P2P can succeed (issue #157; disable to always answer immediately)")
 	flag.IntVar(&cfg.P2PFallbackMs, "p2p-fallback-ms", cfg.P2PFallbackMs, "Grace period (ms) to wait for the target's PunchHoleSent before sending the relay fallback response (only with --p2p-first)")
 	flag.StringVar(&cfg.InitAdminUser, "init-admin-user", cfg.InitAdminUser, "Initial admin username (default: admin)")

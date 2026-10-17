@@ -35,6 +35,32 @@ type Peer struct {
 	HeartbeatSeq int64      `json:"-"`                        // internal heartbeat counter
 }
 
+// RemoteTarget represents a manually configured RDP or VNC endpoint.
+// Credentials are stored encrypted and are never included in JSON responses.
+type RemoteTarget struct {
+	ID                   string     `json:"id"`
+	OrgID                string     `json:"org_id,omitempty"`
+	Name                 string     `json:"name"`
+	Protocol             string     `json:"protocol"` // rdp or vnc
+	Platform             string     `json:"platform,omitempty"`
+	Host                 string     `json:"host"`
+	Port                 int        `json:"port"`
+	Username             string     `json:"username,omitempty"`
+	CredentialMode       string     `json:"credential_mode"` // saved, prompt, none
+	CredentialCiphertext string     `json:"-"`
+	CredentialNonce      string     `json:"-"`
+	CredentialKeyID      string     `json:"-"`
+	TLSMode              string     `json:"tls_mode"` // required, preferred, disabled
+	CertFingerprint      string     `json:"cert_fingerprint,omitempty"`
+	Enabled              bool       `json:"enabled"`
+	LastTestAt           *time.Time `json:"last_test_at,omitempty"`
+	LastTestStatus       string     `json:"last_test_status,omitempty"`
+	LastTestError        string     `json:"last_test_error,omitempty"`
+	CreatedBy            string     `json:"created_by,omitempty"`
+	CreatedAt            time.Time  `json:"created_at"`
+	UpdatedAt            time.Time  `json:"updated_at"`
+}
+
 // ServerConfig stores runtime configuration in the database.
 type ServerConfig struct {
 	Key   string `json:"key"`
@@ -134,6 +160,33 @@ type PeerMetric struct {
 	Memory    float64   `json:"memory_usage"`
 	Disk      float64   `json:"disk_usage"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// TelemetrySnapshot is the latest bounded snapshot reported by a device.
+// Payload is kept as JSON so platform-specific fields can be added without
+// changing the server schema for every operating system.
+type TelemetrySnapshot struct {
+	DeviceID    string `json:"device_id"`
+	Kind        string `json:"kind"`
+	SampleID    string `json:"sample_id"`
+	Status      string `json:"status"`
+	Payload     string `json:"payload"`
+	CollectedAt string `json:"collected_at"`
+	ReceivedAt  string `json:"received_at"`
+}
+
+// TelemetryCommand is a durable, device-bound command delivered by heartbeat.
+// Args and Result are bounded JSON strings validated by the API handlers.
+type TelemetryCommand struct {
+	ID          int64  `json:"id"`
+	DeviceID    string `json:"device_id"`
+	Command     string `json:"command"`
+	Args        string `json:"args"`
+	Status      string `json:"status"`
+	Result      string `json:"result,omitempty"`
+	CreatedAt   string `json:"created_at"`
+	ExpiresAt   string `json:"expires_at"`
+	CompletedAt string `json:"completed_at,omitempty"`
 }
 
 // DeviceToken represents a unique enrollment token for device registration.
@@ -280,6 +333,19 @@ type OrgSetting struct {
 	OrgID string `json:"org_id"`
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+// OrgPeerCredential is metadata for an encrypted peer password row (#367).
+// Ciphertext/nonce are never exposed via JSON APIs that list credentials.
+type OrgPeerCredential struct {
+	OrgID       string `json:"org_id"`
+	PeerID      string `json:"peer_id"`
+	Ciphertext  string `json:"-"`
+	Nonce       string `json:"-"`
+	KeyID       string `json:"-"`
+	PasswordSet bool   `json:"password_set"`
+	UpdatedAt   string `json:"updated_at,omitempty"`
+	UpdatedBy   string `json:"updated_by,omitempty"`
 }
 
 // AccessPolicy controls unattended access for a peer device.
@@ -469,6 +535,13 @@ type Database interface {
 	// Peer field updates
 	UpdatePeerFields(id string, fields map[string]string) error
 
+	// Manually configured RDP/VNC targets
+	CreateRemoteTarget(target *RemoteTarget) error
+	GetRemoteTarget(id string) (*RemoteTarget, error)
+	ListRemoteTargets(orgID string, includeDisabled bool) ([]*RemoteTarget, error)
+	UpdateRemoteTarget(target *RemoteTarget) error
+	DeleteRemoteTarget(id string) error
+
 	// Ban system
 	BanPeer(id string, reason string) error
 	UnbanPeer(id string) error
@@ -501,6 +574,7 @@ type Database interface {
 	// Config
 	GetConfig(key string) (string, error)
 	SetConfig(key, value string) error
+	CompareAndSwapConfig(key, expected, replacement string) (bool, error)
 	DeleteConfig(key string) error
 	ListConfigByPrefix(prefix string) ([]ServerConfig, error)
 
@@ -543,6 +617,21 @@ type Database interface {
 	GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, error)
 	GetLatestPeerMetric(peerID string) (*PeerMetric, error)
 	CleanupOldMetrics(maxAge time.Duration) (int64, error) // Delete metrics older than maxAge
+
+	// BetterDesk device telemetry and heartbeat-delivered commands.
+	SaveTelemetrySnapshot(snapshot *TelemetrySnapshot) error
+	GetTelemetrySnapshot(deviceID, kind string) (*TelemetrySnapshot, error)
+	QueueTelemetryCommand(command *TelemetryCommand) (int64, error)
+	GetPendingTelemetryCommands(deviceID string, limit int) ([]*TelemetryCommand, error)
+	CompleteTelemetryCommand(id int64, status, result string) error
+
+	// Per-device desktop connection mode (normal <-> incoming-only).
+	IssueConnectionMode(issue *ConnectionModeIssue) (*ConnectionModeCommand, bool, error)
+	GetConnectionModePolicy(deviceID string) (*ConnectionModePolicy, error)
+	LatestConnectionModeCommand(deviceID string) (*ConnectionModeCommand, error)
+	DeliverableConnectionModeCommand(deviceID string, now time.Time) (*ConnectionModeCommand, error)
+	MarkConnectionModeDelivered(commandID string, now time.Time) error
+	AcknowledgeConnectionMode(ack *ConnectionModeAck) (bool, error)
 
 	// Chat Messages
 	SaveChatMessage(msg *ChatMessage) (int64, error) // Returns inserted ID
@@ -614,6 +703,12 @@ type Database interface {
 	// Org Address Books (shared contacts for organization members)
 	GetOrgAddressBook(orgID, abType string) (string, error)
 	SaveOrgAddressBook(orgID, abType, data, updatedBy string) error
+
+	// Org peer credentials — AES-GCM ciphertext in main DB (#367)
+	GetOrgPeerCredential(orgID, peerID string) (*OrgPeerCredential, error)
+	ListOrgPeerCredentialFlags(orgID string) ([]*OrgPeerCredential, error)
+	SaveOrgPeerCredential(c *OrgPeerCredential) error
+	DeleteOrgPeerCredential(orgID, peerID string) error
 
 	// Access Policies (unattended access management)
 	GetAccessPolicy(peerID string) (*AccessPolicy, error)

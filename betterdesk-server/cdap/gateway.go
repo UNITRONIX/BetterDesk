@@ -6,6 +6,7 @@ package cdap
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -25,6 +26,7 @@ import (
 	"github.com/unitronix/betterdesk-server/peer"
 	"github.com/unitronix/betterdesk-server/ratelimit"
 	"github.com/unitronix/betterdesk-server/security"
+	"github.com/unitronix/betterdesk-server/sessiongrant"
 )
 
 // Gateway is the CDAP WebSocket server.
@@ -37,6 +39,9 @@ type Gateway struct {
 	blocklist *security.Blocklist
 	jwt       *auth.JWTManager
 	limiter   *ratelimit.IPLimiter
+	// sessionGrantSigner binds passive Support Agent sessions to the
+	// authenticated CDAP operator and target device.
+	sessionGrantSigner *sessiongrant.Signer
 
 	httpSrv *http.Server
 	ln      net.Listener
@@ -112,6 +117,18 @@ func (g *Gateway) SetAuditLogger(al *audit.Logger) { g.auditLog = al }
 // SetJWTManager sets the JWT manager.
 func (g *Gateway) SetJWTManager(jm *auth.JWTManager) { g.jwt = jm }
 
+// SetSessionGrantPrivateKey enables signed passive-session grants for Support
+// Agent devices. It must receive the server identity key whose public half is
+// embedded in their signed branding profile.
+func (g *Gateway) SetSessionGrantPrivateKey(key ed25519.PrivateKey) error {
+	signer, err := sessiongrant.NewSigner(key)
+	if err != nil {
+		return err
+	}
+	g.sessionGrantSigner = signer
+	return nil
+}
+
 // SetRateLimiter overrides the default rate limiter.
 func (g *Gateway) SetRateLimiter(l *ratelimit.IPLimiter) { g.limiter = l }
 
@@ -138,8 +155,13 @@ func (g *Gateway) Start(ctx context.Context) error {
 			ln.Close()
 			return fmt.Errorf("cdap: tls config: %w", tlsErr)
 		}
-		ln = config.NewDualModeListener(ln, tlsCfg)
-		log.Printf("[cdap] TLS enabled (dual-mode: plain + TLS auto-detect)")
+		if g.cfg.CDAPTLSRequiredEnabled() {
+			ln = config.NewTLSOnlyListener(ln, tlsCfg)
+			log.Printf("[cdap] TLS enabled (plaintext rejected)")
+		} else {
+			ln = config.NewDualModeListener(ln, tlsCfg)
+			log.Printf("[cdap] TLS enabled (dual-mode: plain + TLS auto-detect)")
+		}
 	}
 
 	g.ln = ln
@@ -238,9 +260,16 @@ func (g *Gateway) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+	acceptOpts := &websocket.AcceptOptions{
 		Subprotocols: []string{"cdap-v1"},
-	})
+	}
+	if g.cfg != nil {
+		// With no configured patterns, coder/websocket enforces its safe
+		// same-host default for browser origins. Native CDAP agents omit Origin
+		// and remain compatible; configured patterns allow trusted dashboards.
+		acceptOpts.OriginPatterns = g.cfg.GetAllowedWSOrigins()
+	}
+	conn, err := websocket.Accept(w, r, acceptOpts)
 	if err != nil {
 		log.Printf("[cdap] WebSocket upgrade failed from %s: %v", clientIP, err)
 		return

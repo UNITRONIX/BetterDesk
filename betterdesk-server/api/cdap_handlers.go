@@ -42,10 +42,12 @@ type desktopWSMessage struct {
 	DeltaYCamel int             `json:"deltaY,omitempty"`
 	Width       int             `json:"width,omitempty"`
 	Height      int             `json:"height,omitempty"`
+	FpsMode     string          `json:"fps_mode,omitempty"`
 	Format      string          `json:"format,omitempty"`
 	Data        string          `json:"data,omitempty"`
 	SessionID   string          `json:"session_id,omitempty"`
 	Index       int             `json:"index,omitempty"`
+	Enabled     *bool           `json:"enabled,omitempty"`
 	Raw         json.RawMessage `json:"-"`
 }
 
@@ -698,6 +700,7 @@ func (s *Server) handleCDAPDesktop(w http.ResponseWriter, r *http.Request) {
 		Height     int      `json:"height"`
 		Quality    int      `json:"quality"`
 		FPS        int      `json:"fps"`
+		FpsMode    string   `json:"fps_mode"`
 		Codecs     []string `json:"codecs"`
 		VideoCodec string   `json:"video_codec"`
 	}
@@ -706,7 +709,7 @@ func (s *Server) handleCDAPDesktop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := s.cdapGw.StartDesktopSession(ctx, wsConn, id, username, role, initMsg.Width, initMsg.Height, initMsg.Quality, initMsg.FPS, initMsg.Codecs, initMsg.VideoCodec)
+	session, err := s.cdapGw.StartDesktopSession(ctx, wsConn, id, username, role, initMsg.Width, initMsg.Height, initMsg.Quality, initMsg.FPS, initMsg.FpsMode, initMsg.Codecs, initMsg.VideoCodec)
 	if err != nil {
 		errMsg, _ := json.Marshal(map[string]string{"type": "error", "error": fmt.Sprintf("Failed to start desktop: %v", err)})
 		wsConn.Write(ctx, websocket.MessageText, errMsg)
@@ -777,6 +780,18 @@ func (s *Server) handleCDAPDesktop(w http.ResponseWriter, r *http.Request) {
 			s.cdapGw.RelayKeyframeRequest(ctx, session.ID)
 		case "monitor_select":
 			s.cdapGw.RelayMonitorSelect(ctx, session.ID, msg.Index)
+		case "lock_screen", "restart_device", "block_input", "privacy_mode",
+			"disable_clipboard", "lock_after_session", "show_cursor", "quality_set":
+			if msg.Type == "quality_set" && msg.FpsMode != "" {
+				s.cdapGw.SetDesktopFpsMode(session.ID, msg.FpsMode)
+			}
+			enabled := false
+			if msg.Enabled != nil {
+				enabled = *msg.Enabled
+			}
+			if err := s.cdapGw.RelayDesktopControl(ctx, session.ID, msg.Type, enabled, msg.Raw); err != nil {
+				log.Printf("[cdap] desktop control %s relay failed: %v", msg.Type, err)
+			}
 		case "close":
 			s.cdapGw.EndDesktopSession(ctx, session.ID, "user closed desktop")
 			return

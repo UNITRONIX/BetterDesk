@@ -6,7 +6,7 @@ Configure **OpenID Connect (OIDC) / OAuth2** single sign-on so operators log in 
 
 ## Overview
 
-- Optional — local username/password login remains available unless disabled
+- Optional — local username/password login remains available unless SSO-first is enabled
 - Panel login at **http://your-server:5000**
 - Desktop client login via API server (typically port **21114** / **21121**) when OIDC is enabled
 - IdP callback handled by the Go server API (typically port **21114** or **21121** in Docker)
@@ -23,6 +23,7 @@ Configure **OpenID Connect (OIDC) / OAuth2** single sign-on so operators log in 
 | **Identity provider** | Preset or custom |
 | **Button display name** | e.g. "Sign in with Azure AD" |
 | **Issuer URL** | OIDC issuer (`.well-known/openid-configuration` fetched automatically) |
+| **Allowed private OIDC networks** | Optional comma-separated RFC1918/IPv6 ULA IPs or CIDRs for an on-premises/DMZ IdP (for example `10.20.0.0/16`); empty keeps private destinations blocked |
 | **Client ID** | OAuth2 client ID from your IdP |
 | **Client secret** | OAuth2 client secret |
 | **Redirect URL** | Must match IdP exactly — path `/api/auth/oidc/callback` (or `/api/oidc/callback`). **Preferred:** your panel public URL (e.g. `https://your-server:5443/api/auth/oidc/callback`) — the console proxies the callback to Go. Direct Go/Client API (`:21114` / `:21121`) also works. |
@@ -30,9 +31,34 @@ Configure **OpenID Connect (OIDC) / OAuth2** single sign-on so operators log in 
 | **Scopes** | Default `openid profile email` |
 | **Use PKCE** | Recommended for public clients |
 | **Auto provisioning** | Create local user on first SSO login (if enabled) |
+| **Prefer SSO login** | Automatically launch the IdP when opening `/login`; disabled by default |
+
+When **Prefer SSO login** is enabled, use `/login?autoLaunch=0` to show the
+local username/password form. Requests from private network addresses also
+keep the local form available for emergency administration. This only changes
+the login-page experience; it does not disable the password API.
+
+The panel decides whether a request is local from the client IP that Express
+sees. If the panel is behind Nginx, Nginx Proxy Manager, Cloudflare Tunnel, or
+another reverse proxy, set `TRUST_PROXY=1` (or `Y`) on the **console** and
+ensure the proxy forwards `X-Forwarded-For`. Otherwise the panel sees the
+proxy's private/loopback address and deliberately keeps the password form
+visible. Verify the effective decision with:
+
+```text
+GET /api/auth/oidc/status
+```
+
+For SSO-first access, the response must contain `enabled: true`,
+`prefer_sso: true`, and `local_bypass: false`. Do not enable proxy trust on a
+panel that is directly reachable by untrusted clients, because forwarded
+headers must only be accepted from a controlled proxy.
 
 > [!IMPORTANT]
 > When using HTTPS behind a reverse proxy, set `TRUST_PROXY=true` in `.env` so redirect URLs and cookies use the correct scheme.
+
+> [!WARNING]
+> Private-network access is an explicit exception to the default SSRF protection. Add only the exact IdP address or smallest required CIDR. Loopback, link-local, multicast, unspecified, and metadata addresses remain blocked even when an allowlist is configured. The allowlist applies to discovery, token, and UserInfo requests and is also enforced after redirects.
 
 You can also set **`PANEL_PUBLIC_URL`** in the console `.env` as a fallback panel origin for OIDC session redirects.
 
@@ -81,7 +107,12 @@ See [REVERSE_PROXY.md](../setup/REVERSE_PROXY.md).
 
 - First SSO login may create a user (if auto-provisioning enabled)
 - If auto-provisioning is **disabled**, users must exist in BetterDesk first — otherwise login fails with `oidc_no_account`
-- Map IdP groups to server roles manually after first login (or via future automation)
+- New users receive the configured default role (Viewer by default), or the
+  role from a matching group map.
+- Administrators can change an OIDC user's role under **Users**. If no OIDC
+  group mapping matches on a later login, the manually selected role is
+  preserved. A matching group mapping remains authoritative and updates the
+  role.
 
 ---
 

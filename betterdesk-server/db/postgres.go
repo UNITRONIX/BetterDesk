@@ -113,6 +113,34 @@ func (pg *PostgresDB) Migrate() error {
 			value TEXT NOT NULL DEFAULT ''
 		)`,
 
+		// Manually configured RDP/VNC endpoints. Secrets are encrypted by the API
+		// layer; this table intentionally stores only ciphertext and metadata.
+		`CREATE TABLE IF NOT EXISTS remote_targets (
+			id TEXT PRIMARY KEY,
+			org_id TEXT NOT NULL DEFAULT '',
+			name TEXT NOT NULL,
+			protocol TEXT NOT NULL CHECK (protocol IN ('rdp', 'vnc')),
+			platform TEXT NOT NULL DEFAULT '',
+			host TEXT NOT NULL,
+			port INTEGER NOT NULL,
+			username TEXT NOT NULL DEFAULT '',
+			credential_mode TEXT NOT NULL DEFAULT 'prompt',
+			credential_ciphertext TEXT NOT NULL DEFAULT '',
+			credential_nonce TEXT NOT NULL DEFAULT '',
+			credential_key_id TEXT NOT NULL DEFAULT '',
+			tls_mode TEXT NOT NULL DEFAULT 'preferred',
+			cert_fingerprint TEXT NOT NULL DEFAULT '',
+			enabled BOOLEAN NOT NULL DEFAULT TRUE,
+			last_test_at TIMESTAMPTZ,
+			last_test_status TEXT NOT NULL DEFAULT '',
+			last_test_error TEXT NOT NULL DEFAULT '',
+			created_by TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_remote_targets_org ON remote_targets(org_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_remote_targets_enabled ON remote_targets(enabled)`,
+
 		`CREATE TABLE IF NOT EXISTS id_change_history (
 			id         BIGSERIAL PRIMARY KEY,
 			old_id     TEXT NOT NULL,
@@ -188,6 +216,62 @@ func (pg *PostgresDB) Migrate() error {
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer_id ON peer_metrics(peer_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_created_at ON peer_metrics(created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer_created ON peer_metrics(peer_id, created_at DESC)`,
+
+		// BetterDesk device telemetry snapshots and heartbeat-delivered commands.
+		`CREATE TABLE IF NOT EXISTS device_telemetry_snapshots (
+			device_id TEXT NOT NULL,
+			kind TEXT NOT NULL,
+			sample_id TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'ok',
+			payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+			collected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			PRIMARY KEY (device_id, kind)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_device_telemetry_snapshots_received
+			ON device_telemetry_snapshots(received_at)`,
+		`CREATE TABLE IF NOT EXISTS device_telemetry_commands (
+			id BIGSERIAL PRIMARY KEY,
+			device_id TEXT NOT NULL,
+			command TEXT NOT NULL,
+			args JSONB NOT NULL DEFAULT '{}'::jsonb,
+			status TEXT NOT NULL DEFAULT 'pending',
+			result JSONB NOT NULL DEFAULT '{}'::jsonb,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			expires_at TIMESTAMPTZ NOT NULL,
+			completed_at TIMESTAMPTZ
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_device_telemetry_commands_device_status
+			ON device_telemetry_commands(device_id, status, created_at)`,
+		`CREATE TABLE IF NOT EXISTS device_connection_policies (
+			device_id TEXT PRIMARY KEY,
+			device_uuid TEXT NOT NULL,
+			desired_mode TEXT NOT NULL,
+			effective_mode TEXT NOT NULL DEFAULT '',
+			revision BIGINT NOT NULL,
+			active_command_id TEXT NOT NULL DEFAULT '',
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS device_connection_mode_commands (
+			command_id TEXT PRIMARY KEY,
+			device_id TEXT NOT NULL,
+			device_uuid TEXT NOT NULL,
+			revision BIGINT NOT NULL,
+			mode TEXT NOT NULL,
+			reason TEXT NOT NULL,
+			operator_id TEXT NOT NULL DEFAULT '',
+			operator_name TEXT NOT NULL DEFAULT '',
+			previous_mode TEXT NOT NULL DEFAULT '',
+			issued_at BIGINT NOT NULL,
+			expires_at BIGINT NOT NULL,
+			status TEXT NOT NULL,
+			rejection_code TEXT NOT NULL DEFAULT '',
+			acknowledged_at BIGINT,
+			delivered_at BIGINT,
+			UNIQUE(device_uuid, revision)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_conn_mode_commands_device
+			ON device_connection_mode_commands(device_id, status, revision)`,
 
 		// Chat messages
 		`CREATE TABLE IF NOT EXISTS chat_messages (
@@ -303,6 +387,17 @@ func (pg *PostgresDB) Migrate() error {
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_by TEXT NOT NULL DEFAULT '',
 			PRIMARY KEY(org_id, ab_type)
+		)`,
+		// Encrypted org peer passwords for shared AB / Web Remote (#367)
+		`CREATE TABLE IF NOT EXISTS org_peer_credentials (
+			org_id     TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+			peer_id    TEXT NOT NULL,
+			ciphertext TEXT NOT NULL,
+			nonce      TEXT NOT NULL,
+			key_id     TEXT NOT NULL DEFAULT 'v1',
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_by TEXT NOT NULL DEFAULT '',
+			PRIMARY KEY(org_id, peer_id)
 		)`,
 		// Role permission overrides (RBAC Phase 52)
 		`CREATE TABLE IF NOT EXISTS role_permissions (
@@ -1030,6 +1125,11 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 		{`UPDATE peers SET linked_peer_id = $1 WHERE linked_peer_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_folder_assignments SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_group_members SET peer_id = $1 WHERE peer_id = $2`, []any{newID, oldID}},
+		{`UPDATE device_telemetry_snapshots SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`UPDATE device_telemetry_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`UPDATE device_connection_policies SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`UPDATE device_connection_mode_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`UPDATE server_config SET key = $1 WHERE key = $2`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
 	}
 	for _, st := range stmts {
 		if _, err := tx.Exec(ctx, st.query, st.args...); err != nil {
@@ -1117,16 +1217,17 @@ func (pg *PostgresDB) GetIDChangeHistory(id string) ([]*IDChangeHistory, error) 
 	return history, rows.Err()
 }
 
-// IsRenamedPeerID returns true if the given ID was previously used and then
-// changed to a different one (appears as old_id in id_change_history).
+// IsRenamedPeerID returns true when id is a historical source ID that is no
+// longer a current peer. This permits legitimate round-trip renames (A → B → A).
 func (pg *PostgresDB) IsRenamedPeerID(id string) (bool, error) {
-	var count int
+	var renamed bool
 	err := pg.pool.QueryRow(pg.ctx,
-		`SELECT COUNT(*) FROM id_change_history WHERE old_id = $1`, id).Scan(&count)
+		`SELECT EXISTS(SELECT 1 FROM id_change_history WHERE old_id = $1)
+		AND NOT EXISTS(SELECT 1 FROM peers WHERE id = $1)`, id).Scan(&renamed)
 	if err != nil {
 		return false, err
 	}
-	return count > 0, nil
+	return renamed, nil
 }
 
 // GetLatestRenameTarget returns the most recent new_id for old_id.
@@ -1238,6 +1339,20 @@ func (pg *PostgresDB) SetConfig(key, value string) error {
 	return err
 }
 
+// CompareAndSwapConfig updates a configuration value only when it still
+// matches expected. It is used for atomic counters stored as JSON payloads.
+func (pg *PostgresDB) CompareAndSwapConfig(key, expected, replacement string) (bool, error) {
+	result, err := pg.pool.Exec(pg.ctx,
+		`UPDATE server_config SET value = $1
+		 WHERE key = $2 AND value = $3`,
+		replacement, key, expected,
+	)
+	if err != nil {
+		return false, err
+	}
+	return result.RowsAffected() == 1, nil
+}
+
 // DeleteConfig removes a configuration key.
 func (pg *PostgresDB) DeleteConfig(key string) error {
 	_, err := pg.pool.Exec(pg.ctx, `DELETE FROM server_config WHERE key = $1`, key)
@@ -1318,7 +1433,7 @@ func scanUser(row pgx.Row) (*User, error) {
 }
 
 // userSelectColsPG is the shared SELECT list for GetUser/GetUserByID/ListUsers.
-// COALESCE(totp_secret, '') matches SQLite (Issue #292/#301): Node panel inserts
+// COALESCE(totp_secret, ”) matches SQLite (Issue #292/#301): Node panel inserts
 // often leave totp_secret NULL; scanning NULL into Go string fails and breaks
 // GET /api/users, which in turn triggered mirrorCreate retry loops.
 const userSelectColsPG = `id, username, password_hash, role, COALESCE(totp_secret, ''), totp_enabled,
@@ -1751,7 +1866,104 @@ func (pg *PostgresDB) CleanupOldMetrics(maxAge time.Duration) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	if _, err := pg.pool.Exec(pg.ctx,
+		`DELETE FROM device_telemetry_commands
+		 WHERE completed_at IS NOT NULL AND completed_at < $1`, cutoff); err != nil {
+		return result.RowsAffected(), err
+	}
 	return result.RowsAffected(), nil
+}
+
+// SaveTelemetrySnapshot stores the latest bounded snapshot for a device and
+// category. The payload is already validated JSON from the API layer.
+func (pg *PostgresDB) SaveTelemetrySnapshot(snapshot *TelemetrySnapshot) error {
+	_, err := pg.pool.Exec(pg.ctx, `
+		INSERT INTO device_telemetry_snapshots
+			(device_id, kind, sample_id, status, payload, collected_at, received_at)
+		VALUES ($1, $2, $3, $4, $5::jsonb, $6, NOW())
+		ON CONFLICT (device_id, kind) DO UPDATE SET
+			sample_id = EXCLUDED.sample_id,
+			status = EXCLUDED.status,
+			payload = EXCLUDED.payload,
+			collected_at = EXCLUDED.collected_at,
+			received_at = NOW()`,
+		snapshot.DeviceID, snapshot.Kind, snapshot.SampleID, snapshot.Status,
+		snapshot.Payload, snapshot.CollectedAt)
+	return err
+}
+
+// GetTelemetrySnapshot returns the latest snapshot for a device/category.
+func (pg *PostgresDB) GetTelemetrySnapshot(deviceID, kind string) (*TelemetrySnapshot, error) {
+	snapshot := &TelemetrySnapshot{}
+	err := pg.pool.QueryRow(pg.ctx, `
+		SELECT device_id, kind, sample_id, status, payload::text,
+			collected_at::text, received_at::text
+		FROM device_telemetry_snapshots
+		WHERE device_id = $1 AND kind = $2`,
+		deviceID, kind).Scan(
+		&snapshot.DeviceID, &snapshot.Kind, &snapshot.SampleID,
+		&snapshot.Status, &snapshot.Payload, &snapshot.CollectedAt,
+		&snapshot.ReceivedAt)
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return snapshot, nil
+}
+
+// QueueTelemetryCommand queues an allowlisted command for heartbeat delivery.
+func (pg *PostgresDB) QueueTelemetryCommand(command *TelemetryCommand) (int64, error) {
+	var id int64
+	err := pg.pool.QueryRow(pg.ctx, `
+		INSERT INTO device_telemetry_commands
+			(device_id, command, args, status, expires_at)
+		VALUES ($1, $2, $3::jsonb, 'pending', $4)
+		RETURNING id`,
+		command.DeviceID, command.Command, command.Args, command.ExpiresAt).Scan(&id)
+	return id, err
+}
+
+// GetPendingTelemetryCommands returns non-expired commands for heartbeat.
+func (pg *PostgresDB) GetPendingTelemetryCommands(deviceID string, limit int) ([]*TelemetryCommand, error) {
+	if limit <= 0 || limit > 20 {
+		limit = 10
+	}
+	rows, err := pg.pool.Query(pg.ctx, `
+		SELECT id, device_id, command, args::text, status, result::text,
+			created_at::text, expires_at::text, COALESCE(completed_at::text, '')
+		FROM device_telemetry_commands
+		WHERE device_id = $1 AND status = 'pending' AND expires_at > NOW()
+		ORDER BY id ASC LIMIT $2`, deviceID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var commands []*TelemetryCommand
+	for rows.Next() {
+		command := &TelemetryCommand{}
+		if err := rows.Scan(
+			&command.ID, &command.DeviceID, &command.Command,
+			&command.Args, &command.Status, &command.Result,
+			&command.CreatedAt, &command.ExpiresAt,
+			&command.CompletedAt); err != nil {
+			return nil, err
+		}
+		commands = append(commands, command)
+	}
+	return commands, rows.Err()
+}
+
+// CompleteTelemetryCommand stores the bounded result of a delivered command.
+func (pg *PostgresDB) CompleteTelemetryCommand(id int64, status, result string) error {
+	_, err := pg.pool.Exec(pg.ctx, `
+		UPDATE device_telemetry_commands
+		SET status = $1, result = $2::jsonb, completed_at = NOW()
+		WHERE id = $3 AND status = 'pending'`,
+		status, result, id)
+	return err
 }
 
 // ── Chat Messages ─────────────────────────────────────────────────────

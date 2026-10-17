@@ -2,14 +2,16 @@ package api
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/bcrypt"
+	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/events"
@@ -19,13 +21,51 @@ import (
 //  Branding configuration — served to desktop clients (public, no auth)
 // ---------------------------------------------------------------------------
 
+const (
+	brandingSchemaVersion = 1
+	brandingMaxFieldLen   = 256
+	brandingMaxWebsiteLen = 512
+	brandingMaxLogoBytes  = 512 * 1024
+)
+
+// BrandingLogo is an optional image payload for BetterDesk desktop clients.
+type BrandingLogo struct {
+	Mime       string `json:"mime,omitempty"`
+	DataBase64 string `json:"data_base64,omitempty"`
+	URL        string `json:"url,omitempty"`
+}
+
+// BrandingBetterDeskProfile lists fields BetterDesk clients should apply.
+type BrandingBetterDeskProfile struct {
+	Apply []string `json:"apply"`
+}
+
+// BrandingRustDeskProfile is the heartbeat-safe subset for stock RustDesk.
+type BrandingRustDeskProfile struct {
+	ConfigOptions map[string]string `json:"config_options,omitempty"`
+}
+
+// BrandingProfiles separates BetterDesk-rich and RustDesk-compatible projections.
+type BrandingProfiles struct {
+	BetterDesk BrandingBetterDeskProfile `json:"betterdesk"`
+	RustDesk   BrandingRustDeskProfile   `json:"rustdesk"`
+}
+
 // BrandingConfig is the payload returned by GET /api/branding.
 // Desktop clients fetch this to apply company theming.
+// Legacy fields are preserved for older clients / enrollment payloads.
 type BrandingConfig struct {
+	SchemaVersion  int               `json:"schema_version"`
+	Revision       string            `json:"revision"`
 	CompanyName    string            `json:"company_name"`
+	Phone          string            `json:"phone,omitempty"`
+	Email          string            `json:"email,omitempty"`
+	Website        string            `json:"website,omitempty"`
 	AccentColor    string            `json:"accent_color"`
 	SupportContact string            `json:"support_contact"`
+	Logo           *BrandingLogo     `json:"logo,omitempty"`
 	Colors         map[string]string `json:"colors,omitempty"`
+	Profiles       BrandingProfiles  `json:"profiles"`
 	SyncModes      []SyncModeOption  `json:"sync_modes"`
 }
 
@@ -42,20 +82,50 @@ var defaultSyncModes = []SyncModeOption{
 	{ID: "turbo", Label: "Turbo", Description: "Aggressive — 10s telemetry, 1min disk, 30min software"},
 }
 
-// handleGetBranding returns the branding configuration.
-// Public endpoint — no authentication required.
-// GET /api/branding
-func (s *Server) handleGetBranding(w http.ResponseWriter, r *http.Request) {
+var (
+	accentColorRegexp = regexp.MustCompile(`(?i)^#([0-9a-f]{6}|[0-9a-f]{3})$`)
+	allowedLogoMimes  = map[string]bool{
+		"image/png":  true,
+		"image/jpeg": true,
+		"image/jpg":  true,
+		"image/webp": true,
+	}
+)
+
+func defaultBetterDeskApply() []string {
+	return []string{"company_name", "phone", "email", "website", "logo", "accent_color"}
+}
+
+// loadBrandingConfig reads Client Branding from server_config with safe defaults.
+func (s *Server) loadBrandingConfig() BrandingConfig {
 	cfg := BrandingConfig{
+		SchemaVersion:  brandingSchemaVersion,
+		Revision:       "0",
 		CompanyName:    "BetterDesk",
 		AccentColor:    "#4f6ef7",
 		SupportContact: "",
 		SyncModes:      defaultSyncModes,
+		Profiles: BrandingProfiles{
+			BetterDesk: BrandingBetterDeskProfile{Apply: defaultBetterDeskApply()},
+			RustDesk:   BrandingRustDeskProfile{ConfigOptions: map[string]string{}},
+		},
 	}
 
-	// Load overrides from server_config
+	if s == nil || s.db == nil {
+		return cfg
+	}
+
 	if v, err := s.db.GetConfig("branding_company_name"); err == nil && v != "" {
 		cfg.CompanyName = v
+	}
+	if v, err := s.db.GetConfig("branding_phone"); err == nil && v != "" {
+		cfg.Phone = v
+	}
+	if v, err := s.db.GetConfig("branding_email"); err == nil && v != "" {
+		cfg.Email = v
+	}
+	if v, err := s.db.GetConfig("branding_website"); err == nil && v != "" {
+		cfg.Website = v
 	}
 	if v, err := s.db.GetConfig("branding_accent_color"); err == nil && v != "" {
 		cfg.AccentColor = v
@@ -69,7 +139,157 @@ func (s *Server) handleGetBranding(w http.ResponseWriter, r *http.Request) {
 			cfg.Colors = colors
 		}
 	}
+	if v, err := s.db.GetConfig("branding_logo"); err == nil && v != "" {
+		var logo BrandingLogo
+		if json.Unmarshal([]byte(v), &logo) == nil && (logo.DataBase64 != "" || logo.URL != "") {
+			cfg.Logo = &logo
+		}
+	}
+	if v, err := s.db.GetConfig("branding_revision"); err == nil && v != "" {
+		cfg.Revision = v
+	}
 
+	cfg.Profiles.RustDesk.ConfigOptions = rustDeskConfigOptionsFromBranding(cfg)
+	return cfg
+}
+
+func rustDeskConfigOptionsFromBranding(cfg BrandingConfig) map[string]string {
+	out := map[string]string{}
+	name := strings.TrimSpace(cfg.CompanyName)
+	if name != "" && !strings.EqualFold(name, "BetterDesk") {
+		out["display-name"] = name
+	}
+	return out
+}
+
+func brandingRevisionMillis(cfg BrandingConfig) int64 {
+	if cfg.Revision == "" || cfg.Revision == "0" {
+		return 0
+	}
+	if ms, err := strconv.ParseInt(cfg.Revision, 10, 64); err == nil {
+		return ms
+	}
+	return 0
+}
+
+func stripHTMLLike(s string) string {
+	s = strings.ReplaceAll(s, "<", "")
+	s = strings.ReplaceAll(s, ">", "")
+	return strings.TrimSpace(s)
+}
+
+func validateAccentColor(color string) error {
+	color = strings.TrimSpace(color)
+	if color == "" {
+		return nil
+	}
+	if !accentColorRegexp.MatchString(color) {
+		return fmt.Errorf("accent_color must be #RGB or #RRGGBB")
+	}
+	return nil
+}
+
+func validateBrandingLogo(logo *BrandingLogo) error {
+	if logo == nil {
+		return nil
+	}
+	logo.Mime = strings.ToLower(strings.TrimSpace(logo.Mime))
+	logo.DataBase64 = strings.TrimSpace(logo.DataBase64)
+	logo.URL = strings.TrimSpace(logo.URL)
+
+	if logo.DataBase64 == "" && logo.URL == "" {
+		return nil
+	}
+	if logo.DataBase64 != "" {
+		if logo.Mime == "" {
+			return fmt.Errorf("logo.mime is required with data_base64")
+		}
+		if !allowedLogoMimes[logo.Mime] {
+			return fmt.Errorf("logo.mime must be image/png, image/jpeg, or image/webp")
+		}
+		raw, err := base64.StdEncoding.DecodeString(logo.DataBase64)
+		if err != nil {
+			// Accept URL-safe / raw without padding variants used by browsers.
+			raw, err = base64.RawStdEncoding.DecodeString(logo.DataBase64)
+			if err != nil {
+				return fmt.Errorf("logo.data_base64 is invalid")
+			}
+		}
+		if len(raw) == 0 || len(raw) > brandingMaxLogoBytes {
+			return fmt.Errorf("logo must be between 1 byte and 512 KiB")
+		}
+		logo.URL = "" // prefer embedded payload when both present
+	}
+	if logo.URL != "" {
+		lower := strings.ToLower(logo.URL)
+		if !strings.HasPrefix(lower, "https://") && !strings.HasPrefix(lower, "http://") {
+			return fmt.Errorf("logo.url must be http(s)")
+		}
+		if strings.ContainsAny(logo.URL, "<>\"'") {
+			return fmt.Errorf("logo.url contains invalid characters")
+		}
+		if utf8.RuneCountInString(logo.URL) > brandingMaxWebsiteLen {
+			return fmt.Errorf("logo.url is too long")
+		}
+	}
+	return nil
+}
+
+func sameDeviceUUID(stored, incoming string) bool {
+	stored = strings.TrimSpace(stored)
+	incoming = strings.TrimSpace(incoming)
+	if stored == "" || incoming == "" {
+		return stored == incoming
+	}
+	if stored == incoming {
+		return true
+	}
+
+	for _, value := range []string{stored, incoming} {
+		decoded, err := hex.DecodeString(value)
+		if err == nil {
+			if value == stored && string(decoded) == incoming {
+				return true
+			}
+			if value == incoming && string(decoded) == stored {
+				return true
+			}
+		}
+	}
+	for _, encoding := range []*base64.Encoding{base64.StdEncoding, base64.RawStdEncoding} {
+		decoded, err := encoding.DecodeString(incoming)
+		if err == nil && string(decoded) == stored {
+			return true
+		}
+		decoded, err = encoding.DecodeString(stored)
+		if err == nil && string(decoded) == incoming {
+			return true
+		}
+	}
+	return false
+}
+
+func clipBrandingField(s string, max int) string {
+	s = stripHTMLLike(s)
+	if utf8.RuneCountInString(s) <= max {
+		return s
+	}
+	runes := []rune(s)
+	return string(runes[:max])
+}
+
+// handleGetBranding returns the branding configuration.
+// Public endpoint — no authentication required.
+// GET /api/branding
+func (s *Server) handleGetBranding(w http.ResponseWriter, r *http.Request) {
+	cfg := s.loadBrandingConfig()
+	etag := fmt.Sprintf(`"%s"`, cfg.Revision)
+	w.Header().Set("ETag", etag)
+	w.Header().Set("Cache-Control", "private, max-age=60")
+	if strings.TrimSpace(r.Header.Get("If-None-Match")) == etag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(cfg)
 }
@@ -77,38 +297,92 @@ func (s *Server) handleGetBranding(w http.ResponseWriter, r *http.Request) {
 // handleSaveBranding saves branding configuration. Admin only.
 // POST /api/branding
 func (s *Server) handleSaveBranding(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, brandingMaxLogoBytes*2)
 	var req struct {
 		CompanyName    *string           `json:"company_name"`
+		Phone          *string           `json:"phone"`
+		Email          *string           `json:"email"`
+		Website        *string           `json:"website"`
 		AccentColor    *string           `json:"accent_color"`
 		SupportContact *string           `json:"support_contact"`
 		Colors         map[string]string `json:"colors"`
+		Logo           *BrandingLogo     `json:"logo"`
+		ClearLogo      *bool             `json:"clear_logo"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
+	if req.AccentColor != nil {
+		if err := validateAccentColor(*req.AccentColor); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+	if req.Logo != nil {
+		if err := validateBrandingLogo(req.Logo); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	if req.CompanyName != nil {
-		s.db.SetConfig("branding_company_name", *req.CompanyName)
+		s.db.SetConfig("branding_company_name", clipBrandingField(*req.CompanyName, brandingMaxFieldLen))
+	}
+	if req.Phone != nil {
+		s.db.SetConfig("branding_phone", clipBrandingField(*req.Phone, brandingMaxFieldLen))
+	}
+	if req.Email != nil {
+		s.db.SetConfig("branding_email", clipBrandingField(*req.Email, brandingMaxFieldLen))
+	}
+	if req.Website != nil {
+		s.db.SetConfig("branding_website", clipBrandingField(*req.Website, brandingMaxWebsiteLen))
 	}
 	if req.AccentColor != nil {
-		s.db.SetConfig("branding_accent_color", *req.AccentColor)
+		s.db.SetConfig("branding_accent_color", strings.TrimSpace(*req.AccentColor))
 	}
 	if req.SupportContact != nil {
-		s.db.SetConfig("branding_support_contact", *req.SupportContact)
+		s.db.SetConfig("branding_support_contact", clipBrandingField(*req.SupportContact, brandingMaxFieldLen))
 	}
 	if req.Colors != nil {
-		if data, err := json.Marshal(req.Colors); err == nil {
+		cleaned := make(map[string]string, len(req.Colors))
+		for k, v := range req.Colors {
+			k = clipBrandingField(k, 64)
+			v = clipBrandingField(v, 64)
+			if k == "" {
+				continue
+			}
+			cleaned[k] = v
+		}
+		if data, err := json.Marshal(cleaned); err == nil {
 			s.db.SetConfig("branding_colors", string(data))
 		}
 	}
+	if req.ClearLogo != nil && *req.ClearLogo {
+		_ = s.db.DeleteConfig("branding_logo")
+	} else if req.Logo != nil {
+		if req.Logo.DataBase64 == "" && req.Logo.URL == "" {
+			_ = s.db.DeleteConfig("branding_logo")
+		} else if data, err := json.Marshal(req.Logo); err == nil {
+			s.db.SetConfig("branding_logo", string(data))
+		}
+	}
+
+	revision := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	s.db.SetConfig("branding_revision", revision)
 
 	if s.auditLog != nil {
 		s.auditLog.Log("branding_updated", s.remoteIP(r), getUsernameFromCtx(r), nil)
 	}
 
+	cfg := s.loadBrandingConfig()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":  true,
+		"revision": revision,
+		"branding": cfg,
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -123,8 +397,10 @@ type EnrollmentRequest struct {
 	Platform   string `json:"platform"`
 	Version    string `json:"version"`
 	DeviceType string `json:"device_type,omitempty"` // "betterdesk", "rustdesk", "os_agent", etc.
+	BundleID   string `json:"bundle_id,omitempty"`
+	Tags       string `json:"tags,omitempty"` // comma-separated enrollment metadata
 	PublicKey  string `json:"public_key,omitempty"`
-	Token      string `json:"token,omitempty"` // Optional enrollment token
+	Token      string `json:"token,omitempty"` // Optional enrollment credential, POST body only
 }
 
 // EnrollmentResponse is returned to the desktop client.
@@ -166,6 +442,40 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if isSupportAgentEnrollment(&req) {
+		// A Support Agent is a pre-configured passive endpoint. Unlike generic
+		// open enrollment, it must prove possession of its installation key
+		// before it can reserve a device ID, enter the pending queue, or bind
+		// bundle metadata. This prevents a public endpoint from being used to
+		// pre-register somebody else's Support Agent identity.
+		if strings.TrimSpace(req.UUID) == "" ||
+			strings.TrimSpace(req.BundleID) == "" ||
+			strings.TrimSpace(req.PublicKey) == "" {
+			resp := EnrollmentResponse{
+				Status:   "rejected",
+				DeviceID: req.DeviceID,
+				Message:  "support-agent enrollment requires uuid, bundle_id, and public_key",
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(resp)
+			return
+		}
+		if err := s.verifyEnrollmentDeviceProof(r, req.DeviceID, req.PublicKey); err != nil {
+			resp := EnrollmentResponse{
+				Status:   "rejected",
+				DeviceID: req.DeviceID,
+				Message:  "valid support-agent installation proof is required",
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(resp)
+			return
+		}
+		// Proof nonce is consumed above; mark the request so later token-issue
+		// authorization does not treat the same headers as a replay.
+		r = withEnrollmentProofVerified(r, req.DeviceID)
+	}
 
 	clientIP := s.remoteIP(r)
 	mode := s.cfg.EnrollmentMode
@@ -173,10 +483,48 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		mode = "open"
 	}
 
+	// Enrollment decisions and lifecycle blocks take precedence over an
+	// existing peer row. In particular, reject+ban creates a peer solely to
+	// retain audit metadata, so checking it after the existing-peer fast path
+	// would incorrectly approve that device and could reissue a credential.
+	if banned, _ := s.db.IsPeerBanned(req.DeviceID); banned {
+		resp := EnrollmentResponse{
+			Status:   "rejected",
+			DeviceID: req.DeviceID,
+			Message:  "Device is banned",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+	if removed, _ := s.db.IsPeerSoftDeleted(req.DeviceID); removed {
+		resp := EnrollmentResponse{
+			Status:   "rejected",
+			DeviceID: req.DeviceID,
+			Message:  "Device has been removed",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+	if rejected, _ := s.db.GetConfig(rejectedDevicePrefix + req.DeviceID); rejected != "" {
+		resp := EnrollmentResponse{
+			Status:   "rejected",
+			DeviceID: req.DeviceID,
+			Message:  "Device enrollment was rejected",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+
 	// Check if device already exists (re-registration = always approve)
 	existing, _ := s.db.GetPeer(req.DeviceID)
 	if existing != nil {
-		if req.UUID != "" && existing.UUID != "" && req.UUID != existing.UUID {
+		if req.UUID != "" && existing.UUID != "" && !sameDeviceUUID(existing.UUID, req.UUID) {
 			resp := EnrollmentResponse{
 				Status:            "rejected",
 				DeviceID:          req.DeviceID,
@@ -190,16 +538,36 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(resp)
 			return
 		}
+		// An already-enrolled device must never be allowed to replace its
+		// public key through an unauthenticated re-registration request.
+		var boundKeyErr error
 		if req.PublicKey != "" {
 			incomingCanonical, _ := canonicalizeDevicePublicKey(req.PublicKey)
-			if bound, err := s.loadBdMgmtPublicKey(req.DeviceID); err == nil && len(bound) == 32 {
+			if bound, err := s.loadBdMgmtPublicKey(req.DeviceID); err == nil {
 				boundCanonical := base64.StdEncoding.EncodeToString(bound)
 				if incomingCanonical != boundCanonical {
 					http.Error(w, "public_key does not match enrolled device identity", http.StatusForbidden)
 					return
 				}
-			} else if err := s.storeBdMgmtPublicKey(req.DeviceID, incomingCanonical); err != nil {
-				log.Printf("[API] Failed to bind public key for %s: %v", req.DeviceID, err)
+			} else {
+				boundKeyErr = err
+			}
+		} else {
+			_, boundKeyErr = s.loadBdMgmtPublicKey(req.DeviceID)
+		}
+		if isSupportAgentEnrollment(&req) {
+			bundleID := normalizeEnrollmentBundleID(req.BundleID)
+			boundBundleID, _ := s.db.GetConfig(deviceBundleIDPrefix + req.DeviceID)
+			boundBundleID = normalizeEnrollmentBundleID(boundBundleID)
+			if boundBundleID != "" && boundBundleID != bundleID {
+				http.Error(w, "bundle_id does not match enrolled device", http.StatusForbidden)
+				return
+			}
+			if boundBundleID == "" {
+				if err := s.db.SetConfig(deviceBundleIDPrefix+req.DeviceID, bundleID); err != nil {
+					http.Error(w, "failed to bind support-agent bundle", http.StatusInternalServerError)
+					return
+				}
 			}
 		}
 
@@ -211,30 +579,40 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		displayName, _ := s.db.GetConfig("device_display_name_" + req.DeviceID)
 
 		resp := s.buildEnrollmentResponse("approved", req.DeviceID, syncMode, displayName)
-		// Re-issue a device_token so an agent that lost its local copy
-		// (e.g. user reset agent-config) can recover authentication for the
-		// CDAP sidecar without manual intervention. Existing tokens remain
-		// valid — server stores only hashes so we cannot return the prior one.
-		if token, err := s.issueEnrollmentDeviceToken(req.DeviceID); err == nil {
-			resp.DeviceToken = token
-			log.Printf("[API] Re-issued enrollment device token for %s (len=%d)", req.DeviceID, len(token))
+		// Reissuing a token is privileged: require either the existing
+		// device-bound credential or a replay-protected proof of possession of
+		// the key already bound to this device. A UUID alone is metadata, not a
+		// secret, and must never authorize token recovery.
+		hasBoundCredential := s.hasEnrollmentCredential(
+			req.DeviceID,
+			enrollmentTokenCandidates(r, req.Token),
+			true,
+		)
+		authorized := s.authorizeEnrollmentTokenIssue(r, req.DeviceID, req.PublicKey, req.Token, true)
+		if authorized {
+			// A legacy device can attach a management key only after proving
+			// possession of a bound device token. Without that credential,
+			// accepting a new key here would let an attacker seize the identity.
+			if boundKeyErr != nil && req.PublicKey != "" {
+				if err := s.storeBdMgmtPublicKey(req.DeviceID, req.PublicKey); err != nil {
+					log.Printf("[API] Failed to bind public key for %s: %v", req.DeviceID, err)
+				}
+			}
+			// A normal authenticated refresh must not rotate/re-emit a usable
+			// device token. Only recovery with proof but without an active
+			// bound credential gets a replacement.
+			if !hasBoundCredential {
+				if token, err := s.issueEnrollmentDeviceToken(req.DeviceID); err == nil {
+					resp.DeviceToken = token
+					log.Printf("[API] Re-issued enrollment device token for %s (len=%d)", req.DeviceID, len(token))
+				} else {
+					log.Printf("[API] Failed to re-issue enrollment device token for %s: %v", req.DeviceID, err)
+				}
+			}
 		} else {
-			log.Printf("[API] Failed to re-issue enrollment device token for %s: %v", req.DeviceID, err)
+			resp.Message = "Device identity proof is required to issue a device token"
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
-		return
-	}
-
-	// Check if banned or soft-deleted
-	if banned, _ := s.db.IsPeerBanned(req.DeviceID); banned {
-		resp := EnrollmentResponse{
-			Status:   "rejected",
-			DeviceID: req.DeviceID,
-			Message:  "Device is banned",
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
@@ -244,10 +622,18 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		// Auto-approve: create peer immediately
 		s.createPeerFromEnrollment(&req, clientIP)
 		resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
-		if token, err := s.issueEnrollmentDeviceToken(req.DeviceID); err == nil {
-			resp.DeviceToken = token
+		// Open mode admits a new device, but it does not make an unauthenticated
+		// request eligible to receive a reusable device credential. The first
+		// request can prove possession of its supplied key; a later status poll
+		// can use that now-bound key if the first request did not include proof.
+		if s.authorizeEnrollmentTokenIssue(r, req.DeviceID, req.PublicKey, req.Token, false) {
+			if token, err := s.issueEnrollmentDeviceToken(req.DeviceID); err == nil {
+				resp.DeviceToken = token
+			} else {
+				log.Printf("[API] Failed to auto-issue enrollment device token for %s: %v", req.DeviceID, err)
+			}
 		} else {
-			log.Printf("[API] Failed to auto-issue enrollment device token for %s: %v", req.DeviceID, err)
+			resp.Message = "Device identity proof is required to issue a device token"
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
@@ -261,7 +647,20 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 	case "managed":
 		// Each support-agent installation registers without a shared bundle token.
 		// Operator approval issues a unique device_token per device.
-		s.storePendingDevice(&req, clientIP)
+		if err := s.storePendingDevice(&req, clientIP); err != nil {
+			resp := EnrollmentResponse{
+				Status:            "rejected",
+				DeviceID:          req.DeviceID,
+				Error:             "identity_conflict",
+				Message:           "Device ID is already pending for a different machine",
+				SuggestedDeviceID: suggestAlternateDeviceID(req.DeviceID),
+				ServerTime:        timeNowUnixMilli(),
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(resp)
+			return
+		}
 		resp := EnrollmentResponse{
 			Status:       "pending",
 			DeviceID:     req.DeviceID,
@@ -282,7 +681,7 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		// Emit event for web panel real-time update
 		if s.eventBus != nil {
 			s.eventBus.Publish(events.Event{
-				Type: "device_pending",
+				Type: events.EventEnrollmentPending,
 				Data: map[string]string{
 					"device_id": req.DeviceID,
 					"hostname":  req.Hostname,
@@ -295,7 +694,8 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 	case "locked":
 		// Only allow enrollment with a valid token
 		if req.Token != "" {
-			if tok, err := s.db.GetDeviceTokenByHash(hashToken(req.Token)); err == nil && tok != nil {
+			if tok, err := s.db.ValidateToken(hashToken(req.Token)); err == nil && tok != nil &&
+				(tok.PeerID == "" || tok.PeerID == req.DeviceID) {
 				// Valid token — activate and bind to this device, then approve
 				if tok.Status == "pending" {
 					_ = s.db.BindTokenToPeer(tok.TokenHash, req.DeviceID)
@@ -341,20 +741,78 @@ func (s *Server) handleDeviceRegisterStatus(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// A banned, removed, or explicitly rejected device must not use the
+	// otherwise-public status endpoint to obtain an approved response or a
+	// replacement token.
+	if banned, _ := s.db.IsPeerBanned(deviceID); banned {
+		resp := EnrollmentResponse{
+			Status:   "rejected",
+			DeviceID: deviceID,
+			Message:  "Device is banned",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+	if removed, _ := s.db.IsPeerSoftDeleted(deviceID); removed {
+		resp := EnrollmentResponse{
+			Status:   "rejected",
+			DeviceID: deviceID,
+			Message:  "Device has been removed",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+	if rejected, _ := s.db.GetConfig(rejectedDevicePrefix + deviceID); rejected != "" {
+		resp := EnrollmentResponse{
+			Status:   "rejected",
+			DeviceID: deviceID,
+			Message:  "Device enrollment was rejected",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+
 	// Check if approved (exists in peers table)
 	if peer, _ := s.db.GetPeer(deviceID); peer != nil {
+		if peer.Banned || peer.Disabled || peer.SoftDeleted {
+			resp := EnrollmentResponse{
+				Status:     "rejected",
+				DeviceID:   deviceID,
+				ServerTime: timeNowUnixMilli(),
+				Message:    "Device enrollment is no longer active",
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(resp)
+			return
+		}
 		syncMode, _ := s.db.GetConfig("device_sync_mode_" + deviceID)
 		if syncMode == "" {
 			syncMode = "standard"
 		}
 		displayName, _ := s.db.GetConfig("device_display_name_" + deviceID)
 		resp := s.buildEnrollmentResponse("approved", deviceID, syncMode, displayName)
-		// Issue a device_token on poll (same as re-register) so agents approved
-		// via the panel recover CDAP auth without another POST /devices/register.
-		if token, err := s.issueEnrollmentDeviceToken(deviceID); err == nil {
-			resp.DeviceToken = token
+		// Status polling remains available for enrollment state, but token
+		// issuance requires the device-bound credential or a signed proof.
+		hasBoundCredential := s.hasEnrollmentCredential(
+			deviceID,
+			enrollmentTokenCandidates(r, ""),
+			true,
+		)
+		if !hasBoundCredential && s.authorizeEnrollmentTokenIssue(r, deviceID, "", "", true) {
+			if token, err := s.issueEnrollmentDeviceToken(deviceID); err == nil {
+				resp.DeviceToken = token
+			} else {
+				log.Printf("[API] Failed to issue enrollment device token on status poll for %s: %v", deviceID, err)
+			}
 		} else {
-			log.Printf("[API] Failed to issue enrollment device token on status poll for %s: %v", deviceID, err)
+			resp.Message = "Device identity proof is required to issue a device token"
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
@@ -376,20 +834,6 @@ func (s *Server) handleDeviceRegisterStatus(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Check if explicitly rejected
-	rejected, _ := s.db.GetConfig("rejected_device_" + deviceID)
-	if rejected != "" {
-		resp := EnrollmentResponse{
-			Status:   "rejected",
-			DeviceID: deviceID,
-			Message:  "Device enrollment was rejected",
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(resp)
-		return
-	}
-
 	// Unknown — not registered
 	resp := EnrollmentResponse{
 		Status:   "unknown",
@@ -405,6 +849,126 @@ func (s *Server) handleDeviceRegisterStatus(w http.ResponseWriter, r *http.Reque
 //  Enrollment management — operator approval (admin/operator only)
 // ---------------------------------------------------------------------------
 
+const (
+	enrollmentDecisionPrefix  = "enrollment_decision_"
+	rejectedDevicePrefix      = "rejected_device_"
+	pendingDevicePrefix       = "pending_device_"
+	enrollmentRejectBanReason = "enrollment rejected"
+)
+
+// enrollmentDecision is persisted under enrollment_decision_<id> so Approved /
+// Rejected filters can show Go enrollment history (#351).
+type enrollmentDecision struct {
+	DeviceID   string `json:"device_id"`
+	UUID       string `json:"uuid,omitempty"`
+	Hostname   string `json:"hostname"`
+	Platform   string `json:"platform"`
+	Version    string `json:"version"`
+	DeviceType string `json:"device_type,omitempty"`
+	BundleID   string `json:"bundle_id,omitempty"`
+	Tags       string `json:"tags,omitempty"`
+	IP         string `json:"ip"`
+	Status     string `json:"status"` // approved | rejected
+	Banned     bool   `json:"banned"`
+	DecidedAt  string `json:"decided_at"`
+	CreatedAt  string `json:"created_at,omitempty"`
+	Actor      string `json:"actor,omitempty"`
+}
+
+type pendingEnrollmentMeta struct {
+	DeviceID   string `json:"device_id"`
+	UUID       string `json:"uuid"`
+	Hostname   string `json:"hostname"`
+	Platform   string `json:"platform"`
+	Version    string `json:"version"`
+	DeviceType string `json:"device_type,omitempty"`
+	BundleID   string `json:"bundle_id,omitempty"`
+	Tags       string `json:"tags,omitempty"`
+	PublicKey  string `json:"public_key"`
+	IP         string `json:"ip"`
+	CreatedAt  string `json:"created_at"`
+}
+
+func parsePendingEnrollmentMeta(raw string) pendingEnrollmentMeta {
+	var meta pendingEnrollmentMeta
+	if raw == "" {
+		return meta
+	}
+	_ = json.Unmarshal([]byte(raw), &meta)
+	return meta
+}
+
+func (s *Server) storeEnrollmentDecision(d enrollmentDecision) {
+	if d.DeviceID == "" {
+		return
+	}
+	data, err := json.Marshal(d)
+	if err != nil {
+		log.Printf("[API] storeEnrollmentDecision: marshal failed for %s: %v", d.DeviceID, err)
+		return
+	}
+	if err := s.db.SetConfig(enrollmentDecisionPrefix+d.DeviceID, string(data)); err != nil {
+		log.Printf("[API] storeEnrollmentDecision: store failed for %s: %v", d.DeviceID, err)
+	}
+}
+
+func (s *Server) clearEnrollmentRejectionState(deviceID string) {
+	if deviceID == "" || s.db == nil {
+		return
+	}
+	_ = s.db.DeleteConfig(rejectedDevicePrefix + deviceID)
+	// Keep approved history; only drop rejection decisions so Filters stay accurate.
+	if raw, err := s.db.GetConfig(enrollmentDecisionPrefix + deviceID); err == nil && raw != "" {
+		var d enrollmentDecision
+		if json.Unmarshal([]byte(raw), &d) == nil && d.Status == "rejected" {
+			_ = s.db.DeleteConfig(enrollmentDecisionPrefix + deviceID)
+		}
+	}
+}
+
+// removeEnrollmentRejectAuditPeer permanently removes a peer that existed only
+// so Reject & Ban could show under Devices → Banned. Leaving the row after
+// clear/unban would make checkEnrollmentPermission treat the device as already
+// enrolled and bypass managed pending approval (#351).
+func (s *Server) removeEnrollmentRejectAuditPeer(deviceID string) error {
+	if deviceID == "" || s.db == nil {
+		return nil
+	}
+	if s.peers != nil {
+		s.peers.Remove(deviceID)
+	}
+	_ = s.db.DeleteConfig(bdMgmtPublicKeyConfigPref + deviceID)
+	_ = s.db.DeleteConfig(deviceBundleIDPrefix + deviceID)
+	if err := s.db.HardDeletePeer(deviceID); err != nil {
+		log.Printf("[API] removeEnrollmentRejectAuditPeer: HardDeletePeer %s: %v", deviceID, err)
+		return err
+	}
+	return nil
+}
+
+// enrollmentRejectAuditPeer reports whether clearing rejection / unban should
+// remove the peers row so the device must re-enter the pending queue.
+func enrollmentRejectAuditPeer(peerRow *db.Peer, rejectedRaw, decisionRaw string) bool {
+	if peerRow != nil && peerRow.BanReason == enrollmentRejectBanReason {
+		return true
+	}
+	if decisionRaw != "" {
+		var d enrollmentDecision
+		if json.Unmarshal([]byte(decisionRaw), &d) == nil && d.Status == "rejected" && d.Banned {
+			return true
+		}
+	}
+	if rejectedRaw != "" {
+		var meta struct {
+			Banned bool `json:"banned"`
+		}
+		if json.Unmarshal([]byte(rejectedRaw), &meta) == nil && meta.Banned {
+			return true
+		}
+	}
+	return false
+}
+
 // handleListPendingDevices returns all pending enrollment requests.
 // GET /api/enrollment/pending
 func (s *Server) handleListPendingDevices(w http.ResponseWriter, r *http.Request) {
@@ -412,15 +976,6 @@ func (s *Server) handleListPendingDevices(w http.ResponseWriter, r *http.Request
 	// We scan all config keys with this prefix.
 	// Note: For production scale, a dedicated table would be better.
 	// Using server_config for now since it's available and simple.
-
-	type PendingDevice struct {
-		DeviceID  string `json:"device_id"`
-		Hostname  string `json:"hostname"`
-		Platform  string `json:"platform"`
-		Version   string `json:"version"`
-		IP        string `json:"ip"`
-		CreatedAt string `json:"created_at"`
-	}
 
 	// List all pending_ entries
 	pending := s.listPendingDevices()
@@ -430,6 +985,113 @@ func (s *Server) handleListPendingDevices(w http.ResponseWriter, r *http.Request
 		"devices": pending,
 		"count":   len(pending),
 	})
+}
+
+// handleListEnrollmentHistory returns approved/rejected Go enrollment decisions.
+// GET /api/enrollment/history?status=approved|rejected
+func (s *Server) handleListEnrollmentHistory(w http.ResponseWriter, r *http.Request) {
+	statusFilter := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("status")))
+	if statusFilter != "" && statusFilter != "approved" && statusFilter != "rejected" {
+		http.Error(w, "Invalid status (approved, rejected)", http.StatusBadRequest)
+		return
+	}
+
+	devices := s.listEnrollmentHistory(statusFilter)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"devices": devices,
+		"count":   len(devices),
+	})
+}
+
+func (s *Server) listEnrollmentHistory(statusFilter string) []enrollmentDecision {
+	var result []enrollmentDecision
+	seen := make(map[string]struct{})
+	configs, err := s.db.ListConfigByPrefix(enrollmentDecisionPrefix)
+	if err != nil {
+		log.Printf("[API] listEnrollmentHistory: %v", err)
+	} else {
+		for _, cfg := range configs {
+			var d enrollmentDecision
+			if json.Unmarshal([]byte(cfg.Value), &d) != nil || d.DeviceID == "" {
+				continue
+			}
+			if statusFilter != "" && d.Status != statusFilter {
+				continue
+			}
+			seen[d.DeviceID] = struct{}{}
+			result = append(result, d)
+		}
+	}
+
+	// Legacy builds stored rejected_device_* without enrollment_decision_*.
+	// Surface those orphans under Rejected (and All) so operators can Allow re-enroll (#351).
+	if statusFilter == "" || statusFilter == "rejected" {
+		rejectedConfigs, rerr := s.db.ListConfigByPrefix(rejectedDevicePrefix)
+		if rerr != nil {
+			log.Printf("[API] listEnrollmentHistory orphans: %v", rerr)
+			return result
+		}
+		for _, cfg := range rejectedConfigs {
+			deviceID := strings.TrimPrefix(cfg.Key, rejectedDevicePrefix)
+			if deviceID == "" {
+				continue
+			}
+			if _, ok := seen[deviceID]; ok {
+				continue
+			}
+			d := enrollmentDecision{
+				DeviceID:  deviceID,
+				Status:    "rejected",
+				DecidedAt: timeNowISO(),
+			}
+			var meta pendingEnrollmentMeta
+			if json.Unmarshal([]byte(cfg.Value), &meta) == nil {
+				if meta.DeviceID != "" {
+					d.DeviceID = meta.DeviceID
+				}
+				d.UUID = meta.UUID
+				d.Hostname = meta.Hostname
+				d.Platform = meta.Platform
+				d.Version = meta.Version
+				d.DeviceType = meta.DeviceType
+				d.BundleID = meta.BundleID
+				d.Tags = meta.Tags
+				d.IP = meta.IP
+				d.CreatedAt = meta.CreatedAt
+				if meta.CreatedAt != "" {
+					d.DecidedAt = meta.CreatedAt
+				}
+			}
+			var bannedMeta struct {
+				Banned    bool   `json:"banned"`
+				DecidedAt string `json:"decided_at"`
+			}
+			if json.Unmarshal([]byte(cfg.Value), &bannedMeta) == nil {
+				d.Banned = bannedMeta.Banned
+				if bannedMeta.DecidedAt != "" {
+					d.DecidedAt = bannedMeta.DecidedAt
+				}
+			}
+			// Legacy rejects stored {"rejected":true} with no IP — best-effort backfill from peers (#351).
+			if d.IP == "" && s.db != nil {
+				if peerRow, perr := s.db.GetPeer(d.DeviceID); perr == nil && peerRow != nil && peerRow.IP != "" {
+					d.IP = peerRow.IP
+					var raw map[string]interface{}
+					if json.Unmarshal([]byte(cfg.Value), &raw) != nil || raw == nil {
+						raw = map[string]interface{}{"rejected": true}
+					}
+					raw["ip"] = peerRow.IP
+					if enriched, merr := json.Marshal(raw); merr == nil {
+						_ = s.db.SetConfig(cfg.Key, string(enriched))
+					}
+				}
+			}
+			seen[d.DeviceID] = struct{}{}
+			result = append(result, d)
+		}
+	}
+	return result
 }
 
 // handleApproveDevice approves a pending enrollment request.
@@ -462,32 +1124,28 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Load pending device data
-	pendingJSON, _ := s.db.GetConfig("pending_device_" + deviceID)
+	pendingJSON, _ := s.db.GetConfig(pendingDevicePrefix + deviceID)
 	if pendingJSON == "" {
 		http.Error(w, "Device not found in pending list", http.StatusNotFound)
 		return
 	}
 
-	var pending struct {
-		DeviceID  string `json:"device_id"`
-		UUID      string `json:"uuid"`
-		Hostname  string `json:"hostname"`
-		Platform  string `json:"platform"`
-		Version   string `json:"version"`
-		PublicKey string `json:"public_key"`
-		IP        string `json:"ip"`
-		CreatedAt string `json:"created_at"`
+	pending := parsePendingEnrollmentMeta(pendingJSON)
+	if pending.DeviceID == "" {
+		pending.DeviceID = deviceID
 	}
-	json.Unmarshal([]byte(pendingJSON), &pending)
 
 	// Create the peer
 	enrollment := &EnrollmentRequest{
-		DeviceID:  pending.DeviceID,
-		UUID:      pending.UUID,
-		Hostname:  pending.Hostname,
-		Platform:  pending.Platform,
-		Version:   pending.Version,
-		PublicKey: pending.PublicKey,
+		DeviceID:   pending.DeviceID,
+		UUID:       pending.UUID,
+		Hostname:   pending.Hostname,
+		Platform:   pending.Platform,
+		Version:    pending.Version,
+		DeviceType: pending.DeviceType,
+		BundleID:   pending.BundleID,
+		Tags:       pending.Tags,
+		PublicKey:  pending.PublicKey,
 	}
 	s.createPeerFromEnrollment(enrollment, pending.IP)
 
@@ -495,21 +1153,45 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 	s.db.SetConfig("device_sync_mode_"+deviceID, syncMode)
 	if req.DisplayName != "" {
 		s.db.SetConfig("device_display_name_"+deviceID, req.DisplayName)
-		// Also update the peer's note field for display
-		s.db.UpdatePeerFields(deviceID, map[string]string{"note": req.DisplayName})
+		// Persist on the peer so Devices list prefers display_name over hostname.
+		s.db.UpdatePeerFields(deviceID, map[string]string{
+			"display_name": req.DisplayName,
+			"note":         req.DisplayName,
+		})
 	}
 
-	// Apply tags if provided (comma-separated, normalized)
-	tags := normalizeEnrollmentTags(req.Tags)
-	if tags != "" {
+	// Preserve enrollment-provided tags unless the approving operator supplied
+	// an explicit replacement.
+	tags := normalizeEnrollmentTags(pending.Tags)
+	if operatorTags := normalizeEnrollmentTags(req.Tags); operatorTags != "" {
+		tags = operatorTags
 		s.db.UpdatePeerFields(deviceID, map[string]string{"tags": tags})
 	}
 
-	// Remove from pending
-	s.db.DeleteConfig("pending_device_" + deviceID)
+	// Remove from pending and clear any prior rejection lock (#351).
+	s.db.DeleteConfig(pendingDevicePrefix + deviceID)
+	s.db.DeleteConfig(rejectedDevicePrefix + deviceID)
+
+	actor := getUsernameFromCtx(r)
+	s.storeEnrollmentDecision(enrollmentDecision{
+		DeviceID:   deviceID,
+		UUID:       pending.UUID,
+		Hostname:   pending.Hostname,
+		Platform:   pending.Platform,
+		Version:    pending.Version,
+		DeviceType: pending.DeviceType,
+		BundleID:   pending.BundleID,
+		Tags:       tags,
+		IP:         pending.IP,
+		Status:     "approved",
+		Banned:     false,
+		DecidedAt:  timeNowISO(),
+		CreatedAt:  pending.CreatedAt,
+		Actor:      actor,
+	})
 
 	if s.auditLog != nil {
-		s.auditLog.Log("device_approved", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("device_approved", s.remoteIP(r), actor, map[string]string{
 			"device_id": deviceID, "sync_mode": syncMode, "display_name": req.DisplayName, "tags": tags,
 		})
 	}
@@ -549,20 +1231,83 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 	// Body is optional; ignore decode errors (empty body = no ban).
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	// Remove from pending
-	s.db.DeleteConfig("pending_device_" + deviceID)
-	// Store rejection marker (so status poll returns "rejected")
-	s.db.SetConfig("rejected_device_"+deviceID, `{"rejected":true}`)
+	pendingJSON, _ := s.db.GetConfig(pendingDevicePrefix + deviceID)
+	pending := parsePendingEnrollmentMeta(pendingJSON)
+	if pending.DeviceID == "" {
+		pending.DeviceID = deviceID
+	}
 
-	// Optionally ban the device so subsequent registration attempts are blocked.
+	// Remove from pending
+	s.db.DeleteConfig(pendingDevicePrefix + deviceID)
+
+	// Store rejection marker with metadata (status poll + history UI).
+	rejectedPayload, _ := json.Marshal(map[string]interface{}{
+		"rejected":    true,
+		"device_id":   deviceID,
+		"uuid":        pending.UUID,
+		"hostname":    pending.Hostname,
+		"platform":    pending.Platform,
+		"version":     pending.Version,
+		"device_type": pending.DeviceType,
+		"bundle_id":   pending.BundleID,
+		"tags":        pending.Tags,
+		"ip":          pending.IP,
+		"created_at":  pending.CreatedAt,
+		"banned":      req.Ban,
+		"decided_at":  timeNowISO(),
+	})
+	s.db.SetConfig(rejectedDevicePrefix+deviceID, string(rejectedPayload))
+
+	// Optionally ban so Devices → Banned shows the device (#351).
+	// Pending enrollments often have no peers row yet — create one first.
 	if req.Ban {
-		if err := s.db.BanPeer(deviceID, "enrollment rejected"); err != nil {
+		existing, err := s.db.GetPeer(deviceID)
+		if err != nil {
+			log.Printf("[API] handleRejectDevice: GetPeer %s: %v", deviceID, err)
+		}
+		if existing == nil {
+			s.createPeerFromEnrollment(&EnrollmentRequest{
+				DeviceID:   pending.DeviceID,
+				UUID:       pending.UUID,
+				Hostname:   pending.Hostname,
+				Platform:   pending.Platform,
+				Version:    pending.Version,
+				DeviceType: pending.DeviceType,
+				BundleID:   pending.BundleID,
+				Tags:       pending.Tags,
+				PublicKey:  pending.PublicKey,
+			}, pending.IP)
+		}
+		if err := s.db.BanPeer(deviceID, enrollmentRejectBanReason); err != nil {
 			log.Printf("[API] handleRejectDevice: failed to ban %s: %v", deviceID, err)
+		} else {
+			if s.peers != nil {
+				s.peers.Remove(deviceID)
+			}
+			_ = s.db.UpdatePeerStatus(deviceID, "OFFLINE", "")
 		}
 	}
 
+	actor := getUsernameFromCtx(r)
+	s.storeEnrollmentDecision(enrollmentDecision{
+		DeviceID:   deviceID,
+		UUID:       pending.UUID,
+		Hostname:   pending.Hostname,
+		Platform:   pending.Platform,
+		Version:    pending.Version,
+		DeviceType: pending.DeviceType,
+		BundleID:   pending.BundleID,
+		Tags:       pending.Tags,
+		IP:         pending.IP,
+		Status:     "rejected",
+		Banned:     req.Ban,
+		DecidedAt:  timeNowISO(),
+		CreatedAt:  pending.CreatedAt,
+		Actor:      actor,
+	})
+
 	if s.auditLog != nil {
-		s.auditLog.Log("device_rejected", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("device_rejected", s.remoteIP(r), actor, map[string]string{
 			"device_id": deviceID,
 			"banned":    strconv.FormatBool(req.Ban),
 		})
@@ -582,6 +1327,69 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "banned": req.Ban})
 }
 
+// handleClearEnrollmentRejection removes the rejection lock so the device can
+// re-enter the pending queue. Enrollment-reject audit peers are hard-deleted
+// (not merely unbanned) so managed mode cannot treat them as already enrolled.
+// POST /api/enrollment/clear-rejection/{id}
+func (s *Server) handleClearEnrollmentRejection(w http.ResponseWriter, r *http.Request) {
+	deviceID := r.PathValue("id")
+	if deviceID == "" {
+		http.Error(w, "Device ID required", http.StatusBadRequest)
+		return
+	}
+
+	rejected, _ := s.db.GetConfig(rejectedDevicePrefix + deviceID)
+	decisionRaw, _ := s.db.GetConfig(enrollmentDecisionPrefix + deviceID)
+	if rejected == "" && decisionRaw == "" {
+		http.Error(w, "No enrollment rejection found for device", http.StatusNotFound)
+		return
+	}
+
+	peerRow, _ := s.db.GetPeer(deviceID)
+	removeAudit := enrollmentRejectAuditPeer(peerRow, rejected, decisionRaw)
+
+	s.clearEnrollmentRejectionState(deviceID)
+
+	unbanned := false
+	peerRemoved := false
+	if removeAudit {
+		if err := s.removeEnrollmentRejectAuditPeer(deviceID); err != nil {
+			log.Printf("[API] handleClearEnrollmentRejection: remove audit peer %s: %v", deviceID, err)
+		} else {
+			unbanned = true
+			peerRemoved = true
+		}
+	}
+
+	actor := getUsernameFromCtx(r)
+	if s.auditLog != nil {
+		s.auditLog.Log("enrollment_rejection_cleared", s.remoteIP(r), actor, map[string]string{
+			"device_id":    deviceID,
+			"unbanned":     strconv.FormatBool(unbanned),
+			"peer_removed": strconv.FormatBool(peerRemoved),
+		})
+	}
+
+	if s.eventBus != nil {
+		s.eventBus.Publish(events.Event{
+			Type: "enrollment_rejection_cleared",
+			Data: map[string]string{
+				"device_id":    deviceID,
+				"unbanned":     strconv.FormatBool(unbanned),
+				"peer_removed": strconv.FormatBool(peerRemoved),
+			},
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":      true,
+		"device_id":    deviceID,
+		"unbanned":     unbanned,
+		"peer_removed": peerRemoved,
+	})
+}
+
 // ---------------------------------------------------------------------------
 //  Internal helpers
 // ---------------------------------------------------------------------------
@@ -596,29 +1404,9 @@ func (s *Server) buildEnrollmentResponse(status, deviceID, syncMode, displayName
 		HeartbeatSec: 15,
 	}
 
-	// Inline branding
-	branding := &BrandingConfig{
-		CompanyName:    "BetterDesk",
-		AccentColor:    "#4f6ef7",
-		SupportContact: "",
-		SyncModes:      defaultSyncModes,
-	}
-	if v, _ := s.db.GetConfig("branding_company_name"); v != "" {
-		branding.CompanyName = v
-	}
-	if v, _ := s.db.GetConfig("branding_accent_color"); v != "" {
-		branding.AccentColor = v
-	}
-	if v, _ := s.db.GetConfig("branding_support_contact"); v != "" {
-		branding.SupportContact = v
-	}
-	if v, _ := s.db.GetConfig("branding_colors"); v != "" {
-		var colors map[string]string
-		if json.Unmarshal([]byte(v), &colors) == nil {
-			branding.Colors = colors
-		}
-	}
-	resp.Branding = branding
+	// Inline branding (same source as GET /api/branding)
+	branding := s.loadBrandingConfig()
+	resp.Branding = &branding
 
 	// Server public key
 	if s.keyPair != nil {
@@ -654,10 +1442,11 @@ func (s *Server) issueEnrollmentDeviceToken(deviceID string) (string, error) {
 }
 
 func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP string) {
-	devType := req.DeviceType
+	devType := strings.TrimSpace(req.DeviceType)
 	if devType == "" {
 		devType = "betterdesk"
 	}
+	tags := normalizeEnrollmentTags(req.Tags)
 
 	s.db.UpsertPeer(&db.Peer{
 		ID:         req.DeviceID,
@@ -667,6 +1456,7 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 		OS:         req.Platform,
 		Version:    req.Version,
 		DeviceType: devType,
+		Tags:       tags,
 		Status:     "ONLINE",
 	})
 
@@ -675,8 +1465,19 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 		s.db.UpdatePeerSysinfo(req.DeviceID, req.Hostname, req.Platform, req.Version)
 	}
 
-	// Persist device_type via UpdatePeerFields
-	s.db.UpdatePeerFields(req.DeviceID, map[string]string{"device_type": devType})
+	// Persist metadata via UpdatePeerFields so both SQLite and PostgreSQL
+	// retain it when the peer row already existed.
+	fields := map[string]string{"device_type": devType}
+	if tags != "" {
+		fields["tags"] = tags
+	}
+	s.db.UpdatePeerFields(req.DeviceID, fields)
+
+	if bundleID := normalizeEnrollmentBundleID(req.BundleID); bundleID != "" {
+		if err := s.db.SetConfig(deviceBundleIDPrefix+req.DeviceID, bundleID); err != nil {
+			log.Printf("[API] Failed to persist bundle ID for %s: %v", req.DeviceID, err)
+		}
+	}
 
 	if req.PublicKey != "" {
 		if err := s.storeBdMgmtPublicKey(req.DeviceID, req.PublicKey); err != nil {
@@ -685,26 +1486,128 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 	}
 }
 
-type pendingDeviceInfo struct {
-	DeviceID  string `json:"device_id"`
-	Hostname  string `json:"hostname"`
-	Platform  string `json:"platform"`
-	Version   string `json:"version"`
-	IP        string `json:"ip"`
-	CreatedAt string `json:"created_at"`
+// pendingDeviceInfo is also returned to the approval UI. It intentionally
+// mirrors pendingEnrollmentMeta so UUID, device type, tags, bundle ID, and
+// public-key binding survive the pending → approved transition.
+type pendingDeviceInfo = pendingEnrollmentMeta
+
+const deviceBundleIDPrefix = "device_bundle_id_"
+
+func normalizeEnrollmentBundleID(raw string) string {
+	bundleID := strings.TrimSpace(raw)
+	if len(bundleID) > 128 {
+		return bundleID[:128]
+	}
+	return bundleID
 }
 
-func (s *Server) storePendingDevice(req *EnrollmentRequest, clientIP string) {
-	info := pendingDeviceInfo{
-		DeviceID:  req.DeviceID,
-		Hostname:  req.Hostname,
-		Platform:  req.Platform,
-		Version:   req.Version,
-		IP:        clientIP,
-		CreatedAt: timeNowISO(),
+func isSupportAgentEnrollment(req *EnrollmentRequest) bool {
+	if req == nil {
+		return false
 	}
-	data, _ := json.Marshal(info)
-	s.db.SetConfig("pending_device_"+req.DeviceID, string(data))
+	switch strings.ToLower(strings.TrimSpace(req.DeviceType)) {
+	case "os_agent", "support-agent", "support_agent":
+		return true
+	}
+	for _, tag := range strings.FieldsFunc(strings.ToLower(req.Tags), func(r rune) bool {
+		return r == ',' || r == ';' || r == '|' || r == ' ' || r == '\t' || r == '\n'
+	}) {
+		if tag == "support-agent" || tag == "support_agent" {
+			return true
+		}
+	}
+	return false
+}
+
+// storePendingDevice keeps the first identity submission immutable. Otherwise
+// a later unauthenticated retry could replace the public key used to recover a
+// token after operator approval. Empty display metadata from an earlier signal
+// queue may be enriched when a later HTTP enrollment supplies hostname/os/version.
+func (s *Server) storePendingDevice(req *EnrollmentRequest, clientIP string) error {
+	if raw, err := s.db.GetConfig(pendingDevicePrefix + req.DeviceID); err == nil && raw != "" {
+		existing := parsePendingEnrollmentMeta(raw)
+		if existing.DeviceID == "" {
+			existing.DeviceID = req.DeviceID
+		}
+		if existing.UUID != "" && req.UUID != "" && existing.UUID != req.UUID {
+			return fmt.Errorf("pending device UUID does not match")
+		}
+		if existing.PublicKey != "" && req.PublicKey != "" {
+			incoming, _ := canonicalizeDevicePublicKey(req.PublicKey)
+			stored, err := canonicalizeDevicePublicKey(existing.PublicKey)
+			if err != nil || incoming != stored {
+				return fmt.Errorf("pending device public key does not match")
+			}
+		}
+		if existing.BundleID != "" && req.BundleID != "" &&
+			normalizeEnrollmentBundleID(existing.BundleID) != normalizeEnrollmentBundleID(req.BundleID) {
+			return fmt.Errorf("pending device bundle ID does not match")
+		}
+		changed := false
+		if existing.Hostname == "" && req.Hostname != "" {
+			existing.Hostname = req.Hostname
+			changed = true
+		}
+		if existing.Platform == "" && req.Platform != "" {
+			existing.Platform = req.Platform
+			changed = true
+		}
+		if existing.Version == "" && req.Version != "" {
+			existing.Version = req.Version
+			changed = true
+		}
+		if existing.DeviceType == "" && strings.TrimSpace(req.DeviceType) != "" {
+			existing.DeviceType = strings.TrimSpace(req.DeviceType)
+			changed = true
+		}
+		if existing.BundleID == "" && normalizeEnrollmentBundleID(req.BundleID) != "" {
+			existing.BundleID = normalizeEnrollmentBundleID(req.BundleID)
+			changed = true
+		}
+		if existing.Tags == "" && normalizeEnrollmentTags(req.Tags) != "" {
+			existing.Tags = normalizeEnrollmentTags(req.Tags)
+			changed = true
+		}
+		if existing.PublicKey == "" && req.PublicKey != "" {
+			existing.PublicKey = req.PublicKey
+			changed = true
+		}
+		if existing.UUID == "" && req.UUID != "" {
+			existing.UUID = req.UUID
+			changed = true
+		}
+		if existing.IP == "" && clientIP != "" {
+			existing.IP = clientIP
+			changed = true
+		}
+		if !changed {
+			return nil
+		}
+		data, mErr := json.Marshal(existing)
+		if mErr != nil {
+			return mErr
+		}
+		return s.db.SetConfig(pendingDevicePrefix+req.DeviceID, string(data))
+	}
+
+	info := pendingDeviceInfo{
+		DeviceID:   req.DeviceID,
+		UUID:       req.UUID,
+		Hostname:   req.Hostname,
+		Platform:   req.Platform,
+		Version:    req.Version,
+		DeviceType: strings.TrimSpace(req.DeviceType),
+		BundleID:   normalizeEnrollmentBundleID(req.BundleID),
+		Tags:       normalizeEnrollmentTags(req.Tags),
+		PublicKey:  req.PublicKey,
+		IP:         clientIP,
+		CreatedAt:  timeNowISO(),
+	}
+	data, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+	return s.db.SetConfig(pendingDevicePrefix+req.DeviceID, string(data))
 }
 
 func (s *Server) listPendingDevices() []pendingDeviceInfo {
@@ -713,9 +1616,7 @@ func (s *Server) listPendingDevices() []pendingDeviceInfo {
 	// a dedicated table would be more efficient.
 	var result []pendingDeviceInfo
 
-	// We need to query all server_config keys starting with "pending_device_"
-	// Since the DB interface doesn't have a ListConfigByPrefix, we'll add a helper.
-	configs, err := s.db.ListConfigByPrefix("pending_device_")
+	configs, err := s.db.ListConfigByPrefix(pendingDevicePrefix)
 	if err != nil {
 		log.Printf("[API] listPendingDevices: %v", err)
 		return result
@@ -760,14 +1661,16 @@ func normalizeEnrollmentTags(raw string) string {
 	return strings.Join(out, ",")
 }
 
-// handleDeviceSelfAccessPolicy lets an enrolled device push its local access
-// password and unattended flag (support agent minimal client).
+// handleDeviceSelfAccessPolicy lets an enrolled device publish its local
+// access policy. The password itself never leaves the Support Agent: the
+// server keeps only a non-verifier marker for UI/audit status.
 // POST /api/devices/self/access-policy
 func (s *Server) handleDeviceSelfAccessPolicy(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		DeviceID          string `json:"device_id"`
 		DeviceToken       string `json:"device_token"`
-		Password          string `json:"password"`
+		Password          string `json:"password,omitempty"` // rejected legacy field
+		PasswordSet       bool   `json:"password_set"`
 		UnattendedEnabled bool   `json:"unattended_enabled"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -779,14 +1682,12 @@ func (s *Server) handleDeviceSelfAccessPolicy(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	tokenHash := hashToken(body.DeviceToken)
-	dt, err := s.db.ValidateToken(tokenHash)
-	if err != nil || dt == nil {
+	if !s.hasBoundActiveDeviceToken(body.DeviceID, body.DeviceToken) {
 		http.Error(w, "invalid device token", http.StatusForbidden)
 		return
 	}
-	if dt.PeerID != "" && dt.PeerID != body.DeviceID {
-		http.Error(w, "token bound to another device", http.StatusForbidden)
+	if body.Password != "" {
+		http.Error(w, "password material must remain on the device", http.StatusBadRequest)
 		return
 	}
 
@@ -795,13 +1696,13 @@ func (s *Server) handleDeviceSelfAccessPolicy(w http.ResponseWriter, r *http.Req
 		UnattendedEnabled: body.UnattendedEnabled,
 		UpdatedBy:         "device:" + body.DeviceID,
 	}
-	if body.Password != "" {
-		hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
-		if err != nil {
-			http.Error(w, "failed to hash password", http.StatusInternalServerError)
-			return
-		}
-		policy.PasswordHash = string(hash)
+	if body.PasswordSet {
+		// This marker is intentionally not a password verifier. Relay and CDAP
+		// authorization always verify the local secret on the device.
+		policy.PasswordHash = "LOCAL_ONLY"
+	} else {
+		// Clear legacy server-side password hashes after an agent upgrades.
+		policy.PasswordHash = "CLEAR"
 	}
 	if err := s.db.SaveAccessPolicy(policy); err != nil {
 		http.Error(w, "failed to save policy", http.StatusInternalServerError)

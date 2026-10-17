@@ -88,16 +88,36 @@
         `;
 
         try {
-            const [registrationResult, enrollmentResult] = await Promise.all([
+            const enrollmentFetches = [];
+            if (shouldLoadEnrollmentPending()) {
+                enrollmentFetches.push(
+                    apiFetch('/api/enrollment/pending').then(result => ({ kind: 'pending', result }))
+                );
+            }
+            if (shouldLoadEnrollmentHistory()) {
+                const historyUrl = currentStatus
+                    ? `/api/enrollment/history?status=${encodeURIComponent(currentStatus)}`
+                    : '/api/enrollment/history';
+                enrollmentFetches.push(
+                    apiFetch(historyUrl).then(result => ({ kind: 'history', result }))
+                );
+            }
+
+            const [registrationResult, ...enrollmentParts] = await Promise.all([
                 apiFetch(`/api/registrations?${params}`),
-                shouldLoadEnrollmentPending() ? apiFetch('/api/enrollment/pending') : Promise.resolve({ success: true, data: [], count: 0 }),
+                ...enrollmentFetches,
             ]);
             if (!registrationResult.success) throw new Error(registrationResult.error);
 
             const registrations = normalizeRegistrations(registrationResult.data || []);
-            const enrollments = enrollmentResult.success
-                ? normalizeEnrollments(enrollmentResult.data || []).filter(matchesSearch)
-                : [];
+            const enrollments = [];
+            for (const part of enrollmentParts) {
+                if (!part.result?.success) continue;
+                const rows = part.kind === 'history'
+                    ? normalizeEnrollmentHistory(part.result.data || [])
+                    : normalizeEnrollments(part.result.data || []);
+                enrollments.push(...rows.filter(matchesSearch));
+            }
 
             renderTable([...enrollments, ...registrations]);
         } catch (err) {
@@ -116,11 +136,9 @@
 
     async function loadPendingCount() {
         try {
-            const [registrationResult, enrollmentResult] = await Promise.all([
-                apiFetch('/api/registrations/count'),
-                apiFetch('/api/enrollment/pending'),
-            ]);
-            const count = (registrationResult.count || 0) + (enrollmentResult.count || 0);
+            // Combined LAN + managed enrollment pending (same source as global sidebar badge)
+            const result = await apiFetch('/api/registrations/count');
+            const count = result.count || 0;
             pendingCountBadge.textContent = count;
             pendingCountBadge.style.display = count > 0 ? '' : 'none';
 
@@ -170,6 +188,20 @@
                         ${_('registrations.reject_btn')}
                     </button>
                 `;
+            } else if (source === SOURCE_ENROLLMENT && reg.status === 'rejected') {
+                actions = `
+                    <button class="action-btn approve" data-reg-action="clear-rejection" data-source="${escapeAttr(source)}" data-id="${escapeAttr(rowId)}" title="${escapeAttr(_('registrations.clear_rejection_btn'))}">
+                        <span class="material-icons">lock_open</span>
+                        ${_('registrations.clear_rejection_btn')}
+                    </button>
+                `;
+            } else if (source === SOURCE_ENROLLMENT && reg.status === 'approved') {
+                actions = `
+                    <a class="action-btn" href="/devices?search=${encodeURIComponent(reg.device_id || '')}" title="${escapeAttr(_('registrations.view_device_btn'))}">
+                        <span class="material-icons">devices</span>
+                        ${_('registrations.view_device_btn')}
+                    </a>
+                `;
             } else if (source === SOURCE_REGISTRATION) {
                 actions = `
                     <button class="action-btn delete" data-reg-action="remove" data-source="${escapeAttr(source)}" data-id="${escapeAttr(rowId)}" title="${escapeAttr(_('common.delete'))}">
@@ -180,16 +212,23 @@
 
             return `
                 <tr data-id="${escapeAttr(rowId)}" data-source="${escapeAttr(source)}">
-                    <td class="device-id-cell">${escapeHtml(reg.device_id)}</td>
-                    <td>${escapeHtml(reg.hostname || '—')}</td>
-                    <td class="col-platform">
-                        <div class="platform-cell">
-                            <span class="material-icons">${platformIcon}</span>
-                            ${escapeHtml(reg.platform || '—')}
+                    <td class="device-id-cell">
+                        <div class="device-id">
+                            <span class="device-id-text">${escapeHtml(reg.device_id)}</span>
+                            <button type="button" class="copy-btn" title="${escapeAttr(_('actions.copy'))}" data-copy="${escapeAttr(reg.device_id || '')}">
+                                <span class="material-icons">content_copy</span>
+                            </button>
                         </div>
                     </td>
-                    <td>${escapeHtml(reg.ip_address || '—')}</td>
-                    <td class="col-version">${escapeHtml(reg.version || '—')}</td>
+                    <td><span class="text-muted" aria-label="${escapeAttr(_('common.not_available') || 'Not available')}">${escapeHtml(reg.hostname || _('common.not_available') || '—')}</span></td>
+                    <td class="col-platform">
+                        <div class="platform-cell">
+                            <span class="material-icons" aria-hidden="true">${platformIcon}</span>
+                            ${escapeHtml(reg.platform || _('common.not_available') || '—')}
+                        </div>
+                    </td>
+                    <td><span class="text-muted">${escapeHtml(reg.ip_address || _('common.not_available') || '—')}</span></td>
+                    <td class="col-version"><span class="text-muted">${escapeHtml(reg.version || _('common.not_available') || '—')}</span></td>
                     <td class="col-status"><span class="status-badge ${escapeAttr(statusClass)}">${escapeHtml(statusLabel)}</span></td>
                     <td class="col-requested time-cell" title="${escapeAttr(reg.created_at || '')}">${timeAgo}</td>
                     <td class="col-actions">
@@ -198,6 +237,31 @@
                 </tr>
             `;
         }).join('');
+
+        tbody.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.copy || '';
+                if (!id) return;
+                try {
+                    if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(id);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = id;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        ta.remove();
+                    }
+                    btn.classList.add('copied');
+                    setTimeout(() => btn.classList.remove('copied'), 2000);
+                    showToast(_('common.copied'), 'success');
+                } catch (_) {
+                    showToast(_('common.copy_failed') || _('actions.copy'), 'error');
+                }
+            });
+        });
     }
 
     // ---- Actions ----
@@ -482,6 +546,24 @@
         }
     }
 
+    async function clearEnrollmentRejection(id) {
+        if (!confirm(_('registrations.clear_rejection_confirm'))) return;
+
+        try {
+            const result = await apiFetch(`/api/enrollment/clear-rejection/${encodeURIComponent(id)}`, {
+                method: 'POST',
+                body: '{}',
+            });
+            if (!result.success) throw new Error(result.error);
+
+            showToast(_('registrations.clear_rejection_success'), 'success');
+            loadRegistrations();
+            loadPendingCount();
+        } catch (err) {
+            showToast(err.message || _('errors.server_error'), 'error');
+        }
+    }
+
     // ---- Helpers ----
 
     function escapeHtml(str) {
@@ -496,6 +578,11 @@
 
     function shouldLoadEnrollmentPending() {
         return !currentStatus || currentStatus === 'pending';
+    }
+
+    function shouldLoadEnrollmentHistory() {
+        // All (empty status) aggregates pending + approved + rejected history (#351).
+        return !currentStatus || currentStatus === 'approved' || currentStatus === 'rejected';
     }
 
     function normalizeRegistrations(items) {
@@ -515,6 +602,18 @@
             source: SOURCE_ENROLLMENT,
             status: 'pending',
             ip_address: item.ip || item.ip_address || '',
+        }));
+    }
+
+    function normalizeEnrollmentHistory(items) {
+        return items.map(item => ({
+            ...item,
+            id: item.device_id,
+            row_id: item.device_id,
+            source: SOURCE_ENROLLMENT,
+            status: item.status === 'approved' ? 'approved' : 'rejected',
+            ip_address: item.ip || item.ip_address || '',
+            created_at: item.decided_at || item.created_at || '',
         }));
     }
 
@@ -623,6 +722,9 @@
             case 'remove':
                 deleteRegistration(id);
                 break;
+            case 'clear-rejection':
+                clearEnrollmentRejection(id);
+                break;
         }
     });
 
@@ -641,7 +743,15 @@
         loadPendingCount();
     });
 
-    // Refresh pending count every 15 seconds
-    setInterval(loadPendingCount, 15000);
+    // app.js owns the shared panel-event connection and dispatches this event
+    // on registration changes. Refresh both the count and visible rows so the
+    // page is current even when the request arrived on another route.
+    window.addEventListener('registrations:pending-changed', (event) => {
+        loadPendingCount();
+        if (event.detail?.type === 'registration_pending' ||
+            event.detail?.type === 'registration_changed') {
+            loadRegistrations();
+        }
+    });
 
 })();

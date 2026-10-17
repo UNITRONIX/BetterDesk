@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   BetterDesk Console Manager v3.5.4
+#   BetterDesk Console Manager v3.5.168
 #   All-in-One Interactive Tool for Linux
 #
 #   Features:
@@ -36,7 +36,7 @@
 set -e
 
 # Version
-VERSION="3.5.4"
+VERSION="3.5.168"
 # Bump when installer control-flow changes must apply mid-session after Update (#219).
 BETTERDESK_SH_REVISION="20260725-console-start-306"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -47,6 +47,11 @@ BETTERDESK_ORIG_ARGV=("$@")
 AUTO_MODE=false
 SKIP_VERIFY=false
 MINIMAL_MODE=false
+UNINSTALL_MODE=false
+PURGE_MODE=false
+CHECK_CAPABILITIES=false
+REPAIR_PERMISSIONS=false
+MANAGED_CONFIG_CHANGES=()
 PREFERRED_CONSOLE_TYPE="nodejs"  # Always Node.js (Flask removed in v2.3.0)
 
 # Relay server selection mode:
@@ -70,6 +75,30 @@ while [[ $# -gt 0 ]]; do
         --minimal)
             MINIMAL_MODE=true
             shift
+            ;;
+        --uninstall)
+            UNINSTALL_MODE=true
+            shift
+            ;;
+        --purge)
+            PURGE_MODE=true
+            shift
+            ;;
+        --check-permissions|--check-capabilities)
+            CHECK_CAPABILITIES=true
+            shift
+            ;;
+        --repair-permissions)
+            REPAIR_PERMISSIONS=true
+            shift
+            ;;
+        --set-config)
+            if [ $# -lt 2 ] || [[ "$2" != *=* ]]; then
+                echo "ERROR: --set-config requires KEY=VALUE"
+                exit 1
+            fi
+            MANAGED_CONFIG_CHANGES+=("$2")
+            shift 2
             ;;
         --nodejs)
             PREFERRED_CONSOLE_TYPE="nodejs"
@@ -117,6 +146,11 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --auto, -a       Run in automatic mode (non-interactive)"
+            echo "  --uninstall      Stop services and remove the native installation"
+            echo "  --purge          With --uninstall, also remove data and keys"
+            echo "  --check-permissions  Report panel/update/config/restart capabilities"
+            echo "  --repair-permissions Repair BetterDesk ownership, broker and service access"
+            echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
             echo "  --skip-verify    Skip SHA256 verification of binaries"
             echo "  --minimal        Install Go server only (no web console)"
             echo "  --nodejs         Install Node.js web console (default)"
@@ -151,10 +185,25 @@ done
 # Go server source directory
 GO_SERVER_SOURCE="$SCRIPT_DIR/betterdesk-server"
 
-# Minimum Go version required for compilation
-GO_MIN_VERSION="1.25"
+# Minimum Go version required for compilation (must match betterdesk-server/go.mod).
+GO_MIN_VERSION="1.26.9"
 # Point release downloaded when system Go is missing/outdated (must exist on go.dev/dl).
-GO_DOWNLOAD_VERSION="1.26.4"
+GO_DOWNLOAD_VERSION="1.26.9"
+# Maximum time allowed for the first module download on a native install.
+GO_MODULE_DOWNLOAD_TIMEOUT="${GO_MODULE_DOWNLOAD_TIMEOUT:-600}"
+# Maximum time allowed to validate the downloaded module graph.
+GO_MODULE_GRAPH_TIMEOUT="${GO_MODULE_GRAPH_TIMEOUT:-120}"
+# Maximum time allowed to compile the Go server.
+GO_BUILD_TIMEOUT="${GO_BUILD_TIMEOUT:-1800}"
+# Heartbeat/deadline settings for bounded Go commands.
+GO_COMMAND_HEARTBEAT_INTERVAL="${GO_COMMAND_HEARTBEAT_INTERVAL:-15}"
+GO_COMMAND_KILL_AFTER="${GO_COMMAND_KILL_AFTER:-15}"
+# Short HTTPS probe before go mod download (fail fast on blocked proxy/DNS).
+GO_MODULE_PREFLIGHT_TIMEOUT="${GO_MODULE_PREFLIGHT_TIMEOUT:-20}"
+# Set when preflight detects IPv4 OK but IPv6 broken (common on GCP VMs).
+GO_FORCE_IPV4=0
+# Toolchain for native compile (override with BETTERDESK_GOTOOLCHAIN; default local).
+BETTERDESK_GOTOOLCHAIN="${BETTERDESK_GOTOOLCHAIN:-local}"
 
 # Default paths (can be overridden by environment variables)
 RUSTDESK_PATH="${RUSTDESK_PATH:-}"
@@ -246,6 +295,126 @@ print_error() { echo -e "${RED}✗${NC} $1"; log "ERROR: $1"; }
 print_warning() { echo -e "${YELLOW}!${NC} $1"; log "WARNING: $1"; }
 print_info() { echo -e "${BLUE}ℹ${NC} $1"; log "INFO: $1"; }
 print_step() { echo -e "${MAGENTA}▶${NC} $1"; log "STEP: $1"; }
+
+#===============================================================================
+# Management capabilities and allowlisted runtime configuration
+#===============================================================================
+
+management_cli_path() {
+    if [ -f "$CONSOLE_PATH/scripts/management-cli.js" ]; then
+        printf '%s\n' "$CONSOLE_PATH/scripts/management-cli.js"
+    elif [ -f "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js" ]; then
+        printf '%s\n' "$SCRIPT_DIR/web-nodejs/scripts/management-cli.js"
+    else
+        return 1
+    fi
+}
+
+check_management_capabilities() {
+    local cli
+    cli=$(management_cli_path 2>/dev/null) || {
+        print_error "Management capability tool is missing"
+        return 1
+    }
+    print_step "Checking BetterDesk management capabilities..."
+    BETTERDESK_CONSOLE_PATH="$CONSOLE_PATH" BETTERDESK_PATH="$RUSTDESK_PATH" \
+        DATA_DIR="$CONSOLE_PATH/data" node "$cli" check || {
+        print_warning "One or more management capabilities are blocked; see the report above"
+        return 1
+    }
+    print_success "BetterDesk management capabilities are ready"
+}
+
+repair_management_permissions() {
+    print_step "Repairing BetterDesk management permissions..."
+    local ensure_script="$CONSOLE_PATH/scripts/linux-ensure-console-user.js"
+    if [ -f "$ensure_script" ] && command -v node >/dev/null 2>&1; then
+        node "$ensure_script" || print_warning "Console permission repair reported issues"
+    fi
+    if [ -d "$CONSOLE_PATH" ]; then
+        chown -R betterdesk:betterdesk "$CONSOLE_PATH" 2>/dev/null || true
+        chmod 700 "$CONSOLE_PATH/data" 2>/dev/null || true
+    fi
+    if [ -d "$RUSTDESK_PATH" ]; then
+        mkdir -p "$RUSTDESK_PATH/ssl"
+        chown root:betterdesk "$RUSTDESK_PATH" "$RUSTDESK_PATH/ssl" 2>/dev/null || true
+        chmod 2775 "$RUSTDESK_PATH" 2>/dev/null || true
+        chmod 2750 "$RUSTDESK_PATH/ssl" 2>/dev/null || true
+        for f in "$RUSTDESK_PATH/.env" "$RUSTDESK_PATH/.api_key" \
+                 "$RUSTDESK_PATH/db_v2.sqlite3" "$RUSTDESK_PATH/db_v2.sqlite3-wal" \
+                 "$RUSTDESK_PATH/db_v2.sqlite3-shm" "$RUSTDESK_PATH/ssl/betterdesk.crt" \
+                 "$RUSTDESK_PATH/ssl/betterdesk.key"; do
+            if [ -e "$f" ]; then
+                chown root:betterdesk "$f" 2>/dev/null || true
+                chmod 640 "$f" 2>/dev/null || true
+            fi
+        done
+    fi
+    systemctl daemon-reload 2>/dev/null || true
+    check_management_capabilities || true
+}
+
+apply_managed_config() {
+    local cli
+    cli=$(management_cli_path 2>/dev/null) || {
+        print_error "Management configuration tool is missing"
+        return 1
+    }
+    if [ "${#MANAGED_CONFIG_CHANGES[@]}" -eq 0 ]; then
+        print_error "No allowlisted configuration changes supplied"
+        return 1
+    fi
+    print_step "Applying allowlisted BetterDesk configuration..."
+    BETTERDESK_CONSOLE_PATH="$CONSOLE_PATH" BETTERDESK_PATH="$RUSTDESK_PATH" \
+        DATA_DIR="$CONSOLE_PATH/data" node "$cli" set "${MANAGED_CONFIG_CHANGES[@]}" || return 1
+    systemctl daemon-reload 2>/dev/null || true
+    systemctl restart betterdesk-server betterdesk-console 2>/dev/null || true
+    sleep 2
+    start_services_with_verification
+}
+
+configure_management() {
+    print_header
+    echo -e "${WHITE}${BOLD}══════════ MANAGEMENT CAPABILITIES ══════════${NC}"
+    echo ""
+    check_management_capabilities || true
+    echo ""
+    local _menu_items=(
+        $'Repair permissions\tRepair console user, data paths, TLS and broker'
+        $'Change .env settings\tApply allowlisted KEY=VALUE pairs and restart'
+        $'Recheck capabilities\tRun the read-only capability report again'
+        $'Back\tReturn to the main menu'
+    )
+    local _menu_returns=( 1 2 3 0 )
+    menu_choose "BetterDesk Management" "Only allowlisted BetterDesk operations are available"
+    case "${MENU_CHOICE:-0}" in
+        1)
+            repair_management_permissions
+            press_enter
+            ;;
+        2)
+            MANAGED_CONFIG_CHANGES=()
+            while true; do
+                echo -ne "Enter KEY=VALUE (empty to apply): "
+                local item
+                read -r item
+                [ -z "$item" ] && break
+                if [[ "$item" != *=* ]]; then
+                    print_warning "Use KEY=VALUE"
+                else
+                    MANAGED_CONFIG_CHANGES+=("$item")
+                fi
+            done
+            apply_managed_config || print_error "Configuration change failed"
+            press_enter
+            ;;
+        3)
+            check_management_capabilities || true
+            press_enter
+            ;;
+        *) return ;;
+    esac
+}
 
 press_enter() {
     echo ""
@@ -534,6 +703,135 @@ is_valid_pg_identifier() {
     # Keeps installation scripts safe from SQL injection in CREATE/ALTER statements.
     local ident="$1"
     [[ "$ident" =~ ^[A-Za-z_][A-Za-z0-9_]{0,62}$ ]]
+}
+
+is_local_postgresql_host() {
+    case "${POSTGRESQL_HOST,,}" in
+        localhost|127.0.0.1|::1)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+postgresql_hba_file_path() {
+    local hba_file
+    hba_file=$(sudo -u postgres psql -v ON_ERROR_STOP=1 -Atqc "SHOW hba_file;" 2>/dev/null) || return 1
+    hba_file="${hba_file//$'\r'/}"
+    [ -n "$hba_file" ] || return 1
+    printf '%s\n' "$hba_file"
+}
+
+ensure_postgresql_local_hba_rules() {
+    if ! is_local_postgresql_host; then
+        print_info "PostgreSQL host '$POSTGRESQL_HOST' is remote; leaving pg_hba.conf unchanged"
+        return 0
+    fi
+
+    local hba_file
+    if ! hba_file=$(postgresql_hba_file_path); then
+        print_error "Could not determine PostgreSQL pg_hba.conf path"
+        return 1
+    fi
+    if [ ! -f "$hba_file" ]; then
+        print_error "PostgreSQL pg_hba.conf was not found at: $hba_file"
+        return 1
+    fi
+
+    local rule_ipv4="host    $POSTGRESQL_DB    $POSTGRESQL_USER    127.0.0.1/32    scram-sha-256"
+    local rule_ipv6="host    $POSTGRESQL_DB    $POSTGRESQL_USER    ::1/128         scram-sha-256"
+    local has_ipv4=false
+    local has_ipv6=false
+
+    if awk -v db="$POSTGRESQL_DB" -v user="$POSTGRESQL_USER" '
+        $1 !~ /^#/ && $1 == "host" && $2 == db && $3 == user &&
+        $4 == "127.0.0.1/32" && $5 == "scram-sha-256" { found=1 }
+        END { exit !found }
+    ' "$hba_file"; then
+        has_ipv4=true
+    fi
+    if awk -v db="$POSTGRESQL_DB" -v user="$POSTGRESQL_USER" '
+        $1 !~ /^#/ && $1 == "host" && $2 == db && $3 == user &&
+        $4 == "::1/128" && $5 == "scram-sha-256" { found=1 }
+        END { exit !found }
+    ' "$hba_file"; then
+        has_ipv6=true
+    fi
+
+    if [ "$has_ipv4" = true ] && [ "$has_ipv6" = true ]; then
+        print_info "PostgreSQL localhost authentication rules already configured"
+        return 0
+    fi
+
+    local backup_file="${hba_file}.betterdesk-backup-$(date +%Y%m%d%H%M%S)"
+    if ! sudo cp -p "$hba_file" "$backup_file" || ! sudo chmod 600 "$backup_file"; then
+        print_error "Could not back up PostgreSQL pg_hba.conf before editing"
+        return 1
+    fi
+
+    local temp_file
+    if ! temp_file=$(mktemp "${TMPDIR:-/tmp}/betterdesk-pg-hba.XXXXXX"); then
+        print_error "Could not create a temporary PostgreSQL pg_hba.conf"
+        return 1
+    fi
+
+    local add_ipv4=0
+    local add_ipv6=0
+    [ "$has_ipv4" = false ] && add_ipv4=1
+    [ "$has_ipv6" = false ] && add_ipv6=1
+
+    if ! awk \
+        -v add_ipv4="$add_ipv4" \
+        -v add_ipv6="$add_ipv6" \
+        -v rule_ipv4="$rule_ipv4" \
+        -v rule_ipv6="$rule_ipv6" '
+        function add_rules() {
+            if (inserted) {
+                return
+            }
+            if (add_ipv4) {
+                print rule_ipv4
+            }
+            if (add_ipv6) {
+                print rule_ipv6
+            }
+            inserted=1
+        }
+        {
+            if ($0 !~ /^[[:space:]]*#/ && $0 !~ /^[[:space:]]*$/) {
+                add_rules()
+            }
+            print
+        }
+        END {
+            if (!inserted) {
+                add_rules()
+            }
+        }
+    ' "$hba_file" > "$temp_file"; then
+        rm -f "$temp_file"
+        print_error "Could not prepare PostgreSQL pg_hba.conf"
+        return 1
+    fi
+
+    if ! sudo cp "$temp_file" "$hba_file"; then
+        rm -f "$temp_file"
+        print_error "Could not update PostgreSQL pg_hba.conf"
+        print_info "The original file remains available at: $backup_file"
+        return 1
+    fi
+    rm -f "$temp_file"
+
+    if ! systemctl reload postgresql 2>/dev/null && ! service postgresql reload 2>/dev/null; then
+        print_error "Could not reload PostgreSQL after updating pg_hba.conf"
+        print_info "The original file remains available at: $backup_file"
+        return 1
+    fi
+
+    print_success "Configured PostgreSQL localhost authentication for BetterDesk"
+    return 0
 }
 
 #===============================================================================
@@ -880,8 +1178,11 @@ resolve_le_cert_live_dir() {
     echo "$le_live_dir"
 }
 
-# Copy a TLS file to dest as a real file (not a symlink). Removes dest when it
-# already resolves to the same path as src — cp -L otherwise fails with "same file" (#219).
+# Copy a TLS file to dest as a real file (not a symlink).
+# - If dest is already the same real file as src (self-signed generated in place),
+#   do nothing — deleting dest would remove src and break cp (#325, discussion #322).
+# - If dest is a symlink that resolves to src (LE live dir), remove the symlink
+#   and copy content so the console user can read it (#219).
 _safe_cp_tls_file() {
     local src="$1"
     local dest="$2"
@@ -892,7 +1193,13 @@ _safe_cp_tls_file() {
     if [ -e "$dest" ]; then
         dest_real=$(readlink -f "$dest" 2>/dev/null || echo "$dest")
         if [ "$src_real" = "$dest_real" ]; then
-            rm -f "$dest"
+            if [ -L "$dest" ]; then
+                # Symlink to src → replace with a real copy (#219)
+                rm -f "$dest"
+            else
+                # Already a real file at dest (self-signed path) — no copy needed (#325)
+                return 0
+            fi
         fi
     fi
     tmp="${dest}.betterdesk.$$.tmp"
@@ -1850,10 +2157,8 @@ prepare_console_after_update() {
     if [ -f "$CONSOLE_PATH/scripts/linux-ensure-console-user.js" ] && command -v node &>/dev/null; then
         if [ "$(id -u)" -eq 0 ]; then
             node "$CONSOLE_PATH/scripts/linux-ensure-console-user.js" || print_warning "Console permission sync reported issues"
-        elif command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
-            sudo -n node "$CONSOLE_PATH/scripts/linux-ensure-console-user.js" || print_warning "Console permission sync reported issues"
         else
-            print_warning "Console permission sync skipped (run as root: sudo node $CONSOLE_PATH/scripts/linux-ensure-console-user.js)"
+            print_warning "Console permission sync skipped; run linux-ensure-console-user.js as root"
         fi
     fi
     repair_console_service_user_line "betterdesk" || true
@@ -2106,6 +2411,7 @@ merge_console_env() {
     local database_url=""
     local admin_password="${ADMIN_PASSWORD:-}"
     local session_secret=""
+    local remote_target_vault_key=""
     local subst_file="/tmp/betterdesk-env-subst-$$.json"
     local go_port="${GO_API_PORT:-21114}"
     local client_port="${CLIENT_API_PORT:-21121}"
@@ -2142,6 +2448,12 @@ merge_console_env() {
             session_secret=$(openssl rand -hex 32)
         fi
     fi
+    if [ -f "$CONSOLE_PATH/.env" ]; then
+        remote_target_vault_key=$(grep -m1 '^REMOTE_TARGET_VAULT_KEY=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+    fi
+    if [ -z "$remote_target_vault_key" ]; then
+        remote_target_vault_key=$(openssl rand -hex 32)
+    fi
 
     local fresh_flag=""
     [ "$fresh_install" = "true" ] && fresh_flag="--fresh"
@@ -2159,6 +2471,8 @@ merge_console_env() {
     export BD_SUBST_API_PORT="$client_port"
     export BD_SUBST_DEFAULT_ADMIN_PASSWORD="$admin_password"
     export BD_SUBST_SESSION_SECRET="$session_secret"
+    export BD_SUBST_REMOTE_TARGET_VAULT_KEY="$remote_target_vault_key"
+    export BD_SUBST_GUACD_ADDRESS="127.0.0.1:4822"
     export BD_SUBST_SSL_CERT_PATH="$ssl_dir/betterdesk.crt"
     export BD_SUBST_SSL_KEY_PATH="$ssl_dir/betterdesk.key"
 
@@ -2536,6 +2850,7 @@ check_go_installed() {
         local go_patch=$(_go_version_part "$go_version" 3)
         local min_major=$(_go_version_part "$GO_MIN_VERSION" 1)
         local min_minor=$(_go_version_part "$GO_MIN_VERSION" 2)
+        local min_patch=$(_go_version_part "$GO_MIN_VERSION" 3)
 
         # Security hardening: reject vulnerable Go 1.26.0 stdlib.
         if [ "$go_major" -eq 1 ] && [ "$go_minor" -eq 26 ] && [ "$go_patch" -eq 0 ]; then
@@ -2543,7 +2858,9 @@ check_go_installed() {
             return 1
         fi
         
-        if [ "$go_major" -gt "$min_major" ] || ([ "$go_major" -eq "$min_major" ] && [ "$go_minor" -ge "$min_minor" ]); then
+        if [ "$go_major" -gt "$min_major" ] ||
+           ([ "$go_major" -eq "$min_major" ] && [ "$go_minor" -gt "$min_minor" ]) ||
+           ([ "$go_major" -eq "$min_major" ] && [ "$go_minor" -eq "$min_minor" ] && [ "$go_patch" -ge "$min_patch" ]); then
             return 0
         fi
     fi
@@ -2612,6 +2929,359 @@ install_golang() {
     fi
 }
 
+# Probe a fixed HTTPS host without executing response body (connectivity only).
+# Optional 3rd arg: curl IP family flag ("-4" or "-6"); empty = dual-stack default.
+_go_probe_https() {
+    local url="$1"
+    local limit="${2:-$GO_MODULE_PREFLIGHT_TIMEOUT}"
+    local ip_flag="${3:-}"
+
+    if command -v curl &> /dev/null; then
+        # No -f: any HTTP response means the TCP/TLS path works (404 is fine).
+        # shellcheck disable=SC2086
+        curl -sS -o /dev/null --connect-timeout "$limit" --max-time "$limit" $ip_flag "$url"
+        return $?
+    fi
+    if command -v wget &> /dev/null; then
+        # wget has no reliable -4/-6 on all distros; dual-stack only.
+        wget -q --spider --timeout="$limit" --tries=1 "$url"
+        return $?
+    fi
+    return 2
+}
+
+# Read a sysctl value or echo "unknown".
+_go_sysctl_get() {
+    local key="$1"
+    if command -v sysctl &> /dev/null; then
+        sysctl -n "$key" 2>/dev/null || echo "unknown"
+    else
+        echo "unknown"
+    fi
+}
+
+# Temporarily disable IPv6 for Go dual-stack dials on broken-IPv6 VMs (save/restore).
+_go_ipv4_force_begin() {
+    GO_IPV4_SAVED_ALL=""
+    GO_IPV4_SAVED_DEFAULT=""
+    GO_IPV4_APPLIED=0
+
+    if [ "${GO_FORCE_IPV4:-0}" != "1" ]; then
+        return 0
+    fi
+    if ! command -v sysctl &> /dev/null; then
+        print_warning "Broken IPv6 detected but sysctl unavailable; cannot force IPv4 for Go"
+        return 0
+    fi
+
+    GO_IPV4_SAVED_ALL=$(_go_sysctl_get net.ipv6.conf.all.disable_ipv6)
+    GO_IPV4_SAVED_DEFAULT=$(_go_sysctl_get net.ipv6.conf.default.disable_ipv6)
+
+    if sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1 \
+        && sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1; then
+        GO_IPV4_APPLIED=1
+        print_info "Temporarily disabled IPv6 for Go module download (broken IPv6 path detected)"
+    else
+        print_warning "Could not disable IPv6 via sysctl; Go may still hang on AAAA dials"
+    fi
+}
+
+_go_ipv4_force_end() {
+    if [ "${GO_IPV4_APPLIED:-0}" != "1" ]; then
+        return 0
+    fi
+    if [ -n "${GO_IPV4_SAVED_ALL}" ] && [ "${GO_IPV4_SAVED_ALL}" != "unknown" ]; then
+        sysctl -w "net.ipv6.conf.all.disable_ipv6=${GO_IPV4_SAVED_ALL}" >/dev/null 2>&1 || true
+    fi
+    if [ -n "${GO_IPV4_SAVED_DEFAULT}" ] && [ "${GO_IPV4_SAVED_DEFAULT}" != "unknown" ]; then
+        sysctl -w "net.ipv6.conf.default.disable_ipv6=${GO_IPV4_SAVED_DEFAULT}" >/dev/null 2>&1 || true
+    fi
+    GO_IPV4_APPLIED=0
+    print_info "Restored previous IPv6 sysctl settings"
+}
+
+# Drop leftover partial/lock files from a previous Ctrl+C during go mod download.
+_go_clear_stale_module_partials() {
+    local modcache
+    modcache=$(go env GOMODCACHE 2>/dev/null || true)
+    if [ -z "$modcache" ] || [ ! -d "$modcache" ]; then
+        return 0
+    fi
+    local cleared=0
+    cleared=$(find "$modcache" \( -name '*.partial' -o -name '*.lock' \) 2>/dev/null | wc -l | tr -d ' ')
+    if [ "${cleared:-0}" -gt 0 ] 2>/dev/null; then
+        print_warning "Removing ${cleared} stale Go module cache lock/partial file(s) from a prior interrupted download"
+        find "$modcache" \( -name '*.partial' -o -name '*.lock' \) -delete 2>/dev/null || true
+    fi
+}
+
+# Fail fast when proxy.golang.org / sum.golang.org are unreachable.
+# Prefer IPv4 probes; set GO_FORCE_IPV4=1 when IPv6 is broken but IPv4 works.
+_go_module_network_preflight() {
+    local limit="${GO_MODULE_PREFLIGHT_TIMEOUT}"
+    local probe_status=0
+    local ipv4_ok=0
+    local ipv6_ok=0
+
+    GO_FORCE_IPV4=0
+    print_info "Checking HTTPS reachability of Go module endpoints (${limit}s)..."
+
+    if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
+        print_warning "Neither curl nor wget available; skipping Go module network preflight"
+        return 0
+    fi
+
+    if command -v curl &> /dev/null; then
+        if _go_probe_https "https://proxy.golang.org/" "$limit" "-4"; then
+            ipv4_ok=1
+            print_success "Reachable via IPv4: proxy.golang.org"
+        else
+            print_error "Cannot reach https://proxy.golang.org/ via IPv4 within ${limit}s"
+        fi
+
+        # Short IPv6 probe — failure here is common on GCP and is not fatal if IPv4 works.
+        if _go_probe_https "https://proxy.golang.org/" 5 "-6"; then
+            ipv6_ok=1
+            print_success "Reachable via IPv6: proxy.golang.org"
+        else
+            print_warning "IPv6 path to proxy.golang.org failed (will prefer IPv4 for Go if IPv4 works)"
+        fi
+
+        if [ "$ipv4_ok" -eq 1 ] && [ "$ipv6_ok" -eq 0 ]; then
+            GO_FORCE_IPV4=1
+            print_info "Broken IPv6 detected — Go module download will temporarily disable IPv6"
+        fi
+
+        if [ "$ipv4_ok" -ne 1 ]; then
+            # Last resort: dual-stack (some hosts lack curl -4).
+            if _go_probe_https "https://proxy.golang.org/" "$limit"; then
+                print_success "Reachable (dual-stack): proxy.golang.org"
+            else
+                probe_status=1
+            fi
+        fi
+
+        if ! _go_probe_https "https://sum.golang.org/" "$limit" "-4" \
+            && ! _go_probe_https "https://sum.golang.org/" "$limit"; then
+            print_error "Cannot reach https://sum.golang.org/ within ${limit}s"
+            probe_status=1
+        else
+            print_success "Reachable: sum.golang.org"
+        fi
+
+        # GET a tiny known proxy path so HEAD-only reachability cannot hide a hung download path.
+        if [ "$probe_status" -eq 0 ]; then
+            print_info "Probing Go module proxy GET (sample @v/list)..."
+            if ! curl -4 -sS -o /dev/null --connect-timeout "$limit" --max-time 30 \
+                "https://proxy.golang.org/github.com/google/uuid/@v/list"; then
+                print_error "Go module proxy GET probe failed within 30s"
+                print_error "HEAD may work while module downloads hang — check firewall/DPI/IPv6"
+                probe_status=1
+            else
+                print_success "Go module proxy GET probe OK"
+            fi
+        fi
+    else
+        if ! _go_probe_https "https://proxy.golang.org/" "$limit"; then
+            print_error "Cannot reach https://proxy.golang.org/ within ${limit}s"
+            probe_status=1
+        else
+            print_success "Reachable: proxy.golang.org"
+        fi
+        if ! _go_probe_https "https://sum.golang.org/" "$limit"; then
+            print_error "Cannot reach https://sum.golang.org/ within ${limit}s"
+            probe_status=1
+        else
+            print_success "Reachable: sum.golang.org"
+        fi
+    fi
+
+    if [ "$probe_status" -ne 0 ]; then
+        print_error "Outbound HTTPS to the Go module proxy/checksum DB is blocked or timing out"
+        print_error "On cloud VMs check DNS, firewall/egress, IPv6 blackholes, and GOPROXY — then retry"
+        print_error "Override example: GOPROXY=https://proxy.golang.org,direct"
+        return 1
+    fi
+    return 0
+}
+
+# Kill a process group (negative PGID) with TERM then KILL.
+_go_kill_process_group() {
+    local pgid="$1"
+    local label="${2:-process group}"
+
+    if [ -z "$pgid" ] || [ "$pgid" -le 1 ] 2>/dev/null; then
+        return 0
+    fi
+    print_error "Stopping ${label} (PGID ${pgid}) with SIGTERM..."
+    kill -TERM -- "-${pgid}" 2>/dev/null || kill -TERM "$pgid" 2>/dev/null || true
+    sleep 2
+    if kill -0 "$pgid" 2>/dev/null; then
+        print_error "Still alive — sending SIGKILL to PGID ${pgid}"
+        kill -KILL -- "-${pgid}" 2>/dev/null || kill -KILL "$pgid" 2>/dev/null || true
+    fi
+}
+
+# Run a Go command with a hard deadline and visible progress.
+_run_go_command_bounded() {
+    local label="$1"
+    local deadline="$2"
+    shift 2
+    local command_pid=""
+    local command_pgid=""
+    local heartbeat_pid=""
+    local elapsed=0
+    local status=0
+    local heartbeat_interval="${GO_COMMAND_HEARTBEAT_INTERVAL}"
+    local kill_after="${GO_COMMAND_KILL_AFTER}"
+
+    case "$heartbeat_interval" in
+        ''|*[!0-9]*) heartbeat_interval=15 ;;
+    esac
+    case "$kill_after" in
+        ''|*[!0-9]*) kill_after=15 ;;
+    esac
+
+    if command -v setsid &> /dev/null; then
+        setsid "$@" &
+    else
+        "$@" &
+    fi
+    command_pid=$!
+
+    if command -v ps &> /dev/null; then
+        command_pgid=$(ps -o pgid= -p "$command_pid" 2>/dev/null | tr -d ' ' || true)
+        case "$command_pgid" in
+            ''|*[!0-9]*) command_pgid="" ;;
+        esac
+    fi
+
+    print_info "${label} started (PID ${command_pid}, deadline ${deadline}s)"
+
+    (
+        heartbeat_elapsed=0
+        while kill -0 "$command_pid" 2>/dev/null; do
+            sleep "$heartbeat_interval"
+            if ! kill -0 "$command_pid" 2>/dev/null; then
+                break
+            fi
+            heartbeat_elapsed=$((heartbeat_elapsed + heartbeat_interval))
+            printf 'ℹ  still %s... %ss elapsed (watchdog active)\n' \
+                "$label" "$heartbeat_elapsed" >&2
+        done
+    ) &
+    heartbeat_pid=$!
+
+    while kill -0 "$command_pid" 2>/dev/null; do
+        if [ "$elapsed" -ge "$deadline" ]; then
+            print_error "${label} exceeded ${deadline}s"
+            if [ -n "$command_pgid" ] && [ "$command_pgid" -gt 1 ] 2>/dev/null; then
+                _go_kill_process_group "$command_pgid" "$label"
+            else
+                kill -TERM "$command_pid" 2>/dev/null || true
+                sleep "$kill_after"
+                if kill -0 "$command_pid" 2>/dev/null; then
+                    kill -KILL "$command_pid" 2>/dev/null || true
+                fi
+            fi
+            status=124
+            break
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    if [ "$status" -ne 124 ]; then
+        if wait "$command_pid"; then
+            status=0
+        else
+            status=$?
+        fi
+    else
+        wait "$command_pid" 2>/dev/null || true
+    fi
+
+    if [ -n "$heartbeat_pid" ]; then
+        kill "$heartbeat_pid" 2>/dev/null || true
+        wait "$heartbeat_pid" 2>/dev/null || true
+    fi
+
+    return "$status"
+}
+
+# Run go mod download with a hard bash deadline (primary guard).
+# GNU timeout alone was insufficient on some cloud VMs (#371).
+_run_go_mod_download_bounded() {
+    local deadline="${GO_MODULE_DOWNLOAD_TIMEOUT}"
+    local kill_after=15
+    local status=0
+    local download_pid=""
+    local elapsed=0
+    local heartbeat_pid=""
+
+    _go_ipv4_force_begin
+    _go_clear_stale_module_partials
+
+    # Prefer IPv4 for Go's resolver when the host has broken AAAA routes (#371).
+    export GODEBUG="${GODEBUG:+$GODEBUG,}netdns=go"
+
+    # Heartbeat — no `local` inside non-function subshell (set -e).
+    (
+        elapsed=0
+        while true; do
+            sleep 15
+            elapsed=$((elapsed + 15))
+            printf 'ℹ  still downloading Go modules... %ss elapsed (watchdog active)\n' "$elapsed" >&2
+        done
+    ) &
+    heartbeat_pid=$!
+
+    # Run go as a direct background child of this shell (same user/session).
+    # Prior setsid/pidfile races could exit the waiter early, restore IPv6, and
+    # report success while go was still hung or already dead (#371 follow-up).
+    (
+        echo "go mod download child starting" >&2
+        exec go mod download -x
+    ) &
+    download_pid=$!
+
+    print_info "go mod download started (PID ${download_pid}, deadline ${deadline}s)"
+
+    elapsed=0
+    while kill -0 "$download_pid" 2>/dev/null; do
+        if [ "$elapsed" -ge "$deadline" ]; then
+            print_error "Go module download exceeded ${deadline}s"
+            kill -TERM "$download_pid" 2>/dev/null || true
+            sleep "$kill_after"
+            if kill -0 "$download_pid" 2>/dev/null; then
+                kill -KILL "$download_pid" 2>/dev/null || true
+            fi
+            status=124
+            break
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    if [ "$status" -ne 124 ]; then
+        if wait "$download_pid"; then
+            status=0
+        else
+            status=$?
+        fi
+    else
+        wait "$download_pid" 2>/dev/null || true
+    fi
+
+    if [ -n "$heartbeat_pid" ]; then
+        kill "$heartbeat_pid" 2>/dev/null || true
+        wait "$heartbeat_pid" 2>/dev/null || true
+    fi
+
+    _go_ipv4_force_end
+    return "$status"
+}
+
 compile_go_server() {
     print_step "Compiling BetterDesk Go server..."
     
@@ -2638,13 +3308,82 @@ compile_go_server() {
     # Build
     print_info "Building BetterDesk server for $ARCH_NAME..."
     local output_name="betterdesk-server"
-    
-    # Download dependencies
-    print_info "Downloading Go modules..."
-    go mod download
+    local go_bin
+    go_bin=$(command -v go)
+
+    # Force local toolchain for native compile so host GOTOOLCHAIN=auto cannot
+    # silently download another toolchain mid-install (hang risk on cloud VMs).
+    # Override with BETTERDESK_GOTOOLCHAIN if needed. GOPROXY/GOSUMDB still honour env.
+    export GOTOOLCHAIN="${BETTERDESK_GOTOOLCHAIN:-local}"
+    export GOPROXY="${GOPROXY:-https://proxy.golang.org,direct}"
+    export GOSUMDB="${GOSUMDB:-sum.golang.org}"
+
+    print_info "Using $($go_bin version 2>/dev/null || echo 'unknown go')"
+    print_info "GOPROXY=${GOPROXY} GOSUMDB=${GOSUMDB} GOTOOLCHAIN=${GOTOOLCHAIN}"
+
+    if ! _go_module_network_preflight; then
+        return 1
+    fi
+
+    # Download dependencies. Keep this visible and hard-bounded (bash watchdog).
+    print_info "Downloading Go modules (timeout: ${GO_MODULE_DOWNLOAD_TIMEOUT}s, kill-after: 15s, process watchdog)..."
+    local module_download_status=0
+    # Keep the command in the if condition so `set -e` does not abort before
+    # we can capture the actual watchdog/download exit status. Do not use `!`
+    # here: inside its branch `$?` would be the status of the negation (0).
+    if _run_go_mod_download_bounded; then
+        module_download_status=0
+    else
+        module_download_status=$?
+    fi
+
+    if [ "$module_download_status" -ne 0 ]; then
+        if [ "$module_download_status" -eq 124 ] || [ "$module_download_status" -eq 137 ]; then
+            print_error "Go module download timed out after ${GO_MODULE_DOWNLOAD_TIMEOUT}s"
+        else
+            print_error "Go module download failed (exit code ${module_download_status})"
+        fi
+        print_error "Check DNS, outbound HTTPS to proxy.golang.org / sum.golang.org / go.dev, firewall and GOPROXY, then retry"
+        print_error "On GCP/cloud VMs with broken IPv6, confirm IPv4 works: curl -4 -I https://proxy.golang.org/"
+        return 1
+    fi
+
+    print_info "Go module download completed; validating module graph (timeout: ${GO_MODULE_GRAPH_TIMEOUT}s)..."
+    local module_graph_status=0
+    if _run_go_command_bounded "validating Go module graph" "$GO_MODULE_GRAPH_TIMEOUT" go list -m all; then
+        module_graph_status=0
+    else
+        module_graph_status=$?
+    fi
+    if [ "$module_graph_status" -ne 0 ]; then
+        if [ "$module_graph_status" -eq 124 ] || [ "$module_graph_status" -eq 137 ]; then
+            print_error "Go module graph validation timed out after ${GO_MODULE_GRAPH_TIMEOUT}s"
+        else
+            print_error "Go module graph validation failed (exit code ${module_graph_status})"
+        fi
+        print_error "The module cache may be incomplete; retry the native installation after checking GOPROXY and disk space"
+        return 1
+    fi
+    print_success "Go module graph validated"
     
     # Build with optimizations
-    CGO_ENABLED=0 go build -ldflags="-s -w -X main.Version=${VERSION}" -o "$output_name" .
+    print_info "Building BetterDesk server (timeout: ${GO_BUILD_TIMEOUT}s)..."
+    local build_status=0
+    if _run_go_command_bounded "building Go server" "$GO_BUILD_TIMEOUT" \
+        env CGO_ENABLED=0 "$go_bin" build \
+        -ldflags="-s -w -X main.Version=${VERSION}" -o "$output_name" .; then
+        build_status=0
+    else
+        build_status=$?
+    fi
+    if [ "$build_status" -ne 0 ]; then
+        if [ "$build_status" -eq 124 ] || [ "$build_status" -eq 137 ]; then
+            print_error "Go server build timed out after ${GO_BUILD_TIMEOUT}s"
+        else
+            print_error "Go server build failed (exit code ${build_status})"
+        fi
+        return 1
+    fi
     
     if [ -f "$output_name" ]; then
         chmod +x "$output_name"
@@ -2832,6 +3571,11 @@ setup_postgresql_database() {
         print_warning "Database might already exist"
     }
     
+    if ! ensure_postgresql_local_hba_rules; then
+        print_error "PostgreSQL authentication setup failed"
+        return 1
+    fi
+
     # Build connection URI
     POSTGRESQL_URI="postgres://$POSTGRESQL_USER:$POSTGRESQL_PASS@$POSTGRESQL_HOST:$POSTGRESQL_PORT/$POSTGRESQL_DB?sslmode=disable"
     
@@ -2979,21 +3723,47 @@ migrate_sqlite_to_postgresql() {
 # Node.js Installation Functions
 #===============================================================================
 
+node_runtime_is_usable() {
+    local node_version node_major npm_version
+
+    command -v node >/dev/null 2>&1 || return 1
+    node_version=$(node --version 2>/dev/null) || return 1
+    case "$node_version" in
+        v[0-9]*) ;;
+        *) return 1 ;;
+    esac
+
+    node_major="${node_version#v}"
+    node_major="${node_major%%.*}"
+    [ "$node_major" -ge 22 ] 2>/dev/null || return 1
+
+    command -v npm >/dev/null 2>&1 || return 1
+    npm_version=$(npm --version 2>/dev/null) || return 1
+    [ -n "$npm_version" ] || return 1
+}
+
 install_nodejs() {
+    local node_version node_major npm_version
+
     print_step "Checking Node.js installation..."
     
-    # Check if Node.js is already installed and version is sufficient
-    if command -v node &> /dev/null; then
-        local node_version=$(node --version | sed 's/v//' | cut -d'.' -f1)
-        if [ "$node_version" -ge 22 ]; then
-            print_success "Node.js v$(node --version) already installed"
-            return 0
-        else
-            print_warning "Node.js version $node_version is too old (need 22+). Upgrading..."
-        fi
+    # Check both runtimes before accepting an existing installation. A host can
+    # have a usable node binary but no npm (or an unsupported distro version).
+    if node_runtime_is_usable; then
+        node_version=$(node --version)
+        npm_version=$(npm --version)
+        print_success "Node.js ${node_version} and npm ${npm_version} already installed"
+        return 0
+    fi
+
+    if command -v node >/dev/null 2>&1; then
+        node_version=$(node --version 2>/dev/null || echo "unknown")
+        print_warning "Node.js ${node_version} is missing npm or is too old (need Node.js 22+ with npm). Upgrading..."
     fi
     
-    print_step "Installing Node.js 24 LTS..."
+    # Keep new bare-metal console installs on Node 22 while Node 24.19.x
+    # cleanup-hook crashes affect native better-sqlite3 statement finalizers.
+    print_step "Installing Node.js 22 LTS..."
 
     # Detect OS and install Node.js. The NodeSource setup script is downloaded
     # to a temp file and validated before execution (H5 audit fix): we do NOT
@@ -3051,36 +3821,100 @@ install_nodejs() {
     # Detect OS and install Node.js
     if command -v apt-get &> /dev/null; then
         # Debian/Ubuntu - use NodeSource
-        _fetch_and_run_nodesource "https://deb.nodesource.com/setup_24.x" || return 1
-        apt-get install -y -qq nodejs
+        _fetch_and_run_nodesource "https://deb.nodesource.com/setup_22.x" || return 1
+
+        # Debian's libnode-dev owns headers also shipped by NodeSource's
+        # nodejs package. Remove only this conflicting development package;
+        # operator data and runtime packages are preserved. In interactive mode
+        # require confirmation because native builds may use these headers.
+        if command -v dpkg-query >/dev/null 2>&1; then
+            local libnode_dev_status
+            libnode_dev_status=$(dpkg-query -W -f='${db:Status-Status}' libnode-dev 2>/dev/null || true)
+            if [ "$libnode_dev_status" = "installed" ]; then
+                print_warning "Found Debian package libnode-dev, which conflicts with NodeSource Node.js 22 headers."
+                if [ "$AUTO_MODE" = false ] && ! confirm "Remove libnode-dev so Node.js 22 can be installed?"; then
+                    print_error "Cannot install Node.js 22 while libnode-dev is present."
+                    print_info "Re-run after removing it with: sudo apt-get remove libnode-dev"
+                    return 1
+                fi
+                if ! apt-get remove -y -qq libnode-dev; then
+                    print_error "Failed to remove conflicting libnode-dev package."
+                    print_info "Resolve the package conflict, then re-run the installer."
+                    return 1
+                fi
+            fi
+        fi
+
+        if ! apt-get install -y -qq nodejs; then
+            print_error "Node.js 22 package installation failed."
+            print_info "Check the apt/dpkg error above, resolve the package conflict, then re-run the installer."
+            return 1
+        fi
     elif command -v dnf &> /dev/null; then
         # Fedora/RHEL 8+
-        _fetch_and_run_nodesource "https://rpm.nodesource.com/setup_24.x" || return 1
-        dnf install -y -q nodejs
+        _fetch_and_run_nodesource "https://rpm.nodesource.com/setup_22.x" || return 1
+        if ! dnf install -y -q nodejs; then
+            print_error "Node.js 22 package installation failed."
+            return 1
+        fi
     elif command -v yum &> /dev/null; then
         # RHEL/CentOS 7
-        _fetch_and_run_nodesource "https://rpm.nodesource.com/setup_24.x" || return 1
-        yum install -y -q nodejs
+        _fetch_and_run_nodesource "https://rpm.nodesource.com/setup_22.x" || return 1
+        if ! yum install -y -q nodejs; then
+            print_error "Node.js 22 package installation failed."
+            return 1
+        fi
     elif command -v pacman &> /dev/null; then
         # Arch Linux
-        pacman -Sy --noconfirm nodejs npm
+        if ! pacman -Sy --noconfirm nodejs npm; then
+            print_error "Node.js and npm package installation failed."
+            return 1
+        fi
     elif command -v apk &> /dev/null; then
         # Alpine Linux
-        apk add --no-cache nodejs npm
+        if ! apk add --no-cache nodejs npm; then
+            print_error "Node.js and npm package installation failed."
+            return 1
+        fi
     else
         print_error "Cannot install Node.js automatically. Please install Node.js 22+ manually."
         return 1
     fi
     
-    # Verify installation
-    if command -v node &> /dev/null; then
-        print_success "Node.js $(node --version) installed"
-        print_info "npm $(npm --version)"
+    # Verify both requirements after the package transaction. Do not accept an
+    # older node left behind by a failed upgrade or a package without npm.
+    if node_runtime_is_usable; then
+        node_version=$(node --version)
+        npm_version=$(npm --version)
+        print_success "Node.js ${node_version} installed"
+        print_info "npm ${npm_version}"
         return 0
-    else
-        print_error "Node.js installation failed!"
+    fi
+
+    if ! command -v node >/dev/null 2>&1; then
+        print_error "Node.js installation failed: node is not available on PATH."
         return 1
     fi
+    if ! node_version=$(node --version 2>/dev/null); then
+        print_error "Node.js installation failed: node could not report its version."
+        return 1
+    fi
+    node_major="${node_version#v}"
+    case "$node_major" in
+        [0-9]*) ;;
+        *)
+            print_error "Node.js installation failed: invalid node version output."
+            return 1
+            ;;
+    esac
+    if [ "${node_major%%.*}" -lt 22 ] 2>/dev/null; then
+        print_error "Node.js installation left unsupported version ${node_version}; need 22+."
+    elif ! command -v npm >/dev/null 2>&1 || ! npm_version=$(npm --version 2>/dev/null); then
+        print_error "Node.js is installed, but npm is missing or not executable."
+    else
+        print_error "Node.js installation completed without a usable Node.js 22/npm runtime."
+    fi
+    return 1
 }
 
 install_nodejs_console() {
@@ -3116,6 +3950,11 @@ install_nodejs_console() {
     if [ -f "$SCRIPT_DIR/VERSION" ]; then
         cp -a "$SCRIPT_DIR/VERSION" "$CONSOLE_PATH/VERSION" 2>/dev/null || true
     fi
+    if [ -d "$SCRIPT_DIR/remote-gateway" ]; then
+        mkdir -p "$CONSOLE_PATH/remote-gateway"
+        cp -a "$SCRIPT_DIR/remote-gateway/." "$CONSOLE_PATH/remote-gateway/"
+        print_info "Installed RDP/VNC gateway module contract"
+    fi
     
     # Install npm dependencies
     print_step "Installing npm dependencies..."
@@ -3143,10 +3982,8 @@ install_nodejs_console() {
     fi
     rm -f "$npm_log"
 
-    # Server Management Terminal sudo hint (BETA — manual step, NOT automated):
-    #   echo 'betterdesk-console ALL=(ALL) NOPASSWD: /usr/bin/systemctl, /usr/bin/journalctl' \
-    #       | sudo tee /etc/sudoers.d/betterdesk-console
-    # The installer never modifies sudoers; admins opt in manually.
+    # Do not suggest a broad systemctl/journalctl sudoers rule here. The
+    # privileged update broker is the only supported panel elevation path.
     echo ""
     
     # Create data directory for databases
@@ -3518,17 +4355,15 @@ patch_service_definitions() {
         content=$(cat "$console_svc")
         new_content=$(printf '%s' "$content" \
             | sed 's|Environment=HBBS_API_URL=https://localhost|Environment=HBBS_API_URL=http://localhost|g' \
-            | sed 's|Environment=BETTERDESK_API_URL=https://localhost|Environment=BETTERDESK_API_URL=http://localhost|g')
+            | sed 's|Environment=BETTERDESK_API_URL=https://localhost|Environment=BETTERDESK_API_URL=http://localhost|g' \
+            | sed '/^ExecStartPre=.*linux-ensure-console-user/d')
         if [ "$console_user" != "root" ] && grep -q '^User=root' <<< "$new_content"; then
             new_content=$(printf '%s' "$new_content" | sed "s/^User=root/User=$console_user/")
             print_info "Patched betterdesk-console.service (User=$console_user)"
             changed=1
         fi
-        local node_path
-        node_path=$(command -v node 2>/dev/null || echo "/usr/bin/node")
-        if ! grep -q '^ExecStartPre=.*linux-ensure-console-user' <<< "$new_content"; then
-            new_content=$(printf '%s' "$new_content" | sed "s|^ExecStart=|ExecStartPre=+${node_path} ${CONSOLE_PATH}/scripts/linux-ensure-console-user.js\nExecStart=|")
-            print_info "Patched betterdesk-console.service (ExecStartPre permission sync)"
+        if [ "$new_content" != "$content" ] && grep -q '^ExecStartPre=.*linux-ensure-console-user' <<< "$content"; then
+            print_info "Removed unsafe root ExecStartPre permission hook from betterdesk-console.service"
             changed=1
         fi
         if [ "$new_content" != "$content" ]; then
@@ -3635,6 +4470,28 @@ _sync_betterdesk_console_user_permissions() {
             chmod 640 "$RUSTDESK_PATH/$f" 2>/dev/null || true
         fi
     done
+    # Generator data is private to the console service. Keep templates and
+    # artifacts readable by the service account, but keep signing material
+    # readable only by that account.
+    local generator_root="$CONSOLE_PATH/data"
+    mkdir -p "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" \
+        "$generator_root/build-cache/support-templates" \
+        "$generator_root/.generator-uploads"
+    chown -R "$svc_user:$svc_user" \
+        "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" \
+        "$generator_root/build-cache" \
+        "$generator_root/.generator-uploads" 2>/dev/null || true
+    find "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" "$generator_root/build-cache" \
+        "$generator_root/.generator-uploads" -type d -exec chmod 750 {} + 2>/dev/null || true
+    find "$generator_root/modules/betterdesk-support-generator" \
+        "$generator_root/agent-builds" "$generator_root/build-cache" \
+        "$generator_root/.generator-uploads" -type f -exec chmod 640 {} + 2>/dev/null || true
+    if [ -f "$generator_root/modules/betterdesk-support-generator/custom-client-signing.seed" ]; then
+        chmod 600 "$generator_root/modules/betterdesk-support-generator/custom-client-signing.seed" 2>/dev/null || true
+    fi
     { maybe_repair_le_ssl_symlinks || true; } >&2
     return 0
 }
@@ -3900,7 +4757,6 @@ Type=simple
 User=$console_user
 WorkingDirectory=$CONSOLE_PATH
 EnvironmentFile=-$CONSOLE_PATH/.env
-ExecStartPre=+$node_path $CONSOLE_PATH/scripts/linux-ensure-console-user.js
 ExecStart=$node_path server.js
 StandardOutput=journal
 StandardError=journal
@@ -4389,6 +5245,32 @@ read_update_github_branch_from_env() {
     fi
 }
 
+resolve_update_remote_sha() {
+    local clone_dir="$1"
+    local remote_sha=""
+
+    if command -v git &>/dev/null && [ -d "$clone_dir/.git" ]; then
+        remote_sha=$(git -C "$clone_dir" rev-parse HEAD 2>/dev/null || true)
+    fi
+    if ! [[ "$remote_sha" =~ ^[0-9a-fA-F]{40}$ ]] && command -v git &>/dev/null; then
+        remote_sha=$(git ls-remote \
+            "https://github.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}.git" \
+            "refs/heads/${UPDATE_GITHUB_BRANCH}" 2>/dev/null | awk 'NR == 1 { print $1; exit }' || true)
+    fi
+    if ! [[ "$remote_sha" =~ ^[0-9a-fA-F]{40}$ ]] && command -v curl &>/dev/null; then
+        remote_sha=$(curl -fsSL --connect-timeout 15 --max-time 30 \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/commits?sha=${UPDATE_GITHUB_BRANCH}&per_page=1" \
+            2>/dev/null | awk -F'"' '/"sha"[[:space:]]*:/ { print $4; exit }' || true)
+    fi
+
+    if [[ "$remote_sha" =~ ^[0-9a-fA-F]{40}$ ]]; then
+        printf '%s\n' "$remote_sha"
+        return 0
+    fi
+    return 1
+}
+
 write_update_github_branch_to_env() {
     local branch="$1"
     local env_file="${CONSOLE_PATH:-}/.env"
@@ -4475,6 +5357,8 @@ run_terminal_project_update() {
 update_from_github() {
     local clone_dir="$UPDATE_CLONE_DIR"
     local server_build_failed=0
+    local previous_source_dir=""
+    local remote_sha=""
 
     read_update_github_branch_from_env
 
@@ -4518,6 +5402,13 @@ update_from_github() {
         return 1
     fi
 
+    if ! remote_sha=$(resolve_update_remote_sha "$clone_dir"); then
+        print_error "Could not resolve the downloaded commit SHA; refusing an untracked update"
+        rm -rf "$clone_dir"
+        return 1
+    fi
+    print_info "Downloaded commit: ${remote_sha:0:7}"
+
     # Read remote version
     local remote_version=""
     if [ -f "$clone_dir/VERSION" ]; then
@@ -4530,8 +5421,13 @@ update_from_github() {
     # ---- Step 2: Update Go server source & compile ----
     print_step "Updating Go server source..."
     if [ -d "$GO_SERVER_SOURCE" ]; then
-        # Backup existing source (lightweight — just rename)
-        mv "$GO_SERVER_SOURCE" "${GO_SERVER_SOURCE}.pre-update.$$" 2>/dev/null || true
+        # Keep the old tree until the new server has built successfully so a
+        # failed update can restore a known-good source tree.
+        previous_source_dir="${GO_SERVER_SOURCE}.pre-update.$$"
+        if ! mv "$GO_SERVER_SOURCE" "$previous_source_dir" 2>/dev/null; then
+            previous_source_dir=""
+            print_warning "Could not stage the previous Go source tree; update will continue in place"
+        fi
     fi
     # Copy the *contents* into a guaranteed-existing destination. Copying the
     # directory itself would nest the new tree inside an existing
@@ -4542,10 +5438,9 @@ update_from_github() {
     cp -rf "$clone_dir/betterdesk-server/." "$GO_SERVER_SOURCE/"
 
     # Restore any local data/ directory that existed in the old source dir
-    if [ -d "${GO_SERVER_SOURCE}.pre-update.$$/data" ]; then
-        cp -rn "${GO_SERVER_SOURCE}.pre-update.$$/data" "$GO_SERVER_SOURCE/" 2>/dev/null || true
+    if [ -n "$previous_source_dir" ] && [ -d "$previous_source_dir/data" ]; then
+        cp -rn "$previous_source_dir/data" "$GO_SERVER_SOURCE/" 2>/dev/null || true
     fi
-    rm -rf "${GO_SERVER_SOURCE}.pre-update.$$"
     print_success "Go server source updated"
 
     # Compile Go server
@@ -4555,7 +5450,7 @@ update_from_github() {
         if ! install_golang; then
             print_warning "Go toolchain not available — server binary not updated"
             print_info "Install Go manually from https://go.dev/dl/ and re-run update"
-            # Non-critical: source files were updated, binary can be built later
+            server_build_failed=1
         fi
     fi
 
@@ -4580,6 +5475,8 @@ update_from_github() {
             print_info "Use the panel Rebuild server binary button or option 7 (Build & deploy server)"
             server_build_failed=1
         fi
+    else
+        server_build_failed=1
     fi
 
     # ---- Step 3: Update Node.js console files ----
@@ -4669,10 +5566,12 @@ update_from_github() {
     # ---- Step 4: Update installer scripts ----
     print_step "Updating installer scripts..."
     local scripts_updated=0
-    for script_file in betterdesk.sh betterdesk.ps1 betterdesk-docker.sh \
+    for script_file in install.sh betterdesk.sh betterdesk.ps1 betterdesk-docker.sh \
                        docker-compose.yml docker-compose.single.yml docker-compose.quick.yml \
                        docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml \
-                       Dockerfile Dockerfile.server Dockerfile.console VERSION; do
+                       Dockerfile Dockerfile.server Dockerfile.console docker-entrypoint.sh \
+                       docker/entrypoint.sh docker/server-entrypoint.sh docker/console-entrypoint.sh \
+                       docker/supervisord.conf scripts/installer-protocol-check.js VERSION; do
         if [ -f "$clone_dir/$script_file" ]; then
             cp "$clone_dir/$script_file" "$SCRIPT_DIR/$script_file" 2>/dev/null || true
             if [[ "$script_file" == *.sh ]]; then
@@ -4683,33 +5582,33 @@ update_from_github() {
     done
     print_success "$scripts_updated installer files updated"
 
-    # ---- Step 5: Update SHA tracking for in-app updater ----
-    if command -v git &>/dev/null && [ -d "$clone_dir/.git" ]; then
-        local remote_sha
-        remote_sha=$(git -C "$clone_dir" rev-parse HEAD 2>/dev/null)
-        if [ -n "$remote_sha" ]; then
-            mkdir -p "$CONSOLE_PATH/data"
-            echo "$remote_sha" > "$CONSOLE_PATH/data/.update_sha"
-            echo "$remote_sha" > "$CONSOLE_PATH/data/.agent_source_sha"
-            rm -f "$CONSOLE_PATH/data/.last_update_result.json"
-            print_info "SHA tracking updated: ${remote_sha:0:7}"
+    if [ "$server_build_failed" -eq 1 ]; then
+        if [ -n "$previous_source_dir" ] && [ -d "$previous_source_dir" ]; then
+            rm -rf "$GO_SERVER_SOURCE"
+            mv "$previous_source_dir" "$GO_SERVER_SOURCE" 2>/dev/null || \
+                print_warning "Could not restore the previous Go source tree"
         fi
+        rm -rf "$clone_dir"
+        print_error "Go server binary was not rebuilt — update incomplete for server component"
+        return 1
     fi
 
-    # ---- Step 6: Update VERSION file in project root ----
+    # Only mark the update complete after the server build/deploy succeeded.
+    mkdir -p "$CONSOLE_PATH/data"
+    printf '%s\n' "$remote_sha" > "$CONSOLE_PATH/data/.update_sha"
+    printf '%s\n' "$remote_sha" > "$CONSOLE_PATH/data/.agent_source_sha"
+    rm -f "$CONSOLE_PATH/data/.last_update_result.json"
+    print_info "SHA tracking updated: ${remote_sha:0:7}"
+
     if [ -f "$clone_dir/VERSION" ] && [ -n "$remote_version" ]; then
         cp "$clone_dir/VERSION" "$SCRIPT_DIR/VERSION" 2>/dev/null || true
         cp "$clone_dir/VERSION" "$CONSOLE_PATH/VERSION" 2>/dev/null || true
     fi
-
-    # Cleanup
     rm -rf "$clone_dir"
-
-    print_success "All project files updated from GitHub"
-    if [ "$server_build_failed" -eq 1 ]; then
-        print_error "Go server binary was not rebuilt — update incomplete for server component"
-        return 1
+    if [ -n "$previous_source_dir" ]; then
+        rm -rf "$previous_source_dir"
     fi
+    print_success "All project files updated from GitHub"
     return 0
 }
 
@@ -4756,6 +5655,7 @@ do_update() {
     echo ""
     
     detect_installation
+    check_management_capabilities || print_warning "Update may need the Management capabilities → Repair permissions action first"
     
     if [ "$INSTALL_STATUS" = "none" ]; then
         print_error "BetterDesk is not installed!"
@@ -4922,6 +5822,7 @@ do_repair() {
     echo ""
     
     detect_installation
+    check_management_capabilities || print_warning "Repair will report permission blockers before changing protected files"
     
     # CRITICAL: Preserve database configuration before any repair operation
     # This prevents PostgreSQL → SQLite switch when regenerating service files
@@ -5119,10 +6020,8 @@ repair_permissions() {
         if [ -f "$CONSOLE_PATH/scripts/linux-ensure-console-user.js" ] && command -v node &>/dev/null; then
             if [ "$(id -u)" -eq 0 ]; then
                 node "$CONSOLE_PATH/scripts/linux-ensure-console-user.js" || print_warning "Console permission script reported issues"
-            elif command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
-                sudo -n node "$CONSOLE_PATH/scripts/linux-ensure-console-user.js" || print_warning "Console permission script reported issues"
             else
-                print_warning "Console permission sync skipped (run as root: sudo node $CONSOLE_PATH/scripts/linux-ensure-console-user.js)"
+                print_warning "Console permission sync skipped; run linux-ensure-console-user.js as root"
             fi
         fi
         repair_https_stuck_state yes
@@ -5672,57 +6571,11 @@ CREDEOF
 # Build Functions
 #===============================================================================
 
-# Stage Go support-agent sources where the Node.js build worker expects them.
-# Called after console updates and toolchain install so Generator builds work
-# without a full git checkout on the production host.
+# Legacy Support Agent source staging — Generator now downloads BetterDesk-Client
+# templates into data/modules/betterdesk-support-generator/. Kept as a no-op so
+# older install/update call sites do not fail.
 stage_support_agent_source() {
-    local repo_root="${1:-$SCRIPT_DIR}"
-    local console_path="${CONSOLE_PATH:-/opt/BetterDeskConsole}"
-    local base="$console_path/agent-source"
-    local build_user="${SUDO_USER:-${BUILD_USER:-unitronix}}"
-
-    local support_src="$repo_root/betterdesk-support-agent"
-    local agent_lib_src="$repo_root/betterdesk-agent"
-    local server_lib_src="$repo_root/betterdesk-server"
-    local support_dst="$base/betterdesk-support-agent"
-    local agent_lib_dst="$base/betterdesk-agent"
-    local server_lib_dst="$base/betterdesk-server"
-
-    if [ ! -f "$support_src/build.sh" ]; then
-        print_warning "Support agent source not found: $support_src (Generator builds will fail)"
-        return 1
-    fi
-
-    mkdir -p "$base"
-    local staged=0
-    for pair in "$support_src:$support_dst" "$agent_lib_src:$agent_lib_dst" "$server_lib_src:$server_lib_dst"; do
-        local src="${pair%%:*}"
-        local dst="${pair#*:}"
-        if [ ! -d "$src" ]; then
-            print_warning "Missing agent source tree: $src"
-            continue
-        fi
-        if command -v rsync &>/dev/null; then
-            rsync -a --delete \
-                --exclude '.git/' \
-                --exclude 'dist/' \
-                --exclude 'data/' \
-                "$src/" "$dst/"
-        else
-            rm -rf "$dst"
-            mkdir -p "$dst"
-            cp -a "$src/." "$dst/"
-        fi
-        staged=$((staged + 1))
-    done
-
-    if [ "$staged" -eq 0 ]; then
-        print_error "No support-agent sources staged"
-        return 1
-    fi
-
-    chown -R "$build_user:$build_user" "$base" 2>/dev/null || true
-    print_success "Go support-agent source staged at $base"
+    print_info "Support Generator uses Client templates (module install); skipping Go support-agent staging"
     return 0
 }
 
@@ -6418,11 +7271,13 @@ do_uninstall() {
     print_warning "This operation will remove BetterDesk Console!"
     echo ""
     
-    if ! confirm "Are you sure you want to continue?"; then
-        return
+    if [ "$AUTO_MODE" != true ] && [ "$UNINSTALL_MODE" != true ]; then
+        if ! confirm "Are you sure you want to continue?"; then
+            return
+        fi
     fi
     
-    if confirm "Create backup before uninstall?"; then
+    if [ "$AUTO_MODE" = true ] || confirm "Create backup before uninstall?"; then
         do_backup_silent
     fi
     
@@ -6446,14 +7301,18 @@ do_uninstall() {
     rm -f /etc/systemd/system/betterdesk-go.service
     systemctl daemon-reload
     
-    if confirm "Remove installation files ($RUSTDESK_PATH)?"; then
+    if [ "$PURGE_MODE" = true ] || { [ "$AUTO_MODE" != true ] && confirm "Remove installation files ($RUSTDESK_PATH)?"; }; then
         rm -rf "$RUSTDESK_PATH"
         print_info "Removed: $RUSTDESK_PATH"
+    else
+        print_info "Preserved server data: $RUSTDESK_PATH"
     fi
     
-    if confirm "Remove Web Console ($CONSOLE_PATH)?"; then
+    if [ "$PURGE_MODE" = true ] || { [ "$AUTO_MODE" != true ] && confirm "Remove Web Console ($CONSOLE_PATH)?"; }; then
         rm -rf "$CONSOLE_PATH"
         print_info "Removed: $CONSOLE_PATH"
+    else
+        print_info "Preserved console data: $CONSOLE_PATH"
     fi
     
     print_success "BetterDesk has been uninstalled"
@@ -7529,6 +8388,7 @@ show_menu() {
     echo "  M. 🔄 Database migration"
     echo "  B. 🧰 Build toolchain"
     echo "  S. ⚙️  Settings (paths)"
+    echo "  P. 🛡️  Management capabilities and server settings"
     echo "  0. ❌ Exit"
     echo ""
     echo -e "  ${DIM}Tip: this menu also supports arrow-key navigation (set BETTERDESK_CLASSIC_MENU=1 to force this list).${NC}"
@@ -7548,11 +8408,24 @@ main() {
     auto_detect_paths
     echo ""
     sleep 1
+
+    if [ "$CHECK_CAPABILITIES" = true ] || [ "$REPAIR_PERMISSIONS" = true ] \
+        || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+        local management_rc=0
+        [ "$REPAIR_PERMISSIONS" = true ] && repair_management_permissions
+        check_management_capabilities || management_rc=$?
+        if [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
+            apply_managed_config || management_rc=$?
+        fi
+        exit "$management_rc"
+    fi
     
     # Auto mode - run installation directly
     if [ "$AUTO_MODE" = true ]; then
         print_info "Running in AUTO mode..."
-        if [ "$MINIMAL_MODE" = true ]; then
+        if [ "$UNINSTALL_MODE" = true ]; then
+            do_uninstall
+        elif [ "$MINIMAL_MODE" = true ]; then
             do_install_minimal
         else
             do_install
@@ -7578,9 +8451,10 @@ main() {
         $'Database migration\tMigrate between backends'
         $'Build toolchain\tInstall compilers'
         $'Settings (paths)\tConfigure install paths'
+        $'Management capabilities\tCheck permissions and change allowlisted server settings'
         $'Exit\tQuit the manager'
     )
-    local menu_actions=( 1 2 3 4 5 6 7 8 9 L C T M B S 0 )
+    local menu_actions=( 1 2 3 4 5 6 7 8 9 L C T M B S P 0 )
 
     while true; do
         local choice=""
@@ -7615,6 +8489,7 @@ main() {
             [Mm]) do_migrate_database ;;
             [Bb]) do_install_build_toolchain ;;
             [Ss]) configure_paths ;;
+            [Pp]) configure_management ;;
             0) 
                 echo ""
                 print_info "Goodbye!"
@@ -7628,5 +8503,8 @@ main() {
     done
 }
 
-# Run
-main "$@"
+# Run only when executed directly; this also lets installer tests source the
+# bounded command helpers without starting the interactive manager.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

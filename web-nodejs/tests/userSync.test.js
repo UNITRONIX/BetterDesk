@@ -130,6 +130,73 @@ describe('userSync', () => {
         expect(inserts).toHaveLength(0);
     });
 
+    it('syncs a Go last_login timestamp to a matching local user with a different ID', async () => {
+        const updates = [];
+        const { goDb, authDb } = createSqliteMock([
+            {
+                id: 7,
+                username: 'Operator1',
+                password_hash: 'hash',
+                role: 'operator',
+                auth_provider: 'local',
+                last_login: '2026-09-18 12:00:00',
+            },
+        ], [], updates);
+        authDb.prepare = jest.fn((sql) => ({
+            run: jest.fn((...args) => updates.push({ sql, args })),
+        }));
+        mockDb.getDb.mockReturnValue(goDb);
+        mockDb.getAuthDb.mockReturnValue(authDb);
+        mockDb.getAllUsersForBackup.mockResolvedValue([{
+            id: 12,
+            username: 'operator1',
+            role: 'operator',
+            auth_provider: 'local',
+            last_login: null,
+        }]);
+
+        const result = await userSync.backfillFromGo();
+
+        expect(result.synced).toBe(1);
+        expect(updates).toEqual(expect.arrayContaining([
+            {
+                sql: 'UPDATE users SET role = ?, auth_provider = ?, last_login = ? WHERE id = ?',
+                args: ['operator', 'local', '2026-09-18 12:00:00', 12],
+            },
+        ]));
+    });
+
+    it('does not overwrite a newer local last_login with an older Go timestamp', async () => {
+        const updates = [];
+        const { goDb, authDb } = createSqliteMock([
+            {
+                id: 7,
+                username: 'operator1',
+                password_hash: 'hash',
+                role: 'operator',
+                auth_provider: 'local',
+                last_login: '2026-09-18 11:00:00',
+            },
+        ], [], updates);
+        authDb.prepare = jest.fn((sql) => ({
+            run: jest.fn((...args) => updates.push({ sql, args })),
+        }));
+        mockDb.getDb.mockReturnValue(goDb);
+        mockDb.getAuthDb.mockReturnValue(authDb);
+        mockDb.getAllUsersForBackup.mockResolvedValue([{
+            id: 12,
+            username: 'operator1',
+            role: 'operator',
+            auth_provider: 'local',
+            last_login: '2026-09-18 12:00:00',
+        }]);
+
+        const result = await userSync.backfillFromGo();
+
+        expect(result.synced).toBe(0);
+        expect(updates).toHaveLength(0);
+    });
+
     it('resolves a local user ID to the matching Go user ID by username', async () => {
         mockDb.getUserById.mockResolvedValue({ id: 12, username: 'operator1' });
         mockApiClient.get.mockResolvedValue({

@@ -585,9 +585,19 @@
                 const emailInput = document.getElementById('user-email');
                 if (emailInput) emailInput.value = user.email || '';
                 if (passwordInput) passwordInput.placeholder = _('users.password_leave_empty');
-                // LDAP/OIDC accounts are managed by the identity provider:
-                // password cannot be set locally and the role is provider-mapped.
+                // LDAP accounts are fully provider-managed. OIDC passwords remain
+                // provider-managed, while the panel role can be overridden.
                 const provider = (user.auth_provider || 'local').toLowerCase();
+                if (provider === 'ldap' && roleSelect) {
+                    roleSelect.disabled = true;
+                    const roleGroup = roleSelect.closest('.form-group');
+                    if (roleGroup) {
+                        const hint = document.createElement('span');
+                        hint.className = 'form-hint';
+                        hint.textContent = _('users.provider_managed_hint');
+                        roleGroup.appendChild(hint);
+                    }
+                }
                 if (provider !== 'local') {
                     if (passwordInput) {
                         passwordInput.value = '';
@@ -598,7 +608,7 @@
                     if (passwordGroup) {
                         const hint = document.createElement('span');
                         hint.className = 'form-hint';
-                        hint.textContent = _('users.provider_managed_hint');
+                        hint.textContent = _('users.password_managed_by_provider');
                         passwordGroup.appendChild(hint);
                     }
                 }
@@ -720,8 +730,15 @@
         try {
             if (editingUserId) {
                 // Update existing user
-                const data = { role, email, groupGuids, folderIds, peerIds, strategyGuid };
-                if (password) data.password = password;
+                const user = users.find(item => Number(item.id) === Number(editingUserId));
+                const provider = (user?.auth_provider || 'local').toLowerCase();
+                const data = { email, groupGuids, folderIds, peerIds, strategyGuid };
+                if (provider !== 'ldap') {
+                    data.role = role;
+                }
+                if (provider === 'local' && password) {
+                    if (password) data.password = password;
+                }
                 
                 await Utils.api(`/api/users/${editingUserId}`, {
                     method: 'PATCH',

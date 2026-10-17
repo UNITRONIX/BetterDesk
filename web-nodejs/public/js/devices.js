@@ -4,6 +4,11 @@
 
 (function() {
     'use strict';
+
+    function remoteText(key, fallback) {
+        const value = _(key);
+        return value && value !== key ? value : fallback;
+    }
     
     // Fallback if Utils.sanitizeColor is missing (old utils.js on server)
     function _sanitizeColorFallback(c) {
@@ -36,14 +41,28 @@
     function getDeviceTypeIcon(type) {
         switch ((type || '').toLowerCase()) {
             case 'betterdesk': return 'desktop_windows';
+            case 'betterdesk-support': return 'support_agent';
             case 'desktop':  return 'desktop_windows';
             case 'scada':    return 'precision_manufacturing';
             case 'iot':      return 'sensors';
             case 'os_agent': return 'terminal';
             case 'mesh_agent': return 'hub';
+            case 'rdp':      return 'desktop_windows';
+            case 'vnc':      return 'computer';
             case 'mobile':   return 'phone_android';
             case 'rustdesk': return 'connected_tv';
             default:         return 'devices';
+        }
+    }
+
+    function getDeviceTypeLabel(type) {
+        switch ((type || '').toLowerCase()) {
+            case 'betterdesk': return 'BetterDesk';
+            case 'betterdesk-support': return 'BetterDesk Support';
+            case 'rustdesk': return 'RustDesk';
+            case 'rdp': return 'RDP';
+            case 'vnc': return 'VNC';
+            default: return type || '-';
         }
     }
     
@@ -70,6 +89,11 @@
     let searchQuery = '';
     let showDeleted = false;
     let draggedDeviceId = null;
+    let lastDragClientY = null;
+    let dragScrollRafId = null;
+    const DRAG_SCROLL_EDGE_PX = 56;
+    const DRAG_SCROLL_MIN_SPEED = 4;
+    const DRAG_SCROLL_MAX_SPEED = 20;
     const STORAGE_PER_PAGE = 'bd_devices_per_page';
     const STORAGE_SHOW_DELETED = 'bd_devices_show_deleted';
     const PER_PAGE_OPTIONS = [10, 20, 50, 100];
@@ -77,6 +101,9 @@
     let hScrollSyncing = false;
     const pendingRequests = new Map();
     const LOAD_STAGGER_MS = 120;
+    const DEVICES_REFRESH_INTERVAL_MS = 60000;
+    let devicesRefreshTimer = null;
+    let devicesVisibilityHandler = null;
     
     function fetchOnce(endpoint, fetcher) {
         if (pendingRequests.has(endpoint)) return pendingRequests.get(endpoint);
@@ -116,6 +143,7 @@
         initTagFilter();
         initSorting();
         initSync();
+        document.getElementById('add-remote-target-btn')?.addEventListener('click', () => showRemoteTargetModal());
         initFolders();
         initDeviceGroups();
         initStrategies();
@@ -160,6 +188,37 @@
 
         // Real-time device status push via WebSocket
         initDeviceStatusWS();
+        initDevicesBackgroundRefresh();
+    }
+
+    /**
+     * Keep the list reconciled with the server without competing with the
+     * WebSocket status updates. The visibility check avoids background
+     * requests while the tab is not being viewed.
+     */
+    function initDevicesBackgroundRefresh() {
+        stopDevicesBackgroundRefresh();
+
+        devicesRefreshTimer = window.setInterval(() => {
+            if (!document.hidden) loadDevices();
+        }, DEVICES_REFRESH_INTERVAL_MS);
+
+        devicesVisibilityHandler = () => {
+            if (!document.hidden) loadDevices();
+        };
+        document.addEventListener('visibilitychange', devicesVisibilityHandler);
+        window.addEventListener('beforeunload', stopDevicesBackgroundRefresh, { once: true });
+    }
+
+    function stopDevicesBackgroundRefresh() {
+        if (devicesRefreshTimer !== null) {
+            window.clearInterval(devicesRefreshTimer);
+            devicesRefreshTimer = null;
+        }
+        if (devicesVisibilityHandler) {
+            document.removeEventListener('visibilitychange', devicesVisibilityHandler);
+            devicesVisibilityHandler = null;
+        }
     }
 
     /**
@@ -276,6 +335,15 @@
             closeContextMenu();
             updateTableHScroll();
         });
+
+        // Dedicated backdrop dismiss (phone bottom-sheet); do not rely only on document click
+        const overlay = document.getElementById('kebab-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeAllKebabMenus();
+            });
+        }
     }
 
     function closeAllKebabMenus() {
@@ -288,9 +356,61 @@
         if (overlay) overlay.classList.remove('open');
     }
 
+    /** Phone bottom-sheet overlay CSS only applies at ≤600px */
+    function useKebabOverlay() {
+        return window.innerWidth <= 600;
+    }
+
+    /** Touch / mobile shell: avoid HTML5 drag stealing taps (#410) */
+    function shouldDisableRowDrag() {
+        if (document.body.classList.contains('is-mobile-shell')) return true;
+        if (window.DeviceCapabilities && window.DeviceCapabilities.isTouch()) return true;
+        if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
+        return false;
+    }
+
+    /** Prefer single-tap detail on touch / mobile shell; desktop keeps dblclick */
+    function preferSingleTapDetail() {
+        return shouldDisableRowDrag();
+    }
+
+    /** Floating hscroll conflicts with bottom nav on touch + Desktop-site widths */
+    function shouldHideHScrollFloat() {
+        if (window.innerWidth <= 600) return true;
+        if (!document.body.classList.contains('is-mobile-shell')) return false;
+        if (document.body.classList.contains('is-touch')) return true;
+        if (window.DeviceCapabilities && window.DeviceCapabilities.isTouch()) return true;
+        if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
+        return false;
+    }
+
     function buildDeviceMenuItemsHtml(device) {
         const eid = Utils.escapeHtml(device.id);
         const banned = !!device.banned;
+        if (device.remote_target) {
+            return `
+            <button type="button" class="kebab-menu-item connect-desktop" data-action="web-remote" data-id="${eid}">
+                <span class="material-icons">screen_share</span>
+                <span>${_('actions.web_remote') || 'Web Remote'}</span>
+            </button>
+            <button type="button" class="kebab-menu-item info" data-action="details" data-id="${eid}">
+                <span class="material-icons">info</span>
+                <span>${_('actions.details')}</span>
+            </button>
+            <button type="button" class="kebab-menu-item" data-action="edit" data-id="${eid}">
+                <span class="material-icons">edit</span>
+                <span>${_('actions.edit')}</span>
+            </button>
+            <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
+                <span class="material-icons">hub</span>
+                <span>${_('devices.manage_groups') || 'Manage Groups'}</span>
+            </button>
+            <div class="kebab-divider"></div>
+            <button type="button" class="kebab-menu-item danger" data-action="delete" data-id="${eid}">
+                <span class="material-icons">delete</span>
+                <span>${_('actions.delete')}</span>
+            </button>`;
+        }
         if (device.soft_deleted) {
             return `
             <button type="button" class="kebab-menu-item info" data-action="details" data-id="${eid}">
@@ -567,6 +687,11 @@
         const tableContainer = document.querySelector('.devices-table-container');
         const mainContent = document.querySelector('.main-content');
         if (!table || !tableContainer) return;
+
+        if (shouldHideHScrollFloat()) {
+            hScrollFloatEl.classList.remove('visible');
+            return;
+        }
 
         const scrollWidth = table.scrollWidth;
         const clientWidth = tableScrollEl.clientWidth;
@@ -891,8 +1016,9 @@
             const eid = Utils.escapeHtml(device.id);
             const statusInfo = deviceStatusInfo(device);
             const sc = statusInfo.className;
+            const rowDraggable = (!device.soft_deleted && !shouldDisableRowDrag()) ? 'true' : 'false';
             return `
-            <tr data-id="${eid}" class="${device.banned ? 'banned-row' : ''}${device.soft_deleted ? ' deleted-row' : ''}" draggable="${device.soft_deleted ? 'false' : 'true'}">
+            <tr data-id="${eid}" class="${device.banned ? 'banned-row' : ''}${device.soft_deleted ? ' deleted-row' : ''}" draggable="${rowDraggable}">
                 <td data-column="id">
                     <div class="device-id">
                         <span class="device-status-dot ${sc}"></span>
@@ -907,7 +1033,7 @@
                 <td data-column="device_type">
                     <div class="platform-icon">
                         <span class="material-icons">${getDeviceTypeIcon(device.device_type)}</span>
-                        <span>${Utils.escapeHtml(device.device_type || '-')}</span>
+                        <span>${Utils.escapeHtml(getDeviceTypeLabel(device.device_type))}</span>
                         ${device.linked_peer_id ? `<span class="mesh-linked-badge" title="${Utils.escapeHtml(_('mesh.linked_peer') || 'Linked device')}">↔ ${Utils.escapeHtml(device.linked_peer_id)}</span>` : ''}
                     </div>
                 </td>
@@ -970,8 +1096,11 @@
                 if (!wasOpen) {
                     menu.classList.add('open');
                     positionKebabMenu(btn, menu);
-                    const overlay = document.getElementById('kebab-overlay');
-                    if (overlay) overlay.classList.add('open');
+                    // Overlay styles only exist at ≤600px — do not leave a ghost .open class wider
+                    if (useKebabOverlay()) {
+                        const overlay = document.getElementById('kebab-overlay');
+                        if (overlay) overlay.classList.add('open');
+                    }
                 }
             });
         });
@@ -989,16 +1118,20 @@
             });
         });
 
-        // Double-click row to open device detail panel
+        function openRowDetail(e, row) {
+            if (e.target.closest('.kebab-wrapper') || e.target.closest('.copy-btn')) return;
+            const deviceId = row.dataset.id;
+            if (deviceId && typeof DeviceDetail !== 'undefined') {
+                DeviceDetail.open(deviceId);
+            }
+        }
+
+        // Touch / mobile: single tap opens detail; desktop keeps double-click
         tableBody.querySelectorAll('tr[data-id]').forEach(row => {
-            row.addEventListener('dblclick', (e) => {
-                // Ignore double-click on kebab menu and copy button
-                if (e.target.closest('.kebab-wrapper') || e.target.closest('.copy-btn')) return;
-                const deviceId = row.dataset.id;
-                if (deviceId && typeof DeviceDetail !== 'undefined') {
-                    DeviceDetail.open(deviceId);
-                }
-            });
+            if (preferSingleTapDetail()) {
+                row.addEventListener('click', (e) => openRowDetail(e, row));
+            }
+            row.addEventListener('dblclick', (e) => openRowDetail(e, row));
         });
     }
     
@@ -1146,7 +1279,11 @@
                 break;
                 
             case 'edit':
-                showEditModal(deviceId);
+                if (devices.find(d => d.id === deviceId)?.remote_target) {
+                    showRemoteTargetModal(deviceId);
+                } else {
+                    showEditModal(deviceId);
+                }
                 break;
 
             case 'groups':
@@ -1163,7 +1300,11 @@
                 break;
                 
             case 'delete':
-                await deleteDevice(deviceId);
+                if (devices.find(d => d.id === deviceId)?.remote_target) {
+                    await deleteRemoteTarget(deviceId);
+                } else {
+                    await deleteDevice(deviceId);
+                }
                 break;
 
             case 'restore':
@@ -1178,6 +1319,183 @@
                 showAccessPolicyModal(deviceId);
                 break;
         }
+    }
+
+    async function deleteRemoteTarget(deviceId) {
+        const confirmed = await Modal.confirm({
+            title: remoteText('devices.remote_delete_title', 'Delete remote target'),
+            message: remoteText('devices.remote_delete_confirm', 'Delete this RDP/VNC target?'),
+            confirmLabel: _('actions.delete'),
+            danger: true
+        });
+        if (!confirmed) return;
+        try {
+            await Utils.api(`/api/remote-targets/${encodeURIComponent(deviceId)}`, { method: 'DELETE' });
+            Notifications.success(_('devices.delete_success') || 'Remote target deleted');
+            loadDevices();
+        } catch (error) {
+            Notifications.error(error.message || _('errors.delete_failed'));
+        }
+    }
+
+    async function submitRemoteTargetForm(deviceId) {
+        const form = document.getElementById('remote-target-form');
+        if (!form) return;
+        const currentDevice = deviceId && devices.find(d => d.id === deviceId);
+        const payload = {
+            name: form.elements.name.value.trim(),
+            protocol: form.elements.protocol.value,
+            platform: form.elements.platform.value.trim(),
+            host: form.elements.host.value.trim(),
+            port: Number(form.elements.port.value),
+            username: form.elements.username.value.trim(),
+            credential_mode: form.elements.credential_mode.value,
+            tls_mode: form.elements.tls_mode.value,
+            cert_fingerprint: form.elements.cert_fingerprint.value.trim(),
+            enabled: form.elements.enabled.checked
+        };
+        const password = form.elements.password.value;
+        if (payload.credential_mode === 'saved' && !password && currentDevice?.credential_mode !== 'saved') {
+            Notifications.error(remoteText('devices.remote_password_required', 'Enter a password to save credentials'));
+            return;
+        }
+        try {
+            const url = deviceId
+                ? `/api/remote-targets/${encodeURIComponent(deviceId)}`
+                : '/api/remote-targets';
+            const savedTarget = await Utils.api(url, {
+                method: deviceId ? 'PATCH' : 'POST',
+                body: payload
+            });
+            const targetId = deviceId || savedTarget?.id;
+            if (payload.credential_mode === 'saved' && password) {
+                await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
+                    method: 'PUT',
+                    body: { username: payload.username, password }
+                });
+            } else if (payload.credential_mode !== 'saved' && currentDevice?.credential_mode === 'saved') {
+                await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
+                    method: 'DELETE'
+                });
+            }
+            Modal.close();
+            Notifications.success(remoteText('devices.remote_saved', 'Remote target saved'));
+            loadDevices();
+        } catch (error) {
+            Notifications.error(error.message || _('errors.save_failed'));
+        }
+    }
+
+    async function testRemoteTargetForm() {
+        const form = document.getElementById('remote-target-form');
+        if (!form) return;
+        const payload = {
+            name: form.elements.name.value.trim(),
+            protocol: form.elements.protocol.value,
+            platform: form.elements.platform.value.trim(),
+            host: form.elements.host.value.trim(),
+            port: Number(form.elements.port.value),
+            username: form.elements.username.value.trim(),
+            credential_mode: form.elements.credential_mode.value,
+            tls_mode: form.elements.tls_mode.value,
+            cert_fingerprint: form.elements.cert_fingerprint.value.trim()
+        };
+        try {
+            await Utils.api('/api/remote-targets/test', { method: 'POST', body: payload });
+            Notifications.success(remoteText('devices.remote_test_success', 'Connection test succeeded'));
+        } catch (error) {
+            Notifications.error(error.message || remoteText('devices.remote_test_failed', 'Connection test failed'));
+        }
+    }
+
+    function showRemoteTargetModal(deviceId = null) {
+        const device = deviceId && devices.find(d => d.id === deviceId);
+        const title = device
+            ? remoteText('devices.remote_edit_title', 'Edit RDP/VNC target')
+            : remoteText('devices.remote_add_title', 'Add RDP/VNC target');
+        const escape = (value) => Utils.escapeHtml(String(value ?? ''));
+        const content = `
+            <form id="remote-target-form" class="remote-target-form">
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_name', 'Display name')}</label>
+                    <input class="form-input" name="name" required maxlength="160" value="${escape(device?.name || device?.display_name || '')}">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_protocol', 'Technology')}</label>
+                        <select class="form-input" name="protocol">
+                            <option value="rdp" ${device?.remote_protocol === 'rdp' ? 'selected' : ''}>RDP</option>
+                            <option value="vnc" ${device?.remote_protocol === 'vnc' ? 'selected' : ''}>VNC</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_platform', 'Operating system')}</label>
+                        <input class="form-input" name="platform" maxlength="80" placeholder="Windows / Linux" value="${escape(device?.platform || '')}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_host', 'Host or IP')}</label>
+                        <input class="form-input" name="host" required maxlength="253" value="${escape(device?.host || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_port', 'Port')}</label>
+                        <input class="form-input" name="port" type="number" min="1" max="65535" required value="${escape(device?.port || (device?.remote_protocol === 'vnc' ? 5900 : 3389))}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_username', 'Username')}</label>
+                        <input class="form-input" name="username" autocomplete="username" value="${escape(device?.username || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label>${remoteText('devices.remote_credentials', 'Password')}</label>
+                        <select class="form-input" name="credential_mode">
+                            <option value="prompt">${remoteText('devices.remote_prompt_password', 'Ask every session')}</option>
+                            <option value="saved">${remoteText('devices.remote_save_password', 'Save securely')}</option>
+                            <option value="none">${remoteText('devices.remote_no_password', 'No password')}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_password', 'Password')}</label>
+                    <input class="form-input" name="password" type="password" autocomplete="new-password" placeholder="${remoteText('devices.remote_password_hint', 'Leave empty to keep the saved password')}">
+                </div>
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_tls', 'Certificate policy')}</label>
+                    <select class="form-input" name="tls_mode">
+                        <option value="required">${remoteText('devices.remote_tls_required', 'Require TLS')}</option>
+                        <option value="preferred">${remoteText('devices.remote_tls_preferred', 'Prefer TLS')}</option>
+                        <option value="disabled">${remoteText('devices.remote_tls_disabled', 'Disable TLS')}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>${remoteText('devices.remote_fingerprint', 'Trusted certificate fingerprint')}</label>
+                    <input class="form-input" name="cert_fingerprint" maxlength="128" placeholder="SHA-256 fingerprint" value="${escape(device?.cert_fingerprint || '')}">
+                    <small class="form-help">${remoteText('devices.remote_fingerprint_hint', 'Leave empty to require confirmation on first connection.')}</small>
+                </div>
+                <label class="toggle-row">
+                    <input type="checkbox" name="enabled" ${device?.enabled !== false ? 'checked' : ''}>
+                    <span>${remoteText('devices.remote_enabled', 'Enabled')}</span>
+                </label>
+            </form>`;
+        Modal.show({
+            title,
+            content,
+            size: 'medium',
+            buttons: [
+                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: remoteText('devices.remote_test', 'Test connection'), class: 'btn-secondary', onClick: () => testRemoteTargetForm() },
+                { label: _('actions.save'), class: 'btn-primary', onClick: () => submitRemoteTargetForm(deviceId) }
+            ],
+            onOpen: () => {
+                const form = document.getElementById('remote-target-form');
+                if (!form) return;
+                if (device?.credential_mode) form.elements.credential_mode.value = device.credential_mode;
+                if (device?.tls_mode) form.elements.tls_mode.value = device.tls_mode;
+                form.elements.host.focus();
+            }
+        });
     }
     
     /**
@@ -1823,10 +2141,17 @@
                             </h3>
                         </div>
                         <div class="modal-body">
-                            <p class="delete-warning">${_('devices.delete_warning')}</p>
-                            <p class="delete-device-id"><strong>${Utils.escapeHtml(deviceId)}</strong></p>
-                            <p class="delete-info">${_('devices.delete_permanent')}</p>
+                            <p class="delete-warning">${_('devices.delete_confirm', { id: Utils.escapeHtml(deviceId) })}</p>
+                            <p class="delete-info form-hint">${_('devices.delete_reserved_hint')}</p>
                             <div class="revoke-options" style="margin-top: 12px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 6px;">
+                                    <input type="checkbox" id="hard-delete-check-${deviceId}" />
+                                    <span class="material-icons" style="font-size: 18px; color: var(--accent-red);">delete_forever</span>
+                                    <span>${_('devices.delete_hard_option')}</span>
+                                </label>
+                                <p class="revoke-hint" style="font-size: 0.8rem; opacity: 0.7; margin: 0 0 12px 30px;">
+                                    ${_('devices.delete_hard_hint')}
+                                </p>
                                 <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 6px;">
                                     <input type="checkbox" id="revoke-check-${deviceId}" />
                                     <span class="material-icons" style="font-size: 18px; color: var(--accent-red);">block</span>
@@ -1840,7 +2165,7 @@
                         <div class="modal-footer">
                             <button class="btn btn-secondary cancel-btn">${_('actions.cancel')}</button>
                             <button class="btn btn-danger confirm-delete-btn" disabled>
-                                <span class="material-icons">delete_forever</span>
+                                <span class="material-icons">delete</span>
                                 <span class="btn-text">${_('actions.delete')} (<span class="countdown">3</span>)</span>
                             </button>
                         </div>
@@ -1854,6 +2179,7 @@
             const confirmBtn = modal.querySelector('.confirm-delete-btn');
             const cancelBtn = modal.querySelector('.cancel-btn');
             const countdownEl = confirmBtn.querySelector('.countdown');
+            const hardCheck = document.getElementById(`hard-delete-check-${deviceId}`);
             const revokeCheck = document.getElementById(`revoke-check-${deviceId}`);
             
             let countdown = 3;
@@ -1889,16 +2215,25 @@
             
             confirmBtn.addEventListener('click', async () => {
                 if (confirmBtn.disabled) return;
+                const hard = hardCheck && hardCheck.checked;
                 const revoke = revokeCheck && revokeCheck.checked;
                 closeModal();
                 
                 try {
                     const params = new URLSearchParams();
+                    if (hard) params.set('hard', 'true');
                     if (revoke) params.set('revoke', 'true');
                     const qs = params.toString();
-                    const url = `/api/devices/${deviceId}${qs ? '?' + qs : ''}`;
+                    const url = `/api/devices/${encodeURIComponent(deviceId)}${qs ? '?' + qs : ''}`;
                     await Utils.api(url, { method: 'DELETE' });
-                    const msg = revoke ? _('devices.revoke_success') : _('devices.delete_success');
+                    let msg;
+                    if (hard) {
+                        msg = _('devices.permanent_delete_success');
+                    } else if (revoke) {
+                        msg = _('devices.revoke_success');
+                    } else {
+                        msg = _('devices.delete_soft_success_hint');
+                    }
                     Notifications.success(msg);
                     loadDevices();
                     resolve(true);
@@ -1952,6 +2287,64 @@
     function showEditModal(deviceId) {
         const device = devices.find(d => d.id === deviceId);
         if (!device) return;
+
+        const editTags = new Set(normalizeTags(device.tags));
+        const editTagInputId = 'edit-tag-input';
+        const editTagsSelectedId = 'edit-tags-selected';
+        const editTagOptionsId = 'edit-tag-options';
+        const editTagSuggestionsId = 'edit-tag-suggestions';
+        const renderEditTags = () => {
+            const selectedEl = document.getElementById(editTagsSelectedId);
+            const optionsEl = document.getElementById(editTagOptionsId);
+            if (!selectedEl || !optionsEl) return;
+
+            selectedEl.innerHTML = editTags.size
+                ? [...editTags].map(tag => `
+                    <span class="device-edit-tag-pill">
+                        ${Utils.escapeHtml(tag)}
+                        <button type="button" class="device-edit-tag-remove"
+                                data-edit-tag-remove="${Utils.escapeHtml(tag)}"
+                                title="${Utils.escapeHtml(_('actions.delete'))}">
+                            <span class="material-icons">close</span>
+                        </button>
+                    </span>
+                `).join('')
+                : `<span class="form-hint">${Utils.escapeHtml(_('device_detail.no_tags'))}</span>`;
+
+            optionsEl.innerHTML = availableTags
+                .filter(tag => tag && ![...editTags].some(selected => selected.toLowerCase() === tag.toLowerCase()))
+                .map(tag => `
+                    <button type="button" class="device-edit-tag-option"
+                            data-edit-tag-option="${Utils.escapeHtml(tag)}">
+                        <span class="material-icons">add</span>${Utils.escapeHtml(tag)}
+                    </button>
+                `).join('');
+
+            selectedEl.querySelectorAll('[data-edit-tag-remove]').forEach(button => {
+                button.addEventListener('click', () => {
+                    editTags.delete(button.dataset.editTagRemove);
+                    renderEditTags();
+                });
+            });
+            optionsEl.querySelectorAll('[data-edit-tag-option]').forEach(button => {
+                button.addEventListener('click', () => {
+                    editTags.add(button.dataset.editTagOption);
+                    renderEditTags();
+                });
+            });
+        };
+        const addEditTag = () => {
+            const input = document.getElementById(editTagInputId);
+            const tag = input?.value.trim();
+            if (!tag) return;
+            if ([...editTags].some(existing => existing.toLowerCase() === tag.toLowerCase())) {
+                Notifications.warning(_('device_detail.tag_exists'));
+                return;
+            }
+            editTags.add(tag);
+            if (input) input.value = '';
+            renderEditTags();
+        };
         
         Modal.show({
             title: _('devices.edit_title'),
@@ -1975,6 +2368,22 @@
                         <label for="edit-note">${_('devices.note')}</label>
                         <textarea id="edit-note" class="form-input" rows="2" 
                                   placeholder="${_('devices.note_placeholder')}" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
+                    </div>
+                    <div class="device-info-item full-width device-edit-tags-field">
+                        <label for="${editTagInputId}">${_('device_detail.tags')}</label>
+                        <div id="${editTagsSelectedId}" class="device-edit-tags-selected"></div>
+                        <div id="${editTagOptionsId}" class="device-edit-tag-options"></div>
+                        <div class="device-edit-tag-input-row">
+                            <input type="text" id="${editTagInputId}" class="form-input"
+                                   list="${editTagSuggestionsId}"
+                                   placeholder="${_('device_detail.tag_placeholder')}" maxlength="50">
+                            <datalist id="${editTagSuggestionsId}">
+                                ${availableTags.map(tag => `<option value="${Utils.escapeHtml(tag)}"></option>`).join('')}
+                            </datalist>
+                            <button type="button" class="btn btn-secondary btn-sm" id="edit-tag-add-btn">
+                                <span class="material-icons">add</span>${_('device_detail.add_tag')}
+                            </button>
+                        </div>
                     </div>
                     <div class="device-info-item">
                         <label>${_('devices.username')}</label>
@@ -2002,6 +2411,7 @@
                 { label: _('actions.save'), class: 'btn-primary', onClick: async () => {
                     const displayName = document.getElementById('edit-display-name').value.trim();
                     const note = document.getElementById('edit-note').value.trim();
+                    const tags = [...editTags];
                     const saveBtn = document.querySelector('.modal-overlay.open [data-btn-index="0"]');
                     const closeBtn = document.querySelector('.modal-overlay.open [data-btn-index="1"]');
                     const restoreButtons = () => {
@@ -2024,15 +2434,23 @@
                             body: JSON.stringify({ display_name: displayName, note }),
                             headers: { 'Content-Type': 'application/json' }
                         });
+                        const tagResult = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/tags`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ tags }),
+                            headers: { 'Content-Type': 'application/json' }
+                        });
 
                         device.display_name = displayName;
                         device.note = note;
+                        device.tags = tagResult?.tags || tags;
+                        availableTags = Array.from(new Set(availableTags.concat(device.tags))).sort((a, b) => a.localeCompare(b));
                         applyFilters();
                         document.dispatchEvent(new CustomEvent('devices:updated', {
                             detail: {
                                 id: device.id,
                                 display_name: displayName,
-                                note: note
+                                note: note,
+                                tags: device.tags
                             }
                         }));
 
@@ -2050,7 +2468,19 @@
                 }},
                 { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
             ],
-            size: 'medium'
+            size: 'medium',
+            onOpen: () => {
+                renderEditTags();
+                const input = document.getElementById(editTagInputId);
+                const addButton = document.getElementById('edit-tag-add-btn');
+                addButton?.addEventListener('click', addEditTag);
+                input?.addEventListener('keydown', event => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        addEditTag();
+                    }
+                });
+            }
         });
     }
 
@@ -2126,6 +2556,13 @@
     function initSearch() {
         const searchInput = document.getElementById('search-input');
         if (!searchInput) return;
+
+        // Honor ?search= from Enrollment Requests "View device" links (#351).
+        const urlSearch = new URLSearchParams(window.location.search).get('search');
+        if (urlSearch) {
+            searchQuery = urlSearch.trim();
+            searchInput.value = searchQuery;
+        }
         
         searchInput.addEventListener('input', Utils.debounce((e) => {
             searchQuery = e.target.value.trim();
@@ -3187,13 +3624,70 @@
     }
     
     // ==================== Drag & Drop ====================
+
+    function stopDragAutoScroll() {
+        if (dragScrollRafId != null) {
+            cancelAnimationFrame(dragScrollRafId);
+            dragScrollRafId = null;
+        }
+        lastDragClientY = null;
+    }
+
+    function dragScrollSpeed(depthPx) {
+        const t = Math.min(1, Math.max(0, depthPx / DRAG_SCROLL_EDGE_PX));
+        return DRAG_SCROLL_MIN_SPEED + t * (DRAG_SCROLL_MAX_SPEED - DRAG_SCROLL_MIN_SPEED);
+    }
+
+    function tickDragAutoScroll() {
+        dragScrollRafId = null;
+        if (!draggedDeviceId || lastDragClientY == null) return;
+
+        const mainContent = document.querySelector('.main-content');
+        if (!mainContent || mainContent.scrollHeight <= mainContent.clientHeight) {
+            dragScrollRafId = requestAnimationFrame(tickDragAutoScroll);
+            return;
+        }
+
+        const rect = mainContent.getBoundingClientRect();
+        const y = lastDragClientY;
+        let delta = 0;
+
+        if (y < rect.top + DRAG_SCROLL_EDGE_PX) {
+            delta = -dragScrollSpeed(rect.top + DRAG_SCROLL_EDGE_PX - y);
+        } else if (y > rect.bottom - DRAG_SCROLL_EDGE_PX) {
+            delta = dragScrollSpeed(y - (rect.bottom - DRAG_SCROLL_EDGE_PX));
+        }
+
+        if (delta !== 0) {
+            mainContent.scrollTop += delta;
+        }
+
+        dragScrollRafId = requestAnimationFrame(tickDragAutoScroll);
+    }
+
+    function startDragAutoScroll() {
+        if (dragScrollRafId != null) return;
+        dragScrollRafId = requestAnimationFrame(tickDragAutoScroll);
+    }
+
+    function onDocumentDragOver(e) {
+        if (!draggedDeviceId) return;
+        lastDragClientY = e.clientY;
+    }
     
     /**
      * Initialize drag & drop - row drag events only (called once)
      */
     function initDragDrop() {
+        // Track pointer Y during HTML5 drag (mousemove is unreliable while dragging)
+        document.addEventListener('dragover', onDocumentDragOver, true);
+
         // Handle drag start on rows
         tableBody?.addEventListener('dragstart', (e) => {
+            if (shouldDisableRowDrag()) {
+                e.preventDefault();
+                return;
+            }
             const row = e.target.closest('tr');
             if (!row) return;
             
@@ -3201,15 +3695,21 @@
             row.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', draggedDeviceId);
+            lastDragClientY = e.clientY;
+            startDragAutoScroll();
         });
         
         tableBody?.addEventListener('dragend', (e) => {
             const row = e.target.closest('tr');
             if (row) row.classList.remove('dragging');
             draggedDeviceId = null;
+            stopDragAutoScroll();
             
             // Remove drop indicators
             document.querySelectorAll('.folder-chip.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            document.querySelectorAll('.group-chip.drag-over').forEach(el => {
                 el.classList.remove('drag-over');
             });
         });

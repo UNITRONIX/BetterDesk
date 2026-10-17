@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22.23.2'
           cache: npm
           cache-dependency-path: web-nodejs/package-lock.json
 
@@ -36,6 +36,12 @@ jobs:
 
       - name: npm audit (moderate+)
         run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Check browser JavaScript syntax
+        run: npm run check:frontend
+
+      - name: Verify protocol schema artifacts
+        run: npm run protocols:check
 
       - name: Run tests
         run: npm run test:ci

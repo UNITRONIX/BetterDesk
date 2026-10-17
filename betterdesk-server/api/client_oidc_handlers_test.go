@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/unitronix/betterdesk-server/db"
 )
 
 func TestHandleClientLoginOptionsOIDC(t *testing.T) {
@@ -194,5 +195,69 @@ func TestRustdeskUserPayloadHasInfo(t *testing.T) {
 	}
 	if payload["is_admin"] != true {
 		t.Fatalf("is_admin = %#v", payload["is_admin"])
+	}
+}
+
+func TestEnsureOIDCUserPreservesRoleWhenOnlyDefaultApplies(t *testing.T) {
+	database := testSetupDB(t)
+	defer database.Close()
+
+	hash, err := auth.HashPassword("unused")
+	if err != nil {
+		t.Fatal(err)
+	}
+	user := &db.User{
+		Username:     "oidc-admin",
+		PasswordHash: hash,
+		Role:         auth.RoleAdmin,
+		AuthProvider: db.AuthProviderOIDC,
+	}
+	if err := database.CreateUser(user); err != nil {
+		t.Fatal(err)
+	}
+
+	s := &Server{db: database}
+	got, code := s.ensureOIDCUser(&auth.OIDCResult{
+		Username:      "oidc-admin",
+		Role:          auth.RoleViewer,
+		RoleFromGroup: false,
+	}, &auth.OIDCConfig{AllowSignup: true, DefaultRole: auth.RoleViewer})
+	if code != "" {
+		t.Fatalf("ensureOIDCUser code = %q", code)
+	}
+	if got.Role != auth.RoleAdmin {
+		t.Fatalf("role = %q, want %q", got.Role, auth.RoleAdmin)
+	}
+}
+
+func TestEnsureOIDCUserAppliesExplicitGroupRole(t *testing.T) {
+	database := testSetupDB(t)
+	defer database.Close()
+
+	hash, err := auth.HashPassword("unused")
+	if err != nil {
+		t.Fatal(err)
+	}
+	user := &db.User{
+		Username:     "oidc-group-admin",
+		PasswordHash: hash,
+		Role:         auth.RoleViewer,
+		AuthProvider: db.AuthProviderOIDC,
+	}
+	if err := database.CreateUser(user); err != nil {
+		t.Fatal(err)
+	}
+
+	s := &Server{db: database}
+	got, code := s.ensureOIDCUser(&auth.OIDCResult{
+		Username:      "oidc-group-admin",
+		Role:          auth.RoleAdmin,
+		RoleFromGroup: true,
+	}, &auth.OIDCConfig{AllowSignup: true, DefaultRole: auth.RoleViewer})
+	if code != "" {
+		t.Fatalf("ensureOIDCUser code = %q", code)
+	}
+	if got.Role != auth.RoleAdmin {
+		t.Fatalf("role = %q, want %q", got.Role, auth.RoleAdmin)
 	}
 }

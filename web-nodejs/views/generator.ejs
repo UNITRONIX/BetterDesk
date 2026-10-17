@@ -7,31 +7,103 @@
     body: `
         <div class="page-header">
             <h1 class="page-title">
-                <span class="material-icons">tune</span>
+                <span class="material-icons" aria-hidden="true">support_agent</span>
                 ${_('generator.title')}
             </h1>
             <p class="page-subtitle">${_('generator.subtitle')}</p>
         </div>
 
-        <div class="generator-layout">
+        <!-- Module install gate (shown when templates are not ready) -->
+        <div id="gen-module-gate" class="card generator-module-gate hidden">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons" aria-hidden="true">extension</span>
+                    ${_('generator.module_title')}
+                </h2>
+            </div>
+            <div class="card-body">
+                <p class="gen-module-intro">${_('generator.module_intro')}</p>
+                <ul class="gen-module-bullets">
+                    <li>${_('generator.module_bullet_incoming')}</li>
+                    <li>${_('generator.module_bullet_platforms')}</li>
+                    <li>${_('generator.module_bullet_terms')}</li>
+                </ul>
+                <div id="gen-module-status" class="gen-module-status text-muted">${_('generator.module_checking')}</div>
+                <div class="gen-module-actions">
+                    <button id="gen-accept-terms" class="btn btn-secondary" type="button">
+                        <span class="material-icons" aria-hidden="true">gavel</span>
+                        ${_('generator.module_accept_terms')}
+                    </button>
+                    <button id="gen-install-module" class="btn btn-primary" type="button" disabled>
+                        <span class="material-icons" aria-hidden="true">download</span>
+                        <span class="gen-install-label">${_('generator.module_install')}</span>
+                    </button>
+                    <label class="btn btn-secondary" for="gen-install-local-file">
+                        <span class="material-icons" aria-hidden="true">upload_file</span>
+                        Install local package
+                    </label>
+                    <input id="gen-install-local-file" type="file" accept=".tar.gz,.tgz,application/gzip"
+                           class="hidden" disabled>
+                    <button id="gen-finish-install" class="btn btn-success hidden" type="button">
+                        <span class="material-icons" aria-hidden="true">check_circle</span>
+                        ${_('generator.module_finish')}
+                    </button>
+                </div>
+                <div id="gen-legacy-leftovers" class="gen-legacy-leftovers hidden">
+                    <h3 class="section-title">${_('generator.legacy_leftovers_title')}</h3>
+                    <p class="form-hint">${_('generator.legacy_leftovers_hint')}</p>
+                    <p class="form-hint gen-legacy-upgrade-hint">${_('generator.legacy_upgrade_hint') || '“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to the Generator module maturity, not your client agents.'}</p>
+                    <div id="gen-legacy-leftovers-list" class="gen-legacy-leftovers-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="gen-operation-modal" class="gen-operation-modal hidden" aria-hidden="true">
+            <div class="gen-operation-backdrop"></div>
+            <div class="gen-operation-dialog" role="dialog" aria-modal="true"
+                 aria-labelledby="gen-operation-title">
+                <div class="gen-operation-spinner" aria-hidden="true"></div>
+                <h2 id="gen-operation-title">BetterDesk Client builder</h2>
+                <p id="gen-operation-message">Preparing the operation…</p>
+                <div class="gen-operation-progress" role="progressbar"
+                     aria-label="Builder progress">
+                    <span></span>
+                </div>
+                <p id="gen-operation-detail" class="text-muted"></p>
+            </div>
+        </div>
+
+        <section class="card generic-agent-release-card" id="gen-generic-releases">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons" aria-hidden="true">cloud_download</span>
+                    Generic incoming-only agents
+                </h2>
+                <button type="button" class="btn btn-secondary btn-sm" id="gen-sync-generic-release">
+                    <span class="material-icons" aria-hidden="true">sync</span>
+                    Import latest release
+                </button>
+            </div>
+            <div class="card-body">
+                <p class="form-hint">Import a signed GitHub Actions release once, then serve verified agent files locally from this BetterDesk instance.</p>
+                <div id="gen-generic-release-list" class="generic-agent-release-list">
+                    <span class="text-muted">No release imported yet.</span>
+                </div>
+                <p id="gen-generic-release-status" class="form-hint" role="status"></p>
+            </div>
+        </section>
+
+        <div id="gen-main" class="generator-layout hidden">
             <!-- Left column: bundle list -->
             <aside class="generator-bundles card">
                 <div class="card-header">
                     <h2 class="card-title">
-                        <span class="material-icons">inventory_2</span>
+                        <span class="material-icons" aria-hidden="true">inventory_2</span>
                         ${_('generator.bundles_title')}
                     </h2>
-                    <button id="gen-new-bundle" class="btn btn-primary btn-sm" title="${_('generator.agent_client_new_bundle')}">
-                        <span class="material-icons">add</span>
-                        ${_('generator.agent_client_tab')}
-                    </button>
-                    <button id="gen-new-support" class="btn btn-secondary btn-sm" title="${_('generator.support_agent_new_bundle')}">
-                        <span class="material-icons">support_agent</span>
-                        ${_('generator.support_agent_tab')}
-                    </button>
-                    <button id="gen-new-rdclient" class="btn btn-secondary btn-sm" title="${_('generator.rdclient_new_bundle')}">
-                        <span class="material-icons">connected_tv</span>
-                        ${_('generator.rdclient_tab')}
+                    <button id="gen-new-support" class="btn btn-primary btn-sm" title="${_('generator.new_bundle')}">
+                        <span class="material-icons" aria-hidden="true">add</span>
+                        ${_('generator.new_bundle')}
                     </button>
                 </div>
                 <div class="card-body">
@@ -41,260 +113,146 @@
                 </div>
             </aside>
 
-            <!-- Right column: editor + preview -->
+            <!-- Right column: editor -->
             <section class="generator-editor card">
                 <div class="card-header">
                     <h2 class="card-title" id="gen-editor-title">
-                        <span class="material-icons">edit</span>
+                        <span class="material-icons" aria-hidden="true">edit</span>
                         ${_('generator.editor_title')}
                     </h2>
                     <div class="editor-actions">
                         <button id="gen-revoke-btn" class="btn btn-warning btn-sm hidden">
-                            <span class="material-icons">block</span>
+                            <span class="material-icons" aria-hidden="true">block</span>
                             ${_('generator.revoke')}
                         </button>
                         <button id="gen-delete-btn" class="btn btn-danger btn-sm hidden">
-                            <span class="material-icons">delete</span>
+                            <span class="material-icons" aria-hidden="true">delete</span>
                             ${_('common.delete')}
                         </button>
+                        <button id="gen-rebuild-btn" class="btn btn-secondary btn-sm hidden">
+                            <span class="material-icons" aria-hidden="true">autorenew</span>
+                            ${_('generator.rebuild')}
+                        </button>
                         <button id="gen-save-btn" class="btn btn-primary btn-sm" disabled>
-                            <span class="material-icons">save</span>
+                            <span class="material-icons" aria-hidden="true">save</span>
                             ${_('common.save')}
                         </button>
                     </div>
                 </div>
                 <div class="card-body">
                     <div id="gen-empty-state" class="empty-state">
-                        <span class="material-icons">touch_app</span>
+                        <span class="material-icons" aria-hidden="true">touch_app</span>
                         <p>${_('generator.empty_state')}</p>
                     </div>
 
                     <div id="gen-editor-form" class="editor-form hidden">
-                        <div class="editor-grid">
-                            <div class="editor-fields">
+                        <div id="gen-legacy-hint" class="gen-legacy-hint hidden">${_('generator.legacy_hint')}</div>
+                        <div id="gen-build-capability-status" class="gen-build-capability-status hidden" role="status"></div>
+                        <div class="editor-fields">
+                            <div class="form-group">
+                                <label class="form-label" for="gen-name">${_('generator.bundle_name')}</label>
+                                <input type="text" id="gen-name" class="form-input" maxlength="100" required>
+                                <p class="form-hint">${_('generator.bundle_name_hint')}</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="gen-slug">${_('generator.short_link')}</label>
+                                <div class="download-link-row">
+                                    <span class="input-prefix">/d/</span>
+                                    <input type="text" id="gen-slug" class="form-input" maxlength="32"
+                                           title="${_('generator.short_link_hint')}"
+                                           autocomplete="off" spellcheck="false">
+                                </div>
+                                <p class="form-hint">${_('generator.short_link_hint')}</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="gen-app-name">App name</label>
+                                <input type="text" id="gen-app-name" class="form-input" maxlength="100"
+                                       placeholder="BetterDesk Support Agent">
+                                <p class="form-hint">Shown in the desktop client window title. Optional company label only — colors/logo come from Client Branding at runtime.</p>
+                            </div>
+
+                            <h3 class="section-title">${_('generator.connection_section')}</h3>
+
+                            <div class="form-group">
+                                <label class="form-label" for="gen-server-host">${_('generator.server_host')}</label>
+                                <input type="text" id="gen-server-host" class="form-input" maxlength="253"
+                                       placeholder="${_('generator.server_host_placeholder')}" required>
+                                <p class="form-hint">${_('generator.server_host_hint')}</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="gen-relay-host">Relay host</label>
+                                <input type="text" id="gen-relay-host" class="form-input" maxlength="253"
+                                       placeholder="Same as server host if empty">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group form-group-checkbox">
+                                    <label class="form-label">
+                                        <input type="checkbox" id="gen-use-https" checked>
+                                        ${_('generator.use_https')}
+                                    </label>
+                                </div>
                                 <div class="form-group">
-                                    <label class="form-label" for="gen-name">${_('generator.bundle_name')}</label>
-                                    <input type="text" id="gen-name" class="form-input" maxlength="100" required>
-                                    <p class="form-hint">${_('generator.bundle_name_hint')}</p>
+                                    <label class="form-label" for="gen-api-port">API port</label>
+                                    <input type="text" id="gen-api-port" class="form-input" maxlength="8" placeholder="21114">
                                 </div>
+                            </div>
 
-                                <div class="form-group">
-                                    <label class="form-label" for="gen-slug">${_('generator.short_link')}</label>
-                                    <div class="download-link-row">
-                                        <span class="input-prefix">/d/</span>
-                                        <input type="text" id="gen-slug" class="form-input" maxlength="32"
-                                               pattern="[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?"
-                                               autocomplete="off" spellcheck="false">
-                                    </div>
-                                    <p class="form-hint">${_('generator.short_link_hint')}</p>
+                            <div class="form-group">
+                                <label class="form-label" for="gen-public-key">Server public key</label>
+                                <input type="text" id="gen-public-key" class="form-input" readonly>
+                                <p class="form-hint">Injected from this console (id_ed25519.pub).</p>
+                            </div>
+
+                            <h3 class="section-title">${_('generator.platforms_section')}</h3>
+                            <p class="form-hint">${_('generator.platforms_hint')}</p>
+                            <div id="gen-platforms" class="platforms-checklist" role="group" aria-label="${_('generator.platforms_section')}"></div>
+                            <div class="form-row generator-service-options">
+                                <div class="form-group form-group-checkbox">
+                                    <label class="form-label">
+                                        <input type="checkbox" id="gen-install-service">
+                                        Install Support Agent service
+                                    </label>
+                                    <p class="form-hint">Creates a system service only on supported platforms.</p>
                                 </div>
-
-                                <h3 class="section-title">${_('generator.connection_section')}</h3>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="gen-server-host">${_('generator.server_host')}</label>
-                                    <input type="text" id="gen-server-host" class="form-input" maxlength="253"
-                                           placeholder="${_('generator.server_host_placeholder')}" required>
-                                    <p class="form-hint">${_('generator.server_host_hint')}</p>
+                                <div class="form-group form-group-checkbox">
+                                    <label class="form-label">
+                                        <input type="checkbox" id="gen-autostart">
+                                        Start Support Agent automatically
+                                    </label>
+                                    <p class="form-hint">Enables service/startup autostart where supported.</p>
                                 </div>
+                            </div>
 
-                                <div class="form-row">
-                                    <div class="form-group form-group-checkbox">
-                                        <label class="form-label">
-                                            <input type="checkbox" id="gen-use-https" checked>
-                                            ${_('generator.use_https')}
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">${_('generator.enrollment_token')}</label>
-                                        <input type="text" id="gen-token-mask" class="form-input" readonly
-                                               placeholder="${_('generator.enrollment_token_pending')}">
-                                        <p class="form-hint">${_('generator.enrollment_token_hint')}</p>
-                                    </div>
-                                </div>
-
-                                <h3 class="section-title">${_('generator.branding_section')}</h3>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="gen-company">${_('generator.company_name')}</label>
-                                    <input type="text" id="gen-company" class="form-input" maxlength="100" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="gen-short-text">${_('generator.short_text')}</label>
-                                    <textarea id="gen-short-text" class="form-input" rows="2" maxlength="500"></textarea>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-email">${_('generator.contact_email')}</label>
-                                        <input type="email" id="gen-email" class="form-input" maxlength="200">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-phone">${_('generator.contact_phone')}</label>
-                                        <input type="text" id="gen-phone" class="form-input" maxlength="200">
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="gen-url">${_('generator.contact_url')}</label>
-                                    <input type="url" id="gen-url" class="form-input" maxlength="200" placeholder="https://example.com">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="gen-logo">${_('generator.logo')}</label>
-                                    <input type="file" id="gen-logo" class="form-input" accept="image/png,image/jpeg,image/svg+xml,image/webp">
-                                    <p class="form-hint">${_('generator.logo_hint')}</p>
-                                    <button type="button" id="gen-logo-clear" class="btn btn-ghost btn-sm hidden">
-                                        <span class="material-icons">close</span>
-                                        ${_('generator.logo_clear')}
+                            <div id="gen-download-info" class="download-info hidden">
+                                <h3 class="section-title">${_('generator.download_hub')}</h3>
+                                <div class="download-link-row">
+                                    <input type="text" id="gen-download-url" class="form-input" readonly>
+                                    <button type="button" id="gen-copy-link" class="btn btn-secondary btn-sm">
+                                        <span class="material-icons" aria-hidden="true">content_copy</span>
                                     </button>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-primary">${_('generator.primary_color')}</label>
-                                        <input type="color" id="gen-primary" class="form-input form-color" value="#2563eb">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-accent">${_('generator.accent_color')}</label>
-                                        <input type="color" id="gen-accent" class="form-input form-color" value="#1e293b">
-                                    </div>
-                                </div>
-
-                                <div class="form-row color-grid">
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-bg">${_('generator.background_color')}</label>
-                                        <input type="color" id="gen-bg" class="form-input form-color" value="#0f172a">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-surface">${_('generator.surface_color')}</label>
-                                        <input type="color" id="gen-surface" class="form-input form-color" value="#1e293b">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-text">${_('generator.text_color')}</label>
-                                        <input type="color" id="gen-text" class="form-input form-color" value="#e2e8f0">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-text-muted">${_('generator.text_muted_color')}</label>
-                                        <input type="color" id="gen-text-muted" class="form-input form-color" value="#94a3b8">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-status-ready">${_('generator.status_ready_color')}</label>
-                                        <input type="color" id="gen-status-ready" class="form-input form-color" value="#22c55e">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-header-text">${_('generator.header_text_color')}</label>
-                                        <input type="color" id="gen-header-text" class="form-input form-color" value="#ffffff">
-                                    </div>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label class="form-label" for="gen-lang">${_('generator.default_lang')}</label>
-                                        <select id="gen-lang" class="form-input">
-                                            ${(typeof supportedLangs !== 'undefined' ? supportedLangs : ['en', 'pl', 'zh-TW']).map(function(code) {
-                                                const label = (typeof localeLabels !== 'undefined' && localeLabels[code]) ? localeLabels[code] : code;
-                                                return '<option value="' + code + '">' + label + '</option>';
-                                            }).join('')}
-                                        </select>
-                                    </div>
-                                    <div class="form-group form-group-checkbox">
-                                        <label class="form-label">
-                                            <input type="checkbox" id="gen-unattended">
-                                            ${_('generator.allow_unattended')}
-                                        </label>
-                                        <p class="form-hint">${_('generator.allow_unattended_hint')}</p>
-                                    </div>
-                                </div>
-
-                                <div id="gen-download-info" class="download-info hidden">
-                                    <div class="builds-section" id="gen-builds-section">
-                                        <div class="builds-section-header">
-                                            <h3 class="section-title">${_('generator.builds_title')}</h3>
-                                            <button type="button" id="gen-rebuild-btn" class="btn btn-secondary btn-sm">
-                                                <span class="material-icons">sync</span>
-                                                ${_('generator.rebuild_all')}
-                                            </button>
-                                        </div>
-                                        <p class="form-hint">${_('generator.builds_hint')}</p>
-                                        <div id="gen-builds-summary" class="builds-summary hidden"></div>
-                                        <div id="gen-builds-list" class="builds-list">
-                                            <p class="text-muted">${_('generator.builds_loading')}</p>
-                                        </div>
-                                    </div>
-
-                                    <h3 class="section-title">${_('generator.download_link_title')}</h3>
-                                    <div class="download-link-row">
-                                        <input type="text" id="gen-download-url" class="form-input" readonly>
-                                        <button type="button" id="gen-copy-link" class="btn btn-secondary">
-                                            <span class="material-icons">content_copy</span>
-                                            ${_('copy')}
-                                        </button>
-                                        <a id="gen-open-link" class="btn btn-ghost" target="_blank" rel="noopener">
-                                            <span class="material-icons">open_in_new</span>
-                                            ${_('generator.open_portal')}
-                                        </a>
-                                    </div>
-                                    <p class="form-hint">${_('generator.download_link_hint')}</p>
+                                    <a id="gen-open-link" class="btn btn-secondary btn-sm" target="_blank" rel="noopener">
+                                        <span class="material-icons" aria-hidden="true">open_in_new</span>
+                                    </a>
                                 </div>
                             </div>
 
-                            <!-- Live preview -->
-                            <div class="editor-preview">
-                                <h3 class="section-title">${_('generator.preview_title')}</h3>
-                                <p class="form-hint">${_('generator.preview_hint')}</p>
-                                <div class="agent-preview" id="gen-preview">
-                                    <div class="agent-preview-frame" style="--brand-primary: #2563eb; --brand-accent: #1e293b;">
-                                        <div class="ap-header">
-                                            <div class="ap-brand ap-brand-only">
-                                                <div class="ap-brand-name" id="gen-prev-name">${_('generator.preview_default_name')}</div>
-                                                <div class="ap-brand-text" id="gen-prev-text"></div>
-                                            </div>
-                                        </div>
-                                        <div class="ap-body">
-                                            <div class="ap-body-logo" id="gen-prev-body-logo">
-                                                <span class="material-icons">support_agent</span>
-                                            </div>
-                                            <div class="ap-status">
-                                                <span class="ap-status-dot"></span>
-                                                <span class="ap-status-text">${_('generator.preview_status_ready')}</span>
-                                            </div>
-                                            <div class="ap-id-row">
-                                                <span class="ap-id-label">${_('generator.preview_id')}</span>
-                                                <span class="ap-id-value">123 456 789</span>
-                                            </div>
-                                            <div class="ap-pw-row" id="gen-prev-pw-row">
-                                                <span class="ap-id-label">${_('generator.preview_password')}</span>
-                                                <span class="ap-id-value ap-pw">a B 3 # K 9</span>
-                                            </div>
-                                            <button class="ap-help" type="button" disabled>
-                                                <span class="material-icons">contact_support</span>
-                                                ${_('generator.preview_help')}
-                                            </button>
-                                            <button class="ap-chat" type="button" disabled>
-                                                <span class="material-icons">chat</span>
-                                                ${_('generator.preview_chat')}
-                                            </button>
-                                        </div>
-                                        <div class="ap-footer">
-                                            <button class="ap-icon-btn" type="button" disabled title="${_('generator.preview_settings')}">
-                                                <span class="material-icons">settings</span>
-                                            </button>
-                                            <div class="ap-contact" id="gen-prev-contact"></div>
-                                            <button class="ap-icon-btn" type="button" disabled title="${_('generator.preview_quit')}">
-                                                <span class="material-icons">power_settings_new</span>
-                                            </button>
-                                        </div>
-                                    </div>
+                            <div id="gen-builds-section" class="builds-section">
+                                <div class="builds-header">
+                                    <h3 class="section-title">${_('generator.builds_title')}</h3>
+                                    <span id="gen-builds-summary" class="text-muted"></span>
                                 </div>
+                                <div id="gen-builds-list" class="builds-list"></div>
                             </div>
+
+                            <div id="gen-validation-errors" class="validation-errors hidden"></div>
                         </div>
-
-                        <div id="gen-validation-errors" class="validation-errors hidden"></div>
                     </div>
                 </div>
             </section>
         </div>
     `
-}) %>
+}); %>

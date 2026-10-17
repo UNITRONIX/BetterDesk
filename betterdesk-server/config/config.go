@@ -3,12 +3,14 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Enrollment mode constants for Dual Key System.
@@ -63,14 +65,22 @@ type Config struct {
 	AdminPort int // TCP admin interface port (0 = disabled)
 
 	// Security — Authentication
-	JWTSecret               string // Secret key for JWT signing (auto-generated if empty)
+	JWTSecret string // Secret key for JWT signing (auto-generated if empty)
+	// OrgPeerVaultKey encrypts recoverable org peer passwords at rest (#367).
+	// Falls back to JWT secret when empty (installers should set a dedicated key).
+	OrgPeerVaultKey string
+	// RemoteTargetVaultKey encrypts RDP/VNC credentials. It is deliberately
+	// independent from JWT and the org peer vault; no fallback is allowed.
+	RemoteTargetVaultKey string
+	// GuacdAddress is the loopback address of the managed Guacamole daemon.
+	GuacdAddress            string
 	JWTExpiry               int    // JWT token expiry in hours (default 24)
 	ClientSessionExpiryDays int    // RustDesk client session TTL in days (default 7)
 	ClientSessionSliding    bool   // Extend client session on activity (default true)
 	ClientSessionMaxDays    int    // Max sliding session lifetime from login (default 30)
-	AdminPassword           string // Password for admin TCP interface (empty = no auth)
-	ForceHTTPS      bool   // Reject non-TLS API requests (except behind reverse proxy)
-	TrustProxy      bool   // Trust X-Forwarded-For / X-Real-IP headers from reverse proxy
+	AdminPassword           string // Password for admin TCP interface (required when AdminPort is enabled)
+	ForceHTTPS              bool   // Reject non-TLS API requests (except behind reverse proxy)
+	TrustProxy              bool   // Trust X-Forwarded-For / X-Real-IP headers from reverse proxy
 	// TrustedProxies is the CIDR allowlist of reverse proxies that may set
 	// X-Forwarded-For / X-Real-IP. Required when TrustProxy is true — empty
 	// means forwarded headers are ignored (security-first, issue #276).
@@ -80,14 +90,20 @@ type Config struct {
 	// as a RustDesk peer; PunchHole/RequestRelay from these CIDRs are treated
 	// as panel-authorized initiators (#302 regression fix). Default: loopback.
 	PanelSignalProxyCIDRs []*net.IPNet
-	RelayMaxConnsIP int // Max relay connections per IP (0 = unlimited)
-	InitAdminUser   string // Initial admin username (created on first start)
-	InitAdminPass   string // Initial admin password (auto-generated if empty)
+	RelayMaxConnsIP       int    // Max relay connections per IP (0 = unlimited)
+	InitAdminUser         string // Initial admin username (created on first start)
+	InitAdminPass         string // Initial admin password (auto-generated if empty)
 
 	// Signal rate limiting (registrations per IP per minute).
 	// Issue #122: large NAT deployments may need to raise or disable this
 	// (set to 0 to disable rate limiting entirely).
 	SignalRateLimitPerIP int
+
+	// AllowLegacyOutbound permits controller-only stock RustDesk clients to
+	// start sessions without first registering a local device identity. This is
+	// deliberately opt-in because the server cannot apply initiator device
+	// policy to an anonymous controller. It is honored only in open enrollment.
+	AllowLegacyOutbound bool
 
 	// SameNATRelay forces relay fallback when both peers connect from the
 	// same public IP (i.e. they sit behind the same NAT gateway).  Many
@@ -95,6 +111,22 @@ type Config struct {
 	// normally works in this case can silently fail and the connection
 	// times out (issue #121).  Default: enabled.
 	SameNATRelay bool
+
+	// AllowSharedNATInitiator authorizes PunchHole/RequestRelay when multiple
+	// live peers share the initiator's public IP and no stronger identity
+	// (token, exact addr, udp_port) is available (#399). Uses synthetic
+	// initiator id "shared-nat-initiator" — does not inherit a peer identity
+	// (#302). Default: disabled.
+	AllowSharedNATInitiator bool
+
+	// LoggedInOnlyInitiator requires a valid BetterDesk RustDesk client
+	// session token for outbound PunchHole/RequestRelay initiation. The
+	// panel Web Remote proxy remains an explicit exception. Default: disabled.
+	LoggedInOnlyInitiator bool
+	// OperatorOnlyOutbound requires a valid BetterDesk client session whose
+	// user has device.connect permission for outbound PunchHole/RequestRelay.
+	// It also disables address-based initiator fallbacks. Default: disabled.
+	OperatorOnlyOutbound bool
 
 	// P2PFirst enables the classic RustDesk hole-punching handshake: instead
 	// of immediately answering the initiator with the target's (still
@@ -112,7 +144,7 @@ type Config struct {
 	P2PFallbackMs int
 
 	// WebSocket security (M3)
-	AllowedWSOrigins    string // Comma-separated allowed WebSocket origins (empty = allow all)
+	AllowedWSOrigins    string // Comma-separated allowed WebSocket origins (empty = same-host only)
 	APIAllowedWSOrigins string // Comma-separated allowed WebSocket origins for HTTP API events endpoint
 
 	// Metrics endpoint access control (audit fix H-03, 2026-04-10)
@@ -133,13 +165,15 @@ type Config struct {
 	// "open" (default) - Accept all device registrations (backward compatible)
 	// "managed" - New devices need to be approved or have a valid token
 	// "locked" - Only devices with valid tokens can register
-	EnrollmentMode string
+	EnrollmentMode            string
+	EnrollmentModeEnvOverride bool // ENROLLMENT_MODE was explicitly configured by the operator
 
 	// CDAP Gateway
-	CDAPPort      int  // WebSocket gateway port (default 21122)
-	CDAPEnabled   bool // Enable CDAP gateway (default false)
-	CDAPTLS       bool // Enable TLS on CDAP port
-	CDAPRateLimit int  // Max requests per minute per IP (default 30)
+	CDAPPort        int  // WebSocket gateway port (default 21122)
+	CDAPEnabled     bool // Enable CDAP gateway (default false)
+	CDAPTLS         bool // Enable TLS on CDAP port
+	CDAPTLSRequired bool // Reject plaintext connections on the CDAP port
+	CDAPRateLimit   int  // Max requests per minute per IP (default 30)
 
 	// MeshCentral compatibility layer
 	MeshCentralEnabled bool   // MESH_ENABLED
@@ -156,6 +190,86 @@ type Config struct {
 	BillingTrustOSNTP         bool   // Trust OS NTP (timedatectl) when direct queries fail
 	BillingRoundingMinutes    int    // Billable minute rounding (1, 10, 15)
 	BillingRequireWorkReport  bool   // Require technician report before session close
+
+	connectionMu sync.RWMutex
+}
+
+const (
+	// PersistedConnectionSettingsKey is the shared server_config key used by
+	// the panel's split-Docker connection strategy API.
+	PersistedConnectionSettingsKey = "connection_strategy"
+	// MaxP2PFallbackMs bounds panel-managed runtime changes. Environment and
+	// CLI values retain their historical parsing behavior for compatibility.
+	MaxP2PFallbackMs = 30000
+)
+
+// ConnectionSettings is the runtime P2P/relay policy exposed to the panel.
+// Mode is derived from P2PFirst and AlwaysUseRelay when read from Config.
+type ConnectionSettings struct {
+	Mode                    string `json:"mode"`
+	P2PFallbackMs           int    `json:"p2p_fallback_ms"`
+	SameNATRelay            bool   `json:"same_nat_relay"`
+	AllowSharedNATInitiator bool   `json:"allow_shared_nat_initiator"`
+	LoggedInOnlyInitiator   bool   `json:"logged_in_only_initiator"`
+	OperatorOnlyOutbound    bool   `json:"operator_only_outbound"`
+	P2PFirst                bool   `json:"p2p_first,omitempty"`
+	AlwaysUseRelay          bool   `json:"always_use_relay,omitempty"`
+}
+
+// ConnectionSettings returns a consistent snapshot of the live connection
+// policy. Callers handling signal traffic must use this instead of reading
+// the individual mutable fields directly.
+func (c *Config) ConnectionSettings() ConnectionSettings {
+	if c == nil {
+		return ConnectionSettings{}
+	}
+	c.connectionMu.RLock()
+	defer c.connectionMu.RUnlock()
+
+	mode := "p2p_first"
+	if c.AlwaysUseRelay || !c.P2PFirst {
+		mode = "relay_only"
+	}
+	return ConnectionSettings{
+		Mode:                    mode,
+		P2PFallbackMs:           c.P2PFallbackMs,
+		SameNATRelay:            c.SameNATRelay,
+		AllowSharedNATInitiator: c.AllowSharedNATInitiator,
+		LoggedInOnlyInitiator:   c.LoggedInOnlyInitiator,
+		OperatorOnlyOutbound:    c.OperatorOnlyOutbound,
+		P2PFirst:                c.P2PFirst,
+		AlwaysUseRelay:          c.AlwaysUseRelay,
+	}
+}
+
+// ApplyConnectionSettings atomically updates the live connection policy.
+// Validation is intentionally performed by the API/startup boundary so this
+// method can also preserve existing environment/CLI values during startup.
+func (c *Config) ApplyConnectionSettings(settings ConnectionSettings) {
+	if c == nil {
+		return
+	}
+	c.connectionMu.Lock()
+	defer c.connectionMu.Unlock()
+
+	c.P2PFallbackMs = settings.P2PFallbackMs
+	c.SameNATRelay = settings.SameNATRelay
+	c.AllowSharedNATInitiator = settings.AllowSharedNATInitiator
+	c.LoggedInOnlyInitiator = settings.LoggedInOnlyInitiator
+	c.OperatorOnlyOutbound = settings.OperatorOnlyOutbound
+	c.P2PFirst = settings.Mode != "relay_only"
+	c.AlwaysUseRelay = settings.Mode == "relay_only"
+}
+
+// ValidateConnectionSettings validates panel-persisted connection policy.
+func (s ConnectionSettings) Validate() error {
+	if s.Mode != "p2p_first" && s.Mode != "relay_only" {
+		return fmt.Errorf("mode must be p2p_first or relay_only")
+	}
+	if s.P2PFallbackMs < 0 || s.P2PFallbackMs > MaxP2PFallbackMs {
+		return fmt.Errorf("p2p_fallback_ms must be between 0 and %d", MaxP2PFallbackMs)
+	}
+	return nil
 }
 
 // DefaultPanelSignalProxyCIDRs is the loopback allowlist for the panel→hbbs
@@ -166,30 +280,34 @@ const DefaultPanelSignalProxyCIDRs = "127.0.0.0/8,::1/128"
 func DefaultConfig() *Config {
 	panelCIDRs, _ := ParseTrustedProxies(DefaultPanelSignalProxyCIDRs)
 	return &Config{
-		SignalPort:           21116,
-		RelayPort:            21117,
-		APIPort:              DefaultAPIPort,
-		Mode:                 "all",
-		DBPath:               "./db_v2.sqlite3",
-		KeyFile:              "id_ed25519",
-		JWTExpiry:            24,
-		ClientSessionExpiryDays: 7,
-		ClientSessionSliding:    true,
-		ClientSessionMaxDays:    30,
-		RelayMaxConnsIP:      20,
-		EnrollmentMode:       EnrollmentModeOpen, // Backward compatible default
-		PanelSignalProxyCIDRs: panelCIDRs,
-		CDAPPort:             21122,
-		CDAPEnabled:          true, // Enabled by default; set CDAP_ENABLED=N for minimal installs
-		CDAPRateLimit:        30,
-		MeshCentralEnabled:   true, // default on; set MESH_ENABLED=N to disable
-		MeshCoreVersion:      "1.2.0",
-		MeshAgentCertFile:    "mesh_agent_server.pem",
-		MeshRateLimit:        30,
-		SignalRateLimitPerIP: IPRateLimitRegistrations,
-		SameNATRelay:         true, // issue #121: auto-fallback to relay on shared public IP
-		P2PFirst:             true, // issue #157: give direct P2P a real chance before relay
-		P2PFallbackMs:             2000, // grace period for target hole punch before relay fallback
+		SignalPort:                21116,
+		RelayPort:                 21117,
+		APIPort:                   DefaultAPIPort,
+		Mode:                      "all",
+		DBPath:                    "./db_v2.sqlite3",
+		KeyFile:                   "id_ed25519",
+		JWTExpiry:                 24,
+		ClientSessionExpiryDays:   7,
+		ClientSessionSliding:      true,
+		ClientSessionMaxDays:      30,
+		RelayMaxConnsIP:           20,
+		EnrollmentMode:            EnrollmentModeOpen, // Backward compatible default
+		PanelSignalProxyCIDRs:     panelCIDRs,
+		CDAPPort:                  21122,
+		CDAPEnabled:               true, // Enabled by default; set CDAP_ENABLED=N for minimal installs
+		CDAPRateLimit:             30,
+		MeshCentralEnabled:        true, // default on; set MESH_ENABLED=N to disable
+		MeshCoreVersion:           "1.2.0",
+		MeshAgentCertFile:         "mesh_agent_server.pem",
+		MeshRateLimit:             30,
+		GuacdAddress:              "127.0.0.1:4822",
+		SignalRateLimitPerIP:      IPRateLimitRegistrations,
+		SameNATRelay:              true,  // issue #121: auto-fallback to relay on shared public IP
+		AllowSharedNATInitiator:   false, // issue #399: opt-in stock multi-NAT initiator
+		LoggedInOnlyInitiator:     false, // issue #414: require client login for stock initiators
+		OperatorOnlyOutbound:      false, // issue #425: restrict outbound initiation to connected operators
+		P2PFirst:                  true,  // issue #157: give direct P2P a real chance before relay
+		P2PFallbackMs:             2000,  // grace period for target hole punch before relay fallback
 		LogLevel:                  "info",
 		BillingMaxClockSkewMS:     2000,
 		BillingRequireSyncedClock: true,
@@ -201,6 +319,8 @@ func DefaultConfig() *Config {
 // LoadEnv overrides config values from environment variables.
 // Environment variables take precedence over CLI flags.
 func (c *Config) LoadEnv() {
+	connection := c.ConnectionSettings()
+
 	// SIGNAL_PORT takes precedence over PORT.
 	// This avoids conflicts in Docker single-container setups where PORT=5000
 	// is intended for the Node.js console, not the Go signal server.
@@ -251,8 +371,13 @@ func (c *Config) LoadEnv() {
 	if v := os.Getenv("MASK"); v != "" {
 		c.Mask = v
 	}
-	if strings.ToUpper(os.Getenv("ALWAYS_USE_RELAY")) == "Y" {
-		c.AlwaysUseRelay = true
+	if v := os.Getenv("ALWAYS_USE_RELAY"); v != "" {
+		switch strings.ToUpper(strings.TrimSpace(v)) {
+		case "Y", "YES", "1", "TRUE", "ON":
+			connection.AlwaysUseRelay = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			connection.AlwaysUseRelay = false
+		}
 	}
 	if v := os.Getenv("BLOCKLIST_FILE"); v != "" {
 		c.BlocklistFile = v
@@ -286,6 +411,15 @@ func (c *Config) LoadEnv() {
 	}
 	if v := os.Getenv("JWT_SECRET"); v != "" {
 		c.JWTSecret = v
+	}
+	if v := os.Getenv("ORG_PEER_VAULT_KEY"); v != "" {
+		c.OrgPeerVaultKey = v
+	}
+	if v := os.Getenv("REMOTE_TARGET_VAULT_KEY"); v != "" {
+		c.RemoteTargetVaultKey = v
+	}
+	if v := os.Getenv("GUACD_ADDRESS"); v != "" {
+		c.GuacdAddress = v
 	}
 	if v := os.Getenv("JWT_EXPIRY_HOURS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
@@ -351,6 +485,14 @@ func (c *Config) LoadEnv() {
 			c.SignalRateLimitPerIP = n
 		}
 	}
+	if v := strings.ToUpper(strings.TrimSpace(os.Getenv("ALLOW_LEGACY_OUTBOUND"))); v != "" {
+		switch v {
+		case "Y", "YES", "1", "TRUE", "ON":
+			c.AllowLegacyOutbound = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			c.AllowLegacyOutbound = false
+		}
+	}
 	// Issue #121: when both peers share the same public IP, the LAN
 	// hole-punch path requires NAT hairpinning, which many consumer
 	// routers (and most cellular gateways) silently drop.  Enabled by
@@ -359,9 +501,42 @@ func (c *Config) LoadEnv() {
 	if v := os.Getenv("SAME_NAT_RELAY"); v != "" {
 		switch strings.ToUpper(v) {
 		case "Y", "YES", "1", "TRUE", "ON":
-			c.SameNATRelay = true
+			connection.SameNATRelay = true
 		case "N", "NO", "0", "FALSE", "OFF":
-			c.SameNATRelay = false
+			connection.SameNATRelay = false
+		}
+	}
+	// Issue #399: allow PunchHole/RequestRelay from shared public IPs with
+	// multiple live peers when stock clients cannot prove initiator identity
+	// (no token / udp_port). Default off — preserves #302 enrollment gate.
+	if v := os.Getenv("ALLOW_SHARED_NAT_INITIATOR"); v != "" {
+		switch strings.ToUpper(v) {
+		case "Y", "YES", "1", "TRUE", "ON":
+			connection.AllowSharedNATInitiator = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			connection.AllowSharedNATInitiator = false
+		}
+	}
+	// Issue #414: require a valid BetterDesk client login token for stock
+	// PunchHole/RequestRelay initiators. Panel Web Remote remains allowed via
+	// PANEL_SIGNAL_PROXY_CIDRS.
+	if v := os.Getenv("LOGGED_IN_ONLY_INITIATOR"); v != "" {
+		switch strings.ToUpper(strings.TrimSpace(v)) {
+		case "Y", "YES", "1", "TRUE", "ON":
+			connection.LoggedInOnlyInitiator = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			connection.LoggedInOnlyInitiator = false
+		}
+	}
+	// Issue #425: require a valid client session belonging to a user with
+	// device.connect permission for stock PunchHole/RequestRelay initiators.
+	// PANEL_SIGNAL_PROXY_CIDRS remains the authenticated Web Remote exception.
+	if v := os.Getenv("OPERATOR_ONLY_OUTBOUND"); v != "" {
+		switch strings.ToUpper(strings.TrimSpace(v)) {
+		case "Y", "YES", "1", "TRUE", "ON":
+			connection.OperatorOnlyOutbound = true
+		case "N", "NO", "0", "FALSE", "OFF":
+			connection.OperatorOnlyOutbound = false
 		}
 	}
 	// Issue #157: P2P-first hole punching. Enabled by default so direct
@@ -370,16 +545,22 @@ func (c *Config) LoadEnv() {
 	if v := os.Getenv("P2P_FIRST"); v != "" {
 		switch strings.ToUpper(v) {
 		case "Y", "YES", "1", "TRUE", "ON":
-			c.P2PFirst = true
+			connection.P2PFirst = true
 		case "N", "NO", "0", "FALSE", "OFF":
-			c.P2PFirst = false
+			connection.P2PFirst = false
 		}
 	}
 	if v := os.Getenv("P2P_FALLBACK_MS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
-			c.P2PFallbackMs = n
+			connection.P2PFallbackMs = n
 		}
 	}
+	if connection.AlwaysUseRelay || !connection.P2PFirst {
+		connection.Mode = "relay_only"
+	} else {
+		connection.Mode = "p2p_first"
+	}
+	c.ApplyConnectionSettings(connection)
 	if v := os.Getenv("INIT_ADMIN_USER"); v != "" {
 		c.InitAdminUser = v
 	}
@@ -411,6 +592,8 @@ func (c *Config) LoadEnv() {
 		mode := strings.ToLower(v)
 		if mode == "open" || mode == "managed" || mode == "locked" {
 			c.EnrollmentMode = mode
+			marker := strings.ToUpper(strings.TrimSpace(os.Getenv("ENROLLMENT_MODE_ENV_OVERRIDE")))
+			c.EnrollmentModeEnvOverride = marker != "N" && marker != "NO" && marker != "FALSE" && marker != "0"
 		}
 	}
 	if v := os.Getenv("CDAP_PORT"); v != "" {
@@ -424,6 +607,10 @@ func (c *Config) LoadEnv() {
 		c.CDAPEnabled = true
 	}
 	if strings.ToUpper(os.Getenv("CDAP_TLS")) == "Y" {
+		c.CDAPTLS = true
+	}
+	if v := strings.ToUpper(os.Getenv("CDAP_TLS_REQUIRED")); v == "Y" || v == "YES" || v == "TRUE" || v == "1" {
+		c.CDAPTLSRequired = true
 		c.CDAPTLS = true
 	}
 	if v := os.Getenv("CDAP_RATE_LIMIT"); v != "" {
@@ -492,6 +679,16 @@ func (c *Config) LoadEnv() {
 	}
 }
 
+// ValidateAdminInterface rejects an enabled admin TCP listener without a
+// password. The listener provides privileged server management commands, so
+// binding it without authentication is not permitted.
+func (c *Config) ValidateAdminInterface() error {
+	if c != nil && c.AdminPort != 0 && strings.TrimSpace(c.AdminPassword) == "" {
+		return fmt.Errorf("ADMIN_PASSWORD is required when ADMIN_PORT is enabled")
+	}
+	return nil
+}
+
 // GetNTPServers returns configured NTP server hostnames.
 func (c *Config) GetNTPServers() []string {
 	if c.NTPServers == "" {
@@ -557,7 +754,7 @@ func (c *Config) GetRelayServers() []string {
 }
 
 // GetAllowedWSOrigins parses the comma-separated list of allowed WebSocket origins.
-// Returns nil if empty (meaning all origins are allowed for backward compatibility).
+// Returns nil when unset so websocket.Accept uses its safe same-host default.
 // Supports glob patterns accepted by nhooyr.io/websocket:
 //   - "*" matches any origin
 //   - "*.example.com" matches subdomains
@@ -640,5 +837,12 @@ func (c *Config) APITLSEnabled() bool {
 
 // CDAPTLSEnabled returns true if TLS should be used for the CDAP WebSocket gateway.
 func (c *Config) CDAPTLSEnabled() bool {
-	return c.CDAPTLS && c.HasTLSCert()
+	return (c.CDAPTLS || c.CDAPTLSRequired) && c.HasTLSCert()
+}
+
+// CDAPTLSRequiredEnabled returns true when the CDAP gateway must reject
+// plaintext connections instead of accepting the backwards-compatible
+// dual-mode protocol.
+func (c *Config) CDAPTLSRequiredEnabled() bool {
+	return c.CDAPTLSRequired && c.HasTLSCert()
 }

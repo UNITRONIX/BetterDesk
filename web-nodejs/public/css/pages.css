@@ -168,6 +168,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--space-md);
+    min-width: 0;
     padding: var(--space-md);
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
@@ -177,7 +179,10 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    min-width: 0;
+    flex: 0 1 45%;
     color: var(--text-secondary);
+    overflow-wrap: anywhere;
 }
 
 .server-info-label .material-icons {
@@ -185,9 +190,22 @@
 }
 
 .server-info-value {
+    min-width: 0;
+    max-width: 55%;
+    flex: 1 1 55%;
     font-family: var(--font-mono);
     font-size: var(--font-size-sm);
     color: var(--text-primary);
+    text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.server-info-value code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 
 /* Settings page */
@@ -647,44 +665,16 @@
     }
 }
 
-/* ==================== Settings Tabs ==================== */
+/* ==================== Settings Tabs (panel visibility + legacy tablist) ==================== */
 
+/* Legacy container — unused by Settings v2 shell; kept for any stray markup */
 .settings-tabs {
     display: flex;
     gap: var(--space-xs);
     margin-bottom: var(--space-lg);
     border-bottom: 1px solid var(--border-primary);
     padding-bottom: 0;
-}
-
-.settings-tab {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-md);
-    border: none;
-    background: none;
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: all var(--transition-fast);
-}
-
-.settings-tab .material-icons {
-    font-size: 18px;
-}
-
-.settings-tab:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-}
-
-.settings-tab.active {
-    color: var(--accent-blue);
-    border-bottom-color: var(--accent-blue);
+    overflow-x: auto;
 }
 
 .settings-tab-content {
@@ -872,41 +862,12 @@
     margin-bottom: var(--space-lg);
 }
 
-/* Logo preview */
-.branding-preview-box {
-    margin-top: var(--space-lg);
-}
-
-.logo-preview {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-md) var(--space-lg);
-    background: var(--bg-primary);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
-    min-height: 60px;
-}
-
-.logo-preview .material-icons {
-    font-size: 28px;
-    color: var(--accent-blue);
-}
-
-.logo-preview-text {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-}
-
-.logo-preview-svg,
 .sidebar-logo-svg,
 .login-logo-svg {
     display: flex;
     align-items: center;
 }
 
-.logo-preview-svg svg,
 .sidebar-logo-svg svg,
 .login-logo-svg svg {
     height: 36px;
@@ -923,13 +884,19 @@
 }
 
 .login-logo-img {
-    max-height: 48px;
-    width: auto;
+    width: 56px;
+    height: 56px;
+    max-height: 56px;
+    object-fit: cover;
+    border-radius: 12px;
 }
 
 .sidebar-logo-img {
-    max-height: 32px;
-    width: auto;
+    width: 36px;
+    height: 36px;
+    max-height: 36px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
 /* Logo file upload */
@@ -1340,10 +1307,57 @@
 .branding-save-status.is-error { color: var(--accent-red); }
 .branding-status-icon { font-size: 18px; }
 
+.branding-management-disclosure {
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+}
+
+.branding-management-disclosure > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: 44px;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--text-primary);
+    cursor: pointer;
+    list-style: none;
+    font-weight: var(--font-weight-semibold);
+}
+
+.branding-management-disclosure > summary::-webkit-details-marker { display: none; }
+.branding-management-disclosure > summary::after {
+    content: "";
+    margin-left: auto;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-secondary);
+    border-bottom: 2px solid var(--text-secondary);
+    transform: rotate(45deg);
+    transition: transform var(--transition-fast);
+    color: var(--text-secondary);
+}
+.branding-management-disclosure[open] > summary::after { transform: rotate(225deg); }
+.branding-disclosure-hint {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-normal);
+}
+.branding-management-disclosure .branding-profiles-bar {
+    margin: 0 var(--space-sm) var(--space-sm);
+}
+
 .branding-toolbar-actions {
     display: flex;
     gap: var(--space-sm);
     flex-wrap: wrap;
+}
+
+.branding-toolbar-actions .btn,
+.branding-actions-row .btn,
+.branding-profiles-actions .btn,
+.branding-profiles-main .btn {
+    min-height: 40px;
 }
 
 .branding-profiles-bar {
@@ -1401,7 +1415,9 @@
     flex-direction: column;
     gap: 4px;
     padding: var(--space-sm);
-    min-width: 120px;
+    min-width: 140px;
+    min-height: 72px;
+    justify-content: center;
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-md);
     background: var(--bg-secondary);
@@ -1450,7 +1466,7 @@
 
 .branding-studio-body {
     display: grid;
-    grid-template-columns: 210px minmax(0, 1fr) 320px;
+    grid-template-columns: 210px minmax(0, 1fr);
     gap: var(--space-lg);
     align-items: start;
 }
@@ -1467,6 +1483,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    min-height: 44px;
     padding: var(--space-sm) var(--space-md);
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-lg);
@@ -1492,137 +1509,23 @@
     box-shadow: inset 3px 0 0 var(--accent-blue);
 }
 
+.branding-module-btn:focus-visible,
+.branding-theme-card:focus-visible,
+.branding-management-disclosure > summary:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--accent-blue) 45%, transparent);
+    outline-offset: 2px;
+}
+
+.branding-modules {
+    min-width: 0;
+}
+
 .branding-modules .branding-module-panel {
     display: none;
 }
 
 .branding-modules .branding-module-panel.active {
     display: block;
-}
-
-.branding-live-preview {
-    position: sticky;
-    top: 72px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--space-md);
-    box-shadow: var(--shadow-md);
-}
-
-.branding-live-preview-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-md);
-}
-
-.branding-live-preview-header h3 {
-    margin: 0;
-    font-size: var(--font-size-md);
-}
-
-.branding-preview-page-toggle {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    font-size: var(--font-size-xs);
-    color: var(--text-secondary);
-    cursor: pointer;
-}
-
-.branding-preview-mockup {
-    position: relative;
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    min-height: 220px;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 1px solid var(--border-primary);
-    background: var(--bg-primary);
-}
-
-.branding-mockup-sidebar {
-    background: var(--bg-secondary);
-    border-right: 1px solid var(--border-primary);
-    padding: var(--space-sm) var(--space-xs);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-}
-
-.branding-mockup-logo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    font-size: 9px;
-    color: var(--text-primary);
-    text-align: center;
-    margin-bottom: var(--space-xs);
-    word-break: break-word;
-}
-
-.branding-mockup-logo .material-icons { font-size: 18px; color: var(--accent-blue); }
-
-.branding-mockup-nav-item {
-    height: 8px;
-    border-radius: 4px;
-    background: var(--bg-tertiary);
-}
-
-.branding-mockup-nav-item.active { background: var(--accent-blue-muted); }
-
-.branding-mockup-main {
-    padding: var(--space-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.branding-mockup-card {
-    width: 100%;
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-sm);
-    padding: var(--space-sm);
-}
-
-.branding-mockup-heading {
-    margin: 0 0 4px;
-    font-size: 11px;
-    color: var(--text-primary);
-    font-family: var(--font-heading, var(--font-family));
-}
-
-.branding-mockup-body {
-    margin: 0 0 var(--space-sm);
-    font-size: 9px;
-    color: var(--text-secondary);
-    line-height: 1.4;
-}
-
-.branding-mockup-actions {
-    display: flex;
-    gap: 4px;
-}
-
-.branding-mockup-btn {
-    border: none;
-    border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 8px;
-    cursor: default;
-}
-
-.branding-mockup-btn.primary {
-    background: var(--accent-blue);
-    color: #fff;
-}
-
-.branding-mockup-btn.secondary {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-primary);
 }
 
 .font-source-tabs {
@@ -1707,19 +1610,23 @@
 
     .branding-module-nav {
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
         position: static;
     }
 
-    .branding-live-preview {
-        position: static;
-        order: -1;
-    }
+    .branding-module-btn { flex: 0 0 auto; }
+
 }
 
 @media (max-width: 640px) {
     .branding-hero-steps {
         grid-template-columns: 1fr;
+    }
+
+    .branding-module-nav {
+        margin-inline: calc(var(--space-md) * -1);
+        padding-inline: var(--space-md);
     }
 }
 
@@ -1853,20 +1760,6 @@
 
 .font-clear-btn.hidden { display: none; }
 
-.font-preview {
-    margin-top: var(--space-sm);
-    padding: var(--space-md);
-    background: var(--bg-primary);
-    border: 1px solid var(--border-secondary);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.font-preview-text {
-    color: var(--text-primary);
-    display: block;
-}
-
 .font-category-filter {
     display: flex;
     gap: var(--space-xs);
@@ -1949,34 +1842,7 @@
     .branding-actions-row {
         flex-direction: column;
     }
-    
-    .settings-tabs {
-        overflow-x: auto;
-    }
 
-.settings-search {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-lg);
-    padding: var(--space-sm);
-    border: 1px solid var(--surface-glass-border, var(--border-primary));
-    border-radius: var(--radius-lg);
-    background: var(--surface-glass-bg-secondary, var(--bg-secondary));
-    backdrop-filter: blur(var(--surface-glass-blur, 0px)) saturate(var(--surface-glass-saturate, 1));
-    -webkit-backdrop-filter: blur(var(--surface-glass-blur, 0px)) saturate(var(--surface-glass-saturate, 1));
-}
-
-.settings-search > .material-icons {
-    color: var(--text-secondary);
-    margin-left: var(--space-xs);
-}
-
-.settings-search .form-input {
-    flex: 1;
-    min-width: 180px;
-}
-    
     .backend-selector {
         flex-direction: column;
     }
@@ -2172,6 +2038,14 @@
     display: flex;
     gap: var(--space-md);
     flex-wrap: wrap;
+}
+
+.restore-warning-box {
+    margin-bottom: var(--space-md);
+}
+
+.restore-warning-box + .backup-actions {
+    margin-top: var(--space-md);
 }
 
 .restore-options {
@@ -2426,7 +2300,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
-    min-width: 440px;
+    min-width: min(440px, 100%);
 }
 .update-wizard-header {
     display: flex;
@@ -2449,6 +2323,7 @@
 }
 .update-wizard-meta {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--space-sm);
@@ -2458,8 +2333,18 @@
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    flex: 0 0 auto;
+}
+.update-wizard-percent {
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: 0 0 auto;
 }
 .update-wizard-detail {
+    flex: 1 1 220px;
+    min-width: 0;
     color: var(--text-primary);
     text-align: right;
     min-height: 1.3em;
@@ -2544,6 +2429,7 @@
 }
 .update-wizard-log-toolbar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-sm);
@@ -3095,6 +2981,19 @@
     margin: 0;
 }
 
+.update-preflight-info {
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--win11-accent, #0067c0) 45%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--win11-accent, #0067c0) 10%, var(--bg-secondary, #161b22));
+    color: var(--text-primary);
+}
+
+.update-preflight-blocked {
+    border-color: color-mix(in srgb, #c42b1c 55%, transparent);
+    background: color-mix(in srgb, #c42b1c 8%, var(--bg-secondary, #161b22));
+}
+
 /* Available update card */
 .win11-updates-available {
     background: var(--win11-card-bg);
@@ -3313,11 +3212,11 @@
     }
 }
 
-/* ==================== Settings v2 shell ==================== */
+/* ==================== Settings v2 shell (horizontal top tabs) ==================== */
 
 .settings-shell {
     display: grid;
-    grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-lg);
     align-items: start;
 }
@@ -3327,51 +3226,98 @@
 }
 
 .settings-shell-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: var(--space-sm);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-lg);
-    background: var(--bg-secondary);
-    background-color: var(--bg-secondary);
+    --settings-nav-bleed: 0px;
+    --settings-nav-bleed-x: 0px;
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-bottom: 1px solid var(--border-primary);
+    border-radius: 0;
+    overflow: visible;
     position: sticky;
-    top: var(--space-md);
+    top: calc(-1 * var(--settings-nav-bleed));
+    padding-top: var(--settings-nav-bleed);
+    margin-top: calc(-1 * var(--settings-nav-bleed));
+    margin-inline: calc(-1 * var(--settings-nav-bleed-x));
+    padding-inline: var(--settings-nav-bleed-x);
+    z-index: 2;
+    /* Keep labels readable while scrolling long forms / branding wallpaper */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: color-mix(in srgb, var(--bg-primary) 88%, transparent);
 }
 
-.settings-shell-tab {
+/* Classic layout: cancel .main-content padding so sticky bar is flush */
+.app-page:not(.ux35-page) .settings-shell-nav {
+    --settings-nav-bleed: var(--space-lg);
+    --settings-nav-bleed-x: var(--space-lg);
+}
+
+/* Horizontal scroll lives on the track — not the sticky outer (avoids sticky breakage) */
+.settings-shell-nav-track {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Settings track: no extra bottom padding from .mobile-tabs-scroll (keeps bar compact) */
+.settings-shell-nav-track.mobile-tabs-scroll {
+    padding-bottom: 0;
+}
+
+.settings-shell-nav .settings-shell-tab,
+.settings-shell-nav .settings-tab {
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-xs);
+    flex: 0 0 auto;
+    padding: 10px 16px;
     border: none;
-    border-radius: var(--radius-md);
-    background: transparent;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    background-color: transparent;
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
     text-align: left;
-    transition: background var(--transition-fast), color var(--transition-fast);
+    white-space: nowrap;
+    min-height: 44px;
+    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 }
 
-.settings-shell-tab .material-icons {
+.settings-shell-nav .settings-shell-tab .material-icons,
+.settings-shell-nav .settings-tab .material-icons {
     font-size: 18px;
     opacity: 0.85;
 }
 
-.settings-shell-tab:hover {
-    background: var(--bg-hover);
+.settings-shell-nav .settings-shell-tab:hover,
+.settings-shell-nav .settings-tab:hover {
+    background: transparent;
     color: var(--text-primary);
 }
 
-.settings-shell-tab.active,
-.settings-shell-tab[aria-selected="true"] {
-    background: var(--accent-blue-muted);
+.settings-shell-nav .settings-shell-tab.active,
+.settings-shell-nav .settings-shell-tab[aria-selected="true"],
+.settings-shell-nav .settings-tab.active,
+.settings-shell-nav .settings-tab[aria-selected="true"] {
+    background: transparent;
+    background-color: transparent;
     color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+    font-weight: 600;
 }
 
-.settings-shell-tab:focus-visible {
+.settings-shell-nav .settings-shell-tab:focus-visible,
+.settings-shell-nav .settings-tab:focus-visible {
     outline: 2px solid var(--accent-blue);
     outline-offset: 2px;
 }
@@ -3741,8 +3687,7 @@
 }
 
 .branding-studio-toolbar,
-.branding-module-nav,
-.branding-live-preview {
+.branding-module-nav {
     background: var(--bg-secondary);
     background-color: var(--bg-secondary);
 }
@@ -3785,26 +3730,7 @@
     padding: var(--space-md);
 }
 
-.settings-tabs {
-    display: none;
-}
-
 @media (max-width: 900px) {
-    .settings-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .settings-shell-nav {
-        flex-direction: row;
-        overflow-x: auto;
-        position: static;
-        flex-wrap: nowrap;
-    }
-
-    .settings-shell-tab {
-        flex: 0 0 auto;
-    }
-
     .settings-row {
         grid-template-columns: 1fr;
         gap: var(--space-sm);

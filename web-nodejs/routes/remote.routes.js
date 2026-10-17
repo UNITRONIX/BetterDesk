@@ -11,6 +11,7 @@ const { requireRdClientAuth, rdClientGuestOnly, normalizeRdClientReturnUrl, role
 const { rdClientPageLimiter } = require('../middleware/rateLimiter');
 const betterdeskApi = require('../services/betterdeskApi');
 const keyService = require('../services/keyService');
+const serverConnectionConfig = require('../services/serverConnectionConfigService');
 const {
     getGuestToken,
     getGuestTokenFromQuery,
@@ -20,14 +21,60 @@ const {
     peerAllowedByGrant,
 } = require('../middleware/guestAccess');
 
+const DEFAULT_CONNECTION_SNAPSHOT = {
+    p2p_first: true,
+    always_use_relay: false,
+    p2p_fallback_ms: 2000,
+    same_nat_relay: true,
+    allow_shared_nat_initiator: false,
+    relay_servers: ''
+};
+
+/**
+ * Snapshot of Go connection policy for RdClient web (timeouts / diagnostics).
+ * Prefer live /api/health.connection; fall back to local Settings env read.
+ */
+async function resolveConnectionSnapshot() {
+    try {
+        const health = await betterdeskApi.getHealth();
+        if (health && health.connection && typeof health.connection === 'object') {
+            return {
+                ...DEFAULT_CONNECTION_SNAPSHOT,
+                ...health.connection
+            };
+        }
+    } catch (err) {
+        logger.debug('Connection snapshot from health failed:', err.message || err);
+    }
+    try {
+        const mode = await serverConnectionConfig.getConnectionMode();
+        return {
+            ...DEFAULT_CONNECTION_SNAPSHOT,
+            p2p_first: mode.mode !== 'relay_only',
+            always_use_relay: mode.mode === 'relay_only',
+            p2p_fallback_ms: Number(mode.p2p_fallback_ms) >= 0
+                ? Number(mode.p2p_fallback_ms)
+                : DEFAULT_CONNECTION_SNAPSHOT.p2p_fallback_ms,
+            same_nat_relay: mode.same_nat_relay !== false,
+            allow_shared_nat_initiator: mode.allow_shared_nat_initiator === true
+        };
+    } catch (err) {
+        logger.debug('Connection snapshot from settings failed:', err.message || err);
+    }
+    return { ...DEFAULT_CONNECTION_SNAPSHOT };
+}
+
 async function requireRemoteAccess(req, res, next) {
     const deviceId = req.params.deviceId;
+    const isRemoteTarget = String(deviceId || '').startsWith('rt_');
 
     // Panel session with device.connect wins over a stale guest cookie (avoids hijack 403).
     const role = req.session && req.session.user && req.session.user.role;
-    if (req.session && req.session.userId && role !== 'pro' && roleHasPermission(role, 'device.connect')) {
-        return requireRdClientAuth('device.connect')(req, res, next);
+    const connectPermission = isRemoteTarget ? 'remote_target.connect' : 'device.connect';
+    if (req.session && req.session.userId && role !== 'pro' && roleHasPermission(role, connectPermission)) {
+        return requireRdClientAuth(connectPermission)(req, res, next);
     }
+    if (isRemoteTarget) return requireRdClientAuth(connectPermission)(req, res, next);
 
     const queryToken = getGuestTokenFromQuery(req);
     const guestToken = getGuestToken(req);
@@ -180,9 +227,12 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
         return res.redirect('/devices');
     }
 
+    const isRemoteTarget = deviceId.startsWith('rt_');
     let device = null;
     try {
-        device = await db.getDevice(deviceId);
+        device = isRemoteTarget
+            ? await betterdeskApi.getRemoteTarget(deviceId)
+            : await db.getDevice(deviceId);
     } catch {
         // Database lookup failure is non-blocking - viewer can still work
     }
@@ -194,18 +244,22 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
     let goPeer = null;
     try {
         const api = require('../services/betterdeskApi');
-        goPeer = await api.getPeer(deviceId);
+        goPeer = isRemoteTarget
+            ? device
+            : await api.getPeer(deviceId);
         if (goPeer) {
-            isOsAgent = String(goPeer.device_type || '').toLowerCase() === 'os_agent';
+            isOsAgent = !isRemoteTarget && String(goPeer.device_type || '').toLowerCase() === 'os_agent';
             isCdapConnected = !!goPeer.cdap_connected;
-            isMeshAgent = String(goPeer.device_type || '').toLowerCase() === 'mesh_agent';
+            isMeshAgent = !isRemoteTarget && String(goPeer.device_type || '').toLowerCase() === 'mesh_agent';
             meshConnected = !!goPeer.mesh_connected;
         }
     } catch { /* non-fatal: degrade to standard viewer */ }
 
     const forced = String(req.query.transport || '').toLowerCase();
     let transport;
-    if (forced === 'mesh' || forced === 'cdap' || forced === 'rd') {
+    if (isRemoteTarget) {
+        transport = String(device.remote_protocol || device.protocol || '').toLowerCase();
+    } else if (forced === 'mesh' || forced === 'cdap' || forced === 'rd') {
         transport = forced;
     } else if (isMeshAgent && meshConnected) {
         transport = 'mesh';
@@ -223,6 +277,16 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
         device_type: goPeer && goPeer.device_type ? String(goPeer.device_type) : '',
         mesh_share: req.meshShareGrant ? true : false,
         mesh_view_only: req.meshShareGrant && req.meshShareGrant.view_only ? true : false,
+        remote_target: isRemoteTarget,
+        remote_protocol: isRemoteTarget ? transport : '',
+        remote_target_config: isRemoteTarget ? {
+            id: device.id,
+            name: device.name || device.display_name || '',
+            username: device.username || '',
+            credential_mode: device.credential_mode || 'prompt',
+            tls_mode: device.tls_mode || 'preferred',
+            cert_fingerprint: device.cert_fingerprint || ''
+        } : null,
         guest_access: !!req.guestGrant,
         guest_view_only: !!(req.guestGrant && req.guestGrant.view_only),
         guest_peer_ids: req.guestGrant && Array.isArray(req.guestGrant.peer_ids) ? req.guestGrant.peer_ids : [],
@@ -234,6 +298,7 @@ router.get('/remote/:deviceId', rdClientPageLimiter, requireRemoteAccess, async 
         deviceId: deviceId,
         device: device || { id: deviceId, hostname: '', platform: '', note: '' },
         serverPubKey: await resolveServerPubKey(),
+        connection: await resolveConnectionSnapshot(),
         capabilities,
         guestToken: req.guestToken || getGuestTokenFromQuery(req) || '',
         layout: 'viewer'

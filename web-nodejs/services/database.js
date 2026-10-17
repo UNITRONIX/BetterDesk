@@ -15,11 +15,10 @@
 'use strict';
 
 const { getAdapter, DB_TYPE } = require('./dbAdapter');
-const config = require('../config/config');
 
 // Create (or retrieve) the singleton adapter.  This does NOT open any
 // database connections yet  that happens lazily on first use or on init().
-const adapter = getAdapter(config);
+const adapter = getAdapter(require('../config/config'));
 
 // =========================================================================
 //  Facade  Legacy Name Mappings
@@ -103,6 +102,11 @@ const facade = {
     countAdmins:      () => adapter.countAdmins(),
     resetAdminPassword: (hash) => adapter.resetAdminPassword(hash),
     deleteAllUsers:   () => adapter.deleteAllUsers(),
+    getUserPeerGrants: (userId) => adapter.getUserPeerGrants(userId),
+    setUserPeerGrants: (userId, peerIds) => adapter.setUserPeerGrants(userId, peerIds),
+    getUserStrategyGuid: (userId) => adapter.getUserStrategyGuid(userId),
+    setUserStrategyAssignment: (userId, strategyGuid) =>
+        adapter.setUserStrategyAssignment(userId, strategyGuid),
 
     // ---- TOTP ----
     saveTotpSecret: (userId, secret) => adapter.saveTotpSecret(userId, secret),
@@ -220,6 +224,10 @@ const facade = {
     listAgentBundleBuildsForHash: (hash) => adapter.listAgentBundleBuildsForHash(hash),
     getAgentBundleBuild:        (q) => adapter.getAgentBundleBuild(q),
     upsertAgentBundleBuild:     (data) => adapter.upsertAgentBundleBuild(data),
+    prepareAgentBundleGeneration: (bundleId, data) =>
+        adapter.prepareAgentBundleGeneration(bundleId, data),
+    promoteAgentBundleGeneration: (brandingHash) =>
+        adapter.promoteAgentBundleGeneration(brandingHash),
 
     // ---- User Groups ----
     getAllUserGroups:    () => adapter.getAllUserGroups(),
@@ -270,27 +278,20 @@ const facade = {
 // =========================================================================
 
 if (DB_TYPE === 'sqlite' || DB_TYPE === '') {
-    const Database = require('better-sqlite3');
-    const path = require('path');
-    let _mainDb = null;
-    let _authDb = null;
-
+    // Share the adapter's better-sqlite3 handles (#353). A second
+    // Database() on the same file races N-API cleanup hooks on Node 24/musl.
     facade.getDb = function getDb() {
-        if (!_mainDb) {
-            _mainDb = new Database(config.dbPath, { readonly: false, fileMustExist: false });
-            _mainDb.pragma('journal_mode = WAL');
-            _mainDb.pragma('foreign_keys = ON');
+        if (typeof adapter.getSqliteMainDb !== 'function') {
+            throw new Error('[DB] getSqliteMainDb is not available on this adapter');
         }
-        return _mainDb;
+        return adapter.getSqliteMainDb();
     };
 
     facade.getAuthDb = function getAuthDb() {
-        if (!_authDb) {
-            const authDbPath = path.join(config.dataDir, 'auth.db');
-            _authDb = new Database(authDbPath, { readonly: false, fileMustExist: false });
-            _authDb.pragma('journal_mode = WAL');
+        if (typeof adapter.getSqliteAuthDb !== 'function') {
+            throw new Error('[DB] getSqliteAuthDb is not available on this adapter');
         }
-        return _authDb;
+        return adapter.getSqliteAuthDb();
     };
 } else {
     facade.getDb = function getDb() {

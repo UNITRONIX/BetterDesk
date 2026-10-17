@@ -1,26 +1,22 @@
 # Web Remote Desktop
 
-BetterDesk includes a browser-based remote desktop client accessible from the web console.
+Browser remote from the web console — no separate desktop app required. Prefer **HTTPS** so WebCodecs (VP9/AV1) work; plain HTTP falls back to H.264 with lower performance.
+
+**For operators:** open a device → Connect (or Support Agent Web Remote) → enter password → use quality presets / recording as needed. If the target is in WebSocket mode, use a current 3.5.x relay (TCP↔WS bridge).
+
+**For developers:** codec / input notes further down.
 
 ---
 
-## Overview
-
-The web remote client connects to RustDesk peers directly from the browser, with no client installation needed. It supports:
+## Features
 
 | Feature | HTTPS | HTTP |
 |---------|-------|------|
 | Video codec | VP9, H.264, AV1, VP8 (WebCodecs) | H.264 only (JMuxer fallback) |
-| Max FPS | 60 fps | 30 fps |
-| Audio | ✅ Opus | ✅ Opus |
-| Keyboard | ✅ Full (incl. modifiers, F-keys) | ✅ Full |
-| Mouse | ✅ Click, right-click, scroll, drag | ✅ Click, right-click, scroll, drag |
-| Clipboard | ✅ Bidirectional | ✅ Bidirectional |
-| Session recording | ✅ WebM VP9+Opus | ✅ WebM VP9+Opus |
-| Monitor switching | ✅ | ✅ |
-| Quality presets | ✅ 4 presets | ✅ 4 presets |
-
-> **Note:** HTTPS is strongly recommended. WebCodecs API (VP9/AV1) is only available on secure origins. HTTP falls back to JMuxer (H.264 only) with lower performance.
+| Max FPS | 60 | 30 |
+| Audio / keyboard / mouse / clipboard | Yes | Yes |
+| Session recording | WebM VP9+Opus | WebM VP9+Opus |
+| Monitor switching / quality presets | Yes | Yes |
 
 ---
 
@@ -169,6 +165,22 @@ If no frames arrive for 5 seconds, the client automatically requests a `refreshV
 - FileTransfer is not supported in web remote (use RustDesk desktop client)
 - Audio quality depends on network bandwidth
 - Some keyboard shortcuts may be intercepted by the browser (e.g., Ctrl+W)
+
+### Mobile and tablet performance
+
+- HTTPS remains the preferred path on tablets. After the browser accepts a
+  custom certificate, `window.isSecureContext` can enable WebCodecs and the
+  browser's hardware decoder when supported.
+- HTTP remains supported through the H.264/JMuxer fallback. The client starts
+  that path at 30 FPS and does not enable server-side adaptive FPS above that
+  limit, preventing MSE queue growth on mobile browsers.
+- Touch tablets start remote control at 30 FPS for a stable handshake. On
+  HTTPS, adaptive quality can promote a capable device to 45/60 FPS; the
+  toolbar can also change quality, FPS, and codec manually.
+- These choices are automatic; no browser variables or manual device profile
+  are required. The disconnect status includes the WebSocket close code/reason
+  when the relay is the source, while peer-initiated closes retain the remote
+  reason.
 
 ---
 

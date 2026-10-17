@@ -25,15 +25,17 @@ import (
 
 // Server is the relay server instance.
 type Server struct {
-	cfg         *config.Config
-	bwLimiter   *ratelimit.BandwidthLimiter
-	connLimiter *ratelimit.ConnLimiter
+	cfg            *config.Config
+	bwLimiter      *ratelimit.BandwidthLimiter
+	connLimiter    *ratelimit.ConnLimiter
 	sessionLimiter *ratelimit.ConnLimiter // active paired sessions per IP (post-pair)
-	tcpLn       net.Listener
-	wsHTTP      *http.Server // WebSocket relay listener
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
+	authorizations *AuthorizationRegistry
+	authWait       *relayAuthWaitLimiter
+	tcpLn          net.Listener
+	wsHTTP         *http.Server // WebSocket relay listener
+	ctx            context.Context
+	cancel         context.CancelFunc
+	wg             sync.WaitGroup
 
 	// Pending connections waiting for a pair (key: UUID string)
 	pending sync.Map // map[string]*pendingConn
@@ -46,6 +48,81 @@ type Server struct {
 	onRelayEnd   func(uuid string)
 }
 
+const (
+	maxRelayAuthWaitGlobal = 256
+	maxRelayAuthWaitPerIP  = 8
+)
+
+// relayAuthWaitLimiter bounds connections held briefly while signal finishes
+// authorizing a UUID. The normal relay connection limiter may be disabled, so
+// this independent cap is required to prevent random UUID floods from
+// consuming unbounded sockets and goroutines.
+type relayAuthWaitLimiter struct {
+	mu        sync.Mutex
+	maxGlobal int
+	maxPerIP  int
+	total     int
+	byIP      map[string]int
+}
+
+func newRelayAuthWaitLimiter(maxGlobal, maxPerIP int) *relayAuthWaitLimiter {
+	return &relayAuthWaitLimiter{
+		maxGlobal: maxGlobal,
+		maxPerIP:  maxPerIP,
+		byIP:      make(map[string]int),
+	}
+}
+
+func (l *relayAuthWaitLimiter) acquire(ip string) bool {
+	if l == nil {
+		return false
+	}
+	if ip == "" {
+		ip = "unknown"
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.maxGlobal > 0 && l.total >= l.maxGlobal {
+		return false
+	}
+	if l.maxPerIP > 0 && l.byIP[ip] >= l.maxPerIP {
+		return false
+	}
+	l.total++
+	l.byIP[ip]++
+	return true
+}
+
+func (l *relayAuthWaitLimiter) release(ip string) {
+	if l == nil {
+		return
+	}
+	if ip == "" {
+		ip = "unknown"
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	count := l.byIP[ip]
+	if count == 0 {
+		return
+	}
+	l.total--
+	if count > 1 {
+		l.byIP[ip] = count - 1
+	} else {
+		delete(l.byIP, ip)
+	}
+}
+
+func (l *relayAuthWaitLimiter) snapshot() (total int, ips int) {
+	if l == nil {
+		return 0, 0
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.total, len(l.byIP)
+}
+
 // Indirection for testing.
 var (
 	timeNow   = func() time.Time { return time.Now() }
@@ -54,7 +131,8 @@ var (
 
 // relayTransport identifies how a peer reached the relay (framing differs).
 // TCP uses RustDesk BytesCodec; WebSocket uses one raw protobuf per binary frame.
-// Mixing them after UUID pairing corrupts the E2E handshake (#290).
+// Mixed pairs are bridged with message-aware translation (#397); naive io.Copy
+// between them corrupts the E2E handshake (#290).
 type relayTransport string
 
 const (
@@ -95,7 +173,11 @@ func (pc *pendingConn) remoteAddr() string {
 
 // New creates a new relay server instance.
 func New(cfg *config.Config) *Server {
-	return &Server{cfg: cfg}
+	return &Server{
+		cfg:            cfg,
+		authorizations: defaultAuthorizationRegistry,
+		authWait:       newRelayAuthWaitLimiter(maxRelayAuthWaitGlobal, maxRelayAuthWaitPerIP),
+	}
 }
 
 // SetBandwidthLimiter sets the bandwidth limiter for relay sessions.
@@ -111,6 +193,64 @@ func (s *Server) SetConnLimiter(cl *ratelimit.ConnLimiter) {
 // SetSessionLimiter limits active (paired) relay sessions per IP.
 func (s *Server) SetSessionLimiter(cl *ratelimit.ConnLimiter) {
 	s.sessionLimiter = cl
+}
+
+// SetAuthorizationRegistry overrides the signal-issued relay authorization
+// registry. It is primarily useful for isolated deployments and tests.
+func (s *Server) SetAuthorizationRegistry(registry *AuthorizationRegistry) {
+	if registry != nil {
+		s.authorizations = registry
+	}
+}
+
+// claimRelayUUID claims an authorized UUID immediately or waits briefly for
+// signal to authorize it. The final Claim remains mandatory after the wait.
+func (s *Server) claimRelayUUID(uuid, remoteAddr string) bool {
+	if s == nil || s.authorizations == nil || uuid == "" {
+		return false
+	}
+	if s.authorizations.Claim(uuid) {
+		return true
+	}
+
+	if s.authWait == nil {
+		log.Printf("[relay] Unauthorized relay UUID from %s (no auth wait capacity)", remoteAddr)
+		return false
+	}
+	ip, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil || ip == "" {
+		ip = remoteAddr
+	}
+	if !s.authWait.acquire(ip) {
+		log.Printf("[relay] Relay auth wait rejected from %s (capacity exceeded)", remoteAddr)
+		return false
+	}
+	defer s.authWait.release(ip)
+
+	baseCtx := s.ctx
+	if baseCtx == nil {
+		baseCtx = context.Background()
+	}
+	waitCtx, cancel := context.WithTimeout(baseCtx, config.RelayAuthWait)
+	defer cancel()
+
+	log.Printf("[relay] Waiting for signal authorization of UUID %s from %s", relayUUIDLogID(uuid), remoteAddr)
+	if !s.authorizations.WaitForAuthorization(waitCtx, uuid) {
+		log.Printf("[relay] Unauthorized relay UUID from %s (authorization wait expired)", remoteAddr)
+		return false
+	}
+	if !s.authorizations.Claim(uuid) {
+		log.Printf("[relay] Unauthorized relay UUID from %s (claim rejected after authorization)", remoteAddr)
+		return false
+	}
+	return true
+}
+
+func relayUUIDLogID(uuid string) string {
+	if len(uuid) <= 8 {
+		return uuid
+	}
+	return uuid[:8]
 }
 
 // SetBillingCallbacks registers hooks when relay sessions start/end (commercialization).
@@ -236,8 +376,13 @@ func (s *Server) handleConn(conn net.Conn) {
 		conn.Close()
 		return
 	}
+	if !s.claimRelayUUID(uuid, conn.RemoteAddr().String()) {
+		log.Printf("[relay] Unauthorized relay UUID from %s (rejecting)", conn.RemoteAddr())
+		conn.Close()
+		return
+	}
 
-	log.Printf("[relay] Connection from %s for UUID %s", conn.RemoteAddr(), uuid)
+	log.Printf("[relay] Connection from %s for UUID %s", conn.RemoteAddr(), relayUUIDLogID(uuid))
 	s.pairIncomingConn(&pendingConn{
 		conn:      conn,
 		remote:    conn.RemoteAddr().String(),
@@ -250,17 +395,26 @@ func (s *Server) handleConn(conn net.Conn) {
 // pairIncomingConn pairs two relay connections sharing the same session UUID.
 // LoadOrStore avoids a race where simultaneous connections both miss LoadAndDelete
 // and overwrite each other in pending without ever pairing.
-// Peers must use the same transport (TCP or WS); mixed framing is rejected (#290).
+// Homogeneous transports use byte/message copy; mixed TCP↔WS uses BytesCodec
+// translation (#397) so Web Remote (TCP proxy) can reach WebSocket Mode peers.
 func (s *Server) pairIncomingConn(pc *pendingConn, uuid string) {
 	if val, loaded := s.pending.LoadOrStore(uuid, pc); loaded {
 		existing := val.(*pendingConn)
 		s.pending.Delete(uuid)
 		close(existing.done)
 		if existing.transport != pc.transport {
-			log.Printf("[relay] Protocol mismatch for UUID %s: %s <-> %s (rejecting mixed WebSocket/native relay)",
-				uuid, existing.transport, pc.transport)
-			existing.close()
-			pc.close()
+			tcpPC, wsPC := existing, pc
+			if existing.transport == relayTransportWS {
+				tcpPC, wsPC = pc, existing
+			}
+			if tcpPC.conn == nil || wsPC.ws == nil {
+				log.Printf("[relay] Protocol mismatch for UUID %s: %s <-> %s (incomplete mixed pair)",
+					relayUUIDLogID(uuid), existing.transport, pc.transport)
+				existing.close()
+				pc.close()
+				return
+			}
+			s.startMixedRelay(tcpPC.conn, wsPC.ws, tcpPC.remoteAddr(), wsPC.remoteAddr(), uuid)
 			return
 		}
 		if pc.transport == relayTransportWS {
@@ -277,12 +431,14 @@ func (s *Server) pairIncomingConn(pc *pendingConn, uuid string) {
 	case <-timeAfter(config.RelayPairTimeout):
 		if val, ok := s.pending.Load(uuid); ok && val.(*pendingConn) == pc {
 			s.pending.Delete(uuid)
+			s.authorizations.Release(uuid)
 			pc.close()
-			log.Printf("[relay] Pair timeout for UUID %s", uuid)
+			log.Printf("[relay] Pair timeout for UUID %s", relayUUIDLogID(uuid))
 		}
 	case <-s.ctx.Done():
 		if val, ok := s.pending.Load(uuid); ok && val.(*pendingConn) == pc {
 			s.pending.Delete(uuid)
+			s.authorizations.Release(uuid)
 			pc.close()
 		}
 	}
@@ -298,7 +454,7 @@ func (s *Server) startRelay(conn1, conn2 net.Conn, uuid string) {
 				ip = c.RemoteAddr().String()
 			}
 			if !s.sessionLimiter.Acquire(ip) {
-				log.Printf("[relay] Active session limit exceeded for %s (UUID %s)", ip, uuid)
+				log.Printf("[relay] Active session limit exceeded for %s (UUID %s)", ip, relayUUIDLogID(uuid))
 				conn1.Close()
 				conn2.Close()
 				return
@@ -316,7 +472,7 @@ func (s *Server) startRelay(conn1, conn2 net.Conn, uuid string) {
 	s.TotalRelayed.Add(1)
 
 	log.Printf("[relay] Pair established: %s <-> %s (UUID: %s)",
-		conn1.RemoteAddr(), conn2.RemoteAddr(), uuid)
+		conn1.RemoteAddr(), conn2.RemoteAddr(), relayUUIDLogID(uuid))
 
 	if s.onRelayStart != nil {
 		s.onRelayStart(uuid)
@@ -386,7 +542,7 @@ func (s *Server) startRelay(conn1, conn2 net.Conn, uuid string) {
 	}
 
 	s.ActiveSessions.Add(-1)
-	log.Printf("[relay] Session ended: UUID %s (active: %d)", uuid, s.ActiveSessions.Load())
+	log.Printf("[relay] Session ended: UUID %s (active: %d)", relayUUIDLogID(uuid), s.ActiveSessions.Load())
 }
 
 // idleTimeoutConn wraps a net.Conn and extends the deadline on every successful
@@ -430,6 +586,7 @@ func (s *Server) cleanupPending() {
 				pc := value.(*pendingConn)
 				if time.Since(pc.created) > config.RelayPairTimeout {
 					if _, loaded := s.pending.LoadAndDelete(key); loaded {
+						s.authorizations.Release(key.(string))
 						pc.close()
 						close(pc.done)
 					}

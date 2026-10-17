@@ -280,7 +280,7 @@
                             <div class="bd-a11y-profiles">
                                 ${profileButton('lowVision', 'visibility', tr('profile_low_vision', 'Low vision'), tr('profile_low_vision_hint', 'Larger text, strong contrast and focus.'))}
                                 ${profileButton('dyslexia', 'menu_book', tr('profile_dyslexia', 'Reading comfort'), tr('profile_dyslexia_hint', 'Readable font and wider spacing.'))}
-                                ${profileButton('motionSafe', 'motion_photos_pause', tr('profile_motion_safe', 'Motion safe'), tr('profile_motion_safe_hint', 'Reduces transitions and pauses animation.'))}
+                                ${profileButton('motionSafe', 'speed', tr('profile_motion_safe', 'Motion safe'), tr('profile_motion_safe_hint', 'Reduces transitions and pauses animation.'))}
                                 ${profileButton('colorAssist', 'palette', tr('profile_color_assist', 'Color support'), tr('profile_color_assist_hint', 'Color filter, labels and highlighted links.'))}
                             </div>
                         </section>
@@ -294,8 +294,8 @@
                                 ${rangeField('wordSpacing', tr('word_spacing', 'Word spacing'), 0, 0.22, 0.01, 'em')}
                             </div>
                             <div class="bd-a11y-grid">
-                                ${toggleButton('readableFont', 'font_download', tr('readable_font', 'Readable font'), tr('readable_font_hint', 'Uses broad, familiar letter shapes.'))}
-                                ${toggleButton('dyslexiaFont', 'format_line_spacing', tr('dyslexia_spacing', 'Dyslexia spacing'), tr('dyslexia_spacing_hint', 'Adds extra spacing for long text.'))}
+                                ${toggleButton('readableFont', 'text_fields', tr('readable_font', 'Readable font'), tr('readable_font_hint', 'Uses broad, familiar letter shapes.'))}
+                                ${toggleButton('dyslexiaFont', 'format_align_left', tr('dyslexia_spacing', 'Dyslexia spacing'), tr('dyslexia_spacing_hint', 'Adds extra spacing for long text.'))}
                             </div>
                         </section>
 
@@ -318,40 +318,25 @@
                             </div>
                             ${rangeField('saturation', tr('saturation', 'Color saturation'), 0, 180, 5, '%')}
                             <div class="bd-a11y-grid">
-                                ${toggleButton('underlineLinks', 'format_underlined', tr('underline_links', 'Underline links'), tr('underline_links_hint', 'Makes links visible without relying on color.'))}
-                                ${toggleButton('highlightLinks', 'ads_click', tr('highlight_links', 'Highlight actions'), tr('highlight_links_hint', 'Outlines links and buttons.'))}
+                                ${toggleButton('underlineLinks', 'link', tr('underline_links', 'Underline links'), tr('underline_links_hint', 'Makes links visible without relying on color.'))}
+                                ${toggleButton('highlightLinks', 'touch_app', tr('highlight_links', 'Highlight actions'), tr('highlight_links_hint', 'Outlines links and buttons.'))}
                                 ${toggleButton('highlightHeadings', 'title', tr('highlight_headings', 'Highlight headings'), tr('highlight_headings_hint', 'Marks section titles with a color bar.'))}
-                                ${toggleButton('hideMedia', 'image_not_supported', tr('hide_media', 'Dim media'), tr('hide_media_hint', 'Dims images, videos and canvases.'))}
+                                ${toggleButton('hideMedia', 'image', tr('hide_media', 'Dim media'), tr('hide_media_hint', 'Dims images, videos and canvases.'))}
                             </div>
                         </section>
 
                         <section class="bd-a11y-section">
                             <div class="bd-a11y-section-title"><span class="material-icons">touch_app</span>${esc(tr('interaction', 'Interaction'))}</div>
                             <div class="bd-a11y-grid">
-                                ${toggleButton('strongFocus', 'center_focus_strong', tr('strong_focus', 'Strong focus'), tr('strong_focus_hint', 'Shows a large keyboard focus ring.'))}
-                                ${toggleButton('largeCursor', 'near_me', tr('large_cursor', 'Large cursor'), tr('large_cursor_hint', 'Uses a larger high-contrast pointer.'))}
+                                ${toggleButton('strongFocus', 'gps_fixed', tr('strong_focus', 'Strong focus'), tr('strong_focus_hint', 'Shows a large keyboard focus ring.'))}
+                                ${toggleButton('largeCursor', 'touch_app', tr('large_cursor', 'Large cursor'), tr('large_cursor_hint', 'Uses a larger high-contrast pointer.'))}
                                 ${toggleButton('reduceMotion', 'speed', tr('reduce_motion', 'Reduce motion'), tr('reduce_motion_hint', 'Shortens transitions and smooth scrolling.'))}
-                                ${toggleButton('pauseAnimations', 'pause_circle', tr('pause_animations', 'Pause animations'), tr('pause_animations_hint', 'Stops looping visual motion.'))}
-                                ${toggleButton('readingGuide', 'horizontal_rule', tr('reading_guide', 'Reading guide'), tr('reading_guide_hint', 'Follows the pointer with a bright line.'))}
+                                ${toggleButton('pauseAnimations', 'speed', tr('pause_animations', 'Pause animations'), tr('pause_animations_hint', 'Stops looping visual motion.'))}
+                                ${toggleButton('readingGuide', 'drag_handle', tr('reading_guide', 'Reading guide'), tr('reading_guide_hint', 'Follows the pointer with a bright line.'))}
                                 ${toggleButton('readingMask', 'visibility_off', tr('reading_mask', 'Reading mask'), tr('reading_mask_hint', 'Dims content above and below the pointer.'))}
                             </div>
                         </section>
                     </div>
-                    <aside class="bd-a11y-preview-wrap" aria-live="polite">
-                        <div class="bd-a11y-section-title"><span class="material-icons">preview</span>${esc(tr('preview', 'Preview'))}</div>
-                        <div class="bd-a11y-preview">
-                            <h3>${esc(tr('preview_title', 'Operator workspace preview'))}</h3>
-                            <p>${esc(tr('preview_text', 'Check whether text, links, controls and status labels are comfortable to read before closing this menu.'))}</p>
-                            <div class="bd-a11y-preview-row">
-                                <a href="#" data-a11y-preview-link>${esc(tr('preview_link', 'Device details link'))}</a>
-                                <span class="bd-a11y-preview-status"><span class="material-icons icon-sm">check_circle</span>${esc(tr('preview_status', 'Online'))}</span>
-                            </div>
-                            <div class="bd-a11y-preview-row">
-                                <button type="button" class="btn btn-primary">${esc(tr('preview_button', 'Primary action'))}</button>
-                                <button type="button" class="btn btn-secondary">${esc(tr('preview_secondary', 'Secondary'))}</button>
-                            </div>
-                        </div>
-                    </aside>
                 </div>
                 <div class="bd-a11y-footer">
                     <button type="button" class="btn btn-secondary" data-a11y-reset>
@@ -446,9 +431,6 @@
             return;
         }
 
-        if (event.target.closest('[data-a11y-preview-link]')) {
-            event.preventDefault();
-        }
     }
 
     function updateOutput(key) {

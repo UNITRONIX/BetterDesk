@@ -20,8 +20,9 @@
 #
 # Web Console: http://localhost:5000
 # RustDesk client API: http://localhost:21114 (Go server — not the console port)
-# SQLite: console DB_PATH shares Go peer DB at /opt/rustdesk/db_v2.sqlite3;
-# server mounts console auth.db read-only for folder/group sync (issue #138).
+# SQLite: both services share the primary database at
+# /opt/rustdesk/db_v2.sqlite3. Legacy auth.db is optional and only used for
+# unmigrated deployments.
 # Default credentials are written to the shared credentials file:
 #   docker compose exec console betterdesk-show-admin-credentials
 #
@@ -38,7 +39,7 @@
 services:
   # BetterDesk Server (Go) — handles signal, relay, and API
   server:
-    image: ghcr.io/unitronix/betterdesk-server:${BETTERDESK_IMAGE_TAG:-3.5.4}
+    image: ghcr.io/unitronix/betterdesk-server:${BETTERDESK_IMAGE_TAG:-3.5.168}
     container_name: betterdesk-server
     hostname: betterdesk-server
     command: ["/usr/local/bin/betterdesk-server", "-mode", "all", "-api-port", "21114", "-key-file", "/opt/rustdesk/id_ed25519"]
@@ -56,20 +57,33 @@ services:
       - console-data:/app/data:ro
     environment:
       - ENCRYPTED_ONLY=1
+      # Keep Go and Node.js on the same primary SQLite database.
+      - DB_URL=/opt/rustdesk/db_v2.sqlite3
       # RustDesk client folders/groups (issue #138). Ignored when DB_URL is postgres://.
       - AUTH_DB_PATH=/app/data/auth.db
       # Admin credentials (first run only; existing users are not overwritten).
+      # Do NOT comment these out — host ADMIN_PASSWORD only reaches the container when mapped (issue #385).
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - INIT_ADMIN_USER=${ADMIN_USERNAME:-admin}
       - INIT_ADMIN_PASS=${ADMIN_PASSWORD:-}
+      - SQLITE_AUTH_DB_MODE=${SQLITE_AUTH_DB_MODE:-}
       # Set this when clients are outside the Docker network. Use the host's
       # public IP/DNS, or the host LAN IP for LAN-only deployments.
       # Example: RELAY_SERVERS=203.2.1413.10:21117 docker compose up -d
       - RELAY_SERVERS=${RELAY_SERVERS:-}
       - SIGNAL_RATE_LIMIT_PER_IP=${SIGNAL_RATE_LIMIT_PER_IP:-20}
+      - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
       # Enrollment policy. Fresh volumes default to "managed" (operator approves
       # new devices); pre-existing volumes keep their current mode. Override with
       # "open", "managed", or "locked".
       - ENROLLMENT_MODE=${ENROLLMENT_MODE:-}
+      - NTP_SERVERS=${NTP_SERVERS:-pool.ntp.org,time.google.com,time.cloudflare.com}
+      - BILLING_MAX_CLOCK_SKEW_MS=${BILLING_MAX_CLOCK_SKEW_MS:-2000}
+      - BILLING_REQUIRE_SYNCED_CLOCK=${BILLING_REQUIRE_SYNCED_CLOCK:-1}
+      - BILLING_TRUST_OS_NTP=${BILLING_TRUST_OS_NTP:-Y}
+      # Optional: map betterdesk to host bind-mount owner (Synology etc.). Default 10001.
+      - PUID=${PUID:-10001}
+      - PGID=${PGID:-10001}
     networks:
       - betterdesk-net
     restart: unless-stopped
@@ -93,7 +107,7 @@ services:
 
   # BetterDesk Console — Web Management Interface
   console:
-    image: ghcr.io/unitronix/betterdesk-console:${BETTERDESK_IMAGE_TAG:-3.5.4}
+    image: ghcr.io/unitronix/betterdesk-console:${BETTERDESK_IMAGE_TAG:-3.5.168}
     container_name: betterdesk-console
     hostname: betterdesk-console
     ports:
@@ -103,6 +117,8 @@ services:
       - console-data:/app/data
     environment:
       - NODE_ENV=production
+      # Set TRUST_PROXY=1 when this console is behind one reverse proxy.
+      - TRUST_PROXY=${TRUST_PROXY:-}
       - PORT=5000
       - HOST=0.0.0.0
       - API_HOST=0.0.0.0
@@ -111,6 +127,14 @@ services:
       - BETTERDESK_API_URL=http://betterdesk-server:21114/api
       - RUSTDESK_PATH=/opt/rustdesk
       - DATA_DIR=/app/data
+      - BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-UNITRONIX/BetterDesk-Client}
+      - BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
+      - BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
+      - BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}
+      - AGENT_ARTIFACT_DIR=/app/data/agent-builds
+      - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
+      - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
+      - AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
       - DB_PATH=/opt/rustdesk/db_v2.sqlite3
       # Optional public client endpoints (IaC). Non-empty values override the panel
       # file at /app/data/public-endpoints.env. Leave unset to use Settings UI.
@@ -119,8 +143,11 @@ services:
       # - PUBLIC_RELAY_SERVER=gateway.example.net
       # - PUBLIC_API_URL=https://api.example.net:21121
       # Admin credentials (first run only; existing users are not overwritten).
+      # Do NOT comment these out — host ADMIN_PASSWORD only reaches the container when mapped (issue #385).
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - DEFAULT_ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - DEFAULT_ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - SQLITE_AUTH_DB_MODE=${SQLITE_AUTH_DB_MODE:-}
       - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
       - API_KEY_PATH=/opt/rustdesk/.api_key
       - WS_HBBS_HOST=betterdesk-server
@@ -128,9 +155,12 @@ services:
       - WS_HBBR_HOST=betterdesk-server
       - WS_HBBR_PORT=21117
       - DOCKER=true
+      # Optional: map betterdesk to host bind-mount owner (Synology etc.). Default 10001.
+      - PUID=${PUID:-10001}
+      - PGID=${PGID:-10001}
       - BETTERDESK_UPDATE_MODE=image
       - BETTERDESK_DOCKER_LAYOUT=split
-      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-3.5.4}
+      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-3.5.168}
     networks:
       - betterdesk-net
     depends_on:

@@ -3,18 +3,44 @@
 # Fixes volume file permissions before dropping to non-root user
 set -e
 
+# shellcheck source=/dev/null
+. /ensure-app-user.sh
+ensure_betterdesk_user
+
 DATA_DIR="/opt/rustdesk"
 
-# Public Docker examples use ADMIN_*; the Go server seeds from INIT_ADMIN_*.
-if [ -n "${ADMIN_USERNAME:-}" ] && [ -z "${INIT_ADMIN_USER:-}" ]; then
-    export INIT_ADMIN_USER="$ADMIN_USERNAME"
-fi
-if [ -n "${ADMIN_PASSWORD:-}" ] && [ -z "${INIT_ADMIN_PASS:-}" ]; then
-    export INIT_ADMIN_PASS="$ADMIN_PASSWORD"
+# Normalize the Go database path before credential bootstrap and startup.
+# Split Compose files should set DB_URL explicitly, but custom deployments may
+# only set DB_PATH or neither. Keep bootstrap inspection and Go on the same
+# absolute volume-backed path instead of relying on the container WORKDIR.
+if [ -z "${DB_URL:-}" ]; then
+    case "${DB_TYPE:-sqlite}" in
+        postgres|postgresql)
+            export DB_URL="${DATABASE_URL:-${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}}"
+            ;;
+        *)
+            export DB_URL="${DB_PATH:-${RUSTDESK_PATH:-$DATA_DIR}/db_v2.sqlite3}"
+            ;;
+    esac
 fi
 
-# SQLite Docker: wait for the console to create auth.db (folders/groups ACL).
-# Skipped for PostgreSQL — panel sync uses the shared DATABASE_URL instead.
+# Fix ownership before bootstrap writes .admin_credentials (issue #385).
+if [ "$(id -u)" = "0" ]; then
+    chown -R betterdesk:betterdesk "$DATA_DIR" 2>/dev/null || true
+    if [ -f "$DATA_DIR/id_ed25519" ]; then
+        chmod 600 "$DATA_DIR/id_ed25519"
+        chown betterdesk:betterdesk "$DATA_DIR/id_ed25519"
+    fi
+fi
+
+# Load shared bootstrap helpers before any app-owned path checks. The helper
+# definitions are also used by the panel and enrollment checks below.
+# shellcheck source=/docker/bootstrap-admin-credentials.sh
+. /docker/bootstrap-admin-credentials.sh
+
+# SQLite Docker: legacy auth.db is optional. Fresh installs keep panel
+# identities in the primary db_v2.sqlite3; only explicitly legacy deployments
+# need to wait for a separate auth.db.
 panel_auth_db_ready() {
     case "${DB_URL:-}" in
         postgres://*|postgresql://*) return 0 ;;
@@ -23,18 +49,22 @@ panel_auth_db_ready() {
     if [ -z "$auth_path" ]; then
         return 0
     fi
-    if [ -f "$auth_path" ]; then
+    if ! file_exists_as_betterdesk "$auth_path" && [ "${SQLITE_AUTH_DB_MODE:-}" != "legacy" ]; then
+        echo "Panel auth.db not present — using the primary SQLite database"
+        return 0
+    fi
+    if file_exists_as_betterdesk "$auth_path"; then
         echo "Panel auth.db ready: $auth_path"
         return 0
     fi
     echo "Waiting for panel auth.db at $auth_path (console container)..."
     retries=0
     max_retries=90
-    while [ ! -f "$auth_path" ] && [ "$retries" -lt "$max_retries" ]; do
+    while ! file_exists_as_betterdesk "$auth_path" && [ "$retries" -lt "$max_retries" ]; do
         sleep 2
         retries=$((retries + 1))
     done
-    if [ ! -f "$auth_path" ]; then
+    if ! file_exists_as_betterdesk "$auth_path"; then
         echo "WARN: panel auth.db not found after ${max_retries} attempts — RustDesk folders/groups may be unavailable"
         return 0
     fi
@@ -48,11 +78,16 @@ panel_auth_db_ready
 # install and defaults to "managed" (stock RustDesk clients are queued for
 # operator approval). Pre-existing volumes keep their current behavior
 # (Go default "open", or whatever the panel persisted in the database).
-# An explicit ENROLLMENT_MODE env value always wins.
-if [ -z "${ENROLLMENT_MODE:-}" ]; then
+# An explicit ENROLLMENT_MODE env value always wins. The marker lets the Go
+# server distinguish it from the managed mode injected below as a default.
+if [ -n "${ENROLLMENT_MODE:-}" ]; then
+    export ENROLLMENT_MODE_ENV_OVERRIDE="Y"
+else
+    export ENROLLMENT_MODE_ENV_OVERRIDE="N"
     ENROLLMENT_SENTINEL="$DATA_DIR/.enrollment_initialized"
-    if [ ! -f "$ENROLLMENT_SENTINEL" ]; then
-        if [ -f "$DATA_DIR/db_v2.sqlite3" ] || [ -f "$DATA_DIR/id_ed25519" ]; then
+    if ! file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"; then
+        if file_exists_as_betterdesk "$DATA_DIR/db_v2.sqlite3" \
+            || file_exists_as_betterdesk "$DATA_DIR/id_ed25519"; then
             : # pre-existing volume — keep current enrollment policy
         else
             export ENROLLMENT_MODE="managed"
@@ -62,19 +97,8 @@ if [ -z "${ENROLLMENT_MODE:-}" ]; then
     fi
 fi
 
-# Fix ownership of volume-mounted data directory.
-# Docker volumes preserve UID/GID from the host or previous container,
-# which may not match the betterdesk user (10001) in this container.
-# This is especially important for id_ed25519 (mode 600) — if owned by
-# a different UID, the server cannot read the private key.
+# Drop privileges and re-exec
 if [ "$(id -u)" = "0" ]; then
-    chown -R betterdesk:betterdesk "$DATA_DIR" 2>/dev/null || true
-    # Ensure private key is readable by betterdesk
-    if [ -f "$DATA_DIR/id_ed25519" ]; then
-        chmod 600 "$DATA_DIR/id_ed25519"
-        chown betterdesk:betterdesk "$DATA_DIR/id_ed25519"
-    fi
-    # Drop privileges and re-exec
     exec su-exec betterdesk "$@"
 else
     exec "$@"

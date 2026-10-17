@@ -15,6 +15,7 @@
         initUserMenu();
         initRefreshButton();
         initRegistrationBadge();
+        initPanelEvents();
     }
 
     /**
@@ -61,6 +62,21 @@
      * Navbar functionality
      */
     function initNavbar() {
+        function closeAllTopbarPopovers(except) {
+            document.querySelectorAll('.lang-dropdown.open').forEach(d => {
+                if (except && (d === except || except.contains?.(d))) return;
+                d.classList.remove('open');
+                d.parentElement?.querySelector('button')?.setAttribute('aria-expanded', 'false');
+            });
+            const notif = document.getElementById('notif-dropdown');
+            if (notif && !(except && (except === notif || except.contains?.(notif)))) {
+                notif.hidden = true;
+                document.getElementById('notif-btn')?.setAttribute('aria-expanded', 'false');
+            }
+        }
+        window.BetterDesk = window.BetterDesk || {};
+        window.BetterDesk.closeAllTopbarPopovers = closeAllTopbarPopovers;
+
         // Dropdowns
         document.querySelectorAll('.lang-selector').forEach(selector => {
             const btn = selector.querySelector('button');
@@ -70,19 +86,16 @@
             
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // Close other dropdowns
-                document.querySelectorAll('.lang-dropdown.open').forEach(d => {
-                    if (d !== dropdown) d.classList.remove('open');
-                });
-                dropdown.classList.toggle('open');
+                const willOpen = !dropdown.classList.contains('open');
+                closeAllTopbarPopovers(willOpen ? dropdown : null);
+                dropdown.classList.toggle('open', willOpen);
+                btn.setAttribute('aria-expanded', String(willOpen));
             });
         });
         
         // Close dropdowns on outside click
         document.addEventListener('click', () => {
-            document.querySelectorAll('.lang-dropdown.open').forEach(d => {
-                d.classList.remove('open');
-            });
+            closeAllTopbarPopovers();
         });
     }
     
@@ -139,6 +152,14 @@
                 }
             }
         });
+
+        [changePasswordBtn, logoutBtn].filter(Boolean).forEach(btn => {
+            btn.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                btn.click();
+            });
+        });
     }
     
     /**
@@ -177,14 +198,27 @@
      * Periodically fetch pending registration count for sidebar badge.
      */
     function initRegistrationBadge() {
-        const badge = document.getElementById('reg-sidebar-badge');
-        if (!badge) return;
+        const badges = () => [
+            document.getElementById('reg-sidebar-badge'),
+            document.getElementById('pending-count'),
+        ].filter(Boolean);
+        if (!badges().length) return;
 
         let badgeInterval = null;
 
+        function renderRegistrationCount(count) {
+            badges().forEach((badge) => {
+                badge.textContent = String(count);
+                badge.style.display = count > 0 ? '' : 'none';
+            });
+        }
+
         async function updateBadge() {
             try {
-                const resp = await fetch('/api/registrations/count');
+                const resp = await fetch('/api/registrations/count', {
+                    credentials: 'same-origin',
+                    headers: { Accept: 'application/json' },
+                });
                 if (!resp.ok) {
                     if (resp.status === 401 && badgeInterval) {
                         clearInterval(badgeInterval);
@@ -193,14 +227,86 @@
                     return;
                 }
                 const data = await resp.json();
-                const count = data.count || 0;
-                badge.textContent = count;
-                badge.style.display = count > 0 ? '' : 'none';
+                const count = Number.isFinite(Number(data.count)) ? Number(data.count) : 0;
+                renderRegistrationCount(Math.max(0, count));
             } catch (_) { /* silent */ }
         }
 
         updateBadge();
-        badgeInterval = setInterval(updateBadge, 30000); // every 30s
+        badgeInterval = setInterval(updateBadge, 15000); // real-time fallback
+    }
+
+    /**
+     * Subscribe once per page to events produced by the Go event bus and
+     * Node.js LAN registration route. The notification center and the
+     * registrations page consume the normalized browser event.
+     */
+    function initPanelEvents() {
+        // The stream contains registration metadata, so only approvers need
+        // to open it. The server repeats this authorization check during the
+        // WebSocket upgrade.
+        if (typeof WebSocket !== 'function' ||
+            !document.getElementById('reg-sidebar-badge')) return;
+
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${proto}//${location.host}/ws/panel-events`;
+        let ws = null;
+        let retryDelay = 3000;
+
+        function connect() {
+            // The console is intentionally unavailable during an in-panel
+            // restart. Do not create a burst of failed WSS handshakes while
+            // systemd/NSSM is bringing the replacement process up.
+            if (window.BetterDesk?.consoleRestarting) return;
+            try {
+                ws = new WebSocket(wsUrl);
+            } catch (_) {
+                if (window.BetterDesk?.consoleRestarting) return;
+                setTimeout(connect, retryDelay);
+                retryDelay = Math.min(retryDelay * 2, 60000);
+                return;
+            }
+
+            ws.onopen = () => {
+                retryDelay = 3000;
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'registration_pending' ||
+                        data.type === 'registration_changed') {
+                        window.dispatchEvent(new CustomEvent('registrations:pending-changed', {
+                            detail: data,
+                        }));
+                    }
+                    if (data.type === 'registration_changed') {
+                        // Approval creates the Go peer immediately, but the
+                        // Devices page may otherwise wait for its 60s
+                        // reconciliation timer before showing it.
+                        window.dispatchEvent(new CustomEvent('app:refresh', {
+                            detail: data,
+                        }));
+                    }
+                    window.dispatchEvent(new CustomEvent('betterdesk:panel-event', {
+                        detail: data,
+                    }));
+                } catch (_) {}
+            };
+
+            ws.onclose = () => {
+                if (window.BetterDesk?.consoleRestarting) return;
+                setTimeout(connect, retryDelay);
+                retryDelay = Math.min(retryDelay * 2, 60000);
+            };
+
+            ws.onerror = () => {
+                if (window.BetterDesk?.consoleRestarting) return;
+                ws.close();
+            };
+        }
+
+        connect();
     }
     
 })();

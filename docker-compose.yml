@@ -40,7 +40,17 @@ services:
       - ENCRYPTED_ONLY=1
       - DB_URL=${DB_URL:-/opt/rustdesk/db_v2.sqlite3}
       - AUTH_DB_PATH=/app/data/auth.db
+      # Admin credentials (first run only; existing users are not overwritten).
+      # Keep these mappings in both services so Go and Node.js seed the same account.
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - INIT_ADMIN_USER=${ADMIN_USERNAME:-admin}
+      - INIT_ADMIN_PASS=${ADMIN_PASSWORD:-}
+      - SQLITE_AUTH_DB_MODE=${SQLITE_AUTH_DB_MODE:-}
       - SIGNAL_RATE_LIMIT_PER_IP=${SIGNAL_RATE_LIMIT_PER_IP:-20}
+      # Opt-in compatibility for stock controller-only clients. Effective
+      # only with ENROLLMENT_MODE=open; strict initiator authorization remains
+      # the default.
+      - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
       - P2P_FIRST=${P2P_FIRST:-Y}
       - ALWAYS_USE_RELAY=${ALWAYS_USE_RELAY:-N}
       - P2P_FALLBACK_MS=${P2P_FALLBACK_MS:-2000}
@@ -53,6 +63,9 @@ services:
       - BILLING_MAX_CLOCK_SKEW_MS=${BILLING_MAX_CLOCK_SKEW_MS:-2000}
       - BILLING_REQUIRE_SYNCED_CLOCK=${BILLING_REQUIRE_SYNCED_CLOCK:-1}
       - BILLING_TRUST_OS_NTP=${BILLING_TRUST_OS_NTP:-Y}
+      # Optional: map betterdesk to host bind-mount owner (Synology etc.). Default 10001.
+      - PUID=${PUID:-10001}
+      - PGID=${PGID:-10001}
     networks:
       - betterdesk-net
     restart: unless-stopped
@@ -88,9 +101,11 @@ services:
       - "21121:21121"           # Backward compat proxy → Go :21114
     volumes:
       - rustdesk-data:/opt/rustdesk        # Shared server data (keys, db) — needs write for WAL mode
-      - console-data:/app/data            # Console-specific data (auth.db, sessions)
+      - console-data:/app/data            # Console sessions and optional legacy auth.db
     environment:
       - NODE_ENV=production
+      # Set TRUST_PROXY=1 when this console is behind one reverse proxy.
+      - TRUST_PROXY=${TRUST_PROXY:-}
       - PORT=5000
       - HOST=0.0.0.0
       - API_HOST=0.0.0.0
@@ -103,18 +118,31 @@ services:
       - BETTERDESK_API_URL=http://betterdesk-server:21114/api
       - RUSTDESK_PATH=/opt/rustdesk
       - DATA_DIR=/app/data
+      - BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-UNITRONIX/BetterDesk-Client}
+      - BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
+      - BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
+      - BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}
+      - AGENT_ARTIFACT_DIR=/app/data/agent-builds
+      - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
+      - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
+      - AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
       - DB_PATH=/opt/rustdesk/db_v2.sqlite3
+      - SQLITE_AUTH_DB_MODE=${SQLITE_AUTH_DB_MODE:-}
       - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
       - API_KEY_PATH=/opt/rustdesk/.api_key
       - SESSION_SECRET=${SESSION_SECRET:-}
+      # Admin credentials (first run only; existing users are not overwritten).
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - DEFAULT_ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - DEFAULT_ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - WS_HBBS_HOST=betterdesk-server
       - WS_HBBS_PORT=21116
       - WS_HBBR_HOST=betterdesk-server
       - WS_HBBR_PORT=21117
       - DOCKER=true
-      # Optional: Set custom admin credentials for first run
-      # - ADMIN_USERNAME=admin
-      # - ADMIN_PASSWORD=YourSecurePassword123
+      # Optional: map betterdesk to host bind-mount owner (Synology etc.). Default 10001.
+      - PUID=${PUID:-10001}
+      - PGID=${PGID:-10001}
     networks:
       - betterdesk-net
     restart: unless-stopped

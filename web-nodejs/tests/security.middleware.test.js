@@ -1,21 +1,27 @@
 const request = require('supertest');
 const { createTestApp } = require('./helpers');
 
-const securityMiddleware = require('../middleware/security');
-
 function getScriptSrcDirective(cspHeader) {
-    const match = cspHeader.match(/script-src ([^;]+)/);
+    const match = String(cspHeader || '').match(/script-src ([^;]+)/);
+    return match ? match[1] : '';
+}
+
+function getScriptSrcAttr(cspHeader) {
+    const match = String(cspHeader || '').match(/script-src-attr ([^;]+)/);
     return match ? match[1] : '';
 }
 
 describe('Security Middleware', () => {
     function createSecureApp() {
+        jest.resetModules();
+        delete process.env.CSP_RELAX_REMOTE;
+        const securityMiddleware = require('../middleware/security');
         const app = createTestApp();
         app.use(securityMiddleware);
         return app;
     }
 
-    it('sets nonce-based CSP on standard pages without unsafe inline script execution', async () => {
+    it('sets nonce-based CSP on standard pages without unsafe-eval or unsafe-inline scripts', async () => {
         const app = createSecureApp();
         app.get('/dashboard', (_req, res) => {
             res.send('<html><body>ok</body></html>');
@@ -23,14 +29,16 @@ describe('Security Middleware', () => {
 
         const res = await request(app).get('/dashboard');
         const scriptSrc = getScriptSrcDirective(res.headers['content-security-policy']);
+        const scriptSrcAttr = getScriptSrcAttr(res.headers['content-security-policy']);
 
         expect(res.status).toBe(200);
         expect(scriptSrc).toMatch(/'self' 'nonce-[^']+'/);
         expect(scriptSrc).not.toContain("'unsafe-inline'");
         expect(scriptSrc).not.toContain("'unsafe-eval'");
+        expect(scriptSrcAttr).toContain("'none'");
     });
 
-    it('allows unsafe-eval only on remote viewer routes while still issuing a nonce', async () => {
+    it('does not allow unsafe-eval on remote viewer by default (static protobuf)', async () => {
         const app = createSecureApp();
         app.get('/remote/device-123', (_req, res) => {
             res.send('<html><body>remote</body></html>');
@@ -41,8 +49,24 @@ describe('Security Middleware', () => {
 
         expect(res.status).toBe(200);
         expect(scriptSrc).toMatch(/'self' 'nonce-[^']+'/);
-        expect(scriptSrc).toContain("'unsafe-eval'");
+        expect(scriptSrc).not.toContain("'unsafe-eval'");
         expect(scriptSrc).not.toContain("'unsafe-inline'");
+    });
+
+    it('allows unsafe-eval on /remote only when CSP_RELAX_REMOTE=true (rollback)', async () => {
+        process.env.CSP_RELAX_REMOTE = 'true';
+        jest.resetModules();
+        const securityMw = require('../middleware/security');
+        const app = createTestApp();
+        app.use(securityMw);
+        app.get('/remote/device-123', (_req, res) => res.send('remote'));
+
+        const res = await request(app).get('/remote/device-123');
+        const scriptSrc = getScriptSrcDirective(res.headers['content-security-policy']);
+        expect(scriptSrc).toContain("'unsafe-eval'");
+
+        delete process.env.CSP_RELAX_REMOTE;
+        jest.resetModules();
     });
 
     it('omits HSTS when HTTPS with self-signed certs (ALLOW_SELF_SIGNED_CERTS=true)', async () => {

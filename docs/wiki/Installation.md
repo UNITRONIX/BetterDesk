@@ -11,7 +11,8 @@ BetterDesk supports **Linux (bare-metal)**, **Windows (PowerShell)**, and **Dock
 - 1 CPU core, 512 MB RAM minimum (2 cores, 2 GB recommended)
 - Root access (sudo)
 - Open ports: 21114-21119 TCP, 21116 UDP, 5000 TCP (web console)
-- Node.js 22+ (auto-installed by script; installer targets Node.js 24 LTS)
+- Node.js 22+ (auto-installed by script; installer targets Node.js 22 LTS while the Node.js 24 native cleanup-hook regression is resolved)
+- Existing bare-metal installations running Node.js 24.19.x should switch the console runtime to Node.js 22.x before restarting the service; the installer does not force-downgrade an existing Node installation.
 
 ### Windows
 - Windows 10/11 or Windows Server 2019+
@@ -126,8 +127,8 @@ cd BetterDesk
 # Skip SHA256 verification
 .\betterdesk.ps1 -SkipVerify
 
-# Custom API port
-$env:API_PORT = "21114"
+# Custom RustDesk Client API port (default 21121; Go admin API is GO_API_PORT=21114)
+$env:API_PORT = "21121"
 .\betterdesk.ps1 -Auto
 ```
 
@@ -218,6 +219,14 @@ When prompted for database type, choose **PostgreSQL** and provide the connectio
 postgres://user:password@host:5432/betterdesk?sslmode=disable
 ```
 
+For a native Linux installation with a local PostgreSQL server, you can select PostgreSQL non-interactively:
+
+```bash
+sudo ./betterdesk.sh --auto --postgresql
+```
+
+The installer creates the BetterDesk role and database, then configures narrowly scoped `pg_hba.conf` rules for `127.0.0.1/32` and `::1/128` using `scram-sha-256`. It reloads PostgreSQL before testing the same TCP/password connection used by BetterDesk. Remote PostgreSQL hosts are not modified; their authentication policy remains operator-managed.
+
 ### Migrate Existing Data
 
 ```bash
@@ -259,7 +268,7 @@ sudo ./betterdesk.sh
 ```
 
 The update process preserves:
-- Database files (auth.db, db_v2.sqlite3)
+- Database files (`db_v2.sqlite3`; legacy `auth.db` if still in use)
 - PostgreSQL configuration
 - SSL certificates
 - API keys
@@ -287,9 +296,23 @@ This removes all services, binaries, and optionally data files.
 
 ---
 
+## Check it worked
+
+```bash
+# Linux services
+sudo systemctl status betterdesk-server betterdesk-console
+curl -s http://localhost:21114/api/health
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5000/
+```
+
+Expect health JSON and HTTP 200 (or a login redirect) from the panel. Then [[Client Setup|Client-Setup]].
+
+---
+
 ## See also
 
 - [[Configuration]] — environment variables and service units
 - [[Panel Updates|Panel-Updates]] — in-app updates via Settings → Updates
 - [[Docker Deployment|Docker]] — container deployment
 - [[Migration Guide|Migration]] — SQLite ↔ PostgreSQL, RustDesk OSS migration
+- [[Privacy]] — what stays on your server

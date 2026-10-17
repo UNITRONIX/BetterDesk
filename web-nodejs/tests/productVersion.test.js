@@ -53,7 +53,14 @@ describe('productVersion', () => {
         expect(readProductVersion({ rootDir: tmpRoot, consoleDir })).toBe('3.3.0');
     });
 
-    test('returns fallback when no sources available', () => {
-        expect(readProductVersion({ rootDir: tmpRoot, fallback: '0.0.0' })).toBe('0.0.0');
+    test('prefers console package.json when consoleDir is the flat install root', () => {
+        const consoleDir = path.join(tmpRoot, 'BetterDeskConsole');
+        fs.mkdirSync(consoleDir, { recursive: true });
+        fs.writeFileSync(path.join(tmpRoot, 'VERSION'), '3.3.1\n');
+        fs.writeFileSync(
+            path.join(consoleDir, 'package.json'),
+            JSON.stringify({ version: '3.5.108' })
+        );
+        expect(readProductVersion({ rootDir: consoleDir, consoleDir })).toBe('3.5.108');
     });
 });

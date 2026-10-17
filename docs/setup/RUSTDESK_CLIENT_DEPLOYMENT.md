@@ -28,8 +28,10 @@ Use **Copy deploy string** on the dashboard, or **Intune / PSADT script** for a 
 | Method | Format | Use case |
 |--------|--------|----------|
 | Manual UI | Four fields in Network settings | First test, one-off machines |
-| QR / deep link | `rustdesk://config/<standard-base64-json>` | Mobile / scan from dashboard QR |
+| QR / deep link | `rustdesk://config/<reversed-deploy-string>` | Mobile / scan from dashboard QR (same string as CLI) |
 | CLI / Import | `reverse(base64(json))` without `=` padding | Intune, PSADT, GPO, RMM scripts |
+
+> **Mobile note (#368):** The QR path must use the **reversed** deploy string (not standard base64). On stock RustDesk **Android/iOS 1.4.9+**, deep links that change server settings are off by default — enable built-in `allow-deep-link-server-settings`, or use **Copy deploy string** → **Import Server Config**.
 
 All three use the same JSON payload:
 
@@ -119,6 +121,10 @@ Combine with a custom detection script that verifies network settings if require
 | Silent user login | Not supported | Users log in manually |
 
 BetterDesk **Pro features** (address book sync, device list, audit) activate after each user **logs in** in the RustDesk client with their BetterDesk account — server config alone is not enough.
+
+That BetterDesk login does **not** replace the target’s **permanent peer password**. For unattended access, set `--password` (or equivalent) on each target during deploy and share that peer secret with authorized operators; user/device groups only scope which devices appear in the address book.
+
+For stricter account-bound initiation, enable `LOGGED_IN_ONLY_INITIATOR=Y` on the BetterDesk server (or **Settings → Connection → Require client login for initiators**). With this opt-in setting, stock clients need an active BetterDesk client session before starting PunchHole or relay connections; the session follows the configured client-session expiry and sliding-renewal policy. It does not require a new interactive login before every connection, replace the target password/approve step, or apply to the separately authenticated Web Remote panel path.
 
 ## Troubleshooting
 

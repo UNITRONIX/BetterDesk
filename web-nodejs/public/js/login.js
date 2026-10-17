@@ -23,7 +23,7 @@
         
         const csrfToken = window.BetterDesk?.csrfToken || '';
 
-        // Check OIDC status and show SSO button if enabled
+        // Check OIDC status, show the SSO button, and optionally launch SSO.
         checkOIDCStatus();
 
         // Show OIDC/SSO error from redirect query string (?error=oidc_*)
@@ -257,6 +257,15 @@
                 }
                 if (ssoBtnText && data.display_name) {
                     ssoBtnText.textContent = _('auth.login_sso_with', { provider: data.display_name }) || `Sign in with ${data.display_name}`;
+                }
+
+                const params = new URLSearchParams(window.location.search);
+                const passwordBypass = params.get('autoLaunch') === '0';
+                const hasOidcError = params.get('error')?.startsWith('oidc_');
+                if (data.prefer_sso && !passwordBypass && !data.local_bypass && !hasOidcError) {
+                    const loginForm = document.getElementById('login-form');
+                    if (loginForm) loginForm.classList.add('hidden');
+                    window.location.replace('/api/auth/oidc/authorize');
                 }
             }
         } catch (e) {

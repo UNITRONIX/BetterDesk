@@ -30,6 +30,7 @@ const { requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
 const deviceGroupService = require('../services/deviceGroupService');
 const serverBackend = require('../services/serverBackend');
+const { publishPanelEvent } = require('../services/deviceStatusPush');
 
 const ENROLLMENT_SETTING_RICH = 'enrollment_rich_approve';
 const ENROLLMENT_SETTING_TAG_PICKER = 'enrollment_tag_picker';
@@ -117,6 +118,22 @@ router.post('/register-request', async (req, res) => {
             public_key: (public_key || '').substring(0, 512),
             uuid: (uuid || '').substring(0, 64),
         });
+
+        if (registration.status === 'pending') {
+            publishPanelEvent({
+                type: 'registration_pending',
+                registration: {
+                    source: 'lan',
+                    id: registration.id,
+                    device_id: registration.device_id,
+                    hostname: registration.hostname,
+                    platform: registration.platform,
+                    ip: registration.ip_address,
+                    created_at: registration.created_at || registration.updated_at,
+                },
+                timestamp: Date.now(),
+            });
+        }
 
         res.json({
             success: true,
@@ -214,11 +231,26 @@ router.get('/api/registrations', requirePermission('enrollment.approve'), async 
 
 /**
  * GET /api/registrations/count — Pending registration count (sidebar badge).
+ * Combines LAN discovery pending_registrations with Go managed enrollment queue (#351).
  */
 router.get('/api/registrations/count', requirePermission('enrollment.approve'), async (req, res) => {
     try {
-        const count = await db.getPendingRegistrationCount();
-        res.json({ success: true, count });
+        let lanCount = 0;
+        try {
+            lanCount = await db.getPendingRegistrationCount() || 0;
+        } catch (_) {
+            lanCount = 0;
+        }
+
+        let enrollmentCount = 0;
+        try {
+            const pending = await betterdeskApi.getEnrollmentPending();
+            enrollmentCount = (pending && pending.count) || 0;
+        } catch (_) {
+            enrollmentCount = 0;
+        }
+
+        res.json({ success: true, count: lanCount + enrollmentCount });
     } catch (err) {
         res.json({ success: true, count: 0 });
     }
@@ -325,6 +357,21 @@ router.put('/api/registrations/:id/approve', requirePermission('enrollment.appro
             }
         }
 
+        // Keep the Devices page in sync with the separate LAN registration
+        // store. Managed Go approvals already arrive through the Go event bus.
+        publishPanelEvent({
+            type: 'registration_changed',
+            registration: {
+                source: 'lan',
+                id,
+                device_id: reg.device_id,
+                hostname: reg.hostname,
+                platform: reg.platform,
+                status: 'approved',
+            },
+            timestamp: Date.now(),
+        });
+
         // Log the approval
         try {
             await db.logAction(
@@ -409,6 +456,21 @@ router.get('/api/enrollment/pending', requirePermission('enrollment.approve'), a
         res.json(result);
     } catch (err) {
         console.error('Get enrollment pending error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * GET /api/enrollment/history — Approved/rejected Go enrollment history (#351).
+ * Query: status=approved|rejected (optional)
+ */
+router.get('/api/enrollment/history', requirePermission('enrollment.approve'), async (req, res) => {
+    try {
+        const status = typeof req.query.status === 'string' ? req.query.status : '';
+        const result = await betterdeskApi.getEnrollmentHistory(status);
+        res.json(result);
+    } catch (err) {
+        console.error('Get enrollment history error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });
@@ -514,6 +576,32 @@ router.post('/api/enrollment/reject/:id', requirePermission('enrollment.approve'
         res.json(result);
     } catch (err) {
         console.error('Reject enrollment error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * POST /api/enrollment/clear-rejection/:id — Clear rejection lock / allow re-enroll (#351).
+ */
+router.post('/api/enrollment/clear-rejection/:id', requirePermission('enrollment.approve'), async (req, res) => {
+    try {
+        const deviceId = req.params.id;
+        const result = await betterdeskApi.clearEnrollmentRejection(deviceId);
+
+        if (result.success) {
+            try {
+                await db.logAction(
+                    req.session?.user?.id || 0,
+                    'enrollment_rejection_cleared',
+                    `Cleared enrollment rejection for device ${deviceId}${result.data?.unbanned ? ' (unbanned)' : ''}`,
+                    getClientIp(req)
+                );
+            } catch (_) { /* audit log optional */ }
+        }
+
+        res.json(result);
+    } catch (err) {
+        console.error('Clear enrollment rejection error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });

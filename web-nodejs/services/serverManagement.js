@@ -27,6 +27,7 @@ const fsp = require('fs').promises;
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 const { resolvePathWithinAnyRoot, resolveChildPath, renameConfinedWithinRoots, unlinkConfinedWithinRoots, mkdirConfinedWithinRoots, rmDirConfinedWithinRoots } = require('../lib/safePath');
+const { canUsePrivilegedUpdate, restartService } = require('../lib/privilegedUpdateHelper');
 
 const SERVICE_NAME_RE = /^[A-Za-z0-9_.@:-]{1,128}$/;
 const FILE_MAX_BYTES = 8 * 1024 * 1024;        // 8 MB read/write cap
@@ -204,6 +205,21 @@ function getAllowedFileRoots() {
     return [...roots];
 }
 
+function getMutableFileRoots() {
+    const roots = new Set([
+        path.resolve(process.env.BETTERDESK_PATH || '/opt/rustdesk'),
+        path.resolve(process.env.BETTERDESK_CONSOLE_PATH || process.cwd()),
+    ]);
+    const extra = process.env.BETTERDESK_MUTABLE_ROOTS;
+    if (extra) {
+        for (const entry of extra.split(',')) {
+            const trimmed = entry.trim();
+            if (trimmed) roots.add(path.resolve(trimmed));
+        }
+    }
+    return [...roots];
+}
+
 /**
  * Resolve a user-supplied path to an absolute path within allowed roots.
  * Rejects null bytes, empty strings, symlink escapes, and paths outside roots.
@@ -278,7 +294,7 @@ async function readFilePreview(filePath) {
 }
 
 async function writeFile(filePath, content) {
-    const abs = resolvePath(filePath);
+    const abs = resolvePathWithinAnyRoot(filePath, getMutableFileRoots());
     if (typeof content !== 'string') throw new Error('Content must be a string');
     if (Buffer.byteLength(content, 'utf8') > FILE_MAX_BYTES) {
         throw new Error('Content exceeds 8 MB limit');
@@ -288,7 +304,7 @@ async function writeFile(filePath, content) {
 }
 
 async function deletePath(p) {
-    const roots = getAllowedFileRoots();
+    const roots = getMutableFileRoots();
     const abs = resolvePathWithinAnyRoot(p, roots);
     if (abs === '/' || /^[A-Za-z]:\\?$/.test(abs)) {
         throw new Error('Refusing to delete filesystem root');
@@ -303,12 +319,12 @@ async function deletePath(p) {
 }
 
 async function makeDirectory(p) {
-    const abs = mkdirConfinedWithinRoots(p, getAllowedFileRoots());
+    const abs = mkdirConfinedWithinRoots(p, getMutableFileRoots());
     return { path: abs };
 }
 
 async function renamePath(oldPath, newPath) {
-    const result = renameConfinedWithinRoots(oldPath, newPath, getAllowedFileRoots());
+    const result = renameConfinedWithinRoots(oldPath, newPath, getMutableFileRoots());
     return { from: result.from, to: result.to };
 }
 
@@ -316,6 +332,33 @@ async function renamePath(oldPath, newPath) {
 
 const ALLOWED_SERVICE_ACTIONS_LINUX = new Set(['start', 'stop', 'restart', 'reload', 'enable', 'disable', 'status']);
 const ALLOWED_SERVICE_ACTIONS_WINDOWS = new Set(['start', 'stop', 'restart', 'status']);
+const ALLOWED_BETTERDESK_SERVICES = new Set([
+    'betterdesk-server',
+    'betterdesk-server.service',
+    'betterdesk-console',
+    'betterdesk-console.service',
+    'betterdesk',
+    'betterdesk-api',
+    'betterdesk-api.service',
+    'betterdesk-go',
+    'betterdesk-go.service',
+    'rustdesksignal',
+    'rustdesksignal.service',
+    'rustdeskrelay',
+    'rustdeskrelay.service',
+    'hbbs',
+    'hbbs.service',
+    'hbbr',
+    'hbbr.service',
+    'BetterDeskServer',
+    'BetterDeskConsole',
+    'BetterDeskSignal',
+    'BetterDeskRelay',
+]);
+
+function isAllowedBetterDeskService(name) {
+    return typeof name === 'string' && ALLOWED_BETTERDESK_SERVICES.has(name);
+}
 
 function listServicesLinux() {
     // List loaded units of type service with state info
@@ -353,14 +396,25 @@ function listServicesWindows() {
 }
 
 function listServices() {
-    if (isLinux) return listServicesLinux();
-    if (isWindows) return listServicesWindows();
+    if (isLinux) return listServicesLinux().filter((service) => isAllowedBetterDeskService(service.name));
+    if (isWindows) return listServicesWindows().filter((service) => isAllowedBetterDeskService(service.name));
     return [];
 }
 
 function controlServiceLinux(name, action) {
     if (!SERVICE_NAME_RE.test(name)) throw new Error('Invalid service name');
+    if (!isAllowedBetterDeskService(name)) throw new Error('Service is not allowlisted');
     if (!ALLOWED_SERVICE_ACTIONS_LINUX.has(action)) throw new Error('Action not allowed');
+    const brokerService = name.replace(/\.service$/, '');
+    if (action === 'restart'
+        && ['betterdesk-server', 'betterdesk-console'].includes(brokerService)
+        && canUsePrivilegedUpdate()) {
+        return Promise.resolve({
+            name,
+            action,
+            ...(restartService(brokerService)),
+        });
+    }
     return new Promise((resolve) => {
         const child = spawn('systemctl', [action, name], { stdio: ['ignore', 'pipe', 'pipe'] });
         let stdout = '';
@@ -385,6 +439,7 @@ function controlServiceLinux(name, action) {
 
 function controlServiceWindows(name, action) {
     if (!SERVICE_NAME_RE.test(name)) throw new Error('Invalid service name');
+    if (!isAllowedBetterDeskService(name)) throw new Error('Service is not allowlisted');
     if (!ALLOWED_SERVICE_ACTIONS_WINDOWS.has(action)) throw new Error('Action not allowed');
     let psAction = action === 'restart' ? 'Restart-Service' : action === 'start' ? 'Start-Service' : action === 'stop' ? 'Stop-Service' : 'Get-Service';
     return new Promise((resolve) => {
@@ -418,8 +473,11 @@ function controlService(name, action) {
 
 module.exports = {
     SERVICE_NAME_RE,
+    ALLOWED_BETTERDESK_SERVICES,
+    isAllowedBetterDeskService,
     FILE_MAX_BYTES,
     getResourceSnapshot,
+    getMutableFileRoots,
     listDirectory,
     readFilePreview,
     writeFile,

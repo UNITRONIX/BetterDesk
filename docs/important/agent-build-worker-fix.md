@@ -1,27 +1,30 @@
-# agentBuildWorker.js — known gotchas (fixed 2026-05-29)
+# Embedded Support builder — operational notes
 
-- `betterdesk-console.service` runs as **User=root** (NOT `$BUILD_USER`). systemd env is empty —
-  `process.env.USER` is undefined → `BUILD_USER` would default to "root" → CARGO_HOME wrong.
-- Fix in `web-nodejs/services/agentBuildWorker.js`:
-  1. Worker now reads `/etc/betterdesk/build.env` at module load (set by `scripts/install-build-toolchain.sh`).
-  2. `BUILD_USER` defaults to `'betterdesk'` (NOT `process.env.USER`).
-  3. Absolute binary paths `CARGO_BIN` / `NPM_BIN` resolved via `_resolveBin([...candidates])`
-     to bypass spawn ENOENT (Node spawn PATH override is unreliable for systemd-root services).
-  4. `_runTauriBuild` uses `CARGO_BIN` / `NPM_BIN` literals (not the string "cargo" / "npm").
-- Diagnostic log on startup: `paths cargo=... npm=... source=...` — verify these point to
-  `/home/$BUILD_USER/.cargo/bin/cargo`, `/usr/bin/npm`, `/opt/BetterDeskConsole/agent-source/betterdesk-agent-client`.
-- cargo-xwin runner CLI: `cargo tauri build --runner cargo-xwin --bundles X --target X`
-  (NOT `cargo xwin tauri build ...`).
-- Build workspace: `/var/cache/betterdesk-build/` (24 GB free needed).
-- Artifact target dir: `/opt/BetterDeskConsole/data/agent-builds/<hash>/<platform>-<arch><ext>`.
-- Agent source override: `AGENT_SOURCE_DIR` env (defaults to `/opt/BetterDeskConsole/agent-source/betterdesk-agent-client`).
-- Toolchain installer: `scripts/install-build-toolchain.sh` (menu B in betterdesk.sh).
-- Toolchain env file: `/etc/betterdesk/build.env` (BUILD_USER, CARGO_HOME, RUSTUP_HOME, CARGO_TARGET_DIR, PATH).
+The active incoming-only generator uses `clientTemplateWorker.js`,
+`clientBuilderService.js` and `localClientBuilder.js`. The old Tauri/Go
+`agentBuildWorker.js` path is not part of the Support generator.
+
+- The local provider is host-only. It builds Linux targets on Linux, Windows
+  targets on Windows and macOS targets on macOS.
+- The Linux package targets additionally require `dpkg-deb`, `rpmbuild` and
+  `zstd` as applicable.
+- `betterdesk-console.service` must receive the absolute tool paths through
+  systemd: `PATH`, `FLUTTER_ROOT`, `VCPKG_ROOT`, `CARGO_HOME` and `PUB_CACHE`.
+- Run `scripts/install-build-toolchain.sh` as root. It writes
+  `/etc/betterdesk/build.env`; make the service environment reference the same
+  values or configure them in the systemd drop-in.
+- Inspect the Generator status before creating a profile. Unavailable targets
+  must be disabled in the UI and must not be queued by the API.
+- A full Windows/Linux/macOS and ARM matrix requires a trusted provider that
+  returns a verified embedded manifest. The local Linux provider must never be
+  presented as that matrix.
+- The artifact directory is `${DATA_DIR}/agent-builds`; builder requests and
+  outputs live under `${DATA_DIR}/modules/betterdesk-client-builder`.
 
 ## Retry a failed build
 ```bash
 sudo -u postgres psql betterdesk -c \
-  "UPDATE agent_bundle_builds SET status='pending', error_message='' \
+  "UPDATE agent_bundle_builds SET status='queued', error_message='' \
    WHERE branding_hash='<hash>' AND platform='linux' AND format='deb';"
 ```
 

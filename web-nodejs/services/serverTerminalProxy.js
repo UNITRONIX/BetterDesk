@@ -233,12 +233,14 @@ function startShell(cols, rows, userInfo) {
 function initServerTerminalProxy(server, sessionMiddleware, opts) {
     const wss = new WebSocket.Server({ noServer: true });
     const audit = opts && typeof opts.logAction === 'function' ? opts.logAction : null;
+    const { enforceOrigin } = require('../middleware/wsOrigin');
     const { registerUpgradeHandler } = require('./wsUpgradeRouter');
 
     registerUpgradeHandler(
         server,
         (pathname) => pathname === '/ws/server-management/terminal',
         (req, socket, head) => {
+            if (!enforceOrigin(req, socket, 'server-management-terminal')) return;
             sessionMiddleware(req, {}, () => {
                 if (!req.session || !req.session.userId) {
                     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');

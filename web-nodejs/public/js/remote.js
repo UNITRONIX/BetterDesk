@@ -4,7 +4,7 @@
  * Supports multiple concurrent RDClient sessions
  */
 
-/* global RDClient, RDVideo, CDAPSession */
+/* global RDClient, RDVideo, CDAPSession, RemoteTargetSession */
 
 (function () {
     'use strict';
@@ -32,6 +32,7 @@
         const t = String(caps.transport || 'rd').toLowerCase();
         if (t === 'mesh') return 'mesh';
         if (t === 'cdap') return 'cdap';
+        if (t === 'rdp' || t === 'vnc') return t;
         return 'rd';
     }
 
@@ -101,6 +102,9 @@
         if (name === 'cdap' && typeof CDAPSession === 'function') {
             return new CDAPSession(canvas, opts);
         }
+        if ((name === 'rdp' || name === 'vnc') && typeof RemoteTargetSession === 'function') {
+            return new RemoteTargetSession(canvas, opts);
+        }
         return new RDClient(canvas, opts);
     }
 
@@ -124,13 +128,14 @@
     const Prefs = window.RemoteViewerPrefs || {};
     const globalViewerPrefs = typeof Prefs.loadRemoteViewerPrefs === 'function'
         ? Prefs.loadRemoteViewerPrefs(window.BetterDesk?.user?.id)
-        : { quality: 'Best', scale: 'fit', codec: 'Auto', adaptiveQuality: true, backgroundFps: 1 };
+        : { quality: 'Best', scale: 'fit', codec: 'Auto', fpsMode: 'adaptive', adaptiveQuality: true, backgroundFps: 1 };
 
     function cloneViewerPrefs(prefs) {
         return Object.assign({
             quality: 'Best',
             scale: 'fit',
             codec: 'Auto',
+            fpsMode: 'adaptive',
             adaptiveQuality: true,
             backgroundFps: 1,
             keyboardMode: 'Auto',
@@ -147,20 +152,22 @@
     function buildClientOpts(session) {
         const prefs = session.viewerPrefs || globalViewerPrefs;
         const userName = (window.BetterDesk.user && (window.BetterDesk.user.display_name || window.BetterDesk.user.username)) || 'BetterDesk Web';
-        const activeFps = typeof Prefs.getActiveFpsForQuality === 'function'
-            ? Prefs.getActiveFpsForQuality(prefs.quality)
+        const activeFps = typeof Prefs.getActiveFpsForMode === 'function'
+            ? Prefs.getActiveFpsForMode(prefs.fpsMode, prefs.quality)
             : 60;
         return {
             deviceId: session.deviceId,
             serverPubKey: window.BetterDesk.serverPubKey || '',
+            connection: window.BetterDesk.connection || null,
             myName: userName,
             scaleMode: prefs.scale || 'fit',
             fps: activeFps,
+            fpsMode: prefs.fpsMode || 'adaptive',
             imageQuality: prefs.quality || 'Best',
             qualityPreset: typeof Prefs.getPresetForQuality === 'function'
                 ? Prefs.getPresetForQuality(prefs.quality)
                 : 'best',
-            adaptiveQuality: prefs.adaptiveQuality !== false,
+            adaptiveQuality: prefs.fpsMode === 'adaptive' && prefs.adaptiveQuality !== false,
             preferCodec: prefs.codec || 'Auto',
             disableAudio: false,
             serverRecord: session.meshServerRecord || false,
@@ -178,6 +185,9 @@
                 : ({ Best: 'best', Balanced: 'balanced', Low: 'speed' }[prefs.quality] || 'best');
             if (typeof client.setQualityPreset === 'function') {
                 client.setQualityPreset(preset);
+            }
+            if (typeof client.setFpsMode === 'function') {
+                client.setFpsMode(prefs.fpsMode || 'adaptive');
             }
             if (typeof client.setScaleMode === 'function') {
                 client.setScaleMode(prefs.scale || 'fit');
@@ -862,15 +872,30 @@
             session.passwordOverlay.style.display = 'flex';
             session.loginError.style.display = 'none';
             session.passwordInput.value = '';
-            if (window.RdClientSecureStore && session.deviceId) {
-                window.RdClientSecureStore.loadPeerPassword(session.deviceId).then(function (saved) {
-                    if (saved) {
-                        session.passwordInput.value = saved;
-                        if (session.rememberPeerCheckbox) session.rememberPeerCheckbox.checked = true;
-                    }
-                }).catch(function () { /* ignore */ });
-            }
-            if (isActive(session)) session.passwordInput.focus();
+            var applySaved = function (saved) {
+                if (saved) {
+                    session.passwordInput.value = saved;
+                    if (session.rememberPeerCheckbox) session.rememberPeerCheckbox.checked = true;
+                }
+                if (isActive(session)) session.passwordInput.focus();
+            };
+            var localPromise = (window.RdClientSecureStore && session.deviceId)
+                ? window.RdClientSecureStore.loadPeerPassword(session.deviceId).catch(function () { return ''; })
+                : Promise.resolve('');
+            var orgPromise = session.deviceId
+                ? fetch('/api/devices/' + encodeURIComponent(session.deviceId) + '/connect-password', {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                }).then(function (r) {
+                    if (!r.ok) return '';
+                    return r.json().then(function (body) {
+                        return (body && body.password) ? String(body.password) : '';
+                    });
+                }).catch(function () { return ''; })
+                : Promise.resolve('');
+            Promise.all([localPromise, orgPromise]).then(function (pair) {
+                applySaved(pair[0] || pair[1] || '');
+            });
             if (isActive(session)) setToolbarChromeVisible(false);
         });
 
@@ -886,6 +911,26 @@
             session.loginError.style.display = 'block';
             session.passwordInput.value = '';
             if (isActive(session)) session.passwordInput.focus();
+        });
+
+        c.on('certificate_required', async (details) => {
+            const fingerprint = String(details?.fingerprint || '');
+            if (!fingerprint) return;
+            const accepted = window.confirm(
+                t('remote.certificate_confirm',
+                    'The remote certificate is not trusted. Trust fingerprint ' + fingerprint + '?')
+            );
+            if (!accepted) return;
+            try {
+                await Utils.api('/api/remote-targets/' + encodeURIComponent(session.deviceId) + '/certificate/accept', {
+                    method: 'POST',
+                    body: { fingerprint }
+                });
+                c.disconnect();
+                c.connect();
+            } catch (error) {
+                setSessionStatus(session, 'error', error.message || 'Certificate was not trusted');
+            }
         });
 
         c.on('2fa_error', (error) => {
@@ -947,6 +992,13 @@
 
         c.on('stats', (stats) => {
             session.lastStats = stats;
+        });
+
+        c.on('diagnostics', (diagnostics) => {
+            session.lastDiagnostics = diagnostics;
+            if (window.BetterDesk && window.BetterDesk.debugRelay === true) {
+                console.info('[Remote] Session diagnostics:', diagnostics);
+            }
         });
 
         c.on('latency', (rtt) => { session.latency = rtt; });
@@ -1166,6 +1218,9 @@
         document.querySelectorAll('.quality-item').forEach(function (btn) {
             btn.classList.toggle('active', btn.dataset.quality === p.quality);
         });
+        document.querySelectorAll('.fps-mode-item').forEach(function (btn) {
+            btn.classList.toggle('active', btn.dataset.fpsMode === (p.fpsMode || 'adaptive'));
+        });
         document.querySelectorAll('.scale-item').forEach(function (btn) {
             btn.classList.toggle('active', btn.dataset.scale === p.scale);
         });
@@ -1254,10 +1309,10 @@
     function applyTransportCapabilities() {
         const fileBtn = document.getElementById('btn-file-transfer');
         if (fileBtn && getTransportName() === 'cdap') {
-            fileBtn.disabled = true;
-            fileBtn.classList.add('disabled');
-            fileBtn.title = t('remote.file_transfer_unavailable_cdap',
-                'File transfer is not available for CDAP snapshot sessions.');
+            // CDAP file transfer is wired via CDAPFileTransfer + /files WS.
+            fileBtn.disabled = false;
+            fileBtn.classList.remove('disabled');
+            fileBtn.title = t('remote.file_transfer', 'File transfer');
         }
         applyGuestUiLockdown();
     }
@@ -1351,6 +1406,19 @@
             withClient(c => c.setQualityPreset(preset));
             if (session) updateSessionViewerPref(session, { quality: this.dataset.quality });
             document.querySelectorAll('.quality-item').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    document.querySelectorAll('.fps-mode-item').forEach(btn => {
+        btn.addEventListener('click', function () {
+            var mode = this.dataset.fpsMode || '30';
+            var session = getActiveSession();
+            withClient(c => {
+                if (typeof c.setFpsMode === 'function') c.setFpsMode(mode);
+            });
+            if (session) updateSessionViewerPref(session, { fpsMode: mode });
+            document.querySelectorAll('.fps-mode-item').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         });
     });
@@ -1659,7 +1727,6 @@
     document.getElementById('btn-file-transfer')?.addEventListener('click', function () {
         const session = getActiveSession();
         if (!session || !session.client?.fileTransfer) return;
-        if (getTransportName() === 'cdap') return;
         const modal = window.__fileTransferModal;
         if (!modal) return;
         if (modal.isOpen()) {
@@ -1952,6 +2019,10 @@
     function attachMobileTouch(session) {
         if (!window.RdClientMobile || !window.RdClientMobile.isMobileRdClient()) return;
         if (typeof RDTouch !== 'function' || !session.client) return;
+        // RDTouch emits RustDesk mouseEvent messages. CDAP and Mesh expose
+        // different input contracts, so do not attach it unless this
+        // transport explicitly provides the RDClient sendMessage callback.
+        if (!session.client.input || typeof session.client.input.sendMessage !== 'function') return;
         let touch = touchHandlers.get(session.deviceId);
         if (!touch) {
             touch = new RDTouch(session.canvas, session.client.renderer, function(msg) {
@@ -2145,7 +2216,11 @@
     // triggers a clean `disconnect()` on every active session so the peer
     // tears down immediately — saves bandwidth and CPU on the remote end.
     function installLifecycleHandlers() {
-        const teardown = () => {
+        const teardown = (event) => {
+            // Mobile browsers can place the viewer in the back-forward cache.
+            // Preserve the live session while the page is restorable; unload
+            // and navigation events still perform the normal cleanup.
+            if (event && event.persisted) return;
             for (const session of sessions.values()) {
                 try {
                     if (session.client) session.client.disconnect();
@@ -2158,8 +2233,11 @@
         // pagehide fires on tab close, navigation, and bfcache eviction —
         // the most reliable modern hook.
         window.addEventListener('pagehide', teardown, { capture: true });
-        // beforeunload is a secondary fallback for older browsers.
-        window.addEventListener('beforeunload', teardown, { capture: true });
+        // Keep the legacy fallback only where pagehide is unavailable;
+        // beforeunload listeners can prevent mobile bfcache restoration.
+        if (!('onpagehide' in window)) {
+            window.addEventListener('beforeunload', teardown, { capture: true });
+        }
     }
 
     if (document.readyState === 'loading') {

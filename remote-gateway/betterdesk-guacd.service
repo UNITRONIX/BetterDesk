@@ -1,0 +1,25 @@
+[Unit]
+Description=BetterDesk RDP/VNC gateway (guacd)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=betterdesk-guacd
+Group=betterdesk-guacd
+ExecStart=/usr/local/bin/guacd -b 127.0.0.1 -p 4822 -f
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateDevices=true
+ReadWritePaths=/var/lib/betterdesk-guacd
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+MemoryDenyWriteExecute=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

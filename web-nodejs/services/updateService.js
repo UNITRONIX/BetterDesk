@@ -27,11 +27,14 @@ const https = require('https');
 const { execSync, execFileSync } = require('child_process');
 const config = require('../config/config');
 const {
-    readSystemdUnitPrivileged,
-    writeSystemdUnitPrivileged,
     isAllowedSystemdUnitPath,
     privilegedSystemdUnitHint,
 } = require('../lib/linuxSystemdUnitPrivileged');
+const {
+    canUsePrivilegedUpdate,
+    daemonReload: privilegedDaemonReload,
+    restartService: privilegedRestartService,
+} = require('../lib/privilegedUpdateHelper');
 const { readProductVersion } = require('../lib/productVersion');
 const { createConsoleDeployGraph } = require('../lib/consoleDeployGraph');
 const { resolveChildPath, resolvePathUnderRoot, existsConfinedChild, removeConfinedChild } = require('../lib/safePath');
@@ -53,6 +56,7 @@ const {
     ensureParentDirForFile,
     isUpdatePermissionError,
 } = require('../lib/updateProjectRoot');
+const managementCapabilities = require('../lib/managementCapabilities');
 
 const GITHUB_OWNER  = process.env.UPDATE_GITHUB_OWNER  || 'UNITRONIX';
 const GITHUB_REPO   = process.env.UPDATE_GITHUB_REPO   || 'BetterDesk';
@@ -103,7 +107,17 @@ function resolveProjectRoot(rootDir = ROOT_DIR, opts) {
     return resolveProjectRootFromConsole(rootDir, opts);
 }
 
-const PROJECT_ROOT       = resolveProjectRoot();
+let PROJECT_ROOT         = resolveProjectRoot();
+
+/**
+ * Re-resolve project root. Long-lived console processes can keep a stale
+ * PROJECT_ROOT from before nested server sources existed (e.g. /opt instead of
+ * /opt/BetterDeskConsole), which poisons VERSION ldflags and writes.
+ */
+function refreshProjectRoot() {
+    PROJECT_ROOT = resolveProjectRoot();
+    return PROJECT_ROOT;
+}
 
 function setUpdateChannel(channelId) {
     const channel = UPDATE_CHANNELS[channelId];
@@ -166,20 +180,16 @@ const COMPONENTS = {
         service: IS_WINDOWS ? 'BetterDeskAgent' : 'betterdesk-agent',
         autoUpdate: false
     },
-    supportAgent: {
-        prefix: 'betterdesk-support-agent/',
-        label: 'Support Agent (Generator)',
-        localRoot: null,
-        service: null,
-        autoUpdate: false
-    },
     scripts: {
         // matched by exact file names, not prefix
         files: [
-            'betterdesk.sh', 'betterdesk.ps1', 'betterdesk-docker.sh',
+            'install.sh', 'betterdesk.sh', 'betterdesk.ps1', 'betterdesk-docker.sh',
             'docker-compose.yml', 'docker-compose.single.yml', 'docker-compose.quick.yml',
             'docker-compose.quick.single.yml', 'docker-compose.quick.single.macvlan.yml',
-            'Dockerfile', 'Dockerfile.server', 'Dockerfile.console'
+            'Dockerfile', 'Dockerfile.server', 'Dockerfile.console',
+            'docker-entrypoint.sh', 'docker/entrypoint.sh',
+            'docker/server-entrypoint.sh', 'docker/console-entrypoint.sh',
+            'docker/supervisord.conf', 'scripts/installer-protocol-check.js'
         ],
         label: 'Scripts & Docker',
         localRoot: PROJECT_ROOT,
@@ -254,34 +264,51 @@ const EXCLUDE_PATTERNS = [
     /(^|\/)\.env(\.|$)/                           // .env, .env.local, etc.
 ];
 
-/** Paths in a commit diff that should refresh agent-source/ and rebuild bundles. */
-const AGENT_REBUILD_TRIGGER_PATHS = [
-    /^betterdesk-support-agent\//,
-    /^betterdesk-agent\//,
-    /^betterdesk-server\//,
-    /^web-nodejs\/services\/agentBuildWorker\.js$/,
-    /^web-nodejs\/services\/agentBundleConnection\.js$/,
-    /^web-nodejs\/services\/agentBundleService\.js$/,
-    /^web-nodejs\/routes\/generator\.routes\.js$/,
-    /^scripts\/install-build-toolchain\.sh$/,
-    /^betterdesk\.sh$/,
-];
-
-function shouldQueueAgentRebuild(changedData) {
-    const all = Object.values(changedData?.grouped || {}).flat();
-    return all.some((f) => AGENT_REBUILD_TRIGGER_PATHS.some((rx) => rx.test(f.path)));
+/** Legacy hook — Support Generator now uses Client templates, not Go agent-source. */
+function shouldQueueAgentRebuild(_changedData) {
+    return false;
 }
 
 /**
- * List all blob paths in the repo tree at ref (commit SHA or branch).
+ * List blob paths below one repository directory without cloning the repo.
+ *
+ * Resolving the directory tree first is important: GitHub can truncate a
+ * recursive request for the repository root, while the server and console
+ * subtrees remain small enough to enumerate completely.
  */
-async function ghListRepoBlobPaths(ref) {
-    const data = await ghGet(
-        `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/trees/${encodeURIComponent(ref)}?recursive=1`
+async function ghListRepoBlobPathsUnderPrefix(ref, prefix) {
+    const segments = String(prefix || '').replace(/\/+$/, '').split('/').filter(Boolean);
+    if (!segments.length) throw new Error('A repository subtree prefix is required');
+
+    const commit = await ghGet(
+        `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/commits/${encodeURIComponent(ref)}`
     );
-    return (data.tree || [])
-        .filter((entry) => entry.type === 'blob' && entry.path && !isExcluded(entry.path))
-        .map((entry) => entry.path);
+    let treeSha = commit.tree?.sha;
+    if (!treeSha) throw new Error(`GitHub commit ${ref} has no root tree`);
+
+    for (const segment of segments) {
+        const tree = await ghGet(
+            `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/trees/${encodeURIComponent(treeSha)}`
+        );
+        const entry = (tree.tree || []).find(item => item.type === 'tree' && item.path === segment);
+        if (!entry?.sha) {
+            throw new Error(`GitHub commit ${ref} has no ${prefix} subtree`);
+        }
+        treeSha = entry.sha;
+    }
+
+    const subtree = await ghGet(
+        `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/trees/${encodeURIComponent(treeSha)}?recursive=1`
+    );
+    if (subtree.truncated) {
+        throw new Error(`GitHub ${prefix} tree is truncated; refusing an incomplete source update`);
+    }
+
+    const normalizedPrefix = `${segments.join('/')}/`;
+    return (subtree.tree || [])
+        .filter((entry) => entry.type === 'blob' && entry.path)
+        .map((entry) => `${normalizedPrefix}${entry.path}`)
+        .filter((repoPath) => !isExcluded(repoPath));
 }
 
 // ======================== HTTP Helpers ===================================
@@ -656,7 +683,8 @@ async function getRemoteHeadSHA() {
 }
 
 function getLocalVersion() {
-    return readProductVersion({ rootDir: PROJECT_ROOT }) || config.appVersion;
+    refreshProjectRoot();
+    return readProductVersion({ rootDir: PROJECT_ROOT, consoleDir: ROOT_DIR }) || config.appVersion;
 }
 
 // ======================== Classify ======================================
@@ -740,22 +768,6 @@ function spawnPromise(command, args, opts = {}) {
     });
 }
 
-/**
- * Copy directory recursively.
- */
-function copyDirRecursive(src, dest) {
-    fs.mkdirSync(dest, { recursive: true });
-    for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
-        if (entry.isDirectory()) {
-            copyDirRecursive(srcPath, destPath);
-        } else {
-            fs.copyFileSync(srcPath, destPath);
-        }
-    }
-}
-
 function getGoVersionNumber(versionOutput) {
     const text = String(versionOutput || '');
     const goMatch = text.match(/go(\d+(?:\.\d+){1,2})/i);
@@ -783,15 +795,11 @@ function readTextFilePrivileged(filePath) {
     try {
         return fs.readFileSync(filePath, 'utf8');
     } catch (err) {
-        if (!IS_WINDOWS && (err.code === 'EACCES' || err.code === 'EPERM') && isAllowedSystemdUnitPath(filePath)) {
-            return readSystemdUnitPrivileged(filePath, ROOT_DIR);
-        }
         if (!IS_WINDOWS && (err.code === 'EACCES' || err.code === 'EPERM')) {
-            try {
-                return execSync(`sudo -n cat ${shellQuote(filePath)}`, { timeout: 5000, stdio: 'pipe' }).toString();
-            } catch (sudoErr) {
-                throw new Error(`${sudoErr.message || sudoErr}. ${privilegedSystemdUnitHint()}`);
-            }
+            const detail = isAllowedSystemdUnitPath(filePath)
+                ? privilegedSystemdUnitHint()
+                : 'Run the update preparation step as root.';
+            throw new Error(`${err.message || err}. ${detail}`);
         }
         throw err;
     }
@@ -801,10 +809,6 @@ function writeTextFilePrivileged(filePath, content) {
     try {
         fs.writeFileSync(filePath, content);
     } catch (err) {
-        if (!IS_WINDOWS && (err.code === 'EACCES' || err.code === 'EPERM') && isAllowedSystemdUnitPath(filePath)) {
-            writeSystemdUnitPrivileged(filePath, content, ROOT_DIR);
-            return;
-        }
         if (!IS_WINDOWS && (err.code === 'EACCES' || err.code === 'EPERM')) {
             throw new Error(`${err.message || err}. ${privilegedSystemdUnitHint()}`);
         }
@@ -813,8 +817,18 @@ function writeTextFilePrivileged(filePath, content) {
 }
 
 function runPrivileged(command, options = {}) {
-    const prefix = !IS_WINDOWS && typeof process.getuid === 'function' && process.getuid() !== 0 ? 'sudo -n ' : '';
-    return execSync(prefix + command, options);
+    void options;
+    if (IS_WINDOWS) {
+        throw new Error('Privileged Linux service operation requested on Windows');
+    }
+    if (command === 'systemctl daemon-reload') {
+        return privilegedDaemonReload();
+    }
+    const restartMatch = /^systemctl restart '?([A-Za-z0-9_.@-]+)'?$/.exec(String(command || ''));
+    if (restartMatch) {
+        return privilegedRestartService(restartMatch[1]);
+    }
+    throw new Error('Unallowlisted privileged service command');
 }
 
 /**
@@ -1318,37 +1332,12 @@ async function ensureServerSource(remoteSHA, opts = {}) {
 
     fs.mkdirSync(serverDir, { recursive: true });
 
-    // --- Try git clone --depth=1 (fastest) ---
-    try {
-        const tmpDir = path.join(config.dataDir, '_tmp_server_clone');
-        if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
-
-        const repoUrl = GITHUB_TOKEN
-            ? `https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_OWNER}/${GITHUB_REPO}.git`
-            : `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}.git`;
-
-        execSync(
-            `git clone --depth=1 --single-branch --branch "${getGithubBranch()}" "${repoUrl}" "${tmpDir}"`,
-            { timeout: 120000, stdio: 'pipe' }
-        );
-
-        const srcDir = path.join(tmpDir, 'betterdesk-server');
-        if (fs.existsSync(srcDir)) {
-            copyDirRecursive(srcDir, serverDir);
-        }
-        try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_e) { /* ok */ }
-        return { strategy: 'git-clone', filesDownloaded: -1 };
-    } catch (_e) {
-        /* git not available or clone failed — fall through to API */
-    }
-
-    // --- Fallback: GitHub tree API + raw file downloads ---
-    const tree = await ghGet(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/trees/${remoteSHA}?recursive=1`);
-    const serverFiles = (tree.tree || []).filter(t =>
-        t.path.startsWith('betterdesk-server/') &&
-        t.type === 'blob' &&
-        !EXCLUDE_PATTERNS.some(rx => rx.test(t.path))
-    );
+    // Download only the server subtree. Do not clone the repository: the panel
+    // only needs the complete Go source tree and its module files.
+    const serverFiles = (await ghListRepoBlobPathsUnderPrefix(
+        remoteSHA,
+        COMPONENTS.server.prefix
+    )).map((repoPath) => ({ path: repoPath }));
 
     let downloaded = 0;
     for (const file of serverFiles) {
@@ -1420,17 +1409,8 @@ async function ensureConsoleSource(remoteSHA, opts = {}) {
         return { strategy: 'incremental', filesDownloaded: 0, filesSkipped: 0 };
     }
 
-    const tree = await ghGet(
-        `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/trees/${encodeURIComponent(remoteSHA)}?recursive=1`
-    );
-    if (tree.truncated) {
-        console.warn('[UPDATE] GitHub tree listing was truncated — console full sync may be incomplete');
-    }
-
     const prefix = COMPONENTS.console.prefix;
-    const consolePaths = (tree.tree || [])
-        .filter(entry => entry.type === 'blob' && entry.path && entry.path.startsWith(prefix))
-        .map(entry => entry.path);
+    const consolePaths = await ghListRepoBlobPathsUnderPrefix(remoteSHA, prefix);
 
     let downloaded = 0;
     let skipped = 0;
@@ -1524,7 +1504,13 @@ async function buildGoServer(preferredGoBinPath = null) {
             env: buildEnv
         });
 
-        const productVersion = readProductVersion({ rootDir: PROJECT_ROOT });
+        // Prefer console-local VERSION/package.json: flat installs often leave a
+        // stale root-owned /opt/VERSION that the panel cannot overwrite.
+        const productVersion = readProductVersion({
+            rootDir: ROOT_DIR,
+            consoleDir: ROOT_DIR,
+            fallback: readProductVersion({ rootDir: PROJECT_ROOT, consoleDir: ROOT_DIR }),
+        });
         const ldflags = `-s -w -X main.Version=${productVersion}`;
         await spawnPromise(
             goBin,
@@ -1546,10 +1532,10 @@ async function buildGoServer(preferredGoBinPath = null) {
 // ---------- Vendored Go toolchain bootstrap ----------
 
 const GO_TOOLCHAIN_DIR = path.join(config.dataDir, 'go-toolchain');
-// Minimum Go version required to build the server (must match
-// betterdesk-server/go.mod). The actual point release is selected at
-// install time from the live go.dev manifest.
-const GO_MIN_VERSION = '1.23.0';
+// Minimum Go version required to build the server. Keep this aligned with the
+// toolchain pinned in betterdesk-server/go.mod so builds do not trigger a
+// hidden automatic toolchain download.
+const GO_MIN_VERSION = '1.26.9';
 
 function getToolchainKey() {
     const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';
@@ -1657,8 +1643,9 @@ function httpsDownload(url, redirects = 5) {
  * the canonical SHA-256 sum so the download can be verified securely.
  */
 async function resolveGoRelease(opts = {}) {
-    // Go 1.26.x ships incomplete stdlib on some hosts; cap agent/server builds at 1.25.x.
-    const maxVersion = opts.maxVersion || '1.25.99';
+    // The server's go.mod pins this toolchain. Callers may explicitly request
+    // another compatible release for a separate build target.
+    const maxVersion = opts.maxVersion || GO_MIN_VERSION;
     const key = getToolchainKey();
     const data = await httpsDownload('https://go.dev/dl/?mode=json');
     const releases = JSON.parse(data.toString('utf8'));
@@ -1796,39 +1783,20 @@ async function _installGoToolchainBody(onProgress, opts = {}) {
     }
 }
 
-/** Refresh Linux sudoers/permissions (issue #182). Runs ensure script as root when possible. */
+/** Report Linux privilege state without running repository code as root. */
 function syncLinuxPanelUpdatePrivileges() {
     if (IS_WINDOWS) return { skipped: true, reason: 'not-linux' };
 
-    const ensureScript = path.join(ROOT_DIR, 'scripts/linux-ensure-console-user.js');
-
-    const runEnsureInProcess = () => {
+    try {
+        if (typeof process.getuid === 'function' && process.getuid() !== 0) {
+            return {
+                skipped: true,
+                reason: 'root maintenance required; the panel will not execute repository scripts via sudo',
+            };
+        }
         const modPath = require.resolve('../scripts/linux-ensure-console-user');
         delete require.cache[modPath];
         return require('../scripts/linux-ensure-console-user').ensureLinuxConsoleServiceUser();
-    };
-
-    try {
-        if (typeof process.getuid === 'function' && process.getuid() !== 0 && fs.existsSync(ensureScript)) {
-            try {
-                const out = execFileSync('sudo', ['-n', process.execPath, ensureScript], {
-                    encoding: 'utf8',
-                    timeout: 120000,
-                    stdio: ['pipe', 'pipe', 'pipe'],
-                });
-                const parsed = JSON.parse(String(out || '').trim() || '{}');
-                if (parsed.error) {
-                    console.warn(`[UPDATE] Linux privilege sync reported: ${parsed.error}`);
-                }
-                return parsed;
-            } catch (sudoErr) {
-                console.warn(
-                    `[UPDATE] Privileged ensure via sudo failed (${sudoErr.message || sudoErr});`
-                    + ' trying in-process (sudoers may need one deploy cycle or root repair)'
-                );
-            }
-        }
-        return runEnsureInProcess();
     } catch (err) {
         console.warn(`[UPDATE] Linux privilege sync warning: ${err.message}`);
         return { error: err.message || String(err) };
@@ -1840,6 +1808,13 @@ function deployServerBinaryPrivileged(builtBinaryPath, targetPath) {
     if (!fs.existsSync(scriptPath)) {
         return { success: false, error: 'Privileged deploy helper not installed' };
     }
+    if (!IS_WINDOWS && typeof process.getuid === 'function' && process.getuid() !== 0) {
+        return {
+            success: false,
+            error: 'Go server binary is root-owned. Run the release deploy helper once as root; '
+                + 'the panel will not execute repository code through sudo.',
+        };
+    }
 
     const payload = JSON.stringify({
         source: builtBinaryPath,
@@ -1850,10 +1825,7 @@ function deployServerBinaryPrivileged(builtBinaryPath, targetPath) {
     });
 
     try {
-        const prefix = !IS_WINDOWS && typeof process.getuid === 'function' && process.getuid() !== 0
-            ? 'sudo -n '
-            : '';
-        const out = execSync(`${prefix}${shellQuote(scriptPath)}`, {
+        const out = execSync(`${shellQuote(scriptPath)}`, {
             input: payload,
             timeout: 120000,
             encoding: 'utf8',
@@ -1940,7 +1912,9 @@ function deployServerBinary(builtBinaryPath, targetPath) {
         return deployServerBinaryPrivileged(builtBinaryPath, targetPath);
     }
 
-    const direct = deployServerBinaryAtomic(builtBinaryPath, targetPath);
+    const direct = deployServerBinaryAtomic(builtBinaryPath, targetPath, {
+        backupDir: path.join(config.dataDir, 'binary-backups'),
+    });
     if (direct.success) {
         return { ...direct, method: 'direct' };
     }
@@ -1954,118 +1928,8 @@ function deployServerBinary(builtBinaryPath, targetPath) {
 }
 
 /**
- * Determine the expected binary asset name for this platform+arch on GitHub Releases.
- * @returns {string}
- */
-function getReleaseBinaryName() {
-    const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';
-    if (IS_WINDOWS) return `betterdesk-server-windows-${arch}.exe`;
-    const os = process.platform === 'darwin' ? 'darwin' : 'linux';
-    return `betterdesk-server-${os}-${arch}`;
-}
-
-/**
- * Check if a pre-built binary is available on GitHub Releases.
- * Looks for the latest release, then for a binary asset matching the current OS/arch.
- *
- * @returns {Promise<{ available: boolean, downloadUrl: string|null, releaseName: string|null, releaseTag: string|null, assetSize: number|null }>}
- */
-async function checkPrebuiltAvailable() {
-    try {
-        const release = await ghGet(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`);
-        if (!release || !release.assets || !release.assets.length) {
-            return { available: false, downloadUrl: null, releaseName: null, releaseTag: null, assetSize: null };
-        }
-
-        const binaryName = getReleaseBinaryName();
-        // Also check common alternative names (without os-arch suffix for Windows)
-        const altNames = IS_WINDOWS
-            ? [binaryName, 'betterdesk-server.exe']
-            : [binaryName, `betterdesk-server-${process.platform === 'darwin' ? 'darwin' : 'linux'}`];
-
-        const asset = release.assets.find(a =>
-            altNames.some(name => a.name === name || a.name.toLowerCase() === name.toLowerCase())
-        );
-
-        if (asset) {
-            return {
-                available: true,
-                downloadUrl: asset.browser_download_url,
-                releaseName: release.name || release.tag_name,
-                releaseTag: release.tag_name,
-                assetSize: asset.size || null
-            };
-        }
-
-        return { available: false, downloadUrl: null, releaseName: release.name, releaseTag: release.tag_name, assetSize: null };
-    } catch (_e) {
-        return { available: false, downloadUrl: null, releaseName: null, releaseTag: null, assetSize: null };
-    }
-}
-
-/**
- * Download a pre-built binary from a URL.
- * Validates the download is non-empty and reasonable size.
- *
- * @param {string} downloadUrl
- * @returns {Promise<{ success: boolean, binaryPath: string|null, error?: string, size?: number }>}
- */
-async function downloadPrebuiltBinary(downloadUrl) {
-    if (!downloadUrl || typeof downloadUrl !== 'string' || !downloadUrl.startsWith('https://')) {
-        return { success: false, binaryPath: null, error: 'Invalid download URL' };
-    }
-
-    const serverDir = resolveServerSourceRootForUpdate();
-    fs.mkdirSync(serverDir, { recursive: true });
-
-    const binaryName = IS_WINDOWS ? 'betterdesk-server.exe' : 'betterdesk-server';
-    const outputPath = path.join(serverDir, binaryName);
-
-    try {
-        const data = await new Promise((resolve, reject) => {
-            const headers = { 'User-Agent': USER_AGENT, 'Accept': 'application/octet-stream' };
-            if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
-
-            const follow = (target, redirects = 0) => {
-                if (redirects > 5) return reject(new Error('Too many redirects'));
-                const url = new URL(target);
-                const mod = url.protocol === 'https:' ? https : require('http');
-                const req = mod.get({ hostname: url.hostname, path: url.pathname + url.search, headers }, (res) => {
-                    if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
-                        return follow(res.headers.location, redirects + 1);
-                    }
-                    if (res.statusCode !== 200) {
-                        return reject(new Error(`Download failed: HTTP ${res.statusCode}`));
-                    }
-                    const chunks = [];
-                    res.on('data', c => chunks.push(c));
-                    res.on('end', () => resolve(Buffer.concat(chunks)));
-                });
-                req.on('error', reject);
-                req.setTimeout(120000, () => { req.destroy(); reject(new Error('Download timeout (120s)')); });
-            };
-            follow(downloadUrl);
-        });
-
-        // Sanity check: binary should be at least 1MB
-        if (!data || data.length < 1024 * 1024) {
-            return { success: false, binaryPath: null, error: `Downloaded file too small (${data ? data.length : 0} bytes) — likely not a valid binary` };
-        }
-
-        fs.writeFileSync(outputPath, data);
-        if (!IS_WINDOWS) {
-            try { fs.chmodSync(outputPath, 0o755); } catch (_e) { /* ok */ }
-        }
-
-        return { success: true, binaryPath: outputPath, size: data.length };
-    } catch (err) {
-        return { success: false, binaryPath: null, error: `Binary download failed: ${err.message}` };
-    }
-}
-
-/**
  * Get server update readiness info for the UI.
- * Returns information about all available update strategies.
+ * Returns information about the local server build environment.
  */
 function getServerUpdateInfo() {
     const goInfo = checkGoAvailable();
@@ -2089,18 +1953,8 @@ function getServerUpdateInfo() {
         binaryPath,
         sourcePresent,
         canAutoUpdate: true,
-        // Platform info for binary matching
-        platform: IS_WINDOWS ? 'windows' : process.platform,
-        arch: process.arch === 'arm64' ? 'arm64' : 'amd64',
-        expectedBinary: getReleaseBinaryName()
+        buildMethod: 'local'
     };
-}
-
-/**
- * Check pre-built binary availability (async — called separately from getServerUpdateInfo).
- */
-async function getPrebuiltInfo() {
-    return checkPrebuiltAvailable();
 }
 
 function getAutoUpdateComponents(changedData) {
@@ -2235,7 +2089,7 @@ async function getChangedFiles(remoteSHA) {
     const compare = await ghGet(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/compare/${localSHA}...${remoteSHA}`);
     const files = (compare.files || []).filter(f => !isExcluded(f.filename));
 
-    const grouped = { console: [], server: [], agent: [], supportAgent: [], scripts: [], other: [] };
+    const grouped = { console: [], server: [], agent: [], scripts: [], other: [] };
 
     for (const f of files) {
         const comp = classifyFile(f.filename);
@@ -2275,7 +2129,7 @@ async function getChangedFiles(remoteSHA) {
 /**
  * Create a pre-update backup of console files that will be changed.
  */
-async function createPreUpdateBackup(allFiles) {
+async function createPreUpdateBackup(allFiles, opts = {}) {
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const backupName = `pre-update-${ts}`;
     const backupPath = resolveChildPath(path.resolve(BACKUP_DIR), backupName);
@@ -2284,16 +2138,62 @@ async function createPreUpdateBackup(allFiles) {
     const localVersion = getLocalVersion();
     const localSHA = getLocalSHA();
     let backedUp = 0;
+    const backedUpFiles = [];
+    const removeOnRestore = [];
+
+    const copyFileToBackup = (src, relativePath) => {
+        if (!relativePath || isProtectedRuntimePath(src)) return false;
+        const dest = resolvePathUnderRoot(backupPath, relativePath);
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(src, dest);
+        backedUpFiles.push(relativePath.replace(/\\/g, '/'));
+        backedUp++;
+        return true;
+    };
 
     for (const file of allFiles) {
-        if (file.component !== 'console' || !file.localPath) continue;
-        const src = resolveConsoleLocalPath(file.localPath);
-        if (fs.existsSync(src)) {
-            const dest = resolvePathUnderRoot(backupPath, file.localPath);
-            fs.mkdirSync(path.dirname(dest), { recursive: true });
-            fs.copyFileSync(src, dest);
-            backedUp++;
+        if (!file.localPath) continue;
+        const sourceRoot = file.component === 'console'
+            ? ROOT_DIR
+            : file.component === 'scripts'
+                ? PROJECT_ROOT
+                : file.component === 'server'
+                    ? resolveServerSourceRootForUpdate()
+                    : null;
+        if (!sourceRoot) continue;
+        const relativePath = file.component === 'console'
+            ? file.localPath
+            : file.component === 'server'
+                ? file.path.slice(COMPONENTS.server.prefix.length)
+                : file.localPath;
+        const src = path.join(sourceRoot, relativePath);
+        if (fs.existsSync(src) && fs.statSync(src).isFile()) {
+            copyFileToBackup(src, `${file.component}/${relativePath}`);
+        } else {
+            removeOnRestore.push(`${file.component}/${relativePath}`.replace(/\\/g, '/'));
         }
+    }
+
+    // A truncated GitHub compare diff is followed by a full tree sync. Back
+    // up the complete deployable console tree in that case, otherwise a
+    // restore could only recover the files listed by the truncated compare.
+    if (opts.fullConsole) {
+        const walkConsoleTree = (currentDir, relativeDir = '') => {
+            for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+                const relativePath = path.join(relativeDir, entry.name);
+                const sourcePath = path.join(currentDir, entry.name);
+                if (['data', 'node_modules'].includes(entry.name) && !relativeDir) continue;
+                if (entry.isSymbolicLink()) continue;
+                if (entry.isDirectory()) {
+                    walkConsoleTree(sourcePath, relativePath);
+                    continue;
+                }
+                if (entry.isFile() && isConsoleDeployLocalPath(relativePath)) {
+                    copyFileToBackup(sourcePath, `console/${relativePath}`);
+                }
+            }
+        };
+        walkConsoleTree(ROOT_DIR);
     }
 
     fs.writeFileSync(resolveChildPath(backupPath, 'manifest.json'), JSON.stringify({
@@ -2301,7 +2201,9 @@ async function createPreUpdateBackup(allFiles) {
         sha: localSHA,
         timestamp: new Date().toISOString(),
         filesBackedUp: backedUp,
-        files: allFiles.filter(f => f.component === 'console' && f.localPath).map(f => f.localPath)
+        fullConsole: !!opts.fullConsole,
+        files: backedUpFiles,
+        removeOnRestore
     }, null, 2));
 
     // Mesh agent-server cert (loss requires re-enrolling all MeshAgents)
@@ -2310,7 +2212,8 @@ async function createPreUpdateBackup(allFiles) {
         if (rustdeskDir) {
             const meshCert = path.join(rustdeskDir, 'mesh_agent_server.pem');
             if (fs.existsSync(meshCert)) {
-                const dest = resolveChildPath(backupPath, 'mesh_agent_server.pem');
+                const dest = resolveChildPath(backupPath, 'special/mesh_agent_server.pem');
+                fs.mkdirSync(path.dirname(dest), { recursive: true });
                 fs.copyFileSync(meshCert, dest);
                 backedUp++;
             }
@@ -2427,7 +2330,7 @@ function runPostConsoleSecurityHooks() {
  * @param {object} changedData        Output of getChangedFiles()
  * @param {object} opts
  * @param {boolean}  opts.createBackup  default true
- * @param {string}   opts.serverStrategy default 'auto'
+ * @param {string}   opts.serverStrategy legacy compatibility option; local compile is always used
  */
 async function applyUpdate(remoteSHA, changedData, opts = {}) {
     if (isImageBasedDockerDeployment()) {
@@ -2444,7 +2347,9 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     let backupInfo = null;
     if (createBackup) {
         const allFiles = Object.values(changedData.grouped).flat();
-        backupInfo = await createPreUpdateBackup(allFiles);
+        backupInfo = await createPreUpdateBackup(allFiles, {
+            fullConsole: !!changedData.compareTruncated,
+        });
     }
 
     const results = {
@@ -2580,30 +2485,21 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
         }
     }
 
-    // ---- Server source files + compile/download + deploy ----
+    // ---- Server source files + local compile + deploy ----
     if (changedData.grouped.server?.length && selectedComponents.includes('server')) {
         if (!IS_WINDOWS) {
             results.linuxPrivilegeSync = syncLinuxPanelUpdatePrivileges();
         }
 
-        const strategy = opts.serverStrategy || 'auto'; // 'auto', 'compile', 'download', 'install-go'
+        // The panel always builds the exact downloaded source locally. The
+        // legacy strategy option is intentionally ignored.
         let goInfo = checkGoAvailable();
         let goAvailable = goInfo.available && goInfo.meetsMinimum;
         let serverBinaryPath = null;
         let buildUsed = null;
         let preferredGoBinPath = null;
-        let prebuiltInfo = null;
 
-        const getPrebuiltOnce = async () => {
-            if (!prebuiltInfo) prebuiltInfo = await checkPrebuiltAvailable();
-            return prebuiltInfo;
-        };
-
-        // ---- Strategy: download Go toolchain on demand ----
-        // Triggered explicitly ('install-go') or by auto-fallback (no Go + no
-        // matching pre-built binary).
-        let toolchainInstalled = false;
-        if (strategy === 'install-go' && !goAvailable) {
+        if (!goAvailable) {
             const tc = await installGoToolchain();
             results.toolchainInstall = {
                 success: tc.success,
@@ -2612,61 +2508,25 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
                 binPath: tc.binPath || null
             };
             if (tc.success) {
-                toolchainInstalled = true;
-                goAvailable = true;
-                preferredGoBinPath = tc.binPath || null;
-            }
-        } else if (strategy === 'auto' && !goAvailable) {
-            // Auto-fallback: only attempt toolchain install if no pre-built
-            // release is reachable. This keeps the default path light.
-            try {
-                const prebuilt = await getPrebuiltOnce();
-                if (!prebuilt.available || !prebuilt.downloadUrl) {
-                    const tc = await installGoToolchain();
-                    results.toolchainInstall = {
-                        success: tc.success,
-                        version: tc.version || null,
-                        error: tc.error || null,
-                        binPath: tc.binPath || null,
-                        autoTriggered: true
-                    };
-                    if (tc.success) {
-                        toolchainInstalled = true;
-                        goAvailable = true;
-                        preferredGoBinPath = tc.binPath || null;
-                    }
-                }
-            } catch (err) {
-                console.error('[UPDATE] auto-fallback toolchain install failed:', err.message);
-            }
-        } else if (strategy === 'compile' && !goAvailable) {
-            const tc = await installGoToolchain();
-            results.toolchainInstall = {
-                success: tc.success,
-                version: tc.version || null,
-                error: tc.error || null,
-                binPath: tc.binPath || null,
-                autoTriggered: true
-            };
-            if (tc.success) {
-                toolchainInstalled = true;
                 goAvailable = true;
                 preferredGoBinPath = tc.binPath || null;
             }
         }
 
-        const wantsCompile = strategy === 'compile' || strategy === 'install-go' || toolchainInstalled
-            || (strategy === 'auto' && goAvailable);
-
         // Keep local Go server source in sync for every server update path.
-        // Even when a pre-built binary is used, the next source build must not
-        // start from stale files. Force a FULL source resync (issue #158): the
+        // Force a FULL source resync (issue #158): the
         // GitHub compare diff is capped at 300 files and can omit changed
         // dependency files, leaving the on-disk source inconsistent and
         // unbuildable. A full resync guarantees all callee files are present.
         try {
             const sourceResult = await ensureServerSource(remoteSHA, { force: true });
             console.log(`[UPDATE] Server source: strategy=${sourceResult.strategy}, files=${sourceResult.filesDownloaded}`);
+            for (const failure of sourceResult.failed || []) {
+                results.failed.push({
+                    file: failure.path || 'server-source',
+                    error: failure.error || 'Server source file download failed',
+                });
+            }
         } catch (err) {
             results.failed.push({ file: 'server-source', error: `Source download failed: ${err.message}` });
         }
@@ -2700,7 +2560,18 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
             }
         }
 
-        if (wantsCompile && goAvailable) {
+        if (!goAvailable) {
+            results.serverBuild = {
+                success: false,
+                duration: 0,
+                error: results.toolchainInstall?.error || 'Go toolchain is unavailable',
+                method: 'compile'
+            };
+            results.failed.push({
+                file: 'betterdesk-server',
+                error: results.serverBuild.error
+            });
+        } else {
             // ---- Strategy: Compile from source ----
             const buildResult = await buildGoServer(preferredGoBinPath);
             results.serverBuild = {
@@ -2716,64 +2587,9 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
             } else {
                 results.failed.push({ file: 'betterdesk-server', error: buildResult.error || 'Server build failed' });
             }
-        } else {
-            // ---- Strategy: Download pre-built binary ----
-            console.log('[UPDATE] Go not available or download strategy selected — trying pre-built binary download');
-
-            // Try to get from GitHub Releases first
-            let downloadResult = null;
-            const prebuilt = await getPrebuiltOnce();
-
-            if (prebuilt.available && prebuilt.downloadUrl) {
-                downloadResult = await downloadPrebuiltBinary(prebuilt.downloadUrl);
-            }
-
-            // If release download failed, try direct raw download of the binary from the repo tree
-            if (!downloadResult || !downloadResult.success) {
-                const binaryName = IS_WINDOWS ? 'betterdesk-server.exe' : 'betterdesk-server-linux-amd64';
-                const repoPath = `betterdesk-server/${binaryName}`;
-                try {
-                    console.log(`[UPDATE] Trying raw binary download from repo: ${repoPath}`);
-                    const data = await ghDownloadFile(GITHUB_OWNER, GITHUB_REPO, remoteSHA, repoPath);
-                    if (data && data.length > 1024 * 1024) {
-                        const serverDir = resolveServerSourceRootForUpdate();
-                        fs.mkdirSync(serverDir, { recursive: true });
-                        const outName = IS_WINDOWS ? 'betterdesk-server.exe' : 'betterdesk-server';
-                        const outputPath = path.join(serverDir, outName);
-                        fs.writeFileSync(outputPath, data);
-                        if (!IS_WINDOWS) {
-                            try { fs.chmodSync(outputPath, 0o755); } catch (_e) { /* ok */ }
-                        }
-                        downloadResult = { success: true, binaryPath: outputPath, size: data.length };
-                    }
-                } catch (_e) {
-                    // Binary not in repo tree — expected
-                }
-            }
-
-            if (downloadResult && downloadResult.success) {
-                results.serverBuild = {
-                    success: true,
-                    duration: 0,
-                    error: null,
-                    method: 'download',
-                    size: downloadResult.size || 0
-                };
-                serverBinaryPath = downloadResult.binaryPath;
-                buildUsed = 'download';
-            } else {
-                const errMsg = downloadResult?.error || 'No pre-built binary available and Go not installed';
-                results.serverBuild = {
-                    success: false,
-                    duration: 0,
-                    error: errMsg,
-                    method: 'download'
-                };
-                results.failed.push({ file: 'betterdesk-server', error: errMsg });
-            }
         }
 
-        // 4. Deploy to service path (common for both strategies)
+        // 4. Deploy the locally compiled binary to the service path.
         if (serverBinaryPath) {
             const targetPath = detectServerBinaryPath();
             const deployResult = deployServerBinary(serverBinaryPath, targetPath);
@@ -2781,7 +2597,8 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
                 success: deployResult.success,
                 backupPath: deployResult.backupPath || null,
                 error: deployResult.error || null,
-                method: buildUsed
+                method: buildUsed,
+                targetPath
             };
 
             if (deployResult.success) {
@@ -2798,35 +2615,10 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
                     results.needsServerRestart = true;
                 }
                 results.needsServerRestart = true;
-                // Fresh binary (with updated dependencies) is in place — any
-                // previous staleness warning no longer applies.
                 clearServerBinaryStale();
             } else {
                 results.failed.push({ file: 'betterdesk-server-deploy', error: deployResult.error || 'Server deploy failed' });
             }
-        }
-    }
-
-    // ---- Generator agent: sync agent-source/ + queue bundle rebuilds ----
-    if (shouldQueueAgentRebuild(changedData)) {
-        try {
-            const agentBuildWorker = require('./agentBuildWorker');
-            const stageResult = await agentBuildWorker.syncFullAgentSourceFromGitHub({
-                remoteSHA,
-                download: ghDownloadFile,
-                listPaths: ghListRepoBlobPaths,
-            });
-            agentBuildWorker.markRebuildPending('in-app update');
-            results.agentSourcesStaged = stageResult.staged;
-            results.agentSourcePaths = stageResult.paths;
-            results.agentRebuildQueued = true;
-            console.log(
-                `[UPDATE] Agent source tree synced (${stageResult.staged}/${stageResult.paths} file(s));`
-                + ' generator bundles queued for rebuild on console restart'
-            );
-        } catch (err) {
-            results.failed.push({ file: 'support-agent-source-sync', error: err.message, nonCritical: true });
-            console.warn(`[UPDATE] Full agent-source sync failed: ${err.message}`);
         }
     }
 
@@ -2837,6 +2629,36 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     );
     results.criticalFailures = criticalFailures;
     results.nonCriticalFailures = nonCriticalFailures;
+
+    if (criticalFailures.length > 0 && createBackup && opts.autoRollback !== false && backupInfo?.backupPath) {
+        try {
+            const rollback = restoreFromBackup(path.basename(backupInfo.backupPath));
+            const binaryRollback = results.serverDeploy?.backupPath
+                ? restoreServerBinaryBackup(
+                    results.serverDeploy.backupPath,
+                    results.serverDeploy.targetPath
+                )
+                : { restored: false, skipped: true };
+            results.rollback = {
+                attempted: true,
+                success: !binaryRollback.error && rollback.restored >= 0,
+                filesRestored: rollback.restored,
+                filesRemoved: rollback.removed || 0,
+                binary: binaryRollback,
+            };
+            console.warn(
+                `[UPDATE] Critical update failure — restored ${rollback.restored} file(s)`
+                + ` and removed ${rollback.removed || 0} new file(s)`
+            );
+        } catch (rollbackErr) {
+            results.rollback = {
+                attempted: true,
+                success: false,
+                error: rollbackErr.message || String(rollbackErr),
+            };
+            console.error(`[UPDATE] Automatic rollback failed: ${rollbackErr.message}`);
+        }
+    }
 
     // Security visibility: if the Go server source changed
     // dependency bump shipping a security fix) but the binary could not be
@@ -2884,16 +2706,50 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
         saveLocalSHA(remoteSHA);
         results.shaSaved = true;
 
+        // BetterDesk-Client is an external runtime module. When embedded
+        // generation is enabled, synchronize its pinned source during the
+        // same panel update and queue all existing Support configs. The
+        // worker promotes a new generation only after every target succeeds,
+        // so an interrupted update cannot break an active download link.
+        if (String(
+            process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+        ).trim().toLowerCase() === 'embedded') {
+            try {
+                const clientBuilder = require('./clientBuilderService');
+                results.clientRebuild = await clientBuilder.syncAndQueueRebuilds();
+            } catch (clientErr) {
+                results.clientRebuild = {
+                    queued: false,
+                    error: clientErr.message || String(clientErr),
+                };
+                console.warn(`[UPDATE] BetterDesk-Client sync/rebuild deferred: ${clientErr.message}`);
+            }
+        }
+
         // ---- Pull remote VERSION file ----
         try {
             const versionContent = await ghDownloadFile(GITHUB_OWNER, GITHUB_REPO, remoteSHA, 'VERSION');
-            const versionDest = path.join(PROJECT_ROOT, 'VERSION');
-            ensureParentDirForFile(versionDest);
-            fs.writeFileSync(versionDest, versionContent);
+            refreshProjectRoot();
+            // Always write into the writable console tree first (flat installs).
+            const consoleVersionDest = path.join(ROOT_DIR, 'VERSION');
+            ensureParentDirForFile(consoleVersionDest);
+            fs.writeFileSync(consoleVersionDest, versionContent);
+            if (path.resolve(PROJECT_ROOT) !== path.resolve(ROOT_DIR)) {
+                try {
+                    const versionDest = path.join(PROJECT_ROOT, 'VERSION');
+                    ensureParentDirForFile(versionDest);
+                    fs.writeFileSync(versionDest, versionContent);
+                } catch (_parentWriteErr) {
+                    // Parent may be root-owned (/opt/VERSION) — console copy is enough.
+                }
+            }
         } catch (_e) { /* non-critical */ }
 
-        if (nonCriticalFailures.length > 0) {
-            console.log(`[UPDATE] SHA saved despite ${nonCriticalFailures.length} non-critical failure(s): ${nonCriticalFailures.map(f => f.file).join(', ')}`);
+        const finalFailures = splitUpdateFailures(results.failed, ROOT_DIR);
+        results.criticalFailures = finalFailures.critical;
+        results.nonCriticalFailures = finalFailures.nonCritical;
+        if (finalFailures.nonCritical.length > 0) {
+            console.log(`[UPDATE] SHA saved despite ${finalFailures.nonCritical.length} non-critical failure(s): ${finalFailures.nonCritical.map(f => f.file).join(', ')}`);
         }
     } else {
         results.skipped.push('SHA tracking (critical update steps incomplete)');
@@ -2926,14 +2782,9 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     }
 }
 
-/** Sync full support-agent trees from GitHub at the given commit SHA. */
-async function syncAgentSourceAtSha(remoteSHA) {
-    const agentBuildWorker = require('./agentBuildWorker');
-    return agentBuildWorker.syncFullAgentSourceFromGitHub({
-        remoteSHA,
-        download: ghDownloadFile,
-        listPaths: ghListRepoBlobPaths,
-    });
+/** @deprecated Support Generator no longer syncs Go support-agent source trees. */
+async function syncAgentSourceAtSha(_remoteSHA) {
+    return { staged: 0, paths: 0, skipped: true };
 }
 
 /**
@@ -3089,8 +2940,41 @@ function pruneBackups(keep) {
     return { kept: n, deleted };
 }
 
+function restoreServerBinaryBackup(backupPath, targetPath) {
+    if (!backupPath || !targetPath) {
+        return { restored: false, error: 'Server binary backup path is incomplete' };
+    }
+    const backup = path.resolve(backupPath);
+    const target = path.resolve(targetPath);
+    const expectedPrefix = `${path.basename(target)}.bak.`;
+    if (path.dirname(backup) !== path.dirname(target)
+        || !path.basename(backup).startsWith(expectedPrefix)
+        || !fs.existsSync(backup)) {
+        return { restored: false, error: 'Server binary backup path failed validation' };
+    }
+
+    const staging = `${target}.rollback.${process.pid}.${Date.now()}`;
+    try {
+        fs.copyFileSync(backup, staging);
+        if (IS_WINDOWS) {
+            fs.copyFileSync(staging, target);
+            fs.unlinkSync(staging);
+        } else {
+            fs.renameSync(staging, target);
+        }
+        return { restored: true, targetPath: target };
+    } catch (err) {
+        try { if (fs.existsSync(staging)) fs.unlinkSync(staging); } catch (_e) { /* best effort */ }
+        return { restored: false, error: err.message || String(err), targetPath: target };
+    }
+}
+
 /**
- * Restore console files from a pre-update backup and revert the SHA.
+ * Restore files from a pre-update backup and revert the SHA.
+ *
+ * Current manifests prefix entries with `console/`, `server/` or `scripts/`
+ * so a restore can recover more than the console tree. Older manifests used
+ * unprefixed console paths and remain supported for backwards compatibility.
  */
 function restoreFromBackup(backupName) {
     if (!isValidBackupName(backupName)) throw new Error('Invalid backup name');
@@ -3103,15 +2987,81 @@ function restoreFromBackup(backupName) {
 
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     let restored = 0;
-    for (const filePath of (manifest.files || [])) {
-        if (!isValidManifestRelativePath(filePath)) {
-            throw new Error(`Invalid path in backup manifest: ${filePath}`);
+    let removed = 0;
+    const resolveManifestTarget = (backupFilePath) => {
+        let filePath = backupFilePath;
+        let targetRoot = ROOT_DIR;
+        if (backupFilePath.startsWith('console/')) {
+            filePath = backupFilePath.slice('console/'.length);
+        } else if (backupFilePath.startsWith('server/')) {
+            filePath = backupFilePath.slice('server/'.length);
+            targetRoot = resolveServerSourceRootForUpdate();
+        } else if (backupFilePath.startsWith('scripts/')) {
+            filePath = backupFilePath.slice('scripts/'.length);
+            targetRoot = PROJECT_ROOT;
         }
-        const src = resolvePathUnderRoot(backupPath, filePath);
-        const dest = resolvePathUnderRoot(ROOT_DIR, filePath);
+        if (!isValidManifestRelativePath(filePath)) {
+            throw new Error(`Invalid target path in backup manifest: ${filePath}`);
+        }
+        return {
+            backupFilePath,
+            filePath,
+            targetRoot,
+        };
+    };
+
+    for (const backupFilePath of (manifest.files || [])) {
+        if (!isValidManifestRelativePath(backupFilePath)) {
+            throw new Error(`Invalid path in backup manifest: ${backupFilePath}`);
+        }
+        const target = resolveManifestTarget(backupFilePath);
+        const src = resolvePathUnderRoot(backupPath, backupFilePath);
+        const dest = resolvePathUnderRoot(target.targetRoot, target.filePath);
+        if (isProtectedRuntimePath(dest)) {
+            throw new Error(`Refusing to restore protected runtime path: ${backupFilePath}`);
+        }
         if (fs.existsSync(src)) {
+            if (fs.lstatSync(src).isSymbolicLink()) {
+                throw new Error(`Refusing to restore symlink in backup: ${backupFilePath}`);
+            }
             fs.mkdirSync(path.dirname(dest), { recursive: true });
             fs.copyFileSync(src, dest);
+            restored++;
+        }
+    }
+
+    for (const backupFilePath of (manifest.removeOnRestore || [])) {
+        if (!isValidManifestRelativePath(backupFilePath)) {
+            throw new Error(`Invalid remove path in backup manifest: ${backupFilePath}`);
+        }
+        const target = resolveManifestTarget(backupFilePath);
+        const dest = resolvePathUnderRoot(target.targetRoot, target.filePath);
+        if (isProtectedRuntimePath(dest)) {
+            throw new Error(`Refusing to remove protected runtime path: ${backupFilePath}`);
+        }
+        if (fs.existsSync(dest)) {
+            fs.rmSync(dest, { force: true });
+            removed++;
+        }
+    }
+
+    // Mesh agent certificates live beside the server data, not in the
+    // console root. Older backups placed this file at the backup root; accept
+    // both formats but always restore to the configured runtime directory.
+    const rustdeskDir = config.rustdeskDir || config.keysPath;
+    if (rustdeskDir) {
+        const meshSources = [
+            resolveChildPath(backupPath, 'special/mesh_agent_server.pem'),
+            resolveChildPath(backupPath, 'mesh_agent_server.pem'),
+        ];
+        const meshSource = meshSources.find((candidate) => fs.existsSync(candidate));
+        if (meshSource) {
+            if (fs.lstatSync(meshSource).isSymbolicLink()) {
+                throw new Error('Refusing to restore symlink mesh_agent_server.pem from backup');
+            }
+            const meshTarget = path.join(rustdeskDir, 'mesh_agent_server.pem');
+            fs.mkdirSync(path.dirname(meshTarget), { recursive: true });
+            fs.copyFileSync(meshSource, meshTarget);
             restored++;
         }
     }
@@ -3119,7 +3069,13 @@ function restoreFromBackup(backupName) {
     // Revert SHA to the pre-update value
     if (manifest.sha) saveLocalSHA(manifest.sha);
 
-    return { restored, version: manifest.version, sha: manifest.sha, totalFiles: (manifest.files || []).length };
+    return {
+        restored,
+        removed,
+        version: manifest.version,
+        sha: manifest.sha,
+        totalFiles: (manifest.files || []).length,
+    };
 }
 
 /**
@@ -3148,6 +3104,7 @@ async function rebuildServerBinary(opts = {}) {
             steps: {}
         };
     }
+    refreshProjectRoot();
     const result = { success: false, steps: {} };
     const remoteSHA = opts.sha || getLocalSHA();
 
@@ -3230,12 +3187,46 @@ async function rebuildServerBinary(opts = {}) {
 
 /**
  * Pre-install checks for panel update (issue #158).
- * @returns {Promise<{ ready: boolean, issues: string[], warnings: string[], go: object, prebuiltAvailable: boolean, canBuildServer: boolean }>}
+ * @returns {Promise<{ ready: boolean, issues: string[], warnings: string[], go: object, canBuildServer: boolean }>}
  */
+function checkUpdateDiskSpace(targetPath = ROOT_DIR) {
+    const minimumFreeBytes = Math.max(
+        64 * 1024 * 1024,
+        (Number.parseInt(process.env.UPDATE_MIN_FREE_MB, 10) || 512) * 1024 * 1024
+    );
+    const result = {
+        availableBytes: null,
+        minimumFreeBytes,
+        path: targetPath,
+        supported: typeof fs.statfsSync === 'function',
+        sufficient: null,
+    };
+
+    if (!result.supported) return result;
+
+    try {
+        const stats = fs.statfsSync(targetPath);
+        result.availableBytes = Number(stats.bavail) * Number(stats.bsize);
+        if (Number.isFinite(result.availableBytes)) {
+            result.sufficient = result.availableBytes >= minimumFreeBytes;
+        } else {
+            // Some Node/platform combinations expose statfsSync but do not
+            // return usable block statistics. Treat that as unsupported
+            // rather than incorrectly blocking every Windows update.
+            result.supported = false;
+            result.availableBytes = null;
+        }
+    } catch (_e) {
+        result.supported = false;
+    }
+    return result;
+}
+
 async function runUpdatePreflight(opts = {}) {
     const issues = [];
     const warnings = [];
     const serverUpdateRequired = !!opts.serverUpdateRequired;
+    const remoteSHA = opts.remoteSHA || null;
 
     if (isImageBasedDockerDeployment()) {
         const hint = getDockerUpdateInstructions().commands.join(' && ');
@@ -3244,7 +3235,6 @@ async function runUpdatePreflight(opts = {}) {
             issues: [`Docker image deployment — use "${hint}" instead of in-app install`],
             warnings: [],
             go: checkGoAvailable(),
-            prebuiltAvailable: false,
             canBuildServer: false,
             dockerImageMode: true,
             dockerUpdate: getDockerUpdateInstructions()
@@ -3270,6 +3260,17 @@ async function runUpdatePreflight(opts = {}) {
         issues.push(`Console data directory is not writable: ${config.dataDir}`);
     }
 
+    const disk = checkUpdateDiskSpace(config.dataDir);
+    if (disk.sufficient === false) {
+        issues.push(
+            `Insufficient free disk space under ${disk.path}: `
+            + `${Math.floor(disk.availableBytes / 1024 / 1024)} MiB available, `
+            + `${Math.floor(disk.minimumFreeBytes / 1024 / 1024)} MiB required`
+        );
+    } else if (!disk.supported) {
+        warnings.push('Free disk-space check is unavailable on this platform');
+    }
+
     try {
         const { ensureConsoleNpmDirs } = require('../lib/consoleNpmInstall');
         ensureConsoleNpmDirs(config.dataDir);
@@ -3279,10 +3280,10 @@ async function runUpdatePreflight(opts = {}) {
     }
 
     if (process.platform === 'linux' && typeof process.getuid === 'function' && process.getuid() !== 0) {
-        try {
-            execSync('sudo -n systemctl --version', { timeout: 5000, stdio: 'pipe' });
-        } catch (_e) {
-            warnings.push('Passwordless sudo for systemctl is not configured — service restarts during update may fail until linux-ensure-console-user.js is run as root');
+        if (!canUsePrivilegedUpdate()) {
+            warnings.push(
+                'The fixed root update broker is not installed — run linux-ensure-console-user.js as root once'
+            );
         }
     }
 
@@ -3292,28 +3293,34 @@ async function runUpdatePreflight(opts = {}) {
         if (!capability.ready) {
             warnings.push(
                 `Server binary directory is not writable: ${capability.targetDir || path.dirname(binaryPath)}`
-                + ' — run linux-ensure-console-user.js as root once to enable privileged deploy'
+                + ' — run the documented Go server deploy helper as root; the panel will not sudo repository code'
             );
         }
     } else {
         warnings.push('Go server binary path could not be detected — deploy step may require manual repair');
     }
 
-    let prebuiltAvailable = false;
-    try {
-        const prebuilt = await checkPrebuiltAvailable();
-        prebuiltAvailable = !!(prebuilt && prebuilt.available);
-    } catch (_e) { /* optional */ }
-
     const goInfo = checkGoAvailable();
-    const canBuildServer = prebuiltAvailable || (goInfo.available && goInfo.meetsMinimum);
+    const hasCompatibleGo = !!(goInfo.available && goInfo.meetsMinimum);
+    // applyUpdate can bootstrap a vendored Go toolchain when system Go is missing or too old.
+    const canBootstrapGoToolchain = true;
+    const canBuildServer = hasCompatibleGo || canBootstrapGoToolchain;
 
     if (!canBuildServer) {
-        const msg = 'Neither a compatible Go toolchain nor a pre-built server binary is available';
+        const msg = 'No compatible Go toolchain is available';
         if (serverUpdateRequired) {
             issues.push(`${msg} — server update cannot complete`);
         } else {
             warnings.push(`${msg} — server compile may fail (auto-rebuild will retry)`);
+        }
+    } else if (serverUpdateRequired && !hasCompatibleGo) {
+        if (goInfo.available && goInfo.needsUpgrade) {
+            warnings.push(
+                `System Go (${goInfo.version || 'unknown'}) is below ${GO_MIN_VERSION}; `
+                + 'a compatible toolchain will be installed automatically during the update'
+            );
+        } else {
+            warnings.push('Go toolchain will be downloaded automatically during the update');
         }
     }
 
@@ -3327,9 +3334,11 @@ async function runUpdatePreflight(opts = {}) {
         ready: issues.length === 0,
         issues,
         warnings,
+        capabilities: managementCapabilities.getCapabilityReport(),
         go: goInfo,
-        prebuiltAvailable,
-        canBuildServer
+        canBuildServer,
+        disk,
+        remoteSHA
     };
 }
 
@@ -3352,12 +3361,12 @@ module.exports = {
     deleteBackup,
     pruneBackups,
     restoreFromBackup,
+    restoreServerBinaryBackup,
     getLocalVersion,
     getLocalSHA,
     saveLocalSHA,
     getRemoteHeadSHA,
     getServerUpdateInfo,
-    getPrebuiltInfo,
     installGoToolchain,
     checkGoAvailable,
     getServerBinaryStatus,
@@ -3395,6 +3404,8 @@ module.exports = {
     isUpdatePermissionError,
     readLastUpdateResult: () => require('../lib/updateResultStore').readLastUpdateResult(config.dataDir),
     ensureConsoleSource,
+    listRepoBlobPathsUnderPrefix: ghListRepoBlobPathsUnderPrefix,
+    checkUpdateDiskSpace,
 };
 
 bootstrapDockerImageDeployment();

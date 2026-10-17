@@ -32,10 +32,43 @@ const PANEL_POLL_PATHS = new Set([
     '/api/logs/recent',
     '/api/database/stats',
     '/api/docker/containers',
+    '/api/settings/restart-status',
     '/api/folders',
     '/api/tags',
     '/api/device-groups',
     '/api/bd/notifications'
+]);
+
+/**
+ * Lightweight, authenticated settings reads. These endpoints can be loaded
+ * together when the Settings page initializes and should not consume the
+ * stricter mutation/general API budget.
+ */
+const PANEL_READ_PATHS = new Set([
+    '/api/settings/audit',
+    '/api/settings/info',
+    '/api/settings/restart/pending',
+    '/api/settings/device-scope',
+    '/api/settings/connection-mode',
+    '/api/settings/public-endpoints',
+    '/api/settings/branding',
+    '/api/settings/appearance',
+    '/api/settings/branding/backgrounds',
+    '/api/settings/branding/export',
+    '/api/settings/branding/profiles',
+    '/api/settings/themes',
+    '/api/settings/fonts',
+    '/api/settings/fonts/local',
+    '/api/settings/backup/stats',
+    '/api/settings/updates/channel',
+    '/api/settings/updates/last-result',
+    '/api/settings/updates/server-binary/status',
+    '/api/settings/backup/retention',
+    '/api/settings/enrollment',
+    '/api/settings/client-sessions',
+    '/api/settings/ldap',
+    '/api/settings/oidc',
+    '/api/settings/email/smtp'
 ]);
 
 /** Prefixes for read-only dashboard sub-routes (future-safe). */
@@ -72,6 +105,12 @@ function isPanelPollRequest(req) {
     return PANEL_POLL_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
+function isPanelReadRequest(req) {
+    const method = String(req.method || 'GET').toUpperCase();
+    if (method !== 'GET' && method !== 'HEAD') return false;
+    return PANEL_READ_PATHS.has(resolveApiPath(req));
+}
+
 /** Session-authenticated UI preference writes (desktop layout save). */
 function isPanelPreferenceWrite(req) {
     const method = String(req.method || 'GET').toUpperCase();
@@ -82,6 +121,11 @@ function isPanelPreferenceWrite(req) {
 /** Paths that receive widgetLimiter in server.js (exact paths only). */
 function getPanelPollMountPaths() {
     return Array.from(PANEL_POLL_PATHS);
+}
+
+/** Paths that receive panelReadLimiter in server.js (exact paths only). */
+function getPanelReadMountPaths() {
+    return Array.from(PANEL_READ_PATHS);
 }
 
 /**
@@ -102,7 +146,7 @@ const apiLimiter = rateLimit({
         error: 'Too many requests. Please try again later.'
     },
     keyGenerator: defaultKeyGenerator,
-    skip: (req) => isPanelPollRequest(req) || isPanelPreferenceWrite(req)
+    skip: (req) => isPanelPollRequest(req) || isPanelReadRequest(req) || isPanelPreferenceWrite(req)
 });
 
 /**
@@ -120,6 +164,27 @@ const widgetLimiter = rateLimit({
         error: 'Too many widget requests. Please slow down.'
     },
     keyGenerator: defaultKeyGenerator
+});
+
+/**
+ * Settings reads are authenticated by their route handlers and keyed to the
+ * session user when available. Unauthenticated requests still fall back to
+ * the client IP, so the limiter does not create an unbounded bypass.
+ */
+const panelReadLimiter = rateLimit({
+    windowMs: config.rateLimitWindowMs,
+    max: parseInt(process.env.PANEL_READ_RATE_LIMIT_MAX, 10) || 600,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        error: 'Too many panel read requests. Please slow down.'
+    },
+    keyGenerator: (req) => {
+        const userId = req.session && (req.session.userId || req.session.user?.id);
+        if (userId) return `panel-read:${userId}`;
+        return defaultKeyGenerator(req);
+    }
 });
 
 /**
@@ -221,6 +286,7 @@ const fileAccessLimiter = rateLimit({
 module.exports = {
     apiLimiter,
     widgetLimiter,
+    panelReadLimiter,
     panelPreferenceLimiter,
     rdClientPageLimiter,
     loginLimiter,
@@ -228,8 +294,11 @@ module.exports = {
     uploadLimiter,
     fileAccessLimiter,
     isPanelPollRequest,
+    isPanelReadRequest,
     isPanelPreferenceWrite,
     resolveApiPath,
     getPanelPollMountPaths,
-    PANEL_POLL_PATHS
+    getPanelReadMountPaths,
+    PANEL_POLL_PATHS,
+    PANEL_READ_PATHS
 };

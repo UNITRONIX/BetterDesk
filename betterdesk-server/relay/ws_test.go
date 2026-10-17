@@ -1,6 +1,7 @@
 package relay
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -70,6 +71,7 @@ func TestWSRelayPairing(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	uuid := "ws-relay-test-uuid-456"
+	authorizeTestRelayPair(t, uuid)
 	wsURL := fmt.Sprintf("ws://127.0.0.1:%d/", cfg.WSRelayPort())
 
 	// Connect first side
@@ -110,6 +112,49 @@ func TestWSRelayPairing(t *testing.T) {
 	}
 }
 
+func TestWSRelayRejectsUnknownUUID(t *testing.T) {
+	cfg := config.DefaultConfig()
+	ln, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := ln.Addr().(*net.TCPAddr).Port
+	ln.Close()
+	cfg.RelayPort = port
+
+	srv := New(cfg)
+	ctx := t.Context()
+	if err := srv.Start(ctx); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+	time.Sleep(100 * time.Millisecond)
+
+	wsURL := fmt.Sprintf("ws://127.0.0.1:%d/", cfg.WSRelayPort())
+	ws, _, err := websocket.Dial(ctx, wsURL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ws.CloseNow()
+
+	data, err := proto.Marshal(&pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_RequestRelay{
+			RequestRelay: &pb.RequestRelay{Uuid: "unknown-ws-relay-uuid"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ws.Write(ctx, websocket.MessageBinary, data); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(100 * time.Millisecond)
+	if srv.ActiveSessions.Load() != 0 || srv.TotalRelayed.Load() != 0 {
+		t.Fatalf("unknown WS UUID must not create a session: active=%d total=%d",
+			srv.ActiveSessions.Load(), srv.TotalRelayed.Load())
+	}
+}
+
 // TestWSRelayLargeMessagePreserved ensures payloads larger than io.Copy's default
 // buffer (~32 KiB) stay as a single WebSocket message after relay (#293).
 func TestWSRelayLargeMessagePreserved(t *testing.T) {
@@ -131,6 +176,7 @@ func TestWSRelayLargeMessagePreserved(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	uuid := "ws-relay-large-msg-293"
+	authorizeTestRelayPair(t, uuid)
 	wsURL := fmt.Sprintf("ws://127.0.0.1:%d/", cfg.WSRelayPort())
 
 	ws1, _, err := websocket.Dial(ctx, wsURL, nil)
@@ -198,7 +244,9 @@ func TestWSRelayLargeMessagePreserved(t *testing.T) {
 	}
 }
 
-func TestRelayRejectsMixedTCPAndWS(t *testing.T) {
+func TestRelayBridgesMixedTCPAndWS(t *testing.T) {
+	// #397: panel Web Remote (TCP :21117) + WS Mode peer (:21119) must pair
+	// via BytesCodec↔WS translation — not reject (#290 crash path).
 	cfg := config.DefaultConfig()
 	ln, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -216,15 +264,16 @@ func TestRelayRejectsMixedTCPAndWS(t *testing.T) {
 	defer srv.Stop()
 	time.Sleep(200 * time.Millisecond)
 
-	uuid := "mixed-transport-uuid-290"
+	uuid := "mixed-transport-uuid-397"
+	authorizeTestRelayPair(t, uuid)
 	wsURL := fmt.Sprintf("ws://127.0.0.1:%d/", cfg.WSRelayPort())
 
-	// First peer: WebSocket RequestRelay
 	ws, _, err := websocket.Dial(ctx, wsURL, nil)
 	if err != nil {
 		t.Fatalf("WS dial: %v", err)
 	}
 	defer ws.CloseNow()
+	ws.SetReadLimit(MaxWSRelayMessage)
 
 	rr := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
@@ -237,7 +286,6 @@ func TestRelayRejectsMixedTCPAndWS(t *testing.T) {
 	}
 	time.Sleep(50 * time.Millisecond)
 
-	// Second peer: native TCP RequestRelay with same UUID
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 5*time.Second)
 	if err != nil {
 		t.Fatalf("TCP dial: %v", err)
@@ -252,13 +300,44 @@ func TestRelayRejectsMixedTCPAndWS(t *testing.T) {
 	}
 
 	deadline := time.Now().Add(2 * time.Second)
-	for time.Now().Before(deadline) {
-		if srv.TotalRelayed.Load() > 0 {
-			t.Fatal("mixed TCP/WS pair must not start a relay session")
-		}
+	for srv.TotalRelayed.Load() < 1 && time.Now().Before(deadline) {
 		time.Sleep(20 * time.Millisecond)
 	}
-	if srv.ActiveSessions.Load() != 0 {
-		t.Fatalf("active sessions = %d, want 0", srv.ActiveSessions.Load())
+	if srv.TotalRelayed.Load() < 1 {
+		t.Fatal("mixed TCP/WS pair not established")
+	}
+	if srv.ActiveSessions.Load() < 1 {
+		t.Fatalf("active sessions = %d, want >= 1", srv.ActiveSessions.Load())
+	}
+
+	// TCP → WS: BytesCodec frame becomes one WS binary message
+	payloadTCP := []byte("hello-from-tcp-peer-payload-397")
+	if err := codec.WriteRawBytesMax(conn, payloadTCP, codec.MaxPeerFrameSize); err != nil {
+		t.Fatalf("TCP send: %v", err)
+	}
+	readCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	typ, got, err := ws.Read(readCtx)
+	if err != nil {
+		t.Fatalf("WS recv: %v", err)
+	}
+	if typ != websocket.MessageBinary {
+		t.Fatalf("message type = %v, want binary", typ)
+	}
+	if !bytes.Equal(got, payloadTCP) {
+		t.Fatalf("WS got %q, want %q", got, payloadTCP)
+	}
+
+	// WS → TCP: WS binary message becomes BytesCodec frame
+	payloadWS := []byte("hello-from-ws-peer-payload-397")
+	if err := ws.Write(ctx, websocket.MessageBinary, payloadWS); err != nil {
+		t.Fatalf("WS send: %v", err)
+	}
+	gotTCP, err := codec.ReadRawBytesMax(conn, 3*time.Second, codec.MaxPeerFrameSize)
+	if err != nil {
+		t.Fatalf("TCP recv: %v", err)
+	}
+	if !bytes.Equal(gotTCP, payloadWS) {
+		t.Fatalf("TCP got %q, want %q", gotTCP, payloadWS)
 	}
 }

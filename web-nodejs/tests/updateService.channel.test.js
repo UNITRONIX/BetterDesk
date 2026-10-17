@@ -80,4 +80,67 @@ describe('updateService update channel', () => {
         expect(updateService.UPDATE_CHANNELS.stable.branch).toBe('main');
         expect(updateService.UPDATE_CHANNELS.development.branch).toBe('dev');
     });
+
+    test('reports insufficient disk space before an update', () => {
+        const updateService = loadUpdateService({ dataDir });
+        if (typeof fs.statfsSync !== 'function') {
+            expect(updateService.checkUpdateDiskSpace(dataDir).supported).toBe(false);
+            return;
+        }
+
+        const statfs = jest.spyOn(fs, 'statfsSync').mockReturnValue({
+            bavail: 1,
+            bsize: 4096,
+        });
+        try {
+            const result = updateService.checkUpdateDiskSpace(dataDir);
+            expect(result.supported).toBe(true);
+            expect(result.sufficient).toBe(false);
+            expect(result.availableBytes).toBe(4096);
+        } finally {
+            statfs.mockRestore();
+        }
+    });
+
+    test('does not block updates when filesystem statistics are unusable', () => {
+        const updateService = loadUpdateService({ dataDir });
+        if (typeof fs.statfsSync !== 'function') return;
+
+        const statfs = jest.spyOn(fs, 'statfsSync').mockReturnValue({});
+        try {
+            expect(updateService.checkUpdateDiskSpace(dataDir)).toMatchObject({
+                supported: false,
+                sufficient: null,
+                availableBytes: null,
+            });
+        } finally {
+            statfs.mockRestore();
+        }
+    });
+
+    test('preflight stays ready when server update needs Go toolchain bootstrap', async () => {
+        const updateService = loadUpdateService({ dataDir });
+        const goSpy = jest.spyOn(updateService, 'checkGoAvailable')
+            .mockReturnValue({
+                available: true,
+                meetsMinimum: false,
+                needsUpgrade: true,
+                version: 'go version go1.20 linux/amd64',
+            });
+        const remoteSpy = jest.spyOn(updateService, 'getRemoteHeadSHA')
+            .mockResolvedValue({ sha: 'abc123def4567890abcdef1234567890abcdef12' });
+
+        try {
+            const pf = await updateService.runUpdatePreflight({
+                serverUpdateRequired: true,
+                remoteSHA: 'abc123def4567890abcdef1234567890abcdef12',
+            });
+            expect(pf.ready).toBe(true);
+            expect(pf.issues).toHaveLength(0);
+            expect(pf.warnings.join(' ')).toMatch(/toolchain/i);
+        } finally {
+            goSpy.mockRestore();
+            remoteSpy.mockRestore();
+        }
+    });
 });

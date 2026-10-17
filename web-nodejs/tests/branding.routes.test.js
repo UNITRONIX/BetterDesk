@@ -78,6 +78,20 @@ describe('Branding routes', () => {
         jest.clearAllMocks();
     });
 
+    it('keeps the appearance settings focused on saved configuration', () => {
+        const view = fs.readFileSync(path.join(__dirname, '..', 'views', 'settings.ejs'), 'utf8');
+        const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'settings.js'), 'utf8');
+        const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'pages.css'), 'utf8');
+
+        expect(view).not.toContain('branding-preview');
+        expect(view).not.toContain('branding-live-preview');
+        expect(view).toContain('branding-management-disclosure');
+        expect(view).not.toContain('folder_special');
+        expect(script).not.toContain('BrandingPreview');
+        expect(script).toContain('initBrandingFieldTracking');
+        expect(styles).toContain('border-right: 2px solid var(--text-secondary);');
+    });
+
     describe('GET /css/branding.css', () => {
         it('returns text/css with :root overrides when branding has colors', async () => {
             const css = brandingService.generateThemeCss();
@@ -103,6 +117,43 @@ describe('Branding routes', () => {
         });
     });
 
+    describe('POST /api/settings/branding/profiles/:id/duplicate', () => {
+        it('returns a new profile id and copies the saved profile data', async () => {
+            const res = await request(app)
+                .post('/api/settings/branding/profiles/1/duplicate')
+                .send({});
+
+            expect(res.status).toBe(200);
+            expect(res.body).toEqual({ success: true, data: { id: 2 } });
+            expect(database.createBrandingProfile).toHaveBeenCalledWith(
+                'Default (copy)',
+                '',
+                expect.objectContaining({
+                    type: 'betterdesk-theme',
+                    branding: mockBranding
+                })
+            );
+        });
+
+        it('suffixes the duplicate name when the default copy already exists', async () => {
+            database.listBrandingProfiles.mockResolvedValueOnce([
+                { id: 1, name: 'Default', is_active: 1 },
+                { id: 2, name: 'Default (copy)', is_active: 0 }
+            ]);
+
+            const res = await request(app)
+                .post('/api/settings/branding/profiles/1/duplicate')
+                .send({});
+
+            expect(res.status).toBe(200);
+            expect(database.createBrandingProfile).toHaveBeenCalledWith(
+                'Default (copy) 2',
+                '',
+                expect.any(Object)
+            );
+        });
+    });
+
     describe('GET /api/settings/appearance', () => {
         it('returns the versioned appearance model with readability status', async () => {
             const res = await request(app).get('/api/settings/appearance');
@@ -113,6 +164,19 @@ describe('Branding routes', () => {
             expect(res.body.data.version).toBe('2.0');
             expect(res.body.data.identity.appName).toBeTruthy();
             expect(res.body.readability).toHaveProperty('ok');
+        });
+    });
+
+    describe('GET /api/settings/themes', () => {
+        it('returns distinct display names for built-in presets', async () => {
+            const res = await request(app).get('/api/settings/themes');
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.map(theme => theme.name)).toEqual(expect.arrayContaining([
+                'BetterDesk Dark',
+                'BetterDesk Light',
+                'insolve Core Server'
+            ]));
         });
     });
 
@@ -252,5 +316,13 @@ describe('brandingService.generateThemeCss', () => {
         });
         expect(readability.ok).toBe(false);
         expect(readability.issues.some(issue => issue.id === 'page-text')).toBe(true);
+    });
+
+    it('default favicon uses a large letter B mark on a dark tile', () => {
+        const svg = brandingService.generateFavicon();
+        expect(svg).toMatch(/font-size="23"/);
+        expect(svg).toMatch(/>B<\/text>/);
+        expect(svg).toMatch(/fill="#0d1117"/);
+        expect(svg).not.toMatch(/M8 10h16/);
     });
 });

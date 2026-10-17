@@ -48,9 +48,46 @@ function normalizeUsername(username) {
     return String(username || '').trim().toLowerCase();
 }
 
+function parseLastLogin(value) {
+    const text = String(value || '').trim();
+    if (!text) return null;
+
+    // SQLite datetime('now') is UTC but has no timezone suffix.
+    const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
+        ? `${text.replace(' ', 'T')}Z`
+        : text;
+    const timestamp = Date.parse(normalized);
+    return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function shouldSyncLastLogin(localValue, goValue) {
+    const goText = String(goValue || '').trim();
+    if (!goText || parseLastLogin(goText) === null) return false;
+
+    const localText = String(localValue || '').trim();
+    if (!localText) return true;
+
+    const localTimestamp = parseLastLogin(localText);
+    const goTimestamp = parseLastLogin(goText);
+    return localTimestamp === null || goTimestamp > localTimestamp;
+}
+
 /** Matches Go auth.IsSuperAdminRole / panel isSuperAdminRole (Discussion #99). */
 function isSuperAdminRole(role) {
     return role === 'super_admin' || role === 'admin';
+}
+
+function usesSharedUserStore() {
+    if (db.type === 'postgres') return true;
+    try {
+        return typeof db.getAuthDb === 'function' && db.getAuthDb() === db.getDb();
+    } catch (_) {
+        return false;
+    }
+}
+
+function usesSharedSQLiteStore() {
+    return db.type === 'sqlite' && usesSharedUserStore();
 }
 
 /**
@@ -85,7 +122,7 @@ async function listGoUsers() {
  */
 async function assertGoAllowsSuperAdminDelete(username) {
     if (!username) return { ok: true, reason: 'no-username' };
-    if (db.type === 'postgres') return { ok: true, reason: 'shared-db' };
+    if (usesSharedUserStore()) return { ok: true, reason: 'shared-db' };
 
     const listed = await listGoUsers();
     if (!listed.ok) {
@@ -295,6 +332,7 @@ async function resolveGoUserId(localUserId) {
         return null;
     }
     if (!localUser) return null;
+    if (usesSharedUserStore()) return localUser.id;
 
     const goUser = await findGoUserByUsername(localUser.username);
     return goUser?.id || localUser.id;
@@ -309,7 +347,7 @@ async function resolveGoUserId(localUserId) {
  */
 async function mirrorCreate(username, password, role) {
     if (!username || !password) return;
-    if (db.type === 'postgres') {
+    if (usesSharedUserStore()) {
         return;
     }
     try {
@@ -344,6 +382,7 @@ async function mirrorCreate(username, password, role) {
 async function mirrorUpdate(username, { password, role, allowCreate = true } = {}) {
     if (!username) return;
     if (!password && !role) return;
+    if (usesSharedUserStore()) return;
 
     let goUser = await findGoUserByUsername(username);
 
@@ -391,7 +430,7 @@ async function mirrorUpdate(username, { password, role, allowCreate = true } = {
  */
 async function mirrorDelete(username) {
     if (!username) return { ok: true, skipped: true };
-    if (db.type === 'postgres') return { ok: true, skipped: 'shared-db' };
+    if (usesSharedUserStore()) return { ok: true, skipped: 'shared-db' };
 
     const goUser = await findGoUserByUsername(username);
     if (!goUser) return { ok: true, skipped: 'not-on-go' };
@@ -415,19 +454,13 @@ async function mirrorDelete(username) {
 
 async function mirrorTotpEnable(username, { secret } = {}) {
     if (!username || !secret) return;
-    if (db.type === 'postgres') {
-        // PostgreSQL uses the shared users table; the local enable already
-        // updates the row read by the Go API.
-        return;
-    }
+    if (usesSharedUserStore()) return;
     mirrorTotpToGoSqlite(username, { enabled: true, secret });
 }
 
 async function mirrorTotpDisable(username) {
     if (!username) return;
-    if (db.type === 'postgres') {
-        return;
-    }
+    if (usesSharedUserStore()) return;
     mirrorTotpToGoSqlite(username, { enabled: false });
 }
 
@@ -440,6 +473,7 @@ async function mirrorTotpDisable(username) {
  * PostgreSQL shared-DB installs normally already share the users table.
  */
 async function backfillFromNode() {
+    if (usesSharedSQLiteStore()) return { skipped: 'shared-store' };
     let nodeUsers;
     try {
         nodeUsers = await db.getAllUsers();
@@ -545,16 +579,26 @@ async function backfillFromGoPostgres() {
 }
 
 /**
- * Backfill: recover Node auth.db users from the Go server SQLite database.
+ * Backfill only legacy dual-store SQLite deployments.
  *
- * SQLite dual-DB installs read db_v2.sqlite3 directly (preserves password hashes).
- * PostgreSQL uses the Go REST API to reconcile auth_provider/role only.
+ * Consolidated SQLite and PostgreSQL already share one users table and must
+ * not run best-effort reconciliation over that source of truth.
  */
 async function backfillFromGo() {
     if (db.type === 'postgres') {
         return backfillFromGoPostgres();
     }
     if (typeof db.getAuthDb !== 'function') return { imported: 0, skipped: 'no-auth-db' };
+    let authDb;
+    try {
+        authDb = db.getAuthDb();
+        if (authDb === db.getDb()) {
+            return { imported: 0, skipped: 'shared-sqlite-store' };
+        }
+    } catch (err) {
+        console.warn(`[userSync] Go->Node backfill: cannot open local auth DB: ${err.message}`);
+        return { imported: 0, error: err.message };
+    }
 
     const goUsers = readGoUsersFromSqlite()
         .filter(u => normalizeUsername(u.username) && String(u.password_hash || '').trim() !== '');
@@ -571,14 +615,6 @@ async function backfillFromGo() {
     const localByUsername = new Set((localUsers || []).map(u => normalizeUsername(u.username)));
     const localIds = new Set((localUsers || []).map(u => Number(u.id)).filter(Number.isInteger));
     const missing = goUsers.filter(u => !localByUsername.has(normalizeUsername(u.username)));
-
-    let authDb;
-    try {
-        authDb = db.getAuthDb();
-    } catch (err) {
-        console.warn(`[userSync] Go->Node backfill: cannot open local auth DB: ${err.message}`);
-        return { imported: 0, error: err.message };
-    }
 
     const insertWithId = authDb.prepare(`
         INSERT INTO users (id, username, password_hash, role, auth_provider, created_at, last_login, totp_secret, totp_enabled)
@@ -625,7 +661,7 @@ async function backfillFromGo() {
 
     const synced = syncExistingAuthFromGo(authDb, goUsers, localUsers);
     if (synced > 0) {
-        console.log(`[userSync] Go->Node backfill: synced auth_provider/role for ${synced} existing user(s)`);
+        console.log(`[userSync] Go->Node backfill: synced account metadata/last_login for ${synced} existing user(s)`);
     }
 
     return { imported, synced };
@@ -635,6 +671,9 @@ function syncExistingAuthFromGo(authDb, goUsers, localUsers) {
     if (!authDb || !Array.isArray(goUsers) || goUsers.length === 0) return 0;
     const localByName = new Map((localUsers || []).map(u => [normalizeUsername(u.username), u]));
     const updateStmt = authDb.prepare('UPDATE users SET role = ?, auth_provider = ? WHERE id = ?');
+    const updateWithLastLoginStmt = authDb.prepare(
+        'UPDATE users SET role = ?, auth_provider = ?, last_login = ? WHERE id = ?'
+    );
     let synced = 0;
 
     for (const goUser of goUsers) {
@@ -644,10 +683,20 @@ function syncExistingAuthFromGo(authDb, goUsers, localUsers) {
         const goProvider = String(goUser.auth_provider || 'local').trim() || 'local';
         const goRole = normalizeRole(goUser.role);
         const localProvider = String(local.auth_provider || 'local').trim() || 'local';
+        const syncLastLogin = shouldSyncLastLogin(local.last_login, goUser.last_login);
 
-        if (goProvider !== localProvider || goRole !== local.role) {
+        if (goProvider !== localProvider || goRole !== local.role || syncLastLogin) {
             try {
-                updateStmt.run(goRole, goProvider, local.id);
+                if (syncLastLogin) {
+                    updateWithLastLoginStmt.run(
+                        goRole,
+                        goProvider,
+                        String(goUser.last_login).trim(),
+                        local.id
+                    );
+                } else {
+                    updateStmt.run(goRole, goProvider, local.id);
+                }
                 synced++;
             } catch (err) {
                 console.warn(`[userSync] Go->Node sync failed for '${local.username}': ${err.message}`);

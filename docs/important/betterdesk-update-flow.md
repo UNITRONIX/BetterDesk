@@ -4,11 +4,41 @@
 
 - Browser self-update restart confirmation should use lightweight `/api/settings/restart-status`, not heavy/authenticated `/api/settings/info`; DB/Go backend warmup can cause false restart-timeout reports.
 - Use `window.BetterDesk.cacheVersion` to distinguish the old Node.js process from the restarted one, and reload with a cache-busting query after update.
-- `GET /api/settings/updates/preflight?serverUpdate=1` when server files change — blocks install if Go/prebuilt unavailable.
+- `GET /api/settings/updates/preflight?serverUpdate=1` when server files change — checks writable paths, disk space and local Go/toolchain readiness before install.
 - After update, if server source changed but binary build/deploy failed, `applyUpdate` attempts **auto-rebuild** via `rebuildServerBinary` before leaving a stale marker.
+- The panel always builds the Go server locally from the exact update commit. It downloads only the required `betterdesk-server/` subtree through the GitHub tree API, installs the pinned Go toolchain into the console data directory when needed, runs `go mod download` and `go build`, then deploys the resulting binary.
+- The panel does not download or install a pre-built server binary from GitHub Releases or GitHub Actions. This keeps source, dependencies and the compiled binary on the same selected branch/SHA.
 - Console update merges new keys from `web-nodejs/.env.example` into existing `.env` using `buildEnvSubstitutions()` (resolved paths, no raw `__PLACEHOLDER__` values).
-- After server updates, `patchServiceDefinitions()` sanitizes systemd/NSSM units in place.
+- After server updates, `patchServiceDefinitions()` sanitizes writable/NSSM units in place; protected Linux systemd units require the explicit root maintenance step below.
+- Update preflight now includes the shared management capability report. It
+  separately reports whether the panel can update files, write allowlisted
+  `.env` settings, restart BetterDesk services, repair permissions, create
+  backups and complete a post-operation health check.
+- **Linux privilege boundary:** the panel never executes a repository JavaScript file through `sudo` and never writes root-owned systemd units or Go binaries. A root operator must run `sudo node web-nodejs/scripts/linux-ensure-console-user.js` after installation or after a privileged layout change; this installs the fixed root-owned update broker at `/usr/local/libexec/betterdesk/betterdesk-privileged-update.js`. The broker only permits `systemctl daemon-reload` and restart of `betterdesk-console` / `betterdesk-server`.
+- The fixed broker also permits only validated BetterDesk `.env` writes and
+  rollback from a generated backup. Environment keys are loaded from the
+  root-owned management manifest, and paths, ports, booleans and branch names
+  are validated before a write.
+- **Root-owned Go binary:** when the Go server target is not writable by the console user, the panel leaves the binary unchanged and reports the documented manual root deploy step. Do not add a sudoers rule for `linux-deploy-server-binary.js`, `linux-ensure-console-user.js`, or any script under the writable console tree.
+- **Migration:** a root operator must rerun the ensure script once to replace older broad sudoers entries and remove any legacy `ExecStartPre=+...linux-ensure-console-user.js` line from the console unit. Verify with `sudo visudo -cf /etc/sudoers.d/betterdesk-console-updates` and `sudo systemctl cat betterdesk-console`.
 - **Windows path root (#272):** `resolveProjectRoot()` must never resolve to a drive root (`C:\`). Default layout `C:\BetterDeskConsole` + `C:\BetterDesk` writes Scripts & Docker files under the console directory. `ensureParentDirForFile()` skips `mkdir` on filesystem roots (Node throws `EPERM` on `mkdir('C:\\')`). NSSM OpenService Access Denied when restarting `BetterDeskServer` is non-critical — restart the Go service manually or via `betterdesk.ps1` if needed.
+
+### Embedded Support Client rebuild phase
+
+When embedded Client generation is enabled, `applyUpdate()` checks the pinned
+BetterDesk-Client ref separately from the BetterDesk ref. A changed Client
+commit is downloaded into `data/modules/betterdesk-client-builder/` outside
+the BetterDesk checkout, verified, and passed to the embedded build provider.
+The worker then queues one new generation for every non-revoked Support
+configuration. Each generation contains every target exposed by the active
+build provider and is promoted only after every artifact passes its
+manifest/checksum/SKU and no-`custom.txt` checks. The built-in local provider
+is host-only; it does not queue unsupported cross-platform targets.
+
+The update does not rebuild on every download. Existing public links continue
+to serve their previous active generation until the replacement is complete.
+After a restart, `clientBuilderService.syncAndQueueRebuilds()` resumes
+retryable work without changing an active link to a partial generation.
 
 ## Issue #158 — server build / config preservation
 
@@ -16,7 +46,7 @@
 
 GitHub `compare` API caps `files` at 300, so large diffs are truncated and changed Go callee files were not downloaded → inconsistent on-disk source and `undefined` build errors.
 
-**Fix:** `ensureServerSource(remoteSHA, { force: true })` before every server compile/rebuild (panel update + Rebuild button).
+**Fix:** `ensureServerSource(remoteSHA, { force: true })` before every server compile/rebuild (panel update + Rebuild button). The helper resolves and downloads only the `betterdesk-server/` Git tree for that SHA; it never clones the complete repository. This remains required because the GitHub compare API caps `files` at 300 entries.
 
 ### Installer GitHub update
 
@@ -28,10 +58,40 @@ GitHub `compare` API caps `files` at 300, so large diffs are truncated and chang
 - **Passwords:** Panel login uses `users.password_hash` in `auth.db` / PostgreSQL. Updates must **not** change DB passwords.
 - **Services:** `patch_service_definitions` / `Patch-ServiceDefinitions` on every update when units exist; full `Setup-Services` only when missing or when operator confirms recreate (`[y/N]` prompt) / `UPDATE_REFRESH_SERVICES=true`.
 - **Script update failure:** GitHub update returns non-zero if Go server binary compile fails.
+- **Tracked commit:** both Bash and PowerShell installers resolve the downloaded
+  commit SHA through Git or the GitHub API. Tar/ZIP fallback updates refuse to
+  advance tracking when the commit cannot be verified.
+- **Failure recovery:** panel updates create a manifest for changed console,
+  server and installer files. Critical failures automatically restore the
+  manifest and any deployed server binary backup unless `autoRollback` is
+  explicitly disabled.
 
 ### Stale panel warning after script / Docker update (#192)
 
 `data/.last_update_result.json` stores the last **in-panel** update outcome. A failed panel attempt (e.g. `EACCES` on root-owned `/opt/` files) can leave a red banner even when a later **script** or **Docker** update succeeded.
+
+An update is not considered complete until the critical source/binary steps
+finish. `.update_sha`, `.agent_source_sha` and the stale-result marker are
+updated only after that point. Before applying changes, the panel also checks
+the writable data path and available disk space (override the 512 MiB minimum
+with `UPDATE_MIN_FREE_MB` when a deployment has a documented different
+requirement). If the host exposes `statfsSync` without usable block
+statistics, the check is reported as unsupported rather than blocking every
+Windows update.
+
+The same cross-platform protocol harness is available after installation:
+
+```bash
+node scripts/installer-protocol-check.js \
+  --api-url http://127.0.0.1:21114/api/health \
+  --panel-url http://127.0.0.1:5000/health \
+  --port 127.0.0.1:21116
+```
+
+Use `21121` instead of `21114` for the Docker single-container layout. The
+harness distinguishes TCP reachability from HTTP success, accepts a recorded
+3xx redirect, validates HTTPS certificate SANs by default, and supports
+`--insecure` only for explicitly disposable/self-signed checks.
 
 | Update path | Clears stale banner |
 |-------------|---------------------|
@@ -51,6 +111,8 @@ When the console runs from `ghcr.io/.../betterdesk-console` (see `docker-compose
 - `POST /api/settings/updates/install` and `rebuildServerBinary()` are rejected in this mode.
 
 After pulling new images, recreate containers so the console picks up the embedded commit from the new image tag.
+
+**GHCR tags:** prefer pinning `BETTERDESK_IMAGE_TAG` to a release semver (compose / `install.sh` default). `latest` is the rolling tip of the last successful **stable** image publish (Release / `main`); `dev` tracks development builds and is republished after each `dev` version bump via an explicit workflow dispatch (#401 — GITHUB_TOKEN bump pushes do not start image builds by themselves). See [DOCKER_QUICKSTART.md](../docker/DOCKER_QUICKSTART.md), [#387](https://github.com/UNITRONIX/BetterDesk/issues/387), and [#401](https://github.com/UNITRONIX/BetterDesk/issues/401).
 
 ## Update channel (stable / development)
 

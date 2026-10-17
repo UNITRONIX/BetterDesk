@@ -27,6 +27,15 @@ function shouldSendStrictTransportSecurity() {
     return !config.allowSelfSignedCerts;
 }
 
+/**
+ * Emergency rollback for RdClient only: CSP_RELAX_REMOTE=true re-enables
+ * unsafe-eval on /remote* (default off after static protobuf bundle).
+ */
+function allowRemoteUnsafeEval() {
+    return String(process.env.CSP_RELAX_REMOTE || '').toLowerCase() === 'true'
+        || process.env.CSP_RELAX_REMOTE === '1';
+}
+
 function buildHelmetMiddleware(req, res) {
     const nonce = crypto.randomBytes(16).toString('base64');
     const isRemoteViewerPage = req.path.startsWith('/remote');
@@ -34,8 +43,7 @@ function buildHelmetMiddleware(req, res) {
     res.locals.cspNonce = nonce;
 
     const scriptSources = ["'self'", `'nonce-${nonce}'`, "https://cdn.jsdelivr.net"];
-    if (isRemoteViewerPage) {
-        // The remote viewer still depends on protobuf.js runtime code generation.
+    if (isRemoteViewerPage && allowRemoteUnsafeEval()) {
         scriptSources.push("'unsafe-eval'");
     }
 
@@ -44,9 +52,8 @@ function buildHelmetMiddleware(req, res) {
             directives: {
                 defaultSrc: ["'self'"],
                 scriptSrc: scriptSources,
-                // Allow inline event handlers (onclick=, onchange=, etc.) used by
-                // several admin panel pages. <script> tags still require nonce.
-                scriptSrcAttr: ["'unsafe-inline'"],
+                // Inline event handlers migrated to data-bd-call + bd-actions.js
+                scriptSrcAttr: ["'none'"],
                 styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
                 fontSrc: ["'self'", "https://fonts.gstatic.com"],
                 imgSrc: ["'self'", "data:", "blob:"],
@@ -116,3 +123,4 @@ function securityMiddleware(req, res, next) {
 }
 
 module.exports = securityMiddleware;
+module.exports.allowRemoteUnsafeEval = allowRemoteUnsafeEval;

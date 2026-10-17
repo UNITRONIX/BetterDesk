@@ -5,9 +5,11 @@
 
 const express = require('express');
 const router = express.Router();
+const net = require('net');
 const authService = require('../services/authService');
 const db = require('../services/database');
 const betterdeskApi = require('../services/betterdeskApi');
+const brandingService = require('../services/brandingService');
 const userSync = require('../services/userSync');
 let serverAttestation;
 try {
@@ -16,7 +18,8 @@ try {
     console.warn('[auth] serverAttestation unavailable:', err.message);
     serverAttestation = {
         getLastResult: async () => null,
-        buildPublicSummary: () => ({ tier: null, maxConnections: null })
+        buildPublicSummary: () => ({ tier: null, maxConnections: null }),
+        getBadgePresentation: async () => null
     };
 }
 const { guestOnly, requireAuth } = require('../middleware/auth');
@@ -35,6 +38,22 @@ function isSafeReturnUrl(u) {
     if (!u.startsWith('/')) return false;
     if (u.startsWith('//') || u.startsWith('/\\')) return false;
     return true;
+}
+
+function isPrivateClientIp(rawIp) {
+    let ip = String(rawIp || '').trim().toLowerCase();
+    if (ip.startsWith('::ffff:')) ip = ip.slice(7);
+    if (net.isIP(ip) === 4) {
+        const octets = ip.split('.').map(Number);
+        return octets[0] === 10 ||
+            (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+            (octets[0] === 192 && octets[1] === 168) ||
+            octets[0] === 127;
+    }
+    if (net.isIP(ip) === 6) {
+        return ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd');
+    }
+    return false;
 }
 
 async function bestEffortUserSync(action, label) {
@@ -56,7 +75,12 @@ router.get('/login', guestOnly, async (req, res) => {
     let attestationBadge = { tier: null, maxConnections: null };
     try {
         const last = await serverAttestation.getLastResult();
-        attestationBadge = serverAttestation.buildPublicSummary(last);
+        const presentation = await serverAttestation.getBadgePresentation({
+            tier: last && last.tier,
+            translate: req.t,
+            brandName: brandingService.getBranding().appName
+        });
+        attestationBadge = serverAttestation.buildPublicSummary(last, presentation);
     } catch (_) { /* optional */ }
 
     if (useDesktop) {
@@ -321,7 +345,10 @@ router.get('/api/auth/oidc/status', async (req, res) => {
         if (!result.success) {
             return res.json({ enabled: false });
         }
-        res.json(result.data);
+        res.json({
+            ...result.data,
+            local_bypass: isPrivateClientIp(req.ip || req.socket?.remoteAddress)
+        });
     } catch (err) {
         res.json({ enabled: false });
     }
@@ -458,10 +485,16 @@ router.get('/api/auth/oidc/session', async (req, res) => {
             req.session.authMethod = 'oidc';
             clearGuestCookie(res);
 
-            req.session.save((saveErr) => {
+            req.session.save(async (saveErr) => {
                 if (saveErr) {
                     console.error('OIDC session save error:', saveErr);
                     return res.redirect('/login?error=oidc_error');
+                }
+
+                try {
+                    await db.updateLastLogin(user.id);
+                } catch (bookkeepingErr) {
+                    console.error('OIDC post-auth bookkeeping error:', bookkeepingErr);
                 }
                 res.redirect(safeReturnUrl);
             });

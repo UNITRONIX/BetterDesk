@@ -446,10 +446,10 @@
     function normalizeMessage(msg) {
         return {
             id: msg.id || Date.now(),
-            from: msg.from || '',
-            from_name: msg.from_name || msg.operator || msg.from || '',
+            from: msg.from || msg.from_id || '',
+            from_name: msg.from_name || msg.operator || msg.from || msg.from_id || '',
             text: msg.text || '',
-            timestamp: msg.timestamp || Date.now(),
+            timestamp: msg.timestamp || msg.created_at || Date.now(),
             conversation_id: msg.conversation_id || '',
             system: !!msg.system,
             file: msg.file || null,

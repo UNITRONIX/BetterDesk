@@ -7,6 +7,7 @@
 const db = require('./database');
 const fontService = require('./fontService');
 const { stripUntilStable, stripTagName } = require('../lib/stripUntilStable');
+const THEME_PALETTES = require('../config/theme-palettes.json');
 
 // Dangerous SVG elements that can execute scripts or fetch external resources.
 // Includes <style> (CSS @import/expression XSS vectors) and <use> (xlink:href external SVG inclusion).
@@ -410,64 +411,23 @@ const DEFAULT_BRANDING = {
 };
 
 /** Built-in palettes for themeMode light/dark (custom uses branding.colors). */
-const BUILTIN_THEME_PALETTES = {
-    dark: {
-        bgPrimary: '#0d1117',
-        bgSecondary: '#161b22',
-        bgTertiary: '#21262d',
-        bgElevated: '#30363d',
-        textPrimary: '#e6edf3',
-        textSecondary: '#8b949e',
-        accentBlue: '#58a6ff',
-        accentBlueHover: '#79c0ff',
-        accentBlueMuted: '#58a6ff',
-        accentGreen: '#2ea44f',
-        accentGreenHover: '#3fb950',
-        accentGreenMuted: '#2ea44f',
-        accentRed: '#f85149',
-        accentRedHover: '#ff6b6b',
-        accentRedMuted: '#f85149',
-        accentYellow: '#d29922',
-        accentYellowHover: '#e3b341',
-        accentYellowMuted: '#d29922',
-        accentPurple: '#a371f7',
-        accentPurpleHover: '#bc8cff',
-        accentPurpleMuted: '#a371f7',
-        borderPrimary: '#30363d',
-        borderSecondary: '#21262d'
-    },
-    light: {
-        bgPrimary: '#f0f2f5',
-        bgSecondary: '#ffffff',
-        bgTertiary: '#eaeef2',
-        bgElevated: '#ffffff',
-        textPrimary: '#1f2328',
-        textSecondary: '#656d76',
-        accentBlue: '#0969da',
-        accentBlueHover: '#0550ae',
-        accentBlueMuted: '#0969da',
-        accentGreen: '#1a7f37',
-        accentGreenHover: '#116329',
-        accentGreenMuted: '#1a7f37',
-        accentRed: '#cf222e',
-        accentRedHover: '#a40e26',
-        accentRedMuted: '#cf222e',
-        accentYellow: '#9a6700',
-        accentYellowHover: '#7d4e00',
-        accentYellowMuted: '#9a6700',
-        accentPurple: '#8250df',
-        accentPurpleHover: '#6639ba',
-        accentPurpleMuted: '#8250df',
-        borderPrimary: '#d0d7de',
-        borderSecondary: '#eaeef2'
-    }
-};
+const BUILTIN_THEME_PALETTES = Object.freeze({
+    dark: Object.freeze({ ...THEME_PALETTES.dark }),
+    light: Object.freeze({ ...THEME_PALETTES.light })
+});
 
 function normalizeThemeMode(mode) {
     let m = String(mode || 'dark');
     if (m === 'auto') m = 'dark';
     if (!['dark', 'light', 'custom'].includes(m)) m = 'dark';
     return m;
+}
+
+function getThemePalettes() {
+    return {
+        dark: { ...BUILTIN_THEME_PALETTES.dark },
+        light: { ...BUILTIN_THEME_PALETTES.light }
+    };
 }
 
 /**
@@ -790,6 +750,7 @@ function generateSemanticAliasCss(branding) {
         '    --color-primary: var(--accent-blue);',
         '    --color-primary-hover: var(--accent-blue-hover);',
         '    --color-primary-muted: var(--accent-blue-muted);',
+        '    --accent-color: var(--accent-blue);',
         '    --color-success: var(--accent-green);',
         '    --color-success-hover: var(--accent-green-hover);',
         '    --color-success-muted: var(--accent-green-muted);',
@@ -821,21 +782,34 @@ function generateSemanticAliasCss(branding) {
         '    --ux35-muted: var(--text-secondary);',
         '    --ux35-hover: var(--bg-hover);',
         '    --ux35-primary: var(--accent-blue);',
+        '    --ux35-focus-ring: var(--accent-blue);',
         '    --ux35-active-bg: var(--accent-blue-muted);',
         '    --ux35-glass-blur: 0px;',
-        '    --ux35-glass-saturate: 1;'
+        '    --ux35-glass-saturate: 1;',
+        '    /* UX 3.5 topbar chrome — theme-invariant (always dark) */',
+        '    --ux35-topbar-bg: #161b22;',
+        '    --ux35-topbar-fg: #e6edf3;',
+        '    --ux35-topbar-fg-muted: #8b949e;',
+        '    --ux35-topbar-border: #30363d;'
     ];
-    const mode = normalizeThemeMode(branding.themeMode);
-    if (mode === 'light') {
-        lines.push('    --ux35-topbar-bg: var(--accent-blue);');
-        lines.push('    --ux35-topbar-fg: #ffffff;');
-        lines.push('    --ux35-topbar-fg-muted: rgba(255, 255, 255, 0.78);');
-    } else {
-        lines.push('    --ux35-topbar-bg: var(--bg-elevated, var(--bg-secondary));');
-        lines.push('    --ux35-topbar-fg: var(--text-primary);');
-        lines.push('    --ux35-topbar-fg-muted: var(--text-secondary);');
-    }
     return `:root {\n${lines.join('\n')}\n}\n`;
+}
+
+/**
+ * Convert a solid hex accent to a translucent muted rgba (matches branding.css + theme preview).
+ * @param {string} hex - #RRGGBB or RRGGBB
+ * @param {number} [alpha=0.15]
+ * @returns {string|null} rgba(...) or null if hex is invalid
+ */
+function hexToMutedRgba(hex, alpha = 0.15) {
+    if (hex == null) return null;
+    const raw = String(hex).trim().replace(/^#/, '');
+    if (!/^[0-9a-fA-F]{6}$/.test(raw)) return null;
+    const r = parseInt(raw.substring(0, 2), 16);
+    const g = parseInt(raw.substring(2, 4), 16);
+    const b = parseInt(raw.substring(4, 6), 16);
+    const a = Number.isFinite(alpha) ? alpha : 0.15;
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
 /**
@@ -853,11 +827,8 @@ function generateThemeCss() {
         if (value && String(value).trim()) {
             // For muted colors, auto-generate rgba if a hex color is provided
             if (key.endsWith('Muted') && String(value).startsWith('#')) {
-                const hex = String(value).replace('#', '');
-                const r = parseInt(hex.substring(0, 2), 16);
-                const g = parseInt(hex.substring(2, 4), 16);
-                const b = parseInt(hex.substring(4, 6), 16);
-                overrides.push(`    ${cssVar}: rgba(${r}, ${g}, ${b}, 0.15);`);
+                const muted = hexToMutedRgba(value, 0.15);
+                overrides.push(`    ${cssVar}: ${muted || value};`);
             } else {
                 overrides.push(`    ${cssVar}: ${value};`);
             }
@@ -1098,6 +1069,12 @@ function assessAppearanceReadability(brandingInput = null) {
                 severity: ratio < 3 ? 'error' : 'warning',
                 ratio: Number(ratio.toFixed(2)),
                 minimum,
+                messageKey: 'branding.readability_contrast',
+                messageParams: {
+                    item: id,
+                    ratio: ratio.toFixed(2),
+                    minimum
+                },
                 message: `${id} contrast ratio ${ratio.toFixed(2)} is below ${minimum}:1`
             });
         }
@@ -1117,6 +1094,11 @@ function assessAppearanceReadability(brandingInput = null) {
             issues.push({
                 id: item.id,
                 severity: 'warning',
+                messageKey: 'branding.readability_background',
+                messageParams: {
+                    item: item.id,
+                    type: item.type
+                },
                 message: `${item.id} uses ${item.type} with a low overlay; text may be hard to read.`
             });
         }
@@ -1194,7 +1176,22 @@ function getPublicAppearance() {
 }
 
 /**
+ * Sanitize a CSS hex/rgb color for safe SVG attribute injection.
+ * Falls back when the value is not a simple color token.
+ * @param {string} value
+ * @param {string} fallback
+ * @returns {string}
+ */
+function sanitizeSvgColor(value, fallback) {
+    const raw = String(value || '').trim();
+    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return raw;
+    if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(raw)) return raw;
+    return fallback;
+}
+
+/**
  * Generate favicon SVG from branding
+ * Default mark: large letter "B" on dark tile (readable at 16×16 tab size).
  * @returns {string} SVG markup for favicon
  */
 function generateFavicon() {
@@ -1205,15 +1202,23 @@ function generateFavicon() {
         return branding.faviconSvg;
     }
     
-    // Generate from branding colors (use accent color or default blue)
-    const bgColor = branding.colors.bgPrimary || '#0d1117';
-    const accentColor = branding.colors.accentBlue || '#58a6ff';
-    const greenColor = branding.colors.accentGreen || '#2ea44f';
+    // Large "B" mark — same idea as Flutter contactRow fontSize bump: fill the
+    // small viewport so the glyph stays legible in browser tabs / PWA icons.
+    const bgColor = sanitizeSvgColor(branding.colors?.bgPrimary, '#0d1117');
+    const accentColor = sanitizeSvgColor(branding.colors?.accentBlue, '#58a6ff');
+    const greenColor = sanitizeSvgColor(branding.colors?.accentGreen, '#a3e635');
     
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="${bgColor}"/>
-  <path d="M8 10h16M8 16h16M8 22h12" stroke="${accentColor}" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="24" cy="22" r="3" fill="${greenColor}"/>
+  <defs>
+    <linearGradient id="bdMark" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="${accentColor}"/>
+      <stop offset="1" stop-color="${greenColor}"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="${bgColor}"/>
+  <text x="16" y="16" text-anchor="middle" dominant-baseline="central"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="23" font-weight="800" fill="url(#bdMark)">B</text>
 </svg>`;
 }
 
@@ -1288,8 +1293,10 @@ module.exports = {
     DEFAULT_BRANDING,
     COLOR_TO_CSS_VAR,
     BUILTIN_THEME_PALETTES,
+    getThemePalettes,
     normalizeThemeMode,
     resolveThemeColors,
+    hexToMutedRgba,
     loadBranding,
     getBranding,
     saveBranding,

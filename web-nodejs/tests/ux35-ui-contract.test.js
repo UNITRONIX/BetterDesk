@@ -1,0 +1,149 @@
+'use strict';
+
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+
+const root = path.join(__dirname, '..');
+const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
+
+describe('UX 3.5 mobile and accessibility contracts', () => {
+    const mobileCss = read('public', 'css', 'mobile-shell.css');
+    const pagesCss = read('public', 'css', 'pages.css');
+    const ux35Css = read('public', 'css', 'ux35.css');
+    const shellJs = read('public', 'js', 'ux35-shell.js');
+    const settingsJs = read('public', 'js', 'settings.js');
+    const mobileJs = read('public', 'js', 'mobile-nav.js');
+    const topbar = read('views', 'partials', 'ux35-topbar.ejs');
+    const bottomNav = read('views', 'partials', 'mobile-bottom-nav.ejs');
+    const sidebar = read('views', 'partials', 'ux35-sidebar.ejs');
+    const layout = read('views', 'layouts', 'main.ejs');
+    const automation = read('public', 'js', 'automation.js');
+    const appJs = read('public', 'js', 'app.js');
+    const devicesJs = read('public', 'js', 'devices.js');
+    const registrationRoutes = read('routes', 'registration.routes.js');
+    const notifCenter = read('public', 'js', 'notif-center.js');
+    const uiShell = read('public', 'js', 'ui-shell.js');
+    const classicNavbar = read('views', 'partials', 'navbar.ejs');
+    const settingsView = read('views', 'settings.ejs');
+    const loginJs = read('public', 'js', 'login.js');
+
+    it('keeps classic mobile height rules out of the UX 3.5 scroll region', () => {
+        assert.match(mobileCss, /\.app-layout \.main-content/);
+        assert.match(mobileCss, /\.ux35-content\.main-content/);
+        assert.match(mobileCss, /--ux35-topbar-height/);
+    });
+
+    it('uses a single UX 3.5 drawer from the mobile More control', () => {
+        assert.match(mobileJs, /function isUx35Drawer/);
+        assert.match(mobileJs, /setAttribute\('aria-controls', 'ux35-sidebar'\)/);
+        assert.doesNotMatch(mobileJs, /\/\* UX 3\.5: full-list sidebar sections \*\//);
+    });
+
+    it('provides responsive action overflow and visible keyboard focus', () => {
+        assert.match(topbar, /ux35-actions-menu-btn/);
+        assert.match(topbar, /aria-controls="ux35-topbar-action-list"/);
+        assert.match(ux35Css, /\.ux35-topbar-btn:focus-visible/);
+        assert.match(ux35Css, /\.ux35-topbar-action-list\.is-open/);
+    });
+
+    it('makes drawer and sidebar resize interactions keyboard accessible', () => {
+        assert.match(sidebar, /role="separator"/);
+        assert.match(sidebar, /aria-valuemin="200"/);
+        assert.match(shellJs, /focusableIn/);
+        assert.match(shellJs, /e\.key === 'ArrowLeft'/);
+        assert.match(shellJs, /sidebar\.inert/);
+    });
+
+    it('only renders aria-current for the active bottom navigation item', () => {
+        assert.doesNotMatch(bottomNav, /aria-current="<%= .*: 'false' %>"/);
+        assert.match(bottomNav, /aria-current="page"/);
+    });
+
+    it('escapes dynamic automation values before inserting rule rows', () => {
+        assert.match(automation, /<td>\$\{escapeHtml\(r\.condition_value\)\}<\/td>/);
+        assert.match(automation, /function safeSeverity/);
+        assert.match(automation, /function safeStatus/);
+    });
+
+    it('defers console scripts without changing their document order', () => {
+        assert.match(layout, /<script defer src="\/js\/utils\.js/);
+        assert.match(layout, /<script defer src="\/js\/ux35-shell\.js/);
+        assert.match(layout, /<script defer src="\/js\/<%= script %>\.js/);
+    });
+
+    it('keeps registration notifications visible without opening the registrations page', () => {
+        assert.match(appJs, /\/ws\/panel-events/);
+        assert.match(appJs, /registrations:pending-changed/);
+        assert.match(appJs, /setInterval\(updateBadge, 15000\)/);
+        assert.match(notifCenter, /data\.unread_count/);
+        assert.match(notifCenter, /registration_pending/);
+        assert.match(topbar, /id="notif-badge"/);
+        assert.match(topbar, /href="\/registrations"/);
+        assert.match(sidebar, /id="reg-sidebar-badge"/);
+    });
+
+    it('keeps the notification badge hidden when unread count is zero', () => {
+        assert.match(notifCenter, /if \(count > 0\)/);
+        assert.match(notifCenter, /dom\.badge\.hidden = true/);
+        assert.match(notifCenter, /dom\.badge\.setAttribute\('aria-hidden', 'true'\)/);
+        assert.match(topbar, /id="notif-badge" hidden aria-hidden="true"/);
+    });
+
+    it('refreshes the Devices list after managed or LAN approval', () => {
+        assert.match(appJs, /data\.type === 'registration_changed'/);
+        assert.match(appJs, /new CustomEvent\('app:refresh'/);
+        assert.match(devicesJs, /window\.addEventListener\('app:refresh'/);
+        assert.match(registrationRoutes, /publishPanelEvent\(\{/);
+        assert.match(registrationRoutes, /type: 'registration_changed'/);
+    });
+
+    it('uses UX 3.5 as the only shell without beta or classic switch controls', () => {
+        assert.match(layout, /const shell = 'ux35'/);
+        assert.match(uiShell, /return 'ux35'/);
+        assert.doesNotMatch(topbar, /ux35-beta-chip|data-ui-shell-switch/);
+        assert.doesNotMatch(topbar, /beta_tooltip|beta_badge/);
+        assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
+    });
+
+    it('keeps Settings navigation sticky, horizontally scrollable, and compact on mobile shell widths', () => {
+        assert.match(settingsView, /<nav class="settings-shell-nav" role="tablist"/);
+        assert.match(settingsView, /class="settings-shell-nav-track mobile-tabs-scroll"/);
+        assert.match(pagesCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*sticky/);
+        assert.match(pagesCss, /\.settings-shell-nav-track\.mobile-tabs-scroll\s*\{[\s\S]*?padding-bottom:\s*0/);
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*0px[\s\S]*?top:\s*0[\s\S]*?margin-top:\s*0/
+        );
+        assert.match(ux35Css, /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?align-items:\s*center/);
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?justify-content:\s*center[\s\S]*?line-height:\s*1\.2/
+        );
+        assert.match(ux35Css, /@media \(min-width: 768px\) and \(max-width: 1024px\)/);
+        assert.match(
+            ux35Css,
+            /@media \(min-width: 768px\) and \(max-width: 1024px\)[\s\S]*?\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?min-height:\s*36px/
+        );
+        assert.match(
+            ux35Css,
+            /@media \(min-width: 1025px\)[\s\S]*?\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding-lg\)[\s\S]*?top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)[\s\S]*?margin-top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)/
+        );
+        assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
+        assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);
+    });
+
+    it('keeps OIDC password recovery explicit on the login page', () => {
+        assert.match(loginJs, /params\.get\('autoLaunch'\) === '0'/);
+        assert.match(loginJs, /data\.prefer_sso && !passwordBypass && !data\.local_bypass && !hasOidcError/);
+        assert.match(loginJs, /window\.location\.replace\('\/api\/auth\/oidc\/authorize'\)/);
+    });
+
+    it('keeps personal TOTP in Authentication while gating admin panels', () => {
+        assert.match(settingsView, /id="settings-tab-auth"[^>]*data-tab="auth"/);
+        assert.match(settingsView, /data-auth-panel="totp"/);
+        assert.match(settingsView, /id="auth-panel-totp"/);
+        assert.match(settingsView, /canServerConfig \? `/);
+        assert.match(settingsJs, /initTotpSection\(\)/);
+    });
+});

@@ -1,28 +1,48 @@
 /**
- * BetterDesk Console — Agent Generator routes
+ * BetterDesk Console — Support Generator routes
  *
  * Provides:
- *   - "Generator Agenta" admin panel (/generator) — branding editor + bundle list
+ *   - Generator admin panel (/generator) — module install + bundle editor
+ *   - Module install API (/api/generator/module/*)
  *   - Bundle management REST API (/api/generator/bundles/*)
- *   - Public download portal per bundle (/d/:slug) with platform cards
- *   - Legacy RustDesk TOML config generator (kept for backward compat,
- *     marked deprecated in code only — UI no longer exposes it)
+ *   - Public download portal per bundle (/d/:slug)
  */
 
 'use strict';
 
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const keyService = require('../services/keyService');
 const bundleService = require('../services/agentBundleService');
-const buildWorker = require('../services/agentBuildWorker');
-const agentClientBuildWorker = require('../services/agentClientBuildWorker');
-const rdclientBuildWorker = require('../services/rdclientBuildWorker');
+const clientTemplateWorker = require('../services/clientTemplateWorker');
+const supportModule = require('../services/supportGeneratorModule');
+const clientBuilder = require('../services/clientBuilderService');
 const db = require('../services/database');
 const config = require('../config/config');
 const brandingService = require('../services/brandingService');
 const conn = require('../services/agentBundleConnection');
+const clientConfigHost = require('../services/clientConfigHost');
+const { PRODUCT_TYPES, normalizeProductType, isBetterDeskSupportBundle } = require('../lib/generatorBuildTypes');
+const { resolveConfinedMulterPath } = require('../lib/multerCleanup');
+const EMBEDDED_MODE = String(
+    process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+).trim().toLowerCase() === 'embedded';
+const moduleUpload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => {
+            const dir = path.join(config.dataDir, '.generator-uploads');
+            fs.mkdir(dir, { recursive: true }, (err) => cb(err, dir));
+        },
+        filename: (_req, file, cb) => {
+            cb(null, `${Date.now()}-${String(file.originalname || 'generator.tar.gz').replace(/[^a-zA-Z0-9._-]/g, '_')}`);
+        },
+    }),
+    limits: { fileSize: 2 * 1024 * 1024 * 1024 },
+});
 
 // Branding payloads may carry a base64-encoded logo up to 10 MB; expand the
 // default 2 MB JSON body limit on the bundle CRUD + preview endpoints only.
@@ -50,12 +70,89 @@ function serializeBundle(row) {
         branding:        publicBrandingView(parseBranding(row.branding)),
         branding_hash:   row.branding_hash,
         revoked:         !!row.revoked,
+        legacy:          !isBetterDeskSupportBundle(row),
         download_count:  Number(row.download_count || 0),
         created_at:      row.created_at,
         updated_at:      row.updated_at,
         download_url:    `/d/${publicId}`,
-        product_type:    row.product_type || 'agent',
+        product_type:    normalizeProductType(row.product_type),
+        client_commit:   row.client_commit || null,
+        active_generation_hash: row.active_generation_hash || row.branding_hash || null,
     };
+}
+
+function activeBuildHash(row) {
+    return row?.active_generation_hash || row?.branding_hash || '';
+}
+
+function generatorReady() {
+    return EMBEDDED_MODE ? clientBuilder.isReady() : supportModule.isReady();
+}
+
+function generatorNotReadyError() {
+    return EMBEDDED_MODE
+        ? 'betterdesk_client_builder_not_ready'
+        : 'module_not_ready';
+}
+
+function generatorBuildErrorKey(code) {
+    const keys = {
+        platforms_required: 'platforms_required',
+        unsupported_platform: 'unsupported_platform',
+        local_builder_no_supported_targets: 'no_supported_targets',
+        local_builder_toolchain_missing: 'toolchain_missing',
+        betterdesk_client_builder_not_ready: 'validation_failed',
+        support_generator_module_not_ready: 'validation_failed',
+    };
+    return keys[code] ? `generator.errors.${keys[code]}` : 'errors.bad_request';
+}
+
+function sendGeneratorBuildError(req, res, error, status = 400) {
+    const code = String(error?.code || error?.message || 'build_request_invalid').split(':', 1)[0];
+    const details = ['platforms_required', 'unsupported_platform'].includes(code)
+        && Array.isArray(error?.details) && error.details.length
+        ? error.details
+        : [];
+    return res.status(status).json({
+        success: false,
+        error: req.t(generatorBuildErrorKey(code)),
+        code,
+        details,
+    });
+}
+
+function sendGeneratorNotReady(req, res) {
+    const code = generatorNotReadyError();
+    return res.status(400).json({
+        success: false,
+        error: req.t(generatorBuildErrorKey(code)),
+        code,
+        details: [],
+    });
+}
+
+function validateGeneratorPlatforms(req, res) {
+    const requested = Array.isArray(req.body?.platforms) ? req.body.platforms : null;
+    const result = clientTemplateWorker.validatePlatformSelection(requested);
+    if (!result.valid) {
+        const error = new Error(result.error);
+        error.code = result.error;
+        error.details = result.details;
+        sendGeneratorBuildError(req, res, error);
+        return null;
+    }
+    return result;
+}
+
+function currentClientRevision() {
+    if (!EMBEDDED_MODE) return null;
+    const commit = String(clientBuilder.readState().installedCommit || '').trim();
+    return /^[a-f0-9]{40}$/i.test(commit) ? commit : null;
+}
+
+function generationForConfig(configFingerprint, clientCommit = currentClientRevision()) {
+    if (!EMBEDDED_MODE || !clientCommit) return configFingerprint;
+    return clientBuilder.generationKey(configFingerprint, clientCommit);
 }
 
 async function resolvePublicBundle(publicId) {
@@ -83,48 +180,49 @@ async function resolveBundleSlug({ preferred, name, fallbackId, excludeBundleId 
     return { ok: true, slug };
 }
 
-function injectServerBranding(input) {
-    // Legacy alias — use finalizeBundleBranding for new bundles.
-    return finalizeBundleBrandingSync(input);
-}
-
-function finalizeBundleBrandingSync(input) {
-    const branding = { ...(input || {}) };
-    const host = branding.server_host || conn.defaultServerHost();
-    const useHttps = branding.use_https ?? conn.defaultUseHttps();
-    const urls = conn.buildServerUrls(host, useHttps);
-    branding.server = {
-        address: urls.address,
-        api_url: urls.api_url,
-        public_key: keyService.getPublicKey() || '',
-        cdap_port: urls.cdap_port,
-        cdap_url: urls.cdap_url,
-    };
-    branding.server_address = branding.server.address;
-    branding.server_key = branding.server.public_key;
-    branding.use_https = !!useHttps;
-    return branding;
-}
-
 /**
- * Merge operator connection settings and inject server key.
- * Support-agent bundles do NOT embed a shared enrollment token — each
- * installation registers on its own and receives a unique device_token
- * after operator approval (managed enrollment).
+ * Prepare the signed server profile for BetterDesk Support embedded builds.
+ * Branding colors/logos are not embedded in the binary — Client Branding API
+ * supplies runtime appearance.
  */
-async function finalizeBundleBranding(input) {
-    const branding = finalizeBundleBrandingSync(input);
-    const pubKey = (await keyService.resolvePublicKey()) || '';
-    if (branding.server) {
-        branding.server.public_key = pubKey;
-    }
+async function finalizeSupportBranding(input) {
+    const src = input || {};
+    const branding = { ...src };
+    const hostNorm = conn.normalizeServerHost(
+        branding.server_host || clientConfigHost.resolveClientFacingHost?.() || conn.defaultServerHost()
+    );
+    const host = hostNorm.valid ? hostNorm.host : String(branding.server_host || '').trim();
+    const useHttps = !!(branding.use_https ?? true);
+    const apiPort = String(branding.api_port || conn.defaultApiPort());
+    const scheme = useHttps ? 'https' : 'http';
+    const omitPort = (scheme === 'https' && apiPort === '443') || (scheme === 'http' && apiPort === '80');
+    const apiServer = branding.api_server
+        || (omitPort ? `${scheme}://${host}` : `${scheme}://${host}:${apiPort}`);
+    const pubKey = (await keyService.resolvePublicKey()) || branding.public_key || '';
+
+    branding.server_host = host;
+    branding.relay_host = String(branding.relay_host || host).trim();
+    branding.api_server = apiServer;
+    branding.api_port = apiPort;
+    branding.use_https = useHttps;
+    branding.public_key = pubKey;
     branding.server_key = pubKey;
-    // Strip legacy shared tokens from older bundles on save/rebuild.
+    branding.app_name = String(branding.app_name || branding.company_name || 'BetterDesk Support Agent').trim()
+        || 'BetterDesk Support Agent';
+    branding.company_name = String(branding.company_name || branding.app_name).trim();
+    branding.product_name = branding.app_name;
+    branding.disable_settings = branding.disable_settings !== false;
+    branding.sku = 'betterdesk-support';
+    branding.generator_kind = 'betterdesk-support';
+    branding.generator_version = 2;
+    branding.server = {
+        address: omitPort ? `${scheme}://${host}` : `${scheme}://${host}:${apiPort}`,
+        api_url: apiServer,
+        public_key: pubKey,
+    };
     delete branding.enrollment_token;
     delete branding.has_enrollment_token;
     delete branding.enrollment_token_masked;
-    branding.server_host = input.server_host || conn.defaultServerHost();
-    branding.use_https = !!(input.use_https ?? conn.defaultUseHttps());
     return branding;
 }
 
@@ -137,19 +235,21 @@ function publicBrandingView(branding) {
     return out;
 }
 
-function normalizeProductType(raw) {
-    const v = String(raw || 'agent-client').toLowerCase();
-    if (v === 'rdclient') return 'rdclient';
-    if (v === 'agent-client' || v === 'agent_client') return 'agent-client';
-    if (v === 'support-agent' || v === 'support_agent' || v === 'agent') return 'support-agent';
-    return 'agent-client';
+function resolveBuildWorker() {
+    return clientTemplateWorker;
 }
 
-function resolveBuildWorker(productType) {
-    const pt = normalizeProductType(productType);
-    if (pt === 'rdclient') return rdclientBuildWorker;
-    if (pt === 'agent-client') return agentClientBuildWorker;
-    return buildWorker;
+function availablePlatformKeys() {
+    return new Set(clientTemplateWorker.getAvailablePlatforms().map((p) => (
+        `${p.platform}/${p.arch}/${p.format}`
+    )));
+}
+
+function filterAvailableBuilds(builds) {
+    const keys = availablePlatformKeys();
+    return (builds || []).filter((build) => (
+        keys.has(`${build.platform}/${build.arch}/${build.format}`)
+    ));
 }
 
 // =========================================================================
@@ -166,14 +266,124 @@ router.get('/generator', requireAuth, requireAdmin, (req, res) => {
 });
 
 // =========================================================================
+//  Module install gate
+// =========================================================================
+
+router.get('/api/generator/module/status', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const status = EMBEDDED_MODE
+            ? await clientBuilder.getStatus()
+            : await supportModule.getStatus();
+        res.json({ success: true, data: status });
+    } catch (err) {
+        console.error('[generator] module status error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/generator/module/accept-terms', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const state = EMBEDDED_MODE
+            ? await clientBuilder.acceptTerms()
+            : await supportModule.acceptTerms();
+        res.json({ success: true, data: state });
+    } catch (err) {
+        console.error('[generator] accept-terms error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post('/api/generator/module/install', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        if (EMBEDDED_MODE) {
+            clientBuilder.ensureSigningKeySync();
+            if (!require('../services/supportGeneratorModule').isSigningSeedValid()) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'custom_client_signing_seed_required',
+                });
+            }
+            const state = await clientBuilder.syncSource({
+                repo: req.body?.repo,
+                ref: req.body?.ref || req.body?.tag,
+                force: true,
+            });
+            return res.json({ success: true, data: state });
+        }
+        const repo = req.body?.repo ? String(req.body.repo).trim() : undefined;
+        const tag = req.body?.tag ? String(req.body.tag).trim() : undefined;
+        const state = await supportModule.installFromGitHub({ repo, tag });
+        res.json({ success: true, data: state });
+    } catch (err) {
+        const code = err.code || '';
+        if (code === 'terms_not_accepted') {
+            return res.status(400).json({
+                success: false,
+                error: req.t('generator.module_terms_required'),
+                code,
+            });
+        }
+        if (code === 'no_release' || code === 'no_template_asset') {
+            return res.status(404).json({
+                success: false,
+                error: err.message || req.t('generator.module_no_release'),
+                code,
+            });
+        }
+        console.error('[generator] module install error:', err);
+        const status = err.statusCode === 403 ? 502 : 500;
+        res.status(status).json({
+            success: false,
+            error: err.message || req.t('errors.server_error'),
+            code: code || 'install_failed',
+        });
+    }
+});
+
+router.post(
+    '/api/generator/module/install-local',
+    requireAuth,
+    requireAdmin,
+    moduleUpload.single('archive'),
+    async (req, res) => {
+        const uploaded = req.file?.path;
+        try {
+            if (EMBEDDED_MODE) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'embedded_builder_requires_client_source_sync',
+                });
+            }
+            if (!uploaded) {
+                return res.status(400).json({ success: false, error: 'generator_archive_required' });
+            }
+            const version = String(req.body?.version || 'local').trim().slice(0, 100);
+            const state = await supportModule.installFromLocalArchive(uploaded, version);
+            return res.json({ success: true, data: state });
+        } catch (err) {
+            console.error('[generator] local module install error:', err);
+            const code = err.code || err.message || 'install_failed';
+            return res.status(400).json({ success: false, error: code, code });
+        } finally {
+            const confined = uploaded ? resolveConfinedMulterPath(uploaded) : null;
+            if (confined) fs.rm(confined, { force: true }, () => {});
+        }
+    },
+);
+
+// =========================================================================
 //  Bundle management API (admin only)
 // =========================================================================
 
 router.get('/api/generator/bundles', requireAuth, requireAdmin, async (req, res) => {
     try {
         const includeRevoked = req.query.includeRevoked === '1';
+        const includeLegacy = req.query.includeLegacy === '1';
         const rows = await db.listAgentBundles({ includeRevoked });
-        res.json({ success: true, data: { bundles: rows.map(serializeBundle) } });
+        const filtered = includeLegacy
+            ? rows
+            : (rows || []).filter(isBetterDeskSupportBundle);
+        res.json({ success: true, data: { bundles: filtered.map(serializeBundle) } });
     } catch (err) {
         console.error('[generator] list bundles error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
@@ -185,8 +395,8 @@ router.get('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
         const row = await db.getAgentBundle(req.params.bundleId);
         if (!row) return res.status(404).json({ success: false, error: req.t('errors.not_found') });
         const bundle = serializeBundle(row);
-        const builds = await db.listAgentBundleBuildsForHash(row.branding_hash);
-        bundle.builds = builds || [];
+        const builds = await db.listAgentBundleBuildsForHash(activeBuildHash(row));
+        bundle.builds = filterAvailableBuilds(builds);
         res.json({ success: true, data: { bundle } });
     } catch (err) {
         console.error('[generator] get bundle error:', err);
@@ -195,28 +405,33 @@ router.get('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
 });
 
 router.get('/api/generator/defaults', requireAuth, requireAdmin, async (req, res) => {
+    const host = clientConfigHost.resolveClientFacingHost(req) || conn.defaultServerHost();
     res.json({
         success: true,
         data: {
-            server_host: conn.defaultServerHost(),
+            server_host: host,
+            relay_host: host,
             use_https: conn.defaultUseHttps(),
             api_port: conn.defaultApiPort(),
             public_key: (await keyService.resolvePublicKey()) || '',
+            app_name: 'BetterDesk Support Agent',
         },
     });
 });
 
 router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res) => {
     try {
+        if (!generatorReady()) {
+            return sendGeneratorNotReady(req, res);
+        }
+        const platformSelection = validateGeneratorPlatforms(req, res);
+        if (!platformSelection) return;
         const name = String(req.body.name || '').trim().slice(0, 100);
         if (!name) {
             return res.status(400).json({ success: false, error: req.t('generator.errors.name_required') });
         }
-        const productType = normalizeProductType(req.body.product_type);
-        const validateFn = productType === 'rdclient'
-            ? bundleService.validateRdclientBranding
-            : bundleService.validateBranding;
-        const { valid, errors, normalized: base } = validateFn(req.body.branding || {});
+        const productType = PRODUCT_TYPES.BETTERDESK_SUPPORT;
+        const { valid, errors, normalized: base } = bundleService.validateBranding(req.body.branding || {});
         if (!valid) {
             return res.status(400).json({ success: false, error: req.t('generator.errors.validation_failed'), errors, details: errors });
         }
@@ -234,28 +449,31 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
                 details: [slugResult.error],
             });
         }
-        const normalized = productType === 'rdclient'
-            ? { ...base, bundle_id: bundleId, server_url: base.panel_url }
-            : await finalizeBundleBranding(base);
-        if (productType !== 'rdclient') {
-            normalized.bundle_id = bundleId;
-            normalized.product_name = productType === 'agent-client'
-                ? (normalized.company_name ? `${normalized.company_name} Agent` : 'BetterDesk Agent')
-                : (normalized.company_name || 'BetterDesk Support');
-        }
-        const brandingHash = bundleService.hashBranding(normalized);
+        const normalized = await finalizeSupportBranding(base);
+        normalized.bundle_id = bundleId;
+        const configFingerprint = bundleService.hashBranding(normalized);
+        const clientCommit = currentClientRevision();
+        const brandingHash = generationForConfig(configFingerprint, clientCommit);
         const created = await db.createAgentBundle({
             bundleId,
             slug: slugResult.slug,
             name,
             branding: JSON.stringify(normalized),
             brandingHash,
+            configFingerprint,
+            clientCommit,
             createdBy: req.session?.userId || null,
             productType,
         });
-        resolveBuildWorker(productType).enqueueBuildsForHash(brandingHash).catch((e) => {
+        const platformsFilter = Array.isArray(req.body.platforms) ? req.body.platforms : null;
+        try {
+            await resolveBuildWorker().enqueueBuildsForHash(brandingHash, {
+                platforms: platformsFilter || platformSelection.selected,
+            });
+        } catch (e) {
             console.error('[generator] enqueue builds failed:', e.message);
-        });
+            return sendGeneratorBuildError(req, res, e, 503);
+        }
         res.json({ success: true, data: { bundle: serializeBundle(created) } });
     } catch (err) {
         console.error('[generator] create bundle error:', err);
@@ -265,6 +483,11 @@ router.post('/api/generator/bundles', requireAuth, requireAdmin, async (req, res
 
 router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async (req, res) => {
     try {
+        if (!generatorReady()) {
+            return sendGeneratorNotReady(req, res);
+        }
+        const platformSelection = validateGeneratorPlatforms(req, res);
+        if (!platformSelection) return;
         const existing = await db.getAgentBundle(req.params.bundleId);
         if (!existing) return res.status(404).json({ success: false, error: req.t('errors.not_found') });
         const name = String(req.body.name || existing.name).trim().slice(0, 100);
@@ -276,12 +499,15 @@ router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
         if (!valid) {
             return res.status(400).json({ success: false, error: req.t('generator.errors.validation_failed'), errors, details: errors });
         }
-        const normalized = await finalizeBundleBranding(base);
+        const normalized = await finalizeSupportBranding(base);
         normalized.bundle_id = req.params.bundleId;
-        normalized.product_name = normalizeProductType(existing.product_type) === 'agent-client'
-            ? (normalized.company_name ? `${normalized.company_name} Agent` : 'BetterDesk Agent')
-            : (normalized.company_name || 'BetterDesk Support');
-        const brandingHash = bundleService.hashBranding(normalized);
+        const configFingerprint = bundleService.hashBranding(normalized);
+        const clientCommit = currentClientRevision();
+        const existingFingerprint = existing.config_fingerprint || existing.branding_hash;
+        const configChanged = existingFingerprint !== configFingerprint;
+        const brandingHash = configChanged
+            ? generationForConfig(configFingerprint, clientCommit)
+            : existing.branding_hash;
         let slug = existing.slug || '';
         if (req.body.slug !== undefined) {
             const slugResult = await resolveBundleSlug({
@@ -313,11 +539,16 @@ router.put('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, async 
             slug,
             branding: JSON.stringify(normalized),
             brandingHash,
+            configFingerprint,
+            clientCommit: clientCommit || existing.client_commit || null,
         });
-        // Phase 2: if branding hash changed, queue new builds; cached artifacts
-        // for the previous hash remain reusable for prior portal links.
-        if (existing.branding_hash !== brandingHash) {
-            resolveBuildWorker(existing.product_type).enqueueBuildsForHash(brandingHash).catch((e) => {
+        if (existing.branding_hash !== brandingHash || configChanged) {
+            const platformsFilter = Array.isArray(req.body.platforms)
+                ? req.body.platforms
+                : platformSelection.selected;
+            resolveBuildWorker().enqueueBuildsForHash(brandingHash, {
+                platforms: platformsFilter,
+            }).catch((e) => {
                 console.error('[generator] enqueue builds failed:', e.message);
             });
         }
@@ -335,20 +566,80 @@ router.post('/api/generator/bundles/:bundleId/rebuild', requireAuth, requireAdmi
         if (row.revoked) {
             return res.status(400).json({ success: false, error: req.t('generator.errors.rebuild_revoked') });
         }
-        const result = await resolveBuildWorker(row.product_type).rebuildBundleById(req.params.bundleId);
+        if (!generatorReady()) {
+            return sendGeneratorNotReady(req, res);
+        }
+        const platformsFilter = Array.isArray(req.body?.platforms) ? req.body.platforms : null;
+        const platformSelection = validateGeneratorPlatforms(req, res);
+        if (!platformSelection) return;
+        const result = await resolveBuildWorker().rebuildBundleById(
+            req.params.bundleId,
+            platformsFilter ? { platforms: platformsFilter } : undefined
+        );
         if (!result.success) {
             return res.status(404).json({ success: false, error: req.t('errors.not_found') });
         }
-        const builds = await db.listAgentBundleBuildsForHash(row.branding_hash);
+        const listHash = result.brandingHash || row.branding_hash;
+        const builds = await db.listAgentBundleBuildsForHash(listHash);
         res.json({
             success: true,
             data: {
                 queued: result.platforms,
-                builds: builds || [],
+                builds: filterAvailableBuilds(builds),
             },
         });
     } catch (err) {
         console.error('[generator] rebuild bundle error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+router.post(
+    '/api/generator/bundles/:bundleId/rebuild/:platform/:arch/:format',
+    requireAuth,
+    requireAdmin,
+    async (req, res) => {
+        try {
+            const row = await db.getAgentBundle(req.params.bundleId);
+            if (!row) return res.status(404).json({ success: false, error: req.t('errors.not_found') });
+            if (row.revoked) {
+                return res.status(400).json({ success: false, error: req.t('generator.errors.rebuild_revoked') });
+            }
+            if (!row.branding_hash) {
+                return res.status(400).json({ success: false, error: req.t('generator.errors.missing_hash') });
+            }
+            if (!generatorReady()) {
+                return res.status(400).json({ success: false, error: generatorNotReadyError() });
+            }
+            const worker = resolveBuildWorker();
+            const result = await worker.requeuePlatformBuild(
+                activeBuildHash(row),
+                req.params.platform,
+                req.params.arch,
+                req.params.format
+            );
+            if (!result.success) {
+                const errKey = result.error === 'unsupported_platform'
+                    ? 'generator.errors.unsupported_platform'
+                    : 'errors.bad_request';
+                return res.status(400).json({ success: false, error: req.t(errKey) });
+            }
+            const listHash = result.brandingHash || activeBuildHash(row);
+            const builds = await db.listAgentBundleBuildsForHash(listHash);
+            res.json({ success: true, data: { builds: builds || [] } });
+        } catch (err) {
+            console.error('[generator] rebuild platform error:', err);
+            res.status(500).json({ success: false, error: req.t('errors.server_error') });
+        }
+    }
+);
+
+router.get('/api/generator/build-status', requireAuth, requireAdmin, (req, res) => {
+    try {
+        const status = clientTemplateWorker.getBuildWorkerStatus();
+        res.json({ success: true, data: status });
+    } catch (err) {
+        console.error('[generator] build-status error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });
@@ -376,14 +667,9 @@ router.delete('/api/generator/bundles/:bundleId', requireAuth, requireAdmin, asy
     }
 });
 
-/**
- * Live preview helper — validate + normalize a branding payload without
- * persisting it. Used by the editor to render the preview without writing
- * to the DB on every keystroke.
- */
-router.post('/api/generator/preview', requireAuth, requireAdmin, (req, res) => {
+router.post('/api/generator/preview', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const rawBranding = finalizeBundleBrandingSync(req.body.branding || {});
+        const rawBranding = await finalizeSupportBranding(req.body.branding || {});
         const { valid, errors, normalized } = bundleService.validateBranding(rawBranding);
         res.json({ success: true, data: { valid, errors, branding: publicBrandingView(normalized) }, errors });
     } catch (err) {
@@ -393,17 +679,21 @@ router.post('/api/generator/preview', requireAuth, requireAdmin, (req, res) => {
 });
 
 router.get('/api/generator/platforms', requireAuth, requireAdmin, (req, res) => {
-    res.json({ success: true, data: { platforms: bundleService.PLATFORMS } });
+    const capabilities = EMBEDDED_MODE ? clientBuilder.getBuildCapabilities() : null;
+    res.json({
+        success: true,
+        data: {
+            platforms: clientTemplateWorker.getPlatformStatus(),
+            availablePlatforms: clientTemplateWorker.getAvailablePlatforms(),
+            capabilities,
+        },
+    });
 });
 
 // =========================================================================
 //  Public download portal
 // =========================================================================
 
-/**
- * Public landing page for an issued bundle. No auth — the slug (or legacy
- * bundle ID) is the access token. Revoked or unknown bundles return 404.
- */
 router.get('/d/:publicId', async (req, res) => {
     try {
         const row = await resolvePublicBundle(req.params.publicId);
@@ -414,17 +704,17 @@ router.get('/d/:publicId', async (req, res) => {
             });
         }
         const bundle = serializeBundle(row);
-        const builds = await db.listAgentBundleBuildsForHash(row.branding_hash);
+        const builds = filterAvailableBuilds(
+            await db.listAgentBundleBuildsForHash(activeBuildHash(row))
+        );
         const buildMap = {};
         for (const b of (builds || [])) {
             buildMap[`${b.platform}/${b.arch}/${b.format}`] = b.status;
         }
-        const platforms = bundleService.PLATFORMS.map(p => ({
+        const platforms = clientTemplateWorker.getAvailablePlatforms().map(p => ({
             ...p,
             status: buildMap[`${p.platform}/${p.arch}/${p.format}`] || 'pending',
         }));
-        // Global console branding provides portal-wide defaults (wallpaper,
-        // attribution) shared by every bundle that does not override them.
         const gb = brandingService.getBranding();
         const globalBranding = {
             background: brandingService.buildBackgroundValue(gb.agentBgType, gb.agentBgColor, gb.agentBgGradient, gb.agentBgImageUrl),
@@ -445,15 +735,13 @@ router.get('/d/:publicId', async (req, res) => {
     }
 });
 
-/**
- * Public manifest endpoint — JSON shape the portal page polls to refresh
- * platform build status without a full reload.
- */
 router.get('/api/d/:publicId/manifest', async (req, res) => {
     try {
         const row = await resolvePublicBundle(req.params.publicId);
         if (!row || row.revoked) return res.status(404).json({ success: false });
-        const builds = await db.listAgentBundleBuildsForHash(row.branding_hash);
+        const builds = filterAvailableBuilds(
+            await db.listAgentBundleBuildsForHash(activeBuildHash(row))
+        );
         const buildMap = {};
         for (const b of (builds || [])) {
             buildMap[`${b.platform}/${b.arch}/${b.format}`] = {
@@ -462,7 +750,7 @@ router.get('/api/d/:publicId/manifest', async (req, res) => {
                 sha256: b.artifact_sha256 || null,
             };
         }
-        const platforms = bundleService.PLATFORMS.map(p => ({
+        const platforms = clientTemplateWorker.getAvailablePlatforms().map(p => ({
             ...p,
             ...(buildMap[`${p.platform}/${p.arch}/${p.format}`] || { status: 'pending' }),
         }));
@@ -482,22 +770,17 @@ router.get('/api/d/:publicId/manifest', async (req, res) => {
     }
 });
 
-/**
- * Public download endpoint. Phase 1 returns 503 with `build_pending` until
- * the Phase 2 build pipeline is wired; the route exists so the portal can
- * link to it today and Phase 2 is a pure backend swap.
- */
 router.get('/api/d/:publicId/download/:platform/:arch/:format', async (req, res) => {
     try {
         const row = await resolvePublicBundle(req.params.publicId);
         if (!row || row.revoked) return res.status(404).json({ success: false });
-        const build = await db.getAgentBundleBuild({
-            brandingHash: row.branding_hash,
+        const build = await resolveBuildWorker().getReadyArtifact({
+            brandingHash: activeBuildHash(row),
             platform: req.params.platform,
             arch: req.params.arch,
             format: req.params.format,
         });
-        if (!build || build.status !== 'ready' || !build.artifact_path) {
+        if (!build || !build.artifact_path) {
             return res.status(503).json({
                 success: false,
                 error: 'build_pending',

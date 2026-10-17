@@ -2,8 +2,8 @@
  * Navbar notification center.
  *
  * Responsibilities:
- *  - Fetches unread notifications from /api/bd/notifications?unread_only=true on load
- *  - Subscribes to Socket.IO "help-request" event for real-time pushes
+ *  - Fetches recent notifications from /api/bd/notifications on load
+ *  - Subscribes to the shared authenticated panel event stream
  *  - Renders a dropdown list of recent items with action/link
  *  - Marks items as read via POST /api/bd/notifications/:id/read
  *  - Updates badge counter
@@ -56,8 +56,11 @@
         if (count > 0) {
             dom.badge.textContent = count > 99 ? '99+' : String(count);
             dom.badge.hidden = false;
+            dom.badge.removeAttribute('aria-hidden');
         } else {
+            dom.badge.textContent = '';
             dom.badge.hidden = true;
+            dom.badge.setAttribute('aria-hidden', 'true');
         }
     }
 
@@ -125,7 +128,10 @@
             const data = await resp.json();
             const items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
             state.items = items;
-            state.unreadCount = items.filter(i => !i.read).length;
+            const serverUnreadCount = Number(data.unread_count);
+            state.unreadCount = Number.isFinite(serverUnreadCount) && serverUnreadCount >= 0
+                ? serverUnreadCount
+                : items.filter(i => !i.read).length;
             updateBadge();
             renderList();
         } catch {
@@ -187,11 +193,16 @@
                 created_at: payload.timestamp || new Date().toISOString(),
             };
             // Insert at top, cap list.
+            const existingIndex = state.items.findIndex((entry) => String(entry.id) === String(item.id));
+            if (existingIndex >= 0) {
+                state.items.splice(existingIndex, 1);
+            } else {
+                state.unreadCount += 1;
+            }
             state.items.unshift(item);
             if (state.items.length > MAX_ITEMS) {
                 state.items = state.items.slice(0, MAX_ITEMS);
             }
-            state.unreadCount += 1;
             updateBadge();
             renderList();
 
@@ -207,21 +218,26 @@
         }
     }
 
-    function attachSocket() {
-        try {
-            const s = window.socket || (typeof io === 'function' ? io() : null);
-            if (!s || typeof s.on !== 'function') return;
-            window.socket = s;
-            s.on('help-request', onHelpRequestEvent);
-            s.on('notification', onHelpRequestEvent);
-        } catch {
-            // Socket.IO not available — poll only.
-        }
+    function attachPanelEvents() {
+        window.addEventListener('betterdesk:panel-event', (event) => {
+            const payload = event.detail || {};
+            if (payload.type === 'help_request') {
+                onHelpRequestEvent(payload);
+            } else if (payload.type === 'registration_pending' ||
+                payload.type === 'registration_changed') {
+                // The API is the source of truth for read state and the
+                // aggregate count; reload it instead of guessing locally.
+                fetchNotifications();
+            }
+        });
     }
 
     function toggleDropdown(open) {
         if (!dom) return;
         const isOpen = open !== undefined ? open : dom.dropdown.hidden;
+        if (isOpen && window.BetterDesk && typeof window.BetterDesk.closeAllTopbarPopovers === 'function') {
+            window.BetterDesk.closeAllTopbarPopovers(dom.dropdown);
+        }
         dom.dropdown.hidden = !isOpen;
         dom.btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         if (isOpen) {
@@ -267,11 +283,10 @@
         });
 
         fetchNotifications();
-        attachSocket();
+        attachPanelEvents();
 
-        // Polling fallback: refresh every 60s. Cheap (10 rows max) and survives
-        // socket disconnects.
-        setInterval(fetchNotifications, 60_000);
+        // Polling fallback: survives a disconnected panel event stream.
+        setInterval(fetchNotifications, 30000);
     }
 
     if (document.readyState === 'loading') {

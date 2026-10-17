@@ -24,6 +24,7 @@ import (
 	"github.com/unitronix/betterdesk-server/cdap"
 	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/crypto"
+	"github.com/unitronix/betterdesk-server/crypto/peervault"
 	"github.com/unitronix/betterdesk-server/db"
 	eventsModule "github.com/unitronix/betterdesk-server/events"
 	"github.com/unitronix/betterdesk-server/meshcentral"
@@ -73,15 +74,22 @@ type Server struct {
 	// branding endpoints to deter device-ID enumeration and config probing.
 	enrollmentLimiter *ratelimit.IPLimiter
 	brandingLimiter   *ratelimit.IPLimiter
-	keyPair           *crypto.KeyPair    // Ed25519 keypair for signing
-	cdapGw            *cdap.Gateway      // CDAP gateway (nil if CDAP disabled)
+	keyPair           *crypto.KeyPair // Ed25519 keypair for signing
+	telemetryPrivate  [32]byte        // X25519 private key for telemetry envelopes
+	telemetryPublic   [32]byte        // X25519 public key for telemetry envelopes
+	telemetryReady    bool
+	secureClientsMu   sync.RWMutex
+	secureClientKeys  map[string][32]byte
+	cdapGw            *cdap.Gateway        // CDAP gateway (nil if CDAP disabled)
 	meshGw            *meshcentral.Gateway // MeshCentral compat (nil if disabled)
-	ldapProvider      ldapAuthProvider // LDAP auth provider (nil if not configured)
-	oidcProvider      *auth.OIDCProvider // OIDC/OAuth2 auth provider (nil if not configured)
+	ldapProvider      ldapAuthProvider     // LDAP auth provider (nil if not configured)
+	oidcProvider      *auth.OIDCProvider   // OIDC/OAuth2 auth provider (nil if not configured)
 	clientTFASessions *tfaSessionStore
 	panelStore        db.PanelSyncStore // device groups, folders, ACL (PostgreSQL or legacy auth.db)
 	timeSync          *timesync.Service
 	billing           *billing.Service
+	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
+	remoteTargetVault *peervault.Vault // Dedicated AES-GCM vault for RDP/VNC credentials
 	httpSrv           *http.Server
 	wg                sync.WaitGroup
 	version           string
@@ -110,6 +118,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		enrollmentLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),  // M-07: 20/min per IP, 5-min block
 		brandingLimiter:   ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M-07: 60/min per IP
 		clientTFASessions: newTFASessionStore(),
+		secureClientKeys:  make(map[string][32]byte),
 	}
 }
 
@@ -204,9 +213,32 @@ func (s *Server) SetJWTManager(jm *auth.JWTManager) {
 	s.jwtManager = jm
 }
 
+// InitPeerCredentialVault configures AES-GCM sealing for org peer passwords (#367).
+// Prefer dedicated ORG_PEER_VAULT_KEY; callers typically fall back to the JWT secret.
+func (s *Server) InitPeerCredentialVault(secret string) error {
+	v, err := peervault.New(secret)
+	if err != nil {
+		return err
+	}
+	s.peerVault = v
+	return nil
+}
+
+// InitRemoteTargetCredentialVault configures the dedicated RDP/VNC credential
+// vault. Unlike the legacy peer vault, this never falls back to JWT secrets.
+func (s *Server) InitRemoteTargetCredentialVault(secret string) error {
+	v, err := peervault.New(secret)
+	if err != nil {
+		return err
+	}
+	s.remoteTargetVault = v
+	return nil
+}
+
 // SetKeyPair sets the Ed25519 keypair for the server (used for signing IdPk).
 func (s *Server) SetKeyPair(kp *crypto.KeyPair) {
 	s.keyPair = kp
+	s.initializeTelemetryKeys()
 }
 
 // SetCDAPGateway sets the CDAP gateway for serving CDAP REST endpoints.
@@ -243,9 +275,10 @@ func (s *Server) InitOIDC() {
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 
-	// Health + info (public, no auth required)
+	// Health and public key are needed for client bootstrap. Detailed runtime
+	// stats use the same allowlist/auth policy as Prometheus metrics.
 	mux.HandleFunc("GET /api/health", s.handleHealth)
-	mux.HandleFunc("GET /api/server/stats", s.handleServerStats)
+	mux.HandleFunc("GET /api/server/stats", s.metricsGuard(s.handleServerStats))
 	mux.HandleFunc("GET /api/server/pubkey", s.handlePubKey)
 
 	// Peers (permission-based access control)
@@ -263,12 +296,31 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/peers/online", s.handleOnlinePeers)
 	mux.HandleFunc("GET /api/peers/{id}/status", s.handlePeerStatus)
 	mux.HandleFunc("GET /api/peers/{id}/metrics", s.handlePeerMetrics)
+	mux.HandleFunc("GET /api/peers/{id}/telemetry", s.requirePermission(auth.PermDeviceView, s.handleGetPeerTelemetry))
+	mux.HandleFunc("POST /api/peers/{id}/telemetry/refresh", s.requirePermission(auth.PermDeviceEdit, s.handleRefreshPeerHardware))
+	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requireRole(auth.RoleOperator, s.handleQueuePeerTelemetryCommand))
 	mux.HandleFunc("GET /api/peers/{id}/linked", s.handleLinkedPeers)
 	mux.HandleFunc("POST /api/peers/{id}/wol", s.requireRole(auth.RoleOperator, s.handleWakeOnLan))
 	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requireRole(auth.RoleOperator, s.handleGetAccessPolicy))
 	mux.HandleFunc("PUT /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.handleSaveAccessPolicy))
 	mux.HandleFunc("DELETE /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.handleDeleteAccessPolicy))
+	mux.HandleFunc("GET /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceView, s.handleGetConnectionMode))
+	mux.HandleFunc("POST /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceConnectionMode, s.handleSetConnectionMode))
+	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requireRole(auth.RoleOperator, s.handleIssueSupportSessionGrant))
 	mux.HandleFunc("GET /api/peers/{id}/policy", s.handleGetPeerPolicy)
+
+	// Manually configured RDP/VNC targets.
+	mux.HandleFunc("GET /api/remote-targets", s.requirePermission(auth.PermRemoteTargetView, s.handleListRemoteTargets))
+	mux.HandleFunc("POST /api/remote-targets", s.requirePermission(auth.PermRemoteTargetEdit, s.handleCreateRemoteTarget))
+	mux.HandleFunc("POST /api/remote-targets/test", s.requirePermission(auth.PermRemoteTargetTest, s.handleTestRemoteTarget))
+	mux.HandleFunc("GET /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetView, s.handleGetRemoteTargetCredentialStatus))
+	mux.HandleFunc("PUT /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleSetRemoteTargetCredentials))
+	mux.HandleFunc("DELETE /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleClearRemoteTargetCredentials))
+	mux.HandleFunc("POST /api/remote-targets/{id}/certificate/accept", s.requirePermission(auth.PermRemoteTargetConnect, s.handleAcceptRemoteTargetCertificate))
+	mux.HandleFunc("GET /api/remote-targets/{id}/tunnel", s.requirePermission(auth.PermRemoteTargetConnect, s.handleRemoteTargetTunnel))
+	mux.HandleFunc("GET /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetView, s.handleGetRemoteTarget))
+	mux.HandleFunc("PATCH /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetEdit, s.handleUpdateRemoteTarget))
+	mux.HandleFunc("DELETE /api/remote-targets/{id}", s.requirePermission(auth.PermRemoteTargetDelete, s.handleDeleteRemoteTarget))
 
 	// Blocklist management
 	mux.HandleFunc("GET /api/blocklist", s.requirePermission(auth.PermBlocklistEdit, s.handleListBlocklist))
@@ -309,6 +361,10 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("PUT /api/org/{id}/settings", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgSetting)))
 	mux.HandleFunc("GET /api/org/{id}/address-book", s.requireOrgMembership("id", s.handleGetOrgAddressBook))
 	mux.HandleFunc("PUT /api/org/{id}/address-book", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgAddressBook)))
+	mux.HandleFunc("GET /api/org/{id}/peer-credentials", s.requireOrgMembership("id", s.handleListOrgPeerCredentials))
+	mux.HandleFunc("PUT /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgPeerCredential)))
+	mux.HandleFunc("DELETE /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleClearOrgPeerCredential)))
+	mux.HandleFunc("GET /api/peers/{id}/connect-password", s.requirePermission(auth.PermDeviceView, s.handleGetPeerConnectPassword))
 	mux.HandleFunc("POST /api/org/login", s.handleOrgLogin) // public — no auth required
 
 	// User-Org Linking (Issue #106)
@@ -332,6 +388,8 @@ func (s *Server) Start(ctx context.Context) error {
 	// Config (server.config permission)
 	mux.HandleFunc("GET /api/config/{key}", s.requirePermission(auth.PermServerConfig, s.handleGetConfig))
 	mux.HandleFunc("PUT /api/config/{key}", s.requirePermission(auth.PermServerConfig, s.handleSetConfig))
+	mux.HandleFunc("GET /api/connection/config", s.requirePermission(auth.PermServerConfig, s.handleGetConnectionConfig))
+	mux.HandleFunc("PUT /api/connection/config", s.requirePermission(auth.PermServerConfig, s.handleSetConnectionConfig))
 
 	// Auth (public — no auth required, handled by middleware exclusion)
 	mux.HandleFunc("POST /api/auth/login", s.handleLogin)
@@ -371,6 +429,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /api/heartbeat", s.handleClientHeartbeat)
 	mux.HandleFunc("POST /api/sysinfo", s.handleClientSysinfo)
 	mux.HandleFunc("POST /api/sysinfo_ver", s.handleClientSysinfoVer)
+	mux.HandleFunc("GET /api/telemetry/key", s.rateLimitPublic(s.brandingLimiter, s.handleTelemetryKey))
 
 	// RustDesk client compat (Phase A — handlers in client_*.go, mirrored from Node :21121)
 	mux.HandleFunc("GET /api/server-key", s.handleServerKey)
@@ -445,7 +504,6 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/devices/register/status", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceRegisterStatus))
 	mux.HandleFunc("POST /api/devices/self/access-policy", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfAccessPolicy))
 	mux.HandleFunc("POST /api/devices/self/help-request", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfHelpRequest))
-	mux.HandleFunc("GET /api/devices/self/totp", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfTOTP))
 	mux.HandleFunc("POST /api/devices/self/totp", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfTOTP))
 
 	// Help requests — operator panel (raised by agents via CDAP or REST self endpoint)
@@ -457,6 +515,8 @@ func (s *Server) Start(ctx context.Context) error {
 	// Time sync / billing (commercialization)
 	mux.HandleFunc("GET /api/timesync/status", s.requirePermission(auth.PermBillingView, s.handleTimeSyncStatus))
 	mux.HandleFunc("POST /api/timesync/check", s.requirePermission(auth.PermServerConfig, s.handleTimeSyncCheck))
+	mux.HandleFunc("GET /api/timesync/config", s.requirePermission(auth.PermServerConfig, s.handleGetTimeSyncConfig))
+	mux.HandleFunc("PUT /api/timesync/config", s.requirePermission(auth.PermServerConfig, s.handleSetTimeSyncConfig))
 	mux.HandleFunc("GET /api/billing/check", s.requirePermission(auth.PermDeviceConnect, s.handleBillingConnectionCheck))
 	mux.HandleFunc("GET /api/billing/packages", s.requirePermission(auth.PermBillingView, s.handleListBillingPackages))
 	mux.HandleFunc("POST /api/billing/packages", s.requirePermission(auth.PermBillingManage, s.handleCreateBillingPackage))
@@ -478,8 +538,10 @@ func (s *Server) Start(ctx context.Context) error {
 
 	// Enrollment — operator approval (admin/operator)
 	mux.HandleFunc("GET /api/enrollment/pending", s.requireRole(auth.RoleOperator, s.handleListPendingDevices))
+	mux.HandleFunc("GET /api/enrollment/history", s.requireRole(auth.RoleOperator, s.handleListEnrollmentHistory))
 	mux.HandleFunc("POST /api/enrollment/approve/{id}", s.requireRole(auth.RoleOperator, s.handleApproveDevice))
 	mux.HandleFunc("POST /api/enrollment/reject/{id}", s.requireRole(auth.RoleOperator, s.handleRejectDevice))
+	mux.HandleFunc("POST /api/enrollment/clear-rejection/{id}", s.requireRole(auth.RoleOperator, s.handleClearEnrollmentRejection))
 
 	// LDAP configuration (server.config permission)
 	mux.HandleFunc("GET /api/auth/ldap/config", s.requirePermission(auth.PermServerConfig, s.handleGetLDAPConfig))
@@ -549,10 +611,12 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/mesh/share/validate", s.handleMeshShareValidate)
 
 	// Guest Access Links (temporary RdClient allowlist links)
-	mux.HandleFunc("POST /api/guest/access-links", s.requirePermission(auth.PermDeviceConnect, s.handleGuestAccessCreate))
-	mux.HandleFunc("GET /api/guest/access-links", s.requirePermission(auth.PermDeviceConnect, s.handleGuestAccessList))
-	mux.HandleFunc("DELETE /api/guest/access-links/{id}", s.requirePermission(auth.PermDeviceConnect, s.handleGuestAccessRevoke))
+	mux.HandleFunc("POST /api/guest/access-links", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessCreate))
+	mux.HandleFunc("GET /api/guest/access-links", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessList))
+	mux.HandleFunc("DELETE /api/guest/access-links/{id}", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessRevoke))
 	mux.HandleFunc("GET /api/guest/access-links/validate", s.handleGuestAccessValidate)
+	mux.HandleFunc("POST /api/guest/access-links/consume", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessConsume))
+	mux.HandleFunc("POST /api/guest/access-links/events", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessEvent))
 	mux.HandleFunc("GET /api/guest/access-links/peers", s.handleGuestAccessPeers)
 	mux.HandleFunc("POST /api/mesh/devices/{id}/tcp", s.requirePermission(auth.PermDeviceConnect, s.handleMeshTcpRelay))
 	mux.HandleFunc("POST /api/mesh/devices/{id}/udp", s.requirePermission(auth.PermDeviceConnect, s.handleMeshUdpRelay))
@@ -602,7 +666,7 @@ func (s *Server) Start(ctx context.Context) error {
 	addr := fmt.Sprintf(":%d", s.cfg.APIPort)
 	s.httpSrv = &http.Server{
 		Addr:        addr,
-		Handler:     s.authMiddleware(mux),
+		Handler:     s.secureEnvelopeMiddleware(s.authMiddleware(mux)),
 		ReadTimeout: 10 * time.Second,
 		// No WriteTimeout — WebSocket connections need unlimited write time.
 		// Individual REST handlers are responsible for their own deadlines.
@@ -684,12 +748,16 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		payload["clock_synced"] = s.timeSync.IsSynced()
 	}
 	if s.cfg != nil {
+		connection := s.cfg.ConnectionSettings()
 		payload["connection"] = map[string]any{
-			"p2p_first":        s.cfg.P2PFirst,
-			"always_use_relay": s.cfg.AlwaysUseRelay,
-			"p2p_fallback_ms":  s.cfg.P2PFallbackMs,
-			"same_nat_relay":   s.cfg.SameNATRelay,
-			"relay_servers":    s.cfg.RelayServers,
+			"p2p_first":                  connection.P2PFirst,
+			"always_use_relay":           connection.AlwaysUseRelay,
+			"p2p_fallback_ms":            connection.P2PFallbackMs,
+			"same_nat_relay":             connection.SameNATRelay,
+			"allow_shared_nat_initiator": connection.AllowSharedNATInitiator,
+			"logged_in_only_initiator":   connection.LoggedInOnlyInitiator,
+			"operator_only_outbound":     connection.OperatorOnlyOutbound,
+			"relay_servers":              s.cfg.RelayServers,
 		}
 	}
 	writeJSON(w, http.StatusOK, payload)
@@ -863,6 +931,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		Status        int         `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
 		StatusText    string      `json:"status_text"` // Original string status for admin panel
 		LiveOnline    bool        `json:"live_online"`
+		SignalReady   bool        `json:"signal_ready"` // Live signal transport is registered
 		LiveStatus    peer.Status `json:"live_status"`
 		Platform      string      `json:"platform"`
 		CDAPConnected bool        `json:"cdap_connected"`
@@ -873,9 +942,17 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 	result := make([]peerResponse, len(peers))
 	for i, p := range peers {
 		liveOnline := s.peers.IsOnline(p.ID, config.RegTimeout)
+		signalReady := liveOnline
 		liveStatus := peer.StatusOffline
 		if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
 			liveStatus = snap.Status
+		}
+		// BetterDesk clients may be reachable through the HTTP heartbeat API
+		// without a UDP/WebSocket signal entry. Use the recent DB heartbeat as
+		// the liveness source in that case.
+		if !liveOnline && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
+			liveOnline = true
+			liveStatus = peer.StatusOnline
 		}
 
 		// CDAP overlay: device connected via CDAP gateway is online
@@ -904,6 +981,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 			Status:        statusInt,
 			StatusText:    p.Status,
 			LiveOnline:    liveOnline,
+			SignalReady:   signalReady,
 			LiveStatus:    liveStatus,
 			Platform:      p.OS,
 			CDAPConnected: cdapConnected,
@@ -987,6 +1065,10 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
 		liveStatus = snap.Status
 	}
+	if !liveOnline && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
+		liveOnline = true
+		liveStatus = peer.StatusOnline
+	}
 
 	// CDAP overlay
 	cdapConnected := s.cdapGw != nil && s.cdapGw.IsConnected(p.ID)
@@ -1009,6 +1091,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		Status        int         `json:"status"`      // 1=active, 0=disabled (overrides db.Peer.Status string)
 		StatusText    string      `json:"status_text"` // Original string status for admin panel
 		LiveOnline    bool        `json:"live_online"`
+		SignalReady   bool        `json:"signal_ready"` // Live signal transport is registered
 		LiveStatus    peer.Status `json:"live_status"`
 		Platform      string      `json:"platform"`
 		CDAPConnected bool        `json:"cdap_connected"`
@@ -1020,12 +1103,14 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	if p.Disabled {
 		statusInt = 0
 	}
+	signalReady := s.peers.IsOnline(p.ID, config.RegTimeout)
 
 	writeJSON(w, http.StatusOK, singlePeerResponse{
 		Peer:          p,
 		Status:        statusInt,
 		StatusText:    p.Status,
 		LiveOnline:    liveOnline,
+		SignalReady:   signalReady,
 		LiveStatus:    liveStatus,
 		Platform:      p.OS,
 		CDAPConnected: cdapConnected,
@@ -1256,6 +1341,28 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 	if !s.peerOrgScopeCheck(w, r, id) {
 		return
 	}
+
+	peerRow, _ := s.db.GetPeer(id)
+	enrollmentRejectBan := peerRow != nil && peerRow.BanReason == enrollmentRejectBanReason
+
+	// Enrollment Reject & Ban created an audit-only peer. Unban must remove it
+	// so managed mode re-queues for approval instead of treating the ID as enrolled (#351).
+	if enrollmentRejectBan {
+		s.clearEnrollmentRejectionState(id)
+		if err := s.removeEnrollmentRejectAuditPeer(id); err != nil {
+			writeInternalError(w, err, "removeEnrollmentRejectAuditPeer")
+			return
+		}
+		if s.auditLog != nil {
+			s.auditLog.Log(audit.ActionPeerUnbanned, s.remoteIP(r), id, map[string]string{
+				"peer_removed": "true",
+				"reason":       enrollmentRejectBanReason,
+			})
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"status": "unbanned", "id": id, "peer_removed": "true"})
+		return
+	}
+
 	if err := s.db.UnbanPeer(id); err != nil {
 		writeInternalError(w, err, "UnbanPeer")
 		return
@@ -1265,6 +1372,9 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 	if entry != nil {
 		entry.Banned = false
 	}
+
+	// Also clear enrollment rejection lock so the device can re-queue (#351).
+	s.clearEnrollmentRejectionState(id)
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerUnbanned, s.remoteIP(r), id, nil)
@@ -1381,12 +1491,8 @@ func (s *Server) handleChangePeerID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update memory map
-	entry := s.peers.Remove(oldID)
-	if entry != nil {
-		entry.ID = body.NewID
-		s.peers.Put(entry)
-	}
+	// Preserve a live TCP/WSS registration while changing its map key.
+	s.peers.Rename(oldID, body.NewID)
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerIDChanged, s.remoteIP(r), oldID, map[string]string{"new_id": body.NewID})

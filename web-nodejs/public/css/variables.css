@@ -50,6 +50,8 @@
     --accent-blue: #58a6ff;
     --accent-blue-hover: #79c0ff;
     --accent-blue-muted: rgba(88, 166, 255, 0.15);
+    /* Legacy-compatible primary accent. New UI should prefer --accent-blue. */
+    --accent-color: var(--accent-blue);
     
     --accent-red: #f85149;
     --accent-red-hover: #ff6b6b;
@@ -141,6 +143,8 @@
     /* Mobile / responsive breakpoints (match device-capabilities.js) */
     --bp-phone-max: 767px;
     --bp-tablet-max: 1024px;
+    --bp-shell-drawer-max: 1099px;
+    --bp-shell-desktop-min: 1100px;
     --bp-fold-inner-max: 720px;
     --bp-desktop-min: 1025px;
 
@@ -218,25 +222,7 @@
     --scrollbar-thumb-hover: var(--border-hover);
 }
 
-/* Material Icons */
-.material-icons,
-.material-icons-outlined,
-.material-symbols-outlined {
-    font-family: 'Material Icons';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-feature-settings: 'liga';
-    font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-}
+/* Icon glyph styles: see material-icons-local.css (Material Symbols) */
 
 /* Icon sizes */
 .icon-sm { font-size: 18px; }

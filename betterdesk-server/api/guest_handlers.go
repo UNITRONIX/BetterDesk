@@ -79,6 +79,70 @@ func (s *Server) handleGuestAccessValidate(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, pub)
 }
 
+// POST /api/guest/access-links/consume
+// Atomically consumes one use after the panel has accepted a guest session.
+func (s *Server) handleGuestAccessConsume(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Token  string `json:"token"`
+		PeerID string `json:"peer_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+	grant, err := s.guestAccessStore().Consume(body.Token, body.PeerID)
+	if err != nil {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, guestaccess.ToPublic(grant))
+}
+
+// POST /api/guest/access-links/events
+// Receives bridge lifecycle events from the authenticated panel proxy. Secrets
+// are deliberately not accepted or persisted here.
+func (s *Server) handleGuestAccessEvent(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Event      string `json:"event"`
+		GrantID    string `json:"grant_id"`
+		PeerID     string `json:"peer_id"`
+		SessionID  string `json:"session_id"`
+		Transport  string `json:"transport"`
+		SourceIP   string `json:"source_ip"`
+		DurationMS int64  `json:"duration_ms"`
+		Reason     string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		return
+	}
+	if body.Event != "opened" && body.Event != "closed" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid guest event"})
+		return
+	}
+	if body.GrantID == "" || body.PeerID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "grant_id and peer_id required"})
+		return
+	}
+	action := audit.ActionGuestSessionOpened
+	if body.Event == "closed" {
+		action = audit.ActionGuestSessionClosed
+	}
+	details := map[string]string{
+		"grant_id":    body.GrantID,
+		"peer_id":     body.PeerID,
+		"session_id":  body.SessionID,
+		"transport":   body.Transport,
+		"source_ip":   body.SourceIP,
+		"duration_ms": strconv.FormatInt(body.DurationMS, 10),
+		"reason":      body.Reason,
+	}
+	if s.auditLog != nil {
+		s.auditLog.Log(action, body.SourceIP, body.PeerID, details)
+	}
+	writeJSON(w, http.StatusAccepted, map[string]bool{"recorded": true})
+}
+
 // GET /api/guest/access-links
 func (s *Server) handleGuestAccessList(w http.ResponseWriter, r *http.Request) {
 	username := usernameFromRequest(r)
@@ -170,10 +234,10 @@ func (s *Server) handleGuestAccessPeers(w http.ResponseWriter, r *http.Request) 
 		devices = append(devices, item)
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"valid":     true,
-		"view_only": grant.ViewOnly,
+		"valid":      true,
+		"view_only":  grant.ViewOnly,
 		"expires_at": grant.ExpiresAt.Format(time.RFC3339),
-		"label":     grant.Label,
-		"devices":   devices,
+		"label":      grant.Label,
+		"devices":    devices,
 	})
 }

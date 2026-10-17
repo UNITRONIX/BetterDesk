@@ -41,6 +41,11 @@ screenshots/
 dev_modules/
 TESTING.local.md
 betterdesk-client/
+betterdesk-desktop/
+betterdesk-agent-client/
+betterdesk-agent/
+rdclient-desktop/
+betterdesk-mgmt/
 
 # Sensitive files
 *.key

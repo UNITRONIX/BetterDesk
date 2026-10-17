@@ -9,6 +9,7 @@ const router = express.Router();
 const { assertSafeApiId } = require('../lib/goApiPath');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
+const restartCoordinator = require('../services/restartCoordinator');
 
 // ── Page Routes ──────────────────────────────────────────────────────────
 
@@ -169,8 +170,21 @@ router.post('/api/cdap/toggle', requireAuth, requirePermission('server.config'),
         if (typeof enabled !== 'boolean') {
             return res.status(400).json({ success: false, error: 'enabled must be a boolean' });
         }
+        const previous = await betterdeskApi.getConfig('cdap_enabled');
+        if (!previous.success) {
+            return res.status(500).json({ success: false, error: previous.error || 'Failed to read CDAP setting' });
+        }
         await betterdeskApi.setConfig('cdap_enabled', enabled ? 'Y' : 'N');
-        res.json({ success: true, enabled, restart_required: true });
+        const restartRequired = restartCoordinator.registerChange(req, {
+            key: 'cdap-enabled',
+            label: req.t('cdap.devices_title'),
+            rollback: {
+                type: 'go-config',
+                key: 'cdap_enabled',
+                value: previous.data?.value ?? previous.data ?? 'N',
+            }
+        });
+        res.json({ success: true, enabled, restart_required: true, restartRequired });
     } catch (err) {
         console.error('[CDAP] Toggle error:', err.message);
         res.status(500).json({ success: false, error: 'Failed to toggle CDAP' });

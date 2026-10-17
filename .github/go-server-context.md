@@ -14,11 +14,14 @@ both `hbbs` (signal) and `hbbr` (relay).
 
 ### Legal Basis
 
-- `.proto` files (`rendezvous.proto`, `message.proto`) have **no copyright headers** — they
-  define the wire protocol, not copyrightable expression.
-- AGPL-3.0 covers the Rust **source code**, not the protocol itself.
-- Clean-room = we implement from the **protocol specification** (protobuf messages, framing,
-  port layout), never copying Rust code.
+- Do not infer the provenance or copyright status of `.proto` files from their
+  protocol role or file headers. Existing schemas are subject to the provenance
+  gate in `docs/important/support-agent-provenance.md`.
+- Do not copy external source, generated artifacts, comments, or test fixtures.
+  Implement only from BetterDesk-owned specifications and independently
+  authored black-box test vectors.
+- Do not make clean-room or relicensing claims in code, documentation, or
+  release notes until the provenance register has been reviewed.
 
 ---
 
@@ -550,7 +553,7 @@ states is a bitmask: 2 bits per peer
 | `DOWNGRADE_THRESHOLD` | - | 0.66 | Bandwidth downgrade ratio |
 | `RELAY_SERVERS` | `--relay-servers` | (self) | Comma-separated relay servers |
 | `RENDEZVOUS_SERVERS` | `--rendezvous-servers` | (self) | Comma-separated signal servers |
-| `MASK` | `--mask` | - | LAN mask (e.g. 192.168.0.0/24) |
+| `MASK` | `--mask` | - | CIDR for LAN peer detection (e.g. 192.168.0.0/16); empty defaults to IPv4 /24 |
 
 ---
 
@@ -736,7 +739,7 @@ The Go server replaces ONLY the Rust binaries (`hbbs` + `hbbr`). Everything else
 | ID | Issue | File | Fix | Status |
 |----|-------|------|-----|--------|
 | H1 | No validation of `new_id` in change-id API | `api/server.go:297-324` | `peerIDRegexp` check | ✅ Fixed |
-| H2 | `FindByIP` fallback returns first peer behind NAT | `peer/map.go:449-460` | Document limitation, improve IP+port matching | ⚠️ Documented |
+| H2 | `FindByIP` fallback returns first peer behind NAT | `peer/map.go` / `signal/handler.go` | Outbound auth: exact `FindByAddr` / TCP session / token / panel proxy / `udp_port` hint / safe single-IP fallback; multi-peer → `initiator_ambiguous_same_nat` unless opt-in `ALLOW_SHARED_NAT_INITIATOR` (synthetic `shared-nat-initiator`, #399). RelayResponse uses pending UUID+initiator store — no multi-peer `FindByIP` delivery. | ✅ Fixed (auth + #399 forward) |
 | H3 | No rate-limit on `/api/auth/login/2fa` | `api/auth_handlers.go:127-168` | `loginLimiter.Allow(clientIP)` + audit log | ✅ Fixed |
 | H4 | Partial 2FA token has 24h TTL | `api/auth_handlers.go:104-111` | `GenerateWithTTL()` 5min | ✅ Fixed |
 

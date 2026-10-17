@@ -233,6 +233,26 @@ func (m *Map) Put(e *Entry) *Entry {
 	return old
 }
 
+// SetPKIfEmpty hydrates a peer's persisted public key without replacing an
+// identity that is already present in memory. It returns true when the key was
+// stored, or when the peer already had a key.
+func (m *Map) SetPKIfEmpty(id string, pk []byte) bool {
+	if m == nil || id == "" || len(pk) == 0 {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	if len(e.PK) > 0 {
+		return true
+	}
+	e.PK = append([]byte(nil), pk...)
+	return true
+}
+
 // UpdateHeartbeat refreshes the heartbeat timestamp and address for a peer.
 // Returns false if the peer is not in the map.
 func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
@@ -257,6 +277,12 @@ func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
 		}
 		e.UDPAddr = addr
 		e.IP = newIP
+		// TCP RegisterPk can stamp ConnTCP before the OS service heartbeats
+		// (#327 / #382). A live UDP address means inbound PunchHole/RequestRelay
+		// must go over UDP — do not leave ConnType stuck on tcp.
+		if e.ConnType != ConnWS {
+			e.ConnType = ConnUDP
+		}
 	}
 	return true
 }
@@ -289,6 +315,50 @@ func (m *Map) Remove(id string) *Entry {
 	e.CloseConnections()
 	delete(m.entries, id)
 	return e
+}
+
+// Rename moves a live peer to a new ID without closing its transport.
+// ID changes are metadata updates, not disconnects.
+func (m *Map) Rename(oldID, newID string) (*Entry, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	e, ok := m.entries[oldID]
+	if !ok {
+		return nil, false
+	}
+	if oldID == newID {
+		return e, true
+	}
+	if _, exists := m.entries[newID]; exists {
+		return nil, false
+	}
+
+	delete(m.entries, oldID)
+	e.ID = newID
+	m.entries[newID] = e
+	return e, true
+}
+
+// TouchWSHeartbeat refreshes the peer currently bound to conn. Matching by
+// connection keeps heartbeats working after an in-place ID rename.
+func (m *Map) TouchWSHeartbeat(conn interface{}) bool {
+	if conn == nil {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, e := range m.entries {
+		if e.WSConn != conn {
+			continue
+		}
+		e.LastReg = time.Now()
+		e.MissedBeats = 0
+		e.StatusTier = StatusOnline
+		e.HeartbeatCount++
+		return true
+	}
+	return false
 }
 
 // Count returns the number of peers currently in the map.
@@ -500,12 +570,53 @@ func (m *Map) ForEach(fn func(e *Entry)) {
 	}
 }
 
+// normalizePeerAddr produces a canonical "ip:port" for exact endpoint matching.
+// IPv4-mapped IPv6 addresses are reduced to IPv4 form (same as signal normalizeAddrKey).
+func normalizePeerAddr(addr string) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return addr
+	}
+	if ip4 := ip.To4(); ip4 != nil {
+		return net.JoinHostPort(ip4.String(), port)
+	}
+	return addr
+}
+
+// FindByAddr returns the peer whose registered endpoint matches addr exactly
+// (ip:port). Used for outbound PunchHole/RequestRelay initiator authorization
+// so a pending client behind the same public NAT cannot inherit another peer's
+// identity (#302 residual / audit H2).
+func (m *Map) FindByAddr(addr *net.UDPAddr) *Entry {
+	if addr == nil || addr.IP == nil {
+		return nil
+	}
+	want := normalizePeerAddr(addr.String())
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, e := range m.entries {
+		if e.UDPAddr != nil && normalizePeerAddr(e.UDPAddr.String()) == want {
+			return e
+		}
+		if e.IP != "" && normalizePeerAddr(e.IP) == want {
+			return e
+		}
+	}
+	return nil
+}
+
 // FindByIP returns the first peer whose public IP matches.
 // Prefers peers with a UDPAddr; otherwise matches the host portion of entry.IP
 // (WebSocket/TCP peers store "ip:port" without UDPAddr). Used when forwarding
 // PunchHole/RelayResponse from a decoded socket_addr. If multiple peers share
 // the same IP (behind NAT), only the first match is returned — prefer
 // exact ip:port maps (tcpPunchConns / wsPunchConns) for initiator delivery (#276).
+// Do NOT use bare FindByIP for outbound initiator authorization when multiple
+// peers may share a NAT — use FindByAddr or FindAllByIP with a single-match rule (#302).
 func (m *Map) FindByIP(ip net.IP) *Entry {
 	if ip == nil {
 		return nil
@@ -535,18 +646,25 @@ func (m *Map) FindByIP(ip net.IP) *Entry {
 
 // CountByIP returns how many peers share the given public IP (UDPAddr or IP host).
 func (m *Map) CountByIP(ip net.IP) int {
+	return len(m.FindAllByIP(ip))
+}
+
+// FindAllByIP returns every peer whose public IP matches (UDPAddr or IP host).
+// Used for outbound initiator auth when exact ip:port is unavailable: a single
+// live match can authorize; multiple matches are ambiguous (same-NAT).
+func (m *Map) FindAllByIP(ip net.IP) []*Entry {
 	if ip == nil {
-		return 0
+		return nil
 	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	n := 0
+	var out []*Entry
 	for _, e := range m.entries {
 		if peerEntryMatchesIP(e, ip) {
-			n++
+			out = append(out, e)
 		}
 	}
-	return n
+	return out
 }
 
 // FindWSByIP returns the first WebSocket peer whose public IP matches.

@@ -13,7 +13,7 @@ Agents (`betterdesk-agent*`) are out of scope until support resumes.
 | express-rate-limit | 7.x | 8.x | Prefer with Express 5 |
 | csrf-csrf | 3.x | 4.x | Auth/CSRF regression suite |
 | bcrypt | 5.x | 6.x | Native rebuild; sheds deprecated `node-gyp` transitive tree |
-| better-sqlite3 | 11.x | 13.x | Native + Alpine musl rebuild |
+| better-sqlite3 | **13.x** | — | Done (#353): shared SQLite handles + Node 24 Alpine musl |
 | ejs | 3.x | 6.x | Template audit |
 | otplib | 12.x | 13.x | **npm-deprecated** at 12; 2FA/TOTP tests required |
 | protobufjs | 7.x | 8.x | RdClient / proto paths |
@@ -28,7 +28,7 @@ Agents (`betterdesk-agent*`) are out of scope until support resumes.
 
 ## Done in audit follow-up (2026-07)
 
-- Node **24** (Docker, CI, installers); `engines` **>=22**
+- Node **24** (CI/client tooling); production console images temporarily pin Node **22.23.2** because of the Node.js 24 cleanup-hook crash tracked in #377; `engines` **>=22**
 - Alpine server runtime **3.22**; Go build image **1.26**
 - Patch bumps: axios, nodemailer, ws, pg; Go direct deps including `modernc.org/sqlite`
 - SNMP bridge: `pysnmplib` → **`pysnmp` >=7.1**

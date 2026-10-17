@@ -15,10 +15,15 @@ const (
 	RoleGlobalAdmin = "global_admin"
 
 	// Legacy global roles (backward-compatible)
-	RoleAdmin    = "admin" // maps to super_admin in permission terms
-	RoleOperator = "operator"
-	RoleViewer   = "viewer"
-	RolePro      = "pro" // API-only RustDesk PRO activation; no device access
+	RoleAdmin       = "admin" // maps to super_admin in permission terms
+	RoleOperator    = "operator"
+	RoleViewer      = "viewer"
+	RolePro         = "pro"          // API-only RustDesk PRO activation; no device access
+	RoleGuestIssuer = "guest_issuer" // device view + temporary guest link issuance
+
+	// RoleDevice is an internal, device-scoped principal used for authenticated
+	// agents. It is intentionally not a user-assignable role.
+	RoleDevice = "device"
 )
 
 // RoleLevel returns the numeric privilege level for a role.
@@ -37,6 +42,10 @@ func RoleLevel(role string) int {
 	case RoleViewer:
 		return 1
 	case RolePro:
+		return 0
+	case RoleGuestIssuer:
+		return 1
+	case RoleDevice:
 		return 0
 	default:
 		return 0
@@ -65,7 +74,8 @@ func CanAssignRole(callerRole, targetRole string) bool {
 	// Global Admin can assign roles below global_admin
 	// (operator, viewer, pro — NOT super_admin, server_admin, global_admin, admin)
 	case callerRole == RoleGlobalAdmin:
-		return targetRole == RoleOperator || targetRole == RoleViewer || targetRole == RolePro
+		return targetRole == RoleOperator || targetRole == RoleViewer || targetRole == RolePro ||
+			targetRole == RoleGuestIssuer
 
 	// Server Admin cannot assign any roles
 	case callerRole == RoleServerAdmin:
@@ -80,14 +90,24 @@ func CanAssignRole(callerRole, targetRole string) bool {
 // HasPermission returns true if userRole has at least the privileges of requiredRole.
 // Kept for backward compatibility — prefer requirePermission middleware.
 func HasPermission(userRole, requiredRole string) bool {
+	// A device credential must never satisfy a user-role check merely because
+	// both roles have the same numeric level.
+	if IsDeviceRole(userRole) {
+		return userRole == requiredRole
+	}
 	return RoleLevel(userRole) >= RoleLevel(requiredRole)
+}
+
+// IsDeviceRole reports whether role is the internal device-only principal.
+func IsDeviceRole(role string) bool {
+	return role == RoleDevice
 }
 
 // ValidRole returns true if the given string is a recognised role.
 func ValidRole(r string) bool {
 	switch r {
 	case RoleSuperAdmin, RoleServerAdmin, RoleGlobalAdmin,
-		RoleAdmin, RoleOperator, RoleViewer, RolePro:
+		RoleAdmin, RoleOperator, RoleViewer, RolePro, RoleGuestIssuer:
 		return true
 	}
 	return false

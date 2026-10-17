@@ -386,7 +386,10 @@ class RDVideo {
             node: this._videoEl,
             mode: 'video',
             flushingTime: 0,        // Flush immediately for low latency
-            fps: 60,
+            // HTTP/mobile fallback uses MSE/JMuxer and must not be fed at a
+            // 60fps target; that causes queue growth and visible stalls on
+            // tablet browsers.
+            fps: RDVideo.isSupported() ? 60 : 30,
             clearBuffer: false,     // We manage buffer trimming in _startHealthCheck
             debug: false,
             onReady: () => {

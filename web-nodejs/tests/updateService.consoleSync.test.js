@@ -1,5 +1,9 @@
 'use strict';
 
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const config = require('../config/config');
 const { createConsoleDeployGraph } = require('../lib/consoleDeployGraph');
 const {
     GITHUB_COMPARE_FILE_LIMIT,
@@ -7,6 +11,8 @@ const {
     isRetryableDownloadStatus,
     getDownloadRetryDelayMs,
     ensureGoServerSignalRelayPorts,
+    restoreServerBinaryBackup,
+    restoreFromBackup,
 } = require('../services/updateService');
 
 describe('updateService console sync helpers', () => {
@@ -21,6 +27,8 @@ describe('updateService console sync helpers', () => {
         const graph = createConsoleDeployGraph(require('path').join(__dirname, '..'));
         expect(graph.resolveConsoleRequire('routes/auth.routes.js', '../services/serverAttestation'))
             .toBe('services/serverAttestation.js');
+        expect(graph.resolveConsoleRequire('services/brandingService.js', '../config/theme-palettes.json'))
+            .toBe('config/theme-palettes.json');
         expect(graph.resolveConsoleRequire('routes/index.js', './devices.routes'))
             .toBe('routes/devices.routes.js');
         expect(graph.resolveConsoleRequire('server.js', './routes'))
@@ -78,5 +86,80 @@ describe('updateService console sync helpers', () => {
 
         const again = ensureGoServerSignalRelayPorts(patched.text);
         expect(again.changed).toBe(false);
+    });
+
+    test('restores a validated server binary backup atomically', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bd-binary-rollback-'));
+        const target = path.join(root, 'betterdesk-server.exe');
+        const backup = `${target}.bak.test`;
+        try {
+            fs.writeFileSync(target, 'new');
+            fs.writeFileSync(backup, 'old');
+            expect(restoreServerBinaryBackup(backup, target)).toMatchObject({ restored: true });
+            expect(fs.readFileSync(target, 'utf8')).toBe('old');
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    test('rejects a binary backup outside the target directory', () => {
+        expect(restoreServerBinaryBackup(
+            path.join(os.tmpdir(), 'betterdesk-server.exe.bak.test'),
+            path.join(os.tmpdir(), 'other', 'betterdesk-server.exe')
+        )).toMatchObject({
+            restored: false,
+            error: 'Server binary backup path failed validation',
+        });
+    });
+
+    test('rejects traversal paths from a backup manifest', () => {
+        const backupRoot = path.join(config.dataDir, 'backups');
+        const backupName = `pre-update-${Date.now()}-${process.pid}`;
+        const backupPath = path.join(backupRoot, backupName);
+        fs.mkdirSync(backupPath, { recursive: true });
+        fs.writeFileSync(path.join(backupPath, 'manifest.json'), JSON.stringify({
+            files: ['../outside.txt'],
+        }));
+
+        try {
+            expect(() => restoreFromBackup(backupName))
+                .toThrow('Invalid path in backup manifest');
+        } finally {
+            fs.rmSync(backupPath, { recursive: true, force: true });
+        }
+    });
+
+    test('refuses to restore protected runtime files from a backup manifest', () => {
+        const backupRoot = path.join(config.dataDir, 'backups');
+        const backupName = `pre-update-${Date.now()}-${process.pid}`;
+        const backupPath = path.join(backupRoot, backupName);
+        fs.mkdirSync(backupPath, { recursive: true });
+        fs.writeFileSync(path.join(backupPath, 'manifest.json'), JSON.stringify({
+            files: ['console/.env'],
+        }));
+
+        try {
+            expect(() => restoreFromBackup(backupName))
+                .toThrow('Refusing to restore protected runtime path');
+        } finally {
+            fs.rmSync(backupPath, { recursive: true, force: true });
+        }
+    });
+
+    test('refuses to remove protected runtime files from a backup manifest', () => {
+        const backupRoot = path.join(config.dataDir, 'backups');
+        const backupName = `pre-update-${Date.now()}-${process.pid}`;
+        const backupPath = path.join(backupRoot, backupName);
+        fs.mkdirSync(backupPath, { recursive: true });
+        fs.writeFileSync(path.join(backupPath, 'manifest.json'), JSON.stringify({
+            removeOnRestore: ['console/.env'],
+        }));
+
+        try {
+            expect(() => restoreFromBackup(backupName))
+                .toThrow('Refusing to remove protected runtime path');
+        } finally {
+            fs.rmSync(backupPath, { recursive: true, force: true });
+        }
     });
 });
