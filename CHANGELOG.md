@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.162] — 2026-10-17
+
 ### Security
 - Bumped Node production dependencies for audited advisories: `axios` ≥1.20,
   `multer` ≥2.4, `proxy-addr` ≥2.0.8, `brace-expansion` ≥5.0.12; upload error
@@ -4025,3 +4032,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.159]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.158...v3.5.159
 [3.5.160]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.159...v3.5.160
 [3.5.161]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.160...v3.5.161
+[3.5.162]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.161...v3.5.162
