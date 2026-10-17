@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.161] — 2026-10-17
+
+### Changed
 - Moved personal TOTP management to the Authentication settings tab while
   keeping it available to users without the `server.config` permission.
 - Fixed language-picker metadata that displayed English for multiple locales,
@@ -4001,3 +4008,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.158]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.157...v3.5.158
 [3.5.159]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.158...v3.5.159
 [3.5.160]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.159...v3.5.160
+[3.5.161]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.160...v3.5.161
