@@ -93,7 +93,7 @@ const ALLOWED_PATH_PATTERNS = [
 const ALLOWED_METHODS = {
     '/api/login': 'POST',
     '/api/logout': 'POST',
-    '/api/currentUser': '*',
+    '/api/currentUser': ['GET', 'POST'],
     '/api/login-options': 'GET',
     '/api/oidc/auth': 'POST',
     '/api/oidc/auth-query': 'GET',
@@ -183,7 +183,12 @@ function pathWhitelist(req, res, next) {
 
     // Enforce correct HTTP method (* allows any method)
     const expectedMethod = ALLOWED_METHODS[req.path];
-    if (expectedMethod && expectedMethod !== '*' && req.method !== expectedMethod && req.method !== 'OPTIONS') {
+    const methodAllowed = expectedMethod === '*' || (
+        Array.isArray(expectedMethod)
+            ? expectedMethod.includes(req.method)
+            : req.method === expectedMethod
+    );
+    if (expectedMethod && !methodAllowed && req.method !== 'OPTIONS') {
         return res.status(405).end();
     }
 
