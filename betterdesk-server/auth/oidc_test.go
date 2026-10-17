@@ -506,55 +506,24 @@ func TestBuildOIDCSessionURL(t *testing.T) {
 }
 
 func TestExchangeCodePreservesReturnURL(t *testing.T) {
-	payload := map[string]interface{}{
-		"preferred_username": "sso-user",
-	}
-	payloadJSON, _ := json.Marshal(payload)
-	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
-	idToken := "eyJhbGciOiJSUzI1NiJ9." + payloadB64 + ".fakesignature"
-
-	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost || r.URL.Path != "/token" {
-			http.NotFound(w, r)
-			return
-		}
-		_ = json.NewEncoder(w).Encode(map[string]string{
-			"access_token": "access-token",
-			"id_token":     idToken,
-		})
-	}))
-	defer tokenSrv.Close()
-
-	cfg := &OIDCConfig{
-		Enabled:          true,
-		ClientID:         "client",
-		RedirectURL:      "http://localhost/callback",
-		AuthorizationURL: "https://idp.example.com/authorize",
-		TokenURL:         tokenSrv.URL + "/token",
-		Scopes:           "openid",
-		ClaimUsername:    "preferred_username",
-	}
-	p := NewOIDCProvider(cfg)
-
+	nonce := ""
+	p, _ := tokenValidationFixture(t, func(m map[string]interface{}) { m["nonce"] = nonce; m["preferred_username"] = "sso-user" }, false, "owner")
+	p.config.AuthorizationURL = p.config.IssuerURL + "/authorize"
+	p.config.ClaimUsername = "preferred_username"
 	_, state, err := p.BuildAuthURL("/dashboard")
 	if err != nil {
-		t.Fatalf("BuildAuthURL error: %v", err)
+		t.Fatal(err)
 	}
-
+	nonce = p.states[state].Nonce
 	result, err := p.ExchangeCode(context.Background(), "code123", state)
 	if err != nil {
-		t.Fatalf("ExchangeCode error: %v", err)
+		t.Fatal(err)
 	}
-	if result.ReturnURL != "/dashboard" {
-		t.Errorf("ReturnURL = %q, want /dashboard", result.ReturnURL)
+	if result.ReturnURL != "/dashboard" || result.Username != "sso-user" {
+		t.Fatalf("lost return URL or identity: %+v", result)
 	}
-	if result.Username != "sso-user" {
-		t.Errorf("Username = %q, want sso-user", result.Username)
-	}
-
-	// State is consumed — GetReturnURL should no longer find it.
-	if got := p.GetReturnURL(state); got != "" {
-		t.Errorf("GetReturnURL after ExchangeCode = %q, want empty", got)
+	if p.GetReturnURL(state) != "" {
+		t.Fatal("state not consumed")
 	}
 }
 
@@ -628,49 +597,20 @@ func TestClientPendingRejectsMismatchDevice(t *testing.T) {
 }
 
 func TestExchangeCodePreservesClientFlow(t *testing.T) {
-	payload := map[string]interface{}{
-		"preferred_username": "cli-user",
-	}
-	payloadJSON, _ := json.Marshal(payload)
-	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
-	idToken := "eyJhbGciOiJSUzI1NiJ9." + payloadB64 + ".fakesignature"
-
-	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost || r.URL.Path != "/token" {
-			http.NotFound(w, r)
-			return
-		}
-		_ = json.NewEncoder(w).Encode(map[string]string{
-			"access_token": "access-token",
-			"id_token":     idToken,
-		})
-	}))
-	defer tokenSrv.Close()
-
-	p := NewOIDCProvider(&OIDCConfig{
-		Enabled: true, ClientID: "client",
-		RedirectURL:      "http://localhost/callback",
-		AuthorizationURL: "https://idp.example.com/authorize",
-		TokenURL:         tokenSrv.URL + "/token",
-		ClaimUsername:    "preferred_username",
-	})
-
+	nonce := ""
+	p, _ := tokenValidationFixture(t, func(m map[string]interface{}) { m["nonce"] = nonce; m["preferred_username"] = "cli-user" }, false, "owner")
+	p.config.AuthorizationURL = p.config.IssuerURL + "/authorize"
+	p.config.ClaimUsername = "preferred_username"
 	_, code, err := p.BuildClientAuthURL("d1", "u1", ClientDeviceInfo{Name: "n"})
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	nonce = p.states[code].Nonce
 	result, err := p.ExchangeCode(context.Background(), "authcode", code)
 	if err != nil {
-		t.Fatalf("ExchangeCode: %v", err)
+		t.Fatal(err)
 	}
-	if result.Flow != OIDCFlowClient {
-		t.Fatalf("Flow = %q, want client", result.Flow)
-	}
-	if result.ClientID != "d1" || result.ClientUUID != "u1" || result.State != code {
-		t.Fatalf("client fields: %+v", result)
-	}
-	if result.Username != "cli-user" {
-		t.Fatalf("Username = %q", result.Username)
+	if result.Flow != OIDCFlowClient || result.ClientID != "d1" || result.ClientUUID != "u1" || result.State != code || result.Username != "cli-user" {
+		t.Fatalf("lost client binding: %+v", result)
 	}
 }

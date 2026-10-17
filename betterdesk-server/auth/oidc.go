@@ -24,6 +24,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	oidc "github.com/coreos/go-oidc/v3/oidc"
 )
 
 // OIDCConfig holds all OIDC provider settings.
@@ -522,13 +524,26 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 		return nil, fmt.Errorf("no access_token in token response")
 	}
 
-	// Extract claims from ID token (JWT payload, no signature verification —
-	// we trust the TLS connection to the IdP's token endpoint)
+	// Validate the ID token through the issuer's pinned discovery/JWKS metadata.
+	// Never accept a merely decoded payload as an authenticated identity.
+	if tokenResp.IDToken == "" {
+		return nil, fmt.Errorf("missing OIDC ID token")
+	}
+	verifyCtx := oidc.ClientContext(ctx, p.client)
+	provider, err := oidc.NewProvider(verifyCtx, cfg.IssuerURL)
+	if err != nil {
+		return nil, fmt.Errorf("OIDC verification discovery failed: %w", err)
+	}
+	idToken, err := provider.Verifier(&oidc.Config{ClientID: cfg.ClientID, SupportedSigningAlgs: []string{"RS256"}}).Verify(verifyCtx, tokenResp.IDToken)
+	if err != nil {
+		return nil, fmt.Errorf("OIDC ID token validation failed: %w", err)
+	}
+	if stateEntry.Nonce == "" || idToken.Nonce != stateEntry.Nonce {
+		return nil, fmt.Errorf("OIDC nonce mismatch")
+	}
 	claims := make(map[string]interface{})
-	if tokenResp.IDToken != "" {
-		if parsed, err := parseJWTPayload(tokenResp.IDToken); err == nil {
-			claims = parsed
-		}
+	if err := idToken.Claims(&claims); err != nil {
+		return nil, fmt.Errorf("OIDC verified claims failed: %w", err)
 	}
 
 	// Fetch userinfo for additional claims
@@ -536,7 +551,10 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 	if err != nil {
 		log.Printf("[OIDC] UserInfo fetch failed (non-fatal): %v", err)
 	} else {
-		// Merge userinfo claims (userinfo takes precedence)
+		if getStringClaim(userinfoClaims, "sub") != idToken.Subject {
+			return nil, fmt.Errorf("OIDC UserInfo subject mismatch")
+		}
+		// Merge only UserInfo claims bound to the verified ID token subject.
 		for k, v := range userinfoClaims {
 			claims[k] = v
 		}
