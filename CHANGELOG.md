@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.168] — 2026-10-17
+
 ### Security
 - Cleared OIDC discovery data race (`atomic` retry interval + `Close()`); Go
   toolchain **1.26.9** and `golang.org/x/text` **v0.41.0** (govulncheck clean).
@@ -4084,3 +4091,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.165]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.164...v3.5.165
 [3.5.166]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.165...v3.5.166
 [3.5.167]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.166...v3.5.167
+[3.5.168]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.167...v3.5.168
