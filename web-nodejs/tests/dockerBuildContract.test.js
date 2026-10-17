@@ -102,8 +102,13 @@ describe('Docker admin bootstrap contract', () => {
         expect(bootstrap).toContain('path_exists_as_betterdesk "$CREDS_FILE"');
         expect(entrypoint).toContain('file_exists_as_betterdesk "$API_KEY_FILE"');
         expect(entrypoint).toContain('file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"');
-        expect(guard).toContain('file_exists_as_betterdesk "$_auth_db"');
-        expect(guard).toContain('file_exists_as_betterdesk "$_primary_db"');
+        // Guard is self-contained for unit tests, but still prefers the
+        // betterdesk-owned helper when bootstrap has already defined it.
+        expect(guard).toContain('_guard_file_exists()');
+        expect(guard).toContain('file_exists_as_betterdesk "$1"');
+        expect(guard).toContain('_guard_run_as_betterdesk test -f "$1"');
+        expect(guard).toContain('_guard_file_exists "$_auth_db"');
+        expect(guard).toContain('_guard_file_exists "$_primary_db"');
     });
 
     test('Docker entrypoints source path helpers before using them', () => {

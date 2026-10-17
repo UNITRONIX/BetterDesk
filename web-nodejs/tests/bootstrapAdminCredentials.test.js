@@ -11,7 +11,9 @@ const os = require('os');
 const path = require('path');
 
 const SCRIPT = path.join(__dirname, '..', '..', 'docker', 'bootstrap-admin-credentials.sh');
-const shAvailable = process.platform !== 'win32';
+// Match dockerBootstrapCredentials.test.js: run whenever a POSIX sh is on PATH
+// (Linux CI, Git Bash on Windows). Skip only when sh is unavailable.
+const shAvailable = spawnSync('sh', ['-c', 'exit 0'], { stdio: 'ignore' }).status === 0;
 
 (shAvailable ? describe : describe.skip)('bootstrap-admin-credentials.sh', () => {
     let tmpDir;
@@ -59,11 +61,14 @@ const shAvailable = process.platform !== 'win32';
         expect(fs.readFileSync(credsFile, 'utf8')).toContain('existing-secret');
     });
 
-    test('respects ADMIN_PASSWORD without writing a new file when env is set', () => {
+    test('publishes ADMIN_PASSWORD to .admin_credentials on a fresh volume', () => {
+        // Operators and show-admin-credentials must read the same password as
+        // INIT_ADMIN_PASS / DEFAULT_ADMIN_PASSWORD (issue #385).
         const result = runBootstrap({ ADMIN_PASSWORD: 'preset-password-12345' });
         expect(result.status).toBe(0);
 
         const credsFile = path.join(tmpDir, '.admin_credentials');
-        expect(fs.existsSync(credsFile)).toBe(false);
+        expect(fs.existsSync(credsFile)).toBe(true);
+        expect(fs.readFileSync(credsFile, 'utf8')).toContain('Admin Password: preset-password-12345');
     });
 });

@@ -89,7 +89,15 @@ function sourceBootstrapExports(env) {
         });
 
         expect(result.status).toBe(0);
-        expect(result.stdout.trim()).toBe('admin|admin||');
+        // Fresh volume with no ADMIN_PASSWORD: generate one shared secret and
+        // export it for both Go (INIT_*) and Node (DEFAULT_*) supervisord vars.
+        const parts = result.stdout.trim().split('|');
+        expect(parts).toHaveLength(4);
+        expect(parts[0]).toBe('admin');
+        expect(parts[1]).toBe('admin');
+        expect(parts[2].length).toBeGreaterThan(0);
+        expect(parts[3]).toBe(parts[2]);
+        expect(fs.existsSync(path.join(tempDir, '.admin_credentials'))).toBe(true);
     });
 
     test('keeps configured admin values synchronized across services', () => {
