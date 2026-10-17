@@ -1,7 +1,13 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- Moved personal TOTP management to the Authentication settings tab while
+  keeping it available to users without the `server.config` permission.
+- Fixed language-picker metadata that displayed English for multiple locales,
+  including French and Traditional Chinese.
+- Added scheduled, validated full-instance backups with retention, local or
+  mounted-network destinations, SHA-256 sidecars, destination tests and SMB
+  connection validation.
 
 ---
 

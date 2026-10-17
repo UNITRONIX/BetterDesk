@@ -33,6 +33,7 @@ const { roleHasPermission, isSuperAdminRole } = require('./middleware/auth');
 const authService = require('./services/authService');
 const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
+const scheduledBackupService = require('./services/scheduledBackupService');
 const { DatabaseSessionStore } = require('./services/databaseSessionStore');
 const userSync = require('./services/userSync');
 const { initWsProxy } = require('./services/wsRelay');
@@ -647,6 +648,7 @@ async function startServer() {
                 // Silent fail
             }
         }, 60 * 60 * 1000); // Every hour
+        scheduledBackupService.start();
         
         // ============ Periodic Online Status Sync ============
         const syncInterval = parseInt(process.env.STATUS_SYNC_INTERVAL, 10) || 15; // seconds
@@ -684,6 +686,7 @@ async function startServer() {
             console.log(`\n${signal} received. Shutting down gracefully...`);
             clearInterval(housekeepingInterval);
             clearInterval(statusSyncInterval);
+            scheduledBackupService.stop();
             
             const closePromises = [new Promise(r => server.close(r))];
             if (apiServer) {

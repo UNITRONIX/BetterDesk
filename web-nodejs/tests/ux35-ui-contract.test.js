@@ -138,4 +138,12 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(loginJs, /data\.prefer_sso && !passwordBypass && !data\.local_bypass && !hasOidcError/);
         assert.match(loginJs, /window\.location\.replace\('\/api\/auth\/oidc\/authorize'\)/);
     });
+
+    it('keeps personal TOTP in Authentication while gating admin panels', () => {
+        assert.match(settingsView, /id="settings-tab-auth"[^>]*data-tab="auth"/);
+        assert.match(settingsView, /data-auth-panel="totp"/);
+        assert.match(settingsView, /id="auth-panel-totp"/);
+        assert.match(settingsView, /canServerConfig \? `/);
+        assert.match(settingsJs, /initTotpSection\(\)/);
+    });
 });

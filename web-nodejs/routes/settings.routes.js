@@ -14,6 +14,7 @@ const brandingService = require('../services/brandingService');
 const fontService = require('../services/fontService');
 const serverBackend = require('../services/serverBackend');
 const backupService = require('../services/backupService');
+const scheduledBackupService = require('../services/scheduledBackupService');
 const updateService = require('../services/updateService');
 const { resolveChildPath } = require('../lib/safePath');
 const { canScheduleConsoleRestart } = require('../lib/updateFailurePolicy');
@@ -943,6 +944,98 @@ router.get('/api/settings/backup', requireAuth, requirePermission('server.config
     } catch (err) {
         console.error('Backup download error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * Scheduled full disaster-recovery backup configuration and controls.
+ */
+router.get('/api/settings/backup/schedule', requireAuth, requirePermission('server.config'), async (_req, res) => {
+    try {
+        const [schedule, status] = await Promise.all([
+            scheduledBackupService.getConfig(),
+            scheduledBackupService.getStatus()
+        ]);
+        res.json({ success: true, data: { schedule, status } });
+    } catch (err) {
+        console.error('Scheduled backup settings read error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.get('/api/settings/backup/schedule/status', requireAuth, requirePermission('server.config'), async (_req, res) => {
+    try {
+        res.json({ success: true, data: await scheduledBackupService.getStatus() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.put('/api/settings/backup/schedule', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const schedule = await scheduledBackupService.saveConfig(req.body || {});
+        res.json({ success: true, data: schedule });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/api/settings/backup/schedule/run', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const result = await scheduledBackupService.createScheduledBackup({ manual: true });
+        await db.logAction(
+            req.session?.userId,
+            'backup_created',
+            `Scheduled full backup created (${result.filename})`,
+            req.ip
+        );
+        res.json({ success: true, data: result });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/api/settings/backup/destination/test', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const result = await scheduledBackupService.testDestination(req.body || {});
+        res.json({ success: true, data: result });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.get('/api/settings/backup/smb', requireAuth, requirePermission('server.config'), async (_req, res) => {
+    try {
+        res.json({ success: true, data: await scheduledBackupService.getSmbSettings() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.put('/api/settings/backup/smb', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        res.json({ success: true, data: await scheduledBackupService.saveSmbSettings(req.body || {}) });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/api/settings/backup/smb/test', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const saved = await scheduledBackupService.saveSmbSettings(req.body || {});
+        const raw = { ...(req.body || {}) };
+        if (saved.password === '********') {
+            const current = await db.getSetting('scheduled_backup_smb', null);
+            try {
+                Object.assign(raw, JSON.parse(current || '{}'));
+            } catch (_) {
+                // The validation below will return a useful error.
+            }
+        }
+        const result = await scheduledBackupService.testSmbConnection(raw);
+        res.json({ success: true, data: result });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
     }
 });
 

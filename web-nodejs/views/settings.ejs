@@ -21,10 +21,11 @@
                     <span class="material-icons" aria-hidden="true">palette</span>
                     ${_('settings.tab_branding')}
                 </button>
-                ${canServerConfig ? `<button type="button" class="settings-shell-tab settings-tab" role="tab" aria-selected="false" id="settings-tab-auth" data-tab="auth" aria-controls="tab-auth">
+                <button type="button" class="settings-shell-tab settings-tab" role="tab" aria-selected="false" id="settings-tab-auth" data-tab="auth" aria-controls="tab-auth">
                     <span class="material-icons" aria-hidden="true">admin_panel_settings</span>
                     ${_('settings.tab_auth')}
                 </button>
+                ${canServerConfig ? `
                 <button type="button" class="settings-shell-tab settings-tab" role="tab" aria-selected="false" id="settings-tab-backup" data-tab="backup" aria-controls="tab-backup">
                     <span class="material-icons" aria-hidden="true">backup</span>
                     ${_('settings.tab_backup')}
@@ -361,25 +362,6 @@
                 </div>
             </div>
             ` : ''}
-            
-            <!-- Two-Factor Authentication Section -->
-            <div class="settings-panel">
-                <div class="settings-panel-header">
-                    <h2 class="settings-panel-title">
-                        <span class="material-icons" aria-hidden="true">security</span>
-                        ${_('settings.totp_title')}
-                    </h2>
-                    <p class="settings-panel-desc">${_('settings.totp_desc')}</p>
-                </div>
-                <div class="settings-panel-body">
-                    <div id="totp-status-container">
-                        <div class="totp-status-loading">
-                            <span class="material-icons spin" aria-hidden="true">sync</span>
-                            ${_('common.loading')}
-                        </div>
-                    </div>
-                </div>
-            </div>
             
             <!-- Audit Log Section -->
             <div class="settings-panel">
@@ -1451,10 +1433,15 @@
         </div>
         </div>
         
-        <!-- Authentication Tab (server.config permission required) -->
-        <div class="settings-tab-content" id="tab-auth" role="tabpanel" aria-labelledby="settings-tab-auth" ${canServerConfig ? '' : 'style="display:none"'}>
+        <!-- Authentication Tab -->
+        <div class="settings-tab-content" id="tab-auth" role="tabpanel" aria-labelledby="settings-tab-auth">
         <nav class="settings-auth-subnav" role="tablist" aria-label="${_('settings.tab_auth')}">
-            <button type="button" class="settings-auth-subtab active" role="tab" aria-selected="true" data-auth-panel="enrollment" id="settings-auth-tab-enrollment">
+            <button type="button" class="settings-auth-subtab active" role="tab" aria-selected="true" data-auth-panel="totp" id="settings-auth-tab-totp">
+                <span class="material-icons" aria-hidden="true">security</span>
+                ${_('settings.ui.auth_sub_totp')}
+            </button>
+            ${canServerConfig ? `
+            <button type="button" class="settings-auth-subtab" role="tab" aria-selected="false" data-auth-panel="enrollment" id="settings-auth-tab-enrollment">
                 <span class="material-icons" aria-hidden="true">how_to_reg</span>
                 ${_('settings.ui.auth_sub_enrollment')}
             </button>
@@ -1470,8 +1457,32 @@
                 <span class="material-icons" aria-hidden="true">login</span>
                 ${_('settings.ui.auth_sub_oidc')}
             </button>
+            ` : ''}
         </nav>
-        <div class="settings-auth-panel active" id="auth-panel-enrollment" role="tabpanel" aria-labelledby="settings-auth-tab-enrollment">
+        <div class="settings-auth-panel active" id="auth-panel-totp" role="tabpanel" aria-labelledby="settings-auth-tab-totp">
+        <div class="settings-stack">
+            <!-- Two-Factor Authentication -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">security</span>
+                        ${_('settings.totp_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('settings.totp_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <div id="totp-status-container">
+                        <div class="totp-status-loading">
+                            <span class="material-icons spin" aria-hidden="true">sync</span>
+                            ${_('common.loading')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        ${canServerConfig ? `
+        <div class="settings-auth-panel" id="auth-panel-enrollment" role="tabpanel" aria-labelledby="settings-auth-tab-enrollment" hidden>
         <div class="settings-stack">
             <!-- Device enrollment -->
             <div class="settings-panel" id="enrollment-settings-section">
@@ -1924,6 +1935,7 @@
                 </div>
             </div>
         </div>
+        ` : ''}
         </div>
         </div>
 
@@ -1992,6 +2004,124 @@
                             ${_('backup.download')}
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Scheduled full disaster-recovery backup -->
+            <div class="settings-panel" id="scheduled-backup-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">schedule</span>
+                        ${_('backup.schedule_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('backup.schedule_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <form class="settings-form" id="scheduled-backup-form">
+                        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+                            <input type="checkbox" id="scheduled-backup-enabled" class="toggle-switch">
+                            <label class="form-label" for="scheduled-backup-enabled">${_('backup.schedule_enabled')}</label>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="scheduled-backup-interval">${_('backup.schedule_interval')}</label>
+                                <select id="scheduled-backup-interval" class="form-input">
+                                    <option value="1">${_('backup.schedule_interval_1h')}</option>
+                                    <option value="6">${_('backup.schedule_interval_6h')}</option>
+                                    <option value="12">${_('backup.schedule_interval_12h')}</option>
+                                    <option value="24">${_('backup.schedule_interval_24h')}</option>
+                                    <option value="168">${_('backup.schedule_interval_weekly')}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="scheduled-backup-retention">${_('backup.schedule_retention')}</label>
+                                <input type="number" id="scheduled-backup-retention" class="form-input" min="1" max="365" value="7">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="scheduled-backup-destination-type">${_('backup.schedule_destination')}</label>
+                            <select id="scheduled-backup-destination-type" class="form-input">
+                                <option value="local">${_('backup.schedule_destination_local')}</option>
+                                <option value="path">${_('backup.schedule_destination_path')}</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="scheduled-backup-path-group" hidden>
+                            <label class="form-label" for="scheduled-backup-path">${_('backup.schedule_destination_path_label')}</label>
+                            <input type="text" id="scheduled-backup-path" class="form-input" placeholder="/mnt/backups or \\server\share">
+                            <small class="form-hint">${_('backup.schedule_destination_path_hint')}</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <span class="material-icons" aria-hidden="true">save</span>
+                                ${_('backup.schedule_save')}
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="scheduled-backup-test-btn">
+                                <span class="material-icons" aria-hidden="true">fact_check</span>
+                                ${_('backup.schedule_test_destination')}
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="scheduled-backup-run-btn">
+                                <span class="material-icons" aria-hidden="true">play_arrow</span>
+                                ${_('backup.schedule_run_now')}
+                            </button>
+                        </div>
+                        <div id="scheduled-backup-status" class="restore-result" style="display:none;"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- SMB connection validation -->
+            <div class="settings-panel" id="scheduled-backup-smb-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">lan</span>
+                        ${_('backup.smb_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('backup.smb_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <form class="settings-form" id="scheduled-backup-smb-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="backup-smb-host">${_('backup.smb_host')}</label>
+                                <input type="text" id="backup-smb-host" class="form-input" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="backup-smb-share">${_('backup.smb_share')}</label>
+                                <input type="text" id="backup-smb-share" class="form-input" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="backup-smb-domain">${_('backup.smb_domain')}</label>
+                                <input type="text" id="backup-smb-domain" class="form-input" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="backup-smb-username">${_('backup.smb_username')}</label>
+                                <input type="text" id="backup-smb-username" class="form-input" autocomplete="username">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="backup-smb-password">${_('backup.smb_password')}</label>
+                            <input type="password" id="backup-smb-password" class="form-input" autocomplete="new-password">
+                            <small class="form-hint">${_('backup.smb_password_hint')}</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="backup-smb-mount-path">${_('backup.schedule_destination_path_label')}</label>
+                            <input type="text" id="backup-smb-mount-path" class="form-input" placeholder="\\\\server\\share or /mnt/backups">
+                            <small class="form-hint">${_('backup.schedule_destination_path_hint')}</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <span class="material-icons" aria-hidden="true">save</span>
+                                ${_('backup.smb_save')}
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="backup-smb-test-btn">
+                                <span class="material-icons" aria-hidden="true">wifi_tethering</span>
+                                ${_('backup.smb_test')}
+                            </button>
+                        </div>
+                        <div id="backup-smb-status" class="restore-result" style="display:none;"></div>
+                    </form>
                 </div>
             </div>
             

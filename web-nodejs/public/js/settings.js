@@ -24,8 +24,8 @@
         initTotpSection();
         initBrandingSection();
 
-        // Only init server-config sections when the tab is visible (requires server.config permission)
-        if (document.getElementById('tab-auth') && document.getElementById('tab-auth').style.display !== 'none') {
+        // Only init server-config sections when their admin panels are rendered.
+        if (document.getElementById('auth-panel-enrollment')) {
             initEnrollmentSection();
             initClientSessionsSection();
             initLdapSection();
@@ -2702,6 +2702,7 @@
     
     function initBackupSection() {
         loadBackupStats();
+        initScheduledBackupSection();
         
         // Download backup
         document.getElementById('backup-download-btn')?.addEventListener('click', async () => {
@@ -2817,6 +2818,145 @@
             } finally {
                 e.target.value = '';
                 if (label) label.classList.remove('loading');
+            }
+        });
+    }
+
+    async function initScheduledBackupSection() {
+        const form = document.getElementById('scheduled-backup-form');
+        if (!form) return;
+        const enabled = document.getElementById('scheduled-backup-enabled');
+        const interval = document.getElementById('scheduled-backup-interval');
+        const retention = document.getElementById('scheduled-backup-retention');
+        const destinationType = document.getElementById('scheduled-backup-destination-type');
+        const destinationPath = document.getElementById('scheduled-backup-path');
+        const pathGroup = document.getElementById('scheduled-backup-path-group');
+        const statusEl = document.getElementById('scheduled-backup-status');
+        const showStatus = (message, ok = true) => {
+            if (!statusEl) return;
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `<p class="${ok ? 'restore-ok' : 'restore-warn'}">${Utils.escapeHtml(message)}</p>`;
+        };
+        const syncPathVisibility = () => {
+            if (pathGroup) pathGroup.hidden = destinationType?.value !== 'path';
+        };
+        destinationType?.addEventListener('change', syncPathVisibility);
+        syncPathVisibility();
+
+        const renderStatus = (status) => {
+            if (!status?.lastAttemptAt) return;
+            const label = status.lastError
+                ? `${_('backup.schedule_last_run')}: ${status.lastError}`
+                : `${_('backup.schedule_last_run')}: ${status.lastSuccessAt || status.lastAttemptAt}`;
+            showStatus(label, !status.lastError);
+        };
+
+        try {
+            const data = await Utils.api('/api/settings/backup/schedule');
+            const schedule = data?.schedule || {};
+            if (enabled) enabled.checked = !!schedule.enabled;
+            if (interval) interval.value = String(schedule.intervalHours || 24);
+            if (retention) retention.value = String(schedule.retentionCount || 7);
+            if (destinationType) destinationType.value = schedule.destinationType || 'local';
+            if (destinationPath) destinationPath.value = schedule.destinationPath || '';
+            syncPathVisibility();
+            renderStatus(data?.status);
+        } catch (err) {
+            showStatus(err.message || _('errors.server_error'), false);
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            try {
+                const saved = await Utils.api('/api/settings/backup/schedule', {
+                    method: 'PUT',
+                    body: {
+                        enabled: !!enabled?.checked,
+                        intervalHours: Number(interval?.value || 24),
+                        retentionCount: Number(retention?.value || 7),
+                        destinationType: destinationType?.value || 'local',
+                        destinationPath: destinationPath?.value || ''
+                    }
+                });
+                if (destinationType) destinationType.value = saved?.destinationType || destinationType.value;
+                Notifications.success(_('backup.schedule_saved'));
+            } catch (err) {
+                showStatus(err.message || _('errors.server_error'), false);
+            }
+        });
+
+        document.getElementById('scheduled-backup-test-btn')?.addEventListener('click', async () => {
+            try {
+                const result = await Utils.api('/api/settings/backup/destination/test', {
+                    method: 'POST',
+                    body: {
+                        destinationType: destinationType?.value || 'local',
+                        destinationPath: destinationPath?.value || ''
+                    }
+                });
+                showStatus(`${_('backup.schedule_destination_ok')}: ${result?.destination || ''}`);
+            } catch (err) {
+                showStatus(err.message || _('errors.server_error'), false);
+            }
+        });
+
+        document.getElementById('scheduled-backup-run-btn')?.addEventListener('click', async () => {
+            const button = document.getElementById('scheduled-backup-run-btn');
+            if (button) button.disabled = true;
+            try {
+                const result = await Utils.api('/api/settings/backup/schedule/run', { method: 'POST' });
+                showStatus(`${_('backup.schedule_run_success')}: ${result?.filename || ''}`);
+                Notifications.success(_('backup.schedule_run_success'));
+            } catch (err) {
+                showStatus(err.message || _('errors.server_error'), false);
+            } finally {
+                if (button) button.disabled = false;
+            }
+        });
+
+        const smbForm = document.getElementById('scheduled-backup-smb-form');
+        const smbStatus = document.getElementById('backup-smb-status');
+        const smbField = (name) => document.getElementById('backup-smb-' + name);
+        const showSmbStatus = (message, ok = true) => {
+            if (!smbStatus) return;
+            smbStatus.style.display = 'block';
+            smbStatus.innerHTML = `<p class="${ok ? 'restore-ok' : 'restore-warn'}">${Utils.escapeHtml(message)}</p>`;
+        };
+        const smbPayload = () => ({
+            host: smbField('host')?.value || '',
+            share: smbField('share')?.value || '',
+            domain: smbField('domain')?.value || '',
+            username: smbField('username')?.value || '',
+            password: smbField('password')?.value || '',
+            mountPath: smbField('mountPath')?.value || ''
+        });
+        try {
+            const smb = await Utils.api('/api/settings/backup/smb');
+            for (const key of ['host', 'share', 'domain', 'username', 'password', 'mountPath']) {
+                const field = smbField(key);
+                if (field) field.value = smb?.[key] || '';
+            }
+        } catch (err) {
+            showSmbStatus(err.message || _('errors.server_error'), false);
+        }
+        smbForm?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            try {
+                await Utils.api('/api/settings/backup/smb', { method: 'PUT', body: smbPayload() });
+                Notifications.success(_('backup.smb_saved'));
+            } catch (err) {
+                showSmbStatus(err.message || _('errors.server_error'), false);
+            }
+        });
+        document.getElementById('backup-smb-test-btn')?.addEventListener('click', async () => {
+            try {
+                const result = await Utils.api('/api/settings/backup/smb/test', {
+                    method: 'POST',
+                    body: smbPayload()
+                });
+                showSmbStatus(`${_('backup.smb_test_success')}: ${result?.target || ''}`);
+            } catch (err) {
+                showSmbStatus(err.message || _('errors.server_error'), false);
             }
         });
     }
