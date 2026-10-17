@@ -27,6 +27,7 @@ const brandingService = require('../services/brandingService');
 const conn = require('../services/agentBundleConnection');
 const clientConfigHost = require('../services/clientConfigHost');
 const { PRODUCT_TYPES, normalizeProductType, isBetterDeskSupportBundle } = require('../lib/generatorBuildTypes');
+const { resolveConfinedMulterPath } = require('../lib/multerCleanup');
 const EMBEDDED_MODE = String(
     process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
 ).trim().toLowerCase() === 'embedded';
@@ -364,7 +365,8 @@ router.post(
             const code = err.code || err.message || 'install_failed';
             return res.status(400).json({ success: false, error: code, code });
         } finally {
-            if (uploaded) fs.rm(uploaded, { force: true }, () => {});
+            const confined = uploaded ? resolveConfinedMulterPath(uploaded) : null;
+            if (confined) fs.rm(confined, { force: true }, () => {});
         }
     },
 );

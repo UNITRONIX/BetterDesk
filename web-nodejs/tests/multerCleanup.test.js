@@ -3,7 +3,11 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { unlinkMulterFiles, isSafeMulterDiskPath } = require('../lib/multerCleanup');
+const {
+    unlinkMulterFiles,
+    isSafeMulterDiskPath,
+    resolveConfinedMulterPath,
+} = require('../lib/multerCleanup');
 
 describe('multerCleanup path confinement', () => {
     let tempFile;
@@ -19,6 +23,7 @@ describe('multerCleanup path confinement', () => {
         tempFile = path.join(os.tmpdir(), `bd-multer-test-${process.pid}-${Date.now()}`);
         fs.writeFileSync(tempFile, 'x');
         expect(isSafeMulterDiskPath(tempFile)).toBe(true);
+        expect(resolveConfinedMulterPath(tempFile)).toBe(path.resolve(tempFile));
         unlinkMulterFiles({ file: { path: tempFile } });
         expect(fs.existsSync(tempFile)).toBe(false);
         tempFile = null;
@@ -27,10 +32,12 @@ describe('multerCleanup path confinement', () => {
     test('rejects path traversal outside temp roots', () => {
         const evil = path.join(os.tmpdir(), '..', 'etc', 'passwd');
         expect(isSafeMulterDiskPath(evil)).toBe(false);
+        expect(resolveConfinedMulterPath(evil)).toBeNull();
     });
 
     test('rejects empty or null paths', () => {
         expect(isSafeMulterDiskPath('')).toBe(false);
         expect(isSafeMulterDiskPath(null)).toBe(false);
+        expect(resolveConfinedMulterPath(null)).toBeNull();
     });
 });

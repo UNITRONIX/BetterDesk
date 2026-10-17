@@ -18,6 +18,7 @@ const crypto  = require('crypto');
 const path    = require('path');
 const db      = require('../services/database');
 const { requireAuth, requirePermission } = require('../middleware/auth');
+const { fileAccessLimiter } = require('../middleware/rateLimiter');
 const genericAgentReleases = require('../services/genericAgentReleaseService');
 const betterdeskApi = require('../services/betterdeskApi');
 
@@ -292,7 +293,7 @@ router.post('/api/agent-pairing/activate', requireAuth, requirePermission('enrol
     }
 });
 
-router.get('/downloads/generic-agent/:tag/:name', async (req, res) => {
+router.get('/downloads/generic-agent/:tag/:name', fileAccessLimiter, async (req, res) => {
     const file = await genericAgentReleases.resolveAsset(req.params.tag, req.params.name);
     if (!file) return res.status(404).send('Agent release asset not found');
     return res.download(file, path.basename(file));

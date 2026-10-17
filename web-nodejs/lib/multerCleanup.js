@@ -4,24 +4,27 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+const SAFE_SEG = /^[A-Za-z0-9._-]+$/;
+
 /**
- * Multer disk paths must stay under known temp roots — never unlink arbitrary
- * request-controlled paths (CodeQL js/path-injection / DEP-04).
+ * Multer disk cleanup must never unlink an arbitrary request path.
+ * Rebuild the target as allowedRoot + safe relative segments (CodeQL confinement).
  * @param {string} filePath
- * @returns {boolean}
+ * @returns {string|null} absolute path under an allowed root, or null
  */
-function isSafeMulterDiskPath(filePath) {
+function resolveConfinedMulterPath(filePath) {
     if (typeof filePath !== 'string' || !filePath || filePath.includes('\0')) {
-        return false;
+        return null;
     }
-    let resolved;
+
+    let originalResolved;
     try {
-        resolved = path.resolve(filePath);
+        originalResolved = path.resolve(filePath);
     } catch (_) {
-        return false;
+        return null;
     }
+
     const allowedRoots = [path.resolve(os.tmpdir())];
-    // Optional console data dir (some upload middlewares land files here).
     try {
         const config = require('../config/config');
         if (config && config.dataDir) {
@@ -29,10 +32,29 @@ function isSafeMulterDiskPath(filePath) {
         }
     } catch (_) { /* config may be unavailable in unit harnesses */ }
 
-    return allowedRoots.some((root) => {
-        const rel = path.relative(root, resolved);
-        return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
-    });
+    for (const root of allowedRoots) {
+        const rel = path.relative(root, originalResolved);
+        if (!rel || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
+            continue;
+        }
+        const segments = rel.split(path.sep).filter(Boolean);
+        if (!segments.length || !segments.every((seg) => SAFE_SEG.test(seg))) {
+            continue;
+        }
+        const candidate = path.resolve(root, ...segments);
+        if (candidate === originalResolved) {
+            return candidate;
+        }
+    }
+    return null;
+}
+
+/**
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+function isSafeMulterDiskPath(filePath) {
+    return resolveConfinedMulterPath(filePath) !== null;
 }
 
 /**
@@ -52,12 +74,17 @@ function unlinkMulterFiles(req) {
         }
     }
     for (const f of files) {
-        if (f && f.path && isSafeMulterDiskPath(f.path)) {
-            try {
-                fs.unlinkSync(f.path);
-            } catch (_) { /* ignore */ }
-        }
+        if (!f || !f.path) continue;
+        const confined = resolveConfinedMulterPath(f.path);
+        if (!confined) continue;
+        try {
+            fs.unlinkSync(confined);
+        } catch (_) { /* ignore */ }
     }
 }
 
-module.exports = { unlinkMulterFiles, isSafeMulterDiskPath };
+module.exports = {
+    unlinkMulterFiles,
+    isSafeMulterDiskPath,
+    resolveConfinedMulterPath,
+};

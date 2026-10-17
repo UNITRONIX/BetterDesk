@@ -384,10 +384,29 @@ function getCapabilities() {
     };
 }
 
+/** Basenames allowed for local Support Client builds (host toolchain only). */
+const ALLOWED_BUILDER_TOOLS = new Set([
+    'cargo', 'rustc', 'flutter', 'dart', 'python', 'python3', 'py',
+    'dpkg-deb', 'rpmbuild', 'tar', 'zip', 'unzip', 'strip', 'objcopy',
+]);
+
+function assertAllowedBuilderCommand(command) {
+    const raw = String(command || '');
+    const base = path.basename(raw)
+        .replace(/\.(exe|bat|cmd)$/i, '')
+        .toLowerCase();
+    if (!ALLOWED_BUILDER_TOOLS.has(base)) {
+        throw new Error(`Refusing to spawn non-allowlisted builder tool: ${base || '(empty)'}`);
+    }
+    return raw;
+}
+
 function run(command, args, options = {}) {
-    const isBatchCommand = IS_WINDOWS && /\.(bat|cmd)$/i.test(String(command));
+    const safeCommand = assertAllowedBuilderCommand(command);
+    const isBatchCommand = IS_WINDOWS && /\.(bat|cmd)$/i.test(safeCommand);
     return new Promise((resolve, reject) => {
-        const child = spawn(command, args, {
+        // Prefer argv spawn; only use shell for Windows .bat/.cmd wrappers.
+        const child = spawn(safeCommand, args, {
             cwd: options.cwd,
             env: options.env,
             stdio: ['ignore', 'pipe', 'pipe'],

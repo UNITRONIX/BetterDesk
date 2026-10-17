@@ -16,7 +16,8 @@ paths-ignore:
   - rdclient-desktop/vendor/wry/**
 
 query-filters:
-  # --- Sanitizer / confinement libraries (validated paths; not user taint) ---
+  # --- Path sinks after safePath / basename confinement / admin-validated roots ---
+  # (Default setup ignores this file; keep for advanced workflow + documentation.)
   - exclude:
       id: js/path-injection
       paths:
@@ -29,6 +30,7 @@ query-filters:
         - web-nodejs/routes/settings.routes.js
         - web-nodejs/routes/generator.routes.js
         - web-nodejs/services/serverManagement.js
+        - web-nodejs/tests/**
 
   # --- Intentional admin-only terminal I/O (super_admin / server_admin) ---
   - exclude:
