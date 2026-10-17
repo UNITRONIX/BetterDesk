@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### Security
+- Cleared OIDC discovery data race (`atomic` retry interval + `Close()`); Go
+  toolchain **1.26.9** and `golang.org/x/text` **v0.41.0** (govulncheck clean).
+- Multer disk cleanup confined to reconstructed paths under temp/`dataDir`;
+  generator upload cleanup uses the same confinement.
+- Support Generator GitHub downloads: HTTPS-only host allowlist with
+  `hostname`/`path` request options (SSRF guard).
+- Local Support Client builder: allowlisted toolchain basenames before spawn;
+  public generic-agent download rate-limited.
+- CodeQL Security noise cleared (real fixes + documented false-positive dismissals).
+
 ### Changed
 - _(none yet)_
 
