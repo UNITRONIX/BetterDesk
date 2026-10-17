@@ -287,17 +287,31 @@ async function acceptTerms() {
     return writeState({ termsAccepted: true, error: null });
 }
 
-const GITHUB_FETCH_HOSTS = new Set([
-    'api.github.com',
-    'github.com',
-    'objects.githubusercontent.com',
-    'release-assets.githubusercontent.com',
-]);
+/** Literal host map so CodeQL sees an untainted hostname after allowlist lookup. */
+const GITHUB_FETCH_HOSTS = Object.freeze({
+    'api.github.com': 'api.github.com',
+    'github.com': 'github.com',
+    'objects.githubusercontent.com': 'objects.githubusercontent.com',
+    'release-assets.githubusercontent.com': 'release-assets.githubusercontent.com',
+});
+
+/**
+ * Resolve hostname to a compile-time allowlisted literal (SSRF guard).
+ * @param {string} hostname
+ * @returns {string}
+ */
+function resolveAllowedGithubHost(hostname) {
+    const allowed = GITHUB_FETCH_HOSTS[String(hostname || '').toLowerCase()];
+    if (!allowed) {
+        throw new Error(`github_fetch_host_not_allowed:${hostname}`);
+    }
+    return allowed;
+}
 
 /**
  * Only allow HTTPS fetches to known GitHub download/API hosts (SSRF guard).
  * @param {string} raw
- * @returns {URL}
+ * @returns {{ hostname: string, path: string, href: string }}
  */
 function assertAllowedGithubFetchUrl(raw) {
     let parsed;
@@ -312,10 +326,13 @@ function assertAllowedGithubFetchUrl(raw) {
     if (parsed.username || parsed.password) {
         throw new Error('github_fetch_url_must_not_contain_credentials');
     }
-    if (!GITHUB_FETCH_HOSTS.has(parsed.hostname.toLowerCase())) {
-        throw new Error(`github_fetch_host_not_allowed:${parsed.hostname}`);
-    }
-    return parsed;
+    const hostname = resolveAllowedGithubHost(parsed.hostname);
+    const requestPath = `${parsed.pathname || '/'}${parsed.search || ''}`;
+    return {
+        hostname,
+        path: requestPath,
+        href: `https://${hostname}${requestPath}`,
+    };
 }
 
 function _githubHeaders(accept) {
@@ -342,7 +359,12 @@ function _httpGetBuffer(url, redirects = 0, accept) {
             reject(err);
             return;
         }
-        const req = https.get(validated.href, {
+        // Pass hostname/path options (not a full URL string) so the host cannot
+        // be attacker-controlled after resolveAllowedGithubHost().
+        const req = https.get({
+            protocol: 'https:',
+            hostname: validated.hostname,
+            path: validated.path,
             headers: _githubHeaders(accept || 'application/octet-stream, application/json'),
             timeout: 120000,
         }, (res) => {
