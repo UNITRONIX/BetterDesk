@@ -17,6 +17,7 @@ const backupService = require('../services/backupService');
 const scheduledBackupService = require('../services/scheduledBackupService');
 const updateService = require('../services/updateService');
 const { resolveChildPath } = require('../lib/safePath');
+const { unlinkMulterFiles } = require('../lib/multerCleanup');
 const { canScheduleConsoleRestart } = require('../lib/updateFailurePolicy');
 const {
     persistUpdateResult,
@@ -355,6 +356,7 @@ const logoUpload = multer({
 router.post('/api/settings/branding/upload-logo', requireAuth, requirePermission('branding.edit'), (req, res) => {
     logoUpload.single('logo')(req, res, async (err) => {
         if (err) {
+            unlinkMulterFiles(req);
             const msg = err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 2 MB)' : (err.message || 'Upload failed');
             return res.status(400).json({ success: false, error: msg });
         }
@@ -455,6 +457,7 @@ router.get('/api/settings/branding/backgrounds', requireAuth, (req, res) => {
 router.post('/api/settings/branding/upload-background', requireAuth, requirePermission('branding.edit'), (req, res) => {
     bgUpload.single('background')(req, res, async (err) => {
         if (err) {
+            unlinkMulterFiles(req);
             const msg = err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 8 MB)' : (err.message || 'Upload failed');
             return res.status(400).json({ success: false, error: msg });
         }
@@ -830,6 +833,7 @@ const fontUpload = multer({
 router.post('/api/settings/fonts/upload', requireAuth, requirePermission('branding.edit'), (req, res) => {
     fontUpload.single('font')(req, res, async (err) => {
         if (err) {
+            unlinkMulterFiles(req);
             const msg = err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 5 MB)' : (err.message || 'Upload failed');
             return res.status(400).json({ success: false, error: msg });
         }

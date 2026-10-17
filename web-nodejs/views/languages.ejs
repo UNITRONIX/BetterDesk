@@ -20,11 +20,11 @@
         </div>
 
         <!-- Detail overlay -->
-        <div class="lang-detail-overlay" id="lang-detail-overlay" onclick="if(event.target===this) Languages.closeDetail()">
+        <div class="lang-detail-overlay" id="lang-detail-overlay" data-bd-call="Languages.closeDetail" data-bd-self-only="1">
             <div class="lang-detail-panel">
                 <div class="lang-detail-header">
                     <span></span>
-                    <button class="lang-detail-close" onclick="Languages.closeDetail()">
+                    <button class="lang-detail-close" data-bd-call="Languages.closeDetail">
                         <span class="material-icons-round">close</span>
                     </button>
                 </div>

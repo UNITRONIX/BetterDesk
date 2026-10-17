@@ -17,89 +17,99 @@ class RDProtocol {
     }
 
     /**
-     * Load and parse .proto files
+     * Bind CSP-safe static protobuf (BetterDeskProtos) — no runtime .proto parse / eval.
      */
     async load() {
         if (this.loaded) return;
 
-        this.protoRoot = await protobuf.load([
-            '/protos/rendezvous.proto',
-            '/protos/message.proto'
-        ]);
+        const root = (typeof BetterDeskProtos !== 'undefined' && BetterDeskProtos)
+            || (typeof window !== 'undefined' && window.BetterDeskProtos)
+            || null;
+        if (!root || !root.hbb) {
+            throw new Error('BetterDeskProtos missing — run npm run protocols:rdclient');
+        }
+        this.protoRoot = root;
+        const hbb = root.hbb;
+        const type = (name) => {
+            const t = hbb[name];
+            if (!t) throw new Error(`Missing static proto type hbb.${name}`);
+            return t;
+        };
+        /** Static enums are plain value maps; shim .values for existing call sites. */
+        const enumType = (e) => {
+            if (!e) throw new Error('Missing static proto enum');
+            return e.values ? e : { values: e };
+        };
 
-        // Cache commonly used message types
-        this.types.RendezvousMessage = this.protoRoot.lookupType('hbb.RendezvousMessage');
-        this.types.Message = this.protoRoot.lookupType('hbb.Message');
-        this.types.PunchHoleRequest = this.protoRoot.lookupType('hbb.PunchHoleRequest');
-        this.types.PunchHoleResponse = this.protoRoot.lookupType('hbb.PunchHoleResponse');
-        this.types.RequestRelay = this.protoRoot.lookupType('hbb.RequestRelay');
-        this.types.RelayResponse = this.protoRoot.lookupType('hbb.RelayResponse');
-        this.types.LoginRequest = this.protoRoot.lookupType('hbb.LoginRequest');
-        this.types.LoginResponse = this.protoRoot.lookupType('hbb.LoginResponse');
-        this.types.SignedId = this.protoRoot.lookupType('hbb.SignedId');
-        this.types.PublicKey = this.protoRoot.lookupType('hbb.PublicKey');
-        this.types.Hash = this.protoRoot.lookupType('hbb.Hash');
-        this.types.MouseEvent = this.protoRoot.lookupType('hbb.MouseEvent');
-        this.types.KeyEvent = this.protoRoot.lookupType('hbb.KeyEvent');
-        this.types.VideoFrame = this.protoRoot.lookupType('hbb.VideoFrame');
-        this.types.AudioFrame = this.protoRoot.lookupType('hbb.AudioFrame');
-        this.types.CursorData = this.protoRoot.lookupType('hbb.CursorData');
-        this.types.CursorPosition = this.protoRoot.lookupType('hbb.CursorPosition');
-        this.types.TestDelay = this.protoRoot.lookupType('hbb.TestDelay');
-        this.types.Misc = this.protoRoot.lookupType('hbb.Misc');
-        this.types.OptionMessage = this.protoRoot.lookupType('hbb.OptionMessage');
-        this.types.SupportedDecoding = this.protoRoot.lookupType('hbb.SupportedDecoding');
-        this.types.Clipboard = this.protoRoot.lookupType('hbb.Clipboard');
-        this.types.PeerInfo = this.protoRoot.lookupType('hbb.PeerInfo');
-        this.types.IdPk = this.protoRoot.lookupType('hbb.IdPk');
-        this.types.Resolution = this.protoRoot.lookupType('hbb.Resolution');
-        this.types.ChatMessage = this.protoRoot.lookupType('hbb.ChatMessage');
-        this.types.TogglePrivacyMode = this.protoRoot.lookupType('hbb.TogglePrivacyMode');
-        this.types.SwitchDisplay = this.protoRoot.lookupType('hbb.SwitchDisplay');
-        this.types.Auth2FA = this.protoRoot.lookupType('hbb.Auth2FA');
+        this.types.RendezvousMessage = type('RendezvousMessage');
+        this.types.Message = type('Message');
+        this.types.PunchHoleRequest = type('PunchHoleRequest');
+        this.types.PunchHoleResponse = type('PunchHoleResponse');
+        this.types.RequestRelay = type('RequestRelay');
+        this.types.RelayResponse = type('RelayResponse');
+        this.types.LoginRequest = type('LoginRequest');
+        this.types.LoginResponse = type('LoginResponse');
+        this.types.SignedId = type('SignedId');
+        this.types.PublicKey = type('PublicKey');
+        this.types.Hash = type('Hash');
+        this.types.MouseEvent = type('MouseEvent');
+        this.types.KeyEvent = type('KeyEvent');
+        this.types.VideoFrame = type('VideoFrame');
+        this.types.AudioFrame = type('AudioFrame');
+        this.types.CursorData = type('CursorData');
+        this.types.CursorPosition = type('CursorPosition');
+        this.types.TestDelay = type('TestDelay');
+        this.types.Misc = type('Misc');
+        this.types.OptionMessage = type('OptionMessage');
+        this.types.SupportedDecoding = type('SupportedDecoding');
+        this.types.Clipboard = type('Clipboard');
+        this.types.PeerInfo = type('PeerInfo');
+        this.types.IdPk = type('IdPk');
+        this.types.Resolution = type('Resolution');
+        this.types.ChatMessage = type('ChatMessage');
+        this.types.TogglePrivacyMode = type('TogglePrivacyMode');
+        this.types.SwitchDisplay = type('SwitchDisplay');
+        this.types.Auth2FA = type('Auth2FA');
 
-        // File transfer types
-        this.types.FileAction = this.protoRoot.lookupType('hbb.FileAction');
-        this.types.FileResponse = this.protoRoot.lookupType('hbb.FileResponse');
-        this.types.FileDirectory = this.protoRoot.lookupType('hbb.FileDirectory');
-        this.types.FileEntry = this.protoRoot.lookupType('hbb.FileEntry');
-        this.types.ReadDir = this.protoRoot.lookupType('hbb.ReadDir');
-        this.types.FileTransferSendRequest = this.protoRoot.lookupType('hbb.FileTransferSendRequest');
-        this.types.FileTransferReceiveRequest = this.protoRoot.lookupType('hbb.FileTransferReceiveRequest');
-        this.types.FileTransferBlock = this.protoRoot.lookupType('hbb.FileTransferBlock');
-        this.types.FileTransferDigest = this.protoRoot.lookupType('hbb.FileTransferDigest');
-        this.types.FileTransferDone = this.protoRoot.lookupType('hbb.FileTransferDone');
-        this.types.FileTransferCancel = this.protoRoot.lookupType('hbb.FileTransferCancel');
-        this.types.FileTransferSendConfirmRequest = this.protoRoot.lookupType('hbb.FileTransferSendConfirmRequest');
-        this.types.FileTransferError = this.protoRoot.lookupType('hbb.FileTransferError');
-        this.types.FileDirCreate = this.protoRoot.lookupType('hbb.FileDirCreate');
-        this.types.FileRemoveDir = this.protoRoot.lookupType('hbb.FileRemoveDir');
-        this.types.FileRemoveFile = this.protoRoot.lookupType('hbb.FileRemoveFile');
-        this.types.FileRename = this.protoRoot.lookupType('hbb.FileRename');
-        this.types.FileTransfer = this.protoRoot.lookupType('hbb.FileTransfer');
+        this.types.FileAction = type('FileAction');
+        this.types.FileResponse = type('FileResponse');
+        this.types.FileDirectory = type('FileDirectory');
+        this.types.FileEntry = type('FileEntry');
+        this.types.ReadDir = type('ReadDir');
+        this.types.FileTransferSendRequest = type('FileTransferSendRequest');
+        this.types.FileTransferReceiveRequest = type('FileTransferReceiveRequest');
+        this.types.FileTransferBlock = type('FileTransferBlock');
+        this.types.FileTransferDigest = type('FileTransferDigest');
+        this.types.FileTransferDone = type('FileTransferDone');
+        this.types.FileTransferCancel = type('FileTransferCancel');
+        this.types.FileTransferSendConfirmRequest = type('FileTransferSendConfirmRequest');
+        this.types.FileTransferError = type('FileTransferError');
+        this.types.FileDirCreate = type('FileDirCreate');
+        this.types.FileRemoveDir = type('FileRemoveDir');
+        this.types.FileRemoveFile = type('FileRemoveFile');
+        this.types.FileRename = type('FileRename');
+        this.types.FileTransfer = type('FileTransfer');
 
-        // Cliprdr (file clipboard / Explorer paste)
-        this.types.Cliprdr = this.protoRoot.lookupType('hbb.Cliprdr');
-        this.types.CliprdrMonitorReady = this.protoRoot.lookupType('hbb.CliprdrMonitorReady');
-        this.types.CliprdrFormat = this.protoRoot.lookupType('hbb.CliprdrFormat');
-        this.types.CliprdrServerFormatList = this.protoRoot.lookupType('hbb.CliprdrServerFormatList');
-        this.types.CliprdrServerFormatListResponse = this.protoRoot.lookupType('hbb.CliprdrServerFormatListResponse');
-        this.types.CliprdrServerFormatDataRequest = this.protoRoot.lookupType('hbb.CliprdrServerFormatDataRequest');
-        this.types.CliprdrServerFormatDataResponse = this.protoRoot.lookupType('hbb.CliprdrServerFormatDataResponse');
-        this.types.CliprdrFileContentsRequest = this.protoRoot.lookupType('hbb.CliprdrFileContentsRequest');
-        this.types.CliprdrFileContentsResponse = this.protoRoot.lookupType('hbb.CliprdrFileContentsResponse');
-        this.types.CliprdrTryEmpty = this.protoRoot.lookupType('hbb.CliprdrTryEmpty');
+        this.types.Cliprdr = type('Cliprdr');
+        this.types.CliprdrMonitorReady = type('CliprdrMonitorReady');
+        this.types.CliprdrFormat = type('CliprdrFormat');
+        this.types.CliprdrServerFormatList = type('CliprdrServerFormatList');
+        this.types.CliprdrServerFormatListResponse = type('CliprdrServerFormatListResponse');
+        this.types.CliprdrServerFormatDataRequest = type('CliprdrServerFormatDataRequest');
+        this.types.CliprdrServerFormatDataResponse = type('CliprdrServerFormatDataResponse');
+        this.types.CliprdrFileContentsRequest = type('CliprdrFileContentsRequest');
+        this.types.CliprdrFileContentsResponse = type('CliprdrFileContentsResponse');
+        this.types.CliprdrTryEmpty = type('CliprdrTryEmpty');
 
-        // Enums
         this.enums = {};
-        this.enums.ConnType = this.protoRoot.lookupEnum('hbb.ConnType');
-        this.enums.NatType = this.protoRoot.lookupEnum('hbb.NatType');
-        this.enums.ControlKey = this.protoRoot.lookupEnum('hbb.ControlKey');
-        this.enums.KeyboardMode = this.protoRoot.lookupEnum('hbb.KeyboardMode');
-        this.enums.ImageQuality = this.protoRoot.lookupEnum('hbb.ImageQuality');
-        this.enums.ClipboardFormat = this.protoRoot.lookupEnum('hbb.ClipboardFormat');
-        this.enums.FileType = this.protoRoot.lookupEnum('hbb.FileType');
-        this.enums.PreferCodec = this.protoRoot.lookupEnum('hbb.SupportedDecoding.PreferCodec');
+        this.enums.ConnType = enumType(hbb.ConnType);
+        this.enums.NatType = enumType(hbb.NatType);
+        this.enums.ControlKey = enumType(hbb.ControlKey);
+        this.enums.KeyboardMode = enumType(hbb.KeyboardMode);
+        this.enums.ImageQuality = enumType(hbb.ImageQuality);
+        this.enums.ClipboardFormat = enumType(hbb.ClipboardFormat);
+        this.enums.FileType = enumType(hbb.FileType);
+        this.enums.PreferCodec = enumType(hbb.SupportedDecoding && hbb.SupportedDecoding.PreferCodec);
 
         this.loaded = true;
     }

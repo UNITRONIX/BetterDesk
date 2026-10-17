@@ -1,5 +1,21 @@
 ## [Unreleased]
 
+### Security
+- Bumped Node production dependencies for audited advisories: `axios` ≥1.20,
+  `multer` ≥2.4, `proxy-addr` ≥2.0.8, `brace-expansion` ≥5.0.12; upload error
+  paths unlink orphaned multer disk files.
+- Hardened dynamic SQL table identifiers via `assertSafeSqlIdent` (stats,
+  dump/restore).
+- Go JWT now emits and requires `aud`/`iss`/`nbf` (issuer `betterdesk-server`,
+  audience `betterdesk-api`). **Operators must re-login** after upgrade —
+  tokens without these claims are rejected.
+- CSP: removed `script-src-attr 'unsafe-inline'` and default `/remote`
+  `unsafe-eval` (RdClient uses a static protobuf bundle). Emergency rollback:
+  `CSP_RELAX_REMOTE=true`. Inline `onclick`/`onchange` migrated to
+  `data-bd-call` + `bd-actions.js`.
+- Security Test Suite bumped to v1.2.0 (`npm run test:security` /
+  `scripts/run-security-suite.*`).
+
 ### Changed
 - _(none yet)_
 

@@ -118,7 +118,7 @@
       if (totalPages <= 1) { pag.innerHTML = ''; return; }
       let html = '';
       for (let i = 0; i < totalPages && i < 10; i++) {
-        html += `<button class="secaudit-page-btn ${i === eventsPage ? 'active' : ''}" onclick="SecurityAudit.goPage(${i})">${i + 1}</button>`;
+        html += `<button class="secaudit-page-btn ${i === eventsPage ? 'active' : ''}" data-bd-call="SecurityAudit.goPage" data-bd-args='[${i}]'>${i + 1}</button>`;
       }
       pag.innerHTML = html;
     } catch (e) {

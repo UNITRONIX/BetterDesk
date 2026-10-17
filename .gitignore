@@ -43,6 +43,12 @@ target/
 
 # --- Node.js ---
 node_modules/
+
+# --- Generated RdClient protobuf (local/dev artifact; rebuild with
+#     npm run protocols:rdclient — do not commit multi‑MB static JS) ---
+web-nodejs/public/js/rdclient/generated/
+web-nodejs/public/protos/bundle.json
+web-nodejs/public/protos/
 # --- IDEs & OS ---
 .vscode/
 .idea/

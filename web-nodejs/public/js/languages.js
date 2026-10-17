@@ -103,7 +103,7 @@
                     ${keyStats.length ? `<div class="lang-key-stats">${keyStats.join('')}</div>` : ''}
                     ${!lang.is_reference ? `
                         <div class="lang-actions">
-                            ${lang.missing_keys > 0 ? `<button onclick="Languages.viewMissing('${lang.code}')" title="${_('languages.view_missing')}">
+                            ${lang.missing_keys > 0 ? `<button data-bd-call="Languages.viewMissing" data-bd-args='["${lang.code}"]' title="${_('languages.view_missing')}">
                                 <span class="material-icons-round">search</span> ${_('languages.view_missing')}
                             </button>` : ''}
                         </div>
