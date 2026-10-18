@@ -584,6 +584,20 @@ func (pg *PostgresDB) Migrate() error {
 			symbol TEXT NOT NULL DEFAULT '',
 			exchange_rate_to_base DOUBLE PRECISION NOT NULL DEFAULT 1
 		)`,
+		`CREATE TABLE IF NOT EXISTS billing_period_totals (
+			id BIGSERIAL PRIMARY KEY,
+			contract_id TEXT NOT NULL,
+			package_id TEXT NOT NULL DEFAULT '',
+			period_ym TEXT NOT NULL,
+			timezone TEXT NOT NULL DEFAULT 'UTC',
+			included_minutes_used INTEGER NOT NULL DEFAULT 0,
+			overage_minutes INTEGER NOT NULL DEFAULT 0,
+			amount_overage DOUBLE PRECISION NOT NULL DEFAULT 0,
+			included_limit_snapshot INTEGER NOT NULL DEFAULT 0,
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE(contract_id, period_ym)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_billing_period_totals_pkg ON billing_period_totals(package_id, period_ym)`,
 
 		// User/device groups + strategies (API-port consolidation Phase A)
 		`CREATE TABLE IF NOT EXISTS user_groups (
@@ -718,6 +732,9 @@ func (pg *PostgresDB) Migrate() error {
 		// peers/users: Pro strategy assignment GUIDs
 		`ALTER TABLE peers ADD COLUMN IF NOT EXISTS guid TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS guid TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE billing_packages ADD COLUMN IF NOT EXISTS rounding_minutes INTEGER NOT NULL DEFAULT 10`,
+		`ALTER TABLE billing_contracts ADD COLUMN IF NOT EXISTS current_period_ym TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE billing_period_totals ADD COLUMN IF NOT EXISTS included_limit_snapshot INTEGER NOT NULL DEFAULT 0`,
 	}
 
 	for _, ddl := range columnMigrations {

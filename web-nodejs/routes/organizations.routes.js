@@ -130,7 +130,31 @@ router.get('/organizations/:id', requireAuth, (req, res) => {
 
 // Organizations CRUD
 router.get('/api/panel/org', requireAuth, (req, res) => goApiProxy(req, res, 'get', '/org'));
-router.post('/api/panel/org', requireAuth, requirePermission('org.create'), (req, res) => goApiProxy(req, res, 'post', '/org', req.body));
+// Commercialization depends on org→default device group; packages attach to groups, not orgs/folders.
+router.post('/api/panel/org', requireAuth, requirePermission('org.create'), async (req, res) => {
+    try {
+        const resp = await apiClient({ method: 'post', url: '/org', data: req.body });
+        const org = resp.data;
+        if (org && org.id) {
+            try {
+                const groupName = String(org.name || 'Organization').trim() || 'Organization';
+                await db.createDeviceGroup(deviceGroupService.buildDeviceGroupCreateFields({
+                    name: groupName,
+                    team_id: org.id,
+                    source_type: 'manual',
+                    note: 'Default group created with organization (commercialization)',
+                }));
+            } catch (groupErr) {
+                console.warn('[org] default device group create failed:', groupErr.message);
+            }
+        }
+        res.status(resp.status).json(org);
+    } catch (err) {
+        const status = err.response?.status || 500;
+        const data = err.response?.data || { error: 'Go server unreachable' };
+        res.status(status).json(data);
+    }
+});
 router.get('/api/panel/org/:id', requireAuth, (req, res) =>
     goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id)));
 router.put('/api/panel/org/:id', requireAuth, requirePermission('org.edit'), (req, res) =>

@@ -422,7 +422,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Chaves do servidor",
@@ -818,7 +826,24 @@
         "availability_history_retention": "Retenção (dias)",
         "availability_history_retention_hint": "Eventos antigos são apagados automaticamente. Predefinição: 30 dias.",
         "availability_history_save": "Guardar definições de disponibilidade",
-        "availability_history_saved": "Definições de histórico de disponibilidade guardadas"
+        "availability_history_saved": "Definições de histórico de disponibilidade guardadas",
+        "tab_time": "Hora / fusos horários",
+        "time": {
+            "timezone_title": "Fuso horário de faturação",
+            "timezone_desc": "Fuso IANA global para limites mensais de comercialização (excesso reinicia à meia-noite do dia 1).",
+            "billing_month_hint": "A meia-noite do primeiro dia do mês neste fuso fecha o período anterior e abre um novo. Sessões ativas não são interrompidas.",
+            "billing_timezone": "Fuso horário",
+            "billing_timezone_hint": "Ex.: Europe/Warsaw. Afeta o uso mensal e o excesso.",
+            "custom_timezone": "Fuso IANA personalizado (opcional)",
+            "detect_os": "Detetar a partir do SO do servidor",
+            "detected": "Fuso detetado: {tz}",
+            "ntp_title": "NTP / sincronização do relógio",
+            "ntp_desc": "Mantenha o relógio do servidor BetterDesk sincronizado para tempos de sessão faturáveis precisos.",
+            "save": "Guardar definições de hora",
+            "save_title": "Guardar definições de hora",
+            "saved": "Definições de hora guardadas.",
+            "commercialization_link": "Abrir Comercialização → Pacotes"
+        }
     },
     "audit": {
         "time": "Hora",
@@ -4189,7 +4214,8 @@
             "status_error": "Último erro",
             "os_yes": "Sim",
             "os_no": "Não",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Sessões faturáveis ativas",
@@ -4213,7 +4239,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Dispositivo",
@@ -4221,7 +4254,11 @@
             "duration": "Duração",
             "phase": "Fase",
             "amount": "Valor",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sessão",
@@ -4268,7 +4305,9 @@
             "skip": "Ignorar por agora",
             "submit": "Enviar relatório",
             "summary_required": "O resumo é obrigatório",
-            "saved": "Relatório de trabalho guardado"
+            "saved": "Relatório de trabalho guardado",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Ainda não há pacotes. Crie um com o botão acima.",
@@ -4330,6 +4369,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

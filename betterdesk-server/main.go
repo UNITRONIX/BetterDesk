@@ -54,6 +54,7 @@ type persistedTimeSyncConfig struct {
 	MaxSkewMS          int    `json:"max_skew_ms"`
 	RequireSyncedClock bool   `json:"require_synced_clock"`
 	TrustOSNTP         bool   `json:"trust_os_ntp"`
+	BillingTimezone    string `json:"billing_timezone"`
 }
 
 func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
@@ -76,6 +77,11 @@ func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
 	cfg.BillingMaxClockSkewMS = persisted.MaxSkewMS
 	cfg.BillingRequireSyncedClock = persisted.RequireSyncedClock
 	cfg.BillingTrustOSNTP = persisted.TrustOSNTP
+	if tz := strings.TrimSpace(persisted.BillingTimezone); tz != "" {
+		if _, err := time.LoadLocation(tz); err == nil {
+			cfg.BillingTimezone = tz
+		}
+	}
 	log.Printf("Restored time-sync configuration from DB")
 }
 
@@ -427,24 +433,26 @@ func main() {
 
 	// Time sync + billing (commercialization module)
 	timeSyncSvc := timesync.NewService(database, timesync.Config{
-		Servers:      cfg.GetNTPServers(),
-		Interval:     60 * time.Second,
-		QueryTimeout: 5 * time.Second,
-		MaxSkew:      time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
-		RequireSync:  cfg.BillingRequireSyncedClock,
-		TrustOSNTP:   cfg.BillingTrustOSNTP,
+		Servers:         cfg.GetNTPServers(),
+		Interval:        60 * time.Second,
+		QueryTimeout:    5 * time.Second,
+		MaxSkew:         time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
+		RequireSync:     cfg.BillingRequireSyncedClock,
+		TrustOSNTP:      cfg.BillingTrustOSNTP,
+		BillingTimezone: cfg.BillingTimezone,
 	})
-	log.Printf("[timesync] NTP servers: %v (trust OS NTP when queries fail: %v)",
-		cfg.GetNTPServers(), cfg.BillingTrustOSNTP)
+	log.Printf("[timesync] NTP servers: %v (trust OS NTP when queries fail: %v; billing TZ: %s)",
+		cfg.GetNTPServers(), cfg.BillingTrustOSNTP, cfg.BillingLocation().String())
 	timeSyncSvc.Start(ctx)
 	defer timeSyncSvc.Stop()
 
 	reloadHandler.OnReload(func() error {
 		timeSyncSvc.ApplyConfig(timesync.Config{
-			Servers:     cfg.GetNTPServers(),
-			MaxSkew:     time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
-			RequireSync: cfg.BillingRequireSyncedClock,
-			TrustOSNTP:  cfg.BillingTrustOSNTP,
+			Servers:         cfg.GetNTPServers(),
+			MaxSkew:         time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
+			RequireSync:     cfg.BillingRequireSyncedClock,
+			TrustOSNTP:      cfg.BillingTrustOSNTP,
+			BillingTimezone: cfg.BillingTimezone,
 		})
 		return nil
 	})

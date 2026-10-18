@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Ключі сервера",
@@ -824,7 +832,24 @@
         "availability_history_retention": "Зберігання (дні)",
         "availability_history_retention_hint": "Старіші події видаляються автоматично. Типово: 30 днів.",
         "availability_history_save": "Зберегти налаштування доступності",
-        "availability_history_saved": "Налаштування історії доступності збережено"
+        "availability_history_saved": "Налаштування історії доступності збережено",
+        "tab_time": "Час / часові пояси",
+        "time": {
+            "timezone_title": "Часовий пояс розрахунків",
+            "timezone_desc": "Глобальний IANA-пояс для місячних меж комерціалізації (перевищення обнуляється опівночі 1-го числа).",
+            "billing_month_hint": "Опівніч першого дня місяця в цьому поясі закриває попередній період і відкриває новий. Активні сесії не перериваються.",
+            "billing_timezone": "Часовий пояс",
+            "billing_timezone_hint": "Напр. Europe/Warsaw. Впливає на місячне використання та перевищення.",
+            "custom_timezone": "Власний IANA-пояс (необов’язково)",
+            "detect_os": "Визначити з ОС сервера",
+            "detected": "Визначений пояс: {tz}",
+            "ntp_title": "NTP / синхронізація годинника",
+            "ntp_desc": "Тримайте годинник сервера BetterDesk синхронізованим для точних платних сесій.",
+            "save": "Зберегти налаштування часу",
+            "save_title": "Зберегти налаштування часу",
+            "saved": "Налаштування часу збережено.",
+            "commercialization_link": "Відкрити Комерціалізацію → Пакети"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "Остання помилка",
             "os_yes": "Так",
             "os_no": "Ні",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Активні платні сесії",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Пристрій",
@@ -4227,7 +4260,11 @@
             "duration": "Тривалість",
             "phase": "Фаза",
             "amount": "Сума",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Сесія",
@@ -4274,7 +4311,9 @@
             "skip": "Пропустити зараз",
             "submit": "Надіслати звіт",
             "summary_required": "Підсумок обов'язковий",
-            "saved": "Звіт про роботу збережено"
+            "saved": "Звіт про роботу збережено",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Пакетів ще немає. Створіть перший кнопкою вище.",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

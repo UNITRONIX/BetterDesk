@@ -43,6 +43,9 @@
         if (document.getElementById('tab-email') && document.getElementById('tab-email').style.display !== 'none') {
             initEmailSection();
         }
+        if (document.getElementById('tab-time') && document.getElementById('tab-time').style.display !== 'none') {
+            initTimeSettingsTab();
+        }
 
         loadAuditLog();
         loadServerInfo();
@@ -412,7 +415,7 @@
         });
         
         const hash = window.location.hash.replace('#', '');
-        if (['general', 'branding', 'server', 'backup', 'updates', 'auth', 'advanced', 'email'].includes(hash)) {
+        if (['general', 'branding', 'server', 'backup', 'updates', 'auth', 'advanced', 'email', 'time'].includes(hash)) {
             const tabName = hash === 'server' ? 'general' : hash;
             const tab = document.querySelector(`.settings-shell-tab[data-tab="${tabName}"], .settings-tab[data-tab="${tabName}"]`);
             if (tab) tab.click();
@@ -454,8 +457,157 @@
         return false;
     }
 
-    function onSettingsTabChanged() {
-        // Appearance changes are applied only after an explicit save.
+    function onSettingsTabChanged(tabName) {
+        if (tabName === 'time') {
+            loadTimeSettingsTab();
+        }
+    }
+
+    // ==================== Time / NTP / billing timezone ====================
+
+    let _timeClockDockerMode = false;
+    let _timeCommonZones = [];
+
+    function fillTimezoneSelect(selected, common) {
+        const select = document.getElementById('time-billing-timezone');
+        if (!select) return;
+        const zones = Array.from(new Set([...(common || []), selected, 'UTC', 'Europe/Warsaw'].filter(Boolean))).sort();
+        select.innerHTML = zones.map((z) =>
+            `<option value="${Utils.escapeHtml(z)}"${z === selected ? ' selected' : ''}>${Utils.escapeHtml(z)}</option>`
+        ).join('');
+        const custom = document.getElementById('time-billing-timezone-custom');
+        if (custom && selected && !zones.includes(selected)) {
+            custom.value = selected;
+        }
+    }
+
+    async function loadTimeSettingsTab() {
+        if (!document.getElementById('tab-time')) return;
+        try {
+            const detect = await Utils.api('/api/panel/billing/clock/detect-timezone');
+            _timeCommonZones = detect.common || [];
+        } catch (_) {
+            _timeCommonZones = ['UTC', 'Europe/Warsaw'];
+        }
+        try {
+            const data = await Utils.api('/api/panel/billing/clock/settings');
+            _timeClockDockerMode = data.dockerMode === true;
+            const settings = data.settings || {};
+            fillTimezoneSelect(settings.billing_timezone || 'UTC', _timeCommonZones);
+            const serversEl = document.getElementById('time-clock-ntp-servers');
+            const skewEl = document.getElementById('time-clock-max-skew');
+            const requireEl = document.getElementById('time-clock-require-sync');
+            const trustEl = document.getElementById('time-clock-trust-os');
+            if (serversEl) serversEl.value = settings.ntp_servers || '';
+            if (skewEl) skewEl.value = settings.max_skew_ms || 2000;
+            if (requireEl) requireEl.checked = settings.require_synced_clock !== false;
+            if (trustEl) trustEl.checked = settings.trust_os_ntp !== false;
+        } catch (e) {
+            console.warn('[settings] clock settings', e);
+        }
+        await refreshTimeSyncStatus();
+    }
+
+    async function refreshTimeSyncStatus() {
+        try {
+            const st = await Utils.api('/api/panel/billing/timesync/status');
+            const detail = document.getElementById('time-clock-detail');
+            const offsetEl = document.getElementById('time-clock-offset');
+            const ntpServerEl = document.getElementById('time-clock-ntp-server');
+            const osSyncEl = document.getElementById('time-clock-os-sync');
+            const lastErrorEl = document.getElementById('time-clock-last-error');
+            const synced = !!st.synced;
+            if (detail) {
+                detail.textContent = synced
+                    ? (typeof __ === 'function' ? __('commercialization.clock.synced_detail') : 'Clock synchronized for billing')
+                    : (typeof __ === 'function' ? __('commercialization.clock.unsynced') : 'Server clock is not synchronized');
+            }
+            if (offsetEl) offsetEl.textContent = st.offset_ms != null ? `${st.offset_ms} ms` : '—';
+            if (ntpServerEl) ntpServerEl.textContent = st.ntp_server || '—';
+            if (osSyncEl) {
+                if (st.os_clock_synced === true) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_yes') : 'Yes';
+                else if (st.os_clock_synced === false) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_no') : 'No';
+                else osSyncEl.textContent = '—';
+            }
+            if (lastErrorEl) lastErrorEl.textContent = st.last_error || '—';
+        } catch (e) {
+            console.warn('[settings] timesync status', e);
+        }
+    }
+
+    function resolveSelectedTimezone() {
+        const custom = (document.getElementById('time-billing-timezone-custom')?.value || '').trim();
+        if (custom) return custom;
+        return document.getElementById('time-billing-timezone')?.value || 'UTC';
+    }
+
+    function initTimeSettingsTab() {
+        if (!document.getElementById('tab-time')) return;
+
+        document.getElementById('time-detect-timezone-btn')?.addEventListener('click', async () => {
+            try {
+                const data = await Utils.api('/api/panel/billing/clock/detect-timezone');
+                const tz = data.timezone || 'UTC';
+                fillTimezoneSelect(tz, data.common || _timeCommonZones);
+                const custom = document.getElementById('time-billing-timezone-custom');
+                if (custom) custom.value = '';
+                Notifications.success(tSettings('time.detected', 'Detected timezone: {tz}').replace('{tz}', tz));
+            } catch (e) {
+                Notifications.error(e.message || 'Failed to detect timezone');
+            }
+        });
+
+        document.getElementById('time-timesync-check-btn')?.addEventListener('click', async () => {
+            try {
+                await Utils.api('/api/panel/billing/timesync/check', { method: 'POST' });
+                Notifications.success(typeof __ === 'function' ? __('commercialization.clock.checked') : 'Clock check completed');
+                await refreshTimeSyncStatus();
+            } catch (e) {
+                Notifications.error(e.message || 'Clock check failed');
+            }
+        });
+
+        document.getElementById('time-save-clock-settings-btn')?.addEventListener('click', async () => {
+            if (!_timeClockDockerMode) {
+                const ok = await settingsConfirmCritical({
+                    title: tSettings('time.save_title', 'Save time settings'),
+                    message: typeof __ === 'function'
+                        ? __('commercialization.clock.save_restart')
+                        : 'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.',
+                    confirmLabel: tSettings('time.save', 'Save'),
+                    icon: 'schedule'
+                });
+                if (!ok) return;
+            }
+            try {
+                const result = await Utils.api('/api/panel/billing/clock/settings', {
+                    method: 'PUT',
+                    body: {
+                        ntp_servers: document.getElementById('time-clock-ntp-servers')?.value || '',
+                        max_skew_ms: Number(document.getElementById('time-clock-max-skew')?.value || 2000),
+                        require_synced_clock: document.getElementById('time-clock-require-sync')?.checked !== false,
+                        trust_os_ntp: document.getElementById('time-clock-trust-os')?.checked !== false,
+                        billing_timezone: resolveSelectedTimezone()
+                    }
+                });
+                if (result.dockerMode) _timeClockDockerMode = true;
+                if (result.settings) {
+                    fillTimezoneSelect(result.settings.billing_timezone || resolveSelectedTimezone(), _timeCommonZones);
+                }
+                if (result.restartRequired && typeof showRestartPrompt === 'function') {
+                    showRestartPrompt(result.restartRequired);
+                } else {
+                    Notifications.success(
+                        result.dockerMode
+                            ? (typeof __ === 'function' ? __('commercialization.clock.saved_hot_reload') : 'Clock settings saved.')
+                            : tSettings('time.saved', 'Time settings saved.')
+                    );
+                }
+                await refreshTimeSyncStatus();
+            } catch (e) {
+                Notifications.error(e.message || 'Save failed');
+            }
+        });
     }
 
     function initSettingsSearch() {

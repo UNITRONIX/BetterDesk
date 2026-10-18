@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Sunucu Anahtarları",
@@ -824,7 +832,24 @@
         "availability_history_retention": "Saklama (gün)",
         "availability_history_retention_hint": "Eski olaylar otomatik silinir. Varsayılan: 30 gün.",
         "availability_history_save": "Kullanılabilirlik ayarlarını kaydet",
-        "availability_history_saved": "Kullanılabilirlik geçmişi ayarları kaydedildi"
+        "availability_history_saved": "Kullanılabilirlik geçmişi ayarları kaydedildi",
+        "tab_time": "Saat / saat dilimleri",
+        "time": {
+            "timezone_title": "Faturalama saat dilimi",
+            "timezone_desc": "Ticarileştirme ay sınırları için genel IANA dilimi (aşım ayın 1’inde gece yarısı sıfırlanır).",
+            "billing_month_hint": "Bu dilimde ayın birinci gününün gece yarısı önceki dönemi kapatır ve yenisini açar. Aktif oturumlar kesilmez.",
+            "billing_timezone": "Saat dilimi",
+            "billing_timezone_hint": "Örn. Europe/Warsaw. Aylık kullanımı ve aşımı etkiler.",
+            "custom_timezone": "Özel IANA dilimi (isteğe bağlı)",
+            "detect_os": "Sunucu OS’den algıla",
+            "detected": "Algılanan dilim: {tz}",
+            "ntp_title": "NTP / saat senkronu",
+            "ntp_desc": "Faturalanabilir oturum sürelerinin doğruluğu için BetterDesk sunucu saatini senkron tutun.",
+            "save": "Saat ayarlarını kaydet",
+            "save_title": "Saat ayarlarını kaydet",
+            "saved": "Saat ayarları kaydedildi.",
+            "commercialization_link": "Ticarileştirme → Paketleri aç"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "Son hata",
             "os_yes": "Evet",
             "os_no": "Hayır",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktif faturalandırılabilir oturumlar",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Cihaz",
@@ -4227,7 +4260,11 @@
             "duration": "Süre",
             "phase": "Aşama",
             "amount": "Tutar",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Oturum",
@@ -4274,7 +4311,9 @@
             "skip": "Şimdilik atla",
             "submit": "Rapor gönder",
             "summary_required": "Özet gerekli",
-            "saved": "İş raporu kaydedildi"
+            "saved": "İş raporu kaydedildi",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Henüz paket yok. Yukarıdaki düğmeyle oluşturun.",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

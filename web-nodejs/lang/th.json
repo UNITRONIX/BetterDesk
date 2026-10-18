@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "คีย์เซิร์ฟเวอร์",
@@ -824,7 +832,24 @@
         "availability_history_retention": "ระยะเก็บ (วัน)",
         "availability_history_retention_hint": "เหตุการณ์เก่าจะถูกลบอัตโนมัติ ค่าเริ่มต้น 30 วัน",
         "availability_history_save": "บันทึกการตั้งค่าความพร้อมใช้งาน",
-        "availability_history_saved": "บันทึกการตั้งค่าประวัติความพร้อมใช้งานแล้ว"
+        "availability_history_saved": "บันทึกการตั้งค่าประวัติความพร้อมใช้งานแล้ว",
+        "tab_time": "เวลา / เขตเวลา",
+        "time": {
+            "timezone_title": "เขตเวลาการเรียกเก็บเงิน",
+            "timezone_desc": "เขต IANA ส่วนกลางสำหรับขอบเดือนของการพาณิชย์ (เกินโควต้ารีเซ็ตตอนเที่ยงคืนวันที่ 1)",
+            "billing_month_hint": "เที่ยงคืนของวันที่ 1 ของเดือนในเขตนี้ปิดรอบก่อนหน้าและเปิดรอบใหม่ เซสชันที่ใช้งานอยู่ไม่ถูกขัดจังหวะ",
+            "billing_timezone": "เขตเวลา",
+            "billing_timezone_hint": "เช่น Europe/Warsaw ส่งผลต่อการใช้รายเดือนและค่าเกิน",
+            "custom_timezone": "เขต IANA กำหนดเอง (ไม่บังคับ)",
+            "detect_os": "ตรวจจับจาก OS ของเซิร์ฟเวอร์",
+            "detected": "เขตที่ตรวจพบ: {tz}",
+            "ntp_title": "NTP / ซิงก์นาฬิกา",
+            "ntp_desc": "รักษาการซิงก์นาฬิกาเซิร์ฟเวอร์ BetterDesk เพื่อความแม่นยำของเวลาเซสชันที่เรียกเก็บได้",
+            "save": "บันทึกการตั้งค่าเวลา",
+            "save_title": "บันทึกการตั้งค่าเวลา",
+            "saved": "บันทึกการตั้งค่าเวลาแล้ว",
+            "commercialization_link": "เปิดการพาณิชย์ → แพ็กเกจ"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "ข้อผิดพลาดล่าสุด",
             "os_yes": "ใช่",
             "os_no": "ไม่",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "เซสชันที่เรียกเก็บเงินที่ใช้งานอยู่",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "อุปกรณ์",
@@ -4227,7 +4260,11 @@
             "duration": "ระยะเวลา",
             "phase": "ระยะ",
             "amount": "จำนวนเงิน",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "เซสชัน",
@@ -4274,7 +4311,9 @@
             "skip": "ข้ามไปก่อน",
             "submit": "ส่งรายงาน",
             "summary_required": "ต้องมีสรุป",
-            "saved": "บันทึกรายงานการทำงานแล้ว"
+            "saved": "บันทึกรายงานการทำงานแล้ว",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "ยังไม่มีแพ็กเกจ สร้างด้วยปุ่มด้านบน",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

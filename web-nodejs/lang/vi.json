@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Khóa máy chủ",
@@ -824,7 +832,24 @@
         "availability_history_retention": "Lưu giữ (ngày)",
         "availability_history_retention_hint": "Sự kiện cũ được xóa tự động. Mặc định 30 ngày.",
         "availability_history_save": "Lưu cài đặt khả dụng",
-        "availability_history_saved": "Đã lưu cài đặt lịch sử khả dụng"
+        "availability_history_saved": "Đã lưu cài đặt lịch sử khả dụng",
+        "tab_time": "Thời gian / múi giờ",
+        "time": {
+            "timezone_title": "Múi giờ thanh toán",
+            "timezone_desc": "Múi IANA toàn cục cho ranh giới tháng thương mại hóa (vượt hạn mức đặt lại lúc nửa đêm ngày 1).",
+            "billing_month_hint": "Nửa đêm ngày đầu tháng ở múi này đóng kỳ trước và mở kỳ mới. Phiên đang hoạt động không bị gián đoạn.",
+            "billing_timezone": "Múi giờ",
+            "billing_timezone_hint": "VD: Europe/Warsaw. Ảnh hưởng mức dùng tháng và vượt hạn.",
+            "custom_timezone": "Múi IANA tùy chỉnh (tùy chọn)",
+            "detect_os": "Phát hiện từ OS máy chủ",
+            "detected": "Múi đã phát hiện: {tz}",
+            "ntp_title": "NTP / đồng bộ đồng hồ",
+            "ntp_desc": "Giữ đồng hồ máy chủ BetterDesk đồng bộ để thời gian phiên tính phí chính xác.",
+            "save": "Lưu cài đặt thời gian",
+            "save_title": "Lưu cài đặt thời gian",
+            "saved": "Đã lưu cài đặt thời gian.",
+            "commercialization_link": "Mở Thương mại hóa → Gói"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "Lỗi cuối",
             "os_yes": "Có",
             "os_no": "Không",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Phiên tính phí đang hoạt động",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Thiết bị",
@@ -4227,7 +4260,11 @@
             "duration": "Thời lượng",
             "phase": "Giai đoạn",
             "amount": "Số tiền",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Phiên",
@@ -4274,7 +4311,9 @@
             "skip": "Bỏ qua bây giờ",
             "submit": "Gửi báo cáo",
             "summary_required": "Tóm tắt là bắt buộc",
-            "saved": "Đã lưu báo cáo công việc"
+            "saved": "Đã lưu báo cáo công việc",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Chưa có gói nào. Tạo gói bằng nút phía trên.",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

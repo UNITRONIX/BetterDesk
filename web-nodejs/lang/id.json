@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Kunci Server",
@@ -824,7 +832,24 @@
         "availability_history_retention": "Retensi (hari)",
         "availability_history_retention_hint": "Peristiwa lama dihapus otomatis. Default 30 hari.",
         "availability_history_save": "Simpan pengaturan ketersediaan",
-        "availability_history_saved": "Pengaturan riwayat ketersediaan disimpan"
+        "availability_history_saved": "Pengaturan riwayat ketersediaan disimpan",
+        "tab_time": "Waktu / zona waktu",
+        "time": {
+            "timezone_title": "Zona waktu penagihan",
+            "timezone_desc": "Zona IANA global untuk batas bulan komersialisasi (overage direset pada tengah malam tanggal 1).",
+            "billing_month_hint": "Tengah malam hari pertama bulan di zona ini menutup periode sebelumnya dan membuka yang baru. Sesi aktif tidak terputus.",
+            "billing_timezone": "Zona waktu",
+            "billing_timezone_hint": "Contoh: Europe/Warsaw. Mempengaruhi penggunaan bulanan dan overage.",
+            "custom_timezone": "Zona IANA kustom (opsional)",
+            "detect_os": "Deteksi dari OS server",
+            "detected": "Zona terdeteksi: {tz}",
+            "ntp_title": "NTP / sinkronisasi jam",
+            "ntp_desc": "Jaga jam server BetterDesk tetap tersinkron untuk waktu sesi yang dapat ditagih.",
+            "save": "Simpan pengaturan waktu",
+            "save_title": "Simpan pengaturan waktu",
+            "saved": "Pengaturan waktu disimpan.",
+            "commercialization_link": "Buka Komersialisasi → Paket"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "Kesalahan terakhir",
             "os_yes": "Ya",
             "os_no": "Tidak",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Sesi berbayar aktif",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Perangkat",
@@ -4227,7 +4260,11 @@
             "duration": "Durasi",
             "phase": "Fase",
             "amount": "Jumlah",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sesi",
@@ -4274,7 +4311,9 @@
             "skip": "Lewati untuk sekarang",
             "submit": "Kirim laporan",
             "summary_required": "Ringkasan wajib diisi",
-            "saved": "Laporan kerja disimpan"
+            "saved": "Laporan kerja disimpan",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Belum ada paket. Buat dengan tombol di atas.",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

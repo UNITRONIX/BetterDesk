@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -365,6 +366,34 @@ func (s *SQLiteDB) DeleteDeviceGroup(guid string) error {
 	defer s.mu.Unlock()
 	_, err := s.db.Exec(`DELETE FROM device_groups WHERE guid = ?`, guid)
 	return err
+}
+
+// ListDeviceGroupMemberPeerIDs returns peer IDs assigned to a device group.
+func (s *SQLiteDB) ListDeviceGroupMemberPeerIDs(deviceGroupID int64) ([]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(
+		`SELECT peer_id FROM device_group_members WHERE device_group_id = ? ORDER BY peer_id ASC`,
+		deviceGroupID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no such table") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		id = strings.TrimSpace(id)
+		if id != "" {
+			ids = append(ids, id)
+		}
+	}
+	return ids, rows.Err()
 }
 
 // ── Strategies ────────────────────────────────────────────────────────

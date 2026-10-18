@@ -422,7 +422,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "서버 키",
@@ -818,7 +826,24 @@
         "availability_history_retention": "보존 기간(일)",
         "availability_history_retention_hint": "오래된 이벤트는 자동 삭제됩니다. 기본값은 30일입니다.",
         "availability_history_save": "가용성 설정 저장",
-        "availability_history_saved": "가용성 기록 설정이 저장됨"
+        "availability_history_saved": "가용성 기록 설정이 저장됨",
+        "tab_time": "시간 / 시간대",
+        "time": {
+            "timezone_title": "청구 시간대",
+            "timezone_desc": "상용화 월 경계를 위한 전역 IANA 시간대(초과분은 1일 자정에 초기화).",
+            "billing_month_hint": "이 시간대에서 매월 1일 자정에 이전 기간을 닫고 새 기간을 엽니다. 활성 세션은 중단되지 않습니다.",
+            "billing_timezone": "시간대",
+            "billing_timezone_hint": "예: Europe/Warsaw. 월간 사용량과 초과에 영향을 줍니다.",
+            "custom_timezone": "사용자 지정 IANA 시간대(선택)",
+            "detect_os": "서버 OS에서 감지",
+            "detected": "감지된 시간대: {tz}",
+            "ntp_title": "NTP / 시계 동기화",
+            "ntp_desc": "청구 가능 세션 시간의 정확성을 위해 BetterDesk 서버 시계를 동기화하세요.",
+            "save": "시간 설정 저장",
+            "save_title": "시간 설정 저장",
+            "saved": "시간 설정이 저장되었습니다.",
+            "commercialization_link": "상용화 → 패키지 열기"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4189,7 +4214,8 @@
             "status_error": "마지막 오류",
             "os_yes": "예",
             "os_no": "아니오",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "활성 과금 세션",
@@ -4213,7 +4239,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "장치",
@@ -4221,7 +4254,11 @@
             "duration": "시간",
             "phase": "단계",
             "amount": "금액",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "세션",
@@ -4268,7 +4305,9 @@
             "skip": "지금 건너뛰기",
             "submit": "보고서 제출",
             "summary_required": "요약은 필수입니다",
-            "saved": "작업 보고서가 저장되었습니다"
+            "saved": "작업 보고서가 저장되었습니다",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "아직 패키지가 없습니다. 위 버튼으로 만드세요.",
@@ -4330,6 +4369,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

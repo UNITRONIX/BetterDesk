@@ -430,7 +430,15 @@
             "no_data": "No hardware data available",
             "title": "Hardware Information",
             "gpu": "Graphics Card"
-        }
+        },
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Server Keys",
@@ -458,6 +466,23 @@
         "tab_backup": "Backup",
         "tab_auth": "Authentication",
         "tab_advanced": "Advanced",
+        "tab_time": "Time / timezones",
+        "time": {
+            "timezone_title": "Billing timezone",
+            "timezone_desc": "Global IANA timezone used for commercialization month boundaries (overage reset at midnight on the 1st).",
+            "billing_month_hint": "Midnight on the first day of each month in this timezone closes the previous billing period and opens a new one. Active remote sessions are not interrupted — only the accounting period splits.",
+            "billing_timezone": "Timezone",
+            "billing_timezone_hint": "Example: Europe/Warsaw. Affects package monthly usage and overage totals.",
+            "custom_timezone": "Custom IANA timezone (optional)",
+            "detect_os": "Detect from server OS",
+            "detected": "Detected timezone: {tz}",
+            "ntp_title": "NTP / clock sync",
+            "ntp_desc": "Keep the BetterDesk server clock synchronized so billable session times are accurate.",
+            "save": "Save time settings",
+            "save_title": "Save time settings",
+            "saved": "Time settings saved.",
+            "commercialization_link": "Open Commercialization → Packages"
+        },
         "connection_mode_title": "Connection strategy",
         "connection_mode_desc": "Control how RustDesk desktop clients connect: direct P2P (hole punch) when possible, or always via relay.",
         "connection_mode_label": "Default connection mode",
@@ -4246,7 +4271,8 @@
             "status_os": "OS clock synced",
             "status_error": "Last error",
             "os_yes": "Yes",
-            "os_no": "No"
+            "os_no": "No",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Active billable sessions",
@@ -4268,7 +4294,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Device",
@@ -4276,7 +4309,25 @@
             "operator": "Operator",
             "duration": "Duration",
             "phase": "Phase",
-            "amount": "Amount"
+            "amount": "Amount",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         },
         "reports": {
             "session": "Session",
@@ -4370,7 +4421,9 @@
             "skip": "Skip for now",
             "submit": "Submit report",
             "summary_required": "Summary is required",
-            "saved": "Work report saved"
+            "saved": "Work report saved",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "notifications": {
             "title": "Email notifications",

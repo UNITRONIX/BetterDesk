@@ -1,7 +1,22 @@
 ## [Unreleased]
 
+### Added
+- Commercialization month periods (`billing_period_totals`, `BILLING_TIMEZONE`): history
+  survives monthly usage reset; sessions spanning midnight settle at the month boundary
+  without disconnecting; package limit edits do not rewrite past months.
+- Packages table month preview (PPM / side panel): company, devices, used / remaining /
+  overage / month total with period navigation.
+- Web Remote billing overlay: package badge, in-session report intent, split disconnect
+  card with work report; skipped reports stay `pending_report` in Sessions with
+  **Complete report**.
+- Settings → Time / timezones: NTP + billing timezone (`BILLING_TIMEZONE`) with OS detect;
+  Commercialization links to that tab.
+
 ### Changed
-- _(none yet)_
+- Commercialization IA: Packages | Sessions only (overview/reports/settings tabs removed;
+  exports and gear settings live on those tabs).
+- Billing packages attach to device groups only; folders excluded; one manual group per
+  device; org create seeds a default device group.
 
 ---
 

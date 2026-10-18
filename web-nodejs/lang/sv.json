@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Servernycklar",
@@ -824,7 +832,24 @@
         "availability_history_retention": "Lagring (dagar)",
         "availability_history_retention_hint": "Äldre händelser raderas automatiskt. Standard: 30 dagar.",
         "availability_history_save": "Spara tillgänglighetsinställningar",
-        "availability_history_saved": "Tillgänglighetshistorik-inställningar sparade"
+        "availability_history_saved": "Tillgänglighetshistorik-inställningar sparade",
+        "tab_time": "Tid / tidszoner",
+        "time": {
+            "timezone_title": "Faktureringstidszon",
+            "timezone_desc": "Global IANA-zon för kommersialiseringens månadsgränser (överskridning nollställs vid midnatt den 1:a).",
+            "billing_month_hint": "Midnatt den första dagen i månaden i denna zon stänger föregående period och öppnar en ny. Aktiva sessioner avbryts inte.",
+            "billing_timezone": "Tidszon",
+            "billing_timezone_hint": "T.ex. Europe/Warsaw. Påverkar månatlig användning och överskridning.",
+            "custom_timezone": "Anpassad IANA-zon (valfritt)",
+            "detect_os": "Upptäck från server-OS",
+            "detected": "Upptäckt zon: {tz}",
+            "ntp_title": "NTP / klocksynk",
+            "ntp_desc": "Håll BetterDesk-serverklockan synkad för korrekta fakturerbara sessionstider.",
+            "save": "Spara tidsinställningar",
+            "save_title": "Spara tidsinställningar",
+            "saved": "Tidsinställningar sparade.",
+            "commercialization_link": "Öppna Kommersialisering → Paket"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "Senaste fel",
             "os_yes": "Ja",
             "os_no": "Nej",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktiva fakturerbara sessioner",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Enhet",
@@ -4227,7 +4260,11 @@
             "duration": "Varaktighet",
             "phase": "Fas",
             "amount": "Belopp",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Supportsession",
@@ -4274,7 +4311,9 @@
             "skip": "Hoppa över nu",
             "submit": "Skicka rapport",
             "summary_required": "Sammanfattning krävs",
-            "saved": "Arbetsrapport sparad"
+            "saved": "Arbetsrapport sparad",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Inga paket ännu. Skapa ett med knappen ovan.",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

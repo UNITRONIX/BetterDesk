@@ -12,14 +12,15 @@ const (
 
 // BillingPackage is a reusable support-hours template.
 type BillingPackage struct {
-	ID              string    `json:"id"`
-	Name            string    `json:"name"`
-	Description     string    `json:"description,omitempty"`
-	IncludedMinutes int       `json:"included_minutes"`
-	OverageRate     float64   `json:"overage_rate"` // per hour when included pool exhausted
-	Currency        string    `json:"currency"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID               string    `json:"id"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description,omitempty"`
+	IncludedMinutes  int       `json:"included_minutes"`
+	RoundingMinutes  int       `json:"rounding_minutes"` // per-package billable minute rounding
+	OverageRate      float64   `json:"overage_rate"`     // per hour when included pool exhausted
+	Currency         string    `json:"currency"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 // BillingContract links a billing package to an org, group, folder, or device.
@@ -39,6 +40,8 @@ type BillingContract struct {
 	UpdatedAt        time.Time  `json:"updated_at"`
 	PackageName      string     `json:"package_name,omitempty"`
 	TargetName       string     `json:"target_name,omitempty"`
+	// CurrentPeriodYM is the billing month (YYYY-MM) that RemainingMinutes applies to.
+	CurrentPeriodYM string `json:"current_period_ym,omitempty"`
 	// Legacy JSON fields when target_type=org
 	OrgID   string `json:"org_id,omitempty"`
 	OrgName string `json:"org_name,omitempty"`

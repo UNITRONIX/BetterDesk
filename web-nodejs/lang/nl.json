@@ -422,7 +422,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Serversleutels",
@@ -818,7 +826,24 @@
         "availability_history_retention": "Bewaartermijn (dagen)",
         "availability_history_retention_hint": "Oudere gebeurtenissen worden automatisch verwijderd. Standaard: 30 dagen.",
         "availability_history_save": "Beschikbaarheidsinstellingen opslaan",
-        "availability_history_saved": "Instellingen beschikbaarheidsgeschiedenis opgeslagen"
+        "availability_history_saved": "Instellingen beschikbaarheidsgeschiedenis opgeslagen",
+        "tab_time": "Tijd / tijdzones",
+        "time": {
+            "timezone_title": "Facturatietijdzone",
+            "timezone_desc": "Globale IANA-zone voor maandgrenzen van commercialisatie (overschrijding reset om middernacht op de 1e).",
+            "billing_month_hint": "Middernacht op de eerste dag van de maand in deze zone sluit de vorige periode en opent een nieuwe. Actieve sessies worden niet onderbroken.",
+            "billing_timezone": "Tijdzone",
+            "billing_timezone_hint": "Bijv. Europe/Warsaw. Beïnvloedt maandelijks gebruik en overschrijding.",
+            "custom_timezone": "Aangepaste IANA-zone (optioneel)",
+            "detect_os": "Detecteren vanaf server-OS",
+            "detected": "Gedetecteerde zone: {tz}",
+            "ntp_title": "NTP / kloksynchronisatie",
+            "ntp_desc": "Houd de BetterDesk-serverklok gesynchroniseerd voor nauwkeurige factureerbare sessietijden.",
+            "save": "Tijdinstellingen opslaan",
+            "save_title": "Tijdinstellingen opslaan",
+            "saved": "Tijdinstellingen opgeslagen.",
+            "commercialization_link": "Commercialisatie → Pakketten openen"
+        }
     },
     "audit": {
         "time": "Tijd",
@@ -4189,7 +4214,8 @@
             "status_error": "Laatste fout",
             "os_yes": "Ja",
             "os_no": "Nee",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Actieve factureerbare sessies",
@@ -4213,7 +4239,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Apparaat",
@@ -4221,7 +4254,11 @@
             "duration": "Duur",
             "phase": "Fase",
             "amount": "Bedrag",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sessie",
@@ -4268,7 +4305,9 @@
             "skip": "Nu overslaan",
             "submit": "Rapport verzenden",
             "summary_required": "Samenvatting is verplicht",
-            "saved": "Werkrapport opgeslagen"
+            "saved": "Werkrapport opgeslagen",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Nog geen pakketten. Maak er een met de knop hierboven.",
@@ -4330,6 +4369,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

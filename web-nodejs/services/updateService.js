@@ -844,6 +844,7 @@ const BILLING_ENV_KEYS = [
     'BILLING_MAX_CLOCK_SKEW_MS',
     'BILLING_REQUIRE_SYNCED_CLOCK',
     'BILLING_TRUST_OS_NTP',
+    'BILLING_TIMEZONE',
 ];
 
 function parseEnvFileKeys(content, keys) {

@@ -422,7 +422,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "服务器密钥",
@@ -818,7 +826,24 @@
         "availability_history_retention": "保留天数",
         "availability_history_retention_hint": "较旧的事件会自动删除。默认 30 天。",
         "availability_history_save": "保存可用性设置",
-        "availability_history_saved": "可用性历史设置已保存"
+        "availability_history_saved": "可用性历史设置已保存",
+        "tab_time": "时间 / 时区",
+        "time": {
+            "timezone_title": "计费时区",
+            "timezone_desc": "用于商业化月度边界的全局 IANA 时区（超额在每月 1 日午夜清零）。",
+            "billing_month_hint": "该时区每月 1 日午夜关闭上一周期并开启新周期。进行中的会话不会中断。",
+            "billing_timezone": "时区",
+            "billing_timezone_hint": "例如 Europe/Warsaw。影响月度用量与超额。",
+            "custom_timezone": "自定义 IANA 时区（可选）",
+            "detect_os": "从服务器操作系统检测",
+            "detected": "检测到的时区：{tz}",
+            "ntp_title": "NTP / 时钟同步",
+            "ntp_desc": "保持 BetterDesk 服务器时钟同步，以确保可计费会话时间准确。",
+            "save": "保存时间设置",
+            "save_title": "保存时间设置",
+            "saved": "时间设置已保存。",
+            "commercialization_link": "打开商业化 → 套餐"
+        }
     },
     "audit": {
         "time": "时间",
@@ -4189,7 +4214,8 @@
             "status_error": "最后错误",
             "os_yes": "是",
             "os_no": "否",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "活动可计费会话",
@@ -4213,7 +4239,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "设备",
@@ -4221,7 +4254,11 @@
             "duration": "时长",
             "phase": "阶段",
             "amount": "金额",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "会话",
@@ -4268,7 +4305,9 @@
             "skip": "暂时跳过",
             "submit": "提交报告",
             "summary_required": "摘要为必填项",
-            "saved": "工作报告已保存"
+            "saved": "工作报告已保存",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "尚无套餐。请使用上方按钮创建。",
@@ -4330,6 +4369,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

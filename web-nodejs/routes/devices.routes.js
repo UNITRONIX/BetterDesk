@@ -420,7 +420,15 @@ router.put('/api/devices/:id/groups', requireAuth, requirePermission('device.edi
         const groups = await getVisibleDeviceGroupsForRequest(req);
         const manualGroups = groups.filter(group => (group.source_type || 'manual') !== 'tag');
         const manualGuidSet = new Set(manualGroups.map(group => group.guid));
-        const selected = Array.from(new Set(groupGuids.filter(guid => manualGuidSet.has(guid))));
+        // Commercialization rule: a device belongs to at most one manual group.
+        const selectedAll = Array.from(new Set(groupGuids.filter(guid => manualGuidSet.has(guid))));
+        if (selectedAll.length > 1) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.group_one_only') || 'A device can belong to only one group',
+            });
+        }
+        const selected = selectedAll.slice(0, 1);
 
         for (const group of manualGroups) {
             if (selected.includes(group.guid)) await db.addDeviceToGroup(group.guid, deviceId);

@@ -99,6 +99,112 @@
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
+.overlay-card.overlay-card--billing {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    max-width: min(920px, 96vw);
+    width: auto;
+    padding: 0;
+    text-align: left;
+    overflow: hidden;
+}
+
+.overlay-card-main {
+    flex: 1 1 42%;
+    padding: 36px 32px;
+    text-align: center;
+}
+
+.overlay-card-divider {
+    width: 1px;
+    background: linear-gradient(180deg, transparent, var(--border-primary, #30363d) 12%, var(--accent-blue, #58a6ff) 50%, var(--border-primary, #30363d) 88%, transparent);
+    flex: 0 0 1px;
+}
+
+.overlay-card-billing {
+    flex: 1 1 58%;
+    padding: 28px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    background: linear-gradient(135deg, rgba(88, 166, 255, 0.06), transparent 55%);
+}
+
+.billing-pane-title {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text-primary, #e6edf3);
+}
+
+.billing-pane-package,
+.billing-pane-hours {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary, #8b949e);
+}
+
+.billing-pane-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-primary, #e6edf3);
+}
+
+.billing-pane-label textarea {
+    display: block;
+    width: 100%;
+    margin-top: 0.35rem;
+    min-height: 8rem;
+    padding: 0.65rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-primary, #30363d);
+    background: var(--bg-primary, #0d1117);
+    color: inherit;
+    font: inherit;
+    white-space: pre-wrap;
+    resize: vertical;
+}
+
+.billing-pane-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: auto;
+}
+
+.billing-pane-error {
+    color: #f85149;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.toolbar-package-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 12rem;
+    padding: 0.15rem 0.55rem;
+    margin-right: 0.25rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent-blue, #58a6ff);
+    border: 1px solid rgba(88, 166, 255, 0.35);
+}
+
+@media (max-width: 720px) {
+    .overlay-card.overlay-card--billing {
+        flex-direction: column;
+        max-width: 96vw;
+    }
+    .overlay-card-divider {
+        width: 100%;
+        height: 1px;
+    }
+}
+
 .overlay-icon {
     margin-bottom: 16px;
 }

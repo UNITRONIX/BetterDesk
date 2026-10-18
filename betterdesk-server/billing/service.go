@@ -34,10 +34,15 @@ const (
 
 // ConnectionCheckResult is returned before allowing a remote session.
 type ConnectionCheckResult struct {
-	Allowed   bool   `json:"allowed"`
-	Reason    string `json:"reason,omitempty"`
-	OrgID     string `json:"org_id,omitempty"`
-	HasBilling bool  `json:"has_billing"`
+	Allowed           bool   `json:"allowed"`
+	Reason            string `json:"reason,omitempty"`
+	OrgID             string `json:"org_id,omitempty"`
+	HasBilling        bool   `json:"has_billing"`
+	ContractID        string `json:"contract_id,omitempty"`
+	PackageID         string `json:"package_id,omitempty"`
+	PackageName       string `json:"package_name,omitempty"`
+	RemainingMinutes  *int   `json:"remaining_minutes,omitempty"`
+	Currency          string `json:"currency,omitempty"`
 }
 
 // Service manages billable remote sessions.
@@ -163,13 +168,41 @@ func (s *Service) CheckConnection(deviceID string) ConnectionCheckResult {
 		return ConnectionCheckResult{Allowed: true, OrgID: orgID}
 	}
 
+	_ = s.EnsureContractPeriod(contract)
+	contract, _, _ = s.resolveContract(deviceID)
+	if contract == nil {
+		return ConnectionCheckResult{Allowed: true, OrgID: orgID}
+	}
+
+	pkgName := contract.PackageName
+	if pkgName == "" {
+		if pkg, _ := s.db.GetBillingPackage(contract.PackageID); pkg != nil {
+			pkgName = pkg.Name
+		}
+	}
+	rem := contract.RemainingMinutes
+	base := ConnectionCheckResult{
+		Allowed:          true,
+		OrgID:            orgID,
+		HasBilling:       true,
+		ContractID:       contract.ID,
+		PackageID:        contract.PackageID,
+		PackageName:      pkgName,
+		RemainingMinutes: &rem,
+		Currency:         contract.Currency,
+	}
+
 	if s.clock != nil && !s.clock.IsSynced() {
-		return ConnectionCheckResult{Allowed: false, Reason: "clock_unsynced", OrgID: orgID, HasBilling: true}
+		base.Allowed = false
+		base.Reason = "clock_unsynced"
+		return base
 	}
 	if contract.Status == ContractSuspended {
-		return ConnectionCheckResult{Allowed: false, Reason: "billing_suspended", OrgID: orgID, HasBilling: true}
+		base.Allowed = false
+		base.Reason = "billing_suspended"
+		return base
 	}
-	return ConnectionCheckResult{Allowed: true, OrgID: orgID, HasBilling: true}
+	return base
 }
 
 // PrepareRelay registers billing metadata when signal assigns a relay UUID.
@@ -227,6 +260,11 @@ func (s *Service) ActivateRelay(relayUUID string) {
 	if err != nil || contract == nil {
 		return
 	}
+	_ = s.EnsureContractPeriod(contract)
+	contract, err = s.db.GetBillingContract(meta.ContractID)
+	if err != nil || contract == nil {
+		return
+	}
 	overageRate := contract.HourlyRate
 	if contract.OverageRate != nil {
 		overageRate = *contract.OverageRate
@@ -234,10 +272,7 @@ func (s *Service) ActivateRelay(relayUUID string) {
 		overageRate = pkg.OverageRate
 	}
 
-	now := time.Now().UTC()
-	if s.clock != nil {
-		now = s.clock.NowUTC()
-	}
+	now := s.nowUTC()
 	sessionID := uuid.New().String()
 	synced := true
 	var offset int64
@@ -314,6 +349,7 @@ func (s *Service) tickActive() {
 	s.mu.Unlock()
 
 	for _, a := range snap {
+		s.settleCrossingMonth(a)
 		s.updateActiveProgress(a)
 	}
 }
@@ -359,15 +395,16 @@ func (s *Service) updateActiveProgress(a *activeSession) {
 }
 
 func (s *Service) finalizeSession(a *activeSession) {
-	now := time.Now().UTC()
-	if s.clock != nil {
-		now = s.clock.NowUTC()
-	}
+	// Settle month-boundary segments first (mutates a.StartedAt / RemainingAtStart).
+	s.settleCrossingMonth(a)
+
+	now := s.nowUTC()
 	rawSecs := int(now.Sub(a.StartedAt).Seconds())
 	if rawSecs < 0 {
 		rawSecs = 0
 	}
-	billedMin := roundUpMinutes(rawSecs, s.roundMin)
+	roundMin := s.roundMinForContract(a.ContractID)
+	billedMin := roundUpMinutes(rawSecs, roundMin)
 	includedUsed := min(billedMin, a.RemainingAtStart)
 	overageMin := 0
 	if billedMin > a.RemainingAtStart {
@@ -390,13 +427,16 @@ func (s *Service) finalizeSession(a *activeSession) {
 		return
 	}
 	sess.EndedAt = &now
-	sess.RawSeconds = rawSecs
-	sess.BilledMinutes = billedMin
-	sess.IncludedMinutesUsed = includedUsed
-	sess.OverageMinutes = overageMin
+	sess.RawSeconds = int(now.Sub(sess.StartedAt).Seconds())
+	if sess.RawSeconds < 0 {
+		sess.RawSeconds = 0
+	}
+	sess.BilledMinutes += billedMin
+	sess.IncludedMinutesUsed += includedUsed
+	sess.OverageMinutes += overageMin
 	sess.BillingPhase = phase
-	sess.AmountIncluded = amountIncluded
-	sess.AmountOverage = amountOverage
+	sess.AmountIncluded += amountIncluded
+	sess.AmountOverage += amountOverage
 	sess.Status = status
 	_ = s.db.UpdateBillingSession(sess)
 	_ = s.db.InsertBillingLedgerEntry(&db.BillingSessionLedger{
@@ -405,12 +445,23 @@ func (s *Service) finalizeSession(a *activeSession) {
 	})
 
 	if contract, err := s.db.GetBillingContract(a.ContractID); err == nil && contract != nil {
+		_ = s.EnsureContractPeriod(contract)
+		contract, _ = s.db.GetBillingContract(a.ContractID)
+		if contract == nil {
+			return
+		}
 		newRemaining := contract.RemainingMinutes - includedUsed
 		if newRemaining < 0 {
 			newRemaining = 0
 		}
 		contract.RemainingMinutes = newRemaining
 		_ = s.db.UpdateBillingContract(contract)
+
+		limitSnap := contract.RemainingMinutes + includedUsed
+		if pkg, _ := s.db.GetBillingPackage(contract.PackageID); pkg != nil {
+			limitSnap = pkg.IncludedMinutes
+		}
+		s.applyUsageToPeriod(contract.ID, contract.PackageID, a.StartedAt, now, includedUsed, overageMin, amountOverage, limitSnap)
 	}
 }
 

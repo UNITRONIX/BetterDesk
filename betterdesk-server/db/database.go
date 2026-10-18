@@ -834,4 +834,10 @@ type Database interface {
 	ListBillingCurrencies() ([]*BillingCurrency, error)
 	UpsertBillingCurrency(c *BillingCurrency) error
 	DeleteBillingCurrency(code string) error
+
+	UpsertBillingPeriodTotal(t *BillingPeriodTotal) error
+	AddBillingPeriodUsage(contractID, packageID, periodYM, timezone string, includedUsed, overageMin int, amountOverage float64, limitSnapshot int) error
+	GetBillingPeriodTotal(contractID, periodYM string) (*BillingPeriodTotal, error)
+	ListBillingPeriodTotalsByPackage(packageID string) ([]*BillingPeriodTotal, error)
+	ListBillingPeriodTotalsByContract(contractID string) ([]*BillingPeriodTotal, error)
 }

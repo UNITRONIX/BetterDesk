@@ -38,6 +38,10 @@
                     <span class="material-icons" aria-hidden="true">email</span>
                     ${_('settings.tab_email')}
                 </button>
+                <button type="button" class="settings-shell-tab settings-tab" role="tab" aria-selected="false" id="settings-tab-time" data-tab="time" aria-controls="tab-time">
+                    <span class="material-icons" aria-hidden="true">schedule</span>
+                    ${_('settings.tab_time')}
+                </button>
                 <button type="button" class="settings-shell-tab settings-tab" role="tab" aria-selected="false" id="settings-tab-advanced" data-tab="advanced" aria-controls="tab-advanced">
                     <span class="material-icons" aria-hidden="true">code</span>
                     ${_('settings.tab_advanced')}
@@ -2443,6 +2447,80 @@
                             <button type="button" class="btn btn-primary" id="email-smtp-save-btn">${_('settings.email.smtp_save')}</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Time / timezone / NTP (server.config permission required) -->
+        <div class="settings-tab-content" id="tab-time" role="tabpanel" aria-labelledby="settings-tab-time" ${canServerConfig ? '' : 'style="display:none"'}>
+        <div class="settings-stack">
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">public</span>
+                        ${_('settings.time.timezone_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('settings.time.timezone_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <p class="form-hint" id="time-billing-month-hint">${_('settings.time.billing_month_hint')}</p>
+                    <div class="form-group">
+                        <label class="form-label" for="time-billing-timezone">${_('settings.time.billing_timezone')}</label>
+                        <select id="time-billing-timezone" class="form-input"></select>
+                        <span class="form-hint">${_('settings.time.billing_timezone_hint')}</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="time-billing-timezone-custom">${_('settings.time.custom_timezone')}</label>
+                        <input type="text" id="time-billing-timezone-custom" class="form-input" placeholder="Europe/Warsaw" maxlength="64">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="time-detect-timezone-btn">
+                            <span class="material-icons" aria-hidden="true">my_location</span>
+                            ${_('settings.time.detect_os')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">schedule</span>
+                        ${_('settings.time.ntp_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('settings.time.ntp_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <p id="time-clock-detail" class="text-muted"></p>
+                    <dl class="clock-status-grid settings-time-status-grid">
+                        <div><dt>${_('commercialization.clock.status_offset')}</dt><dd id="time-clock-offset">—</dd></div>
+                        <div><dt>${_('commercialization.clock.status_server')}</dt><dd id="time-clock-ntp-server">—</dd></div>
+                        <div><dt>${_('commercialization.clock.status_os')}</dt><dd id="time-clock-os-sync">—</dd></div>
+                        <div><dt>${_('commercialization.clock.status_error')}</dt><dd id="time-clock-last-error">—</dd></div>
+                    </dl>
+                    <button type="button" class="btn btn-secondary" id="time-timesync-check-btn">${_('commercialization.clock.check_now')}</button>
+                    <form id="time-clock-settings-form" class="settings-form" style="margin-top: 1rem;">
+                        <label class="form-label">${_('commercialization.clock.ntp_servers')}
+                            <textarea id="time-clock-ntp-servers" class="form-control" rows="2" placeholder="pool.ntp.org,time.google.com"></textarea>
+                        </label>
+                        <p class="text-muted form-hint">${_('commercialization.clock.ntp_servers_hint')}</p>
+                        <label class="form-label">${_('commercialization.clock.max_skew_ms')}
+                            <input type="number" id="time-clock-max-skew" class="form-control" min="100" max="600000" step="100" value="2000">
+                        </label>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="time-clock-require-sync"> ${_('commercialization.clock.require_sync')}</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="time-clock-trust-os"> ${_('commercialization.clock.trust_os')}</label>
+                        </div>
+                        <p class="text-muted form-hint">${_('commercialization.clock.trust_os_hint')}</p>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" id="time-save-clock-settings-btn">${_('settings.time.save')}</button>
+                        </div>
+                    </form>
+                    <p class="form-hint" style="margin-top:1rem;">
+                        <a href="/commercialization?tab=packages">${_('settings.time.commercialization_link')}</a>
+                    </p>
                 </div>
             </div>
         </div>

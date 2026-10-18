@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Palvelimen avaimet",
@@ -824,7 +832,24 @@
         "availability_history_retention": "Säilytys (päivää)",
         "availability_history_retention_hint": "Vanhemmat tapahtumat poistetaan automaattisesti. Oletus: 30 päivää.",
         "availability_history_save": "Tallenna saatavuusasetukset",
-        "availability_history_saved": "Saatavuushistorian asetukset tallennettu"
+        "availability_history_saved": "Saatavuushistorian asetukset tallennettu",
+        "tab_time": "Aika / aikavyöhykkeet",
+        "time": {
+            "timezone_title": "Laskutuksen aikavyöhyke",
+            "timezone_desc": "Globaali IANA-vyöhyke kaupallistamisen kuukausirajoille (ylitys nollautuu kuukauden 1. päivän keskiyöllä).",
+            "billing_month_hint": "Kuukauden ensimmäisen päivän keskiyö tällä vyöhykkeellä sulkee edellisen jakson ja avaa uuden. Aktiivisia istuntoja ei keskeytetä.",
+            "billing_timezone": "Aikavyöhyke",
+            "billing_timezone_hint": "Esim. Europe/Warsaw. Vaikuttaa kuukausittaiseen käyttöön ja ylitykseen.",
+            "custom_timezone": "Mukautettu IANA-vyöhyke (valinnainen)",
+            "detect_os": "Tunnista palvelimen käyttöjärjestelmästä",
+            "detected": "Tunnistettu vyöhyke: {tz}",
+            "ntp_title": "NTP / kellon synkronointi",
+            "ntp_desc": "Pidä BetterDesk-palvelimen kello synkronoituna laskutettavien istuntoaikojen tarkkuuden vuoksi.",
+            "save": "Tallenna aika-asetukset",
+            "save_title": "Tallenna aika-asetukset",
+            "saved": "Aika-asetukset tallennettu.",
+            "commercialization_link": "Avaa Kaupallistaminen → Paketit"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "Viimeisin virhe",
             "os_yes": "Kyllä",
             "os_no": "Ei",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktiiviset laskutettavat istunnot",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Laite",
@@ -4227,7 +4260,11 @@
             "duration": "Kesto",
             "phase": "Vaihe",
             "amount": "Summa",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Istunto",
@@ -4274,7 +4311,9 @@
             "skip": "Ohita toistaiseksi",
             "submit": "Lähetä raportti",
             "summary_required": "Yhteenveto vaaditaan",
-            "saved": "Työraportti tallennettu"
+            "saved": "Työraportti tallennettu",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Ei paketteja vielä. Luo ensimmäinen yllä olevalla painikkeella.",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

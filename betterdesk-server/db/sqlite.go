@@ -555,6 +555,21 @@ func (s *SQLiteDB) Migrate() error {
 			symbol TEXT NOT NULL DEFAULT '',
 			exchange_rate_to_base REAL NOT NULL DEFAULT 1
 		)`,
+		// Immutable per-month usage snapshots for commercialization package preview.
+		`CREATE TABLE IF NOT EXISTS billing_period_totals (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			contract_id TEXT NOT NULL,
+			package_id TEXT NOT NULL DEFAULT '',
+			period_ym TEXT NOT NULL,
+			timezone TEXT NOT NULL DEFAULT 'UTC',
+			included_minutes_used INTEGER NOT NULL DEFAULT 0,
+			overage_minutes INTEGER NOT NULL DEFAULT 0,
+			amount_overage REAL NOT NULL DEFAULT 0,
+			included_limit_snapshot INTEGER NOT NULL DEFAULT 0,
+			updated_at TEXT DEFAULT (datetime('now')),
+			UNIQUE(contract_id, period_ym)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_billing_period_totals_pkg ON billing_period_totals(package_id, period_ym)`,
 
 		// User/device groups + strategies (API-port consolidation Phase A)
 		`CREATE TABLE IF NOT EXISTS user_groups (
@@ -635,6 +650,9 @@ func (s *SQLiteDB) Migrate() error {
 		// peers/users: Pro strategy assignment GUIDs
 		{"peers", "guid", `ALTER TABLE peers ADD COLUMN guid TEXT DEFAULT ''`},
 		{"users", "guid", `ALTER TABLE users ADD COLUMN guid TEXT DEFAULT ''`},
+		{"billing_packages", "rounding_minutes", `ALTER TABLE billing_packages ADD COLUMN rounding_minutes INTEGER NOT NULL DEFAULT 10`},
+		{"billing_contracts", "current_period_ym", `ALTER TABLE billing_contracts ADD COLUMN current_period_ym TEXT NOT NULL DEFAULT ''`},
+		{"billing_period_totals", "included_limit_snapshot", `ALTER TABLE billing_period_totals ADD COLUMN included_limit_snapshot INTEGER NOT NULL DEFAULT 0`},
 	}
 
 	for _, m := range columnMigrations {

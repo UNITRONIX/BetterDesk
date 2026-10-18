@@ -2786,6 +2786,9 @@
                 <span class="chip-label">${Utils.escapeHtml(group.name)}</span>
                 <span class="chip-count">${group.member_count || 0}</span>
                 <span class="chip-actions">
+                    <button type="button" class="chip-action group-chip-action" data-action="commercialization" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.group_commercialization') || 'Commercialization'}">
+                        <span class="material-icons">payments</span>
+                    </button>
                     <button type="button" class="chip-action group-chip-action" data-action="edit" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.edit_group') || 'Edit group'}">
                         <span class="material-icons">edit</span>
                     </button>
@@ -2819,6 +2822,8 @@
                     await showDeviceGroupModal(group);
                 } else if (btn.dataset.action === 'delete') {
                     await deleteDeviceGroup(group);
+                } else if (btn.dataset.action === 'commercialization') {
+                    await openGroupCommercializationModal(group);
                 }
             });
         });
@@ -2844,6 +2849,145 @@
         } catch (error) {
             Notifications.error(error.message || _('errors.server_error'));
         }
+    }
+
+    /**
+     * Commercialization depends on org→default device group; packages attach to groups.
+     * Modal stays on Devices — create a package or assign an existing one to this group.
+     */
+    async function openGroupCommercializationModal(group) {
+        if (!group?.guid) return;
+        let packages = [];
+        try {
+            const data = await Utils.api('/api/panel/billing/packages');
+            packages = data.packages || [];
+        } catch (e) {
+            Notifications.error(e.message || _('errors.server_error'));
+            return;
+        }
+
+        const title = (_('devices.group_commercialization_title') || 'Commercialization — {name}').replace('{name}', group.name);
+        const pkgOptions = packages.map((p) =>
+            `<option value="${Utils.escapeHtml(p.id)}">${Utils.escapeHtml(p.name)} (${p.included_minutes || 0} min)</option>`
+        ).join('');
+
+        const bodyHtml = `
+            <p class="form-hint">${_('devices.group_commercialization_hint') || 'Assign a support package to this group. All devices in the group share the package pool.'}</p>
+            <div class="form-group">
+                <label class="form-label">${_('devices.group_commercialization_mode') || 'Action'}
+                    <select id="gc-mode" class="form-input">
+                        <option value="existing">${_('devices.group_commercialization_assign_existing') || 'Assign existing package'}</option>
+                        <option value="new">${_('devices.group_commercialization_create_new') || 'Create new package and assign'}</option>
+                    </select>
+                </label>
+            </div>
+            <div id="gc-existing-wrap" class="form-group">
+                <label class="form-label">${_('commercialization.contracts.package') || 'Package'}
+                    <select id="gc-package" class="form-input" ${packages.length ? '' : 'disabled'}>
+                        ${pkgOptions || `<option value="">${_('commercialization.contracts.no_packages') || 'No packages yet'}</option>`}
+                    </select>
+                </label>
+            </div>
+            <div id="gc-new-wrap" class="form-group" hidden>
+                <label class="form-label">${_('commercialization.packages.name') || 'Name'}
+                    <input type="text" id="gc-name" class="form-input" maxlength="128">
+                </label>
+                <label class="form-label">${_('commercialization.packages.description') || 'Description'}
+                    <textarea id="gc-desc" class="form-input" rows="2" maxlength="512"></textarea>
+                </label>
+                <label class="form-label">${_('commercialization.packages.included_minutes') || 'Included minutes'}
+                    <input type="number" id="gc-minutes" class="form-input" value="600" min="1" step="1">
+                </label>
+                <label class="form-label">${_('commercialization.packages.overage_rate') || 'Overage rate'}
+                    <input type="number" id="gc-overage" class="form-input" value="100" min="0" step="0.01">
+                </label>
+                <label class="form-label">${_('commercialization.packages.currency') || 'Currency'}
+                    <input type="text" id="gc-currency" class="form-input" value="PLN" maxlength="8">
+                </label>
+            </div>
+            <p id="gc-error" class="form-error" hidden></p>
+        `;
+
+        return new Promise((resolve) => {
+            Modal.show({
+                title,
+                content: bodyHtml,
+                size: 'large',
+                onOpen: () => {
+                    const mode = document.getElementById('gc-mode');
+                    const existingWrap = document.getElementById('gc-existing-wrap');
+                    const newWrap = document.getElementById('gc-new-wrap');
+                    mode?.addEventListener('change', () => {
+                        const isNew = mode.value === 'new';
+                        if (existingWrap) existingWrap.hidden = isNew;
+                        if (newWrap) newWrap.hidden = !isNew;
+                    });
+                },
+                buttons: [
+                    {
+                        label: _('actions.cancel') || 'Cancel',
+                        class: 'btn-secondary',
+                        onClick: () => { Modal.close(); resolve(false); }
+                    },
+                    {
+                        label: _('actions.save') || 'Save',
+                        class: 'btn-primary',
+                        onClick: async () => {
+                            const err = document.getElementById('gc-error');
+                            const showErr = (msg) => {
+                                if (err) { err.hidden = false; err.textContent = msg; }
+                            };
+                            try {
+                                const mode = document.getElementById('gc-mode')?.value || 'existing';
+                                let packageId = document.getElementById('gc-package')?.value;
+                                if (mode === 'new') {
+                                    const name = document.getElementById('gc-name')?.value?.trim();
+                                    if (!name) {
+                                        showErr(_('commercialization.packages.prompt_name') || 'Package name required');
+                                        return;
+                                    }
+                                    await Utils.api('/api/panel/billing/packages', {
+                                        method: 'POST',
+                                        body: {
+                                            name,
+                                            description: document.getElementById('gc-desc')?.value?.trim() || '',
+                                            included_minutes: parseInt(document.getElementById('gc-minutes')?.value, 10) || 600,
+                                            overage_rate: parseFloat(document.getElementById('gc-overage')?.value) || 0,
+                                            currency: (document.getElementById('gc-currency')?.value || 'PLN').trim().toUpperCase()
+                                        }
+                                    });
+                                    const list = await Utils.api('/api/panel/billing/packages');
+                                    const match = (list.packages || []).find((p) => p.name === name);
+                                    packageId = match?.id;
+                                    if (!packageId) {
+                                        showErr(_('errors.server_error') || 'Failed to create package');
+                                        return;
+                                    }
+                                }
+                                if (!packageId) {
+                                    showErr(_('commercialization.contracts.no_packages') || 'Select a package');
+                                    return;
+                                }
+                                await Utils.api('/api/panel/billing/contracts', {
+                                    method: 'POST',
+                                    body: {
+                                        target_type: 'device_group',
+                                        target_key: group.guid,
+                                        package_id: packageId
+                                    }
+                                });
+                                Modal.close();
+                                Notifications.success(_('devices.group_commercialization_saved') || 'Package assigned to group');
+                                resolve(true);
+                            } catch (e) {
+                                showErr(e.message || _('errors.server_error'));
+                            }
+                        }
+                    }
+                ],
+                onClose: () => resolve(false)
+            });
+        });
     }
 
     function updateGroupCounts() {
@@ -3831,8 +3975,9 @@
                         const group = deviceGroups.find(item => item.guid === targetGroup);
                         if (!group || (group.source_type || 'manual') === 'tag') return;
                         const manualGuids = await getDeviceManualGroupGuids(deviceId);
-                        if (manualGuids.includes(targetGroup)) return;
-                        await setDeviceManualGroups(deviceId, [...manualGuids, targetGroup]);
+                        if (manualGuids.includes(targetGroup) && manualGuids.length === 1) return;
+                        // One manual group per device — replace previous membership.
+                        await setDeviceManualGroups(deviceId, [targetGroup]);
                         Notifications.success(_('devices.group_membership_added') || 'Added to group');
                     }
                     loadDevices();

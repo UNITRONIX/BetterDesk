@@ -422,7 +422,15 @@
             "gpu": "Karta graficzna"
         },
         "no_signal_tooltip": "Klient niedawno kontaktował API, ale nie jest zarejestrowany na serwerze sygnałowym (UDP :21116). Uruchom ponownie klienta po migracji serwera.",
-        "per_page": "Na stronę"
+        "per_page": "Na stronę",
+        "group_commercialization": "Komercjalizacja",
+        "group_commercialization_title": "Komercjalizacja — {name}",
+        "group_commercialization_hint": "Przypisz pakiet wsparcia do tej grupy. Wszystkie urządzenia w grupie dzielą pulę godzin.",
+        "group_commercialization_mode": "Akcja",
+        "group_commercialization_assign_existing": "Przypisz istniejący pakiet",
+        "group_commercialization_create_new": "Utwórz nowy pakiet i przypisz",
+        "group_commercialization_saved": "Pakiet przypisany do grupy",
+        "group_one_only": "Urządzenie może należeć tylko do jednej grupy"
     },
     "keys": {
         "title": "Klucze serwera",
@@ -818,7 +826,24 @@
         "availability_history_retention": "Retencja (dni)",
         "availability_history_retention_hint": "Starsze zdarzenia są usuwane automatycznie. Domyślnie 30 dni.",
         "availability_history_save": "Zapisz ustawienia dostępności",
-        "availability_history_saved": "Zapisano ustawienia historii dostępności"
+        "availability_history_saved": "Zapisano ustawienia historii dostępności",
+        "tab_time": "Czas / strefy czasowe",
+        "time": {
+            "timezone_title": "Strefa czasowa rozliczeń",
+            "timezone_desc": "Globalna strefa IANA dla granic miesięcy komercjalizacji (nadgodziny zerują się o północy 1. dnia miesiąca).",
+            "billing_month_hint": "Północ pierwszego dnia miesiąca w tej strefie zamyka poprzedni okres rozliczeniowy i otwiera nowy. Aktywne sesje RD nie są przerywane — dzielone jest tylko rozliczenie.",
+            "billing_timezone": "Strefa czasowa",
+            "billing_timezone_hint": "Np. Europe/Warsaw. Wpływa na miesięczne zużycie i nadgodziny pakietów.",
+            "custom_timezone": "Własna strefa IANA (opcjonalnie)",
+            "detect_os": "Wykryj z systemu serwera",
+            "detected": "Wykryta strefa: {tz}",
+            "ntp_title": "NTP / synchronizacja zegara",
+            "ntp_desc": "Utrzymuj zsynchronizowany zegar serwera BetterDesk, aby czasy sesji rozliczeniowych były dokładne.",
+            "save": "Zapisz ustawienia czasu",
+            "save_title": "Zapisz ustawienia czasu",
+            "saved": "Ustawienia czasu zapisane.",
+            "commercialization_link": "Otwórz Komercjalizację → Pakiety"
+        }
     },
     "audit": {
         "time": "Czas",
@@ -4189,7 +4214,8 @@
             "status_error": "Ostatni błąd",
             "os_yes": "Tak",
             "os_no": "Nie",
-            "checked": "Sprawdzenie zegara zakończone"
+            "checked": "Sprawdzenie zegara zakończone",
+            "open_time_settings": "Otwórz Ustawienia → Czas / strefy czasowe (NTP i strefa rozliczeń)"
         },
         "stats": {
             "active_sessions": "Aktywne sesje rozliczeniowe",
@@ -4213,7 +4239,14 @@
             "created": "Pakiet utworzony",
             "updated": "Pakiet zaktualizowany",
             "deleted": "Pakiet usunięty",
-            "delete_confirm": "Usunąć ten pakiet? Najpierw usuń powiązane przypisania."
+            "delete_confirm": "Usunąć ten pakiet? Najpierw usuń powiązane przypisania.",
+            "unit": "Jednostka",
+            "unit_minutes": "Minuty",
+            "unit_hours": "Godziny",
+            "included_amount": "Ilość w pakiecie",
+            "rounding": "Dokładność naliczania (minuty)",
+            "rounding_custom": "Własna",
+            "rounding_custom_value": "Własna wartość (min)"
         },
         "sessions": {
             "device": "Urządzenie",
@@ -4221,7 +4254,11 @@
             "duration": "Czas",
             "phase": "Faza",
             "amount": "Kwota",
-            "org": "Organizacja"
+            "org": "Organizacja",
+            "started": "Start",
+            "ended": "Koniec",
+            "report": "Raport",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sesja",
@@ -4287,7 +4324,9 @@
             "skip": "Pomiń na razie",
             "submit": "Wyślij raport",
             "summary_required": "Podsumowanie jest wymagane",
-            "saved": "Raport pracy zapisany"
+            "saved": "Raport pracy zapisany",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "notifications": {
             "title": "Powiadomienia e-mail",
@@ -4330,6 +4369,20 @@
             "suspended": "Wstrzymany",
             "pending_report": "Oczekuje raportu",
             "closed": "Zamknięty"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

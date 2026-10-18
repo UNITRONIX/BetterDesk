@@ -428,7 +428,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "Cheile serverului",
@@ -824,7 +832,24 @@
         "availability_history_retention": "Păstrare (zile)",
         "availability_history_retention_hint": "Evenimentele vechi sunt șterse automat. Implicit: 30 de zile.",
         "availability_history_save": "Salvează setările de disponibilitate",
-        "availability_history_saved": "Setările istoricului de disponibilitate au fost salvate"
+        "availability_history_saved": "Setările istoricului de disponibilitate au fost salvate",
+        "tab_time": "Ora / fusuri orare",
+        "time": {
+            "timezone_title": "Fus orar de facturare",
+            "timezone_desc": "Fus IANA global pentru limitele lunare ale comercializării (depășirea se resetează la miezul nopții pe 1).",
+            "billing_month_hint": "Miezul nopții din prima zi a lunii în acest fus închide perioada anterioară și deschide una nouă. Sesiunile active nu sunt întrerupte.",
+            "billing_timezone": "Fus orar",
+            "billing_timezone_hint": "Ex.: Europe/Warsaw. Afectează utilizarea lunară și depășirea.",
+            "custom_timezone": "Fus IANA personalizat (opțional)",
+            "detect_os": "Detectează din SO-ul serverului",
+            "detected": "Fus detectat: {tz}",
+            "ntp_title": "NTP / sincronizare ceas",
+            "ntp_desc": "Păstrați ceasul serverului BetterDesk sincronizat pentru durate de sesiune facturabile precise.",
+            "save": "Salvează setările de timp",
+            "save_title": "Salvează setările de timp",
+            "saved": "Setările de timp au fost salvate.",
+            "commercialization_link": "Deschide Comercializare → Pachete"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4195,7 +4220,8 @@
             "status_error": "Ultima eroare",
             "os_yes": "Da",
             "os_no": "Nu",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Sesiuni facturabile active",
@@ -4219,7 +4245,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Dispozitiv",
@@ -4227,7 +4260,11 @@
             "duration": "Durată",
             "phase": "Fază",
             "amount": "Sumă",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sesiune",
@@ -4274,7 +4311,9 @@
             "skip": "Omite deocamdată",
             "submit": "Trimite raport",
             "summary_required": "Rezumatul este obligatoriu",
-            "saved": "Raport de lucru salvat"
+            "saved": "Raport de lucru salvat",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "Nu există pachete încă. Creați unul cu butonul de mai sus.",
@@ -4336,6 +4375,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

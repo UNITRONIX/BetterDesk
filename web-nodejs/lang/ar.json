@@ -429,7 +429,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "مفاتيح الخادم",
@@ -825,7 +833,24 @@
         "availability_history_retention": "مدة الاحتفاظ (أيام)",
         "availability_history_retention_hint": "تُحذف الأحداث الأقدم تلقائيًا. الافتراضي 30 يومًا.",
         "availability_history_save": "حفظ إعدادات التوفر",
-        "availability_history_saved": "تم حفظ إعدادات سجل التوفر"
+        "availability_history_saved": "تم حفظ إعدادات سجل التوفر",
+        "tab_time": "الوقت / المناطق الزمنية",
+        "time": {
+            "timezone_title": "المنطقة الزمنية للفوترة",
+            "timezone_desc": "المنطقة الزمنية العالمية IANA لحدود أشهر التسويق (إعادة تعيين الزيادة عند منتصف ليل اليوم الأول).",
+            "billing_month_hint": "منتصف الليل في اليوم الأول من كل شهر في هذه المنطقة يغلق الفترة السابقة ويفتح فترة جديدة. الجلسات النشطة لا تُقاطع.",
+            "billing_timezone": "المنطقة الزمنية",
+            "billing_timezone_hint": "مثال: Europe/Warsaw. يؤثر على الاستخدام الشهري والزيادات.",
+            "custom_timezone": "منطقة IANA مخصصة (اختياري)",
+            "detect_os": "اكتشاف من نظام التشغيل",
+            "detected": "المنطقة المكتشفة: {tz}",
+            "ntp_title": "NTP / مزامنة الساعة",
+            "ntp_desc": "حافظ على مزامنة ساعة خادم BetterDesk لدقة أوقات الجلسات القابلة للفوترة.",
+            "save": "حفظ إعدادات الوقت",
+            "save_title": "حفظ إعدادات الوقت",
+            "saved": "تم حفظ إعدادات الوقت.",
+            "commercialization_link": "فتح التسويق → الحزم"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4196,7 +4221,8 @@
             "status_error": "آخر خطأ",
             "os_yes": "نعم",
             "os_no": "لا",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "جلسات قابلة للفوترة نشطة",
@@ -4220,7 +4246,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "الجهاز",
@@ -4228,7 +4261,11 @@
             "duration": "المدة",
             "phase": "المرحلة",
             "amount": "المبلغ",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "الجلسة",
@@ -4275,7 +4312,9 @@
             "skip": "تخطي الآن",
             "submit": "إرسال التقرير",
             "summary_required": "الملخص مطلوب",
-            "saved": "تم حفظ تقرير العمل"
+            "saved": "تم حفظ تقرير العمل",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "لا توجد حزم بعد. أنشئ واحدة بالزر أعلاه.",
@@ -4337,6 +4376,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * Billing work report modal — shown after remote session ends when a
- * billable session requires a technician report.
+ * Billing work report — right pane of the RD disconnect overlay.
+ * Closing without submit leaves session as pending_report (same record in Sessions).
  */
 (function (global) {
     function t(key, fallback) {
@@ -13,64 +13,8 @@
         return fallback !== undefined ? fallback : key;
     }
 
-    function escapeHtml(s) {
-        return String(s || '').replace(/[&<>"']/g, (c) => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[c]));
-    }
-
     function sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
-    function ensureModal() {
-        let el = document.getElementById('billing-report-modal');
-        if (el) return el;
-
-        el = document.createElement('div');
-        el.id = 'billing-report-modal';
-        el.className = 'billing-report-modal hidden';
-        el.innerHTML = `
-<div class="billing-report-backdrop"></div>
-<div class="billing-report-dialog" role="dialog" aria-modal="true">
-  <h2 class="billing-report-title"></h2>
-  <p class="billing-report-subtitle"></p>
-  <div class="billing-report-meta"></div>
-  <label class="billing-report-label">${escapeHtml(t('commercialization.report.category', 'Category'))}
-    <input type="text" class="billing-report-category" maxlength="128">
-  </label>
-  <label class="billing-report-label">${escapeHtml(t('commercialization.report.ticket_ref', 'Ticket reference'))}
-    <input type="text" class="billing-report-ticket" maxlength="128">
-  </label>
-  <label class="billing-report-label">${escapeHtml(t('commercialization.report.summary', 'Work performed'))} *
-    <textarea class="billing-report-summary" rows="6" maxlength="8000" required></textarea>
-  </label>
-  <div class="billing-report-actions">
-    <button type="button" class="btn btn-secondary billing-report-skip">${escapeHtml(t('commercialization.report.skip', 'Skip for now'))}</button>
-    <button type="button" class="btn btn-primary billing-report-submit">${escapeHtml(t('commercialization.report.submit', 'Submit report'))}</button>
-  </div>
-  <p class="billing-report-error hidden"></p>
-</div>`;
-        document.body.appendChild(el);
-
-        if (!document.getElementById('billing-report-styles')) {
-            const style = document.createElement('style');
-            style.id = 'billing-report-styles';
-            style.textContent = `
-.billing-report-modal{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center}
-.billing-report-modal.hidden{display:none}
-.billing-report-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
-.billing-report-dialog{position:relative;z-index:1;width:min(520px,92vw);background:var(--surface-1,#fff);border-radius:10px;padding:1.25rem;box-shadow:0 12px 40px rgba(0,0,0,.25)}
-.billing-report-title{margin:0 0 .25rem;font-size:1.15rem}
-.billing-report-subtitle{margin:0 0 .75rem;color:var(--text-muted,#666);font-size:.9rem}
-.billing-report-meta{font-size:.85rem;margin-bottom:.75rem;color:var(--text-muted,#666)}
-.billing-report-label{display:block;margin-bottom:.65rem;font-size:.875rem}
-.billing-report-label input,.billing-report-label textarea{width:100%;margin-top:.25rem;padding:.5rem;border:1px solid var(--border,#ccc);border-radius:6px;background:var(--surface-2,#fafafa);color:inherit}
-.billing-report-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.75rem}
-.billing-report-error{color:#b91c1c;font-size:.85rem;margin-top:.5rem}`;
-            document.head.appendChild(style);
-        }
-        return el;
     }
 
     async function fetchPendingSession(deviceId) {
@@ -81,6 +25,17 @@
         return data.session || null;
     }
 
+    async function fetchBillingCheck(deviceId) {
+        try {
+            const url = `/api/panel/billing/check?device_id=${encodeURIComponent(deviceId)}`;
+            const resp = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+            if (!resp.ok) return null;
+            return await resp.json();
+        } catch (_) {
+            return null;
+        }
+    }
+
     async function submitReport(sessionId, payload) {
         await Utils.api(`/api/panel/billing/sessions/${encodeURIComponent(sessionId)}/report`, {
             method: 'POST',
@@ -88,54 +43,78 @@
         });
     }
 
-    function showModal(session, deviceName) {
+    function findSessionPanel(deviceId) {
+        const panels = document.querySelectorAll('.session-panel');
+        for (const panel of panels) {
+            if (panel.dataset.deviceId === deviceId || panel.querySelector('.session-device-label')?.textContent === deviceId) {
+                return panel;
+            }
+        }
+        return document.querySelector('.session-panel.active') || document.querySelector('.session-panel');
+    }
+
+    function showInOverlay(session, deviceName, panel) {
         return new Promise((resolve) => {
-            const modal = ensureModal();
-            modal.querySelector('.billing-report-title').textContent = t('commercialization.report.title', 'Work report');
-            modal.querySelector('.billing-report-subtitle').textContent = t('commercialization.report.subtitle', 'Describe the work performed during this remote session.');
+            const card = panel?.querySelector('.overlay-card');
+            const pane = panel?.querySelector('.session-billing-pane');
+            const divider = panel?.querySelector('.session-billing-divider');
+            if (!card || !pane) {
+                resolve(false);
+                return;
+            }
+
+            card.classList.add('overlay-card--billing');
+            pane.hidden = false;
+            if (divider) divider.hidden = false;
+
             const mins = session.billed_minutes || 0;
+            const hours = (mins / 60).toFixed(2);
             const amount = (session.amount_included || 0) + (session.amount_overage || 0);
-            modal.querySelector('.billing-report-meta').textContent =
-                `${deviceName || session.device_id} · ${mins} min · ${amount.toFixed(2)} ${session.currency || ''}`;
+            const pkgEl = pane.querySelector('.session-billing-package');
+            const hoursEl = pane.querySelector('.session-billing-hours');
+            const summaryEl = pane.querySelector('.session-billing-summary');
+            const errEl = pane.querySelector('.session-billing-error');
 
-            const summaryEl = modal.querySelector('.billing-report-summary');
-            const catEl = modal.querySelector('.billing-report-category');
-            const ticketEl = modal.querySelector('.billing-report-ticket');
-            const errEl = modal.querySelector('.billing-report-error');
-            summaryEl.value = '';
-            catEl.value = '';
-            ticketEl.value = '';
-            errEl.classList.add('hidden');
+            if (pkgEl) {
+                pkgEl.textContent = session.package_name
+                    ? `${t('commercialization.contracts.package', 'Package')}: ${session.package_name}`
+                    : (deviceName || session.device_id || '');
+            }
+            if (hoursEl) {
+                hoursEl.textContent = `${hours} h (${mins} min) · ${amount.toFixed(2)} ${session.currency || ''}`.trim();
+            }
+            if (summaryEl) summaryEl.value = session._draftSummary || '';
+            if (errEl) errEl.hidden = true;
 
-            const close = (result) => {
-                modal.classList.add('hidden');
+            const finish = (result) => {
+                pane.hidden = true;
+                if (divider) divider.hidden = true;
+                card.classList.remove('overlay-card--billing');
                 resolve(result);
             };
 
-            modal.querySelector('.billing-report-skip').onclick = () => close(false);
-            modal.querySelector('.billing-report-backdrop').onclick = () => close(false);
-            modal.querySelector('.billing-report-submit').onclick = async () => {
-                const summary = summaryEl.value.trim();
+            pane.querySelector('.session-billing-skip').onclick = () => finish(false);
+            pane.querySelector('.session-billing-submit').onclick = async () => {
+                const summary = (summaryEl?.value || '').trim();
                 if (!summary) {
-                    errEl.textContent = t('commercialization.report.summary_required', 'Summary is required');
-                    errEl.classList.remove('hidden');
+                    if (errEl) {
+                        errEl.textContent = t('commercialization.report.summary_required', 'Summary is required');
+                        errEl.hidden = false;
+                    }
                     return;
                 }
                 try {
-                    await submitReport(session.id, {
-                        summary,
-                        category: catEl.value.trim(),
-                        ticket_ref: ticketEl.value.trim()
-                    });
-                    close(true);
+                    await submitReport(session.id, { summary, category: '', ticket_ref: '' });
+                    finish(true);
                 } catch (e) {
-                    errEl.textContent = e.message || 'Error';
-                    errEl.classList.remove('hidden');
+                    if (errEl) {
+                        errEl.textContent = e.message || 'Error';
+                        errEl.hidden = false;
+                    }
                 }
             };
 
-            modal.classList.remove('hidden');
-            summaryEl.focus();
+            summaryEl?.focus();
         });
     }
 
@@ -149,8 +128,49 @@
             await sleep(800);
         }
         if (!session) return false;
-        return showModal(session, deviceName);
+        const panel = findSessionPanel(deviceId);
+        return showInOverlay(session, deviceName, panel);
     }
 
-    global.BillingReport = { promptAfterSession };
+    async function markReportIntent(deviceId) {
+        try {
+            sessionStorage.setItem(`bd-billing-report-intent:${deviceId}`, '1');
+        } catch (_) { /* ignore */ }
+    }
+
+    async function refreshToolbarPackage(deviceId) {
+        const badge = document.getElementById('toolbar-package-badge');
+        const btn = document.getElementById('btn-billing-report');
+        if (!deviceId) {
+            if (badge) badge.hidden = true;
+            if (btn) btn.style.display = 'none';
+            return null;
+        }
+        const check = await fetchBillingCheck(deviceId);
+        const has = check && (check.allowed !== false) && (check.contract_id || check.package_name || check.remaining_minutes != null);
+        if (badge) {
+            if (has && (check.package_name || check.remaining_minutes != null)) {
+                const rem = check.remaining_minutes != null ? `${check.remaining_minutes} min` : '';
+                badge.textContent = check.package_name ? `${check.package_name}${rem ? ' · ' + rem : ''}` : rem;
+                badge.hidden = false;
+                badge.title = [
+                    check.org_name || check.company || '',
+                    check.device_name || deviceId,
+                    check.package_name || '',
+                    rem
+                ].filter(Boolean).join('\n');
+            } else {
+                badge.hidden = true;
+            }
+        }
+        if (btn) btn.style.display = has ? '' : 'none';
+        return check;
+    }
+
+    global.BillingReport = {
+        promptAfterSession,
+        markReportIntent,
+        refreshToolbarPackage,
+        fetchBillingCheck
+    };
 })(window);

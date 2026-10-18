@@ -422,7 +422,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "サーバーキー",
@@ -818,7 +826,24 @@
         "availability_history_retention": "保持期間（日）",
         "availability_history_retention_hint": "古いイベントは自動削除されます。既定は30日です。",
         "availability_history_save": "可用性設定を保存",
-        "availability_history_saved": "可用性履歴設定を保存しました"
+        "availability_history_saved": "可用性履歴設定を保存しました",
+        "tab_time": "時刻 / タイムゾーン",
+        "time": {
+            "timezone_title": "請求タイムゾーン",
+            "timezone_desc": "商業化の月次境界用のグローバル IANA ゾーン（超過分は毎月1日の深夜0時にリセット）。",
+            "billing_month_hint": "このゾーンでの毎月1日の深夜0時に前期間を閉じ、新しい期間を開きます。アクティブなセッションは中断されません。",
+            "billing_timezone": "タイムゾーン",
+            "billing_timezone_hint": "例: Europe/Warsaw。月次使用量と超過に影響します。",
+            "custom_timezone": "カスタム IANA ゾーン（任意）",
+            "detect_os": "サーバー OS から検出",
+            "detected": "検出されたゾーン: {tz}",
+            "ntp_title": "NTP / 時計同期",
+            "ntp_desc": "課金可能なセッション時間の精度のため BetterDesk サーバー時計を同期してください。",
+            "save": "時刻設定を保存",
+            "save_title": "時刻設定を保存",
+            "saved": "時刻設定を保存しました。",
+            "commercialization_link": "商業化 → パッケージを開く"
+        }
     },
     "audit": {
         "time": "Time",
@@ -4189,7 +4214,8 @@
             "status_error": "最後のエラー",
             "os_yes": "はい",
             "os_no": "いいえ",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "アクティブな課金セッション",
@@ -4213,7 +4239,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "デバイス",
@@ -4221,7 +4254,11 @@
             "duration": "時間",
             "phase": "フェーズ",
             "amount": "金額",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "セッション",
@@ -4268,7 +4305,9 @@
             "skip": "今はスキップ",
             "submit": "レポートを送信",
             "summary_required": "概要は必須です",
-            "saved": "作業レポートを保存しました"
+            "saved": "作業レポートを保存しました",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "empty": {
             "packages": "パッケージがありません。上のボタンで作成してください。",
@@ -4330,6 +4369,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

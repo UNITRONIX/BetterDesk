@@ -426,7 +426,15 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group"
     },
     "keys": {
         "title": "服務器密鑰",
@@ -822,7 +830,24 @@
         "availability_history_retention": "保留天數",
         "availability_history_retention_hint": "較舊的事件會自動刪除。預設 30 天。",
         "availability_history_save": "儲存可用性設定",
-        "availability_history_saved": "可用性歷程設定已儲存"
+        "availability_history_saved": "可用性歷程設定已儲存",
+        "tab_time": "時間 / 時區",
+        "time": {
+            "timezone_title": "計費時區",
+            "timezone_desc": "用於商業化月度邊界的全域 IANA 時區（超額於每月 1 日午夜歸零）。",
+            "billing_month_hint": "此時區每月 1 日午夜關閉上一週期並開啟新週期。進行中的工作階段不會中斷。",
+            "billing_timezone": "時區",
+            "billing_timezone_hint": "例如 Europe/Warsaw。影響月度用量與超額。",
+            "custom_timezone": "自訂 IANA 時區（選用）",
+            "detect_os": "從伺服器作業系統偵測",
+            "detected": "偵測到的時區：{tz}",
+            "ntp_title": "NTP / 時鐘同步",
+            "ntp_desc": "保持 BetterDesk 伺服器時鐘同步，以確保可計費工作階段時間準確。",
+            "save": "儲存時間設定",
+            "save_title": "儲存時間設定",
+            "saved": "時間設定已儲存。",
+            "commercialization_link": "開啟商業化 → 套餐"
+        }
     },
     "audit": {
         "time": "時間",
@@ -4193,7 +4218,8 @@
             "status_error": "最後錯誤",
             "os_yes": "是",
             "os_no": "否",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "使用中可計費工作階段",
@@ -4217,7 +4243,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "裝置",
@@ -4225,7 +4258,11 @@
             "duration": "時長",
             "phase": "階段",
             "amount": "金額",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "工作階段",
@@ -4291,7 +4328,9 @@
             "skip": "暫時略過",
             "submit": "提交報告",
             "summary_required": "摘要為必填",
-            "saved": "工作報告已儲存"
+            "saved": "工作報告已儲存",
+            "toolbar": "Work report",
+            "intent_hint": "Report form will open when the session ends"
         },
         "notifications": {
             "title": "Email notifications",
@@ -4334,6 +4373,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {

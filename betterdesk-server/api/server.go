@@ -521,6 +521,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("PUT /api/timesync/config", s.requirePermission(auth.PermServerConfig, s.handleSetTimeSyncConfig))
 	mux.HandleFunc("GET /api/billing/check", s.requirePermission(auth.PermDeviceConnect, s.handleBillingConnectionCheck))
 	mux.HandleFunc("GET /api/billing/packages", s.requirePermission(auth.PermBillingView, s.handleListBillingPackages))
+	mux.HandleFunc("GET /api/billing/packages/{id}/preview", s.requirePermission(auth.PermBillingView, s.handleBillingPackagePreview))
 	mux.HandleFunc("POST /api/billing/packages", s.requirePermission(auth.PermBillingManage, s.handleCreateBillingPackage))
 	mux.HandleFunc("PUT /api/billing/packages/{id}", s.requirePermission(auth.PermBillingManage, s.handleUpdateBillingPackage))
 	mux.HandleFunc("DELETE /api/billing/packages/{id}", s.requirePermission(auth.PermBillingManage, s.handleDeleteBillingPackage))

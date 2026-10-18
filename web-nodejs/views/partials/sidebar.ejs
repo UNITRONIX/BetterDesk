@@ -84,25 +84,13 @@
         <!-- Commercialization category links -->
         <div class="sidebar-flyout-panel" data-panel="commercialization">
             <% if (hasPermission('billing.view')) { %>
-            <a href="/commercialization?tab=overview" class="sidebar-link <%= currentPage === 'commercialization' && sidebarCommercialTab === 'overview' ? 'active' : '' %>">
-                <span class="material-icons" aria-hidden="true">dashboard</span>
-                <span class="sidebar-link-text"><%= _('commercialization.tabs.overview') %></span>
-            </a>
-            <a href="/commercialization?tab=packages" class="sidebar-link <%= currentPage === 'commercialization' && sidebarCommercialTab === 'packages' ? 'active' : '' %>">
+            <a href="/commercialization?tab=packages" class="sidebar-link <%= currentPage === 'commercialization' && (sidebarCommercialTab === 'packages' || sidebarCommercialTab === 'overview' || sidebarCommercialTab === 'settings') ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">inventory_2</span>
                 <span class="sidebar-link-text"><%= _('commercialization.tabs.packages') %></span>
             </a>
-            <a href="/commercialization?tab=sessions" class="sidebar-link <%= currentPage === 'commercialization' && sidebarCommercialTab === 'sessions' ? 'active' : '' %>">
+            <a href="/commercialization?tab=sessions" class="sidebar-link <%= currentPage === 'commercialization' && (sidebarCommercialTab === 'sessions' || sidebarCommercialTab === 'reports') ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">schedule</span>
                 <span class="sidebar-link-text"><%= _('commercialization.tabs.sessions') %></span>
-            </a>
-            <a href="/commercialization?tab=reports" class="sidebar-link <%= currentPage === 'commercialization' && sidebarCommercialTab === 'reports' ? 'active' : '' %>">
-                <span class="material-icons" aria-hidden="true">description</span>
-                <span class="sidebar-link-text"><%= _('commercialization.tabs.reports') %></span>
-            </a>
-            <a href="/commercialization?tab=settings" class="sidebar-link <%= currentPage === 'commercialization' && sidebarCommercialTab === 'settings' ? 'active' : '' %>">
-                <span class="material-icons" aria-hidden="true">tune</span>
-                <span class="sidebar-link-text"><%= _('commercialization.tabs.settings') %></span>
             </a>
             <% } %>
         </div>

@@ -757,6 +757,10 @@
             session.client.setAudioMuted(session.audioMuted);
         }
         syncMobileTouchForActive();
+
+        if (typeof window.BillingReport !== 'undefined') {
+            window.BillingReport.refreshToolbarPackage(deviceId).catch(() => {});
+        }
     }
 
     function closeSession(deviceId, options) {
@@ -1320,6 +1324,17 @@
     // Disconnect
     document.getElementById('btn-disconnect')?.addEventListener('click', () => {
         withClient(c => c.disconnect());
+    });
+
+    // Billing work-report intent (during session → disconnect overlay)
+    document.getElementById('btn-billing-report')?.addEventListener('click', () => {
+        const session = getActiveSession();
+        if (!session || typeof window.BillingReport === 'undefined') return;
+        window.BillingReport.markReportIntent(session.deviceId);
+        showToast(
+            t('commercialization.report.intent_hint', 'Report form will open when the session ends'),
+            'info'
+        );
     });
 
     // Audio toggle

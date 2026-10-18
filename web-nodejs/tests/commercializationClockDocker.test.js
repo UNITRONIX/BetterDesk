@@ -96,14 +96,15 @@ describe('commercialization Docker clock settings', () => {
         expect(response.body.settings.ntp_servers).toBe('pool.ntp.org');
     });
 
-    test('UI guards the native restart prompt behind Docker mode', () => {
+    test('UI guards the native restart prompt behind Docker mode (Settings → Time)', () => {
+        // NTP / BILLING_TIMEZONE save lives on Settings → Time, not Commercialization.
         const source = fs.readFileSync(
-            path.join(__dirname, '../public/js/commercialization.js'),
+            path.join(__dirname, '../public/js/settings.js'),
             'utf8'
         );
 
-        expect(source).toContain('let clockDockerMode = false;');
-        expect(source).toContain('if (!clockDockerMode)');
+        expect(source).toContain('_timeClockDockerMode');
+        expect(source).toContain('if (!_timeClockDockerMode)');
         expect(source).toContain('commercialization.clock.saved_hot_reload');
     });
 });
