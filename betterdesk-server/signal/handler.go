@@ -548,7 +548,7 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 
 		// Debounce database status updates — only sync every 60s per peer (P1)
 		if time.Since(existing.LastDBSync) > 60*time.Second {
-			s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String())
+			s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String(), "signal")
 			existing.LastDBSync = time.Now()
 		}
 		return
@@ -642,7 +642,7 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 	s.sendUDP(resp, raddr)
 
 	log.Printf("[signal] New peer registered: %s from %s (pk_loaded=%v)", id, raddr, len(entry.PK) > 0)
-	s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String())
+	s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String(), "signal")
 	s.publishPeerOnline(id)
 }
 
@@ -1003,6 +1003,8 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 	log.Printf("[signal] PunchHole: target %s found (addr=%s, status=%s, lastReg=%v ago), relay=%s",
 		targetID, target.UDPAddr, target.StatusTier, time.Since(target.LastReg), relayServer)
 
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole", "")
+
 	// Correlate initiator identity for a later RelayResponse on shared NAT (#399).
 	s.storePendingUUID(targetID, raddr, "", initiatorID)
 
@@ -1179,6 +1181,8 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 
 	log.Printf("[signal] PunchHole (TCP): target %s found (addr=%s, status=%s), relay=%s",
 		targetID, target.UDPAddr, target.StatusTier, relayServer)
+
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole", "")
 
 	// Correlate initiator identity for a later RelayResponse on shared NAT (#399).
 	s.storePendingUUID(targetID, raddr, "", initiatorID)
@@ -1547,6 +1551,8 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		log.Printf("[signal] RequestRelay shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", raddr.IP, relayServer)
 	}
 
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
+
 	// Forward relay request to target peer (supports UDP, TCP, and WebSocket targets).
 	// NOTE: Must use RequestRelay type, not RelayResponse — RustDesk client's
 	// handle_resp() dispatches RequestRelay to create_relay() but drops RelayResponse.
@@ -1677,6 +1683,8 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	if !s.authorizeRelayTicket(relayUUID, initiatorID, targetID) {
 		return s.relayTicketRejectedResponse(relayServer)
 	}
+
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
 
 	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
 	// public IP peers keep the public relay to avoid NAT hairpin failures (#121).
@@ -2663,6 +2671,46 @@ func (s *Server) logAuthorizedInitiator(raddr *net.UDPAddr, initiatorID, targetI
 		}
 	}
 	s.auditLog.Log(audit.ActionConnectionAllowed, clientHost, targetID, details)
+}
+
+// recordConnectionSession persists a Metrics-tab session row after the target
+// is confirmed online. Debounced in the DB layer for PunchHole retries.
+func (s *Server) recordConnectionSession(raddr *net.UDPAddr, initiatorID, targetID, token, transport, relayUUID string) {
+	if s.db == nil || strings.TrimSpace(targetID) == "" {
+		return
+	}
+	sess := &db.PeerConnectionSession{
+		HostID:    targetID,
+		PeerID:    initiatorID,
+		Transport: transport,
+		RelayUUID: strings.TrimSpace(relayUUID),
+		Source:    "signal",
+		StartedAt: time.Now().UTC(),
+	}
+	if raddr != nil {
+		sess.PeerIP = raddr.IP.String()
+	}
+	if strings.EqualFold(initiatorID, panelWebRemoteInitiatorID) {
+		sess.PeerName = "Web Remote"
+		sess.Username = "web_remote"
+	} else if s.db != nil {
+		if p, err := s.db.GetPeer(initiatorID); err == nil && p != nil {
+			sess.PeerName = strings.TrimSpace(p.Hostname)
+			if sess.PeerName == "" {
+				sess.PeerName = initiatorID
+			}
+		}
+		if opaqueClientTokenRegexp.MatchString(strings.TrimSpace(token)) {
+			if cs, err := s.db.GetClientSessionByTokenHash(hashOpaqueClientToken(token)); err == nil && cs != nil {
+				if user, userErr := s.db.GetUserByID(cs.UserID); userErr == nil && user != nil {
+					sess.Username = user.Username
+				}
+			}
+		}
+	}
+	if _, err := s.db.StartPeerConnectionSession(sess); err != nil {
+		log.Printf("[signal] connection session record failed: %v", err)
+	}
 }
 
 func (s *Server) shouldForceRelayForPeers(peerIDs ...string) bool {

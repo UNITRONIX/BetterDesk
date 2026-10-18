@@ -342,7 +342,7 @@ func (s *Server) cmdKick(conn net.Conn, args []string) {
 	id := args[0]
 	removed := s.peers.Remove(id)
 	if removed != nil {
-		s.db.UpdatePeerStatus(id, "OFFLINE", "")
+		s.db.UpdatePeerStatus(id, "OFFLINE", "", "admin")
 		fmt.Fprintf(conn, "Peer %s kicked (forced offline)\r\n", id)
 	} else {
 		fmt.Fprintf(conn, "Peer %s not in memory\r\n", id)

@@ -48,6 +48,7 @@
         loadServerInfo();
         initMeshSettingsSection();
         initDeviceScopeSection();
+        initAvailabilityHistorySection();
         initConnectionModeSection();
         initPublicEndpointsSection();
         initAuthSubnav();
@@ -716,6 +717,44 @@
         });
 
         loadDeviceScopeSetting();
+    }
+
+    // ==================== Availability history (#455) ====================
+
+    function initAvailabilityHistorySection() {
+        const form = document.getElementById('availability-history-form');
+        if (!form) return;
+
+        const enabledEl = document.getElementById('availability-history-enabled');
+        const retentionEl = document.getElementById('availability-history-retention');
+
+        async function loadAvailabilityHistorySetting() {
+            try {
+                const data = await Utils.api('/api/settings/availability-history');
+                if (enabledEl) enabledEl.checked = !!data.enabled;
+                if (retentionEl) retentionEl.value = data.retention_days || 30;
+            } catch (err) {
+                console.error('Failed to load availability history setting:', err);
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const enabled = !!(enabledEl && enabledEl.checked);
+            let retention = parseInt(retentionEl && retentionEl.value, 10);
+            if (!Number.isFinite(retention) || retention < 1) retention = 30;
+            try {
+                await Utils.api('/api/settings/availability-history', {
+                    method: 'POST',
+                    body: { enabled, retention_days: retention }
+                });
+                Notifications.success(_('settings.availability_history_saved'));
+            } catch (err) {
+                Notifications.error(err.message || _('errors.server_error'));
+            }
+        });
+
+        loadAvailabilityHistorySetting();
     }
 
     // ==================== MeshCentral compatibility ====================

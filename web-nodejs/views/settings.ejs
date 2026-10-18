@@ -176,6 +176,36 @@
                     </form>
                 </div>
             </div>
+
+            <div class="settings-panel" id="availability-history-settings-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">timeline</span>
+                        ${_('settings.availability_history_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('settings.availability_history_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <form class="settings-form" id="availability-history-form">
+                        <div class="form-group">
+                            <label class="form-label" for="availability-history-enabled">
+                                <input type="checkbox" id="availability-history-enabled">
+                                ${_('settings.availability_history_enable')}
+                            </label>
+                            <p class="form-hint">${_('settings.availability_history_enable_hint')}</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="availability-history-retention">${_('settings.availability_history_retention')}</label>
+                            <input type="number" id="availability-history-retention" class="form-input" min="1" max="3650" value="30" style="max-width:8rem;">
+                            <p class="form-hint">${_('settings.availability_history_retention_hint')}</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-icons" aria-hidden="true">save</span>
+                            ${_('settings.availability_history_save')}
+                        </button>
+                    </form>
+                </div>
+            </div>
             ` : ''}
 
             ${canServerConfig ? `
@@ -2056,7 +2086,7 @@
                                 ${_('backup.schedule_save')}
                             </button>
                             <button type="button" class="btn btn-secondary" id="scheduled-backup-test-btn">
-                                <span class="material-icons" aria-hidden="true">fact_check</span>
+                                <span class="material-icons" aria-hidden="true">task_alt</span>
                                 ${_('backup.schedule_test_destination')}
                             </button>
                             <button type="button" class="btn btn-secondary" id="scheduled-backup-run-btn">
@@ -2116,7 +2146,7 @@
                                 ${_('backup.smb_save')}
                             </button>
                             <button type="button" class="btn btn-secondary" id="backup-smb-test-btn">
-                                <span class="material-icons" aria-hidden="true">wifi_tethering</span>
+                                <span class="material-icons" aria-hidden="true">router</span>
                                 ${_('backup.smb_test')}
                             </button>
                         </div>

@@ -31,7 +31,8 @@ const serverConnectionConfig = require('../services/serverConnectionConfigServic
 const rustDeskPublicEndpoints = require('../services/rustDeskPublicEndpointsService');
 const clientConfigHost = require('../services/clientConfigHost');
 const { getSmtpSettings, putSmtpSettings, testSmtpSettings } = require('../lib/smtpSettingsHandlers');
-const { apiClient } = require('../services/betterdeskApi');
+const betterdeskApi = require('../services/betterdeskApi');
+const { apiClient } = betterdeskApi;
 const { canUsePrivilegedUpdate, invokePrivilegedUpdate } = require('../lib/privilegedUpdateHelper');
 const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
 const deviceGroupService = require('../services/deviceGroupService');
@@ -224,6 +225,80 @@ router.post('/api/settings/device-scope', requireAuth, requirePermission('server
         res.json({ success: true, data: { mode } });
     } catch (err) {
         console.error('Set device scope setting error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+const AVAIL_HISTORY_ENABLED_KEY = 'availability_history_enabled';
+const AVAIL_HISTORY_RETENTION_KEY = 'availability_history_retention_days';
+const AVAIL_HISTORY_DEFAULT_RETENTION = 30;
+
+function parseTruthy(v) {
+    const s = String(v == null ? '' : v).trim().toLowerCase();
+    return s === '1' || s === 'true' || s === 'y' || s === 'yes' || s === 'on';
+}
+
+/**
+ * GET /api/settings/availability-history — Go server_config gate for #455.
+ */
+router.get('/api/settings/availability-history', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const enabledRes = await betterdeskApi.getConfig(AVAIL_HISTORY_ENABLED_KEY);
+        const retentionRes = await betterdeskApi.getConfig(AVAIL_HISTORY_RETENTION_KEY);
+        let retention = AVAIL_HISTORY_DEFAULT_RETENTION;
+        const rawDays = retentionRes && retentionRes.success !== false
+            ? (retentionRes.value ?? retentionRes.data?.value)
+            : null;
+        const parsed = parseInt(rawDays, 10);
+        if (Number.isFinite(parsed) && parsed > 0) {
+            retention = Math.min(parsed, 3650);
+        }
+        const enabledVal = enabledRes && enabledRes.success !== false
+            ? (enabledRes.value ?? enabledRes.data?.value)
+            : '';
+        res.json({
+            success: true,
+            data: {
+                enabled: parseTruthy(enabledVal),
+                retention_days: retention
+            }
+        });
+    } catch (err) {
+        console.error('Get availability history setting error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * POST /api/settings/availability-history — enable/disable + retention days.
+ */
+router.post('/api/settings/availability-history', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const enabled = !!(req.body && req.body.enabled);
+        let retention = parseInt(req.body && req.body.retention_days, 10);
+        if (!Number.isFinite(retention) || retention < 1) {
+            retention = AVAIL_HISTORY_DEFAULT_RETENTION;
+        }
+        retention = Math.min(retention, 3650);
+
+        const enRes = await betterdeskApi.setConfig(AVAIL_HISTORY_ENABLED_KEY, enabled ? 'true' : 'false');
+        if (enRes && enRes.success === false) {
+            return res.status(502).json({ success: false, error: enRes.error || req.t('errors.server_error') });
+        }
+        const retRes = await betterdeskApi.setConfig(AVAIL_HISTORY_RETENTION_KEY, String(retention));
+        if (retRes && retRes.success === false) {
+            return res.status(502).json({ success: false, error: retRes.error || req.t('errors.server_error') });
+        }
+
+        await db.logAction(
+            req.session.userId,
+            'availability_history_updated',
+            `Availability history: enabled=${enabled}, retention_days=${retention}`,
+            req.ip
+        );
+        res.json({ success: true, data: { enabled, retention_days: retention } });
+    } catch (err) {
+        console.error('Set availability history setting error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });
@@ -1752,8 +1827,6 @@ router.put('/api/settings/backup/retention', requireAuth, requirePermission('ser
 });
 
 // ==================== Device enrollment settings ============================
-
-const betterdeskApi = require('../services/betterdeskApi');
 
 const ENROLLMENT_SETTING_RICH = 'enrollment_rich_approve';
 const ENROLLMENT_SETTING_TAG_PICKER = 'enrollment_tag_picker';

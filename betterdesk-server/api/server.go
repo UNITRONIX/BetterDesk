@@ -296,6 +296,8 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/peers/online", s.handleOnlinePeers)
 	mux.HandleFunc("GET /api/peers/{id}/status", s.handlePeerStatus)
 	mux.HandleFunc("GET /api/peers/{id}/metrics", s.handlePeerMetrics)
+	mux.HandleFunc("GET /api/peers/{id}/availability", s.requirePermission(auth.PermDeviceView, s.handlePeerAvailability))
+	mux.HandleFunc("GET /api/peers/{id}/connection-sessions", s.requirePermission(auth.PermDeviceView, s.handlePeerConnectionSessions))
 	mux.HandleFunc("GET /api/peers/{id}/telemetry", s.requirePermission(auth.PermDeviceView, s.handleGetPeerTelemetry))
 	mux.HandleFunc("POST /api/peers/{id}/telemetry/refresh", s.requirePermission(auth.PermDeviceEdit, s.handleRefreshPeerHardware))
 	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requireRole(auth.RoleOperator, s.handleQueuePeerTelemetryCommand))
@@ -1327,7 +1329,7 @@ func (s *Server) handleBanPeer(w http.ResponseWriter, r *http.Request) {
 	s.peers.Remove(id)
 
 	// Also update database status to OFFLINE since the peer is now banned
-	s.db.UpdatePeerStatus(id, "OFFLINE", "")
+	s.db.UpdatePeerStatus(id, "OFFLINE", "", "admin")
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerBanned, s.remoteIP(r), id, map[string]string{"reason": body.Reason})
@@ -1619,6 +1621,94 @@ func (s *Server) handlePeerStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"in_memory": true,
 		"snapshot":  snap,
+	})
+}
+
+// handlePeerAvailability returns server-observed status transitions for one local day.
+// GET /api/peers/{id}/availability?day=YYYY-MM-DD&tz_offset=<js getTimezoneOffset()>
+func (s *Server) handlePeerAvailability(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" || !peerIDRegexp.MatchString(id) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid peer ID"})
+		return
+	}
+	if !s.peerOrgScopeCheck(w, r, id) {
+		return
+	}
+
+	enabled := s.db.IsAvailabilityHistoryEnabled()
+	retention := s.db.AvailabilityHistoryRetentionDays()
+	day := r.URL.Query().Get("day")
+	if day == "" {
+		day = time.Now().UTC().Format("2006-01-02")
+	}
+	tzOffset := 0
+	if raw := r.URL.Query().Get("tz_offset"); raw != "" {
+		if parsed, err := strconv.Atoi(raw); err == nil {
+			tzOffset = parsed
+		}
+	}
+
+	from, to, err := db.LocalDayBounds(day, tzOffset)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid day; expected YYYY-MM-DD"})
+		return
+	}
+
+	events := []*db.PeerAvailabilityEvent{}
+	if enabled {
+		events, err = s.db.GetPeerAvailabilityEvents(id, from, to)
+		if err != nil {
+			writeInternalError(w, err, "GetPeerAvailabilityEvents")
+			return
+		}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"peer_id":        id,
+		"enabled":        enabled,
+		"retention_days": retention,
+		"day":            day,
+		"tz_offset":      tzOffset,
+		"from":           from.UTC().Format(time.RFC3339),
+		"to":             to.UTC().Format(time.RFC3339),
+		"count":          len(events),
+		"events":         events,
+	})
+}
+
+// handlePeerConnectionSessions returns server-observed remote-control sessions.
+// GET /api/peers/{id}/connection-sessions?limit=50
+func (s *Server) handlePeerConnectionSessions(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" || !peerIDRegexp.MatchString(id) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid peer ID"})
+		return
+	}
+	if !s.peerOrgScopeCheck(w, r, id) {
+		return
+	}
+
+	limit := 50
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 500 {
+			limit = parsed
+		}
+	}
+
+	sessions, err := s.db.ListPeerConnectionSessions(id, limit)
+	if err != nil {
+		writeInternalError(w, err, "ListPeerConnectionSessions")
+		return
+	}
+	if sessions == nil {
+		sessions = []*db.PeerConnectionSession{}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"peer_id":  id,
+		"count":    len(sessions),
+		"sessions": sessions,
 	})
 }
 

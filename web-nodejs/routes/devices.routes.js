@@ -557,6 +557,61 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
 });
 
 /**
+ * GET /api/devices/:id/availability
+ * Server-observed online/offline status transitions for one local calendar day (#455).
+ * Query: day=YYYY-MM-DD, tz_offset=<Date.getTimezoneOffset()>
+ */
+router.get('/api/devices/:id/availability', requireAuth, requirePermission('device.view'), async (req, res) => {
+    try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
+        const day = typeof req.query.day === 'string' ? req.query.day : '';
+        const tzOffset = req.query.tz_offset;
+        const result = await betterdeskApi.getPeerAvailability(req.params.id, {
+            day: day || undefined,
+            tzOffset: tzOffset !== undefined ? tzOffset : new Date().getTimezoneOffset()
+        });
+        if (result && result.success === false) {
+            return res.status(502).json({ success: false, error: result.error || req.t('errors.server_error') });
+        }
+        res.json({ success: true, data: result.data || result });
+    } catch (err) {
+        console.error('Get device availability error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * GET /api/devices/:id/connection-sessions
+ * Server-observed remote-control sessions (who / when / duration).
+ */
+router.get('/api/devices/:id/connection-sessions', requireAuth, requirePermission('device.view'), async (req, res) => {
+    try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
+        const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+        const result = await betterdeskApi.getPeerConnectionSessions(req.params.id, {
+            limit: Number.isFinite(limit) ? limit : 50
+        });
+        if (result && result.success === false) {
+            return res.status(502).json({ success: false, error: result.error || req.t('errors.server_error') });
+        }
+        res.json({ success: true, data: result.data || result });
+    } catch (err) {
+        console.error('Get device connection sessions error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
  * POST /api/devices/:id/telemetry/refresh
  * Queue a rate-limited hardware inventory refresh on the device.
  */

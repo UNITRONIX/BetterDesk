@@ -13,8 +13,9 @@ import (
 
 // SQLiteDB implements the Database interface using modernc.org/sqlite (pure Go, no CGO).
 type SQLiteDB struct {
-	db *sql.DB
-	mu sync.RWMutex // serialize writes (SQLite limitation)
+	db   *sql.DB
+	mu   sync.RWMutex // serialize writes (SQLite limitation)
+	gate *availabilityGate
 }
 
 // OpenSQLite opens or creates a SQLite database at the given path.
@@ -32,7 +33,7 @@ func OpenSQLite(path string) (*SQLiteDB, error) {
 		return nil, fmt.Errorf("db: SQLite ping failed: %w", err)
 	}
 
-	return &SQLiteDB{db: sqlDB}, nil
+	return &SQLiteDB{db: sqlDB, gate: newAvailabilityGate()}, nil
 }
 
 // Close closes the database connection.
@@ -184,6 +185,41 @@ func (s *SQLiteDB) Migrate() error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer ON peer_metrics(peer_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_created ON peer_metrics(created_at)`,
+
+		// Peer availability history (server-observed status transitions, #455)
+		`CREATE TABLE IF NOT EXISTS peer_availability_events (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			peer_id TEXT NOT NULL,
+			from_status TEXT NOT NULL DEFAULT '',
+			to_status TEXT NOT NULL,
+			source TEXT NOT NULL DEFAULT '',
+			created_at TEXT DEFAULT (datetime('now'))
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_avail_peer_created
+			ON peer_availability_events(peer_id, created_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_avail_created
+			ON peer_availability_events(created_at)`,
+
+		// Server-observed remote-control sessions (Metrics tab).
+		`CREATE TABLE IF NOT EXISTS peer_connection_sessions (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			host_id TEXT NOT NULL,
+			peer_id TEXT NOT NULL DEFAULT '',
+			peer_name TEXT NOT NULL DEFAULT '',
+			peer_ip TEXT NOT NULL DEFAULT '',
+			username TEXT NOT NULL DEFAULT '',
+			transport TEXT NOT NULL DEFAULT '',
+			relay_uuid TEXT NOT NULL DEFAULT '',
+			started_at TEXT NOT NULL DEFAULT (datetime('now')),
+			ended_at TEXT,
+			source TEXT NOT NULL DEFAULT 'signal'
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_host_started
+			ON peer_connection_sessions(host_id, started_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_relay
+			ON peer_connection_sessions(relay_uuid)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_open
+			ON peer_connection_sessions(host_id, peer_id, ended_at)`,
 
 		// BetterDesk device telemetry snapshots and heartbeat-delivered commands.
 		`CREATE TABLE IF NOT EXISTS device_telemetry_snapshots (
@@ -1147,23 +1183,59 @@ func (s *SQLiteDB) GetBannedPeerCount() (int, error) {
 }
 
 // UpdatePeerStatus updates a peer's status and IP, plus last_online timestamp.
-func (s *SQLiteDB) UpdatePeerStatus(id string, status string, ip string) error {
+// When availability history is enabled, records a transition if status changed.
+func (s *SQLiteDB) UpdatePeerStatus(id string, status string, ip string, source string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	var prev string
+	found := s.db.QueryRow(
+		`SELECT status FROM peers WHERE id = ? AND soft_deleted = 0`, id,
+	).Scan(&prev) == nil
 
 	_, err := s.db.Exec(
 		`UPDATE peers SET status = ?, ip = ?, last_online = datetime('now') WHERE id = ? AND soft_deleted = 0`,
 		status, ip, id)
-	return err
+	if err != nil {
+		return err
+	}
+	if found && prev != status {
+		s.recordAvailabilityEventLocked(id, prev, status, source)
+	}
+	return nil
 }
 
 // BatchUpdatePeerStatus sets status for many peers in one query (empty ip preserved).
-func (s *SQLiteDB) BatchUpdatePeerStatus(ids []string, status string) error {
+func (s *SQLiteDB) BatchUpdatePeerStatus(ids []string, status string, source string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	prevByID := map[string]string{}
+	if s.gateEnabledUnlocked() {
+		placeholders := make([]string, len(ids))
+		args := make([]any, len(ids))
+		for i, id := range ids {
+			placeholders[i] = "?"
+			args[i] = id
+		}
+		rows, err := s.db.Query(
+			fmt.Sprintf(`SELECT id, status FROM peers WHERE soft_deleted = 0 AND id IN (%s)`,
+				strings.Join(placeholders, ",")),
+			args...,
+		)
+		if err == nil {
+			for rows.Next() {
+				var id, st string
+				if rows.Scan(&id, &st) == nil {
+					prevByID[id] = st
+				}
+			}
+			rows.Close()
+		}
+	}
 
 	placeholders := make([]string, len(ids))
 	args := make([]any, 0, len(ids)+1)
@@ -1177,7 +1249,305 @@ func (s *SQLiteDB) BatchUpdatePeerStatus(ids []string, status string) error {
 		strings.Join(placeholders, ","),
 	)
 	_, err := s.db.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	for id, prev := range prevByID {
+		if prev != status {
+			s.recordAvailabilityEventLocked(id, prev, status, source)
+		}
+	}
+	return nil
+}
+
+func (s *SQLiteDB) gateEnabledUnlocked() bool {
+	if s.gate == nil {
+		return false
+	}
+	enabled, _ := s.gate.refresh(func(key string) (string, error) {
+		var v string
+		err := s.db.QueryRow(`SELECT value FROM server_config WHERE key = ?`, key).Scan(&v)
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return v, err
+	})
+	return enabled
+}
+
+func (s *SQLiteDB) recordAvailabilityEventLocked(peerID, fromStatus, toStatus, source string) {
+	if !s.gateEnabledUnlocked() {
+		return
+	}
+	if source == "" {
+		source = "status"
+	}
+	_, _ = s.db.Exec(
+		`INSERT INTO peer_availability_events (peer_id, from_status, to_status, source, created_at)
+		 VALUES (?, ?, ?, ?, datetime('now'))`,
+		peerID, fromStatus, toStatus, source,
+	)
+}
+
+func (s *SQLiteDB) IsAvailabilityHistoryEnabled() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.gateEnabledUnlocked()
+}
+
+func (s *SQLiteDB) AvailabilityHistoryRetentionDays() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.gate == nil {
+		return DefaultAvailabilityHistoryRetention
+	}
+	_, days := s.gate.refresh(func(key string) (string, error) {
+		var v string
+		err := s.db.QueryRow(`SELECT value FROM server_config WHERE key = ?`, key).Scan(&v)
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return v, err
+	})
+	return days
+}
+
+func (s *SQLiteDB) InvalidateAvailabilityHistoryCache() {
+	if s.gate != nil {
+		s.gate.invalidate()
+	}
+}
+
+func (s *SQLiteDB) GetPeerAvailabilityEvents(peerID string, from, to time.Time) ([]*PeerAvailabilityEvent, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		`SELECT id, peer_id, from_status, to_status, source, created_at
+		 FROM peer_availability_events
+		 WHERE peer_id = ?
+		   AND created_at >= ?
+		   AND created_at < ?
+		 ORDER BY created_at ASC, id ASC`,
+		peerID,
+		from.UTC().Format("2006-01-02 15:04:05"),
+		to.UTC().Format("2006-01-02 15:04:05"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*PeerAvailabilityEvent
+	for rows.Next() {
+		ev := &PeerAvailabilityEvent{}
+		var created string
+		if err := rows.Scan(&ev.ID, &ev.PeerID, &ev.FromStatus, &ev.ToStatus, &ev.Source, &created); err != nil {
+			return nil, err
+		}
+		if t, err := time.ParseInLocation("2006-01-02 15:04:05", created, time.UTC); err == nil {
+			ev.CreatedAt = t
+		} else if t, err := time.Parse(time.RFC3339, created); err == nil {
+			ev.CreatedAt = t.UTC()
+		}
+		out = append(out, ev)
+	}
+	if out == nil {
+		out = []*PeerAvailabilityEvent{}
+	}
+	return out, rows.Err()
+}
+
+func (s *SQLiteDB) CleanupOldAvailabilityEvents(maxAge time.Duration) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	cutoff := time.Now().UTC().Add(-maxAge).Format("2006-01-02 15:04:05")
+	res, err := s.db.Exec(`DELETE FROM peer_availability_events WHERE created_at < ?`, cutoff)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
+func parseSQLiteDateTime(raw string) time.Time {
+	if raw == "" {
+		return time.Time{}
+	}
+	if t, err := time.ParseInLocation("2006-01-02 15:04:05", raw, time.UTC); err == nil {
+		return t
+	}
+	if t, err := time.Parse(time.RFC3339, raw); err == nil {
+		return t.UTC()
+	}
+	return time.Time{}
+}
+
+// StartPeerConnectionSession inserts or refreshes an open session for host+peer.
+func (s *SQLiteDB) StartPeerConnectionSession(sess *PeerConnectionSession) (int64, error) {
+	if sess == nil || strings.TrimSpace(sess.HostID) == "" {
+		return 0, fmt.Errorf("host_id required")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	now := time.Now().UTC()
+	if sess.StartedAt.IsZero() {
+		sess.StartedAt = now
+	}
+	if sess.Source == "" {
+		sess.Source = "signal"
+	}
+	debounceCutoff := now.Add(-ConnectionSessionDebounce).Format("2006-01-02 15:04:05")
+
+	var existingID int64
+	var existingStarted string
+	err := s.db.QueryRow(
+		`SELECT id, started_at FROM peer_connection_sessions
+		 WHERE host_id = ? AND peer_id = ? AND ended_at IS NULL
+		 ORDER BY started_at DESC, id DESC LIMIT 1`,
+		sess.HostID, sess.PeerID,
+	).Scan(&existingID, &existingStarted)
+	if err == nil && existingID > 0 {
+		started := parseSQLiteDateTime(existingStarted)
+		if !started.IsZero() && started.After(now.Add(-ConnectionSessionDebounce)) {
+			if sess.RelayUUID != "" {
+				_, _ = s.db.Exec(
+					`UPDATE peer_connection_sessions SET
+						relay_uuid = CASE WHEN relay_uuid = '' OR relay_uuid IS NULL THEN ? ELSE relay_uuid END,
+						peer_ip = CASE WHEN ? != '' THEN ? ELSE peer_ip END,
+						peer_name = CASE WHEN ? != '' THEN ? ELSE peer_name END,
+						username = CASE WHEN ? != '' THEN ? ELSE username END,
+						transport = CASE WHEN ? != '' THEN ? ELSE transport END
+					 WHERE id = ?`,
+					sess.RelayUUID,
+					sess.PeerIP, sess.PeerIP,
+					sess.PeerName, sess.PeerName,
+					sess.Username, sess.Username,
+					sess.Transport, sess.Transport,
+					existingID,
+				)
+			} else {
+				_, _ = s.db.Exec(
+					`UPDATE peer_connection_sessions SET
+						peer_ip = CASE WHEN ? != '' THEN ? ELSE peer_ip END,
+						peer_name = CASE WHEN ? != '' THEN ? ELSE peer_name END,
+						username = CASE WHEN ? != '' THEN ? ELSE username END,
+						transport = CASE WHEN ? != '' THEN ? ELSE transport END
+					 WHERE id = ?`,
+					sess.PeerIP, sess.PeerIP,
+					sess.PeerName, sess.PeerName,
+					sess.Username, sess.Username,
+					sess.Transport, sess.Transport,
+					existingID,
+				)
+			}
+			return existingID, nil
+		}
+		// Stale open session — close it before inserting a new one.
+		_, _ = s.db.Exec(
+			`UPDATE peer_connection_sessions SET ended_at = ? WHERE id = ? AND ended_at IS NULL`,
+			now.Format("2006-01-02 15:04:05"), existingID,
+		)
+	} else if err != nil && err != sql.ErrNoRows {
+		return 0, err
+	}
+
+	// Close any other open sessions for this pair older than the debounce window.
+	_, _ = s.db.Exec(
+		`UPDATE peer_connection_sessions SET ended_at = ?
+		 WHERE host_id = ? AND peer_id = ? AND ended_at IS NULL AND started_at < ?`,
+		now.Format("2006-01-02 15:04:05"), sess.HostID, sess.PeerID, debounceCutoff,
+	)
+
+	res, err := s.db.Exec(
+		`INSERT INTO peer_connection_sessions
+			(host_id, peer_id, peer_name, peer_ip, username, transport, relay_uuid, started_at, source)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		sess.HostID, sess.PeerID, sess.PeerName, sess.PeerIP, sess.Username,
+		sess.Transport, sess.RelayUUID, sess.StartedAt.UTC().Format("2006-01-02 15:04:05"), sess.Source,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func (s *SQLiteDB) EndPeerConnectionSessionByRelay(relayUUID string) error {
+	relayUUID = strings.TrimSpace(relayUUID)
+	if relayUUID == "" {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now().UTC().Format("2006-01-02 15:04:05")
+	_, err := s.db.Exec(
+		`UPDATE peer_connection_sessions SET ended_at = ?
+		 WHERE relay_uuid = ? AND ended_at IS NULL`,
+		now, relayUUID,
+	)
 	return err
+}
+
+func (s *SQLiteDB) ListPeerConnectionSessions(hostID string, limit int) ([]*PeerConnectionSession, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(
+		`SELECT id, host_id, peer_id, peer_name, peer_ip, username, transport, relay_uuid,
+		        started_at, ended_at, source
+		 FROM peer_connection_sessions
+		 WHERE host_id = ?
+		 ORDER BY started_at DESC, id DESC
+		 LIMIT ?`,
+		hostID, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*PeerConnectionSession
+	for rows.Next() {
+		sess := &PeerConnectionSession{}
+		var started, ended sql.NullString
+		if err := rows.Scan(
+			&sess.ID, &sess.HostID, &sess.PeerID, &sess.PeerName, &sess.PeerIP,
+			&sess.Username, &sess.Transport, &sess.RelayUUID,
+			&started, &ended, &sess.Source,
+		); err != nil {
+			return nil, err
+		}
+		if started.Valid {
+			sess.StartedAt = parseSQLiteDateTime(started.String)
+		}
+		if ended.Valid && ended.String != "" {
+			t := parseSQLiteDateTime(ended.String)
+			sess.EndedAt = &t
+		}
+		sess.FillDerived()
+		out = append(out, sess)
+	}
+	if out == nil {
+		out = []*PeerConnectionSession{}
+	}
+	return out, rows.Err()
+}
+
+func (s *SQLiteDB) CleanupOldPeerConnectionSessions(maxAge time.Duration) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	cutoff := time.Now().UTC().Add(-maxAge).Format("2006-01-02 15:04:05")
+	res, err := s.db.Exec(`DELETE FROM peer_connection_sessions WHERE started_at < ?`, cutoff)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
 }
 
 // UpdatePeerSysinfo updates hostname, os, and version for a peer.
@@ -1509,6 +1879,11 @@ func (s *SQLiteDB) SetConfig(key, value string) error {
 	_, err := s.db.Exec(
 		`INSERT INTO server_config (key, value) VALUES (?, ?)
 		 ON CONFLICT(key) DO UPDATE SET value = excluded.value`, key, value)
+	if err == nil && (key == ConfigAvailabilityHistoryEnabled || key == ConfigAvailabilityHistoryRetentionDays) {
+		if s.gate != nil {
+			s.gate.invalidate()
+		}
+	}
 	return err
 }
 

@@ -35,7 +35,7 @@ func (g *Gateway) registerAgent(ac *AgentConn) (string, error) {
 	if err := g.db.UpsertPeer(peer); err != nil {
 		return "", err
 	}
-	g.db.UpdatePeerStatus(peerID, "ONLINE", ac.clientIP)
+	g.db.UpdatePeerStatus(peerID, "ONLINE", ac.clientIP, "mesh")
 	g.db.SetConfig("mesh_node_id_"+peerID, ac.meshNodeID)
 	g.db.SetConfig("mesh_group_id_"+peerID, ac.meshGroupID)
 

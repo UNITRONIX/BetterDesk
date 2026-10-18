@@ -87,7 +87,7 @@ func (g *Gateway) handleRegister(ctx context.Context, dc *DeviceConn) error {
 	g.devices.Store(dc.ID, dc)
 
 	// Update peer status to ONLINE
-	g.db.UpdatePeerStatus(dc.ID, "ONLINE", dc.ClientIP)
+	g.db.UpdatePeerStatus(dc.ID, "ONLINE", dc.ClientIP, "cdap")
 
 	// Send registration confirmation
 	result := map[string]any{
@@ -169,7 +169,7 @@ func (g *Gateway) handleHeartbeat(ctx context.Context, dc *DeviceConn, msg *Mess
 	}
 
 	// Keep peer ONLINE
-	g.db.UpdatePeerStatus(dc.ID, "ONLINE", dc.ClientIP)
+	g.db.UpdatePeerStatus(dc.ID, "ONLINE", dc.ClientIP, "cdap")
 
 	// Respond with server ping
 	sendMessage(ctx, dc.conn, "ping", map[string]any{

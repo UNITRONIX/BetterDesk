@@ -22,6 +22,8 @@ type PostgresDB struct {
 
 	// LISTEN/NOTIFY callback (nil = disabled). Set via OnNotify().
 	notifyFunc func(channel, payload string)
+
+	gate *availabilityGate
 }
 
 // OpenPostgres connects to a PostgreSQL server. The dsn must use the
@@ -57,7 +59,7 @@ func OpenPostgres(dsn string) (*PostgresDB, error) {
 		return nil, fmt.Errorf("db: PostgreSQL ping: %w", err)
 	}
 
-	return &PostgresDB{pool: pool, ctx: ctx, queryTimeout: 30 * time.Second}, nil
+	return &PostgresDB{pool: pool, ctx: ctx, queryTimeout: 30 * time.Second, gate: newAvailabilityGate()}, nil
 }
 
 // opCtx returns a context for database operations with optional query timeout.
@@ -216,6 +218,41 @@ func (pg *PostgresDB) Migrate() error {
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer_id ON peer_metrics(peer_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_created_at ON peer_metrics(created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer_created ON peer_metrics(peer_id, created_at DESC)`,
+
+		// Peer availability history (server-observed status transitions, #455)
+		`CREATE TABLE IF NOT EXISTS peer_availability_events (
+			id          BIGSERIAL PRIMARY KEY,
+			peer_id     TEXT NOT NULL,
+			from_status TEXT NOT NULL DEFAULT '',
+			to_status   TEXT NOT NULL,
+			source      TEXT NOT NULL DEFAULT '',
+			created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_avail_peer_created
+			ON peer_availability_events(peer_id, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_avail_created
+			ON peer_availability_events(created_at)`,
+
+		// Server-observed remote-control sessions (Metrics tab).
+		`CREATE TABLE IF NOT EXISTS peer_connection_sessions (
+			id          BIGSERIAL PRIMARY KEY,
+			host_id     TEXT NOT NULL,
+			peer_id     TEXT NOT NULL DEFAULT '',
+			peer_name   TEXT NOT NULL DEFAULT '',
+			peer_ip     TEXT NOT NULL DEFAULT '',
+			username    TEXT NOT NULL DEFAULT '',
+			transport   TEXT NOT NULL DEFAULT '',
+			relay_uuid  TEXT NOT NULL DEFAULT '',
+			started_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			ended_at    TIMESTAMPTZ,
+			source      TEXT NOT NULL DEFAULT 'signal'
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_host_started
+			ON peer_connection_sessions(host_id, started_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_relay
+			ON peer_connection_sessions(relay_uuid)`,
+		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_open
+			ON peer_connection_sessions(host_id, peer_id, ended_at)`,
 
 		// BetterDesk device telemetry snapshots and heartbeat-delivered commands.
 		`CREATE TABLE IF NOT EXISTS device_telemetry_snapshots (
@@ -996,26 +1033,300 @@ func (pg *PostgresDB) GetBannedPeerCount() (int, error) {
 }
 
 // UpdatePeerStatus updates a peer's status and IP, plus last_online timestamp.
-func (pg *PostgresDB) UpdatePeerStatus(id string, status string, ip string) error {
+// When availability history is enabled, records a transition if status changed.
+func (pg *PostgresDB) UpdatePeerStatus(id string, status string, ip string, source string) error {
 	ctx, cancel := pg.opCtx()
 	defer cancel()
+
+	var prev string
+	found := pg.pool.QueryRow(ctx,
+		`SELECT status FROM peers WHERE id = $1 AND soft_deleted = FALSE`, id,
+	).Scan(&prev) == nil
+
 	_, err := pg.pool.Exec(ctx,
 		`UPDATE peers SET status = $1, ip = $2, last_online = NOW() WHERE id = $3 AND soft_deleted = FALSE`,
 		status, ip, id)
-	return err
+	if err != nil {
+		return err
+	}
+	if found && prev != status {
+		pg.recordAvailabilityEvent(ctx, id, prev, status, source)
+	}
+	return nil
 }
 
 // BatchUpdatePeerStatus sets status for many peers in one query.
-func (pg *PostgresDB) BatchUpdatePeerStatus(ids []string, status string) error {
+func (pg *PostgresDB) BatchUpdatePeerStatus(ids []string, status string, source string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	ctx, cancel := pg.opCtx()
 	defer cancel()
+
+	prevByID := map[string]string{}
+	if pg.gateEnabled() {
+		rows, err := pg.pool.Query(ctx,
+			`SELECT id, status FROM peers WHERE soft_deleted = FALSE AND id = ANY($1)`, ids)
+		if err == nil {
+			for rows.Next() {
+				var id, st string
+				if rows.Scan(&id, &st) == nil {
+					prevByID[id] = st
+				}
+			}
+			rows.Close()
+		}
+	}
+
 	_, err := pg.pool.Exec(ctx,
 		`UPDATE peers SET status = $1, last_online = NOW() WHERE soft_deleted = FALSE AND id = ANY($2)`,
 		status, ids)
+	if err != nil {
+		return err
+	}
+	for id, prev := range prevByID {
+		if prev != status {
+			pg.recordAvailabilityEvent(ctx, id, prev, status, source)
+		}
+	}
+	return nil
+}
+
+func (pg *PostgresDB) gateEnabled() bool {
+	if pg.gate == nil {
+		return false
+	}
+	enabled, _ := pg.gate.refresh(func(key string) (string, error) {
+		var v string
+		err := pg.pool.QueryRow(pg.ctx, `SELECT value FROM server_config WHERE key = $1`, key).Scan(&v)
+		if err == pgx.ErrNoRows {
+			return "", nil
+		}
+		return v, err
+	})
+	return enabled
+}
+
+func (pg *PostgresDB) recordAvailabilityEvent(ctx context.Context, peerID, fromStatus, toStatus, source string) {
+	if !pg.gateEnabled() {
+		return
+	}
+	if source == "" {
+		source = "status"
+	}
+	_, _ = pg.pool.Exec(ctx,
+		`INSERT INTO peer_availability_events (peer_id, from_status, to_status, source)
+		 VALUES ($1, $2, $3, $4)`,
+		peerID, fromStatus, toStatus, source,
+	)
+}
+
+func (pg *PostgresDB) IsAvailabilityHistoryEnabled() bool {
+	return pg.gateEnabled()
+}
+
+func (pg *PostgresDB) AvailabilityHistoryRetentionDays() int {
+	if pg.gate == nil {
+		return DefaultAvailabilityHistoryRetention
+	}
+	_, days := pg.gate.refresh(func(key string) (string, error) {
+		var v string
+		err := pg.pool.QueryRow(pg.ctx, `SELECT value FROM server_config WHERE key = $1`, key).Scan(&v)
+		if err == pgx.ErrNoRows {
+			return "", nil
+		}
+		return v, err
+	})
+	return days
+}
+
+func (pg *PostgresDB) InvalidateAvailabilityHistoryCache() {
+	if pg.gate != nil {
+		pg.gate.invalidate()
+	}
+}
+
+func (pg *PostgresDB) GetPeerAvailabilityEvents(peerID string, from, to time.Time) ([]*PeerAvailabilityEvent, error) {
+	ctx, cancel := pg.opCtx()
+	defer cancel()
+	rows, err := pg.pool.Query(ctx,
+		`SELECT id, peer_id, from_status, to_status, source, created_at
+		 FROM peer_availability_events
+		 WHERE peer_id = $1
+		   AND created_at >= $2
+		   AND created_at < $3
+		 ORDER BY created_at ASC, id ASC`,
+		peerID, from.UTC(), to.UTC(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*PeerAvailabilityEvent
+	for rows.Next() {
+		ev := &PeerAvailabilityEvent{}
+		if err := rows.Scan(&ev.ID, &ev.PeerID, &ev.FromStatus, &ev.ToStatus, &ev.Source, &ev.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, ev)
+	}
+	if out == nil {
+		out = []*PeerAvailabilityEvent{}
+	}
+	return out, rows.Err()
+}
+
+func (pg *PostgresDB) CleanupOldAvailabilityEvents(maxAge time.Duration) (int64, error) {
+	ctx, cancel := pg.opCtx()
+	defer cancel()
+	cutoff := time.Now().Add(-maxAge)
+	tag, err := pg.pool.Exec(ctx,
+		`DELETE FROM peer_availability_events WHERE created_at < $1`, cutoff)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
+// StartPeerConnectionSession inserts or refreshes an open session for host+peer.
+func (pg *PostgresDB) StartPeerConnectionSession(sess *PeerConnectionSession) (int64, error) {
+	if sess == nil || strings.TrimSpace(sess.HostID) == "" {
+		return 0, fmt.Errorf("host_id required")
+	}
+	ctx, cancel := pg.opCtx()
+	defer cancel()
+
+	now := time.Now().UTC()
+	if sess.StartedAt.IsZero() {
+		sess.StartedAt = now
+	}
+	if sess.Source == "" {
+		sess.Source = "signal"
+	}
+	debounceCutoff := now.Add(-ConnectionSessionDebounce)
+
+	var existingID int64
+	var existingStarted time.Time
+	err := pg.pool.QueryRow(ctx,
+		`SELECT id, started_at FROM peer_connection_sessions
+		 WHERE host_id = $1 AND peer_id = $2 AND ended_at IS NULL
+		 ORDER BY started_at DESC, id DESC LIMIT 1`,
+		sess.HostID, sess.PeerID,
+	).Scan(&existingID, &existingStarted)
+	if err == nil && existingID > 0 {
+		if existingStarted.After(now.Add(-ConnectionSessionDebounce)) {
+			_, _ = pg.pool.Exec(ctx,
+				`UPDATE peer_connection_sessions SET
+					relay_uuid = CASE
+						WHEN ($1 <> '' AND (relay_uuid = '' OR relay_uuid IS NULL)) THEN $1
+						ELSE relay_uuid END,
+					peer_ip = CASE WHEN $2 <> '' THEN $2 ELSE peer_ip END,
+					peer_name = CASE WHEN $3 <> '' THEN $3 ELSE peer_name END,
+					username = CASE WHEN $4 <> '' THEN $4 ELSE username END,
+					transport = CASE WHEN $5 <> '' THEN $5 ELSE transport END
+				 WHERE id = $6`,
+				sess.RelayUUID, sess.PeerIP, sess.PeerName, sess.Username, sess.Transport, existingID,
+			)
+			return existingID, nil
+		}
+		_, _ = pg.pool.Exec(ctx,
+			`UPDATE peer_connection_sessions SET ended_at = $1 WHERE id = $2 AND ended_at IS NULL`,
+			now, existingID,
+		)
+	} else if err != nil && err != pgx.ErrNoRows {
+		return 0, err
+	}
+
+	_, _ = pg.pool.Exec(ctx,
+		`UPDATE peer_connection_sessions SET ended_at = $1
+		 WHERE host_id = $2 AND peer_id = $3 AND ended_at IS NULL AND started_at < $4`,
+		now, sess.HostID, sess.PeerID, debounceCutoff,
+	)
+
+	var id int64
+	err = pg.pool.QueryRow(ctx,
+		`INSERT INTO peer_connection_sessions
+			(host_id, peer_id, peer_name, peer_ip, username, transport, relay_uuid, started_at, source)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		 RETURNING id`,
+		sess.HostID, sess.PeerID, sess.PeerName, sess.PeerIP, sess.Username,
+		sess.Transport, sess.RelayUUID, sess.StartedAt.UTC(), sess.Source,
+	).Scan(&id)
+	return id, err
+}
+
+func (pg *PostgresDB) EndPeerConnectionSessionByRelay(relayUUID string) error {
+	relayUUID = strings.TrimSpace(relayUUID)
+	if relayUUID == "" {
+		return nil
+	}
+	ctx, cancel := pg.opCtx()
+	defer cancel()
+	_, err := pg.pool.Exec(ctx,
+		`UPDATE peer_connection_sessions SET ended_at = NOW()
+		 WHERE relay_uuid = $1 AND ended_at IS NULL`,
+		relayUUID,
+	)
 	return err
+}
+
+func (pg *PostgresDB) ListPeerConnectionSessions(hostID string, limit int) ([]*PeerConnectionSession, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 500 {
+		limit = 500
+	}
+	ctx, cancel := pg.opCtx()
+	defer cancel()
+
+	rows, err := pg.pool.Query(ctx,
+		`SELECT id, host_id, peer_id, peer_name, peer_ip, username, transport, relay_uuid,
+		        started_at, ended_at, source
+		 FROM peer_connection_sessions
+		 WHERE host_id = $1
+		 ORDER BY started_at DESC, id DESC
+		 LIMIT $2`,
+		hostID, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*PeerConnectionSession
+	for rows.Next() {
+		sess := &PeerConnectionSession{}
+		var ended *time.Time
+		if err := rows.Scan(
+			&sess.ID, &sess.HostID, &sess.PeerID, &sess.PeerName, &sess.PeerIP,
+			&sess.Username, &sess.Transport, &sess.RelayUUID,
+			&sess.StartedAt, &ended, &sess.Source,
+		); err != nil {
+			return nil, err
+		}
+		sess.EndedAt = ended
+		sess.FillDerived()
+		out = append(out, sess)
+	}
+	if out == nil {
+		out = []*PeerConnectionSession{}
+	}
+	return out, rows.Err()
+}
+
+func (pg *PostgresDB) CleanupOldPeerConnectionSessions(maxAge time.Duration) (int64, error) {
+	ctx, cancel := pg.opCtx()
+	defer cancel()
+	tag, err := pg.pool.Exec(ctx,
+		`DELETE FROM peer_connection_sessions WHERE started_at < $1`,
+		time.Now().Add(-maxAge),
+	)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
 }
 
 // UpdatePeerSysinfo updates hostname, os, and version for a peer.
@@ -1336,6 +1647,11 @@ func (pg *PostgresDB) SetConfig(key, value string) error {
 	_, err := pg.pool.Exec(pg.ctx,
 		`INSERT INTO server_config (key, value) VALUES ($1, $2)
 		 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, key, value)
+	if err == nil && (key == ConfigAvailabilityHistoryEnabled || key == ConfigAvailabilityHistoryRetentionDays) {
+		if pg.gate != nil {
+			pg.gate.invalidate()
+		}
+	}
 	return err
 }
 
