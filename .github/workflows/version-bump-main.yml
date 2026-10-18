@@ -97,13 +97,14 @@ jobs:
             gh pr view "$BUMP_BRANCH" --base main --json url -q .url
             exit 0
           fi
-          BODY="Automated stable version bump to ${NEW_VERSION} after merge to main.
-
-Tag v${NEW_VERSION} and the GitHub Release are created from this bump commit.
-Merge this PR so VERSION on main matches the published tag.
-
-Do not remove the [version-bump] marker from the title (prevents recursive bumps).
-Server/Docker asset workflows attach to the tag, not to this PR merge."
+          BODY=$(printf '%s\n' \
+            "Automated stable version bump to ${NEW_VERSION} after merge to main." \
+            "" \
+            "Tag v${NEW_VERSION} and the GitHub Release are created from this bump commit." \
+            "Merge this PR so VERSION on main matches the published tag." \
+            "" \
+            "Do not remove the [version-bump] marker from the title (prevents recursive bumps)." \
+            "Server/Docker asset workflows attach to the tag, not to this PR merge.")
           gh pr create \
             --base main \
             --head "$BUMP_BRANCH" \
