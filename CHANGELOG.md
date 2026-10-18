@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.169] — 2026-10-18
+
 ### Fixed
 - CI on `main`: retired in-repo desktop release + Rust cargo-audit workflows (clients build
   in BetterDesk-Client); Go Server release upload creates a release if version-bump cannot
@@ -4094,3 +4101,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.166]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.165...v3.5.166
 [3.5.167]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.166...v3.5.167
 [3.5.168]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.167...v3.5.168
+[3.5.169]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.168...v3.5.169
