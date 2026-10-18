@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.177] — 2026-10-18
+
 ### Fixed
 - Go Server release job: set `GH_REPO` so `gh` works without a git checkout (upload no longer
   fails with `not a git repository`).
@@ -4179,3 +4186,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.174]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.173...v3.5.174
 [3.5.175]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.174...v3.5.175
 [3.5.176]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.175...v3.5.176
+[3.5.177]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.176...v3.5.177
