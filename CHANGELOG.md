@@ -1,7 +1,9 @@
 ## [Unreleased]
 
-### Changed
-- _(none yet)_
+### Fixed
+- Go Server release job: set `GH_REPO` so `gh` works without a git checkout (upload no longer
+  fails with `not a git repository`).
+
 
 ---
 

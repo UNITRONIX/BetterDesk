@@ -136,6 +136,9 @@ jobs:
       - name: Upload server artifacts to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Required: this job has no checkout; without GH_REPO, `gh` shells out to
+          # git and fails with "not a git repository".
+          GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
@@ -168,10 +171,11 @@ jobs:
 
           if [ "$found" -ne 1 ]; then
             echo "Creating GitHub Release ${TAG_NAME} (version-bump did not publish it in time)"
+            # No --verify-tag: release job has no .git checkout.
             gh release create "$TAG_NAME" \
               --title "BetterDesk ${TAG_NAME#v}" \
               --notes "BetterDesk ${TAG_NAME#v} server artifacts." \
-              --verify-tag
+              --target "${GITHUB_SHA}"
           fi
 
           gh release upload "$TAG_NAME" \
