@@ -25,6 +25,11 @@
 - Billing packages attach to device groups only; folders excluded; one manual group per
   device; org create seeds a default device group.
 
+### Fixed
+- CI on `main`: retired in-repo desktop release + Rust cargo-audit workflows (clients build
+  in BetterDesk-Client); Go Server release upload creates a release if version-bump cannot
+  publish one; stable version-bump opens a PR instead of direct-push to protected `main`.
+
 ---
 
 ## [3.5.171] — 2026-10-18
