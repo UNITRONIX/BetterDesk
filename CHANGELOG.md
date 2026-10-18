@@ -1,7 +1,9 @@
 ## [Unreleased]
 
-### Changed
-- _(none yet)_
+### Fixed
+- CI on `main`: retired in-repo desktop release + Rust cargo-audit workflows (clients build
+  in BetterDesk-Client); Go Server release upload creates a release if version-bump cannot
+  publish one; stable version-bump opens a PR instead of direct-push to protected `main`.
 
 ---
 

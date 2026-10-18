@@ -139,16 +139,40 @@ jobs:
           TAG_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 120); do
-            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+
+          release_exists() {
+            local err
+            err=$(mktemp)
+            if gh release view "$TAG_NAME" >"$err" 2>&1; then
+              rm -f "$err"
+              return 0
+            fi
+            echo "gh release view ${TAG_NAME} failed:" >&2
+            cat "$err" >&2
+            rm -f "$err"
+            return 1
+          }
+
+          # Prefer an existing release (version-bump / manual). If none appears
+          # after a short wait, create one from this tag so assets are not blocked
+          # by protected-main version-bump failures.
+          found=0
+          for attempt in $(seq 1 18); do
+            if release_exists; then
+              found=1
               break
             fi
-            if [ "$attempt" -eq 120 ]; then
-              echo "GitHub Release $TAG_NAME was not created within 20 minutes" >&2
-              exit 1
-            fi
+            echo "Release ${TAG_NAME} not visible yet (attempt ${attempt}/18); retrying in 10s..."
             sleep 10
           done
+
+          if [ "$found" -ne 1 ]; then
+            echo "Creating GitHub Release ${TAG_NAME} (version-bump did not publish it in time)"
+            gh release create "$TAG_NAME" \
+              --title "BetterDesk ${TAG_NAME#v}" \
+              --notes "BetterDesk ${TAG_NAME#v} server artifacts." \
+              --verify-tag
+          fi
 
           gh release upload "$TAG_NAME" \
             betterdesk-server-linux-amd64/betterdesk-server-linux-amd64 \

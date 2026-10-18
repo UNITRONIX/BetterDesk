@@ -1,189 +1,22 @@
-# BetterDesk Desktop Client — full release artifacts
-# Builds the independent betterdesk-desktop Rust core + Flutter shell.
+# RETIRED — desktop clients are built and released in UNITRONIX/BetterDesk-Client.
+# This monorepo imports signed GitHub Releases (generic agent / generator templates)
+# and must not build betterdesk-desktop here (tree is archived as *_old).
+#
+# Historical workflow name kept so GitHub Actions UI shows the retirement clearly.
 
 name: Build & Release Desktop Client
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag for a manual test build (e.g., v3.5.49)'
-        required: false
-        default: ''
-        type: string
 
 permissions:
-  contents: write
-
-env:
-  CLIENT_DIR: betterdesk-desktop
+  contents: read
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          cache: true
-
-      - name: Install Protobuf Compiler
-        run: choco install protoc -y
-
-      - name: Install WiX Toolset
-        shell: pwsh
-        run: dotnet tool install --global wix
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Build Windows EXE and MSI
-        working-directory: ${{ env.CLIENT_DIR }}
-        run: python build.py build --target windows-x64
-
-      - name: Verify Windows release artifacts
-        shell: pwsh
-        run: |
-          $dist = "${{ env.CLIENT_DIR }}/dist"
-          $required = @("*.exe", "*.msi", "*portable.zip", "DESKTOP_CHECKSUMS.sha256")
-          foreach ($pattern in $required) {
-            if (-not (Get-ChildItem -Path $dist -Filter $pattern -File)) {
-              throw "Missing Windows desktop artifact: $pattern"
-            }
-          }
-
-      - name: Upload Windows release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: betterdesk-windows-x64
-          path: |
-            ${{ env.CLIENT_DIR }}/dist/BetterDesk-Desktop-*
-          if-no-files-found: error
-
-  build-linux:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            clang \
-            cmake \
-            ninja-build \
-            pkg-config \
-            libgtk-3-dev \
-            libstdc++-12-dev \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            protobuf-compiler \
-            rpm \
-            dpkg-dev
-
-      - name: Install AppImage tool
-        run: |
-          sudo curl -L \
-            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage \
-            -o /usr/local/bin/appimagetool
-          sudo chmod +x /usr/local/bin/appimagetool
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          cache: true
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Build Linux DEB, RPM, AppImage and tar.gz
-        working-directory: ${{ env.CLIENT_DIR }}
-        env:
-          APPIMAGE_EXTRACT_AND_RUN: '1'
-        run: python build.py build --target linux-x64
-
-      - name: Verify Linux release artifacts
-        run: |
-          set -euo pipefail
-          dist="${{ env.CLIENT_DIR }}/dist"
-          for pattern in "*.deb" "*.rpm" "*.AppImage" "*.tar.gz" "DESKTOP_CHECKSUMS.sha256"; do
-            compgen -G "$dist/$pattern" >/dev/null || {
-              echo "Missing Linux desktop artifact: $pattern" >&2
-              exit 1
-            }
-          done
-
-      - name: Upload Linux release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: betterdesk-linux-x64
-          path: |
-            ${{ env.CLIENT_DIR }}/dist/BetterDesk-Desktop-*
-          if-no-files-found: error
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-windows, build-linux]
+  retired:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Generate checksums
+      - name: Desktop builds moved to BetterDesk-Client
         run: |
-          find . -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.tar.gz" \) -print0 |
-            sort -z |
-            xargs -0 sha256sum > DESKTOP_CHECKSUMS.sha256
-          cat DESKTOP_CHECKSUMS.sha256
-
-      - name: Upload desktop artifacts to product release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          for attempt in $(seq 1 120); do
-            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-              break
-            fi
-            if [ "$attempt" -eq 120 ]; then
-              echo "GitHub Release $TAG_NAME was not created within 20 minutes" >&2
-              exit 1
-            fi
-            sleep 10
-          done
-
-          gh release upload "$TAG_NAME" \
-            betterdesk-windows-x64/* \
-            betterdesk-linux-x64/* \
-            DESKTOP_CHECKSUMS.sha256 \
-            --clobber
+          echo "Desktop client CI lives in https://github.com/UNITRONIX/BetterDesk-Client"
+          echo "BetterDesk console imports signed releases; it does not build clients in this repo."
