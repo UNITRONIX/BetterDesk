@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.172] — 2026-10-18
+
 ### Added
 - Commercialization month periods (`billing_period_totals`, `BILLING_TIMEZONE`): history
   survives monthly usage reset; sessions spanning midnight settle at the month boundary
@@ -4131,3 +4138,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.169]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.168...v3.5.169
 [3.5.170]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.169...v3.5.170
 [3.5.171]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.170...v3.5.171
+[3.5.172]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.171...v3.5.172
