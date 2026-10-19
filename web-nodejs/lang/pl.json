@@ -4011,7 +4011,11 @@
         "preflight_warnings_title": "Przed instalacją",
         "install_blocked_hint": "Instalacja jest wyłączona, dopóki nie rozwiążesz problemów wymienionych powyżej.",
         "preflight_info_title": "Przed instalacją",
-        "preflight_info_note": "Możesz zainstalować aktualizację — to tylko informacja, nie błąd."
+        "preflight_info_note": "Możesz zainstalować aktualizację — to tylko informacja, nie błąd.",
+        "proxy_timeout_recovering": "Timeout bramy/proxy — sprawdzam, czy aktualizacja nadal trwa na serwerze…",
+        "install_still_running": "Aktualizacja nadal trwa na serwerze…",
+        "install_recovered": "Aktualizacja zakończyła się na serwerze po zerwaniu połączenia przeglądarki",
+        "install_recovery_timeout": "Przekroczono czas oczekiwania na zakończenie aktualizacji po rozłączeniu bramy. Sprawdź Ustawienia → Aktualizacje, data/.last_update_result.json lub uruchom: node scripts/update-cli.js"
     },
     "accessibility": {
         "title": "Dostępność",

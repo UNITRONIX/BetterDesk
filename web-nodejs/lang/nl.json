@@ -3926,7 +3926,11 @@
         "preflight_warnings_title": "Voor installatie",
         "install_blocked_hint": "Installatie is uitgeschakeld totdat de bovenstaande problemen zijn opgelost.",
         "preflight_info_title": "Voor installatie",
-        "preflight_info_note": "U kunt de update installeren — dit zijn alleen informatieve meldingen."
+        "preflight_info_note": "U kunt de update installeren — dit zijn alleen informatieve meldingen.",
+        "proxy_timeout_recovering": "Gateway-/proxytime-out — controleren of de update nog op de server draait…",
+        "install_still_running": "Update draait nog op de server…",
+        "install_recovered": "Update op de server voltooid na verbroken browserverbinding",
+        "install_recovery_timeout": "Time-out bij wachten op update na gateway-onderbreking. Controleer Instellingen → Updates, data/.last_update_result.json of: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Machtigingen",

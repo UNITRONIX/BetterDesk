@@ -3926,7 +3926,11 @@
         "preflight_warnings_title": "Antes de instalar",
         "install_blocked_hint": "La instalación está deshabilitada hasta que se resuelvan los problemas anteriores.",
         "preflight_info_title": "Antes de instalar",
-        "preflight_info_note": "Puede instalar la actualización: estos avisos son informativos."
+        "preflight_info_note": "Puede instalar la actualización: estos avisos son informativos.",
+        "proxy_timeout_recovering": "Tiempo de espera de puerta de enlace/proxy — comprobando si la actualización sigue en el servidor…",
+        "install_still_running": "La actualización sigue en curso en el servidor…",
+        "install_recovered": "La actualización terminó en el servidor tras perder la conexión del navegador",
+        "install_recovery_timeout": "Tiempo de espera agotado tras desconexión de la puerta de enlace. Revise Ajustes → Actualizaciones, data/.last_update_result.json o: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Permisos",

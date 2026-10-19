@@ -3926,7 +3926,11 @@
         "preflight_warnings_title": "Prima di installare",
         "install_blocked_hint": "L’installazione è disabilitata finché i problemi sopra non sono risolti.",
         "preflight_info_title": "Prima di installare",
-        "preflight_info_note": "Puoi installare l’aggiornamento — questi avvisi sono informativi."
+        "preflight_info_note": "Puoi installare l’aggiornamento — questi avvisi sono informativi.",
+        "proxy_timeout_recovering": "Timeout gateway/proxy — controllo se l'aggiornamento è ancora in corso sul server…",
+        "install_still_running": "L'aggiornamento è ancora in corso sul server…",
+        "install_recovered": "Aggiornamento completato sul server dopo la perdita di connessione del browser",
+        "install_recovery_timeout": "Timeout in attesa del completamento dopo disconnessione gateway. Controlla Impostazioni → Aggiornamenti, data/.last_update_result.json o: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Permessi",

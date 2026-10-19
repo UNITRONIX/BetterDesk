@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "Telepítés előtt",
         "install_blocked_hint": "A telepítés letiltva, amíg a fenti problémák meg nem oldódnak.",
         "preflight_info_title": "Telepítés előtt",
-        "preflight_info_note": "Telepítheti a frissítést — ezek csak tájékoztató üzenetek."
+        "preflight_info_note": "Telepítheti a frissítést — ezek csak tájékoztató üzenetek.",
+        "proxy_timeout_recovering": "Átjáró/proxy időtúllépés — ellenőrzöm, hogy a frissítés még fut-e a szerveren…",
+        "install_still_running": "A frissítés még fut a szerveren…",
+        "install_recovered": "A frissítés a szerveren befejeződött a böngészőkapcsolat megszakadása után",
+        "install_recovery_timeout": "Időtúllépés a frissítésre várakozáskor az átjáró bontása után. Ellenőrizze: Beállítások → Frissítések, data/.last_update_result.json vagy: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Engedélyek",

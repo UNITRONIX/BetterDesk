@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "Før installasjon",
         "install_blocked_hint": "Installasjon er deaktivert til problemene over er løst.",
         "preflight_info_title": "Før installasjon",
-        "preflight_info_note": "Du kan installere oppdateringen — dette er bare informasjonsmeldinger."
+        "preflight_info_note": "Du kan installere oppdateringen — dette er bare informasjonsmeldinger.",
+        "proxy_timeout_recovering": "Gateway-/proxy-tidsavbrudd — sjekker om oppdateringen fortsatt kjører på serveren…",
+        "install_still_running": "Oppdateringen kjører fortsatt på serveren…",
+        "install_recovered": "Oppdateringen fullført på serveren etter at nettlesertilkoblingen ble brutt",
+        "install_recovery_timeout": "Tidsavbrudd under venting på oppdatering etter gateway-brudd. Sjekk Innstillinger → Oppdateringer, data/.last_update_result.json eller: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Tillatelser",

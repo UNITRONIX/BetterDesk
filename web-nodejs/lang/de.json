@@ -3926,7 +3926,11 @@
         "preflight_warnings_title": "Vor der Installation",
         "install_blocked_hint": "Die Installation ist deaktiviert, bis die oben genannten Probleme behoben sind.",
         "preflight_info_title": "Vor der Installation",
-        "preflight_info_note": "Sie können das Update installieren — dies sind nur Hinweise."
+        "preflight_info_note": "Sie können das Update installieren — dies sind nur Hinweise.",
+        "proxy_timeout_recovering": "Gateway-/Proxy-Timeout — prüfe, ob das Update auf dem Server noch läuft…",
+        "install_still_running": "Update läuft auf dem Server noch…",
+        "install_recovered": "Update auf dem Server nach Verbindungsabbruch abgeschlossen",
+        "install_recovery_timeout": "Zeitüberschreitung beim Warten auf das Update nach Gateway-Trennung. Prüfen Sie Einstellungen → Updates, data/.last_update_result.json oder: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Berechtigungen",

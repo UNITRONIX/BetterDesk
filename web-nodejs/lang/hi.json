@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "इंस्टॉल करने से पहले",
         "install_blocked_hint": "ऊपर दिए गए मुद्दों के हल होने तक इंस्टॉल अक्षम है।",
         "preflight_info_title": "इंस्टॉल करने से पहले",
-        "preflight_info_note": "आप अपडेट इंस्टॉल कर सकते हैं — ये केवल सूचनात्मक संदेश हैं।"
+        "preflight_info_note": "आप अपडेट इंस्टॉल कर सकते हैं — ये केवल सूचनात्मक संदेश हैं।",
+        "proxy_timeout_recovering": "गेटवे/प्रॉक्सी समय समाप्त — जाँच रहा है कि अपडेट सर्वर पर अभी भी चल रहा है या नहीं…",
+        "install_still_running": "अपडेट सर्वर पर अभी भी चल रहा है…",
+        "install_recovered": "ब्राउज़र कनेक्शन टूटने के बाद सर्वर पर अपडेट पूरा हो गया",
+        "install_recovery_timeout": "गेटवे डिस्कनेक्ट के बाद अपडेट पूर्ण होने की प्रतीक्षा का समय समाप्त। सेटिंग्स → अपडेट, data/.last_update_result.json या: node scripts/update-cli.js देखें"
     },
     "permissions": {
         "title": "अनुमतियां",

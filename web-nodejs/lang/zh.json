@@ -3998,7 +3998,11 @@
         "preflight_warnings_title": "安装前",
         "install_blocked_hint": "在上面的问题解决之前，安装已禁用。",
         "preflight_info_title": "安装前",
-        "preflight_info_note": "您可以安装更新 — 这些只是提示信息。"
+        "preflight_info_note": "您可以安装更新 — 这些只是提示信息。",
+        "proxy_timeout_recovering": "网关/代理超时 — 正在检查服务器上更新是否仍在进行…",
+        "install_still_running": "更新仍在服务器上运行…",
+        "install_recovered": "浏览器连接断开后，服务器上的更新已完成",
+        "install_recovery_timeout": "网关断开后等待更新完成超时。请检查 设置 → 更新、data/.last_update_result.json，或运行：node scripts/update-cli.js"
     },
     "accessibility": {
         "title": "无障碍",

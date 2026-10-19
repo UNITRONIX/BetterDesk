@@ -4015,7 +4015,11 @@
         "preflight_warnings_title": "Avant l’installation",
         "install_blocked_hint": "L’installation est désactivée tant que les problèmes ci-dessus ne sont pas résolus.",
         "preflight_info_title": "Avant l’installation",
-        "preflight_info_note": "Vous pouvez installer la mise à jour — ces messages sont informatifs."
+        "preflight_info_note": "Vous pouvez installer la mise à jour — ces messages sont informatifs.",
+        "proxy_timeout_recovering": "Délai passerelle/proxy — vérification si la mise à jour tourne encore sur le serveur…",
+        "install_still_running": "La mise à jour est toujours en cours sur le serveur…",
+        "install_recovered": "Mise à jour terminée sur le serveur après la perte de connexion du navigateur",
+        "install_recovery_timeout": "Délai d'attente dépassé après déconnexion de la passerelle. Vérifiez Paramètres → Mises à jour, data/.last_update_result.json ou : node scripts/update-cli.js"
     },
     "accessibility": {
         "title": "Barrierefreiheit",

@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "Sebelum memasang",
         "install_blocked_hint": "Pemasangan dinonaktifkan hingga masalah di atas diselesaikan.",
         "preflight_info_title": "Sebelum memasang",
-        "preflight_info_note": "Anda dapat memasang pembaruan — ini hanya pemberitahuan informasi."
+        "preflight_info_note": "Anda dapat memasang pembaruan — ini hanya pemberitahuan informasi.",
+        "proxy_timeout_recovering": "Timeout gateway/proxy — memeriksa apakah pembaruan masih berjalan di server…",
+        "install_still_running": "Pembaruan masih berjalan di server…",
+        "install_recovered": "Pembaruan selesai di server setelah koneksi browser terputus",
+        "install_recovery_timeout": "Waktu tunggu pembaruan habis setelah putus gateway. Periksa Pengaturan → Pembaruan, data/.last_update_result.json, atau: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Izin",

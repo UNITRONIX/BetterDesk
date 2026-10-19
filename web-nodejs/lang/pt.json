@@ -3926,7 +3926,11 @@
         "preflight_warnings_title": "Antes de instalar",
         "install_blocked_hint": "A instalação está desativada até que os problemas acima sejam resolvidos.",
         "preflight_info_title": "Antes de instalar",
-        "preflight_info_note": "Pode instalar a atualização — estes avisos são informativos."
+        "preflight_info_note": "Pode instalar a atualização — estes avisos são informativos.",
+        "proxy_timeout_recovering": "Tempo esgotado do gateway/proxy — a verificar se a atualização ainda corre no servidor…",
+        "install_still_running": "A atualização ainda está a decorrer no servidor…",
+        "install_recovered": "Atualização concluída no servidor após a perda da ligação do browser",
+        "install_recovery_timeout": "Tempo esgotado à espera da atualização após desligar o gateway. Verifique Definições → Atualizações, data/.last_update_result.json ou: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Permissões",

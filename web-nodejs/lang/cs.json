@@ -3926,7 +3926,11 @@
         "preflight_warnings_title": "Před instalací",
         "install_blocked_hint": "Instalace je zakázána, dokud nejsou vyřešeny problémy výše.",
         "preflight_info_title": "Před instalací",
-        "preflight_info_note": "Aktualizaci můžete nainstalovat — jde jen o informační upozornění."
+        "preflight_info_note": "Aktualizaci můžete nainstalovat — jde jen o informační upozornění.",
+        "proxy_timeout_recovering": "Timeout brány/proxy — kontroluji, zda aktualizace na serveru stále běží…",
+        "install_still_running": "Aktualizace na serveru stále běží…",
+        "install_recovered": "Aktualizace na serveru dokončena po přerušení připojení prohlížeče",
+        "install_recovery_timeout": "Vypršel čas čekání na dokončení aktualizace po odpojení brány. Zkontrolujte Nastavení → Aktualizace, data/.last_update_result.json nebo: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Oprávnění",

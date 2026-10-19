@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "ก่อนติดตั้ง",
         "install_blocked_hint": "การติดตั้งถูกปิดใช้งานจนกว่าจะแก้ไขปัญหาข้างต้น",
         "preflight_info_title": "ก่อนติดตั้ง",
-        "preflight_info_note": "คุณสามารถติดตั้งอัปเดตได้ — นี่เป็นเพียงข้อความแจ้งข้อมูล"
+        "preflight_info_note": "คุณสามารถติดตั้งอัปเดตได้ — นี่เป็นเพียงข้อความแจ้งข้อมูล",
+        "proxy_timeout_recovering": "หมดเวลาเกตเวย์/พร็อกซี — กำลังตรวจสอบว่าการอัปเดตยังทำงานบนเซิร์ฟเวอร์หรือไม่…",
+        "install_still_running": "การอัปเดตยังทำงานบนเซิร์ฟเวอร์…",
+        "install_recovered": "การอัปเดตเสร็จบนเซิร์ฟเวอร์หลังการเชื่อมต่อเบราว์เซอร์ขาด",
+        "install_recovery_timeout": "หมดเวลารอการอัปเดตหลังเกตเวย์ตัดการเชื่อมต่อ ตรวจสอบ การตั้งค่า → การอัปเดต, data/.last_update_result.json หรือ: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "สิทธิ์",

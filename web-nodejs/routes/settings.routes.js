@@ -1489,6 +1489,19 @@ router.get('/api/settings/updates/last-result', requireAuth, requirePermission('
 });
 
 /**
+ * GET /api/settings/updates/install-status - Live install progress (#464).
+ * Used when the browser loses the long-running install HTTP call (proxy timeout)
+ * so the UI can keep polling until applyUpdate finishes.
+ */
+router.get('/api/settings/updates/install-status', requireAuth, requirePermission('server.config'), (req, res) => {
+    try {
+        res.json({ success: true, data: updateService.getUpdateInstallStatus() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
  * GET /api/settings/updates/changes - Get list of changed files between local SHA and remote
  */
 router.get('/api/settings/updates/changes', requireAuth, requirePermission('server.config'), async (req, res) => {

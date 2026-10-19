@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "Kurulumdan önce",
         "install_blocked_hint": "Yukarıdaki sorunlar çözülene kadar kurulum devre dışıdır.",
         "preflight_info_title": "Kurulumdan önce",
-        "preflight_info_note": "Güncellemeyi yükleyebilirsiniz — bunlar yalnızca bilgilendirme notlarıdır."
+        "preflight_info_note": "Güncellemeyi yükleyebilirsiniz — bunlar yalnızca bilgilendirme notlarıdır.",
+        "proxy_timeout_recovering": "Ağ geçidi/proxy zaman aşımı — güncellemenin sunucuda hâlâ çalışıp çalışmadığı kontrol ediliyor…",
+        "install_still_running": "Güncelleme sunucuda hâlâ çalışıyor…",
+        "install_recovered": "Tarayıcı bağlantısı koptuktan sonra güncelleme sunucuda tamamlandı",
+        "install_recovery_timeout": "Ağ geçidi kopmasından sonra güncelleme bekleme süresi doldu. Ayarlar → Güncellemeler, data/.last_update_result.json veya: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "İzinler",

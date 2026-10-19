@@ -3933,7 +3933,11 @@
         "preflight_warnings_title": "قبل التثبيت",
         "install_blocked_hint": "التثبيت معطّل حتى يتم حل المشكلات أعلاه.",
         "preflight_info_title": "قبل التثبيت",
-        "preflight_info_note": "يمكنك تثبيت التحديث — هذه الإشعارات للمعلومات فقط."
+        "preflight_info_note": "يمكنك تثبيت التحديث — هذه الإشعارات للمعلومات فقط.",
+        "proxy_timeout_recovering": "انتهت مهلة البوابة/الوكيل — جارٍ التحقق مما إذا كان التحديث لا يزال يعمل على الخادم…",
+        "install_still_running": "التحديث لا يزال يعمل على الخادم…",
+        "install_recovered": "اكتمل التحديث على الخادم بعد انقطاع اتصال المتصفح",
+        "install_recovery_timeout": "انتهت مهلة انتظار اكتمال التحديث بعد انقطاع البوابة. تحقق من الإعدادات ← التحديثات أو data/.last_update_result.json أو: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "الأذونات",

@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "Înainte de instalare",
         "install_blocked_hint": "Instalarea este dezactivată până când problemele de mai sus sunt rezolvate.",
         "preflight_info_title": "Înainte de instalare",
-        "preflight_info_note": "Puteți instala actualizarea — acestea sunt doar notificări informative."
+        "preflight_info_note": "Puteți instala actualizarea — acestea sunt doar notificări informative.",
+        "proxy_timeout_recovering": "Timeout gateway/proxy — verific dacă actualizarea încă rulează pe server…",
+        "install_still_running": "Actualizarea încă rulează pe server…",
+        "install_recovered": "Actualizarea s-a terminat pe server după pierderea conexiunii browserului",
+        "install_recovery_timeout": "Timeout la așteptarea actualizării după deconectarea gateway-ului. Verificați Setări → Actualizări, data/.last_update_result.json sau: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Permisiuni",

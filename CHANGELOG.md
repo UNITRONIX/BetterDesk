@@ -14,6 +14,12 @@
   start/last-activity/end times and end reason are audited. Configure via
   `SESSION_IDLE_TIMEOUT`, `SESSION_MAX_AGE`, and `SESSION_IDLE_WARN_MS`.
 
+### Fixed
+- Panel updates behind a reverse proxy: clearer 502/504 handling and install-status
+  polling when the browser loses the long-running install request (~120s proxy
+  timeout). Go rebuilds use `GOTOOLCHAIN=local`, honor spawn timeouts, and report
+  kill/OOM signals instead of opaque `exited with code null` (#464).
+
 ---
 
 ## [3.5.177] — 2026-10-18

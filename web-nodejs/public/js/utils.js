@@ -237,9 +237,24 @@ const Utils = {
             }
             
             if (!response.ok) {
-                const error = new Error(data.error || data.message || 'Request failed');
+                let message = (data && typeof data === 'object')
+                    ? (data.error || data.message)
+                    : null;
+                // Reverse proxies often return HTML 502/504 with no JSON body (#464).
+                if (!message) {
+                    if (response.status === 502 || response.status === 504) {
+                        message = 'Gateway/proxy timeout — the request may still be running on the server. Check update status or raise proxy_read_timeout (≥600s).';
+                    } else if (typeof data === 'string' && /<(html|head|body|title)/i.test(data)) {
+                        message = `Request failed (HTTP ${response.status}) — gateway returned HTML instead of JSON. The server operation may still be running.`;
+                    } else {
+                        message = `Request failed (HTTP ${response.status})`;
+                    }
+                }
+                const error = new Error(message);
                 error.status = response.status;
                 error.data = data;
+                error.gatewayTimeout = response.status === 502 || response.status === 504
+                    || (typeof data === 'string' && /<(html|head|body|title)/i.test(data));
                 throw error;
             }
             

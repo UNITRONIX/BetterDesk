@@ -4015,7 +4015,11 @@
         "preflight_warnings_title": "安裝前",
         "install_blocked_hint": "在上方的問題解決之前，安裝已停用。",
         "preflight_info_title": "安裝前",
-        "preflight_info_note": "您可以安裝更新 — 這些只是提示資訊。"
+        "preflight_info_note": "您可以安裝更新 — 這些只是提示資訊。",
+        "proxy_timeout_recovering": "閘道/代理逾時 — 正在檢查伺服器上更新是否仍在進行…",
+        "install_still_running": "更新仍在伺服器上執行中…",
+        "install_recovered": "瀏覽器連線中斷後，伺服器上的更新已完成",
+        "install_recovery_timeout": "閘道中斷後等待更新完成逾時。請檢查 設定 → 更新、data/.last_update_result.json，或執行：node scripts/update-cli.js"
     },
     "accessibility": {
         "title": "無障礙",

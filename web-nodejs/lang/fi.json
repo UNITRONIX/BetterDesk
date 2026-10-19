@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "Ennen asennusta",
         "install_blocked_hint": "Asennus on poistettu käytöstä, kunnes yllä olevat ongelmat on ratkaistu.",
         "preflight_info_title": "Ennen asennusta",
-        "preflight_info_note": "Voit asentaa päivityksen — nämä ovat vain tiedoksi."
+        "preflight_info_note": "Voit asentaa päivityksen — nämä ovat vain tiedoksi.",
+        "proxy_timeout_recovering": "Yhdyskäytävän/proxyn aikakatkaisu — tarkistetaan, onko päivitys vielä käynnissä palvelimella…",
+        "install_still_running": "Päivitys on vielä käynnissä palvelimella…",
+        "install_recovered": "Päivitys valmistui palvelimella selaimen yhteyden katkettua",
+        "install_recovery_timeout": "Aikakatkaisu päivityksen odotuksessa yhdyskäytävän katkaisun jälkeen. Tarkista Asetukset → Päivitykset, data/.last_update_result.json tai: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Käyttöoikeudet",

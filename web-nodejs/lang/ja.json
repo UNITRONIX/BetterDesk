@@ -3926,7 +3926,11 @@
         "preflight_warnings_title": "インストール前",
         "install_blocked_hint": "上記の問題が解決するまでインストールは無効です。",
         "preflight_info_title": "インストール前",
-        "preflight_info_note": "更新をインストールできます — これらは参考情報です。"
+        "preflight_info_note": "更新をインストールできます — これらは参考情報です。",
+        "proxy_timeout_recovering": "ゲートウェイ/プロキシのタイムアウト — サーバー側で更新が続行中か確認しています…",
+        "install_still_running": "サーバー側で更新が続行中です…",
+        "install_recovered": "ブラウザ接続切断後、サーバー側で更新が完了しました",
+        "install_recovery_timeout": "ゲートウェイ切断後の更新完了待ちがタイムアウトしました。設定 → 更新、data/.last_update_result.json、または node scripts/update-cli.js を確認してください"
     },
     "permissions": {
         "title": "権限",

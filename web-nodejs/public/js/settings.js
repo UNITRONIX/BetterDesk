@@ -4336,106 +4336,21 @@
         logUpdate(`Starting update to ${_updateState.remoteSHA.slice(0, 7)}…`);
 
         try {
-            const result = await Utils.api('/api/settings/updates/install', {
-                method: 'POST',
-                body: { remoteSHA: _updateState.remoteSHA, createBackup }
-            });
-
-            ['backup', 'console'].forEach(p => {
-                const st = document.querySelector(`[data-phase-state="${p}"]`)?.dataset?.state;
-                if (st !== 'done' && st !== 'skipped') setUpdatePhase(p, 'done');
-            });
-
-            if (hasServerUpdate) {
-                if (result.toolchainInstall) {
-                    if (result.toolchainInstall.success) {
-                        logUpdate(`Go toolchain ready: ${result.toolchainInstall.version || ''}`.trim());
-                    } else {
-                        logUpdate(`Go toolchain install failed: ${result.toolchainInstall.error || 'unknown'}`);
-                    }
-                }
-                const deployFailed = !!(result.serverDeploy && result.serverDeploy.success === false);
-                if (result.serverBuild) {
-                    if (result.serverBuild.success && !deployFailed) {
-                        const ms = result.serverBuild.duration || 0;
-                        const secs = ms ? Math.round(ms / 1000) : 0;
-                        const detail = `${_('updates.server_built')}${secs ? ` · ${secs}s` : ''}`;
-                        setUpdatePhase('server', 'done', detail);
-                        logUpdate(detail);
-                    } else if (result.serverBuild.success && deployFailed) {
-                        const detail = _('updates.server_deploy_failed');
-                        setUpdatePhase('server', 'error', detail);
-                        logUpdate(`${detail}: ${result.serverDeploy.error || ''}`);
-                    } else {
-                        const detail = _('updates.server_build_failed');
-                        setUpdatePhase('server', 'error', detail);
-                        logUpdate(`${detail}: ${result.serverBuild.error || ''}`);
-                    }
-                } else {
-                    setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
-                }
-                if (result.autoRebuild) {
-                    if (result.autoRebuild.success) {
-                        logUpdate(_('updates.server_built') + ' (auto-rebuild)');
-                        setUpdatePhase('server', 'done', _('updates.server_built'));
-                    } else if (result.autoRebuild.error) {
-                        logUpdate(`Auto-rebuild: ${result.autoRebuild.error}`);
-                    }
-                }
-                if (deployFailed && result.serverBuild?.success) {
-                    logUpdate(`Deploy failed: ${result.serverDeploy.error || ''}`);
-                }
-            } else {
-                setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
+            let result;
+            try {
+                result = await Utils.api('/api/settings/updates/install', {
+                    method: 'POST',
+                    body: { remoteSHA: _updateState.remoteSHA, createBackup }
+                });
+            } catch (installErr) {
+                if (!isRecoverableInstallDisconnect(installErr)) throw installErr;
+                logUpdate(_('updates.proxy_timeout_recovering'));
+                setUpdatePhase('console', 'active', _('updates.proxy_timeout_recovering'));
+                Notifications.info(_('updates.proxy_timeout_recovering'));
+                result = await recoverInstallAfterDisconnect(_updateState.remoteSHA, hasServerUpdate);
             }
 
-            const applied = result.applied?.length || 0;
-            const failed  = result.failed?.length || 0;
-            const removed = result.removed?.length || 0;
-            logUpdate(`${_('updates.applied')}: ${applied} · ${_('updates.failed')}: ${failed} · ${_('updates.removed')}: ${removed}`);
-            if (result.agentRebuildDeferred) {
-                logUpdate(`Support Agent rebuild deferred until the console restarts (${result.agentRebuildRemoteSHA?.slice(0, 7) || 'pending'}).`);
-            } else if (result.agentRebuildQueued) {
-                logUpdate(
-                    _('updates.agent_rebuild_queued')
-                        .replace('{{count}}', String(result.agentRebuildBundles ?? '?'))
-                        .replace('{{staged}}', String(result.agentSourcesStaged ?? 0))
-                        .replace('{{paths}}', String(result.agentSourcePaths ?? 0))
-                );
-            }
-            for (const item of (result.failed || [])) {
-                if (item.file === 'support-agent-source-sync') {
-                    logUpdate(`${_('updates.agent_source_sync_failed')} ${item.error || ''}`);
-                } else {
-                    logUpdate(`${item.file}: ${item.error || ''}`);
-                }
-            }
-            for (const item of (result.servicesFailed || [])) {
-                logUpdate(`${item.service}: ${item.error || ''}`);
-            }
-
-            if (result.needsConsoleRestart && !result.consoleRestartBlocked) {
-                window.BetterDesk = window.BetterDesk || {};
-                window.BetterDesk.consoleRestarting = true;
-                setUpdatePhase('restart', 'active', _('updates.restarting'));
-                logUpdate(_('updates.console_will_restart'));
-                // systemd/NSSM normally needs a few seconds to replace the
-                // process. Waiting through that grace window avoids logging
-                // expected connection-refused probes in the browser console.
-                setTimeout(() => pollConsoleRestart(result), 8000);
-            } else if (result.consoleRestartBlocked) {
-                setUpdatePhase('restart', 'error', result.consoleRestartBlocked);
-                logUpdate(result.consoleRestartBlocked);
-                setUpdatePhase('done', 'done', _('updates.complete_with_errors'));
-                showUpdateCompletionModal(result);
-                loadServerBinaryStatus();
-            } else {
-                setUpdatePhase('restart', 'skipped', _('updates.no_restart_needed'));
-                setUpdatePhase('done', 'done', _('updates.complete'));
-                showUpdateCompletionModal(result);
-                enableUpdateInstallBtn();
-                loadServerBinaryStatus();
-            }
+            finishInstallUi(result, hasServerUpdate);
         } catch (error) {
             const activePhase = UPDATE_PHASES.find(p => {
                 const st = document.querySelector(`[data-phase-state="${p.id}"]`)?.dataset?.state;
@@ -4446,6 +4361,175 @@
             transitionUpdateModal('error', { errorMessage: error.message || _('errors.server_error') });
             Notifications.error(error.message || _('updates.install_failed'));
             enableUpdateInstallBtn();
+        }
+    }
+
+    function isRecoverableInstallDisconnect(error) {
+        if (!error) return false;
+        if (error.gatewayTimeout) return true;
+        if (error.status === 502 || error.status === 504) return true;
+        const msg = String(error.message || '');
+        if (/gateway\/proxy timeout/i.test(msg)) return true;
+        if (!error.status && /failed to fetch|networkerror|network error|load failed|aborted/i.test(msg)) {
+            return true;
+        }
+        return false;
+    }
+
+    function updateShaMatches(a, b) {
+        if (!a || !b) return false;
+        const left = String(a).trim().toLowerCase();
+        const right = String(b).trim().toLowerCase();
+        if (!left || !right) return false;
+        return left === right
+            || left.startsWith(right.slice(0, 7))
+            || right.startsWith(left.slice(0, 7));
+    }
+
+    async function recoverInstallAfterDisconnect(targetSha, hasServerUpdate) {
+        const maxMs = 600000;
+        const intervalMs = 3000;
+        const started = Date.now();
+        let sawInProgress = false;
+        let lastStatus = null;
+
+        while (Date.now() - started < maxMs) {
+            try {
+                lastStatus = await Utils.api('/api/settings/updates/install-status');
+                if (lastStatus?.inProgress) {
+                    if (!sawInProgress) {
+                        logUpdate(_('updates.install_still_running'));
+                    }
+                    sawInProgress = true;
+                    setUpdatePhase('console', 'active', _('updates.install_still_running'));
+                } else if (sawInProgress || updateShaMatches(lastStatus?.localSHA, targetSha)) {
+                    logUpdate(_('updates.install_recovered'));
+                    const lr = lastStatus?.lastResult || null;
+                    const failed = Array.isArray(lr?.failed) ? lr.failed : [];
+                    const servicesFailed = Array.isArray(lr?.servicesFailed) ? lr.servicesFailed : [];
+                    const appliedCount = typeof lr?.applied === 'number' ? lr.applied : (updateShaMatches(lastStatus?.localSHA, targetSha) ? 1 : 0);
+                    return {
+                        applied: Array.from({ length: appliedCount }, () => ({ file: 'recovered' })),
+                        failed,
+                        servicesFailed,
+                        servicesRestarted: lr?.servicesRestarted || [],
+                        removed: [],
+                        needsConsoleRestart: !lr?.consoleRestartBlocked,
+                        consoleRestartBlocked: lr?.consoleRestartBlocked || null,
+                        consoleRestartNote: lr?.consoleRestartNote || null,
+                        shaSaved: updateShaMatches(lastStatus?.localSHA, targetSha),
+                        serverBuild: lr?.serverBuild || (hasServerUpdate ? null : undefined),
+                        serverDeploy: lr?.serverDeploy || null,
+                        recoveredAfterDisconnect: true,
+                    };
+                }
+            } catch (_e) {
+                // Console may be restarting mid-poll — keep waiting.
+                setUpdatePhase('restart', 'active', _('updates.restarting'));
+            }
+            await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        }
+
+        throw new Error(_('updates.install_recovery_timeout'));
+    }
+
+    function finishInstallUi(result, hasServerUpdate) {
+        ['backup', 'console'].forEach(p => {
+            const st = document.querySelector(`[data-phase-state="${p}"]`)?.dataset?.state;
+            if (st !== 'done' && st !== 'skipped') setUpdatePhase(p, 'done');
+        });
+
+        if (hasServerUpdate) {
+            if (result.toolchainInstall) {
+                if (result.toolchainInstall.success) {
+                    logUpdate(`Go toolchain ready: ${result.toolchainInstall.version || ''}`.trim());
+                } else {
+                    logUpdate(`Go toolchain install failed: ${result.toolchainInstall.error || 'unknown'}`);
+                }
+            }
+            const deployFailed = !!(result.serverDeploy && result.serverDeploy.success === false);
+            if (result.serverBuild) {
+                if (result.serverBuild.success && !deployFailed) {
+                    const ms = result.serverBuild.duration || 0;
+                    const secs = ms ? Math.round(ms / 1000) : 0;
+                    const detail = `${_('updates.server_built')}${secs ? ` · ${secs}s` : ''}`;
+                    setUpdatePhase('server', 'done', detail);
+                    logUpdate(detail);
+                } else if (result.serverBuild.success && deployFailed) {
+                    const detail = _('updates.server_deploy_failed');
+                    setUpdatePhase('server', 'error', detail);
+                    logUpdate(`${detail}: ${result.serverDeploy.error || ''}`);
+                } else {
+                    const detail = _('updates.server_build_failed');
+                    setUpdatePhase('server', 'error', detail);
+                    logUpdate(`${detail}: ${result.serverBuild.error || ''}`);
+                }
+            } else if (result.recoveredAfterDisconnect) {
+                setUpdatePhase('server', 'done', _('updates.install_recovered'));
+            } else {
+                setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
+            }
+            if (result.autoRebuild) {
+                if (result.autoRebuild.success) {
+                    logUpdate(_('updates.server_built') + ' (auto-rebuild)');
+                    setUpdatePhase('server', 'done', _('updates.server_built'));
+                } else if (result.autoRebuild.error) {
+                    logUpdate(`Auto-rebuild: ${result.autoRebuild.error}`);
+                }
+            }
+            if (deployFailed && result.serverBuild?.success) {
+                logUpdate(`Deploy failed: ${result.serverDeploy.error || ''}`);
+            }
+        } else {
+            setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
+        }
+
+        const applied = result.applied?.length || 0;
+        const failed  = result.failed?.length || 0;
+        const removed = result.removed?.length || 0;
+        logUpdate(`${_('updates.applied')}: ${applied} · ${_('updates.failed')}: ${failed} · ${_('updates.removed')}: ${removed}`);
+        if (result.agentRebuildDeferred) {
+            logUpdate(`Support Agent rebuild deferred until the console restarts (${result.agentRebuildRemoteSHA?.slice(0, 7) || 'pending'}).`);
+        } else if (result.agentRebuildQueued) {
+            logUpdate(
+                _('updates.agent_rebuild_queued')
+                    .replace('{{count}}', String(result.agentRebuildBundles ?? '?'))
+                    .replace('{{staged}}', String(result.agentSourcesStaged ?? 0))
+                    .replace('{{paths}}', String(result.agentSourcePaths ?? 0))
+            );
+        }
+        for (const item of (result.failed || [])) {
+            if (item.file === 'support-agent-source-sync') {
+                logUpdate(`${_('updates.agent_source_sync_failed')} ${item.error || ''}`);
+            } else {
+                logUpdate(`${item.file}: ${item.error || ''}`);
+            }
+        }
+        for (const item of (result.servicesFailed || [])) {
+            logUpdate(`${item.service}: ${item.error || ''}`);
+        }
+
+        if (result.needsConsoleRestart && !result.consoleRestartBlocked) {
+            window.BetterDesk = window.BetterDesk || {};
+            window.BetterDesk.consoleRestarting = true;
+            setUpdatePhase('restart', 'active', _('updates.restarting'));
+            logUpdate(_('updates.console_will_restart'));
+            // systemd/NSSM normally needs a few seconds to replace the
+            // process. Waiting through that grace window avoids logging
+            // expected connection-refused probes in the browser console.
+            setTimeout(() => pollConsoleRestart(result), result.recoveredAfterDisconnect ? 2000 : 8000);
+        } else if (result.consoleRestartBlocked) {
+            setUpdatePhase('restart', 'error', result.consoleRestartBlocked);
+            logUpdate(result.consoleRestartBlocked);
+            setUpdatePhase('done', 'done', _('updates.complete_with_errors'));
+            showUpdateCompletionModal(result);
+            loadServerBinaryStatus();
+        } else {
+            setUpdatePhase('restart', 'skipped', _('updates.no_restart_needed'));
+            setUpdatePhase('done', 'done', _('updates.complete'));
+            showUpdateCompletionModal(result);
+            enableUpdateInstallBtn();
+            loadServerBinaryStatus();
         }
     }
 

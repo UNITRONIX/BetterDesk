@@ -750,22 +750,128 @@ function execPromise(cmd, opts = {}) {
 function spawnPromise(command, args, opts = {}) {
     return new Promise((resolve, reject) => {
         const { spawn } = require('child_process');
-        const proc = spawn(command, args, { shell: false, ...opts });
+        // Honor timeout ourselves — do not pass it through to spawn (Node support varies).
+        const { timeout, killSignal = 'SIGTERM', ...spawnOpts } = opts;
+        const proc = spawn(command, args, { shell: false, ...spawnOpts });
         let stdout = '';
         let stderr = '';
+        let timedOut = false;
+        let settleTimer = null;
+        let forceKillTimer = null;
+
+        const clearTimers = () => {
+            if (settleTimer) clearTimeout(settleTimer);
+            if (forceKillTimer) clearTimeout(forceKillTimer);
+            settleTimer = null;
+            forceKillTimer = null;
+        };
+
+        if (Number.isFinite(timeout) && timeout > 0) {
+            settleTimer = setTimeout(() => {
+                timedOut = true;
+                try {
+                    proc.kill(killSignal);
+                } catch (_) { /* already exited */ }
+                // Escalate if the process ignores SIGTERM (common for stuck Go toolchains).
+                forceKillTimer = setTimeout(() => {
+                    try { proc.kill('SIGKILL'); } catch (_) { /* ignore */ }
+                }, 5000);
+                if (typeof forceKillTimer.unref === 'function') forceKillTimer.unref();
+            }, timeout);
+            if (typeof settleTimer.unref === 'function') settleTimer.unref();
+        }
+
         proc.stdout?.on('data', (chunk) => { stdout += chunk; });
         proc.stderr?.on('data', (chunk) => { stderr += chunk; });
-        proc.on('error', reject);
-        proc.on('close', (code) => {
-            if (code !== 0) {
-                const err = new Error(`${command} exited with code ${code}`);
+        proc.on('error', (err) => {
+            clearTimers();
+            reject(err);
+        });
+        proc.on('close', (code, signal) => {
+            clearTimers();
+            if (timedOut) {
+                const err = new Error(`${command} timed out after ${timeout}ms`);
                 err.stderr = stderr;
                 err.stdout = stdout;
+                err.code = code;
+                err.signal = signal || killSignal;
+                err.timedOut = true;
+                return reject(err);
+            }
+            if (code !== 0) {
+                let message = `${command} exited with code ${code}`;
+                if (code == null) {
+                    const sig = signal ? `signal ${signal}` : 'no exit code';
+                    message = `${command} exited with code null (${sig}; process was killed — check OOM / dmesg)`;
+                }
+                const err = new Error(message);
+                err.stderr = stderr;
+                err.stdout = stdout;
+                err.code = code;
+                err.signal = signal || null;
                 return reject(err);
             }
             resolve({ stdout, stderr });
         });
     });
+}
+
+function updateInProgressMarkerPath() {
+    return path.join(config.dataDir, '.update_in_progress.json');
+}
+
+function writeUpdateInProgressMarker(payload = {}) {
+    const target = updateInProgressMarkerPath();
+    const record = {
+        startedAt: new Date().toISOString(),
+        ...payload,
+    };
+    fs.mkdirSync(config.dataDir, { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(record, null, 2));
+    return record;
+}
+
+function clearUpdateInProgressMarker() {
+    const target = updateInProgressMarkerPath();
+    try {
+        if (fs.existsSync(target)) fs.unlinkSync(target);
+    } catch (_) { /* ignore */ }
+}
+
+function readUpdateInProgressMarker() {
+    const target = updateInProgressMarkerPath();
+    if (!fs.existsSync(target)) return null;
+    try {
+        return JSON.parse(fs.readFileSync(target, 'utf8'));
+    } catch (_) {
+        return null;
+    }
+}
+
+/**
+ * Live install status for UI recovery after proxy/gateway disconnect (#464).
+ * Orphan markers (process crashed mid-update) are cleared when not in progress.
+ */
+function getUpdateInstallStatus() {
+    if (!_updateInProgress) {
+        clearUpdateInProgressMarker();
+        return {
+            inProgress: false,
+            marker: null,
+            localSHA: getLocalSHA(),
+            lastResult: require('../lib/updateResultStore').readLastUpdateResult(config.dataDir),
+        };
+    }
+    return {
+        inProgress: true,
+        marker: readUpdateInProgressMarker(),
+        localSHA: getLocalSHA(),
+        lastResult: require('../lib/updateResultStore').readLastUpdateResult(config.dataDir),
+    };
+}
+
+function isUpdateInProgress() {
+    return _updateInProgress;
 }
 
 function getGoVersionNumber(versionOutput) {
@@ -1239,6 +1345,9 @@ function buildEnvWithGo(goBinPath) {
         const sep = IS_WINDOWS ? ';' : ':';
         env.PATH = goBinDir + sep + (env.PATH || '');
     }
+    // Pin to the vendored/local toolchain — matches installer #371 and avoids
+    // silent go.dev toolchain downloads that hang or get OOM-killed (#464).
+    env.GOTOOLCHAIN = process.env.BETTERDESK_GOTOOLCHAIN || 'local';
     try {
         const { modCache, buildCache } = ensureGoCacheDirs();
         env.GOMODCACHE = modCache;
@@ -2340,6 +2449,10 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     }
     if (_updateInProgress) throw new Error('Another update is already in progress');
     _updateInProgress = true;
+    writeUpdateInProgressMarker({
+        sha: remoteSHA,
+        pid: process.pid,
+    });
 
     try {
     const { createBackup = true } = opts;
@@ -2780,6 +2893,7 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     return results;
     } finally {
         _updateInProgress = false;
+        clearUpdateInProgressMarker();
     }
 }
 
@@ -3352,6 +3466,10 @@ module.exports = {
     getChangedFiles,
     createPreUpdateBackup,
     applyUpdate,
+    isUpdateInProgress,
+    getUpdateInstallStatus,
+    spawnPromise,
+    buildEnvWithGo,
     runUpdatePreflight,
     sanitizeGoServerServiceConfig,
     syncBillingEnvToWindowsGoServer,

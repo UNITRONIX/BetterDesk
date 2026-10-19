@@ -3932,7 +3932,11 @@
         "preflight_warnings_title": "Trước khi cài đặt",
         "install_blocked_hint": "Cài đặt bị vô hiệu cho đến khi các vấn đề ở trên được giải quyết.",
         "preflight_info_title": "Trước khi cài đặt",
-        "preflight_info_note": "Bạn có thể cài đặt bản cập nhật — đây chỉ là thông báo mang tính thông tin."
+        "preflight_info_note": "Bạn có thể cài đặt bản cập nhật — đây chỉ là thông báo mang tính thông tin.",
+        "proxy_timeout_recovering": "Hết thời gian chờ gateway/proxy — đang kiểm tra xem bản cập nhật còn chạy trên máy chủ không…",
+        "install_still_running": "Bản cập nhật vẫn đang chạy trên máy chủ…",
+        "install_recovered": "Bản cập nhật đã hoàn tất trên máy chủ sau khi mất kết nối trình duyệt",
+        "install_recovery_timeout": "Hết thời gian chờ hoàn tất cập nhật sau khi mất kết nối gateway. Kiểm tra Cài đặt → Cập nhật, data/.last_update_result.json hoặc: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Quyền",

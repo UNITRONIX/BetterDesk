@@ -2,6 +2,7 @@
 
 ## Panel (in-app) update
 
+- **Reverse proxy timeouts (#464):** in-app `POST /api/settings/updates/install` and server binary rebuild can run for several minutes (Go `mod download` + `go build`). The Node route allows up to **600s**, but Nginx Proxy Manager / custom nginx often default to **`proxy_read_timeout` 60–120s**, which returns HTML 502/504 while the update may still finish on the server. Set panel location timeouts to **≥ 600s** (e.g. `proxy_read_timeout 600s; proxy_send_timeout 600s;`). Bypass: on the host run `cd /opt/BetterDeskConsole && node scripts/update-cli.js` (localhost, no proxy). The panel polls `GET /api/settings/updates/install-status` after a gateway disconnect to recover.
 - Browser self-update restart confirmation should use lightweight `/api/settings/restart-status`, not heavy/authenticated `/api/settings/info`; DB/Go backend warmup can cause false restart-timeout reports.
 - Use `window.BetterDesk.cacheVersion` to distinguish the old Node.js process from the restarted one, and reload with a cache-busting query after update.
 - `GET /api/settings/updates/preflight?serverUpdate=1` when server files change — checks writable paths, disk space and local Go/toolchain readiness before install.
