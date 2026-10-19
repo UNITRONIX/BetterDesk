@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.178] — 2026-10-19
+
 ### Security
 - Panel console sessions are now server-enforced with idle timeout (default 30 minutes),
   absolute max age (default 24 hours), and a single active session per account.
@@ -4191,3 +4198,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.175]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.174...v3.5.175
 [3.5.176]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.175...v3.5.176
 [3.5.177]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.176...v3.5.177
+[3.5.178]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.177...v3.5.178
