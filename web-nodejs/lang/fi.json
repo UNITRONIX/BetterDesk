@@ -130,7 +130,11 @@
         "oidc_error": "SSO-kirjautumisen aikana tapahtui virhe.",
         "oidc_no_account": "Tiliäsi ei löytynyt, ja automaattinen rekisteröinti on poistettu käytöstä.",
         "totp_rate_limited": "Liikaa yrityksiä. Yritä myöhemmin uudelleen.",
-        "emergency_mode_banner": "Go server ei tavoitettavissa – toimii hätätilassa (vain järjestelmänvalvoja, rajoitettu toiminnallisuus)"
+        "emergency_mode_banner": "Go server ei tavoitettavissa – toimii hätätilassa (vain järjestelmänvalvoja, rajoitettu toiminnallisuus)",
+        "session_expired": "Istuntosi vanheni tai korvattiin uudella kirjautumisella. Kirjaudu uudelleen.",
+        "session_idle_warning_title": "Istunto vanhenee pian",
+        "session_idle_warning_body": "Sinut kirjataan ulos käyttämättömyyden vuoksi {{seconds}} sekunnin kuluttua.",
+        "session_stay_signed_in": "Pysy kirjautuneena"
     },
     "dashboard": {
         "title": "Kojelauta",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Istunto korvattu",
+        "action_session_expired": "Istunto vanhentunut",
+        "action_session_ip_change": "Istunnon IP vaihtui"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Turvallisuuden parantamisen prioriteetit BetterDesk-käyttöönotossasi. Tuotteet on järjestetty vakavuuden mukaan.",
         "no_hardening": "Kovettavia tuotteita ei ole saatavilla.",
         "vuln_hint": "Riippuvuushaavoittuvuuden tarkistuksen tulokset. Suorita npm-tarkastus säännöllisesti pitääksesi riippuvuudet turvassa.",
-        "no_vulns": "Haavoittuvuuksia ei löytynyt. Riippuvuutesi ovat turvassa."
+        "no_vulns": "Haavoittuvuuksia ei löytynyt. Riippuvuutesi ovat turvassa.",
+        "tab_sessions": "Paneeli-istunnot",
+        "sessions_hint": "Konsolin kirjautumiset. Tilillä voi olla vain yksi aktiivinen istunto; uusi kirjautuminen lopettaa edellisen.",
+        "sessions_policy": "Joutenolo: {{idle}} min · Absoluuttinen max: {{max}} h · Yksi aktiivinen istunto per tili",
+        "no_sessions": "Paneeli-istuntoja ei ole vielä tallennettu.",
+        "session_current": "Nykyinen",
+        "session_active": "Aktiivinen",
+        "session_ended": "Päättynyt",
+        "col_status": "Tila",
+        "col_started": "Aloitettu",
+        "col_last_activity": "Viimeisin toiminta",
+        "col_ended": "Päättynyt",
+        "col_reason": "Lopetussyy",
+        "col_user_agent": "Selain",
+        "reason_logout": "Uloskirjautuminen",
+        "reason_replaced": "Korvattu uudella kirjautumisella",
+        "reason_idle": "Joutenoloajan ylitys",
+        "reason_max_age": "Enimmäiskesto",
+        "reason_revoked": "Peruttu",
+        "reason_destroyed": "Tuottu"
     },
     "languages": {
         "title": "Kielenhallinta",

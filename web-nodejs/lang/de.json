@@ -124,7 +124,11 @@
         "oidc_error": "Beim SSO-Anmelden ist ein Fehler aufgetreten.",
         "oidc_no_account": "Ihr Konto wurde nicht gefunden und die automatische Registrierung ist deaktiviert.",
         "totp_rate_limited": "Zu viele Versuche. Bitte versuchen Sie es später erneut.",
-        "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)"
+        "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)",
+        "session_expired": "Ihre Sitzung ist abgelaufen oder wurde durch eine neue Anmeldung ersetzt. Bitte melden Sie sich erneut an.",
+        "session_idle_warning_title": "Sitzung läuft bald ab",
+        "session_idle_warning_body": "Sie werden wegen Inaktivität in {{seconds}} Sekunden abgemeldet.",
+        "session_stay_signed_in": "Angemeldet bleiben"
     },
     "dashboard": {
         "title": "Übersicht",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sitzung ersetzt",
+        "action_session_expired": "Sitzung abgelaufen",
+        "action_session_ip_change": "Sitzungs-IP geändert"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "Sicherheitshärtungsprioriäten für Ihre BetterDesk-Bereitstellung. Nach Schweregrad sortiert.",
         "no_hardening": "Keine Härtungselemente verfügbar.",
         "vuln_hint": "Ergebnisse des Abhängigkeits-Schwachstellenscans. Führen Sie npm audit regelmäßig aus.",
-        "no_vulns": "Keine Schwachstellen gefunden. Ihre Abhängigkeiten sind sicher."
+        "no_vulns": "Keine Schwachstellen gefunden. Ihre Abhängigkeiten sind sicher.",
+        "tab_sessions": "Panel-Sitzungen",
+        "sessions_hint": "Ihre Konsolen-Anmeldungen. Pro Konto ist nur eine aktive Sitzung erlaubt; eine neue Anmeldung beendet die vorherige.",
+        "sessions_policy": "Idle-Timeout: {{idle}} Min · Absolutes Maximum: {{max}} Std · Eine aktive Sitzung pro Konto",
+        "no_sessions": "Noch keine Panel-Sitzungen erfasst.",
+        "session_current": "Aktuell",
+        "session_active": "Aktiv",
+        "session_ended": "Beendet",
+        "col_status": "Status",
+        "col_started": "Gestartet",
+        "col_last_activity": "Letzte Aktivität",
+        "col_ended": "Beendet",
+        "col_reason": "Endgrund",
+        "col_user_agent": "Browser",
+        "reason_logout": "Abmeldung",
+        "reason_replaced": "Durch neue Anmeldung ersetzt",
+        "reason_idle": "Idle-Timeout",
+        "reason_max_age": "Maximale Lebensdauer",
+        "reason_revoked": "Widerrufen",
+        "reason_destroyed": "Zerstört"
     },
     "languages": {
         "title": "Dashboard",

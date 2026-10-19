@@ -124,7 +124,11 @@
         "oidc_error": "Ocorreu um erro durante o login SSO.",
         "oidc_no_account": "Sua conta não foi encontrada e o registro automático está desativado.",
         "totp_rate_limited": "Muitas tentativas. Tente novamente mais tarde.",
-        "emergency_mode_banner": "Servidor Go inacessível — executando em modo de emergência (somente administrador, funcionalidade limitada)"
+        "emergency_mode_banner": "Servidor Go inacessível — executando em modo de emergência (somente administrador, funcionalidade limitada)",
+        "session_expired": "Sua sessão expirou ou foi substituída por um novo login. Entre novamente.",
+        "session_idle_warning_title": "Sessão expirando em breve",
+        "session_idle_warning_body": "Você será desconectado por inatividade em {{seconds}} segundos.",
+        "session_stay_signed_in": "Permanecer conectado"
     },
     "dashboard": {
         "title": "Painel",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sessão substituída",
+        "action_session_expired": "Sessão expirada",
+        "action_session_ip_change": "Alteração de IP da sessão"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "Prioridades de fortalecimento de segurança para sua implantação BetterDesk. Ordenados por gravidade.",
         "no_hardening": "Nenhum item de fortalecimento disponível.",
         "vuln_hint": "Resultados da verificação de vulnerabilidades de dependências. Execute npm audit regularmente.",
-        "no_vulns": "Nenhuma vulnerabilidade encontrada. Suas dependências estão seguras."
+        "no_vulns": "Nenhuma vulnerabilidade encontrada. Suas dependências estão seguras.",
+        "tab_sessions": "Sessões do painel",
+        "sessions_hint": "Seus logins do console. Apenas uma sessão ativa por conta; um novo login encerra a anterior.",
+        "sessions_policy": "Tempo ocioso: {{idle}} min · Máx. absoluto: {{max}} h · Uma sessão ativa por conta",
+        "no_sessions": "Nenhuma sessão do painel registrada ainda.",
+        "session_current": "Atual",
+        "session_active": "Ativa",
+        "session_ended": "Encerrada",
+        "col_status": "Status",
+        "col_started": "Início",
+        "col_last_activity": "Última atividade",
+        "col_ended": "Fim",
+        "col_reason": "Motivo do fim",
+        "col_user_agent": "Navegador",
+        "reason_logout": "Logout",
+        "reason_replaced": "Substituída por novo login",
+        "reason_idle": "Tempo ocioso",
+        "reason_max_age": "Vida máxima",
+        "reason_revoked": "Revogada",
+        "reason_destroyed": "Destruída"
     },
     "languages": {
         "title": "Idiomas",

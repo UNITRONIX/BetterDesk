@@ -130,7 +130,11 @@
         "oidc_error": "Det oppstod en feil under SSO-pålogging.",
         "oidc_no_account": "Kontoen din ble ikke funnet og automatisk registrering er deaktivert.",
         "totp_rate_limited": "For mange forsøk. Vennligst prøv igjen senere.",
-        "emergency_mode_banner": "Go server utilgjengelig — kjører i nødmodus (kun admin, begrenset funksjonalitet)"
+        "emergency_mode_banner": "Go server utilgjengelig — kjører i nødmodus (kun admin, begrenset funksjonalitet)",
+        "session_expired": "Økten er utløpt eller erstattet av en ny innlogging. Logg inn på nytt.",
+        "session_idle_warning_title": "Økten utløper snart",
+        "session_idle_warning_body": "Du logges ut på grunn av inaktivitet om {{seconds}} sekunder.",
+        "session_stay_signed_in": "Forbli innlogget"
     },
     "dashboard": {
         "title": "Dashbord",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Økt erstattet",
+        "action_session_expired": "Økt utløpt",
+        "action_session_ip_change": "Økt-IP endret"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Sikkerhetsforsterkende prioriteter for BetterDesk-distribusjonen. Varene er sortert etter alvorlighetsgrad.",
         "no_hardening": "Ingen herdeprodukter tilgjengelig.",
         "vuln_hint": "Resultat av avhengighetssårbarhetsskanning. Kjør npm-revisjon regelmessig for å holde avhengigheter sikre.",
-        "no_vulns": "Ingen sårbarheter funnet. Dine avhengigheter er sikre."
+        "no_vulns": "Ingen sårbarheter funnet. Dine avhengigheter er sikre.",
+        "tab_sessions": "Paneløkter",
+        "sessions_hint": "Konsollinnloggingene dine. Kun én aktiv økt per konto; ny innlogging avslutter den forrige.",
+        "sessions_policy": "Inaktivitet: {{idle}} min · Absolutt maks: {{max}} t · Én aktiv økt per konto",
+        "no_sessions": "Ingen paneløkter registrert ennå.",
+        "session_current": "Nåværende",
+        "session_active": "Aktiv",
+        "session_ended": "Avsluttet",
+        "col_status": "Status",
+        "col_started": "Startet",
+        "col_last_activity": "Siste aktivitet",
+        "col_ended": "Avsluttet",
+        "col_reason": "Avslutningsårsak",
+        "col_user_agent": "Nettleser",
+        "reason_logout": "Logg ut",
+        "reason_replaced": "Erstattet av ny innlogging",
+        "reason_idle": "Inaktivitetstidsavbrudd",
+        "reason_max_age": "Maksimal levetid",
+        "reason_revoked": "Tilbakekalt",
+        "reason_destroyed": "Ødelagt"
     },
     "languages": {
         "title": "Språkhåndtering",

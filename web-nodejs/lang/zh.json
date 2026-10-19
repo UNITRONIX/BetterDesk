@@ -124,7 +124,11 @@
         "totp_already_enabled": "双因素认证已启用",
         "pro_only_account": "此账户仅适用于 RustDesk 桌面客户端。请使用 RustDesk 应用登录。",
         "passwords_mismatch": "两次输入的密码不一致",
-        "emergency_mode_banner": "Go 服务器不可达 — 紧急模式运行中（仅管理员，功能受限）"
+        "emergency_mode_banner": "Go 服务器不可达 — 紧急模式运行中（仅管理员，功能受限）",
+        "session_expired": "您的会话已过期或被新的登录替换。请重新登录。",
+        "session_idle_warning_title": "会话即将过期",
+        "session_idle_warning_body": "由于无操作，将在 {{seconds}} 秒后退出登录。",
+        "session_stay_signed_in": "保持登录"
     },
     "dashboard": {
         "title": "仪表板",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "会话已替换",
+        "action_session_expired": "会话已过期",
+        "action_session_ip_change": "会话 IP 变更"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3636,7 +3643,26 @@
         "hardening_hint": "BetterDesk部署的安全加固优先级。按严重程度排序。",
         "no_hardening": "没有可用的加固项目。",
         "vuln_hint": "依赖项漏洞扫描结果。定期运行npm audit以保持依赖安全。",
-        "no_vulns": "未发现漏洞。您的依赖项是安全的。"
+        "no_vulns": "未发现漏洞。您的依赖项是安全的。",
+        "tab_sessions": "面板会话",
+        "sessions_hint": "您的控制台登录会话。每个账户仅允许一个活动会话；新登录会结束之前的会话。",
+        "sessions_policy": "空闲超时：{{idle}} 分钟 · 绝对上限：{{max}} 小时 · 每账户一个活动会话",
+        "no_sessions": "尚未记录面板会话。",
+        "session_current": "当前",
+        "session_active": "活动",
+        "session_ended": "已结束",
+        "col_status": "状态",
+        "col_started": "开始",
+        "col_last_activity": "最后活动",
+        "col_ended": "结束",
+        "col_reason": "结束原因",
+        "col_user_agent": "浏览器",
+        "reason_logout": "注销",
+        "reason_replaced": "被新登录替换",
+        "reason_idle": "空闲超时",
+        "reason_max_age": "最长生命周期",
+        "reason_revoked": "已吊销",
+        "reason_destroyed": "已销毁"
     },
     "languages": {
         "title": "语言管理",

@@ -130,7 +130,11 @@
         "oidc_error": "Terjadi kesalahan saat login SSO.",
         "oidc_no_account": "Akun Anda tidak ditemukan dan pendaftaran otomatis dinonaktifkan.",
         "totp_rate_limited": "Terlalu banyak upaya. Silakan coba lagi nanti.",
-        "emergency_mode_banner": "Go server tidak dapat dijangkau — berjalan dalam mode darurat (khusus admin, fungsi terbatas)"
+        "emergency_mode_banner": "Go server tidak dapat dijangkau — berjalan dalam mode darurat (khusus admin, fungsi terbatas)",
+        "session_expired": "Sesi Anda kedaluwarsa atau digantikan oleh login baru. Silakan masuk lagi.",
+        "session_idle_warning_title": "Sesi akan segera berakhir",
+        "session_idle_warning_body": "Anda akan keluar karena tidak aktif dalam {{seconds}} detik.",
+        "session_stay_signed_in": "Tetap masuk"
     },
     "dashboard": {
         "title": "Dasbor",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sesi diganti",
+        "action_session_expired": "Sesi kedaluwarsa",
+        "action_session_ip_change": "IP sesi berubah"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Prioritas penguatan keamanan untuk penerapan BetterDesk Anda. Barang diurutkan berdasarkan tingkat keparahannya.",
         "no_hardening": "Tidak ada item pengerasan yang tersedia.",
         "vuln_hint": "Hasil pemindaian kerentanan ketergantungan. Jalankan npm audit secara teratur untuk menjaga keamanan dependensi.",
-        "no_vulns": "Tidak ada kerentanan yang ditemukan. Dependensi Anda aman."
+        "no_vulns": "Tidak ada kerentanan yang ditemukan. Dependensi Anda aman.",
+        "tab_sessions": "Sesi panel",
+        "sessions_hint": "Login konsol Anda. Hanya satu sesi aktif per akun; login baru mengakhiri yang sebelumnya.",
+        "sessions_policy": "Batas idle: {{idle}} mnt · Maks absolut: {{max}} j · Satu sesi aktif per akun",
+        "no_sessions": "Belum ada sesi panel yang tercatat.",
+        "session_current": "Saat ini",
+        "session_active": "Aktif",
+        "session_ended": "Berakhir",
+        "col_status": "Status",
+        "col_started": "Mulai",
+        "col_last_activity": "Aktivitas terakhir",
+        "col_ended": "Berakhir",
+        "col_reason": "Alasan berakhir",
+        "col_user_agent": "Browser",
+        "reason_logout": "Keluar",
+        "reason_replaced": "Diganti login baru",
+        "reason_idle": "Batas idle",
+        "reason_max_age": "Masa berlaku maksimum",
+        "reason_revoked": "Dicabut",
+        "reason_destroyed": "Dihancurkan"
     },
     "languages": {
         "title": "Manajemen Bahasa",

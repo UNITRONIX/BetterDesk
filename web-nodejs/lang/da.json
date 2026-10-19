@@ -130,7 +130,11 @@
         "oidc_error": "Der opstod en fejl under SSO login.",
         "oidc_no_account": "Din konto blev ikke fundet, og automatisk registrering er deaktiveret.",
         "totp_rate_limited": "For mange forsøg. Prøv venligst igen senere.",
-        "emergency_mode_banner": "Go server utilgængelig — kører i nødtilstand (kun admin, begrænset funktionalitet)"
+        "emergency_mode_banner": "Go server utilgængelig — kører i nødtilstand (kun admin, begrænset funktionalitet)",
+        "session_expired": "Din session er udløbet eller erstattet af et nyt login. Log ind igen.",
+        "session_idle_warning_title": "Session udløber snart",
+        "session_idle_warning_body": "Du logges ud på grund af inaktivitet om {{seconds}} sekunder.",
+        "session_stay_signed_in": "Forbliv logget ind"
     },
     "dashboard": {
         "title": "Oversigt",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Session erstattet",
+        "action_session_expired": "Session udløbet",
+        "action_session_ip_change": "Session-IP ændret"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Sikkerhedshærdende prioriteter for din BetterDesk-implementering. Varerne er sorteret efter sværhedsgrad.",
         "no_hardening": "Ingen hærdende emner tilgængelige.",
         "vuln_hint": "Resultater af afhængighedssårbarhedsscanning. Kør npm-revision regelmæssigt for at holde afhængigheder sikre.",
-        "no_vulns": "Ingen sårbarheder fundet. Dine afhængigheder er sikre."
+        "no_vulns": "Ingen sårbarheder fundet. Dine afhængigheder er sikre.",
+        "tab_sessions": "Panelsessioner",
+        "sessions_hint": "Dine konsol-logins. Kun én aktiv session pr. konto; et nyt login afslutter den forrige.",
+        "sessions_policy": "Idle-timeout: {{idle}} min · Absolut max: {{max}} t · Én aktiv session pr. konto",
+        "no_sessions": "Ingen panelsessioner registreret endnu.",
+        "session_current": "Nuværende",
+        "session_active": "Aktiv",
+        "session_ended": "Afsluttet",
+        "col_status": "Status",
+        "col_started": "Startet",
+        "col_last_activity": "Seneste aktivitet",
+        "col_ended": "Sluttet",
+        "col_reason": "Årsag",
+        "col_user_agent": "Browser",
+        "reason_logout": "Log ud",
+        "reason_replaced": "Erstattet af nyt login",
+        "reason_idle": "Idle-timeout",
+        "reason_max_age": "Maksimal levetid",
+        "reason_revoked": "Tilbagekaldt",
+        "reason_destroyed": "Destrueret"
     },
     "languages": {
         "title": "Sprogstyring",

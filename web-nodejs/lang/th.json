@@ -130,7 +130,11 @@
         "oidc_error": "เกิดข้อผิดพลาดระหว่างการล็อกอิน SSO",
         "oidc_no_account": "ไม่พบบัญชีของคุณ และการลงทะเบียนอัตโนมัติถูกปิดใช้งาน",
         "totp_rate_limited": "มีความพยายามมากเกินไป โปรดลองอีกครั้งในภายหลัง",
-        "emergency_mode_banner": "ไม่สามารถเข้าถึง Go server — ทำงานในโหมดฉุกเฉิน (เฉพาะผู้ดูแลระบบเท่านั้น มีฟังก์ชันการทำงานที่จำกัด)"
+        "emergency_mode_banner": "ไม่สามารถเข้าถึง Go server — ทำงานในโหมดฉุกเฉิน (เฉพาะผู้ดูแลระบบเท่านั้น มีฟังก์ชันการทำงานที่จำกัด)",
+        "session_expired": "เซสชันของคุณหมดอายุหรือถูกแทนที่ด้วยการเข้าสู่ระบบใหม่ กรุณาเข้าสู่ระบบอีกครั้ง",
+        "session_idle_warning_title": "เซสชันใกล้หมดอายุ",
+        "session_idle_warning_body": "คุณจะถูกออกจากระบบเนื่องจากไม่มีการใช้งานใน {{seconds}} วินาที",
+        "session_stay_signed_in": "คงสถานะเข้าสู่ระบบ"
     },
     "dashboard": {
         "title": "แดชบอร์ด",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "เซสชันถูกแทนที่",
+        "action_session_expired": "เซสชันหมดอายุ",
+        "action_session_ip_change": "IP เซสชันเปลี่ยน"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "ลำดับความสำคัญของการรักษาความปลอดภัยที่เข้มงวดขึ้นสำหรับการปรับใช้ BetterDesk ของคุณ สินค้าเรียงลำดับตามความรุนแรง",
         "no_hardening": "ไม่มีรายการชุบแข็งให้ใช้งาน",
         "vuln_hint": "ผลการสแกนช่องโหว่ในการพึ่งพา เรียกใช้การตรวจสอบ npm เป็นประจำเพื่อรักษาการขึ้นต่อกันให้ปลอดภัย",
-        "no_vulns": "ไม่พบช่องโหว่ การพึ่งพาของคุณมีความปลอดภัย"
+        "no_vulns": "ไม่พบช่องโหว่ การพึ่งพาของคุณมีความปลอดภัย",
+        "tab_sessions": "เซสชันแผงควบคุม",
+        "sessions_hint": "การเข้าสู่ระบบคอนโซลของคุณ อนุญาตเพียงหนึ่งเซสชันที่ใช้งานต่อบัญชี การเข้าสู่ระบบใหม่จะสิ้นสุดเซสชันก่อนหน้า",
+        "sessions_policy": "หมดเวลา idle: {{idle}} นาที · สูงสุดสัมบูรณ์: {{max}} ชม. · หนึ่งเซสชันที่ใช้งานต่อบัญชี",
+        "no_sessions": "ยังไม่มีเซสชันแผงควบคุมที่บันทึก",
+        "session_current": "ปัจจุบัน",
+        "session_active": "ใช้งาน",
+        "session_ended": "สิ้นสุดแล้ว",
+        "col_status": "สถานะ",
+        "col_started": "เริ่ม",
+        "col_last_activity": "กิจกรรมล่าสุด",
+        "col_ended": "สิ้นสุด",
+        "col_reason": "เหตุผลสิ้นสุด",
+        "col_user_agent": "เบราว์เซอร์",
+        "reason_logout": "ออกจากระบบ",
+        "reason_replaced": "ถูกแทนที่ด้วยการเข้าสู่ระบบใหม่",
+        "reason_idle": "หมดเวลา idle",
+        "reason_max_age": "อายุสูงสุด",
+        "reason_revoked": "เพิกถอน",
+        "reason_destroyed": "ทำลาย"
     },
     "languages": {
         "title": "การจัดการภาษา",

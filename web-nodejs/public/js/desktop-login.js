@@ -166,6 +166,25 @@
             submitBtn.disabled = true;
             hideError(errorEl);
 
+            var clientFingerprint = (function () {
+                try {
+                    var parts = [
+                        navigator.userAgent || '',
+                        navigator.language || '',
+                        String(screen.width || '') + 'x' + String(screen.height || ''),
+                        String(new Date().getTimezoneOffset()),
+                        String(navigator.hardwareConcurrency || ''),
+                        String(navigator.platform || '')
+                    ].join('|');
+                    var hash = 2166136261;
+                    for (var i = 0; i < parts.length; i++) {
+                        hash ^= parts.charCodeAt(i);
+                        hash = Math.imul(hash, 16777619);
+                    }
+                    return ('00000000' + (hash >>> 0).toString(16)).slice(-8) +
+                        ('00000000' + ((hash ^ parts.length) >>> 0).toString(16)).slice(-8);
+                } catch (_) { return ''; }
+            })();
             fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -173,7 +192,7 @@
                     'X-CSRF-Token': csrfToken
                 },
                 credentials: 'same-origin',
-                body: JSON.stringify({ username: username, password: password })
+                body: JSON.stringify({ username: username, password: password, clientFingerprint: clientFingerprint })
             })
             .then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data }; }); })
             .then(function (result) {

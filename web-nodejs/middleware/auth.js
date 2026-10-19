@@ -202,12 +202,13 @@ function requireAuth(req, res, next) {
         if (req.path.startsWith('/api/')) {
             return res.status(401).json({
                 success: false,
-                error: 'Unauthorized. Please log in.'
+                error: 'Unauthorized. Please log in.',
+                code: 'session_required'
             });
         }
         
-        // HTML request - redirect to login
-        return res.redirect('/login');
+        // HTML request - redirect to login (expired helps UX when cookie was revoked)
+        return res.redirect('/login?expired=1');
     }
     
     // Block pro-only users from web panel (API-only role)

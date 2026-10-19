@@ -128,7 +128,11 @@
         "totp_rate_limited": "嘗試次數過多，請稍後再試。",
         "totp_already_enabled": "雙因素認證已啓用",
         "passwords_mismatch": "兩次輸入的密碼不一致",
-        "emergency_mode_banner": "Go 服務器不可達 — 緊急模式運行中（僅管理員，功能受限）"
+        "emergency_mode_banner": "Go 服務器不可達 — 緊急模式運行中（僅管理員，功能受限）",
+        "session_expired": "您的工作階段已過期或被新的登入取代。請重新登入。",
+        "session_idle_warning_title": "工作階段即將過期",
+        "session_idle_warning_body": "因閒置將在 {{seconds}} 秒後登出。",
+        "session_stay_signed_in": "保持登入"
     },
     "dashboard": {
         "title": "儀表板",
@@ -873,7 +877,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "工作階段已取代",
+        "action_session_expired": "工作階段已過期",
+        "action_session_ip_change": "工作階段 IP 變更"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3653,7 +3660,26 @@
         "hardening_hint": "BetterDesk部署的安全加固優先級。按嚴重程度排序。",
         "no_hardening": "沒有可用的加固項目。",
         "vuln_hint": "依賴項漏洞掃描結果。定期運行npm audit以保持依賴安全。",
-        "no_vulns": "未發現漏洞。您的依賴項是安全的。"
+        "no_vulns": "未發現漏洞。您的依賴項是安全的。",
+        "tab_sessions": "面板工作階段",
+        "sessions_hint": "您的主控台登入工作階段。每個帳戶僅允許一個作用中工作階段；新登入會結束前一個。",
+        "sessions_policy": "閒置逾時：{{idle}} 分 · 絕對上限：{{max}} 小時 · 每帳戶一個作用中工作階段",
+        "no_sessions": "尚未記錄面板工作階段。",
+        "session_current": "目前",
+        "session_active": "作用中",
+        "session_ended": "已結束",
+        "col_status": "狀態",
+        "col_started": "開始",
+        "col_last_activity": "最後活動",
+        "col_ended": "結束",
+        "col_reason": "結束原因",
+        "col_user_agent": "瀏覽器",
+        "reason_logout": "登出",
+        "reason_replaced": "被新登入取代",
+        "reason_idle": "閒置逾時",
+        "reason_max_age": "最長生命週期",
+        "reason_revoked": "已撤銷",
+        "reason_destroyed": "已銷毀"
     },
     "languages": {
         "title": "語言管理",

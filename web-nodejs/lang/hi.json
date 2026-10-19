@@ -130,7 +130,11 @@
         "oidc_error": "SSO लॉगिन के दौरान एक त्रुटि उत्पन्न हुई।",
         "oidc_no_account": "आपका खाता नहीं मिला और स्वतः-पंजीकरण अक्षम है।",
         "totp_rate_limited": "बहुत अधिक प्रयास. कृपया बाद में पुन: प्रयास करें।",
-        "emergency_mode_banner": "Go server पहुंच योग्य नहीं - आपातकालीन मोड में चल रहा है (केवल व्यवस्थापक, सीमित कार्यक्षमता)"
+        "emergency_mode_banner": "Go server पहुंच योग्य नहीं - आपातकालीन मोड में चल रहा है (केवल व्यवस्थापक, सीमित कार्यक्षमता)",
+        "session_expired": "आपका सत्र समाप्त हो गया या नई लॉगिन से बदल दिया गया। कृपया फिर से साइन इन करें।",
+        "session_idle_warning_title": "सत्र जल्द समाप्त होगा",
+        "session_idle_warning_body": "निष्क्रियता के कारण {{seconds}} सेकंड में आपको साइन आउट किया जाएगा।",
+        "session_stay_signed_in": "साइन इन रहें"
     },
     "dashboard": {
         "title": "डैशबोर्ड",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "सत्र बदला गया",
+        "action_session_expired": "सत्र समाप्त",
+        "action_session_ip_change": "सत्र IP बदला"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "आपके BetterDesk परिनियोजन के लिए सुरक्षा सख्त करने की प्राथमिकताएँ। आइटम गंभीरता के आधार पर ऑर्डर किए जाते हैं।",
         "no_hardening": "कोई सख्त करने वाली वस्तुएँ उपलब्ध नहीं हैं।",
         "vuln_hint": "निर्भरता भेद्यता स्कैन परिणाम। निर्भरता को सुरक्षित रखने के लिए नियमित रूप से एनपीएम ऑडिट चलाएं।",
-        "no_vulns": "कोई कमज़ोरियाँ नहीं मिलीं. आपकी निर्भरताएँ सुरक्षित हैं."
+        "no_vulns": "कोई कमज़ोरियाँ नहीं मिलीं. आपकी निर्भरताएँ सुरक्षित हैं.",
+        "tab_sessions": "पैनल सत्र",
+        "sessions_hint": "आपके कंसोल लॉगिन। प्रति खाता केवल एक सक्रिय सत्र; नया लॉगिन पिछले को समाप्त करता है।",
+        "sessions_policy": "निष्क्रिय समय सीमा: {{idle}} मि · अधिकतम: {{max}} घं · प्रति खाता एक सक्रिय सत्र",
+        "no_sessions": "अभी तक कोई पैनल सत्र दर्ज नहीं।",
+        "session_current": "वर्तमान",
+        "session_active": "सक्रिय",
+        "session_ended": "समाप्त",
+        "col_status": "स्थिति",
+        "col_started": "शुरू",
+        "col_last_activity": "अंतिम गतिविधि",
+        "col_ended": "समाप्ति",
+        "col_reason": "समाप्ति कारण",
+        "col_user_agent": "ब्राउज़र",
+        "reason_logout": "लॉगआउट",
+        "reason_replaced": "नए लॉगिन से बदला",
+        "reason_idle": "निष्क्रिय समय सीमा",
+        "reason_max_age": "अधिकतम अवधि",
+        "reason_revoked": "रद्द",
+        "reason_destroyed": "नष्ट"
     },
     "languages": {
         "title": "भाषा प्रबंधन",

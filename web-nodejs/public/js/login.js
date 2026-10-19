@@ -7,6 +7,28 @@
     
     document.addEventListener('DOMContentLoaded', init);
     
+    function buildClientFingerprint() {
+        try {
+            var parts = [
+                navigator.userAgent || '',
+                navigator.language || '',
+                String(screen.width || '') + 'x' + String(screen.height || ''),
+                String(new Date().getTimezoneOffset()),
+                String(navigator.hardwareConcurrency || ''),
+                String(navigator.platform || '')
+            ].join('|');
+            var hash = 2166136261;
+            for (var i = 0; i < parts.length; i++) {
+                hash ^= parts.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
+            }
+            return ('00000000' + (hash >>> 0).toString(16)).slice(-8) +
+                ('00000000' + ((hash ^ parts.length) >>> 0).toString(16)).slice(-8);
+        } catch (_) {
+            return '';
+        }
+    }
+
     function init() {
         const loginForm = document.getElementById('login-form');
         const totpForm = document.getElementById('totp-form');
@@ -22,12 +44,21 @@
         if (!loginForm) return;
         
         const csrfToken = window.BetterDesk?.csrfToken || '';
+        const clientFingerprint = buildClientFingerprint();
 
         // Check OIDC status, show the SSO button, and optionally launch SSO.
         checkOIDCStatus();
 
         // Show OIDC/SSO error from redirect query string (?error=oidc_*)
         showOidcLoginError();
+
+        // Session expired / replaced elsewhere
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.get('expired') === '1') {
+                showError(_('auth.session_expired') || 'Your session expired. Please sign in again.');
+            }
+        } catch (_) { /* ignore */ }
         
         // Password visibility toggle
         passwordToggle?.addEventListener('click', () => {
@@ -60,7 +91,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ username, password, remember })
+                    body: JSON.stringify({ username, password, remember, clientFingerprint })
                 });
                 
                 // Safely parse response — server may return HTML on CSRF/middleware errors
@@ -124,8 +155,8 @@
             
             try {
                 const body = useRecovery 
-                    ? { recoveryCode } 
-                    : { code: totpCode };
+                    ? { recoveryCode, clientFingerprint } 
+                    : { code: totpCode, clientFingerprint };
                 
                 const response = await fetch('/api/auth/totp/verify', {
                     method: 'POST',

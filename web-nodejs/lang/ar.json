@@ -131,7 +131,11 @@
         "oidc_error": "حدث خطأ أثناء تسجيل الدخول إلى SSO.",
         "oidc_no_account": "لم يتم العثور على حسابك وتم تعطيل التسجيل التلقائي.",
         "totp_rate_limited": "محاولات كثيرة جدًا. يرجى المحاولة مرة أخرى لاحقا.",
-        "emergency_mode_banner": "Go server غير قابل للوصول — يعمل في وضع الطوارئ (للمسؤول فقط، وظائف محدودة)"
+        "emergency_mode_banner": "Go server غير قابل للوصول — يعمل في وضع الطوارئ (للمسؤول فقط، وظائف محدودة)",
+        "session_expired": "انتهت جلستك أو تم استبدالها بتسجيل دخول جديد. يرجى تسجيل الدخول مرة أخرى.",
+        "session_idle_warning_title": "الجلسة على وشك الانتهاء",
+        "session_idle_warning_body": "سيتم تسجيل خروجك بسبب عدم النشاط خلال {{seconds}} ثانية.",
+        "session_stay_signed_in": "البقاء مسجلاً"
     },
     "dashboard": {
         "title": "لوحة القيادة",
@@ -876,7 +880,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "تم استبدال الجلسة",
+        "action_session_expired": "انتهت الجلسة",
+        "action_session_ip_change": "تغيّر عنوان IP للجلسة"
     },
     "generator": {
         "title": "مولّد وكيل الدعم",
@@ -3571,7 +3578,26 @@
         "hardening_hint": "أولويات تعزيز الأمان لنشر BetterDesk. يتم ترتيب العناصر حسب الخطورة.",
         "no_hardening": "لا توجد عناصر تصلب المتاحة.",
         "vuln_hint": "نتائج فحص ثغرة التبعية. قم بتشغيل تدقيق npm بانتظام للحفاظ على أمان التبعيات.",
-        "no_vulns": "لم يتم العثور على نقاط الضعف. تبعياتك آمنة."
+        "no_vulns": "لم يتم العثور على نقاط الضعف. تبعياتك آمنة.",
+        "tab_sessions": "جلسات اللوحة",
+        "sessions_hint": "جلسات تسجيل الدخول إلى لوحة التحكم. يُسمح بجلسة نشطة واحدة لكل حساب؛ تسجيل دخول جديد ينهي الجلسة السابقة.",
+        "sessions_policy": "مهلة الخمول: {{idle}} د · الحد الأقصى: {{max}} س · جلسة نشطة واحدة لكل حساب",
+        "no_sessions": "لا توجد جلسات مسجلة بعد.",
+        "session_current": "الحالية",
+        "session_active": "نشطة",
+        "session_ended": "منتهية",
+        "col_status": "الحالة",
+        "col_started": "البداية",
+        "col_last_activity": "آخر نشاط",
+        "col_ended": "الانتهاء",
+        "col_reason": "سبب الانتهاء",
+        "col_user_agent": "المتصفح",
+        "reason_logout": "تسجيل الخروج",
+        "reason_replaced": "استُبدلت بتسجيل دخول جديد",
+        "reason_idle": "مهلة الخمول",
+        "reason_max_age": "العمر الأقصى",
+        "reason_revoked": "مُلغاة",
+        "reason_destroyed": "مُدمَّرة"
     },
     "languages": {
         "title": "إدارة اللغة",

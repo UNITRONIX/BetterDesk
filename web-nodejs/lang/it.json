@@ -124,7 +124,11 @@
         "oidc_error": "Si è verificato un errore durante l’accesso SSO.",
         "oidc_no_account": "Account non trovato e registrazione automatica disabilitata.",
         "totp_rate_limited": "Troppi tentativi. Riprova più tardi.",
-        "emergency_mode_banner": "Server Go non raggiungibile — modalità di emergenza attiva (solo amministratore, funzionalità limitate)"
+        "emergency_mode_banner": "Server Go non raggiungibile — modalità di emergenza attiva (solo amministratore, funzionalità limitate)",
+        "session_expired": "La sessione è scaduta o è stata sostituita da un nuovo accesso. Accedi di nuovo.",
+        "session_idle_warning_title": "Sessione in scadenza",
+        "session_idle_warning_body": "Verrai disconnesso per inattività tra {{seconds}} secondi.",
+        "session_stay_signed_in": "Resta connesso"
     },
     "dashboard": {
         "title": "Panoramica",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sessione sostituita",
+        "action_session_expired": "Sessione scaduta",
+        "action_session_ip_change": "Cambio IP sessione"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "Priorità di rafforzamento sicurezza per la distribuzione BetterDesk. Ordinati per gravità.",
         "no_hardening": "Nessun elemento di rafforzamento disponibile.",
         "vuln_hint": "Risultati della scansione vulnerabilità delle dipendenze. Esegui npm audit regolarmente.",
-        "no_vulns": "Nessuna vulnerabilità trovata. Le dipendenze sono sicure."
+        "no_vulns": "Nessuna vulnerabilità trovata. Le dipendenze sono sicure.",
+        "tab_sessions": "Sessioni del pannello",
+        "sessions_hint": "Accessi alla console. È consentita una sola sessione attiva per account; un nuovo accesso termina la precedente.",
+        "sessions_policy": "Timeout inattività: {{idle}} min · Massimo assoluto: {{max}} h · Una sessione attiva per account",
+        "no_sessions": "Nessuna sessione del pannello registrata.",
+        "session_current": "Corrente",
+        "session_active": "Attiva",
+        "session_ended": "Terminata",
+        "col_status": "Stato",
+        "col_started": "Inizio",
+        "col_last_activity": "Ultima attività",
+        "col_ended": "Fine",
+        "col_reason": "Motivo di fine",
+        "col_user_agent": "Browser",
+        "reason_logout": "Logout",
+        "reason_replaced": "Sostituita da nuovo accesso",
+        "reason_idle": "Timeout inattività",
+        "reason_max_age": "Durata massima",
+        "reason_revoked": "Revocata",
+        "reason_destroyed": "Distrutta"
     },
     "languages": {
         "title": "Gestione lingue",

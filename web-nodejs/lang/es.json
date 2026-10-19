@@ -124,7 +124,11 @@
         "oidc_error": "Se produjo un error durante el inicio de sesión SSO.",
         "oidc_no_account": "No se encontró tu cuenta y el registro automático está deshabilitado.",
         "totp_rate_limited": "Demasiados intentos. Inténtalo de nuevo más tarde.",
-        "emergency_mode_banner": "Servidor Go no disponible — funcionando en modo de emergencia (solo administrador, funcionalidad limitada)"
+        "emergency_mode_banner": "Servidor Go no disponible — funcionando en modo de emergencia (solo administrador, funcionalidad limitada)",
+        "session_expired": "Su sesión expiró o fue reemplazada por un nuevo inicio de sesión. Inicie sesión de nuevo.",
+        "session_idle_warning_title": "La sesión expirará pronto",
+        "session_idle_warning_body": "Se cerrará la sesión por inactividad en {{seconds}} segundos.",
+        "session_stay_signed_in": "Seguir conectado"
     },
     "dashboard": {
         "title": "Panel",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sesión reemplazada",
+        "action_session_expired": "Sesión expirada",
+        "action_session_ip_change": "Cambio de IP de sesión"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "Prioridades de endurecimiento de seguridad para su implementación BetterDesk. Ordenados por gravedad.",
         "no_hardening": "No hay elementos de endurecimiento disponibles.",
         "vuln_hint": "Resultados del escaneo de vulnerabilidades de dependencias. Ejecute npm audit regularmente.",
-        "no_vulns": "No se encontraron vulnerabilidades. Sus dependencias son seguras."
+        "no_vulns": "No se encontraron vulnerabilidades. Sus dependencias son seguras.",
+        "tab_sessions": "Sesiones del panel",
+        "sessions_hint": "Sus inicios de sesión en la consola. Solo se permite una sesión activa por cuenta; un nuevo inicio termina la anterior.",
+        "sessions_policy": "Tiempo de inactividad: {{idle}} min · Máximo absoluto: {{max}} h · Una sesión activa por cuenta",
+        "no_sessions": "Aún no hay sesiones del panel registradas.",
+        "session_current": "Actual",
+        "session_active": "Activa",
+        "session_ended": "Finalizada",
+        "col_status": "Estado",
+        "col_started": "Inicio",
+        "col_last_activity": "Última actividad",
+        "col_ended": "Fin",
+        "col_reason": "Motivo de fin",
+        "col_user_agent": "Navegador",
+        "reason_logout": "Cierre de sesión",
+        "reason_replaced": "Reemplazada por nuevo inicio",
+        "reason_idle": "Tiempo de inactividad",
+        "reason_max_age": "Vida máxima",
+        "reason_revoked": "Revocada",
+        "reason_destroyed": "Destruida"
     },
     "languages": {
         "title": "Panel",

@@ -124,7 +124,11 @@
         "oidc_error": "SSO ログイン中にエラーが発生しました。",
         "oidc_no_account": "アカウントが見つからなかったため、自動登録が無効になっています。",
         "totp_rate_limited": "試行回数が多すぎます。後でもう一度試してください。",
-        "emergency_mode_banner": "Go server 到達不能 — 緊急モードで実行中 (管理者のみ、機能が制限されています)"
+        "emergency_mode_banner": "Go server 到達不能 — 緊急モードで実行中 (管理者のみ、機能が制限されています)",
+        "session_expired": "セッションの有効期限が切れたか、新しいログインに置き換えられました。再度サインインしてください。",
+        "session_idle_warning_title": "セッションまもなく期限切れ",
+        "session_idle_warning_body": "操作がないため {{seconds}} 秒後にサインアウトされます。",
+        "session_stay_signed_in": "サインインを維持"
     },
     "dashboard": {
         "title": "ダッシュボード",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "セッション置換",
+        "action_session_expired": "セッション期限切れ",
+        "action_session_ip_change": "セッションIP変更"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "BetterDeskデプロイのセキュリティハーデニング優先事項。重大度順。",
         "no_hardening": "ハーデニング項目なし。",
         "vuln_hint": "依存関係脆弱性スキャン結果。定期的にnpm auditを実行してください。",
-        "no_vulns": "脆弱性は見つかりませんでした。依存関係は安全です。"
+        "no_vulns": "脆弱性は見つかりませんでした。依存関係は安全です。",
+        "tab_sessions": "パネルセッション",
+        "sessions_hint": "コンソールのログインセッションです。アカウントごとにアクティブなセッションは1つのみで、新しいログインは以前のセッションを終了します。",
+        "sessions_policy": "アイドル: {{idle}} 分 · 絶対上限: {{max}} 時間 · アカウントごとに1セッション",
+        "no_sessions": "パネルセッションはまだ記録されていません。",
+        "session_current": "現在",
+        "session_active": "アクティブ",
+        "session_ended": "終了",
+        "col_status": "状態",
+        "col_started": "開始",
+        "col_last_activity": "最終アクティビティ",
+        "col_ended": "終了",
+        "col_reason": "終了理由",
+        "col_user_agent": "ブラウザ",
+        "reason_logout": "ログアウト",
+        "reason_replaced": "新しいログインで置換",
+        "reason_idle": "アイドルタイムアウト",
+        "reason_max_age": "最大有効期間",
+        "reason_revoked": "取り消し",
+        "reason_destroyed": "破棄"
     },
     "languages": {
         "title": "言語管理",

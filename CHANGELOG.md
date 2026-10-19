@@ -1,7 +1,11 @@
 ## [Unreleased]
 
-### Changed
-- _(none yet)_
+### Security
+- Panel console sessions are now server-enforced with idle timeout (default 30 minutes),
+  absolute max age (default 24 hours), and a single active session per account.
+  A new login replaces any prior session; IP, User-Agent, optional client fingerprint,
+  start/last-activity/end times and end reason are audited. Configure via
+  `SESSION_IDLE_TIMEOUT`, `SESSION_MAX_AGE`, and `SESSION_IDLE_WARN_MS`.
 
 ---
 

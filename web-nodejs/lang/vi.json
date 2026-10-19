@@ -130,7 +130,11 @@
         "oidc_error": "Đã xảy ra lỗi trong quá trình đăng nhập SSO.",
         "oidc_no_account": "Không tìm thấy tài khoản của bạn và tính năng đăng ký tự động bị tắt.",
         "totp_rate_limited": "Quá nhiều nỗ lực. Vui lòng thử l���i sau.",
-        "emergency_mode_banner": "Go server không thể truy cập được - đang chạy ở chế độ khẩn cấp (chỉ dành cho quản trị viên, chức năng hạn chế)"
+        "emergency_mode_banner": "Go server không thể truy cập được - đang chạy ở chế độ khẩn cấp (chỉ dành cho quản trị viên, chức năng hạn chế)",
+        "session_expired": "Phiên của bạn đã hết hạn hoặc bị thay bằng lần đăng nhập mới. Vui lòng đăng nhập lại.",
+        "session_idle_warning_title": "Phiên sắp hết hạn",
+        "session_idle_warning_body": "Bạn sẽ bị đăng xuất do không hoạt động sau {{seconds}} giây.",
+        "session_stay_signed_in": "Giữ đăng nhập"
     },
     "dashboard": {
         "title": "Trang tổng quan",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Phiên bị thay",
+        "action_session_expired": "Phiên hết hạn",
+        "action_session_ip_change": "Đổi IP phiên"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Ưu tiên tăng cường bảo mật cho việc triển khai BetterDesk của bạn. Các mục được sắp xếp theo mức độ nghiêm trọng.",
         "no_hardening": "Không có vật phẩm làm cứng có sẵn.",
         "vuln_hint": "Kết quả quét lỗ hổng phụ thuộc. Chạy kiểm tra npm thường xuyên để giữ an toàn cho các phần phụ thuộc.",
-        "no_vulns": "Không tìm thấy lỗ hổng nào. Sự phụ thuộc của bạn được an toàn."
+        "no_vulns": "Không tìm thấy lỗ hổng nào. Sự phụ thuộc của bạn được an toàn.",
+        "tab_sessions": "Phiên bảng điều khiển",
+        "sessions_hint": "Phiên đăng nhập console. Mỗi tài khoản chỉ có một phiên đang hoạt động; đăng nhập mới sẽ kết thúc phiên trước.",
+        "sessions_policy": "Hết hạn rảnh: {{idle}} phút · Tối đa tuyệt đối: {{max}} giờ · Một phiên hoạt động mỗi tài khoản",
+        "no_sessions": "Chưa có phiên bảng điều khiển nào được ghi nhận.",
+        "session_current": "Hiện tại",
+        "session_active": "Đang hoạt động",
+        "session_ended": "Đã kết thúc",
+        "col_status": "Trạng thái",
+        "col_started": "Bắt đầu",
+        "col_last_activity": "Hoạt động cuối",
+        "col_ended": "Kết thúc",
+        "col_reason": "Lý do kết thúc",
+        "col_user_agent": "Trình duyệt",
+        "reason_logout": "Đăng xuất",
+        "reason_replaced": "Bị thay bởi đăng nhập mới",
+        "reason_idle": "Hết hạn rảnh",
+        "reason_max_age": "Thời gian sống tối đa",
+        "reason_revoked": "Đã thu hồi",
+        "reason_destroyed": "Đã hủy"
     },
     "languages": {
         "title": "Quản lý ngôn ngữ",

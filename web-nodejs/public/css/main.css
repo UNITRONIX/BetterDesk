@@ -2171,3 +2171,52 @@ input[type="datetime-local"]:focus {
     color: #cf222e;
     border-color: rgba(248, 81, 73, 0.3);
 }
+
+/* Idle session warning (session-guard.js) */
+.session-idle-warning {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 1rem;
+}
+.session-idle-warning.hidden {
+    display: none;
+}
+.session-idle-warning-card {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    max-width: 28rem;
+    width: 100%;
+    background: var(--bg-secondary, #161b22);
+    color: var(--text-primary, #e6edf3);
+    border: 1px solid var(--border-primary, #30363d);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+.session-idle-warning-card > .material-icons {
+    font-size: 28px;
+    color: var(--accent-blue, #58a6ff);
+}
+.session-idle-warning-text {
+    flex: 1;
+    min-width: 0;
+}
+.session-idle-warning-text strong {
+    display: block;
+    margin-bottom: 0.35rem;
+}
+.session-idle-warning-text p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--text-secondary, #8b949e);
+}
+.session-idle-warning-card .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}

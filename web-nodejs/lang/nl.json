@@ -124,7 +124,11 @@
         "oidc_error": "Er is een fout opgetreden tijdens het aanmelden met SSO.",
         "oidc_no_account": "Uw account is niet gevonden en automatische registratie is uitgeschakeld.",
         "totp_rate_limited": "Te veel pogingen. Probeer het later opnieuw.",
-        "emergency_mode_banner": "Go-server onbereikbaar — noodmodus actief (alleen beheerder, beperkte functionaliteit)"
+        "emergency_mode_banner": "Go-server onbereikbaar — noodmodus actief (alleen beheerder, beperkte functionaliteit)",
+        "session_expired": "Uw sessie is verlopen of vervangen door een nieuwe login. Meld u opnieuw aan.",
+        "session_idle_warning_title": "Sessie verloopt binnenkort",
+        "session_idle_warning_body": "U wordt over {{seconds}} seconden uitgelogd wegens inactiviteit.",
+        "session_stay_signed_in": "Ingelogd blijven"
     },
     "dashboard": {
         "title": "Overzicht",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sessie vervangen",
+        "action_session_expired": "Sessie verlopen",
+        "action_session_ip_change": "Sessie-IP gewijzigd"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "Beveiligingsversterkingsprioriteiten voor uw BetterDesk-implementatie. Gesorteerd op ernst.",
         "no_hardening": "Geen versterkingsitems beschikbaar.",
         "vuln_hint": "Resultaten van de kwetsbaarheidsscan voor afhankelijkheden. Voer npm audit regelmatig uit.",
-        "no_vulns": "Geen kwetsbaarheden gevonden. Uw afhankelijkheden zijn veilig."
+        "no_vulns": "Geen kwetsbaarheden gevonden. Uw afhankelijkheden zijn veilig.",
+        "tab_sessions": "Panelsessies",
+        "sessions_hint": "Uw console-logins. Per account is slechts één actieve sessie toegestaan; een nieuwe login beëindigt de vorige.",
+        "sessions_policy": "Idle-timeout: {{idle}} min · Absoluut max: {{max}} u · Eén actieve sessie per account",
+        "no_sessions": "Nog geen panelsessies geregistreerd.",
+        "session_current": "Huidig",
+        "session_active": "Actief",
+        "session_ended": "Beëindigd",
+        "col_status": "Status",
+        "col_started": "Gestart",
+        "col_last_activity": "Laatste activiteit",
+        "col_ended": "Beëindigd",
+        "col_reason": "Eindreden",
+        "col_user_agent": "Browser",
+        "reason_logout": "Uitloggen",
+        "reason_replaced": "Vervangen door nieuwe login",
+        "reason_idle": "Idle-timeout",
+        "reason_max_age": "Maximale levensduur",
+        "reason_revoked": "Ingetrokken",
+        "reason_destroyed": "Vernietigd"
     },
     "languages": {
         "title": "Taalbeheer",

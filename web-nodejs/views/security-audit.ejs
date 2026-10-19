@@ -21,6 +21,9 @@
     <button class="secaudit-tab ${activeTab === 'vulnerabilities' ? 'active' : ''}" data-tab="vulnerabilities" data-bd-call="SecurityAudit.switchTab" data-bd-args='["vulnerabilities"]'>
       <span class="material-icons" aria-hidden="true">bug_report</span> ${_('security_audit.tab_vulnerabilities')}
     </button>
+    <button class="secaudit-tab ${activeTab === 'sessions' ? 'active' : ''}" data-tab="sessions" data-bd-call="SecurityAudit.switchTab" data-bd-args='["sessions"]'>
+      <span class="material-icons" aria-hidden="true">devices</span> ${_('security_audit.tab_sessions')}
+    </button>
   </div>
 
   <!-- Overview panel -->
@@ -91,6 +94,31 @@
     <p class="secaudit-hint">${_('security_audit.vuln_hint')}</p>
     <div class="secaudit-vuln-summary" id="vuln-summary"></div>
     <div class="secaudit-vuln-list" id="vuln-list"></div>
+  </div>
+
+  <!-- Panel sessions -->
+  <div class="secaudit-panel" id="panel-sessions" style="display: ${activeTab === 'sessions' ? 'block' : 'none'}">
+    <p class="secaudit-hint">${_('security_audit.sessions_hint')}</p>
+    <div class="secaudit-toolbar">
+      <div id="session-policy-summary" class="secaudit-hint"></div>
+      <button class="secaudit-btn" data-bd-call="SecurityAudit.loadSessions"><span class="material-icons">refresh</span> ${_('security_audit.refresh')}</button>
+    </div>
+    <div class="secaudit-table-wrap">
+      <table class="secaudit-table">
+        <thead>
+          <tr>
+            <th>${_('security_audit.col_status')}</th>
+            <th>${_('security_audit.col_ip')}</th>
+            <th>${_('security_audit.col_started')}</th>
+            <th>${_('security_audit.col_last_activity')}</th>
+            <th>${_('security_audit.col_ended')}</th>
+            <th>${_('security_audit.col_reason')}</th>
+            <th>${_('security_audit.col_user_agent')}</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-tbody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 ` }) %>

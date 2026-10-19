@@ -130,7 +130,11 @@
         "oidc_error": "Під час входу в систему SSO сталася помилка.",
         "oidc_no_account": "Ваш обліковий запис не знайдено, і ав��оматична реєстрація вимкнена.",
         "totp_rate_limited": "Забагато спроб. Спробуйте пізніше.",
-        "emergency_mode_banner": "Go server недоступний — працює в екстреному режимі (лише для адміністратора, обмежена функціональність)"
+        "emergency_mode_banner": "Go server недоступний — працює в екстреному режимі (лише для адміністратора, обмежена функціональність)",
+        "session_expired": "Ваш сеанс закінчився або був замінений новим входом. Увійдіть знову.",
+        "session_idle_warning_title": "Сеанс скоро завершиться",
+        "session_idle_warning_body": "Вас буде виведено через неактивність за {{seconds}} с.",
+        "session_stay_signed_in": "Залишатися в системі"
     },
     "dashboard": {
         "title": "Приладова панель",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Сеанс замінено",
+        "action_session_expired": "Сеанс завершено",
+        "action_session_ip_change": "Зміна IP сеансу"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Пріоритети посилення безпеки для вашого розгортання BetterDesk. Елементи впорядковані за ступенем тяжкості.",
         "no_hardening": "Немає предметів для зміцнення.",
         "vuln_hint": "Результати сканування вразливості залежностей. Регулярно запускайте перевірку npm, щоб захистити залежності.",
-        "no_vulns": "Вразливості не знайдено. Ваші залежності в безпеці."
+        "no_vulns": "Вразливості не знайдено. Ваші залежності в безпеці.",
+        "tab_sessions": "Сеанси панелі",
+        "sessions_hint": "Ваші входи в консоль. На обліковий запис дозволено лише один активний сеанс; новий вхід завершує попередній.",
+        "sessions_policy": "Таймаут простою: {{idle}} хв · Абсолютний макс: {{max}} год · Один активний сеанс на обліковий запис",
+        "no_sessions": "Ще немає записаних сеансів панелі.",
+        "session_current": "Поточний",
+        "session_active": "Активний",
+        "session_ended": "Завершений",
+        "col_status": "Статус",
+        "col_started": "Початок",
+        "col_last_activity": "Остання активність",
+        "col_ended": "Кінець",
+        "col_reason": "Причина завершення",
+        "col_user_agent": "Браузер",
+        "reason_logout": "Вихід",
+        "reason_replaced": "Замінено новим входом",
+        "reason_idle": "Таймаут простою",
+        "reason_max_age": "Максимальний час життя",
+        "reason_revoked": "Відкликано",
+        "reason_destroyed": "Знищено"
     },
     "languages": {
         "title": "Управління мовою",

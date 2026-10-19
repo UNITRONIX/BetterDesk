@@ -128,7 +128,11 @@
         "totp_rate_limited": "Zu viele Versuche. Bitte versuchen Sie es später erneut.",
         "totp_already_enabled": "L'authentification à deux facteurs est déjà activée",
         "passwords_mismatch": "Les mots de passe ne correspondent pas",
-        "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)"
+        "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)",
+        "session_expired": "Votre session a expiré ou a été remplacée par une nouvelle connexion. Veuillez vous reconnecter.",
+        "session_idle_warning_title": "Session bientôt expirée",
+        "session_idle_warning_body": "Vous serez déconnecté pour inactivité dans {{seconds}} secondes.",
+        "session_stay_signed_in": "Rester connecté"
     },
     "dashboard": {
         "title": "Tableau de bord",
@@ -873,7 +877,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Session remplacée",
+        "action_session_expired": "Session expirée",
+        "action_session_ip_change": "Changement d'IP de session"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3653,7 +3660,26 @@
         "hardening_hint": "Priorités de durcissement sécuritaire pour votre déploiement BetterDesk. Triés par gravité.",
         "no_hardening": "Aucun élément de durcissement disponible.",
         "vuln_hint": "Résultats de l'analyse des vulnérabilités. Exécutez npm audit régulièrement.",
-        "no_vulns": "Aucune vulnérabilité trouvée. Vos dépendances sont sécurisées."
+        "no_vulns": "Aucune vulnérabilité trouvée. Vos dépendances sont sécurisées.",
+        "tab_sessions": "Sessions du panneau",
+        "sessions_hint": "Vos connexions à la console. Une seule session active est autorisée par compte ; une nouvelle connexion termine la précédente.",
+        "sessions_policy": "Délai d'inactivité : {{idle}} min · Maximum absolu : {{max}} h · Une session active par compte",
+        "no_sessions": "Aucune session de panneau enregistrée pour le moment.",
+        "session_current": "Actuelle",
+        "session_active": "Active",
+        "session_ended": "Terminée",
+        "col_status": "État",
+        "col_started": "Début",
+        "col_last_activity": "Dernière activité",
+        "col_ended": "Fin",
+        "col_reason": "Motif de fin",
+        "col_user_agent": "Navigateur",
+        "reason_logout": "Déconnexion",
+        "reason_replaced": "Remplacée par une nouvelle connexion",
+        "reason_idle": "Délai d'inactivité",
+        "reason_max_age": "Durée maximale",
+        "reason_revoked": "Révoquée",
+        "reason_destroyed": "Détruite"
     },
     "languages": {
         "title": "Tableau de bord",

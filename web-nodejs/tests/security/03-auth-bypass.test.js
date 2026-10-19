@@ -45,4 +45,12 @@ describe('[sec/03] Authorization bypass', () => {
         expect(roleHasPermission('operator', 'user.delete')).toBe(false);
         expect(roleHasPermission('admin', 'server.config')).toBe(true);
     });
+
+    it('HTML unauthenticated access redirects to login with expired flag', async () => {
+        const app = createTestApp();
+        app.get('/dashboard', requireAuth, (_req, res) => res.send('ok'));
+        const res = await request(app).get('/dashboard');
+        expect(res.status).toBe(302);
+        expect(res.headers.location).toBe('/login?expired=1');
+    });
 });

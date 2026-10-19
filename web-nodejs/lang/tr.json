@@ -130,7 +130,11 @@
         "oidc_error": "SSO oturum açma işlemi sırasında bir hata oluştu.",
         "oidc_no_account": "Hesabınız bulunamadı ve otomatik kayıt devre dışı bırakıldı.",
         "totp_rate_limited": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin.",
-        "emergency_mode_banner": "Go server erişilemiyor — acil durum modunda çalışıyor (yalnızca yönetici, sınırlı işlevsellik)"
+        "emergency_mode_banner": "Go server erişilemiyor — acil durum modunda çalışıyor (yalnızca yönetici, sınırlı işlevsellik)",
+        "session_expired": "Oturumunuz sona erdi veya yeni bir girişle değiştirildi. Lütfen tekrar oturum açın.",
+        "session_idle_warning_title": "Oturum yakında sona erecek",
+        "session_idle_warning_body": "Hareketsizlik nedeniyle {{seconds}} saniye içinde oturumunuz kapatılacak.",
+        "session_stay_signed_in": "Oturumda kal"
     },
     "dashboard": {
         "title": "Kontrol Paneli",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Oturum değiştirildi",
+        "action_session_expired": "Oturum sona erdi",
+        "action_session_ip_change": "Oturum IP değişimi"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "BetterDesk dağıtımınız için güvenliği güçlendirme öncelikleri. Öğeler önem derecesine göre sıralanır.",
         "no_hardening": "Sertleştirici öğe mevcut değil.",
         "vuln_hint": "Bağımlılık güvenlik açığı taraması sonuçları. Bağımlılıkları güvende tutmak için npm denetimini düzenli olarak çalıştırın.",
-        "no_vulns": "Hiçbir güvenlik açığı bulunamadı. Bağımlılıklarınız güvende."
+        "no_vulns": "Hiçbir güvenlik açığı bulunamadı. Bağımlılıklarınız güvende.",
+        "tab_sessions": "Panel oturumları",
+        "sessions_hint": "Konsol oturumlarınız. Hesap başına yalnızca bir etkin oturuma izin verilir; yeni giriş öncekini sonlandırır.",
+        "sessions_policy": "Boşta kalma: {{idle}} dk · Mutlak üst sınır: {{max}} sa · Hesap başına bir etkin oturum",
+        "no_sessions": "Henüz kayıtlı panel oturumu yok.",
+        "session_current": "Geçerli",
+        "session_active": "Etkin",
+        "session_ended": "Sona erdi",
+        "col_status": "Durum",
+        "col_started": "Başlangıç",
+        "col_last_activity": "Son etkinlik",
+        "col_ended": "Bitiş",
+        "col_reason": "Bitiş nedeni",
+        "col_user_agent": "Tarayıcı",
+        "reason_logout": "Çıkış",
+        "reason_replaced": "Yeni girişle değiştirildi",
+        "reason_idle": "Boşta kalma zaman aşımı",
+        "reason_max_age": "Maksimum ömür",
+        "reason_revoked": "İptal edildi",
+        "reason_destroyed": "Yok edildi"
     },
     "languages": {
         "title": "Dil Yönetimi",

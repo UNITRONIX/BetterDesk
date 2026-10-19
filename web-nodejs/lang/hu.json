@@ -130,7 +130,11 @@
         "oidc_error": "Hiba történt a SSO bejelentkezés során.",
         "oidc_no_account": "Fiókja nem található, és az automatikus regisztráció le van tiltva.",
         "totp_rate_limited": "Túl sok próbálkozás. Kérjük, próbálja újra később.",
-        "emergency_mode_banner": "A Go server nem érhető el – vészhelyzeti módban fut (csak rendszergazda, korlátozott funkcionalitás)"
+        "emergency_mode_banner": "A Go server nem érhető el – vészhelyzeti módban fut (csak rendszergazda, korlátozott funkcionalitás)",
+        "session_expired": "A munkamenet lejárt, vagy új bejelentkezés váltotta fel. Jelentkezzen be újra.",
+        "session_idle_warning_title": "A munkamenet hamarosan lejár",
+        "session_idle_warning_body": "Inaktivitás miatt {{seconds}} másodperc múlva kijelentkeztetjük.",
+        "session_stay_signed_in": "Maradjon bejelentkezve"
     },
     "dashboard": {
         "title": "Irányítópult",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Munkamenet lecserélve",
+        "action_session_expired": "Munkamenet lejárt",
+        "action_session_ip_change": "Munkamenet IP-változás"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Biztonsági szigorítási prioritások a BetterDesk telepítéséhez. A tételek sorrendje súlyosság szerint történik.",
         "no_hardening": "Keményítő elemek nem állnak rendelkezésre.",
         "vuln_hint": "A függőségi sérülékenység vizsgálatának eredménye. Futtassa rendszeresen az npm auditot a függőségek biztonságának megőrzése érdekében.",
-        "no_vulns": "Nem található sebezhetőség. A függőségei biztonságban vannak."
+        "no_vulns": "Nem található sebezhetőség. A függőségei biztonságban vannak.",
+        "tab_sessions": "Panel munkamenetek",
+        "sessions_hint": "Konzol-bejelentkezései. Fiókonként csak egy aktív munkamenet engedélyezett; az új bejelentkezés lezárja az előzőt.",
+        "sessions_policy": "Tétlenségi időkorlát: {{idle}} perc · Abszolút max: {{max}} óra · Fiókonként egy aktív munkamenet",
+        "no_sessions": "Még nincsenek rögzített panel munkamenetek.",
+        "session_current": "Jelenlegi",
+        "session_active": "Aktív",
+        "session_ended": "Lezárt",
+        "col_status": "Állapot",
+        "col_started": "Kezdés",
+        "col_last_activity": "Utolsó aktivitás",
+        "col_ended": "Vége",
+        "col_reason": "Lezárás oka",
+        "col_user_agent": "Böngésző",
+        "reason_logout": "Kijelentkezés",
+        "reason_replaced": "Új bejelentkezés váltotta fel",
+        "reason_idle": "Tétlenségi időtúllépés",
+        "reason_max_age": "Maximális élettartam",
+        "reason_revoked": "Visszavonva",
+        "reason_destroyed": "Megsemmisítve"
     },
     "languages": {
         "title": "Nyelvkezelés",

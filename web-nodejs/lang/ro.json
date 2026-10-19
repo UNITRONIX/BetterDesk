@@ -130,7 +130,11 @@
         "oidc_error": "A apărut o eroare în timpul conectării SSO.",
         "oidc_no_account": "Contul dvs. nu a fost găsit și înregistrarea automată este dezactivată.",
         "totp_rate_limited": "Prea multe încercări. Vă rugăm să încercați din nou mai târziu.",
-        "emergency_mode_banner": "Go server inaccesibil - rulează în modul de urgență (doar pentru administrator, funcționalitate limitată)"
+        "emergency_mode_banner": "Go server inaccesibil - rulează în modul de urgență (doar pentru administrator, funcționalitate limitată)",
+        "session_expired": "Sesiunea a expirat sau a fost înlocuită de o autentificare nouă. Autentificați-vă din nou.",
+        "session_idle_warning_title": "Sesiunea expiră în curând",
+        "session_idle_warning_body": "Veți fi deconectat din cauza inactivității în {{seconds}} secunde.",
+        "session_stay_signed_in": "Rămâneți autentificat"
     },
     "dashboard": {
         "title": "Tabloul de bord",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sesiune înlocuită",
+        "action_session_expired": "Sesiune expirată",
+        "action_session_ip_change": "Schimbare IP sesiune"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Priorități de întărire a securității pentru implementarea dvs. BetterDesk. Articolele sunt ordonate în funcție de gravitate.",
         "no_hardening": "Nu există articole de întărire disponibile.",
         "vuln_hint": "Rezultatele scanării vulnerabilității dependenței. Rulați auditul npm în mod regulat pentru a menține dependențele în siguranță.",
-        "no_vulns": "Nu au fost găsite vulnerabilități. Dependența dvs. este în siguranță."
+        "no_vulns": "Nu au fost găsite vulnerabilități. Dependența dvs. este în siguranță.",
+        "tab_sessions": "Sesiuni panou",
+        "sessions_hint": "Autentificările în consolă. Este permisă o singură sesiune activă per cont; o autentificare nouă o încheie pe cea anterioară.",
+        "sessions_policy": "Timeout inactivitate: {{idle}} min · Maxim absolut: {{max}} h · O sesiune activă per cont",
+        "no_sessions": "Nu există încă sesiuni de panou înregistrate.",
+        "session_current": "Curentă",
+        "session_active": "Activă",
+        "session_ended": "Încheiată",
+        "col_status": "Stare",
+        "col_started": "Început",
+        "col_last_activity": "Ultima activitate",
+        "col_ended": "Sfârșit",
+        "col_reason": "Motiv încheiere",
+        "col_user_agent": "Browser",
+        "reason_logout": "Deconectare",
+        "reason_replaced": "Înlocuită de autentificare nouă",
+        "reason_idle": "Timeout inactivitate",
+        "reason_max_age": "Durată maximă",
+        "reason_revoked": "Revocată",
+        "reason_destroyed": "Distrusă"
     },
     "languages": {
         "title": "Managementul Limbii",

@@ -130,7 +130,11 @@
         "oidc_error": "Ett fel uppstod under SSO-inloggning.",
         "oidc_no_account": "Ditt konto hittades inte och automatisk registrering är inaktiverad.",
         "totp_rate_limited": "För många försök. Försök igen senare.",
-        "emergency_mode_banner": "Go server går inte att nå — körs i nödläge (endast administratör, begränsad funktionalitet)"
+        "emergency_mode_banner": "Go server går inte att nå — körs i nödläge (endast administratör, begränsad funktionalitet)",
+        "session_expired": "Din session har gått ut eller ersatts av en ny inloggning. Logga in igen.",
+        "session_idle_warning_title": "Sessionen går snart ut",
+        "session_idle_warning_body": "Du loggas ut på grund av inaktivitet om {{seconds}} sekunder.",
+        "session_stay_signed_in": "Förbli inloggad"
     },
     "dashboard": {
         "title": "Instrumentbräda",
@@ -875,7 +879,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Session ersatt",
+        "action_session_expired": "Session utgången",
+        "action_session_ip_change": "Sessions-IP ändrad"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3570,7 +3577,26 @@
         "hardening_hint": "Säkerhetshärdande prioriteringar för din BetterDesk-distribution. Föremålen är sorterade efter svårighetsgrad.",
         "no_hardening": "Inga härdande föremål tillgängliga.",
         "vuln_hint": "Resultat av sökning av beroendesårbarhet. Kör npm-revision regelbundet för att hålla beroenden säkra.",
-        "no_vulns": "Inga sårbarheter hittades. Dina beroenden är säkra."
+        "no_vulns": "Inga sårbarheter hittades. Dina beroenden är säkra.",
+        "tab_sessions": "Panelsessioner",
+        "sessions_hint": "Dina konsolinloggningar. Endast en aktiv session per konto; en ny inloggning avslutar den föregående.",
+        "sessions_policy": "Inaktivitet: {{idle}} min · Absolut max: {{max}} t · En aktiv session per konto",
+        "no_sessions": "Inga panelsessioner registrerade ännu.",
+        "session_current": "Nuvarande",
+        "session_active": "Aktiv",
+        "session_ended": "Avslutad",
+        "col_status": "Status",
+        "col_started": "Startad",
+        "col_last_activity": "Senaste aktivitet",
+        "col_ended": "Avslutad",
+        "col_reason": "Avslutningsorsak",
+        "col_user_agent": "Webbläsare",
+        "reason_logout": "Logga ut",
+        "reason_replaced": "Ersatt av ny inloggning",
+        "reason_idle": "Inaktivitetstimeout",
+        "reason_max_age": "Maximal livstid",
+        "reason_revoked": "Återkallad",
+        "reason_destroyed": "Förstörd"
     },
     "languages": {
         "title": "Språkhantering",

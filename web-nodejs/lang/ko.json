@@ -124,7 +124,11 @@
         "oidc_error": "SSO 로그인 중에 오류가 발생했습니다.",
         "oidc_no_account": "귀하의 계정을 찾을 수 없으며 자동 등록이 비활성화되었습니다.",
         "totp_rate_limited": "시도 횟수가 너무 많습니다. 나중에 다시 시도해 주세요.",
-        "emergency_mode_banner": "Go server에 연결할 수 없음 — 비상 모드에서 실행 중(관리자 전용, 제한된 기능)"
+        "emergency_mode_banner": "Go server에 연결할 수 없음 — 비상 모드에서 실행 중(관리자 전용, 제한된 기능)",
+        "session_expired": "세션이 만료되었거나 새 로그인으로 대체되었습니다. 다시 로그인해 주세요.",
+        "session_idle_warning_title": "세션이 곧 만료됩니다",
+        "session_idle_warning_body": "비활성으로 인해 {{seconds}}초 후 로그아웃됩니다.",
+        "session_stay_signed_in": "로그인 유지"
     },
     "dashboard": {
         "title": "대시보드",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "세션 교체됨",
+        "action_session_expired": "세션 만료",
+        "action_session_ip_change": "세션 IP 변경"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "BetterDesk 배포의 보안 강화 우선순위. 심각도 순 정렬.",
         "no_hardening": "보안 강화 항목이 없습니다.",
         "vuln_hint": "의존성 취약점 스캔 결과. 정기적으로 npm audit를 실행하세요.",
-        "no_vulns": "취약점이 발견되지 않았습니다. 의존성이 안전합니다."
+        "no_vulns": "취약점이 발견되지 않았습니다. 의존성이 안전합니다.",
+        "tab_sessions": "패널 세션",
+        "sessions_hint": "콘솔 로그인 세션입니다. 계정당 활성 세션은 하나뿐이며, 새 로그인은 이전 세션을 종료합니다.",
+        "sessions_policy": "유휴 제한: {{idle}}분 · 절대 최대: {{max}}시간 · 계정당 활성 세션 1개",
+        "no_sessions": "기록된 패널 세션이 없습니다.",
+        "session_current": "현재",
+        "session_active": "활성",
+        "session_ended": "종료됨",
+        "col_status": "상태",
+        "col_started": "시작",
+        "col_last_activity": "마지막 활동",
+        "col_ended": "종료",
+        "col_reason": "종료 사유",
+        "col_user_agent": "브라우저",
+        "reason_logout": "로그아웃",
+        "reason_replaced": "새 로그인으로 교체됨",
+        "reason_idle": "유휴 시간 초과",
+        "reason_max_age": "최대 수명",
+        "reason_revoked": "취소됨",
+        "reason_destroyed": "삭제됨"
     },
     "languages": {
         "title": "언어 관리",

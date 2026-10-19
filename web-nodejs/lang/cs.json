@@ -124,7 +124,11 @@
         "oidc_error": "Při přihlašování pomocí SSO došlo k chybě.",
         "oidc_no_account": "Váš účet nebyl nalezen a automatická registrace je vypnutá.",
         "totp_rate_limited": "Příliš mnoho pokusů. Zkuste to prosím později.",
-        "emergency_mode_banner": "Go server je nedostupný — běží nouzový režim (pouze admin, omezené funkce)"
+        "emergency_mode_banner": "Go server je nedostupný — běží nouzový režim (pouze admin, omezené funkce)",
+        "session_expired": "Vaše relace vypršela nebo byla nahrazena novým přihlášením. Přihlaste se znovu.",
+        "session_idle_warning_title": "Relace brzy vyprší",
+        "session_idle_warning_body": "Budete odhlášeni kvůli nečinnosti za {{seconds}} s.",
+        "session_stay_signed_in": "Zůstat přihlášen"
     },
     "dashboard": {
         "title": "Nástěnka",
@@ -869,7 +873,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Relace nahrazena",
+        "action_session_expired": "Relace vypršela",
+        "action_session_ip_change": "Změna IP relace"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -3564,7 +3571,26 @@
         "hardening_hint": "Priority zabezpečení pro vaše nasazení BetterDesk. Položky jsou seřazeny podle závažnosti.",
         "no_hardening": "Žádné položky k zabezpečení nejsou k dispozici.",
         "vuln_hint": "Výsledky skenování zranitelností závislostí. Pravidelně spouštějte 'npm audit' pro udržení bezpečnosti.",
-        "no_vulns": "Nenalezeny žádné zranitelnosti. Vaše závislosti jsou bezpečné."
+        "no_vulns": "Nenalezeny žádné zranitelnosti. Vaše závislosti jsou bezpečné.",
+        "tab_sessions": "Relace panelu",
+        "sessions_hint": "Přihlášení do konzole. Na účet je povolena jen jedna aktivní relace; nové přihlášení ukončí předchozí.",
+        "sessions_policy": "Nečinnost: {{idle}} min · Absolutní max: {{max}} h · Jedna aktivní relace na účet",
+        "no_sessions": "Zatím nejsou zaznamenány žádné relace panelu.",
+        "session_current": "Aktuální",
+        "session_active": "Aktivní",
+        "session_ended": "Ukončená",
+        "col_status": "Stav",
+        "col_started": "Začátek",
+        "col_last_activity": "Poslední aktivita",
+        "col_ended": "Konec",
+        "col_reason": "Důvod ukončení",
+        "col_user_agent": "Prohlížeč",
+        "reason_logout": "Odhlášení",
+        "reason_replaced": "Nahrazena novým přihlášením",
+        "reason_idle": "Timeout nečinnosti",
+        "reason_max_age": "Maximální životnost",
+        "reason_revoked": "Zrušena",
+        "reason_destroyed": "Zničena"
     },
     "languages": {
         "title": "Správa jazyků",
