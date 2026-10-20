@@ -1,31 +1,39 @@
 # API port consolidation (Go :21114 + compat proxy :21121)
 
 **Status:** active (v3+)  
-**Related:** issue #160, `betterdesk-server/api/*`, `web-nodejs/middleware/goApiProxy.js`
+**Related:** issue #160, Discussion #452, `betterdesk-server/api/*`, `web-nodejs/middleware/goApiProxy.js`
 
 ## Summary
 
 | Port | Process | Role |
 |------|---------|------|
-| **21114** | `betterdesk-server` (Go) | **Default API** — `/api/login`, AB, heartbeat, REST (direct) |
-| **21121** | `betterdesk-console` (Node) | **Backward compatibility** — proxy to Go :21114 only |
-| **5000** | Node | Admin web panel |
+| **21114** | `betterdesk-server` (Go) | **Default Client API** (split / systemd) — `/api/login`, AB, heartbeat, REST |
+| **21121** | Go (single/AIO) **or** Node compat proxy (split) | Single-container default Go API; on split layout, Node reverse-proxies to Go `:21114` when `RUSTDESK_API_PROXY=true` |
+| **5000** | Node | Admin web panel only — **never** set RustDesk **API Server** to this port |
+| **21118 / 21119** | Go | Native RustDesk WSS signal / relay (not Client API) |
 
-Handlers and database live **only in Go**. Node on **21121** does not implement login/AB logic when `RUSTDESK_API_PROXY=true`.
+Handlers and database for Client API live **only in Go**. Node on **21121** (split compat) does not implement login/AB logic when `RUSTDESK_API_PROXY=true`.
 
 ## Architecture
 
 ```
-RustDesk client (recommended)  ──HTTP :21114──►  Go  /api/login, /api/ab, …
+RustDesk client (split / recommended)  ──HTTP :21114──►  Go  /api/login, /api/ab, …
 
-RustDesk client (legacy URL)   ──HTTP :21121──►  Node (wanSecurity + goApiProxy)
-                                                    └──►  Go :21114
+RustDesk client (single / AIO)         ──HTTP :21121──►  Go  (same handlers)
 
-Web panel  ── :5000 ──►  betterdeskApi.js  ──►  Go :21114
+RustDesk client (legacy split URL)     ──HTTP :21121──►  Node (wanSecurity + goApiProxy)
+                                                            └──►  Go :21114
+
+Web panel  ── :5000 ──►  betterdeskApi.js  ──►  Go :21114 (or :21121 in AIO)
 ```
 
-**New deployments:** `http://<host>:21114`  
-**Existing fleets (unchanged):** `http://<host>:21121`
+**Split / systemd new deployments:** `http://<host>:21114`  
+**Official single-container Docker:** `http://<host>:21121`  
+**Existing split fleets on :21121:** keep using the Node compat proxy
+
+### Reverse proxy pitfalls
+
+Do **not** send only `/api/ws/` to Go while leaving `/api/login` (and AB) on panel `:5000`. Client login tokens are issued by Go into `client_sessions`; PunchHole then validates that hash. A partial proxy often yields “login looks fine” in the UI but `initiator_token_rejected` on connect — see [DOCKER_TROUBLESHOOTING.md](../docker/DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected) and [REVERSE_PROXY.md — Client API vs panel](../setup/REVERSE_PROXY.md#client-api-vs-panel-on-the-same-hostname).
 
 ## Defaults (.env)
 

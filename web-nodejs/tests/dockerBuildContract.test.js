@@ -171,3 +171,86 @@ describe('Docker admin bootstrap contract', () => {
         expect(contents).toContain('TRUST_PROXY=${TRUST_PROXY:-}');
     });
 });
+
+describe('Docker compose layout contract (Discussion #452)', () => {
+    const sourceBuildCompose = ['docker-compose.yml', 'docker-compose.single.yml'];
+    const ghcrQuickCompose = [
+        'docker-compose.quick.yml',
+        'docker-compose.quick.single.yml',
+        'docker-compose.quick.macvlan.yml',
+        'docker-compose.quick.single.macvlan.yml',
+    ];
+
+    test.each(sourceBuildCompose)('%s is source-build (local tags, pull never)', composeFile => {
+        const contents = fs.readFileSync(path.join(repoRoot, composeFile), 'utf8');
+
+        expect(contents).toMatch(/pull_policy:\s*never/);
+        expect(contents).toMatch(/image:\s*betterdesk(?:-server|-console)?:local/);
+        expect(contents).toMatch(/BUILD FROM SOURCE|source build|builds images locally|pull_policy:\s*never/i);
+        expect(contents).toMatch(/docker compose up -d --build|up -d --build/);
+        // Must not tell operators that bare `docker compose pull` refreshes *:local
+        expect(contents).toMatch(/pull.*does NOT|pull_policy:\s*never|does nothing/i);
+    });
+
+    test.each(ghcrQuickCompose)('%s is prebuilt GHCR (pull refreshes images)', composeFile => {
+        const contents = fs.readFileSync(path.join(repoRoot, composeFile), 'utf8');
+        // Ignore comments — headers may mention source-build pull_policy: never for contrast.
+        const yamlBody = contents
+            .split(/\r?\n/)
+            .filter(line => !/^\s*#/.test(line))
+            .join('\n');
+
+        expect(contents).toMatch(/ghcr\.io\/unitronix\/betterdesk/);
+        expect(contents).toMatch(/docker compose pull/);
+        expect(yamlBody).not.toMatch(/pull_policy:\s*never/);
+        expect(yamlBody).not.toMatch(/image:\s*betterdesk(?:-server|-console)?:local/);
+    });
+
+    test('split source-build compose documents Client API vs panel ports', () => {
+        const contents = fs.readFileSync(path.join(repoRoot, 'docker-compose.yml'), 'utf8');
+
+        expect(contents).toContain('21114:21114');
+        expect(contents).toContain('21118:21118');
+        expect(contents).toContain('21119:21119');
+        expect(contents).toContain('5000:5000');
+        expect(contents).toContain('21121:21121');
+        expect(contents).toMatch(/:21114/);
+        expect(contents).toMatch(/Client API|Go Client API|Go HTTP API/);
+        expect(contents).toMatch(/web panel|Web Console|admin panel/i);
+        expect(contents).toMatch(/21118|WebSocket Signal/);
+        expect(contents).toMatch(/21119|WebSocket Relay/);
+    });
+
+    test('split GHCR compose documents preferred Client API on 21114', () => {
+        const contents = fs.readFileSync(path.join(repoRoot, 'docker-compose.quick.yml'), 'utf8');
+
+        expect(contents).toContain('21114:21114');
+        expect(contents).toContain('21118:21118');
+        expect(contents).toContain('21119:21119');
+        expect(contents).toMatch(/:21114/);
+        expect(contents).toMatch(/do NOT point RustDesk API Server|not the console port/i);
+        expect(contents).toContain('DB_URL=/opt/rustdesk/db_v2.sqlite3');
+        expect(contents).toContain('DB_PATH=/opt/rustdesk/db_v2.sqlite3');
+        expect(contents).toContain('PANEL_SIGNAL_PROXY_CIDRS');
+    });
+
+    test('single-container quick compose exposes Client API on 21121', () => {
+        const contents = fs.readFileSync(
+            path.join(repoRoot, 'docker-compose.quick.single.yml'),
+            'utf8'
+        );
+
+        expect(contents).toContain('21121:21121');
+        expect(contents).toContain('5000:5000');
+        expect(contents).toContain('21118:21118');
+        expect(contents).toContain('21119:21119');
+        expect(contents).toMatch(/HTTP API|Client API|RustDesk client/);
+    });
+
+    test('production defaults discourage open legacy outbound on source-build split', () => {
+        const contents = fs.readFileSync(path.join(repoRoot, 'docker-compose.yml'), 'utf8');
+
+        expect(contents).toContain('ENCRYPTED_ONLY=1');
+        expect(contents).toMatch(/ALLOW_LEGACY_OUTBOUND=\$\{ALLOW_LEGACY_OUTBOUND:-N\}/);
+    });
+});

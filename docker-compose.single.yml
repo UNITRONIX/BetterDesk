@@ -1,7 +1,14 @@
-# BetterDesk — Simplified Docker Compose (Single Container)
+# BetterDesk — Simplified Docker Compose (Single Container, source build)
 # ===========================================================
 #
 # All-in-one: Go server + Node.js console in a single container.
+# THIS FILE builds betterdesk:local (pull_policy: never).
+# `docker compose pull` does NOT refresh BetterDesk — rebuild after git pull:
+#   git pull && docker compose -f docker-compose.single.yml up -d --build
+#
+# PREBUILT GHCR (no local build) — prefer:
+#   curl -fsSL …/docker-compose.quick.single.yml -o docker-compose.yml
+#   docker compose pull && docker compose up -d
 #
 # Quick start (SQLite — default):
 #   docker compose -f docker-compose.single.yml up -d --build
@@ -19,6 +26,7 @@
 #
 # Access:
 #   Web Console: http://localhost:5000
+#   Client API:  http://localhost:21121  (not panel :5000)
 #   Admin password: auto-generated unless ADMIN_PASSWORD is set before first start
 
 services:

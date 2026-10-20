@@ -1,11 +1,15 @@
 # =============================================================================
 # BetterDesk Console - Quick Start (Pre-built Images) — legacy split layout
 # =============================================================================
-# NO BUILD REQUIRED - uses pre-built images from GitHub Container Registry (ghcr.io).
+# NO BUILD REQUIRED — uses pre-built images from GitHub Container Registry (ghcr.io).
 # Prefer the official all-in-one image: docker-compose.quick.single.yml (or install.sh).
 #
+# THIS FILE is the GHCR path: `docker compose pull` refreshes betterdesk-server /
+# betterdesk-console. Do NOT confuse with docker-compose.yml (source build),
+# which uses betterdesk-*:local and pull_policy: never — pull does nothing there.
+#
 # Image tag (aligned with VERSION / CHANGELOG):
-#   Default: 3.3.169  |  Rolling: BETTERDESK_IMAGE_TAG=latest
+#   Default: 3.5.182  |  Rolling: BETTERDESK_IMAGE_TAG=latest | Dev: BETTERDESK_IMAGE_TAG=dev
 #
 # Usage (automated — recommended):
 #   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash
@@ -15,8 +19,15 @@
 #   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
 #   docker compose pull && docker compose up -d
 #
-# Pin a specific release:
-#   BETTERDESK_IMAGE_TAG=3.3.169 docker compose up -d
+# Pin a specific release / channel:
+#   BETTERDESK_IMAGE_TAG=3.5.182 docker compose up -d
+#   BETTERDESK_IMAGE_TAG=dev docker compose pull && docker compose up -d
+#
+# Port map (split layout):
+#   :5000  — web panel (Node) — do NOT point RustDesk API Server here
+#   :21114 — Go Client API (RustDesk /api/login, AB) — preferred
+#   :21121 — optional Node → Go compat proxy (legacy fleets)
+#   :21118 / :21119 — native RustDesk WSS signal / relay
 #
 # Web Console: http://localhost:5000
 # RustDesk client API: http://localhost:21114 (Go server — not the console port)

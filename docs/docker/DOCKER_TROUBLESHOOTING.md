@@ -872,6 +872,112 @@ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' bet
 
 ---
 
+## Problem: Logged-in client fails with `initiator_token_rejected`
+
+### Symptom
+
+- RustDesk desktop connects when **logged out**, but fails when **logged in**.
+- Go / audit logs show:
+
+```text
+Rejected outbound … reason=initiator_token_rejected
+connection_denied … reason:initiator_token_rejected
+```
+
+Approving the **target** device does not fix this — the reject is about the **initiator’s** login session token, not enrollment of the remote peer.
+
+### Cause
+
+The signal server received a 64-character opaque client login token on PunchHole/RequestRelay, but that token hash is missing, expired, or revoked in the **same** database Go uses (`client_sessions`). Common Docker/VPS causes:
+
+1. **Source-build compose not rebuilt** — `docker-compose.yml` uses `betterdesk-*:local` + `pull_policy: never`. `docker compose pull` does not update those images; use `git pull` + `docker compose up -d --build`, or switch to `docker-compose.quick.yml` (GHCR) and pull there.
+2. **Wrong Client API URL** — API Server pointed at panel `:5000` or only a partial Nginx path (e.g. `/api/ws/` → Go while `/api/login` still hits the panel). Login may “succeed” in the UI without writing a Go `client_sessions` row that PunchHole can validate.
+3. **Split DB / stale token** — Go and console not on the same SQLite/Postgres store, or an old local token after image/DB recreate. Env paths alone (`DB_URL` / `DB_PATH`) are not enough; both containers must see the same file/DSN content.
+4. **Misconfigured TLS on Go behind Nginx** — `TLS_API=Y` (or signal/relay TLS) without certs, or double TLS when the reverse proxy already terminates HTTPS. Upstream to Go should stay plain HTTP.
+
+This is usually **not** a pure WSS/firewall failure: if WebSockets were completely broken, anonymous (logged-out) connections would typically fail too.
+
+### Fix checklist
+
+1. **Refresh the correct way**
+
+```bash
+# GHCR quick compose (images from ghcr.io):
+docker compose pull && docker compose up -d --force-recreate
+
+# Source build (local tags — pull does nothing):
+git pull
+docker compose up -d --build --force-recreate
+```
+
+Confirm the running version matches what you expect:
+
+```bash
+curl -sS http://127.0.0.1:21114/api/health   # split Go API
+# or: curl -sS http://127.0.0.1:21121/api/health   # single / compat proxy
+docker compose ps
+```
+
+2. **Point the RustDesk client at the Client API, not the panel**
+
+| Layout | API Server |
+|--------|------------|
+| Official single container | `http://YOUR_HOST:21121` (or HTTPS if you terminate TLS for that port) |
+| Split `server` + `console` | `http://YOUR_HOST:21114` (preferred) or `:21121` if the Node compat proxy is enabled |
+
+Do **not** use panel port `5000` as API Server. Behind Nginx, either expose `:21114`/`:21121` directly, or proxy **Client API** paths to Go (or the `:21121` proxy) — not only `/api/ws/`. Prefer a separate API hostname; see [REVERSE_PROXY.md](../setup/REVERSE_PROXY.md#client-api-vs-panel-on-the-same-hostname).
+
+3. **Same primary database (split Docker)**
+
+```bash
+docker compose exec server sh -lc 'printf "DB_URL=%s\n" "$DB_URL"'
+docker compose exec console sh -lc 'printf "DB_PATH=%s\n" "$DB_PATH"'
+# Same path string is necessary but not sufficient — compare the file:
+docker compose exec server sh -lc 'ls -la /opt/rustdesk/db_v2.sqlite3; sha256sum /opt/rustdesk/db_v2.sqlite3 2>/dev/null || cksum /opt/rustdesk/db_v2.sqlite3'
+docker compose exec console sh -lc 'ls -la /opt/rustdesk/db_v2.sqlite3; sha256sum /opt/rustdesk/db_v2.sqlite3 2>/dev/null || cksum /opt/rustdesk/db_v2.sqlite3'
+```
+
+Both services should share the volume that mounts `/opt/rustdesk` (writable for SQLite WAL).
+
+4. **Re-login after recreate**
+
+In the Windows RustDesk client: sign out → sign in again with a panel user allowed to connect. Old tokens after image/DB changes produce exactly this log line.
+
+5. **Reverse-proxy / production env hygiene**
+
+- Native WSS: `/ws/id` → host `21118`, `/ws/relay` → host `21119` (Upgrade headers on). Do not send those paths to panel `:5000`.
+- When Nginx terminates TLS: leave Go `TLS_API` / `TLS_SIGNAL` / `TLS_RELAY` unset unless you configure `TLS_CERT`/`TLS_KEY` for Enterprise dual-TLS.
+- Prefer `ENCRYPTED_ONLY=1`, `ALLOW_LEGACY_OUTBOUND=N`, and `ENROLLMENT_MODE=managed` after devices are approved.
+- Set a reachable relay: `RELAY_SERVERS=YOUR_PUBLIC_IP_OR_DNS:21117`.
+
+### Diagnostics (no passwords / no tokens)
+
+```bash
+docker compose ps
+docker compose config | grep -E 'image:|pull_policy|DB_URL|DB_PATH|RELAY_SERVERS|TLS_|ALLOW_LEGACY'
+
+curl -sS http://127.0.0.1:21114/api/health || curl -sS http://127.0.0.1:21121/api/health
+curl -sS http://127.0.0.1:21114/api/login-options || curl -sS http://127.0.0.1:21121/api/login-options
+
+# After a failed logged-in connect (redact secrets; do not paste access tokens):
+docker compose logs --tail=300 | grep -E 'initiator_token_rejected|/api/login|issueClientSession|Token generation'
+```
+
+A healthy logged-in flow shows a successful `/api/login` (or `issueClientSession`) shortly before PunchHole. If PunchHole rejects with `initiator_token_rejected` and there is **no** matching login/issue line for that attempt, the client is not talking to the Go Client API you think it is.
+
+### What to paste when asking for help
+
+Redact passwords, keys, and bearer tokens. Include:
+
+- single vs split compose (and whether images are `ghcr.io/…` or `*:local`)
+- RustDesk client version; ID / Relay / API host+ports only (no key)
+- whether a reverse proxy fronts WSS / API
+- a few log lines around the next `initiator_token_rejected` plus any `/api/login` / `issueClientSession` lines from the same attempt
+
+Related: [API port consolidation](../important/betterdesk-api-port-consolidation.md), [REVERSE_PROXY.md](../setup/REVERSE_PROXY.md), [Client Setup — login](../wiki/Client-Setup.md#client-login).
+
+---
+
 ## Problem: Shell Not Available in HBBS/HBBR Containers
 
 ### Symptom
