@@ -29,7 +29,11 @@ const {
     getPanelReadMountPaths
 } = require('./middleware/rateLimiter');
 const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
-const { roleHasPermission, isSuperAdminRole } = require('./middleware/auth');
+const {
+    requestHasPermission,
+    isSuperAdminRole,
+    loadEffectivePermissions,
+} = require('./middleware/auth');
 const authService = require('./services/authService');
 const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
@@ -186,6 +190,7 @@ app.use((req, res, next) => {
     panelSessionService.noteIpChange(req, (uid, action, details, ip) => db.logAction(uid, action, details, ip));
     next();
 });
+
 // Generate the double-submit token before routes that need route-level CSRF
 // protection, including the session-authenticated notification endpoints.
 app.use(csrfTokenProvider);
@@ -220,6 +225,11 @@ app.use('/wallpapers', express.static(path.join(__dirname, 'wallpapers'), {
     etag: true,
     immutable: true
 }));
+
+// Resolve role overrides before browser-facing routers. Static assets are
+// intentionally served first so authenticated pages do not add a Go lookup
+// for every CSS, image, and JavaScript request.
+app.use(loadEffectivePermissions);
 
 // Rate limiting for API.
 // SECURITY (audit fix M-03, 2026-04-10): high-frequency widget refresh paths
@@ -258,7 +268,9 @@ app.use((req, res, next) => {
     res.locals.supporters = loadSupporters();
     // Inject permission helper for EJS templates (sidebar/button visibility)
     const role = req.session?.user?.role;
-    res.locals.hasPermission = (perm) => role ? roleHasPermission(role, perm) : false;
+    res.locals.hasPermission = (perm) => role
+        ? requestHasPermission(req, perm)
+        : false;
     res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
     res.locals.sessionPolicy = panelSessionService.getPolicy();
     // Prevent HTML page caching — only static assets should be cached

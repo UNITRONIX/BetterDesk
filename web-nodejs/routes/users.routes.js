@@ -13,7 +13,12 @@ const userSync = require('../services/userSync');
 const userScopeService = require('../services/userScopeService');
 const deviceGroupService = require('../services/deviceGroupService');
 const serverBackend = require('../services/serverBackend');
-const { requireAuth, requirePermission, roleHasPermission, isSuperAdminRole } = require('../middleware/auth');
+const {
+    requireAuth,
+    requirePermission,
+    requestHasPermission,
+    isSuperAdminRole,
+} = require('../middleware/auth');
 const { passwordChangeLimiter } = require('../middleware/rateLimiter');
 
 // ---------------------------------------------------------------------------
@@ -288,8 +293,14 @@ function rejectUnauthorizedRoleAssignment(res) {
 
 function requireAnyPermission(...permissions) {
     return function(req, res, next) {
-        const role = req.session && req.session.user && req.session.user.role;
-        if (permissions.some(permission => roleHasPermission(role, permission))) return next();
+        if (req.permissionContextLoaded && req.permissionLoadError) {
+            return res.status(503).json({
+                success: false,
+                error: 'Permission service unavailable',
+                code: 'permission_service_unavailable'
+            });
+        }
+        if (permissions.some(permission => requestHasPermission(req, permission))) return next();
         return res.status(403).json({ success: false, error: `Permission denied: ${permissions.join(' or ')}` });
     };
 }

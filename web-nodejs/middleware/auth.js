@@ -3,6 +3,11 @@
  * Protects routes that require authentication
  */
 
+const {
+    getEffectivePermissions,
+    loadEffectivePermissions,
+} = require('../services/rolePermissionService');
+
 // Default role-permission map (mirrors Go auth/permissions.go — Phase 52+)
 //
 // Role hierarchy (branched, not strictly linear):
@@ -105,6 +110,34 @@ function roleHasPermission(role, permission) {
 }
 
 /**
+ * Check a permission using the request's effective role snapshot when the
+ * panel authorization middleware has loaded one. The static map remains a
+ * compatibility fallback for isolated middleware unit tests and non-panel
+ * callers; production requests are marked as loaded by server.js.
+ */
+function requestHasPermission(req, permission) {
+    const role = req?.session?.user?.role;
+    if (proRoleBlocksPermission(role, permission)) return false;
+    if (isSuperAdminRole(role)) return true;
+    if (req?.effectivePermissions instanceof Set) {
+        return req.effectivePermissions.has(permission);
+    }
+    if (req?.permissionContextLoaded && req.permissionLoadError) return false;
+    return roleHasPermission(role, permission);
+}
+
+/**
+ * Resolve a role directly for non-HTTP request paths such as WebSocket
+ * upgrades, where the normal Express permission middleware is not present.
+ */
+async function roleHasEffectivePermission(role, permission) {
+    if (proRoleBlocksPermission(role, permission)) return false;
+    if (isSuperAdminRole(role)) return true;
+    const permissions = await getEffectivePermissions(role);
+    return permissions.has(permission);
+}
+
+/**
  * Safe relative return URL for RdClient pages only (/remote…).
  */
 function normalizeRdClientReturnUrl(u) {
@@ -163,7 +196,7 @@ function requireRdClientAuth(permission) {
 
         if (permission) {
             const role = req.session.user && req.session.user.role;
-            if (!roleHasPermission(role, permission)) {
+            if (!requestHasPermission(req, permission)) {
                 if (req.path.startsWith('/api/')) {
                     return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
                 }
@@ -185,7 +218,7 @@ function requireRdClientAuth(permission) {
  */
 function rdClientGuestOnly(req, res, next) {
     const role = req.session && req.session.user && req.session.user.role;
-    if (req.session && req.session.userId && role !== 'pro' && roleHasPermission(role, 'device.connect')) {
+    if (req.session && req.session.userId && role !== 'pro' && requestHasPermission(req, 'device.connect')) {
         const dest = normalizeRdClientReturnUrl(req.query.return) || '/remote';
         return res.redirect(dest);
     }
@@ -333,7 +366,20 @@ function requirePermission(permission) {
         }
 
         const role = req.session.user && req.session.user.role;
-        if (!roleHasPermission(role, permission)) {
+        if (req.permissionContextLoaded && req.permissionLoadError) {
+            if (req.path.startsWith('/api/')) {
+                return res.status(503).json({
+                    success: false,
+                    error: 'Permission service unavailable',
+                    code: 'permission_service_unavailable'
+                });
+            }
+            return res.status(503).render('errors/500', {
+                title: 'Service unavailable',
+                message: 'Permission service unavailable'
+            });
+        }
+        if (!requestHasPermission(req, permission)) {
             if (req.path.startsWith('/api/')) {
                 return res.status(403).json({ success: false, error: `Permission denied: ${permission}` });
             }
@@ -360,5 +406,8 @@ module.exports = {
     optionalAuth,
     guestOnly,
     roleHasPermission,
+    requestHasPermission,
+    roleHasEffectivePermission,
+    loadEffectivePermissions,
     isSuperAdminRole
 };

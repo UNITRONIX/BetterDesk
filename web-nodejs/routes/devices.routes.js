@@ -9,7 +9,7 @@ const serverBackend = require('../services/serverBackend');
 const betterdeskApi = require('../services/betterdeskApi');
 const addressBookSync = require('../services/rustdeskAddressBookSync');
 const deviceGroupService = require('../services/deviceGroupService');
-const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
 /**
@@ -531,10 +531,9 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
         try {
             const mode = await betterdeskApi.getConnectionMode(req.params.id);
             if (mode?.success && mode.data) {
-                const role = req.session.user && req.session.user.role;
                 device.connection_mode = {
                     ...mode.data,
-                    can_change: roleHasPermission(role, 'device.connection_mode')
+                    can_change: requestHasPermission(req, 'device.connection_mode')
                 };
             }
         } catch (e) {

@@ -11,7 +11,7 @@ const config = require('../config/config');
 const db = require('./database');
 const betterdeskApi = require('./betterdeskApi');
 const deviceGroupService = require('./deviceGroupService');
-const { roleHasPermission } = require('../middleware/auth');
+const { roleHasEffectivePermission } = require('../middleware/auth');
 const { enforceOrigin } = require('../middleware/wsOrigin');
 const { registerUpgradeHandler } = require('./wsUpgradeRouter');
 
@@ -39,7 +39,15 @@ function initRemoteTargetGateway(server, sessionMiddleware) {
             sessionMiddleware(req, {}, async () => {
                 const user = req.session?.user || {};
                 const role = user.role || req.session?.role || '';
-                if (!req.session?.userId || !roleHasPermission(role, 'remote_target.connect')) {
+                let canConnect = false;
+                if (req.session?.userId) {
+                    try {
+                        canConnect = await roleHasEffectivePermission(role, 'remote_target.connect');
+                    } catch (_) {
+                        canConnect = false;
+                    }
+                }
+                if (!canConnect) {
                     return reject(socket, 403, 'Forbidden');
                 }
                 try {

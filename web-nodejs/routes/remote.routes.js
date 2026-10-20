@@ -7,7 +7,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../services/database');
 const logger = require('../lib/logger').child('REMOTE');
-const { requireRdClientAuth, rdClientGuestOnly, normalizeRdClientReturnUrl, roleHasPermission } = require('../middleware/auth');
+const {
+    requireRdClientAuth,
+    rdClientGuestOnly,
+    normalizeRdClientReturnUrl,
+    requestHasPermission,
+} = require('../middleware/auth');
 const { rdClientPageLimiter } = require('../middleware/rateLimiter');
 const betterdeskApi = require('../services/betterdeskApi');
 const keyService = require('../services/keyService');
@@ -69,9 +74,8 @@ async function requireRemoteAccess(req, res, next) {
     const isRemoteTarget = String(deviceId || '').startsWith('rt_');
 
     // Panel session with device.connect wins over a stale guest cookie (avoids hijack 403).
-    const role = req.session && req.session.user && req.session.user.role;
     const connectPermission = isRemoteTarget ? 'remote_target.connect' : 'device.connect';
-    if (req.session && req.session.userId && role !== 'pro' && roleHasPermission(role, connectPermission)) {
+    if (req.session && req.session.userId && requestHasPermission(req, connectPermission)) {
         return requireRdClientAuth(connectPermission)(req, res, next);
     }
     if (isRemoteTarget) return requireRdClientAuth(connectPermission)(req, res, next);

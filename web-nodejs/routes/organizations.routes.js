@@ -163,7 +163,12 @@ router.delete('/api/panel/org/:id', requireAuth, requirePermission('org.delete')
     goApiProxySafe(req, res, 'delete', () => orgApiPath(req.params.id)));
 
 // Org Users
-router.get('/api/panel/org/:id/users', requireAuth, (req, res) =>
+router.get(
+    '/api/panel/org/:id/users',
+    requireAuth,
+    requirePermission('user.view'),
+    requirePermission('org.manage_users'),
+    (req, res) =>
     goApiProxySafe(req, res, 'get', () => orgApiPath(req.params.id, '/users')));
 router.post('/api/panel/org/:id/users', requireAuth, requirePermission('org.manage_users'), (req, res) =>
     goApiProxySafe(req, res, 'post', () => orgApiPath(req.params.id, '/users'), req.body));

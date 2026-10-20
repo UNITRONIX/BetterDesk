@@ -34,7 +34,7 @@ const { getSmtpSettings, putSmtpSettings, testSmtpSettings } = require('../lib/s
 const betterdeskApi = require('../services/betterdeskApi');
 const { apiClient } = betterdeskApi;
 const { canUsePrivilegedUpdate, invokePrivilegedUpdate } = require('../lib/privilegedUpdateHelper');
-const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const deviceGroupService = require('../services/deviceGroupService');
 const managementCapabilities = require('../lib/managementCapabilities');
 const os = require('os');
@@ -44,12 +44,11 @@ const multer = require('multer');
  * GET /settings - Settings page
  */
 router.get('/settings', requireAuth, (req, res) => {
-    const userRole = req.session.user && req.session.user.role;
     res.render('settings', {
         title: req.t('nav.settings'),
         activePage: 'settings',
-        canServerConfig: roleHasPermission(userRole, 'server.config'),
-        canBrandingEdit: roleHasPermission(userRole, 'branding.edit')
+        canServerConfig: requestHasPermission(req, 'server.config'),
+        canBrandingEdit: requestHasPermission(req, 'branding.edit')
     });
 });
 

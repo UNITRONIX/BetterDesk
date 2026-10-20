@@ -46,6 +46,24 @@ describe('[sec/03] Authorization bypass', () => {
         expect(roleHasPermission('admin', 'server.config')).toBe(true);
     });
 
+    it('enforces the request effective permission snapshot over role defaults', async () => {
+        const app = createTestApp();
+        app.use((req, _res, next) => {
+            req.session.userId = 9;
+            req.session.user = { id: 9, username: 'operator1', role: 'operator' };
+            req.permissionContextLoaded = true;
+            req.effectivePermissions = new Set(['device.view']);
+            next();
+        });
+        app.get('/api/users', requireAuth, requirePermission('user.view'), (_req, res) => {
+            res.json({ success: true, leaked: true });
+        });
+
+        const res = await request(app).get('/api/users');
+        expect(res.status).toBe(403);
+        expect(res.body.leaked).toBeUndefined();
+    });
+
     it('HTML unauthenticated access redirects to login with expired flag', async () => {
         const app = createTestApp();
         app.get('/dashboard', requireAuth, (_req, res) => res.send('ok'));
