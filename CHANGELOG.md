@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.182] — 2026-10-20
+
 ### Fixed
 - **WebRemote file transfer — parent directory navigation (#467):** climbing from `C:\Users\…` to the drive root no longer requests bare `C:` (Win32 cwd on that drive). Parent paths use `C:\` and then the drive list. Ships via panel update (static JS).
 
@@ -4237,3 +4244,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.179]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.178...v3.5.179
 [3.5.180]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.179...v3.5.180
 [3.5.181]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.180...v3.5.181
+[3.5.182]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.181...v3.5.182
