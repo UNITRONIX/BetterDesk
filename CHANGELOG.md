@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.180] — 2026-10-20
+
 ### Fixed
 - **Docker split Web Remote `initiator_not_registered` (#465):** official split compose now defaults `PANEL_SIGNAL_PROXY_CIDRS` to the Docker bridge range (`172.16.0.0/12` + loopback) so panel PunchHole from the console container is accepted. Same class as #313; AIO single-container unchanged. Docs: DOCKER_TROUBLESHOOTING / QUICKSTART.
 
@@ -4216,3 +4223,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.177]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.176...v3.5.177
 [3.5.178]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.177...v3.5.178
 [3.5.179]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.178...v3.5.179
+[3.5.180]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.179...v3.5.180
