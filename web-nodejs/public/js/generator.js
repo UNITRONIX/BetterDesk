@@ -449,10 +449,10 @@
 
     function buildStatusLabel(status) {
         const s = String(status || 'pending').toLowerCase();
-        if (s === 'ready') return t('generator.build_ready', 'Ready');
-        if (s === 'building') return t('generator.build_building', 'Building');
-        if (s === 'queued' || s === 'pending') return t('generator.build_queued', 'Queued');
-        if (s === 'failed') return t('generator.build_failed', 'Failed');
+        if (s === 'ready') return t('generator.build_status_ready', 'Ready');
+        if (s === 'building') return t('generator.build_status_building', 'Building');
+        if (s === 'queued' || s === 'pending') return t('generator.build_status_pending', 'Queued');
+        if (s === 'failed') return t('generator.build_status_failed', 'Failed');
         return s;
     }
 

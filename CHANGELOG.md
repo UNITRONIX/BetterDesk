@@ -8,10 +8,12 @@
 ## [3.5.180] — 2026-10-20
 
 ### Fixed
+- **Generator Download Hub i18n:** missing `generator.download_hub` / `rebuild` keys showed raw key paths in the UI; added across all locales (#466 follow-up).
 - **Docker split Web Remote `initiator_not_registered` (#465):** official split compose now defaults `PANEL_SIGNAL_PROXY_CIDRS` to the Docker bridge range (`172.16.0.0/12` + loopback) so panel PunchHole from the console container is accepted. Same class as #313; AIO single-container unchanged. Docs: DOCKER_TROUBLESHOOTING / QUICKSTART.
 
 ### Changed
-- _(none yet)_
+- **Support agents are download-only by default:** import signed BetterDesk-Client GitHub releases instead of compiling on the panel host. `BETTERDESK_CLIENT_GENERATOR_MODE` defaults to `download`; `AGENT_BUILD_WORKER` defaults to `off`. Menu **B** / `install-build-toolchain` marked optional for maintainers. Refs #466.
+- **Główne → Aktywuj agenta:** sidebar entry opens Dashboard pairing QR scanner (`/?activateAgent=1`) for operators with `enrollment.approve`.
 
 ---
 

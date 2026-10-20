@@ -637,7 +637,7 @@ async function startServer() {
                     const clientTemplateWorker = require('./services/clientTemplateWorker');
                     clientTemplateWorker.startWorker();
                     if (String(
-                        process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+                        process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'download'
                     ).trim().toLowerCase() === 'embedded') {
                         const clientBuilder = require('./services/clientBuilderService');
                         clientBuilder.syncAndQueueRebuilds()

@@ -2826,7 +2826,7 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
         // worker promotes a new generation only after every target succeeds,
         // so an interrupted update cannot break an active download link.
         if (String(
-            process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+            process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'download'
         ).trim().toLowerCase() === 'embedded') {
             try {
                 const clientBuilder = require('./clientBuilderService');

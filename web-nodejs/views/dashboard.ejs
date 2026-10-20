@@ -1,8 +1,9 @@
 <%- include('layouts/main', {
-    title: _('nav.dashboard'),
+    title: (typeof activateAgentNav !== 'undefined' && activateAgentNav) ? _('nav.activate_agent') : _('nav.dashboard'),
     pageStyles: ['dashboard'],
     pageScripts: ['dashboard'],
     currentPage: 'dashboard',
+    activateAgentNav: typeof activateAgentNav !== 'undefined' && activateAgentNav,
     body: `
         <div class="dashboard-shell" id="welcome-section">
             <section class="dashboard-hero" aria-labelledby="welcome-greeting-text">

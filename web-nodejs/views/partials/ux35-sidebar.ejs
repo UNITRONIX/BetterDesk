@@ -19,7 +19,7 @@
                 <span><%= _('nav.main') %></span>
                 <span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span>
             </button>
-            <a href="/" class="ux35-sidebar-item <%= currentPage === 'dashboard' ? 'active' : '' %>">
+            <a href="/" class="ux35-sidebar-item <%= currentPage === 'dashboard' && !(typeof activateAgentNav !== 'undefined' && activateAgentNav) ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">dashboard</span>
                 <span><%= _('nav.dashboard') %></span>
             </a>
@@ -30,6 +30,10 @@
             </a>
             <% } %>
             <% if (hasPermission('enrollment.approve')) { %>
+            <a href="/?activateAgent=1" class="ux35-sidebar-item <%= typeof activateAgentNav !== 'undefined' && activateAgentNav ? 'active' : '' %>" id="nav-activate-agent">
+                <span class="material-icons" aria-hidden="true">qr_code_scanner</span>
+                <span><%= _('nav.activate_agent') %></span>
+            </a>
             <a href="/registrations" class="ux35-sidebar-item <%= currentPage === 'registrations' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">how_to_reg</span>
                 <span><%= _('nav.registrations') %></span>

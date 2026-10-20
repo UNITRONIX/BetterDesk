@@ -77,17 +77,17 @@
             <div class="card-header">
                 <h2 class="card-title">
                     <span class="material-icons" aria-hidden="true">cloud_download</span>
-                    Generic incoming-only agents
+                    ${_('generator.generic_agents_title') || 'Generic incoming-only agents'}
                 </h2>
-                <button type="button" class="btn btn-secondary btn-sm" id="gen-sync-generic-release">
+                <button type="button" class="btn btn-primary btn-sm" id="gen-sync-generic-release">
                     <span class="material-icons" aria-hidden="true">sync</span>
-                    Import latest release
+                    ${_('generator.generic_agents_import') || 'Import latest release'}
                 </button>
             </div>
             <div class="card-body">
-                <p class="form-hint">Import a signed GitHub Actions release once, then serve verified agent files locally from this BetterDesk instance.</p>
+                <p class="form-hint">${_('generator.generic_agents_hint') || 'Primary production path: import signed BetterDesk-Client releases from GitHub, then serve verified agents from this instance. No local Flutter/Cargo build required.'}</p>
                 <div id="gen-generic-release-list" class="generic-agent-release-list">
-                    <span class="text-muted">No release imported yet.</span>
+                    <span class="text-muted">${_('generator.generic_agents_empty') || 'No release imported yet.'}</span>
                 </div>
                 <p id="gen-generic-release-status" class="form-hint" role="status"></p>
             </div>

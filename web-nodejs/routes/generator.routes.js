@@ -28,8 +28,10 @@ const conn = require('../services/agentBundleConnection');
 const clientConfigHost = require('../services/clientConfigHost');
 const { PRODUCT_TYPES, normalizeProductType, isBetterDeskSupportBundle } = require('../lib/generatorBuildTypes');
 const { resolveConfinedMulterPath } = require('../lib/multerCleanup');
+// Default is download-only (signed BetterDesk-Client GitHub releases).
+// Set BETTERDESK_CLIENT_GENERATOR_MODE=embedded only for maintainer local builds.
 const EMBEDDED_MODE = String(
-    process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+    process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'download'
 ).trim().toLowerCase() === 'embedded';
 const moduleUpload = multer({
     storage: multer.diskStorage({
