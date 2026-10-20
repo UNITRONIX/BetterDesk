@@ -195,6 +195,30 @@ class RDFileTransfer {
         return dir + (dir.endsWith(sep) ? '' : sep) + (fileName || '');
     }
 
+    /**
+     * Parent directory for remote browse navigation (Windows drive roots + Unix).
+     * Bare `C:` is not a drive root — Win32 resolves it to the process cwd on that drive.
+     * @param {string} path
+     * @returns {string} parent path, or '' for drive list / above Unix root
+     */
+    static parentRemotePath(path) {
+        if (!path) return '';
+        let parent = String(path).replace(/[\\/]+$/, '');
+        if (!parent) return '';
+        // Already at Windows drive root (C: or C:\ after strip) → drive list
+        if (/^[A-Za-z]:$/.test(parent)) return '';
+        const sep = parent.includes('\\') ? '\\' : '/';
+        const lastSep = parent.lastIndexOf(sep);
+        if (lastSep > 0) {
+            parent = parent.substring(0, lastSep);
+            // Keep trailing separator on drive roots: C:\Users → C:\ (not C:)
+            if (/^[A-Za-z]:$/.test(parent)) return parent + '\\';
+            return parent;
+        }
+        if (lastSep === 0) return sep; // Unix root
+        return '';
+    }
+
     _failTransfer(id, message, opts) {
         const options = opts || {};
         const transfer = this._transfers.get(id);
@@ -459,18 +483,7 @@ class RDFileTransfer {
      */
     browseParent() {
         if (!this._currentPath) return;
-        // Handle both Windows and Unix paths
-        let parent = this._currentPath.replace(/[\\/]+$/, '');
-        const sep = parent.includes('\\') ? '\\' : '/';
-        const lastSep = parent.lastIndexOf(sep);
-        if (lastSep > 0) {
-            parent = parent.substring(0, lastSep);
-        } else if (lastSep === 0) {
-            parent = sep; // Unix root
-        } else {
-            parent = ''; // Drive list on Windows
-        }
-        this.browseDir(parent);
+        this.browseDir(RDFileTransfer.parentRemotePath(this._currentPath));
     }
 
     /**

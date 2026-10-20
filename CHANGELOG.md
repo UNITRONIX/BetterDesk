@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **WebRemote file transfer — parent directory navigation (#467):** climbing from `C:\Users\…` to the drive root no longer requests bare `C:` (Win32 cwd on that drive). Parent paths use `C:\` and then the drive list. Ships via panel update (static JS).
+
 ### Changed
 - _(none yet)_
 

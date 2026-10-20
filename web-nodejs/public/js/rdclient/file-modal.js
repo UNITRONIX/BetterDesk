@@ -440,9 +440,8 @@
         var self = this;
         var client = session.client;
         client.on('file_browsing', function () {
-            if (!self._remoteEntries.length) {
-                self._renderRemoteLoading(t('remote.file_loading', 'Loading…'));
-            }
+            self._remoteEntries = [];
+            self._renderRemoteLoading(t('remote.file_loading', 'Loading…'));
             self._setDropzoneEnabled(false);
         });
         client.on('file_connecting', function () {
