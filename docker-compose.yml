@@ -51,6 +51,10 @@ services:
       # only with ENROLLMENT_MODE=open; strict initiator authorization remains
       # the default.
       - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
+      # Web Remote (#465 / #313): console PunchHole arrives from the Docker
+      # bridge IP (not loopback). Default trusts compose 172.16/12 + loopback.
+      # On a shared Docker host, override to the console container /32.
+      - PANEL_SIGNAL_PROXY_CIDRS=${PANEL_SIGNAL_PROXY_CIDRS:-172.16.0.0/12,127.0.0.0/8,::1/128}
       - P2P_FIRST=${P2P_FIRST:-Y}
       - ALWAYS_USE_RELAY=${ALWAYS_USE_RELAY:-N}
       - P2P_FALLBACK_MS=${P2P_FALLBACK_MS:-2000}

@@ -824,6 +824,54 @@ fi
 
 ---
 
+## Problem: Web Remote fails on split Docker (`initiator_not_registered`)
+
+### Symptom
+
+Browser Web Remote cannot connect to **any** online peer. Security → Audit Events shows:
+
+```text
+connection_denied
+reason=initiator_not_registered
+target_id=<peer id>
+```
+
+Actor IP is a Docker bridge address such as `172.18.0.28` (not `127.0.0.1`).
+
+Desktop↔desktop may still work. Single-container (AIO) installs are usually unaffected.
+
+### Cause
+
+Web Remote PunchHole is proxied by the **console** container to Go `:21116`. The panel never registers as a RustDesk peer, so Go accepts those punches only when the source IP is in `PANEL_SIGNAL_PROXY_CIDRS` (Go default: loopback only). In the **split** layout the console source IP is the bridge address, so every browser session is denied (#465 / #313 / #302).
+
+### Solution
+
+On the **Go `server`** service (not only the console), set:
+
+```env
+PANEL_SIGNAL_PROXY_CIDRS=172.16.0.0/12,127.0.0.0/8,::1/128
+```
+
+Official [`docker-compose.quick.yml`](../../docker-compose.quick.yml) / [`docker-compose.yml`](../../docker-compose.yml) now default to that value. Recreate the server after changing env:
+
+```bash
+docker compose up -d
+```
+
+On a **shared Docker host**, prefer the console container IP `/32` instead of the whole `172.16.0.0/12` range:
+
+```bash
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' betterdesk-console
+# then: PANEL_SIGNAL_PROXY_CIDRS=<that-ip>/32,127.0.0.0/8,::1/128
+```
+
+### Verify
+
+1. Open Web Remote to an online peer — password prompt / stream should appear.
+2. New audit rows should not show `initiator_not_registered` for those attempts (initiator is treated as `panel-web-remote`).
+
+---
+
 ## Problem: Shell Not Available in HBBS/HBBR Containers
 
 ### Symptom

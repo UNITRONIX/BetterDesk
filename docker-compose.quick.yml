@@ -73,6 +73,10 @@ services:
       - RELAY_SERVERS=${RELAY_SERVERS:-}
       - SIGNAL_RATE_LIMIT_PER_IP=${SIGNAL_RATE_LIMIT_PER_IP:-20}
       - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
+      # Web Remote (#465 / #313): console PunchHole arrives from the Docker
+      # bridge IP (not loopback). Default trusts compose 172.16/12 + loopback.
+      # On a shared Docker host, override to the console container /32.
+      - PANEL_SIGNAL_PROXY_CIDRS=${PANEL_SIGNAL_PROXY_CIDRS:-172.16.0.0/12,127.0.0.0/8,::1/128}
       # Enrollment policy. Fresh volumes default to "managed" (operator approves
       # new devices); pre-existing volumes keep their current mode. Override with
       # "open", "managed", or "locked".

@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **Docker split Web Remote `initiator_not_registered` (#465):** official split compose now defaults `PANEL_SIGNAL_PROXY_CIDRS` to the Docker bridge range (`172.16.0.0/12` + loopback) so panel PunchHole from the console container is accepted. Same class as #313; AIO single-container unchanged. Docs: DOCKER_TROUBLESHOOTING / QUICKSTART.
+
 ### Changed
 - _(none yet)_
 

@@ -69,6 +69,8 @@ docker compose exec console betterdesk-show-admin-credentials
 
 Split layout uses API port **21114**; the official single container uses **21121**.
 
+**Web Remote:** the Go `server` service defaults `PANEL_SIGNAL_PROXY_CIDRS` to `172.16.0.0/12,127.0.0.0/8,::1/128` so browser remote from the console container is allowed (#465 / #313). On a shared Docker host, override to the console container IP `/32`. See [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-web-remote-fails-on-split-docker-initiator_not_registered).
+
 ### Pin or change image version
 
 ```bash
@@ -318,6 +320,10 @@ docker compose up -d
 2. Verify server is healthy: `curl http://localhost:21114/api/health`
 3. Check the advertised relay address: `docker compose logs server | grep 'relay='`
 4. If logs show a Docker/container IP such as `10.x.x.x` or `172.x.x.x`, restart with `RELAY_SERVERS=YOUR_HOST_IP:21117 docker compose up -d`
+
+### Browser Web Remote fails on every device (split Docker)
+
+Audit shows `connection_denied` / `initiator_not_registered` with a `172.x` actor IP — set `PANEL_SIGNAL_PROXY_CIDRS` on the Go server (see [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-web-remote-fails-on-split-docker-initiator_not_registered)).
 
 ### "Web console shows 0 devices"
 
