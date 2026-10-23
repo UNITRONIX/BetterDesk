@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.186] — 2026-10-23
+
 ### Added
 - **Device tags management (#470):** Operators can rename or delete tags across all visible devices from Devices → Manage tags, unassign tags per device in Edit / Details / context menu, and matching dynamic group filters update on rename. Ships via panel update.
 
@@ -4272,3 +4279,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.183]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.182...v3.5.183
 [3.5.184]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.183...v3.5.184
 [3.5.185]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.184...v3.5.185
+[3.5.186]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.185...v3.5.186
