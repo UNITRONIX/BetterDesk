@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Tags beheren",
+        "manage_device_tags": "Tags beheren",
+        "rename_tag": "Tag hernoemen",
+        "delete_tag": "Tag verwijderen",
+        "rename_tag_prompt": "Nieuwe tagnaam",
+        "rename_tag_hint": "Hernoemt deze tag op alle zichtbare apparaten en werkt bijpassende dynamische groepen bij.",
+        "delete_tag_confirm": "Tag \"{tag}\" van {count} apparaat/apparaten verwijderen? Dynamische groepen die deze tag gebruiken blijven leeg tot bijgewerkt.",
+        "tag_renamed": "Tag hernoemd",
+        "tag_deleted": "Tag verwijderd",
+        "tag_name_required": "Tagnaam is verplicht",
+        "tag_rename_identical": "Nieuwe tagnaam moet anders zijn",
+        "tags_backend_unsupported": "Apparaattags worden niet ondersteund met de huidige backend",
+        "tags_manage_hint": "Hernoem of verwijder tags op alle zichtbare apparaten. Verwijderen van één apparaat gebeurt in Bewerken of Details.",
+        "tags_device_hint": "Verwijder hier een tag om deze alleen van dit apparaat te ontkoppelen. Gebruik Tags beheren om overal te hernoemen of te verwijderen.",
+        "unassign_tag": "Van dit apparaat verwijderen",
+        "tag_device_one": "apparaat",
+        "tag_device_many": "apparaten",
+        "tag_group_one": "dynamische groep",
+        "tag_group_many": "dynamische groepen"
     },
     "keys": {
         "title": "Serversleutels",
@@ -1769,7 +1788,8 @@
         "sessions_col_duration": "Duur",
         "sessions_active": "Actief",
         "sessions_transport_punch": "Direct / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Een tag hier verwijderen ontkoppelt deze alleen van dit apparaat. Gebruik Tags beheren op Apparaten om overal te hernoemen of te verwijderen."
     },
     "inventory": {
         "title": "Inventaris",

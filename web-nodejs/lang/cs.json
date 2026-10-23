@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Spravovat štítky",
+        "manage_device_tags": "Spravovat štítky",
+        "rename_tag": "Přejmenovat štítek",
+        "delete_tag": "Smazat štítek",
+        "rename_tag_prompt": "Nový název štítku",
+        "rename_tag_hint": "Přejmenuje tento štítek na všech viditelných zařízeních a aktualizuje odpovídající dynamické skupiny.",
+        "delete_tag_confirm": "Odebrat štítek \"{tag}\" z {count} zařízení? Dynamické skupiny používající tento štítek budou prázdné do aktualizace.",
+        "tag_renamed": "Štítek přejmenován",
+        "tag_deleted": "Štítek smazán",
+        "tag_name_required": "Název štítku je povinný",
+        "tag_rename_identical": "Nový název musí být jiný",
+        "tags_backend_unsupported": "Štítky zařízení nejsou s aktuálním backendem podporovány",
+        "tags_manage_hint": "Přejmenujte nebo smažte štítky na všech viditelných zařízeních. Odebrání z jednoho zařízení je v Upravit nebo Podrobnostech.",
+        "tags_device_hint": "Odeberte štítek zde, abyste jej odpojili jen od tohoto zařízení. Pro globální změnu použijte Spravovat štítky.",
+        "unassign_tag": "Odebrat z tohoto zařízení",
+        "tag_device_one": "zařízení",
+        "tag_device_many": "zařízení",
+        "tag_group_one": "dynamická skupina",
+        "tag_group_many": "dynamických skupin"
     },
     "keys": {
         "title": "Klíče serveru",
@@ -1769,7 +1788,8 @@
         "sessions_col_duration": "Trvání",
         "sessions_active": "Aktivní",
         "sessions_transport_punch": "Přímé / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Odebrání štítku zde jej odpojí jen od tohoto zařízení. Pro globální změnu použijte Spravovat štítky na stránce Zařízení."
     },
     "inventory": {
         "title": "Inventář",

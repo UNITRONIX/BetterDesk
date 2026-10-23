@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Gestisci tag",
+        "manage_device_tags": "Gestisci tag",
+        "rename_tag": "Rinomina tag",
+        "delete_tag": "Elimina tag",
+        "rename_tag_prompt": "Nuovo nome tag",
+        "rename_tag_hint": "Rinomina questo tag su tutti i dispositivi visibili e aggiorna i gruppi dinamici corrispondenti.",
+        "delete_tag_confirm": "Rimuovere il tag \"{tag}\" da {count} dispositivo/i? I gruppi dinamici che lo usano resteranno vuoti fino all’aggiornamento.",
+        "tag_renamed": "Tag rinominato",
+        "tag_deleted": "Tag eliminato",
+        "tag_name_required": "Il nome del tag è obbligatorio",
+        "tag_rename_identical": "Il nuovo nome deve essere diverso",
+        "tags_backend_unsupported": "I tag dei dispositivi non sono supportati con il backend attuale",
+        "tags_manage_hint": "Rinomina o elimina i tag su tutti i dispositivi visibili. Rimuovere un tag da un dispositivo si fa in Modifica o Dettagli.",
+        "tags_device_hint": "Rimuovi un tag qui per disassegnarlo solo da questo dispositivo. Usa Gestisci tag per rinominare o eliminare ovunque.",
+        "unassign_tag": "Rimuovi da questo dispositivo",
+        "tag_device_one": "dispositivo",
+        "tag_device_many": "dispositivi",
+        "tag_group_one": "gruppo dinamico",
+        "tag_group_many": "gruppi dinamici"
     },
     "keys": {
         "title": "Chiavi del server",
@@ -1769,7 +1788,8 @@
         "sessions_col_duration": "Durata",
         "sessions_active": "Attiva",
         "sessions_transport_punch": "Diretto / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Rimuovere un tag qui lo disassegna solo da questo dispositivo. Usa Gestisci tag nella pagina Dispositivi per rinominare o eliminare ovunque."
     },
     "inventory": {
         "title": "Inventario",

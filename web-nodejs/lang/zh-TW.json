@@ -439,7 +439,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "管理標籤",
+        "manage_device_tags": "管理標籤",
+        "rename_tag": "重新命名標籤",
+        "delete_tag": "刪除標籤",
+        "rename_tag_prompt": "新標籤名稱",
+        "rename_tag_hint": "在您可見的所有裝置上重新命名此標籤，並更新相符的動態群組。",
+        "delete_tag_confirm": "從 {count} 台裝置移除標籤 \"{tag}\"？使用此標籤的動態群組在更新前將為空。",
+        "tag_renamed": "標籤已重新命名",
+        "tag_deleted": "標籤已刪除",
+        "tag_name_required": "標籤名稱為必填",
+        "tag_rename_identical": "新名稱必須不同",
+        "tags_backend_unsupported": "目前後端不支援裝置標籤",
+        "tags_manage_hint": "在您可見的所有裝置上重新命名或刪除標籤。從單一裝置移除請在編輯或詳細資料中操作。",
+        "tags_device_hint": "在此移除標籤僅取消本裝置的指派。全域重新命名或刪除請使用管理標籤。",
+        "unassign_tag": "從此裝置移除",
+        "tag_device_one": "台裝置",
+        "tag_device_many": "台裝置",
+        "tag_group_one": "個動態群組",
+        "tag_group_many": "個動態群組"
     },
     "keys": {
         "title": "服務器密鑰",
@@ -1786,7 +1805,8 @@
         "sessions_col_duration": "時長",
         "sessions_active": "進行中",
         "sessions_transport_punch": "直連 / 打洞",
-        "sessions_transport_relay": "中繼"
+        "sessions_transport_relay": "中繼",
+        "tags_unassign_hint": "在此移除標籤僅取消本裝置的指派。全域重新命名或刪除請在裝置頁使用管理標籤。"
     },
     "inventory": {
         "title": "資產清單",

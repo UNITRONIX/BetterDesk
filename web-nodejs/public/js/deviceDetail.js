@@ -840,12 +840,13 @@ const DeviceDetail = (function () {
         html += `
         <div class="device-panel-section">
             <div class="device-panel-section-title"><span class="material-icons">sell</span> ${_('device_detail.tags')}</div>
+            <p class="form-hint device-panel-tags-hint">${_('device_detail.tags_unassign_hint') || _('devices.tags_device_hint') || 'Removing a tag here unassigns it from this device only. Use Manage Tags on the Devices page to rename or delete a tag everywhere.'}</p>
             <div class="device-panel-tags-container" id="dp-tags-list">
                 ${hasTags
                     ? tags.map(t => `
                         <span class="device-panel-tag">
                             ${Utils.escapeHtml(t)}
-                            <button class="device-panel-tag-remove" data-tag="${Utils.escapeHtml(t)}" title="${_('actions.delete')}">
+                            <button class="device-panel-tag-remove" data-tag="${Utils.escapeHtml(t)}" title="${_('devices.unassign_tag') || _('actions.delete')}">
                                 <span class="material-icons">close</span>
                             </button>
                         </span>`).join('')

@@ -141,6 +141,7 @@
         initFilters();
         initShowDeletedToggle();
         initTagFilter();
+        initManageTags();
         initSorting();
         initSync();
         document.getElementById('add-remote-target-btn')?.addEventListener('click', () => showRemoteTargetModal());
@@ -401,6 +402,10 @@
                 <span class="material-icons">edit</span>
                 <span>${_('actions.edit')}</span>
             </button>
+            <button type="button" class="kebab-menu-item" data-action="manage-tags" data-id="${eid}">
+                <span class="material-icons">sell</span>
+                <span>${_('devices.manage_device_tags') || 'Manage tags'}</span>
+            </button>
             <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
                 <span class="material-icons">hub</span>
                 <span>${_('devices.manage_groups') || 'Manage Groups'}</span>
@@ -508,6 +513,10 @@
             <button type="button" class="kebab-menu-item" data-action="edit" data-id="${eid}">
                 <span class="material-icons">edit</span>
                 <span>${_('actions.edit')}</span>
+            </button>
+            <button type="button" class="kebab-menu-item" data-action="manage-tags" data-id="${eid}">
+                <span class="material-icons">sell</span>
+                <span>${_('devices.manage_device_tags') || 'Manage tags'}</span>
             </button>
             <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
                 <span class="material-icons">hub</span>
@@ -1283,6 +1292,14 @@
                     showRemoteTargetModal(deviceId);
                 } else {
                     showEditModal(deviceId);
+                }
+                break;
+
+            case 'manage-tags':
+                if (devices.find(d => d.id === deviceId)?.remote_target) {
+                    showEditModal(deviceId);
+                } else {
+                    showEditModal(deviceId, { focusTags: true });
                 }
                 break;
 
@@ -2284,9 +2301,10 @@
     /**
      * Show edit modal
      */
-    function showEditModal(deviceId) {
+    function showEditModal(deviceId, options = {}) {
         const device = devices.find(d => d.id === deviceId);
         if (!device) return;
+        const focusTags = !!(options && options.focusTags);
 
         const editTags = new Set(normalizeTags(device.tags));
         const editTagInputId = 'edit-tag-input';
@@ -2304,7 +2322,7 @@
                         ${Utils.escapeHtml(tag)}
                         <button type="button" class="device-edit-tag-remove"
                                 data-edit-tag-remove="${Utils.escapeHtml(tag)}"
-                                title="${Utils.escapeHtml(_('actions.delete'))}">
+                                title="${Utils.escapeHtml(_('devices.unassign_tag') || _('actions.delete'))}">
                             <span class="material-icons">close</span>
                         </button>
                     </span>
@@ -2347,7 +2365,9 @@
         };
         
         Modal.show({
-            title: _('devices.edit_title'),
+            title: focusTags
+                ? (_('devices.manage_device_tags') || _('devices.edit_title'))
+                : _('devices.edit_title'),
             content: `
                 <div class="device-info-grid">
                     <div class="device-info-item">
@@ -2369,8 +2389,9 @@
                         <textarea id="edit-note" class="form-input" rows="2" 
                                   placeholder="${_('devices.note_placeholder')}" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
                     </div>
-                    <div class="device-info-item full-width device-edit-tags-field">
+                    <div class="device-info-item full-width device-edit-tags-field${focusTags ? ' device-edit-tags-focus' : ''}">
                         <label for="${editTagInputId}">${_('device_detail.tags')}</label>
+                        <p class="form-hint">${Utils.escapeHtml(_('devices.tags_device_hint') || 'Remove a tag here to unassign it from this device only. Use Manage Tags to rename or delete a tag everywhere.')}</p>
                         <div id="${editTagsSelectedId}" class="device-edit-tags-selected"></div>
                         <div id="${editTagOptionsId}" class="device-edit-tag-options"></div>
                         <div class="device-edit-tag-input-row">
@@ -2480,12 +2501,173 @@
                         addEditTag();
                     }
                 });
+                if (focusTags) {
+                    const field = document.querySelector('.device-edit-tags-field');
+                    field?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    setTimeout(() => input?.focus(), 100);
+                }
             }
         });
     }
 
     window.BetterDeskDevices = window.BetterDeskDevices || {};
     window.BetterDeskDevices.showEditModal = showEditModal;
+
+    function countDevicesWithTag(tag) {
+        const expected = String(tag || '').trim().toLowerCase();
+        if (!expected) return 0;
+        return devices.filter(device =>
+            normalizeTags(device.tags).some(t => t.toLowerCase() === expected)
+        ).length;
+    }
+
+    function countGroupsWithTag(tag) {
+        const expected = String(tag || '').trim().toLowerCase();
+        if (!expected) return 0;
+        return deviceGroups.filter(group =>
+            (group.source_type || 'manual') === 'tag'
+            && String(group.tag_filter || '').trim().toLowerCase() === expected
+        ).length;
+    }
+
+    function showManageTagsModal() {
+        const renderList = () => {
+            if (!availableTags.length) {
+                return `<div class="manage-tags-empty">${Utils.escapeHtml(_('devices.no_tags') || 'No tags')}</div>`;
+            }
+            return `<ul class="manage-tags-list">${availableTags.map(tag => {
+                const deviceCount = countDevicesWithTag(tag);
+                const groupCount = countGroupsWithTag(tag);
+                const metaParts = [
+                    `${deviceCount} ${deviceCount === 1 ? (_('devices.tag_device_one') || 'device') : (_('devices.tag_device_many') || 'devices')}`
+                ];
+                if (groupCount > 0) {
+                    metaParts.push(`${groupCount} ${groupCount === 1 ? (_('devices.tag_group_one') || 'dynamic group') : (_('devices.tag_group_many') || 'dynamic groups')}`);
+                }
+                return `<li class="manage-tags-row" data-tag="${Utils.escapeHtml(tag)}">
+                    <div class="manage-tags-info">
+                        <span class="manage-tags-name">${Utils.escapeHtml(tag)}</span>
+                        <span class="manage-tags-meta">${Utils.escapeHtml(metaParts.join(' · '))}</span>
+                    </div>
+                    <div class="manage-tags-actions">
+                        <button type="button" class="btn btn-secondary btn-sm manage-tag-rename" data-tag="${Utils.escapeHtml(tag)}" title="${Utils.escapeHtml(_('devices.rename_tag') || 'Rename')}">
+                            <span class="material-icons">edit</span>
+                            <span>${Utils.escapeHtml(_('devices.rename_tag') || 'Rename')}</span>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm manage-tag-delete" data-tag="${Utils.escapeHtml(tag)}" title="${Utils.escapeHtml(_('devices.delete_tag') || 'Delete')}">
+                            <span class="material-icons">delete</span>
+                            <span>${Utils.escapeHtml(_('devices.delete_tag') || 'Delete')}</span>
+                        </button>
+                    </div>
+                </li>`;
+            }).join('')}</ul>`;
+        };
+
+        const bindActions = () => {
+            document.querySelectorAll('.manage-tag-rename').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const from = button.dataset.tag;
+                    if (!from) return;
+                    const to = await Modal.prompt({
+                        title: _('devices.rename_tag') || 'Rename tag',
+                        label: _('devices.rename_tag_prompt') || 'New tag name',
+                        value: from,
+                        placeholder: from,
+                        hint: _('devices.rename_tag_hint') || 'Renames this tag on all devices you can see and updates matching dynamic groups.',
+                        confirmLabel: _('actions.save')
+                    });
+                    if (to === null) return;
+                    const cleaned = String(to || '').trim();
+                    if (!cleaned) {
+                        Notifications.error(_('devices.tag_name_required') || 'Tag name is required');
+                        return;
+                    }
+                    if (cleaned === from) return;
+                    try {
+                        const result = await Utils.api('/api/tags/rename', {
+                            method: 'POST',
+                            body: { from, to: cleaned }
+                        });
+                        if (selectedTags.has(from)) {
+                            selectedTags.delete(from);
+                            selectedTags.add(result?.to || cleaned);
+                        }
+                        Notifications.success(
+                            (_('devices.tag_renamed') || 'Tag renamed')
+                            + ` (${result?.updatedDevices || 0})`
+                        );
+                        Modal.close();
+                        await loadTags();
+                        await loadDeviceGroups();
+                        await loadDevices();
+                        showManageTagsModal();
+                    } catch (err) {
+                        Notifications.error(err.message || _('errors.server_error'));
+                    }
+                });
+            });
+
+            document.querySelectorAll('.manage-tag-delete').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const tag = button.dataset.tag;
+                    if (!tag) return;
+                    const deviceCount = countDevicesWithTag(tag);
+                    const groupCount = countGroupsWithTag(tag);
+                    const confirmMsg = (_('devices.delete_tag_confirm') || 'Remove tag "{tag}" from {count} device(s)? Dynamic groups that use this tag will become empty until updated.')
+                        .replace('{tag}', tag)
+                        .replace('{count}', String(deviceCount))
+                        .replace('{groups}', String(groupCount));
+                    const confirmed = await Modal.confirm({
+                        title: _('devices.delete_tag') || 'Delete tag',
+                        message: confirmMsg,
+                        danger: true,
+                        confirmLabel: _('actions.delete')
+                    });
+                    if (!confirmed) return;
+                    try {
+                        const result = await Utils.api('/api/tags/delete', {
+                            method: 'POST',
+                            body: { tag }
+                        });
+                        selectedTags.delete(tag);
+                        Notifications.success(
+                            (_('devices.tag_deleted') || 'Tag deleted')
+                            + ` (${result?.updatedDevices || 0})`
+                        );
+                        Modal.close();
+                        await loadTags();
+                        await loadDeviceGroups();
+                        await loadDevices();
+                        showManageTagsModal();
+                    } catch (err) {
+                        Notifications.error(err.message || _('errors.server_error'));
+                    }
+                });
+            });
+        };
+
+        Modal.show({
+            title: _('devices.manage_tags') || 'Manage tags',
+            content: `
+                <p class="form-hint manage-tags-hint">${Utils.escapeHtml(_('devices.tags_manage_hint') || 'Rename or delete tags across all devices you can see. Removing a tag from one device is done in Edit / Device details.')}</p>
+                ${renderList()}
+            `,
+            size: 'medium',
+            buttons: [
+                { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
+            ],
+            onOpen: bindActions
+        });
+    }
+
+    function initManageTags() {
+        const btn = document.getElementById('manage-tags-btn');
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showManageTagsModal();
+        });
+    }
     
     /**
      * Render pagination

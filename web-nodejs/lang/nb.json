@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Administrer tagger",
+        "manage_device_tags": "Administrer tagger",
+        "rename_tag": "Gi tag nytt navn",
+        "delete_tag": "Slett tag",
+        "rename_tag_prompt": "Nytt tagnavn",
+        "rename_tag_hint": "Gir denne tagen nytt navn på alle synlige enheter og oppdaterer matchende dynamiske grupper.",
+        "delete_tag_confirm": "Fjern tagen \"{tag}\" fra {count} enhet(er)? Dynamiske grupper som bruker den blir tomme til de oppdateres.",
+        "tag_renamed": "Tag omdøpt",
+        "tag_deleted": "Tag slettet",
+        "tag_name_required": "Tagnavn er påkrevd",
+        "tag_rename_identical": "Det nye tagnavnet må være annerledes",
+        "tags_backend_unsupported": "Enhetstagger støttes ikke med gjeldende backend",
+        "tags_manage_hint": "Gi nytt navn eller slett tagger på alle synlige enheter. Fjerning fra én enhet gjøres i Rediger eller Detaljer.",
+        "tags_device_hint": "Fjern en tag her for å frakoble den kun fra denne enheten. Bruk Administrer tagger for global endring.",
+        "unassign_tag": "Fjern fra denne enheten",
+        "tag_device_one": "enhet",
+        "tag_device_many": "enheter",
+        "tag_group_one": "dynamisk gruppe",
+        "tag_group_many": "dynamiske grupper"
     },
     "keys": {
         "title": "Servernøkler",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Varighet",
         "sessions_active": "Aktiv",
         "sessions_transport_punch": "Direkte / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Fjerning av en tag her frakobler den kun fra denne enheten. Bruk Administrer tagger på Enheter for global endring."
     },
     "inventory": {
         "title": "Inventory",

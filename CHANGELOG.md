@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **Device tags management (#470):** Operators can rename or delete tags across all visible devices from Devices → Manage tags, unassign tags per device in Edit / Details / context menu, and matching dynamic group filters update on rename. Ships via panel update.
+
 ### Changed
 - _(none yet)_
 

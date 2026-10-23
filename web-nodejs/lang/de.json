@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Tags verwalten",
+        "manage_device_tags": "Tags verwalten",
+        "rename_tag": "Tag umbenennen",
+        "delete_tag": "Tag löschen",
+        "rename_tag_prompt": "Neuer Tagname",
+        "rename_tag_hint": "Benennt diesen Tag auf allen sichtbaren Geräten um und aktualisiert passende dynamische Gruppen.",
+        "delete_tag_confirm": "Tag \"{tag}\" von {count} Gerät(en) entfernen? Dynamische Gruppen mit diesem Tag bleiben bis zur Aktualisierung leer.",
+        "tag_renamed": "Tag umbenannt",
+        "tag_deleted": "Tag gelöscht",
+        "tag_name_required": "Tagname ist erforderlich",
+        "tag_rename_identical": "Der neue Tagname muss anders sein",
+        "tags_backend_unsupported": "Geräte-Tags werden mit dem aktuellen Backend nicht unterstützt",
+        "tags_manage_hint": "Tags auf allen sichtbaren Geräten umbenennen oder löschen. Entfernen von einem Gerät erfolgt in Bearbeiten oder Gerätedetails.",
+        "tags_device_hint": "Entfernen Sie einen Tag hier, um ihn nur von diesem Gerät zu lösen. Nutzen Sie Tags verwalten zum globalen Umbenennen oder Löschen.",
+        "unassign_tag": "Von diesem Gerät entfernen",
+        "tag_device_one": "Gerät",
+        "tag_device_many": "Geräte",
+        "tag_group_one": "dynamische Gruppe",
+        "tag_group_many": "dynamische Gruppen"
     },
     "keys": {
         "title": "Dashboard",
@@ -1769,7 +1788,8 @@
         "sessions_col_duration": "Dauer",
         "sessions_active": "Aktiv",
         "sessions_transport_punch": "Direkt / Punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Das Entfernen eines Tags hier hebt die Zuweisung nur für dieses Gerät auf. Nutzen Sie Tags verwalten auf der Geräte-Seite zum globalen Umbenennen oder Löschen."
     },
     "inventory": {
         "title": "Dashboard",

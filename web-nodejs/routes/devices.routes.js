@@ -9,6 +9,7 @@ const serverBackend = require('../services/serverBackend');
 const betterdeskApi = require('../services/betterdeskApi');
 const addressBookSync = require('../services/rustdeskAddressBookSync');
 const deviceGroupService = require('../services/deviceGroupService');
+const tagManagementService = require('../services/tagManagementService');
 const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
@@ -243,6 +244,134 @@ router.get('/api/tags', requireAuth, requirePermission('device.view'), async (re
         });
     } catch (err) {
         console.error('Get tags error:', err);
+        res.status(500).json({
+            success: false,
+            error: req.t('errors.server_error')
+        });
+    }
+});
+
+/**
+ * POST /api/tags/rename - Rename a tag on all visible devices (and matching dynamic groups).
+ */
+router.post('/api/tags/rename', requireAuth, requirePermission('device.edit'), async (req, res) => {
+    try {
+        if (!(await serverBackend.isBetterDesk())) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tags_backend_unsupported')
+            });
+        }
+
+        const from = tagManagementService.sanitizeTagName(bodyString(req.body && req.body.from));
+        const to = tagManagementService.sanitizeTagName(bodyString(req.body && req.body.to));
+
+        if (!from || !to) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_name_required')
+            });
+        }
+        if (from === to) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_rename_identical')
+            });
+        }
+
+        const devices = await getVisibleDevicesForRequest(req);
+        const groups = await getVisibleDeviceGroupsForRequest(req);
+        const result = await tagManagementService.renameTagAcrossScope({
+            devices,
+            groups,
+            fromTag: from,
+            toTag: to,
+            setPeerTags: (id, tags) => serverBackend.setPeerTags(id, tags),
+            updateDeviceGroup: (guid, data) => db.updateDeviceGroup(guid, data)
+        });
+
+        if (result.errors && result.errors.includes('identical')) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_rename_identical')
+            });
+        }
+
+        await db.logAction(
+            req.session.userId,
+            'device_tag_renamed',
+            `Tag "${from}" renamed to "${to}" on ${result.updatedDevices} device(s), ${result.updatedGroups} group(s)`,
+            req.ip
+        );
+
+        res.json({
+            success: true,
+            data: {
+                from: result.from,
+                to: result.to,
+                updatedDevices: result.updatedDevices,
+                updatedGroups: result.updatedGroups,
+                skipped: result.skipped,
+                failedDevices: result.errors || []
+            }
+        });
+    } catch (err) {
+        console.error('Rename tag error:', err);
+        res.status(500).json({
+            success: false,
+            error: req.t('errors.server_error')
+        });
+    }
+});
+
+/**
+ * POST /api/tags/delete - Remove a tag from all visible devices.
+ */
+router.post('/api/tags/delete', requireAuth, requirePermission('device.edit'), async (req, res) => {
+    try {
+        if (!(await serverBackend.isBetterDesk())) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tags_backend_unsupported')
+            });
+        }
+
+        const tag = tagManagementService.sanitizeTagName(bodyString(req.body && req.body.tag));
+        if (!tag) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_name_required')
+            });
+        }
+
+        const devices = await getVisibleDevicesForRequest(req);
+        const groups = await getVisibleDeviceGroupsForRequest(req);
+        const result = await tagManagementService.deleteTagAcrossScope({
+            devices,
+            groups,
+            tag,
+            setPeerTags: (id, tags) => serverBackend.setPeerTags(id, tags)
+        });
+
+        await db.logAction(
+            req.session.userId,
+            'device_tag_deleted',
+            `Tag "${tag}" removed from ${result.updatedDevices} device(s) (${result.affectedGroups} dynamic group(s) reference it)`,
+            req.ip
+        );
+
+        res.json({
+            success: true,
+            data: {
+                tag: result.tag,
+                updatedDevices: result.updatedDevices,
+                skipped: result.skipped,
+                affectedGroups: result.affectedGroups,
+                failedDevices: result.errors || []
+            }
+        });
+    } catch (err) {
+        console.error('Delete tag error:', err);
         res.status(500).json({
             success: false,
             error: req.t('errors.server_error')

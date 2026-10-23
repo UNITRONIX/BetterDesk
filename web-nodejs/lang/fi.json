@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Hallitse tageja",
+        "manage_device_tags": "Hallitse tageja",
+        "rename_tag": "Nimeä tagi uudelleen",
+        "delete_tag": "Poista tagi",
+        "rename_tag_prompt": "Uusi tagin nimi",
+        "rename_tag_hint": "Nimeää tämän tagin uudelleen kaikilla näkyvillä laitteilla ja päivittää vastaavat dynaamiset ryhmät.",
+        "delete_tag_confirm": "Poistetaanko tagi \"{tag}\" {count} laitteelta? Dynaamiset ryhmät, jotka käyttävät sitä, ovat tyhjiä päivitykseen asti.",
+        "tag_renamed": "Tagi nimetty uudelleen",
+        "tag_deleted": "Tagi poistettu",
+        "tag_name_required": "Tagin nimi on pakollinen",
+        "tag_rename_identical": "Uuden nimen on oltava eri",
+        "tags_backend_unsupported": "Laitetageja ei tueta nykyisellä backendillä",
+        "tags_manage_hint": "Nimeä uudelleen tai poista tageja kaikilta näkyviltä laitteilta. Poisto yhdeltä laitteelta tehdään Muokkaa- tai Tiedot-näkymässä.",
+        "tags_device_hint": "Poista tagi täällä irrottaaksesi sen vain tältä laitteelta. Käytä Hallitse tageja globaaliin uudelleennimeämiseen tai poistoon.",
+        "unassign_tag": "Poista tältä laitteelta",
+        "tag_device_one": "laite",
+        "tag_device_many": "laitetta",
+        "tag_group_one": "dynaaminen ryhmä",
+        "tag_group_many": "dynaamista ryhmää"
     },
     "keys": {
         "title": "Palvelimen avaimet",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Kesto",
         "sessions_active": "Aktiivinen",
         "sessions_transport_punch": "Suora / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Tagin poisto täällä irrottaa sen vain tältä laitteelta. Käytä Hallitse tageja Laitteet-sivulla globaaliin muutokseen."
     },
     "inventory": {
         "title": "Inventory",

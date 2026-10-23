@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Administrer tags",
+        "manage_device_tags": "Administrer tags",
+        "rename_tag": "Omdøb tag",
+        "delete_tag": "Slet tag",
+        "rename_tag_prompt": "Nyt tagnavn",
+        "rename_tag_hint": "Omdøber dette tag på alle synlige enheder og opdaterer matchende dynamiske grupper.",
+        "delete_tag_confirm": "Fjern tagget \"{tag}\" fra {count} enhed(er)? Dynamiske grupper der bruger det bliver tomme indtil opdatering.",
+        "tag_renamed": "Tag omdøbt",
+        "tag_deleted": "Tag slettet",
+        "tag_name_required": "Tagnavn er påkrævet",
+        "tag_rename_identical": "Det nye tagnavn skal være anderledes",
+        "tags_backend_unsupported": "Enhedstags understøttes ikke med den aktuelle backend",
+        "tags_manage_hint": "Omdøb eller slet tags på alle synlige enheder. Fjernelse fra én enhed sker under Rediger eller Detaljer.",
+        "tags_device_hint": "Fjern et tag her for kun at fjerne det fra denne enhed. Brug Administrer tags til at omdøbe eller slette overalt.",
+        "unassign_tag": "Fjern fra denne enhed",
+        "tag_device_one": "enhed",
+        "tag_device_many": "enheder",
+        "tag_group_one": "dynamisk gruppe",
+        "tag_group_many": "dynamiske grupper"
     },
     "keys": {
         "title": "Servernøgler",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Varighed",
         "sessions_active": "Aktiv",
         "sessions_transport_punch": "Direkte / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Fjernelse af et tag her fjerner det kun fra denne enhed. Brug Administrer tags på Enheder til at omdøbe eller slette overalt."
     },
     "inventory": {
         "title": "Inventory",

@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Керувати тегами",
+        "manage_device_tags": "Керувати тегами",
+        "rename_tag": "Перейменувати тег",
+        "delete_tag": "Видалити тег",
+        "rename_tag_prompt": "Нова назва тегу",
+        "rename_tag_hint": "Перейменовує цей тег на всіх видимих пристроях і оновлює відповідні динамічні групи.",
+        "delete_tag_confirm": "Видалити тег \"{tag}\" з {count} пристрою(їв)? Динамічні групи з цим тегом будуть порожніми до оновлення.",
+        "tag_renamed": "Тег перейменовано",
+        "tag_deleted": "Тег видалено",
+        "tag_name_required": "Назва тегу обов’язкова",
+        "tag_rename_identical": "Нова назва має відрізнятися",
+        "tags_backend_unsupported": "Теги пристроїв не підтримуються з поточним бекендом",
+        "tags_manage_hint": "Перейменовуйте або видаляйте теги на всіх видимих пристроях. Зняття з одного пристрою — в Редагуванні або Деталях.",
+        "tags_device_hint": "Видаліть тег тут, щоб відв’язати його лише від цього пристрою. Для глобальних змін використовуйте Керувати тегами.",
+        "unassign_tag": "Видалити з цього пристрою",
+        "tag_device_one": "пристрій",
+        "tag_device_many": "пристроїв",
+        "tag_group_one": "динамічна група",
+        "tag_group_many": "динамічних груп"
     },
     "keys": {
         "title": "Ключі сервера",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Тривалість",
         "sessions_active": "Активна",
         "sessions_transport_punch": "Пряме / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Видалення тегу тут відв’язує його лише від цього пристрою. Для глобальних змін використайте Керувати тегами на сторінці Пристрої."
     },
     "inventory": {
         "title": "Inventory",

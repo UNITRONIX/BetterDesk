@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "태그 관리",
+        "manage_device_tags": "태그 관리",
+        "rename_tag": "태그 이름 바꾸기",
+        "delete_tag": "태그 삭제",
+        "rename_tag_prompt": "새 태그 이름",
+        "rename_tag_hint": "볼 수 있는 모든 장치에서 이 태그 이름을 바꾸고 일치하는 동적 그룹을 업데이트합니다.",
+        "delete_tag_confirm": "태그 \"{tag}\"을(를) {count}개 장치에서 제거할까요? 이 태그를 쓰는 동적 그룹은 업데이트될 때까지 비어 있습니다.",
+        "tag_renamed": "태그 이름이 바뀌었습니다",
+        "tag_deleted": "태그가 삭제되었습니다",
+        "tag_name_required": "태그 이름이 필요합니다",
+        "tag_rename_identical": "새 이름은 달라야 합니다",
+        "tags_backend_unsupported": "현재 백엔드에서는 장치 태그가 지원되지 않습니다",
+        "tags_manage_hint": "볼 수 있는 모든 장치에서 태그를 바꾸거나 삭제합니다. 한 장치에서 제거는 편집 또는 세부정보에서 합니다.",
+        "tags_device_hint": "여기서 태그를 제거하면 이 장치에서만 할당이 해제됩니다. 전역 변경은 태그 관리를 사용하세요.",
+        "unassign_tag": "이 장치에서 제거",
+        "tag_device_one": "장치",
+        "tag_device_many": "장치",
+        "tag_group_one": "동적 그룹",
+        "tag_group_many": "동적 그룹"
     },
     "keys": {
         "title": "서버 키",
@@ -1769,7 +1788,8 @@
         "sessions_col_duration": "지속 시간",
         "sessions_active": "진행 중",
         "sessions_transport_punch": "직접 / 펀치",
-        "sessions_transport_relay": "릴레이"
+        "sessions_transport_relay": "릴레이",
+        "tags_unassign_hint": "여기서 태그를 제거하면 이 장치에서만 할당이 해제됩니다. 전역 변경은 장치 페이지의 태그 관리를 사용하세요."
     },
     "inventory": {
         "title": "Inventory",

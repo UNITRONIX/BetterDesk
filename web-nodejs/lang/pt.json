@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Gerir etiquetas",
+        "manage_device_tags": "Gerir etiquetas",
+        "rename_tag": "Mudar nome da etiqueta",
+        "delete_tag": "Eliminar etiqueta",
+        "rename_tag_prompt": "Novo nome da etiqueta",
+        "rename_tag_hint": "Altera o nome desta etiqueta em todos os dispositivos visíveis e atualiza grupos dinâmicos correspondentes.",
+        "delete_tag_confirm": "Remover a etiqueta \"{tag}\" de {count} dispositivo(s)? Grupos dinâmicos que a usam ficarão vazios até serem atualizados.",
+        "tag_renamed": "Etiqueta renomeada",
+        "tag_deleted": "Etiqueta eliminada",
+        "tag_name_required": "O nome da etiqueta é obrigatório",
+        "tag_rename_identical": "O novo nome deve ser diferente",
+        "tags_backend_unsupported": "Etiquetas de dispositivos não são suportadas com o backend atual",
+        "tags_manage_hint": "Renomeie ou elimine etiquetas em todos os dispositivos visíveis. Remover de um dispositivo faz-se em Editar ou Detalhes.",
+        "tags_device_hint": "Remova uma etiqueta aqui para a desassociar apenas deste dispositivo. Use Gerir etiquetas para renomear ou eliminar em todo o lado.",
+        "unassign_tag": "Remover deste dispositivo",
+        "tag_device_one": "dispositivo",
+        "tag_device_many": "dispositivos",
+        "tag_group_one": "grupo dinâmico",
+        "tag_group_many": "grupos dinâmicos"
     },
     "keys": {
         "title": "Chaves do servidor",
@@ -1769,7 +1788,8 @@
         "sessions_col_duration": "Duração",
         "sessions_active": "Ativa",
         "sessions_transport_punch": "Direto / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Remover uma etiqueta aqui desassocia-a apenas deste dispositivo. Use Gerir etiquetas na página Dispositivos para renomear ou eliminar em todo o lado."
     },
     "inventory": {
         "title": "Inventário",

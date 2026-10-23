@@ -439,7 +439,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Gérer les balises",
+        "manage_device_tags": "Gérer les balises",
+        "rename_tag": "Renommer la balise",
+        "delete_tag": "Supprimer la balise",
+        "rename_tag_prompt": "Nouveau nom de balise",
+        "rename_tag_hint": "Renomme cette balise sur tous les appareils visibles et met à jour les groupes dynamiques correspondants.",
+        "delete_tag_confirm": "Retirer la balise \"{tag}\" de {count} appareil(s) ? Les groupes dynamiques qui l’utilisent seront vides jusqu’à mise à jour.",
+        "tag_renamed": "Balise renommée",
+        "tag_deleted": "Balise supprimée",
+        "tag_name_required": "Le nom de balise est requis",
+        "tag_rename_identical": "Le nouveau nom doit être différent",
+        "tags_backend_unsupported": "Les balises d’appareils ne sont pas prises en charge avec le backend actuel",
+        "tags_manage_hint": "Renommez ou supprimez des balises sur tous les appareils visibles. Retirer une balise d’un appareil se fait dans Modifier ou Détails.",
+        "tags_device_hint": "Retirez une balise ici pour la désassigner de cet appareil uniquement. Utilisez Gérer les balises pour renommer ou supprimer partout.",
+        "unassign_tag": "Retirer de cet appareil",
+        "tag_device_one": "appareil",
+        "tag_device_many": "appareils",
+        "tag_group_one": "groupe dynamique",
+        "tag_group_many": "groupes dynamiques"
     },
     "keys": {
         "title": "Tableau de bord",
@@ -1786,7 +1805,8 @@
         "sessions_col_duration": "Durée",
         "sessions_active": "Active",
         "sessions_transport_punch": "Direct / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Retirer une balise ici la désassigne uniquement de cet appareil. Utilisez Gérer les balises sur la page Appareils pour renommer ou supprimer partout."
     },
     "inventory": {
         "title": "Tableau de bord",

@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Quản lý thẻ",
+        "manage_device_tags": "Quản lý thẻ",
+        "rename_tag": "Đổi tên thẻ",
+        "delete_tag": "Xóa thẻ",
+        "rename_tag_prompt": "Tên thẻ mới",
+        "rename_tag_hint": "Đổi tên thẻ này trên tất cả thiết bị bạn thấy và cập nhật nhóm động khớp.",
+        "delete_tag_confirm": "Gỡ thẻ \"{tag}\" khỏi {count} thiết bị? Nhóm động dùng thẻ này sẽ trống cho đến khi cập nhật.",
+        "tag_renamed": "Đã đổi tên thẻ",
+        "tag_deleted": "Đã xóa thẻ",
+        "tag_name_required": "Tên thẻ là bắt buộc",
+        "tag_rename_identical": "Tên mới phải khác",
+        "tags_backend_unsupported": "Thẻ thiết bị không được hỗ trợ với backend hiện tại",
+        "tags_manage_hint": "Đổi tên hoặc xóa thẻ trên tất cả thiết bị hiển thị. Gỡ khỏi một thiết bị trong Sửa hoặc Chi tiết.",
+        "tags_device_hint": "Gỡ thẻ tại đây chỉ bỏ gán khỏi thiết bị này. Dùng Quản lý thẻ để đổi tên/xóa toàn cục.",
+        "unassign_tag": "Gỡ khỏi thiết bị này",
+        "tag_device_one": "thiết bị",
+        "tag_device_many": "thiết bị",
+        "tag_group_one": "nhóm động",
+        "tag_group_many": "nhóm động"
     },
     "keys": {
         "title": "Khóa máy chủ",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Thời lượng",
         "sessions_active": "Đang hoạt động",
         "sessions_transport_punch": "Trực tiếp / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Gỡ thẻ tại đây chỉ bỏ gán khỏi thiết bị này. Dùng Quản lý thẻ trên trang Thiết bị để đổi tên/xóa toàn cục."
     },
     "inventory": {
         "title": "Inventory",

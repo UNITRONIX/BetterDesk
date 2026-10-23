@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "タグを管理",
+        "manage_device_tags": "タグを管理",
+        "rename_tag": "タグ名を変更",
+        "delete_tag": "タグを削除",
+        "rename_tag_prompt": "新しいタグ名",
+        "rename_tag_hint": "表示中のすべてのデバイスでこのタグ名を変更し、一致する動的グループを更新します。",
+        "delete_tag_confirm": "タグ \"{tag}\" を {count} 台のデバイスから削除しますか？このタグを使う動的グループは更新まで空になります。",
+        "tag_renamed": "タグ名を変更しました",
+        "tag_deleted": "タグを削除しました",
+        "tag_name_required": "タグ名は必須です",
+        "tag_rename_identical": "新しい名前は別である必要があります",
+        "tags_backend_unsupported": "現在のバックエンドではデバイスタグはサポートされていません",
+        "tags_manage_hint": "表示中のすべてのデバイスでタグを変更または削除します。1台からの解除は編集または詳細で行います。",
+        "tags_device_hint": "ここでタグを削除すると、このデバイスからのみ割り当てが解除されます。全体の変更にはタグを管理を使います。",
+        "unassign_tag": "このデバイスから削除",
+        "tag_device_one": "デバイス",
+        "tag_device_many": "デバイス",
+        "tag_group_one": "動的グループ",
+        "tag_group_many": "動的グループ"
     },
     "keys": {
         "title": "サーバーキー",
@@ -1769,7 +1788,8 @@
         "sessions_col_duration": "所要時間",
         "sessions_active": "進行中",
         "sessions_transport_punch": "直接 / パンチ",
-        "sessions_transport_relay": "リレー"
+        "sessions_transport_relay": "リレー",
+        "tags_unassign_hint": "ここでタグを削除すると、このデバイスからのみ割り当てが解除されます。全体の変更にはデバイスページのタグを管理を使います。"
     },
     "inventory": {
         "title": "Inventory",

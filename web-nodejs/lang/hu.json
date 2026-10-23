@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Címkék kezelése",
+        "manage_device_tags": "Címkék kezelése",
+        "rename_tag": "Címke átnevezése",
+        "delete_tag": "Címke törlése",
+        "rename_tag_prompt": "Új címkenév",
+        "rename_tag_hint": "Átnevezi ezt a címkét minden látható eszközön, és frissíti a megfelelő dinamikus csoportokat.",
+        "delete_tag_confirm": "Eltávolítja a(z) \"{tag}\" címkét {count} eszközről? A címkét használó dinamikus csoportok üresek maradnak a frissítésig.",
+        "tag_renamed": "Címke átnevezve",
+        "tag_deleted": "Címke törölve",
+        "tag_name_required": "A címkenév kötelező",
+        "tag_rename_identical": "Az új névnek különböznie kell",
+        "tags_backend_unsupported": "Az eszközcímkék nem támogatottak a jelenlegi backenddel",
+        "tags_manage_hint": "Nevezzen át vagy töröljön címkéket minden látható eszközön. Egy eszközről az Edit / Részletek alatt vehető le.",
+        "tags_device_hint": "Itt távolítsa el a címkét, hogy csak erről az eszközről legyen leválasztva. Globális műveletekhez használja a Címkék kezelése gombot.",
+        "unassign_tag": "Eltávolítás erről az eszközről",
+        "tag_device_one": "eszköz",
+        "tag_device_many": "eszköz",
+        "tag_group_one": "dinamikus csoport",
+        "tag_group_many": "dinamikus csoport"
     },
     "keys": {
         "title": "Szerverkulcsok",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Időtartam",
         "sessions_active": "Aktív",
         "sessions_transport_punch": "Közvetlen / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "A címke eltávolítása itt csak erről az eszközről veszi le. Globális műveletekhez használja a Címkék kezelése gombot az Eszközök oldalon."
     },
     "inventory": {
         "title": "Inventory",

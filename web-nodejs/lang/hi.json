@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "टैग प्रबंधित करें",
+        "manage_device_tags": "टैग प्रबंधित करें",
+        "rename_tag": "टैग का नाम बदलें",
+        "delete_tag": "टैग हटाएँ",
+        "rename_tag_prompt": "नया टैग नाम",
+        "rename_tag_hint": "इस टैग का नाम सभी दिखाई देने वाले उपकरणों पर बदलता है और मेल खाते गतिशील समूह अपडेट करता है।",
+        "delete_tag_confirm": "टैग \"{tag}\" को {count} उपकरण(ों) से हटाएँ? इसे उपयोग करने वाले गतिशील समूह अपडेट तक खाली रहेंगे।",
+        "tag_renamed": "टैग का नाम बदला गया",
+        "tag_deleted": "टैग हटाया गया",
+        "tag_name_required": "टैग नाम आवश्यक है",
+        "tag_rename_identical": "नया नाम अलग होना चाहिए",
+        "tags_backend_unsupported": "वर्तमान बैकएंड के साथ उपकरण टैग समर्थित नहीं हैं",
+        "tags_manage_hint": "सभी दिखाई देने वाले उपकरणों पर टैग का नाम बदलें या हटाएँ। एक उपकरण से हटाना संपादन या विवरण में होता है।",
+        "tags_device_hint": "यहाँ टैग हटाकर केवल इस उपकरण से अनअसाइन करें। सर्वत्र बदलने के लिए टैग प्रबंधित करें उपयोग करें।",
+        "unassign_tag": "इस उपकरण से हटाएँ",
+        "tag_device_one": "उपकरण",
+        "tag_device_many": "उपकरण",
+        "tag_group_one": "गतिशील समूह",
+        "tag_group_many": "गतिशील समूह"
     },
     "keys": {
         "title": "सर्वर कुंजी",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "अवधि",
         "sessions_active": "सक्रिय",
         "sessions_transport_punch": "प्रत्यक्ष / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "यहाँ टैग हटाने से केवल इस उपकरण से अनअसाइन होता है। सर्वत्र बदलने के लिए उपकरण पृष्ठ पर टैग प्रबंधित करें उपयोग करें।"
     },
     "inventory": {
         "title": "Inventory",

@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Kelola tag",
+        "manage_device_tags": "Kelola tag",
+        "rename_tag": "Ganti nama tag",
+        "delete_tag": "Hapus tag",
+        "rename_tag_prompt": "Nama tag baru",
+        "rename_tag_hint": "Mengganti nama tag ini pada semua perangkat yang terlihat dan memperbarui grup dinamis yang cocok.",
+        "delete_tag_confirm": "Hapus tag \"{tag}\" dari {count} perangkat? Grup dinamis yang memakai tag ini akan kosong hingga diperbarui.",
+        "tag_renamed": "Tag diganti nama",
+        "tag_deleted": "Tag dihapus",
+        "tag_name_required": "Nama tag wajib diisi",
+        "tag_rename_identical": "Nama baru harus berbeda",
+        "tags_backend_unsupported": "Tag perangkat tidak didukung dengan backend saat ini",
+        "tags_manage_hint": "Ganti nama atau hapus tag di semua perangkat yang terlihat. Lepas dari satu perangkat lewat Edit atau Detail.",
+        "tags_device_hint": "Hapus tag di sini untuk melepasnya hanya dari perangkat ini. Gunakan Kelola tag untuk perubahan global.",
+        "unassign_tag": "Hapus dari perangkat ini",
+        "tag_device_one": "perangkat",
+        "tag_device_many": "perangkat",
+        "tag_group_one": "grup dinamis",
+        "tag_group_many": "grup dinamis"
     },
     "keys": {
         "title": "Kunci Server",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Durasi",
         "sessions_active": "Aktif",
         "sessions_transport_punch": "Langsung / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Menghapus tag di sini hanya melepasnya dari perangkat ini. Gunakan Kelola tag di halaman Perangkat untuk perubahan global."
     },
     "inventory": {
         "title": "Inventory",

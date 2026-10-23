@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Gestionează etichetele",
+        "manage_device_tags": "Gestionează etichetele",
+        "rename_tag": "Redenumește eticheta",
+        "delete_tag": "Șterge eticheta",
+        "rename_tag_prompt": "Nume nou pentru etichetă",
+        "rename_tag_hint": "Redenumește această etichetă pe toate dispozitivele vizibile și actualizează grupurile dinamice potrivite.",
+        "delete_tag_confirm": "Eliminați eticheta \"{tag}\" de pe {count} dispozitiv(e)? Grupurile dinamice care o folosesc vor fi goale până la actualizare.",
+        "tag_renamed": "Etichetă redenumită",
+        "tag_deleted": "Etichetă ștearsă",
+        "tag_name_required": "Numele etichetei este obligatoriu",
+        "tag_rename_identical": "Noul nume trebuie să fie diferit",
+        "tags_backend_unsupported": "Etichetele dispozitivelor nu sunt acceptate cu backend-ul curent",
+        "tags_manage_hint": "Redenumiți sau ștergeți etichete pe toate dispozitivele vizibile. Eliminarea de pe un dispozitiv se face în Editare sau Detalii.",
+        "tags_device_hint": "Eliminați o etichetă aici pentru a o dezasocia doar de acest dispozitiv. Folosiți Gestionează etichetele pentru redenumire/ștergere globală.",
+        "unassign_tag": "Elimină de pe acest dispozitiv",
+        "tag_device_one": "dispozitiv",
+        "tag_device_many": "dispozitive",
+        "tag_group_one": "grup dinamic",
+        "tag_group_many": "grupuri dinamice"
     },
     "keys": {
         "title": "Cheile serverului",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Durată",
         "sessions_active": "Activă",
         "sessions_transport_punch": "Direct / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Eliminarea unei etichete aici o dezasociază doar de acest dispozitiv. Folosiți Gestionează etichetele pe pagina Dispozitive pentru redenumire/ștergere globală."
     },
     "inventory": {
         "title": "Inventory",

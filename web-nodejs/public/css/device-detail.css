@@ -481,6 +481,12 @@ body.device-detail-open {
    TAGS TAB
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.device-panel-tags-hint {
+    margin: 0 0 var(--space-sm, 0.5rem);
+    color: var(--text-tertiary, #8b949e);
+    font-size: var(--font-size-sm, 0.875rem);
+}
+
 .device-panel-tags-container {
     display: flex;
     flex-wrap: wrap;

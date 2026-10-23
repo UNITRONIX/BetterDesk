@@ -442,7 +442,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "إدارة الوسوم",
+        "manage_device_tags": "إدارة الوسوم",
+        "rename_tag": "إعادة تسمية الوسم",
+        "delete_tag": "حذف الوسم",
+        "rename_tag_prompt": "اسم الوسم الجديد",
+        "rename_tag_hint": "يعيد تسمية هذا الوسم على كل الأجهزة المرئية ويحدّث المجموعات الديناميكية المطابقة.",
+        "delete_tag_confirm": "إزالة الوسم \"{tag}\" من {count} جهاز/أجهزة؟ ستصبح المجموعات الديناميكية التي تستخدمه فارغة حتى التحديث.",
+        "tag_renamed": "تمت إعادة تسمية الوسم",
+        "tag_deleted": "تم حذف الوسم",
+        "tag_name_required": "اسم الوسم مطلوب",
+        "tag_rename_identical": "يجب أن يكون الاسم الجديد مختلفاً",
+        "tags_backend_unsupported": "وسوم الأجهزة غير مدعومة مع الخلفية الحالية",
+        "tags_manage_hint": "أعد تسمية الوسوم أو احذفها على كل الأجهزة المرئية. الإزالة من جهاز واحد تتم في التعديل أو التفاصيل.",
+        "tags_device_hint": "أزل وسماً هنا لإلغاء تعيينه من هذا الجهاز فقط. استخدم إدارة الوسوم لإعادة التسمية أو الحذف في كل مكان.",
+        "unassign_tag": "إزالة من هذا الجهاز",
+        "tag_device_one": "جهاز",
+        "tag_device_many": "أجهزة",
+        "tag_group_one": "مجموعة ديناميكية",
+        "tag_group_many": "مجموعات ديناميكية"
     },
     "keys": {
         "title": "مفاتيح الخادم",
@@ -1776,7 +1795,8 @@
         "sessions_col_duration": "المدة",
         "sessions_active": "نشطة",
         "sessions_transport_punch": "مباشر / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "إزالة وسم هنا تلغي تعيينه من هذا الجهاز فقط. استخدم إدارة الوسوم في صفحة الأجهزة لإعادة التسمية أو الحذف في كل مكان."
     },
     "inventory": {
         "title": "Inventory",

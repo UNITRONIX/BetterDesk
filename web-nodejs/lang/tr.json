@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Etiketleri yönet",
+        "manage_device_tags": "Etiketleri yönet",
+        "rename_tag": "Etiketi yeniden adlandır",
+        "delete_tag": "Etiketi sil",
+        "rename_tag_prompt": "Yeni etiket adı",
+        "rename_tag_hint": "Bu etiketi görebildiğiniz tüm cihazlarda yeniden adlandırır ve eşleşen dinamik grupları günceller.",
+        "delete_tag_confirm": "\"{tag}\" etiketi {count} cihazdan kaldırılsın mı? Bu etiketi kullanan dinamik gruplar güncellenene kadar boş kalır.",
+        "tag_renamed": "Etiket yeniden adlandırıldı",
+        "tag_deleted": "Etiket silindi",
+        "tag_name_required": "Etiket adı gerekli",
+        "tag_rename_identical": "Yeni ad farklı olmalı",
+        "tags_backend_unsupported": "Cihaz etiketleri mevcut backend ile desteklenmiyor",
+        "tags_manage_hint": "Görünür tüm cihazlarda etiketleri yeniden adlandırın veya silin. Bir cihazdan kaldırma Düzenle veya Ayrıntılar’da yapılır.",
+        "tags_device_hint": "Burada bir etiketi kaldırarak yalnızca bu cihazdan ayırırsınız. Her yerde yeniden adlandırmak/silmek için Etiketleri yönet’i kullanın.",
+        "unassign_tag": "Bu cihazdan kaldır",
+        "tag_device_one": "cihaz",
+        "tag_device_many": "cihaz",
+        "tag_group_one": "dinamik grup",
+        "tag_group_many": "dinamik grup"
     },
     "keys": {
         "title": "Sunucu Anahtarları",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Süre",
         "sessions_active": "Aktif",
         "sessions_transport_punch": "Doğrudan / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Burada bir etiketi kaldırmak yalnızca bu cihazdan ayırır. Her yerde yeniden adlandırmak/silmek için Cihazlar sayfasındaki Etiketleri yönet’i kullanın."
     },
     "inventory": {
         "title": "Inventory",

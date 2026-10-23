@@ -435,7 +435,26 @@
         "group_commercialization_assign_existing": "Przypisz istniejący pakiet",
         "group_commercialization_create_new": "Utwórz nowy pakiet i przypisz",
         "group_commercialization_saved": "Pakiet przypisany do grupy",
-        "group_one_only": "Urządzenie może należeć tylko do jednej grupy"
+        "group_one_only": "Urządzenie może należeć tylko do jednej grupy",
+        "manage_tags": "Zarządzaj tagami",
+        "manage_device_tags": "Zarządzaj tagami",
+        "rename_tag": "Zmień nazwę tagu",
+        "delete_tag": "Usuń tag",
+        "rename_tag_prompt": "Nowa nazwa tagu",
+        "rename_tag_hint": "Zmienia nazwę tego tagu na wszystkich widocznych urządzeniach i aktualizuje pasujące grupy dynamiczne.",
+        "delete_tag_confirm": "Usunąć tag \"{tag}\" z {count} urządzeń? Grupy dynamiczne używające tego tagu będą puste do czasu aktualizacji.",
+        "tag_renamed": "Zmieniono nazwę tagu",
+        "tag_deleted": "Usunięto tag",
+        "tag_name_required": "Nazwa tagu jest wymagana",
+        "tag_rename_identical": "Nowa nazwa tagu musi być inna",
+        "tags_backend_unsupported": "Tagi urządzeń nie są obsługiwane w bieżącym backendzie",
+        "tags_manage_hint": "Zmieniaj nazwy lub usuwaj tagi na wszystkich widocznych urządzeniach. Usunięcie tagu z jednego urządzenia odbywa się w Edycji lub szczegółach urządzenia.",
+        "tags_device_hint": "Usuń tag tutaj, aby odpiąć go tylko od tego urządzenia. Użyj Zarządzaj tagami, aby zmienić nazwę lub usunąć tag wszędzie.",
+        "unassign_tag": "Usuń z tego urządzenia",
+        "tag_device_one": "urządzenie",
+        "tag_device_many": "urządzeń",
+        "tag_group_one": "grupa dynamiczna",
+        "tag_group_many": "grup dynamicznych"
     },
     "keys": {
         "title": "Klucze serwera",
@@ -1782,7 +1801,8 @@
         "sessions_col_duration": "Czas",
         "sessions_active": "Aktywna",
         "sessions_transport_punch": "Bezpośrednie / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Usunięcie tagu tutaj odłącza go tylko od tego urządzenia. Użyj Zarządzaj tagami na stronie Urządzenia, aby zmienić nazwę lub usunąć tag wszędzie."
     },
     "inventory": {
         "title": "Inwentaryzacja",

@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "จัดการแท็ก",
+        "manage_device_tags": "จัดการแท็ก",
+        "rename_tag": "เปลี่ยนชื่อแท็ก",
+        "delete_tag": "ลบแท็ก",
+        "rename_tag_prompt": "ชื่อแท็กใหม่",
+        "rename_tag_hint": "เปลี่ยนชื่อแท็กนี้บนอุปกรณ์ที่มองเห็นทั้งหมด และอัปเดตกลุ่มไดนามิกที่ตรงกัน",
+        "delete_tag_confirm": "ลบแท็ก \"{tag}\" ออกจาก {count} อุปกรณ์หรือไม่ กลุ่มไดนามิกที่ใช้แท็กนี้จะว่างจนกว่าจะอัปเดต",
+        "tag_renamed": "เปลี่ยนชื่อแท็กแล้ว",
+        "tag_deleted": "ลบแท็กแล้ว",
+        "tag_name_required": "ต้องระบุชื่อแท็ก",
+        "tag_rename_identical": "ชื่อใหม่ต้องต่างจากเดิม",
+        "tags_backend_unsupported": "แท็กอุปกรณ์ไม่รองรับกับแบ็กเอนด์ปัจจุบัน",
+        "tags_manage_hint": "เปลี่ยนชื่อหรือลบแท็กบนอุปกรณ์ที่มองเห็นทั้งหมด การลบจากอุปกรณ์เดียวทำในแก้ไขหรือรายละเอียด",
+        "tags_device_hint": "ลบแท็กที่นี่เพื่อยกเลิกการกำหนดเฉพาะอุปกรณ์นี้ ใช้จัดการแท็กเพื่อเปลี่ยนชื่อหรือลบทั้งหมด",
+        "unassign_tag": "ลบออกจากอุปกรณ์นี้",
+        "tag_device_one": "อุปกรณ์",
+        "tag_device_many": "อุปกรณ์",
+        "tag_group_one": "กลุ่มไดนามิก",
+        "tag_group_many": "กลุ่มไดนามิก"
     },
     "keys": {
         "title": "คีย์เซิร์ฟเวอร์",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "ระยะเวลา",
         "sessions_active": "กำลังทำงาน",
         "sessions_transport_punch": "ตรง / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "ลบแท็กที่นี่จะยกเลิกการกำหนดเฉพาะอุปกรณ์นี้ ใช้จัดการแท็กในหน้าอุปกรณ์เพื่อเปลี่ยนชื่อหรือลบทั้งหมด"
     },
     "inventory": {
         "title": "Inventory",

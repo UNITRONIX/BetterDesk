@@ -441,7 +441,26 @@
         "group_commercialization_assign_existing": "Assign existing package",
         "group_commercialization_create_new": "Create new package and assign",
         "group_commercialization_saved": "Package assigned to group",
-        "group_one_only": "A device can belong to only one group"
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Hantera taggar",
+        "manage_device_tags": "Hantera taggar",
+        "rename_tag": "Byt namn på tagg",
+        "delete_tag": "Ta bort tagg",
+        "rename_tag_prompt": "Nytt taggnamn",
+        "rename_tag_hint": "Byter namn på denna tagg på alla synliga enheter och uppdaterar matchande dynamiska grupper.",
+        "delete_tag_confirm": "Ta bort taggen \"{tag}\" från {count} enhet(er)? Dynamiska grupper som använder den blir tomma tills de uppdateras.",
+        "tag_renamed": "Tagg omdöpt",
+        "tag_deleted": "Tagg borttagen",
+        "tag_name_required": "Taggnamn krävs",
+        "tag_rename_identical": "Det nya namnet måste vara annorlunda",
+        "tags_backend_unsupported": "Enhetstaggar stöds inte med aktuell backend",
+        "tags_manage_hint": "Byt namn på eller ta bort taggar på alla synliga enheter. Borttagning från en enhet görs i Redigera eller Detaljer.",
+        "tags_device_hint": "Ta bort en tagg här för att koppla bort den endast från denna enhet. Använd Hantera taggar för global ändring.",
+        "unassign_tag": "Ta bort från denna enhet",
+        "tag_device_one": "enhet",
+        "tag_device_many": "enheter",
+        "tag_group_one": "dynamisk grupp",
+        "tag_group_many": "dynamiska grupper"
     },
     "keys": {
         "title": "Servernycklar",
@@ -1775,7 +1794,8 @@
         "sessions_col_duration": "Varaktighet",
         "sessions_active": "Aktiv",
         "sessions_transport_punch": "Direkt / punch",
-        "sessions_transport_relay": "Relay"
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Att ta bort en tagg här kopplar bort den endast från denna enhet. Använd Hantera taggar på Enheter för global ändring."
     },
     "inventory": {
         "title": "Inventory",
