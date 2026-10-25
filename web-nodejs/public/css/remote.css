@@ -189,7 +189,6 @@
     align-items: center;
     max-width: 12rem;
     padding: 0.15rem 0.55rem;
-    margin-right: 0.25rem;
     border-radius: 999px;
     font-size: 0.7rem;
     white-space: nowrap;
@@ -198,6 +197,10 @@
     background: rgba(88, 166, 255, 0.15);
     color: var(--accent-blue, #58a6ff);
     border: 1px solid rgba(88, 166, 255, 0.35);
+}
+
+.toolbar-package-badge[hidden] {
+    display: none !important;
 }
 
 @media (max-width: 720px) {
