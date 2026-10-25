@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.191] — 2026-10-25
+
 ### Fixed
 - **Web Remote work report overlay:** Skip/Submit now reliably hide the billing pane (`[hidden]` + `.hidden`); added missing `GET /api/panel/billing/check` panel proxy (toolbar package badge); connect-password returns 200 when no vault password (no console 404); report pane no longer uses a separate tinted background; report labels follow panel language (all locales).
 
@@ -4318,3 +4325,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.188]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.187...v3.5.188
 [3.5.189]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.188...v3.5.189
 [3.5.190]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.189...v3.5.190
+[3.5.191]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.190...v3.5.191
