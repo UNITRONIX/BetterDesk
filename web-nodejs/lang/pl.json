@@ -1610,7 +1610,7 @@
         "bg_image_invalid_type": "Nieprawidłowy typ pliku. Użyj PNG, JPG, WebP lub GIF.",
         "bg_upload_success": "Obraz tła przesłany pomyślnie.",
         "login_title": "Strona logowania",
-        "login_desc": "Dostosuj nagłówek, podtytuł i tło ekranu logowania.",
+        "login_desc": "Dostosuj nagłówek logowania, układ, tło i slajdy promocyjne.",
         "login_heading": "Nagłówek logowania",
         "login_heading_placeholder": "Witaj ponownie",
         "login_subheading": "Podtytuł logowania",
@@ -1686,7 +1686,23 @@
         "builtin_themes_hint": "Presety stosują pełną paletę (np. BetterDesk, insolv Core Server). To osobna rzecz od szybkiego przełącznika jasny/ciemny.",
         "readability_check": "Kontrola czytelności",
         "readability_contrast": "{item}: kontrast ({ratio}) jest niższy niż {minimum}:1",
-        "readability_background": "{item} używa {type} z niskim przyciemnieniem; tekst może być trudny do odczytania."
+        "readability_background": "{item} używa {type} z niskim przyciemnieniem; tekst może być trudny do odczytania.",
+        "login_promo_mode": "Układ logowania",
+        "login_promo_mode_hint": "Klasyczna karta na środku, split z jednym obrazem albo pokaz slajdów (do 10).",
+        "login_promo_classic": "Klasyczny",
+        "login_promo_single": "Jeden obraz",
+        "login_promo_slides": "Pokaz slajdów",
+        "login_slides_title": "Slajdy logowania",
+        "login_slides_desc": "Obrazy to tła; tytuły i opisy to osobny tekst nałożony na slajd.",
+        "login_slides_add": "Dodaj slajd",
+        "login_slides_remove": "Usuń",
+        "login_slides_restore": "Przywróć domyślne BetterDesk",
+        "login_slides_max": "Maksymalnie 10 slajdów.",
+        "login_slide_title": "Tytuł slajdu",
+        "login_slide_body": "Opis slajdu",
+        "login_slide_image": "Tło slajdu",
+        "login_slide_move_up": "W górę",
+        "login_slide_move_down": "W dół"
     },
     "device_detail": {
         "tab_overview": "Przegląd",
@@ -4687,5 +4703,27 @@
         "load_failed": "Nie udało się wczytać brandingu",
         "logo_too_large": "Logo może mieć co najwyżej 512 KiB",
         "logo_invalid": "Nieprawidłowy format logo"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk jest darmowy",
+                "body": "Open-source remote desktop — bez licencji na stanowiska i bez vendor lock-in. Hostujesz u siebie."
+            },
+            "remote": {
+                "title": "Zdalne wsparcie pod Twoją kontrolą",
+                "body": "Łączysz się z endpointami z własnej konsoli. Sesje zostają na Twojej infrastrukturze."
+            },
+            "secure": {
+                "title": "Bezpieczeństwo wbudowane",
+                "body": "Uwierzytelnianie operatorów, kontrola sesji i attestation serwera, gdy potrzebujesz dowodu."
+            },
+            "platforms": {
+                "title": "Windows, Linux i macOS",
+                "body": "Jedna konsola dla agentów na platformach, które zespół już obsługuje."
+            }
+        },
+        "prev": "Poprzedni slajd",
+        "next": "Następny slajd"
     }
 }

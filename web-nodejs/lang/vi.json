@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "Loại tệp không hợp lệ. Sử dụng PNG, JPG, WebP hoặc GIF.",
         "bg_upload_success": "Đã tải lên ảnh nền thành công.",
         "login_title": "Trang đăng nhập",
-        "login_desc": "Tùy chỉnh tiêu đề, phụ đề và nền trang đăng nhập.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Tiêu đề đăng nhập",
         "login_heading_placeholder": "Chào mừng trở lại",
         "login_subheading": "Phụ đề đăng nhập",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "Preset áp dụng một bộ màu đầy đủ (ví dụ BetterDesk hoặc insolv Core Server). Chúng tách biệt với nút chuyển nhanh giữa sáng và tối.",
         "readability_check": "Kiểm tra khả năng đọc",
         "readability_contrast": "Độ tương phản của {item} ({ratio}) thấp hơn {minimum}:1",
-        "readability_background": "{item} dùng {type} với lớp phủ thấp; văn bản có thể khó đọc."
+        "readability_background": "{item} dùng {type} với lớp phủ thấp; văn bản có thể khó đọc.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Tổng quan",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk miễn phí",
+                "body": "Remote desktop mã nguồn mở — không giấy phép ghế, không khóa nhà cung cấp. Tự lưu trữ."
+            },
+            "remote": {
+                "title": "Hỗ trợ từ xa do bạn kiểm soát",
+                "body": "Kết nối endpoint từ bảng điều khiển của bạn. Phiên làm việc ở trên hạ tầng của bạn."
+            },
+            "secure": {
+                "title": "Bảo mật tích hợp",
+                "body": "Xác thực vận hành, kiểm soát phiên và attestation máy chủ khi cần."
+            },
+            "platforms": {
+                "title": "Windows, Linux và macOS",
+                "body": "Một bảng điều khiển cho agent trên các nền tảng nhóm bạn đã hỗ trợ."
+            }
+        },
+        "prev": "Trang trước",
+        "next": "Trang sau"
     }
 }

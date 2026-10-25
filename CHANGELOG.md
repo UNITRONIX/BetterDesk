@@ -1,7 +1,10 @@
 ## [Unreleased]
 
+### Fixed
+- **Login session-expired toast:** `/login?expired=1` shows the session message as a right-side toast instead of stretching the login card; wrong-password / TOTP / OIDC errors stay inline. Desktop login uses the same toast path. Ships via panel update.
+
 ### Changed
-- _(none yet)_
+- **Split login + promo slides:** Classic `/login` supports Branding layouts `classic` / `single` / `slides` (max 10 editable slides: image + separate title/body). Default BetterDesk slideshow starts with “free / open source”. Ships via panel update. Verify: Settings → Branding → Login layout; `/login` shows carousel on wide screens, form-only on mobile.
 
 ---
 

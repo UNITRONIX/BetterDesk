@@ -1597,7 +1597,7 @@
         "bg_image_invalid_type": "잘못된 파일 형식입니다. PNG, JPG, WebP 또는 GIF를 사용하세요.",
         "bg_upload_success": "배경 이미지가 성공적으로 업로드되었습니다.",
         "login_title": "로그인 페이지",
-        "login_desc": "로그인 화면의 제목, 부제목, 배경을 사용자 지정합니다.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "로그인 제목",
         "login_heading_placeholder": "돌아오셨군요",
         "login_subheading": "로그인 부제목",
@@ -1673,7 +1673,23 @@
         "builtin_themes_hint": "프리셋은 전체 색상 패키지(예: BetterDesk, insolv Core Server)를 적용합니다. 빠른 밝은/어두운 전환과는 별개입니다.",
         "readability_check": "가독성 검사",
         "readability_contrast": "{item} 대비({ratio})가 {minimum}:1보다 낮습니다",
-        "readability_background": "{item}에서 오버레이가 약한 {type}을 사용하므로 텍스트가 읽기 어려울 수 있습니다."
+        "readability_background": "{item}에서 오버레이가 약한 {type}을 사용하므로 텍스트가 읽기 어려울 수 있습니다.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "개요",
@@ -4687,5 +4703,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk는 무료입니다",
+                "body": "오픈소스 원격 데스크톱 — 좌석 라이선스와 종속성 없음. 직접 호스팅하세요."
+            },
+            "remote": {
+                "title": "내가 통제하는 원격 지원",
+                "body": "자체 콘솔에서 엔드포인트에 연결합니다. 세션은 인프라에 남습니다."
+            },
+            "secure": {
+                "title": "보안 내장",
+                "body": "운영자 인증, 세션 제어, 필요할 때 서버 증명."
+            },
+            "platforms": {
+                "title": "Windows, Linux, macOS",
+                "body": "팀이 이미 지원하는 플랫폼의 에이전트를 하나의 콘솔에서."
+            }
+        },
+        "prev": "이전 슬라이드",
+        "next": "다음 슬라이드"
     }
 }

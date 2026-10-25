@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "Ogiltig filtyp. Använd PNG, JPG, WebP eller GIF.",
         "bg_upload_success": "Bakgrundsbild uppladdad.",
         "login_title": "Inloggningssida",
-        "login_desc": "Anpassa inloggningsskärmens rubrik, underrubrik och bakgrund.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Inloggningsrubrik",
         "login_heading_placeholder": "Välkommen tillbaka",
         "login_subheading": "Inloggningsunderrubrik",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "Förinställningar använder en komplett färgpalett (till exempel BetterDesk eller insolv Core Server). De är separata från snabbväxlingen mellan ljust och mörkt.",
         "readability_check": "Läsbarhetskontroll",
         "readability_contrast": "Kontrasten för {item} ({ratio}) är under {minimum}:1",
-        "readability_background": "{item} använder {type} med ett svagt överlägg; texten kan vara svår att läsa."
+        "readability_background": "{item} använder {type} med ett svagt överlägg; texten kan vara svår att läsa.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Översikt",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk är gratis",
+                "body": "Öppen källkods remote desktop — inga platser, ingen inlåsning. Hosta själv."
+            },
+            "remote": {
+                "title": "Fjärsupport under din kontroll",
+                "body": "Anslut endpoints från din egen konsol. Sessioner stannar på din infrastruktur."
+            },
+            "secure": {
+                "title": "Säkerhet inbyggd",
+                "body": "Operatörsautentisering, sessionskontroll och serverattestation när du behöver det."
+            },
+            "platforms": {
+                "title": "Windows, Linux och macOS",
+                "body": "En konsol för agenter på plattformarna ditt team redan stödjer."
+            }
+        },
+        "prev": "Föregående bild",
+        "next": "Nästa bild"
     }
 }

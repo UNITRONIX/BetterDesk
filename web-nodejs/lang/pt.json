@@ -1597,7 +1597,7 @@
         "bg_image_invalid_type": "Tipo de ficheiro no válido. Use PNG, JPG, WebP o GIF.",
         "bg_upload_success": "Imagem de fundo subida correctamente.",
         "login_title": "Página de início de sessão",
-        "login_desc": "Personaliza el título, subtítulo y fundo de la pantalla de início de sessão.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Cabeçalho de início de sessão",
         "login_heading_placeholder": "Bem-vindo de nuevo",
         "login_subheading": "Subtítulo de início de sessão",
@@ -1673,7 +1673,23 @@
         "builtin_themes_hint": "As predefinições aplicam uma paleta completa (por exemplo, BetterDesk ou insolv Core Server). São independentes da troca rápida entre claro e escuro.",
         "readability_check": "Verificação de legibilidade",
         "readability_contrast": "O contraste de {item} ({ratio}) é inferior a {minimum}:1",
-        "readability_background": "{item} usa {type} com uma sobreposição baixa; o texto pode ser difícil de ler."
+        "readability_background": "{item} usa {type} com uma sobreposição baixa; o texto pode ser difícil de ler.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Visão geral",
@@ -4687,5 +4703,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk é gratuito",
+                "body": "Desktop remoto open source — sem licenças por posto e sem lock-in. Hospede você mesmo."
+            },
+            "remote": {
+                "title": "Suporte remoto sob o seu controlo",
+                "body": "Ligue endpoints a partir da sua consola. As sessões ficam na sua infraestrutura."
+            },
+            "secure": {
+                "title": "Segurança integrada",
+                "body": "Autenticação de operadores, controlo de sessões e atestação do servidor quando precisar."
+            },
+            "platforms": {
+                "title": "Windows, Linux e macOS",
+                "body": "Uma consola para agentes nas plataformas que a equipa já suporte."
+            }
+        },
+        "prev": "Diapositivo anterior",
+        "next": "Diapositivo seguinte"
     }
 }

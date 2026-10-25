@@ -1524,6 +1524,41 @@
     display: none;
 }
 
+.login-slides-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.login-slide-card {
+    border: 1px solid var(--border-primary, #30363d);
+    border-radius: var(--radius-md, 8px);
+    background: var(--bg-secondary, #161b22);
+    padding: 14px 16px;
+}
+
+.login-slide-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.login-slide-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.login-slide-card .form-group {
+    margin-bottom: 10px;
+}
+
+.login-slide-card .form-group:last-child {
+    margin-bottom: 0;
+}
+
 .branding-modules .branding-module-panel.active {
     display: block;
 }

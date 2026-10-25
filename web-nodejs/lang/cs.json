@@ -1597,7 +1597,7 @@
         "bg_image_invalid_type": "Neprawidlowy typ souboru. Uzyj PNG, JPG, WebP lub GIF.",
         "bg_upload_success": "Obrázek tla przeslany pomyslnie.",
         "login_title": "Strona logowania",
-        "login_desc": "Dostosuj naglowek, podtytul i tlo ekranu logowania.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Naglowek logowania",
         "login_heading_placeholder": "Witaj ponownie",
         "login_subheading": "Podtytul logowania",
@@ -1673,7 +1673,23 @@
         "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle.",
         "readability_check": "Kontrola čitelnosti",
         "readability_contrast": "Kontrast {item} ({ratio}) je nižší než {minimum}:1",
-        "readability_background": "{item} používá {type} s nízkým překrytím; text může být špatně čitelný."
+        "readability_background": "{item} používá {type} s nízkým překrytím; text může být špatně čitelný.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Přehled",
@@ -4687,5 +4703,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk je zdarma",
+                "body": "Open-source vzdálená plocha — bez licencí na místa a bez lock-inu. Hostujte sami."
+            },
+            "remote": {
+                "title": "Vzdálená podpora pod vaší kontrolou",
+                "body": "Připojte endpointy z vlastní konzole. Relace zůstávají na vaší infrastruktuře."
+            },
+            "secure": {
+                "title": "Zabezpečení vestavěně",
+                "body": "Ověření operátorů, řízení relací a attestation serveru, když potřebujete důkaz."
+            },
+            "platforms": {
+                "title": "Windows, Linux a macOS",
+                "body": "Jedna konzole pro agenty na platformách, které tým už podporuje."
+            }
+        },
+        "prev": "Předchozí snímek",
+        "next": "Další snímek"
     }
 }

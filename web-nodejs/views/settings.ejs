@@ -1076,7 +1076,7 @@
                     <p class="settings-panel-desc">${_('branding.login_desc')}</p>
                 </div>
                 <div class="settings-panel-body">
-                    <form class="settings-form branding-form" style="max-width: 600px;">
+                    <form class="settings-form branding-form" style="max-width: 720px;">
                         <div class="form-group">
                             <label class="form-label" for="login-title">${_('branding.login_heading')}</label>
                             <input type="text" id="login-title" class="form-input" maxlength="80"
@@ -1087,8 +1087,58 @@
                             <input type="text" id="login-subtitle" class="form-input" maxlength="160"
                                    placeholder="${_('branding.login_subheading_placeholder')}">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">${_('branding.login_promo_mode')}</label>
+                            <p class="form-hint">${_('branding.login_promo_mode_hint')}</p>
+                            <div class="logo-type-selector" id="login-promo-mode-selector">
+                                <label class="logo-type-option">
+                                    <input type="radio" name="login-promo-mode" value="classic">
+                                    <span class="logo-type-card">
+                                        <span class="material-icons" aria-hidden="true">crop_square</span>
+                                        <span>${_('branding.login_promo_classic')}</span>
+                                    </span>
+                                </label>
+                                <label class="logo-type-option">
+                                    <input type="radio" name="login-promo-mode" value="single">
+                                    <span class="logo-type-card">
+                                        <span class="material-icons" aria-hidden="true">image</span>
+                                        <span>${_('branding.login_promo_single')}</span>
+                                    </span>
+                                </label>
+                                <label class="logo-type-option">
+                                    <input type="radio" name="login-promo-mode" value="slides" checked>
+                                    <span class="logo-type-card">
+                                        <span class="material-icons" aria-hidden="true">view_carousel</span>
+                                        <span>${_('branding.login_promo_slides')}</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
                     </form>
-                    <div class="branding-bg-config" style="margin-top: 16px;">
+
+                    <div class="branding-login-slides" id="login-slides-panel" style="margin-top: 16px;">
+                        <div class="settings-panel-header" style="padding: 0 0 12px;">
+                            <h3 class="settings-panel-title" style="font-size: 1rem;">
+                                <span class="material-icons" aria-hidden="true">slideshow</span>
+                                ${_('branding.login_slides_title')}
+                            </h3>
+                            <p class="settings-panel-desc">${_('branding.login_slides_desc')}</p>
+                        </div>
+                        <div id="login-slides-list" class="login-slides-list"></div>
+                        <div class="login-slides-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                            <button type="button" class="btn btn-secondary" id="login-slides-add">
+                                <span class="material-icons" aria-hidden="true">add</span>
+                                ${_('branding.login_slides_add')}
+                            </button>
+                            <button type="button" class="btn btn-ghost" id="login-slides-restore">
+                                <span class="material-icons" aria-hidden="true">restart_alt</span>
+                                ${_('branding.login_slides_restore')}
+                            </button>
+                        </div>
+                        <p class="form-hint" id="login-slides-max-hint" hidden>${_('branding.login_slides_max')}</p>
+                    </div>
+
+                    <div class="branding-bg-config" id="login-bg-config" style="margin-top: 16px;">
                         <div class="logo-type-selector">
                             <label class="logo-type-option">
                                 <input type="radio" name="login-bg-type" value="inherit">

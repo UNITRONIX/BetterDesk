@@ -52,13 +52,10 @@
         // Show OIDC/SSO error from redirect query string (?error=oidc_*)
         showOidcLoginError();
 
-        // Session expired / replaced elsewhere
-        try {
-            const params = new URLSearchParams(window.location.search || '');
-            if (params.get('expired') === '1') {
-                showError(_('auth.session_expired') || 'Your session expired. Please sign in again.');
-            }
-        } catch (_) { /* ignore */ }
+        // Session expired / replaced elsewhere — toast on the right so the card stays compact
+        showSessionExpiredNotice();
+
+        initLoginPromoCarousel();
         
         // Password visibility toggle
         passwordToggle?.addEventListener('click', () => {
@@ -245,6 +242,87 @@
             setTimeout(() => {
                 errorContainer.style.animation = '';
             }, 500);
+        }
+
+        function showSessionExpiredNotice() {
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                if (params.get('expired') !== '1') return;
+
+                const message = _('auth.session_expired') || 'Your session expired. Please sign in again.';
+                if (window.Notifications && typeof Notifications.error === 'function') {
+                    Notifications.error(message);
+                } else {
+                    showError(message);
+                }
+
+                params.delete('expired');
+                const cleanQuery = params.toString();
+                const cleanUrl = window.location.pathname + (cleanQuery ? `?${cleanQuery}` : '') + (window.location.hash || '');
+                window.history.replaceState({}, document.title, cleanUrl);
+            } catch (_) { /* ignore */ }
+        }
+
+        function initLoginPromoCarousel() {
+            const root = document.getElementById('login-promo');
+            const slides = root ? Array.from(root.querySelectorAll('.login-promo-slide')) : [];
+            if (!root || slides.length < 2) return;
+
+            const dots = Array.from(root.querySelectorAll('.login-promo-dot'));
+            const prevBtn = document.getElementById('login-promo-prev');
+            const nextBtn = document.getElementById('login-promo-next');
+            let index = 0;
+            let timer = null;
+            const INTERVAL_MS = 7000;
+
+            function goTo(next) {
+                const total = slides.length;
+                index = ((next % total) + total) % total;
+                slides.forEach((slide, i) => {
+                    const active = i === index;
+                    slide.classList.toggle('is-active', active);
+                    slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+                });
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('is-active', i === index);
+                });
+            }
+
+            function next() { goTo(index + 1); }
+            function prev() { goTo(index - 1); }
+
+            function start() {
+                stop();
+                timer = window.setInterval(next, INTERVAL_MS);
+            }
+
+            function stop() {
+                if (timer) {
+                    window.clearInterval(timer);
+                    timer = null;
+                }
+            }
+
+            prevBtn?.addEventListener('click', () => { prev(); start(); });
+            nextBtn?.addEventListener('click', () => { next(); start(); });
+            dots.forEach((dot) => {
+                dot.addEventListener('click', () => {
+                    const to = Number(dot.getAttribute('data-slide-to'));
+                    if (Number.isFinite(to)) {
+                        goTo(to);
+                        start();
+                    }
+                });
+            });
+
+            root.addEventListener('mouseenter', stop);
+            root.addEventListener('mouseleave', start);
+            root.addEventListener('focusin', stop);
+            root.addEventListener('focusout', (e) => {
+                if (!root.contains(e.relatedTarget)) start();
+            });
+
+            start();
         }
     }
 

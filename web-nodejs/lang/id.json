@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "Jenis file tidak valid. Gunakan PNG, JPG, WebP atau GIF.",
         "bg_upload_success": "Gambar latar belakang berhasil diunggah.",
         "login_title": "Halaman Login",
-        "login_desc": "Sesuaikan judul, subjudul, dan latar belakang layar login.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Judul Login",
         "login_heading_placeholder": "Selamat datang kembali",
         "login_subheading": "Subjudul Login",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "Preset menerapkan paket warna lengkap (misalnya BetterDesk atau insolv Core Server). Preset terpisah dari pengalih cepat terang/gelap.",
         "readability_check": "Pemeriksaan keterbacaan",
         "readability_contrast": "Rasio kontras {item} ({ratio}) di bawah {minimum}:1",
-        "readability_background": "{item} menggunakan {type} dengan overlay rendah; teks mungkin sulit dibaca."
+        "readability_background": "{item} menggunakan {type} dengan overlay rendah; teks mungkin sulit dibaca.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Ikhtisar",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk gratis",
+                "body": "Remote desktop open source — tanpa lisensi seat, tanpa lock-in. Host sendiri."
+            },
+            "remote": {
+                "title": "Dukungan jarak jauh di bawah kendali Anda",
+                "body": "Hubungkan endpoint dari konsol Anda. Sesi tetap di infrastruktur Anda."
+            },
+            "secure": {
+                "title": "Keamanan bawaan",
+                "body": "Autentikasi operator, kontrol sesi, dan attestation server bila diperlukan."
+            },
+            "platforms": {
+                "title": "Windows, Linux, dan macOS",
+                "body": "Satu konsol untuk agen di platform yang sudah didukung tim Anda."
+            }
+        },
+        "prev": "Slide sebelumnya",
+        "next": "Slide berikutnya"
     }
 }

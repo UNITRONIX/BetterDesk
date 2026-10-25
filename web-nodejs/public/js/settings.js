@@ -1510,6 +1510,14 @@
     let _fontSource = 'google';
     let _brandingProfiles = [];
     const _backgroundUploads = new Map();
+    const MAX_LOGIN_SLIDES = 10;
+    const DEFAULT_LOGIN_SLIDES = [
+        { id: 'free', slideKey: 'free', order: 0, imageUrl: '/img/login-slides/free.jpg', title: '', body: '', overlay: '45' },
+        { id: 'remote', slideKey: 'remote', order: 1, imageUrl: '/img/login-slides/remote.jpg', title: '', body: '', overlay: '45' },
+        { id: 'secure', slideKey: 'secure', order: 2, imageUrl: '/img/login-slides/secure.jpg', title: '', body: '', overlay: '45' },
+        { id: 'platforms', slideKey: 'platforms', order: 3, imageUrl: '/img/login-slides/platforms.jpg', title: '', body: '', overlay: '45' }
+    ];
+    let _loginSlides = DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
     
     /**
      * Initialize branding configuration section
@@ -1533,6 +1541,7 @@
             initFontPickers();
             initFontSourceTabs();
             initBackgroundSelectors();
+            initLoginSlidesEditor();
             initBrandingProfiles();
             initBuiltinThemes();
             initBrandingActions();
@@ -2038,6 +2047,7 @@
         // Login page
         setVal('login-title', data.loginTitle || '');
         setVal('login-subtitle', data.loginSubtitle || '');
+        checkRadio('login-promo-mode', data.loginPromoMode || 'slides');
         checkRadio('login-bg-type', data.loginBgType || 'inherit');
         setVal('login-bg-color', data.loginBgColor || '');
         setVal('login-bg-gradient', data.loginBgGradient || '');
@@ -2049,6 +2059,19 @@
         const loginOverlayVal = document.getElementById('login-bg-overlay-value');
         if (loginOverlayVal) loginOverlayVal.textContent = data.loginBgOverlay || '0';
         showBackgroundPanel('login-bg', data.loginBgType || 'inherit');
+        _loginSlides = Array.isArray(data.loginSlides) && data.loginSlides.length
+            ? data.loginSlides.map((s, i) => ({
+                id: s.id || `slide-${i + 1}`,
+                slideKey: s.slideKey || '',
+                order: i,
+                imageUrl: s.imageUrl || '',
+                title: s.title || '',
+                body: s.body || '',
+                overlay: String(s.overlay != null ? s.overlay : '45')
+            }))
+            : DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
+        renderLoginSlidesEditor();
+        syncLoginPromoPanels();
         
         // Agent download page
         checkRadio('agent-bg-type', data.agentBgType || 'none');
@@ -2101,6 +2124,196 @@
      * Wire background selectors: radio toggles, range value labels,
      * color picker sync and image uploads for console/login/agent groups.
      */
+    function syncLoginPromoPanels() {
+        const mode = document.querySelector('input[name="login-promo-mode"]:checked')?.value || 'slides';
+        const slidesPanel = document.getElementById('login-slides-panel');
+        const bgConfig = document.getElementById('login-bg-config');
+        if (slidesPanel) slidesPanel.hidden = mode !== 'slides';
+        if (bgConfig) bgConfig.hidden = mode === 'slides';
+    }
+
+    function collectLoginSlidesFromDom() {
+        const list = document.getElementById('login-slides-list');
+        if (!list) return _loginSlides.slice(0, MAX_LOGIN_SLIDES);
+        const cards = Array.from(list.querySelectorAll('.login-slide-card'));
+        return cards.slice(0, MAX_LOGIN_SLIDES).map((card, i) => ({
+            id: card.dataset.slideId || `slide-${i + 1}`,
+            slideKey: card.dataset.slideKey || '',
+            order: i,
+            imageUrl: card.querySelector('.login-slide-image-url')?.value.trim() || '',
+            title: card.querySelector('.login-slide-title')?.value.trim() || '',
+            body: card.querySelector('.login-slide-body')?.value.trim() || '',
+            overlay: card.querySelector('.login-slide-overlay')?.value || '45'
+        }));
+    }
+
+    function renderLoginSlidesEditor() {
+        const list = document.getElementById('login-slides-list');
+        if (!list) return;
+        const esc = (typeof Utils !== 'undefined' && Utils.escapeHtml)
+            ? Utils.escapeHtml
+            : (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        list.innerHTML = _loginSlides.map((slide, idx) => `
+            <div class="login-slide-card" data-slide-id="${esc(slide.id)}" data-slide-key="${esc(slide.slideKey || '')}" data-index="${idx}">
+                <div class="login-slide-card-header">
+                    <strong>#${idx + 1}</strong>
+                    <div class="login-slide-card-actions">
+                        <button type="button" class="btn btn-ghost btn-sm login-slide-up" title="${esc(_('branding.login_slide_move_up'))}" ${idx === 0 ? 'disabled' : ''}>
+                            <span class="material-icons" aria-hidden="true">arrow_upward</span>
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-sm login-slide-down" title="${esc(_('branding.login_slide_move_down'))}" ${idx >= _loginSlides.length - 1 ? 'disabled' : ''}>
+                            <span class="material-icons" aria-hidden="true">arrow_downward</span>
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-sm login-slide-remove" title="${esc(_('branding.login_slides_remove'))}">
+                            <span class="material-icons" aria-hidden="true">delete</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.login_slide_image'))}</label>
+                    <div class="logo-upload-area">
+                        <input type="file" class="logo-file-input login-slide-file" accept="image/png,image/jpeg,image/webp,image/gif" data-index="${idx}">
+                        <label class="logo-upload-btn login-slide-file-label">
+                            <span class="material-icons" aria-hidden="true">upload_file</span>
+                            <span>${esc(_('branding.bg_image_choose'))}</span>
+                        </label>
+                    </div>
+                    <input type="text" class="form-input login-slide-image-url" value="${esc(slide.imageUrl || '')}" placeholder="/img/login-slides/free.jpg">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.login_slide_title'))}</label>
+                    <input type="text" class="form-input login-slide-title" maxlength="120" value="${esc(slide.title || '')}" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.title') : '')}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.login_slide_body'))}</label>
+                    <textarea class="form-input login-slide-body" rows="2" maxlength="400" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.body') : '')}">${esc(slide.body || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.bg_overlay'))} (<span class="login-slide-overlay-value">${esc(slide.overlay || '45')}</span>%)</label>
+                    <input type="range" class="form-range login-slide-overlay" min="0" max="90" step="5" value="${esc(slide.overlay || '45')}">
+                </div>
+            </div>
+        `).join('');
+
+        const addBtn = document.getElementById('login-slides-add');
+        const maxHint = document.getElementById('login-slides-max-hint');
+        if (addBtn) addBtn.disabled = _loginSlides.length >= MAX_LOGIN_SLIDES;
+        if (maxHint) maxHint.hidden = _loginSlides.length < MAX_LOGIN_SLIDES;
+
+        list.querySelectorAll('.login-slide-file-label').forEach((label) => {
+            const input = label.parentElement?.querySelector('.login-slide-file');
+            if (input && !input.id) {
+                const id = `login-slide-file-${label.closest('.login-slide-card')?.dataset.index || '0'}`;
+                input.id = id;
+                label.setAttribute('for', id);
+            }
+        });
+    }
+
+    function initLoginSlidesEditor() {
+        const list = document.getElementById('login-slides-list');
+        document.querySelectorAll('input[name="login-promo-mode"]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+                syncLoginPromoPanels();
+                onBrandingFieldChange();
+            });
+        });
+
+        document.getElementById('login-slides-add')?.addEventListener('click', () => {
+            if (_loginSlides.length >= MAX_LOGIN_SLIDES) return;
+            _loginSlides = collectLoginSlidesFromDom();
+            _loginSlides.push({
+                id: `slide-${Date.now().toString(36)}`,
+                slideKey: '',
+                order: _loginSlides.length,
+                imageUrl: '',
+                title: '',
+                body: '',
+                overlay: '45'
+            });
+            renderLoginSlidesEditor();
+            onBrandingFieldChange();
+        });
+
+        document.getElementById('login-slides-restore')?.addEventListener('click', () => {
+            _loginSlides = DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
+            renderLoginSlidesEditor();
+            onBrandingFieldChange();
+        });
+
+        list?.addEventListener('click', (e) => {
+            const card = e.target.closest('.login-slide-card');
+            if (!card) return;
+            const idx = Number(card.dataset.index);
+            if (e.target.closest('.login-slide-remove')) {
+                _loginSlides = collectLoginSlidesFromDom();
+                if (_loginSlides.length <= 1) return;
+                _loginSlides.splice(idx, 1);
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+                return;
+            }
+            if (e.target.closest('.login-slide-up') && idx > 0) {
+                _loginSlides = collectLoginSlidesFromDom();
+                const tmp = _loginSlides[idx - 1];
+                _loginSlides[idx - 1] = _loginSlides[idx];
+                _loginSlides[idx] = tmp;
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+                return;
+            }
+            if (e.target.closest('.login-slide-down') && idx < _loginSlides.length - 1) {
+                _loginSlides = collectLoginSlidesFromDom();
+                const tmp = _loginSlides[idx + 1];
+                _loginSlides[idx + 1] = _loginSlides[idx];
+                _loginSlides[idx] = tmp;
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+            }
+        });
+
+        list?.addEventListener('input', (e) => {
+            if (e.target.classList.contains('login-slide-overlay')) {
+                const val = e.target.closest('.login-slide-card')?.querySelector('.login-slide-overlay-value');
+                if (val) val.textContent = e.target.value;
+            }
+        });
+
+        list?.addEventListener('change', async (e) => {
+            const fileInput = e.target.closest('.login-slide-file');
+            if (!fileInput || !fileInput.files?.length) return;
+            const file = fileInput.files[0];
+            const card = fileInput.closest('.login-slide-card');
+            const idx = Number(card?.dataset.index);
+            try {
+                const formData = new FormData();
+                formData.append('background', file);
+                const csrf = window.BetterDesk?.csrfToken || '';
+                const res = await fetch('/api/settings/branding/upload-background', {
+                    method: 'POST',
+                    headers: csrf ? { 'X-CSRF-Token': csrf } : {},
+                    credentials: 'same-origin',
+                    body: formData
+                });
+                const payload = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(payload.error || payload.message || _('errors.server_error'));
+                const url = payload.url || payload.data?.url;
+                if (!url) throw new Error(_('errors.server_error'));
+                _loginSlides = collectLoginSlidesFromDom();
+                if (_loginSlides[idx]) _loginSlides[idx].imageUrl = url;
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+                Notifications.success(_('branding.bg_upload_success'));
+            } catch (err) {
+                Notifications.error(err.message || _('errors.server_error'));
+            } finally {
+                fileInput.value = '';
+            }
+        });
+
+        syncLoginPromoPanels();
+    }
+
     function initBackgroundSelectors() {
         // Radio toggles for the three background groups
         [['bg-type', 'bg'], ['login-bg-type', 'login-bg'], ['agent-bg-type', 'agent-bg'], ['rdclient-bg-type', 'rdclient-bg']].forEach(([name, prefix]) => {
@@ -2628,6 +2841,8 @@
         data.loginBgOverlay = document.getElementById('login-bg-overlay')?.value || '';
         data.loginTitle = document.getElementById('login-title')?.value.trim() || '';
         data.loginSubtitle = document.getElementById('login-subtitle')?.value.trim() || '';
+        data.loginPromoMode = document.querySelector('input[name="login-promo-mode"]:checked')?.value || 'slides';
+        data.loginSlides = collectLoginSlidesFromDom();
         
         // Agent download page
         data.agentBgType = document.querySelector('input[name="agent-bg-type"]:checked')?.value || 'none';

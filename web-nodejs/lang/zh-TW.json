@@ -1614,7 +1614,7 @@
         "bg_image_invalid_type": "文件類型無效。請使用 PNG、JPG、WebP 或 GIF。",
         "bg_upload_success": "背景圖片上傳成功。",
         "login_title": "登錄頁面",
-        "login_desc": "自定義登錄界面的標題、副標題和背景。",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "登錄標題",
         "login_heading_placeholder": "歡迎回來",
         "login_subheading": "登錄副標題",
@@ -1690,7 +1690,23 @@
         "builtin_themes_hint": "預設會套用完整的色彩組合（例如 BetterDesk 或 insolv Core Server），與快速明暗切換不同。",
         "readability_check": "可讀性檢查",
         "readability_contrast": "{item} 的對比度（{ratio}）低於 {minimum}:1",
-        "readability_background": "{item} 使用低覆蓋度的 {type}，文字可能難以閱讀。"
+        "readability_background": "{item} 使用低覆蓋度的 {type}，文字可能難以閱讀。",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "概覽",
@@ -4691,5 +4707,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk 免費",
+                "body": "開源遠端桌面 — 無座位授權、無廠商鎖定。自行託管。"
+            },
+            "remote": {
+                "title": "由您掌控的遠端支援",
+                "body": "透過自有主控台連線端點。工作階段留在您的基礎設施。"
+            },
+            "secure": {
+                "title": "內建安全性",
+                "body": "操作人員驗證、工作階段控制，以及需要時的伺服器證明。"
+            },
+            "platforms": {
+                "title": "Windows、Linux 與 macOS",
+                "body": "一個主控台涵蓋團隊已支援的各平台代理程式。"
+            }
+        },
+        "prev": "上一張投影片",
+        "next": "下一張投影片"
     }
 }

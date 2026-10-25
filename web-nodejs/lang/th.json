@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "ประเภทไฟล์ไม่ถูกต้อง ใช้ PNG, JPG, WebP หรือ GIF",
         "bg_upload_success": "อัปโหลดรูปพื้นหลังสำเร็จ",
         "login_title": "หน้าเข้าสู่ระบบ",
-        "login_desc": "กำหนดค่าหัวเรื่อง, คำบรรยาย และพื้นหลังของหน้าเข้าสู่ระบบ",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "หัวเรื่องเข้าสู่ระบบ",
         "login_heading_placeholder": "ยินดีต้อนรับกลับ",
         "login_subheading": "คำบรรยายเข้าสู่ระบบ",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "พรีเซ็ตจะใช้ชุดสีแบบเต็ม (เช่น BetterDesk หรือ insolv Core Server) และแยกจากปุ่มสลับโหมดสว่าง/มืดแบบด่วน",
         "readability_check": "ตรวจสอบความสามารถในการอ่าน",
         "readability_contrast": "อัตราส่วนคอนทราสต์ของ {item} ({ratio}) ต่ำกว่า {minimum}:1",
-        "readability_background": "{item} ใช้ {type} ที่มีโอเวอร์เลย์ต่ำ ทำให้ข้อความอ่านได้ยาก"
+        "readability_background": "{item} ใช้ {type} ที่มีโอเวอร์เลย์ต่ำ ทำให้ข้อความอ่านได้ยาก",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "ภาพรวม",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk ฟรี",
+                "body": "รีโมตเดสก์ท็อปโอเพนซอร์ส — ไม่มีไลเซนส์ต่อที่นั่ง ไม่ล็อกผู้ขาย โฮสต์เองได้"
+            },
+            "remote": {
+                "title": "ซัพพอร์ตระยะไกลที่คุณควบคุม",
+                "body": "เชื่อมต่อเอนด์พอยต์จากคอนโซลของคุณ เซสชันอยู่บนโครงสร้างของคุณ"
+            },
+            "secure": {
+                "title": "ความปลอดภัยในตัว",
+                "body": "ยืนยันตัวตนผู้ปฏิบัติงาน ควบคุมเซสชัน และ attestation เซิร์ฟเวอร์เมื่อต้องการ"
+            },
+            "platforms": {
+                "title": "Windows, Linux และ macOS",
+                "body": "คอนโซลเดียวสำหรับเอเจนต์บนแพลตฟอร์มที่ทีมรองรับอยู่แล้ว"
+            }
+        },
+        "prev": "สไลด์ก่อนหน้า",
+        "next": "สไลด์ถัดไป"
     }
 }

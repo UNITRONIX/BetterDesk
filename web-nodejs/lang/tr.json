@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "Geçersiz dosya türü. PNG, JPG, WebP veya GIF kullanın.",
         "bg_upload_success": "Arka plan görüntüsü başarıyla yüklendi.",
         "login_title": "Giriş Sayfası",
-        "login_desc": "Giriş ekranı başlığını, alt başlığını ve arka planını özelleştirin.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Giriş Başlığı",
         "login_heading_placeholder": "Tekrar hoş geldiniz",
         "login_subheading": "Giriş Alt Başlığı",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "Ön ayarlar tam bir renk paketi uygular (ör. BetterDesk veya insolv Core Server). Hızlı açık/koyu geçişinden ayrıdır.",
         "readability_check": "Okunabilirlik denetimi",
         "readability_contrast": "{item} kontrast oranı ({ratio}) {minimum}:1 değerinin altında",
-        "readability_background": "{item}, düşük kaplama ile {type} kullanıyor; metin zor okunabilir."
+        "readability_background": "{item}, düşük kaplama ile {type} kullanıyor; metin zor okunabilir.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Genel Bakış",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk ücretsizdir",
+                "body": "Açık kaynak uzak masaüstü — koltuk lisansı yok, kilitlenme yok. Kendiniz barındırın."
+            },
+            "remote": {
+                "title": "Kontrol sizde uzak destek",
+                "body": "Uç noktalara kendi konsolunuzdan bağlanın. Oturumlar altyapınızda kalır."
+            },
+            "secure": {
+                "title": "Güvenlik yerleşik",
+                "body": "Operatör kimlik doğrulama, oturum denetimleri ve gerektiğinde sunucu attestation."
+            },
+            "platforms": {
+                "title": "Windows, Linux ve macOS",
+                "body": "Ekibinizin zaten desteklediği platformlarda ajanlar için tek konsol."
+            }
+        },
+        "prev": "Önceki slayt",
+        "next": "Sonraki slayt"
     }
 }

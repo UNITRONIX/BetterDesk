@@ -1597,7 +1597,7 @@
         "bg_image_invalid_type": "Ungultiger Bestandtyp. Bitte PNG, JPG, WebP oder GIF verwenden.",
         "bg_upload_success": "Hintergrundbild erfolgreich hochgeladen.",
         "login_title": "Anmeldeseite",
-        "login_desc": "Uberschrift, Untertitel und Hintergrund des Anmeldebildschirms anpassen.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Anmeldeuberschrift",
         "login_heading_placeholder": "Willkommen zuruck",
         "login_subheading": "Anmeldeuntertitel",
@@ -1673,7 +1673,23 @@
         "builtin_themes_hint": "Voorinstellingen passen een volledig kleurenpakket toe (bijvoorbeeld BetterDesk of insolv Core Server). Ze staan los van de snelle licht/donker-schakelaar.",
         "readability_check": "Leesbaarheidscontrole",
         "readability_contrast": "Het contrast van {item} ({ratio}) is lager dan {minimum}:1",
-        "readability_background": "{item} gebruikt {type} met een lage overlay; tekst kan moeilijk leesbaar zijn."
+        "readability_background": "{item} gebruikt {type} met een lage overlay; tekst kan moeilijk leesbaar zijn.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Overzicht",
@@ -4687,5 +4703,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk is gratis",
+                "body": "Open-source remote desktop — geen seat-licenties, geen lock-in. Zelf hosten."
+            },
+            "remote": {
+                "title": "Remote support onder jouw controle",
+                "body": "Verbind endpoints vanuit je eigen console. Sessies blijven op jouw infrastructuur."
+            },
+            "secure": {
+                "title": "Beveiliging ingebouwd",
+                "body": "Operator-authenticatie, sessiecontrole en serverattestation wanneer nodig."
+            },
+            "platforms": {
+                "title": "Windows, Linux en macOS",
+                "body": "Eén console voor agents op de platforms die je team al ondersteunt."
+            }
+        },
+        "prev": "Vorige dia",
+        "next": "Volgende dia"
     }
 }

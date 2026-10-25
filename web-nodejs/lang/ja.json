@@ -1597,7 +1597,7 @@
         "bg_image_invalid_type": "無効なファイル形式です。PNG、JPG、WebP または GIF を使用してください。",
         "bg_upload_success": "背景画像を正常にアップロードしました。",
         "login_title": "ログインページ",
-        "login_desc": "ログイン画面の見出し、サブタイトル、背景をカスタマイズします。",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "ログイン見出し",
         "login_heading_placeholder": "お帰りなさい",
         "login_subheading": "ログインサブタイトル",
@@ -1673,7 +1673,23 @@
         "builtin_themes_hint": "プリセットは完全なカラーパック（BetterDesk、insolv Core Server など）を適用します。クイック明暗切り替えとは別の機能です。",
         "readability_check": "可読性チェック",
         "readability_contrast": "{item} のコントラスト比 ({ratio}) は {minimum}:1 未満です",
-        "readability_background": "{item} はオーバーレイが弱い {type} を使用しているため、テキストが読みにくい可能性があります。"
+        "readability_background": "{item} はオーバーレイが弱い {type} を使用しているため、テキストが読みにくい可能性があります。",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "概要",
@@ -4687,5 +4703,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk は無料です",
+                "body": "オープンソースのリモートデスクトップ — シートライセンスもロックインもなし。自前でホスト。"
+            },
+            "remote": {
+                "title": "自分で制御するリモートサポート",
+                "body": "自前のコンソールからエンドポイントへ接続。セッションは自社インフラに留まります。"
+            },
+            "secure": {
+                "title": "セキュリティを標準搭載",
+                "body": "オペレーター認証、セッション制御、必要なときのサーバー証明。"
+            },
+            "platforms": {
+                "title": "Windows・Linux・macOS",
+                "body": "チームが既に支えるプラットフォーム向けエージェントを一つのコンソールで。"
+            }
+        },
+        "prev": "前のスライド",
+        "next": "次のスライド"
     }
 }

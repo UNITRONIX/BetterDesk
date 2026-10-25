@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "अमान्य फ़ाइल प्रकार। PNG, JPG, WebP या GIF उपयोग करें।",
         "bg_upload_success": "पृष्ठभूमि छवि सफलतापूर्वक अपलोड हुई।",
         "login_title": "लॉगिन पेज",
-        "login_desc": "लॉगिन स्क्रीन शीर्षक, उपशीर्षक और पृष्ठभूमि अनुकूलित करें।",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "लॉगिन शीर्षक",
         "login_heading_placeholder": "वापस स्वागत है",
         "login_subheading": "लॉगिन उपशीर्षक",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "प्रीसेट पूरा रंग पैक लागू करते हैं (जैसे BetterDesk या insolv Core Server)। ये त्वरित हल्के/गहरे थीम स्विच से अलग हैं।",
         "readability_check": "पठनीयता जाँच",
         "readability_contrast": "{item} का कंट्रास्ट अनुपात ({ratio}) {minimum}:1 से कम है",
-        "readability_background": "{item} कम ओवरले के साथ {type} का उपयोग करता है; पाठ पढ़ना कठिन हो सकता है।"
+        "readability_background": "{item} कम ओवरले के साथ {type} का उपयोग करता है; पाठ पढ़ना कठिन हो सकता है।",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "सिंहावलोकन",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk मुफ़्त है",
+                "body": "ओपन-सोर्स रिमोट डेस्कटॉप — कोई सीट लाइसेंस नहीं, कोई लॉक-इन नहीं। स्वयं होस्ट करें।"
+            },
+            "remote": {
+                "title": "आपके नियंत्रण में रिमोट सपोर्ट",
+                "body": "अपने कंसोल से एंडपॉइंट जोड़ें। सत्र आपके इन्फ्रा पर रहते हैं।"
+            },
+            "secure": {
+                "title": "सुरक्षा अंतर्निहित",
+                "body": "ऑपरेटर प्रमाणीकरण, सत्र नियंत्रण, और जरूरत पर सर्वर attestation।"
+            },
+            "platforms": {
+                "title": "Windows, Linux और macOS",
+                "body": "टीम के पहले से समर्थित प्लेटफ़ॉर्म पर एजेंटों के लिए एक कंसोल।"
+            }
+        },
+        "prev": "पिछली स्लाइड",
+        "next": "अगली स्लाइड"
     }
 }

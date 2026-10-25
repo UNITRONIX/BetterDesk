@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "Невірний тип файлу. Використовуйте PNG, JPG, WebP або GIF.",
         "bg_upload_success": "Фонове зображення завантажено.",
         "login_title": "Сторінка входу",
-        "login_desc": "Налаштуйте заголовок, підзаголовок і фон екрана входу.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Заголовок входу",
         "login_heading_placeholder": "З поверненням",
         "login_subheading": "Підзаголовок входу",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "Пресети застосовують повну палітру (наприклад BetterDesk або insolv Core Server). Вони відокремлені від швидкого перемикача світлої/темної теми.",
         "readability_check": "Перевірка читабельності",
         "readability_contrast": "Контраст {item} ({ratio}) нижчий за {minimum}:1",
-        "readability_background": "{item} використовує {type} з низьким затемненням; текст може бути важко читати."
+        "readability_background": "{item} використовує {type} з низьким затемненням; текст може бути важко читати.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Огляд",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk безкоштовний",
+                "body": "Віддалений робочий стіл з відкритим кодом — без ліцензій на місця і без прив’язки. Хостіть самі."
+            },
+            "remote": {
+                "title": "Віддалена підтримка під вашим контролем",
+                "body": "Підключайте кінцеві точки з власної консолі. Сеанси лишаються на вашій інфраструктурі."
+            },
+            "secure": {
+                "title": "Безпека з коробки",
+                "body": "Автентифікація операторів, контроль сеансів і атестація сервера за потреби."
+            },
+            "platforms": {
+                "title": "Windows, Linux і macOS",
+                "body": "Одна консоль для агентів на платформах, які вже підтримує ваша команда."
+            }
+        },
+        "prev": "Попередній слайд",
+        "next": "Наступний слайд"
     }
 }

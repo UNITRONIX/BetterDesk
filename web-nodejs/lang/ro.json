@@ -1603,7 +1603,7 @@
         "bg_image_invalid_type": "Tip de fișier invalid. Utilizați PNG, JPG, WebP sau GIF.",
         "bg_upload_success": "Imagine de fundal încărcată.",
         "login_title": "Pagina de autentificare",
-        "login_desc": "Personalizați titlul, subtitlul și fundalul ecranului de autentificare.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Titlu autentificare",
         "login_heading_placeholder": "Bine ați revenit",
         "login_subheading": "Subtitlu autentificare",
@@ -1679,7 +1679,23 @@
         "builtin_themes_hint": "Presetările aplică o paletă completă (de exemplu BetterDesk sau insolv Core Server). Sunt separate de comutatorul rapid luminos/întunecat.",
         "readability_check": "Verificare lizibilitate",
         "readability_contrast": "Contrastul pentru {item} ({ratio}) este sub {minimum}:1",
-        "readability_background": "{item} folosește {type} cu o suprapunere redusă; textul poate fi greu de citit."
+        "readability_background": "{item} folosește {type} cu o suprapunere redusă; textul poate fi greu de citit.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Prezentare generală",
@@ -4693,5 +4709,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk este gratuit",
+                "body": "Desktop remote open-source — fără licențe pe locuri, fără lock-in. Îl găzduiți voi."
+            },
+            "remote": {
+                "title": "Suport remote sub controlul dvs.",
+                "body": "Conectați endpoint-uri din propria consolă. Sesiunile rămân pe infrastructura dvs."
+            },
+            "secure": {
+                "title": "Securitate integrată",
+                "body": "Autentificare operatori, control sesiuni și atestare server când aveți nevoie."
+            },
+            "platforms": {
+                "title": "Windows, Linux și macOS",
+                "body": "O consolă pentru agenți pe platformele pe care echipa le suportă deja."
+            }
+        },
+        "prev": "Diapozitivul anterior",
+        "next": "Diapozitivul următor"
     }
 }

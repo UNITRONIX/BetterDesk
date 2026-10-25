@@ -1597,7 +1597,7 @@
         "bg_image_invalid_type": "文件类型无效。请使用 PNG、JPG、WebP 或 GIF。",
         "bg_upload_success": "背景图片上传成功。",
         "login_title": "登录页面",
-        "login_desc": "自定义登录界面的标题、副标题和背景。",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "登录标题",
         "login_heading_placeholder": "欢迎回来",
         "login_subheading": "登录副标题",
@@ -1673,7 +1673,23 @@
         "builtin_themes_hint": "预设会应用完整的配色方案（例如 BetterDesk 或 insolv Core Server），与快速明暗切换不同。",
         "readability_check": "可读性检查",
         "readability_contrast": "{item} 的对比度（{ratio}）低于 {minimum}:1",
-        "readability_background": "{item} 使用低覆盖度的 {type}，文字可能难以阅读。"
+        "readability_background": "{item} 使用低覆盖度的 {type}，文字可能难以阅读。",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "概览",
@@ -4687,5 +4703,27 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk 免费",
+                "body": "开源远程桌面 — 无席位许可、无供应商锁定。自行托管。"
+            },
+            "remote": {
+                "title": "由您掌控的远程支持",
+                "body": "通过自有控制台连接终端。会话保留在您的基础设施上。"
+            },
+            "secure": {
+                "title": "内置安全",
+                "body": "操作员认证、会话控制，以及需要时的服务器证明。"
+            },
+            "platforms": {
+                "title": "Windows、Linux 与 macOS",
+                "body": "一个控制台覆盖团队已支持的各平台代理。"
+            }
+        },
+        "prev": "上一张幻灯片",
+        "next": "下一张幻灯片"
     }
 }
