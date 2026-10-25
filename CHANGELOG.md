@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.195] — 2026-10-25
+
 ### Fixed
 - **Login session-expired toast:** `/login?expired=1` shows the session message as a right-side toast instead of stretching the login card; wrong-password / TOTP / OIDC errors stay inline. Desktop login uses the same toast path. Ships via panel update.
 
@@ -4359,3 +4366,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.192]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.191...v3.5.192
 [3.5.193]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.192...v3.5.193
 [3.5.194]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.193...v3.5.194
+[3.5.195]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.194...v3.5.195
