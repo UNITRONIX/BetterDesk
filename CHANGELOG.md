@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.193] — 2026-10-25
+
 ### Fixed
 - **Settings tab bar flush + scroll (#396):** UX 3.5 Settings tabs use content-padding bleed on all widths (not only ≥1025px), so sticky sits flush under the topbar on phone/tablet; the horizontal track keeps a thin scrollbar and bounded width so overflow tabs stay reachable. Ships via panel update. Verify: ≤1024px Settings → scroll a long form → bar flush under topbar; swipe/drag the tab strip to reach Advanced / Updates.
 - **Settings choice cards spacing:** Enrollment / connection mode card grids get bottom margin before the following toggle rows (styles live in `pages.css`, which Settings actually loads).
@@ -4340,3 +4347,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.190]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.189...v3.5.190
 [3.5.191]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.190...v3.5.191
 [3.5.192]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.191...v3.5.192
+[3.5.193]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.192...v3.5.193
