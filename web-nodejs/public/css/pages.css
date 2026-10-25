@@ -3254,19 +3254,30 @@
     --settings-nav-bleed-x: var(--space-lg);
 }
 
-/* Horizontal scroll lives on the track — not the sticky outer (avoids sticky breakage) */
+/* Horizontal scroll lives on the track — not the sticky outer (avoids sticky breakage).
+ * Explicit overflow-y:hidden — overflow-x:auto alone promotes overflow-y to auto. */
 .settings-shell-nav-track {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    align-items: center;
     gap: 4px;
     min-width: 0;
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.settings-shell-nav-track::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 /* Settings track: no extra bottom padding from .mobile-tabs-scroll (keeps bar compact) */

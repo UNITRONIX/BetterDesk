@@ -117,12 +117,22 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(settingsView, /class="settings-shell-nav-track mobile-tabs-scroll"/);
         assert.match(pagesCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*sticky/);
         assert.match(pagesCss, /\.settings-shell-nav-track\.mobile-tabs-scroll\s*\{[\s\S]*?padding-bottom:\s*0/);
-        assert.match(pagesCss, /\.settings-shell-nav-track\s*\{[\s\S]*?overflow-x:\s*auto[\s\S]*?touch-action:\s*pan-x/);
+        assert.match(
+            pagesCss,
+            /\.settings-shell-nav-track\s*\{[\s\S]*?overflow-x:\s*auto[\s\S]*?overflow-y:\s*hidden[\s\S]*?touch-action:\s*pan-x/
+        );
         assert.match(
             ux35Css,
-            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding-lg\)[\s\S]*?top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)[\s\S]*?margin-top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)/
+            /\.ux35-page \.ux35-content:has\(\.settings-shell\)\s*\{[\s\S]*?padding-top:\s*0[\s\S]*?padding-inline:\s*0/
         );
-        assert.match(ux35Css, /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?align-items:\s*center[\s\S]*?scrollbar-width:\s*thin/);
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?top:\s*0[\s\S]*?width:\s*100%/
+        );
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?overflow-y:\s*hidden[\s\S]*?scrollbar-width:\s*none/
+        );
         assert.match(
             ux35Css,
             /\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?justify-content:\s*center[\s\S]*?line-height:\s*1\.2/
@@ -134,7 +144,7 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         );
         assert.match(
             ux35Css,
-            /@media \(max-width: 767px\)[\s\S]*?\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding\)/
+            /@media \(max-width: 767px\)[\s\S]*?\.ux35-page \.ux35-content:has\(\.settings-shell\)\s*\{[\s\S]*?padding-top:\s*0/
         );
         assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
         assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);

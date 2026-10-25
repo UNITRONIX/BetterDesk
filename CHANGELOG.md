@@ -8,7 +8,7 @@
 ## [3.5.193] — 2026-10-25
 
 ### Fixed
-- **Settings tab bar flush + scroll (#396):** UX 3.5 Settings tabs use content-padding bleed on all widths (not only ≥1025px), so sticky sits flush under the topbar on phone/tablet; the horizontal track keeps a thin scrollbar and bounded width so overflow tabs stay reachable. Ships via panel update. Verify: ≤1024px Settings → scroll a long form → bar flush under topbar; swipe/drag the tab strip to reach Advanced / Updates.
+- **Settings tab bar flush + scroll (#396):** Settings scrollport drops top/side padding (`:has(.settings-shell)`) so sticky tabs sit flush under the topbar with zero gap (Chromium cannot stick into padding); content padding moves to page-header + settings main; horizontal swipe without scrollbar chrome; `overflow-y: hidden` on the track. Ships via panel update. Verify: Settings → scroll → tabs edge-to-edge under topbar, no gap.
 - **Settings choice cards spacing:** Enrollment / connection mode card grids get bottom margin before the following toggle rows (styles live in `pages.css`, which Settings actually loads).
 - **Mobile bottom-nav Remote:** “Zdalny” linked to non-existent `/remote-dashboard` (404); now opens `/remote` like the sidebar. Ships via panel update.
 - **Material Symbols subset (#393 follow-up):** Regenerated self-hosted fonts to include missing ligatures (`label`, `assignment`, `my_location`) that rendered as giant raw text next to Devices toolbar icons; toolbar icon buttons also clip overflow. Hard-refresh once after panel update.
