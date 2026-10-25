@@ -128,7 +128,13 @@
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
-    background: linear-gradient(135deg, rgba(88, 166, 255, 0.06), transparent 55%);
+    background: transparent;
+}
+
+.overlay-card-billing[hidden],
+.session-billing-divider[hidden],
+.session-billing-error[hidden] {
+    display: none !important;
 }
 
 .billing-pane-title {

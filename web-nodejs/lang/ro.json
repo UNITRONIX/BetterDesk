@@ -4387,8 +4387,8 @@
             "submit": "Trimite raport",
             "summary_required": "Rezumatul este obligatoriu",
             "saved": "Raport de lucru salvat",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Raport de lucru",
+            "intent_hint": "Formularul de raport se va deschide la finalul sesiunii"
         },
         "empty": {
             "packages": "Nu există pachete încă. Creați unul cu butonul de mai sus.",

@@ -4381,8 +4381,8 @@
             "submit": "보고서 제출",
             "summary_required": "요약은 필수입니다",
             "saved": "작업 보고서가 저장되었습니다",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "작업 보고서",
+            "intent_hint": "세션이 끝나면 보고서 양식이 열립니다"
         },
         "empty": {
             "packages": "아직 패키지가 없습니다. 위 버튼으로 만드세요.",

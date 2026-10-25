@@ -4387,8 +4387,8 @@
             "submit": "Send rapport",
             "summary_required": "Resumé er påkrævet",
             "saved": "Arbejdsrapport gemt",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Arbejdsrapport",
+            "intent_hint": "Rapportformularen åbnes, når sessionen slutter"
         },
         "empty": {
             "packages": "Ingen pakker endnu. Opret en med knappen ovenfor.",

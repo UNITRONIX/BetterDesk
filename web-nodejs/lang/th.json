@@ -4387,8 +4387,8 @@
             "submit": "ส่งรายงาน",
             "summary_required": "ต้องมีสรุป",
             "saved": "บันทึกรายงานการทำงานแล้ว",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "รายงานงาน",
+            "intent_hint": "แบบฟอร์มรายงานจะเปิดเมื่อเซสชันสิ้นสุด"
         },
         "empty": {
             "packages": "ยังไม่มีแพ็กเกจ สร้างด้วยปุ่มด้านบน",

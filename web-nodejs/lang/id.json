@@ -4387,8 +4387,8 @@
             "submit": "Kirim laporan",
             "summary_required": "Ringkasan wajib diisi",
             "saved": "Laporan kerja disimpan",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Laporan kerja",
+            "intent_hint": "Formulir laporan akan terbuka saat sesi berakhir"
         },
         "empty": {
             "packages": "Belum ada paket. Buat dengan tombol di atas.",

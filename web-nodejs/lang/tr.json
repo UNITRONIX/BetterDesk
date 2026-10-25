@@ -4387,8 +4387,8 @@
             "submit": "Rapor gönder",
             "summary_required": "Özet gerekli",
             "saved": "İş raporu kaydedildi",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "İş raporu",
+            "intent_hint": "Oturum bittiğinde rapor formu açılacak"
         },
         "empty": {
             "packages": "Henüz paket yok. Yukarıdaki düğmeyle oluşturun.",

@@ -163,6 +163,11 @@ router.get('/api/panel/billing/sessions', requireAuth, requirePermission('billin
     proxyToGo(apiClient, req, res, 'GET', () => `/billing/sessions${q ? `?${q}` : ''}`);
 });
 
+router.get('/api/panel/billing/check', requireAuth, requirePermission('device.connect'), (req, res) => {
+    const q = new URLSearchParams(req.query).toString();
+    proxyToGo(apiClient, req, res, 'GET', () => `/billing/check${q ? `?${q}` : ''}`);
+});
+
 router.get('/api/panel/billing/sessions/pending', requireAuth, requirePermission('billing.reports'), (req, res) => {
     const q = new URLSearchParams(req.query).toString();
     proxyToGo(apiClient, req, res, 'GET', () => `/billing/sessions/pending${q ? `?${q}` : ''}`);

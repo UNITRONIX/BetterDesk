@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **Web Remote work report overlay:** Skip/Submit now reliably hide the billing pane (`[hidden]` + `.hidden`); added missing `GET /api/panel/billing/check` panel proxy (toolbar package badge); connect-password returns 200 when no vault password (no console 404); report pane no longer uses a separate tinted background; report labels follow panel language (all locales).
+
 ### Changed
 - _(none yet)_
 

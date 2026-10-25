@@ -53,6 +53,63 @@
         return document.querySelector('.session-panel.active') || document.querySelector('.session-panel');
     }
 
+    function setPaneVisible(pane, divider, card, visible) {
+        if (!pane) return;
+        pane.hidden = !visible;
+        pane.classList.toggle('hidden', !visible);
+        if (divider) {
+            divider.hidden = !visible;
+            divider.classList.toggle('hidden', !visible);
+            divider.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        }
+        if (card) {
+            card.classList.toggle('overlay-card--billing', visible);
+        }
+    }
+
+    function hideBillingPane(panel) {
+        if (!panel) return;
+        const card = panel.querySelector('.overlay-card');
+        const pane = panel.querySelector('.session-billing-pane');
+        const divider = panel.querySelector('.session-billing-divider');
+        setPaneVisible(pane, divider, card, false);
+    }
+
+    function applyLocalizedLabels(pane) {
+        const titleEl = pane.querySelector('.billing-pane-title');
+        if (titleEl) titleEl.textContent = t('commercialization.report.title', 'Work report');
+
+        const labelEl = pane.querySelector('.billing-pane-label');
+        if (labelEl) {
+            const textarea = labelEl.querySelector('textarea');
+            const labelText = t('commercialization.report.summary', 'Work performed');
+            // Keep textarea as child; replace only the text node before it.
+            let textNode = null;
+            for (const node of labelEl.childNodes) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    textNode = node;
+                    break;
+                }
+            }
+            if (textNode) {
+                textNode.textContent = labelText;
+            } else if (textarea) {
+                labelEl.insertBefore(document.createTextNode(labelText), textarea);
+            } else {
+                labelEl.textContent = labelText;
+            }
+        }
+
+        const skipBtn = pane.querySelector('.session-billing-skip');
+        if (skipBtn) skipBtn.textContent = t('commercialization.report.skip', 'Skip for now');
+
+        const submitBtn = pane.querySelector('.session-billing-submit');
+        if (submitBtn) {
+            submitBtn.dataset.labelDefault = t('commercialization.report.submit', 'Submit report');
+            if (!submitBtn.disabled) submitBtn.textContent = submitBtn.dataset.labelDefault;
+        }
+    }
+
     function showInOverlay(session, deviceName, panel) {
         return new Promise((resolve) => {
             const card = panel?.querySelector('.overlay-card');
@@ -63,9 +120,8 @@
                 return;
             }
 
-            card.classList.add('overlay-card--billing');
-            pane.hidden = false;
-            if (divider) divider.hidden = false;
+            setPaneVisible(pane, divider, card, true);
+            applyLocalizedLabels(pane);
 
             const mins = session.billed_minutes || 0;
             const hours = (mins / 60).toFixed(2);
@@ -74,6 +130,8 @@
             const hoursEl = pane.querySelector('.session-billing-hours');
             const summaryEl = pane.querySelector('.session-billing-summary');
             const errEl = pane.querySelector('.session-billing-error');
+            const skipBtn = pane.querySelector('.session-billing-skip');
+            const submitBtn = pane.querySelector('.session-billing-submit');
 
             if (pkgEl) {
                 pkgEl.textContent = session.package_name
@@ -84,35 +142,65 @@
                 hoursEl.textContent = `${hours} h (${mins} min) · ${amount.toFixed(2)} ${session.currency || ''}`.trim();
             }
             if (summaryEl) summaryEl.value = session._draftSummary || '';
-            if (errEl) errEl.hidden = true;
+            if (errEl) {
+                errEl.hidden = true;
+                errEl.classList.add('hidden');
+            }
 
+            let settled = false;
             const finish = (result) => {
-                pane.hidden = true;
-                if (divider) divider.hidden = true;
-                card.classList.remove('overlay-card--billing');
+                if (settled) return;
+                settled = true;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = submitBtn.dataset.labelDefault
+                        || t('commercialization.report.submit', 'Submit report');
+                }
+                if (skipBtn) skipBtn.disabled = false;
+                setPaneVisible(pane, divider, card, false);
                 resolve(result);
             };
 
-            pane.querySelector('.session-billing-skip').onclick = () => finish(false);
-            pane.querySelector('.session-billing-submit').onclick = async () => {
-                const summary = (summaryEl?.value || '').trim();
-                if (!summary) {
-                    if (errEl) {
-                        errEl.textContent = t('commercialization.report.summary_required', 'Summary is required');
-                        errEl.hidden = false;
+            if (skipBtn) {
+                skipBtn.disabled = false;
+                skipBtn.onclick = () => finish(false);
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.onclick = async () => {
+                    const summary = (summaryEl?.value || '').trim();
+                    if (!summary) {
+                        if (errEl) {
+                            errEl.textContent = t('commercialization.report.summary_required', 'Summary is required');
+                            errEl.hidden = false;
+                            errEl.classList.remove('hidden');
+                        }
+                        return;
                     }
-                    return;
-                }
-                try {
-                    await submitReport(session.id, { summary, category: '', ticket_ref: '' });
-                    finish(true);
-                } catch (e) {
+                    submitBtn.disabled = true;
+                    if (skipBtn) skipBtn.disabled = true;
+                    submitBtn.textContent = t('common.loading', '…');
                     if (errEl) {
-                        errEl.textContent = e.message || 'Error';
-                        errEl.hidden = false;
+                        errEl.hidden = true;
+                        errEl.classList.add('hidden');
                     }
-                }
-            };
+                    try {
+                        await submitReport(session.id, { summary, category: '', ticket_ref: '' });
+                        finish(true);
+                    } catch (e) {
+                        submitBtn.disabled = false;
+                        if (skipBtn) skipBtn.disabled = false;
+                        submitBtn.textContent = submitBtn.dataset.labelDefault
+                            || t('commercialization.report.submit', 'Submit report');
+                        if (errEl) {
+                            errEl.textContent = e.message || 'Error';
+                            errEl.hidden = false;
+                            errEl.classList.remove('hidden');
+                        }
+                    }
+                };
+            }
 
             summaryEl?.focus();
         });
@@ -163,7 +251,10 @@
                 badge.hidden = true;
             }
         }
-        if (btn) btn.style.display = has ? '' : 'none';
+        if (btn) {
+            btn.style.display = has ? '' : 'none';
+            btn.title = t('commercialization.report.toolbar', 'Work report');
+        }
         return check;
     }
 
@@ -171,6 +262,7 @@
         promptAfterSession,
         markReportIntent,
         refreshToolbarPackage,
-        fetchBillingCheck
+        fetchBillingCheck,
+        hideBillingPane
     };
 })(window);

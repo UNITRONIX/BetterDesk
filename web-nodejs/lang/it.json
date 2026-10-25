@@ -4381,8 +4381,8 @@
             "submit": "Invia report",
             "summary_required": "Il riepilogo è obbligatorio",
             "saved": "Report di lavoro salvato",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Rapporto di lavoro",
+            "intent_hint": "Il modulo del rapporto si aprirà al termine della sessione"
         },
         "empty": {
             "packages": "Nessun pacchetto ancora. Creane uno con il pulsante sopra.",

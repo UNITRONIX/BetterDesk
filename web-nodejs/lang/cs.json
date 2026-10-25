@@ -4381,8 +4381,8 @@
             "submit": "Odeslat zprávu",
             "summary_required": "Shrnutí je povinné",
             "saved": "Pracovní zpráva uložena",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Pracovní zpráva",
+            "intent_hint": "Formulář zprávy se otevře po ukončení relace"
         },
         "empty": {
             "packages": "Zatím žádné balíčky. Vytvořte první tlačítkem výše.",

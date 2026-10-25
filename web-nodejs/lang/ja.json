@@ -4381,8 +4381,8 @@
             "submit": "レポートを送信",
             "summary_required": "概要は必須です",
             "saved": "作業レポートを保存しました",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "作業レポート",
+            "intent_hint": "セッション終了時にレポートフォームが開きます"
         },
         "empty": {
             "packages": "パッケージがありません。上のボタンで作成してください。",

@@ -4381,8 +4381,8 @@
             "submit": "Enviar relatório",
             "summary_required": "O resumo é obrigatório",
             "saved": "Relatório de trabalho guardado",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Relatório de trabalho",
+            "intent_hint": "O formulário de relatório abrirá quando a sessão terminar"
         },
         "empty": {
             "packages": "Ainda não há pacotes. Crie um com o botão acima.",

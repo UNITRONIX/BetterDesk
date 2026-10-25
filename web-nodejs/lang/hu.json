@@ -4387,8 +4387,8 @@
             "submit": "Jelentés küldése",
             "summary_required": "Az összefoglaló kötelező",
             "saved": "Munkajelentés mentve",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Munkajelentés",
+            "intent_hint": "A jelentés űrlap a munkamenet végén nyílik meg"
         },
         "empty": {
             "packages": "Még nincsenek csomagok. Hozzon létre egyet a fenti gombbal.",

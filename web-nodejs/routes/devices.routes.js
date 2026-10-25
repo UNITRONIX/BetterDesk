@@ -1273,8 +1273,9 @@ router.get('/api/devices/:id/connect-password', requireAuth, requirePermission('
         res.json(result);
     } catch (err) {
         const status = err.response?.status || 500;
+        // Peer exists but no org vault password — 200 keeps Web Remote console clean (#367).
         if (status === 404) {
-            return res.status(404).json({ password_set: false });
+            return res.status(200).json({ password_set: false });
         }
         if (status === 403) {
             return res.status(403).json({ error: 'forbidden' });

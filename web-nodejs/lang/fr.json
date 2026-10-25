@@ -4404,8 +4404,8 @@
             "submit": "Envoyer le rapport",
             "summary_required": "Le résumé est obligatoire",
             "saved": "Rapport de travail enregistré",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Rapport de travail",
+            "intent_hint": "Le formulaire de rapport s’ouvrira à la fin de la session"
         },
         "notifications": {
             "title": "Notifications e-mail",

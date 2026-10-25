@@ -4381,8 +4381,8 @@
             "submit": "Rapport verzenden",
             "summary_required": "Samenvatting is verplicht",
             "saved": "Werkrapport opgeslagen",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Werkrapport",
+            "intent_hint": "Het rapportformulier opent wanneer de sessie eindigt"
         },
         "empty": {
             "packages": "Nog geen pakketten. Maak er een met de knop hierboven.",

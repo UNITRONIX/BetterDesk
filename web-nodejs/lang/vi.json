@@ -4387,8 +4387,8 @@
             "submit": "Gửi báo cáo",
             "summary_required": "Tóm tắt là bắt buộc",
             "saved": "Đã lưu báo cáo công việc",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Báo cáo công việc",
+            "intent_hint": "Biểu mẫu báo cáo sẽ mở khi phiên kết thúc"
         },
         "empty": {
             "packages": "Chưa có gói nào. Tạo gói bằng nút phía trên.",

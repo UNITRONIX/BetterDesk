@@ -4381,8 +4381,8 @@
             "submit": "Bericht senden",
             "summary_required": "Zusammenfassung ist erforderlich",
             "saved": "Arbeitsbericht gespeichert",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Arbeitsbericht",
+            "intent_hint": "Das Berichtsformular öffnet sich, wenn die Sitzung endet"
         },
         "empty": {
             "packages": "Noch keine Pakete. Erstellen Sie eines mit der Schaltfläche oben.",

@@ -4381,8 +4381,8 @@
             "submit": "Enviar informe",
             "summary_required": "El resumen es obligatorio",
             "saved": "Informe de trabajo guardado",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Informe de trabajo",
+            "intent_hint": "El formulario de informe se abrirá al finalizar la sesión"
         },
         "empty": {
             "packages": "Aún no hay paquetes. Cree uno con el botón de arriba.",

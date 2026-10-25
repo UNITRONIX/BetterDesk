@@ -4387,8 +4387,8 @@
             "submit": "रिपोर्ट भेजें",
             "summary_required": "सारांश आवश्यक है",
             "saved": "कार्य रिपोर्ट सहेजी गई",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "कार्य रिपोर्ट",
+            "intent_hint": "सत्र समाप्त होने पर रिपोर्ट फ़ॉर्म खुलेगा"
         },
         "empty": {
             "packages": "अभी कोई पैकेज नहीं। ऊपर के बटन से एक बनाएं।",

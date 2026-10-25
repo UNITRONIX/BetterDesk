@@ -4387,8 +4387,8 @@
             "submit": "Skicka rapport",
             "summary_required": "Sammanfattning krävs",
             "saved": "Arbetsrapport sparad",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Arbetsrapport",
+            "intent_hint": "Rapportformuläret öppnas när sessionen avslutas"
         },
         "empty": {
             "packages": "Inga paket ännu. Skapa ett med knappen ovan.",

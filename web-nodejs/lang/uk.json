@@ -4387,8 +4387,8 @@
             "submit": "Надіслати звіт",
             "summary_required": "Підсумок обов'язковий",
             "saved": "Звіт про роботу збережено",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Звіт про роботу",
+            "intent_hint": "Форма звіту відкриється після завершення сеансу"
         },
         "empty": {
             "packages": "Пакетів ще немає. Створіть перший кнопкою вище.",

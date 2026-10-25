@@ -4404,8 +4404,8 @@
             "submit": "提交報告",
             "summary_required": "摘要為必填",
             "saved": "工作報告已儲存",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "工作報告",
+            "intent_hint": "工作階段結束時將開啟報告表單"
         },
         "notifications": {
             "title": "Email notifications",

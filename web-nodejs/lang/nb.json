@@ -4387,8 +4387,8 @@
             "submit": "Send rapport",
             "summary_required": "Sammendrag er påkrevd",
             "saved": "Arbeidsrapport lagret",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Arbeidsrapport",
+            "intent_hint": "Rapportskjemaet åpnes når økten avsluttes"
         },
         "empty": {
             "packages": "Ingen pakker ennå. Opprett en med knappen over.",

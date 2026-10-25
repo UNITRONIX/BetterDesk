@@ -4388,8 +4388,8 @@
             "submit": "إرسال التقرير",
             "summary_required": "الملخص مطلوب",
             "saved": "تم حفظ تقرير العمل",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "تقرير العمل",
+            "intent_hint": "سيفتح نموذج التقرير عند انتهاء الجلسة"
         },
         "empty": {
             "packages": "لا توجد حزم بعد. أنشئ واحدة بالزر أعلاه.",

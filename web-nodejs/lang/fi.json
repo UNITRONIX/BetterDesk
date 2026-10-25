@@ -4387,8 +4387,8 @@
             "submit": "Lähetä raportti",
             "summary_required": "Yhteenveto vaaditaan",
             "saved": "Työraportti tallennettu",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Työraportti",
+            "intent_hint": "Raporttilomake avautuu istunnon päättyessä"
         },
         "empty": {
             "packages": "Ei paketteja vielä. Luo ensimmäinen yllä olevalla painikkeella.",

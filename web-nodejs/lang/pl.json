@@ -4400,8 +4400,8 @@
             "submit": "Wyślij raport",
             "summary_required": "Podsumowanie jest wymagane",
             "saved": "Raport pracy zapisany",
-            "toolbar": "Work report",
-            "intent_hint": "Report form will open when the session ends"
+            "toolbar": "Raport pracy",
+            "intent_hint": "Formularz raportu otworzy się po zakończeniu sesji"
         },
         "notifications": {
             "title": "Powiadomienia e-mail",
