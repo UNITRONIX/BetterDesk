@@ -46,6 +46,10 @@ const EXTRA_ICONS = [
     'security',
     'home_repair_service',
     'autorenew',
+    /* Used in markup; keep even if a scan pattern misses them */
+    'label',
+    'assignment',
+    'my_location',
 ];
 
 const USER_AGENT =

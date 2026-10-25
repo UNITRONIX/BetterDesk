@@ -221,6 +221,11 @@ router.get('/remote', rdClientPageLimiter, requireRdClientAuth('device.connect')
     });
 });
 
+/** Legacy bottom-nav / bookmarks used this path; keep a permanent redirect. */
+router.get('/remote-dashboard', (_req, res) => {
+    res.redirect(301, '/remote');
+});
+
 /**
  * GET /remote/:deviceId - Unified remote desktop viewer (single entry point).
  */

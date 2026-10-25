@@ -3260,9 +3260,13 @@
     flex-direction: row;
     flex-wrap: nowrap;
     gap: 4px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
 }
 
 /* Settings track: no extra bottom padding from .mobile-tabs-scroll (keeps bar compact) */
@@ -3453,6 +3457,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--space-md);
+    margin-bottom: var(--space-lg);
 }
 
 .settings-choice-card {

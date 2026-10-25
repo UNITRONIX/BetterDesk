@@ -60,6 +60,12 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(bottomNav, /aria-current="page"/);
     });
 
+    it('points mobile bottom-nav Remote at the live /remote route', () => {
+        assert.match(bottomNav, /href="\/remote"/);
+        assert.match(bottomNav, /data-nav="remote"/);
+        assert.doesNotMatch(bottomNav, /href="\/remote-dashboard"/);
+    });
+
     it('escapes dynamic automation values before inserting rule rows', () => {
         assert.match(automation, /<td>\$\{escapeHtml\(r\.condition_value\)\}<\/td>/);
         assert.match(automation, /function safeSeverity/);
@@ -111,11 +117,12 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(settingsView, /class="settings-shell-nav-track mobile-tabs-scroll"/);
         assert.match(pagesCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*sticky/);
         assert.match(pagesCss, /\.settings-shell-nav-track\.mobile-tabs-scroll\s*\{[\s\S]*?padding-bottom:\s*0/);
+        assert.match(pagesCss, /\.settings-shell-nav-track\s*\{[\s\S]*?overflow-x:\s*auto[\s\S]*?touch-action:\s*pan-x/);
         assert.match(
             ux35Css,
-            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*0px[\s\S]*?top:\s*0[\s\S]*?margin-top:\s*0/
+            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding-lg\)[\s\S]*?top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)[\s\S]*?margin-top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)/
         );
-        assert.match(ux35Css, /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?align-items:\s*center/);
+        assert.match(ux35Css, /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?align-items:\s*center[\s\S]*?scrollbar-width:\s*thin/);
         assert.match(
             ux35Css,
             /\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?justify-content:\s*center[\s\S]*?line-height:\s*1\.2/
@@ -127,7 +134,7 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         );
         assert.match(
             ux35Css,
-            /@media \(min-width: 1025px\)[\s\S]*?\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding-lg\)[\s\S]*?top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)[\s\S]*?margin-top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)/
+            /@media \(max-width: 767px\)[\s\S]*?\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding\)/
         );
         assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
         assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);
