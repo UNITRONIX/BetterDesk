@@ -23,6 +23,20 @@ const MAX_RELEASE_BYTES = 2 * 1024 * 1024 * 1024;
 // Public half of the protected GitHub Actions release-signing key.
 // An environment override is supported for rotation and staged migration.
 const DEFAULT_RELEASE_PUBLIC_KEY = 'eXGPOvUvFfz1FGGbYogKfYEEWVWzeJEKpmI1ngAU490=';
+/** Literal host map so CodeQL sees an untainted hostname after allowlist lookup (parity with supportGeneratorModule). */
+const GITHUB_FETCH_HOSTS = Object.freeze({
+    'api.github.com': 'api.github.com',
+    'github.com': 'github.com',
+    'objects.githubusercontent.com': 'objects.githubusercontent.com',
+    // GitHub Release asset CDN — browser_download_url redirects here in production.
+    'release-assets.githubusercontent.com': 'release-assets.githubusercontent.com',
+});
+
+function resolveAllowedGithubHost(hostname) {
+    const allowed = GITHUB_FETCH_HOSTS[String(hostname || '').toLowerCase()];
+    if (!allowed) return null;
+    return allowed;
+}
 
 function root() {
     return path.join(
@@ -64,12 +78,13 @@ function githubRequest(url, headers = {}, redirects = 0) {
                     return;
                 }
                 const next = new URL(response.headers.location, url);
-                if (!['api.github.com', 'github.com', 'objects.githubusercontent.com']
-                    .includes(next.hostname)) {
+                const allowedHost = resolveAllowedGithubHost(next.hostname);
+                if (!allowedHost) {
                     response.resume();
                     reject(new Error('generic_agent_release_redirect_host_invalid'));
                     return;
                 }
+                next.hostname = allowedHost;
                 response.resume();
                 githubRequest(next.toString(), headers, redirects + 1).then(resolve, reject);
                 return;
@@ -288,4 +303,6 @@ module.exports = {
     importLatest,
     listCached,
     resolveAsset,
+    resolveAllowedGithubHost,
+    GITHUB_FETCH_HOSTS,
 };

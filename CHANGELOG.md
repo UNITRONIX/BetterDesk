@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **Generator Import latest release (#475):** allow GitHub Release asset redirects to `release-assets.githubusercontent.com` (same CDN allowlist as the Support Generator module). Fixes `generic_agent_release_redirect_host_invalid` when downloading signed `support-v*` artifacts. Ships via panel update.
+
 ### Changed
 - _(none yet)_
 
