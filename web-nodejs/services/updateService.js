@@ -2322,7 +2322,7 @@ async function createPreUpdateBackup(allFiles, opts = {}) {
         if (rustdeskDir) {
             const meshCert = path.join(rustdeskDir, 'mesh_agent_server.pem');
             if (fs.existsSync(meshCert)) {
-                const dest = resolveChildPath(backupPath, 'special/mesh_agent_server.pem');
+                const dest = resolvePathUnderRoot(backupPath, 'special/mesh_agent_server.pem');
                 fs.mkdirSync(path.dirname(dest), { recursive: true });
                 fs.copyFileSync(meshCert, dest);
                 backedUp++;
@@ -3166,8 +3166,8 @@ function restoreFromBackup(backupName) {
     const rustdeskDir = config.rustdeskDir || config.keysPath;
     if (rustdeskDir) {
         const meshSources = [
-            resolveChildPath(backupPath, 'special/mesh_agent_server.pem'),
-            resolveChildPath(backupPath, 'mesh_agent_server.pem'),
+            resolvePathUnderRoot(backupPath, 'special/mesh_agent_server.pem'),
+            resolvePathUnderRoot(backupPath, 'mesh_agent_server.pem'),
         ];
         const meshSource = meshSources.find((candidate) => fs.existsSync(candidate));
         if (meshSource) {
