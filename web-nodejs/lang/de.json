@@ -1029,7 +1029,21 @@
             "platforms_required": "Wählen Sie mindestens eine Plattform zum Bauen",
             "no_supported_targets": "Derzeit sind keine Build-Ziele verfügbar. Prüfen Sie die Builder-Konfiguration.",
             "toolchain_missing": "Erforderliche Build-Werkzeuge fehlen: {{tools}}",
-            "platform_unavailable": "Dieses Ziel ist beim konfigurierten Builder nicht verfügbar."
+            "platform_unavailable": "Dieses Ziel ist beim konfigurierten Builder nicht verfügbar.",
+            "generic_agent_release_not_found": "Kein signiertes support-v*-Release auf BetterDesk-Client verfügbar (muss stabil sein, kein Entwurf/Prerelease).",
+            "generic_agent_release_list_failed": "BetterDesk-Client-Releases von GitHub konnten nicht geladen werden (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Zeitüberschreitung beim Download eines generischen Agent-Release-Assets.",
+            "generic_agent_release_redirect_limit": "Zu viele Weiterleitungen beim Download eines Release-Assets.",
+            "generic_agent_release_redirect_host_invalid": "Release-Download wurde auf einen unerwarteten Host umgeleitet.",
+            "generic_agent_release_asset_invalid": "Name oder URL eines Release-Assets ist ungültig.",
+            "generic_agent_release_asset_download_failed": "Release-Asset konnte nicht heruntergeladen werden: {{detail}}",
+            "generic_agent_release_external_config": "Release-Archiv enthält eingebettete Serverkonfiguration (custom.txt) und wurde abgelehnt.",
+            "generic_agent_release_archive_invalid": "Ein Release-Archiv konnte nicht geöffnet oder geprüft werden.",
+            "generic_agent_release_manifest_missing": "Release enthält kein manifest.json oder manifest.sig.",
+            "generic_agent_release_public_key_missing": "Kein öffentlicher Schlüssel zur Signaturprüfung konfiguriert.",
+            "generic_agent_release_signature_invalid": "Signaturprüfung des Release-Manifests fehlgeschlagen.",
+            "generic_agent_release_manifest_invalid": "Release-Manifest hat die Validierung nicht bestanden (Schema, SKU oder Assets).",
+            "generic_agent_release_checksum_mismatch": "Prüfsummenfehler für Release-Asset: {{detail}}"
         },
         "legacy_title": "Client-Konfigurationsgenerator",
         "background_color": "Fensterhintergrund",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "Branding-Signierung fehlgeschlagen — prüfen Sie den Signaturschlüssel auf der Konsole und bauen Sie neu.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) nicht gefunden — Windows-Builds schlagen fehl.",
         "toolchain_appimage_missing": "appimagetool nicht gefunden — AppImage-Builds schlagen fehl.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Neues signiertes Release wird importiert und geprüft…",
+        "generic_agents_imported": "{{tag}} importiert.",
+        "generic_agents_verified": "verifiziert",
+        "generic_agents_artifacts": "{{count}} Plattform-Artefakte"
     },
     "server": {
         "port": "Port",

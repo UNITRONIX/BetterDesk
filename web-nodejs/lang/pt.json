@@ -1029,7 +1029,21 @@
             "platforms_required": "Selecione pelo menos uma plataforma para compilar",
             "no_supported_targets": "Não há destinos de compilação disponíveis no momento. Verifique a configuração do builder.",
             "toolchain_missing": "Faltam ferramentas de compilação necessárias: {{tools}}",
-            "platform_unavailable": "Este destino não está disponível no builder configurado."
+            "platform_unavailable": "Este destino não está disponível no builder configurado.",
+            "generic_agent_release_not_found": "Nenhuma versão assinada support-v* disponível no BetterDesk-Client (tem de ser estável, sem rascunho nem prerelease).",
+            "generic_agent_release_list_failed": "Não foi possível listar as versões do BetterDesk-Client no GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Tempo esgotado ao transferir um artefacto da versão do agente.",
+            "generic_agent_release_redirect_limit": "Demasiados redirecionamentos ao transferir um artefacto.",
+            "generic_agent_release_redirect_host_invalid": "A transferência foi redirecionada para um anfitrião inesperado.",
+            "generic_agent_release_asset_invalid": "Nome ou URL de um artefacto da versão é inválido.",
+            "generic_agent_release_asset_download_failed": "Falha ao transferir o artefacto: {{detail}}",
+            "generic_agent_release_external_config": "O arquivo contém configuração de servidor incorporada (custom.txt) e foi rejeitado.",
+            "generic_agent_release_archive_invalid": "Não foi possível abrir ou validar um arquivo da versão.",
+            "generic_agent_release_manifest_missing": "Falta manifest.json ou manifest.sig na versão.",
+            "generic_agent_release_public_key_missing": "Nenhuma chave pública configurada para verificar a assinatura.",
+            "generic_agent_release_signature_invalid": "Falha na verificação da assinatura do manifesto.",
+            "generic_agent_release_manifest_invalid": "O manifesto não passou na validação (schema, sku ou assets).",
+            "generic_agent_release_checksum_mismatch": "Soma de verificação incorreta para o artefacto: {{detail}}"
         },
         "legacy_title": "Gerador de configuração do cliente",
         "connection_section": "Ligação al servidor",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "Falha ao assinar a marca — verifique a chave de assinatura na consola e reconstrua.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) não encontrado — as builds Windows falharão.",
         "toolchain_appimage_missing": "appimagetool não encontrado — as builds AppImage falharão.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "A importar e verificar a versão assinada mais recente…",
+        "generic_agents_imported": "Importado {{tag}}.",
+        "generic_agents_verified": "verificado",
+        "generic_agents_artifacts": "{{count}} artefactos de plataforma"
     },
     "server": {
         "port": "Porta",

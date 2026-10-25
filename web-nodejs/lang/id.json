@@ -1035,7 +1035,21 @@
             "platforms_required": "Pilih setidaknya satu platform untuk dibangun",
             "no_supported_targets": "Saat ini tidak ada target build yang tersedia. Periksa konfigurasi builder.",
             "toolchain_missing": "Alat build yang diperlukan tidak ditemukan: {{tools}}",
-            "platform_unavailable": "Target ini tidak tersedia dari builder yang dikonfigurasi."
+            "platform_unavailable": "Target ini tidak tersedia dari builder yang dikonfigurasi.",
+            "generic_agent_release_not_found": "Tidak ada rilis support-v* bertanda tangan di BetterDesk-Client (harus stabil, bukan draft/prerelease).",
+            "generic_agent_release_list_failed": "Tidak dapat mendaftar rilis BetterDesk-Client dari GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Waktu habis saat mengunduh aset rilis agen generik.",
+            "generic_agent_release_redirect_limit": "Terlalu banyak pengalihan saat mengunduh aset rilis.",
+            "generic_agent_release_redirect_host_invalid": "Unduhan dialihkan ke host yang tidak diharapkan.",
+            "generic_agent_release_asset_invalid": "Nama atau URL aset rilis tidak valid.",
+            "generic_agent_release_asset_download_failed": "Gagal mengunduh aset rilis: {{detail}}",
+            "generic_agent_release_external_config": "Arsip berisi konfigurasi server tertanam (custom.txt) dan ditolak.",
+            "generic_agent_release_archive_invalid": "Arsip rilis tidak dapat dibuka atau divalidasi.",
+            "generic_agent_release_manifest_missing": "Rilis tidak memiliki manifest.json atau manifest.sig.",
+            "generic_agent_release_public_key_missing": "Tidak ada kunci publik yang dikonfigurasi untuk memverifikasi tanda tangan.",
+            "generic_agent_release_signature_invalid": "Verifikasi tanda tangan manifes gagal.",
+            "generic_agent_release_manifest_invalid": "Manifes gagal validasi (schema, sku, atau assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum tidak cocok untuk aset: {{detail}}"
         },
         "legacy_title": "Generator Konfigurasi Klien",
         "connection_section": "Koneksi server",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Penandatanganan branding gagal — periksa kunci tanda tangan di konsol, lalu bangun ulang.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) tidak ditemukan — build Windows akan gagal.",
         "toolchain_appimage_missing": "appimagetool tidak ditemukan — build AppImage akan gagal.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Mengimpor dan memverifikasi rilis bertanda tangan terbaru…",
+        "generic_agents_imported": "{{tag}} diimpor.",
+        "generic_agents_verified": "terverifikasi",
+        "generic_agents_artifacts": "{{count}} artefak platform"
     },
     "server": {
         "port": "Port",

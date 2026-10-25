@@ -1053,7 +1053,21 @@
             "platforms_required": "請至少選擇一個要建置的平台",
             "no_supported_targets": "目前沒有可用的建置目標。請檢查建置器設定。",
             "toolchain_missing": "缺少必要的建置工具：{{tools}}",
-            "platform_unavailable": "設定的建置器無法使用此目標。"
+            "platform_unavailable": "設定的建置器無法使用此目標。",
+            "generic_agent_release_not_found": "BetterDesk-Client 上沒有可用的已簽署 support-v* 版本（須為穩定版，非草稿/預發布）。",
+            "generic_agent_release_list_failed": "無法從 GitHub 列出 BetterDesk-Client 版本（HTTP {{detail}}）。",
+            "generic_agent_release_timeout": "下載通用代理版本資源逾時。",
+            "generic_agent_release_redirect_limit": "下載版本資源時重新導向次數過多。",
+            "generic_agent_release_redirect_host_invalid": "下載被重新導向到非預期的主機。",
+            "generic_agent_release_asset_invalid": "版本資源名稱或 URL 無效。",
+            "generic_agent_release_asset_download_failed": "下載版本資源失敗：{{detail}}",
+            "generic_agent_release_external_config": "壓縮檔包含內嵌伺服器設定（custom.txt），已被拒絕。",
+            "generic_agent_release_archive_invalid": "無法開啟或驗證版本壓縮檔。",
+            "generic_agent_release_manifest_missing": "版本缺少 manifest.json 或 manifest.sig。",
+            "generic_agent_release_public_key_missing": "未設定用於驗證簽章的公開金鑰。",
+            "generic_agent_release_signature_invalid": "版本清單簽章驗證失敗。",
+            "generic_agent_release_manifest_invalid": "版本清單未通過驗證（schema、sku 或 assets）。",
+            "generic_agent_release_checksum_mismatch": "資源檢查碼不符：{{detail}}"
         },
         "legacy_title": "客戶端配置生成器",
         "config_options": "配置選項",
@@ -1104,7 +1118,11 @@
         "toolchain_branding_seal": "品牌簽章失敗 — 請檢查主控台上的簽章金鑰後重新建置。",
         "toolchain_mingw_missing": "找不到 mingw-w64 (x86_64-w64-mingw32-gcc) — Windows 建置將失敗。",
         "toolchain_appimage_missing": "找不到 appimagetool — AppImage 建置將失敗。",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "正在匯入並驗證最新已簽署版本…",
+        "generic_agents_imported": "已匯入 {{tag}}。",
+        "generic_agents_verified": "已驗證",
+        "generic_agents_artifacts": "{{count}} 個平台產物"
     },
     "download": {
         "title": "下載 BetterDesk 代理",

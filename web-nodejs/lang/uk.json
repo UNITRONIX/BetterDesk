@@ -1035,7 +1035,21 @@
             "platforms_required": "Виберіть принаймні одну платформу для збірки",
             "no_supported_targets": "Зараз немає доступних цілей збірки. Перевірте конфігурацію builder.",
             "toolchain_missing": "Відсутні необхідні інструменти збірки: {{tools}}",
-            "platform_unavailable": "Ця ціль недоступна у налаштованому builder."
+            "platform_unavailable": "Ця ціль недоступна у налаштованому builder.",
+            "generic_agent_release_not_found": "У BetterDesk-Client немає підписаного випуску support-v* (має бути стабільним, без draft/prerelease).",
+            "generic_agent_release_list_failed": "Не вдалося отримати список випусків BetterDesk-Client з GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Час очікування вичерпано під час завантаження артефакту випуску агента.",
+            "generic_agent_release_redirect_limit": "Забагато перенаправлень під час завантаження артефакту.",
+            "generic_agent_release_redirect_host_invalid": "Завантаження перенаправлено на неочікуваний хост.",
+            "generic_agent_release_asset_invalid": "Назва або URL артефакту випуску недійсні.",
+            "generic_agent_release_asset_download_failed": "Не вдалося завантажити артефакт: {{detail}}",
+            "generic_agent_release_external_config": "Архів містить вбудовану конфігурацію сервера (custom.txt) і відхилено.",
+            "generic_agent_release_archive_invalid": "Не вдалося відкрити або перевірити архів випуску.",
+            "generic_agent_release_manifest_missing": "У випуску відсутні manifest.json або manifest.sig.",
+            "generic_agent_release_public_key_missing": "Не налаштовано відкритий ключ для перевірки підпису.",
+            "generic_agent_release_signature_invalid": "Перевірка підпису маніфесту не вдалася.",
+            "generic_agent_release_manifest_invalid": "Маніфест не пройшов перевірку (schema, sku або assets).",
+            "generic_agent_release_checksum_mismatch": "Невідповідність контрольної суми артефакту: {{detail}}"
         },
         "legacy_title": "Генератор конфігурації клієнта",
         "connection_section": "Підключення до сервера",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Підпис брендингу не вдався — перевірте ключ підпису на консолі й перезберіть.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) не знайдено — збірки Windows не вдадуться.",
         "toolchain_appimage_missing": "appimagetool не знайдено — збірки AppImage не вдадуться.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Імпорт і перевірка останнього підписаного випуску…",
+        "generic_agents_imported": "Імпортовано {{tag}}.",
+        "generic_agents_verified": "перевірено",
+        "generic_agents_artifacts": "{{count}} артефактів платформи"
     },
     "server": {
         "port": "Port",

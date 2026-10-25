@@ -1029,7 +1029,21 @@
             "platforms_required": "빌드할 플랫폼을 하나 이상 선택하세요",
             "no_supported_targets": "현재 사용할 수 있는 빌드 대상이 없습니다. 빌더 설정을 확인하세요.",
             "toolchain_missing": "필요한 빌드 도구가 없습니다: {{tools}}",
-            "platform_unavailable": "구성된 빌더에서 이 대상을 사용할 수 없습니다."
+            "platform_unavailable": "구성된 빌더에서 이 대상을 사용할 수 없습니다.",
+            "generic_agent_release_not_found": "BetterDesk-Client에 서명된 support-v* 릴리스가 없습니다(안정 버전, draft/prerelease 제외).",
+            "generic_agent_release_list_failed": "GitHub에서 BetterDesk-Client 릴리스 목록을 가져오지 못했습니다(HTTP {{detail}}).",
+            "generic_agent_release_timeout": "일반 에이전트 릴리스 자산 다운로드 시간이 초과되었습니다.",
+            "generic_agent_release_redirect_limit": "릴리스 자산 다운로드 중 리다이렉트가 너무 많습니다.",
+            "generic_agent_release_redirect_host_invalid": "다운로드가 예상치 못한 호스트로 리다이렉트되었습니다.",
+            "generic_agent_release_asset_invalid": "릴리스 자산 이름 또는 URL이 올바르지 않습니다.",
+            "generic_agent_release_asset_download_failed": "릴리스 자산 다운로드 실패: {{detail}}",
+            "generic_agent_release_external_config": "아카이브에 내장 서버 설정(custom.txt)이 있어 거부되었습니다.",
+            "generic_agent_release_archive_invalid": "릴리스 아카이브를 열거나 검증할 수 없습니다.",
+            "generic_agent_release_manifest_missing": "릴리스에 manifest.json 또는 manifest.sig가 없습니다.",
+            "generic_agent_release_public_key_missing": "서명 검증용 공개 키가 구성되지 않았습니다.",
+            "generic_agent_release_signature_invalid": "릴리스 매니페스트 서명 검증에 실패했습니다.",
+            "generic_agent_release_manifest_invalid": "릴리스 매니페스트 검증에 실패했습니다(schema, sku 또는 assets).",
+            "generic_agent_release_checksum_mismatch": "자산 체크섬이 일치하지 않습니다: {{detail}}"
         },
         "legacy_title": "클라이언트 구성 생성기",
         "connection_section": "서버 연결",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "브랜딩 서명 실패 — 콘솔의 서명 키를 확인한 뒤 다시 빌드하세요.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc)를 찾을 수 없음 — Windows 빌드가 실패합니다.",
         "toolchain_appimage_missing": "appimagetool을 찾을 수 없음 — AppImage 빌드가 실패합니다.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "최신 서명된 릴리스를 가져오고 검증하는 중…",
+        "generic_agents_imported": "{{tag}}을(를) 가져왔습니다.",
+        "generic_agents_verified": "검증됨",
+        "generic_agents_artifacts": "플랫폼 아티팩트 {{count}}개"
     },
     "server": {
         "port": "Port",

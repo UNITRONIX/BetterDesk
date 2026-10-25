@@ -1029,7 +1029,21 @@
             "platforms_required": "Vyberte alespoň jednu platformu ke sestavení",
             "no_supported_targets": "Momentálně nejsou k dispozici žádné cíle sestavení. Zkontrolujte konfiguraci builderu.",
             "toolchain_missing": "Chybí požadované nástroje pro sestavení: {{tools}}",
-            "platform_unavailable": "Tento cíl není v nakonfigurovaném builderu dostupný."
+            "platform_unavailable": "Tento cíl není v nakonfigurovaném builderu dostupný.",
+            "generic_agent_release_not_found": "V BetterDesk-Client není dostupné podepsané vydání support-v* (musí být stabilní, ne draft/prerelease).",
+            "generic_agent_release_list_failed": "Nelze načíst seznam vydání BetterDesk-Client z GitHubu (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Vypršel časový limit při stahování artefaktu vydání agenta.",
+            "generic_agent_release_redirect_limit": "Příliš mnoho přesměrování při stahování artefaktu.",
+            "generic_agent_release_redirect_host_invalid": "Stahování bylo přesměrováno na neočekávaného hostitele.",
+            "generic_agent_release_asset_invalid": "Název nebo URL artefaktu vydání je neplatný.",
+            "generic_agent_release_asset_download_failed": "Stažení artefaktu se nezdařilo: {{detail}}",
+            "generic_agent_release_external_config": "Archiv obsahuje vestavěnou konfiguraci serveru (custom.txt) a byl odmítnut.",
+            "generic_agent_release_archive_invalid": "Archiv vydání nelze otevřít nebo ověřit.",
+            "generic_agent_release_manifest_missing": "Ve vydání chybí manifest.json nebo manifest.sig.",
+            "generic_agent_release_public_key_missing": "Není nakonfigurován veřejný klíč pro ověření podpisu.",
+            "generic_agent_release_signature_invalid": "Ověření podpisu manifestu se nezdařilo.",
+            "generic_agent_release_manifest_invalid": "Manifest neprošel validací (schema, sku nebo assets).",
+            "generic_agent_release_checksum_mismatch": "Neshoda kontrolního součtu artefaktu: {{detail}}"
         },
         "legacy_title": "Generátor konfigurace klienta",
         "connection_section": "Polaczenie z serverem",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "Podepsání brandingu selhalo — zkontrolujte podpisový klíč na konzoli a sestavte znovu.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) nenalezen — sestavení pro Windows selže.",
         "toolchain_appimage_missing": "appimagetool nenalezen — sestavení AppImage selže.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Import a ověření nejnovější podepsané verze…",
+        "generic_agents_imported": "Importováno {{tag}}.",
+        "generic_agents_verified": "ověřeno",
+        "generic_agents_artifacts": "{{count}} platformových artefaktů"
     },
     "server": {
         "port": "Port",

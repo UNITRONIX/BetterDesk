@@ -1035,7 +1035,21 @@
             "platforms_required": "Válasszon legalább egy buildelendő platformot",
             "no_supported_targets": "Jelenleg nincs elérhető buildcél. Ellenőrizze a builder beállításait.",
             "toolchain_missing": "Hiányoznak a szükséges buildeszközök: {{tools}}",
-            "platform_unavailable": "Ez a cél nem érhető el a konfigurált builderből."
+            "platform_unavailable": "Ez a cél nem érhető el a konfigurált builderből.",
+            "generic_agent_release_not_found": "Nincs aláírt support-v* kiadás a BetterDesk-Clienten (stabilnak kell lennie, nem draft/prerelease).",
+            "generic_agent_release_list_failed": "Nem sikerült listázni a BetterDesk-Client kiadásokat a GitHubról (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Időtúllépés az általános ügynökközlemény eszközének letöltésekor.",
+            "generic_agent_release_redirect_limit": "Túl sok átirányítás az eszköz letöltésekor.",
+            "generic_agent_release_redirect_host_invalid": "A letöltés váratlan gazdagépre lett átirányítva.",
+            "generic_agent_release_asset_invalid": "A kiadási eszköz neve vagy URL-je érvénytelen.",
+            "generic_agent_release_asset_download_failed": "Az eszköz letöltése sikertelen: {{detail}}",
+            "generic_agent_release_external_config": "Az archívum beágyazott szerverkonfigurációt (custom.txt) tartalmaz, ezért elutasítva.",
+            "generic_agent_release_archive_invalid": "A kiadási archívumot nem lehetett megnyitni vagy érvényesíteni.",
+            "generic_agent_release_manifest_missing": "A kiadásból hiányzik a manifest.json vagy a manifest.sig.",
+            "generic_agent_release_public_key_missing": "Nincs nyilvános kulcs beállítva az aláírás ellenőrzéséhez.",
+            "generic_agent_release_signature_invalid": "A manifest aláírásának ellenőrzése sikertelen.",
+            "generic_agent_release_manifest_invalid": "A manifest nem ment át a validáción (schema, sku vagy assets).",
+            "generic_agent_release_checksum_mismatch": "Ellenőrzőösszeg-eltérés az eszköznél: {{detail}}"
         },
         "legacy_title": "Klienskonfiguráció-generátor",
         "connection_section": "Szerver kapcsolat",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "A márka aláírása sikertelen — ellenőrizze az aláíró kulcsot a konzolon, majd építse újra.",
         "toolchain_mingw_missing": "A mingw-w64 (x86_64-w64-mingw32-gcc) hiányzik — a Windows buildek meghiúsulnak.",
         "toolchain_appimage_missing": "Az appimagetool hiányzik — az AppImage buildek meghiúsulnak.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "A legújabb aláírt kiadás importálása és ellenőrzése…",
+        "generic_agents_imported": "{{tag}} importálva.",
+        "generic_agents_verified": "ellenőrizve",
+        "generic_agents_artifacts": "{{count}} platformartefaktum"
     },
     "server": {
         "port": "Port",

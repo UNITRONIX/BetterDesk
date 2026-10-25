@@ -1029,7 +1029,21 @@
             "platforms_required": "Selecteer minstens één platform om te bouwen",
             "no_supported_targets": "Er zijn momenteel geen builddoelen beschikbaar. Controleer de builderconfiguratie.",
             "toolchain_missing": "Vereiste buildtools ontbreken: {{tools}}",
-            "platform_unavailable": "Dit doel is niet beschikbaar via de geconfigureerde builder."
+            "platform_unavailable": "Dit doel is niet beschikbaar via de geconfigureerde builder.",
+            "generic_agent_release_not_found": "Geen ondertekende support-v*-release beschikbaar op BetterDesk-Client (stabiel, geen draft/prerelease).",
+            "generic_agent_release_list_failed": "BetterDesk-Client-releases konden niet van GitHub worden opgehaald (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Time-out bij het downloaden van een generieke agent-release.",
+            "generic_agent_release_redirect_limit": "Te veel omleidingen bij het downloaden van een release-asset.",
+            "generic_agent_release_redirect_host_invalid": "Download werd omgeleid naar een onverwachte host.",
+            "generic_agent_release_asset_invalid": "Naam of URL van een release-asset is ongeldig.",
+            "generic_agent_release_asset_download_failed": "Download van release-asset mislukt: {{detail}}",
+            "generic_agent_release_external_config": "Archief bevat ingebedde serverconfig (custom.txt) en is geweigerd.",
+            "generic_agent_release_archive_invalid": "Een release-archief kon niet worden geopend of gevalideerd.",
+            "generic_agent_release_manifest_missing": "Release mist manifest.json of manifest.sig.",
+            "generic_agent_release_public_key_missing": "Geen publieke sleutel geconfigureerd om de handtekening te verifiëren.",
+            "generic_agent_release_signature_invalid": "Handtekeningverificatie van het release-manifest mislukt.",
+            "generic_agent_release_manifest_invalid": "Release-manifest validatie mislukt (schema, sku of assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum komt niet overeen voor asset: {{detail}}"
         },
         "legacy_title": "Generator voor clientconfiguratie",
         "connection_section": "Serververbinding",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "Branding-ondertekening mislukt — controleer de ondertekeningssleutel op de console en bouw opnieuw.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) niet gevonden — Windows-builds mislukken.",
         "toolchain_appimage_missing": "appimagetool niet gevonden — AppImage-builds mislukken.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Nieuwste ondertekende release importeren en verifiëren…",
+        "generic_agents_imported": "{{tag}} geïmporteerd.",
+        "generic_agents_verified": "geverifieerd",
+        "generic_agents_artifacts": "{{count}} platformartefacten"
     },
     "server": {
         "port": "Poort",

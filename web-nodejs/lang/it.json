@@ -1029,7 +1029,21 @@
             "platforms_required": "Seleziona almeno una piattaforma da compilare",
             "no_supported_targets": "Al momento non sono disponibili destinazioni di compilazione. Controlla la configurazione del builder.",
             "toolchain_missing": "Mancano gli strumenti di compilazione richiesti: {{tools}}",
-            "platform_unavailable": "Questa destinazione non è disponibile nel builder configurato."
+            "platform_unavailable": "Questa destinazione non è disponibile nel builder configurato.",
+            "generic_agent_release_not_found": "Nessuna release firmata support-v* disponibile su BetterDesk-Client (deve essere stabile, non draft/prerelease).",
+            "generic_agent_release_list_failed": "Impossibile elencare le release BetterDesk-Client da GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Timeout durante il download di un asset della release dell'agente.",
+            "generic_agent_release_redirect_limit": "Troppi redirect durante il download di un asset.",
+            "generic_agent_release_redirect_host_invalid": "Il download è stato reindirizzato a un host imprevisto.",
+            "generic_agent_release_asset_invalid": "Nome o URL di un asset della release non valido.",
+            "generic_agent_release_asset_download_failed": "Download dell'asset non riuscito: {{detail}}",
+            "generic_agent_release_external_config": "L'archivio contiene config server incorporata (custom.txt) ed è stato rifiutato.",
+            "generic_agent_release_archive_invalid": "Impossibile aprire o validare un archivio della release.",
+            "generic_agent_release_manifest_missing": "Nella release mancano manifest.json o manifest.sig.",
+            "generic_agent_release_public_key_missing": "Nessuna chiave pubblica configurata per verificare la firma.",
+            "generic_agent_release_signature_invalid": "Verifica della firma del manifesto non riuscita.",
+            "generic_agent_release_manifest_invalid": "Il manifesto non ha superato la validazione (schema, sku o assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum non corrispondente per l'asset: {{detail}}"
         },
         "legacy_title": "Generatore configurazione client",
         "connection_section": "Connessione au serveur",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "Firma del branding non riuscita — controlla la chiave di firma sulla console e ricostruisci.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) non trovato — le build Windows falliranno.",
         "toolchain_appimage_missing": "appimagetool non trovato — le build AppImage falliranno.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Importazione e verifica dell'ultima release firmata…",
+        "generic_agents_imported": "Importato {{tag}}.",
+        "generic_agents_verified": "verificato",
+        "generic_agents_artifacts": "{{count}} artefatti di piattaforma"
     },
     "server": {
         "port": "Porta",

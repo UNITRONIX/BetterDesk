@@ -12,9 +12,11 @@
     };
     const errorMessage = (error, fallback) => {
         const data = error && error.data;
-        if (data && data.error) return data.error;
-        const raw = String((data && (data.code || data.error)) || (error && error.message) || '');
-        const code = raw.split(':', 1)[0];
+        const raw = String((data && (data.error || data.code)) || (error && error.message) || '').trim();
+        if (!raw) return fallback || t('errors.server_error', 'The request could not be completed.');
+        const colon = raw.indexOf(':');
+        const code = colon === -1 ? raw : raw.slice(0, colon);
+        const detail = colon === -1 ? '' : raw.slice(colon + 1);
         const keys = {
             local_builder_no_supported_targets: 'no_supported_targets',
             local_builder_toolchain_missing: 'toolchain_missing',
@@ -22,9 +24,15 @@
             template_missing: 'platform_unavailable',
         };
         const translationKey = keys[code] || code;
-        return code
-            ? t(`generator.errors.${translationKey}`, fallback || t('errors.bad_request', 'The request could not be completed.'))
-            : (fallback || t('errors.server_error', 'The request could not be completed.'));
+        let msg = t(
+            `generator.errors.${translationKey}`,
+            fallback || t('errors.bad_request', 'The request could not be completed.')
+        );
+        if (detail) {
+            if (msg.includes('{{detail}}')) msg = msg.split('{{detail}}').join(detail);
+            else if (!msg.includes(detail)) msg = `${msg} (${detail})`;
+        }
+        return msg;
     };
     const notify = window.Notifications || { success: console.log, error: console.error, warning: console.warn, info: console.info };
     const csrf = () => (window.BetterDesk && window.BetterDesk.csrfToken) || '';
@@ -1006,15 +1014,19 @@
             const data = await api('GET', '/api/agent-releases');
             const releases = data.releases || [];
             els['gen-generic-release-list'].innerHTML = releases.length
-                ? releases.map((release) => `
+                ? releases.map((release) => {
+                    const count = (release.manifest && release.manifest.assets || []).length;
+                    const artifacts = t('generator.generic_agents_artifacts', '{{count}} platform artifacts')
+                        .split('{{count}}').join(String(count));
+                    return `
                     <div class="generic-agent-release-item">
                         <div><strong>${escapeText(release.tag)}</strong>
-                            <div class="text-muted">${(release.manifest.assets || []).length} platform artifacts</div>
+                            <div class="text-muted">${escapeText(artifacts)}</div>
                         </div>
-                        <span class="status-badge ready">verified</span>
-                    </div>
-                `).join('')
-                : '<span class="text-muted">No release imported yet.</span>';
+                        <span class="status-badge ready">${escapeText(t('generator.generic_agents_verified', 'verified'))}</span>
+                    </div>`;
+                }).join('')
+                : `<span class="text-muted">${escapeText(t('generator.generic_agents_empty', 'No release imported yet.'))}</span>`;
         } catch (error) {
             els['gen-generic-release-status'].textContent = errorMessage(error);
         }
@@ -1024,12 +1036,18 @@
         const button = els['gen-sync-generic-release'];
         if (button) button.disabled = true;
         if (els['gen-generic-release-status']) {
-            els['gen-generic-release-status'].textContent = 'Importing and verifying the latest signed release…';
+            els['gen-generic-release-status'].textContent = t(
+                'generator.generic_agents_importing',
+                'Importing and verifying the latest signed release…'
+            );
         }
         try {
             const result = await api('POST', '/api/agent-releases/sync', {});
             if (els['gen-generic-release-status']) {
-                els['gen-generic-release-status'].textContent = `Imported ${result.tag}.`;
+                els['gen-generic-release-status'].textContent = t(
+                    'generator.generic_agents_imported',
+                    'Imported {{tag}}.'
+                ).split('{{tag}}').join(result.tag || '');
             }
             await loadGenericReleases();
         } catch (error) {

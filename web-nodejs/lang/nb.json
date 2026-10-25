@@ -1035,7 +1035,21 @@
             "platforms_required": "Velg minst én plattform å bygge",
             "no_supported_targets": "Ingen byggmål er tilgjengelige nå. Kontroller builder-konfigurasjonen.",
             "toolchain_missing": "Nødvendige byggeverktøy mangler: {{tools}}",
-            "platform_unavailable": "Dette målet er ikke tilgjengelig fra den konfigurerte builderen."
+            "platform_unavailable": "Dette målet er ikke tilgjengelig fra den konfigurerte builderen.",
+            "generic_agent_release_not_found": "Ingen signert support-v*-utgivelse er tilgjengelig på BetterDesk-Client (må være stabil, ikke draft/prerelease).",
+            "generic_agent_release_list_failed": "Kunne ikke liste BetterDesk-Client-utgivelser fra GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Tidsavbrudd under nedlasting av et generisk agentutgivelsesobjekt.",
+            "generic_agent_release_redirect_limit": "For mange omdirigeringer under nedlasting av et utgivelsesobjekt.",
+            "generic_agent_release_redirect_host_invalid": "Nedlastingen ble omdirigert til en uventet vert.",
+            "generic_agent_release_asset_invalid": "Navn eller URL for et utgivelsesobjekt er ugyldig.",
+            "generic_agent_release_asset_download_failed": "Kunne ikke laste ned utgivelsesobjekt: {{detail}}",
+            "generic_agent_release_external_config": "Arkivet inneholder innebygd serverkonfigurasjon (custom.txt) og ble avvist.",
+            "generic_agent_release_archive_invalid": "Et utgivelsesarkiv kunne ikke åpnes eller valideres.",
+            "generic_agent_release_manifest_missing": "Utgivelsen mangler manifest.json eller manifest.sig.",
+            "generic_agent_release_public_key_missing": "Ingen offentlig nøkkel er konfigurert for å verifisere signaturen.",
+            "generic_agent_release_signature_invalid": "Verifisering av manifestsignatur mislyktes.",
+            "generic_agent_release_manifest_invalid": "Manifestet bestod ikke validering (schema, sku eller assets).",
+            "generic_agent_release_checksum_mismatch": "Sjekksum samsvarer ikke for objekt: {{detail}}"
         },
         "legacy_title": "Klientkonfigurasjonsgenerator",
         "connection_section": "Servertilkobling",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Merkevaresignering mislyktes — sjekk signeringsnøkkelen på konsollen og bygg på nytt.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) ikke funnet — Windows-bygg mislykkes.",
         "toolchain_appimage_missing": "appimagetool ikke funnet — AppImage-bygg mislykkes.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Importerer og verifiserer den nyeste signerte utgivelsen…",
+        "generic_agents_imported": "Importerte {{tag}}.",
+        "generic_agents_verified": "verifisert",
+        "generic_agents_artifacts": "{{count}} plattformartefakter"
     },
     "server": {
         "port": "Port",

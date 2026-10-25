@@ -1029,7 +1029,21 @@
             "platforms_required": "ビルドするプラットフォームを少なくとも1つ選択してください",
             "no_supported_targets": "現在利用できるビルド対象がありません。ビルダーの設定を確認してください。",
             "toolchain_missing": "必要なビルドツールがありません: {{tools}}",
-            "platform_unavailable": "この対象は設定されたビルダーでは利用できません。"
+            "platform_unavailable": "この対象は設定されたビルダーでは利用できません。",
+            "generic_agent_release_not_found": "BetterDesk-Client に署名済みの support-v* リリースがありません（安定版・draft/prerelease 以外が必要です）。",
+            "generic_agent_release_list_failed": "GitHub から BetterDesk-Client のリリース一覧を取得できませんでした (HTTP {{detail}})。",
+            "generic_agent_release_timeout": "汎用エージェントリリースのダウンロードがタイムアウトしました。",
+            "generic_agent_release_redirect_limit": "リリースアセットのダウンロードでリダイレクトが多すぎます。",
+            "generic_agent_release_redirect_host_invalid": "ダウンロードが予期しないホストへリダイレクトされました。",
+            "generic_agent_release_asset_invalid": "リリースアセットの名前または URL が無効です。",
+            "generic_agent_release_asset_download_failed": "リリースアセットのダウンロードに失敗しました: {{detail}}",
+            "generic_agent_release_external_config": "アーカイブに埋め込みサーバー設定 (custom.txt) が含まれているため拒否されました。",
+            "generic_agent_release_archive_invalid": "リリースアーカイブを開けないか検証できませんでした。",
+            "generic_agent_release_manifest_missing": "リリースに manifest.json または manifest.sig がありません。",
+            "generic_agent_release_public_key_missing": "署名検証用の公開鍵が設定されていません。",
+            "generic_agent_release_signature_invalid": "リリースマニフェストの署名検証に失敗しました。",
+            "generic_agent_release_manifest_invalid": "リリースマニフェストの検証に失敗しました（schema / sku / assets）。",
+            "generic_agent_release_checksum_mismatch": "アセットのチェックサムが一致しません: {{detail}}"
         },
         "legacy_title": "クライアント構成ジェネレーター",
         "connection_section": "サーバー接続",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "ブランディングの署名に失敗しました — コンソールの署名鍵を確認して再ビルドしてください。",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) が見つかりません — Windows ビルドは失敗します。",
         "toolchain_appimage_missing": "appimagetool が見つかりません — AppImage ビルドは失敗します。",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "最新の署名済みリリースをインポートして検証しています…",
+        "generic_agents_imported": "{{tag}} をインポートしました。",
+        "generic_agents_verified": "検証済み",
+        "generic_agents_artifacts": "プラットフォーム成果物 {{count}} 件"
     },
     "server": {
         "port": "Port",

@@ -1035,7 +1035,21 @@
             "platforms_required": "เลือกอย่างน้อยหนึ่งแพลตฟอร์มที่จะบิลด์",
             "no_supported_targets": "ขณะนี้ไม่มีเป้าหมายการบิลด์ที่พร้อมใช้งาน โปรดตรวจสอบการตั้งค่า builder",
             "toolchain_missing": "ไม่พบเครื่องมือบิลด์ที่จำเป็น: {{tools}}",
-            "platform_unavailable": "เป้าหมายนี้ไม่พร้อมใช้งานจาก builder ที่กำหนดค่าไว้"
+            "platform_unavailable": "เป้าหมายนี้ไม่พร้อมใช้งานจาก builder ที่กำหนดค่าไว้",
+            "generic_agent_release_not_found": "ไม่มีรีลีส support-v* ที่ลงนามบน BetterDesk-Client (ต้องเป็นรุ่นเสถียร ไม่ใช่ draft/prerelease)",
+            "generic_agent_release_list_failed": "ไม่สามารถแสดงรายการรีลีส BetterDesk-Client จาก GitHub ได้ (HTTP {{detail}})",
+            "generic_agent_release_timeout": "หมดเวลาขณะดาวน์โหลดไฟล์รีลีสของเอเจนต์ทั่วไป",
+            "generic_agent_release_redirect_limit": "มีการเปลี่ยนเส้นทางมากเกินไปขณะดาวน์โหลดไฟล์รีลีส",
+            "generic_agent_release_redirect_host_invalid": "การดาวน์โหลดถูกเปลี่ยนเส้นทางไปยังโฮสต์ที่ไม่คาดคิด",
+            "generic_agent_release_asset_invalid": "ชื่อหรือ URL ของไฟล์รีลีสไม่ถูกต้อง",
+            "generic_agent_release_asset_download_failed": "ดาวน์โหลดไฟล์รีลีสไม่สำเร็จ: {{detail}}",
+            "generic_agent_release_external_config": "ไฟล์เก็บมีค่าคอนฟิกเซิร์ฟเวอร์ฝังอยู่ (custom.txt) จึงถูกปฏิเสธ",
+            "generic_agent_release_archive_invalid": "ไม่สามารถเปิดหรือตรวจสอบไฟล์เก็บรีลีสได้",
+            "generic_agent_release_manifest_missing": "รีลีสไม่มี manifest.json หรือ manifest.sig",
+            "generic_agent_release_public_key_missing": "ไม่ได้ตั้งค่าคีย์สาธารณะสำหรับตรวจสอบลายเซ็น",
+            "generic_agent_release_signature_invalid": "การตรวจสอบลายเซ็นของแมนิเฟสต์ล้มเหลว",
+            "generic_agent_release_manifest_invalid": "แมนิเฟสต์ไม่ผ่านการตรวจสอบ (schema, sku หรือ assets)",
+            "generic_agent_release_checksum_mismatch": "checksum ของไฟล์ไม่ตรงกัน: {{detail}}"
         },
         "legacy_title": "ตัวสร้างการกำหนดค่าไคลเอนต์",
         "connection_section": "การเชื่อมต่อเซิร์ฟเวอร์",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "การลงนามแบรนด์ล้มเหลว — ตรวจคีย์ลงนามบนคอนโซลแล้วบิลด์ใหม่",
         "toolchain_mingw_missing": "ไม่พบ mingw-w64 (x86_64-w64-mingw32-gcc) — บิลด์ Windows จะล้มเหลว",
         "toolchain_appimage_missing": "ไม่พบ appimagetool — บิลด์ AppImage จะล้มเหลว",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "กำลังนำเข้าและตรวจสอบรีลีสที่ลงนามล่าสุด…",
+        "generic_agents_imported": "นำเข้า {{tag}} แล้ว",
+        "generic_agents_verified": "ตรวจสอบแล้ว",
+        "generic_agents_artifacts": "อาร์ติแฟกต์แพลตฟอร์ม {{count}} รายการ"
     },
     "server": {
         "port": "Port",

@@ -1035,7 +1035,21 @@
             "platforms_required": "Valitse vähintään yksi koottava alusta",
             "no_supported_targets": "Koontikohteita ei ole tällä hetkellä saatavilla. Tarkista builderin asetukset.",
             "toolchain_missing": "Vaaditut koontityökalut puuttuvat: {{tools}}",
-            "platform_unavailable": "Tämä kohde ei ole käytettävissä määritetyssä builderissa."
+            "platform_unavailable": "Tämä kohde ei ole käytettävissä määritetyssä builderissa.",
+            "generic_agent_release_not_found": "BetterDesk-Clientissä ei ole allekirjoitettua support-v*-julkaisua (on oltava vakaa, ei draft/prerelease).",
+            "generic_agent_release_list_failed": "BetterDesk-Client-julkaisujen listaaminen GitHubista epäonnistui (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Aikakatkaisu ladattaessa geneerisen agenttijulkaisun tiedostoa.",
+            "generic_agent_release_redirect_limit": "Liian monta uudelleenohjausta tiedoston latauksessa.",
+            "generic_agent_release_redirect_host_invalid": "Lataus uudelleenohjattiin odottamattomaan palvelimeen.",
+            "generic_agent_release_asset_invalid": "Julkaisutiedoston nimi tai URL on virheellinen.",
+            "generic_agent_release_asset_download_failed": "Julkaisutiedoston lataus epäonnistui: {{detail}}",
+            "generic_agent_release_external_config": "Arkisto sisältää upotetun palvelinasetuksen (custom.txt) ja hylättiin.",
+            "generic_agent_release_archive_invalid": "Julkaisuarkistoa ei voitu avata tai validoida.",
+            "generic_agent_release_manifest_missing": "Julkaisusta puuttuu manifest.json tai manifest.sig.",
+            "generic_agent_release_public_key_missing": "Allekirjoituksen varmennukseen ei ole määritetty julkista avainta.",
+            "generic_agent_release_signature_invalid": "Manifestin allekirjoituksen varmennus epäonnistui.",
+            "generic_agent_release_manifest_invalid": "Manifesti ei läpäissyt validointia (schema, sku tai assets).",
+            "generic_agent_release_checksum_mismatch": "Tiedoston tarkistussumma ei täsmää: {{detail}}"
         },
         "legacy_title": "Asiakasmääritysten luontityökalu",
         "connection_section": "Palvelinyhteys",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Brändäyksen allekirjoitus epäonnistui — tarkista allekirjoitusavain konsolissa ja rakenna uudelleen.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) puuttuu — Windows-koonnit epäonnistuvat.",
         "toolchain_appimage_missing": "appimagetool puuttuu — AppImage-koonnit epäonnistuvat.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Tuodaan ja varmennetaan uusin allekirjoitettu julkaisu…",
+        "generic_agents_imported": "Tuotu {{tag}}.",
+        "generic_agents_verified": "varmennettu",
+        "generic_agents_artifacts": "{{count}} alustan artefaktia"
     },
     "server": {
         "port": "Port",

@@ -1079,7 +1079,21 @@
             "slug_taken": "This short link is already used by another bundle",
             "no_supported_targets": "No build targets are currently available. Check the builder configuration.",
             "toolchain_missing": "Required build tools are missing: {{tools}}",
-            "platform_unavailable": "This target is not available from the configured builder."
+            "platform_unavailable": "This target is not available from the configured builder.",
+            "generic_agent_release_not_found": "No signed support-v* release is available on BetterDesk-Client (must be stable, not a draft or prerelease).",
+            "generic_agent_release_list_failed": "Could not list BetterDesk-Client releases from GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Timed out while downloading a generic agent release asset.",
+            "generic_agent_release_redirect_limit": "Too many redirects while downloading a release asset.",
+            "generic_agent_release_redirect_host_invalid": "Release download redirected to an unexpected host.",
+            "generic_agent_release_asset_invalid": "A release asset name or URL is invalid.",
+            "generic_agent_release_asset_download_failed": "Failed to download release asset: {{detail}}",
+            "generic_agent_release_external_config": "Release archive contains embedded server config (custom.txt) and was rejected.",
+            "generic_agent_release_archive_invalid": "A release archive could not be opened or validated.",
+            "generic_agent_release_manifest_missing": "Release is missing manifest.json or manifest.sig.",
+            "generic_agent_release_public_key_missing": "No public key configured to verify the release signature.",
+            "generic_agent_release_signature_invalid": "Release manifest signature verification failed.",
+            "generic_agent_release_manifest_invalid": "Release manifest failed validation (schema, sku, or assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum mismatch for release asset: {{detail}}"
         },
         "legacy_title": "Client Configuration Generator",
         "config_options": "Configuration Options",
@@ -1108,7 +1122,11 @@
         "product_agent_client": "Agent Client",
         "product_support_agent": "Support",
         "product_rdclient": "RdClient",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Importing and verifying the latest signed release…",
+        "generic_agents_imported": "Imported {{tag}}.",
+        "generic_agents_verified": "verified",
+        "generic_agents_artifacts": "{{count}} platform artifacts"
     },
     "download": {
         "title": "Download BetterDesk Agent",

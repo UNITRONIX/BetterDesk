@@ -11,7 +11,7 @@
 - **Device tags management (#470):** Operators can rename or delete tags across all visible devices from Devices → Manage tags, unassign tags per device in Edit / Details / context menu, and matching dynamic group filters update on rename. Ships via panel update.
 
 ### Changed
-- _(none yet)_
+- **Generator generic agent import UX (#474):** Import/status messages and `generic_agent_release_*` API errors are translated instead of showing raw codes (e.g. `generic_agent_release_not_found`). Ships via panel update.
 
 ---
 

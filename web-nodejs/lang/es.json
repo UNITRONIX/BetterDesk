@@ -1029,7 +1029,21 @@
             "platforms_required": "Seleccione al menos una plataforma para compilar",
             "no_supported_targets": "No hay objetivos de compilación disponibles actualmente. Compruebe la configuración del generador.",
             "toolchain_missing": "Faltan herramientas de compilación necesarias: {{tools}}",
-            "platform_unavailable": "Este objetivo no está disponible en el generador configurado."
+            "platform_unavailable": "Este objetivo no está disponible en el generador configurado.",
+            "generic_agent_release_not_found": "No hay una versión firmada support-v* disponible en BetterDesk-Client (debe ser estable, sin borrador ni prerelease).",
+            "generic_agent_release_list_failed": "No se pudieron listar las versiones de BetterDesk-Client en GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Tiempo de espera agotado al descargar un artefacto de la versión del agente.",
+            "generic_agent_release_redirect_limit": "Demasiadas redirecciones al descargar un artefacto.",
+            "generic_agent_release_redirect_host_invalid": "La descarga se redirigió a un host inesperado.",
+            "generic_agent_release_asset_invalid": "El nombre o la URL de un artefacto de versión no es válido.",
+            "generic_agent_release_asset_download_failed": "Error al descargar el artefacto: {{detail}}",
+            "generic_agent_release_external_config": "El archivo contiene configuración de servidor incrustada (custom.txt) y fue rechazado.",
+            "generic_agent_release_archive_invalid": "No se pudo abrir o validar un archivo de la versión.",
+            "generic_agent_release_manifest_missing": "Falta manifest.json o manifest.sig en la versión.",
+            "generic_agent_release_public_key_missing": "No hay clave pública configurada para verificar la firma.",
+            "generic_agent_release_signature_invalid": "Falló la verificación de la firma del manifiesto.",
+            "generic_agent_release_manifest_invalid": "El manifiesto no superó la validación (esquema, sku o assets).",
+            "generic_agent_release_checksum_mismatch": "La suma de comprobación no coincide para el artefacto: {{detail}}"
         },
         "legacy_title": "Generador de configuración del cliente",
         "background_color": "Fondo de ventana",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "Falló la firma de la marca — compruebe la clave de firma en la consola y vuelva a compilar.",
         "toolchain_mingw_missing": "No se encontró mingw-w64 (x86_64-w64-mingw32-gcc) — fallarán las compilaciones de Windows.",
         "toolchain_appimage_missing": "No se encontró appimagetool — fallarán las compilaciones AppImage.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Importando y verificando la última versión firmada…",
+        "generic_agents_imported": "Importado {{tag}}.",
+        "generic_agents_verified": "verificado",
+        "generic_agents_artifacts": "{{count}} artefactos de plataforma"
     },
     "server": {
         "port": "Puerto",

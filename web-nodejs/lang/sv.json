@@ -1035,7 +1035,21 @@
             "platforms_required": "Välj minst en plattform att bygga",
             "no_supported_targets": "Inga byggmål är tillgängliga just nu. Kontrollera builder-konfigurationen.",
             "toolchain_missing": "Nödvändiga byggverktyg saknas: {{tools}}",
-            "platform_unavailable": "Det här målet är inte tillgängligt från den konfigurerade buildern."
+            "platform_unavailable": "Det här målet är inte tillgängligt från den konfigurerade buildern.",
+            "generic_agent_release_not_found": "Ingen signerad support-v*-version finns på BetterDesk-Client (måste vara stabil, inte draft/prerelease).",
+            "generic_agent_release_list_failed": "Kunde inte lista BetterDesk-Client-versioner från GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Tidsgräns överskriden vid nedladdning av en generisk agentversionsfil.",
+            "generic_agent_release_redirect_limit": "För många omdirigeringar vid nedladdning av en versionsfil.",
+            "generic_agent_release_redirect_host_invalid": "Nedladdningen omdirigerades till en oväntad värd.",
+            "generic_agent_release_asset_invalid": "Namn eller URL för en versionsfil är ogiltig.",
+            "generic_agent_release_asset_download_failed": "Misslyckades att ladda ner versionsfil: {{detail}}",
+            "generic_agent_release_external_config": "Arkivet innehåller inbäddad serverkonfiguration (custom.txt) och avvisades.",
+            "generic_agent_release_archive_invalid": "Ett versionsarkiv kunde inte öppnas eller valideras.",
+            "generic_agent_release_manifest_missing": "Versionen saknar manifest.json eller manifest.sig.",
+            "generic_agent_release_public_key_missing": "Ingen offentlig nyckel är konfigurerad för att verifiera signaturen.",
+            "generic_agent_release_signature_invalid": "Verifiering av manifestsignatur misslyckades.",
+            "generic_agent_release_manifest_invalid": "Manifestet klarade inte validering (schema, sku eller assets).",
+            "generic_agent_release_checksum_mismatch": "Kontrollsumma stämmer inte för fil: {{detail}}"
         },
         "legacy_title": "Klientkonfigurationsgenerator",
         "connection_section": "Serveranslutning",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Varumärkessignering misslyckades — kontrollera signeringsnyckeln på konsolen och bygg om.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) saknas — Windows-byggen misslyckas.",
         "toolchain_appimage_missing": "appimagetool saknas — AppImage-byggen misslyckas.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Importerar och verifierar den senaste signerade utgåvan…",
+        "generic_agents_imported": "Importerade {{tag}}.",
+        "generic_agents_verified": "verifierad",
+        "generic_agents_artifacts": "{{count}} plattformsartefakter"
     },
     "server": {
         "port": "Port",

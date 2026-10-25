@@ -1035,7 +1035,21 @@
             "platforms_required": "Selectați cel puțin o platformă de compilat",
             "no_supported_targets": "Nu există momentan ținte de compilare disponibile. Verificați configurația builderului.",
             "toolchain_missing": "Lipsesc instrumentele de compilare necesare: {{tools}}",
-            "platform_unavailable": "Această țintă nu este disponibilă în builderul configurat."
+            "platform_unavailable": "Această țintă nu este disponibilă în builderul configurat.",
+            "generic_agent_release_not_found": "Nu există o versiune semnată support-v* pe BetterDesk-Client (trebuie să fie stabilă, fără draft/prerelease).",
+            "generic_agent_release_list_failed": "Nu s-au putut lista versiunile BetterDesk-Client de pe GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Timpul a expirat la descărcarea unui artefact al versiunii agentului.",
+            "generic_agent_release_redirect_limit": "Prea multe redirecționări la descărcarea unui artefact.",
+            "generic_agent_release_redirect_host_invalid": "Descărcarea a fost redirecționată către un gazdă neașteptată.",
+            "generic_agent_release_asset_invalid": "Numele sau URL-ul unui artefact de versiune este invalid.",
+            "generic_agent_release_asset_download_failed": "Descărcarea artefactului a eșuat: {{detail}}",
+            "generic_agent_release_external_config": "Arhiva conține configurație de server încorporată (custom.txt) și a fost respinsă.",
+            "generic_agent_release_archive_invalid": "O arhivă a versiunii nu a putut fi deschisă sau validată.",
+            "generic_agent_release_manifest_missing": "Versiunii îi lipsește manifest.json sau manifest.sig.",
+            "generic_agent_release_public_key_missing": "Nu este configurată nicio cheie publică pentru verificarea semnăturii.",
+            "generic_agent_release_signature_invalid": "Verificarea semnăturii manifestului a eșuat.",
+            "generic_agent_release_manifest_invalid": "Manifestul nu a trecut validarea (schema, sku sau assets).",
+            "generic_agent_release_checksum_mismatch": "Suma de control nu se potrivește pentru artefact: {{detail}}"
         },
         "legacy_title": "Generator de configurare a clientului",
         "connection_section": "Conexiune server",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Semnarea brandingului a eșuat — verificați cheia de semnare pe consolă, apoi reconstruiți.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) lipsește — build-urile Windows vor eșua.",
         "toolchain_appimage_missing": "appimagetool lipsește — build-urile AppImage vor eșua.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Se importă și se verifică cea mai recentă versiune semnată…",
+        "generic_agents_imported": "Importat {{tag}}.",
+        "generic_agents_verified": "verificat",
+        "generic_agents_artifacts": "{{count}} artefacte de platformă"
     },
     "server": {
         "port": "Port",

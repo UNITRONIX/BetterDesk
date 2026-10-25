@@ -1035,7 +1035,21 @@
             "platforms_required": "बिल्ड के लिए कम से कम एक प्लेटफ़ॉर्म चुनें",
             "no_supported_targets": "अभी कोई बिल्ड लक्ष्य उपलब्ध नहीं है। बिल्डर कॉन्फ़िगरेशन जाँचें।",
             "toolchain_missing": "आवश्यक बिल्ड टूल उपलब्ध नहीं हैं: {{tools}}",
-            "platform_unavailable": "यह लक्ष्य कॉन्फ़िगर किए गए बिल्डर में उपलब्ध नहीं है।"
+            "platform_unavailable": "यह लक्ष्य कॉन्फ़िगर किए गए बिल्डर में उपलब्ध नहीं है।",
+            "generic_agent_release_not_found": "BetterDesk-Client पर कोई हस्ताक्षरित support-v* रिलीज़ उपलब्ध नहीं है (स्थिर होनी चाहिए, draft/prerelease नहीं)।",
+            "generic_agent_release_list_failed": "GitHub से BetterDesk-Client रिलीज़ सूचीबद्ध नहीं की जा सकीं (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "जेनेरिक एजेंट रिलीज़ एसेट डाउनलोड करते समय समय समाप्त।",
+            "generic_agent_release_redirect_limit": "एसेट डाउनलोड करते समय बहुत अधिक रीडायरेक्ट।",
+            "generic_agent_release_redirect_host_invalid": "डाउनलोड अप्रत्याशित होस्ट पर रीडायरेक्ट हो गया।",
+            "generic_agent_release_asset_invalid": "रिलीज़ एसेट का नाम या URL अमान्य है।",
+            "generic_agent_release_asset_download_failed": "रिलीज़ एसेट डाउनलोड विफल: {{detail}}",
+            "generic_agent_release_external_config": "संग्रह में एम्बेडेड सर्वर कॉन्फ़िग (custom.txt) है और अस्वीकृत किया गया।",
+            "generic_agent_release_archive_invalid": "रिलीज़ संग्रह खोला या सत्यापित नहीं किया जा सका।",
+            "generic_agent_release_manifest_missing": "रिलीज़ में manifest.json या manifest.sig नहीं है।",
+            "generic_agent_release_public_key_missing": "हस्ताक्षर सत्यापन के लिए कोई सार्वजनिक कुंजी कॉन्फ़िगर नहीं है।",
+            "generic_agent_release_signature_invalid": "मैनिफ़ेस्ट हस्ताक्षर सत्यापन विफल।",
+            "generic_agent_release_manifest_invalid": "मैनिफ़ेस्ट सत्यापन विफल (schema, sku या assets)।",
+            "generic_agent_release_checksum_mismatch": "एसेट चेकसम मेल नहीं खाता: {{detail}}"
         },
         "legacy_title": "क्लाइंट कॉन्फ़िगरेशन जेनरेटर",
         "connection_section": "सर्वर कनेक्शन",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "ब्रांडिंग हस्ताक्षर विफल — कंसोल पर साइनिंग कुंजी जाँचें, फिर फिर से बनाएँ।",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) नहीं मिला — Windows बिल्ड विफल होंगे।",
         "toolchain_appimage_missing": "appimagetool नहीं मिला — AppImage बिल्ड विफल होंगे।",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "नवीनतम हस्ताक्षरित रिलीज़ आयात और सत्यापित की जा रही है…",
+        "generic_agents_imported": "{{tag}} आयात किया गया.",
+        "generic_agents_verified": "सत्यापित",
+        "generic_agents_artifacts": "{{count}} प्लेटफ़ॉर्म आर्टिफ़ैक्ट"
     },
     "server": {
         "port": "Port",

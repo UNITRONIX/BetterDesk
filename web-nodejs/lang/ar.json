@@ -1036,7 +1036,21 @@
             "platforms_required": "حدد منصة واحدة على الأقل للبناء",
             "no_supported_targets": "لا تتوفر أهداف بناء حاليًا. تحقق من إعدادات المنشئ.",
             "toolchain_missing": "أدوات البناء المطلوبة مفقودة: {{tools}}",
-            "platform_unavailable": "هذا الهدف غير متاح من المنشئ المكوّن."
+            "platform_unavailable": "هذا الهدف غير متاح من المنشئ المكوّن.",
+            "generic_agent_release_not_found": "لا يتوفر إصدار support-v* موقّع على BetterDesk-Client (يجب أن يكون مستقراً وليس مسودة/تجريبياً).",
+            "generic_agent_release_list_failed": "تعذر سرد إصدارات BetterDesk-Client من GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "انتهت المهلة أثناء تنزيل مورد إصدار الوكيل العام.",
+            "generic_agent_release_redirect_limit": "عدد كبير جداً من عمليات إعادة التوجيه أثناء تنزيل المورد.",
+            "generic_agent_release_redirect_host_invalid": "أُعيد توجيه التنزيل إلى مضيف غير متوقع.",
+            "generic_agent_release_asset_invalid": "اسم مورد الإصدار أو عنوان URL غير صالح.",
+            "generic_agent_release_asset_download_failed": "فشل تنزيل مورد الإصدار: {{detail}}",
+            "generic_agent_release_external_config": "يحتوي الأرشيف على إعداد خادم مضمّن (custom.txt) ورُفض.",
+            "generic_agent_release_archive_invalid": "تعذر فتح أرشيف الإصدار أو التحقق منه.",
+            "generic_agent_release_manifest_missing": "الإصدار يفتقد manifest.json أو manifest.sig.",
+            "generic_agent_release_public_key_missing": "لم يُضبط مفتاح عام للتحقق من التوقيع.",
+            "generic_agent_release_signature_invalid": "فشل التحقق من توقيع البيان.",
+            "generic_agent_release_manifest_invalid": "لم يجتز البيان التحقق (schema أو sku أو assets).",
+            "generic_agent_release_checksum_mismatch": "عدم تطابق المجموع الاختباري للمورد: {{detail}}"
         },
         "legacy_title": "مولد تكوين العميل",
         "connection_section": "اتصال الخادم",
@@ -1107,7 +1121,11 @@
         "toolchain_branding_seal": "فشل توقيع العلامة التجارية — تحقق من مفتاح التوقيع على وحدة التحكم ثم أعد البناء.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) غير موجود — ستفشل بنايات Windows.",
         "toolchain_appimage_missing": "appimagetool غير موجود — ستفشل بنايات AppImage.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "جارٍ استيراد أحدث إصدار موقّع والتحقق منه…",
+        "generic_agents_imported": "تم استيراد {{tag}}.",
+        "generic_agents_verified": "تم التحقق",
+        "generic_agents_artifacts": "{{count}} من عناصر المنصة"
     },
     "server": {
         "port": "Port",

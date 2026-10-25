@@ -1053,7 +1053,21 @@
             "platforms_required": "Sélectionnez au moins une plateforme à compiler",
             "no_supported_targets": "Aucune cible de compilation n’est actuellement disponible. Vérifiez la configuration du générateur.",
             "toolchain_missing": "Outils de compilation requis manquants : {{tools}}",
-            "platform_unavailable": "Cette cible n’est pas disponible avec le générateur configuré."
+            "platform_unavailable": "Cette cible n’est pas disponible avec le générateur configuré.",
+            "generic_agent_release_not_found": "Aucune version signée support-v* n’est disponible sur BetterDesk-Client (stable, hors brouillon et prerelease).",
+            "generic_agent_release_list_failed": "Impossible de lister les versions BetterDesk-Client sur GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Délai dépassé lors du téléchargement d’un artefact de version d’agent.",
+            "generic_agent_release_redirect_limit": "Trop de redirections lors du téléchargement d’un artefact.",
+            "generic_agent_release_redirect_host_invalid": "Le téléchargement a été redirigé vers un hôte inattendu.",
+            "generic_agent_release_asset_invalid": "Nom ou URL d’artefact de version invalide.",
+            "generic_agent_release_asset_download_failed": "Échec du téléchargement de l’artefact : {{detail}}",
+            "generic_agent_release_external_config": "L’archive contient une config serveur intégrée (custom.txt) et a été rejetée.",
+            "generic_agent_release_archive_invalid": "Impossible d’ouvrir ou de valider une archive de version.",
+            "generic_agent_release_manifest_missing": "La version ne contient pas manifest.json ou manifest.sig.",
+            "generic_agent_release_public_key_missing": "Aucune clé publique configurée pour vérifier la signature.",
+            "generic_agent_release_signature_invalid": "Échec de la vérification de la signature du manifeste.",
+            "generic_agent_release_manifest_invalid": "Le manifeste n’a pas passé la validation (schéma, sku ou assets).",
+            "generic_agent_release_checksum_mismatch": "Somme de contrôle incorrecte pour l’artefact : {{detail}}"
         },
         "legacy_title": "Client-Konfigurationsgenerator",
         "config_options": "Options de configuration",
@@ -1104,7 +1118,11 @@
         "toolchain_branding_seal": "Échec de la signature de la marque — vérifiez la clé de signature sur la console, puis reconstruisez.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) introuvable — les builds Windows échoueront.",
         "toolchain_appimage_missing": "appimagetool introuvable — les builds AppImage échoueront.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Import et vérification de la dernière version signée…",
+        "generic_agents_imported": "{{tag}} importé.",
+        "generic_agents_verified": "vérifié",
+        "generic_agents_artifacts": "{{count}} artefacts de plateforme"
     },
     "download": {
         "title": "BetterDesk Agent herunterladen",

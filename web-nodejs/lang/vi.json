@@ -1035,7 +1035,21 @@
             "platforms_required": "Chọn ít nhất một nền tảng để dựng",
             "no_supported_targets": "Hiện không có mục tiêu build nào khả dụng. Hãy kiểm tra cấu hình builder.",
             "toolchain_missing": "Thiếu các công cụ build bắt buộc: {{tools}}",
-            "platform_unavailable": "Mục tiêu này không khả dụng từ builder đã cấu hình."
+            "platform_unavailable": "Mục tiêu này không khả dụng từ builder đã cấu hình.",
+            "generic_agent_release_not_found": "Không có bản phát hành support-v* đã ký trên BetterDesk-Client (phải ổn định, không phải draft/prerelease).",
+            "generic_agent_release_list_failed": "Không thể liệt kê bản phát hành BetterDesk-Client từ GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Hết thời gian khi tải tài nguyên bản phát hành tác nhân chung.",
+            "generic_agent_release_redirect_limit": "Quá nhiều chuyển hướng khi tải tài nguyên.",
+            "generic_agent_release_redirect_host_invalid": "Tải xuống bị chuyển hướng tới máy chủ không mong đợi.",
+            "generic_agent_release_asset_invalid": "Tên hoặc URL của tài nguyên bản phát hành không hợp lệ.",
+            "generic_agent_release_asset_download_failed": "Không tải được tài nguyên: {{detail}}",
+            "generic_agent_release_external_config": "Kho lưu trữ có cấu hình máy chủ nhúng (custom.txt) và đã bị từ chối.",
+            "generic_agent_release_archive_invalid": "Không thể mở hoặc xác thực kho lưu trữ bản phát hành.",
+            "generic_agent_release_manifest_missing": "Bản phát hành thiếu manifest.json hoặc manifest.sig.",
+            "generic_agent_release_public_key_missing": "Chưa cấu hình khóa công khai để xác minh chữ ký.",
+            "generic_agent_release_signature_invalid": "Xác minh chữ ký bản kê thất bại.",
+            "generic_agent_release_manifest_invalid": "Bản kê không vượt qua xác thực (schema, sku hoặc assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum không khớp cho tài nguyên: {{detail}}"
         },
         "legacy_title": "Trình tạo cấu hình máy khách",
         "connection_section": "Kết nối máy chủ",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Ký thương hiệu thất bại — kiểm tra khóa ký trên console rồi dựng lại.",
         "toolchain_mingw_missing": "Không tìm thấy mingw-w64 (x86_64-w64-mingw32-gcc) — bản dựng Windows sẽ thất bại.",
         "toolchain_appimage_missing": "Không tìm thấy appimagetool — bản dựng AppImage sẽ thất bại.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Đang nhập và xác minh bản phát hành đã ký mới nhất…",
+        "generic_agents_imported": "Đã nhập {{tag}}.",
+        "generic_agents_verified": "đã xác minh",
+        "generic_agents_artifacts": "{{count}} artifact nền tảng"
     },
     "server": {
         "port": "Port",

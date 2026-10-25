@@ -1035,7 +1035,21 @@
             "platforms_required": "Derlemek için en az bir platform seçin",
             "no_supported_targets": "Şu anda kullanılabilir derleme hedefi yok. Builder yapılandırmasını kontrol edin.",
             "toolchain_missing": "Gerekli derleme araçları eksik: {{tools}}",
-            "platform_unavailable": "Bu hedef, yapılandırılan builder üzerinden kullanılamıyor."
+            "platform_unavailable": "Bu hedef, yapılandırılan builder üzerinden kullanılamıyor.",
+            "generic_agent_release_not_found": "BetterDesk-Client üzerinde imzalı support-v* sürümü yok (kararlı olmalı; draft/prerelease olmamalı).",
+            "generic_agent_release_list_failed": "GitHub’dan BetterDesk-Client sürümleri listelenemedi (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Genel ajan sürüm varlığı indirilirken zaman aşımı.",
+            "generic_agent_release_redirect_limit": "Sürüm varlığı indirilirken çok fazla yönlendirme.",
+            "generic_agent_release_redirect_host_invalid": "İndirme beklenmeyen bir ana bilgisayara yönlendirildi.",
+            "generic_agent_release_asset_invalid": "Bir sürüm varlığının adı veya URL’si geçersiz.",
+            "generic_agent_release_asset_download_failed": "Sürüm varlığı indirilemedi: {{detail}}",
+            "generic_agent_release_external_config": "Arşiv gömülü sunucu yapılandırması (custom.txt) içeriyor ve reddedildi.",
+            "generic_agent_release_archive_invalid": "Bir sürüm arşivi açılamadı veya doğrulanamadı.",
+            "generic_agent_release_manifest_missing": "Sürümde manifest.json veya manifest.sig eksik.",
+            "generic_agent_release_public_key_missing": "İmzayı doğrulamak için genel anahtar yapılandırılmamış.",
+            "generic_agent_release_signature_invalid": "Manifest imza doğrulaması başarısız.",
+            "generic_agent_release_manifest_invalid": "Manifest doğrulamayı geçemedi (schema, sku veya assets).",
+            "generic_agent_release_checksum_mismatch": "Varlık için sağlama toplamı uyuşmuyor: {{detail}}"
         },
         "legacy_title": "İstemci Yapılandırma Oluşturucu",
         "connection_section": "Sunucu bağlantısı",
@@ -1106,7 +1120,11 @@
         "toolchain_branding_seal": "Marka imzalama başarısız — konsoldaki imza anahtarını kontrol edin ve yeniden derleyin.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) bulunamadı — Windows derlemeleri başarısız olur.",
         "toolchain_appimage_missing": "appimagetool bulunamadı — AppImage derlemeleri başarısız olur.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "En son imzalı sürüm içe aktarılıyor ve doğrulanıyor…",
+        "generic_agents_imported": "{{tag}} içe aktarıldı.",
+        "generic_agents_verified": "doğrulandı",
+        "generic_agents_artifacts": "{{count}} platform artefaktı"
     },
     "server": {
         "port": "Port",

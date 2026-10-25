@@ -1029,7 +1029,21 @@
             "platforms_required": "请至少选择一个要构建的平台",
             "no_supported_targets": "当前没有可用的构建目标。请检查构建器配置。",
             "toolchain_missing": "缺少必需的构建工具：{{tools}}",
-            "platform_unavailable": "配置的构建器不支持此目标。"
+            "platform_unavailable": "配置的构建器不支持此目标。",
+            "generic_agent_release_not_found": "BetterDesk-Client 上没有可用的已签名 support-v* 版本（须为稳定版，非草稿/预发布）。",
+            "generic_agent_release_list_failed": "无法从 GitHub 列出 BetterDesk-Client 版本（HTTP {{detail}}）。",
+            "generic_agent_release_timeout": "下载通用代理版本资源超时。",
+            "generic_agent_release_redirect_limit": "下载版本资源时重定向次数过多。",
+            "generic_agent_release_redirect_host_invalid": "下载被重定向到意外的主机。",
+            "generic_agent_release_asset_invalid": "版本资源名称或 URL 无效。",
+            "generic_agent_release_asset_download_failed": "下载版本资源失败：{{detail}}",
+            "generic_agent_release_external_config": "压缩包包含嵌入的服务器配置（custom.txt），已被拒绝。",
+            "generic_agent_release_archive_invalid": "无法打开或验证版本压缩包。",
+            "generic_agent_release_manifest_missing": "版本缺少 manifest.json 或 manifest.sig。",
+            "generic_agent_release_public_key_missing": "未配置用于验证签名的公钥。",
+            "generic_agent_release_signature_invalid": "版本清单签名验证失败。",
+            "generic_agent_release_manifest_invalid": "版本清单未通过验证（schema、sku 或 assets）。",
+            "generic_agent_release_checksum_mismatch": "资源校验和不匹配：{{detail}}"
         },
         "legacy_title": "客户端配置生成器",
         "connection_section": "服务器连接",
@@ -1100,7 +1114,11 @@
         "toolchain_branding_seal": "品牌签名失败 — 请检查控制台上的签名密钥后重新构建。",
         "toolchain_mingw_missing": "未找到 mingw-w64 (x86_64-w64-mingw32-gcc) — Windows 构建将失败。",
         "toolchain_appimage_missing": "未找到 appimagetool — AppImage 构建将失败。",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "正在导入并验证最新已签名版本…",
+        "generic_agents_imported": "已导入 {{tag}}。",
+        "generic_agents_verified": "已验证",
+        "generic_agents_artifacts": "{{count}} 个平台产物"
     },
     "server": {
         "port": "端口",
