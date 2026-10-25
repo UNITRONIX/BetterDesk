@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.189] — 2026-10-25
+
 ### Fixed
 - **Generator Import latest release (#475):** allow GitHub Release asset redirects to `release-assets.githubusercontent.com` (same CDN allowlist as the Support Generator module). Fixes `generic_agent_release_redirect_host_invalid` when downloading signed `support-v*` artifacts. Ships via panel update.
 
@@ -4299,3 +4306,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.186]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.185...v3.5.186
 [3.5.187]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.186...v3.5.187
 [3.5.188]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.187...v3.5.188
+[3.5.189]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.188...v3.5.189
