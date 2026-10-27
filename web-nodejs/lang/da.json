@@ -47,7 +47,7 @@
         "dashboard": "Oversigt",
         "devices": "Enheder",
         "keys": "Nøgler",
-        "generator": "Generator",
+        "generator": "BetterDesk-agenter",
         "settings": "Indstillinger",
         "users": "Brugere",
         "inventory": "Inventar",
@@ -88,7 +88,8 @@
         "server_attestation": "Serverattest",
         "commercialization": "Kommercialisering",
         "remote_open_tab": "Åbn fjernskrivebordsklient i ny fane",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk-agenter"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Hurtige handlinger",
         "manage_devices": "Administrer tilsluttede enheder",
         "view_keys": "Se servernøgler",
-        "generate_config": "Generer klientkonfiguration",
+        "generate_config": "Hvor du får incoming-only Support-agenter",
         "server_settings": "Konfigurer indstillinger",
         "greeting_morning": "Godmorgen, {name}",
         "greeting_afternoon": "God eftermiddag, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "API-server",
         "config_key": "Nøgle",
         "client_config_hint": "Indtast disse værdier i RustDesk-netværksindstillingerne under ID/Relay-server.",
-        "open_generator": "Klientgenerator",
+        "open_generator": "BetterDesk-agenter",
         "open_keys": "Åbn nøgler",
         "open_remote": "Åbn fjernskrivebordskonsollen",
         "attention_panel": "Kræver opmærksomhed",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Ingen mappe",
         "activate_agent_submit": "Aktivér enhed",
         "activate_agent_submitting": "Aktiverer enhed…",
-        "activate_agent_success": "Agent aktiveret."
+        "activate_agent_success": "Agent aktiveret.",
+        "open_agents": "BetterDesk-agenter",
+        "agents_hint": "Hvor du får incoming-only Support-agenter"
     },
     "devices": {
         "title": "Enheder",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Forrige dias",
         "next": "Næste dias"
+    },
+    "agents": {
+        "title": "BetterDesk-agenter",
+        "subtitle": "Incoming-only Support-klienter bygges i BetterDesk-Client — dette panel importerer og serverer dem.",
+        "what_title": "Hvad er BetterDesk-agenter?",
+        "what_body": "BetterDesk Support-agenter er skrivebordsklienter kun til indgående forbindelser. De registrerer sig på din server, viser en parrings-QR og accepterer fjernsupport. De starter ikke udgående forbindelser til andre enheder.",
+        "note_no_build": "Denne konsol bygger ikke længere klientinstallere. Signerede releases produceres i BetterDesk-Client GitHub-repositoriet.",
+        "get_title": "Hvor du får agenter",
+        "get_body": "Download signerede Support Agent-pakker fra BetterDesk-Client-releases, eller del denne servers offentlige portal efter import nedenfor.",
+        "get_github": "BetterDesk-Client-releases",
+        "get_portal": "Åbn downloadportal",
+        "sync_title": "Import til denne server",
+        "sync_hint": "Importér den seneste signerede support-v*-release, så /portal kan servere verificerede installere.",
+        "sync_import": "Importér seneste release",
+        "sync_importing": "Importerer og verificerer den seneste signerede release…",
+        "sync_imported": "Importeret {{tag}}.",
+        "sync_empty": "Ingen release importeret endnu.",
+        "sync_verified": "verificeret",
+        "sync_artifacts": "{{count}} platformartefakter",
+        "steps_title": "Sådan tilknytter du en agent",
+        "step1": "Importér den seneste signerede release (knap ovenfor) eller download fra GitHub.",
+        "step2": "Installér agenten på enheden, og indtast denne servers offentlige URL.",
+        "step3": "Når agenten viser en QR, åbn Aktivér agent og scan den.",
+        "step4": "Godkend tilmelding hvis politikken kræver det, og opret derefter forbindelse via Remote Desktop.",
+        "pair_activate": "Aktivér agent",
+        "pair_body": "Parring bruger QR-koden fra en generisk Support Agent, når den når din server.",
+        "branding_link": "Klientbranding",
+        "branding_body": "Udseende (logo, farver, etiketter) indlæses ved kørsel fra Klientbranding — det er ikke indbygget i installeren."
     }
 }

@@ -47,7 +47,7 @@
         "dashboard": "Kojelauta",
         "devices": "Laitteet",
         "keys": "Avaimet",
-        "generator": "Generaattori",
+        "generator": "BetterDesk-agentit",
         "settings": "Asetukset",
         "users": "Käyttäjät",
         "inventory": "Inventaario",
@@ -88,7 +88,8 @@
         "server_attestation": "Palvelintodistus",
         "commercialization": "Kaupallistaminen",
         "remote_open_tab": "Avaa etätyöpöytäasiakas uuteen välilehteen",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk-agentit"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Nopeat toiminnot",
         "manage_devices": "Hallitse yhdistettyjä laitteita",
         "view_keys": "Näytä palvelimen avaimet",
-        "generate_config": "Luo asiakasasetukset",
+        "generate_config": "Mistä saat vain saapuvia Support-agentteja",
         "server_settings": "Määritä asetukset",
         "greeting_morning": "Hyvää huomenta, {name}",
         "greeting_afternoon": "Hyvää iltapäivää, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "API-palvelin",
         "config_key": "Avain",
         "client_config_hint": "Syötä nämä arvot RustDeskin verkkoasetuksiin ID/Relay-palvelimen kohtaan.",
-        "open_generator": "Asiakasgeneraattori",
+        "open_generator": "BetterDesk-agentit",
         "open_keys": "Avaa avaimet",
         "open_remote": "Avaa etätyöpöytäkonsoli",
         "attention_panel": "Vaatii huomiota",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Ei kansiota",
         "activate_agent_submit": "Aktivoi laite",
         "activate_agent_submitting": "Aktivoidaan laitetta…",
-        "activate_agent_success": "Agentti aktivoitiin."
+        "activate_agent_success": "Agentti aktivoitiin.",
+        "open_agents": "BetterDesk-agentit",
+        "agents_hint": "Mistä saat vain saapuvia Support-agentteja"
     },
     "devices": {
         "title": "Laitteet",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Edellinen dia",
         "next": "Seuraava dia"
+    },
+    "agents": {
+        "title": "BetterDesk-agentit",
+        "subtitle": "Vain saapuvat Support-asiakkaat rakennetaan BetterDesk-Clientissä — tämä paneeli tuo ja tarjoaa ne.",
+        "what_title": "Mitä BetterDesk-agentit ovat?",
+        "what_body": "BetterDesk Support -agentit ovat työpöytäasiakkaita vain saapuviin yhteyksiin. Ne rekisteröityvät palvelimelle, näyttävät paritus-QR:n ja hyväksyvät etätuen. Ne eivät aloita lähteviä yhteyksiä muihin laitteisiin.",
+        "note_no_build": "Tämä konsoli ei enää rakenna asiakasasennusohjelmia. Allekirjoitetut julkaisut tehdään BetterDesk-Client GitHub-repositoriossa.",
+        "get_title": "Mistä agentteja saa",
+        "get_body": "Lataa allekirjoitetut Support Agent -paketit BetterDesk-Client-julkaisuista tai jaa tämän palvelimen julkinen portaali tuonnin jälkeen.",
+        "get_github": "BetterDesk-Client-julkaisut",
+        "get_portal": "Avaa latausportaali",
+        "sync_title": "Tuo tälle palvelimelle",
+        "sync_hint": "Tuo uusin allekirjoitettu support-v*-julkaisu, jotta /portal voi tarjota varmennettuja asennusohjelmia.",
+        "sync_import": "Tuo uusin julkaisu",
+        "sync_importing": "Tuodaan ja varmennetaan uusin allekirjoitettu julkaisu…",
+        "sync_imported": "Tuotu {{tag}}.",
+        "sync_empty": "Julkaisua ei ole vielä tuotu.",
+        "sync_verified": "varmennettu",
+        "sync_artifacts": "{{count}} alustan artefaktia",
+        "steps_title": "Agentin käyttöönotto",
+        "step1": "Tuo uusin allekirjoitettu julkaisu (painike yllä) tai lataa GitHubista.",
+        "step2": "Asenna agentti laitteelle ja anna tämän palvelimen julkinen URL.",
+        "step3": "Kun agentti näyttää QR-koodin, avaa Aktivoi agentti ja skannaa se.",
+        "step4": "Hyväksy rekisteröinti tarvittaessa ja yhdistä sitten Remote Desktopilla.",
+        "pair_activate": "Aktivoi agentti",
+        "pair_body": "Paritus käyttää geneerisen Support Agentin näyttämää QR-koodia palvelimen tavoittamisen jälkeen.",
+        "branding_link": "Asiakkaan brändäys",
+        "branding_body": "Ulkoasu (logo, värit, tekstit) ladataan ajon aikana Asiakkaan brändäyksestä — sitä ei upoteta asennusohjelmaan."
     }
 }

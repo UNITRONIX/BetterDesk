@@ -136,7 +136,7 @@
             // Tools
             { id: 'reports',       icon: 'assessment',       route: '/reports',       color: '#da7756',  name: t('nav.reports'),        category: 'tools' },
             { id: 'keys',          icon: 'vpn_key',          route: '/keys',          color: '#d29922',  name: t('nav.keys'),           category: 'tools' },
-            { id: 'generator',     icon: 'build',            route: '/generator',     color: '#bc8cff',  name: t('nav.generator'),      category: 'tools' },
+            { id: 'agents',        icon: 'support_agent',    route: '/agents',        color: '#bc8cff',  name: t('nav.agents'),         category: 'tools' },
             { id: 'remote',        icon: 'connected_tv',     route: '/remote',        color: '#58a6ff',  name: t('nav.remote') || 'Remote Desktop', category: 'tools' },
             { id: 'toolkit',       icon: 'handyman',         route: '/toolkit',       color: '#f0883e',  name: t('nav.toolkit') || 'Toolkit', category: 'tools' },
             // Settings (always visible)

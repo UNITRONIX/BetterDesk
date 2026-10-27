@@ -45,7 +45,7 @@
         "dashboard": "Tableau de bord",
         "devices": "Appareils",
         "keys": "Clés",
-        "generator": "Générateur",
+        "generator": "Agents BetterDesk",
         "settings": "Paramètres",
         "users": "Utilisateurs",
         "inventory": "Inventory",
@@ -86,7 +86,8 @@
         "server_attestation": "Server-Attestierung",
         "commercialization": "Kommerzialisierung",
         "remote_open_tab": "Ouvrir le client Bureau à distance dans un nouvel onglet",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agents BetterDesk"
     },
     "auth": {
         "login": "Connexion",
@@ -147,7 +148,7 @@
         "quick_actions": "Actions rapides",
         "manage_devices": "Gérer les appareils connectés",
         "view_keys": "Voir les clés du serveur",
-        "generate_config": "Générer la configuration client",
+        "generate_config": "Où obtenir les agents Support entrants uniquement",
         "server_settings": "Configurer les paramètres",
         "greeting_morning": "Bonjour, {name}",
         "greeting_afternoon": "Bon après-midi, {name}",
@@ -179,7 +180,7 @@
         "config_api_server": "Serveur API",
         "config_key": "Clé",
         "client_config_hint": "Saisissez ces valeurs dans les paramètres réseau de RustDesk, dans la section serveur ID/relais.",
-        "open_generator": "Générateur de client",
+        "open_generator": "Agents BetterDesk",
         "open_keys": "Ouvrir les clés",
         "open_remote": "Ouvrir la console de bureau distant",
         "attention_panel": "À surveiller",
@@ -218,7 +219,9 @@
         "activate_agent_folder_none": "Aucun dossier",
         "activate_agent_submit": "Activer l’appareil",
         "activate_agent_submitting": "Activation de l’appareil…",
-        "activate_agent_success": "Agent activé avec succès."
+        "activate_agent_success": "Agent activé avec succès.",
+        "open_agents": "Agents BetterDesk",
+        "agents_hint": "Où obtenir les agents Support entrants uniquement"
     },
     "devices": {
         "title": "Tableau de bord",
@@ -4729,5 +4732,33 @@
         },
         "prev": "Diapositive précédente",
         "next": "Diapositive suivante"
+    },
+    "agents": {
+        "title": "Agents BetterDesk",
+        "subtitle": "Les clients Support entrants sont construits dans BetterDesk-Client — ce panneau les importe et les sert.",
+        "what_title": "Que sont les agents BetterDesk ?",
+        "what_body": "Les agents Support BetterDesk sont des clients de bureau en entrée uniquement. Ils s’enregistrent sur votre serveur, affichent un QR de jumelage et acceptent le support distant. Ils n’initient pas de connexions sortantes.",
+        "note_no_build": "Cette console ne compile plus les installateurs client. Les versions signées sont produites dans le dépôt GitHub BetterDesk-Client.",
+        "get_title": "Où obtenir les agents",
+        "get_body": "Téléchargez les paquets Support Agent signés depuis les releases BetterDesk-Client, ou partagez le portail public de ce serveur après l’import ci-dessous.",
+        "get_github": "Releases BetterDesk-Client",
+        "get_portal": "Ouvrir le portail de téléchargement",
+        "sync_title": "Importer pour ce serveur",
+        "sync_hint": "Importez la dernière release support-v* signée pour que /portal serve des installateurs vérifiés.",
+        "sync_import": "Importer la dernière release",
+        "sync_importing": "Import et vérification de la dernière release signée…",
+        "sync_imported": "{{tag}} importé.",
+        "sync_empty": "Aucune release importée pour le moment.",
+        "sync_verified": "vérifié",
+        "sync_artifacts": "{{count}} artefacts de plateforme",
+        "steps_title": "Comment intégrer un agent",
+        "step1": "Importez la dernière release signée (bouton ci-dessus) ou téléchargez depuis GitHub.",
+        "step2": "Installez l’agent sur l’appareil et saisissez l’URL publique de ce serveur.",
+        "step3": "Lorsque l’agent affiche un QR, ouvrez Activer l’agent et scannez-le.",
+        "step4": "Approuvez l’enrôlement si la politique l’exige, puis connectez-vous via Remote Desktop.",
+        "pair_activate": "Activer l’agent",
+        "pair_body": "Le jumelage utilise le QR affiché par un agent Support générique après contact avec votre serveur.",
+        "branding_link": "Habillage client",
+        "branding_body": "L’apparence (logo, couleurs, libellés) est chargée à l’exécution depuis l’habillage client — elle n’est pas intégrée à l’installateur."
     }
 }

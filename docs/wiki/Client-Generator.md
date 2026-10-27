@@ -1,8 +1,10 @@
-# Client Generator
+# BetterDesk Agents (Client distribution)
 
-The **BetterDesk Support Generator** distributes **incoming-only** desktop
-agents. Production BetterDesk servers (typically Linux) **do not compile**
-clients on the panel host.
+The console page **BetterDesk Agents** (`/agents`; old `/generator` redirects
+here) explains how to get **incoming-only** desktop agents. Production
+BetterDesk servers (typically Linux) **do not compile** clients on the panel
+host — the old in-panel “Client Generator” build UI was removed to avoid
+confusion.
 
 Signed installers are built on GitHub in
 [BetterDesk-Client](https://github.com/UNITRONIX/BetterDesk-Client)
@@ -19,8 +21,9 @@ client loads branding at runtime from the Console **Client Branding API**.
 ## Quick start (production — download-only)
 
 1. Log in as **admin**.
-2. Open **Generator**.
-3. Under **Generic incoming-only agents**, click **Import latest release**.
+2. Open **BetterDesk Agents** (`/agents`).
+3. Click **Import latest release** (or download signed packages from
+   BetterDesk-Client releases).
 4. Share the public download / portal links with end users.
 5. After install, the generic agent asks for the BetterDesk HTTPS address
    (local IP or public), downloads the server public key, and shows a
@@ -47,7 +50,7 @@ generic release contains no server URL, organization data or enrollment
 secret.
 
 An administrator imports a signed release through the release API (the
-Generator UI calls the same endpoint). BetterDesk verifies the Ed25519
+**BetterDesk Agents** page calls the same endpoint). BetterDesk verifies the Ed25519
 manifest signature, SHA-256 values, target metadata and absence of
 `custom.txt`, then stores the verified files below the instance data
 directory. Public download links serve the local cache, not GitHub

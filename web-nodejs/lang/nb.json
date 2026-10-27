@@ -47,7 +47,7 @@
         "dashboard": "Dashbord",
         "devices": "Enheter",
         "keys": "Nøkler",
-        "generator": "Generator",
+        "generator": "BetterDesk-agenter",
         "settings": "Innstillinger",
         "users": "Brukere",
         "inventory": "Inventar",
@@ -88,7 +88,8 @@
         "server_attestation": "Serverattest",
         "commercialization": "Kommersialisering",
         "remote_open_tab": "Åpne eksternt skrivebordsklient i ny fane",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk-agenter"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Raske handlinger",
         "manage_devices": "Administrer tilkoblede enheter",
         "view_keys": "Se servernøkler",
-        "generate_config": "Generer klientkonfigurasjon",
+        "generate_config": "Hvor du får incoming-only Support-agenter",
         "server_settings": "Konfigurer innstillinger",
         "greeting_morning": "God morgen, {name}",
         "greeting_afternoon": "God ettermiddag, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "API-server",
         "config_key": "Nøkkel",
         "client_config_hint": "Skriv inn disse verdiene i nettverksinnstillingene i RustDesk, under ID-/Relay-server.",
-        "open_generator": "Klientgenerator",
+        "open_generator": "BetterDesk-agenter",
         "open_keys": "Åpne nøkler",
         "open_remote": "Åpne konsollen for eksternt skrivebord",
         "attention_panel": "Krever oppmerksomhet",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Ingen mappe",
         "activate_agent_submit": "Aktiver enhet",
         "activate_agent_submitting": "Aktiverer enhet…",
-        "activate_agent_success": "Agenten ble aktivert."
+        "activate_agent_success": "Agenten ble aktivert.",
+        "open_agents": "BetterDesk-agenter",
+        "agents_hint": "Hvor du får incoming-only Support-agenter"
     },
     "devices": {
         "title": "Enheter",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Forrige lysbilde",
         "next": "Neste lysbilde"
+    },
+    "agents": {
+        "title": "BetterDesk-agenter",
+        "subtitle": "Incoming-only Support-klienter bygges i BetterDesk-Client — dette panelet importerer og serverer dem.",
+        "what_title": "Hva er BetterDesk-agenter?",
+        "what_body": "BetterDesk Support-agenter er skrivebordsklienter kun for innkommende tilkoblinger. De registrerer seg på serveren, viser en parings-QR og godtar fjernsupport. De starter ikke utgående tilkoblinger til andre enheter.",
+        "note_no_build": "Denne konsollen bygger ikke lenger klientinstallere. Signerte utgivelser produseres i BetterDesk-Client GitHub-repositoriet.",
+        "get_title": "Hvor du får agenter",
+        "get_body": "Last ned signerte Support Agent-pakker fra BetterDesk-Client-utgivelser, eller del denne serverens offentlige portal etter import nedenfor.",
+        "get_github": "BetterDesk-Client-utgivelser",
+        "get_portal": "Åpne nedlastingsportal",
+        "sync_title": "Importer for denne serveren",
+        "sync_hint": "Importer den nyeste signerte support-v*-utgivelsen slik at /portal kan servere verifiserte installere.",
+        "sync_import": "Importer nyeste utgivelse",
+        "sync_importing": "Importerer og verifiserer den nyeste signerte utgivelsen…",
+        "sync_imported": "Importert {{tag}}.",
+        "sync_empty": "Ingen utgivelse importert ennå.",
+        "sync_verified": "verifisert",
+        "sync_artifacts": "{{count}} plattformartefakter",
+        "steps_title": "Slik tar du i bruk en agent",
+        "step1": "Importer den nyeste signerte utgivelsen (knapp over) eller last ned fra GitHub.",
+        "step2": "Installer agenten på enheten og oppgi denne serverens offentlige URL.",
+        "step3": "Når agenten viser en QR, åpne Aktiver agent og skann den.",
+        "step4": "Godkjenn registrering hvis politikken krever det, og koble deretter til via Remote Desktop.",
+        "pair_activate": "Aktiver agent",
+        "pair_body": "Paring bruker QR-koden fra en generisk Support Agent etter at den når serveren din.",
+        "branding_link": "Klientmerking",
+        "branding_body": "Utseende (logo, farger, etiketter) lastes ved kjøring fra Klientmerking — det er ikke innebygd i installeren."
     }
 }

@@ -41,7 +41,7 @@
         "dashboard": "Nástěnka",
         "devices": "Zařízení",
         "keys": "Klíče",
-        "generator": "Generátor",
+        "generator": "Agenti BetterDesk",
         "settings": "Nastavení",
         "users": "Uživatelé",
         "inventory": "Inventář",
@@ -82,7 +82,8 @@
         "server_attestation": "Atestace serveru",
         "commercialization": "Komerce",
         "remote_open_tab": "Otevřít klienta vzdálené plochy v nové kartě",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agenti BetterDesk"
     },
     "auth": {
         "login": "Přihlášení",
@@ -143,7 +144,7 @@
         "quick_actions": "Rychlé akce",
         "manage_devices": "Spravovat připojená zařízení",
         "view_keys": "Zobrazit klíče serveru",
-        "generate_config": "Vygenerovat konfiguraci klienta",
+        "generate_config": "Odkud získat Support agenty pouze příchozí",
         "server_settings": "Nastavit konfiguraci",
         "greeting_morning": "Dobré ráno, {name}",
         "greeting_afternoon": "Dobré odpoledne, {name}",
@@ -175,7 +176,7 @@
         "config_api_server": "API server",
         "config_key": "Klíč",
         "client_config_hint": "Zadejte tyto hodnoty v síťových nastaveních RustDesk v části ID/Relay server.",
-        "open_generator": "Generátor klienta",
+        "open_generator": "Agenti BetterDesk",
         "open_keys": "Otevřít klíče",
         "open_remote": "Otevřít konzoli vzdálené plochy",
         "attention_panel": "Vyžaduje pozornost",
@@ -214,7 +215,9 @@
         "activate_agent_folder_none": "Bez složky",
         "activate_agent_submit": "Aktivovat zařízení",
         "activate_agent_submitting": "Aktivace zařízení…",
-        "activate_agent_success": "Agent byl úspěšně aktivován."
+        "activate_agent_success": "Agent byl úspěšně aktivován.",
+        "open_agents": "Agenti BetterDesk",
+        "agents_hint": "Odkud získat Support agenty pouze příchozí"
     },
     "devices": {
         "title": "Zařízení",
@@ -4725,5 +4728,33 @@
         },
         "prev": "Předchozí snímek",
         "next": "Další snímek"
+    },
+    "agents": {
+        "title": "Agenti BetterDesk",
+        "subtitle": "Support klienti pouze příchozí se vytvářejí v BetterDesk-Client — tento panel je importuje a poskytuje.",
+        "what_title": "Co jsou agenti BetterDesk?",
+        "what_body": "BetterDesk Support agenti jsou desktopoví klienti pouze pro příchozí spojení. Registrují se na serveru, ukazují párovací QR a přijímají vzdálenou podporu. Nezahajují odchozí spojení k jiným zařízením.",
+        "note_no_build": "Tato konzole už nestaví instalátory klienta. Podepsané verze vznikají v GitHub repozitáři BetterDesk-Client.",
+        "get_title": "Odkud získat agenty",
+        "get_body": "Stáhněte podepsané balíčky Support Agent z vydání BetterDesk-Client, nebo sdílejte veřejný portál tohoto serveru po importu níže.",
+        "get_github": "Vydání BetterDesk-Client",
+        "get_portal": "Otevřít portál stahování",
+        "sync_title": "Import pro tento server",
+        "sync_hint": "Importujte nejnovější podepsané vydání support-v*, aby /portal mohl poskytovat ověřené instalátory.",
+        "sync_import": "Importovat nejnovější vydání",
+        "sync_importing": "Import a ověření nejnovějšího podepsaného vydání…",
+        "sync_imported": "Importováno {{tag}}.",
+        "sync_empty": "Zatím nebylo importováno žádné vydání.",
+        "sync_verified": "ověřeno",
+        "sync_artifacts": "{{count}} artefaktů platforem",
+        "steps_title": "Jak připojit agenta",
+        "step1": "Importujte nejnovější podepsané vydání (tlačítko výše) nebo stáhněte z GitHubu.",
+        "step2": "Nainstalujte agenta na zařízení a zadejte veřejnou URL tohoto serveru.",
+        "step3": "Když agent ukáže QR, otevřete Aktivovat agenta a naskenujte ho.",
+        "step4": "Schvalte registraci, pokud to vyžaduje politika, a poté se připojte přes Remote Desktop.",
+        "pair_activate": "Aktivovat agenta",
+        "pair_body": "Párování používá QR zobrazený obecným Support Agentem po kontaktu se serverem.",
+        "branding_link": "Branding klienta",
+        "branding_body": "Vzhled (logo, barvy, popisky) se načítá za běhu z Brandingu klienta — není zabudován do instalátoru."
     }
 }

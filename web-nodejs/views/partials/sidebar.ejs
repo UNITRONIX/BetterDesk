@@ -29,7 +29,7 @@
                     data-category="management" title="<%= _('nav.management') || 'Management' %>">
                 <span class="material-icons" aria-hidden="true">business_center</span>
             </button>
-            <button class="sidebar-rail-btn <%= ['reports','keys','generator','remote','toolkit','cdap-studio'].includes(currentPage) ? 'active' : '' %>"
+            <button class="sidebar-rail-btn <%= ['reports','keys','agents','generator','remote','toolkit','cdap-studio'].includes(currentPage) ? 'active' : '' %>"
                     data-category="tools" title="<%= _('nav.tools') %>">
                 <span class="material-icons" aria-hidden="true">build</span>
             </button>
@@ -199,10 +199,9 @@
                 <span class="material-icons" aria-hidden="true">vpn_key</span>
                 <span class="sidebar-link-text"><%= _('nav.keys') %></span>
             </a>
-            <a href="/generator" class="sidebar-link <%= currentPage === 'generator' ? 'active' : '' %>" title="<%= _('generator.alpha_tooltip') || _('nav.generator') %>">
-                <span class="material-icons" aria-hidden="true">build</span>
-                <span class="sidebar-link-text"><%= _('nav.generator') %></span>
-                <span class="badge-sidebar badge-sidebar--alpha"><%= _('generator.alpha_badge') || 'ALPHA' %></span>
+            <a href="/agents" class="sidebar-link <%= currentPage === 'agents' || currentPage === 'generator' ? 'active' : '' %>" title="<%= _('nav.agents') %>">
+                <span class="material-icons" aria-hidden="true">support_agent</span>
+                <span class="sidebar-link-text"><%= _('nav.agents') %></span>
             </a>
             <% } %>
             <% if (hasPermission('device.connect')) { %>

@@ -41,7 +41,7 @@
         "dashboard": "仪表板",
         "devices": "设备",
         "keys": "密钥",
-        "generator": "生成器",
+        "generator": "BetterDesk 代理",
         "settings": "设置",
         "users": "用户",
         "inventory": "资产清单",
@@ -82,7 +82,8 @@
         "server_attestation": "服务器性能认证",
         "commercialization": "商业化",
         "remote_open_tab": "在新标签页中打开远程桌面客户端",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk 代理"
     },
     "auth": {
         "login": "登录",
@@ -143,7 +144,7 @@
         "quick_actions": "快捷操作",
         "manage_devices": "管理已连接的设备",
         "view_keys": "查看服务器密钥",
-        "generate_config": "生成客户端配置",
+        "generate_config": "从何处获取仅入站 Support 代理",
         "server_settings": "配置设置",
         "greeting_morning": "早上好，{name}",
         "greeting_afternoon": "下午好，{name}",
@@ -175,7 +176,7 @@
         "config_api_server": "API 服务器",
         "config_key": "密钥",
         "client_config_hint": "请在 RustDesk 网络设置的 ID/中继服务器部分输入这些值。",
-        "open_generator": "客户端生成器",
+        "open_generator": "BetterDesk 代理",
         "open_keys": "打开密钥",
         "open_remote": "打开远程桌面控制台",
         "attention_panel": "需要注意",
@@ -214,7 +215,9 @@
         "activate_agent_folder_none": "无文件夹",
         "activate_agent_submit": "激活设备",
         "activate_agent_submitting": "正在激活设备…",
-        "activate_agent_success": "代理已成功激活。"
+        "activate_agent_success": "代理已成功激活。",
+        "open_agents": "BetterDesk 代理",
+        "agents_hint": "从何处获取仅入站 Support 代理"
     },
     "devices": {
         "title": "设备",
@@ -4725,5 +4728,33 @@
         },
         "prev": "上一张幻灯片",
         "next": "下一张幻灯片"
+    },
+    "agents": {
+        "title": "BetterDesk 代理",
+        "subtitle": "仅入站 Support 客户端在 BetterDesk-Client 中构建 — 本面板负责导入并提供下载。",
+        "what_title": "什么是 BetterDesk 代理？",
+        "what_body": "BetterDesk Support 代理是仅入站的桌面客户端。它们向服务器注册、显示配对二维码并接受远程支持，不会向其他设备发起出站连接。",
+        "note_no_build": "本控制台不再在本机构建客户端安装包。已签名的版本在 BetterDesk-Client 的 GitHub 仓库中发布。",
+        "get_title": "从何处获取代理",
+        "get_body": "从 BetterDesk-Client 发行版下载已签名的 Support Agent 包，或在下方导入后分享本服务器的公共门户。",
+        "get_github": "BetterDesk-Client 发行版",
+        "get_portal": "打开下载门户",
+        "sync_title": "导入到本服务器",
+        "sync_hint": "导入最新已签名的 support-v* 发行版，以便 /portal 向用户提供已验证的安装包。",
+        "sync_import": "导入最新发行版",
+        "sync_importing": "正在导入并验证最新已签名发行版…",
+        "sync_imported": "已导入 {{tag}}。",
+        "sync_empty": "尚未导入任何发行版。",
+        "sync_verified": "已验证",
+        "sync_artifacts": "{{count}} 个平台产物",
+        "steps_title": "如何接入代理",
+        "step1": "导入最新已签名发行版（上方按钮）或从 GitHub 下载。",
+        "step2": "在终端设备上安装代理并输入本服务器的公共 URL。",
+        "step3": "当代理显示二维码时，打开“激活代理”并扫描。",
+        "step4": "若策略要求则批准注册，然后从 Remote Desktop 连接。",
+        "pair_activate": "激活代理",
+        "pair_body": "配对使用通用 Support Agent 在联系服务器后显示的二维码。",
+        "branding_link": "客户端品牌",
+        "branding_body": "外观（徽标、颜色、标签）在运行时从客户端品牌加载，不会写入安装包。"
     }
 }

@@ -41,7 +41,7 @@
         "dashboard": "Dashboard",
         "devices": "Devices",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "BetterDesk Agents",
         "settings": "Settings",
         "users": "Users",
         "inventory": "Inventory",
@@ -82,7 +82,8 @@
         "login": "Login",
         "server_management": "Server Management",
         "server_attestation": "Server Attestation",
-        "commercialization": "Commercialization"
+        "commercialization": "Commercialization",
+        "agents": "BetterDesk Agents"
     },
     "mobile_nav": {
         "label": "Main navigation",
@@ -151,7 +152,7 @@
         "quick_actions": "Quick Actions",
         "manage_devices": "Manage connected devices",
         "view_keys": "View server keys",
-        "generate_config": "Generate client config",
+        "generate_config": "Where to get incoming-only Support agents",
         "server_settings": "Configure settings",
         "greeting_morning": "Good morning, {name}",
         "greeting_afternoon": "Good afternoon, {name}",
@@ -183,7 +184,7 @@
         "config_api_server": "API Server",
         "config_key": "Key",
         "client_config_hint": "Enter these values in RustDesk network settings, in the ID/Relay server section.",
-        "open_generator": "Client Generator",
+        "open_generator": "BetterDesk Agents",
         "open_keys": "Open Keys",
         "open_remote": "Open the remote desktop console",
         "attention_panel": "Needs Attention",
@@ -222,7 +223,9 @@
         "activate_agent_folder_none": "No folder",
         "activate_agent_submit": "Activate device",
         "activate_agent_submitting": "Activating device…",
-        "activate_agent_success": "Agent activated successfully."
+        "activate_agent_success": "Agent activated successfully.",
+        "open_agents": "BetterDesk Agents",
+        "agents_hint": "Where to get incoming-only Support agents"
     },
     "devices": {
         "title": "Devices",
@@ -4723,5 +4726,33 @@
         },
         "prev": "Previous slide",
         "next": "Next slide"
+    },
+    "agents": {
+        "title": "BetterDesk Agents",
+        "subtitle": "Incoming-only Support clients are built on BetterDesk-Client — this panel imports and serves them.",
+        "what_title": "What are BetterDesk Agents?",
+        "what_body": "BetterDesk Support Agents are incoming-only desktop clients for end users. They register with your server, show a pairing QR, and accept remote support. They do not start outbound connections to other devices.",
+        "note_no_build": "This console no longer builds client installers. Signed releases are produced in the BetterDesk-Client GitHub repository.",
+        "get_title": "Where to get agents",
+        "get_body": "Download signed Support Agent packages from BetterDesk-Client releases, or share this server’s public portal after you import a release below.",
+        "get_github": "BetterDesk-Client releases",
+        "get_portal": "Open download portal",
+        "sync_title": "Import for this server",
+        "sync_hint": "Import the latest signed support-v* release into this instance so /portal can serve verified installers to your users.",
+        "sync_import": "Import latest release",
+        "sync_importing": "Importing and verifying the latest signed release…",
+        "sync_imported": "Imported {{tag}}.",
+        "sync_empty": "No release imported yet.",
+        "sync_verified": "verified",
+        "sync_artifacts": "{{count}} platform artifacts",
+        "steps_title": "How to onboard an agent",
+        "step1": "Import the latest signed release (button above) or download from GitHub.",
+        "step2": "Install the agent on the end-user device and enter this server’s public URL.",
+        "step3": "When the agent shows a QR code, open Activate agent and scan it.",
+        "step4": "Approve enrollment if your policy requires it, then connect from Remote Desktop.",
+        "pair_activate": "Activate agent",
+        "pair_body": "Pairing uses the QR shown by a generic Support Agent after it reaches your server.",
+        "branding_link": "Client Branding",
+        "branding_body": "Appearance (logo, colors, labels) is loaded at runtime from Client Branding — it is not baked into the installer."
     }
 }

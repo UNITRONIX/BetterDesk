@@ -47,7 +47,7 @@
         "dashboard": "Kontrol Paneli",
         "devices": "Cihazlar",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "BetterDesk Aracıları",
         "settings": "Ayarlar",
         "users": "Users",
         "inventory": "Inventory",
@@ -88,7 +88,8 @@
         "server_attestation": "Sunucu Performans Onayı",
         "commercialization": "Ticarileştirme",
         "remote_open_tab": "Uzak masaüstü istemcisini yeni sekmede aç",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk Aracıları"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Hızlı Eylemler",
         "manage_devices": "Bağlı cihazları yönetin",
         "view_keys": "Sunucu anahtarlarını görüntüle",
-        "generate_config": "İstemci yapılandırması oluştur",
+        "generate_config": "Yalnızca gelen Support aracılarını nereden alırsınız",
         "server_settings": "Ayarları yapılandırın",
         "greeting_morning": "Günaydın {name}",
         "greeting_afternoon": "İyi günler, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "API sunucusu",
         "config_key": "Anahtar",
         "client_config_hint": "Bu değerleri RustDesk ağ ayarlarında, ID/Relay sunucusu bölümüne girin.",
-        "open_generator": "İstemci oluşturucu",
+        "open_generator": "BetterDesk Aracıları",
         "open_keys": "Anahtarları aç",
         "open_remote": "Uzak masaüstü konsolunu aç",
         "attention_panel": "Dikkat gerekiyor",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Klasör yok",
         "activate_agent_submit": "Cihazı etkinleştir",
         "activate_agent_submitting": "Cihaz etkinleştiriliyor…",
-        "activate_agent_success": "Ajan başarıyla etkinleştirildi."
+        "activate_agent_success": "Ajan başarıyla etkinleştirildi.",
+        "open_agents": "BetterDesk Aracıları",
+        "agents_hint": "Yalnızca gelen Support aracılarını nereden alırsınız"
     },
     "devices": {
         "title": "Cihazlar",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Önceki slayt",
         "next": "Sonraki slayt"
+    },
+    "agents": {
+        "title": "BetterDesk Aracıları",
+        "subtitle": "Yalnızca gelen Support istemcileri BetterDesk-Client’ta oluşturulur — bu panel onları içe aktarır ve sunar.",
+        "what_title": "BetterDesk aracıları nedir?",
+        "what_body": "BetterDesk Support aracıları yalnızca gelen masaüstü istemcileridir. Sunucunuza kaydolur, eşleştirme QR’si gösterir ve uzaktan desteği kabul eder. Diğer cihazlara giden bağlantı başlatmazlar.",
+        "note_no_build": "Bu konsol artık istemci yükleyicileri derlemez. İmzalı sürümler BetterDesk-Client GitHub deposunda üretilir.",
+        "get_title": "Aracıları nereden alırsınız",
+        "get_body": "İmzalı Support Agent paketlerini BetterDesk-Client sürümlerinden indirin veya aşağıda içe aktardıktan sonra bu sunucunun genel portalını paylaşın.",
+        "get_github": "BetterDesk-Client sürümleri",
+        "get_portal": "İndirme portalını aç",
+        "sync_title": "Bu sunucu için içe aktar",
+        "sync_hint": "En son imzalı support-v* sürümünü içe aktarın; böylece /portal doğrulanmış yükleyicileri sunabilir.",
+        "sync_import": "En son sürümü içe aktar",
+        "sync_importing": "En son imzalı sürüm içe aktarılıyor ve doğrulanıyor…",
+        "sync_imported": "{{tag}} içe aktarıldı.",
+        "sync_empty": "Henüz sürüm içe aktarılmadı.",
+        "sync_verified": "doğrulandı",
+        "sync_artifacts": "{{count}} platform artefaktı",
+        "steps_title": "Bir aracı nasıl eklenir",
+        "step1": "En son imzalı sürümü içe aktarın (yukarıdaki düğme) veya GitHub’dan indirin.",
+        "step2": "Aracıyı cihaza kurun ve bu sunucunun genel URL’sini girin.",
+        "step3": "Aracı bir QR gösterdiğinde Aracıyı etkinleştir’i açın ve tarayın.",
+        "step4": "Politika gerektiriyorsa kaydı onaylayın, ardından Remote Desktop’tan bağlanın.",
+        "pair_activate": "Aracıyı etkinleştir",
+        "pair_body": "Eşleştirme, genel bir Support Agent’ın sunucunuza ulaştıktan sonra gösterdiği QR’yi kullanır.",
+        "branding_link": "İstemci markası",
+        "branding_body": "Görünüm (logo, renkler, etiketler) çalışma zamanında İstemci markasından yüklenir — yükleyiciye gömülmez."
     }
 }

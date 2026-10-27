@@ -48,7 +48,7 @@
         "dashboard": "لوحة القيادة",
         "devices": "الأجهزة",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "وكلاء BetterDesk",
         "settings": "إعدادات",
         "users": "Users",
         "inventory": "Inventory",
@@ -89,7 +89,8 @@
         "server_attestation": "اعتماد أداء الخادم",
         "commercialization": "التسويق",
         "remote_open_tab": "فتح عميل سطح المكتب البعيد في علامة تبويب جديدة",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "وكلاء BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -150,7 +151,7 @@
         "quick_actions": "إجراءات سريعة",
         "manage_devices": "إدارة الأجهزة المتصلة",
         "view_keys": "عرض مفاتيح الخادم",
-        "generate_config": "إنشاء تكوين العميل",
+        "generate_config": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط",
         "server_settings": "تكوين الإعدادات",
         "greeting_morning": "صباح الخير، {name}",
         "greeting_afternoon": "مساء الخير، {name}",
@@ -182,7 +183,7 @@
         "config_api_server": "خادم API",
         "config_key": "المفتاح",
         "client_config_hint": "أدخل هذه القيم في إعدادات شبكة RustDesk ضمن قسم خادم ID/الترحيل.",
-        "open_generator": "مولد العميل",
+        "open_generator": "وكلاء BetterDesk",
         "open_keys": "فتح المفاتيح",
         "open_remote": "فتح وحدة تحكم سطح المكتب البعيد",
         "attention_panel": "يتطلب الانتباه",
@@ -221,7 +222,9 @@
         "activate_agent_folder_none": "بدون مجلد",
         "activate_agent_submit": "تفعيل الجهاز",
         "activate_agent_submitting": "جارٍ تفعيل الجهاز…",
-        "activate_agent_success": "تم تفعيل الوكيل بنجاح."
+        "activate_agent_success": "تم تفعيل الوكيل بنجاح.",
+        "open_agents": "وكلاء BetterDesk",
+        "agents_hint": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط"
     },
     "devices": {
         "title": "الأجهزة",
@@ -4732,5 +4735,33 @@
         },
         "prev": "الشريحة السابقة",
         "next": "الشريحة التالية"
+    },
+    "agents": {
+        "title": "وكلاء BetterDesk",
+        "subtitle": "يُبنى عملاء Support الواردة فقط في BetterDesk-Client — تستورد هذه اللوحة وتقدّمهم.",
+        "what_title": "ما وكلاء BetterDesk؟",
+        "what_body": "وكلاء BetterDesk Support هم عملاء سطح مكتب للاتصالات الواردة فقط. يسجّلون على خادمك، ويعرضون رمز QR للاقتران، ويقبلون الدعم عن بُعد. لا يبدأون اتصالات صادرة إلى أجهزة أخرى.",
+        "note_no_build": "لم تعد هذه الوحدة تبني مثبّتات العميل. تُنتَج الإصدارات الموقّعة في مستودع GitHub لـ BetterDesk-Client.",
+        "get_title": "من أين تحصل على الوكلاء",
+        "get_body": "نزّل حزم Support Agent الموقّعة من إصدارات BetterDesk-Client، أو شارك بوابة هذا الخادم العامة بعد الاستيراد أدناه.",
+        "get_github": "إصدارات BetterDesk-Client",
+        "get_portal": "فتح بوابة التنزيل",
+        "sync_title": "استيراد لهذا الخادم",
+        "sync_hint": "استورد أحدث إصدار support-v* موقّع حتى يتمكن /portal من تقديم مثبّتات مُتحقَّق منها.",
+        "sync_import": "استيراد أحدث إصدار",
+        "sync_importing": "جارٍ استيراد أحدث إصدار موقّع والتحقق منه…",
+        "sync_imported": "تم استيراد {{tag}}.",
+        "sync_empty": "لم يُستورد أي إصدار بعد.",
+        "sync_verified": "مُتحقَّق",
+        "sync_artifacts": "{{count}} من قطع المنصات",
+        "steps_title": "كيفية إضافة وكيل",
+        "step1": "استورد أحدث إصدار موقّع (الزر أعلاه) أو نزّله من GitHub.",
+        "step2": "ثبّت الوكيل على الجهاز وأدخل عنوان URL العام لهذا الخادم.",
+        "step3": "عندما يعرض الوكيل رمز QR، افتح تفعيل الوكيل وامسحه.",
+        "step4": "وافق على التسجيل إن تطلبت السياسة ذلك، ثم اتصل من Remote Desktop.",
+        "pair_activate": "تفعيل الوكيل",
+        "pair_body": "يستخدم الاقتران رمز QR الذي يعرضه وكيل Support عام بعد الوصول إلى خادمك.",
+        "branding_link": "علامة العميل",
+        "branding_body": "يُحمَّل المظهر (الشعار والألوان والتسميات) وقت التشغيل من علامة العميل — وليس مضمّنًا في المثبّت."
     }
 }

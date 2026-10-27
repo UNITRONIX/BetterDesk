@@ -41,7 +41,7 @@
         "dashboard": "ダッシュボード",
         "devices": "デバイス",
         "keys": "キー",
-        "generator": "ジェネレーター",
+        "generator": "BetterDeskエージェント",
         "settings": "設定",
         "users": "ユーザー",
         "inventory": "インベントリ",
@@ -82,7 +82,8 @@
         "server_attestation": "サーバー性能認定",
         "commercialization": "商用化",
         "remote_open_tab": "新しいタブでリモートデスクトップクライアントを開く",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDeskエージェント"
     },
     "auth": {
         "login": "Login",
@@ -143,7 +144,7 @@
         "quick_actions": "クイックアクション",
         "manage_devices": "接続されたデバイスを管理",
         "view_keys": "サーバーキーを表示",
-        "generate_config": "クライアント設定を生成",
+        "generate_config": "受信専用サポートエージェントの入手先",
         "server_settings": "設定を構成",
         "greeting_morning": "おはようございます、{name}",
         "greeting_afternoon": "こんにちは、{name}",
@@ -175,7 +176,7 @@
         "config_api_server": "API サーバー",
         "config_key": "キー",
         "client_config_hint": "RustDesk のネットワーク設定で、ID/リレーサーバー欄にこれらの値を入力してください。",
-        "open_generator": "クライアント生成",
+        "open_generator": "BetterDeskエージェント",
         "open_keys": "キーを開く",
         "open_remote": "リモートデスクトップコンソールを開く",
         "attention_panel": "要確認",
@@ -214,7 +215,9 @@
         "activate_agent_folder_none": "フォルダーなし",
         "activate_agent_submit": "デバイスを有効化",
         "activate_agent_submitting": "デバイスを有効化しています…",
-        "activate_agent_success": "エージェントを有効化しました。"
+        "activate_agent_success": "エージェントを有効化しました。",
+        "open_agents": "BetterDeskエージェント",
+        "agents_hint": "受信専用サポートエージェントの入手先"
     },
     "devices": {
         "title": "デバイス",
@@ -4725,5 +4728,33 @@
         },
         "prev": "前のスライド",
         "next": "次のスライド"
+    },
+    "agents": {
+        "title": "BetterDeskエージェント",
+        "subtitle": "受信専用サポートクライアントは BetterDesk-Client でビルドされます。このパネルはそれらを取り込み、配信します。",
+        "what_title": "BetterDeskエージェントとは？",
+        "what_body": "BetterDeskサポートエージェントは受信専用のデスクトップクライアントです。サーバーに登録し、ペアリング用QRを表示し、リモートサポートを受け付けます。他デバイスへの送信接続は開始しません。",
+        "note_no_build": "このコンソールはクライアントインストーラーをビルドしなくなりました。署名付きリリースは BetterDesk-Client の GitHub リポジトリで作成されます。",
+        "get_title": "エージェントの入手先",
+        "get_body": "BetterDesk-Client のリリースから署名付き Support Agent パッケージをダウンロードするか、下でインポート後にこのサーバーの公開ポータルを共有してください。",
+        "get_github": "BetterDesk-Client リリース",
+        "get_portal": "ダウンロードポータルを開く",
+        "sync_title": "このサーバーへインポート",
+        "sync_hint": "最新の署名付き support-v* リリースを取り込み、/portal が検証済みインストーラーを配信できるようにします。",
+        "sync_import": "最新リリースをインポート",
+        "sync_importing": "最新の署名付きリリースをインポートして検証しています…",
+        "sync_imported": "{{tag}} をインポートしました。",
+        "sync_empty": "まだリリースがインポートされていません。",
+        "sync_verified": "検証済み",
+        "sync_artifacts": "{{count}} 個のプラットフォーム成果物",
+        "steps_title": "エージェントの導入手順",
+        "step1": "最新の署名付きリリースをインポートする（上のボタン）か、GitHub からダウンロードします。",
+        "step2": "エンドユーザー端末にエージェントをインストールし、このサーバーの公開 URL を入力します。",
+        "step3": "エージェントが QR を表示したら、「エージェントを有効化」を開いてスキャンします。",
+        "step4": "ポリシーで必要な場合は登録を承認し、Remote Desktop から接続します。",
+        "pair_activate": "エージェントを有効化",
+        "pair_body": "ペアリングには、汎用 Support Agent がサーバー到達後に表示する QR を使います。",
+        "branding_link": "クライアントブランディング",
+        "branding_body": "外観（ロゴ・色・ラベル）は実行時にクライアントブランディングから読み込まれます。インストーラーには焼き込まれません。"
     }
 }

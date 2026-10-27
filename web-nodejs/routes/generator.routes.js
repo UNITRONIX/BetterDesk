@@ -1,11 +1,10 @@
 /**
- * BetterDesk Console — Support Generator routes
+ * BetterDesk Console — Agents info + legacy Support Generator APIs
  *
  * Provides:
- *   - Generator admin panel (/generator) — module install + bundle editor
- *   - Module install API (/api/generator/module/*)
- *   - Bundle management REST API (/api/generator/bundles/*)
- *   - Public download portal per bundle (/d/:slug)
+ *   - Agents info page (/agents); /generator redirects here
+ *   - Legacy module/bundle APIs (/api/generator/*) for embedded maintainer mode
+ *   - Public download portal per legacy bundle (/d/:slug)
  */
 
 'use strict';
@@ -255,16 +254,18 @@ function filterAvailableBuilds(builds) {
 }
 
 // =========================================================================
-//  Generator page
+//  Agents info page (replaces the confusing in-panel client Generator UI)
 // =========================================================================
 
-router.get('/generator', requireAuth, requireAdmin, (req, res) => {
-    res.render('generator', {
-        title: req.t('nav.generator'),
-        activePage: 'generator',
-        supportedLangs: bundleService.SUPPORTED_LANGS,
-        localeLabels: bundleService.LOCALE_LABELS,
+router.get('/agents', requireAuth, requireAdmin, (req, res) => {
+    res.render('agents', {
+        title: req.t('nav.agents'),
+        activePage: 'agents',
     });
+});
+
+router.get('/generator', requireAuth, requireAdmin, (_req, res) => {
+    res.redirect(301, '/agents');
 });
 
 // =========================================================================

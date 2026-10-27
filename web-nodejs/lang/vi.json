@@ -47,7 +47,7 @@
         "dashboard": "Trang tổng quan",
         "devices": "Thiết bị",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "Tác nhân BetterDesk",
         "settings": "Cài đặt",
         "users": "Users",
         "inventory": "Inventory",
@@ -88,7 +88,8 @@
         "server_attestation": "Chứng nhận máy chủ",
         "commercialization": "Thương mại hóa",
         "remote_open_tab": "Mở client máy tính để bàn từ xa trong tab mới",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Tác nhân BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Thao tác nhanh",
         "manage_devices": "Quản lý các thiết bị được kết nối",
         "view_keys": "Xem khóa máy chủ",
-        "generate_config": "Tạo cấu hình máy khách",
+        "generate_config": "Lấy tác nhân Support chỉ nhận từ đâu",
         "server_settings": "Định cấu hình cài đặt",
         "greeting_morning": "Chào buổi sáng, {name}",
         "greeting_afternoon": "Chào buổi chiều, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "Máy chủ API",
         "config_key": "Khóa",
         "client_config_hint": "Nhập các giá trị này trong cài đặt mạng RustDesk, tại phần máy chủ ID/relay.",
-        "open_generator": "Trình tạo máy khách",
+        "open_generator": "Tác nhân BetterDesk",
         "open_keys": "Mở khóa",
         "open_remote": "Mở bảng điều khiển máy tính từ xa",
         "attention_panel": "Cần chú ý",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Không có thư mục",
         "activate_agent_submit": "Kích hoạt thiết bị",
         "activate_agent_submitting": "Đang kích hoạt thiết bị…",
-        "activate_agent_success": "Đã kích hoạt agent thành công."
+        "activate_agent_success": "Đã kích hoạt agent thành công.",
+        "open_agents": "Tác nhân BetterDesk",
+        "agents_hint": "Lấy tác nhân Support chỉ nhận từ đâu"
     },
     "devices": {
         "title": "Thiết bị",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Trang trước",
         "next": "Trang sau"
+    },
+    "agents": {
+        "title": "Tác nhân BetterDesk",
+        "subtitle": "Máy khách Support chỉ nhận được xây trong BetterDesk-Client — bảng điều khiển này nhập và phục vụ chúng.",
+        "what_title": "Tác nhân BetterDesk là gì?",
+        "what_body": "Tác nhân Support BetterDesk là máy khách máy tính chỉ nhận kết nối. Chúng đăng ký với máy chủ, hiện QR ghép nối và chấp nhận hỗ trợ từ xa. Chúng không khởi tạo kết nối đi tới thiết bị khác.",
+        "note_no_build": "Bảng điều khiển này không còn dựng trình cài máy khách. Bản phát hành đã ký được tạo trong kho GitHub BetterDesk-Client.",
+        "get_title": "Lấy tác nhân từ đâu",
+        "get_body": "Tải gói Support Agent đã ký từ bản phát hành BetterDesk-Client, hoặc chia sẻ cổng công khai của máy chủ này sau khi nhập bên dưới.",
+        "get_github": "Bản phát hành BetterDesk-Client",
+        "get_portal": "Mở cổng tải xuống",
+        "sync_title": "Nhập cho máy chủ này",
+        "sync_hint": "Nhập bản phát hành support-v* đã ký mới nhất để /portal phục vụ trình cài đã xác minh.",
+        "sync_import": "Nhập bản phát hành mới nhất",
+        "sync_importing": "Đang nhập và xác minh bản phát hành đã ký mới nhất…",
+        "sync_imported": "Đã nhập {{tag}}.",
+        "sync_empty": "Chưa nhập bản phát hành nào.",
+        "sync_verified": "đã xác minh",
+        "sync_artifacts": "{{count}} hiện vật nền tảng",
+        "steps_title": "Cách đưa tác nhân vào dùng",
+        "step1": "Nhập bản phát hành đã ký mới nhất (nút ở trên) hoặc tải từ GitHub.",
+        "step2": "Cài tác nhân trên thiết bị và nhập URL công khai của máy chủ này.",
+        "step3": "Khi tác nhân hiện QR, mở Kích hoạt tác nhân và quét.",
+        "step4": "Phê duyệt đăng ký nếu chính sách yêu cầu, rồi kết nối từ Remote Desktop.",
+        "pair_activate": "Kích hoạt tác nhân",
+        "pair_body": "Ghép nối dùng QR do Support Agent chung hiện sau khi đến máy chủ của bạn.",
+        "branding_link": "Thương hiệu máy khách",
+        "branding_body": "Giao diện (logo, màu, nhãn) được tải lúc chạy từ Thương hiệu máy khách — không gắn sẵn trong trình cài."
     }
 }

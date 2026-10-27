@@ -1469,7 +1469,7 @@
             { name: 'Devices', icon: 'devices', route: '/devices' },
             { name: 'Registrations', icon: 'how_to_reg', route: '/registrations' },
             { name: 'Keys', icon: 'vpn_key', route: '/keys' },
-            { name: 'Generator', icon: 'build', route: '/generator' },
+            { name: (typeof t === 'function' ? t('nav.agents') : 'BetterDesk Agents'), icon: 'support_agent', route: '/agents' },
             { name: 'Users', icon: 'group', route: '/users' },
             { name: 'Audit', icon: 'monitoring', route: '/audit' },
             { name: 'Network', icon: 'wifi', route: '/network' },

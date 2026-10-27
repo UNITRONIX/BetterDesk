@@ -47,7 +47,7 @@
         "dashboard": "Tabloul de bord",
         "devices": "Dispozitive",
         "keys": "Chei",
-        "generator": "Generator",
+        "generator": "Agenți BetterDesk",
         "settings": "Setări",
         "users": "Utilizatori",
         "inventory": "Inventar",
@@ -88,7 +88,8 @@
         "server_attestation": "Atestare server",
         "commercialization": "Comercializare",
         "remote_open_tab": "Deschide clientul desktop la distanță într-o filă nouă",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agenți BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Acțiuni rapide",
         "manage_devices": "Gestionați dispozitivele conectate",
         "view_keys": "Vizualizați cheile serverului",
-        "generate_config": "Generați configurația clientului",
+        "generate_config": "De unde obțineți agenți Support doar incoming",
         "server_settings": "Configurați setările",
         "greeting_morning": "Bună dimineața, {name}",
         "greeting_afternoon": "Bună ziua, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "Server API",
         "config_key": "Cheie",
         "client_config_hint": "Introduceți aceste valori în setările de rețea RustDesk, în secțiunea server ID/relay.",
-        "open_generator": "Generator client",
+        "open_generator": "Agenți BetterDesk",
         "open_keys": "Deschide cheile",
         "open_remote": "Deschide consola desktop la distanță",
         "attention_panel": "Necesită atenție",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Fără folder",
         "activate_agent_submit": "Activează dispozitivul",
         "activate_agent_submitting": "Se activează dispozitivul…",
-        "activate_agent_success": "Agent activat cu succes."
+        "activate_agent_success": "Agent activat cu succes.",
+        "open_agents": "Agenți BetterDesk",
+        "agents_hint": "De unde obțineți agenți Support doar incoming"
     },
     "devices": {
         "title": "Dispozitive",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Diapozitivul anterior",
         "next": "Diapozitivul următor"
+    },
+    "agents": {
+        "title": "Agenți BetterDesk",
+        "subtitle": "Clienții Support doar incoming sunt creați în BetterDesk-Client — acest panou îi importă și îi servește.",
+        "what_title": "Ce sunt agenții BetterDesk?",
+        "what_body": "Agenții Support BetterDesk sunt clienți desktop doar pentru conexiuni de intrare. Se înregistrează pe server, afișează un QR de asociere și acceptă suport remote. Nu inițiază conexiuni de ieșire către alte dispozitive.",
+        "note_no_build": "Această consolă nu mai construiește instalatoare de client. Versiunile semnate sunt produse în depozitul GitHub BetterDesk-Client.",
+        "get_title": "De unde obțineți agenții",
+        "get_body": "Descărcați pachete Support Agent semnate din versiunile BetterDesk-Client sau partajați portalul public al acestui server după importul de mai jos.",
+        "get_github": "Versiuni BetterDesk-Client",
+        "get_portal": "Deschide portalul de descărcare",
+        "sync_title": "Import pentru acest server",
+        "sync_hint": "Importați cea mai recentă versiune semnată support-v* pentru ca /portal să servească instalatoare verificate.",
+        "sync_import": "Importă ultima versiune",
+        "sync_importing": "Se importă și se verifică ultima versiune semnată…",
+        "sync_imported": "Importat {{tag}}.",
+        "sync_empty": "Nicio versiune importată încă.",
+        "sync_verified": "verificat",
+        "sync_artifacts": "{{count}} artefacte de platformă",
+        "steps_title": "Cum integrați un agent",
+        "step1": "Importați ultima versiune semnată (butonul de mai sus) sau descărcați de pe GitHub.",
+        "step2": "Instalați agentul pe dispozitiv și introduceți URL-ul public al acestui server.",
+        "step3": "Când agentul afișează un QR, deschideți Activează agentul și scanați-l.",
+        "step4": "Aprobați înregistrarea dacă politica o cere, apoi conectați-vă din Remote Desktop.",
+        "pair_activate": "Activează agentul",
+        "pair_body": "Asocierea folosește QR-ul afișat de un Support Agent generic după contactul cu serverul.",
+        "branding_link": "Branding client",
+        "branding_body": "Aspectul (logo, culori, etichete) este încărcat la runtime din Branding client — nu este înglobat în instalator."
     }
 }

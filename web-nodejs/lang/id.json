@@ -47,7 +47,7 @@
         "dashboard": "Dasbor",
         "devices": "Perangkat",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "Agen BetterDesk",
         "settings": "Pengaturan",
         "users": "Users",
         "inventory": "Inventory",
@@ -88,7 +88,8 @@
         "server_attestation": "Sertifikasi Server",
         "commercialization": "Komersialisasi",
         "remote_open_tab": "Buka klien desktop jarak jauh di tab baru",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agen BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Tindakan Cepat",
         "manage_devices": "Kelola perangkat yang terhubung",
         "view_keys": "Lihat kunci server",
-        "generate_config": "Hasilkan konfigurasi klien",
+        "generate_config": "Dari mana mendapatkan agen Support hanya masuk",
         "server_settings": "Konfigurasikan pengaturan",
         "greeting_morning": "Selamat pagi {name}",
         "greeting_afternoon": "Selamat siang, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "Server API",
         "config_key": "Kunci",
         "client_config_hint": "Masukkan nilai ini di pengaturan jaringan RustDesk, pada bagian server ID/relay.",
-        "open_generator": "Generator klien",
+        "open_generator": "Agen BetterDesk",
         "open_keys": "Buka kunci",
         "open_remote": "Buka konsol desktop jarak jauh",
         "attention_panel": "Perlu perhatian",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Tanpa folder",
         "activate_agent_submit": "Aktifkan perangkat",
         "activate_agent_submitting": "Mengaktifkan perangkat…",
-        "activate_agent_success": "Agen berhasil diaktifkan."
+        "activate_agent_success": "Agen berhasil diaktifkan.",
+        "open_agents": "Agen BetterDesk",
+        "agents_hint": "Dari mana mendapatkan agen Support hanya masuk"
     },
     "devices": {
         "title": "Perangkat",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Slide sebelumnya",
         "next": "Slide berikutnya"
+    },
+    "agents": {
+        "title": "Agen BetterDesk",
+        "subtitle": "Klien Support hanya masuk dibangun di BetterDesk-Client — panel ini mengimpor dan menyajikannya.",
+        "what_title": "Apa itu agen BetterDesk?",
+        "what_body": "Agen Support BetterDesk adalah klien desktop hanya untuk koneksi masuk. Mereka mendaftar ke server Anda, menampilkan QR pemasangan, dan menerima dukungan jarak jauh. Mereka tidak memulai koneksi keluar ke perangkat lain.",
+        "note_no_build": "Konsol ini tidak lagi membangun penginstal klien. Rilis bertanda tangan diproduksi di repositori GitHub BetterDesk-Client.",
+        "get_title": "Dari mana mendapatkan agen",
+        "get_body": "Unduh paket Support Agent bertanda tangan dari rilis BetterDesk-Client, atau bagikan portal publik server ini setelah mengimpor di bawah.",
+        "get_github": "Rilis BetterDesk-Client",
+        "get_portal": "Buka portal unduhan",
+        "sync_title": "Impor untuk server ini",
+        "sync_hint": "Impor rilis support-v* bertanda tangan terbaru agar /portal dapat menyajikan penginstal terverifikasi.",
+        "sync_import": "Impor rilis terbaru",
+        "sync_importing": "Mengimpor dan memverifikasi rilis bertanda tangan terbaru…",
+        "sync_imported": "Diimpor {{tag}}.",
+        "sync_empty": "Belum ada rilis yang diimpor.",
+        "sync_verified": "terverifikasi",
+        "sync_artifacts": "{{count}} artefak platform",
+        "steps_title": "Cara menghubungkan agen",
+        "step1": "Impor rilis bertanda tangan terbaru (tombol di atas) atau unduh dari GitHub.",
+        "step2": "Instal agen di perangkat dan masukkan URL publik server ini.",
+        "step3": "Saat agen menampilkan QR, buka Aktifkan agen dan pindai.",
+        "step4": "Setujui pendaftaran jika kebijakan mengharuskan, lalu hubungkan dari Remote Desktop.",
+        "pair_activate": "Aktifkan agen",
+        "pair_body": "Pemasangan memakai QR yang ditampilkan Support Agent generik setelah mencapai server Anda.",
+        "branding_link": "Branding klien",
+        "branding_body": "Tampilan (logo, warna, label) dimuat saat runtime dari Branding klien — tidak dibake ke penginstal."
     }
 }

@@ -127,10 +127,9 @@
                 <span class="material-icons" aria-hidden="true">vpn_key</span>
                 <span><%= _('nav.keys') %></span>
             </a>
-            <a href="/generator" class="ux35-sidebar-item <%= currentPage === 'generator' ? 'active' : '' %>" title="<%= _('generator.alpha_tooltip') || _('nav.generator') %>">
-                <span class="material-icons" aria-hidden="true">build</span>
-                <span><%= _('nav.generator') %></span>
-                <span class="badge-sidebar badge-sidebar--alpha"><%= _('generator.alpha_badge') || 'ALPHA' %></span>
+            <a href="/agents" class="ux35-sidebar-item <%= currentPage === 'agents' || currentPage === 'generator' ? 'active' : '' %>" title="<%= _('nav.agents') %>">
+                <span class="material-icons" aria-hidden="true">support_agent</span>
+                <span><%= _('nav.agents') %></span>
             </a>
             <% } %>
             <% if (hasPermission('device.connect')) { %>

@@ -47,7 +47,7 @@
         "dashboard": "डैशबोर्ड",
         "devices": "उपकरण",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "BetterDesk एजेंट",
         "settings": "सेटिंग्स",
         "users": "Users",
         "inventory": "Inventory",
@@ -88,7 +88,8 @@
         "server_attestation": "सर्वर प्रमाणीकरण",
         "commercialization": "व्यावसायीकरण",
         "remote_open_tab": "नए टैब में रिमोट डेस्कटॉप क्लाइंट खोलें",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk एजेंट"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "त्वरित कार्रवाई",
         "manage_devices": "कनेक्टेड डिवाइस प्रबंधित करें",
         "view_keys": "सर्वर कुंजियाँ देखें",
-        "generate_config": "क्लाइंट कॉन्फ़िगरेशन जनरेट करें",
+        "generate_config": "केवल इनकमिंग Support एजेंट कहाँ से लें",
         "server_settings": "सेटिंग्स कॉन्फ़िगर करें",
         "greeting_morning": "सुप्रभात, {name}",
         "greeting_afternoon": "शुभ दोपहर, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "API सर्वर",
         "config_key": "कुंजी",
         "client_config_hint": "इन मानों को RustDesk नेटवर्क सेटिंग्स में ID/Relay सर्वर अनुभाग में दर्ज करें।",
-        "open_generator": "क्लाइंट जनरेटर",
+        "open_generator": "BetterDesk एजेंट",
         "open_keys": "कुंजियाँ खोलें",
         "open_remote": "रिमोट डेस्कटॉप कंसोल खोलें",
         "attention_panel": "ध्यान चाहिए",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "कोई फ़ोल्डर नहीं",
         "activate_agent_submit": "डिवाइस सक्रिय करें",
         "activate_agent_submitting": "डिवाइस सक्रिय हो रहा है…",
-        "activate_agent_success": "एजेंट सफलतापूर्वक सक्रिय किया गया।"
+        "activate_agent_success": "एजेंट सफलतापूर्वक सक्रिय किया गया।",
+        "open_agents": "BetterDesk एजेंट",
+        "agents_hint": "केवल इनकमिंग Support एजेंट कहाँ से लें"
     },
     "devices": {
         "title": "उपकरण",
@@ -4731,5 +4734,33 @@
         },
         "prev": "पिछली स्लाइड",
         "next": "अगली स्लाइड"
+    },
+    "agents": {
+        "title": "BetterDesk एजेंट",
+        "subtitle": "केवल इनकमिंग Support क्लाइंट BetterDesk-Client में बनते हैं — यह पैनल उन्हें आयात करके परोसता है।",
+        "what_title": "BetterDesk एजेंट क्या हैं?",
+        "what_body": "BetterDesk Support एजेंट केवल आने वाले कनेक्शन वाले डेस्कटॉप क्लाइंट हैं। वे आपके सर्वर पर पंजीकृत होते हैं, पेयरिंग QR दिखाते हैं और रिमोट सपोर्ट स्वीकार करते हैं। वे अन्य डिवाइसों को आउटबाउंड कनेक्शन नहीं शुरू करते।",
+        "note_no_build": "यह कंसोल अब क्लाइंट इंस्टॉलर नहीं बनाता। हस्ताक्षरित रिलीज़ BetterDesk-Client GitHub रिपॉजिटरी में बनती हैं।",
+        "get_title": "एजेंट कहाँ से लें",
+        "get_body": "BetterDesk-Client रिलीज़ से हस्ताक्षरित Support Agent पैकेज डाउनलोड करें, या नीचे आयात के बाद इस सर्वर का सार्वजनिक पोर्टल साझा करें।",
+        "get_github": "BetterDesk-Client रिलीज़",
+        "get_portal": "डाउनलोड पोर्टल खोलें",
+        "sync_title": "इस सर्वर के लिए आयात",
+        "sync_hint": "नवीनतम हस्ताक्षरित support-v* रिलीज़ आयात करें ताकि /portal सत्यापित इंस्टॉलर परोस सके।",
+        "sync_import": "नवीनतम रिलीज़ आयात करें",
+        "sync_importing": "नवीनतम हस्ताक्षरित रिलीज़ आयात और सत्यापित हो रही है…",
+        "sync_imported": "{{tag}} आयात किया गया।",
+        "sync_empty": "अभी कोई रिलीज़ आयात नहीं हुई।",
+        "sync_verified": "सत्यापित",
+        "sync_artifacts": "{{count}} प्लेटफ़ॉर्म आर्टिफ़ैक्ट",
+        "steps_title": "एजेंट कैसे जोड़ें",
+        "step1": "नवीनतम हस्ताक्षरित रिलीज़ आयात करें (ऊपर बटन) या GitHub से डाउनलोड करें।",
+        "step2": "डिवाइस पर एजेंट इंस्टॉल करें और इस सर्वर का सार्वजनिक URL दर्ज करें।",
+        "step3": "जब एजेंट QR दिखाए, एजेंट सक्रिय करें खोलें और स्कैन करें।",
+        "step4": "यदि नीति माँगती है तो नामांकन स्वीकृत करें, फिर Remote Desktop से कनेक्ट करें।",
+        "pair_activate": "एजेंट सक्रिय करें",
+        "pair_body": "पेयरिंग सामान्य Support Agent द्वारा सर्वर पहुँचने के बाद दिखाए गए QR का उपयोग करता है।",
+        "branding_link": "क्लाइंट ब्रांडिंग",
+        "branding_body": "दिखावट (लोगो, रंग, लेबल) रनटाइम पर क्लाइंट ब्रांडिंग से लोड होती है — इंस्टॉलर में बेक नहीं होती।"
     }
 }

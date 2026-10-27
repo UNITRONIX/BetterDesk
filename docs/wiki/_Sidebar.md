@@ -12,7 +12,7 @@
 - [[Organizations and RBAC|Organizations-and-RBAC]]
 - [[LDAP / Active Directory|LDAP-AD]]
 - [[OIDC SSO|OIDC-SSO]]
-- [[Client Generator|Client-Generator]]
+- [[BetterDesk Agents|Client-Generator]]
 - [[Fleet and Policies|Fleet-and-Policies]]
 - [[Unattended Access and WoL|Unattended-and-WoL]]
 - [[Web Remote Desktop|Web-Remote]]

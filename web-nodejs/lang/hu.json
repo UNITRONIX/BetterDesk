@@ -47,7 +47,7 @@
         "dashboard": "Irányítópult",
         "devices": "Eszközök",
         "keys": "Kulcsok",
-        "generator": "Generátor",
+        "generator": "BetterDesk ügynökök",
         "settings": "Beállítások elemre",
         "users": "Felhasználók",
         "inventory": "Leltár",
@@ -88,7 +88,8 @@
         "server_attestation": "Szerver tanúsítás",
         "commercialization": "Kereskedelmi modul",
         "remote_open_tab": "Távoli asztal kliens megnyitása új lapon",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk ügynökök"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "Gyors műveletek",
         "manage_devices": "A csatlakoztatott eszközök kezelése",
         "view_keys": "Szerverkulcsok megtekintése",
-        "generate_config": "Kliens konfiguráció létrehozása",
+        "generate_config": "Honnan szerezhetők a csak bejövő Support ügynökök",
         "server_settings": "Konfigurálja a beállításokat",
         "greeting_morning": "Jó reggelt, {name}",
         "greeting_afternoon": "Jó napot, {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "API szerver",
         "config_key": "Kulcs",
         "client_config_hint": "Adja meg ezeket az értékeket a RustDesk hálózati beállításaiban, az ID/Relay szerver résznél.",
-        "open_generator": "Kliensgenerátor",
+        "open_generator": "BetterDesk ügynökök",
         "open_keys": "Kulcsok megnyitása",
         "open_remote": "Távoli asztali konzol megnyitása",
         "attention_panel": "Figyelmet igényel",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "Nincs mappa",
         "activate_agent_submit": "Eszköz aktiválása",
         "activate_agent_submitting": "Eszköz aktiválása…",
-        "activate_agent_success": "Az ügynök aktiválása sikeres."
+        "activate_agent_success": "Az ügynök aktiválása sikeres.",
+        "open_agents": "BetterDesk ügynökök",
+        "agents_hint": "Honnan szerezhetők a csak bejövő Support ügynökök"
     },
     "devices": {
         "title": "Eszközök",
@@ -4731,5 +4734,33 @@
         },
         "prev": "Előző dia",
         "next": "Következő dia"
+    },
+    "agents": {
+        "title": "BetterDesk ügynökök",
+        "subtitle": "A csak bejövő Support kliensek a BetterDesk-Clientben készülnek — ez a panel importálja és szolgálja ki őket.",
+        "what_title": "Mik a BetterDesk ügynökök?",
+        "what_body": "A BetterDesk Support ügynökök csak bejövő asztali kliensek. Regisztrálnak a szerveren, párosító QR-t mutatnak, és fogadják a távoli támogatást. Nem indítanak kimenő kapcsolatokat más eszközökre.",
+        "note_no_build": "Ez a konzol már nem épít kliens telepítőket. Az aláírt kiadások a BetterDesk-Client GitHub-tárolóban készülnek.",
+        "get_title": "Honnan szerezhetők az ügynökök",
+        "get_body": "Töltse le az aláírt Support Agent csomagokat a BetterDesk-Client kiadásokból, vagy ossza meg a szerver nyilvános portálját az alábbi import után.",
+        "get_github": "BetterDesk-Client kiadások",
+        "get_portal": "Letöltési portál megnyitása",
+        "sync_title": "Import ehhez a szerverhez",
+        "sync_hint": "Importálja a legújabb aláírt support-v* kiadást, hogy a /portal ellenőrzött telepítőket szolgálhasson ki.",
+        "sync_import": "Legújabb kiadás importálása",
+        "sync_importing": "A legújabb aláírt kiadás importálása és ellenőrzése…",
+        "sync_imported": "Importálva: {{tag}}.",
+        "sync_empty": "Még nincs importált kiadás.",
+        "sync_verified": "ellenőrizve",
+        "sync_artifacts": "{{count}} platformartefakt",
+        "steps_title": "Ügynök bevezetése",
+        "step1": "Importálja a legújabb aláírt kiadást (fenti gomb) vagy töltse le a GitHubról.",
+        "step2": "Telepítse az ügynököt az eszközre, és adja meg a szerver nyilvános URL-jét.",
+        "step3": "Amikor az ügynök QR-kódot mutat, nyissa meg az Ügynök aktiválása menüt, és olvassa be.",
+        "step4": "Szükség esetén hagyja jóvá a regisztrációt, majd csatlakozzon a Remote Desktopból.",
+        "pair_activate": "Ügynök aktiválása",
+        "pair_body": "A párosítás a generikus Support Agent által a szerver elérése után mutatott QR-t használja.",
+        "branding_link": "Kliens branding",
+        "branding_body": "A megjelenés (logó, színek, címkék) futásidőben a Kliens brandingből töltődik — nincs beágyazva a telepítőbe."
     }
 }

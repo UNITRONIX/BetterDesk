@@ -41,7 +41,7 @@
         "dashboard": "Panel",
         "devices": "Urządzenia",
         "keys": "Klucze",
-        "generator": "Generator",
+        "generator": "Agenci BetterDesk",
         "settings": "Ustawienia",
         "users": "Użytkownicy",
         "inventory": "Inwentaryzacja",
@@ -82,7 +82,8 @@
         "server_attestation": "Atest serwera",
         "commercialization": "Komercjalizacja",
         "remote_open_tab": "Otwórz klienta pulpitu zdalnego w nowej karcie",
-        "client_branding": "Branding klienta"
+        "client_branding": "Branding klienta",
+        "agents": "Agenci BetterDesk"
     },
     "auth": {
         "login": "Zaloguj",
@@ -143,7 +144,7 @@
         "quick_actions": "Szybkie akcje",
         "manage_devices": "Zarządzaj urządzeniami",
         "view_keys": "Wyświetl klucze serwera",
-        "generate_config": "Generuj konfigurację klienta",
+        "generate_config": "Skąd wziąć agentów Support (tylko incoming)",
         "server_settings": "Skonfiguruj ustawienia",
         "greeting_morning": "Dzień dobry, {name}",
         "greeting_afternoon": "Dzień dobry, {name}",
@@ -175,7 +176,7 @@
         "config_api_server": "Serwer API",
         "config_key": "Key",
         "client_config_hint": "Wpisz te wartości w ustawieniach sieci RustDesk, w sekcji serwera ID/pośredniczącego.",
-        "open_generator": "Generator klienta",
+        "open_generator": "Agenci BetterDesk",
         "open_keys": "Otwórz klucze",
         "open_remote": "Otwórz konsolę pulpitu zdalnego",
         "attention_panel": "Wymaga uwagi",
@@ -214,7 +215,9 @@
         "activate_agent_folder_none": "Bez folderu",
         "activate_agent_submit": "Aktywuj urządzenie",
         "activate_agent_submitting": "Aktywowanie urządzenia…",
-        "activate_agent_success": "Agent został pomyślnie aktywowany."
+        "activate_agent_success": "Agent został pomyślnie aktywowany.",
+        "open_agents": "Agenci BetterDesk",
+        "agents_hint": "Skąd wziąć agentów Support (tylko incoming)"
     },
     "devices": {
         "title": "Urządzenia",
@@ -4725,5 +4728,33 @@
         },
         "prev": "Poprzedni slajd",
         "next": "Następny slajd"
+    },
+    "agents": {
+        "title": "Agenci BetterDesk",
+        "subtitle": "Klienci Support (tylko incoming) powstają w repozytorium BetterDesk-Client — ten panel je importuje i udostępnia.",
+        "what_title": "Czym są agenci BetterDesk?",
+        "what_body": "BetterDesk Support Agent to klient desktopowy tylko do połączeń przychodzących. Rejestruje się na Twoim serwerze, pokazuje kod QR do parowania i przyjmuje wsparcie zdalne. Nie inicjuje połączeń wychodzących do innych urządzeń.",
+        "note_no_build": "Ta konsola nie buduje już instalatorów klienta. Podpisane wydania powstają w repozytorium GitHub BetterDesk-Client.",
+        "get_title": "Skąd wziąć agentów",
+        "get_body": "Pobierz podpisane pakiety Support Agent z wydań BetterDesk-Client albo udostępnij publiczny portal tego serwera po zaimportowaniu wydania poniżej.",
+        "get_github": "Wydania BetterDesk-Client",
+        "get_portal": "Otwórz portal pobierania",
+        "sync_title": "Import na ten serwer",
+        "sync_hint": "Zaimportuj najnowsze podpisane wydanie support-v*, aby /portal mógł serwować zweryfikowane instalatory użytkownikom.",
+        "sync_import": "Importuj najnowsze wydanie",
+        "sync_importing": "Importowanie i weryfikacja najnowszego podpisanego wydania…",
+        "sync_imported": "Zaimportowano {{tag}}.",
+        "sync_empty": "Nie zaimportowano jeszcze żadnego wydania.",
+        "sync_verified": "zweryfikowane",
+        "sync_artifacts": "{{count}} artefaktów platform",
+        "steps_title": "Jak podłączyć agenta",
+        "step1": "Zaimportuj najnowsze podpisane wydanie (przycisk powyżej) albo pobierz z GitHub.",
+        "step2": "Zainstaluj agenta na urządzeniu użytkownika i podaj publiczny adres URL tego serwera.",
+        "step3": "Gdy agent pokaże kod QR, otwórz Aktywuj agenta i zeskanuj go.",
+        "step4": "Zaakceptuj rejestrację, jeśli wymaga tego polityka, a potem połącz się z Remote Desktop.",
+        "pair_activate": "Aktywuj agenta",
+        "pair_body": "Parowanie używa kodu QR pokazywanego przez generycznego Support Agenta po połączeniu z serwerem.",
+        "branding_link": "Branding klienta",
+        "branding_body": "Wygląd (logo, kolory, etykiety) jest ładowany w czasie działania z Brandingu klienta — nie jest wbudowany w instalator."
     }
 }

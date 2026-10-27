@@ -190,7 +190,7 @@ curl http://your-server.com:21121/api/login-options
 
 ## Custom Client Branding
 
-RustDesk supports custom branding. Use the built-in **Client Generator** in the web panel to build pre-configured clients — see [[Client Generator|Client-Generator]].
+For incoming-only BetterDesk Support agents, use **BetterDesk Agents** in the web panel (import signed releases) — see [[BetterDesk Agents|Client-Generator]]. Appearance comes from **Client Branding** at runtime.
 
 ---
 

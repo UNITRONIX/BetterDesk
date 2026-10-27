@@ -41,7 +41,7 @@
         "dashboard": "대시보드",
         "devices": "장치",
         "keys": "키",
-        "generator": "생성기",
+        "generator": "BetterDesk 에이전트",
         "settings": "설정",
         "users": "사용자",
         "inventory": "인벤토리",
@@ -82,7 +82,8 @@
         "server_attestation": "서버 성능 인증",
         "commercialization": "상용화",
         "remote_open_tab": "새 탭에서 원격 데스크톱 클라이언트 열기",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk 에이전트"
     },
     "auth": {
         "login": "Login",
@@ -143,7 +144,7 @@
         "quick_actions": "빠른 작업",
         "manage_devices": "연결된 장치 관리",
         "view_keys": "서버 키 보기",
-        "generate_config": "클라이언트 구성 생성",
+        "generate_config": "수신 전용 Support 에이전트를 받는 곳",
         "server_settings": "설정 구성",
         "greeting_morning": "좋은 아침입니다, {name}",
         "greeting_afternoon": "좋은 오후입니다, {name}",
@@ -175,7 +176,7 @@
         "config_api_server": "API 서버",
         "config_key": "키",
         "client_config_hint": "RustDesk 네트워크 설정의 ID/릴레이 서버 섹션에 이 값을 입력하세요.",
-        "open_generator": "클라이언트 생성기",
+        "open_generator": "BetterDesk 에이전트",
         "open_keys": "키 열기",
         "open_remote": "원격 데스크톱 콘솔 열기",
         "attention_panel": "주의 필요",
@@ -214,7 +215,9 @@
         "activate_agent_folder_none": "폴더 없음",
         "activate_agent_submit": "장치 활성화",
         "activate_agent_submitting": "장치를 활성화하는 중…",
-        "activate_agent_success": "에이전트가 활성화되었습니다."
+        "activate_agent_success": "에이전트가 활성화되었습니다.",
+        "open_agents": "BetterDesk 에이전트",
+        "agents_hint": "수신 전용 Support 에이전트를 받는 곳"
     },
     "devices": {
         "title": "장치",
@@ -4725,5 +4728,33 @@
         },
         "prev": "이전 슬라이드",
         "next": "다음 슬라이드"
+    },
+    "agents": {
+        "title": "BetterDesk 에이전트",
+        "subtitle": "수신 전용 Support 클라이언트는 BetterDesk-Client에서 빌드됩니다. 이 패널은 이를 가져와 제공합니다.",
+        "what_title": "BetterDesk 에이전트란?",
+        "what_body": "BetterDesk Support 에이전트는 수신 전용 데스크톱 클라이언트입니다. 서버에 등록하고 페어링 QR을 표시하며 원격 지원을 수락합니다. 다른 장치로 나가는 연결을 시작하지 않습니다.",
+        "note_no_build": "이 콘솔은 더 이상 클라이언트 설치 프로그램을 빌드하지 않습니다. 서명된 릴리스는 BetterDesk-Client GitHub 저장소에서 만들어집니다.",
+        "get_title": "에이전트를 받는 곳",
+        "get_body": "BetterDesk-Client 릴리스에서 서명된 Support Agent 패키지를 다운로드하거나, 아래에서 가져온 뒤 이 서버의 공개 포털을 공유하세요.",
+        "get_github": "BetterDesk-Client 릴리스",
+        "get_portal": "다운로드 포털 열기",
+        "sync_title": "이 서버로 가져오기",
+        "sync_hint": "최신 서명된 support-v* 릴리스를 가져와 /portal이 검증된 설치 프로그램을 제공할 수 있게 합니다.",
+        "sync_import": "최신 릴리스 가져오기",
+        "sync_importing": "최신 서명된 릴리스를 가져와 검증하는 중…",
+        "sync_imported": "{{tag}}을(를) 가져왔습니다.",
+        "sync_empty": "아직 가져온 릴리스가 없습니다.",
+        "sync_verified": "검증됨",
+        "sync_artifacts": "플랫폼 아티팩트 {{count}}개",
+        "steps_title": "에이전트 온보딩 방법",
+        "step1": "최신 서명된 릴리스를 가져오거나(위 버튼) GitHub에서 다운로드합니다.",
+        "step2": "장치에 에이전트를 설치하고 이 서버의 공개 URL을 입력합니다.",
+        "step3": "에이전트가 QR을 표시하면 에이전트 활성화를 열고 스캔합니다.",
+        "step4": "정책상 필요하면 등록을 승인한 뒤 Remote Desktop에서 연결합니다.",
+        "pair_activate": "에이전트 활성화",
+        "pair_body": "페어링은 일반 Support Agent가 서버에 도달한 후 표시하는 QR을 사용합니다.",
+        "branding_link": "클라이언트 브랜딩",
+        "branding_body": "모양(로고, 색상, 라벨)은 런타임에 클라이언트 브랜딩에서 로드되며 설치 프로그램에 포함되지 않습니다."
     }
 }

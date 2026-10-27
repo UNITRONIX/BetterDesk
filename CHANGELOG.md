@@ -11,6 +11,7 @@
 - **Login session-expired toast:** `/login?expired=1` shows the session message as a right-side toast instead of stretching the login card; wrong-password / TOTP / OIDC errors stay inline. Desktop login uses the same toast path. Ships via panel update.
 
 ### Changed
+- **BetterDesk Agents replaces Client Generator UI:** Sidebar / dashboard no longer open the ALPHA in-panel build/bundle Generator (module gate, local toolchain, rebuild). New **/agents** page explains incoming-only Support agents, BetterDesk-Client releases, `/portal`, Import latest release, pairing, and Client Branding. Old `/generator` redirects to `/agents`. Import + portal APIs stay. Ships via panel update. Verify: Tools → BetterDesk Agents; Import still works; no ALPHA Generator chrome.
 - **Split login + promo slides:** Classic `/login` supports Branding layouts `classic` / `single` / `slides` (max 10 editable slides: image + separate title/body). Default BetterDesk slideshow starts with “free / open source”. Ships via panel update. Verify: Settings → Branding → Login layout; `/login` shows carousel on wide screens, form-only on mobile.
 
 ---

@@ -47,7 +47,7 @@
         "dashboard": "แดชบอร์ด",
         "devices": "อุปกรณ์",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "เอเจนต์ BetterDesk",
         "settings": "การตั้งค่า",
         "users": "Users",
         "inventory": "Inventory",
@@ -88,7 +88,8 @@
         "server_attestation": "การรับรองประสิทธิภาพเซิร์ฟเวอร์",
         "commercialization": "การทำให้เป็นเชิงพาณิชย์",
         "remote_open_tab": "เปิดไคลเอนต์เดสก์ท็อประยะไกลในแท็บใหม่",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "เอเจนต์ BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -149,7 +150,7 @@
         "quick_actions": "การดำเนินการด่วน",
         "manage_devices": "จัดการอุปกรณ์ที่เชื่อมต่อ",
         "view_keys": "ดูคีย์เซิร์ฟเวอร์",
-        "generate_config": "สร้างการกำหนดค่าไคลเอ็นต์",
+        "generate_config": "รับเอเจนต์ Support แบบรับเข้าอย่างเดียวจากที่ไหน",
         "server_settings": "กำหนดการตั้งค่า",
         "greeting_morning": "สวัสดีตอนเช้า {name}",
         "greeting_afternoon": "สวัสดีตอนบ่าย {name}",
@@ -181,7 +182,7 @@
         "config_api_server": "เซิร์ฟเวอร์ API",
         "config_key": "คีย์",
         "client_config_hint": "ป้อนค่าเหล่านี้ในการตั้งค่าเครือข่ายของ RustDesk ในส่วนเซิร์ฟเวอร์ ID/รีเลย์",
-        "open_generator": "ตัวสร้างไคลเอนต์",
+        "open_generator": "เอเจนต์ BetterDesk",
         "open_keys": "เปิดคีย์",
         "open_remote": "เปิดคอนโซลเดสก์ท็อประยะไกล",
         "attention_panel": "ต้องตรวจสอบ",
@@ -220,7 +221,9 @@
         "activate_agent_folder_none": "ไม่มีโฟลเดอร์",
         "activate_agent_submit": "เปิดใช้งานอุปกรณ์",
         "activate_agent_submitting": "กำลังเปิดใช้งานอุปกรณ์…",
-        "activate_agent_success": "เปิดใช้งานเอเจนต์สำเร็จ"
+        "activate_agent_success": "เปิดใช้งานเอเจนต์สำเร็จ",
+        "open_agents": "เอเจนต์ BetterDesk",
+        "agents_hint": "รับเอเจนต์ Support แบบรับเข้าอย่างเดียวจากที่ไหน"
     },
     "devices": {
         "title": "อุปกรณ์",
@@ -4731,5 +4734,33 @@
         },
         "prev": "สไลด์ก่อนหน้า",
         "next": "สไลด์ถัดไป"
+    },
+    "agents": {
+        "title": "เอเจนต์ BetterDesk",
+        "subtitle": "ไคลเอนต์ Support แบบรับเข้าอย่างเดียวสร้างใน BetterDesk-Client — แผงนี้จะนำเข้าและให้บริการ",
+        "what_title": "เอเจนต์ BetterDesk คืออะไร?",
+        "what_body": "เอเจนต์ BetterDesk Support เป็นไคลเอนต์เดสก์ท็อปแบบรับเข้าอย่างเดียว ลงทะเบียนกับเซิร์ฟเวอร์ แสดง QR จับคู่ และรับการสนับสนุนระยะไกล โดยไม่เริ่มการเชื่อมต่อออกไปยังอุปกรณ์อื่น",
+        "note_no_build": "คอนโซลนี้ไม่ได้สร้างตัวติดตั้งไคลเอนต์อีกต่อไป รีลีสที่ลงนามสร้างในที่เก็บ GitHub ของ BetterDesk-Client",
+        "get_title": "รับเอเจนต์จากที่ไหน",
+        "get_body": "ดาวน์โหลดแพ็กเกจ Support Agent ที่ลงนามจากรีลีส BetterDesk-Client หรือแชร์พอร์ทัลสาธารณะของเซิร์ฟเวอร์นี้หลังนำเข้าด้านล่าง",
+        "get_github": "รีลีส BetterDesk-Client",
+        "get_portal": "เปิดพอร์ทัลดาวน์โหลด",
+        "sync_title": "นำเข้าสำหรับเซิร์ฟเวอร์นี้",
+        "sync_hint": "นำเข้ารีลีส support-v* ที่ลงนามล่าสุด เพื่อให้ /portal ให้บริการตัวติดตั้งที่ตรวจสอบแล้ว",
+        "sync_import": "นำเข้ารีลีสล่าสุด",
+        "sync_importing": "กำลังนำเข้าและตรวจสอบรีลีสที่ลงนามล่าสุด…",
+        "sync_imported": "นำเข้า {{tag}} แล้ว",
+        "sync_empty": "ยังไม่ได้นำเข้ารีลีส",
+        "sync_verified": "ตรวจสอบแล้ว",
+        "sync_artifacts": "อาร์ติแฟกต์แพลตฟอร์ม {{count}} รายการ",
+        "steps_title": "วิธีนำเอเจนต์เข้าใช้งาน",
+        "step1": "นำเข้ารีลีสที่ลงนามล่าสุด (ปุ่มด้านบน) หรือดาวน์โหลดจาก GitHub",
+        "step2": "ติดตั้งเอเจนต์บนอุปกรณ์และใส่ URL สาธารณะของเซิร์ฟเวอร์นี้",
+        "step3": "เมื่อเอเจนต์แสดง QR ให้เปิด เปิดใช้งานเอเจนต์ แล้วสแกน",
+        "step4": "อนุมัติการลงทะเบียนหากนโยบายกำหนด แล้วเชื่อมต่อจาก Remote Desktop",
+        "pair_activate": "เปิดใช้งานเอเจนต์",
+        "pair_body": "การจับคู่ใช้ QR ที่ Support Agent ทั่วไปแสดงหลังจากติดต่อเซิร์ฟเวอร์ของคุณ",
+        "branding_link": "แบรนด์ไคลเอนต์",
+        "branding_body": "ลักษณะ (โลโก้ สี ป้าย) โหลดตอนรันไทม์จากแบรนด์ไคลเอนต์ — ไม่ฝังในตัวติดตั้ง"
     }
 }

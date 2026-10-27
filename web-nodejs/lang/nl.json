@@ -41,7 +41,7 @@
         "dashboard": "Overzicht",
         "devices": "Apparaten",
         "keys": "Sleutels",
-        "generator": "Generator",
+        "generator": "BetterDesk-agents",
         "settings": "Instellingen",
         "users": "Gebruikers",
         "inventory": "Inventaris",
@@ -82,7 +82,8 @@
         "server_attestation": "Serverattestering",
         "commercialization": "Commercialisatie",
         "remote_open_tab": "Externe-bureaubladclient openen in nieuw tabblad",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk-agents"
     },
     "auth": {
         "login": "Inloggen",
@@ -143,7 +144,7 @@
         "quick_actions": "Snelle acties",
         "manage_devices": "Beheer verbonden apparaten",
         "view_keys": "Bekijk serversleutels",
-        "generate_config": "Genereer clientconfiguratie",
+        "generate_config": "Waar u incoming-only Support-agents vindt",
         "server_settings": "Configureer instellingen",
         "greeting_morning": "Goedemorgen, {name}",
         "greeting_afternoon": "Goedemiddag, {name}",
@@ -175,7 +176,7 @@
         "config_api_server": "API-server",
         "config_key": "Sleutel",
         "client_config_hint": "Voer deze waarden in de netwerkinstellingen van RustDesk in, bij de ID-/relayserver.",
-        "open_generator": "Clientgenerator",
+        "open_generator": "BetterDesk-agents",
         "open_keys": "Sleutels openen",
         "open_remote": "Externe-bureaubladconsole openen",
         "attention_panel": "Aandacht vereist",
@@ -214,7 +215,9 @@
         "activate_agent_folder_none": "Geen map",
         "activate_agent_submit": "Apparaat activeren",
         "activate_agent_submitting": "Apparaat activeren…",
-        "activate_agent_success": "Agent is geactiveerd."
+        "activate_agent_success": "Agent is geactiveerd.",
+        "open_agents": "BetterDesk-agents",
+        "agents_hint": "Waar u incoming-only Support-agents vindt"
     },
     "devices": {
         "title": "Apparaten",
@@ -4725,5 +4728,33 @@
         },
         "prev": "Vorige dia",
         "next": "Volgende dia"
+    },
+    "agents": {
+        "title": "BetterDesk-agents",
+        "subtitle": "Incoming-only Support-clients worden in BetterDesk-Client gebouwd — dit paneel importeert en serveert ze.",
+        "what_title": "Wat zijn BetterDesk-agents?",
+        "what_body": "BetterDesk Support-agents zijn desktopclients alleen voor inkomende verbindingen. Ze registreren zich op uw server, tonen een koppelings-QR en accepteren remote support. Ze starten geen uitgaande verbindingen naar andere apparaten.",
+        "note_no_build": "Deze console bouwt geen client-installers meer. Ondertekende releases worden gemaakt in de BetterDesk-Client GitHub-repository.",
+        "get_title": "Waar agents ophalen",
+        "get_body": "Download ondertekende Support Agent-pakketten van BetterDesk-Client-releases, of deel het openbare portaal van deze server na import hieronder.",
+        "get_github": "BetterDesk-Client-releases",
+        "get_portal": "Downloadportaal openen",
+        "sync_title": "Importeren voor deze server",
+        "sync_hint": "Importeer de nieuwste ondertekende support-v*-release zodat /portal geverifieerde installers kan serveren.",
+        "sync_import": "Nieuwste release importeren",
+        "sync_importing": "Nieuwste ondertekende release importeren en verifiëren…",
+        "sync_imported": "{{tag}} geïmporteerd.",
+        "sync_empty": "Nog geen release geïmporteerd.",
+        "sync_verified": "geverifieerd",
+        "sync_artifacts": "{{count}} platformartefacten",
+        "steps_title": "Een agent aansluiten",
+        "step1": "Importeer de nieuwste ondertekende release (knop hierboven) of download van GitHub.",
+        "step2": "Installeer de agent op het apparaat en voer de openbare URL van deze server in.",
+        "step3": "Wanneer de agent een QR toont, open Agent activeren en scan hem.",
+        "step4": "Keur inschrijving goed indien vereist en verbind daarna via Remote Desktop.",
+        "pair_activate": "Agent activeren",
+        "pair_body": "Koppelen gebruikt de QR van een generieke Support Agent nadat die uw server bereikt.",
+        "branding_link": "Clientbranding",
+        "branding_body": "Uiterlijk (logo, kleuren, labels) wordt tijdens runtime geladen uit Clientbranding — niet in de installer gebakken."
     }
 }

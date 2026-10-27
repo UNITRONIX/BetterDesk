@@ -34,13 +34,13 @@ BetterDesk provides two Tauri v2 desktop applications and a headless Go agent fo
 | **Chat** | Operator ↔ end-user chat in Web Remote |
 | **Remote audio** | CDAP audio stream in unified `/remote` viewer |
 | **Lock / restart** | Operator toolbar actions relayed to the agent |
-| **Branding** | Appearance + server endpoints baked at Generator build time |
+| **Branding** | Appearance from Client Branding at runtime; installers from BetterDesk-Client |
 | **Enrollment** | Per-device register; unique `device_token` after approval (managed mode) |
 | **Artifacts** | Windows portable `.exe` / `.msi`; Linux portable, AppImage, `.deb`, `.rpm` |
 
 ### Build & deploy
 
-1. Console → **Generator** → **New Support Agent bundle**
+1. Console → **BetterDesk Agents** → **Import latest release** (or BetterDesk-Client GitHub releases)
 2. Set branding, server host, optional unattended
 3. Wait for platform builds (toolchain status shown in the editor)
 4. Share the public hub link `/d/:slug`
