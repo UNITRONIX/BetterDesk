@@ -376,6 +376,7 @@
 
         // Always show the overlay first — never fail closed with a silent return.
         this._el.style.display = 'flex';
+        this.setAuthenticationPending(session, !!session?.client?._file2FAPending);
         this._open = true;
         document.getElementById('btn-file-transfer')?.classList.add('active');
 
@@ -429,6 +430,17 @@
         document.getElementById('btn-file-transfer')?.classList.remove('active');
         if (this._session && this._session.client && this._session.client.fileTransfer) {
             this._session.client.fileTransfer._saveDownload = null;
+        }
+    };
+
+    // The file modal sits above the viewer's OTP overlay. Temporarily hide it
+    // without closing it or restarting the pending directory request.
+    FileTransferModal.prototype.setAuthenticationPending = function (session, pending) {
+        if (!this._el || this._session !== session) return;
+        this._el.style.visibility = pending ? 'hidden' : '';
+        if (pending) {
+            this._hideContextMenu();
+            this._hideDragOverlay();
         }
     };
 
