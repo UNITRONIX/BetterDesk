@@ -61,6 +61,9 @@ const managementCapabilities = require('../lib/managementCapabilities');
 const GITHUB_OWNER  = process.env.UPDATE_GITHUB_OWNER  || 'UNITRONIX';
 const GITHUB_REPO   = process.env.UPDATE_GITHUB_REPO   || 'BetterDesk';
 const GITHUB_API    = 'https://api.github.com';
+const GITHUB_API_HOST = 'api.github.com';
+const GITHUB_RAW_HOST = 'raw.githubusercontent.com';
+const MAX_GITHUB_REDIRECTS = 3;
 
 /** Update channel → GitHub branch mapping */
 const UPDATE_CHANNELS = Object.freeze({
@@ -337,15 +340,47 @@ function isGithubRateLimitError(err) {
     return !!(err && (err.code === 'GITHUB_RATE_LIMIT' || /rate limit exceeded/i.test(err.message || '')));
 }
 
+function parseAllowedGithubUrl(target, allowedHostname) {
+    const base = allowedHostname === GITHUB_API_HOST
+        ? GITHUB_API
+        : `https://${allowedHostname}`;
+    let url;
+    try {
+        url = new URL(String(target || ''), base);
+    } catch (_err) {
+        throw new Error('Invalid GitHub URL');
+    }
+
+    if (
+        url.protocol !== 'https:'
+        || url.hostname.toLowerCase() !== allowedHostname
+        || url.port
+        || url.username
+        || url.password
+    ) {
+        throw new Error(`GitHub URL host is not allowed: ${allowedHostname}`);
+    }
+    return url;
+}
+
+function isGithubRedirectStatus(statusCode) {
+    return statusCode === 301
+        || statusCode === 302
+        || statusCode === 303
+        || statusCode === 307
+        || statusCode === 308;
+}
+
 function ghGetCacheKey(urlPath) {
     const url = urlPath.startsWith('https://') ? new URL(urlPath) : new URL(urlPath, GITHUB_API);
     return url.pathname + url.search;
 }
 
 /**
- * HTTPS GET → parsed JSON. Follows one redirect.
+ * HTTPS GET → parsed JSON. Follows a small, same-host redirect chain.
  */
-function ghGet(urlPath, { bypassCache = false } = {}) {
+function ghGet(urlPath, { bypassCache = false, redirectCount = 0 } = {}) {
+    const url = parseAllowedGithubUrl(urlPath, GITHUB_API_HOST);
     const cacheKey = ghGetCacheKey(urlPath);
     if (!bypassCache && GH_GET_CACHE_TTL_MS > 0) {
         const cached = GH_GET_CACHE.get(cacheKey);
@@ -355,13 +390,25 @@ function ghGet(urlPath, { bypassCache = false } = {}) {
     }
 
     return new Promise((resolve, reject) => {
-        const url = urlPath.startsWith('https://') ? new URL(urlPath) : new URL(urlPath, GITHUB_API);
         const headers = { 'User-Agent': USER_AGENT, 'Accept': 'application/vnd.github+json' };
         if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
 
         const req = https.get({ hostname: url.hostname, path: url.pathname + url.search, headers }, (res) => {
-            if (res.statusCode === 301 || res.statusCode === 302) {
-                return ghGet(res.headers.location, { bypassCache }).then(resolve, reject);
+            if (isGithubRedirectStatus(res.statusCode)) {
+                res.resume();
+                if (!res.headers.location || redirectCount >= MAX_GITHUB_REDIRECTS) {
+                    return reject(new Error('GitHub API redirect limit exceeded'));
+                }
+                let redirectUrl;
+                try {
+                    redirectUrl = parseAllowedGithubUrl(res.headers.location, GITHUB_API_HOST);
+                } catch (err) {
+                    return reject(err);
+                }
+                return ghGet(redirectUrl.toString(), {
+                    bypassCache,
+                    redirectCount: redirectCount + 1
+                }).then(resolve, reject);
             }
             const chunks = [];
             res.on('data', (c) => chunks.push(c));
@@ -403,10 +450,20 @@ function ghDownloadFileOnce(owner, repo, ref, filePath) {
         const headers = { 'User-Agent': USER_AGENT };
         if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
 
-        const follow = (target) => {
-            const req = https.get(target, { headers }, (res) => {
-                if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
-                    return follow(res.headers.location);
+        const follow = (target, redirectCount = 0) => {
+            let parsedTarget;
+            try {
+                parsedTarget = parseAllowedGithubUrl(target, GITHUB_RAW_HOST);
+            } catch (err) {
+                return reject(err);
+            }
+            const req = https.get(parsedTarget, { headers }, (res) => {
+                if (isGithubRedirectStatus(res.statusCode)) {
+                    res.resume();
+                    if (!res.headers.location || redirectCount >= MAX_GITHUB_REDIRECTS) {
+                        return reject(new Error('GitHub download redirect limit exceeded'));
+                    }
+                    return follow(res.headers.location, redirectCount + 1);
                 }
                 if (res.statusCode !== 200) {
                     return reject(new Error(`Download failed (${res.statusCode}): ${filePath}`));
@@ -750,22 +807,128 @@ function execPromise(cmd, opts = {}) {
 function spawnPromise(command, args, opts = {}) {
     return new Promise((resolve, reject) => {
         const { spawn } = require('child_process');
-        const proc = spawn(command, args, { shell: false, ...opts });
+        // Honor timeout ourselves — do not pass it through to spawn (Node support varies).
+        const { timeout, killSignal = 'SIGTERM', ...spawnOpts } = opts;
+        const proc = spawn(command, args, { shell: false, ...spawnOpts });
         let stdout = '';
         let stderr = '';
+        let timedOut = false;
+        let settleTimer = null;
+        let forceKillTimer = null;
+
+        const clearTimers = () => {
+            if (settleTimer) clearTimeout(settleTimer);
+            if (forceKillTimer) clearTimeout(forceKillTimer);
+            settleTimer = null;
+            forceKillTimer = null;
+        };
+
+        if (Number.isFinite(timeout) && timeout > 0) {
+            settleTimer = setTimeout(() => {
+                timedOut = true;
+                try {
+                    proc.kill(killSignal);
+                } catch (_) { /* already exited */ }
+                // Escalate if the process ignores SIGTERM (common for stuck Go toolchains).
+                forceKillTimer = setTimeout(() => {
+                    try { proc.kill('SIGKILL'); } catch (_) { /* ignore */ }
+                }, 5000);
+                if (typeof forceKillTimer.unref === 'function') forceKillTimer.unref();
+            }, timeout);
+            if (typeof settleTimer.unref === 'function') settleTimer.unref();
+        }
+
         proc.stdout?.on('data', (chunk) => { stdout += chunk; });
         proc.stderr?.on('data', (chunk) => { stderr += chunk; });
-        proc.on('error', reject);
-        proc.on('close', (code) => {
-            if (code !== 0) {
-                const err = new Error(`${command} exited with code ${code}`);
+        proc.on('error', (err) => {
+            clearTimers();
+            reject(err);
+        });
+        proc.on('close', (code, signal) => {
+            clearTimers();
+            if (timedOut) {
+                const err = new Error(`${command} timed out after ${timeout}ms`);
                 err.stderr = stderr;
                 err.stdout = stdout;
+                err.code = code;
+                err.signal = signal || killSignal;
+                err.timedOut = true;
+                return reject(err);
+            }
+            if (code !== 0) {
+                let message = `${command} exited with code ${code}`;
+                if (code == null) {
+                    const sig = signal ? `signal ${signal}` : 'no exit code';
+                    message = `${command} exited with code null (${sig}; process was killed — check OOM / dmesg)`;
+                }
+                const err = new Error(message);
+                err.stderr = stderr;
+                err.stdout = stdout;
+                err.code = code;
+                err.signal = signal || null;
                 return reject(err);
             }
             resolve({ stdout, stderr });
         });
     });
+}
+
+function updateInProgressMarkerPath() {
+    return path.join(config.dataDir, '.update_in_progress.json');
+}
+
+function writeUpdateInProgressMarker(payload = {}) {
+    const target = updateInProgressMarkerPath();
+    const record = {
+        startedAt: new Date().toISOString(),
+        ...payload,
+    };
+    fs.mkdirSync(config.dataDir, { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(record, null, 2));
+    return record;
+}
+
+function clearUpdateInProgressMarker() {
+    const target = updateInProgressMarkerPath();
+    try {
+        if (fs.existsSync(target)) fs.unlinkSync(target);
+    } catch (_) { /* ignore */ }
+}
+
+function readUpdateInProgressMarker() {
+    const target = updateInProgressMarkerPath();
+    if (!fs.existsSync(target)) return null;
+    try {
+        return JSON.parse(fs.readFileSync(target, 'utf8'));
+    } catch (_) {
+        return null;
+    }
+}
+
+/**
+ * Live install status for UI recovery after proxy/gateway disconnect (#464).
+ * Orphan markers (process crashed mid-update) are cleared when not in progress.
+ */
+function getUpdateInstallStatus() {
+    if (!_updateInProgress) {
+        clearUpdateInProgressMarker();
+        return {
+            inProgress: false,
+            marker: null,
+            localSHA: getLocalSHA(),
+            lastResult: require('../lib/updateResultStore').readLastUpdateResult(config.dataDir),
+        };
+    }
+    return {
+        inProgress: true,
+        marker: readUpdateInProgressMarker(),
+        localSHA: getLocalSHA(),
+        lastResult: require('../lib/updateResultStore').readLastUpdateResult(config.dataDir),
+    };
+}
+
+function isUpdateInProgress() {
+    return _updateInProgress;
 }
 
 function getGoVersionNumber(versionOutput) {
@@ -844,6 +1007,7 @@ const BILLING_ENV_KEYS = [
     'BILLING_MAX_CLOCK_SKEW_MS',
     'BILLING_REQUIRE_SYNCED_CLOCK',
     'BILLING_TRUST_OS_NTP',
+    'BILLING_TIMEZONE',
 ];
 
 function parseEnvFileKeys(content, keys) {
@@ -1238,6 +1402,9 @@ function buildEnvWithGo(goBinPath) {
         const sep = IS_WINDOWS ? ';' : ':';
         env.PATH = goBinDir + sep + (env.PATH || '');
     }
+    // Pin to the vendored/local toolchain — matches installer #371 and avoids
+    // silent go.dev toolchain downloads that hang or get OOM-killed (#464).
+    env.GOTOOLCHAIN = process.env.BETTERDESK_GOTOOLCHAIN || 'local';
     try {
         const { modCache, buildCache } = ensureGoCacheDirs();
         env.GOMODCACHE = modCache;
@@ -2212,7 +2379,7 @@ async function createPreUpdateBackup(allFiles, opts = {}) {
         if (rustdeskDir) {
             const meshCert = path.join(rustdeskDir, 'mesh_agent_server.pem');
             if (fs.existsSync(meshCert)) {
-                const dest = resolveChildPath(backupPath, 'special/mesh_agent_server.pem');
+                const dest = resolvePathUnderRoot(backupPath, 'special/mesh_agent_server.pem');
                 fs.mkdirSync(path.dirname(dest), { recursive: true });
                 fs.copyFileSync(meshCert, dest);
                 backedUp++;
@@ -2339,6 +2506,10 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     }
     if (_updateInProgress) throw new Error('Another update is already in progress');
     _updateInProgress = true;
+    writeUpdateInProgressMarker({
+        sha: remoteSHA,
+        pid: process.pid,
+    });
 
     try {
     const { createBackup = true } = opts;
@@ -2712,7 +2883,7 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
         // worker promotes a new generation only after every target succeeds,
         // so an interrupted update cannot break an active download link.
         if (String(
-            process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+            process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'download'
         ).trim().toLowerCase() === 'embedded') {
             try {
                 const clientBuilder = require('./clientBuilderService');
@@ -2779,6 +2950,7 @@ async function applyUpdate(remoteSHA, changedData, opts = {}) {
     return results;
     } finally {
         _updateInProgress = false;
+        clearUpdateInProgressMarker();
     }
 }
 
@@ -3051,8 +3223,8 @@ function restoreFromBackup(backupName) {
     const rustdeskDir = config.rustdeskDir || config.keysPath;
     if (rustdeskDir) {
         const meshSources = [
-            resolveChildPath(backupPath, 'special/mesh_agent_server.pem'),
-            resolveChildPath(backupPath, 'mesh_agent_server.pem'),
+            resolvePathUnderRoot(backupPath, 'special/mesh_agent_server.pem'),
+            resolvePathUnderRoot(backupPath, 'mesh_agent_server.pem'),
         ];
         const meshSource = meshSources.find((candidate) => fs.existsSync(candidate));
         if (meshSource) {
@@ -3351,6 +3523,10 @@ module.exports = {
     getChangedFiles,
     createPreUpdateBackup,
     applyUpdate,
+    isUpdateInProgress,
+    getUpdateInstallStatus,
+    spawnPromise,
+    buildEnvWithGo,
     runUpdatePreflight,
     sanitizeGoServerServiceConfig,
     syncBillingEnvToWindowsGoServer,
@@ -3381,6 +3557,9 @@ module.exports = {
     bootstrapDockerImageDeployment,
     getDockerUpdateInstructions,
     isGithubRateLimitError,
+    parseAllowedGithubUrl,
+    isGithubRedirectStatus,
+    MAX_GITHUB_REDIRECTS,
     ensureMeshEnabledInServiceEnv,
     ensureGoServerEnvironmentFile,
     ensureGoServerSignalRelayPorts,

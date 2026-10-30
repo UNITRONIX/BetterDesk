@@ -2,7 +2,6 @@ package billing
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/unitronix/betterdesk-server/db"
 )
@@ -13,14 +12,15 @@ type ContractResolver interface {
 	GetDeviceOrgID(deviceID string) (string, error)
 }
 
-// PanelContext supplies folder and device-group membership for resolution.
+// PanelContext supplies device-group membership for resolution.
+// Folders are intentionally excluded from commercialization assignment.
 type PanelContext interface {
-	ListFolderAssignments() (map[string]int64, error)
 	ListDeviceGroupGUIDsForPeer(peerID string) ([]string, error)
 }
 
 // ResolveContractForDevice picks the most specific active contract:
-// device > folder > device_group > org.
+// device (legacy) > device_group > org.
+// Folder contracts are ignored (packages attach only to groups).
 func ResolveContractForDevice(resolver ContractResolver, panel PanelContext, deviceID string) (*db.BillingContract, error) {
 	if resolver == nil || deviceID == "" {
 		return nil, nil
@@ -33,16 +33,6 @@ func ResolveContractForDevice(resolver ContractResolver, panel PanelContext, dev
 	}
 
 	if panel != nil {
-		if folders, err := panel.ListFolderAssignments(); err == nil {
-			if folderID, ok := folders[deviceID]; ok && folderID > 0 {
-				key := strconv.FormatInt(folderID, 10)
-				if c, err := resolver.GetActiveBillingContract(db.BillingTargetFolder, key); err != nil {
-					return nil, err
-				} else if c != nil {
-					return c, nil
-				}
-			}
-		}
 		if groups, err := panel.ListDeviceGroupGUIDsForPeer(deviceID); err == nil {
 			for _, guid := range groups {
 				if guid == "" {
@@ -68,6 +58,8 @@ func ResolveContractForDevice(resolver ContractResolver, panel PanelContext, dev
 }
 
 // NormalizeContractTarget maps legacy org_id bodies to target_type/target_key.
+// Folder targets are rejected — packages may only be assigned to device groups
+// (plus legacy org/device for existing data until migrated).
 func NormalizeContractTarget(body *db.BillingContract) error {
 	if body == nil {
 		return fmt.Errorf("contract body required")
@@ -80,8 +72,10 @@ func NormalizeContractTarget(body *db.BillingContract) error {
 		return fmt.Errorf("target_type and target_key required")
 	}
 	switch body.TargetType {
-	case db.BillingTargetOrg, db.BillingTargetDeviceGroup, db.BillingTargetFolder, db.BillingTargetDevice:
+	case db.BillingTargetOrg, db.BillingTargetDeviceGroup, db.BillingTargetDevice:
 		return nil
+	case db.BillingTargetFolder:
+		return fmt.Errorf("folder package assignment is not supported; assign packages to device groups only")
 	default:
 		return fmt.Errorf("invalid target_type")
 	}

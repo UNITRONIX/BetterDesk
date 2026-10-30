@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   BetterDesk Console Manager v3.5.170
+#   BetterDesk Console Manager v3.5.199
 #   All-in-One Interactive Tool for Linux
 #
 #   Features:
@@ -36,7 +36,7 @@
 set -e
 
 # Version
-VERSION="3.5.170"
+VERSION="3.5.199"
 # Bump when installer control-flow changes must apply mid-session after Update (#219).
 BETTERDESK_SH_REVISION="20260725-console-start-306"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -6579,23 +6579,23 @@ stage_support_agent_source() {
     return 0
 }
 
-# Install the toolchain used by the Node.js console worker to compile branded
-# agent installers (cargo + rustup + tauri-cli + cargo-xwin + nsis + rpm +
-# appimagetool + mingw-w64). Runs the standalone script shipped alongside the
-# installer; idempotent. Requires ~3 GB download + 5 GB free disk.
+# Optional developer toolchain for local embedded BetterDesk-Client builds.
+# Production installs should Import latest release in Generator instead —
+# signed agents come from GitHub (BetterDesk-Client), not from this host.
 do_install_build_toolchain() {
     print_header
-    echo -e "${WHITE}${BOLD}══════════ AGENT BUILD TOOLCHAIN ══════════${NC}"
+    echo -e "${WHITE}${BOLD}══════════ AGENT BUILD TOOLCHAIN (OPTIONAL / DEV) ══════════${NC}"
     echo ""
-    echo "  Installs: Rust stable, cargo-tauri 2.x, cargo-xwin,"
-    echo "            mingw-w64 (Windows cross-compile), NSIS,"
-    echo "            rpm-build, appimagetool, pnpm, WebKit dev libs."
+    echo "  Production: use Generator → Import latest release"
+    echo "  (signed incoming-only agents from BetterDesk-Client)."
+    echo "  This host does NOT need Flutter/Cargo for that path."
+    echo ""
+    echo "  This menu is for maintainers who set"
+    echo "  BETTERDESK_CLIENT_GENERATOR_MODE=embedded and compile"
+    echo "  Support agents locally (large download; not required)."
     echo ""
     echo "  Disk:  ~3 GB download, ~5 GB after install,"
     echo "         plus cargo build cache (/var/cache/betterdesk-build)."
-    echo ""
-    echo "  This is REQUIRED for the 'Generator Agenta' feature."
-    echo "  Skip if you do not generate branded agent installers."
     echo ""
 
     local script_dir
@@ -8386,7 +8386,7 @@ show_menu() {
     echo "  C. 🔒 Configure SSL certificates"
     echo "  T. 🔄 Toggle HTTP/HTTPS mode"
     echo "  M. 🔄 Database migration"
-    echo "  B. 🧰 Build toolchain"
+    echo "  B. 🧰 Build toolchain (optional/dev — not needed for production)"
     echo "  S. ⚙️  Settings (paths)"
     echo "  P. 🛡️  Management capabilities and server settings"
     echo "  0. ❌ Exit"
@@ -8449,7 +8449,7 @@ main() {
         $'Configure SSL certificates\tLet'"'"'s Encrypt / custom / self-signed'
         $'Toggle HTTP/HTTPS\tSwitch protocol + run tests'
         $'Database migration\tMigrate between backends'
-        $'Build toolchain\tInstall compilers'
+        $'Build toolchain (optional/dev)\tLocal Flutter/Cargo — not needed for production'
         $'Settings (paths)\tConfigure install paths'
         $'Management capabilities\tCheck permissions and change allowlisted server settings'
         $'Exit\tQuit the manager'

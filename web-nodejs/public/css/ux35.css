@@ -522,20 +522,55 @@ body.app-page.ux35-page {
     margin-bottom: var(--ux35-card-gap);
 }
 
-/* Settings shell: horizontal tabs readable over branding wallpaper; bleed cancels content padding */
+/* Settings: remove scrollport padding so sticky tabs can sit flush under the topbar.
+ * Chromium will not let position:sticky enter the scroll container's padding box —
+ * bleed/negative-top cannot close that gap. Padding moves onto page-header + main. */
+.ux35-page .ux35-content:has(.settings-shell) {
+    padding-top: 0;
+    padding-inline: 0;
+}
+.ux35-page .ux35-content:has(.settings-shell) > .page-header,
+.ux35-page .ux35-content:has(.settings-shell) > .settings-header {
+    padding-top: var(--ux35-content-padding-lg);
+    padding-inline: var(--ux35-content-padding-lg);
+}
+
+/* Settings shell: edge-to-edge sticky tabs; overflow-y hidden (overflow-x:auto alone
+ * promotes overflow-y to auto and shows a useless vertical scrollbar). */
 .ux35-page .settings-shell-nav {
     --settings-nav-bleed: 0px;
-    --settings-nav-bleed-x: var(--ux35-content-padding-lg);
+    --settings-nav-bleed-x: 0px;
     position: sticky;
     top: 0;
     padding-top: 0;
     margin-top: 0;
+    margin-inline: 0;
+    padding-inline: 0;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    box-sizing: border-box;
     z-index: 2;
-    background-color: color-mix(in srgb, var(--bg-primary) 92%, transparent);
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--bg-primary) 96%, transparent);
 }
 .ux35-page .settings-shell-nav-track {
     align-items: center;
     min-height: 44px;
+    height: auto;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-inline: var(--ux35-space-2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.ux35-page .settings-shell-nav-track::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 .ux35-page .settings-shell-nav .settings-shell-tab,
 .ux35-page .settings-shell-nav .settings-tab {
@@ -553,6 +588,7 @@ body.app-page.ux35-page {
 }
 .ux35-page .settings-shell-main {
     min-width: 0;
+    padding-inline: var(--ux35-content-padding-lg);
     color: var(--text-primary);
 }
 .ux35-page .win11-updates-title,
@@ -700,13 +736,25 @@ body.ux35-is-resizing {
         padding: var(--ux35-content-padding);
         padding-bottom: calc(var(--ux35-content-padding) + 72px);
     }
-    /* Tighten header→tabs gap on phone; bleed still cancels content padding when sticky */
+    /* Re-assert after the shorthand above — Settings must keep zero top/side padding */
+    .ux35-page .ux35-content:has(.settings-shell) {
+        padding-top: 0;
+        padding-inline: 0;
+        padding-bottom: calc(var(--ux35-content-padding) + 72px);
+    }
+    .ux35-page .ux35-content:has(.settings-shell) > .page-header,
+    .ux35-page .ux35-content:has(.settings-shell) > .settings-header {
+        padding-top: var(--ux35-content-padding);
+        padding-inline: var(--ux35-content-padding);
+        margin-bottom: var(--ux35-space-3);
+    }
+    .ux35-page .settings-shell-main {
+        padding-inline: var(--ux35-content-padding);
+    }
+    /* Tighten header→tabs gap on phone */
     .ux35-page .ux35-content > .page-header,
     .ux35-page .ux35-content > .settings-header {
         margin-bottom: var(--ux35-space-3);
-    }
-    .ux35-page .settings-shell-nav {
-        --settings-nav-bleed-x: var(--ux35-content-padding);
     }
     /* #396 follow-up: tighter mobile tabs, vertically centered icons/labels */
     .ux35-page .settings-shell-nav .settings-shell-tab,
@@ -762,17 +810,6 @@ body.ux35-is-resizing {
         min-height: 36px;
         padding-bottom: 0;
         gap: 4px;
-    }
-}
-
-/* Desktop keeps the original vertical bleed so the Settings bar does not
- * introduce a top gap or lose its content alignment above the mobile shell. */
-@media (min-width: 1025px) {
-    .ux35-page .settings-shell-nav {
-        --settings-nav-bleed: var(--ux35-content-padding-lg);
-        top: calc(-1 * var(--settings-nav-bleed));
-        padding-top: var(--settings-nav-bleed);
-        margin-top: calc(-1 * var(--settings-nav-bleed));
     }
 }
 

@@ -43,7 +43,71 @@
 }
 .timesync-banner.hidden { display: none; }
 .commercialization-page .table-wrap { overflow-x: auto; }
-.commercialization-page .panel-toolbar { margin-bottom: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.commercialization-page .panel-toolbar {
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Match panel form controls (devices / settings) — avoid unstyled square .form-control */
+.commercialization-page :is(.form-input, .form-select, .form-textarea, .form-control),
+#package-modal :is(.form-input, .form-select, .form-textarea, .form-control),
+#assign-modal :is(.form-input, .form-select, .form-textarea, .form-control) {
+    width: 100%;
+    max-width: 100%;
+    min-height: 2.5rem;
+    padding: var(--space-sm, 0.5rem) var(--space-md, 0.75rem);
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: 1.4;
+    color: var(--text-primary);
+    background: var(--bg-tertiary, var(--bg-secondary));
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md, 6px);
+    box-shadow: none;
+    outline: none;
+    transition: border-color var(--transition-fast, 0.15s ease), box-shadow var(--transition-fast, 0.15s ease);
+    -webkit-appearance: none;
+    appearance: none;
+}
+.commercialization-page select:is(.form-select, .form-control),
+#package-modal select:is(.form-select, .form-control),
+#assign-modal select:is(.form-select, .form-control) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
+    cursor: pointer;
+}
+.commercialization-page :is(.form-input, .form-select, .form-textarea, .form-control):focus,
+#package-modal :is(.form-input, .form-select, .form-textarea, .form-control):focus,
+#assign-modal :is(.form-input, .form-select, .form-textarea, .form-control):focus {
+    border-color: var(--accent-blue, #58a6ff);
+    box-shadow: 0 0 0 3px var(--accent-blue-muted, rgba(88, 166, 255, 0.25));
+}
+.commercialization-page :is(.form-input, .form-control)::placeholder,
+#package-modal :is(.form-input, .form-control)::placeholder,
+#assign-modal :is(.form-input, .form-control)::placeholder {
+    color: var(--text-tertiary, #6e7681);
+}
+.commercialization-page textarea:is(.form-textarea, .form-control),
+#package-modal textarea:is(.form-textarea, .form-control),
+#assign-modal textarea:is(.form-textarea, .form-control) {
+    min-height: 4.5rem;
+    resize: vertical;
+}
+.commercialization-page .panel-toolbar > :is(.form-input, .form-select, .form-control) {
+    width: auto;
+    flex: 0 1 16rem;
+}
+.ux35-page .ux35-content .commercialization-page :is(.form-input, .form-select, .form-textarea, .form-control),
+.ux35-page .ux35-content #package-modal :is(.form-input, .form-select, .form-textarea, .form-control),
+.ux35-page .ux35-content #assign-modal :is(.form-input, .form-select, .form-textarea, .form-control) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--bg-tertiary);
+}
 .commercialization-page .section-heading {
     margin: 1.25rem 0 0.5rem;
     font-size: 1rem;
@@ -64,23 +128,255 @@
     background: var(--bg-secondary);
 }
 .commercialization-page .empty-state.hidden { display: none; }
-.commercialization-page .form-label {
+.commercialization-page .form-label,
+#package-modal .form-label,
+#assign-modal .form-label {
     display: block;
-    margin-bottom: 0.75rem;
-    font-size: 0.875rem;
+    margin-bottom: 0.35rem;
+    font-size: var(--font-size-sm, 0.875rem);
+    font-weight: var(--font-weight-medium, 500);
     color: var(--text-secondary);
 }
-.commercialization-page .form-label .form-control { margin-top: 0.35rem; }
-.commercialization-page .form-error {
-    color: #f85149;
+.commercialization-page .form-group,
+#package-modal .form-group,
+#assign-modal .form-group {
+    margin-bottom: 0.85rem;
+}
+.commercialization-page .form-group:last-child,
+#package-modal .form-group:last-child,
+#assign-modal .form-group:last-child {
+    margin-bottom: 0;
+}
+.commercialization-page .form-row,
+#package-modal .form-row,
+#assign-modal .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+.commercialization-page .form-row > .form-group,
+#package-modal .form-row > .form-group,
+#assign-modal .form-row > .form-group {
+    margin-bottom: 0;
+    min-width: 0;
+}
+.commercialization-page .form-error,
+#package-modal .form-error,
+#assign-modal .form-error {
+    color: var(--accent-red, #f85149);
     font-size: 0.875rem;
     margin-top: 0.5rem;
 }
-.commercialization-page .form-error.hidden { display: none; }
+.commercialization-page .form-error.hidden,
+#package-modal .form-error.hidden,
+#assign-modal .form-error.hidden { display: none; }
 .commercialization-page .filters-toolbar { align-items: flex-end; gap: 0.75rem; }
+
+#package-modal .modal,
+#assign-modal .modal {
+    border-radius: var(--radius-lg, 8px);
+    border: 1px solid var(--border-primary);
+    background: var(--bg-secondary);
+}
+#package-modal .modal-body,
+#assign-modal .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+#package-modal .form-group.hidden,
+#assign-modal .form-group.hidden {
+    display: none !important;
+}
+
+.packages-table-wrap .devices-table tbody tr {
+    cursor: context-menu;
+}
+.packages-table-wrap .devices-table tbody tr.is-selected {
+    background: rgba(88, 166, 255, 0.08);
+}
+
+/* Package month preview — centered modal (does not shrink the packages table) */
+#package-preview-modal .package-preview-modal {
+    width: min(92vw, 420px);
+    max-width: min(92vw, 420px);
+    max-height: min(90vh, 640px);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg, 8px);
+}
+#package-preview-modal .package-preview-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+#package-preview-modal .package-preview-period {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+#package-preview-modal .package-preview-period .btn-ghost {
+    flex: 0 0 auto;
+    width: 2.375rem;
+    height: 2.375rem;
+    min-width: 2.375rem;
+    padding: 0;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md, 6px);
+    background: var(--bg-tertiary, var(--bg-secondary));
+    color: var(--text-secondary);
+}
+#package-preview-modal .package-preview-period .btn-ghost:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-blue, #58a6ff);
+}
+#package-preview-modal .package-preview-period .btn-ghost .material-icons {
+    font-size: 1.25rem;
+}
+#package-preview-modal .package-preview-period #package-preview-period,
+#package-preview-modal .package-preview-period select.form-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    display: block;
+    min-height: 2.375rem;
+    height: 2.375rem;
+    padding: 0.4rem 2.15rem 0.4rem 0.75rem;
+    font: inherit;
+    font-size: var(--font-size-sm, 0.875rem);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary, #0d1117) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    border: 1px solid var(--border-primary, #30363d) !important;
+    border-radius: var(--radius-md, 6px) !important;
+    box-shadow: none;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+#package-preview-modal .package-preview-period #package-preview-period:focus,
+#package-preview-modal .package-preview-period select.form-select:focus {
+    border-color: var(--accent-blue, #58a6ff) !important;
+    box-shadow: 0 0 0 3px var(--accent-blue-muted, rgba(88, 166, 255, 0.25));
+}
+#package-preview-modal .package-preview-stats {
+    margin: 0;
+    display: grid;
+    gap: 0.15rem 0;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md, 6px);
+    background: var(--bg-tertiary, rgba(13, 17, 23, 0.55));
+}
+#package-preview-modal .package-preview-stats dt {
+    margin: 0;
+    padding-top: 0.55rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+#package-preview-modal .package-preview-stats dt:first-child {
+    padding-top: 0;
+}
+#package-preview-modal .package-preview-stats dt:not(:first-child) {
+    border-top: 1px solid var(--border-primary);
+    margin-top: 0.4rem;
+}
+#package-preview-modal .package-preview-stats dd {
+    margin: 0.2rem 0 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+#package-preview-modal .package-preview-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+.sessions-table .status-pill {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent-blue, #58a6ff);
+}
+.sessions-table .status-pill.pending_report {
+    background: rgba(210, 153, 34, 0.18);
+    color: #e3b341;
+}
+#packages-context-menu {
+    position: fixed;
+    z-index: 1200;
+    min-width: 11rem;
+}
 .commercialization-page .filter-label { font-size: 0.8125rem; color: var(--text-secondary); min-width: 140px; }
-.commercialization-page .filter-label .form-control { margin-top: 0.25rem; min-width: 160px; }
+.commercialization-page .filter-label :is(.form-input, .form-select, .form-control) {
+    margin-top: 0.25rem;
+    min-width: 160px;
+}
 .commercialization-page .actions-cell { white-space: nowrap; }
 .commercialization-page .actions-cell .btn-link + .btn-link { margin-left: 0.5rem; }
-.commercialization-page .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
-.commercialization-page .modal-wide { max-width: 560px; width: 100%; }
+#package-modal .modal,
+#assign-modal .modal {
+    width: min(92vw, 560px);
+    max-width: min(92vw, 560px);
+}
+#assign-modal .modal.modal-wide {
+    width: min(92vw, 640px);
+    max-width: min(92vw, 640px);
+}
+
+/* Ensure modal fields are block + full width (label text must not sit beside input) */
+#package-modal :is(.form-input, .form-select, .form-textarea),
+#assign-modal :is(.form-input, .form-select, .form-textarea) {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 2.625rem;
+    padding: 0.55rem 0.85rem;
+    font: inherit;
+    font-size: var(--font-size-sm, 0.875rem);
+    color: var(--text-primary);
+    background: var(--bg-tertiary, #0d1117) !important;
+    border: 1px solid var(--border-primary, #30363d) !important;
+    border-radius: var(--radius-md, 6px) !important;
+    color-scheme: dark;
+}
+#package-modal select.form-select,
+#assign-modal select.form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.85rem center !important;
+    background-color: var(--bg-tertiary, #0d1117) !important;
+    padding-right: 2.25rem;
+}
+#package-modal input[type="date"].form-input,
+#assign-modal input[type="date"].form-input {
+    min-height: 2.625rem;
+    padding-right: 0.75rem;
+}
+#package-modal input[type="date"].form-input::-webkit-calendar-picker-indicator,
+#assign-modal input[type="date"].form-input::-webkit-calendar-picker-indicator {
+    opacity: 0.65;
+    cursor: pointer;
+    filter: invert(0.85);
+}
+#package-modal :is(.form-input, .form-select, .form-textarea):focus,
+#assign-modal :is(.form-input, .form-select, .form-textarea):focus {
+    border-color: var(--accent-blue, #58a6ff) !important;
+    box-shadow: 0 0 0 3px var(--accent-blue-muted, rgba(88, 166, 255, 0.25));
+    outline: none;
+}
+#assign-modal .form-row--dates {
+    grid-template-columns: 1fr 1fr;
+}

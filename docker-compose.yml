@@ -1,13 +1,25 @@
-# BetterDesk Console - Docker Compose Setup
+# BetterDesk Console - Docker Compose Setup (source build / local images)
 # Architecture: Go server (single binary) + Node.js web console
 #
 # ============================================================================
-# QUICK START (no build required):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/Rustdesk-FreeConsole/main/docker-compose.quick.yml -o docker-compose.yml
-#   docker compose up -d
+# THIS FILE builds images locally (betterdesk-*:local, pull_policy: never).
+# `docker compose pull` does NOT refresh BetterDesk — it never pulls *:local.
 #
-# BUILD FROM SOURCE (this file):
-#   docker compose build && docker compose up -d
+# Update path (source build):
+#   git pull
+#   docker compose up -d --build
+#   # or: docker compose build --no-cache && docker compose up -d --force-recreate
+#
+# PREBUILT GHCR (no local build) — use instead:
+#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
+#   docker compose pull && docker compose up -d
+# Prefer the official all-in-one image: docker-compose.quick.single.yml
+#
+# Port map (split layout):
+#   :5000  — web panel (Node)
+#   :21114 — Go Client API (RustDesk /api/login, AB) — preferred for new clients
+#   :21121 — Node → Go compat proxy (legacy client API URLs)
+#   :21118 / :21119 — native RustDesk WSS signal / relay
 # ============================================================================
 #
 # The Go server replaces separate hbbs/hbbr — it handles signal, relay,
@@ -51,6 +63,10 @@ services:
       # only with ENROLLMENT_MODE=open; strict initiator authorization remains
       # the default.
       - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
+      # Web Remote (#465 / #313): console PunchHole arrives from the Docker
+      # bridge IP (not loopback). Default trusts compose 172.16/12 + loopback.
+      # On a shared Docker host, override to the console container /32.
+      - PANEL_SIGNAL_PROXY_CIDRS=${PANEL_SIGNAL_PROXY_CIDRS:-172.16.0.0/12,127.0.0.0/8,::1/128}
       - P2P_FIRST=${P2P_FIRST:-Y}
       - ALWAYS_USE_RELAY=${ALWAYS_USE_RELAY:-N}
       - P2P_FALLBACK_MS=${P2P_FALLBACK_MS:-2000}

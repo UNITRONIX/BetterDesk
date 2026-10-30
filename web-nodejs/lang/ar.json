@@ -48,7 +48,7 @@
         "dashboard": "لوحة القيادة",
         "devices": "الأجهزة",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "وكلاء BetterDesk",
         "settings": "إعدادات",
         "users": "Users",
         "inventory": "Inventory",
@@ -62,6 +62,7 @@
         "reports": "Reports",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "تفعيل الوكيل",
         "management": "إدارة",
         "toggle_sidebar": "تبديل الشريط الجانبي",
         "cdap": "أجهزة CDAP",
@@ -88,7 +89,8 @@
         "server_attestation": "اعتماد أداء الخادم",
         "commercialization": "التسويق",
         "remote_open_tab": "فتح عميل سطح المكتب البعيد في علامة تبويب جديدة",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "وكلاء BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -131,7 +133,11 @@
         "oidc_error": "حدث خطأ أثناء تسجيل الدخول إلى SSO.",
         "oidc_no_account": "لم يتم العثور على حسابك وتم تعطيل التسجيل التلقائي.",
         "totp_rate_limited": "محاولات كثيرة جدًا. يرجى المحاولة مرة أخرى لاحقا.",
-        "emergency_mode_banner": "Go server غير قابل للوصول — يعمل في وضع الطوارئ (للمسؤول فقط، وظائف محدودة)"
+        "emergency_mode_banner": "Go server غير قابل للوصول — يعمل في وضع الطوارئ (للمسؤول فقط، وظائف محدودة)",
+        "session_expired": "انتهت جلستك أو تم استبدالها بتسجيل دخول جديد. يرجى تسجيل الدخول مرة أخرى.",
+        "session_idle_warning_title": "الجلسة على وشك الانتهاء",
+        "session_idle_warning_body": "سيتم تسجيل خروجك بسبب عدم النشاط خلال {{seconds}} ثانية.",
+        "session_stay_signed_in": "البقاء مسجلاً"
     },
     "dashboard": {
         "title": "لوحة القيادة",
@@ -145,7 +151,7 @@
         "quick_actions": "إجراءات سريعة",
         "manage_devices": "إدارة الأجهزة المتصلة",
         "view_keys": "عرض مفاتيح الخادم",
-        "generate_config": "إنشاء تكوين العميل",
+        "generate_config": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط",
         "server_settings": "تكوين الإعدادات",
         "greeting_morning": "صباح الخير، {name}",
         "greeting_afternoon": "مساء الخير، {name}",
@@ -177,7 +183,7 @@
         "config_api_server": "خادم API",
         "config_key": "المفتاح",
         "client_config_hint": "أدخل هذه القيم في إعدادات شبكة RustDesk ضمن قسم خادم ID/الترحيل.",
-        "open_generator": "مولد العميل",
+        "open_generator": "وكلاء BetterDesk",
         "open_keys": "فتح المفاتيح",
         "open_remote": "فتح وحدة تحكم سطح المكتب البعيد",
         "attention_panel": "يتطلب الانتباه",
@@ -216,7 +222,9 @@
         "activate_agent_folder_none": "بدون مجلد",
         "activate_agent_submit": "تفعيل الجهاز",
         "activate_agent_submitting": "جارٍ تفعيل الجهاز…",
-        "activate_agent_success": "تم تفعيل الوكيل بنجاح."
+        "activate_agent_success": "تم تفعيل الوكيل بنجاح.",
+        "open_agents": "وكلاء BetterDesk",
+        "agents_hint": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط"
     },
     "devices": {
         "title": "الأجهزة",
@@ -429,7 +437,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "إدارة الوسوم",
+        "manage_device_tags": "إدارة الوسوم",
+        "rename_tag": "إعادة تسمية الوسم",
+        "delete_tag": "حذف الوسم",
+        "rename_tag_prompt": "اسم الوسم الجديد",
+        "rename_tag_hint": "يعيد تسمية هذا الوسم على كل الأجهزة المرئية ويحدّث المجموعات الديناميكية المطابقة.",
+        "delete_tag_confirm": "إزالة الوسم \"{tag}\" من {count} جهاز/أجهزة؟ ستصبح المجموعات الديناميكية التي تستخدمه فارغة حتى التحديث.",
+        "tag_renamed": "تمت إعادة تسمية الوسم",
+        "tag_deleted": "تم حذف الوسم",
+        "tag_name_required": "اسم الوسم مطلوب",
+        "tag_rename_identical": "يجب أن يكون الاسم الجديد مختلفاً",
+        "tags_backend_unsupported": "وسوم الأجهزة غير مدعومة مع الخلفية الحالية",
+        "tags_manage_hint": "أعد تسمية الوسوم أو احذفها على كل الأجهزة المرئية. الإزالة من جهاز واحد تتم في التعديل أو التفاصيل.",
+        "tags_device_hint": "أزل وسماً هنا لإلغاء تعيينه من هذا الجهاز فقط. استخدم إدارة الوسوم لإعادة التسمية أو الحذف في كل مكان.",
+        "unassign_tag": "إزالة من هذا الجهاز",
+        "tag_device_one": "جهاز",
+        "tag_device_many": "أجهزة",
+        "tag_group_one": "مجموعة ديناميكية",
+        "tag_group_many": "مجموعات ديناميكية"
     },
     "keys": {
         "title": "مفاتيح الخادم",
@@ -817,7 +852,32 @@
         "unsaved_restart_title": "هل تريد حفظ التغييرات على هذا الملف؟ سيتم إنشاء نسخة احتياطية من الإصدار السابق.",
         "unsaved_restart_message": "لديك تغييرات غير محفوظة. هل تريد تجاهلها؟",
         "unsaved_restart_save": "حفظ الملف",
-        "unsaved_restart_stay": "يلغي"
+        "unsaved_restart_stay": "يلغي",
+        "availability_history_title": "سجل التوفر",
+        "availability_history_desc": "سجّل اختياريًا تغيّر حالة الأجهزة متصل/غير متصل لعرض سجل يومي في Metrics. معطّل افتراضيًا لتجنب نمو قاعدة البيانات.",
+        "availability_history_enable": "تفعيل سجل التوفر",
+        "availability_history_enable_hint": "عند التفعيل يسجّل خادم Go انتقالات الحالة (ONLINE وOFFLINE وDEGRADED وCRITICAL) من النبضات ونشاط signal/CDAP/Mesh.",
+        "availability_history_retention": "مدة الاحتفاظ (أيام)",
+        "availability_history_retention_hint": "تُحذف الأحداث الأقدم تلقائيًا. الافتراضي 30 يومًا.",
+        "availability_history_save": "حفظ إعدادات التوفر",
+        "availability_history_saved": "تم حفظ إعدادات سجل التوفر",
+        "tab_time": "الوقت / المناطق الزمنية",
+        "time": {
+            "timezone_title": "المنطقة الزمنية للفوترة",
+            "timezone_desc": "المنطقة الزمنية العالمية IANA لحدود أشهر التسويق (إعادة تعيين الزيادة عند منتصف ليل اليوم الأول).",
+            "billing_month_hint": "منتصف الليل في اليوم الأول من كل شهر في هذه المنطقة يغلق الفترة السابقة ويفتح فترة جديدة. الجلسات النشطة لا تُقاطع.",
+            "billing_timezone": "المنطقة الزمنية",
+            "billing_timezone_hint": "مثال: Europe/Warsaw. يؤثر على الاستخدام الشهري والزيادات.",
+            "custom_timezone": "منطقة IANA مخصصة (اختياري)",
+            "detect_os": "اكتشاف من نظام التشغيل",
+            "detected": "المنطقة المكتشفة: {tz}",
+            "ntp_title": "NTP / مزامنة الساعة",
+            "ntp_desc": "حافظ على مزامنة ساعة خادم BetterDesk لدقة أوقات الجلسات القابلة للفوترة.",
+            "save": "حفظ إعدادات الوقت",
+            "save_title": "حفظ إعدادات الوقت",
+            "saved": "تم حفظ إعدادات الوقت.",
+            "commercialization_link": "فتح التسويق → الحزم"
+        }
     },
     "audit": {
         "time": "Time",
@@ -843,7 +903,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "تم استبدال الجلسة",
+        "action_session_expired": "انتهت الجلسة",
+        "action_session_ip_change": "تغيّر عنوان IP للجلسة"
     },
     "generator": {
         "title": "مولّد وكيل الدعم",
@@ -935,6 +998,11 @@
         "preview_settings": "الإعدادات (المسؤول فقط)",
         "preview_quit": "إنهاء (المشرف فقط)",
         "download_link_title": "رابط التحميل",
+        "download_hub": "مركز التنزيل",
+        "generic_agents_empty": "لم يُستورد أي إصدار بعد.",
+        "generic_agents_hint": "المسار الإنتاجي الأساسي: استورد إصدارات BetterDesk-Client الموقّعة من GitHub ثم قدّم الوكلاء المتحقق منهم من هذا المثيل. لا حاجة لبناء Flutter/Cargo محلي.",
+        "generic_agents_import": "استيراد أحدث إصدار",
+        "generic_agents_title": "وكلاء عامون للورود فقط",
         "download_link_hint": "شارك هذا الرابط مع المستخدمين النهائيين. ستظهر لهم صفحة تنزيل ذات علامة تجارية. روابط hex القديمة تظل تعمل بعد تغيير الرابط القصير.",
         "open_portal": "يفتح",
         "created": "تم إنشاء الحزمة",
@@ -971,7 +1039,21 @@
             "platforms_required": "حدد منصة واحدة على الأقل للبناء",
             "no_supported_targets": "لا تتوفر أهداف بناء حاليًا. تحقق من إعدادات المنشئ.",
             "toolchain_missing": "أدوات البناء المطلوبة مفقودة: {{tools}}",
-            "platform_unavailable": "هذا الهدف غير متاح من المنشئ المكوّن."
+            "platform_unavailable": "هذا الهدف غير متاح من المنشئ المكوّن.",
+            "generic_agent_release_not_found": "لا يتوفر إصدار support-v* موقّع على BetterDesk-Client (يجب أن يكون مستقراً وليس مسودة/تجريبياً).",
+            "generic_agent_release_list_failed": "تعذر سرد إصدارات BetterDesk-Client من GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "انتهت المهلة أثناء تنزيل مورد إصدار الوكيل العام.",
+            "generic_agent_release_redirect_limit": "عدد كبير جداً من عمليات إعادة التوجيه أثناء تنزيل المورد.",
+            "generic_agent_release_redirect_host_invalid": "أُعيد توجيه التنزيل إلى مضيف غير متوقع.",
+            "generic_agent_release_asset_invalid": "اسم مورد الإصدار أو عنوان URL غير صالح.",
+            "generic_agent_release_asset_download_failed": "فشل تنزيل مورد الإصدار: {{detail}}",
+            "generic_agent_release_external_config": "يحتوي الأرشيف على إعداد خادم مضمّن (custom.txt) ورُفض.",
+            "generic_agent_release_archive_invalid": "تعذر فتح أرشيف الإصدار أو التحقق منه.",
+            "generic_agent_release_manifest_missing": "الإصدار يفتقد manifest.json أو manifest.sig.",
+            "generic_agent_release_public_key_missing": "لم يُضبط مفتاح عام للتحقق من التوقيع.",
+            "generic_agent_release_signature_invalid": "فشل التحقق من توقيع البيان.",
+            "generic_agent_release_manifest_invalid": "لم يجتز البيان التحقق (schema أو sku أو assets).",
+            "generic_agent_release_checksum_mismatch": "عدم تطابق المجموع الاختباري للمورد: {{detail}}"
         },
         "legacy_title": "مولد تكوين العميل",
         "connection_section": "اتصال الخادم",
@@ -994,6 +1076,7 @@
         "builds_hint": "برامج التثبيت المُجمَّعة على هذا الخادم لكل منصة. أعد البناء بعد إصلاح أخطاء أدوات البناء أو تحديث مصدر الوكيل.",
         "builds_loading": "جارٍ تحميل حالة البناء…",
         "builds_empty": "لا توجد عمليات بناء في قائمة الانتظار بعد — احفظ الحزمة أو انقر على إعادة بناء الكل.",
+        "rebuild": "إعادة البناء",
         "rebuild_all": "إعادة بناء الكل",
         "rebuilding_all": "جارٍ ترتيب عمليات إعادة البناء…",
         "rebuild_queued": "جميع بنيات المنصات في قائمة الانتظار",
@@ -1041,7 +1124,11 @@
         "toolchain_branding_seal": "فشل توقيع العلامة التجارية — تحقق من مفتاح التوقيع على وحدة التحكم ثم أعد البناء.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) غير موجود — ستفشل بنايات Windows.",
         "toolchain_appimage_missing": "appimagetool غير موجود — ستفشل بنايات AppImage.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "جارٍ استيراد أحدث إصدار موقّع والتحقق منه…",
+        "generic_agents_imported": "تم استيراد {{tag}}.",
+        "generic_agents_verified": "تم التحقق",
+        "generic_agents_artifacts": "{{count}} من عناصر المنصة"
     },
     "server": {
         "port": "Port",
@@ -1520,7 +1607,7 @@
         "bg_image_invalid_type": "نوع الملف غير صالح. استخدم PNG أو JPG أو WebP أو GIF.",
         "bg_upload_success": "تم رفع صورة الخلفية بنجاح.",
         "login_title": "صفحة تسجيل الدخول",
-        "login_desc": "خصّص عنوان شاشة تسجيل الدخول والعنوان الفرعي والخلفية.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "عنوان تسجيل الدخول",
         "login_heading_placeholder": "مرحبًا بعودتك",
         "login_subheading": "العنوان الفرعي لتسجيل الدخول",
@@ -1596,7 +1683,23 @@
         "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle.",
         "readability_check": "فحص قابلية القراءة",
         "readability_contrast": "نسبة تباين {item} ({ratio}) أقل من {minimum}:1",
-        "readability_background": "يستخدم {item} نوع {type} مع تعتيم منخفض؛ قد يصعب قراءة النص."
+        "readability_background": "يستخدم {item} نوع {type} مع تعتيم منخفض؛ قد يصعب قراءة النص.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "ملخص",
@@ -1673,7 +1776,7 @@
         "no_sysinfo": "لا تتوفر أية معلومات عن الأجهزة",
         "no_sysinfo_hint": "ستظهر معلومات النظام بعد أن يرسل الجهاز تقرير معلومات النظام",
         "no_metrics": "لا توجد بيانات مقاييس متاحة",
-        "no_metrics_hint": "ستظهر المقاييس بعد أن يرسل الجهاز تقارير نبضات القلب",
+        "no_metrics_hint": "فعّل سجل التوفر في الإعدادات لتسجيل تغييرات الاتصال/قطع الاتصال. تظهر جلسات الاتصال عندما يتصل أحدهم.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1691,7 +1794,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "سجل التوفر",
+        "availability_prev_day": "اليوم السابق",
+        "availability_next_day": "اليوم التالي",
+        "availability_loading": "جارٍ تحميل سجل التوفر…",
+        "availability_disabled": "سجل التوفر معطّل",
+        "availability_disabled_hint": "فعّله من الإعدادات ← سجل التوفر. سيسجّل الخادم انتقالات الحالة دون الحاجة لمقاييس CPU للعميل.",
+        "availability_empty": "لا تغيّرات حالة في هذا اليوم",
+        "availability_empty_hint": "تظهر الانتقالات عندما يصبح الجهاز online أو offline أو degraded أو critical.",
+        "availability_col_time": "الوقت",
+        "availability_col_from": "من",
+        "availability_col_to": "إلى",
+        "availability_col_source": "المصدر",
+        "availability_status_online": "متصل",
+        "availability_status_offline": "غير متصل",
+        "availability_status_degraded": "متدهور",
+        "availability_status_critical": "حرج",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "نبض",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "مسؤول",
+        "availability_source_status": "الحالة",
+        "section_metrics_summary": "مقاييس الخادم",
+        "metrics_avail_today": "تغييرات الحالة (اليوم المحدد)",
+        "metrics_sessions_tracked": "الجلسات المتتبَّعة",
+        "section_connection_sessions": "جلسات الاتصال",
+        "sessions_loading": "جارٍ تحميل جلسات الاتصال…",
+        "sessions_error": "تعذّر تحميل جلسات الاتصال",
+        "sessions_empty": "لا توجد جلسات اتصال بعد",
+        "sessions_empty_hint": "تظهر الجلسات عندما يتصل نظير مخوّل (punch hole أو relay). تُملأ المدة عند انتهاء جلسة الـ relay.",
+        "sessions_col_when": "متى",
+        "sessions_col_who": "من",
+        "sessions_col_from": "من IP",
+        "sessions_col_transport": "النقل",
+        "sessions_col_duration": "المدة",
+        "sessions_active": "نشطة",
+        "sessions_transport_punch": "مباشر / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "إزالة وسم هنا تلغي تعيينه من هذا الجهاز فقط. استخدم إدارة الوسوم في صفحة الأجهزة لإعادة التسمية أو الحذف في كل مكان."
     },
     "inventory": {
         "title": "Inventory",
@@ -3500,7 +3642,26 @@
         "hardening_hint": "أولويات تعزيز الأمان لنشر BetterDesk. يتم ترتيب العناصر حسب الخطورة.",
         "no_hardening": "لا توجد عناصر تصلب المتاحة.",
         "vuln_hint": "نتائج فحص ثغرة التبعية. قم بتشغيل تدقيق npm بانتظام للحفاظ على أمان التبعيات.",
-        "no_vulns": "لم يتم العثور على نقاط الضعف. تبعياتك آمنة."
+        "no_vulns": "لم يتم العثور على نقاط الضعف. تبعياتك آمنة.",
+        "tab_sessions": "جلسات اللوحة",
+        "sessions_hint": "جلسات تسجيل الدخول إلى لوحة التحكم. يُسمح بجلسة نشطة واحدة لكل حساب؛ تسجيل دخول جديد ينهي الجلسة السابقة.",
+        "sessions_policy": "مهلة الخمول: {{idle}} د · الحد الأقصى: {{max}} س · جلسة نشطة واحدة لكل حساب",
+        "no_sessions": "لا توجد جلسات مسجلة بعد.",
+        "session_current": "الحالية",
+        "session_active": "نشطة",
+        "session_ended": "منتهية",
+        "col_status": "الحالة",
+        "col_started": "البداية",
+        "col_last_activity": "آخر نشاط",
+        "col_ended": "الانتهاء",
+        "col_reason": "سبب الانتهاء",
+        "col_user_agent": "المتصفح",
+        "reason_logout": "تسجيل الخروج",
+        "reason_replaced": "استُبدلت بتسجيل دخول جديد",
+        "reason_idle": "مهلة الخمول",
+        "reason_max_age": "العمر الأقصى",
+        "reason_revoked": "مُلغاة",
+        "reason_destroyed": "مُدمَّرة"
     },
     "languages": {
         "title": "إدارة اللغة",
@@ -3836,7 +3997,11 @@
         "preflight_warnings_title": "قبل التثبيت",
         "install_blocked_hint": "التثبيت معطّل حتى يتم حل المشكلات أعلاه.",
         "preflight_info_title": "قبل التثبيت",
-        "preflight_info_note": "يمكنك تثبيت التحديث — هذه الإشعارات للمعلومات فقط."
+        "preflight_info_note": "يمكنك تثبيت التحديث — هذه الإشعارات للمعلومات فقط.",
+        "proxy_timeout_recovering": "انتهت مهلة البوابة/الوكيل — جارٍ التحقق مما إذا كان التحديث لا يزال يعمل على الخادم…",
+        "install_still_running": "التحديث لا يزال يعمل على الخادم…",
+        "install_recovered": "اكتمل التحديث على الخادم بعد انقطاع اتصال المتصفح",
+        "install_recovery_timeout": "انتهت مهلة انتظار اكتمال التحديث بعد انقطاع البوابة. تحقق من الإعدادات ← التحديثات أو data/.last_update_result.json أو: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "الأذونات",
@@ -4150,7 +4315,8 @@
             "status_error": "آخر خطأ",
             "os_yes": "نعم",
             "os_no": "لا",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "جلسات قابلة للفوترة نشطة",
@@ -4174,7 +4340,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "الجهاز",
@@ -4182,7 +4355,11 @@
             "duration": "المدة",
             "phase": "المرحلة",
             "amount": "المبلغ",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "الجلسة",
@@ -4229,7 +4406,9 @@
             "skip": "تخطي الآن",
             "submit": "إرسال التقرير",
             "summary_required": "الملخص مطلوب",
-            "saved": "تم حفظ تقرير العمل"
+            "saved": "تم حفظ تقرير العمل",
+            "toolbar": "تقرير العمل",
+            "intent_hint": "سيفتح نموذج التقرير عند انتهاء الجلسة"
         },
         "empty": {
             "packages": "لا توجد حزم بعد. أنشئ واحدة بالزر أعلاه.",
@@ -4291,6 +4470,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4520,5 +4713,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk مجاني",
+                "body": "سطح مكتب بعيد مفتوح المصدر — بلا تراخيص مقاعد وبلا احتكار. استضف بنفسك."
+            },
+            "remote": {
+                "title": "دعم عن بُعد تحت سيطرتك",
+                "body": "اتصل بالأجهزة من وحدتك. تبقى الجلسات على بنيتك التحتية."
+            },
+            "secure": {
+                "title": "أمان مدمج",
+                "body": "مصادقة المشغّلين وتحكم بالجلسات وإثبات الخادم عند الحاجة."
+            },
+            "platforms": {
+                "title": "Windows و Linux و macOS",
+                "body": "وحدة تحكم واحدة للوكلاء على المنصات التي يدعمها فريقك بالفعل."
+            }
+        },
+        "prev": "الشريحة السابقة",
+        "next": "الشريحة التالية"
+    },
+    "agents": {
+        "title": "وكلاء BetterDesk",
+        "subtitle": "يُبنى عملاء Support الواردة فقط في BetterDesk-Client — تستورد هذه اللوحة وتقدّمهم.",
+        "what_title": "ما وكلاء BetterDesk؟",
+        "what_body": "وكلاء BetterDesk Support هم عملاء سطح مكتب للاتصالات الواردة فقط. يسجّلون على خادمك، ويعرضون رمز QR للاقتران، ويقبلون الدعم عن بُعد. لا يبدأون اتصالات صادرة إلى أجهزة أخرى.",
+        "note_no_build": "لم تعد هذه الوحدة تبني مثبّتات العميل. تُنتَج الإصدارات الموقّعة في مستودع GitHub لـ BetterDesk-Client.",
+        "get_title": "من أين تحصل على الوكلاء",
+        "get_body": "نزّل حزم Support Agent الموقّعة من إصدارات BetterDesk-Client، أو شارك بوابة هذا الخادم العامة بعد الاستيراد أدناه.",
+        "get_github": "إصدارات BetterDesk-Client",
+        "get_portal": "فتح بوابة التنزيل",
+        "sync_title": "استيراد لهذا الخادم",
+        "sync_hint": "استورد أحدث إصدار support-v* موقّع حتى يتمكن /portal من تقديم مثبّتات مُتحقَّق منها.",
+        "sync_import": "استيراد أحدث إصدار",
+        "sync_importing": "جارٍ استيراد أحدث إصدار موقّع والتحقق منه…",
+        "sync_imported": "تم استيراد {{tag}}.",
+        "sync_empty": "لم يُستورد أي إصدار بعد.",
+        "sync_verified": "مُتحقَّق",
+        "sync_artifacts": "{{count}} من قطع المنصات",
+        "steps_title": "كيفية إضافة وكيل",
+        "step1": "استورد أحدث إصدار موقّع (الزر أعلاه) أو نزّله من GitHub.",
+        "step2": "ثبّت الوكيل على الجهاز وأدخل عنوان URL العام لهذا الخادم.",
+        "step3": "عندما يعرض الوكيل رمز QR، افتح تفعيل الوكيل وامسحه.",
+        "step4": "وافق على التسجيل إن تطلبت السياسة ذلك، ثم اتصل من Remote Desktop.",
+        "pair_activate": "تفعيل الوكيل",
+        "pair_body": "يستخدم الاقتران رمز QR الذي يعرضه وكيل Support عام بعد الوصول إلى خادمك.",
+        "branding_link": "علامة العميل",
+        "branding_body": "يُحمَّل المظهر (الشعار والألوان والتسميات) وقت التشغيل من علامة العميل — وليس مضمّنًا في المثبّت."
     }
 }

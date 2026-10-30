@@ -1,0 +1,64 @@
+/* BetterDesk Agents info page */
+
+.agents-page {
+    display: grid;
+    gap: 16px;
+    max-width: 920px;
+}
+
+.agents-info-card .card-body p {
+    margin: 0 0 12px;
+    line-height: 1.55;
+}
+
+.agents-info-card .card-body p:last-child {
+    margin-bottom: 0;
+}
+
+.agents-note {
+    margin-top: 4px !important;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--color-bg-elevated, rgba(255, 255, 255, 0.04));
+}
+
+.agents-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.agents-steps {
+    margin: 0 0 16px;
+    padding-left: 1.25rem;
+    line-height: 1.55;
+}
+
+.agents-steps li + li {
+    margin-top: 8px;
+}
+
+.agents-release-list {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 8px;
+}
+
+.agents-release-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+    border-radius: 8px;
+    background: var(--color-bg-elevated, rgba(255, 255, 255, 0.03));
+}
+
+@media (max-width: 640px) {
+    .agents-release-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

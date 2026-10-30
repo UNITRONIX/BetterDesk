@@ -9,7 +9,8 @@ const serverBackend = require('../services/serverBackend');
 const betterdeskApi = require('../services/betterdeskApi');
 const addressBookSync = require('../services/rustdeskAddressBookSync');
 const deviceGroupService = require('../services/deviceGroupService');
-const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
+const tagManagementService = require('../services/tagManagementService');
+const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const { bodyInt, bodyString, bodyBool, plainBodyObject } = require('../lib/bodyScalars');
 
 /**
@@ -250,6 +251,134 @@ router.get('/api/tags', requireAuth, requirePermission('device.view'), async (re
     }
 });
 
+/**
+ * POST /api/tags/rename - Rename a tag on all visible devices (and matching dynamic groups).
+ */
+router.post('/api/tags/rename', requireAuth, requirePermission('device.edit'), async (req, res) => {
+    try {
+        if (!(await serverBackend.isBetterDesk())) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tags_backend_unsupported')
+            });
+        }
+
+        const from = tagManagementService.sanitizeTagName(bodyString(req.body && req.body.from));
+        const to = tagManagementService.sanitizeTagName(bodyString(req.body && req.body.to));
+
+        if (!from || !to) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_name_required')
+            });
+        }
+        if (from === to) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_rename_identical')
+            });
+        }
+
+        const devices = await getVisibleDevicesForRequest(req);
+        const groups = await getVisibleDeviceGroupsForRequest(req);
+        const result = await tagManagementService.renameTagAcrossScope({
+            devices,
+            groups,
+            fromTag: from,
+            toTag: to,
+            setPeerTags: (id, tags) => serverBackend.setPeerTags(id, tags),
+            updateDeviceGroup: (guid, data) => db.updateDeviceGroup(guid, data)
+        });
+
+        if (result.errors && result.errors.includes('identical')) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_rename_identical')
+            });
+        }
+
+        await db.logAction(
+            req.session.userId,
+            'device_tag_renamed',
+            `Tag "${from}" renamed to "${to}" on ${result.updatedDevices} device(s), ${result.updatedGroups} group(s)`,
+            req.ip
+        );
+
+        res.json({
+            success: true,
+            data: {
+                from: result.from,
+                to: result.to,
+                updatedDevices: result.updatedDevices,
+                updatedGroups: result.updatedGroups,
+                skipped: result.skipped,
+                failedDevices: result.errors || []
+            }
+        });
+    } catch (err) {
+        console.error('Rename tag error:', err);
+        res.status(500).json({
+            success: false,
+            error: req.t('errors.server_error')
+        });
+    }
+});
+
+/**
+ * POST /api/tags/delete - Remove a tag from all visible devices.
+ */
+router.post('/api/tags/delete', requireAuth, requirePermission('device.edit'), async (req, res) => {
+    try {
+        if (!(await serverBackend.isBetterDesk())) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tags_backend_unsupported')
+            });
+        }
+
+        const tag = tagManagementService.sanitizeTagName(bodyString(req.body && req.body.tag));
+        if (!tag) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.tag_name_required')
+            });
+        }
+
+        const devices = await getVisibleDevicesForRequest(req);
+        const groups = await getVisibleDeviceGroupsForRequest(req);
+        const result = await tagManagementService.deleteTagAcrossScope({
+            devices,
+            groups,
+            tag,
+            setPeerTags: (id, tags) => serverBackend.setPeerTags(id, tags)
+        });
+
+        await db.logAction(
+            req.session.userId,
+            'device_tag_deleted',
+            `Tag "${tag}" removed from ${result.updatedDevices} device(s) (${result.affectedGroups} dynamic group(s) reference it)`,
+            req.ip
+        );
+
+        res.json({
+            success: true,
+            data: {
+                tag: result.tag,
+                updatedDevices: result.updatedDevices,
+                skipped: result.skipped,
+                affectedGroups: result.affectedGroups,
+                failedDevices: result.errors || []
+            }
+        });
+    } catch (err) {
+        console.error('Delete tag error:', err);
+        res.status(500).json({
+            success: false,
+            error: req.t('errors.server_error')
+        });
+    }
+});
+
 function isValidGroupGuid(guid) {
     return typeof guid === 'string' && guid.length > 0 && guid.length <= 80 && /^[A-Za-z0-9_.:-]+$/.test(guid);
 }
@@ -420,7 +549,15 @@ router.put('/api/devices/:id/groups', requireAuth, requirePermission('device.edi
         const groups = await getVisibleDeviceGroupsForRequest(req);
         const manualGroups = groups.filter(group => (group.source_type || 'manual') !== 'tag');
         const manualGuidSet = new Set(manualGroups.map(group => group.guid));
-        const selected = Array.from(new Set(groupGuids.filter(guid => manualGuidSet.has(guid))));
+        // Commercialization rule: a device belongs to at most one manual group.
+        const selectedAll = Array.from(new Set(groupGuids.filter(guid => manualGuidSet.has(guid))));
+        if (selectedAll.length > 1) {
+            return res.status(400).json({
+                success: false,
+                error: req.t('devices.group_one_only') || 'A device can belong to only one group',
+            });
+        }
+        const selected = selectedAll.slice(0, 1);
 
         for (const group of manualGroups) {
             if (selected.includes(group.guid)) await db.addDeviceToGroup(group.guid, deviceId);
@@ -523,10 +660,9 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
         try {
             const mode = await betterdeskApi.getConnectionMode(req.params.id);
             if (mode?.success && mode.data) {
-                const role = req.session.user && req.session.user.role;
                 device.connection_mode = {
                     ...mode.data,
-                    can_change: roleHasPermission(role, 'device.connection_mode')
+                    can_change: requestHasPermission(req, 'device.connection_mode')
                 };
             }
         } catch (e) {
@@ -553,6 +689,61 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             success: false,
             error: req.t('errors.server_error')
         });
+    }
+});
+
+/**
+ * GET /api/devices/:id/availability
+ * Server-observed online/offline status transitions for one local calendar day (#455).
+ * Query: day=YYYY-MM-DD, tz_offset=<Date.getTimezoneOffset()>
+ */
+router.get('/api/devices/:id/availability', requireAuth, requirePermission('device.view'), async (req, res) => {
+    try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
+        const day = typeof req.query.day === 'string' ? req.query.day : '';
+        const tzOffset = req.query.tz_offset;
+        const result = await betterdeskApi.getPeerAvailability(req.params.id, {
+            day: day || undefined,
+            tzOffset: tzOffset !== undefined ? tzOffset : new Date().getTimezoneOffset()
+        });
+        if (result && result.success === false) {
+            return res.status(502).json({ success: false, error: result.error || req.t('errors.server_error') });
+        }
+        res.json({ success: true, data: result.data || result });
+    } catch (err) {
+        console.error('Get device availability error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * GET /api/devices/:id/connection-sessions
+ * Server-observed remote-control sessions (who / when / duration).
+ */
+router.get('/api/devices/:id/connection-sessions', requireAuth, requirePermission('device.view'), async (req, res) => {
+    try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({ success: false, error: req.t('devices.not_found') });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
+        const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+        const result = await betterdeskApi.getPeerConnectionSessions(req.params.id, {
+            limit: Number.isFinite(limit) ? limit : 50
+        });
+        if (result && result.success === false) {
+            return res.status(502).json({ success: false, error: result.error || req.t('errors.server_error') });
+        }
+        res.json({ success: true, data: result.data || result });
+    } catch (err) {
+        console.error('Get device connection sessions error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
     }
 });
 
@@ -1072,7 +1263,7 @@ router.delete('/api/devices/:id/access-policy', requireAuth, requirePermission('
  * GET /api/devices/:id/connect-password — org vault preset for Web Remote auto-fill (#367).
  * Returns password only for authenticated operators; never logs the secret.
  */
-router.get('/api/devices/:id/connect-password', requireAuth, requirePermission('device.view'), async (req, res) => {
+router.get('/api/devices/:id/connect-password', requireAuth, requirePermission('device.connect'), async (req, res) => {
     try {
         const device = await serverBackend.getDeviceById(req.params.id);
         if (!device) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
@@ -1082,8 +1273,9 @@ router.get('/api/devices/:id/connect-password', requireAuth, requirePermission('
         res.json(result);
     } catch (err) {
         const status = err.response?.status || 500;
+        // Peer exists but no org vault password — 200 keeps Web Remote console clean (#367).
         if (status === 404) {
-            return res.status(404).json({ password_set: false });
+            return res.status(200).json({ password_set: false });
         }
         if (status === 403) {
             return res.status(403).json({ error: 'forbidden' });
@@ -1108,6 +1300,15 @@ const bdRelay = require('../services/bdRelay');
  */
 async function proxyAgentRequest(req, res, type, payload = null, timeoutMs = 15000) {
     try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({
+                success: false,
+                error: req.t('devices.not_found')
+            });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
         const data = await bdRelay.requestFromDevice(req.params.id, type, payload, timeoutMs);
         res.json({ success: true, data });
     } catch (err) {

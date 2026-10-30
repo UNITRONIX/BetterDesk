@@ -101,6 +101,27 @@ func (s *Server) requirePanelAdmin(handler http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// resolvePermission applies the persisted role override, if present, before
+// falling back to the built-in role map. The bool pair is
+// (granted, hasOverride). Database failures are returned to the caller so
+// authorization never silently falls back to a permissive default.
+func (s *Server) resolvePermission(role, permission string) (bool, bool, error) {
+	if s.db == nil {
+		return auth.RoleHasPermission(role, permission), false, nil
+	}
+
+	overrides, err := s.db.ListRolePermissions(role)
+	if err != nil {
+		return false, false, err
+	}
+	for _, override := range overrides {
+		if override != nil && override.Permission == permission {
+			return override.Granted, true, nil
+		}
+	}
+	return auth.RoleHasPermission(role, permission), false, nil
+}
+
 // requirePermission wraps a handler to enforce a specific granular permission.
 // Checks custom DB overrides first, then falls back to default role permissions.
 func (s *Server) requirePermission(perm string, handler http.HandlerFunc) http.HandlerFunc {
@@ -125,19 +146,26 @@ func (s *Server) requirePermission(perm string, handler http.HandlerFunc) http.H
 			return
 		}
 
-		// Check DB-stored custom permission overrides first
+		// Check DB-stored custom permission overrides first. Do not treat a
+		// database failure as "no override": that would fail open for roles
+		// whose defaults grant the permission.
 		if s.db != nil {
-			granted, err := s.db.HasRolePermission(userRole, perm)
-			if err == nil {
-				if granted && !(auth.IsProRole(userRole) && auth.ProRoleBlocksPermission(perm)) {
+			granted, overridden, err := s.resolvePermission(userRole, perm)
+			if err != nil {
+				log.Printf("api: permission lookup failed for role %q permission %q: %v", userRole, perm, err)
+				writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+					"error": "Permission service unavailable",
+				})
+				return
+			}
+			if overridden {
+				if granted {
 					handler(w, r)
 					return
 				}
-				// explicit deny in DB — reject even if default says yes
 				writeJSON(w, http.StatusForbidden, map[string]string{"error": "Insufficient permissions"})
 				return
 			}
-			// err != nil means no override found — fall through to defaults
 		}
 
 		// Fall back to built-in default role permissions
@@ -529,8 +557,15 @@ func (s *Server) handleUsersWithClientFallback(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		// If user has user.view permission, return full list
-		if auth.IsSuperAdminRole(role) || auth.RoleHasPermission(role, auth.PermUserView) {
+		// If user has effective user.view permission, return full list.
+		// This must include role_permissions denies; client requests are not a
+		// bypass for the panel's full user directory.
+		hasUserView := auth.IsSuperAdminRole(role)
+		if !hasUserView {
+			granted, _, err := s.resolvePermission(role, auth.PermUserView)
+			hasUserView = err == nil && granted
+		}
+		if hasUserView {
 			s.handleClientUsersList(w, r)
 			return
 		}

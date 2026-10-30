@@ -1,0 +1,102 @@
+<%- include('layouts/main', {
+    title: _('nav.agents'),
+    pageStyles: ['pages', 'agents'],
+    pageScripts: ['agents'],
+    currentPage: 'agents',
+    breadcrumb: [{ label: _('nav.agents') }],
+    body: `
+        <div class="page-header">
+            <h1 class="page-title">
+                <span class="material-icons" aria-hidden="true">support_agent</span>
+                ${_('agents.title')}
+            </h1>
+            <p class="page-subtitle">${_('agents.subtitle')}</p>
+        </div>
+
+        <div class="agents-page">
+            <section class="card agents-info-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="material-icons" aria-hidden="true">info</span>
+                        ${_('agents.what_title')}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p>${_('agents.what_body')}</p>
+                    <p class="form-hint agents-note">${_('agents.note_no_build')}</p>
+                </div>
+            </section>
+
+            <section class="card agents-info-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="material-icons" aria-hidden="true">download</span>
+                        ${_('agents.get_title')}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <p>${_('agents.get_body')}</p>
+                    <div class="agents-actions">
+                        <a class="btn btn-primary" href="https://github.com/UNITRONIX/BetterDesk-Client/releases" target="_blank" rel="noopener noreferrer">
+                            <span class="material-icons" aria-hidden="true">open_in_new</span>
+                            ${_('agents.get_github')}
+                        </a>
+                        <a class="btn btn-secondary" href="/portal" target="_blank" rel="noopener noreferrer">
+                            <span class="material-icons" aria-hidden="true">public</span>
+                            ${_('agents.get_portal')}
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card agents-info-card" id="agents-sync-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="material-icons" aria-hidden="true">cloud_download</span>
+                        ${_('agents.sync_title')}
+                    </h2>
+                    <button type="button" class="btn btn-primary btn-sm" id="agents-sync-release">
+                        <span class="material-icons" aria-hidden="true">sync</span>
+                        ${_('agents.sync_import')}
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="form-hint">${_('agents.sync_hint')}</p>
+                    <div id="agents-release-list" class="agents-release-list">
+                        <span class="text-muted">${_('agents.sync_empty')}</span>
+                    </div>
+                    <p id="agents-release-status" class="form-hint" role="status"></p>
+                </div>
+            </section>
+
+            <section class="card agents-info-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="material-icons" aria-hidden="true">checklist</span>
+                        ${_('agents.steps_title')}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <ol class="agents-steps">
+                        <li>${_('agents.step1')}</li>
+                        <li>${_('agents.step2')}</li>
+                        <li>${_('agents.step3')}</li>
+                        <li>${_('agents.step4')}</li>
+                    </ol>
+                    <div class="agents-actions">
+                        <a class="btn btn-primary" href="/?activateAgent=1">
+                            <span class="material-icons" aria-hidden="true">qr_code_scanner</span>
+                            ${_('agents.pair_activate')}
+                        </a>
+                        <a class="btn btn-secondary" href="/client-branding">
+                            <span class="material-icons" aria-hidden="true">palette</span>
+                            ${_('agents.branding_link')}
+                        </a>
+                    </div>
+                    <p class="form-hint">${_('agents.pair_body')}</p>
+                    <p class="form-hint">${_('agents.branding_body')}</p>
+                </div>
+            </section>
+        </div>
+    `
+}); %>

@@ -69,11 +69,26 @@ docker compose exec console betterdesk-show-admin-credentials
 
 Split layout uses API port **21114**; the official single container uses **21121**.
 
+**Web Remote:** the Go `server` service defaults `PANEL_SIGNAL_PROXY_CIDRS` to `172.16.0.0/12,127.0.0.0/8,::1/128` so browser remote from the console container is allowed (#465 / #313). On a shared Docker host, override to the console container IP `/32`. See [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-web-remote-fails-on-split-docker-initiator_not_registered).
+
+### Source build vs prebuilt GHCR (do not mix update commands)
+
+| Compose file | Images | How to update |
+|--------------|--------|----------------|
+| `docker-compose.quick.single.yml` / `docker-compose.quick.yml` | `ghcr.io/unitronix/…` | `docker compose pull && docker compose up -d` |
+| `docker-compose.yml` / `docker-compose.single.yml` | `betterdesk-*:local` (`pull_policy: never`) | `git pull` then `docker compose up -d --build` |
+
+`docker compose pull` on a source-build compose **does nothing useful** for BetterDesk — local tags are never pulled from a registry. If you cloned the repo and built locally, always rebuild after `git pull`. Discussion reports of “I pulled but still see an old reject” usually mean this mismatch (see [initiator_token_rejected](DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected)).
+
 ### Pin or change image version
 
 ```bash
 # Explicit release version (recommended for production — matches install.sh / compose default)
-export BETTERDESK_IMAGE_TAG=3.0.0
+export BETTERDESK_IMAGE_TAG=3.5.182
+docker compose pull && docker compose up -d
+
+# Development channel (GHCR :dev)
+export BETTERDESK_IMAGE_TAG=dev
 docker compose pull && docker compose up -d
 
 # Rolling tip of the last successful *stable* GHCR publish (release / main)
@@ -92,10 +107,21 @@ Browse tags: GitHub repo → **Packages** → `betterdesk` (official), or legacy
 |------|-------------|
 | 21116 TCP/UDP | Signal server (device registration) |
 | 21117 | Relay server (connections) |
-| 21121 | HTTP API (RustDesk client + REST) |
-| 5000 | Web management panel |
+| 21118 / 21119 | Native RustDesk WebSocket signal / relay |
+| 21121 | HTTP Client API (RustDesk login, AB, REST) |
+| 5000 | Web management panel only — **not** the Client API |
 
-Legacy split layout exposes API on **21114** instead of 21121.
+Legacy **split** layout: Go Client API on **21114**; Node may expose a **21121** compat proxy → Go. Point the RustDesk client **API Server** at `:21114` (split) or `:21121` (single), never at panel `:5000`.
+
+### Client settings (Docker + reverse proxy)
+
+| Client field | Single container | Split (`server` + `console`) |
+|--------------|------------------|------------------------------|
+| ID / Relay | public host or DNS | same |
+| API Server | `http://HOST:21121` (or HTTPS if you terminate TLS for the API) | `http://HOST:21114` (preferred) or `http://HOST:21121` if the console proxy is enabled |
+| Use WebSocket | optional; `/ws/id` → `:21118`, `/ws/relay` → `:21119` | same |
+
+Do **not** set `TLS_API=Y` / `TLS_SIGNAL=Y` / `TLS_RELAY=Y` on the Go container when Nginx/Caddy already terminates TLS — upstream stays plain HTTP. Production defaults: `ENCRYPTED_ONLY=1`, `ALLOW_LEGACY_OUTBOUND=N`, prefer `ENROLLMENT_MODE=managed` after initial device approval.
 
 ## 🔧 Configuration
 
@@ -149,14 +175,14 @@ container (issue #385).
 
 | Image | `:dev` platforms | Notes |
 |-------|------------------|-------|
-| `ghcr.io/unitronix/betterdesk` (AIO) | **amd64 only** | Multi-arch AIO on `:dev` often hits the GitHub Actions time limit |
-| `betterdesk-server` / `betterdesk-console` | amd64 + arm64 | Prefer [docker-compose.quick.yml](../../docker-compose.quick.yml) on ARM hosts |
+| `ghcr.io/unitronix/betterdesk` (AIO) | amd64 + arm64 | Native ARM runners; ARM phase runs after amd64 (#476) |
+| `betterdesk-server` / `betterdesk-console` | amd64 + arm64 | Same publish pipeline |
 | `betterdesk` `latest` / release tags | amd64 + arm64 | Stable channel |
 
-On **linux/arm64**, use the split quick-start compose, build AIO locally from
-`docker-compose.single.yml`, or pin a multi-arch tip tag (e.g. `dev-arm`) when
-published. Do not expect a fresh `betterdesk:dev` pull to refresh ARM layers
-while AIO `:dev` remains amd64-only.
+CI builds **amd64 first**, then **ARM**. If an ARM job fails, GHCR may briefly
+publish **amd64-only** tags (with an Actions warning) until the next green ARM
+run. On **linux/arm64**, `docker compose pull` of `:dev` / `:latest` is the
+normal path; split compose or a local AIO build remain optional.
 
 ### PostgreSQL Instead of SQLite
 
@@ -318,6 +344,10 @@ docker compose up -d
 2. Verify server is healthy: `curl http://localhost:21114/api/health`
 3. Check the advertised relay address: `docker compose logs server | grep 'relay='`
 4. If logs show a Docker/container IP such as `10.x.x.x` or `172.x.x.x`, restart with `RELAY_SERVERS=YOUR_HOST_IP:21117 docker compose up -d`
+
+### Browser Web Remote fails on every device (split Docker)
+
+Audit shows `connection_denied` / `initiator_not_registered` with a `172.x` actor IP — set `PANEL_SIGNAL_PROXY_CIDRS` on the Go server (see [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-web-remote-fails-on-split-docker-initiator_not_registered)).
 
 ### "Web console shows 0 devices"
 

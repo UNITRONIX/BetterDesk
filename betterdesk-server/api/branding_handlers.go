@@ -1284,7 +1284,7 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 			if s.peers != nil {
 				s.peers.Remove(deviceID)
 			}
-			_ = s.db.UpdatePeerStatus(deviceID, "OFFLINE", "")
+			_ = s.db.UpdatePeerStatus(deviceID, "OFFLINE", "", "admin")
 		}
 	}
 

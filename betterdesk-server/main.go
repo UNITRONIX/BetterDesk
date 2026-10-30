@@ -54,6 +54,7 @@ type persistedTimeSyncConfig struct {
 	MaxSkewMS          int    `json:"max_skew_ms"`
 	RequireSyncedClock bool   `json:"require_synced_clock"`
 	TrustOSNTP         bool   `json:"trust_os_ntp"`
+	BillingTimezone    string `json:"billing_timezone"`
 }
 
 func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
@@ -76,6 +77,11 @@ func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
 	cfg.BillingMaxClockSkewMS = persisted.MaxSkewMS
 	cfg.BillingRequireSyncedClock = persisted.RequireSyncedClock
 	cfg.BillingTrustOSNTP = persisted.TrustOSNTP
+	if tz := strings.TrimSpace(persisted.BillingTimezone); tz != "" {
+		if _, err := time.LoadLocation(tz); err == nil {
+			cfg.BillingTimezone = tz
+		}
+	}
 	log.Printf("Restored time-sync configuration from DB")
 }
 
@@ -236,10 +242,16 @@ func main() {
 	// even when the server is started without the ALL-IN-ONE install script.
 	loadAPIKey(cfg, database)
 
-	// Reset all peers to offline on startup (clean slate)
+	// Reset all peers to offline on startup (clean slate).
+	// Intentionally does NOT write availability_history events (#455) so a
+	// restart does not flood every device as downtime.
 	if err := database.SetAllOffline(); err != nil {
 		log.Printf("WARN: Failed to reset peers to offline: %v", err)
 	}
+
+	// Periodic cleanup for optional availability history (#455).
+	go runAvailabilityHistoryCleanup(database)
+	go runConnectionSessionCleanup(database)
 
 	log.Printf("Database initialized successfully")
 
@@ -421,24 +433,26 @@ func main() {
 
 	// Time sync + billing (commercialization module)
 	timeSyncSvc := timesync.NewService(database, timesync.Config{
-		Servers:      cfg.GetNTPServers(),
-		Interval:     60 * time.Second,
-		QueryTimeout: 5 * time.Second,
-		MaxSkew:      time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
-		RequireSync:  cfg.BillingRequireSyncedClock,
-		TrustOSNTP:   cfg.BillingTrustOSNTP,
+		Servers:         cfg.GetNTPServers(),
+		Interval:        60 * time.Second,
+		QueryTimeout:    5 * time.Second,
+		MaxSkew:         time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
+		RequireSync:     cfg.BillingRequireSyncedClock,
+		TrustOSNTP:      cfg.BillingTrustOSNTP,
+		BillingTimezone: cfg.BillingTimezone,
 	})
-	log.Printf("[timesync] NTP servers: %v (trust OS NTP when queries fail: %v)",
-		cfg.GetNTPServers(), cfg.BillingTrustOSNTP)
+	log.Printf("[timesync] NTP servers: %v (trust OS NTP when queries fail: %v; billing TZ: %s)",
+		cfg.GetNTPServers(), cfg.BillingTrustOSNTP, cfg.BillingLocation().String())
 	timeSyncSvc.Start(ctx)
 	defer timeSyncSvc.Stop()
 
 	reloadHandler.OnReload(func() error {
 		timeSyncSvc.ApplyConfig(timesync.Config{
-			Servers:     cfg.GetNTPServers(),
-			MaxSkew:     time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
-			RequireSync: cfg.BillingRequireSyncedClock,
-			TrustOSNTP:  cfg.BillingTrustOSNTP,
+			Servers:         cfg.GetNTPServers(),
+			MaxSkew:         time.Duration(cfg.BillingMaxClockSkewMS) * time.Millisecond,
+			RequireSync:     cfg.BillingRequireSyncedClock,
+			TrustOSNTP:      cfg.BillingTrustOSNTP,
+			BillingTimezone: cfg.BillingTimezone,
 		})
 		return nil
 	})
@@ -481,7 +495,12 @@ func main() {
 		if sessionLimiter != nil {
 			relaySrv.SetSessionLimiter(sessionLimiter)
 		}
-		relaySrv.SetBillingCallbacks(billingSvc.ActivateRelay, billingSvc.EndRelay)
+		relaySrv.SetBillingCallbacks(billingSvc.ActivateRelay, func(uuid string) {
+			billingSvc.EndRelay(uuid)
+			if err := database.EndPeerConnectionSessionByRelay(uuid); err != nil {
+				log.Printf("[warn] end connection session for relay %s: %v", uuid, err)
+			}
+		})
 		if err := relaySrv.Start(ctx); err != nil {
 			log.Fatalf("Failed to start relay server: %v", err)
 		}
@@ -698,6 +717,57 @@ func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, erro
 		}
 	}
 	return source, nil
+}
+
+// runAvailabilityHistoryCleanup deletes expired peer_availability_events when
+// the optional feature is enabled (#455).
+func runAvailabilityHistoryCleanup(database db.Database) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+	runOnce := func() {
+		if !database.IsAvailabilityHistoryEnabled() {
+			return
+		}
+		days := database.AvailabilityHistoryRetentionDays()
+		if days <= 0 {
+			days = db.DefaultAvailabilityHistoryRetention
+		}
+		n, err := database.CleanupOldAvailabilityEvents(time.Duration(days) * 24 * time.Hour)
+		if err != nil {
+			log.Printf("WARN: availability history cleanup: %v", err)
+			return
+		}
+		if n > 0 {
+			log.Printf("Availability history cleanup: removed %d events older than %d days", n, days)
+		}
+	}
+	runOnce()
+	for range ticker.C {
+		runOnce()
+	}
+}
+
+// runConnectionSessionCleanup deletes old Metrics connection-session rows.
+func runConnectionSessionCleanup(database db.Database) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+	runOnce := func() {
+		n, err := database.CleanupOldPeerConnectionSessions(
+			time.Duration(db.DefaultConnectionSessionRetentionDays) * 24 * time.Hour,
+		)
+		if err != nil {
+			log.Printf("WARN: connection session cleanup: %v", err)
+			return
+		}
+		if n > 0 {
+			log.Printf("Connection session cleanup: removed %d rows older than %d days",
+				n, db.DefaultConnectionSessionRetentionDays)
+		}
+	}
+	runOnce()
+	for range ticker.C {
+		runOnce()
+	}
 }
 
 func ensureScopedAPIKey(database db.Database, apiKey string) error {

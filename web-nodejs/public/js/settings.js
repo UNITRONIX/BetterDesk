@@ -43,11 +43,15 @@
         if (document.getElementById('tab-email') && document.getElementById('tab-email').style.display !== 'none') {
             initEmailSection();
         }
+        if (document.getElementById('tab-time') && document.getElementById('tab-time').style.display !== 'none') {
+            initTimeSettingsTab();
+        }
 
         loadAuditLog();
         loadServerInfo();
         initMeshSettingsSection();
         initDeviceScopeSection();
+        initAvailabilityHistorySection();
         initConnectionModeSection();
         initPublicEndpointsSection();
         initAuthSubnav();
@@ -411,7 +415,7 @@
         });
         
         const hash = window.location.hash.replace('#', '');
-        if (['general', 'branding', 'server', 'backup', 'updates', 'auth', 'advanced', 'email'].includes(hash)) {
+        if (['general', 'branding', 'server', 'backup', 'updates', 'auth', 'advanced', 'email', 'time'].includes(hash)) {
             const tabName = hash === 'server' ? 'general' : hash;
             const tab = document.querySelector(`.settings-shell-tab[data-tab="${tabName}"], .settings-tab[data-tab="${tabName}"]`);
             if (tab) tab.click();
@@ -453,8 +457,157 @@
         return false;
     }
 
-    function onSettingsTabChanged() {
-        // Appearance changes are applied only after an explicit save.
+    function onSettingsTabChanged(tabName) {
+        if (tabName === 'time') {
+            loadTimeSettingsTab();
+        }
+    }
+
+    // ==================== Time / NTP / billing timezone ====================
+
+    let _timeClockDockerMode = false;
+    let _timeCommonZones = [];
+
+    function fillTimezoneSelect(selected, common) {
+        const select = document.getElementById('time-billing-timezone');
+        if (!select) return;
+        const zones = Array.from(new Set([...(common || []), selected, 'UTC', 'Europe/Warsaw'].filter(Boolean))).sort();
+        select.innerHTML = zones.map((z) =>
+            `<option value="${Utils.escapeHtml(z)}"${z === selected ? ' selected' : ''}>${Utils.escapeHtml(z)}</option>`
+        ).join('');
+        const custom = document.getElementById('time-billing-timezone-custom');
+        if (custom && selected && !zones.includes(selected)) {
+            custom.value = selected;
+        }
+    }
+
+    async function loadTimeSettingsTab() {
+        if (!document.getElementById('tab-time')) return;
+        try {
+            const detect = await Utils.api('/api/panel/billing/clock/detect-timezone');
+            _timeCommonZones = detect.common || [];
+        } catch (_) {
+            _timeCommonZones = ['UTC', 'Europe/Warsaw'];
+        }
+        try {
+            const data = await Utils.api('/api/panel/billing/clock/settings');
+            _timeClockDockerMode = data.dockerMode === true;
+            const settings = data.settings || {};
+            fillTimezoneSelect(settings.billing_timezone || 'UTC', _timeCommonZones);
+            const serversEl = document.getElementById('time-clock-ntp-servers');
+            const skewEl = document.getElementById('time-clock-max-skew');
+            const requireEl = document.getElementById('time-clock-require-sync');
+            const trustEl = document.getElementById('time-clock-trust-os');
+            if (serversEl) serversEl.value = settings.ntp_servers || '';
+            if (skewEl) skewEl.value = settings.max_skew_ms || 2000;
+            if (requireEl) requireEl.checked = settings.require_synced_clock !== false;
+            if (trustEl) trustEl.checked = settings.trust_os_ntp !== false;
+        } catch (e) {
+            console.warn('[settings] clock settings', e);
+        }
+        await refreshTimeSyncStatus();
+    }
+
+    async function refreshTimeSyncStatus() {
+        try {
+            const st = await Utils.api('/api/panel/billing/timesync/status');
+            const detail = document.getElementById('time-clock-detail');
+            const offsetEl = document.getElementById('time-clock-offset');
+            const ntpServerEl = document.getElementById('time-clock-ntp-server');
+            const osSyncEl = document.getElementById('time-clock-os-sync');
+            const lastErrorEl = document.getElementById('time-clock-last-error');
+            const synced = !!st.synced;
+            if (detail) {
+                detail.textContent = synced
+                    ? (typeof __ === 'function' ? __('commercialization.clock.synced_detail') : 'Clock synchronized for billing')
+                    : (typeof __ === 'function' ? __('commercialization.clock.unsynced') : 'Server clock is not synchronized');
+            }
+            if (offsetEl) offsetEl.textContent = st.offset_ms != null ? `${st.offset_ms} ms` : '—';
+            if (ntpServerEl) ntpServerEl.textContent = st.ntp_server || '—';
+            if (osSyncEl) {
+                if (st.os_clock_synced === true) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_yes') : 'Yes';
+                else if (st.os_clock_synced === false) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_no') : 'No';
+                else osSyncEl.textContent = '—';
+            }
+            if (lastErrorEl) lastErrorEl.textContent = st.last_error || '—';
+        } catch (e) {
+            console.warn('[settings] timesync status', e);
+        }
+    }
+
+    function resolveSelectedTimezone() {
+        const custom = (document.getElementById('time-billing-timezone-custom')?.value || '').trim();
+        if (custom) return custom;
+        return document.getElementById('time-billing-timezone')?.value || 'UTC';
+    }
+
+    function initTimeSettingsTab() {
+        if (!document.getElementById('tab-time')) return;
+
+        document.getElementById('time-detect-timezone-btn')?.addEventListener('click', async () => {
+            try {
+                const data = await Utils.api('/api/panel/billing/clock/detect-timezone');
+                const tz = data.timezone || 'UTC';
+                fillTimezoneSelect(tz, data.common || _timeCommonZones);
+                const custom = document.getElementById('time-billing-timezone-custom');
+                if (custom) custom.value = '';
+                Notifications.success(tSettings('time.detected', 'Detected timezone: {tz}').replace('{tz}', tz));
+            } catch (e) {
+                Notifications.error(e.message || 'Failed to detect timezone');
+            }
+        });
+
+        document.getElementById('time-timesync-check-btn')?.addEventListener('click', async () => {
+            try {
+                await Utils.api('/api/panel/billing/timesync/check', { method: 'POST' });
+                Notifications.success(typeof __ === 'function' ? __('commercialization.clock.checked') : 'Clock check completed');
+                await refreshTimeSyncStatus();
+            } catch (e) {
+                Notifications.error(e.message || 'Clock check failed');
+            }
+        });
+
+        document.getElementById('time-save-clock-settings-btn')?.addEventListener('click', async () => {
+            if (!_timeClockDockerMode) {
+                const ok = await settingsConfirmCritical({
+                    title: tSettings('time.save_title', 'Save time settings'),
+                    message: typeof __ === 'function'
+                        ? __('commercialization.clock.save_restart')
+                        : 'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.',
+                    confirmLabel: tSettings('time.save', 'Save'),
+                    icon: 'schedule'
+                });
+                if (!ok) return;
+            }
+            try {
+                const result = await Utils.api('/api/panel/billing/clock/settings', {
+                    method: 'PUT',
+                    body: {
+                        ntp_servers: document.getElementById('time-clock-ntp-servers')?.value || '',
+                        max_skew_ms: Number(document.getElementById('time-clock-max-skew')?.value || 2000),
+                        require_synced_clock: document.getElementById('time-clock-require-sync')?.checked !== false,
+                        trust_os_ntp: document.getElementById('time-clock-trust-os')?.checked !== false,
+                        billing_timezone: resolveSelectedTimezone()
+                    }
+                });
+                if (result.dockerMode) _timeClockDockerMode = true;
+                if (result.settings) {
+                    fillTimezoneSelect(result.settings.billing_timezone || resolveSelectedTimezone(), _timeCommonZones);
+                }
+                if (result.restartRequired && typeof showRestartPrompt === 'function') {
+                    showRestartPrompt(result.restartRequired);
+                } else {
+                    Notifications.success(
+                        result.dockerMode
+                            ? (typeof __ === 'function' ? __('commercialization.clock.saved_hot_reload') : 'Clock settings saved.')
+                            : tSettings('time.saved', 'Time settings saved.')
+                    );
+                }
+                await refreshTimeSyncStatus();
+            } catch (e) {
+                Notifications.error(e.message || 'Save failed');
+            }
+        });
     }
 
     function initSettingsSearch() {
@@ -716,6 +869,44 @@
         });
 
         loadDeviceScopeSetting();
+    }
+
+    // ==================== Availability history (#455) ====================
+
+    function initAvailabilityHistorySection() {
+        const form = document.getElementById('availability-history-form');
+        if (!form) return;
+
+        const enabledEl = document.getElementById('availability-history-enabled');
+        const retentionEl = document.getElementById('availability-history-retention');
+
+        async function loadAvailabilityHistorySetting() {
+            try {
+                const data = await Utils.api('/api/settings/availability-history');
+                if (enabledEl) enabledEl.checked = !!data.enabled;
+                if (retentionEl) retentionEl.value = data.retention_days || 30;
+            } catch (err) {
+                console.error('Failed to load availability history setting:', err);
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const enabled = !!(enabledEl && enabledEl.checked);
+            let retention = parseInt(retentionEl && retentionEl.value, 10);
+            if (!Number.isFinite(retention) || retention < 1) retention = 30;
+            try {
+                await Utils.api('/api/settings/availability-history', {
+                    method: 'POST',
+                    body: { enabled, retention_days: retention }
+                });
+                Notifications.success(_('settings.availability_history_saved'));
+            } catch (err) {
+                Notifications.error(err.message || _('errors.server_error'));
+            }
+        });
+
+        loadAvailabilityHistorySetting();
     }
 
     // ==================== MeshCentral compatibility ====================
@@ -1319,6 +1510,14 @@
     let _fontSource = 'google';
     let _brandingProfiles = [];
     const _backgroundUploads = new Map();
+    const MAX_LOGIN_SLIDES = 10;
+    const DEFAULT_LOGIN_SLIDES = [
+        { id: 'free', slideKey: 'free', order: 0, imageUrl: '/img/login-slides/free.jpg', title: '', body: '', overlay: '45' },
+        { id: 'remote', slideKey: 'remote', order: 1, imageUrl: '/img/login-slides/remote.jpg', title: '', body: '', overlay: '45' },
+        { id: 'secure', slideKey: 'secure', order: 2, imageUrl: '/img/login-slides/secure.jpg', title: '', body: '', overlay: '45' },
+        { id: 'platforms', slideKey: 'platforms', order: 3, imageUrl: '/img/login-slides/platforms.jpg', title: '', body: '', overlay: '45' }
+    ];
+    let _loginSlides = DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
     
     /**
      * Initialize branding configuration section
@@ -1342,6 +1541,7 @@
             initFontPickers();
             initFontSourceTabs();
             initBackgroundSelectors();
+            initLoginSlidesEditor();
             initBrandingProfiles();
             initBuiltinThemes();
             initBrandingActions();
@@ -1847,6 +2047,7 @@
         // Login page
         setVal('login-title', data.loginTitle || '');
         setVal('login-subtitle', data.loginSubtitle || '');
+        checkRadio('login-promo-mode', data.loginPromoMode || 'slides');
         checkRadio('login-bg-type', data.loginBgType || 'inherit');
         setVal('login-bg-color', data.loginBgColor || '');
         setVal('login-bg-gradient', data.loginBgGradient || '');
@@ -1858,6 +2059,19 @@
         const loginOverlayVal = document.getElementById('login-bg-overlay-value');
         if (loginOverlayVal) loginOverlayVal.textContent = data.loginBgOverlay || '0';
         showBackgroundPanel('login-bg', data.loginBgType || 'inherit');
+        _loginSlides = Array.isArray(data.loginSlides) && data.loginSlides.length
+            ? data.loginSlides.map((s, i) => ({
+                id: s.id || `slide-${i + 1}`,
+                slideKey: s.slideKey || '',
+                order: i,
+                imageUrl: s.imageUrl || '',
+                title: s.title || '',
+                body: s.body || '',
+                overlay: String(s.overlay != null ? s.overlay : '45')
+            }))
+            : DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
+        renderLoginSlidesEditor();
+        syncLoginPromoPanels();
         
         // Agent download page
         checkRadio('agent-bg-type', data.agentBgType || 'none');
@@ -1910,6 +2124,196 @@
      * Wire background selectors: radio toggles, range value labels,
      * color picker sync and image uploads for console/login/agent groups.
      */
+    function syncLoginPromoPanels() {
+        const mode = document.querySelector('input[name="login-promo-mode"]:checked')?.value || 'slides';
+        const slidesPanel = document.getElementById('login-slides-panel');
+        const bgConfig = document.getElementById('login-bg-config');
+        if (slidesPanel) slidesPanel.hidden = mode !== 'slides';
+        if (bgConfig) bgConfig.hidden = mode === 'slides';
+    }
+
+    function collectLoginSlidesFromDom() {
+        const list = document.getElementById('login-slides-list');
+        if (!list) return _loginSlides.slice(0, MAX_LOGIN_SLIDES);
+        const cards = Array.from(list.querySelectorAll('.login-slide-card'));
+        return cards.slice(0, MAX_LOGIN_SLIDES).map((card, i) => ({
+            id: card.dataset.slideId || `slide-${i + 1}`,
+            slideKey: card.dataset.slideKey || '',
+            order: i,
+            imageUrl: card.querySelector('.login-slide-image-url')?.value.trim() || '',
+            title: card.querySelector('.login-slide-title')?.value.trim() || '',
+            body: card.querySelector('.login-slide-body')?.value.trim() || '',
+            overlay: card.querySelector('.login-slide-overlay')?.value || '45'
+        }));
+    }
+
+    function renderLoginSlidesEditor() {
+        const list = document.getElementById('login-slides-list');
+        if (!list) return;
+        const esc = (typeof Utils !== 'undefined' && Utils.escapeHtml)
+            ? Utils.escapeHtml
+            : (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        list.innerHTML = _loginSlides.map((slide, idx) => `
+            <div class="login-slide-card" data-slide-id="${esc(slide.id)}" data-slide-key="${esc(slide.slideKey || '')}" data-index="${idx}">
+                <div class="login-slide-card-header">
+                    <strong>#${idx + 1}</strong>
+                    <div class="login-slide-card-actions">
+                        <button type="button" class="btn btn-ghost btn-sm login-slide-up" title="${esc(_('branding.login_slide_move_up'))}" ${idx === 0 ? 'disabled' : ''}>
+                            <span class="material-icons" aria-hidden="true">arrow_upward</span>
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-sm login-slide-down" title="${esc(_('branding.login_slide_move_down'))}" ${idx >= _loginSlides.length - 1 ? 'disabled' : ''}>
+                            <span class="material-icons" aria-hidden="true">arrow_downward</span>
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-sm login-slide-remove" title="${esc(_('branding.login_slides_remove'))}">
+                            <span class="material-icons" aria-hidden="true">delete</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.login_slide_image'))}</label>
+                    <div class="logo-upload-area">
+                        <input type="file" class="logo-file-input login-slide-file" accept="image/png,image/jpeg,image/webp,image/gif" data-index="${idx}">
+                        <label class="logo-upload-btn login-slide-file-label">
+                            <span class="material-icons" aria-hidden="true">upload_file</span>
+                            <span>${esc(_('branding.bg_image_choose'))}</span>
+                        </label>
+                    </div>
+                    <input type="text" class="form-input login-slide-image-url" value="${esc(slide.imageUrl || '')}" placeholder="/img/login-slides/free.jpg">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.login_slide_title'))}</label>
+                    <input type="text" class="form-input login-slide-title" maxlength="120" value="${esc(slide.title || '')}" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.title') : '')}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.login_slide_body'))}</label>
+                    <textarea class="form-input login-slide-body" rows="2" maxlength="400" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.body') : '')}">${esc(slide.body || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">${esc(_('branding.bg_overlay'))} (<span class="login-slide-overlay-value">${esc(slide.overlay || '45')}</span>%)</label>
+                    <input type="range" class="form-range login-slide-overlay" min="0" max="90" step="5" value="${esc(slide.overlay || '45')}">
+                </div>
+            </div>
+        `).join('');
+
+        const addBtn = document.getElementById('login-slides-add');
+        const maxHint = document.getElementById('login-slides-max-hint');
+        if (addBtn) addBtn.disabled = _loginSlides.length >= MAX_LOGIN_SLIDES;
+        if (maxHint) maxHint.hidden = _loginSlides.length < MAX_LOGIN_SLIDES;
+
+        list.querySelectorAll('.login-slide-file-label').forEach((label) => {
+            const input = label.parentElement?.querySelector('.login-slide-file');
+            if (input && !input.id) {
+                const id = `login-slide-file-${label.closest('.login-slide-card')?.dataset.index || '0'}`;
+                input.id = id;
+                label.setAttribute('for', id);
+            }
+        });
+    }
+
+    function initLoginSlidesEditor() {
+        const list = document.getElementById('login-slides-list');
+        document.querySelectorAll('input[name="login-promo-mode"]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+                syncLoginPromoPanels();
+                onBrandingFieldChange();
+            });
+        });
+
+        document.getElementById('login-slides-add')?.addEventListener('click', () => {
+            if (_loginSlides.length >= MAX_LOGIN_SLIDES) return;
+            _loginSlides = collectLoginSlidesFromDom();
+            _loginSlides.push({
+                id: `slide-${Date.now().toString(36)}`,
+                slideKey: '',
+                order: _loginSlides.length,
+                imageUrl: '',
+                title: '',
+                body: '',
+                overlay: '45'
+            });
+            renderLoginSlidesEditor();
+            onBrandingFieldChange();
+        });
+
+        document.getElementById('login-slides-restore')?.addEventListener('click', () => {
+            _loginSlides = DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
+            renderLoginSlidesEditor();
+            onBrandingFieldChange();
+        });
+
+        list?.addEventListener('click', (e) => {
+            const card = e.target.closest('.login-slide-card');
+            if (!card) return;
+            const idx = Number(card.dataset.index);
+            if (e.target.closest('.login-slide-remove')) {
+                _loginSlides = collectLoginSlidesFromDom();
+                if (_loginSlides.length <= 1) return;
+                _loginSlides.splice(idx, 1);
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+                return;
+            }
+            if (e.target.closest('.login-slide-up') && idx > 0) {
+                _loginSlides = collectLoginSlidesFromDom();
+                const tmp = _loginSlides[idx - 1];
+                _loginSlides[idx - 1] = _loginSlides[idx];
+                _loginSlides[idx] = tmp;
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+                return;
+            }
+            if (e.target.closest('.login-slide-down') && idx < _loginSlides.length - 1) {
+                _loginSlides = collectLoginSlidesFromDom();
+                const tmp = _loginSlides[idx + 1];
+                _loginSlides[idx + 1] = _loginSlides[idx];
+                _loginSlides[idx] = tmp;
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+            }
+        });
+
+        list?.addEventListener('input', (e) => {
+            if (e.target.classList.contains('login-slide-overlay')) {
+                const val = e.target.closest('.login-slide-card')?.querySelector('.login-slide-overlay-value');
+                if (val) val.textContent = e.target.value;
+            }
+        });
+
+        list?.addEventListener('change', async (e) => {
+            const fileInput = e.target.closest('.login-slide-file');
+            if (!fileInput || !fileInput.files?.length) return;
+            const file = fileInput.files[0];
+            const card = fileInput.closest('.login-slide-card');
+            const idx = Number(card?.dataset.index);
+            try {
+                const formData = new FormData();
+                formData.append('background', file);
+                const csrf = window.BetterDesk?.csrfToken || '';
+                const res = await fetch('/api/settings/branding/upload-background', {
+                    method: 'POST',
+                    headers: csrf ? { 'X-CSRF-Token': csrf } : {},
+                    credentials: 'same-origin',
+                    body: formData
+                });
+                const payload = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(payload.error || payload.message || _('errors.server_error'));
+                const url = payload.url || payload.data?.url;
+                if (!url) throw new Error(_('errors.server_error'));
+                _loginSlides = collectLoginSlidesFromDom();
+                if (_loginSlides[idx]) _loginSlides[idx].imageUrl = url;
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+                Notifications.success(_('branding.bg_upload_success'));
+            } catch (err) {
+                Notifications.error(err.message || _('errors.server_error'));
+            } finally {
+                fileInput.value = '';
+            }
+        });
+
+        syncLoginPromoPanels();
+    }
+
     function initBackgroundSelectors() {
         // Radio toggles for the three background groups
         [['bg-type', 'bg'], ['login-bg-type', 'login-bg'], ['agent-bg-type', 'agent-bg'], ['rdclient-bg-type', 'rdclient-bg']].forEach(([name, prefix]) => {
@@ -2437,6 +2841,8 @@
         data.loginBgOverlay = document.getElementById('login-bg-overlay')?.value || '';
         data.loginTitle = document.getElementById('login-title')?.value.trim() || '';
         data.loginSubtitle = document.getElementById('login-subtitle')?.value.trim() || '';
+        data.loginPromoMode = document.querySelector('input[name="login-promo-mode"]:checked')?.value || 'slides';
+        data.loginSlides = collectLoginSlidesFromDom();
         
         // Agent download page
         data.agentBgType = document.querySelector('input[name="agent-bg-type"]:checked')?.value || 'none';
@@ -4145,106 +4551,21 @@
         logUpdate(`Starting update to ${_updateState.remoteSHA.slice(0, 7)}…`);
 
         try {
-            const result = await Utils.api('/api/settings/updates/install', {
-                method: 'POST',
-                body: { remoteSHA: _updateState.remoteSHA, createBackup }
-            });
-
-            ['backup', 'console'].forEach(p => {
-                const st = document.querySelector(`[data-phase-state="${p}"]`)?.dataset?.state;
-                if (st !== 'done' && st !== 'skipped') setUpdatePhase(p, 'done');
-            });
-
-            if (hasServerUpdate) {
-                if (result.toolchainInstall) {
-                    if (result.toolchainInstall.success) {
-                        logUpdate(`Go toolchain ready: ${result.toolchainInstall.version || ''}`.trim());
-                    } else {
-                        logUpdate(`Go toolchain install failed: ${result.toolchainInstall.error || 'unknown'}`);
-                    }
-                }
-                const deployFailed = !!(result.serverDeploy && result.serverDeploy.success === false);
-                if (result.serverBuild) {
-                    if (result.serverBuild.success && !deployFailed) {
-                        const ms = result.serverBuild.duration || 0;
-                        const secs = ms ? Math.round(ms / 1000) : 0;
-                        const detail = `${_('updates.server_built')}${secs ? ` · ${secs}s` : ''}`;
-                        setUpdatePhase('server', 'done', detail);
-                        logUpdate(detail);
-                    } else if (result.serverBuild.success && deployFailed) {
-                        const detail = _('updates.server_deploy_failed');
-                        setUpdatePhase('server', 'error', detail);
-                        logUpdate(`${detail}: ${result.serverDeploy.error || ''}`);
-                    } else {
-                        const detail = _('updates.server_build_failed');
-                        setUpdatePhase('server', 'error', detail);
-                        logUpdate(`${detail}: ${result.serverBuild.error || ''}`);
-                    }
-                } else {
-                    setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
-                }
-                if (result.autoRebuild) {
-                    if (result.autoRebuild.success) {
-                        logUpdate(_('updates.server_built') + ' (auto-rebuild)');
-                        setUpdatePhase('server', 'done', _('updates.server_built'));
-                    } else if (result.autoRebuild.error) {
-                        logUpdate(`Auto-rebuild: ${result.autoRebuild.error}`);
-                    }
-                }
-                if (deployFailed && result.serverBuild?.success) {
-                    logUpdate(`Deploy failed: ${result.serverDeploy.error || ''}`);
-                }
-            } else {
-                setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
+            let result;
+            try {
+                result = await Utils.api('/api/settings/updates/install', {
+                    method: 'POST',
+                    body: { remoteSHA: _updateState.remoteSHA, createBackup }
+                });
+            } catch (installErr) {
+                if (!isRecoverableInstallDisconnect(installErr)) throw installErr;
+                logUpdate(_('updates.proxy_timeout_recovering'));
+                setUpdatePhase('console', 'active', _('updates.proxy_timeout_recovering'));
+                Notifications.info(_('updates.proxy_timeout_recovering'));
+                result = await recoverInstallAfterDisconnect(_updateState.remoteSHA, hasServerUpdate);
             }
 
-            const applied = result.applied?.length || 0;
-            const failed  = result.failed?.length || 0;
-            const removed = result.removed?.length || 0;
-            logUpdate(`${_('updates.applied')}: ${applied} · ${_('updates.failed')}: ${failed} · ${_('updates.removed')}: ${removed}`);
-            if (result.agentRebuildDeferred) {
-                logUpdate(`Support Agent rebuild deferred until the console restarts (${result.agentRebuildRemoteSHA?.slice(0, 7) || 'pending'}).`);
-            } else if (result.agentRebuildQueued) {
-                logUpdate(
-                    _('updates.agent_rebuild_queued')
-                        .replace('{{count}}', String(result.agentRebuildBundles ?? '?'))
-                        .replace('{{staged}}', String(result.agentSourcesStaged ?? 0))
-                        .replace('{{paths}}', String(result.agentSourcePaths ?? 0))
-                );
-            }
-            for (const item of (result.failed || [])) {
-                if (item.file === 'support-agent-source-sync') {
-                    logUpdate(`${_('updates.agent_source_sync_failed')} ${item.error || ''}`);
-                } else {
-                    logUpdate(`${item.file}: ${item.error || ''}`);
-                }
-            }
-            for (const item of (result.servicesFailed || [])) {
-                logUpdate(`${item.service}: ${item.error || ''}`);
-            }
-
-            if (result.needsConsoleRestart && !result.consoleRestartBlocked) {
-                window.BetterDesk = window.BetterDesk || {};
-                window.BetterDesk.consoleRestarting = true;
-                setUpdatePhase('restart', 'active', _('updates.restarting'));
-                logUpdate(_('updates.console_will_restart'));
-                // systemd/NSSM normally needs a few seconds to replace the
-                // process. Waiting through that grace window avoids logging
-                // expected connection-refused probes in the browser console.
-                setTimeout(() => pollConsoleRestart(result), 8000);
-            } else if (result.consoleRestartBlocked) {
-                setUpdatePhase('restart', 'error', result.consoleRestartBlocked);
-                logUpdate(result.consoleRestartBlocked);
-                setUpdatePhase('done', 'done', _('updates.complete_with_errors'));
-                showUpdateCompletionModal(result);
-                loadServerBinaryStatus();
-            } else {
-                setUpdatePhase('restart', 'skipped', _('updates.no_restart_needed'));
-                setUpdatePhase('done', 'done', _('updates.complete'));
-                showUpdateCompletionModal(result);
-                enableUpdateInstallBtn();
-                loadServerBinaryStatus();
-            }
+            finishInstallUi(result, hasServerUpdate);
         } catch (error) {
             const activePhase = UPDATE_PHASES.find(p => {
                 const st = document.querySelector(`[data-phase-state="${p.id}"]`)?.dataset?.state;
@@ -4255,6 +4576,175 @@
             transitionUpdateModal('error', { errorMessage: error.message || _('errors.server_error') });
             Notifications.error(error.message || _('updates.install_failed'));
             enableUpdateInstallBtn();
+        }
+    }
+
+    function isRecoverableInstallDisconnect(error) {
+        if (!error) return false;
+        if (error.gatewayTimeout) return true;
+        if (error.status === 502 || error.status === 504) return true;
+        const msg = String(error.message || '');
+        if (/gateway\/proxy timeout/i.test(msg)) return true;
+        if (!error.status && /failed to fetch|networkerror|network error|load failed|aborted/i.test(msg)) {
+            return true;
+        }
+        return false;
+    }
+
+    function updateShaMatches(a, b) {
+        if (!a || !b) return false;
+        const left = String(a).trim().toLowerCase();
+        const right = String(b).trim().toLowerCase();
+        if (!left || !right) return false;
+        return left === right
+            || left.startsWith(right.slice(0, 7))
+            || right.startsWith(left.slice(0, 7));
+    }
+
+    async function recoverInstallAfterDisconnect(targetSha, hasServerUpdate) {
+        const maxMs = 600000;
+        const intervalMs = 3000;
+        const started = Date.now();
+        let sawInProgress = false;
+        let lastStatus = null;
+
+        while (Date.now() - started < maxMs) {
+            try {
+                lastStatus = await Utils.api('/api/settings/updates/install-status');
+                if (lastStatus?.inProgress) {
+                    if (!sawInProgress) {
+                        logUpdate(_('updates.install_still_running'));
+                    }
+                    sawInProgress = true;
+                    setUpdatePhase('console', 'active', _('updates.install_still_running'));
+                } else if (sawInProgress || updateShaMatches(lastStatus?.localSHA, targetSha)) {
+                    logUpdate(_('updates.install_recovered'));
+                    const lr = lastStatus?.lastResult || null;
+                    const failed = Array.isArray(lr?.failed) ? lr.failed : [];
+                    const servicesFailed = Array.isArray(lr?.servicesFailed) ? lr.servicesFailed : [];
+                    const appliedCount = typeof lr?.applied === 'number' ? lr.applied : (updateShaMatches(lastStatus?.localSHA, targetSha) ? 1 : 0);
+                    return {
+                        applied: Array.from({ length: appliedCount }, () => ({ file: 'recovered' })),
+                        failed,
+                        servicesFailed,
+                        servicesRestarted: lr?.servicesRestarted || [],
+                        removed: [],
+                        needsConsoleRestart: !lr?.consoleRestartBlocked,
+                        consoleRestartBlocked: lr?.consoleRestartBlocked || null,
+                        consoleRestartNote: lr?.consoleRestartNote || null,
+                        shaSaved: updateShaMatches(lastStatus?.localSHA, targetSha),
+                        serverBuild: lr?.serverBuild || (hasServerUpdate ? null : undefined),
+                        serverDeploy: lr?.serverDeploy || null,
+                        recoveredAfterDisconnect: true,
+                    };
+                }
+            } catch (_e) {
+                // Console may be restarting mid-poll — keep waiting.
+                setUpdatePhase('restart', 'active', _('updates.restarting'));
+            }
+            await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        }
+
+        throw new Error(_('updates.install_recovery_timeout'));
+    }
+
+    function finishInstallUi(result, hasServerUpdate) {
+        ['backup', 'console'].forEach(p => {
+            const st = document.querySelector(`[data-phase-state="${p}"]`)?.dataset?.state;
+            if (st !== 'done' && st !== 'skipped') setUpdatePhase(p, 'done');
+        });
+
+        if (hasServerUpdate) {
+            if (result.toolchainInstall) {
+                if (result.toolchainInstall.success) {
+                    logUpdate(`Go toolchain ready: ${result.toolchainInstall.version || ''}`.trim());
+                } else {
+                    logUpdate(`Go toolchain install failed: ${result.toolchainInstall.error || 'unknown'}`);
+                }
+            }
+            const deployFailed = !!(result.serverDeploy && result.serverDeploy.success === false);
+            if (result.serverBuild) {
+                if (result.serverBuild.success && !deployFailed) {
+                    const ms = result.serverBuild.duration || 0;
+                    const secs = ms ? Math.round(ms / 1000) : 0;
+                    const detail = `${_('updates.server_built')}${secs ? ` · ${secs}s` : ''}`;
+                    setUpdatePhase('server', 'done', detail);
+                    logUpdate(detail);
+                } else if (result.serverBuild.success && deployFailed) {
+                    const detail = _('updates.server_deploy_failed');
+                    setUpdatePhase('server', 'error', detail);
+                    logUpdate(`${detail}: ${result.serverDeploy.error || ''}`);
+                } else {
+                    const detail = _('updates.server_build_failed');
+                    setUpdatePhase('server', 'error', detail);
+                    logUpdate(`${detail}: ${result.serverBuild.error || ''}`);
+                }
+            } else if (result.recoveredAfterDisconnect) {
+                setUpdatePhase('server', 'done', _('updates.install_recovered'));
+            } else {
+                setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
+            }
+            if (result.autoRebuild) {
+                if (result.autoRebuild.success) {
+                    logUpdate(_('updates.server_built') + ' (auto-rebuild)');
+                    setUpdatePhase('server', 'done', _('updates.server_built'));
+                } else if (result.autoRebuild.error) {
+                    logUpdate(`Auto-rebuild: ${result.autoRebuild.error}`);
+                }
+            }
+            if (deployFailed && result.serverBuild?.success) {
+                logUpdate(`Deploy failed: ${result.serverDeploy.error || ''}`);
+            }
+        } else {
+            setUpdatePhase('server', 'skipped', _('updates.server_skipped'));
+        }
+
+        const applied = result.applied?.length || 0;
+        const failed  = result.failed?.length || 0;
+        const removed = result.removed?.length || 0;
+        logUpdate(`${_('updates.applied')}: ${applied} · ${_('updates.failed')}: ${failed} · ${_('updates.removed')}: ${removed}`);
+        if (result.agentRebuildDeferred) {
+            logUpdate(`Support Agent rebuild deferred until the console restarts (${result.agentRebuildRemoteSHA?.slice(0, 7) || 'pending'}).`);
+        } else if (result.agentRebuildQueued) {
+            logUpdate(
+                _('updates.agent_rebuild_queued')
+                    .replace('{{count}}', String(result.agentRebuildBundles ?? '?'))
+                    .replace('{{staged}}', String(result.agentSourcesStaged ?? 0))
+                    .replace('{{paths}}', String(result.agentSourcePaths ?? 0))
+            );
+        }
+        for (const item of (result.failed || [])) {
+            if (item.file === 'support-agent-source-sync') {
+                logUpdate(`${_('updates.agent_source_sync_failed')} ${item.error || ''}`);
+            } else {
+                logUpdate(`${item.file}: ${item.error || ''}`);
+            }
+        }
+        for (const item of (result.servicesFailed || [])) {
+            logUpdate(`${item.service}: ${item.error || ''}`);
+        }
+
+        if (result.needsConsoleRestart && !result.consoleRestartBlocked) {
+            window.BetterDesk = window.BetterDesk || {};
+            window.BetterDesk.consoleRestarting = true;
+            setUpdatePhase('restart', 'active', _('updates.restarting'));
+            logUpdate(_('updates.console_will_restart'));
+            // systemd/NSSM normally needs a few seconds to replace the
+            // process. Waiting through that grace window avoids logging
+            // expected connection-refused probes in the browser console.
+            setTimeout(() => pollConsoleRestart(result), result.recoveredAfterDisconnect ? 2000 : 8000);
+        } else if (result.consoleRestartBlocked) {
+            setUpdatePhase('restart', 'error', result.consoleRestartBlocked);
+            logUpdate(result.consoleRestartBlocked);
+            setUpdatePhase('done', 'done', _('updates.complete_with_errors'));
+            showUpdateCompletionModal(result);
+            loadServerBinaryStatus();
+        } else {
+            setUpdatePhase('restart', 'skipped', _('updates.no_restart_needed'));
+            setUpdatePhase('done', 'done', _('updates.complete'));
+            showUpdateCompletionModal(result);
+            enableUpdateInstallBtn();
+            loadServerBinaryStatus();
         }
     }
 

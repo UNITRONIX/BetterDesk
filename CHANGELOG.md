@@ -1,25 +1,284 @@
 ## [Unreleased]
 
-### Fixed
-- Go Server release job: set `GH_REPO` so `gh` works without a git checkout (upload no longer
-  fails with `not a git repository`).
-
+### Changed
+- _(none yet)_
 
 ---
 
-## [3.5.170] — 2026-10-18
+## [3.5.199] — 2026-10-30
 
 ### Changed
 - _(none yet)_
 
 ---
 
-## [3.5.169] — 2026-10-18
+## [3.5.198] — 2026-10-30
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.197] — 2026-10-30
+
+### Changed
+- **Docker `:dev` multi-arch AIO (#476):** All-in-one `ghcr.io/unitronix/betterdesk:dev` builds arm64 again on native runners (after amd64). Soft-merge keeps publishing amd64 if ARM fails. Verify: `docker buildx imagetools inspect ghcr.io/unitronix/betterdesk:dev` shows amd64 + arm64.
+
+---
+
+## [3.5.196] — 2026-10-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.195] — 2026-10-25
+
+### Fixed
+- **Login session-expired toast:** `/login?expired=1` shows the session message as a right-side toast instead of stretching the login card; wrong-password / TOTP / OIDC errors stay inline. Desktop login uses the same toast path. Ships via panel update.
+
+### Changed
+- **BetterDesk Agents replaces Client Generator UI:** Sidebar / dashboard no longer open the ALPHA in-panel build/bundle Generator (module gate, local toolchain, rebuild). New **/agents** page explains incoming-only Support agents, BetterDesk-Client releases, `/portal`, Import latest release, pairing, and Client Branding. Old `/generator` redirects to `/agents`. Import + portal APIs stay. Ships via panel update. Verify: Tools → BetterDesk Agents; Import still works; no ALPHA Generator chrome.
+- **Split login + promo slides:** Classic `/login` supports Branding layouts `classic` / `single` / `slides` (max 10 editable slides: image + separate title/body). Default BetterDesk slideshow starts with “free / open source”. Ships via panel update. Verify: Settings → Branding → Login layout; `/login` shows carousel on wide screens, form-only on mobile.
+
+---
+
+## [3.5.194] — 2026-10-25
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.193] — 2026-10-25
+
+### Fixed
+- **Settings tab bar flush + scroll (#396):** Settings scrollport drops top/side padding (`:has(.settings-shell)`) so sticky tabs sit flush under the topbar with zero gap (Chromium cannot stick into padding); content padding moves to page-header + settings main; horizontal swipe without scrollbar chrome; `overflow-y: hidden` on the track. Ships via panel update. Verify: Settings → scroll → tabs edge-to-edge under topbar, no gap.
+- **Settings choice cards spacing:** Enrollment / connection mode card grids get bottom margin before the following toggle rows (styles live in `pages.css`, which Settings actually loads).
+- **Mobile bottom-nav Remote:** “Zdalny” linked to non-existent `/remote-dashboard` (404); now opens `/remote` like the sidebar. Ships via panel update.
+- **Material Symbols subset (#393 follow-up):** Regenerated self-hosted fonts to include missing ligatures (`label`, `assignment`, `my_location`) that rendered as giant raw text next to Devices toolbar icons; toolbar icon buttons also clip overflow. Hard-refresh once after panel update.
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.192] — 2026-10-25
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.191] — 2026-10-25
+
+### Fixed
+- **Web Remote work report overlay:** Skip/Submit now reliably hide the billing pane (`[hidden]` + `.hidden`); added missing `GET /api/panel/billing/check` panel proxy (toolbar package badge); connect-password returns 200 when no vault password (no console 404); report pane no longer uses a separate tinted background; report labels follow panel language (all locales).
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.190] — 2026-10-25
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.189] — 2026-10-25
+
+### Fixed
+- **Generator Import latest release (#475):** allow GitHub Release asset redirects to `release-assets.githubusercontent.com` (same CDN allowlist as the Support Generator module). Fixes `generic_agent_release_redirect_host_invalid` when downloading signed `support-v*` artifacts. Ships via panel update.
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.188] — 2026-10-25
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.187] — 2026-10-25
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.186] — 2026-10-23
+
+### Added
+- **Device tags management (#470):** Operators can rename or delete tags across all visible devices from Devices → Manage tags, unassign tags per device in Edit / Details / context menu, and matching dynamic group filters update on rename. Ships via panel update.
+
+### Changed
+- **Generator generic agent import UX (#474):** Import/status messages and `generic_agent_release_*` API errors are translated instead of showing raw codes (e.g. `generic_agent_release_not_found`). Ships via panel update.
+
+---
+
+## [3.5.185] — 2026-10-20
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.184] — 2026-10-20
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.183] — 2026-10-20
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.182] — 2026-10-20
+
+### Fixed
+- **WebRemote file transfer — parent directory navigation (#467):** climbing from `C:\Users\…` to the drive root no longer requests bare `C:` (Win32 cwd on that drive). Parent paths use `C:\` and then the drive list. Ships via panel update (static JS).
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.181] — 2026-10-20
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.180] — 2026-10-20
+
+### Fixed
+- **Generator Download Hub i18n:** missing `generator.download_hub` / `rebuild` keys showed raw key paths in the UI; added across all locales (#466 follow-up).
+- **Docker split Web Remote `initiator_not_registered` (#465):** official split compose now defaults `PANEL_SIGNAL_PROXY_CIDRS` to the Docker bridge range (`172.16.0.0/12` + loopback) so panel PunchHole from the console container is accepted. Same class as #313; AIO single-container unchanged. Docs: DOCKER_TROUBLESHOOTING / QUICKSTART.
+
+### Changed
+- **Support agents are download-only by default:** import signed BetterDesk-Client GitHub releases instead of compiling on the panel host. `BETTERDESK_CLIENT_GENERATOR_MODE` defaults to `download`; `AGENT_BUILD_WORKER` defaults to `off`. Menu **B** / `install-build-toolchain` marked optional for maintainers. Refs #466.
+- **Główne → Aktywuj agenta:** sidebar entry opens Dashboard pairing QR scanner (`/?activateAgent=1`) for operators with `enrollment.approve`.
+
+---
+
+## [3.5.179] — 2026-10-19
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.178] — 2026-10-19
+
+### Security
+- Panel console sessions are now server-enforced with idle timeout (default 30 minutes),
+  absolute max age (default 24 hours), and a single active session per account.
+  A new login replaces any prior session; IP, User-Agent, optional client fingerprint,
+  start/last-activity/end times and end reason are audited. Configure via
+  `SESSION_IDLE_TIMEOUT`, `SESSION_MAX_AGE`, and `SESSION_IDLE_WARN_MS`.
+
+### Fixed
+- Panel updates behind a reverse proxy: clearer 502/504 handling and install-status
+  polling when the browser loses the long-running install request (~120s proxy
+  timeout). Go rebuilds use `GOTOOLCHAIN=local`, honor spawn timeouts, and report
+  kill/OOM signals instead of opaque `exited with code null` (#464).
+
+---
+
+## [3.5.177] — 2026-10-18
+
+### Fixed
+- Go Server release job: set `GH_REPO` so `gh` works without a git checkout (upload no longer
+  fails with `not a git repository`).
+
+---
+
+## [3.5.176] — 2026-10-18
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.175] — 2026-10-18
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.174] — 2026-10-18
 
 ### Fixed
 - CI on `main`: retired in-repo desktop release + Rust cargo-audit workflows (clients build
   in BetterDesk-Client); Go Server release upload creates a release if version-bump cannot
   publish one; stable version-bump opens a PR instead of direct-push to protected `main`.
+
+---
+
+## [3.5.173] — 2026-10-18
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.172] — 2026-10-18
+
+### Added
+- Commercialization month periods (`billing_period_totals`, `BILLING_TIMEZONE`): history
+  survives monthly usage reset; sessions spanning midnight settle at the month boundary
+  without disconnecting; package limit edits do not rewrite past months.
+- Packages table month preview (PPM / side panel): company, devices, used / remaining /
+  overage / month total with period navigation.
+- Web Remote billing overlay: package badge, in-session report intent, split disconnect
+  card with work report; skipped reports stay `pending_report` in Sessions with
+  **Complete report**.
+- Settings → Time / timezones: NTP + billing timezone (`BILLING_TIMEZONE`) with OS detect;
+  Commercialization links to that tab.
+
+### Changed
+- Commercialization IA: Packages | Sessions only (overview/reports/settings tabs removed;
+  exports and gear settings live on those tabs).
+- Billing packages attach to device groups only; folders excluded; one manual group per
+  device; org create seeds a default device group.
+
+### Fixed
+- CI on `main`: retired in-repo desktop release + Rust cargo-audit workflows (clients build
+  in BetterDesk-Client); Go Server release upload creates a release if version-bump cannot
+  publish one; stable version-bump opens a PR instead of direct-push to protected `main`.
+
+---
+
+## [3.5.171] — 2026-10-18
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.170] — 2026-10-17
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.169] — 2026-10-17
+
+### Changed
+- _(none yet)_
 
 ---
 
@@ -4112,3 +4371,32 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.168]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.167...v3.5.168
 [3.5.169]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.168...v3.5.169
 [3.5.170]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.169...v3.5.170
+[3.5.171]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.170...v3.5.171
+[3.5.172]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.171...v3.5.172
+[3.5.173]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.172...v3.5.173
+[3.5.174]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.173...v3.5.174
+[3.5.175]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.174...v3.5.175
+[3.5.176]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.175...v3.5.176
+[3.5.177]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.176...v3.5.177
+[3.5.178]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.177...v3.5.178
+[3.5.179]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.178...v3.5.179
+[3.5.180]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.179...v3.5.180
+[3.5.181]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.180...v3.5.181
+[3.5.182]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.181...v3.5.182
+[3.5.183]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.182...v3.5.183
+[3.5.184]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.183...v3.5.184
+[3.5.185]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.184...v3.5.185
+[3.5.186]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.185...v3.5.186
+[3.5.187]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.186...v3.5.187
+[3.5.188]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.187...v3.5.188
+[3.5.189]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.188...v3.5.189
+[3.5.190]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.189...v3.5.190
+[3.5.191]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.190...v3.5.191
+[3.5.192]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.191...v3.5.192
+[3.5.193]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.192...v3.5.193
+[3.5.194]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.193...v3.5.194
+[3.5.195]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.194...v3.5.195
+[3.5.196]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.195...v3.5.196
+[3.5.197]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.196...v3.5.197
+[3.5.198]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.197...v3.5.198
+[3.5.199]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.198...v3.5.199

@@ -41,7 +41,7 @@
         "dashboard": "Overzicht",
         "devices": "Apparaten",
         "keys": "Sleutels",
-        "generator": "Generator",
+        "generator": "BetterDesk-agents",
         "settings": "Instellingen",
         "users": "Gebruikers",
         "inventory": "Inventaris",
@@ -55,6 +55,7 @@
         "reports": "Rapporten",
         "tenants": "Organisaties",
         "registrations": "Registraties",
+        "activate_agent": "Agent activeren",
         "management": "Beheer",
         "toggle_sidebar": "Zijbalk in-/uitschakelen",
         "cdap": "CDAP Apparaten",
@@ -81,7 +82,8 @@
         "server_attestation": "Serverattestering",
         "commercialization": "Commercialisatie",
         "remote_open_tab": "Externe-bureaubladclient openen in nieuw tabblad",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk-agents"
     },
     "auth": {
         "login": "Inloggen",
@@ -124,7 +126,11 @@
         "oidc_error": "Er is een fout opgetreden tijdens het aanmelden met SSO.",
         "oidc_no_account": "Uw account is niet gevonden en automatische registratie is uitgeschakeld.",
         "totp_rate_limited": "Te veel pogingen. Probeer het later opnieuw.",
-        "emergency_mode_banner": "Go-server onbereikbaar — noodmodus actief (alleen beheerder, beperkte functionaliteit)"
+        "emergency_mode_banner": "Go-server onbereikbaar — noodmodus actief (alleen beheerder, beperkte functionaliteit)",
+        "session_expired": "Uw sessie is verlopen of vervangen door een nieuwe login. Meld u opnieuw aan.",
+        "session_idle_warning_title": "Sessie verloopt binnenkort",
+        "session_idle_warning_body": "U wordt over {{seconds}} seconden uitgelogd wegens inactiviteit.",
+        "session_stay_signed_in": "Ingelogd blijven"
     },
     "dashboard": {
         "title": "Overzicht",
@@ -138,7 +144,7 @@
         "quick_actions": "Snelle acties",
         "manage_devices": "Beheer verbonden apparaten",
         "view_keys": "Bekijk serversleutels",
-        "generate_config": "Genereer clientconfiguratie",
+        "generate_config": "Waar u incoming-only Support-agents vindt",
         "server_settings": "Configureer instellingen",
         "greeting_morning": "Goedemorgen, {name}",
         "greeting_afternoon": "Goedemiddag, {name}",
@@ -170,7 +176,7 @@
         "config_api_server": "API-server",
         "config_key": "Sleutel",
         "client_config_hint": "Voer deze waarden in de netwerkinstellingen van RustDesk in, bij de ID-/relayserver.",
-        "open_generator": "Clientgenerator",
+        "open_generator": "BetterDesk-agents",
         "open_keys": "Sleutels openen",
         "open_remote": "Externe-bureaubladconsole openen",
         "attention_panel": "Aandacht vereist",
@@ -209,7 +215,9 @@
         "activate_agent_folder_none": "Geen map",
         "activate_agent_submit": "Apparaat activeren",
         "activate_agent_submitting": "Apparaat activeren…",
-        "activate_agent_success": "Agent is geactiveerd."
+        "activate_agent_success": "Agent is geactiveerd.",
+        "open_agents": "BetterDesk-agents",
+        "agents_hint": "Waar u incoming-only Support-agents vindt"
     },
     "devices": {
         "title": "Apparaten",
@@ -422,7 +430,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Tags beheren",
+        "manage_device_tags": "Tags beheren",
+        "rename_tag": "Tag hernoemen",
+        "delete_tag": "Tag verwijderen",
+        "rename_tag_prompt": "Nieuwe tagnaam",
+        "rename_tag_hint": "Hernoemt deze tag op alle zichtbare apparaten en werkt bijpassende dynamische groepen bij.",
+        "delete_tag_confirm": "Tag \"{tag}\" van {count} apparaat/apparaten verwijderen? Dynamische groepen die deze tag gebruiken blijven leeg tot bijgewerkt.",
+        "tag_renamed": "Tag hernoemd",
+        "tag_deleted": "Tag verwijderd",
+        "tag_name_required": "Tagnaam is verplicht",
+        "tag_rename_identical": "Nieuwe tagnaam moet anders zijn",
+        "tags_backend_unsupported": "Apparaattags worden niet ondersteund met de huidige backend",
+        "tags_manage_hint": "Hernoem of verwijder tags op alle zichtbare apparaten. Verwijderen van één apparaat gebeurt in Bewerken of Details.",
+        "tags_device_hint": "Verwijder hier een tag om deze alleen van dit apparaat te ontkoppelen. Gebruik Tags beheren om overal te hernoemen of te verwijderen.",
+        "unassign_tag": "Van dit apparaat verwijderen",
+        "tag_device_one": "apparaat",
+        "tag_device_many": "apparaten",
+        "tag_group_one": "dynamische groep",
+        "tag_group_many": "dynamische groepen"
     },
     "keys": {
         "title": "Serversleutels",
@@ -810,7 +845,32 @@
         "unsaved_restart_title": "Anderungen an dieser Bestand opslaan? Eine Sicherung der vorherigen Version wird erstellt.",
         "unsaved_restart_message": "Sie haben unopgeslagene Anderungen. Diese verwerfen?",
         "unsaved_restart_save": "Bestand opslaan",
-        "unsaved_restart_stay": "Annuleren"
+        "unsaved_restart_stay": "Annuleren",
+        "availability_history_title": "Beschikbaarheidsgeschiedenis",
+        "availability_history_desc": "Optioneel vastleggen wanneer apparaten online/offline gaan zodat Metrics een dagelijkse geschiedenis toont. Standaard uit om databasegroei te vermijden.",
+        "availability_history_enable": "Beschikbaarheidsgeschiedenis inschakelen",
+        "availability_history_enable_hint": "Indien ingeschakeld legt de Go-server statusovergangen (ONLINE, OFFLINE, DEGRADED, CRITICAL) vast via heartbeats en signal/CDAP/Mesh.",
+        "availability_history_retention": "Bewaartermijn (dagen)",
+        "availability_history_retention_hint": "Oudere gebeurtenissen worden automatisch verwijderd. Standaard: 30 dagen.",
+        "availability_history_save": "Beschikbaarheidsinstellingen opslaan",
+        "availability_history_saved": "Instellingen beschikbaarheidsgeschiedenis opgeslagen",
+        "tab_time": "Tijd / tijdzones",
+        "time": {
+            "timezone_title": "Facturatietijdzone",
+            "timezone_desc": "Globale IANA-zone voor maandgrenzen van commercialisatie (overschrijding reset om middernacht op de 1e).",
+            "billing_month_hint": "Middernacht op de eerste dag van de maand in deze zone sluit de vorige periode en opent een nieuwe. Actieve sessies worden niet onderbroken.",
+            "billing_timezone": "Tijdzone",
+            "billing_timezone_hint": "Bijv. Europe/Warsaw. Beïnvloedt maandelijks gebruik en overschrijding.",
+            "custom_timezone": "Aangepaste IANA-zone (optioneel)",
+            "detect_os": "Detecteren vanaf server-OS",
+            "detected": "Gedetecteerde zone: {tz}",
+            "ntp_title": "NTP / kloksynchronisatie",
+            "ntp_desc": "Houd de BetterDesk-serverklok gesynchroniseerd voor nauwkeurige factureerbare sessietijden.",
+            "save": "Tijdinstellingen opslaan",
+            "save_title": "Tijdinstellingen opslaan",
+            "saved": "Tijdinstellingen opgeslagen.",
+            "commercialization_link": "Commercialisatie → Pakketten openen"
+        }
     },
     "audit": {
         "time": "Tijd",
@@ -836,7 +896,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sessie vervangen",
+        "action_session_expired": "Sessie verlopen",
+        "action_session_ip_change": "Sessie-IP gewijzigd"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -928,6 +991,11 @@
         "preview_settings": "Instellingen (alleen admin)",
         "preview_quit": "Afsluiten (alleen admin)",
         "download_link_title": "Downloadlink",
+        "download_hub": "Downloadhub",
+        "generic_agents_empty": "Nog geen release geïmporteerd.",
+        "generic_agents_hint": "Primaire productiepad: importeer ondertekende BetterDesk-Client-releases van GitHub en serveer geverifieerde agents vanaf deze instance. Geen lokale Flutter/Cargo-build nodig.",
+        "generic_agents_import": "Nieuwste release importeren",
+        "generic_agents_title": "Generieke incoming-only agents",
         "download_link_hint": "Deel deze link met eindgebruikers. Zij zien een downloadpagina met uw branding. Oude hex-links blijven werken nadat u de korte link wijzigt.",
         "open_portal": "Openen",
         "created": "Pakket aangemaakt",
@@ -964,7 +1032,21 @@
             "platforms_required": "Selecteer minstens één platform om te bouwen",
             "no_supported_targets": "Er zijn momenteel geen builddoelen beschikbaar. Controleer de builderconfiguratie.",
             "toolchain_missing": "Vereiste buildtools ontbreken: {{tools}}",
-            "platform_unavailable": "Dit doel is niet beschikbaar via de geconfigureerde builder."
+            "platform_unavailable": "Dit doel is niet beschikbaar via de geconfigureerde builder.",
+            "generic_agent_release_not_found": "Geen ondertekende support-v*-release beschikbaar op BetterDesk-Client (stabiel, geen draft/prerelease).",
+            "generic_agent_release_list_failed": "BetterDesk-Client-releases konden niet van GitHub worden opgehaald (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Time-out bij het downloaden van een generieke agent-release.",
+            "generic_agent_release_redirect_limit": "Te veel omleidingen bij het downloaden van een release-asset.",
+            "generic_agent_release_redirect_host_invalid": "Download werd omgeleid naar een onverwachte host.",
+            "generic_agent_release_asset_invalid": "Naam of URL van een release-asset is ongeldig.",
+            "generic_agent_release_asset_download_failed": "Download van release-asset mislukt: {{detail}}",
+            "generic_agent_release_external_config": "Archief bevat ingebedde serverconfig (custom.txt) en is geweigerd.",
+            "generic_agent_release_archive_invalid": "Een release-archief kon niet worden geopend of gevalideerd.",
+            "generic_agent_release_manifest_missing": "Release mist manifest.json of manifest.sig.",
+            "generic_agent_release_public_key_missing": "Geen publieke sleutel geconfigureerd om de handtekening te verifiëren.",
+            "generic_agent_release_signature_invalid": "Handtekeningverificatie van het release-manifest mislukt.",
+            "generic_agent_release_manifest_invalid": "Release-manifest validatie mislukt (schema, sku of assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum komt niet overeen voor asset: {{detail}}"
         },
         "legacy_title": "Generator voor clientconfiguratie",
         "connection_section": "Serververbinding",
@@ -987,6 +1069,7 @@
         "builds_hint": "Auf diesem Server kompilierte Installationsprogramme fur jede Plattform. Nach der Behebung von Toolchain-Foutn oder der Aktualisierung der Agent-Quellen neu erstellen.",
         "builds_loading": "Build-Status wird geladen…",
         "builds_empty": "Noch keine Builds in der Warteschlange — Paket opslaan oder 'Alles opnieuw bouwen' klicken.",
+        "rebuild": "Opnieuw bouwen",
         "rebuild_all": "Alles opnieuw bouwen",
         "rebuilding_all": "Neubuilds werden eingereiht…",
         "rebuild_queued": "Alle Plattform-Builds in der Warteschlange",
@@ -1034,7 +1117,11 @@
         "toolchain_branding_seal": "Branding-ondertekening mislukt — controleer de ondertekeningssleutel op de console en bouw opnieuw.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) niet gevonden — Windows-builds mislukken.",
         "toolchain_appimage_missing": "appimagetool niet gevonden — AppImage-builds mislukken.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Nieuwste ondertekende release importeren en verifiëren…",
+        "generic_agents_imported": "{{tag}} geïmporteerd.",
+        "generic_agents_verified": "geverifieerd",
+        "generic_agents_artifacts": "{{count}} platformartefacten"
     },
     "server": {
         "port": "Poort",
@@ -1513,7 +1600,7 @@
         "bg_image_invalid_type": "Ungultiger Bestandtyp. Bitte PNG, JPG, WebP oder GIF verwenden.",
         "bg_upload_success": "Hintergrundbild erfolgreich hochgeladen.",
         "login_title": "Anmeldeseite",
-        "login_desc": "Uberschrift, Untertitel und Hintergrund des Anmeldebildschirms anpassen.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Anmeldeuberschrift",
         "login_heading_placeholder": "Willkommen zuruck",
         "login_subheading": "Anmeldeuntertitel",
@@ -1589,7 +1676,23 @@
         "builtin_themes_hint": "Voorinstellingen passen een volledig kleurenpakket toe (bijvoorbeeld BetterDesk of insolv Core Server). Ze staan los van de snelle licht/donker-schakelaar.",
         "readability_check": "Leesbaarheidscontrole",
         "readability_contrast": "Het contrast van {item} ({ratio}) is lager dan {minimum}:1",
-        "readability_background": "{item} gebruikt {type} met een lage overlay; tekst kan moeilijk leesbaar zijn."
+        "readability_background": "{item} gebruikt {type} met een lage overlay; tekst kan moeilijk leesbaar zijn.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Overzicht",
@@ -1666,7 +1769,7 @@
         "no_sysinfo": "Geen hardware-informatie beschikbaar",
         "no_sysinfo_hint": "Systeeminformatie verschijnt nadat het apparaat een sysinfo-rapport heeft verzonden",
         "no_metrics": "Geen metrische gegevens beschikbaar",
-        "no_metrics_hint": "Metrics verschijnen nadat het apparaat heartbeat-rapporten heeft verzonden",
+        "no_metrics_hint": "Schakel beschikbaarheidsgeschiedenis in bij Instellingen om online/offline-wijzigingen vast te leggen. Verbindingssessies verschijnen wanneer iemand verbindt.",
         "chart_oldest": "← Oudste",
         "chart_newest": "Nieuwste →",
         "tab_services": "Services",
@@ -1684,7 +1787,46 @@
         "service_start": "Startmodus",
         "process_name": "Naam",
         "process_user": "Gebruiker",
-        "process_memory": "Geheugen"
+        "process_memory": "Geheugen",
+        "section_availability_history": "Beschikbaarheidsgeschiedenis",
+        "availability_prev_day": "Vorige dag",
+        "availability_next_day": "Volgende dag",
+        "availability_loading": "Beschikbaarheidsgeschiedenis laden…",
+        "availability_disabled": "Beschikbaarheidsgeschiedenis is uitgeschakeld",
+        "availability_disabled_hint": "Schakel in via Instellingen → Beschikbaarheidsgeschiedenis. De server legt overgangen vast zonder client-CPU-statistieken.",
+        "availability_empty": "Geen statuswijzigingen op deze dag",
+        "availability_empty_hint": "Overgangen verschijnen wanneer het apparaat online, offline, degraded of critical wordt.",
+        "availability_col_time": "Tijd",
+        "availability_col_from": "Van",
+        "availability_col_to": "Naar",
+        "availability_col_source": "Bron",
+        "availability_status_online": "Online",
+        "availability_status_offline": "Offline",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Status",
+        "section_metrics_summary": "Serverstatistieken",
+        "metrics_avail_today": "Statuswijzigingen (geselecteerde dag)",
+        "metrics_sessions_tracked": "Bijgehouden sessies",
+        "section_connection_sessions": "Verbindingssessies",
+        "sessions_loading": "Verbindingssessies laden…",
+        "sessions_error": "Kon verbindingssessies niet laden",
+        "sessions_empty": "Nog geen verbindingssessies",
+        "sessions_empty_hint": "Sessies verschijnen wanneer een geautoriseerde peer verbindt (punch hole of relay). Duur wordt gezet bij einde van de relay.",
+        "sessions_col_when": "Wanneer",
+        "sessions_col_who": "Wie",
+        "sessions_col_from": "Van IP",
+        "sessions_col_transport": "Transport",
+        "sessions_col_duration": "Duur",
+        "sessions_active": "Actief",
+        "sessions_transport_punch": "Direct / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Een tag hier verwijderen ontkoppelt deze alleen van dit apparaat. Gebruik Tags beheren op Apparaten om overal te hernoemen of te verwijderen."
     },
     "inventory": {
         "title": "Inventaris",
@@ -3493,7 +3635,26 @@
         "hardening_hint": "Beveiligingsversterkingsprioriteiten voor uw BetterDesk-implementatie. Gesorteerd op ernst.",
         "no_hardening": "Geen versterkingsitems beschikbaar.",
         "vuln_hint": "Resultaten van de kwetsbaarheidsscan voor afhankelijkheden. Voer npm audit regelmatig uit.",
-        "no_vulns": "Geen kwetsbaarheden gevonden. Uw afhankelijkheden zijn veilig."
+        "no_vulns": "Geen kwetsbaarheden gevonden. Uw afhankelijkheden zijn veilig.",
+        "tab_sessions": "Panelsessies",
+        "sessions_hint": "Uw console-logins. Per account is slechts één actieve sessie toegestaan; een nieuwe login beëindigt de vorige.",
+        "sessions_policy": "Idle-timeout: {{idle}} min · Absoluut max: {{max}} u · Eén actieve sessie per account",
+        "no_sessions": "Nog geen panelsessies geregistreerd.",
+        "session_current": "Huidig",
+        "session_active": "Actief",
+        "session_ended": "Beëindigd",
+        "col_status": "Status",
+        "col_started": "Gestart",
+        "col_last_activity": "Laatste activiteit",
+        "col_ended": "Beëindigd",
+        "col_reason": "Eindreden",
+        "col_user_agent": "Browser",
+        "reason_logout": "Uitloggen",
+        "reason_replaced": "Vervangen door nieuwe login",
+        "reason_idle": "Idle-timeout",
+        "reason_max_age": "Maximale levensduur",
+        "reason_revoked": "Ingetrokken",
+        "reason_destroyed": "Vernietigd"
     },
     "languages": {
         "title": "Taalbeheer",
@@ -3829,7 +3990,11 @@
         "preflight_warnings_title": "Voor installatie",
         "install_blocked_hint": "Installatie is uitgeschakeld totdat de bovenstaande problemen zijn opgelost.",
         "preflight_info_title": "Voor installatie",
-        "preflight_info_note": "U kunt de update installeren — dit zijn alleen informatieve meldingen."
+        "preflight_info_note": "U kunt de update installeren — dit zijn alleen informatieve meldingen.",
+        "proxy_timeout_recovering": "Gateway-/proxytime-out — controleren of de update nog op de server draait…",
+        "install_still_running": "Update draait nog op de server…",
+        "install_recovered": "Update op de server voltooid na verbroken browserverbinding",
+        "install_recovery_timeout": "Time-out bij wachten op update na gateway-onderbreking. Controleer Instellingen → Updates, data/.last_update_result.json of: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Machtigingen",
@@ -4143,7 +4308,8 @@
             "status_error": "Laatste fout",
             "os_yes": "Ja",
             "os_no": "Nee",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Actieve factureerbare sessies",
@@ -4167,7 +4333,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Apparaat",
@@ -4175,7 +4348,11 @@
             "duration": "Duur",
             "phase": "Fase",
             "amount": "Bedrag",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sessie",
@@ -4222,7 +4399,9 @@
             "skip": "Nu overslaan",
             "submit": "Rapport verzenden",
             "summary_required": "Samenvatting is verplicht",
-            "saved": "Werkrapport opgeslagen"
+            "saved": "Werkrapport opgeslagen",
+            "toolbar": "Werkrapport",
+            "intent_hint": "Het rapportformulier opent wanneer de sessie eindigt"
         },
         "empty": {
             "packages": "Nog geen pakketten. Maak er een met de knop hierboven.",
@@ -4284,6 +4463,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4513,5 +4706,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk is gratis",
+                "body": "Open-source remote desktop — geen seat-licenties, geen lock-in. Zelf hosten."
+            },
+            "remote": {
+                "title": "Remote support onder jouw controle",
+                "body": "Verbind endpoints vanuit je eigen console. Sessies blijven op jouw infrastructuur."
+            },
+            "secure": {
+                "title": "Beveiliging ingebouwd",
+                "body": "Operator-authenticatie, sessiecontrole en serverattestation wanneer nodig."
+            },
+            "platforms": {
+                "title": "Windows, Linux en macOS",
+                "body": "Eén console voor agents op de platforms die je team al ondersteunt."
+            }
+        },
+        "prev": "Vorige dia",
+        "next": "Volgende dia"
+    },
+    "agents": {
+        "title": "BetterDesk-agents",
+        "subtitle": "Incoming-only Support-clients worden in BetterDesk-Client gebouwd — dit paneel importeert en serveert ze.",
+        "what_title": "Wat zijn BetterDesk-agents?",
+        "what_body": "BetterDesk Support-agents zijn desktopclients alleen voor inkomende verbindingen. Ze registreren zich op uw server, tonen een koppelings-QR en accepteren remote support. Ze starten geen uitgaande verbindingen naar andere apparaten.",
+        "note_no_build": "Deze console bouwt geen client-installers meer. Ondertekende releases worden gemaakt in de BetterDesk-Client GitHub-repository.",
+        "get_title": "Waar agents ophalen",
+        "get_body": "Download ondertekende Support Agent-pakketten van BetterDesk-Client-releases, of deel het openbare portaal van deze server na import hieronder.",
+        "get_github": "BetterDesk-Client-releases",
+        "get_portal": "Downloadportaal openen",
+        "sync_title": "Importeren voor deze server",
+        "sync_hint": "Importeer de nieuwste ondertekende support-v*-release zodat /portal geverifieerde installers kan serveren.",
+        "sync_import": "Nieuwste release importeren",
+        "sync_importing": "Nieuwste ondertekende release importeren en verifiëren…",
+        "sync_imported": "{{tag}} geïmporteerd.",
+        "sync_empty": "Nog geen release geïmporteerd.",
+        "sync_verified": "geverifieerd",
+        "sync_artifacts": "{{count}} platformartefacten",
+        "steps_title": "Een agent aansluiten",
+        "step1": "Importeer de nieuwste ondertekende release (knop hierboven) of download van GitHub.",
+        "step2": "Installeer de agent op het apparaat en voer de openbare URL van deze server in.",
+        "step3": "Wanneer de agent een QR toont, open Agent activeren en scan hem.",
+        "step4": "Keur inschrijving goed indien vereist en verbind daarna via Remote Desktop.",
+        "pair_activate": "Agent activeren",
+        "pair_body": "Koppelen gebruikt de QR van een generieke Support Agent nadat die uw server bereikt.",
+        "branding_link": "Clientbranding",
+        "branding_body": "Uiterlijk (logo, kleuren, labels) wordt tijdens runtime geladen uit Clientbranding — niet in de installer gebakken."
     }
 }

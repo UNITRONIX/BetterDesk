@@ -7,7 +7,7 @@
 # Build: docker build -f Dockerfile.server -t betterdesk-server:local .
 
 # ---- Build stage ----
-FROM golang:1.26-alpine AS builder
+FROM golang:1.26.10-alpine AS builder
 ARG TARGETARCH
 
 RUN apk add --no-cache git || { sleep 2 && apk add --no-cache git; }
@@ -35,7 +35,7 @@ FROM alpine:3.22
 
 LABEL maintainer="UNITRONIX"
 LABEL description="BetterDesk Server - RustDesk-compatible signal + relay"
-LABEL version="3.5.170"
+LABEL version="3.5.199"
 
 RUN apk add --no-cache \
     ca-certificates \

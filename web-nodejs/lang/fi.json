@@ -47,7 +47,7 @@
         "dashboard": "Kojelauta",
         "devices": "Laitteet",
         "keys": "Avaimet",
-        "generator": "Generaattori",
+        "generator": "BetterDesk-agentit",
         "settings": "Asetukset",
         "users": "Käyttäjät",
         "inventory": "Inventaario",
@@ -61,6 +61,7 @@
         "reports": "Raportit",
         "tenants": "Vuokralaiset",
         "registrations": "Registrations",
+        "activate_agent": "Aktivoi agentti",
         "management": "Hallinto",
         "toggle_sidebar": "Vaihda sivupalkki",
         "cdap": "CDAP -laitteet",
@@ -87,7 +88,8 @@
         "server_attestation": "Palvelintodistus",
         "commercialization": "Kaupallistaminen",
         "remote_open_tab": "Avaa etätyöpöytäasiakas uuteen välilehteen",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk-agentit"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "SSO-kirjautumisen aikana tapahtui virhe.",
         "oidc_no_account": "Tiliäsi ei löytynyt, ja automaattinen rekisteröinti on poistettu käytöstä.",
         "totp_rate_limited": "Liikaa yrityksiä. Yritä myöhemmin uudelleen.",
-        "emergency_mode_banner": "Go server ei tavoitettavissa – toimii hätätilassa (vain järjestelmänvalvoja, rajoitettu toiminnallisuus)"
+        "emergency_mode_banner": "Go server ei tavoitettavissa – toimii hätätilassa (vain järjestelmänvalvoja, rajoitettu toiminnallisuus)",
+        "session_expired": "Istuntosi vanheni tai korvattiin uudella kirjautumisella. Kirjaudu uudelleen.",
+        "session_idle_warning_title": "Istunto vanhenee pian",
+        "session_idle_warning_body": "Sinut kirjataan ulos käyttämättömyyden vuoksi {{seconds}} sekunnin kuluttua.",
+        "session_stay_signed_in": "Pysy kirjautuneena"
     },
     "dashboard": {
         "title": "Kojelauta",
@@ -144,7 +150,7 @@
         "quick_actions": "Nopeat toiminnot",
         "manage_devices": "Hallitse yhdistettyjä laitteita",
         "view_keys": "Näytä palvelimen avaimet",
-        "generate_config": "Luo asiakasasetukset",
+        "generate_config": "Mistä saat vain saapuvia Support-agentteja",
         "server_settings": "Määritä asetukset",
         "greeting_morning": "Hyvää huomenta, {name}",
         "greeting_afternoon": "Hyvää iltapäivää, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "API-palvelin",
         "config_key": "Avain",
         "client_config_hint": "Syötä nämä arvot RustDeskin verkkoasetuksiin ID/Relay-palvelimen kohtaan.",
-        "open_generator": "Asiakasgeneraattori",
+        "open_generator": "BetterDesk-agentit",
         "open_keys": "Avaa avaimet",
         "open_remote": "Avaa etätyöpöytäkonsoli",
         "attention_panel": "Vaatii huomiota",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Ei kansiota",
         "activate_agent_submit": "Aktivoi laite",
         "activate_agent_submitting": "Aktivoidaan laitetta…",
-        "activate_agent_success": "Agentti aktivoitiin."
+        "activate_agent_success": "Agentti aktivoitiin.",
+        "open_agents": "BetterDesk-agentit",
+        "agents_hint": "Mistä saat vain saapuvia Support-agentteja"
     },
     "devices": {
         "title": "Laitteet",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Hallitse tageja",
+        "manage_device_tags": "Hallitse tageja",
+        "rename_tag": "Nimeä tagi uudelleen",
+        "delete_tag": "Poista tagi",
+        "rename_tag_prompt": "Uusi tagin nimi",
+        "rename_tag_hint": "Nimeää tämän tagin uudelleen kaikilla näkyvillä laitteilla ja päivittää vastaavat dynaamiset ryhmät.",
+        "delete_tag_confirm": "Poistetaanko tagi \"{tag}\" {count} laitteelta? Dynaamiset ryhmät, jotka käyttävät sitä, ovat tyhjiä päivitykseen asti.",
+        "tag_renamed": "Tagi nimetty uudelleen",
+        "tag_deleted": "Tagi poistettu",
+        "tag_name_required": "Tagin nimi on pakollinen",
+        "tag_rename_identical": "Uuden nimen on oltava eri",
+        "tags_backend_unsupported": "Laitetageja ei tueta nykyisellä backendillä",
+        "tags_manage_hint": "Nimeä uudelleen tai poista tageja kaikilta näkyviltä laitteilta. Poisto yhdeltä laitteelta tehdään Muokkaa- tai Tiedot-näkymässä.",
+        "tags_device_hint": "Poista tagi täällä irrottaaksesi sen vain tältä laitteelta. Käytä Hallitse tageja globaaliin uudelleennimeämiseen tai poistoon.",
+        "unassign_tag": "Poista tältä laitteelta",
+        "tag_device_one": "laite",
+        "tag_device_many": "laitetta",
+        "tag_group_one": "dynaaminen ryhmä",
+        "tag_group_many": "dynaamista ryhmää"
     },
     "keys": {
         "title": "Palvelimen avaimet",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Tallennetaanko muutokset tähän tiedostoon? Edellisestä versiosta luodaan varmuuskopio.",
         "unsaved_restart_message": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne?",
         "unsaved_restart_save": "Tallenna tiedosto",
-        "unsaved_restart_stay": "Peruuta"
+        "unsaved_restart_stay": "Peruuta",
+        "availability_history_title": "Saatavuushistoria",
+        "availability_history_desc": "Tallenna valinnaisesti online/offline-siirtymät, jotta Metrics näyttää päivittäisen historian. Oletuksena pois päältä tietokannan kasvun välttämiseksi.",
+        "availability_history_enable": "Ota saatavuushistoria käyttöön",
+        "availability_history_enable_hint": "Käytössä ollessaan Go-palvelin tallentaa tilasiirtymät (ONLINE, OFFLINE, DEGRADED, CRITICAL) heartbeateista ja signal/CDAP/Mesh-toiminnasta.",
+        "availability_history_retention": "Säilytys (päivää)",
+        "availability_history_retention_hint": "Vanhemmat tapahtumat poistetaan automaattisesti. Oletus: 30 päivää.",
+        "availability_history_save": "Tallenna saatavuusasetukset",
+        "availability_history_saved": "Saatavuushistorian asetukset tallennettu",
+        "tab_time": "Aika / aikavyöhykkeet",
+        "time": {
+            "timezone_title": "Laskutuksen aikavyöhyke",
+            "timezone_desc": "Globaali IANA-vyöhyke kaupallistamisen kuukausirajoille (ylitys nollautuu kuukauden 1. päivän keskiyöllä).",
+            "billing_month_hint": "Kuukauden ensimmäisen päivän keskiyö tällä vyöhykkeellä sulkee edellisen jakson ja avaa uuden. Aktiivisia istuntoja ei keskeytetä.",
+            "billing_timezone": "Aikavyöhyke",
+            "billing_timezone_hint": "Esim. Europe/Warsaw. Vaikuttaa kuukausittaiseen käyttöön ja ylitykseen.",
+            "custom_timezone": "Mukautettu IANA-vyöhyke (valinnainen)",
+            "detect_os": "Tunnista palvelimen käyttöjärjestelmästä",
+            "detected": "Tunnistettu vyöhyke: {tz}",
+            "ntp_title": "NTP / kellon synkronointi",
+            "ntp_desc": "Pidä BetterDesk-palvelimen kello synkronoituna laskutettavien istuntoaikojen tarkkuuden vuoksi.",
+            "save": "Tallenna aika-asetukset",
+            "save_title": "Tallenna aika-asetukset",
+            "saved": "Aika-asetukset tallennettu.",
+            "commercialization_link": "Avaa Kaupallistaminen → Paketit"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Istunto korvattu",
+        "action_session_expired": "Istunto vanhentunut",
+        "action_session_ip_change": "Istunnon IP vaihtui"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Asetukset (vain järjestelmänvalvoja)",
         "preview_quit": "Lopeta (vain järjestelmänvalvoja)",
         "download_link_title": "Lataa linkki",
+        "download_hub": "Latauskeskus",
+        "generic_agents_empty": "Julkaisua ei ole vielä tuotu.",
+        "generic_agents_hint": "Ensisijainen tuotantopolku: tuo allekirjoitetut BetterDesk-Client-julkaisut GitHubista ja tarjoa varmennetut agentit tästä instanssista. Paikallista Flutter/Cargo-koontia ei tarvita.",
+        "generic_agents_import": "Tuo uusin julkaisu",
+        "generic_agents_title": "Yleiset vain saapuvat agentit",
         "download_link_hint": "Jaa tämä linkki loppukäyttäjille. He näkevät tuotemerkin lataussivun. Vanhat hex-linkit toimivat edelleen lyhyen linkin vaihtamisen jälkeen.",
         "open_portal": "Avaa",
         "created": "Paketti luotu",
@@ -970,7 +1038,21 @@
             "platforms_required": "Valitse vähintään yksi koottava alusta",
             "no_supported_targets": "Koontikohteita ei ole tällä hetkellä saatavilla. Tarkista builderin asetukset.",
             "toolchain_missing": "Vaaditut koontityökalut puuttuvat: {{tools}}",
-            "platform_unavailable": "Tämä kohde ei ole käytettävissä määritetyssä builderissa."
+            "platform_unavailable": "Tämä kohde ei ole käytettävissä määritetyssä builderissa.",
+            "generic_agent_release_not_found": "BetterDesk-Clientissä ei ole allekirjoitettua support-v*-julkaisua (on oltava vakaa, ei draft/prerelease).",
+            "generic_agent_release_list_failed": "BetterDesk-Client-julkaisujen listaaminen GitHubista epäonnistui (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Aikakatkaisu ladattaessa geneerisen agenttijulkaisun tiedostoa.",
+            "generic_agent_release_redirect_limit": "Liian monta uudelleenohjausta tiedoston latauksessa.",
+            "generic_agent_release_redirect_host_invalid": "Lataus uudelleenohjattiin odottamattomaan palvelimeen.",
+            "generic_agent_release_asset_invalid": "Julkaisutiedoston nimi tai URL on virheellinen.",
+            "generic_agent_release_asset_download_failed": "Julkaisutiedoston lataus epäonnistui: {{detail}}",
+            "generic_agent_release_external_config": "Arkisto sisältää upotetun palvelinasetuksen (custom.txt) ja hylättiin.",
+            "generic_agent_release_archive_invalid": "Julkaisuarkistoa ei voitu avata tai validoida.",
+            "generic_agent_release_manifest_missing": "Julkaisusta puuttuu manifest.json tai manifest.sig.",
+            "generic_agent_release_public_key_missing": "Allekirjoituksen varmennukseen ei ole määritetty julkista avainta.",
+            "generic_agent_release_signature_invalid": "Manifestin allekirjoituksen varmennus epäonnistui.",
+            "generic_agent_release_manifest_invalid": "Manifesti ei läpäissyt validointia (schema, sku tai assets).",
+            "generic_agent_release_checksum_mismatch": "Tiedoston tarkistussumma ei täsmää: {{detail}}"
         },
         "legacy_title": "Asiakasmääritysten luontityökalu",
         "connection_section": "Palvelinyhteys",
@@ -979,6 +1061,7 @@
         "use_https": "Käytä HTTPS / WSS (suositeltu; poista valinta LAN-HTTP:lle kuten RustDesk)",
         "enrollment_per_device": "Per laite — hyväksy Rekisteröinneissä",
         "builds_title": "Asiakasohjelman koonnokset",
+        "rebuild": "Kokoa uudelleen",
         "rebuild_all": "Kokoa kaikki uudelleen",
         "rebuild_confirm": "Kokoa kaikki alustan asennusohjelmat uudelleen tälle paketille?",
         "build_status_ready": "Valmis",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "Brändäyksen allekirjoitus epäonnistui — tarkista allekirjoitusavain konsolissa ja rakenna uudelleen.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) puuttuu — Windows-koonnit epäonnistuvat.",
         "toolchain_appimage_missing": "appimagetool puuttuu — AppImage-koonnit epäonnistuvat.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Tuodaan ja varmennetaan uusin allekirjoitettu julkaisu…",
+        "generic_agents_imported": "Tuotu {{tag}}.",
+        "generic_agents_verified": "varmennettu",
+        "generic_agents_artifacts": "{{count}} alustan artefaktia"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Virheellinen tiedostotyyppi. Käytä PNG, JPG, WebP tai GIF.",
         "bg_upload_success": "Taustakuva ladattu.",
         "login_title": "Kirjautumissivu",
-        "login_desc": "Mukauta kirjautumisruudun otsikko, alaotsikko ja tausta.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Kirjautumisotsikko",
         "login_heading_placeholder": "Tervetuloa takaisin",
         "login_subheading": "Kirjautumisen alaotsikko",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "Esiasetukset käyttävät koko väripalettia (esim. BetterDesk tai insolv Core Server). Ne ovat erillisiä vaalean ja tumman tilan pikavaihtoehdosta.",
         "readability_check": "Luettavuuden tarkistus",
         "readability_contrast": "{item}-kontrasti ({ratio}) on alle {minimum}:1",
-        "readability_background": "{item} käyttää {type}-taustaa pienellä peittokuvalla; tekstiä voi olla vaikea lukea."
+        "readability_background": "{item} käyttää {type}-taustaa pienellä peittokuvalla; tekstiä voi olla vaikea lukea.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Yleiskatsaus",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Laitteistotietoja ei ole saatavilla",
         "no_sysinfo_hint": "Järjestelmätiedot tulevat näkyviin, kun laite lähettää sysinfo-raportin",
         "no_metrics": "Mittatietoja ei ole saatavilla",
-        "no_metrics_hint": "Mittarit tulevat näkyviin, kun laite lähettää sykeraportteja",
+        "no_metrics_hint": "Ota saatavuushistoria käyttöön Asetuksissa tallentaaksesi online/offline-muutokset. Yhteysistunnot näkyvät, kun joku muodostaa yhteyden.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Saatavuushistoria",
+        "availability_prev_day": "Edellinen päivä",
+        "availability_next_day": "Seuraava päivä",
+        "availability_loading": "Ladataan saatavuushistoriaa…",
+        "availability_disabled": "Saatavuushistoria on pois käytöstä",
+        "availability_disabled_hint": "Ota käyttöön kohdassa Asetukset → Saatavuushistoria. Palvelin tallentaa siirtymät ilman asiakkaan CPU-mittareita.",
+        "availability_empty": "Ei tilamuutoksia tänä päivänä",
+        "availability_empty_hint": "Siirtymät näkyvät, kun laite menee online-, offline-, degraded- tai critical-tilaan.",
+        "availability_col_time": "Aika",
+        "availability_col_from": "Mistä",
+        "availability_col_to": "Mihin",
+        "availability_col_source": "Lähde",
+        "availability_status_online": "Online",
+        "availability_status_offline": "Offline",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Tila",
+        "section_metrics_summary": "Palvelimen mittarit",
+        "metrics_avail_today": "Tilamuutokset (valittu päivä)",
+        "metrics_sessions_tracked": "Seuratut istunnot",
+        "section_connection_sessions": "Yhteysistunnot",
+        "sessions_loading": "Ladataan yhteysistuntoja…",
+        "sessions_error": "Yhteysistuntoja ei voitu ladata",
+        "sessions_empty": "Ei vielä yhteysistuntoja",
+        "sessions_empty_hint": "Istunnot näkyvät, kun valtuutettu vertainen yhdistää (punch hole tai relay). Kesto täytetään relayn päättyessä.",
+        "sessions_col_when": "Milloin",
+        "sessions_col_who": "Kuka",
+        "sessions_col_from": "IP:stä",
+        "sessions_col_transport": "Siirto",
+        "sessions_col_duration": "Kesto",
+        "sessions_active": "Aktiivinen",
+        "sessions_transport_punch": "Suora / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Tagin poisto täällä irrottaa sen vain tältä laitteelta. Käytä Hallitse tageja Laitteet-sivulla globaaliin muutokseen."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "Turvallisuuden parantamisen prioriteetit BetterDesk-käyttöönotossasi. Tuotteet on järjestetty vakavuuden mukaan.",
         "no_hardening": "Kovettavia tuotteita ei ole saatavilla.",
         "vuln_hint": "Riippuvuushaavoittuvuuden tarkistuksen tulokset. Suorita npm-tarkastus säännöllisesti pitääksesi riippuvuudet turvassa.",
-        "no_vulns": "Haavoittuvuuksia ei löytynyt. Riippuvuutesi ovat turvassa."
+        "no_vulns": "Haavoittuvuuksia ei löytynyt. Riippuvuutesi ovat turvassa.",
+        "tab_sessions": "Paneeli-istunnot",
+        "sessions_hint": "Konsolin kirjautumiset. Tilillä voi olla vain yksi aktiivinen istunto; uusi kirjautuminen lopettaa edellisen.",
+        "sessions_policy": "Joutenolo: {{idle}} min · Absoluuttinen max: {{max}} h · Yksi aktiivinen istunto per tili",
+        "no_sessions": "Paneeli-istuntoja ei ole vielä tallennettu.",
+        "session_current": "Nykyinen",
+        "session_active": "Aktiivinen",
+        "session_ended": "Päättynyt",
+        "col_status": "Tila",
+        "col_started": "Aloitettu",
+        "col_last_activity": "Viimeisin toiminta",
+        "col_ended": "Päättynyt",
+        "col_reason": "Lopetussyy",
+        "col_user_agent": "Selain",
+        "reason_logout": "Uloskirjautuminen",
+        "reason_replaced": "Korvattu uudella kirjautumisella",
+        "reason_idle": "Joutenoloajan ylitys",
+        "reason_max_age": "Enimmäiskesto",
+        "reason_revoked": "Peruttu",
+        "reason_destroyed": "Tuottu"
     },
     "languages": {
         "title": "Kielenhallinta",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Ennen asennusta",
         "install_blocked_hint": "Asennus on poistettu käytöstä, kunnes yllä olevat ongelmat on ratkaistu.",
         "preflight_info_title": "Ennen asennusta",
-        "preflight_info_note": "Voit asentaa päivityksen — nämä ovat vain tiedoksi."
+        "preflight_info_note": "Voit asentaa päivityksen — nämä ovat vain tiedoksi.",
+        "proxy_timeout_recovering": "Yhdyskäytävän/proxyn aikakatkaisu — tarkistetaan, onko päivitys vielä käynnissä palvelimella…",
+        "install_still_running": "Päivitys on vielä käynnissä palvelimella…",
+        "install_recovered": "Päivitys valmistui palvelimella selaimen yhteyden katkettua",
+        "install_recovery_timeout": "Aikakatkaisu päivityksen odotuksessa yhdyskäytävän katkaisun jälkeen. Tarkista Asetukset → Päivitykset, data/.last_update_result.json tai: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Käyttöoikeudet",
@@ -4149,7 +4314,8 @@
             "status_error": "Viimeisin virhe",
             "os_yes": "Kyllä",
             "os_no": "Ei",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktiiviset laskutettavat istunnot",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Laite",
@@ -4181,7 +4354,11 @@
             "duration": "Kesto",
             "phase": "Vaihe",
             "amount": "Summa",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Istunto",
@@ -4228,7 +4405,9 @@
             "skip": "Ohita toistaiseksi",
             "submit": "Lähetä raportti",
             "summary_required": "Yhteenveto vaaditaan",
-            "saved": "Työraportti tallennettu"
+            "saved": "Työraportti tallennettu",
+            "toolbar": "Työraportti",
+            "intent_hint": "Raporttilomake avautuu istunnon päättyessä"
         },
         "empty": {
             "packages": "Ei paketteja vielä. Luo ensimmäinen yllä olevalla painikkeella.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk on ilmainen",
+                "body": "Avoimen lähdekoodin etätyöpöytä — ei paikkakohtaisia lisenssejä eikä lukitusta. Hostaa itse."
+            },
+            "remote": {
+                "title": "Etätuki hallinnassasi",
+                "body": "Yhdistä päätelaitteet omasta konsolista. Istunnot pysyvät infrastruktuurissasi."
+            },
+            "secure": {
+                "title": "Turvallisuus sisäänrakennettuna",
+                "body": "Operaattoritunnistus, istunnonhallinta ja palvelimen attestation tarvittaessa."
+            },
+            "platforms": {
+                "title": "Windows, Linux ja macOS",
+                "body": "Yksi konsoli agenteille alustoilla, joita tiimisi jo tukee."
+            }
+        },
+        "prev": "Edellinen dia",
+        "next": "Seuraava dia"
+    },
+    "agents": {
+        "title": "BetterDesk-agentit",
+        "subtitle": "Vain saapuvat Support-asiakkaat rakennetaan BetterDesk-Clientissä — tämä paneeli tuo ja tarjoaa ne.",
+        "what_title": "Mitä BetterDesk-agentit ovat?",
+        "what_body": "BetterDesk Support -agentit ovat työpöytäasiakkaita vain saapuviin yhteyksiin. Ne rekisteröityvät palvelimelle, näyttävät paritus-QR:n ja hyväksyvät etätuen. Ne eivät aloita lähteviä yhteyksiä muihin laitteisiin.",
+        "note_no_build": "Tämä konsoli ei enää rakenna asiakasasennusohjelmia. Allekirjoitetut julkaisut tehdään BetterDesk-Client GitHub-repositoriossa.",
+        "get_title": "Mistä agentteja saa",
+        "get_body": "Lataa allekirjoitetut Support Agent -paketit BetterDesk-Client-julkaisuista tai jaa tämän palvelimen julkinen portaali tuonnin jälkeen.",
+        "get_github": "BetterDesk-Client-julkaisut",
+        "get_portal": "Avaa latausportaali",
+        "sync_title": "Tuo tälle palvelimelle",
+        "sync_hint": "Tuo uusin allekirjoitettu support-v*-julkaisu, jotta /portal voi tarjota varmennettuja asennusohjelmia.",
+        "sync_import": "Tuo uusin julkaisu",
+        "sync_importing": "Tuodaan ja varmennetaan uusin allekirjoitettu julkaisu…",
+        "sync_imported": "Tuotu {{tag}}.",
+        "sync_empty": "Julkaisua ei ole vielä tuotu.",
+        "sync_verified": "varmennettu",
+        "sync_artifacts": "{{count}} alustan artefaktia",
+        "steps_title": "Agentin käyttöönotto",
+        "step1": "Tuo uusin allekirjoitettu julkaisu (painike yllä) tai lataa GitHubista.",
+        "step2": "Asenna agentti laitteelle ja anna tämän palvelimen julkinen URL.",
+        "step3": "Kun agentti näyttää QR-koodin, avaa Aktivoi agentti ja skannaa se.",
+        "step4": "Hyväksy rekisteröinti tarvittaessa ja yhdistä sitten Remote Desktopilla.",
+        "pair_activate": "Aktivoi agentti",
+        "pair_body": "Paritus käyttää geneerisen Support Agentin näyttämää QR-koodia palvelimen tavoittamisen jälkeen.",
+        "branding_link": "Asiakkaan brändäys",
+        "branding_body": "Ulkoasu (logo, värit, tekstit) ladataan ajon aikana Asiakkaan brändäyksestä — sitä ei upoteta asennusohjelmaan."
     }
 }

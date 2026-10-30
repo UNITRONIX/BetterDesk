@@ -47,7 +47,7 @@
         "dashboard": "Приладова панель",
         "devices": "Пристрої",
         "keys": "Ключі",
-        "generator": "Генератор",
+        "generator": "Агенти BetterDesk",
         "settings": "Налаштування",
         "users": "Користувачі",
         "inventory": "Інвентар",
@@ -61,6 +61,7 @@
         "reports": "Звіти",
         "tenants": "Орендарі",
         "registrations": "Registrations",
+        "activate_agent": "Активувати агента",
         "management": "управління",
         "toggle_sidebar": "Перемкнути бічну панель",
         "cdap": "Пристрої CDAP",
@@ -87,7 +88,8 @@
         "server_attestation": "Атестація сервера",
         "commercialization": "Комерціалізація",
         "remote_open_tab": "Відкрити клієнт віддаленого робочого столу в новій вкладці",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Агенти BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "Під час входу в систему SSO сталася помилка.",
         "oidc_no_account": "Ваш обліковий запис не знайдено, і ав��оматична реєстрація вимкнена.",
         "totp_rate_limited": "Забагато спроб. Спробуйте пізніше.",
-        "emergency_mode_banner": "Go server недоступний — працює в екстреному режимі (лише для адміністратора, обмежена функціональність)"
+        "emergency_mode_banner": "Go server недоступний — працює в екстреному режимі (лише для адміністратора, обмежена функціональність)",
+        "session_expired": "Ваш сеанс закінчився або був замінений новим входом. Увійдіть знову.",
+        "session_idle_warning_title": "Сеанс скоро завершиться",
+        "session_idle_warning_body": "Вас буде виведено через неактивність за {{seconds}} с.",
+        "session_stay_signed_in": "Залишатися в системі"
     },
     "dashboard": {
         "title": "Приладова панель",
@@ -144,7 +150,7 @@
         "quick_actions": "Швидкі дії",
         "manage_devices": "Керуйте підключеними пристроями",
         "view_keys": "Переглянути ключі серв��ра",
-        "generate_config": "Створіть конфігурацію клієнта",
+        "generate_config": "Звідки взяти Support-агентів лише для вхідних з’єднань",
         "server_settings": "Налаштувати параметри",
         "greeting_morning": "Доброго ранку, {name}",
         "greeting_afternoon": "Доброго дня, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "API-сервер",
         "config_key": "Ключ",
         "client_config_hint": "Введіть ці значення в мережевих налаштуваннях RustDesk, у розділі ID/Relay-сервера.",
-        "open_generator": "Генератор клієнта",
+        "open_generator": "Агенти BetterDesk",
         "open_keys": "Відкрити ключі",
         "open_remote": "Відкрити консоль віддаленого робочого столу",
         "attention_panel": "Потребує уваги",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Без папки",
         "activate_agent_submit": "Активувати пристрій",
         "activate_agent_submitting": "Активація пристрою…",
-        "activate_agent_success": "Агента успішно активовано."
+        "activate_agent_success": "Агента успішно активовано.",
+        "open_agents": "Агенти BetterDesk",
+        "agents_hint": "Звідки взяти Support-агентів лише для вхідних з’єднань"
     },
     "devices": {
         "title": "Пристрої",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Керувати тегами",
+        "manage_device_tags": "Керувати тегами",
+        "rename_tag": "Перейменувати тег",
+        "delete_tag": "Видалити тег",
+        "rename_tag_prompt": "Нова назва тегу",
+        "rename_tag_hint": "Перейменовує цей тег на всіх видимих пристроях і оновлює відповідні динамічні групи.",
+        "delete_tag_confirm": "Видалити тег \"{tag}\" з {count} пристрою(їв)? Динамічні групи з цим тегом будуть порожніми до оновлення.",
+        "tag_renamed": "Тег перейменовано",
+        "tag_deleted": "Тег видалено",
+        "tag_name_required": "Назва тегу обов’язкова",
+        "tag_rename_identical": "Нова назва має відрізнятися",
+        "tags_backend_unsupported": "Теги пристроїв не підтримуються з поточним бекендом",
+        "tags_manage_hint": "Перейменовуйте або видаляйте теги на всіх видимих пристроях. Зняття з одного пристрою — в Редагуванні або Деталях.",
+        "tags_device_hint": "Видаліть тег тут, щоб відв’язати його лише від цього пристрою. Для глобальних змін використовуйте Керувати тегами.",
+        "unassign_tag": "Видалити з цього пристрою",
+        "tag_device_one": "пристрій",
+        "tag_device_many": "пристроїв",
+        "tag_group_one": "динамічна група",
+        "tag_group_many": "динамічних груп"
     },
     "keys": {
         "title": "Ключі сервера",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Зберегти зміни до цього файлу? Буде створено резервну копію попередньої версії.",
         "unsaved_restart_message": "У вас є незбережені зміни. Відхилити їх?",
         "unsaved_restart_save": "Зберегти файл",
-        "unsaved_restart_stay": "Скасувати"
+        "unsaved_restart_stay": "Скасувати",
+        "availability_history_title": "Історія доступності",
+        "availability_history_desc": "Опційно записуйте зміни online/offline, щоб Metrics показував історію по днях. Типово вимкнено, щоб уникнути росту БД.",
+        "availability_history_enable": "Увімкнути історію доступності",
+        "availability_history_enable_hint": "Увімкнено — Go-сервер записує переходи (ONLINE, OFFLINE, DEGRADED, CRITICAL) з heartbeat та signal/CDAP/Mesh.",
+        "availability_history_retention": "Зберігання (дні)",
+        "availability_history_retention_hint": "Старіші події видаляються автоматично. Типово: 30 днів.",
+        "availability_history_save": "Зберегти налаштування доступності",
+        "availability_history_saved": "Налаштування історії доступності збережено",
+        "tab_time": "Час / часові пояси",
+        "time": {
+            "timezone_title": "Часовий пояс розрахунків",
+            "timezone_desc": "Глобальний IANA-пояс для місячних меж комерціалізації (перевищення обнуляється опівночі 1-го числа).",
+            "billing_month_hint": "Опівніч першого дня місяця в цьому поясі закриває попередній період і відкриває новий. Активні сесії не перериваються.",
+            "billing_timezone": "Часовий пояс",
+            "billing_timezone_hint": "Напр. Europe/Warsaw. Впливає на місячне використання та перевищення.",
+            "custom_timezone": "Власний IANA-пояс (необов’язково)",
+            "detect_os": "Визначити з ОС сервера",
+            "detected": "Визначений пояс: {tz}",
+            "ntp_title": "NTP / синхронізація годинника",
+            "ntp_desc": "Тримайте годинник сервера BetterDesk синхронізованим для точних платних сесій.",
+            "save": "Зберегти налаштування часу",
+            "save_title": "Зберегти налаштування часу",
+            "saved": "Налаштування часу збережено.",
+            "commercialization_link": "Відкрити Комерціалізацію → Пакети"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Сеанс замінено",
+        "action_session_expired": "Сеанс завершено",
+        "action_session_ip_change": "Зміна IP сеансу"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Налаштування (лише адміністратор)",
         "preview_quit": "Вийти (лише адміністратор)",
         "download_link_title": "Посилання для завантаження",
+        "download_hub": "Центр завантажень",
+        "generic_agents_empty": "Ще не імпортовано жодного випуску.",
+        "generic_agents_hint": "Основний виробничий шлях: імпортуйте підписані випуски BetterDesk-Client з GitHub і роздавайте перевірених агентів з цього екземпляра. Локальна збірка Flutter/Cargo не потрібна.",
+        "generic_agents_import": "Імпортувати останній випуск",
+        "generic_agents_title": "Загальні агенти лише на вхід",
         "download_link_hint": "Поділіться цим посиланням з кінцевими користувачами. Вони побачать фірмову сторінку завантаження. Старі hex-посилання працюють і після зміни короткого посилання.",
         "open_portal": "відкритий",
         "created": "Набір створено",
@@ -970,7 +1038,21 @@
             "platforms_required": "Виберіть принаймні одну платформу для збірки",
             "no_supported_targets": "Зараз немає доступних цілей збірки. Перевірте конфігурацію builder.",
             "toolchain_missing": "Відсутні необхідні інструменти збірки: {{tools}}",
-            "platform_unavailable": "Ця ціль недоступна у налаштованому builder."
+            "platform_unavailable": "Ця ціль недоступна у налаштованому builder.",
+            "generic_agent_release_not_found": "У BetterDesk-Client немає підписаного випуску support-v* (має бути стабільним, без draft/prerelease).",
+            "generic_agent_release_list_failed": "Не вдалося отримати список випусків BetterDesk-Client з GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Час очікування вичерпано під час завантаження артефакту випуску агента.",
+            "generic_agent_release_redirect_limit": "Забагато перенаправлень під час завантаження артефакту.",
+            "generic_agent_release_redirect_host_invalid": "Завантаження перенаправлено на неочікуваний хост.",
+            "generic_agent_release_asset_invalid": "Назва або URL артефакту випуску недійсні.",
+            "generic_agent_release_asset_download_failed": "Не вдалося завантажити артефакт: {{detail}}",
+            "generic_agent_release_external_config": "Архів містить вбудовану конфігурацію сервера (custom.txt) і відхилено.",
+            "generic_agent_release_archive_invalid": "Не вдалося відкрити або перевірити архів випуску.",
+            "generic_agent_release_manifest_missing": "У випуску відсутні manifest.json або manifest.sig.",
+            "generic_agent_release_public_key_missing": "Не налаштовано відкритий ключ для перевірки підпису.",
+            "generic_agent_release_signature_invalid": "Перевірка підпису маніфесту не вдалася.",
+            "generic_agent_release_manifest_invalid": "Маніфест не пройшов перевірку (schema, sku або assets).",
+            "generic_agent_release_checksum_mismatch": "Невідповідність контрольної суми артефакту: {{detail}}"
         },
         "legacy_title": "Генератор конфігурації клієнта",
         "connection_section": "Підключення до сервера",
@@ -979,6 +1061,7 @@
         "use_https": "Використовувати HTTPS / WSS (рекомендовано; зніміть для HTTP у LAN як RustDesk)",
         "enrollment_per_device": "По пристрою — затвердіть у Реєстраціях",
         "builds_title": "Збірки клієнтів",
+        "rebuild": "Перебудувати",
         "rebuild_all": "Перебудувати всі",
         "rebuild_confirm": "Перебудувати всі інсталятори платформ для цього пакету?",
         "build_status_ready": "Готово",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "Підпис брендингу не вдався — перевірте ключ підпису на консолі й перезберіть.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) не знайдено — збірки Windows не вдадуться.",
         "toolchain_appimage_missing": "appimagetool не знайдено — збірки AppImage не вдадуться.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Імпорт і перевірка останнього підписаного випуску…",
+        "generic_agents_imported": "Імпортовано {{tag}}.",
+        "generic_agents_verified": "перевірено",
+        "generic_agents_artifacts": "{{count}} артефактів платформи"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Невірний тип файлу. Використовуйте PNG, JPG, WebP або GIF.",
         "bg_upload_success": "Фонове зображення завантажено.",
         "login_title": "Сторінка входу",
-        "login_desc": "Налаштуйте заголовок, підзаголовок і фон екрана входу.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Заголовок входу",
         "login_heading_placeholder": "З поверненням",
         "login_subheading": "Підзаголовок входу",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "Пресети застосовують повну палітру (наприклад BetterDesk або insolv Core Server). Вони відокремлені від швидкого перемикача світлої/темної теми.",
         "readability_check": "Перевірка читабельності",
         "readability_contrast": "Контраст {item} ({ratio}) нижчий за {minimum}:1",
-        "readability_background": "{item} використовує {type} з низьким затемненням; текст може бути важко читати."
+        "readability_background": "{item} використовує {type} з низьким затемненням; текст може бути важко читати.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Огляд",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Інформація про апаратне забезпечення відсутня",
         "no_sysinfo_hint": "Інформація про систему з’явиться після того, як пристрій надішле звіт sysinfo",
         "no_metrics": "Дані показників відсутні",
-        "no_metrics_hint": "Показники з’являться після того, як пристрій надішле звіти про пульс",
+        "no_metrics_hint": "Увімкніть історію доступності в Налаштуваннях, щоб записувати зміни онлайн/офлайн. Сесії з’єднання з’являються, коли хтось підключається.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Історія доступності",
+        "availability_prev_day": "Попередній день",
+        "availability_next_day": "Наступний день",
+        "availability_loading": "Завантаження історії доступності…",
+        "availability_disabled": "Історію доступності вимкнено",
+        "availability_disabled_hint": "Увімкніть у Налаштування → Історія доступності. Сервер запише переходи без CPU-метрик клієнта.",
+        "availability_empty": "Немає змін статусу цього дня",
+        "availability_empty_hint": "Переходи з’являються, коли пристрій стає online, offline, degraded або critical.",
+        "availability_col_time": "Час",
+        "availability_col_from": "З",
+        "availability_col_to": "До",
+        "availability_col_source": "Джерело",
+        "availability_status_online": "Онлайн",
+        "availability_status_offline": "Офлайн",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Статус",
+        "section_metrics_summary": "Метрики сервера",
+        "metrics_avail_today": "Зміни статусу (обраний день)",
+        "metrics_sessions_tracked": "Відстежені сесії",
+        "section_connection_sessions": "Сесії з’єднання",
+        "sessions_loading": "Завантаження сесій з’єднання…",
+        "sessions_error": "Не вдалося завантажити сесії з’єднання",
+        "sessions_empty": "Поки немає сесій з’єднання",
+        "sessions_empty_hint": "Сесії з’являються, коли авторизований peer підключається (punch hole або relay). Тривалість заповнюється після завершення relay.",
+        "sessions_col_when": "Коли",
+        "sessions_col_who": "Хто",
+        "sessions_col_from": "З IP",
+        "sessions_col_transport": "Транспорт",
+        "sessions_col_duration": "Тривалість",
+        "sessions_active": "Активна",
+        "sessions_transport_punch": "Пряме / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Видалення тегу тут відв’язує його лише від цього пристрою. Для глобальних змін використайте Керувати тегами на сторінці Пристрої."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "Пріоритети посилення безпеки для вашого розгортання BetterDesk. Елементи впорядковані за ступенем тяжкості.",
         "no_hardening": "Немає предметів для зміцнення.",
         "vuln_hint": "Результати сканування вразливості залежностей. Регулярно запускайте перевірку npm, щоб захистити залежності.",
-        "no_vulns": "Вразливості не знайдено. Ваші залежності в безпеці."
+        "no_vulns": "Вразливості не знайдено. Ваші залежності в безпеці.",
+        "tab_sessions": "Сеанси панелі",
+        "sessions_hint": "Ваші входи в консоль. На обліковий запис дозволено лише один активний сеанс; новий вхід завершує попередній.",
+        "sessions_policy": "Таймаут простою: {{idle}} хв · Абсолютний макс: {{max}} год · Один активний сеанс на обліковий запис",
+        "no_sessions": "Ще немає записаних сеансів панелі.",
+        "session_current": "Поточний",
+        "session_active": "Активний",
+        "session_ended": "Завершений",
+        "col_status": "Статус",
+        "col_started": "Початок",
+        "col_last_activity": "Остання активність",
+        "col_ended": "Кінець",
+        "col_reason": "Причина завершення",
+        "col_user_agent": "Браузер",
+        "reason_logout": "Вихід",
+        "reason_replaced": "Замінено новим входом",
+        "reason_idle": "Таймаут простою",
+        "reason_max_age": "Максимальний час життя",
+        "reason_revoked": "Відкликано",
+        "reason_destroyed": "Знищено"
     },
     "languages": {
         "title": "Управління мовою",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Перед встановленням",
         "install_blocked_hint": "Встановлення вимкнено, доки не буде вирішено проблеми вище.",
         "preflight_info_title": "Перед встановленням",
-        "preflight_info_note": "Ви можете встановити оновлення — це лише інформаційні повідомлення."
+        "preflight_info_note": "Ви можете встановити оновлення — це лише інформаційні повідомлення.",
+        "proxy_timeout_recovering": "Таймаут шлюзу/проксі — перевіряю, чи оновлення ще виконується на сервері…",
+        "install_still_running": "Оновлення все ще виконується на сервері…",
+        "install_recovered": "Оновлення завершено на сервері після обриву з'єднання браузера",
+        "install_recovery_timeout": "Час очікування оновлення після обриву шлюзу вичерпано. Перевірте Налаштування → Оновлення, data/.last_update_result.json або: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Дозволи",
@@ -4149,7 +4314,8 @@
             "status_error": "Остання помилка",
             "os_yes": "Так",
             "os_no": "Ні",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Активні платні сесії",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Пристрій",
@@ -4181,7 +4354,11 @@
             "duration": "Тривалість",
             "phase": "Фаза",
             "amount": "Сума",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Сесія",
@@ -4228,7 +4405,9 @@
             "skip": "Пропустити зараз",
             "submit": "Надіслати звіт",
             "summary_required": "Підсумок обов'язковий",
-            "saved": "Звіт про роботу збережено"
+            "saved": "Звіт про роботу збережено",
+            "toolbar": "Звіт про роботу",
+            "intent_hint": "Форма звіту відкриється після завершення сеансу"
         },
         "empty": {
             "packages": "Пакетів ще немає. Створіть перший кнопкою вище.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk безкоштовний",
+                "body": "Віддалений робочий стіл з відкритим кодом — без ліцензій на місця і без прив’язки. Хостіть самі."
+            },
+            "remote": {
+                "title": "Віддалена підтримка під вашим контролем",
+                "body": "Підключайте кінцеві точки з власної консолі. Сеанси лишаються на вашій інфраструктурі."
+            },
+            "secure": {
+                "title": "Безпека з коробки",
+                "body": "Автентифікація операторів, контроль сеансів і атестація сервера за потреби."
+            },
+            "platforms": {
+                "title": "Windows, Linux і macOS",
+                "body": "Одна консоль для агентів на платформах, які вже підтримує ваша команда."
+            }
+        },
+        "prev": "Попередній слайд",
+        "next": "Наступний слайд"
+    },
+    "agents": {
+        "title": "Агенти BetterDesk",
+        "subtitle": "Support-клієнти лише для вхідних з’єднань збираються в BetterDesk-Client — ця панель імпортує й роздає їх.",
+        "what_title": "Що таке агенти BetterDesk?",
+        "what_body": "BetterDesk Support-агенти — це настільні клієнти лише для вхідних з’єднань. Вони реєструються на сервері, показують QR для парування й приймають віддалену підтримку. Вони не ініціюють вихідні з’єднання з іншими пристроями.",
+        "note_no_build": "Ця консоль більше не збирає інсталятори клієнта. Підписані релізи створюються в GitHub-репозиторії BetterDesk-Client.",
+        "get_title": "Звідки взяти агентів",
+        "get_body": "Завантажте підписані пакети Support Agent з релізів BetterDesk-Client або поділіться публічним порталом цього сервера після імпорту нижче.",
+        "get_github": "Релізи BetterDesk-Client",
+        "get_portal": "Відкрити портал завантажень",
+        "sync_title": "Імпорт для цього сервера",
+        "sync_hint": "Імпортуйте останній підписаний реліз support-v*, щоб /portal міг роздавати перевірені інсталятори.",
+        "sync_import": "Імпортувати останній реліз",
+        "sync_importing": "Імпорт і перевірка останнього підписаного релізу…",
+        "sync_imported": "Імпортовано {{tag}}.",
+        "sync_empty": "Реліз ще не імпортовано.",
+        "sync_verified": "перевірено",
+        "sync_artifacts": "{{count}} артефактів платформ",
+        "steps_title": "Як підключити агента",
+        "step1": "Імпортуйте останній підписаний реліз (кнопка вище) або завантажте з GitHub.",
+        "step2": "Встановіть агента на пристрій і введіть публічну URL цього сервера.",
+        "step3": "Коли агент покаже QR, відкрийте Активувати агента й відскануйте його.",
+        "step4": "Схваліть реєстрацію, якщо цього вимагає політика, потім підключіться через Remote Desktop.",
+        "pair_activate": "Активувати агента",
+        "pair_body": "Парування використовує QR, який показує загальний Support Agent після зв’язку з сервером.",
+        "branding_link": "Брендинг клієнта",
+        "branding_body": "Вигляд (логотип, кольори, підписи) завантажується під час роботи з Брендингу клієнта — не вбудований в інсталятор."
     }
 }

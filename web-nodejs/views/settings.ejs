@@ -38,6 +38,10 @@
                     <span class="material-icons" aria-hidden="true">email</span>
                     ${_('settings.tab_email')}
                 </button>
+                <button type="button" class="settings-shell-tab settings-tab" role="tab" aria-selected="false" id="settings-tab-time" data-tab="time" aria-controls="tab-time">
+                    <span class="material-icons" aria-hidden="true">schedule</span>
+                    ${_('settings.tab_time')}
+                </button>
                 <button type="button" class="settings-shell-tab settings-tab" role="tab" aria-selected="false" id="settings-tab-advanced" data-tab="advanced" aria-controls="tab-advanced">
                     <span class="material-icons" aria-hidden="true">code</span>
                     ${_('settings.tab_advanced')}
@@ -172,6 +176,36 @@
                         <button type="submit" class="btn btn-primary">
                             <span class="material-icons" aria-hidden="true">save</span>
                             ${_('settings.device_scope_save')}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="availability-history-settings-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">timeline</span>
+                        ${_('settings.availability_history_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('settings.availability_history_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <form class="settings-form" id="availability-history-form">
+                        <div class="form-group">
+                            <label class="form-label" for="availability-history-enabled">
+                                <input type="checkbox" id="availability-history-enabled">
+                                ${_('settings.availability_history_enable')}
+                            </label>
+                            <p class="form-hint">${_('settings.availability_history_enable_hint')}</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="availability-history-retention">${_('settings.availability_history_retention')}</label>
+                            <input type="number" id="availability-history-retention" class="form-input" min="1" max="3650" value="30" style="max-width:8rem;">
+                            <p class="form-hint">${_('settings.availability_history_retention_hint')}</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-icons" aria-hidden="true">save</span>
+                            ${_('settings.availability_history_save')}
                         </button>
                     </form>
                 </div>
@@ -1042,7 +1076,7 @@
                     <p class="settings-panel-desc">${_('branding.login_desc')}</p>
                 </div>
                 <div class="settings-panel-body">
-                    <form class="settings-form branding-form" style="max-width: 600px;">
+                    <form class="settings-form branding-form" style="max-width: 720px;">
                         <div class="form-group">
                             <label class="form-label" for="login-title">${_('branding.login_heading')}</label>
                             <input type="text" id="login-title" class="form-input" maxlength="80"
@@ -1053,8 +1087,58 @@
                             <input type="text" id="login-subtitle" class="form-input" maxlength="160"
                                    placeholder="${_('branding.login_subheading_placeholder')}">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">${_('branding.login_promo_mode')}</label>
+                            <p class="form-hint">${_('branding.login_promo_mode_hint')}</p>
+                            <div class="logo-type-selector" id="login-promo-mode-selector">
+                                <label class="logo-type-option">
+                                    <input type="radio" name="login-promo-mode" value="classic">
+                                    <span class="logo-type-card">
+                                        <span class="material-icons" aria-hidden="true">crop_square</span>
+                                        <span>${_('branding.login_promo_classic')}</span>
+                                    </span>
+                                </label>
+                                <label class="logo-type-option">
+                                    <input type="radio" name="login-promo-mode" value="single">
+                                    <span class="logo-type-card">
+                                        <span class="material-icons" aria-hidden="true">image</span>
+                                        <span>${_('branding.login_promo_single')}</span>
+                                    </span>
+                                </label>
+                                <label class="logo-type-option">
+                                    <input type="radio" name="login-promo-mode" value="slides" checked>
+                                    <span class="logo-type-card">
+                                        <span class="material-icons" aria-hidden="true">view_carousel</span>
+                                        <span>${_('branding.login_promo_slides')}</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
                     </form>
-                    <div class="branding-bg-config" style="margin-top: 16px;">
+
+                    <div class="branding-login-slides" id="login-slides-panel" style="margin-top: 16px;">
+                        <div class="settings-panel-header" style="padding: 0 0 12px;">
+                            <h3 class="settings-panel-title" style="font-size: 1rem;">
+                                <span class="material-icons" aria-hidden="true">slideshow</span>
+                                ${_('branding.login_slides_title')}
+                            </h3>
+                            <p class="settings-panel-desc">${_('branding.login_slides_desc')}</p>
+                        </div>
+                        <div id="login-slides-list" class="login-slides-list"></div>
+                        <div class="login-slides-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                            <button type="button" class="btn btn-secondary" id="login-slides-add">
+                                <span class="material-icons" aria-hidden="true">add</span>
+                                ${_('branding.login_slides_add')}
+                            </button>
+                            <button type="button" class="btn btn-ghost" id="login-slides-restore">
+                                <span class="material-icons" aria-hidden="true">restart_alt</span>
+                                ${_('branding.login_slides_restore')}
+                            </button>
+                        </div>
+                        <p class="form-hint" id="login-slides-max-hint" hidden>${_('branding.login_slides_max')}</p>
+                    </div>
+
+                    <div class="branding-bg-config" id="login-bg-config" style="margin-top: 16px;">
                         <div class="logo-type-selector">
                             <label class="logo-type-option">
                                 <input type="radio" name="login-bg-type" value="inherit">
@@ -2056,7 +2140,7 @@
                                 ${_('backup.schedule_save')}
                             </button>
                             <button type="button" class="btn btn-secondary" id="scheduled-backup-test-btn">
-                                <span class="material-icons" aria-hidden="true">fact_check</span>
+                                <span class="material-icons" aria-hidden="true">task_alt</span>
                                 ${_('backup.schedule_test_destination')}
                             </button>
                             <button type="button" class="btn btn-secondary" id="scheduled-backup-run-btn">
@@ -2116,7 +2200,7 @@
                                 ${_('backup.smb_save')}
                             </button>
                             <button type="button" class="btn btn-secondary" id="backup-smb-test-btn">
-                                <span class="material-icons" aria-hidden="true">wifi_tethering</span>
+                                <span class="material-icons" aria-hidden="true">router</span>
                                 ${_('backup.smb_test')}
                             </button>
                         </div>
@@ -2413,6 +2497,80 @@
                             <button type="button" class="btn btn-primary" id="email-smtp-save-btn">${_('settings.email.smtp_save')}</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Time / timezone / NTP (server.config permission required) -->
+        <div class="settings-tab-content" id="tab-time" role="tabpanel" aria-labelledby="settings-tab-time" ${canServerConfig ? '' : 'style="display:none"'}>
+        <div class="settings-stack">
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">public</span>
+                        ${_('settings.time.timezone_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('settings.time.timezone_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <p class="form-hint" id="time-billing-month-hint">${_('settings.time.billing_month_hint')}</p>
+                    <div class="form-group">
+                        <label class="form-label" for="time-billing-timezone">${_('settings.time.billing_timezone')}</label>
+                        <select id="time-billing-timezone" class="form-input"></select>
+                        <span class="form-hint">${_('settings.time.billing_timezone_hint')}</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="time-billing-timezone-custom">${_('settings.time.custom_timezone')}</label>
+                        <input type="text" id="time-billing-timezone-custom" class="form-input" placeholder="Europe/Warsaw" maxlength="64">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="time-detect-timezone-btn">
+                            <span class="material-icons" aria-hidden="true">my_location</span>
+                            ${_('settings.time.detect_os')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <h2 class="settings-panel-title">
+                        <span class="material-icons" aria-hidden="true">schedule</span>
+                        ${_('settings.time.ntp_title')}
+                    </h2>
+                    <p class="settings-panel-desc">${_('settings.time.ntp_desc')}</p>
+                </div>
+                <div class="settings-panel-body">
+                    <p id="time-clock-detail" class="text-muted"></p>
+                    <dl class="clock-status-grid settings-time-status-grid">
+                        <div><dt>${_('commercialization.clock.status_offset')}</dt><dd id="time-clock-offset">—</dd></div>
+                        <div><dt>${_('commercialization.clock.status_server')}</dt><dd id="time-clock-ntp-server">—</dd></div>
+                        <div><dt>${_('commercialization.clock.status_os')}</dt><dd id="time-clock-os-sync">—</dd></div>
+                        <div><dt>${_('commercialization.clock.status_error')}</dt><dd id="time-clock-last-error">—</dd></div>
+                    </dl>
+                    <button type="button" class="btn btn-secondary" id="time-timesync-check-btn">${_('commercialization.clock.check_now')}</button>
+                    <form id="time-clock-settings-form" class="settings-form" style="margin-top: 1rem;">
+                        <label class="form-label">${_('commercialization.clock.ntp_servers')}
+                            <textarea id="time-clock-ntp-servers" class="form-control" rows="2" placeholder="pool.ntp.org,time.google.com"></textarea>
+                        </label>
+                        <p class="text-muted form-hint">${_('commercialization.clock.ntp_servers_hint')}</p>
+                        <label class="form-label">${_('commercialization.clock.max_skew_ms')}
+                            <input type="number" id="time-clock-max-skew" class="form-control" min="100" max="600000" step="100" value="2000">
+                        </label>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="time-clock-require-sync"> ${_('commercialization.clock.require_sync')}</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="time-clock-trust-os"> ${_('commercialization.clock.trust_os')}</label>
+                        </div>
+                        <p class="text-muted form-hint">${_('commercialization.clock.trust_os_hint')}</p>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" id="time-save-clock-settings-btn">${_('settings.time.save')}</button>
+                        </div>
+                    </form>
+                    <p class="form-hint" style="margin-top:1rem;">
+                        <a href="/commercialization?tab=packages">${_('settings.time.commercialization_link')}</a>
+                    </p>
                 </div>
             </div>
         </div>

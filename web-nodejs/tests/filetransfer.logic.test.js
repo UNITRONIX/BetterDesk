@@ -32,6 +32,16 @@ describe('RDFileTransfer static helpers', () => {
             .toBe('/home/user/a.bin');
     });
 
+    it('parentRemotePath handles Windows drive roots and Unix parents (#467)', () => {
+        expect(RDFileTransfer.parentRemotePath('C:\\Users\\usera')).toBe('C:\\Users');
+        expect(RDFileTransfer.parentRemotePath('C:\\Users')).toBe('C:\\');
+        expect(RDFileTransfer.parentRemotePath('C:\\')).toBe('');
+        expect(RDFileTransfer.parentRemotePath('C:')).toBe('');
+        expect(RDFileTransfer.parentRemotePath('/home/user')).toBe('/home');
+        expect(RDFileTransfer.parentRemotePath('/home')).toBe('/');
+        expect(RDFileTransfer.parentRemotePath('')).toBe('');
+    });
+
     it('buildRemoteRelativePath nests folders with remote separators', () => {
         expect(RDFileTransfer.buildRemoteRelativePath('C:\\Users\\admin', 'docs/a.txt'))
             .toBe('C:\\Users\\admin\\docs\\a.txt');

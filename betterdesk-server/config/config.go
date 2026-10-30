@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Enrollment mode constants for Dual Key System.
@@ -190,6 +191,7 @@ type Config struct {
 	BillingTrustOSNTP         bool   // Trust OS NTP (timedatectl) when direct queries fail
 	BillingRoundingMinutes    int    // Billable minute rounding (1, 10, 15)
 	BillingRequireWorkReport  bool   // Require technician report before session close
+	BillingTimezone           string // IANA timezone for billing month boundaries (e.g. Europe/Warsaw)
 
 	connectionMu sync.RWMutex
 }
@@ -313,6 +315,7 @@ func DefaultConfig() *Config {
 		BillingRequireSyncedClock: true,
 		BillingTrustOSNTP:         runtime.GOOS == "linux",
 		BillingRoundingMinutes:    1,
+		BillingTimezone:           "", // empty → resolve from OS / UTC at use site
 	}
 }
 
@@ -677,6 +680,27 @@ func (c *Config) LoadEnv() {
 			c.BillingRequireWorkReport = false
 		}
 	}
+	if v := strings.TrimSpace(os.Getenv("BILLING_TIMEZONE")); v != "" {
+		if _, err := time.LoadLocation(v); err == nil {
+			c.BillingTimezone = v
+		}
+	}
+}
+
+// BillingLocation returns the IANA location used for monthly billing boundaries.
+// Falls back to the process local zone, then UTC.
+func (c *Config) BillingLocation() *time.Location {
+	if c != nil {
+		if tz := strings.TrimSpace(c.BillingTimezone); tz != "" {
+			if loc, err := time.LoadLocation(tz); err == nil {
+				return loc
+			}
+		}
+	}
+	if loc := time.Local; loc != nil {
+		return loc
+	}
+	return time.UTC
 }
 
 // ValidateAdminInterface rejects an enabled admin TCP listener without a

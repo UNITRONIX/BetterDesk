@@ -681,6 +681,7 @@
         const panel = template.content.firstElementChild.cloneNode(true);
 
         // Fill device labels
+        panel.dataset.deviceId = deviceId;
         panel.querySelector('.session-device-label').textContent = deviceId;
         panel.querySelector('.session-device-name').textContent = deviceName || '';
         panel.querySelector('.session-password-label').textContent =
@@ -757,6 +758,10 @@
             session.client.setAudioMuted(session.audioMuted);
         }
         syncMobileTouchForActive();
+
+        if (typeof window.BillingReport !== 'undefined') {
+            window.BillingReport.refreshToolbarPackage(deviceId).catch(() => {});
+        }
     }
 
     function closeSession(deviceId, options) {
@@ -806,6 +811,11 @@
         session.passwordOverlay.style.display = 'none';
         session.overlayActions.style.display = 'none';
         if (session.cdapFallbackBtn) session.cdapFallbackBtn.style.display = 'none';
+        if (typeof window.BillingReport !== 'undefined' && window.BillingReport.hideBillingPane) {
+            window.BillingReport.hideBillingPane(session.panel);
+        }
+        const autoplay = session.panel.querySelector('.autoplay-overlay');
+        if (autoplay) autoplay.style.display = 'none';
         const spinner = session.connectionOverlay.querySelector('.spinner');
         if (spinner) spinner.style.display = 'block';
         session.statusText.textContent = _('remote.connecting');
@@ -858,6 +868,8 @@
             setSessionStatus(session, 'info', reason || _('remote.disconnected'));
             showSessionActions(session);
             if (isActive(session)) setToolbarChromeVisible(false);
+            const autoplay = session.panel.querySelector('.autoplay-overlay');
+            if (autoplay) autoplay.style.display = 'none';
             if (typeof window.BillingReport !== 'undefined') {
                 window.BillingReport.promptAfterSession(session.deviceId, session.deviceName)
                     .then((submitted) => {
@@ -1320,6 +1332,17 @@
     // Disconnect
     document.getElementById('btn-disconnect')?.addEventListener('click', () => {
         withClient(c => c.disconnect());
+    });
+
+    // Billing work-report intent (during session → disconnect overlay)
+    document.getElementById('btn-billing-report')?.addEventListener('click', () => {
+        const session = getActiveSession();
+        if (!session || typeof window.BillingReport === 'undefined') return;
+        window.BillingReport.markReportIntent(session.deviceId);
+        showToast(
+            t('commercialization.report.intent_hint', 'Report form will open when the session ends'),
+            'info'
+        );
     });
 
     // Audio toggle

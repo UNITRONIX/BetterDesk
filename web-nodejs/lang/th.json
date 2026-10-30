@@ -47,7 +47,7 @@
         "dashboard": "แดชบอร์ด",
         "devices": "อุปกรณ์",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "เอเจนต์ BetterDesk",
         "settings": "การตั้งค่า",
         "users": "Users",
         "inventory": "Inventory",
@@ -61,6 +61,7 @@
         "reports": "Reports",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "เปิดใช้งานเอเจนต์",
         "management": "การจัดการ",
         "toggle_sidebar": "สลับแถบด้านข้าง",
         "cdap": "อุปกรณ์ CDAP",
@@ -87,7 +88,8 @@
         "server_attestation": "การรับรองประสิทธิภาพเซิร์ฟเวอร์",
         "commercialization": "การทำให้เป็นเชิงพาณิชย์",
         "remote_open_tab": "เปิดไคลเอนต์เดสก์ท็อประยะไกลในแท็บใหม่",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "เอเจนต์ BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "เกิดข้อผิดพลาดระหว่างการล็อกอิน SSO",
         "oidc_no_account": "ไม่พบบัญชีของคุณ และการลงทะเบียนอัตโนมัติถูกปิดใช้งาน",
         "totp_rate_limited": "มีความพยายามมากเกินไป โปรดลองอีกครั้งในภายหลัง",
-        "emergency_mode_banner": "ไม่สามารถเข้าถึง Go server — ทำงานในโหมดฉุกเฉิน (เฉพาะผู้ดูแลระบบเท่านั้น มีฟังก์ชันการทำงานที่จำกัด)"
+        "emergency_mode_banner": "ไม่สามารถเข้าถึง Go server — ทำงานในโหมดฉุกเฉิน (เฉพาะผู้ดูแลระบบเท่านั้น มีฟังก์ชันการทำงานที่จำกัด)",
+        "session_expired": "เซสชันของคุณหมดอายุหรือถูกแทนที่ด้วยการเข้าสู่ระบบใหม่ กรุณาเข้าสู่ระบบอีกครั้ง",
+        "session_idle_warning_title": "เซสชันใกล้หมดอายุ",
+        "session_idle_warning_body": "คุณจะถูกออกจากระบบเนื่องจากไม่มีการใช้งานใน {{seconds}} วินาที",
+        "session_stay_signed_in": "คงสถานะเข้าสู่ระบบ"
     },
     "dashboard": {
         "title": "แดชบอร์ด",
@@ -144,7 +150,7 @@
         "quick_actions": "การดำเนินการด่วน",
         "manage_devices": "จัดการอุปกรณ์ที่เชื่อมต่อ",
         "view_keys": "ดูคีย์เซิร์ฟเวอร์",
-        "generate_config": "สร้างการกำหนดค่าไคลเอ็นต์",
+        "generate_config": "รับเอเจนต์ Support แบบรับเข้าอย่างเดียวจากที่ไหน",
         "server_settings": "กำหนดการตั้งค่า",
         "greeting_morning": "สวัสดีตอนเช้า {name}",
         "greeting_afternoon": "สวัสดีตอนบ่าย {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "เซิร์ฟเวอร์ API",
         "config_key": "คีย์",
         "client_config_hint": "ป้อนค่าเหล่านี้ในการตั้งค่าเครือข่ายของ RustDesk ในส่วนเซิร์ฟเวอร์ ID/รีเลย์",
-        "open_generator": "ตัวสร้างไคลเอนต์",
+        "open_generator": "เอเจนต์ BetterDesk",
         "open_keys": "เปิดคีย์",
         "open_remote": "เปิดคอนโซลเดสก์ท็อประยะไกล",
         "attention_panel": "ต้องตรวจสอบ",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "ไม่มีโฟลเดอร์",
         "activate_agent_submit": "เปิดใช้งานอุปกรณ์",
         "activate_agent_submitting": "กำลังเปิดใช้งานอุปกรณ์…",
-        "activate_agent_success": "เปิดใช้งานเอเจนต์สำเร็จ"
+        "activate_agent_success": "เปิดใช้งานเอเจนต์สำเร็จ",
+        "open_agents": "เอเจนต์ BetterDesk",
+        "agents_hint": "รับเอเจนต์ Support แบบรับเข้าอย่างเดียวจากที่ไหน"
     },
     "devices": {
         "title": "อุปกรณ์",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "จัดการแท็ก",
+        "manage_device_tags": "จัดการแท็ก",
+        "rename_tag": "เปลี่ยนชื่อแท็ก",
+        "delete_tag": "ลบแท็ก",
+        "rename_tag_prompt": "ชื่อแท็กใหม่",
+        "rename_tag_hint": "เปลี่ยนชื่อแท็กนี้บนอุปกรณ์ที่มองเห็นทั้งหมด และอัปเดตกลุ่มไดนามิกที่ตรงกัน",
+        "delete_tag_confirm": "ลบแท็ก \"{tag}\" ออกจาก {count} อุปกรณ์หรือไม่ กลุ่มไดนามิกที่ใช้แท็กนี้จะว่างจนกว่าจะอัปเดต",
+        "tag_renamed": "เปลี่ยนชื่อแท็กแล้ว",
+        "tag_deleted": "ลบแท็กแล้ว",
+        "tag_name_required": "ต้องระบุชื่อแท็ก",
+        "tag_rename_identical": "ชื่อใหม่ต้องต่างจากเดิม",
+        "tags_backend_unsupported": "แท็กอุปกรณ์ไม่รองรับกับแบ็กเอนด์ปัจจุบัน",
+        "tags_manage_hint": "เปลี่ยนชื่อหรือลบแท็กบนอุปกรณ์ที่มองเห็นทั้งหมด การลบจากอุปกรณ์เดียวทำในแก้ไขหรือรายละเอียด",
+        "tags_device_hint": "ลบแท็กที่นี่เพื่อยกเลิกการกำหนดเฉพาะอุปกรณ์นี้ ใช้จัดการแท็กเพื่อเปลี่ยนชื่อหรือลบทั้งหมด",
+        "unassign_tag": "ลบออกจากอุปกรณ์นี้",
+        "tag_device_one": "อุปกรณ์",
+        "tag_device_many": "อุปกรณ์",
+        "tag_group_one": "กลุ่มไดนามิก",
+        "tag_group_many": "กลุ่มไดนามิก"
     },
     "keys": {
         "title": "คีย์เซิร์ฟเวอร์",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "บันทึกการเปลี่ยนแปลงในไฟล์นี้? จะสร้างสำรองของเวอร์ชันก่อนหน้า",
         "unsaved_restart_message": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก ยกเลิก?",
         "unsaved_restart_save": "บันทึกไฟล์",
-        "unsaved_restart_stay": "ยกเลิก"
+        "unsaved_restart_stay": "ยกเลิก",
+        "availability_history_title": "ประวัติความพร้อมใช้งาน",
+        "availability_history_desc": "บันทึกการเปลี่ยนสถานะออนไลน์/ออฟไลน์ (ไม่บังคับ) เพื่อให้ Metrics แสดงประวัติรายวัน ปิดไว้โดยค่าเริ่มต้นเพื่อหลีกเลี่ยงฐานข้อมูลโต",
+        "availability_history_enable": "เปิดใช้ประวัติความพร้อมใช้งาน",
+        "availability_history_enable_hint": "เมื่อเปิดใช้ เซิร์ฟเวอร์ Go จะบันทึกการเปลี่ยนสถานะ (ONLINE, OFFLINE, DEGRADED, CRITICAL) จาก heartbeat และ signal/CDAP/Mesh",
+        "availability_history_retention": "ระยะเก็บ (วัน)",
+        "availability_history_retention_hint": "เหตุการณ์เก่าจะถูกลบอัตโนมัติ ค่าเริ่มต้น 30 วัน",
+        "availability_history_save": "บันทึกการตั้งค่าความพร้อมใช้งาน",
+        "availability_history_saved": "บันทึกการตั้งค่าประวัติความพร้อมใช้งานแล้ว",
+        "tab_time": "เวลา / เขตเวลา",
+        "time": {
+            "timezone_title": "เขตเวลาการเรียกเก็บเงิน",
+            "timezone_desc": "เขต IANA ส่วนกลางสำหรับขอบเดือนของการพาณิชย์ (เกินโควต้ารีเซ็ตตอนเที่ยงคืนวันที่ 1)",
+            "billing_month_hint": "เที่ยงคืนของวันที่ 1 ของเดือนในเขตนี้ปิดรอบก่อนหน้าและเปิดรอบใหม่ เซสชันที่ใช้งานอยู่ไม่ถูกขัดจังหวะ",
+            "billing_timezone": "เขตเวลา",
+            "billing_timezone_hint": "เช่น Europe/Warsaw ส่งผลต่อการใช้รายเดือนและค่าเกิน",
+            "custom_timezone": "เขต IANA กำหนดเอง (ไม่บังคับ)",
+            "detect_os": "ตรวจจับจาก OS ของเซิร์ฟเวอร์",
+            "detected": "เขตที่ตรวจพบ: {tz}",
+            "ntp_title": "NTP / ซิงก์นาฬิกา",
+            "ntp_desc": "รักษาการซิงก์นาฬิกาเซิร์ฟเวอร์ BetterDesk เพื่อความแม่นยำของเวลาเซสชันที่เรียกเก็บได้",
+            "save": "บันทึกการตั้งค่าเวลา",
+            "save_title": "บันทึกการตั้งค่าเวลา",
+            "saved": "บันทึกการตั้งค่าเวลาแล้ว",
+            "commercialization_link": "เปิดการพาณิชย์ → แพ็กเกจ"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "เซสชันถูกแทนที่",
+        "action_session_expired": "เซสชันหมดอายุ",
+        "action_session_ip_change": "IP เซสชันเปลี่ยน"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "การตั้งค่า (ผู้ดูแลระบบเท่านั้น)",
         "preview_quit": "ออก (เฉพาะผู้ดูแลระบบเท่านั้น)",
         "download_link_title": "ลิงค์ดาวน์โหลด",
+        "download_hub": "ศูนย์ดาวน์โหลด",
+        "generic_agents_empty": "ยังไม่มีเวอร์ชันที่นำเข้า",
+        "generic_agents_hint": "เส้นทางหลักสำหรับโปรดักชัน: นำเข้าดีลิส BetterDesk-Client ที่ลงนามจาก GitHub แล้วเสิร์ฟเอเจนต์ที่ยืนยันแล้วจากอินสแตนซ์นี้ ไม่ต้องสร้าง Flutter/Cargo ในเครื่อง",
+        "generic_agents_import": "นำเข้าเวอร์ชันล่าสุด",
+        "generic_agents_title": "เอเจนต์ทั่วไปแบบรับเข้าอย่างเดียว",
         "download_link_hint": "แชร์ลิงก์นี้กับผู้ใช้ปลายทาง พวกเขาจะเห็นหน้าดาวน์โหลดที่มีแบรนด์ ลิงก์ hex เก่ายังใช้งานได้หลังเปลี่ยนลิงก์สั้น",
         "open_portal": "เปิด",
         "created": "สร้างชุดรวมแล้ว",
@@ -970,7 +1038,21 @@
             "platforms_required": "เลือกอย่างน้อยหนึ่งแพลตฟอร์มที่จะบิลด์",
             "no_supported_targets": "ขณะนี้ไม่มีเป้าหมายการบิลด์ที่พร้อมใช้งาน โปรดตรวจสอบการตั้งค่า builder",
             "toolchain_missing": "ไม่พบเครื่องมือบิลด์ที่จำเป็น: {{tools}}",
-            "platform_unavailable": "เป้าหมายนี้ไม่พร้อมใช้งานจาก builder ที่กำหนดค่าไว้"
+            "platform_unavailable": "เป้าหมายนี้ไม่พร้อมใช้งานจาก builder ที่กำหนดค่าไว้",
+            "generic_agent_release_not_found": "ไม่มีรีลีส support-v* ที่ลงนามบน BetterDesk-Client (ต้องเป็นรุ่นเสถียร ไม่ใช่ draft/prerelease)",
+            "generic_agent_release_list_failed": "ไม่สามารถแสดงรายการรีลีส BetterDesk-Client จาก GitHub ได้ (HTTP {{detail}})",
+            "generic_agent_release_timeout": "หมดเวลาขณะดาวน์โหลดไฟล์รีลีสของเอเจนต์ทั่วไป",
+            "generic_agent_release_redirect_limit": "มีการเปลี่ยนเส้นทางมากเกินไปขณะดาวน์โหลดไฟล์รีลีส",
+            "generic_agent_release_redirect_host_invalid": "การดาวน์โหลดถูกเปลี่ยนเส้นทางไปยังโฮสต์ที่ไม่คาดคิด",
+            "generic_agent_release_asset_invalid": "ชื่อหรือ URL ของไฟล์รีลีสไม่ถูกต้อง",
+            "generic_agent_release_asset_download_failed": "ดาวน์โหลดไฟล์รีลีสไม่สำเร็จ: {{detail}}",
+            "generic_agent_release_external_config": "ไฟล์เก็บมีค่าคอนฟิกเซิร์ฟเวอร์ฝังอยู่ (custom.txt) จึงถูกปฏิเสธ",
+            "generic_agent_release_archive_invalid": "ไม่สามารถเปิดหรือตรวจสอบไฟล์เก็บรีลีสได้",
+            "generic_agent_release_manifest_missing": "รีลีสไม่มี manifest.json หรือ manifest.sig",
+            "generic_agent_release_public_key_missing": "ไม่ได้ตั้งค่าคีย์สาธารณะสำหรับตรวจสอบลายเซ็น",
+            "generic_agent_release_signature_invalid": "การตรวจสอบลายเซ็นของแมนิเฟสต์ล้มเหลว",
+            "generic_agent_release_manifest_invalid": "แมนิเฟสต์ไม่ผ่านการตรวจสอบ (schema, sku หรือ assets)",
+            "generic_agent_release_checksum_mismatch": "checksum ของไฟล์ไม่ตรงกัน: {{detail}}"
         },
         "legacy_title": "ตัวสร้างการกำหนดค่าไคลเอนต์",
         "connection_section": "การเชื่อมต่อเซิร์ฟเวอร์",
@@ -993,6 +1075,7 @@
         "builds_hint": "ตัวติดตั้งที่คอมไพล์บนเซิร์ฟเวอร์นี้สำหรับแต่ละแพลตฟอร์ม Build ใหม่หลังแก้ไขข้อผิดพลาด toolchain หรืออัปเดต agent source",
         "builds_loading": "กำลังโหลดสถานะ build…",
         "builds_empty": "ยังไม่มี build ในคิว — บันทึก bundle หรือคลิก \"Build ใหม่ทั้งหมด\"",
+        "rebuild": "สร้างใหม่",
         "rebuild_all": "Build ใหม่ทั้งหมด",
         "rebuilding_all": "กำลังเพิ่ม build ใหม่เข้าคิว…",
         "rebuild_queued": "เพิ่ม build ทุกแพลตฟอร์มเข้าคิวแล้ว",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "การลงนามแบรนด์ล้มเหลว — ตรวจคีย์ลงนามบนคอนโซลแล้วบิลด์ใหม่",
         "toolchain_mingw_missing": "ไม่พบ mingw-w64 (x86_64-w64-mingw32-gcc) — บิลด์ Windows จะล้มเหลว",
         "toolchain_appimage_missing": "ไม่พบ appimagetool — บิลด์ AppImage จะล้มเหลว",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "กำลังนำเข้าและตรวจสอบรีลีสที่ลงนามล่าสุด…",
+        "generic_agents_imported": "นำเข้า {{tag}} แล้ว",
+        "generic_agents_verified": "ตรวจสอบแล้ว",
+        "generic_agents_artifacts": "อาร์ติแฟกต์แพลตฟอร์ม {{count}} รายการ"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "ประเภทไฟล์ไม่ถูกต้อง ใช้ PNG, JPG, WebP หรือ GIF",
         "bg_upload_success": "อัปโหลดรูปพื้นหลังสำเร็จ",
         "login_title": "หน้าเข้าสู่ระบบ",
-        "login_desc": "กำหนดค่าหัวเรื่อง, คำบรรยาย และพื้นหลังของหน้าเข้าสู่ระบบ",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "หัวเรื่องเข้าสู่ระบบ",
         "login_heading_placeholder": "ยินดีต้อนรับกลับ",
         "login_subheading": "คำบรรยายเข้าสู่ระบบ",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "พรีเซ็ตจะใช้ชุดสีแบบเต็ม (เช่น BetterDesk หรือ insolv Core Server) และแยกจากปุ่มสลับโหมดสว่าง/มืดแบบด่วน",
         "readability_check": "ตรวจสอบความสามารถในการอ่าน",
         "readability_contrast": "อัตราส่วนคอนทราสต์ของ {item} ({ratio}) ต่ำกว่า {minimum}:1",
-        "readability_background": "{item} ใช้ {type} ที่มีโอเวอร์เลย์ต่ำ ทำให้ข้อความอ่านได้ยาก"
+        "readability_background": "{item} ใช้ {type} ที่มีโอเวอร์เลย์ต่ำ ทำให้ข้อความอ่านได้ยาก",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "ภาพรวม",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "ไม่มีข้อมูลฮาร์ดแวร์",
         "no_sysinfo_hint": "ข้อมูลระบบจะปรากฏขึ้นหลังจากที่อุปกรณ์ส่งรายงาน sysinfo",
         "no_metrics": "ไม่มีข้อมูลเมตริก",
-        "no_metrics_hint": "การวัดจะปรากฏขึ้นหลังจากที่อุปกรณ์ส่งรายงานฮาร์ทบีท",
+        "no_metrics_hint": "เปิดประวัติความพร้อมใช้งานในการตั้งค่าเพื่อบันทึกการเปลี่ยนแปลงออนไลน์/ออฟไลน์ เซสชันการเชื่อมต่อจะปรากฏเมื่อมีผู้เชื่อมต่อ",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "ประวัติความพร้อมใช้งาน",
+        "availability_prev_day": "วันก่อนหน้า",
+        "availability_next_day": "วันถัดไป",
+        "availability_loading": "กำลังโหลดประวัติความพร้อมใช้งาน…",
+        "availability_disabled": "ประวัติความพร้อมใช้งานถูกปิด",
+        "availability_disabled_hint": "เปิดใน การตั้งค่า → ประวัติความพร้อมใช้งาน เซิร์ฟเวอร์จะบันทึกการเปลี่ยนสถานะโดยไม่ต้องมีเมตริก CPU ของไคลเอนต์",
+        "availability_empty": "ไม่มีการเปลี่ยนสถานะในวันนี้",
+        "availability_empty_hint": "การเปลี่ยนจะปรากฏเมื่ออุปกรณ์เป็น online, offline, degraded หรือ critical",
+        "availability_col_time": "เวลา",
+        "availability_col_from": "จาก",
+        "availability_col_to": "ถึง",
+        "availability_col_source": "แหล่งที่มา",
+        "availability_status_online": "ออนไลน์",
+        "availability_status_offline": "ออฟไลน์",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "สถานะ",
+        "section_metrics_summary": "เมตริกเซิร์ฟเวอร์",
+        "metrics_avail_today": "การเปลี่ยนสถานะ (วันที่เลือก)",
+        "metrics_sessions_tracked": "เซสชันที่ติดตาม",
+        "section_connection_sessions": "เซสชันการเชื่อมต่อ",
+        "sessions_loading": "กำลังโหลดเซสชันการเชื่อมต่อ…",
+        "sessions_error": "ไม่สามารถโหลดเซสชันการเชื่อมต่อได้",
+        "sessions_empty": "ยังไม่มีเซสชันการเชื่อมต่อ",
+        "sessions_empty_hint": "เซสชันจะปรากฏเมื่อเพียร์ที่ได้รับอนุญาตเชื่อมต่อ (punch hole หรือ relay) ระยะเวลาจะถูกเติมเมื่อเซสชัน relay สิ้นสุด",
+        "sessions_col_when": "เมื่อ",
+        "sessions_col_who": "ใคร",
+        "sessions_col_from": "จาก IP",
+        "sessions_col_transport": "การขนส่ง",
+        "sessions_col_duration": "ระยะเวลา",
+        "sessions_active": "กำลังทำงาน",
+        "sessions_transport_punch": "ตรง / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "ลบแท็กที่นี่จะยกเลิกการกำหนดเฉพาะอุปกรณ์นี้ ใช้จัดการแท็กในหน้าอุปกรณ์เพื่อเปลี่ยนชื่อหรือลบทั้งหมด"
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "ลำดับความสำคัญของการรักษาความปลอดภัยที่เข้มงวดขึ้นสำหรับการปรับใช้ BetterDesk ของคุณ สินค้าเรียงลำดับตามความรุนแรง",
         "no_hardening": "ไม่มีรายการชุบแข็งให้ใช้งาน",
         "vuln_hint": "ผลการสแกนช่องโหว่ในการพึ่งพา เรียกใช้การตรวจสอบ npm เป็นประจำเพื่อรักษาการขึ้นต่อกันให้ปลอดภัย",
-        "no_vulns": "ไม่พบช่องโหว่ การพึ่งพาของคุณมีความปลอดภัย"
+        "no_vulns": "ไม่พบช่องโหว่ การพึ่งพาของคุณมีความปลอดภัย",
+        "tab_sessions": "เซสชันแผงควบคุม",
+        "sessions_hint": "การเข้าสู่ระบบคอนโซลของคุณ อนุญาตเพียงหนึ่งเซสชันที่ใช้งานต่อบัญชี การเข้าสู่ระบบใหม่จะสิ้นสุดเซสชันก่อนหน้า",
+        "sessions_policy": "หมดเวลา idle: {{idle}} นาที · สูงสุดสัมบูรณ์: {{max}} ชม. · หนึ่งเซสชันที่ใช้งานต่อบัญชี",
+        "no_sessions": "ยังไม่มีเซสชันแผงควบคุมที่บันทึก",
+        "session_current": "ปัจจุบัน",
+        "session_active": "ใช้งาน",
+        "session_ended": "สิ้นสุดแล้ว",
+        "col_status": "สถานะ",
+        "col_started": "เริ่ม",
+        "col_last_activity": "กิจกรรมล่าสุด",
+        "col_ended": "สิ้นสุด",
+        "col_reason": "เหตุผลสิ้นสุด",
+        "col_user_agent": "เบราว์เซอร์",
+        "reason_logout": "ออกจากระบบ",
+        "reason_replaced": "ถูกแทนที่ด้วยการเข้าสู่ระบบใหม่",
+        "reason_idle": "หมดเวลา idle",
+        "reason_max_age": "อายุสูงสุด",
+        "reason_revoked": "เพิกถอน",
+        "reason_destroyed": "ทำลาย"
     },
     "languages": {
         "title": "การจัดการภาษา",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "ก่อนติดตั้ง",
         "install_blocked_hint": "การติดตั้งถูกปิดใช้งานจนกว่าจะแก้ไขปัญหาข้างต้น",
         "preflight_info_title": "ก่อนติดตั้ง",
-        "preflight_info_note": "คุณสามารถติดตั้งอัปเดตได้ — นี่เป็นเพียงข้อความแจ้งข้อมูล"
+        "preflight_info_note": "คุณสามารถติดตั้งอัปเดตได้ — นี่เป็นเพียงข้อความแจ้งข้อมูล",
+        "proxy_timeout_recovering": "หมดเวลาเกตเวย์/พร็อกซี — กำลังตรวจสอบว่าการอัปเดตยังทำงานบนเซิร์ฟเวอร์หรือไม่…",
+        "install_still_running": "การอัปเดตยังทำงานบนเซิร์ฟเวอร์…",
+        "install_recovered": "การอัปเดตเสร็จบนเซิร์ฟเวอร์หลังการเชื่อมต่อเบราว์เซอร์ขาด",
+        "install_recovery_timeout": "หมดเวลารอการอัปเดตหลังเกตเวย์ตัดการเชื่อมต่อ ตรวจสอบ การตั้งค่า → การอัปเดต, data/.last_update_result.json หรือ: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "สิทธิ์",
@@ -4149,7 +4314,8 @@
             "status_error": "ข้อผิดพลาดล่าสุด",
             "os_yes": "ใช่",
             "os_no": "ไม่",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "เซสชันที่เรียกเก็บเงินที่ใช้งานอยู่",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "อุปกรณ์",
@@ -4181,7 +4354,11 @@
             "duration": "ระยะเวลา",
             "phase": "ระยะ",
             "amount": "จำนวนเงิน",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "เซสชัน",
@@ -4228,7 +4405,9 @@
             "skip": "ข้ามไปก่อน",
             "submit": "ส่งรายงาน",
             "summary_required": "ต้องมีสรุป",
-            "saved": "บันทึกรายงานการทำงานแล้ว"
+            "saved": "บันทึกรายงานการทำงานแล้ว",
+            "toolbar": "รายงานงาน",
+            "intent_hint": "แบบฟอร์มรายงานจะเปิดเมื่อเซสชันสิ้นสุด"
         },
         "empty": {
             "packages": "ยังไม่มีแพ็กเกจ สร้างด้วยปุ่มด้านบน",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk ฟรี",
+                "body": "รีโมตเดสก์ท็อปโอเพนซอร์ส — ไม่มีไลเซนส์ต่อที่นั่ง ไม่ล็อกผู้ขาย โฮสต์เองได้"
+            },
+            "remote": {
+                "title": "ซัพพอร์ตระยะไกลที่คุณควบคุม",
+                "body": "เชื่อมต่อเอนด์พอยต์จากคอนโซลของคุณ เซสชันอยู่บนโครงสร้างของคุณ"
+            },
+            "secure": {
+                "title": "ความปลอดภัยในตัว",
+                "body": "ยืนยันตัวตนผู้ปฏิบัติงาน ควบคุมเซสชัน และ attestation เซิร์ฟเวอร์เมื่อต้องการ"
+            },
+            "platforms": {
+                "title": "Windows, Linux และ macOS",
+                "body": "คอนโซลเดียวสำหรับเอเจนต์บนแพลตฟอร์มที่ทีมรองรับอยู่แล้ว"
+            }
+        },
+        "prev": "สไลด์ก่อนหน้า",
+        "next": "สไลด์ถัดไป"
+    },
+    "agents": {
+        "title": "เอเจนต์ BetterDesk",
+        "subtitle": "ไคลเอนต์ Support แบบรับเข้าอย่างเดียวสร้างใน BetterDesk-Client — แผงนี้จะนำเข้าและให้บริการ",
+        "what_title": "เอเจนต์ BetterDesk คืออะไร?",
+        "what_body": "เอเจนต์ BetterDesk Support เป็นไคลเอนต์เดสก์ท็อปแบบรับเข้าอย่างเดียว ลงทะเบียนกับเซิร์ฟเวอร์ แสดง QR จับคู่ และรับการสนับสนุนระยะไกล โดยไม่เริ่มการเชื่อมต่อออกไปยังอุปกรณ์อื่น",
+        "note_no_build": "คอนโซลนี้ไม่ได้สร้างตัวติดตั้งไคลเอนต์อีกต่อไป รีลีสที่ลงนามสร้างในที่เก็บ GitHub ของ BetterDesk-Client",
+        "get_title": "รับเอเจนต์จากที่ไหน",
+        "get_body": "ดาวน์โหลดแพ็กเกจ Support Agent ที่ลงนามจากรีลีส BetterDesk-Client หรือแชร์พอร์ทัลสาธารณะของเซิร์ฟเวอร์นี้หลังนำเข้าด้านล่าง",
+        "get_github": "รีลีส BetterDesk-Client",
+        "get_portal": "เปิดพอร์ทัลดาวน์โหลด",
+        "sync_title": "นำเข้าสำหรับเซิร์ฟเวอร์นี้",
+        "sync_hint": "นำเข้ารีลีส support-v* ที่ลงนามล่าสุด เพื่อให้ /portal ให้บริการตัวติดตั้งที่ตรวจสอบแล้ว",
+        "sync_import": "นำเข้ารีลีสล่าสุด",
+        "sync_importing": "กำลังนำเข้าและตรวจสอบรีลีสที่ลงนามล่าสุด…",
+        "sync_imported": "นำเข้า {{tag}} แล้ว",
+        "sync_empty": "ยังไม่ได้นำเข้ารีลีส",
+        "sync_verified": "ตรวจสอบแล้ว",
+        "sync_artifacts": "อาร์ติแฟกต์แพลตฟอร์ม {{count}} รายการ",
+        "steps_title": "วิธีนำเอเจนต์เข้าใช้งาน",
+        "step1": "นำเข้ารีลีสที่ลงนามล่าสุด (ปุ่มด้านบน) หรือดาวน์โหลดจาก GitHub",
+        "step2": "ติดตั้งเอเจนต์บนอุปกรณ์และใส่ URL สาธารณะของเซิร์ฟเวอร์นี้",
+        "step3": "เมื่อเอเจนต์แสดง QR ให้เปิด เปิดใช้งานเอเจนต์ แล้วสแกน",
+        "step4": "อนุมัติการลงทะเบียนหากนโยบายกำหนด แล้วเชื่อมต่อจาก Remote Desktop",
+        "pair_activate": "เปิดใช้งานเอเจนต์",
+        "pair_body": "การจับคู่ใช้ QR ที่ Support Agent ทั่วไปแสดงหลังจากติดต่อเซิร์ฟเวอร์ของคุณ",
+        "branding_link": "แบรนด์ไคลเอนต์",
+        "branding_body": "ลักษณะ (โลโก้ สี ป้าย) โหลดตอนรันไทม์จากแบรนด์ไคลเอนต์ — ไม่ฝังในตัวติดตั้ง"
     }
 }

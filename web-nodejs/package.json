@@ -1,6 +1,6 @@
 {
   "name": "betterdesk-console",
-  "version": "3.5.170",
+  "version": "3.5.199",
   "description": "BetterDesk Console - Professional Web Management Panel for BetterDesk Server",
   "main": "server.js",
   "scripts": {
@@ -44,8 +44,8 @@
     "express-rate-limit": "^7.4.1",
     "express-session": "^1.18.1",
     "helmet": "^7.2.0",
-    "multer": "^2.4.0",
-    "nodemailer": "^10.0.9",
+    "multer": "^2.4.1",
+    "nodemailer": "^10.1.4",
     "otplib": "^12.0.1",
     "protobufjs": "^7.6.5",
     "qrcode": "^1.5.4",
@@ -59,15 +59,16 @@
   },
   "overrides": {
     "@babel/core": "^7.29.6",
-    "js-yaml": "^3.15.1",
+    "js-yaml": "^3.15.2",
     "tar": "^7.5.21",
     "path-to-regexp": "^0.1.13",
     "brace-expansion": "^5.0.12",
     "proxy-addr": "^2.0.8",
     "form-data": "^4.0.6",
-    "body-parser": "^1.20.6",
+    "body-parser": "^1.20.9",
+    "follow-redirects": "^1.16.1",
     "protobufjs": "^7.6.5",
-    "qs": "^6.16.0",
+    "qs": "^6.16.1",
     "browserslist": "^4.28.7"
   },
   "devDependencies": {

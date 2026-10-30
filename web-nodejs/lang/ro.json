@@ -47,7 +47,7 @@
         "dashboard": "Tabloul de bord",
         "devices": "Dispozitive",
         "keys": "Chei",
-        "generator": "Generator",
+        "generator": "Agenți BetterDesk",
         "settings": "Setări",
         "users": "Utilizatori",
         "inventory": "Inventar",
@@ -61,6 +61,7 @@
         "reports": "Rapoarte",
         "tenants": "Chiriași",
         "registrations": "Registrations",
+        "activate_agent": "Activează agentul",
         "management": "management",
         "toggle_sidebar": "Comutați bara laterală",
         "cdap": "CDAP Dispozitive",
@@ -87,7 +88,8 @@
         "server_attestation": "Atestare server",
         "commercialization": "Comercializare",
         "remote_open_tab": "Deschide clientul desktop la distanță într-o filă nouă",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agenți BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "A apărut o eroare în timpul conectării SSO.",
         "oidc_no_account": "Contul dvs. nu a fost găsit și înregistrarea automată este dezactivată.",
         "totp_rate_limited": "Prea multe încercări. Vă rugăm să încercați din nou mai târziu.",
-        "emergency_mode_banner": "Go server inaccesibil - rulează în modul de urgență (doar pentru administrator, funcționalitate limitată)"
+        "emergency_mode_banner": "Go server inaccesibil - rulează în modul de urgență (doar pentru administrator, funcționalitate limitată)",
+        "session_expired": "Sesiunea a expirat sau a fost înlocuită de o autentificare nouă. Autentificați-vă din nou.",
+        "session_idle_warning_title": "Sesiunea expiră în curând",
+        "session_idle_warning_body": "Veți fi deconectat din cauza inactivității în {{seconds}} secunde.",
+        "session_stay_signed_in": "Rămâneți autentificat"
     },
     "dashboard": {
         "title": "Tabloul de bord",
@@ -144,7 +150,7 @@
         "quick_actions": "Acțiuni rapide",
         "manage_devices": "Gestionați dispozitivele conectate",
         "view_keys": "Vizualizați cheile serverului",
-        "generate_config": "Generați configurația clientului",
+        "generate_config": "De unde obțineți agenți Support doar incoming",
         "server_settings": "Configurați setările",
         "greeting_morning": "Bună dimineața, {name}",
         "greeting_afternoon": "Bună ziua, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "Server API",
         "config_key": "Cheie",
         "client_config_hint": "Introduceți aceste valori în setările de rețea RustDesk, în secțiunea server ID/relay.",
-        "open_generator": "Generator client",
+        "open_generator": "Agenți BetterDesk",
         "open_keys": "Deschide cheile",
         "open_remote": "Deschide consola desktop la distanță",
         "attention_panel": "Necesită atenție",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Fără folder",
         "activate_agent_submit": "Activează dispozitivul",
         "activate_agent_submitting": "Se activează dispozitivul…",
-        "activate_agent_success": "Agent activat cu succes."
+        "activate_agent_success": "Agent activat cu succes.",
+        "open_agents": "Agenți BetterDesk",
+        "agents_hint": "De unde obțineți agenți Support doar incoming"
     },
     "devices": {
         "title": "Dispozitive",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Gestionează etichetele",
+        "manage_device_tags": "Gestionează etichetele",
+        "rename_tag": "Redenumește eticheta",
+        "delete_tag": "Șterge eticheta",
+        "rename_tag_prompt": "Nume nou pentru etichetă",
+        "rename_tag_hint": "Redenumește această etichetă pe toate dispozitivele vizibile și actualizează grupurile dinamice potrivite.",
+        "delete_tag_confirm": "Eliminați eticheta \"{tag}\" de pe {count} dispozitiv(e)? Grupurile dinamice care o folosesc vor fi goale până la actualizare.",
+        "tag_renamed": "Etichetă redenumită",
+        "tag_deleted": "Etichetă ștearsă",
+        "tag_name_required": "Numele etichetei este obligatoriu",
+        "tag_rename_identical": "Noul nume trebuie să fie diferit",
+        "tags_backend_unsupported": "Etichetele dispozitivelor nu sunt acceptate cu backend-ul curent",
+        "tags_manage_hint": "Redenumiți sau ștergeți etichete pe toate dispozitivele vizibile. Eliminarea de pe un dispozitiv se face în Editare sau Detalii.",
+        "tags_device_hint": "Eliminați o etichetă aici pentru a o dezasocia doar de acest dispozitiv. Folosiți Gestionează etichetele pentru redenumire/ștergere globală.",
+        "unassign_tag": "Elimină de pe acest dispozitiv",
+        "tag_device_one": "dispozitiv",
+        "tag_device_many": "dispozitive",
+        "tag_group_one": "grup dinamic",
+        "tag_group_many": "grupuri dinamice"
     },
     "keys": {
         "title": "Cheile serverului",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Salvați modificările în acest fișier? O copie de rezervă a versiunii anterioare va fi creată.",
         "unsaved_restart_message": "Aveți modificări nesalvate. Renunțați la ele?",
         "unsaved_restart_save": "Salvare fișier",
-        "unsaved_restart_stay": "Anulează"
+        "unsaved_restart_stay": "Anulează",
+        "availability_history_title": "Istoric disponibilitate",
+        "availability_history_desc": "Opțional înregistrează schimbările online/offline pentru istoric zilnic în Metrics. Dezactivat implicit pentru a evita creșterea bazei de date.",
+        "availability_history_enable": "Activează istoricul de disponibilitate",
+        "availability_history_enable_hint": "Când este activ, serverul Go înregistrează tranzițiile (ONLINE, OFFLINE, DEGRADED, CRITICAL) din heartbeat și signal/CDAP/Mesh.",
+        "availability_history_retention": "Păstrare (zile)",
+        "availability_history_retention_hint": "Evenimentele vechi sunt șterse automat. Implicit: 30 de zile.",
+        "availability_history_save": "Salvează setările de disponibilitate",
+        "availability_history_saved": "Setările istoricului de disponibilitate au fost salvate",
+        "tab_time": "Ora / fusuri orare",
+        "time": {
+            "timezone_title": "Fus orar de facturare",
+            "timezone_desc": "Fus IANA global pentru limitele lunare ale comercializării (depășirea se resetează la miezul nopții pe 1).",
+            "billing_month_hint": "Miezul nopții din prima zi a lunii în acest fus închide perioada anterioară și deschide una nouă. Sesiunile active nu sunt întrerupte.",
+            "billing_timezone": "Fus orar",
+            "billing_timezone_hint": "Ex.: Europe/Warsaw. Afectează utilizarea lunară și depășirea.",
+            "custom_timezone": "Fus IANA personalizat (opțional)",
+            "detect_os": "Detectează din SO-ul serverului",
+            "detected": "Fus detectat: {tz}",
+            "ntp_title": "NTP / sincronizare ceas",
+            "ntp_desc": "Păstrați ceasul serverului BetterDesk sincronizat pentru durate de sesiune facturabile precise.",
+            "save": "Salvează setările de timp",
+            "save_title": "Salvează setările de timp",
+            "saved": "Setările de timp au fost salvate.",
+            "commercialization_link": "Deschide Comercializare → Pachete"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sesiune înlocuită",
+        "action_session_expired": "Sesiune expirată",
+        "action_session_ip_change": "Schimbare IP sesiune"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Setări (doar administrator)",
         "preview_quit": "Ieșire (doar administrator)",
         "download_link_title": "Link de descărcare",
+        "download_hub": "Centru de descărcare",
+        "generic_agents_empty": "Nicio versiune importată încă.",
+        "generic_agents_hint": "Calea principală de producție: importați versiuni semnate BetterDesk-Client din GitHub, apoi serviți agenți verificați din această instanță. Nu este nevoie de build local Flutter/Cargo.",
+        "generic_agents_import": "Importă cea mai recentă versiune",
+        "generic_agents_title": "Agenți generici doar în intrare",
         "download_link_hint": "Distribuiți acest link cu utilizatorii finali. Ei vor vedea o pagină de descărcare de marcă. Linkurile hex vechi funcționează în continuare după schimbarea linkului scurt.",
         "open_portal": "Deschide",
         "created": "Pachet creat",
@@ -970,7 +1038,21 @@
             "platforms_required": "Selectați cel puțin o platformă de compilat",
             "no_supported_targets": "Nu există momentan ținte de compilare disponibile. Verificați configurația builderului.",
             "toolchain_missing": "Lipsesc instrumentele de compilare necesare: {{tools}}",
-            "platform_unavailable": "Această țintă nu este disponibilă în builderul configurat."
+            "platform_unavailable": "Această țintă nu este disponibilă în builderul configurat.",
+            "generic_agent_release_not_found": "Nu există o versiune semnată support-v* pe BetterDesk-Client (trebuie să fie stabilă, fără draft/prerelease).",
+            "generic_agent_release_list_failed": "Nu s-au putut lista versiunile BetterDesk-Client de pe GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Timpul a expirat la descărcarea unui artefact al versiunii agentului.",
+            "generic_agent_release_redirect_limit": "Prea multe redirecționări la descărcarea unui artefact.",
+            "generic_agent_release_redirect_host_invalid": "Descărcarea a fost redirecționată către un gazdă neașteptată.",
+            "generic_agent_release_asset_invalid": "Numele sau URL-ul unui artefact de versiune este invalid.",
+            "generic_agent_release_asset_download_failed": "Descărcarea artefactului a eșuat: {{detail}}",
+            "generic_agent_release_external_config": "Arhiva conține configurație de server încorporată (custom.txt) și a fost respinsă.",
+            "generic_agent_release_archive_invalid": "O arhivă a versiunii nu a putut fi deschisă sau validată.",
+            "generic_agent_release_manifest_missing": "Versiunii îi lipsește manifest.json sau manifest.sig.",
+            "generic_agent_release_public_key_missing": "Nu este configurată nicio cheie publică pentru verificarea semnăturii.",
+            "generic_agent_release_signature_invalid": "Verificarea semnăturii manifestului a eșuat.",
+            "generic_agent_release_manifest_invalid": "Manifestul nu a trecut validarea (schema, sku sau assets).",
+            "generic_agent_release_checksum_mismatch": "Suma de control nu se potrivește pentru artefact: {{detail}}"
         },
         "legacy_title": "Generator de configurare a clientului",
         "connection_section": "Conexiune server",
@@ -979,6 +1061,7 @@
         "use_https": "Utilizați HTTPS / WSS (recomandat; debifați pentru HTTP în LAN ca RustDesk)",
         "enrollment_per_device": "Per dispozitiv — aprobați în Înregistrări",
         "builds_title": "Build-uri client",
+        "rebuild": "Recompilare",
         "rebuild_all": "Recompilare toate",
         "rebuild_confirm": "Recompilați toți instalatorii de platformă pentru acest pachet?",
         "build_status_ready": "Gata",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "Semnarea brandingului a eșuat — verificați cheia de semnare pe consolă, apoi reconstruiți.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) lipsește — build-urile Windows vor eșua.",
         "toolchain_appimage_missing": "appimagetool lipsește — build-urile AppImage vor eșua.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Se importă și se verifică cea mai recentă versiune semnată…",
+        "generic_agents_imported": "Importat {{tag}}.",
+        "generic_agents_verified": "verificat",
+        "generic_agents_artifacts": "{{count}} artefacte de platformă"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Tip de fișier invalid. Utilizați PNG, JPG, WebP sau GIF.",
         "bg_upload_success": "Imagine de fundal încărcată.",
         "login_title": "Pagina de autentificare",
-        "login_desc": "Personalizați titlul, subtitlul și fundalul ecranului de autentificare.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Titlu autentificare",
         "login_heading_placeholder": "Bine ați revenit",
         "login_subheading": "Subtitlu autentificare",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "Presetările aplică o paletă completă (de exemplu BetterDesk sau insolv Core Server). Sunt separate de comutatorul rapid luminos/întunecat.",
         "readability_check": "Verificare lizibilitate",
         "readability_contrast": "Contrastul pentru {item} ({ratio}) este sub {minimum}:1",
-        "readability_background": "{item} folosește {type} cu o suprapunere redusă; textul poate fi greu de citit."
+        "readability_background": "{item} folosește {type} cu o suprapunere redusă; textul poate fi greu de citit.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Prezentare generală",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Nu există informații despre hardware disponibile",
         "no_sysinfo_hint": "Informațiile de sistem vor apărea după ce dispozitivul trimite un raport sysinfo",
         "no_metrics": "Nu sunt disponibile date de valori",
-        "no_metrics_hint": "Valorile vor apărea după ce dispozitivul trimite rapoarte de ritm cardiac",
+        "no_metrics_hint": "Activați istoricul disponibilității în Setări pentru a înregistra schimbările online/offline. Sesiunile de conexiune apar când cineva se conectează.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Istoric disponibilitate",
+        "availability_prev_day": "Ziua anterioară",
+        "availability_next_day": "Ziua următoare",
+        "availability_loading": "Se încarcă istoricul de disponibilitate…",
+        "availability_disabled": "Istoricul de disponibilitate este dezactivat",
+        "availability_disabled_hint": "Activați în Setări → Istoric disponibilitate. Serverul va înregistra tranzițiile fără metrici CPU client.",
+        "availability_empty": "Nicio schimbare de stare în această zi",
+        "availability_empty_hint": "Tranzițiile apar când dispozitivul trece în online, offline, degraded sau critical.",
+        "availability_col_time": "Oră",
+        "availability_col_from": "Din",
+        "availability_col_to": "Către",
+        "availability_col_source": "Sursă",
+        "availability_status_online": "Online",
+        "availability_status_offline": "Offline",
+        "availability_status_degraded": "Degradat",
+        "availability_status_critical": "Critic",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Stare",
+        "section_metrics_summary": "Metrici server",
+        "metrics_avail_today": "Schimbări de stare (ziua selectată)",
+        "metrics_sessions_tracked": "Sesiuni urmărite",
+        "section_connection_sessions": "Sesiuni de conexiune",
+        "sessions_loading": "Se încarcă sesiunile de conexiune…",
+        "sessions_error": "Nu s-au putut încărca sesiunile de conexiune",
+        "sessions_empty": "Nicio sesiune de conexiune încă",
+        "sessions_empty_hint": "Sesiunile apar când un peer autorizat se conectează (punch hole sau relay). Durata se completează la încheierea relay.",
+        "sessions_col_when": "Când",
+        "sessions_col_who": "Cine",
+        "sessions_col_from": "De la IP",
+        "sessions_col_transport": "Transport",
+        "sessions_col_duration": "Durată",
+        "sessions_active": "Activă",
+        "sessions_transport_punch": "Direct / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Eliminarea unei etichete aici o dezasociază doar de acest dispozitiv. Folosiți Gestionează etichetele pe pagina Dispozitive pentru redenumire/ștergere globală."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "Priorități de întărire a securității pentru implementarea dvs. BetterDesk. Articolele sunt ordonate în funcție de gravitate.",
         "no_hardening": "Nu există articole de întărire disponibile.",
         "vuln_hint": "Rezultatele scanării vulnerabilității dependenței. Rulați auditul npm în mod regulat pentru a menține dependențele în siguranță.",
-        "no_vulns": "Nu au fost găsite vulnerabilități. Dependența dvs. este în siguranță."
+        "no_vulns": "Nu au fost găsite vulnerabilități. Dependența dvs. este în siguranță.",
+        "tab_sessions": "Sesiuni panou",
+        "sessions_hint": "Autentificările în consolă. Este permisă o singură sesiune activă per cont; o autentificare nouă o încheie pe cea anterioară.",
+        "sessions_policy": "Timeout inactivitate: {{idle}} min · Maxim absolut: {{max}} h · O sesiune activă per cont",
+        "no_sessions": "Nu există încă sesiuni de panou înregistrate.",
+        "session_current": "Curentă",
+        "session_active": "Activă",
+        "session_ended": "Încheiată",
+        "col_status": "Stare",
+        "col_started": "Început",
+        "col_last_activity": "Ultima activitate",
+        "col_ended": "Sfârșit",
+        "col_reason": "Motiv încheiere",
+        "col_user_agent": "Browser",
+        "reason_logout": "Deconectare",
+        "reason_replaced": "Înlocuită de autentificare nouă",
+        "reason_idle": "Timeout inactivitate",
+        "reason_max_age": "Durată maximă",
+        "reason_revoked": "Revocată",
+        "reason_destroyed": "Distrusă"
     },
     "languages": {
         "title": "Managementul Limbii",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Înainte de instalare",
         "install_blocked_hint": "Instalarea este dezactivată până când problemele de mai sus sunt rezolvate.",
         "preflight_info_title": "Înainte de instalare",
-        "preflight_info_note": "Puteți instala actualizarea — acestea sunt doar notificări informative."
+        "preflight_info_note": "Puteți instala actualizarea — acestea sunt doar notificări informative.",
+        "proxy_timeout_recovering": "Timeout gateway/proxy — verific dacă actualizarea încă rulează pe server…",
+        "install_still_running": "Actualizarea încă rulează pe server…",
+        "install_recovered": "Actualizarea s-a terminat pe server după pierderea conexiunii browserului",
+        "install_recovery_timeout": "Timeout la așteptarea actualizării după deconectarea gateway-ului. Verificați Setări → Actualizări, data/.last_update_result.json sau: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Permisiuni",
@@ -4149,7 +4314,8 @@
             "status_error": "Ultima eroare",
             "os_yes": "Da",
             "os_no": "Nu",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Sesiuni facturabile active",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Dispozitiv",
@@ -4181,7 +4354,11 @@
             "duration": "Durată",
             "phase": "Fază",
             "amount": "Sumă",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sesiune",
@@ -4228,7 +4405,9 @@
             "skip": "Omite deocamdată",
             "submit": "Trimite raport",
             "summary_required": "Rezumatul este obligatoriu",
-            "saved": "Raport de lucru salvat"
+            "saved": "Raport de lucru salvat",
+            "toolbar": "Raport de lucru",
+            "intent_hint": "Formularul de raport se va deschide la finalul sesiunii"
         },
         "empty": {
             "packages": "Nu există pachete încă. Creați unul cu butonul de mai sus.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk este gratuit",
+                "body": "Desktop remote open-source — fără licențe pe locuri, fără lock-in. Îl găzduiți voi."
+            },
+            "remote": {
+                "title": "Suport remote sub controlul dvs.",
+                "body": "Conectați endpoint-uri din propria consolă. Sesiunile rămân pe infrastructura dvs."
+            },
+            "secure": {
+                "title": "Securitate integrată",
+                "body": "Autentificare operatori, control sesiuni și atestare server când aveți nevoie."
+            },
+            "platforms": {
+                "title": "Windows, Linux și macOS",
+                "body": "O consolă pentru agenți pe platformele pe care echipa le suportă deja."
+            }
+        },
+        "prev": "Diapozitivul anterior",
+        "next": "Diapozitivul următor"
+    },
+    "agents": {
+        "title": "Agenți BetterDesk",
+        "subtitle": "Clienții Support doar incoming sunt creați în BetterDesk-Client — acest panou îi importă și îi servește.",
+        "what_title": "Ce sunt agenții BetterDesk?",
+        "what_body": "Agenții Support BetterDesk sunt clienți desktop doar pentru conexiuni de intrare. Se înregistrează pe server, afișează un QR de asociere și acceptă suport remote. Nu inițiază conexiuni de ieșire către alte dispozitive.",
+        "note_no_build": "Această consolă nu mai construiește instalatoare de client. Versiunile semnate sunt produse în depozitul GitHub BetterDesk-Client.",
+        "get_title": "De unde obțineți agenții",
+        "get_body": "Descărcați pachete Support Agent semnate din versiunile BetterDesk-Client sau partajați portalul public al acestui server după importul de mai jos.",
+        "get_github": "Versiuni BetterDesk-Client",
+        "get_portal": "Deschide portalul de descărcare",
+        "sync_title": "Import pentru acest server",
+        "sync_hint": "Importați cea mai recentă versiune semnată support-v* pentru ca /portal să servească instalatoare verificate.",
+        "sync_import": "Importă ultima versiune",
+        "sync_importing": "Se importă și se verifică ultima versiune semnată…",
+        "sync_imported": "Importat {{tag}}.",
+        "sync_empty": "Nicio versiune importată încă.",
+        "sync_verified": "verificat",
+        "sync_artifacts": "{{count}} artefacte de platformă",
+        "steps_title": "Cum integrați un agent",
+        "step1": "Importați ultima versiune semnată (butonul de mai sus) sau descărcați de pe GitHub.",
+        "step2": "Instalați agentul pe dispozitiv și introduceți URL-ul public al acestui server.",
+        "step3": "Când agentul afișează un QR, deschideți Activează agentul și scanați-l.",
+        "step4": "Aprobați înregistrarea dacă politica o cere, apoi conectați-vă din Remote Desktop.",
+        "pair_activate": "Activează agentul",
+        "pair_body": "Asocierea folosește QR-ul afișat de un Support Agent generic după contactul cu serverul.",
+        "branding_link": "Branding client",
+        "branding_body": "Aspectul (logo, culori, etichete) este încărcat la runtime din Branding client — nu este înglobat în instalator."
     }
 }

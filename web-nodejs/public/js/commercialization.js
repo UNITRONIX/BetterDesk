@@ -188,25 +188,154 @@
         }
     }
 
+    let packagesCache = [];
+    let previewPackageId = null;
+    let previewPeriod = '';
+
+    function closePackageContextMenu() {
+        const menu = document.getElementById('packages-context-menu');
+        if (!menu) return;
+        menu.hidden = true;
+        menu.classList.remove('open');
+        menu.innerHTML = '';
+    }
+
+    function openPackageContextMenu(clientX, clientY, pkg) {
+        const menu = document.getElementById('packages-context-menu');
+        if (!menu || !pkg) return;
+        menu.innerHTML = `
+            <button type="button" class="kebab-menu-item" data-action="preview">
+                <span class="material-icons">visibility</span>
+                <span>${t('commercialization.preview.open', 'Month preview')}</span>
+            </button>
+            <button type="button" class="kebab-menu-item" data-action="edit">
+                <span class="material-icons">edit</span>
+                <span>${t('commercialization.actions.edit', 'Edit')}</span>
+            </button>
+            <div class="kebab-divider"></div>
+            <button type="button" class="kebab-menu-item danger" data-action="delete">
+                <span class="material-icons">delete</span>
+                <span>${t('commercialization.actions.delete', 'Delete')}</span>
+            </button>`;
+        menu.hidden = false;
+        menu.classList.add('open');
+        const mw = menu.offsetWidth || 180;
+        const mh = menu.offsetHeight || 120;
+        let left = clientX;
+        let top = clientY;
+        if (left + mw > window.innerWidth - 8) left = window.innerWidth - mw - 8;
+        if (top + mh > window.innerHeight - 8) top = window.innerHeight - mh - 8;
+        menu.style.left = `${Math.max(8, left)}px`;
+        menu.style.top = `${Math.max(8, top)}px`;
+        menu.onclick = (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            closePackageContextMenu();
+            if (action === 'preview') openPackagePreview(pkg.id);
+            else if (action === 'edit') openPackageModal(pkg.id);
+            else if (action === 'delete') deletePackage(pkg.id);
+        };
+    }
+
+    async function openPackagePreview(packageId, period) {
+        previewPackageId = packageId;
+        const overlay = document.getElementById('package-preview-modal');
+        if (!overlay) return;
+        overlay.classList.add('open');
+        document.querySelectorAll('#packages-table tbody tr').forEach((tr) => {
+            tr.classList.toggle('is-selected', tr.dataset.id === packageId);
+        });
+        const qs = period ? `?period=${encodeURIComponent(period)}` : '';
+        const data = await api(`/api/panel/billing/packages/${encodeURIComponent(packageId)}/preview${qs}`);
+        previewPeriod = data.period_ym || '';
+        const title = document.getElementById('package-preview-title');
+        if (title) title.textContent = data.package?.name || t('commercialization.preview.title', 'Package preview');
+        const sel = document.getElementById('package-preview-period');
+        if (sel) {
+            const periods = data.available_periods || [previewPeriod];
+            sel.innerHTML = periods.map((p) => `<option value="${escapeHtml(p)}" ${p === previewPeriod ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('');
+        }
+        const stats = document.getElementById('package-preview-stats');
+        if (stats) {
+            const companies = (data.companies || []).join(', ') || '—';
+            stats.innerHTML = `
+                <dt>${t('commercialization.preview.company', 'Company')}</dt><dd>${escapeHtml(companies)}</dd>
+                <dt>${t('commercialization.preview.devices', 'Devices')}</dt><dd>${data.device_count || 0}</dd>
+                <dt>${t('commercialization.preview.used', 'Used')}</dt><dd>${formatMinutes(data.included_minutes_used || 0)}</dd>
+                <dt>${t('commercialization.preview.remaining', 'Remaining')}</dt><dd>${formatMinutes(data.remaining_minutes || 0)}</dd>
+                <dt>${t('commercialization.preview.overage', 'Overage')}</dt><dd>${formatMinutes(data.overage_minutes || 0)} · ${(data.amount_overage || 0).toFixed(2)} ${escapeHtml(data.currency || '')}</dd>
+                <dt>${t('commercialization.preview.month_total', 'Month total')}</dt><dd>${formatMinutes((data.included_minutes_used || 0) + (data.overage_minutes || 0))}</dd>
+                <dt>${t('commercialization.preview.timezone', 'Timezone')}</dt><dd>${escapeHtml(data.timezone || 'UTC')}</dd>`;
+        }
+    }
+
+    function closePackagePreview() {
+        previewPackageId = null;
+        document.getElementById('package-preview-modal')?.classList.remove('open');
+        document.querySelectorAll('#packages-table tbody tr.is-selected').forEach((tr) => tr.classList.remove('is-selected'));
+    }
+
+    function shiftPreviewMonth(delta) {
+        const sel = document.getElementById('package-preview-period');
+        if (!sel || !previewPackageId) return;
+        const opts = Array.from(sel.options).map((o) => o.value);
+        let idx = opts.indexOf(sel.value);
+        if (idx < 0) idx = 0;
+        idx = Math.max(0, Math.min(opts.length - 1, idx + delta));
+        openPackagePreview(previewPackageId, opts[idx]).catch((e) => notifyError(e.message));
+    }
+
     async function loadPackages() {
         const tbody = document.querySelector('#packages-table tbody');
         if (!tbody) return [];
         const data = await api('/api/panel/billing/packages');
         tbody.innerHTML = '';
-        const pkgs = data.packages || [];
-        pkgs.forEach((p) => {
+        const search = (document.getElementById('filter-package-search')?.value || '').trim().toLowerCase();
+        let pkgs = data.packages || [];
+        if (search) {
+            pkgs = pkgs.filter((p) => `${p.name || ''} ${p.description || ''}`.toLowerCase().includes(search));
+        }
+        packagesCache = pkgs;
+
+        // Enrich rows with current-month preview (best-effort, parallel)
+        const previews = await Promise.all(pkgs.map(async (p) => {
+            try {
+                return await api(`/api/panel/billing/packages/${encodeURIComponent(p.id)}/preview`);
+            } catch (_) {
+                return null;
+            }
+        }));
+
+        pkgs.forEach((p, i) => {
+            const prev = previews[i] || {};
+            const companies = (prev.companies || []).join(', ');
             const tr = document.createElement('tr');
+            tr.dataset.id = p.id;
             tr.innerHTML = `
-                <td>${escapeHtml(p.name)}</td>
-                <td>${escapeHtml(p.description || '')}</td>
+                <td data-column="name">${escapeHtml(p.name)}</td>
+                <td>${escapeHtml(companies || '—')}</td>
+                <td>${prev.device_count != null ? prev.device_count : '—'}</td>
                 <td>${p.included_minutes}</td>
+                <td>${formatMinutes(prev.included_minutes_used || 0)}</td>
+                <td>${formatMinutes(prev.remaining_minutes != null ? prev.remaining_minutes : p.included_minutes)}</td>
                 <td>${p.overage_rate}</td>
                 <td>${escapeHtml(p.currency)}</td>
                 <td class="actions-cell">
+                    <button type="button" class="btn-link" data-preview-package="${escapeHtml(p.id)}">${t('commercialization.preview.open', 'Preview')}</button>
                     <button type="button" class="btn-link" data-edit-package="${escapeHtml(p.id)}">${t('commercialization.actions.edit', 'Edit')}</button>
                     <button type="button" class="btn-link danger" data-delete-package="${escapeHtml(p.id)}">${t('commercialization.actions.delete', 'Delete')}</button>
                 </td>`;
+            tr.addEventListener('contextmenu', (e) => {
+                if (e.target.closest('.actions-cell')) return;
+                e.preventDefault();
+                openPackageContextMenu(e.clientX, e.clientY, p);
+            });
+            tr.addEventListener('dblclick', () => openPackagePreview(p.id).catch((err) => notifyError(err.message)));
             tbody.appendChild(tr);
+        });
+        tbody.querySelectorAll('[data-preview-package]').forEach((btn) => {
+            btn.addEventListener('click', () => openPackagePreview(btn.getAttribute('data-preview-package')).catch((e) => notifyError(e.message)));
         });
         tbody.querySelectorAll('[data-edit-package]').forEach((btn) => {
             btn.addEventListener('click', () => openPackageModal(btn.getAttribute('data-edit-package')));
@@ -326,23 +455,70 @@
         return params.toString();
     }
 
+    async function completePendingReport(sessionId) {
+        const summary = window.prompt(t('commercialization.report.summary', 'Work performed'));
+        if (summary == null) return;
+        const trimmed = summary.trim();
+        if (!trimmed) {
+            notifyError(t('commercialization.report.summary_required', 'Summary is required'));
+            return;
+        }
+        try {
+            await api(`/api/panel/billing/sessions/${encodeURIComponent(sessionId)}/report`, {
+                method: 'POST',
+                body: { summary: trimmed, category: '', ticket_ref: '' }
+            });
+            notifySuccess(t('commercialization.report.saved', 'Work report saved'));
+            await loadSessions();
+        } catch (e) {
+            notifyError(e.message);
+        }
+    }
+
     async function loadSessions() {
         const tbody = document.querySelector('#sessions-table tbody');
         if (!tbody) return;
         const qs = sessionQuery();
-        const data = await api(`/api/panel/billing/sessions${qs ? `?${qs}` : ''}`);
+        const [sessData, reportData] = await Promise.all([
+            api(`/api/panel/billing/sessions${qs ? `?${qs}` : ''}`),
+            api('/api/panel/billing/reports').catch(() => ({ reports: [] }))
+        ]);
+        const reportsBySession = {};
+        (reportData.reports || []).forEach((r) => {
+            reportsBySession[r.session_id] = r;
+        });
         tbody.innerHTML = '';
         let active = 0;
-        (data.sessions || []).forEach((s) => {
+        (sessData.sessions || []).forEach((s) => {
             if (s.status === 'active') active++;
-            const amount = (s.amount_included || 0) + (s.amount_overage || 0);
+            const report = reportsBySession[s.id];
+            const reportCell = report
+                ? escapeHtml(report.summary || '')
+                : (s.status === 'pending_report'
+                    ? `<span class="status-pill pending_report">${t('commercialization.status.pending_report', 'Pending report')}</span>`
+                    : '—');
+            const actions = s.status === 'pending_report'
+                ? `<button type="button" class="btn-link" data-complete-report="${escapeHtml(s.id)}">${t('commercialization.sessions.complete_report', 'Complete report')}</button>`
+                : '';
+            const started = s.started_at ? new Date(s.started_at).toLocaleString() : '';
+            const ended = s.ended_at ? new Date(s.ended_at).toLocaleString() : '';
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${escapeHtml(s.device_name || s.device_id)}</td><td>${escapeHtml(s.org_id || '')}</td><td>${escapeHtml(s.operator_id)}</td><td>${formatMinutes(s.billed_minutes)}</td><td>${escapeHtml(s.billing_phase)}</td><td>${amount.toFixed(2)} ${escapeHtml(s.currency)}</td>`;
+            tr.innerHTML = `
+                <td>${escapeHtml(s.device_name || s.device_id)}<div class="text-muted" style="font-size:0.75rem;">${escapeHtml(s.device_id || '')}</div></td>
+                <td>${escapeHtml(s.operator_name || s.operator_id || '')}</td>
+                <td>${escapeHtml(started)}</td>
+                <td>${escapeHtml(ended)}</td>
+                <td>${formatMinutes(s.billed_minutes)}</td>
+                <td>${reportCell}</td>
+                <td class="actions-cell">${actions}</td>`;
             tbody.appendChild(tr);
+        });
+        tbody.querySelectorAll('[data-complete-report]').forEach((btn) => {
+            btn.addEventListener('click', () => completePendingReport(btn.getAttribute('data-complete-report')));
         });
         const stat = document.getElementById('stat-active-sessions');
         if (stat) stat.textContent = String(active);
-        setEmptyState('sessions-table', 'sessions-empty', (data.sessions || []).length === 0,
+        setEmptyState('sessions-table', 'sessions-empty', (sessData.sessions || []).length === 0,
             t('commercialization.empty.sessions', 'No billable sessions recorded yet.'));
     }
 
@@ -402,13 +578,26 @@
         openModal('package-modal');
     }
 
+    function syncPackageMinutesFromAmount() {
+        const unit = document.getElementById('package-unit')?.value || 'hours';
+        const amount = parseFloat(document.getElementById('package-amount')?.value) || 0;
+        const minutes = unit === 'hours' ? Math.round(amount * 60) : Math.round(amount);
+        const hidden = document.getElementById('package-minutes');
+        if (hidden) hidden.value = String(Math.max(1, minutes));
+        return Math.max(1, minutes);
+    }
+
     async function submitPackageModal() {
         const errEl = document.getElementById('package-modal-error');
         const name = document.getElementById('package-name')?.value.trim();
         const description = document.getElementById('package-description')?.value.trim();
-        const includedMinutes = parseInt(document.getElementById('package-minutes')?.value, 10);
+        const includedMinutes = syncPackageMinutesFromAmount();
         const overageRate = parseFloat(document.getElementById('package-overage')?.value);
         const currency = document.getElementById('package-currency')?.value.trim().toUpperCase();
+        let rounding = document.getElementById('package-rounding')?.value;
+        if (rounding === 'custom') {
+            rounding = document.getElementById('package-rounding-custom')?.value || '15';
+        }
 
         if (!name) {
             showModalError(errEl, t('commercialization.packages.prompt_name', 'Package name'));
@@ -420,7 +609,8 @@
             description,
             included_minutes: includedMinutes,
             overage_rate: overageRate,
-            currency: currency || 'PLN'
+            currency: currency || 'PLN',
+            rounding_minutes: parseInt(rounding, 10) || 10
         };
 
         try {
@@ -513,7 +703,8 @@
             typeSelect.dataset.bound = '1';
             typeSelect.addEventListener('change', () => loadTargetOptions(typeSelect.value));
         }
-        await loadTargetOptions(typeSelect?.value || 'org');
+        if (typeSelect) typeSelect.value = 'device_group';
+        await loadTargetOptions('device_group');
         openModal('assign-modal');
     }
 
@@ -635,52 +826,23 @@
         if (current) selectEl.value = current;
     }
 
-    document.getElementById('btn-timesync-check')?.addEventListener('click', async () => {
-        try {
-            await api('/api/panel/billing/timesync/check', { method: 'POST' });
-            notifySuccess(t('commercialization.clock.checked', 'Clock check completed'));
-            await loadTimesync();
-        } catch (e) {
-            notifyError(e.message);
+    document.getElementById('btn-billing-settings')?.addEventListener('click', () => {
+        const panel = document.getElementById('billing-settings-panel');
+        panel?.classList.toggle('hidden');
+        if (panel && !panel.classList.contains('hidden')) {
+            loadEmailNotificationSettings().catch(console.warn);
+            loadTimesync();
         }
     });
+    document.getElementById('btn-close-billing-settings')?.addEventListener('click', () => {
+        document.getElementById('billing-settings-panel')?.classList.add('hidden');
+    });
 
-    document.getElementById('btn-save-clock-settings')?.addEventListener('click', async () => {
-        if (!clockDockerMode) {
-            const ok = window.confirm(t(
-                'commercialization.clock.save_restart',
-                'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.'
-            ));
-            if (!ok) return;
-        }
-        try {
-            const result = await api('/api/panel/billing/clock/settings', {
-                method: 'PUT',
-                body: {
-                    ntp_servers: document.getElementById('clock-ntp-servers')?.value || '',
-                    max_skew_ms: Number(document.getElementById('clock-max-skew')?.value || 2000),
-                    require_synced_clock: document.getElementById('clock-require-sync')?.checked !== false,
-                    trust_os_ntp: document.getElementById('clock-trust-os')?.checked !== false
-                }
-            });
-            if (result?.dockerMode === true) {
-                clockDockerMode = true;
-            }
-            notifySuccess(t(
-                result?.dockerMode === true
-                    ? 'commercialization.clock.saved_hot_reload'
-                    : 'commercialization.clock.saved',
-                result?.dockerMode === true
-                    ? 'Clock settings saved and applied without a service restart.'
-                    : 'Clock settings saved. Go server restart initiated.'
-            ));
-            if (result?.restartRequired && window.BetterDeskRestart) {
-                window.BetterDeskRestart.handle(result.restartRequired);
-            }
-            await loadTimesync();
-        } catch (e) {
-            notifyError(e.message);
-        }
+    document.getElementById('package-unit')?.addEventListener('change', syncPackageMinutesFromAmount);
+    document.getElementById('package-amount')?.addEventListener('input', syncPackageMinutesFromAmount);
+    document.getElementById('package-rounding')?.addEventListener('change', () => {
+        const wrap = document.getElementById('package-rounding-custom-wrap');
+        wrap?.classList.toggle('hidden', document.getElementById('package-rounding')?.value !== 'custom');
     });
 
     document.getElementById('btn-new-package')?.addEventListener('click', () => {
@@ -727,6 +889,28 @@
     document.getElementById('filter-session-org')?.addEventListener('change', () => loadSessions().catch(console.warn));
     document.getElementById('filter-session-status')?.addEventListener('change', () => loadSessions().catch(console.warn));
     document.getElementById('filter-report-org')?.addEventListener('change', () => loadReports().catch(console.warn));
+    document.getElementById('filter-package-search')?.addEventListener('input', () => {
+        clearTimeout(window._commPackageSearchTimer);
+        window._commPackageSearchTimer = setTimeout(() => loadPackages().catch(console.warn), 300);
+    });
+    document.getElementById('btn-close-package-preview')?.addEventListener('click', () => closePackagePreview());
+    document.getElementById('btn-preview-prev-month')?.addEventListener('click', () => shiftPreviewMonth(1));
+    document.getElementById('btn-preview-next-month')?.addEventListener('click', () => shiftPreviewMonth(-1));
+    document.getElementById('package-preview-period')?.addEventListener('change', (e) => {
+        if (previewPackageId) openPackagePreview(previewPackageId, e.target.value).catch((err) => notifyError(err.message));
+    });
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#packages-context-menu')) closePackageContextMenu();
+    });
+    document.getElementById('package-preview-modal')?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closePackagePreview();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closePackageContextMenu();
+            closePackagePreview();
+        }
+    });
 
     async function loadEmailNotificationSettings() {
         const statusEl = document.getElementById('email-smtp-status');
@@ -770,28 +954,22 @@
         }
     });
 
-    const tab = page.dataset.activeTab || 'overview';
-    if (tab === 'overview' || tab === 'settings') {
-        loadTimesync();
-    }
-    if (tab === 'overview') {
-        loadOverviewStats().catch(console.warn);
-        loadSessions().catch(console.warn);
-    }
-    if (tab === 'settings') {
-        loadEmailNotificationSettings().catch(console.warn);
-        loadClockSettings().catch(console.warn);
-    }
+    const tab = page.dataset.activeTab || 'packages';
+    loadTimesync();
     if (tab === 'sessions') {
         populateOrgFilterSelect(document.getElementById('filter-session-org')).catch(console.warn);
+        const reportOrg = document.getElementById('filter-report-org');
+        if (reportOrg) {
+            populateOrgFilterSelect(reportOrg).catch(console.warn);
+        }
         loadSessions().catch(console.warn);
     }
     if (tab === 'packages') {
         loadPackages().catch(console.warn);
         loadContracts().catch(console.warn);
-    }
-    if (tab === 'reports') {
-        populateOrgFilterSelect(document.getElementById('filter-report-org')).catch(console.warn);
-        loadReports().catch(console.warn);
+        if (page.dataset.openSettings === '1') {
+            document.getElementById('billing-settings-panel')?.classList.remove('hidden');
+            loadEmailNotificationSettings().catch(console.warn);
+        }
     }
 })();

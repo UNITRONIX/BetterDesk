@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# BetterDesk — embedded Support builder toolchain installer (Linux only)
+# BetterDesk — OPTIONAL / developer toolchain (Linux only)
 #
-# Provisions a host so the Node.js console can build incoming-only
-# BetterDesk Support artifacts with the embedded BetterDesk-Client provider.
+# Production BetterDesk servers do NOT build Support agents locally.
+# Import signed releases from BetterDesk-Client (Generator → Import latest).
+#
+# This script is for maintainers who set BETTERDESK_CLIENT_GENERATOR_MODE=embedded
+# and compile incoming-only BetterDesk-Client artifacts on the panel host.
 # Idempotent — safe to re-run.
 #
 # Local targets are host-only:

@@ -13,7 +13,7 @@
 
 const WebSocket = require('ws');
 const db = require('./database');
-const { roleHasPermission } = require('../middleware/auth');
+const { roleHasEffectivePermission } = require('../middleware/auth');
 
 const log = {
     info:  (...a) => console.log('[DeviceStatus]', ...a),
@@ -53,21 +53,28 @@ function initDeviceStatusPush(httpServer, sessionMiddleware, goApiUrl, apiKey) {
     const panelClients = new Set();
     const { registerUpgradeHandler } = require('./wsUpgradeRouter');
 
-    function authenticateUpgrade(req, socket, head, targetWss, authorize) {
+    async function authenticateUpgrade(req, socket, head, targetWss, authorize) {
         sessionMiddleware(req, {}, () => {
             if (!req.session || !req.session.userId) {
                 socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
                 socket.destroy();
                 return;
             }
-            if (authorize && !authorize(req)) {
-                socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
-                socket.destroy();
-                return;
-            }
-            targetWss.handleUpgrade(req, socket, head, (ws) => {
-                targetWss.emit('connection', ws, req);
-            });
+            Promise.resolve(authorize ? authorize(req) : true)
+                .then((allowed) => {
+                    if (!allowed) {
+                        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                        socket.destroy();
+                        return;
+                    }
+                    targetWss.handleUpgrade(req, socket, head, (ws) => {
+                        targetWss.emit('connection', ws, req);
+                    });
+                })
+                .catch(() => {
+                    socket.write('HTTP/1.1 503 Service Unavailable\r\n\r\n');
+                    socket.destroy();
+                });
         });
     }
 
@@ -85,7 +92,10 @@ function initDeviceStatusPush(httpServer, sessionMiddleware, goApiUrl, apiKey) {
             socket,
             head,
             panelWss,
-            (request) => roleHasPermission(request.session?.user?.role, 'enrollment.approve')
+            (request) => roleHasEffectivePermission(
+                request.session?.user?.role,
+                'enrollment.approve'
+            )
         )
     );
 

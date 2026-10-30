@@ -19,6 +19,7 @@
     else if (tab === 'events') loadEvents();
     else if (tab === 'hardening') loadHardening();
     else if (tab === 'vulnerabilities') loadVulnerabilities();
+    else if (tab === 'sessions') loadSessions();
   }
 
   /* ── Overview ── */
@@ -201,6 +202,58 @@
     }
   }
 
+  /* ── Panel sessions ── */
+  async function loadSessions() {
+    try {
+      const res = await fetch('/api/auth/sessions', { credentials: 'same-origin' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to load sessions');
+      const d = json.data || json;
+      const sessions = d.sessions || [];
+      const policy = d.policy || {};
+      const summary = document.getElementById('session-policy-summary');
+      if (summary) {
+        const idleMin = Math.round((policy.idleTimeoutMs || 0) / 60000);
+        const maxH = Math.round((policy.maxAgeMs || 0) / 3600000);
+        summary.textContent = _('security_audit.sessions_policy')
+          .replace('{{idle}}', String(idleMin))
+          .replace('{{max}}', String(maxH));
+      }
+      const tbody = document.getElementById('sessions-tbody');
+      if (!sessions.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="secaudit-empty"><span class="material-icons">devices</span>${_('security_audit.no_sessions')}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = sessions.map(s => {
+        const status = s.current
+          ? _('security_audit.session_current')
+          : (s.active ? _('security_audit.session_active') : _('security_audit.session_ended'));
+        let reason = '—';
+        if (s.endReason) {
+          const key = 'security_audit.reason_' + s.endReason;
+          const translated = _(key);
+          reason = (translated && translated !== key) ? translated : s.endReason;
+        }
+        return `<tr>
+          <td>${esc(status)}</td>
+          <td>${esc(s.ipAddress || '—')}</td>
+          <td>${formatTime(s.createdAt)}</td>
+          <td>${formatTime(s.lastActivityAt)}</td>
+          <td>${formatTime(s.endedAt)}</td>
+          <td>${esc(reason)}</td>
+          <td title="${esc(s.userAgent || '')}">${esc(shortUa(s.userAgent))}</td>
+        </tr>`;
+      }).join('');
+    } catch (e) {
+      console.error('SecurityAudit sessions error:', e);
+    }
+  }
+
+  function shortUa(ua) {
+    if (!ua) return '—';
+    return ua.length > 64 ? ua.slice(0, 61) + '…' : ua;
+  }
+
   /* ── Helpers ── */
   function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
   function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -224,7 +277,7 @@
   function init() {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab && ['overview', 'events', 'hardening', 'vulnerabilities'].includes(tab)) {
+    if (tab && ['overview', 'events', 'hardening', 'vulnerabilities', 'sessions'].includes(tab)) {
       activeTab = tab;
     }
     // Activate correct tab on load
@@ -237,9 +290,10 @@
     else if (activeTab === 'events') loadEvents();
     else if (activeTab === 'hardening') loadHardening();
     else if (activeTab === 'vulnerabilities') loadVulnerabilities();
+    else if (activeTab === 'sessions') loadSessions();
   }
 
-  window.SecurityAudit = { init, switchTab, loadEvents, filterEvents, goPage };
+  window.SecurityAudit = { init, switchTab, loadEvents, filterEvents, goPage, loadSessions };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

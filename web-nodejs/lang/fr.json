@@ -45,7 +45,7 @@
         "dashboard": "Tableau de bord",
         "devices": "Appareils",
         "keys": "Clés",
-        "generator": "Générateur",
+        "generator": "Agents BetterDesk",
         "settings": "Paramètres",
         "users": "Utilisateurs",
         "inventory": "Inventory",
@@ -59,6 +59,7 @@
         "reports": "Reports",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "Activer l'agent",
         "management": "Management",
         "toggle_sidebar": "Basculer la barre latérale",
         "toggle_theme": "Changer de thème",
@@ -85,7 +86,8 @@
         "server_attestation": "Server-Attestierung",
         "commercialization": "Kommerzialisierung",
         "remote_open_tab": "Ouvrir le client Bureau à distance dans un nouvel onglet",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agents BetterDesk"
     },
     "auth": {
         "login": "Connexion",
@@ -128,7 +130,11 @@
         "totp_rate_limited": "Zu viele Versuche. Bitte versuchen Sie es später erneut.",
         "totp_already_enabled": "L'authentification à deux facteurs est déjà activée",
         "passwords_mismatch": "Les mots de passe ne correspondent pas",
-        "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)"
+        "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)",
+        "session_expired": "Votre session a expiré ou a été remplacée par une nouvelle connexion. Veuillez vous reconnecter.",
+        "session_idle_warning_title": "Session bientôt expirée",
+        "session_idle_warning_body": "Vous serez déconnecté pour inactivité dans {{seconds}} secondes.",
+        "session_stay_signed_in": "Rester connecté"
     },
     "dashboard": {
         "title": "Tableau de bord",
@@ -142,7 +148,7 @@
         "quick_actions": "Actions rapides",
         "manage_devices": "Gérer les appareils connectés",
         "view_keys": "Voir les clés du serveur",
-        "generate_config": "Générer la configuration client",
+        "generate_config": "Où obtenir les agents Support entrants uniquement",
         "server_settings": "Configurer les paramètres",
         "greeting_morning": "Bonjour, {name}",
         "greeting_afternoon": "Bon après-midi, {name}",
@@ -174,7 +180,7 @@
         "config_api_server": "Serveur API",
         "config_key": "Clé",
         "client_config_hint": "Saisissez ces valeurs dans les paramètres réseau de RustDesk, dans la section serveur ID/relais.",
-        "open_generator": "Générateur de client",
+        "open_generator": "Agents BetterDesk",
         "open_keys": "Ouvrir les clés",
         "open_remote": "Ouvrir la console de bureau distant",
         "attention_panel": "À surveiller",
@@ -213,7 +219,9 @@
         "activate_agent_folder_none": "Aucun dossier",
         "activate_agent_submit": "Activer l’appareil",
         "activate_agent_submitting": "Activation de l’appareil…",
-        "activate_agent_success": "Agent activé avec succès."
+        "activate_agent_success": "Agent activé avec succès.",
+        "open_agents": "Agents BetterDesk",
+        "agents_hint": "Où obtenir les agents Support entrants uniquement"
     },
     "devices": {
         "title": "Tableau de bord",
@@ -426,7 +434,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Gérer les balises",
+        "manage_device_tags": "Gérer les balises",
+        "rename_tag": "Renommer la balise",
+        "delete_tag": "Supprimer la balise",
+        "rename_tag_prompt": "Nouveau nom de balise",
+        "rename_tag_hint": "Renomme cette balise sur tous les appareils visibles et met à jour les groupes dynamiques correspondants.",
+        "delete_tag_confirm": "Retirer la balise \"{tag}\" de {count} appareil(s) ? Les groupes dynamiques qui l’utilisent seront vides jusqu’à mise à jour.",
+        "tag_renamed": "Balise renommée",
+        "tag_deleted": "Balise supprimée",
+        "tag_name_required": "Le nom de balise est requis",
+        "tag_rename_identical": "Le nouveau nom doit être différent",
+        "tags_backend_unsupported": "Les balises d’appareils ne sont pas prises en charge avec le backend actuel",
+        "tags_manage_hint": "Renommez ou supprimez des balises sur tous les appareils visibles. Retirer une balise d’un appareil se fait dans Modifier ou Détails.",
+        "tags_device_hint": "Retirez une balise ici pour la désassigner de cet appareil uniquement. Utilisez Gérer les balises pour renommer ou supprimer partout.",
+        "unassign_tag": "Retirer de cet appareil",
+        "tag_device_one": "appareil",
+        "tag_device_many": "appareils",
+        "tag_group_one": "groupe dynamique",
+        "tag_group_many": "groupes dynamiques"
     },
     "keys": {
         "title": "Tableau de bord",
@@ -814,7 +849,32 @@
         "unsaved_restart_title": "Änderungen an dieser Datei speichern? Eine Sicherung der vorherigen Version wird erstellt.",
         "unsaved_restart_message": "Sie haben ungespeicherte Änderungen. Diese verwerfen?",
         "unsaved_restart_save": "Datei speichern",
-        "unsaved_restart_stay": "Annuler"
+        "unsaved_restart_stay": "Annuler",
+        "availability_history_title": "Historique de disponibilité",
+        "availability_history_desc": "Enregistre optionnellement les passages online/offline pour afficher un historique jour par jour dans Metrics. Désactivé par défaut pour limiter la croissance de la base.",
+        "availability_history_enable": "Activer l'historique de disponibilité",
+        "availability_history_enable_hint": "Une fois activé, le serveur Go enregistre les transitions (ONLINE, OFFLINE, DEGRADED, CRITICAL) observées via heartbeats et signal/CDAP/Mesh.",
+        "availability_history_retention": "Rétention (jours)",
+        "availability_history_retention_hint": "Les anciens événements sont supprimés automatiquement. Par défaut : 30 jours.",
+        "availability_history_save": "Enregistrer les paramètres de disponibilité",
+        "availability_history_saved": "Paramètres d'historique de disponibilité enregistrés",
+        "tab_time": "Heure / fuseaux horaires",
+        "time": {
+            "timezone_title": "Fuseau de facturation",
+            "timezone_desc": "Fuseau IANA global pour les bornes mensuelles de commercialisation (dépassement remis à zéro à minuit le 1er).",
+            "billing_month_hint": "Minuit le premier jour du mois dans ce fuseau clôt la période précédente et en ouvre une nouvelle. Les sessions actives ne sont pas interrompues.",
+            "billing_timezone": "Fuseau horaire",
+            "billing_timezone_hint": "Ex. : Europe/Warsaw. Affecte l’usage mensuel et le dépassement.",
+            "custom_timezone": "Fuseau IANA personnalisé (optionnel)",
+            "detect_os": "Détecter depuis l’OS du serveur",
+            "detected": "Fuseau détecté : {tz}",
+            "ntp_title": "NTP / synchro horloge",
+            "ntp_desc": "Gardez l’horloge du serveur BetterDesk synchronisée pour des durées de session facturables exactes.",
+            "save": "Enregistrer les réglages horaire",
+            "save_title": "Enregistrer les réglages horaire",
+            "saved": "Réglages horaire enregistrés.",
+            "commercialization_link": "Ouvrir Commercialisation → Forfaits"
+        }
     },
     "audit": {
         "time": "Heure",
@@ -840,7 +900,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Session remplacée",
+        "action_session_expired": "Session expirée",
+        "action_session_ip_change": "Changement d'IP de session"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -937,6 +1000,11 @@
         "preview_settings": "Einstellungen (nur Admin)",
         "preview_quit": "Beenden (nur Admin)",
         "download_link_title": "Download-Link",
+        "download_hub": "Centre de téléchargement",
+        "generic_agents_empty": "Aucune version importée pour le moment.",
+        "generic_agents_hint": "Chemin de production principal : importer les versions signées BetterDesk-Client depuis GitHub, puis servir les agents vérifiés depuis cette instance. Aucune compilation Flutter/Cargo locale requise.",
+        "generic_agents_import": "Importer la dernière version",
+        "generic_agents_title": "Agents génériques incoming-only",
         "download_link_hint": "Teilen Sie diesen Link mit Endbenutzern. Sie sehen eine gebrandete Download-Seite. Alte Hex-Links funktionieren weiterhin, wenn Sie den kurzen Link ändern.",
         "open_portal": "Öffnen",
         "created": "Paket erstellt",
@@ -954,6 +1022,7 @@
         "builds_hint": "Auf diesem Server kompilierte Installationsprogramme für jede Plattform. Nach der Behebung von Toolchain-Fehlern oder der Aktualisierung der Agent-Quellen neu erstellen.",
         "builds_loading": "Build-Status wird geladen…",
         "builds_empty": "Noch keine Builds in der Warteschlange — Paket speichern oder 'Alle neu erstellen' klicken.",
+        "rebuild": "Reconstruire",
         "rebuild_all": "Alle neu erstellen",
         "rebuilding_all": "Neubuilds werden eingereiht…",
         "rebuild_queued": "Alle Plattform-Builds in der Warteschlange",
@@ -987,7 +1056,21 @@
             "platforms_required": "Sélectionnez au moins une plateforme à compiler",
             "no_supported_targets": "Aucune cible de compilation n’est actuellement disponible. Vérifiez la configuration du générateur.",
             "toolchain_missing": "Outils de compilation requis manquants : {{tools}}",
-            "platform_unavailable": "Cette cible n’est pas disponible avec le générateur configuré."
+            "platform_unavailable": "Cette cible n’est pas disponible avec le générateur configuré.",
+            "generic_agent_release_not_found": "Aucune version signée support-v* n’est disponible sur BetterDesk-Client (stable, hors brouillon et prerelease).",
+            "generic_agent_release_list_failed": "Impossible de lister les versions BetterDesk-Client sur GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Délai dépassé lors du téléchargement d’un artefact de version d’agent.",
+            "generic_agent_release_redirect_limit": "Trop de redirections lors du téléchargement d’un artefact.",
+            "generic_agent_release_redirect_host_invalid": "Le téléchargement a été redirigé vers un hôte inattendu.",
+            "generic_agent_release_asset_invalid": "Nom ou URL d’artefact de version invalide.",
+            "generic_agent_release_asset_download_failed": "Échec du téléchargement de l’artefact : {{detail}}",
+            "generic_agent_release_external_config": "L’archive contient une config serveur intégrée (custom.txt) et a été rejetée.",
+            "generic_agent_release_archive_invalid": "Impossible d’ouvrir ou de valider une archive de version.",
+            "generic_agent_release_manifest_missing": "La version ne contient pas manifest.json ou manifest.sig.",
+            "generic_agent_release_public_key_missing": "Aucune clé publique configurée pour vérifier la signature.",
+            "generic_agent_release_signature_invalid": "Échec de la vérification de la signature du manifeste.",
+            "generic_agent_release_manifest_invalid": "Le manifeste n’a pas passé la validation (schéma, sku ou assets).",
+            "generic_agent_release_checksum_mismatch": "Somme de contrôle incorrecte pour l’artefact : {{detail}}"
         },
         "legacy_title": "Client-Konfigurationsgenerator",
         "config_options": "Options de configuration",
@@ -1038,7 +1121,11 @@
         "toolchain_branding_seal": "Échec de la signature de la marque — vérifiez la clé de signature sur la console, puis reconstruisez.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) introuvable — les builds Windows échoueront.",
         "toolchain_appimage_missing": "appimagetool introuvable — les builds AppImage échoueront.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Import et vérification de la dernière version signée…",
+        "generic_agents_imported": "{{tag}} importé.",
+        "generic_agents_verified": "vérifié",
+        "generic_agents_artifacts": "{{count}} artefacts de plateforme"
     },
     "download": {
         "title": "BetterDesk Agent herunterladen",
@@ -1530,7 +1617,7 @@
         "bg_image_invalid_type": "Ungültiger Dateityp. Bitte PNG, JPG, WebP oder GIF verwenden.",
         "bg_upload_success": "Hintergrundbild erfolgreich hochgeladen.",
         "login_title": "Anmeldeseite",
-        "login_desc": "Überschrift, Untertitel und Hintergrund des Anmeldebildschirms anpassen.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Anmeldeüberschrift",
         "login_heading_placeholder": "Willkommen zurück",
         "login_subheading": "Anmeldeuntertitel",
@@ -1606,7 +1693,23 @@
         "builtin_themes_hint": "Les préréglages appliquent une palette complète (par exemple BetterDesk ou insolv Core Server). Ils sont distincts du changement rapide clair/sombre.",
         "readability_check": "Vérification de la lisibilité",
         "readability_contrast": "Le contraste de {item} ({ratio}) est inférieur à {minimum}:1",
-        "readability_background": "{item} utilise {type} avec une superposition faible ; le texte peut être difficile à lire."
+        "readability_background": "{item} utilise {type} avec une superposition faible ; le texte peut être difficile à lire.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Vue d'ensemble",
@@ -1699,9 +1802,48 @@
         "no_sysinfo": "Aucune information matérielle disponible",
         "no_sysinfo_hint": "Les infos système apparaîtront après que l'appareil aura envoyé un rapport sysinfo",
         "no_metrics": "Aucune métrique disponible",
-        "no_metrics_hint": "Les métriques apparaîtront après que l'appareil aura envoyé des rapports de battement de cœur",
+        "no_metrics_hint": "Activez l’historique de disponibilité dans Paramètres pour enregistrer les changements en ligne/hors ligne. Les sessions de connexion apparaissent lorsqu’une personne se connecte.",
         "chart_oldest": "← Plus ancien",
-        "chart_newest": "Plus récent →"
+        "chart_newest": "Plus récent →",
+        "section_availability_history": "Historique de disponibilité",
+        "availability_prev_day": "Jour précédent",
+        "availability_next_day": "Jour suivant",
+        "availability_loading": "Chargement de l'historique de disponibilité…",
+        "availability_disabled": "L'historique de disponibilité est désactivé",
+        "availability_disabled_hint": "Activez-le dans Paramètres → Historique de disponibilité. Le serveur enregistrera les transitions sans métriques CPU client.",
+        "availability_empty": "Aucun changement de statut ce jour-là",
+        "availability_empty_hint": "Les transitions apparaissent quand l'appareil passe online, offline, degraded ou critical.",
+        "availability_col_time": "Heure",
+        "availability_col_from": "De",
+        "availability_col_to": "Vers",
+        "availability_col_source": "Source",
+        "availability_status_online": "En ligne",
+        "availability_status_offline": "Hors ligne",
+        "availability_status_degraded": "Dégradé",
+        "availability_status_critical": "Critique",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Statut",
+        "section_metrics_summary": "Métriques serveur",
+        "metrics_avail_today": "Changements d’état (jour sélectionné)",
+        "metrics_sessions_tracked": "Sessions suivies",
+        "section_connection_sessions": "Sessions de connexion",
+        "sessions_loading": "Chargement des sessions de connexion…",
+        "sessions_error": "Impossible de charger les sessions de connexion",
+        "sessions_empty": "Aucune session de connexion",
+        "sessions_empty_hint": "Les sessions apparaissent lorsqu’un pair autorisé se connecte (punch hole ou relay). La durée est renseignée à la fin du relay.",
+        "sessions_col_when": "Quand",
+        "sessions_col_who": "Qui",
+        "sessions_col_from": "Depuis IP",
+        "sessions_col_transport": "Transport",
+        "sessions_col_duration": "Durée",
+        "sessions_active": "Active",
+        "sessions_transport_punch": "Direct / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Retirer une balise ici la désassigne uniquement de cet appareil. Utilisez Gérer les balises sur la page Appareils pour renommer ou supprimer partout."
     },
     "inventory": {
         "title": "Tableau de bord",
@@ -3582,7 +3724,26 @@
         "hardening_hint": "Priorités de durcissement sécuritaire pour votre déploiement BetterDesk. Triés par gravité.",
         "no_hardening": "Aucun élément de durcissement disponible.",
         "vuln_hint": "Résultats de l'analyse des vulnérabilités. Exécutez npm audit régulièrement.",
-        "no_vulns": "Aucune vulnérabilité trouvée. Vos dépendances sont sécurisées."
+        "no_vulns": "Aucune vulnérabilité trouvée. Vos dépendances sont sécurisées.",
+        "tab_sessions": "Sessions du panneau",
+        "sessions_hint": "Vos connexions à la console. Une seule session active est autorisée par compte ; une nouvelle connexion termine la précédente.",
+        "sessions_policy": "Délai d'inactivité : {{idle}} min · Maximum absolu : {{max}} h · Une session active par compte",
+        "no_sessions": "Aucune session de panneau enregistrée pour le moment.",
+        "session_current": "Actuelle",
+        "session_active": "Active",
+        "session_ended": "Terminée",
+        "col_status": "État",
+        "col_started": "Début",
+        "col_last_activity": "Dernière activité",
+        "col_ended": "Fin",
+        "col_reason": "Motif de fin",
+        "col_user_agent": "Navigateur",
+        "reason_logout": "Déconnexion",
+        "reason_replaced": "Remplacée par une nouvelle connexion",
+        "reason_idle": "Délai d'inactivité",
+        "reason_max_age": "Durée maximale",
+        "reason_revoked": "Révoquée",
+        "reason_destroyed": "Détruite"
     },
     "languages": {
         "title": "Tableau de bord",
@@ -3918,7 +4079,11 @@
         "preflight_warnings_title": "Avant l’installation",
         "install_blocked_hint": "L’installation est désactivée tant que les problèmes ci-dessus ne sont pas résolus.",
         "preflight_info_title": "Avant l’installation",
-        "preflight_info_note": "Vous pouvez installer la mise à jour — ces messages sont informatifs."
+        "preflight_info_note": "Vous pouvez installer la mise à jour — ces messages sont informatifs.",
+        "proxy_timeout_recovering": "Délai passerelle/proxy — vérification si la mise à jour tourne encore sur le serveur…",
+        "install_still_running": "La mise à jour est toujours en cours sur le serveur…",
+        "install_recovered": "Mise à jour terminée sur le serveur après la perte de connexion du navigateur",
+        "install_recovery_timeout": "Délai d'attente dépassé après déconnexion de la passerelle. Vérifiez Paramètres → Mises à jour, data/.last_update_result.json ou : node scripts/update-cli.js"
     },
     "accessibility": {
         "title": "Barrierefreiheit",
@@ -4147,7 +4312,8 @@
             "status_error": "Dernière erreur",
             "os_yes": "Oui",
             "os_no": "Non",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Sessions facturables actives",
@@ -4171,7 +4337,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Appareil",
@@ -4179,7 +4352,11 @@
             "duration": "Durée",
             "phase": "Phase",
             "amount": "Montant",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Séance",
@@ -4245,7 +4422,9 @@
             "skip": "Ignorer pour l'instant",
             "submit": "Envoyer le rapport",
             "summary_required": "Le résumé est obligatoire",
-            "saved": "Rapport de travail enregistré"
+            "saved": "Rapport de travail enregistré",
+            "toolbar": "Rapport de travail",
+            "intent_hint": "Le formulaire de rapport s’ouvrira à la fin de la session"
         },
         "notifications": {
             "title": "Notifications e-mail",
@@ -4288,6 +4467,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4517,5 +4710,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk est gratuit",
+                "body": "Bureau à distance open source — pas de licences par siège, pas de verrouillage. Hébergez-le vous-même."
+            },
+            "remote": {
+                "title": "Support distant sous votre contrôle",
+                "body": "Connectez les postes depuis votre propre console. Les sessions restent sur votre infrastructure."
+            },
+            "secure": {
+                "title": "Sécurité intégrée",
+                "body": "Authentification des opérateurs, contrôle des sessions et attestation serveur si besoin."
+            },
+            "platforms": {
+                "title": "Windows, Linux et macOS",
+                "body": "Une console pour les agents sur les plateformes déjà prises en charge par votre équipe."
+            }
+        },
+        "prev": "Diapositive précédente",
+        "next": "Diapositive suivante"
+    },
+    "agents": {
+        "title": "Agents BetterDesk",
+        "subtitle": "Les clients Support entrants sont construits dans BetterDesk-Client — ce panneau les importe et les sert.",
+        "what_title": "Que sont les agents BetterDesk ?",
+        "what_body": "Les agents Support BetterDesk sont des clients de bureau en entrée uniquement. Ils s’enregistrent sur votre serveur, affichent un QR de jumelage et acceptent le support distant. Ils n’initient pas de connexions sortantes.",
+        "note_no_build": "Cette console ne compile plus les installateurs client. Les versions signées sont produites dans le dépôt GitHub BetterDesk-Client.",
+        "get_title": "Où obtenir les agents",
+        "get_body": "Téléchargez les paquets Support Agent signés depuis les releases BetterDesk-Client, ou partagez le portail public de ce serveur après l’import ci-dessous.",
+        "get_github": "Releases BetterDesk-Client",
+        "get_portal": "Ouvrir le portail de téléchargement",
+        "sync_title": "Importer pour ce serveur",
+        "sync_hint": "Importez la dernière release support-v* signée pour que /portal serve des installateurs vérifiés.",
+        "sync_import": "Importer la dernière release",
+        "sync_importing": "Import et vérification de la dernière release signée…",
+        "sync_imported": "{{tag}} importé.",
+        "sync_empty": "Aucune release importée pour le moment.",
+        "sync_verified": "vérifié",
+        "sync_artifacts": "{{count}} artefacts de plateforme",
+        "steps_title": "Comment intégrer un agent",
+        "step1": "Importez la dernière release signée (bouton ci-dessus) ou téléchargez depuis GitHub.",
+        "step2": "Installez l’agent sur l’appareil et saisissez l’URL publique de ce serveur.",
+        "step3": "Lorsque l’agent affiche un QR, ouvrez Activer l’agent et scannez-le.",
+        "step4": "Approuvez l’enrôlement si la politique l’exige, puis connectez-vous via Remote Desktop.",
+        "pair_activate": "Activer l’agent",
+        "pair_body": "Le jumelage utilise le QR affiché par un agent Support générique après contact avec votre serveur.",
+        "branding_link": "Habillage client",
+        "branding_body": "L’apparence (logo, couleurs, libellés) est chargée à l’exécution depuis l’habillage client — elle n’est pas intégrée à l’installateur."
     }
 }

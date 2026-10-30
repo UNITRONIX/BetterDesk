@@ -41,7 +41,7 @@
         "dashboard": "대시보드",
         "devices": "장치",
         "keys": "키",
-        "generator": "생성기",
+        "generator": "BetterDesk 에이전트",
         "settings": "설정",
         "users": "사용자",
         "inventory": "인벤토리",
@@ -55,6 +55,7 @@
         "reports": "보고서",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "에이전트 활성화",
         "management": "관리",
         "toggle_sidebar": "사이드바 전환",
         "cdap": "CDAP 장치",
@@ -81,7 +82,8 @@
         "server_attestation": "서버 성능 인증",
         "commercialization": "상용화",
         "remote_open_tab": "새 탭에서 원격 데스크톱 클라이언트 열기",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk 에이전트"
     },
     "auth": {
         "login": "Login",
@@ -124,7 +126,11 @@
         "oidc_error": "SSO 로그인 중에 오류가 발생했습니다.",
         "oidc_no_account": "귀하의 계정을 찾을 수 없으며 자동 등록이 비활성화되었습니다.",
         "totp_rate_limited": "시도 횟수가 너무 많습니다. 나중에 다시 시도해 주세요.",
-        "emergency_mode_banner": "Go server에 연결할 수 없음 — 비상 모드에서 실행 중(관리자 전용, 제한된 기능)"
+        "emergency_mode_banner": "Go server에 연결할 수 없음 — 비상 모드에서 실행 중(관리자 전용, 제한된 기능)",
+        "session_expired": "세션이 만료되었거나 새 로그인으로 대체되었습니다. 다시 로그인해 주세요.",
+        "session_idle_warning_title": "세션이 곧 만료됩니다",
+        "session_idle_warning_body": "비활성으로 인해 {{seconds}}초 후 로그아웃됩니다.",
+        "session_stay_signed_in": "로그인 유지"
     },
     "dashboard": {
         "title": "대시보드",
@@ -138,7 +144,7 @@
         "quick_actions": "빠른 작업",
         "manage_devices": "연결된 장치 관리",
         "view_keys": "서버 키 보기",
-        "generate_config": "클라이언트 구성 생성",
+        "generate_config": "수신 전용 Support 에이전트를 받는 곳",
         "server_settings": "설정 구성",
         "greeting_morning": "좋은 아침입니다, {name}",
         "greeting_afternoon": "좋은 오후입니다, {name}",
@@ -170,7 +176,7 @@
         "config_api_server": "API 서버",
         "config_key": "키",
         "client_config_hint": "RustDesk 네트워크 설정의 ID/릴레이 서버 섹션에 이 값을 입력하세요.",
-        "open_generator": "클라이언트 생성기",
+        "open_generator": "BetterDesk 에이전트",
         "open_keys": "키 열기",
         "open_remote": "원격 데스크톱 콘솔 열기",
         "attention_panel": "주의 필요",
@@ -209,7 +215,9 @@
         "activate_agent_folder_none": "폴더 없음",
         "activate_agent_submit": "장치 활성화",
         "activate_agent_submitting": "장치를 활성화하는 중…",
-        "activate_agent_success": "에이전트가 활성화되었습니다."
+        "activate_agent_success": "에이전트가 활성화되었습니다.",
+        "open_agents": "BetterDesk 에이전트",
+        "agents_hint": "수신 전용 Support 에이전트를 받는 곳"
     },
     "devices": {
         "title": "장치",
@@ -422,7 +430,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "태그 관리",
+        "manage_device_tags": "태그 관리",
+        "rename_tag": "태그 이름 바꾸기",
+        "delete_tag": "태그 삭제",
+        "rename_tag_prompt": "새 태그 이름",
+        "rename_tag_hint": "볼 수 있는 모든 장치에서 이 태그 이름을 바꾸고 일치하는 동적 그룹을 업데이트합니다.",
+        "delete_tag_confirm": "태그 \"{tag}\"을(를) {count}개 장치에서 제거할까요? 이 태그를 쓰는 동적 그룹은 업데이트될 때까지 비어 있습니다.",
+        "tag_renamed": "태그 이름이 바뀌었습니다",
+        "tag_deleted": "태그가 삭제되었습니다",
+        "tag_name_required": "태그 이름이 필요합니다",
+        "tag_rename_identical": "새 이름은 달라야 합니다",
+        "tags_backend_unsupported": "현재 백엔드에서는 장치 태그가 지원되지 않습니다",
+        "tags_manage_hint": "볼 수 있는 모든 장치에서 태그를 바꾸거나 삭제합니다. 한 장치에서 제거는 편집 또는 세부정보에서 합니다.",
+        "tags_device_hint": "여기서 태그를 제거하면 이 장치에서만 할당이 해제됩니다. 전역 변경은 태그 관리를 사용하세요.",
+        "unassign_tag": "이 장치에서 제거",
+        "tag_device_one": "장치",
+        "tag_device_many": "장치",
+        "tag_group_one": "동적 그룹",
+        "tag_group_many": "동적 그룹"
     },
     "keys": {
         "title": "서버 키",
@@ -810,7 +845,32 @@
         "unsaved_restart_title": "이 파일의 변경 사항을 저장하시겠습니까? 이전 버전의 백업이 생성됩니다.",
         "unsaved_restart_message": "저장되지 않은 변경 사항이 있습니다. 삭제하시겠습니까?",
         "unsaved_restart_save": "파일 저장",
-        "unsaved_restart_stay": "취소"
+        "unsaved_restart_stay": "취소",
+        "availability_history_title": "가용성 기록",
+        "availability_history_desc": "장치의 온라인/오프라인 전환을 선택적으로 기록하여 Metrics에서 일별 기록을 표시합니다. DB 증가를 피하기 위해 기본적으로 비활성화됩니다.",
+        "availability_history_enable": "가용성 기록 사용",
+        "availability_history_enable_hint": "활성화되면 Go 서버가 하트비트 및 signal/CDAP/Mesh에서 관찰한 상태 전환(ONLINE, OFFLINE, DEGRADED, CRITICAL)을 기록합니다.",
+        "availability_history_retention": "보존 기간(일)",
+        "availability_history_retention_hint": "오래된 이벤트는 자동 삭제됩니다. 기본값은 30일입니다.",
+        "availability_history_save": "가용성 설정 저장",
+        "availability_history_saved": "가용성 기록 설정이 저장됨",
+        "tab_time": "시간 / 시간대",
+        "time": {
+            "timezone_title": "청구 시간대",
+            "timezone_desc": "상용화 월 경계를 위한 전역 IANA 시간대(초과분은 1일 자정에 초기화).",
+            "billing_month_hint": "이 시간대에서 매월 1일 자정에 이전 기간을 닫고 새 기간을 엽니다. 활성 세션은 중단되지 않습니다.",
+            "billing_timezone": "시간대",
+            "billing_timezone_hint": "예: Europe/Warsaw. 월간 사용량과 초과에 영향을 줍니다.",
+            "custom_timezone": "사용자 지정 IANA 시간대(선택)",
+            "detect_os": "서버 OS에서 감지",
+            "detected": "감지된 시간대: {tz}",
+            "ntp_title": "NTP / 시계 동기화",
+            "ntp_desc": "청구 가능 세션 시간의 정확성을 위해 BetterDesk 서버 시계를 동기화하세요.",
+            "save": "시간 설정 저장",
+            "save_title": "시간 설정 저장",
+            "saved": "시간 설정이 저장되었습니다.",
+            "commercialization_link": "상용화 → 패키지 열기"
+        }
     },
     "audit": {
         "time": "Time",
@@ -836,7 +896,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "세션 교체됨",
+        "action_session_expired": "세션 만료",
+        "action_session_ip_change": "세션 IP 변경"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -928,6 +991,11 @@
         "preview_settings": "설정(관리자 전용)",
         "preview_quit": "종료(관리자 전용)",
         "download_link_title": "다운로드 링크",
+        "download_hub": "다운로드 허브",
+        "generic_agents_empty": "아직 가져온 릴리스가 없습니다.",
+        "generic_agents_hint": "기본 프로덕션 경로: GitHub에서 서명된 BetterDesk-Client 릴리스를 가져온 뒤 이 인스턴스에서 검증된 에이전트를 제공합니다. 로컬 Flutter/Cargo 빌드는 필요 없습니다.",
+        "generic_agents_import": "최신 릴리스 가져오기",
+        "generic_agents_title": "일반 수신 전용 에이전트",
         "download_link_hint": "이 링크를 최종 사용자와 공유하세요. 브랜드 다운로드 페이지가 표시됩니다. 짧은 링크를 변경해도 이전 hex 링크는 계속 작동합니다.",
         "open_portal": "열기",
         "created": "번들 생성됨",
@@ -964,7 +1032,21 @@
             "platforms_required": "빌드할 플랫폼을 하나 이상 선택하세요",
             "no_supported_targets": "현재 사용할 수 있는 빌드 대상이 없습니다. 빌더 설정을 확인하세요.",
             "toolchain_missing": "필요한 빌드 도구가 없습니다: {{tools}}",
-            "platform_unavailable": "구성된 빌더에서 이 대상을 사용할 수 없습니다."
+            "platform_unavailable": "구성된 빌더에서 이 대상을 사용할 수 없습니다.",
+            "generic_agent_release_not_found": "BetterDesk-Client에 서명된 support-v* 릴리스가 없습니다(안정 버전, draft/prerelease 제외).",
+            "generic_agent_release_list_failed": "GitHub에서 BetterDesk-Client 릴리스 목록을 가져오지 못했습니다(HTTP {{detail}}).",
+            "generic_agent_release_timeout": "일반 에이전트 릴리스 자산 다운로드 시간이 초과되었습니다.",
+            "generic_agent_release_redirect_limit": "릴리스 자산 다운로드 중 리다이렉트가 너무 많습니다.",
+            "generic_agent_release_redirect_host_invalid": "다운로드가 예상치 못한 호스트로 리다이렉트되었습니다.",
+            "generic_agent_release_asset_invalid": "릴리스 자산 이름 또는 URL이 올바르지 않습니다.",
+            "generic_agent_release_asset_download_failed": "릴리스 자산 다운로드 실패: {{detail}}",
+            "generic_agent_release_external_config": "아카이브에 내장 서버 설정(custom.txt)이 있어 거부되었습니다.",
+            "generic_agent_release_archive_invalid": "릴리스 아카이브를 열거나 검증할 수 없습니다.",
+            "generic_agent_release_manifest_missing": "릴리스에 manifest.json 또는 manifest.sig가 없습니다.",
+            "generic_agent_release_public_key_missing": "서명 검증용 공개 키가 구성되지 않았습니다.",
+            "generic_agent_release_signature_invalid": "릴리스 매니페스트 서명 검증에 실패했습니다.",
+            "generic_agent_release_manifest_invalid": "릴리스 매니페스트 검증에 실패했습니다(schema, sku 또는 assets).",
+            "generic_agent_release_checksum_mismatch": "자산 체크섬이 일치하지 않습니다: {{detail}}"
         },
         "legacy_title": "클라이언트 구성 생성기",
         "connection_section": "서버 연결",
@@ -987,6 +1069,7 @@
         "builds_hint": "각 플랫폼을 위해 이 서버에서 컴파일된 설치 파일. 도구 체인 오류 수정 또는 에이전트 소스 업데이트 후 재빌드합니다.",
         "builds_loading": "빌드 상태 로드 중…",
         "builds_empty": "아직 대기 중인 빌드가 없습니다 — 번들을 저장하거나 모두 재빌드를 클릭하세요.",
+        "rebuild": "다시 빌드",
         "rebuild_all": "모두 재빌드",
         "rebuilding_all": "재빌드 대기열에 추가 중…",
         "rebuild_queued": "모든 플랫폼 빌드가 대기열에 추가되었습니다",
@@ -1034,7 +1117,11 @@
         "toolchain_branding_seal": "브랜딩 서명 실패 — 콘솔의 서명 키를 확인한 뒤 다시 빌드하세요.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc)를 찾을 수 없음 — Windows 빌드가 실패합니다.",
         "toolchain_appimage_missing": "appimagetool을 찾을 수 없음 — AppImage 빌드가 실패합니다.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "최신 서명된 릴리스를 가져오고 검증하는 중…",
+        "generic_agents_imported": "{{tag}}을(를) 가져왔습니다.",
+        "generic_agents_verified": "검증됨",
+        "generic_agents_artifacts": "플랫폼 아티팩트 {{count}}개"
     },
     "server": {
         "port": "Port",
@@ -1513,7 +1600,7 @@
         "bg_image_invalid_type": "잘못된 파일 형식입니다. PNG, JPG, WebP 또는 GIF를 사용하세요.",
         "bg_upload_success": "배경 이미지가 성공적으로 업로드되었습니다.",
         "login_title": "로그인 페이지",
-        "login_desc": "로그인 화면의 제목, 부제목, 배경을 사용자 지정합니다.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "로그인 제목",
         "login_heading_placeholder": "돌아오셨군요",
         "login_subheading": "로그인 부제목",
@@ -1589,7 +1676,23 @@
         "builtin_themes_hint": "프리셋은 전체 색상 패키지(예: BetterDesk, insolv Core Server)를 적용합니다. 빠른 밝은/어두운 전환과는 별개입니다.",
         "readability_check": "가독성 검사",
         "readability_contrast": "{item} 대비({ratio})가 {minimum}:1보다 낮습니다",
-        "readability_background": "{item}에서 오버레이가 약한 {type}을 사용하므로 텍스트가 읽기 어려울 수 있습니다."
+        "readability_background": "{item}에서 오버레이가 약한 {type}을 사용하므로 텍스트가 읽기 어려울 수 있습니다.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "개요",
@@ -1666,7 +1769,7 @@
         "no_sysinfo": "사용 가능한 하드웨어 정보가 없습니다.",
         "no_sysinfo_hint": "장치가 sysinfo 보고서를 보낸 후에 시스템 정보가 나타납니다.",
         "no_metrics": "측정항목 데이터가 없습니다.",
-        "no_metrics_hint": "장치가 하트비트 보고서를 보낸 후 측정항목이 표시됩니다.",
+        "no_metrics_hint": "온라인/오프라인 변경을 기록하려면 설정에서 가용성 기록을 사용하세요. 연결 세션은 누군가 연결할 때 표시됩니다.",
         "chart_oldest": "← Oldest",
         "chart_newest": "Newest →",
         "tab_services": "Services",
@@ -1684,7 +1787,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "가용성 기록",
+        "availability_prev_day": "이전 날",
+        "availability_next_day": "다음 날",
+        "availability_loading": "가용성 기록 로드 중…",
+        "availability_disabled": "가용성 기록이 비활성화됨",
+        "availability_disabled_hint": "설정 → 가용성 기록에서 활성화하세요. 클라이언트 CPU 메트릭 없이 상태 전환을 기록합니다.",
+        "availability_empty": "이 날짜에 상태 변경 없음",
+        "availability_empty_hint": "장치가 online, offline, degraded, critical로 바뀔 때 전환이 나타납니다.",
+        "availability_col_time": "시간",
+        "availability_col_from": "이전",
+        "availability_col_to": "이후",
+        "availability_col_source": "출처",
+        "availability_status_online": "온라인",
+        "availability_status_offline": "오프라인",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "상태",
+        "section_metrics_summary": "서버 메트릭",
+        "metrics_avail_today": "상태 변경(선택한 날)",
+        "metrics_sessions_tracked": "추적된 세션",
+        "section_connection_sessions": "연결 세션",
+        "sessions_loading": "연결 세션 불러오는 중…",
+        "sessions_error": "연결 세션을 불러올 수 없습니다",
+        "sessions_empty": "아직 연결 세션이 없습니다",
+        "sessions_empty_hint": "권한이 있는 피어가 연결하면 세션이 표시됩니다(펀치홀 또는 릴레이). 릴레이가 끝나면 지속 시간이 채워집니다.",
+        "sessions_col_when": "언제",
+        "sessions_col_who": "누가",
+        "sessions_col_from": "출발 IP",
+        "sessions_col_transport": "전송",
+        "sessions_col_duration": "지속 시간",
+        "sessions_active": "진행 중",
+        "sessions_transport_punch": "직접 / 펀치",
+        "sessions_transport_relay": "릴레이",
+        "tags_unassign_hint": "여기서 태그를 제거하면 이 장치에서만 할당이 해제됩니다. 전역 변경은 장치 페이지의 태그 관리를 사용하세요."
     },
     "inventory": {
         "title": "Inventory",
@@ -3493,7 +3635,26 @@
         "hardening_hint": "BetterDesk 배포의 보안 강화 우선순위. 심각도 순 정렬.",
         "no_hardening": "보안 강화 항목이 없습니다.",
         "vuln_hint": "의존성 취약점 스캔 결과. 정기적으로 npm audit를 실행하세요.",
-        "no_vulns": "취약점이 발견되지 않았습니다. 의존성이 안전합니다."
+        "no_vulns": "취약점이 발견되지 않았습니다. 의존성이 안전합니다.",
+        "tab_sessions": "패널 세션",
+        "sessions_hint": "콘솔 로그인 세션입니다. 계정당 활성 세션은 하나뿐이며, 새 로그인은 이전 세션을 종료합니다.",
+        "sessions_policy": "유휴 제한: {{idle}}분 · 절대 최대: {{max}}시간 · 계정당 활성 세션 1개",
+        "no_sessions": "기록된 패널 세션이 없습니다.",
+        "session_current": "현재",
+        "session_active": "활성",
+        "session_ended": "종료됨",
+        "col_status": "상태",
+        "col_started": "시작",
+        "col_last_activity": "마지막 활동",
+        "col_ended": "종료",
+        "col_reason": "종료 사유",
+        "col_user_agent": "브라우저",
+        "reason_logout": "로그아웃",
+        "reason_replaced": "새 로그인으로 교체됨",
+        "reason_idle": "유휴 시간 초과",
+        "reason_max_age": "최대 수명",
+        "reason_revoked": "취소됨",
+        "reason_destroyed": "삭제됨"
     },
     "languages": {
         "title": "언어 관리",
@@ -3829,7 +3990,11 @@
         "preflight_warnings_title": "설치 전",
         "install_blocked_hint": "위의 문제가 해결될 때까지 설치가 비활성화됩니다.",
         "preflight_info_title": "설치 전",
-        "preflight_info_note": "업데이트를 설치할 수 있습니다 — 안내 메시지입니다."
+        "preflight_info_note": "업데이트를 설치할 수 있습니다 — 안내 메시지입니다.",
+        "proxy_timeout_recovering": "게이트웨이/프록시 시간 초과 — 서버에서 업데이트가 계속 진행 중인지 확인하는 중…",
+        "install_still_running": "서버에서 업데이트가 계속 진행 중입니다…",
+        "install_recovered": "브라우저 연결이 끊긴 후 서버에서 업데이트가 완료됨",
+        "install_recovery_timeout": "게이트웨이 연결 끊김 후 업데이트 완료 대기 시간이 초과되었습니다. 설정 → 업데이트, data/.last_update_result.json 또는 node scripts/update-cli.js를 확인하세요"
     },
     "permissions": {
         "title": "권한",
@@ -4143,7 +4308,8 @@
             "status_error": "마지막 오류",
             "os_yes": "예",
             "os_no": "아니오",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "활성 과금 세션",
@@ -4167,7 +4333,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "장치",
@@ -4175,7 +4348,11 @@
             "duration": "시간",
             "phase": "단계",
             "amount": "금액",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "세션",
@@ -4222,7 +4399,9 @@
             "skip": "지금 건너뛰기",
             "submit": "보고서 제출",
             "summary_required": "요약은 필수입니다",
-            "saved": "작업 보고서가 저장되었습니다"
+            "saved": "작업 보고서가 저장되었습니다",
+            "toolbar": "작업 보고서",
+            "intent_hint": "세션이 끝나면 보고서 양식이 열립니다"
         },
         "empty": {
             "packages": "아직 패키지가 없습니다. 위 버튼으로 만드세요.",
@@ -4284,6 +4463,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4513,5 +4706,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk는 무료입니다",
+                "body": "오픈소스 원격 데스크톱 — 좌석 라이선스와 종속성 없음. 직접 호스팅하세요."
+            },
+            "remote": {
+                "title": "내가 통제하는 원격 지원",
+                "body": "자체 콘솔에서 엔드포인트에 연결합니다. 세션은 인프라에 남습니다."
+            },
+            "secure": {
+                "title": "보안 내장",
+                "body": "운영자 인증, 세션 제어, 필요할 때 서버 증명."
+            },
+            "platforms": {
+                "title": "Windows, Linux, macOS",
+                "body": "팀이 이미 지원하는 플랫폼의 에이전트를 하나의 콘솔에서."
+            }
+        },
+        "prev": "이전 슬라이드",
+        "next": "다음 슬라이드"
+    },
+    "agents": {
+        "title": "BetterDesk 에이전트",
+        "subtitle": "수신 전용 Support 클라이언트는 BetterDesk-Client에서 빌드됩니다. 이 패널은 이를 가져와 제공합니다.",
+        "what_title": "BetterDesk 에이전트란?",
+        "what_body": "BetterDesk Support 에이전트는 수신 전용 데스크톱 클라이언트입니다. 서버에 등록하고 페어링 QR을 표시하며 원격 지원을 수락합니다. 다른 장치로 나가는 연결을 시작하지 않습니다.",
+        "note_no_build": "이 콘솔은 더 이상 클라이언트 설치 프로그램을 빌드하지 않습니다. 서명된 릴리스는 BetterDesk-Client GitHub 저장소에서 만들어집니다.",
+        "get_title": "에이전트를 받는 곳",
+        "get_body": "BetterDesk-Client 릴리스에서 서명된 Support Agent 패키지를 다운로드하거나, 아래에서 가져온 뒤 이 서버의 공개 포털을 공유하세요.",
+        "get_github": "BetterDesk-Client 릴리스",
+        "get_portal": "다운로드 포털 열기",
+        "sync_title": "이 서버로 가져오기",
+        "sync_hint": "최신 서명된 support-v* 릴리스를 가져와 /portal이 검증된 설치 프로그램을 제공할 수 있게 합니다.",
+        "sync_import": "최신 릴리스 가져오기",
+        "sync_importing": "최신 서명된 릴리스를 가져와 검증하는 중…",
+        "sync_imported": "{{tag}}을(를) 가져왔습니다.",
+        "sync_empty": "아직 가져온 릴리스가 없습니다.",
+        "sync_verified": "검증됨",
+        "sync_artifacts": "플랫폼 아티팩트 {{count}}개",
+        "steps_title": "에이전트 온보딩 방법",
+        "step1": "최신 서명된 릴리스를 가져오거나(위 버튼) GitHub에서 다운로드합니다.",
+        "step2": "장치에 에이전트를 설치하고 이 서버의 공개 URL을 입력합니다.",
+        "step3": "에이전트가 QR을 표시하면 에이전트 활성화를 열고 스캔합니다.",
+        "step4": "정책상 필요하면 등록을 승인한 뒤 Remote Desktop에서 연결합니다.",
+        "pair_activate": "에이전트 활성화",
+        "pair_body": "페어링은 일반 Support Agent가 서버에 도달한 후 표시하는 QR을 사용합니다.",
+        "branding_link": "클라이언트 브랜딩",
+        "branding_body": "모양(로고, 색상, 라벨)은 런타임에 클라이언트 브랜딩에서 로드되며 설치 프로그램에 포함되지 않습니다."
     }
 }

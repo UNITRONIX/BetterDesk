@@ -47,7 +47,7 @@
         "dashboard": "Irányítópult",
         "devices": "Eszközök",
         "keys": "Kulcsok",
-        "generator": "Generátor",
+        "generator": "BetterDesk ügynökök",
         "settings": "Beállítások elemre",
         "users": "Felhasználók",
         "inventory": "Leltár",
@@ -61,6 +61,7 @@
         "reports": "Jelentések",
         "tenants": "Bérlők",
         "registrations": "Registrations",
+        "activate_agent": "Ügynök aktiválása",
         "management": "Menedzsment",
         "toggle_sidebar": "Oldalsáv váltása",
         "cdap": "CDAP Eszközök",
@@ -87,7 +88,8 @@
         "server_attestation": "Szerver tanúsítás",
         "commercialization": "Kereskedelmi modul",
         "remote_open_tab": "Távoli asztal kliens megnyitása új lapon",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk ügynökök"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "Hiba történt a SSO bejelentkezés során.",
         "oidc_no_account": "Fiókja nem található, és az automatikus regisztráció le van tiltva.",
         "totp_rate_limited": "Túl sok próbálkozás. Kérjük, próbálja újra később.",
-        "emergency_mode_banner": "A Go server nem érhető el – vészhelyzeti módban fut (csak rendszergazda, korlátozott funkcionalitás)"
+        "emergency_mode_banner": "A Go server nem érhető el – vészhelyzeti módban fut (csak rendszergazda, korlátozott funkcionalitás)",
+        "session_expired": "A munkamenet lejárt, vagy új bejelentkezés váltotta fel. Jelentkezzen be újra.",
+        "session_idle_warning_title": "A munkamenet hamarosan lejár",
+        "session_idle_warning_body": "Inaktivitás miatt {{seconds}} másodperc múlva kijelentkeztetjük.",
+        "session_stay_signed_in": "Maradjon bejelentkezve"
     },
     "dashboard": {
         "title": "Irányítópult",
@@ -144,7 +150,7 @@
         "quick_actions": "Gyors műveletek",
         "manage_devices": "A csatlakoztatott eszközök kezelése",
         "view_keys": "Szerverkulcsok megtekintése",
-        "generate_config": "Kliens konfiguráció létrehozása",
+        "generate_config": "Honnan szerezhetők a csak bejövő Support ügynökök",
         "server_settings": "Konfigurálja a beállításokat",
         "greeting_morning": "Jó reggelt, {name}",
         "greeting_afternoon": "Jó napot, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "API szerver",
         "config_key": "Kulcs",
         "client_config_hint": "Adja meg ezeket az értékeket a RustDesk hálózati beállításaiban, az ID/Relay szerver résznél.",
-        "open_generator": "Kliensgenerátor",
+        "open_generator": "BetterDesk ügynökök",
         "open_keys": "Kulcsok megnyitása",
         "open_remote": "Távoli asztali konzol megnyitása",
         "attention_panel": "Figyelmet igényel",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Nincs mappa",
         "activate_agent_submit": "Eszköz aktiválása",
         "activate_agent_submitting": "Eszköz aktiválása…",
-        "activate_agent_success": "Az ügynök aktiválása sikeres."
+        "activate_agent_success": "Az ügynök aktiválása sikeres.",
+        "open_agents": "BetterDesk ügynökök",
+        "agents_hint": "Honnan szerezhetők a csak bejövő Support ügynökök"
     },
     "devices": {
         "title": "Eszközök",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Címkék kezelése",
+        "manage_device_tags": "Címkék kezelése",
+        "rename_tag": "Címke átnevezése",
+        "delete_tag": "Címke törlése",
+        "rename_tag_prompt": "Új címkenév",
+        "rename_tag_hint": "Átnevezi ezt a címkét minden látható eszközön, és frissíti a megfelelő dinamikus csoportokat.",
+        "delete_tag_confirm": "Eltávolítja a(z) \"{tag}\" címkét {count} eszközről? A címkét használó dinamikus csoportok üresek maradnak a frissítésig.",
+        "tag_renamed": "Címke átnevezve",
+        "tag_deleted": "Címke törölve",
+        "tag_name_required": "A címkenév kötelező",
+        "tag_rename_identical": "Az új névnek különböznie kell",
+        "tags_backend_unsupported": "Az eszközcímkék nem támogatottak a jelenlegi backenddel",
+        "tags_manage_hint": "Nevezzen át vagy töröljön címkéket minden látható eszközön. Egy eszközről az Edit / Részletek alatt vehető le.",
+        "tags_device_hint": "Itt távolítsa el a címkét, hogy csak erről az eszközről legyen leválasztva. Globális műveletekhez használja a Címkék kezelése gombot.",
+        "unassign_tag": "Eltávolítás erről az eszközről",
+        "tag_device_one": "eszköz",
+        "tag_device_many": "eszköz",
+        "tag_group_one": "dinamikus csoport",
+        "tag_group_many": "dinamikus csoport"
     },
     "keys": {
         "title": "Szerverkulcsok",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Mentse a módosításokat ebbe a fájlba? Az előző verzióról biztonsági másolat készül.",
         "unsaved_restart_message": "Nem mentett módosításai vannak. Elveti őket?",
         "unsaved_restart_save": "Fájl mentése",
-        "unsaved_restart_stay": "Mégse"
+        "unsaved_restart_stay": "Mégse",
+        "availability_history_title": "Elérhetőségi előzmények",
+        "availability_history_desc": "Opcionálisan rögzítse az online/offline váltásokat, hogy a Metrics napi előzményeket mutasson. Alapból kikapcsolva az adatbázis növekedés elkerülésére.",
+        "availability_history_enable": "Elérhetőségi előzmények bekapcsolása",
+        "availability_history_enable_hint": "Bekapcsolva a Go szerver rögzíti az (ONLINE, OFFLINE, DEGRADED, CRITICAL) átmeneteket heartbeat és signal/CDAP/Mesh alapján.",
+        "availability_history_retention": "Megőrzés (nap)",
+        "availability_history_retention_hint": "A régebbi események automatikusan törlődnek. Alapértelmezés: 30 nap.",
+        "availability_history_save": "Elérhetőségi beállítások mentése",
+        "availability_history_saved": "Elérhetőségi előzmények beállításai mentve",
+        "tab_time": "Idő / időzónák",
+        "time": {
+            "timezone_title": "Számlázási időzóna",
+            "timezone_desc": "Globális IANA zóna a kommercializáció havi határaihoz (túllépés nullázása a hónap 1-jén éjfélkor).",
+            "billing_month_hint": "A hónap első napjának éjfélje ebben a zónában lezárja az előző időszakot és megnyit egy újat. Az aktív munkamenetek nem szakadnak meg.",
+            "billing_timezone": "Időzóna",
+            "billing_timezone_hint": "Pl. Europe/Warsaw. Hatással van a havi használatra és túllépésre.",
+            "custom_timezone": "Egyéni IANA zóna (opcionális)",
+            "detect_os": "Észlelés a szerver OS-ből",
+            "detected": "Észlelt zóna: {tz}",
+            "ntp_title": "NTP / óraszinkron",
+            "ntp_desc": "Tartsa szinkronban a BetterDesk szerverórát a számlázható munkamenet-idők pontosságához.",
+            "save": "Időbeállítások mentése",
+            "save_title": "Időbeállítások mentése",
+            "saved": "Időbeállítások mentve.",
+            "commercialization_link": "Kommercializáció → Csomagok megnyitása"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Munkamenet lecserélve",
+        "action_session_expired": "Munkamenet lejárt",
+        "action_session_ip_change": "Munkamenet IP-változás"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Beállítások (csak rendszergazda)",
         "preview_quit": "Kilépés (csak rendszergazda)",
         "download_link_title": "Letöltési link",
+        "download_hub": "Letöltési központ",
+        "generic_agents_empty": "Még nincs importált kiadás.",
+        "generic_agents_hint": "Elsődleges éles út: importálja az aláírt BetterDesk-Client kiadásokat a GitHubról, majd szolgálja ki az ellenőrzött ügynököket erről a példányról. Helyi Flutter/Cargo build nem szükséges.",
+        "generic_agents_import": "Legújabb kiadás importálása",
+        "generic_agents_title": "Általános csak bejövő ügynökök",
         "download_link_hint": "Oszd meg ezt a linket a végfelhasználókkal. Egy márkás letöltési oldalt fognak látni. A régi hex linkek továbbra is működnek a rövid link módosítása után.",
         "open_portal": "Nyissa meg",
         "created": "Csomag létrehozva",
@@ -970,7 +1038,21 @@
             "platforms_required": "Válasszon legalább egy buildelendő platformot",
             "no_supported_targets": "Jelenleg nincs elérhető buildcél. Ellenőrizze a builder beállításait.",
             "toolchain_missing": "Hiányoznak a szükséges buildeszközök: {{tools}}",
-            "platform_unavailable": "Ez a cél nem érhető el a konfigurált builderből."
+            "platform_unavailable": "Ez a cél nem érhető el a konfigurált builderből.",
+            "generic_agent_release_not_found": "Nincs aláírt support-v* kiadás a BetterDesk-Clienten (stabilnak kell lennie, nem draft/prerelease).",
+            "generic_agent_release_list_failed": "Nem sikerült listázni a BetterDesk-Client kiadásokat a GitHubról (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Időtúllépés az általános ügynökközlemény eszközének letöltésekor.",
+            "generic_agent_release_redirect_limit": "Túl sok átirányítás az eszköz letöltésekor.",
+            "generic_agent_release_redirect_host_invalid": "A letöltés váratlan gazdagépre lett átirányítva.",
+            "generic_agent_release_asset_invalid": "A kiadási eszköz neve vagy URL-je érvénytelen.",
+            "generic_agent_release_asset_download_failed": "Az eszköz letöltése sikertelen: {{detail}}",
+            "generic_agent_release_external_config": "Az archívum beágyazott szerverkonfigurációt (custom.txt) tartalmaz, ezért elutasítva.",
+            "generic_agent_release_archive_invalid": "A kiadási archívumot nem lehetett megnyitni vagy érvényesíteni.",
+            "generic_agent_release_manifest_missing": "A kiadásból hiányzik a manifest.json vagy a manifest.sig.",
+            "generic_agent_release_public_key_missing": "Nincs nyilvános kulcs beállítva az aláírás ellenőrzéséhez.",
+            "generic_agent_release_signature_invalid": "A manifest aláírásának ellenőrzése sikertelen.",
+            "generic_agent_release_manifest_invalid": "A manifest nem ment át a validáción (schema, sku vagy assets).",
+            "generic_agent_release_checksum_mismatch": "Ellenőrzőösszeg-eltérés az eszköznél: {{detail}}"
         },
         "legacy_title": "Klienskonfiguráció-generátor",
         "connection_section": "Szerver kapcsolat",
@@ -979,6 +1061,7 @@
         "use_https": "HTTPS / WSS használata (ajánlott; LAN HTTP-hez kapcsolja ki, mint RustDesk)",
         "enrollment_per_device": "Eszközönként — jóváhagyás a Regisztrációkban",
         "builds_title": "Kliens buildek",
+        "rebuild": "Újraépítés",
         "rebuild_all": "Összes újraépítése",
         "rebuild_confirm": "Újraépíti az összes platformtelepítőt ehhez a csomaghoz?",
         "build_status_ready": "Kész",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "A márka aláírása sikertelen — ellenőrizze az aláíró kulcsot a konzolon, majd építse újra.",
         "toolchain_mingw_missing": "A mingw-w64 (x86_64-w64-mingw32-gcc) hiányzik — a Windows buildek meghiúsulnak.",
         "toolchain_appimage_missing": "Az appimagetool hiányzik — az AppImage buildek meghiúsulnak.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "A legújabb aláírt kiadás importálása és ellenőrzése…",
+        "generic_agents_imported": "{{tag}} importálva.",
+        "generic_agents_verified": "ellenőrizve",
+        "generic_agents_artifacts": "{{count}} platformartefaktum"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Érvénytelen fájltípus. Használjon PNG, JPG, WebP vagy GIF fájlt.",
         "bg_upload_success": "Háttérkép feltöltve.",
         "login_title": "Bejelentkezési oldal",
-        "login_desc": "Testre szabhatja a bejelentkezési képernyő fejlécét, alcímét és hátterét.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Bejelentkezési fejléc",
         "login_heading_placeholder": "Üdvözöljük újra",
         "login_subheading": "Bejelentkezési alcím",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "A készletek teljes színpalettát alkalmaznak (például BetterDesk vagy insolv Core Server). Elkülönülnek a gyors világos/sötét kapcsolótól.",
         "readability_check": "Olvashatósági ellenőrzés",
         "readability_contrast": "A(z) {item} kontrasztaránya ({ratio}) kisebb, mint {minimum}:1",
-        "readability_background": "A(z) {item} {type} típust használ alacsony fedéssel; a szöveg nehezen olvasható lehet."
+        "readability_background": "A(z) {item} {type} típust használ alacsony fedéssel; a szöveg nehezen olvasható lehet.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Áttekintés",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Nincs hardver információ",
         "no_sysinfo_hint": "A rendszeradatok azután jelennek meg, hogy az eszköz elküldi a sysinfo jelentést",
         "no_metrics": "Nem állnak rendelkezésre mérőszámok",
-        "no_metrics_hint": "A mutatók akkor jelennek meg, ha az eszköz szívverésjelentéseket küld",
+        "no_metrics_hint": "Kapcsolja be az elérhetőségi előzményeket a Beállításokban az online/offline változások rögzítéséhez. A kapcsolati munkamenetek akkor jelennek meg, amikor valaki csatlakozik.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Elérhetőségi előzmények",
+        "availability_prev_day": "Előző nap",
+        "availability_next_day": "Következő nap",
+        "availability_loading": "Elérhetőségi előzmények betöltése…",
+        "availability_disabled": "Az elérhetőségi előzmények ki vannak kapcsolva",
+        "availability_disabled_hint": "Kapcsolja be: Beállítások → Elérhetőségi előzmények. A szerver CPU-metrikák nélkül rögzíti az átmeneteket.",
+        "availability_empty": "Nincs státuszváltozás ezen a napon",
+        "availability_empty_hint": "Az átmenetek akkor jelennek meg, ha az eszköz online, offline, degraded vagy critical lesz.",
+        "availability_col_time": "Idő",
+        "availability_col_from": "Innen",
+        "availability_col_to": "Ide",
+        "availability_col_source": "Forrás",
+        "availability_status_online": "Online",
+        "availability_status_offline": "Offline",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Állapot",
+        "section_metrics_summary": "Szervermetrikák",
+        "metrics_avail_today": "Állapotváltozások (kiválasztott nap)",
+        "metrics_sessions_tracked": "Követett munkamenetek",
+        "section_connection_sessions": "Kapcsolati munkamenetek",
+        "sessions_loading": "Kapcsolati munkamenetek betöltése…",
+        "sessions_error": "Nem sikerült betölteni a kapcsolati munkameneteket",
+        "sessions_empty": "Még nincsenek kapcsolati munkamenetek",
+        "sessions_empty_hint": "A munkamenetek akkor jelennek meg, amikor egy jogosult peer csatlakozik (punch hole vagy relay). Az időtartam a relay végén töltődik.",
+        "sessions_col_when": "Mikor",
+        "sessions_col_who": "Ki",
+        "sessions_col_from": "IP-ről",
+        "sessions_col_transport": "Szállítás",
+        "sessions_col_duration": "Időtartam",
+        "sessions_active": "Aktív",
+        "sessions_transport_punch": "Közvetlen / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "A címke eltávolítása itt csak erről az eszközről veszi le. Globális műveletekhez használja a Címkék kezelése gombot az Eszközök oldalon."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "Biztonsági szigorítási prioritások a BetterDesk telepítéséhez. A tételek sorrendje súlyosság szerint történik.",
         "no_hardening": "Keményítő elemek nem állnak rendelkezésre.",
         "vuln_hint": "A függőségi sérülékenység vizsgálatának eredménye. Futtassa rendszeresen az npm auditot a függőségek biztonságának megőrzése érdekében.",
-        "no_vulns": "Nem található sebezhetőség. A függőségei biztonságban vannak."
+        "no_vulns": "Nem található sebezhetőség. A függőségei biztonságban vannak.",
+        "tab_sessions": "Panel munkamenetek",
+        "sessions_hint": "Konzol-bejelentkezései. Fiókonként csak egy aktív munkamenet engedélyezett; az új bejelentkezés lezárja az előzőt.",
+        "sessions_policy": "Tétlenségi időkorlát: {{idle}} perc · Abszolút max: {{max}} óra · Fiókonként egy aktív munkamenet",
+        "no_sessions": "Még nincsenek rögzített panel munkamenetek.",
+        "session_current": "Jelenlegi",
+        "session_active": "Aktív",
+        "session_ended": "Lezárt",
+        "col_status": "Állapot",
+        "col_started": "Kezdés",
+        "col_last_activity": "Utolsó aktivitás",
+        "col_ended": "Vége",
+        "col_reason": "Lezárás oka",
+        "col_user_agent": "Böngésző",
+        "reason_logout": "Kijelentkezés",
+        "reason_replaced": "Új bejelentkezés váltotta fel",
+        "reason_idle": "Tétlenségi időtúllépés",
+        "reason_max_age": "Maximális élettartam",
+        "reason_revoked": "Visszavonva",
+        "reason_destroyed": "Megsemmisítve"
     },
     "languages": {
         "title": "Nyelvkezelés",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Telepítés előtt",
         "install_blocked_hint": "A telepítés letiltva, amíg a fenti problémák meg nem oldódnak.",
         "preflight_info_title": "Telepítés előtt",
-        "preflight_info_note": "Telepítheti a frissítést — ezek csak tájékoztató üzenetek."
+        "preflight_info_note": "Telepítheti a frissítést — ezek csak tájékoztató üzenetek.",
+        "proxy_timeout_recovering": "Átjáró/proxy időtúllépés — ellenőrzöm, hogy a frissítés még fut-e a szerveren…",
+        "install_still_running": "A frissítés még fut a szerveren…",
+        "install_recovered": "A frissítés a szerveren befejeződött a böngészőkapcsolat megszakadása után",
+        "install_recovery_timeout": "Időtúllépés a frissítésre várakozáskor az átjáró bontása után. Ellenőrizze: Beállítások → Frissítések, data/.last_update_result.json vagy: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Engedélyek",
@@ -4149,7 +4314,8 @@
             "status_error": "Utolsó hiba",
             "os_yes": "Igen",
             "os_no": "Nem",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktív számlázható munkamenetek",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Eszköz",
@@ -4181,7 +4354,11 @@
             "duration": "Időtartam",
             "phase": "Fázis",
             "amount": "Összeg",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Munkamenet",
@@ -4228,7 +4405,9 @@
             "skip": "Kihagyás most",
             "submit": "Jelentés küldése",
             "summary_required": "Az összefoglaló kötelező",
-            "saved": "Munkajelentés mentve"
+            "saved": "Munkajelentés mentve",
+            "toolbar": "Munkajelentés",
+            "intent_hint": "A jelentés űrlap a munkamenet végén nyílik meg"
         },
         "empty": {
             "packages": "Még nincsenek csomagok. Hozzon létre egyet a fenti gombbal.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "A BetterDesk ingyenes",
+                "body": "Nyílt forráskódú távoli asztal — nincs ülőhelyes licenc, nincs bezárás. Ön hosztolja."
+            },
+            "remote": {
+                "title": "Távoli támogatás az Ön irányítása alatt",
+                "body": "Csatlakozzon végpontokhoz a saját konzoljáról. A munkamenetek a saját infrastruktúráján maradnak."
+            },
+            "secure": {
+                "title": "Beépített biztonság",
+                "body": "Operátor-hitelesítés, munkamenet-vezérlés és szerver-attestation, ha bizonyíték kell."
+            },
+            "platforms": {
+                "title": "Windows, Linux és macOS",
+                "body": "Egy konzol az ügynököknek a csapat által már támogatott platformokon."
+            }
+        },
+        "prev": "Előző dia",
+        "next": "Következő dia"
+    },
+    "agents": {
+        "title": "BetterDesk ügynökök",
+        "subtitle": "A csak bejövő Support kliensek a BetterDesk-Clientben készülnek — ez a panel importálja és szolgálja ki őket.",
+        "what_title": "Mik a BetterDesk ügynökök?",
+        "what_body": "A BetterDesk Support ügynökök csak bejövő asztali kliensek. Regisztrálnak a szerveren, párosító QR-t mutatnak, és fogadják a távoli támogatást. Nem indítanak kimenő kapcsolatokat más eszközökre.",
+        "note_no_build": "Ez a konzol már nem épít kliens telepítőket. Az aláírt kiadások a BetterDesk-Client GitHub-tárolóban készülnek.",
+        "get_title": "Honnan szerezhetők az ügynökök",
+        "get_body": "Töltse le az aláírt Support Agent csomagokat a BetterDesk-Client kiadásokból, vagy ossza meg a szerver nyilvános portálját az alábbi import után.",
+        "get_github": "BetterDesk-Client kiadások",
+        "get_portal": "Letöltési portál megnyitása",
+        "sync_title": "Import ehhez a szerverhez",
+        "sync_hint": "Importálja a legújabb aláírt support-v* kiadást, hogy a /portal ellenőrzött telepítőket szolgálhasson ki.",
+        "sync_import": "Legújabb kiadás importálása",
+        "sync_importing": "A legújabb aláírt kiadás importálása és ellenőrzése…",
+        "sync_imported": "Importálva: {{tag}}.",
+        "sync_empty": "Még nincs importált kiadás.",
+        "sync_verified": "ellenőrizve",
+        "sync_artifacts": "{{count}} platformartefakt",
+        "steps_title": "Ügynök bevezetése",
+        "step1": "Importálja a legújabb aláírt kiadást (fenti gomb) vagy töltse le a GitHubról.",
+        "step2": "Telepítse az ügynököt az eszközre, és adja meg a szerver nyilvános URL-jét.",
+        "step3": "Amikor az ügynök QR-kódot mutat, nyissa meg az Ügynök aktiválása menüt, és olvassa be.",
+        "step4": "Szükség esetén hagyja jóvá a regisztrációt, majd csatlakozzon a Remote Desktopból.",
+        "pair_activate": "Ügynök aktiválása",
+        "pair_body": "A párosítás a generikus Support Agent által a szerver elérése után mutatott QR-t használja.",
+        "branding_link": "Kliens branding",
+        "branding_body": "A megjelenés (logó, színek, címkék) futásidőben a Kliens brandingből töltődik — nincs beágyazva a telepítőbe."
     }
 }

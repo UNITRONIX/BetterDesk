@@ -27,6 +27,9 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const classicNavbar = read('views', 'partials', 'navbar.ejs');
     const settingsView = read('views', 'settings.ejs');
     const loginJs = read('public', 'js', 'login.js');
+    const loginView = read('views', 'login.ejs');
+    const desktopLoginJs = read('public', 'js', 'desktop-login.js');
+    const desktopLoginView = read('views', 'desktop-login.ejs');
 
     it('keeps classic mobile height rules out of the UX 3.5 scroll region', () => {
         assert.match(mobileCss, /\.app-layout \.main-content/);
@@ -58,6 +61,12 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     it('only renders aria-current for the active bottom navigation item', () => {
         assert.doesNotMatch(bottomNav, /aria-current="<%= .*: 'false' %>"/);
         assert.match(bottomNav, /aria-current="page"/);
+    });
+
+    it('points mobile bottom-nav Remote at the live /remote route', () => {
+        assert.match(bottomNav, /href="\/remote"/);
+        assert.match(bottomNav, /data-nav="remote"/);
+        assert.doesNotMatch(bottomNav, /href="\/remote-dashboard"/);
     });
 
     it('escapes dynamic automation values before inserting rule rows', () => {
@@ -112,10 +121,21 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(pagesCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*sticky/);
         assert.match(pagesCss, /\.settings-shell-nav-track\.mobile-tabs-scroll\s*\{[\s\S]*?padding-bottom:\s*0/);
         assert.match(
-            ux35Css,
-            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*0px[\s\S]*?top:\s*0[\s\S]*?margin-top:\s*0/
+            pagesCss,
+            /\.settings-shell-nav-track\s*\{[\s\S]*?overflow-x:\s*auto[\s\S]*?overflow-y:\s*hidden[\s\S]*?touch-action:\s*pan-x/
         );
-        assert.match(ux35Css, /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?align-items:\s*center/);
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.ux35-content:has\(\.settings-shell\)\s*\{[\s\S]*?padding-top:\s*0[\s\S]*?padding-inline:\s*0/
+        );
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?top:\s*0[\s\S]*?width:\s*100%/
+        );
+        assert.match(
+            ux35Css,
+            /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?overflow-y:\s*hidden[\s\S]*?scrollbar-width:\s*none/
+        );
         assert.match(
             ux35Css,
             /\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?justify-content:\s*center[\s\S]*?line-height:\s*1\.2/
@@ -127,7 +147,7 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         );
         assert.match(
             ux35Css,
-            /@media \(min-width: 1025px\)[\s\S]*?\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?--settings-nav-bleed:\s*var\(--ux35-content-padding-lg\)[\s\S]*?top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)[\s\S]*?margin-top:\s*calc\(-1 \* var\(--settings-nav-bleed\)\)/
+            /@media \(max-width: 767px\)[\s\S]*?\.ux35-page \.ux35-content:has\(\.settings-shell\)\s*\{[\s\S]*?padding-top:\s*0/
         );
         assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
         assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);
@@ -137,6 +157,28 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(loginJs, /params\.get\('autoLaunch'\) === '0'/);
         assert.match(loginJs, /data\.prefer_sso && !passwordBypass && !data\.local_bypass && !hasOidcError/);
         assert.match(loginJs, /window\.location\.replace\('\/api\/auth\/oidc\/authorize'\)/);
+    });
+
+    it('shows session-expired as a toast instead of stretching the login card', () => {
+        assert.match(loginView, /\/js\/notifications\.js/);
+        assert.match(loginJs, /function showSessionExpiredNotice/);
+        assert.match(loginJs, /Notifications\.error\(message\)/);
+        assert.match(loginJs, /params\.get\('expired'\) !== '1'/);
+        assert.match(desktopLoginView, /\/js\/notifications\.js/);
+        assert.match(desktopLoginJs, /params\.get\('expired'\) === '1'/);
+        assert.match(desktopLoginJs, /Notifications\.error\(message\)/);
+    });
+
+    it('supports split login promo modes and editable slides in branding', () => {
+        assert.match(loginView, /login-layout-<%= promoMode %>/);
+        assert.match(loginView, /login-promo-slide/);
+        assert.match(loginJs, /function initLoginPromoCarousel/);
+        assert.match(settingsView, /name="login-promo-mode"/);
+        assert.match(settingsView, /id="login-slides-panel"/);
+        assert.match(settingsJs, /MAX_LOGIN_SLIDES = 10/);
+        assert.match(settingsJs, /function renderLoginSlidesEditor/);
+        assert.match(settingsJs, /loginPromoMode/);
+        assert.match(settingsJs, /loginSlides/);
     });
 
     it('keeps personal TOTP in Authentication while gating admin panels', () => {

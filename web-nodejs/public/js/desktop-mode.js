@@ -123,6 +123,7 @@
             // Main
             { id: 'dashboard',     icon: 'dashboard',        route: '/',              color: '#58a6ff',  name: t('nav.dashboard'),      category: 'main' },
             { id: 'devices',       icon: 'devices',          route: '/devices',       color: '#3fb950',  name: t('nav.devices'),        category: 'main' },
+            { id: 'activate-agent', icon: 'qr_code_2', route: '/?activateAgent=1', color: '#a371f7', name: t('nav.activate_agent') || t('dashboard.activate_agent_qr'), category: 'main' },
             { id: 'registrations', icon: 'how_to_reg',       route: '/registrations', color: '#79c0ff',  name: t('nav.registrations'),  category: 'main' },
             // Management
             { id: 'inventory',     icon: 'inventory_2',      route: '/inventory',     color: '#d2a8ff',  name: t('nav.inventory'),      category: 'management' },
@@ -135,7 +136,7 @@
             // Tools
             { id: 'reports',       icon: 'assessment',       route: '/reports',       color: '#da7756',  name: t('nav.reports'),        category: 'tools' },
             { id: 'keys',          icon: 'vpn_key',          route: '/keys',          color: '#d29922',  name: t('nav.keys'),           category: 'tools' },
-            { id: 'generator',     icon: 'build',            route: '/generator',     color: '#bc8cff',  name: t('nav.generator'),      category: 'tools' },
+            { id: 'agents',        icon: 'support_agent',    route: '/agents',        color: '#bc8cff',  name: t('nav.agents'),         category: 'tools' },
             { id: 'remote',        icon: 'connected_tv',     route: '/remote',        color: '#58a6ff',  name: t('nav.remote') || 'Remote Desktop', category: 'tools' },
             { id: 'toolkit',       icon: 'handyman',         route: '/toolkit',       color: '#f0883e',  name: t('nav.toolkit') || 'Toolkit', category: 'tools' },
             // Settings (always visible)

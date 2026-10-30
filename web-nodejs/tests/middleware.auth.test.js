@@ -31,7 +31,7 @@ describe('Auth Middleware', () => {
             const res = await request(app).get('/dashboard');
 
             expect(res.status).toBe(302);
-            expect(res.headers.location).toBe('/login');
+            expect(res.headers.location).toBe('/login?expired=1');
         });
 
         it('should pass through for authenticated requests', async () => {

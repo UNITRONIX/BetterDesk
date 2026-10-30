@@ -47,7 +47,7 @@
         "dashboard": "Kontrol Paneli",
         "devices": "Cihazlar",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "BetterDesk Aracıları",
         "settings": "Ayarlar",
         "users": "Users",
         "inventory": "Inventory",
@@ -61,6 +61,7 @@
         "reports": "Reports",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "Ajanı etkinleştir",
         "management": "Yönetim",
         "toggle_sidebar": "Kenar çubuğunu aç/kapat",
         "cdap": "CDAP Cihazlar",
@@ -87,7 +88,8 @@
         "server_attestation": "Sunucu Performans Onayı",
         "commercialization": "Ticarileştirme",
         "remote_open_tab": "Uzak masaüstü istemcisini yeni sekmede aç",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk Aracıları"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "SSO oturum açma işlemi sırasında bir hata oluştu.",
         "oidc_no_account": "Hesabınız bulunamadı ve otomatik kayıt devre dışı bırakıldı.",
         "totp_rate_limited": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin.",
-        "emergency_mode_banner": "Go server erişilemiyor — acil durum modunda çalışıyor (yalnızca yönetici, sınırlı işlevsellik)"
+        "emergency_mode_banner": "Go server erişilemiyor — acil durum modunda çalışıyor (yalnızca yönetici, sınırlı işlevsellik)",
+        "session_expired": "Oturumunuz sona erdi veya yeni bir girişle değiştirildi. Lütfen tekrar oturum açın.",
+        "session_idle_warning_title": "Oturum yakında sona erecek",
+        "session_idle_warning_body": "Hareketsizlik nedeniyle {{seconds}} saniye içinde oturumunuz kapatılacak.",
+        "session_stay_signed_in": "Oturumda kal"
     },
     "dashboard": {
         "title": "Kontrol Paneli",
@@ -144,7 +150,7 @@
         "quick_actions": "Hızlı Eylemler",
         "manage_devices": "Bağlı cihazları yönetin",
         "view_keys": "Sunucu anahtarlarını görüntüle",
-        "generate_config": "İstemci yapılandırması oluştur",
+        "generate_config": "Yalnızca gelen Support aracılarını nereden alırsınız",
         "server_settings": "Ayarları yapılandırın",
         "greeting_morning": "Günaydın {name}",
         "greeting_afternoon": "İyi günler, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "API sunucusu",
         "config_key": "Anahtar",
         "client_config_hint": "Bu değerleri RustDesk ağ ayarlarında, ID/Relay sunucusu bölümüne girin.",
-        "open_generator": "İstemci oluşturucu",
+        "open_generator": "BetterDesk Aracıları",
         "open_keys": "Anahtarları aç",
         "open_remote": "Uzak masaüstü konsolunu aç",
         "attention_panel": "Dikkat gerekiyor",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Klasör yok",
         "activate_agent_submit": "Cihazı etkinleştir",
         "activate_agent_submitting": "Cihaz etkinleştiriliyor…",
-        "activate_agent_success": "Ajan başarıyla etkinleştirildi."
+        "activate_agent_success": "Ajan başarıyla etkinleştirildi.",
+        "open_agents": "BetterDesk Aracıları",
+        "agents_hint": "Yalnızca gelen Support aracılarını nereden alırsınız"
     },
     "devices": {
         "title": "Cihazlar",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Etiketleri yönet",
+        "manage_device_tags": "Etiketleri yönet",
+        "rename_tag": "Etiketi yeniden adlandır",
+        "delete_tag": "Etiketi sil",
+        "rename_tag_prompt": "Yeni etiket adı",
+        "rename_tag_hint": "Bu etiketi görebildiğiniz tüm cihazlarda yeniden adlandırır ve eşleşen dinamik grupları günceller.",
+        "delete_tag_confirm": "\"{tag}\" etiketi {count} cihazdan kaldırılsın mı? Bu etiketi kullanan dinamik gruplar güncellenene kadar boş kalır.",
+        "tag_renamed": "Etiket yeniden adlandırıldı",
+        "tag_deleted": "Etiket silindi",
+        "tag_name_required": "Etiket adı gerekli",
+        "tag_rename_identical": "Yeni ad farklı olmalı",
+        "tags_backend_unsupported": "Cihaz etiketleri mevcut backend ile desteklenmiyor",
+        "tags_manage_hint": "Görünür tüm cihazlarda etiketleri yeniden adlandırın veya silin. Bir cihazdan kaldırma Düzenle veya Ayrıntılar’da yapılır.",
+        "tags_device_hint": "Burada bir etiketi kaldırarak yalnızca bu cihazdan ayırırsınız. Her yerde yeniden adlandırmak/silmek için Etiketleri yönet’i kullanın.",
+        "unassign_tag": "Bu cihazdan kaldır",
+        "tag_device_one": "cihaz",
+        "tag_device_many": "cihaz",
+        "tag_group_one": "dinamik grup",
+        "tag_group_many": "dinamik grup"
     },
     "keys": {
         "title": "Sunucu Anahtarları",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Bu dosyadaki değişiklikler kaydedilsin mi? Önceki sürümün yedeği oluşturulacak.",
         "unsaved_restart_message": "Kaydedilmemiş değişiklikleriniz var. Bunlar atılsın mı?",
         "unsaved_restart_save": "Dosyayı kaydet",
-        "unsaved_restart_stay": "İptal"
+        "unsaved_restart_stay": "İptal",
+        "availability_history_title": "Kullanılabilirlik geçmişi",
+        "availability_history_desc": "İsteğe bağlı olarak cihazların online/offline değişimlerini kaydedin; Metrics günlük geçmiş gösterebilir. Veritabanı büyümesini önlemek için varsayılan kapalı.",
+        "availability_history_enable": "Kullanılabilirlik geçmişini etkinleştir",
+        "availability_history_enable_hint": "Etkinleştirildiğinde Go sunucusu heartbeat ve signal/CDAP/Mesh ile gözlenen (ONLINE, OFFLINE, DEGRADED, CRITICAL) geçişleri kaydeder.",
+        "availability_history_retention": "Saklama (gün)",
+        "availability_history_retention_hint": "Eski olaylar otomatik silinir. Varsayılan: 30 gün.",
+        "availability_history_save": "Kullanılabilirlik ayarlarını kaydet",
+        "availability_history_saved": "Kullanılabilirlik geçmişi ayarları kaydedildi",
+        "tab_time": "Saat / saat dilimleri",
+        "time": {
+            "timezone_title": "Faturalama saat dilimi",
+            "timezone_desc": "Ticarileştirme ay sınırları için genel IANA dilimi (aşım ayın 1’inde gece yarısı sıfırlanır).",
+            "billing_month_hint": "Bu dilimde ayın birinci gününün gece yarısı önceki dönemi kapatır ve yenisini açar. Aktif oturumlar kesilmez.",
+            "billing_timezone": "Saat dilimi",
+            "billing_timezone_hint": "Örn. Europe/Warsaw. Aylık kullanımı ve aşımı etkiler.",
+            "custom_timezone": "Özel IANA dilimi (isteğe bağlı)",
+            "detect_os": "Sunucu OS’den algıla",
+            "detected": "Algılanan dilim: {tz}",
+            "ntp_title": "NTP / saat senkronu",
+            "ntp_desc": "Faturalanabilir oturum sürelerinin doğruluğu için BetterDesk sunucu saatini senkron tutun.",
+            "save": "Saat ayarlarını kaydet",
+            "save_title": "Saat ayarlarını kaydet",
+            "saved": "Saat ayarları kaydedildi.",
+            "commercialization_link": "Ticarileştirme → Paketleri aç"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Oturum değiştirildi",
+        "action_session_expired": "Oturum sona erdi",
+        "action_session_ip_change": "Oturum IP değişimi"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Ayarlar (yalnızca yönetici)",
         "preview_quit": "Çık (yalnızca yönetici)",
         "download_link_title": "İndirme bağlantısı",
+        "download_hub": "İndirme merkezi",
+        "generic_agents_empty": "Henüz içe aktarılmış sürüm yok.",
+        "generic_agents_hint": "Birincil üretim yolu: GitHub’dan imzalı BetterDesk-Client sürümlerini içe aktarın, ardından doğrulanmış ajanları bu örnekten sunun. Yerel Flutter/Cargo derlemesi gerekmez.",
+        "generic_agents_import": "En son sürümü içe aktar",
+        "generic_agents_title": "Genel yalnızca gelen ajanlar",
         "download_link_hint": "Bu bağlantıyı son kullanıcılarla paylaşın. Markalı bir indirme sayfası görecekler. Kısa bağlantıyı değiştirdikten sonra eski hex bağlantılar çalışmaya devam eder.",
         "open_portal": "Açık",
         "created": "Paket oluşturuldu",
@@ -970,7 +1038,21 @@
             "platforms_required": "Derlemek için en az bir platform seçin",
             "no_supported_targets": "Şu anda kullanılabilir derleme hedefi yok. Builder yapılandırmasını kontrol edin.",
             "toolchain_missing": "Gerekli derleme araçları eksik: {{tools}}",
-            "platform_unavailable": "Bu hedef, yapılandırılan builder üzerinden kullanılamıyor."
+            "platform_unavailable": "Bu hedef, yapılandırılan builder üzerinden kullanılamıyor.",
+            "generic_agent_release_not_found": "BetterDesk-Client üzerinde imzalı support-v* sürümü yok (kararlı olmalı; draft/prerelease olmamalı).",
+            "generic_agent_release_list_failed": "GitHub’dan BetterDesk-Client sürümleri listelenemedi (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Genel ajan sürüm varlığı indirilirken zaman aşımı.",
+            "generic_agent_release_redirect_limit": "Sürüm varlığı indirilirken çok fazla yönlendirme.",
+            "generic_agent_release_redirect_host_invalid": "İndirme beklenmeyen bir ana bilgisayara yönlendirildi.",
+            "generic_agent_release_asset_invalid": "Bir sürüm varlığının adı veya URL’si geçersiz.",
+            "generic_agent_release_asset_download_failed": "Sürüm varlığı indirilemedi: {{detail}}",
+            "generic_agent_release_external_config": "Arşiv gömülü sunucu yapılandırması (custom.txt) içeriyor ve reddedildi.",
+            "generic_agent_release_archive_invalid": "Bir sürüm arşivi açılamadı veya doğrulanamadı.",
+            "generic_agent_release_manifest_missing": "Sürümde manifest.json veya manifest.sig eksik.",
+            "generic_agent_release_public_key_missing": "İmzayı doğrulamak için genel anahtar yapılandırılmamış.",
+            "generic_agent_release_signature_invalid": "Manifest imza doğrulaması başarısız.",
+            "generic_agent_release_manifest_invalid": "Manifest doğrulamayı geçemedi (schema, sku veya assets).",
+            "generic_agent_release_checksum_mismatch": "Varlık için sağlama toplamı uyuşmuyor: {{detail}}"
         },
         "legacy_title": "İstemci Yapılandırma Oluşturucu",
         "connection_section": "Sunucu bağlantısı",
@@ -993,6 +1075,7 @@
         "builds_hint": "Her platform için bu sunucuda derlenen yükleyiciler. Araç zinciri hatalarını düzelttikten veya ajan kaynağını güncelledikten sonra yeniden derleyin.",
         "builds_loading": "Derleme durumu yükleniyor…",
         "builds_empty": "Henüz sırada derleme yok — paketi kaydedin veya Tümünü yeniden derle'ye tıklayın.",
+        "rebuild": "Yeniden derle",
         "rebuild_all": "Tümünü yeniden derle",
         "rebuilding_all": "Yeniden derleme sıraya alınıyor…",
         "rebuild_queued": "Tüm platform derlemeleri sıraya alındı",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "Marka imzalama başarısız — konsoldaki imza anahtarını kontrol edin ve yeniden derleyin.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) bulunamadı — Windows derlemeleri başarısız olur.",
         "toolchain_appimage_missing": "appimagetool bulunamadı — AppImage derlemeleri başarısız olur.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "En son imzalı sürüm içe aktarılıyor ve doğrulanıyor…",
+        "generic_agents_imported": "{{tag}} içe aktarıldı.",
+        "generic_agents_verified": "doğrulandı",
+        "generic_agents_artifacts": "{{count}} platform artefaktı"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Geçersiz dosya türü. PNG, JPG, WebP veya GIF kullanın.",
         "bg_upload_success": "Arka plan görüntüsü başarıyla yüklendi.",
         "login_title": "Giriş Sayfası",
-        "login_desc": "Giriş ekranı başlığını, alt başlığını ve arka planını özelleştirin.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Giriş Başlığı",
         "login_heading_placeholder": "Tekrar hoş geldiniz",
         "login_subheading": "Giriş Alt Başlığı",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "Ön ayarlar tam bir renk paketi uygular (ör. BetterDesk veya insolv Core Server). Hızlı açık/koyu geçişinden ayrıdır.",
         "readability_check": "Okunabilirlik denetimi",
         "readability_contrast": "{item} kontrast oranı ({ratio}) {minimum}:1 değerinin altında",
-        "readability_background": "{item}, düşük kaplama ile {type} kullanıyor; metin zor okunabilir."
+        "readability_background": "{item}, düşük kaplama ile {type} kullanıyor; metin zor okunabilir.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Genel Bakış",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Donanım bilgisi mevcut değil",
         "no_sysinfo_hint": "Cihaz bir sistem bilgisi raporu gönderdikten sonra sistem bilgileri görünecektir",
         "no_metrics": "Metrik verisi yok",
-        "no_metrics_hint": "Cihaz kalp atışı raporları gönderdikten sonra ölçümler görünecek",
+        "no_metrics_hint": "Çevrimiçi/çevrimdışı değişiklikleri kaydetmek için Ayarlar’da kullanılabilirlik geçmişini etkinleştirin. Bağlantı oturumları biri bağlandığında görünür.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Kullanılabilirlik geçmişi",
+        "availability_prev_day": "Önceki gün",
+        "availability_next_day": "Sonraki gün",
+        "availability_loading": "Kullanılabilirlik geçmişi yükleniyor…",
+        "availability_disabled": "Kullanılabilirlik geçmişi kapalı",
+        "availability_disabled_hint": "Ayarlar → Kullanılabilirlik geçmişi altında açın. Sunucu istemci CPU ölçümü olmadan geçişleri kaydeder.",
+        "availability_empty": "Bu günde durum değişikliği yok",
+        "availability_empty_hint": "Cihaz online, offline, degraded veya critical olduğunda geçişler görünür.",
+        "availability_col_time": "Zaman",
+        "availability_col_from": "Kimden",
+        "availability_col_to": "Kime",
+        "availability_col_source": "Kaynak",
+        "availability_status_online": "Çevrimiçi",
+        "availability_status_offline": "Çevrimdışı",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Durum",
+        "section_metrics_summary": "Sunucu metrikleri",
+        "metrics_avail_today": "Durum değişiklikleri (seçilen gün)",
+        "metrics_sessions_tracked": "İzlenen oturumlar",
+        "section_connection_sessions": "Bağlantı oturumları",
+        "sessions_loading": "Bağlantı oturumları yükleniyor…",
+        "sessions_error": "Bağlantı oturumları yüklenemedi",
+        "sessions_empty": "Henüz bağlantı oturumu yok",
+        "sessions_empty_hint": "Oturumlar yetkili bir peer bağlandığında görünür (punch hole veya relay). Süre, relay oturumu bitince doldurulur.",
+        "sessions_col_when": "Ne zaman",
+        "sessions_col_who": "Kim",
+        "sessions_col_from": "IP’den",
+        "sessions_col_transport": "Taşıma",
+        "sessions_col_duration": "Süre",
+        "sessions_active": "Aktif",
+        "sessions_transport_punch": "Doğrudan / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Burada bir etiketi kaldırmak yalnızca bu cihazdan ayırır. Her yerde yeniden adlandırmak/silmek için Cihazlar sayfasındaki Etiketleri yönet’i kullanın."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "BetterDesk dağıtımınız için güvenliği güçlendirme öncelikleri. Öğeler önem derecesine göre sıralanır.",
         "no_hardening": "Sertleştirici öğe mevcut değil.",
         "vuln_hint": "Bağımlılık güvenlik açığı taraması sonuçları. Bağımlılıkları güvende tutmak için npm denetimini düzenli olarak çalıştırın.",
-        "no_vulns": "Hiçbir güvenlik açığı bulunamadı. Bağımlılıklarınız güvende."
+        "no_vulns": "Hiçbir güvenlik açığı bulunamadı. Bağımlılıklarınız güvende.",
+        "tab_sessions": "Panel oturumları",
+        "sessions_hint": "Konsol oturumlarınız. Hesap başına yalnızca bir etkin oturuma izin verilir; yeni giriş öncekini sonlandırır.",
+        "sessions_policy": "Boşta kalma: {{idle}} dk · Mutlak üst sınır: {{max}} sa · Hesap başına bir etkin oturum",
+        "no_sessions": "Henüz kayıtlı panel oturumu yok.",
+        "session_current": "Geçerli",
+        "session_active": "Etkin",
+        "session_ended": "Sona erdi",
+        "col_status": "Durum",
+        "col_started": "Başlangıç",
+        "col_last_activity": "Son etkinlik",
+        "col_ended": "Bitiş",
+        "col_reason": "Bitiş nedeni",
+        "col_user_agent": "Tarayıcı",
+        "reason_logout": "Çıkış",
+        "reason_replaced": "Yeni girişle değiştirildi",
+        "reason_idle": "Boşta kalma zaman aşımı",
+        "reason_max_age": "Maksimum ömür",
+        "reason_revoked": "İptal edildi",
+        "reason_destroyed": "Yok edildi"
     },
     "languages": {
         "title": "Dil Yönetimi",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Kurulumdan önce",
         "install_blocked_hint": "Yukarıdaki sorunlar çözülene kadar kurulum devre dışıdır.",
         "preflight_info_title": "Kurulumdan önce",
-        "preflight_info_note": "Güncellemeyi yükleyebilirsiniz — bunlar yalnızca bilgilendirme notlarıdır."
+        "preflight_info_note": "Güncellemeyi yükleyebilirsiniz — bunlar yalnızca bilgilendirme notlarıdır.",
+        "proxy_timeout_recovering": "Ağ geçidi/proxy zaman aşımı — güncellemenin sunucuda hâlâ çalışıp çalışmadığı kontrol ediliyor…",
+        "install_still_running": "Güncelleme sunucuda hâlâ çalışıyor…",
+        "install_recovered": "Tarayıcı bağlantısı koptuktan sonra güncelleme sunucuda tamamlandı",
+        "install_recovery_timeout": "Ağ geçidi kopmasından sonra güncelleme bekleme süresi doldu. Ayarlar → Güncellemeler, data/.last_update_result.json veya: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "İzinler",
@@ -4149,7 +4314,8 @@
             "status_error": "Son hata",
             "os_yes": "Evet",
             "os_no": "Hayır",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktif faturalandırılabilir oturumlar",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Cihaz",
@@ -4181,7 +4354,11 @@
             "duration": "Süre",
             "phase": "Aşama",
             "amount": "Tutar",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Oturum",
@@ -4228,7 +4405,9 @@
             "skip": "Şimdilik atla",
             "submit": "Rapor gönder",
             "summary_required": "Özet gerekli",
-            "saved": "İş raporu kaydedildi"
+            "saved": "İş raporu kaydedildi",
+            "toolbar": "İş raporu",
+            "intent_hint": "Oturum bittiğinde rapor formu açılacak"
         },
         "empty": {
             "packages": "Henüz paket yok. Yukarıdaki düğmeyle oluşturun.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk ücretsizdir",
+                "body": "Açık kaynak uzak masaüstü — koltuk lisansı yok, kilitlenme yok. Kendiniz barındırın."
+            },
+            "remote": {
+                "title": "Kontrol sizde uzak destek",
+                "body": "Uç noktalara kendi konsolunuzdan bağlanın. Oturumlar altyapınızda kalır."
+            },
+            "secure": {
+                "title": "Güvenlik yerleşik",
+                "body": "Operatör kimlik doğrulama, oturum denetimleri ve gerektiğinde sunucu attestation."
+            },
+            "platforms": {
+                "title": "Windows, Linux ve macOS",
+                "body": "Ekibinizin zaten desteklediği platformlarda ajanlar için tek konsol."
+            }
+        },
+        "prev": "Önceki slayt",
+        "next": "Sonraki slayt"
+    },
+    "agents": {
+        "title": "BetterDesk Aracıları",
+        "subtitle": "Yalnızca gelen Support istemcileri BetterDesk-Client’ta oluşturulur — bu panel onları içe aktarır ve sunar.",
+        "what_title": "BetterDesk aracıları nedir?",
+        "what_body": "BetterDesk Support aracıları yalnızca gelen masaüstü istemcileridir. Sunucunuza kaydolur, eşleştirme QR’si gösterir ve uzaktan desteği kabul eder. Diğer cihazlara giden bağlantı başlatmazlar.",
+        "note_no_build": "Bu konsol artık istemci yükleyicileri derlemez. İmzalı sürümler BetterDesk-Client GitHub deposunda üretilir.",
+        "get_title": "Aracıları nereden alırsınız",
+        "get_body": "İmzalı Support Agent paketlerini BetterDesk-Client sürümlerinden indirin veya aşağıda içe aktardıktan sonra bu sunucunun genel portalını paylaşın.",
+        "get_github": "BetterDesk-Client sürümleri",
+        "get_portal": "İndirme portalını aç",
+        "sync_title": "Bu sunucu için içe aktar",
+        "sync_hint": "En son imzalı support-v* sürümünü içe aktarın; böylece /portal doğrulanmış yükleyicileri sunabilir.",
+        "sync_import": "En son sürümü içe aktar",
+        "sync_importing": "En son imzalı sürüm içe aktarılıyor ve doğrulanıyor…",
+        "sync_imported": "{{tag}} içe aktarıldı.",
+        "sync_empty": "Henüz sürüm içe aktarılmadı.",
+        "sync_verified": "doğrulandı",
+        "sync_artifacts": "{{count}} platform artefaktı",
+        "steps_title": "Bir aracı nasıl eklenir",
+        "step1": "En son imzalı sürümü içe aktarın (yukarıdaki düğme) veya GitHub’dan indirin.",
+        "step2": "Aracıyı cihaza kurun ve bu sunucunun genel URL’sini girin.",
+        "step3": "Aracı bir QR gösterdiğinde Aracıyı etkinleştir’i açın ve tarayın.",
+        "step4": "Politika gerektiriyorsa kaydı onaylayın, ardından Remote Desktop’tan bağlanın.",
+        "pair_activate": "Aracıyı etkinleştir",
+        "pair_body": "Eşleştirme, genel bir Support Agent’ın sunucunuza ulaştıktan sonra gösterdiği QR’yi kullanır.",
+        "branding_link": "İstemci markası",
+        "branding_body": "Görünüm (logo, renkler, etiketler) çalışma zamanında İstemci markasından yüklenir — yükleyiciye gömülmez."
     }
 }

@@ -29,7 +29,11 @@ const {
     getPanelReadMountPaths
 } = require('./middleware/rateLimiter');
 const { csrfTokenProvider, doubleCsrfProtection, downgradeToHttp: csrfDowngradeToHttp } = require('./middleware/csrf');
-const { roleHasPermission, isSuperAdminRole } = require('./middleware/auth');
+const {
+    requestHasPermission,
+    isSuperAdminRole,
+    loadEffectivePermissions,
+} = require('./middleware/auth');
 const authService = require('./services/authService');
 const serverBackend = require('./services/serverBackend');
 const db = require('./services/database');
@@ -126,30 +130,67 @@ app.use(cookieParser());
 const SESSION_COOKIE = config.httpsEnabled ? 'betterdesk.sid' : 'bd.sid';
 const persistentSessionStore = new DatabaseSessionStore({
     config,
-    ttlMs: config.sessionMaxAge
+    ttlMs: config.sessionMaxAge,
+    idleTimeoutMs: config.sessionIdleTimeout,
+    maxAgeMs: config.sessionMaxAge
 });
+const panelSessionService = require('./services/panelSessionService');
+panelSessionService.attachStore(persistentSessionStore);
 persistentSessionStore.ready.catch((err) => {
     logger.error('[Session] Persistent session store initialization failed:', err.message);
 });
 const sessionCleanupTimer = setInterval(
     () => persistentSessionStore.cleanup((err) => err && logger.warn('[Session] Cleanup failed:', err.message)),
-    Math.max(60 * 60 * 1000, config.sessionMaxAge)
+    Math.max(5 * 60 * 1000, Math.min(60 * 60 * 1000, config.sessionIdleTimeout))
 );
 sessionCleanupTimer.unref?.();
 const sessionMiddleware = session({
     secret: config.sessionSecret,
     name: SESSION_COOKIE,
     resave: false,
+    // Rolling idle window: activity extends cookie until absolute maxAge.
+    rolling: true,
     saveUninitialized: false,
     store: persistentSessionStore,
     cookie: {
         secure: config.httpsEnabled,
         httpOnly: true,
         sameSite: 'lax',
-        maxAge: config.sessionMaxAge
+        maxAge: config.sessionIdleTimeout
     }
 });
 app.use(sessionMiddleware);
+// Server-side idle/absolute enforcement + IP-change audit for authenticated sessions.
+app.use((req, res, next) => {
+    if (!req.session || !req.session.userId) return next();
+    const touch = panelSessionService.touchActivity(req);
+    if (!touch.ok) {
+        const reason = touch.reason || 'expired';
+        const userId = req.session.userId;
+        panelSessionService.endCurrentSession(req, reason).finally(() => {
+            req.session.destroy(() => {
+                res.clearCookie(SESSION_COOKIE);
+                res.clearCookie('betterdesk.sid');
+                res.clearCookie('bd.sid');
+                const wantsJson = req.path.startsWith('/api/')
+                    || (req.get('accept') || '').includes('application/json');
+                if (wantsJson) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'Session expired. Please log in again.',
+                        code: reason === 'idle' ? 'session_idle' : 'session_expired'
+                    });
+                }
+                return res.redirect('/login?expired=1');
+            });
+        });
+        db.logAction(userId, 'session_expired', `reason=${reason}`, req.ip).catch(() => {});
+        return;
+    }
+    panelSessionService.noteIpChange(req, (uid, action, details, ip) => db.logAction(uid, action, details, ip));
+    next();
+});
+
 // Generate the double-submit token before routes that need route-level CSRF
 // protection, including the session-authenticated notification endpoints.
 app.use(csrfTokenProvider);
@@ -184,6 +225,11 @@ app.use('/wallpapers', express.static(path.join(__dirname, 'wallpapers'), {
     etag: true,
     immutable: true
 }));
+
+// Resolve role overrides before browser-facing routers. Static assets are
+// intentionally served first so authenticated pages do not add a Go lookup
+// for every CSS, image, and JavaScript request.
+app.use(loadEffectivePermissions);
 
 // Rate limiting for API.
 // SECURITY (audit fix M-03, 2026-04-10): high-frequency widget refresh paths
@@ -222,8 +268,11 @@ app.use((req, res, next) => {
     res.locals.supporters = loadSupporters();
     // Inject permission helper for EJS templates (sidebar/button visibility)
     const role = req.session?.user?.role;
-    res.locals.hasPermission = (perm) => role ? roleHasPermission(role, perm) : false;
+    res.locals.hasPermission = (perm) => role
+        ? requestHasPermission(req, perm)
+        : false;
     res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
+    res.locals.sessionPolicy = panelSessionService.getPolicy();
     // Prevent HTML page caching — only static assets should be cached
     if (!req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map|proto)$/)) {
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -600,7 +649,7 @@ async function startServer() {
                     const clientTemplateWorker = require('./services/clientTemplateWorker');
                     clientTemplateWorker.startWorker();
                     if (String(
-                        process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+                        process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'download'
                     ).trim().toLowerCase() === 'embedded') {
                         const clientBuilder = require('./services/clientBuilderService');
                         clientBuilder.syncAndQueueRebuilds()

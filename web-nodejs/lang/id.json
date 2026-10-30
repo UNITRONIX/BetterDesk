@@ -47,7 +47,7 @@
         "dashboard": "Dasbor",
         "devices": "Perangkat",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "Agen BetterDesk",
         "settings": "Pengaturan",
         "users": "Users",
         "inventory": "Inventory",
@@ -61,6 +61,7 @@
         "reports": "Reports",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "Aktifkan agen",
         "management": "Manajemen",
         "toggle_sidebar": "Alihkan bilah sisi",
         "cdap": "Perangkat CDAP",
@@ -87,7 +88,8 @@
         "server_attestation": "Sertifikasi Server",
         "commercialization": "Komersialisasi",
         "remote_open_tab": "Buka klien desktop jarak jauh di tab baru",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agen BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "Terjadi kesalahan saat login SSO.",
         "oidc_no_account": "Akun Anda tidak ditemukan dan pendaftaran otomatis dinonaktifkan.",
         "totp_rate_limited": "Terlalu banyak upaya. Silakan coba lagi nanti.",
-        "emergency_mode_banner": "Go server tidak dapat dijangkau — berjalan dalam mode darurat (khusus admin, fungsi terbatas)"
+        "emergency_mode_banner": "Go server tidak dapat dijangkau — berjalan dalam mode darurat (khusus admin, fungsi terbatas)",
+        "session_expired": "Sesi Anda kedaluwarsa atau digantikan oleh login baru. Silakan masuk lagi.",
+        "session_idle_warning_title": "Sesi akan segera berakhir",
+        "session_idle_warning_body": "Anda akan keluar karena tidak aktif dalam {{seconds}} detik.",
+        "session_stay_signed_in": "Tetap masuk"
     },
     "dashboard": {
         "title": "Dasbor",
@@ -144,7 +150,7 @@
         "quick_actions": "Tindakan Cepat",
         "manage_devices": "Kelola perangkat yang terhubung",
         "view_keys": "Lihat kunci server",
-        "generate_config": "Hasilkan konfigurasi klien",
+        "generate_config": "Dari mana mendapatkan agen Support hanya masuk",
         "server_settings": "Konfigurasikan pengaturan",
         "greeting_morning": "Selamat pagi {name}",
         "greeting_afternoon": "Selamat siang, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "Server API",
         "config_key": "Kunci",
         "client_config_hint": "Masukkan nilai ini di pengaturan jaringan RustDesk, pada bagian server ID/relay.",
-        "open_generator": "Generator klien",
+        "open_generator": "Agen BetterDesk",
         "open_keys": "Buka kunci",
         "open_remote": "Buka konsol desktop jarak jauh",
         "attention_panel": "Perlu perhatian",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Tanpa folder",
         "activate_agent_submit": "Aktifkan perangkat",
         "activate_agent_submitting": "Mengaktifkan perangkat…",
-        "activate_agent_success": "Agen berhasil diaktifkan."
+        "activate_agent_success": "Agen berhasil diaktifkan.",
+        "open_agents": "Agen BetterDesk",
+        "agents_hint": "Dari mana mendapatkan agen Support hanya masuk"
     },
     "devices": {
         "title": "Perangkat",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Kelola tag",
+        "manage_device_tags": "Kelola tag",
+        "rename_tag": "Ganti nama tag",
+        "delete_tag": "Hapus tag",
+        "rename_tag_prompt": "Nama tag baru",
+        "rename_tag_hint": "Mengganti nama tag ini pada semua perangkat yang terlihat dan memperbarui grup dinamis yang cocok.",
+        "delete_tag_confirm": "Hapus tag \"{tag}\" dari {count} perangkat? Grup dinamis yang memakai tag ini akan kosong hingga diperbarui.",
+        "tag_renamed": "Tag diganti nama",
+        "tag_deleted": "Tag dihapus",
+        "tag_name_required": "Nama tag wajib diisi",
+        "tag_rename_identical": "Nama baru harus berbeda",
+        "tags_backend_unsupported": "Tag perangkat tidak didukung dengan backend saat ini",
+        "tags_manage_hint": "Ganti nama atau hapus tag di semua perangkat yang terlihat. Lepas dari satu perangkat lewat Edit atau Detail.",
+        "tags_device_hint": "Hapus tag di sini untuk melepasnya hanya dari perangkat ini. Gunakan Kelola tag untuk perubahan global.",
+        "unassign_tag": "Hapus dari perangkat ini",
+        "tag_device_one": "perangkat",
+        "tag_device_many": "perangkat",
+        "tag_group_one": "grup dinamis",
+        "tag_group_many": "grup dinamis"
     },
     "keys": {
         "title": "Kunci Server",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Simpan perubahan pada file ini? Cadangan versi sebelumnya akan dibuat.",
         "unsaved_restart_message": "Anda memiliki perubahan yang belum disimpan. Buang?",
         "unsaved_restart_save": "Simpan file",
-        "unsaved_restart_stay": "Batalkan"
+        "unsaved_restart_stay": "Batalkan",
+        "availability_history_title": "Riwayat ketersediaan",
+        "availability_history_desc": "Opsional catat saat perangkat online/offline agar Metrics menampilkan riwayat harian. Nonaktif secara default untuk menghindari pertumbuhan DB.",
+        "availability_history_enable": "Aktifkan riwayat ketersediaan",
+        "availability_history_enable_hint": "Jika aktif, server Go mencatat transisi status (ONLINE, OFFLINE, DEGRADED, CRITICAL) dari heartbeat dan sinyal/CDAP/Mesh.",
+        "availability_history_retention": "Retensi (hari)",
+        "availability_history_retention_hint": "Peristiwa lama dihapus otomatis. Default 30 hari.",
+        "availability_history_save": "Simpan pengaturan ketersediaan",
+        "availability_history_saved": "Pengaturan riwayat ketersediaan disimpan",
+        "tab_time": "Waktu / zona waktu",
+        "time": {
+            "timezone_title": "Zona waktu penagihan",
+            "timezone_desc": "Zona IANA global untuk batas bulan komersialisasi (overage direset pada tengah malam tanggal 1).",
+            "billing_month_hint": "Tengah malam hari pertama bulan di zona ini menutup periode sebelumnya dan membuka yang baru. Sesi aktif tidak terputus.",
+            "billing_timezone": "Zona waktu",
+            "billing_timezone_hint": "Contoh: Europe/Warsaw. Mempengaruhi penggunaan bulanan dan overage.",
+            "custom_timezone": "Zona IANA kustom (opsional)",
+            "detect_os": "Deteksi dari OS server",
+            "detected": "Zona terdeteksi: {tz}",
+            "ntp_title": "NTP / sinkronisasi jam",
+            "ntp_desc": "Jaga jam server BetterDesk tetap tersinkron untuk waktu sesi yang dapat ditagih.",
+            "save": "Simpan pengaturan waktu",
+            "save_title": "Simpan pengaturan waktu",
+            "saved": "Pengaturan waktu disimpan.",
+            "commercialization_link": "Buka Komersialisasi → Paket"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Sesi diganti",
+        "action_session_expired": "Sesi kedaluwarsa",
+        "action_session_ip_change": "IP sesi berubah"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Pengaturan (khusus admin)",
         "preview_quit": "Keluar (khusus admin)",
         "download_link_title": "Tautan unduhan",
+        "download_hub": "Pusat unduhan",
+        "generic_agents_empty": "Belum ada rilis yang diimpor.",
+        "generic_agents_hint": "Jalur produksi utama: impor rilis BetterDesk-Client bertanda tangan dari GitHub, lalu sajikan agen terverifikasi dari instance ini. Build Flutter/Cargo lokal tidak diperlukan.",
+        "generic_agents_import": "Impor rilis terbaru",
+        "generic_agents_title": "Agen generik hanya masuk",
         "download_link_hint": "Bagikan tautan ini dengan pengguna akhir. Mereka akan melihat halaman unduhan bermerek. Tautan hex lama tetap berfungsi setelah Anda mengubah tautan pendek.",
         "open_portal": "Buka",
         "created": "Paket dibuat",
@@ -970,7 +1038,21 @@
             "platforms_required": "Pilih setidaknya satu platform untuk dibangun",
             "no_supported_targets": "Saat ini tidak ada target build yang tersedia. Periksa konfigurasi builder.",
             "toolchain_missing": "Alat build yang diperlukan tidak ditemukan: {{tools}}",
-            "platform_unavailable": "Target ini tidak tersedia dari builder yang dikonfigurasi."
+            "platform_unavailable": "Target ini tidak tersedia dari builder yang dikonfigurasi.",
+            "generic_agent_release_not_found": "Tidak ada rilis support-v* bertanda tangan di BetterDesk-Client (harus stabil, bukan draft/prerelease).",
+            "generic_agent_release_list_failed": "Tidak dapat mendaftar rilis BetterDesk-Client dari GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Waktu habis saat mengunduh aset rilis agen generik.",
+            "generic_agent_release_redirect_limit": "Terlalu banyak pengalihan saat mengunduh aset rilis.",
+            "generic_agent_release_redirect_host_invalid": "Unduhan dialihkan ke host yang tidak diharapkan.",
+            "generic_agent_release_asset_invalid": "Nama atau URL aset rilis tidak valid.",
+            "generic_agent_release_asset_download_failed": "Gagal mengunduh aset rilis: {{detail}}",
+            "generic_agent_release_external_config": "Arsip berisi konfigurasi server tertanam (custom.txt) dan ditolak.",
+            "generic_agent_release_archive_invalid": "Arsip rilis tidak dapat dibuka atau divalidasi.",
+            "generic_agent_release_manifest_missing": "Rilis tidak memiliki manifest.json atau manifest.sig.",
+            "generic_agent_release_public_key_missing": "Tidak ada kunci publik yang dikonfigurasi untuk memverifikasi tanda tangan.",
+            "generic_agent_release_signature_invalid": "Verifikasi tanda tangan manifes gagal.",
+            "generic_agent_release_manifest_invalid": "Manifes gagal validasi (schema, sku, atau assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum tidak cocok untuk aset: {{detail}}"
         },
         "legacy_title": "Generator Konfigurasi Klien",
         "connection_section": "Koneksi server",
@@ -993,6 +1075,7 @@
         "builds_hint": "Installer yang dikompilasi di server ini untuk setiap platform. Rebuild setelah memperbaiki kesalahan toolchain atau memperbarui sumber agen.",
         "builds_loading": "Memuat status build…",
         "builds_empty": "Belum ada build dalam antrian — simpan bundle atau klik Rebuild semua.",
+        "rebuild": "Bangun ulang",
         "rebuild_all": "Rebuild semua",
         "rebuilding_all": "Mengantrekan rebuild…",
         "rebuild_queued": "Semua build platform diantrekan",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "Penandatanganan branding gagal — periksa kunci tanda tangan di konsol, lalu bangun ulang.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) tidak ditemukan — build Windows akan gagal.",
         "toolchain_appimage_missing": "appimagetool tidak ditemukan — build AppImage akan gagal.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Mengimpor dan memverifikasi rilis bertanda tangan terbaru…",
+        "generic_agents_imported": "{{tag}} diimpor.",
+        "generic_agents_verified": "terverifikasi",
+        "generic_agents_artifacts": "{{count}} artefak platform"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Jenis file tidak valid. Gunakan PNG, JPG, WebP atau GIF.",
         "bg_upload_success": "Gambar latar belakang berhasil diunggah.",
         "login_title": "Halaman Login",
-        "login_desc": "Sesuaikan judul, subjudul, dan latar belakang layar login.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Judul Login",
         "login_heading_placeholder": "Selamat datang kembali",
         "login_subheading": "Subjudul Login",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "Preset menerapkan paket warna lengkap (misalnya BetterDesk atau insolv Core Server). Preset terpisah dari pengalih cepat terang/gelap.",
         "readability_check": "Pemeriksaan keterbacaan",
         "readability_contrast": "Rasio kontras {item} ({ratio}) di bawah {minimum}:1",
-        "readability_background": "{item} menggunakan {type} dengan overlay rendah; teks mungkin sulit dibaca."
+        "readability_background": "{item} menggunakan {type} dengan overlay rendah; teks mungkin sulit dibaca.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Ikhtisar",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Tidak ada informasi perangkat keras yang tersedia",
         "no_sysinfo_hint": "Info sistem akan muncul setelah perangkat mengirimkan laporan sysinfo",
         "no_metrics": "Tidak ada data metrik yang tersedia",
-        "no_metrics_hint": "Metrik akan muncul setelah perangkat mengirimkan laporan detak jantung",
+        "no_metrics_hint": "Aktifkan riwayat ketersediaan di Pengaturan untuk mencatat perubahan online/offline. Sesi koneksi muncul saat seseorang terhubung.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Riwayat ketersediaan",
+        "availability_prev_day": "Hari sebelumnya",
+        "availability_next_day": "Hari berikutnya",
+        "availability_loading": "Memuat riwayat ketersediaan…",
+        "availability_disabled": "Riwayat ketersediaan dinonaktifkan",
+        "availability_disabled_hint": "Aktifkan di Pengaturan → Riwayat ketersediaan. Server mencatat transisi tanpa metrik CPU klien.",
+        "availability_empty": "Tidak ada perubahan status pada hari ini",
+        "availability_empty_hint": "Transisi muncul saat perangkat menjadi online, offline, degraded, atau critical.",
+        "availability_col_time": "Waktu",
+        "availability_col_from": "Dari",
+        "availability_col_to": "Ke",
+        "availability_col_source": "Sumber",
+        "availability_status_online": "Online",
+        "availability_status_offline": "Offline",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Status",
+        "section_metrics_summary": "Metrik server",
+        "metrics_avail_today": "Perubahan status (hari dipilih)",
+        "metrics_sessions_tracked": "Sesi terlacak",
+        "section_connection_sessions": "Sesi koneksi",
+        "sessions_loading": "Memuat sesi koneksi…",
+        "sessions_error": "Tidak dapat memuat sesi koneksi",
+        "sessions_empty": "Belum ada sesi koneksi",
+        "sessions_empty_hint": "Sesi muncul saat peer yang diotorisasi terhubung (punch hole atau relay). Durasi diisi saat sesi relay berakhir.",
+        "sessions_col_when": "Kapan",
+        "sessions_col_who": "Siapa",
+        "sessions_col_from": "Dari IP",
+        "sessions_col_transport": "Transport",
+        "sessions_col_duration": "Durasi",
+        "sessions_active": "Aktif",
+        "sessions_transport_punch": "Langsung / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Menghapus tag di sini hanya melepasnya dari perangkat ini. Gunakan Kelola tag di halaman Perangkat untuk perubahan global."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "Prioritas penguatan keamanan untuk penerapan BetterDesk Anda. Barang diurutkan berdasarkan tingkat keparahannya.",
         "no_hardening": "Tidak ada item pengerasan yang tersedia.",
         "vuln_hint": "Hasil pemindaian kerentanan ketergantungan. Jalankan npm audit secara teratur untuk menjaga keamanan dependensi.",
-        "no_vulns": "Tidak ada kerentanan yang ditemukan. Dependensi Anda aman."
+        "no_vulns": "Tidak ada kerentanan yang ditemukan. Dependensi Anda aman.",
+        "tab_sessions": "Sesi panel",
+        "sessions_hint": "Login konsol Anda. Hanya satu sesi aktif per akun; login baru mengakhiri yang sebelumnya.",
+        "sessions_policy": "Batas idle: {{idle}} mnt · Maks absolut: {{max}} j · Satu sesi aktif per akun",
+        "no_sessions": "Belum ada sesi panel yang tercatat.",
+        "session_current": "Saat ini",
+        "session_active": "Aktif",
+        "session_ended": "Berakhir",
+        "col_status": "Status",
+        "col_started": "Mulai",
+        "col_last_activity": "Aktivitas terakhir",
+        "col_ended": "Berakhir",
+        "col_reason": "Alasan berakhir",
+        "col_user_agent": "Browser",
+        "reason_logout": "Keluar",
+        "reason_replaced": "Diganti login baru",
+        "reason_idle": "Batas idle",
+        "reason_max_age": "Masa berlaku maksimum",
+        "reason_revoked": "Dicabut",
+        "reason_destroyed": "Dihancurkan"
     },
     "languages": {
         "title": "Manajemen Bahasa",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Sebelum memasang",
         "install_blocked_hint": "Pemasangan dinonaktifkan hingga masalah di atas diselesaikan.",
         "preflight_info_title": "Sebelum memasang",
-        "preflight_info_note": "Anda dapat memasang pembaruan — ini hanya pemberitahuan informasi."
+        "preflight_info_note": "Anda dapat memasang pembaruan — ini hanya pemberitahuan informasi.",
+        "proxy_timeout_recovering": "Timeout gateway/proxy — memeriksa apakah pembaruan masih berjalan di server…",
+        "install_still_running": "Pembaruan masih berjalan di server…",
+        "install_recovered": "Pembaruan selesai di server setelah koneksi browser terputus",
+        "install_recovery_timeout": "Waktu tunggu pembaruan habis setelah putus gateway. Periksa Pengaturan → Pembaruan, data/.last_update_result.json, atau: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Izin",
@@ -4149,7 +4314,8 @@
             "status_error": "Kesalahan terakhir",
             "os_yes": "Ya",
             "os_no": "Tidak",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Sesi berbayar aktif",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Perangkat",
@@ -4181,7 +4354,11 @@
             "duration": "Durasi",
             "phase": "Fase",
             "amount": "Jumlah",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Sesi",
@@ -4228,7 +4405,9 @@
             "skip": "Lewati untuk sekarang",
             "submit": "Kirim laporan",
             "summary_required": "Ringkasan wajib diisi",
-            "saved": "Laporan kerja disimpan"
+            "saved": "Laporan kerja disimpan",
+            "toolbar": "Laporan kerja",
+            "intent_hint": "Formulir laporan akan terbuka saat sesi berakhir"
         },
         "empty": {
             "packages": "Belum ada paket. Buat dengan tombol di atas.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk gratis",
+                "body": "Remote desktop open source — tanpa lisensi seat, tanpa lock-in. Host sendiri."
+            },
+            "remote": {
+                "title": "Dukungan jarak jauh di bawah kendali Anda",
+                "body": "Hubungkan endpoint dari konsol Anda. Sesi tetap di infrastruktur Anda."
+            },
+            "secure": {
+                "title": "Keamanan bawaan",
+                "body": "Autentikasi operator, kontrol sesi, dan attestation server bila diperlukan."
+            },
+            "platforms": {
+                "title": "Windows, Linux, dan macOS",
+                "body": "Satu konsol untuk agen di platform yang sudah didukung tim Anda."
+            }
+        },
+        "prev": "Slide sebelumnya",
+        "next": "Slide berikutnya"
+    },
+    "agents": {
+        "title": "Agen BetterDesk",
+        "subtitle": "Klien Support hanya masuk dibangun di BetterDesk-Client — panel ini mengimpor dan menyajikannya.",
+        "what_title": "Apa itu agen BetterDesk?",
+        "what_body": "Agen Support BetterDesk adalah klien desktop hanya untuk koneksi masuk. Mereka mendaftar ke server Anda, menampilkan QR pemasangan, dan menerima dukungan jarak jauh. Mereka tidak memulai koneksi keluar ke perangkat lain.",
+        "note_no_build": "Konsol ini tidak lagi membangun penginstal klien. Rilis bertanda tangan diproduksi di repositori GitHub BetterDesk-Client.",
+        "get_title": "Dari mana mendapatkan agen",
+        "get_body": "Unduh paket Support Agent bertanda tangan dari rilis BetterDesk-Client, atau bagikan portal publik server ini setelah mengimpor di bawah.",
+        "get_github": "Rilis BetterDesk-Client",
+        "get_portal": "Buka portal unduhan",
+        "sync_title": "Impor untuk server ini",
+        "sync_hint": "Impor rilis support-v* bertanda tangan terbaru agar /portal dapat menyajikan penginstal terverifikasi.",
+        "sync_import": "Impor rilis terbaru",
+        "sync_importing": "Mengimpor dan memverifikasi rilis bertanda tangan terbaru…",
+        "sync_imported": "Diimpor {{tag}}.",
+        "sync_empty": "Belum ada rilis yang diimpor.",
+        "sync_verified": "terverifikasi",
+        "sync_artifacts": "{{count}} artefak platform",
+        "steps_title": "Cara menghubungkan agen",
+        "step1": "Impor rilis bertanda tangan terbaru (tombol di atas) atau unduh dari GitHub.",
+        "step2": "Instal agen di perangkat dan masukkan URL publik server ini.",
+        "step3": "Saat agen menampilkan QR, buka Aktifkan agen dan pindai.",
+        "step4": "Setujui pendaftaran jika kebijakan mengharuskan, lalu hubungkan dari Remote Desktop.",
+        "pair_activate": "Aktifkan agen",
+        "pair_body": "Pemasangan memakai QR yang ditampilkan Support Agent generik setelah mencapai server Anda.",
+        "branding_link": "Branding klien",
+        "branding_body": "Tampilan (logo, warna, label) dimuat saat runtime dari Branding klien — tidak dibake ke penginstal."
     }
 }

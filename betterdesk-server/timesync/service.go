@@ -30,12 +30,13 @@ type Status struct {
 
 // Config controls periodic NTP checks.
 type Config struct {
-	Servers      []string
-	Interval     time.Duration
-	QueryTimeout time.Duration
-	MaxSkew      time.Duration
-	RequireSync  bool
-	TrustOSNTP   bool
+	Servers         []string
+	Interval        time.Duration
+	QueryTimeout    time.Duration
+	MaxSkew         time.Duration
+	RequireSync     bool
+	TrustOSNTP      bool
+	BillingTimezone string // IANA zone for commercialization month boundaries
 }
 
 // Service periodically queries NTP and exposes clock health for billing.
@@ -129,6 +130,9 @@ func (s *Service) ApplyConfig(cfg Config) {
 	}
 	s.cfg.RequireSync = cfg.RequireSync
 	s.cfg.TrustOSNTP = cfg.TrustOSNTP
+	if cfg.BillingTimezone != "" {
+		s.cfg.BillingTimezone = cfg.BillingTimezone
+	}
 	s.status.MaxSkewMS = s.cfg.MaxSkew.Milliseconds()
 	s.status.RequireSync = s.cfg.RequireSync
 }
@@ -138,6 +142,13 @@ func (s *Service) GetConfig() Config {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.cfg
+}
+
+// BillingTimezone returns the IANA zone used for commercialization month boundaries.
+func (s *Service) BillingTimezone() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.cfg.BillingTimezone
 }
 
 // CheckNow runs an immediate NTP check against configured servers.

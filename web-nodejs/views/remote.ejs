@@ -165,6 +165,10 @@
                             </div>
                         </div>
                     </div>
+                    <button class="toolbar-btn" id="btn-billing-report" title="${_('commercialization.report.toolbar') || 'Work report'}" style="display:none;">
+                        <span class="material-icons">assignment</span>
+                    </button>
+                    <span class="toolbar-package-badge" id="toolbar-package-badge" hidden title=""></span>
                     <button class="toolbar-btn" id="btn-audio" title="${_('remote.toggle_audio')}">
                         <span class="material-icons">volume_up</span>
                     </button>
@@ -361,24 +365,40 @@
 <template id="session-panel-template">
     <div class="session-panel">
         <div class="viewer-overlay session-connection-overlay">
-            <div class="overlay-card">
-                <div class="overlay-icon"><span class="material-icons">connected_tv</span></div>
-                <h2 class="overlay-title">${_('remote.title')}</h2>
-                <p class="overlay-device-id session-device-label"></p>
-                <p class="overlay-device-name session-device-name"></p>
-                <div class="overlay-status">
-                    <div class="spinner"></div>
-                    <span class="session-status-text">${_('remote.connecting')}</span>
+            <div class="overlay-card overlay-card--splitable">
+                <div class="overlay-card-main">
+                    <div class="overlay-icon"><span class="material-icons">connected_tv</span></div>
+                    <h2 class="overlay-title">${_('remote.title')}</h2>
+                    <p class="overlay-device-id session-device-label"></p>
+                    <p class="overlay-device-name session-device-name"></p>
+                    <div class="overlay-status">
+                        <div class="spinner"></div>
+                        <span class="session-status-text">${_('remote.connecting')}</span>
+                    </div>
+                    <div class="overlay-actions session-overlay-actions" style="display:none;">
+                        <button class="btn btn-primary session-btn-reconnect">
+                            <span class="material-icons">refresh</span>
+                            ${_('remote.reconnect')}
+                        </button>
+                        <button class="btn btn-secondary session-btn-cdap-fallback" style="display:none;margin-top:8px;" title="${_('remote.cdap_fallback_hint')}">
+                            <span class="material-icons">photo_camera</span>
+                            ${_('remote.use_cdap_fallback')}
+                        </button>
+                    </div>
                 </div>
-                <div class="overlay-actions session-overlay-actions" style="display:none;">
-                    <button class="btn btn-primary session-btn-reconnect">
-                        <span class="material-icons">refresh</span>
-                        ${_('remote.reconnect')}
-                    </button>
-                    <button class="btn btn-secondary session-btn-cdap-fallback" style="display:none;margin-top:8px;" title="${_('remote.cdap_fallback_hint')}">
-                        <span class="material-icons">photo_camera</span>
-                        ${_('remote.use_cdap_fallback')}
-                    </button>
+                <div class="overlay-card-divider session-billing-divider" hidden aria-hidden="true"></div>
+                <div class="overlay-card-billing session-billing-pane" hidden>
+                    <h3 class="billing-pane-title">${_('commercialization.report.title') || 'Work report'}</h3>
+                    <p class="billing-pane-package session-billing-package"></p>
+                    <p class="billing-pane-hours session-billing-hours"></p>
+                    <label class="billing-pane-label">${_('commercialization.report.summary') || 'Work performed'}
+                        <textarea class="session-billing-summary" rows="6" maxlength="8000"></textarea>
+                    </label>
+                    <p class="billing-pane-error session-billing-error" hidden></p>
+                    <div class="billing-pane-actions">
+                        <button type="button" class="btn btn-secondary session-billing-skip">${_('commercialization.report.skip') || 'Skip for now'}</button>
+                        <button type="button" class="btn btn-primary session-billing-submit">${_('commercialization.report.submit') || 'Submit report'}</button>
+                    </div>
                 </div>
             </div>
         </div>

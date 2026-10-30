@@ -47,7 +47,7 @@
         "dashboard": "Trang tổng quan",
         "devices": "Thiết bị",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "Tác nhân BetterDesk",
         "settings": "Cài đặt",
         "users": "Users",
         "inventory": "Inventory",
@@ -61,6 +61,7 @@
         "reports": "Reports",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "Kích hoạt agent",
         "management": "Quản lý",
         "toggle_sidebar": "Chuyển đổi thanh bên",
         "cdap": "Thiết bị CDAP",
@@ -87,7 +88,8 @@
         "server_attestation": "Chứng nhận máy chủ",
         "commercialization": "Thương mại hóa",
         "remote_open_tab": "Mở client máy tính để bàn từ xa trong tab mới",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Tác nhân BetterDesk"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "Đã xảy ra lỗi trong quá trình đăng nhập SSO.",
         "oidc_no_account": "Không tìm thấy tài khoản của bạn và tính năng đăng ký tự động bị tắt.",
         "totp_rate_limited": "Quá nhiều nỗ lực. Vui lòng thử l���i sau.",
-        "emergency_mode_banner": "Go server không thể truy cập được - đang chạy ở chế độ khẩn cấp (chỉ dành cho quản trị viên, chức năng hạn chế)"
+        "emergency_mode_banner": "Go server không thể truy cập được - đang chạy ở chế độ khẩn cấp (chỉ dành cho quản trị viên, chức năng hạn chế)",
+        "session_expired": "Phiên của bạn đã hết hạn hoặc bị thay bằng lần đăng nhập mới. Vui lòng đăng nhập lại.",
+        "session_idle_warning_title": "Phiên sắp hết hạn",
+        "session_idle_warning_body": "Bạn sẽ bị đăng xuất do không hoạt động sau {{seconds}} giây.",
+        "session_stay_signed_in": "Giữ đăng nhập"
     },
     "dashboard": {
         "title": "Trang tổng quan",
@@ -144,7 +150,7 @@
         "quick_actions": "Thao tác nhanh",
         "manage_devices": "Quản lý các thiết bị được kết nối",
         "view_keys": "Xem khóa máy chủ",
-        "generate_config": "Tạo cấu hình máy khách",
+        "generate_config": "Lấy tác nhân Support chỉ nhận từ đâu",
         "server_settings": "Định cấu hình cài đặt",
         "greeting_morning": "Chào buổi sáng, {name}",
         "greeting_afternoon": "Chào buổi chiều, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "Máy chủ API",
         "config_key": "Khóa",
         "client_config_hint": "Nhập các giá trị này trong cài đặt mạng RustDesk, tại phần máy chủ ID/relay.",
-        "open_generator": "Trình tạo máy khách",
+        "open_generator": "Tác nhân BetterDesk",
         "open_keys": "Mở khóa",
         "open_remote": "Mở bảng điều khiển máy tính từ xa",
         "attention_panel": "Cần chú ý",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Không có thư mục",
         "activate_agent_submit": "Kích hoạt thiết bị",
         "activate_agent_submitting": "Đang kích hoạt thiết bị…",
-        "activate_agent_success": "Đã kích hoạt agent thành công."
+        "activate_agent_success": "Đã kích hoạt agent thành công.",
+        "open_agents": "Tác nhân BetterDesk",
+        "agents_hint": "Lấy tác nhân Support chỉ nhận từ đâu"
     },
     "devices": {
         "title": "Thiết bị",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Quản lý thẻ",
+        "manage_device_tags": "Quản lý thẻ",
+        "rename_tag": "Đổi tên thẻ",
+        "delete_tag": "Xóa thẻ",
+        "rename_tag_prompt": "Tên thẻ mới",
+        "rename_tag_hint": "Đổi tên thẻ này trên tất cả thiết bị bạn thấy và cập nhật nhóm động khớp.",
+        "delete_tag_confirm": "Gỡ thẻ \"{tag}\" khỏi {count} thiết bị? Nhóm động dùng thẻ này sẽ trống cho đến khi cập nhật.",
+        "tag_renamed": "Đã đổi tên thẻ",
+        "tag_deleted": "Đã xóa thẻ",
+        "tag_name_required": "Tên thẻ là bắt buộc",
+        "tag_rename_identical": "Tên mới phải khác",
+        "tags_backend_unsupported": "Thẻ thiết bị không được hỗ trợ với backend hiện tại",
+        "tags_manage_hint": "Đổi tên hoặc xóa thẻ trên tất cả thiết bị hiển thị. Gỡ khỏi một thiết bị trong Sửa hoặc Chi tiết.",
+        "tags_device_hint": "Gỡ thẻ tại đây chỉ bỏ gán khỏi thiết bị này. Dùng Quản lý thẻ để đổi tên/xóa toàn cục.",
+        "unassign_tag": "Gỡ khỏi thiết bị này",
+        "tag_device_one": "thiết bị",
+        "tag_device_many": "thiết bị",
+        "tag_group_one": "nhóm động",
+        "tag_group_many": "nhóm động"
     },
     "keys": {
         "title": "Khóa máy chủ",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Lưu các thay đổi vào tệp này? Bản sao lưu của phiên bản trước sẽ được tạo.",
         "unsaved_restart_message": "Bạn có thay đổi chưa lưu. Hủy bỏ?",
         "unsaved_restart_save": "Lưu tệp",
-        "unsaved_restart_stay": "Hủy bỏ"
+        "unsaved_restart_stay": "Hủy bỏ",
+        "availability_history_title": "Lịch sử khả dụng",
+        "availability_history_desc": "Tùy chọn ghi lại khi thiết bị online/offline để Metrics hiện lịch sử theo ngày. Tắt mặc định để tránh phình DB.",
+        "availability_history_enable": "Bật lịch sử khả dụng",
+        "availability_history_enable_hint": "Khi bật, máy chủ Go ghi các chuyển trạng thái (ONLINE, OFFLINE, DEGRADED, CRITICAL) từ heartbeat và signal/CDAP/Mesh.",
+        "availability_history_retention": "Lưu giữ (ngày)",
+        "availability_history_retention_hint": "Sự kiện cũ được xóa tự động. Mặc định 30 ngày.",
+        "availability_history_save": "Lưu cài đặt khả dụng",
+        "availability_history_saved": "Đã lưu cài đặt lịch sử khả dụng",
+        "tab_time": "Thời gian / múi giờ",
+        "time": {
+            "timezone_title": "Múi giờ thanh toán",
+            "timezone_desc": "Múi IANA toàn cục cho ranh giới tháng thương mại hóa (vượt hạn mức đặt lại lúc nửa đêm ngày 1).",
+            "billing_month_hint": "Nửa đêm ngày đầu tháng ở múi này đóng kỳ trước và mở kỳ mới. Phiên đang hoạt động không bị gián đoạn.",
+            "billing_timezone": "Múi giờ",
+            "billing_timezone_hint": "VD: Europe/Warsaw. Ảnh hưởng mức dùng tháng và vượt hạn.",
+            "custom_timezone": "Múi IANA tùy chỉnh (tùy chọn)",
+            "detect_os": "Phát hiện từ OS máy chủ",
+            "detected": "Múi đã phát hiện: {tz}",
+            "ntp_title": "NTP / đồng bộ đồng hồ",
+            "ntp_desc": "Giữ đồng hồ máy chủ BetterDesk đồng bộ để thời gian phiên tính phí chính xác.",
+            "save": "Lưu cài đặt thời gian",
+            "save_title": "Lưu cài đặt thời gian",
+            "saved": "Đã lưu cài đặt thời gian.",
+            "commercialization_link": "Mở Thương mại hóa → Gói"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Phiên bị thay",
+        "action_session_expired": "Phiên hết hạn",
+        "action_session_ip_change": "Đổi IP phiên"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Cài đặt (chỉ dành cho quản trị viên)",
         "preview_quit": "Thoát (chỉ dành cho quản trị viên)",
         "download_link_title": "Liên k���t tải xuống",
+        "download_hub": "Trung tâm tải xuống",
+        "generic_agents_empty": "Chưa nhập bản phát hành nào.",
+        "generic_agents_hint": "Đường chính cho production: nhập bản phát hành BetterDesk-Client đã ký từ GitHub, rồi phục vụ agent đã xác minh từ instance này. Không cần build Flutter/Cargo cục bộ.",
+        "generic_agents_import": "Nhập bản phát hành mới nhất",
+        "generic_agents_title": "Agent generic chỉ nhận vào",
         "download_link_hint": "Chia sẻ liên kết này với người dùng cuối. Họ sẽ thấy một trang tải xuống có thương hiệu. Liên kết hex cũ vẫn hoạt động sau khi bạn đổi liên kết ngắn.",
         "open_portal": "Mở",
         "created": "Đã tạo gói",
@@ -970,7 +1038,21 @@
             "platforms_required": "Chọn ít nhất một nền tảng để dựng",
             "no_supported_targets": "Hiện không có mục tiêu build nào khả dụng. Hãy kiểm tra cấu hình builder.",
             "toolchain_missing": "Thiếu các công cụ build bắt buộc: {{tools}}",
-            "platform_unavailable": "Mục tiêu này không khả dụng từ builder đã cấu hình."
+            "platform_unavailable": "Mục tiêu này không khả dụng từ builder đã cấu hình.",
+            "generic_agent_release_not_found": "Không có bản phát hành support-v* đã ký trên BetterDesk-Client (phải ổn định, không phải draft/prerelease).",
+            "generic_agent_release_list_failed": "Không thể liệt kê bản phát hành BetterDesk-Client từ GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Hết thời gian khi tải tài nguyên bản phát hành tác nhân chung.",
+            "generic_agent_release_redirect_limit": "Quá nhiều chuyển hướng khi tải tài nguyên.",
+            "generic_agent_release_redirect_host_invalid": "Tải xuống bị chuyển hướng tới máy chủ không mong đợi.",
+            "generic_agent_release_asset_invalid": "Tên hoặc URL của tài nguyên bản phát hành không hợp lệ.",
+            "generic_agent_release_asset_download_failed": "Không tải được tài nguyên: {{detail}}",
+            "generic_agent_release_external_config": "Kho lưu trữ có cấu hình máy chủ nhúng (custom.txt) và đã bị từ chối.",
+            "generic_agent_release_archive_invalid": "Không thể mở hoặc xác thực kho lưu trữ bản phát hành.",
+            "generic_agent_release_manifest_missing": "Bản phát hành thiếu manifest.json hoặc manifest.sig.",
+            "generic_agent_release_public_key_missing": "Chưa cấu hình khóa công khai để xác minh chữ ký.",
+            "generic_agent_release_signature_invalid": "Xác minh chữ ký bản kê thất bại.",
+            "generic_agent_release_manifest_invalid": "Bản kê không vượt qua xác thực (schema, sku hoặc assets).",
+            "generic_agent_release_checksum_mismatch": "Checksum không khớp cho tài nguyên: {{detail}}"
         },
         "legacy_title": "Trình tạo cấu hình máy khách",
         "connection_section": "Kết nối máy chủ",
@@ -993,6 +1075,7 @@
         "builds_hint": "Các trình cài đặt được biên dịch trên máy chủ này cho từng nền tảng. Rebuild sau khi sửa lỗi toolchain hoặc cập nhật mã nguồn agent.",
         "builds_loading": "Đang tải trạng thái build…",
         "builds_empty": "Chưa có build nào trong hàng chờ — lưu bundle hoặc nhấp Rebuild tất cả.",
+        "rebuild": "Xây lại",
         "rebuild_all": "Rebuild tất cả",
         "rebuilding_all": "Đang xếp hàng rebuild…",
         "rebuild_queued": "Tất cả build theo nền tảng đã được xếp hàng",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "Ký thương hiệu thất bại — kiểm tra khóa ký trên console rồi dựng lại.",
         "toolchain_mingw_missing": "Không tìm thấy mingw-w64 (x86_64-w64-mingw32-gcc) — bản dựng Windows sẽ thất bại.",
         "toolchain_appimage_missing": "Không tìm thấy appimagetool — bản dựng AppImage sẽ thất bại.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Đang nhập và xác minh bản phát hành đã ký mới nhất…",
+        "generic_agents_imported": "Đã nhập {{tag}}.",
+        "generic_agents_verified": "đã xác minh",
+        "generic_agents_artifacts": "{{count}} artifact nền tảng"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Loại tệp không hợp lệ. Sử dụng PNG, JPG, WebP hoặc GIF.",
         "bg_upload_success": "Đã tải lên ảnh nền thành công.",
         "login_title": "Trang đăng nhập",
-        "login_desc": "Tùy chỉnh tiêu đề, phụ đề và nền trang đăng nhập.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Tiêu đề đăng nhập",
         "login_heading_placeholder": "Chào mừng trở lại",
         "login_subheading": "Phụ đề đăng nhập",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "Preset áp dụng một bộ màu đầy đủ (ví dụ BetterDesk hoặc insolv Core Server). Chúng tách biệt với nút chuyển nhanh giữa sáng và tối.",
         "readability_check": "Kiểm tra khả năng đọc",
         "readability_contrast": "Độ tương phản của {item} ({ratio}) thấp hơn {minimum}:1",
-        "readability_background": "{item} dùng {type} với lớp phủ thấp; văn bản có thể khó đọc."
+        "readability_background": "{item} dùng {type} với lớp phủ thấp; văn bản có thể khó đọc.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Tổng quan",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Không có thông tin phần cứng",
         "no_sysinfo_hint": "Thông tin hệ thống sẽ xuất hiện sau khi thiết bị gửi báo cáo sysinfo",
         "no_metrics": "Không có sẵn dữ liệu số liệu",
-        "no_metrics_hint": "Số liệu sẽ xuất hiện sau khi thiết bị gửi báo cáo nhịp tim",
+        "no_metrics_hint": "Bật lịch sử khả dụng trong Cài đặt để ghi nhận thay đổi online/offline. Phiên kết nối xuất hiện khi ai đó kết nối.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Lịch sử khả dụng",
+        "availability_prev_day": "Ngày trước",
+        "availability_next_day": "Ngày sau",
+        "availability_loading": "Đang tải lịch sử khả dụng…",
+        "availability_disabled": "Lịch sử khả dụng đang tắt",
+        "availability_disabled_hint": "Bật trong Cài đặt → Lịch sử khả dụng. Máy chủ sẽ ghi chuyển trạng thái mà không cần số liệu CPU máy khách.",
+        "availability_empty": "Không có thay đổi trạng thái trong ngày này",
+        "availability_empty_hint": "Chuyển trạng thái hiện khi thiết bị online, offline, degraded hoặc critical.",
+        "availability_col_time": "Thời gian",
+        "availability_col_from": "Từ",
+        "availability_col_to": "Đến",
+        "availability_col_source": "Nguồn",
+        "availability_status_online": "Trực tuyến",
+        "availability_status_offline": "Ngoại tuyến",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Trạng thái",
+        "section_metrics_summary": "Số liệu máy chủ",
+        "metrics_avail_today": "Thay đổi trạng thái (ngày đã chọn)",
+        "metrics_sessions_tracked": "Phiên được theo dõi",
+        "section_connection_sessions": "Phiên kết nối",
+        "sessions_loading": "Đang tải phiên kết nối…",
+        "sessions_error": "Không thể tải phiên kết nối",
+        "sessions_empty": "Chưa có phiên kết nối",
+        "sessions_empty_hint": "Phiên xuất hiện khi peer được ủy quyền kết nối (punch hole hoặc relay). Thời lượng được điền khi phiên relay kết thúc.",
+        "sessions_col_when": "Khi nào",
+        "sessions_col_who": "Ai",
+        "sessions_col_from": "Từ IP",
+        "sessions_col_transport": "Vận chuyển",
+        "sessions_col_duration": "Thời lượng",
+        "sessions_active": "Đang hoạt động",
+        "sessions_transport_punch": "Trực tiếp / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Gỡ thẻ tại đây chỉ bỏ gán khỏi thiết bị này. Dùng Quản lý thẻ trên trang Thiết bị để đổi tên/xóa toàn cục."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "Ưu tiên tăng cường bảo mật cho việc triển khai BetterDesk của bạn. Các mục được sắp xếp theo mức độ nghiêm trọng.",
         "no_hardening": "Không có vật phẩm làm cứng có sẵn.",
         "vuln_hint": "Kết quả quét lỗ hổng phụ thuộc. Chạy kiểm tra npm thường xuyên để giữ an toàn cho các phần phụ thuộc.",
-        "no_vulns": "Không tìm thấy lỗ hổng nào. Sự phụ thuộc của bạn được an toàn."
+        "no_vulns": "Không tìm thấy lỗ hổng nào. Sự phụ thuộc của bạn được an toàn.",
+        "tab_sessions": "Phiên bảng điều khiển",
+        "sessions_hint": "Phiên đăng nhập console. Mỗi tài khoản chỉ có một phiên đang hoạt động; đăng nhập mới sẽ kết thúc phiên trước.",
+        "sessions_policy": "Hết hạn rảnh: {{idle}} phút · Tối đa tuyệt đối: {{max}} giờ · Một phiên hoạt động mỗi tài khoản",
+        "no_sessions": "Chưa có phiên bảng điều khiển nào được ghi nhận.",
+        "session_current": "Hiện tại",
+        "session_active": "Đang hoạt động",
+        "session_ended": "Đã kết thúc",
+        "col_status": "Trạng thái",
+        "col_started": "Bắt đầu",
+        "col_last_activity": "Hoạt động cuối",
+        "col_ended": "Kết thúc",
+        "col_reason": "Lý do kết thúc",
+        "col_user_agent": "Trình duyệt",
+        "reason_logout": "Đăng xuất",
+        "reason_replaced": "Bị thay bởi đăng nhập mới",
+        "reason_idle": "Hết hạn rảnh",
+        "reason_max_age": "Thời gian sống tối đa",
+        "reason_revoked": "Đã thu hồi",
+        "reason_destroyed": "Đã hủy"
     },
     "languages": {
         "title": "Quản lý ngôn ngữ",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Trước khi cài đặt",
         "install_blocked_hint": "Cài đặt bị vô hiệu cho đến khi các vấn đề ở trên được giải quyết.",
         "preflight_info_title": "Trước khi cài đặt",
-        "preflight_info_note": "Bạn có thể cài đặt bản cập nhật — đây chỉ là thông báo mang tính thông tin."
+        "preflight_info_note": "Bạn có thể cài đặt bản cập nhật — đây chỉ là thông báo mang tính thông tin.",
+        "proxy_timeout_recovering": "Hết thời gian chờ gateway/proxy — đang kiểm tra xem bản cập nhật còn chạy trên máy chủ không…",
+        "install_still_running": "Bản cập nhật vẫn đang chạy trên máy chủ…",
+        "install_recovered": "Bản cập nhật đã hoàn tất trên máy chủ sau khi mất kết nối trình duyệt",
+        "install_recovery_timeout": "Hết thời gian chờ hoàn tất cập nhật sau khi mất kết nối gateway. Kiểm tra Cài đặt → Cập nhật, data/.last_update_result.json hoặc: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Quyền",
@@ -4149,7 +4314,8 @@
             "status_error": "Lỗi cuối",
             "os_yes": "Có",
             "os_no": "Không",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Phiên tính phí đang hoạt động",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Thiết bị",
@@ -4181,7 +4354,11 @@
             "duration": "Thời lượng",
             "phase": "Giai đoạn",
             "amount": "Số tiền",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Phiên",
@@ -4228,7 +4405,9 @@
             "skip": "Bỏ qua bây giờ",
             "submit": "Gửi báo cáo",
             "summary_required": "Tóm tắt là bắt buộc",
-            "saved": "Đã lưu báo cáo công việc"
+            "saved": "Đã lưu báo cáo công việc",
+            "toolbar": "Báo cáo công việc",
+            "intent_hint": "Biểu mẫu báo cáo sẽ mở khi phiên kết thúc"
         },
         "empty": {
             "packages": "Chưa có gói nào. Tạo gói bằng nút phía trên.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk miễn phí",
+                "body": "Remote desktop mã nguồn mở — không giấy phép ghế, không khóa nhà cung cấp. Tự lưu trữ."
+            },
+            "remote": {
+                "title": "Hỗ trợ từ xa do bạn kiểm soát",
+                "body": "Kết nối endpoint từ bảng điều khiển của bạn. Phiên làm việc ở trên hạ tầng của bạn."
+            },
+            "secure": {
+                "title": "Bảo mật tích hợp",
+                "body": "Xác thực vận hành, kiểm soát phiên và attestation máy chủ khi cần."
+            },
+            "platforms": {
+                "title": "Windows, Linux và macOS",
+                "body": "Một bảng điều khiển cho agent trên các nền tảng nhóm bạn đã hỗ trợ."
+            }
+        },
+        "prev": "Trang trước",
+        "next": "Trang sau"
+    },
+    "agents": {
+        "title": "Tác nhân BetterDesk",
+        "subtitle": "Máy khách Support chỉ nhận được xây trong BetterDesk-Client — bảng điều khiển này nhập và phục vụ chúng.",
+        "what_title": "Tác nhân BetterDesk là gì?",
+        "what_body": "Tác nhân Support BetterDesk là máy khách máy tính chỉ nhận kết nối. Chúng đăng ký với máy chủ, hiện QR ghép nối và chấp nhận hỗ trợ từ xa. Chúng không khởi tạo kết nối đi tới thiết bị khác.",
+        "note_no_build": "Bảng điều khiển này không còn dựng trình cài máy khách. Bản phát hành đã ký được tạo trong kho GitHub BetterDesk-Client.",
+        "get_title": "Lấy tác nhân từ đâu",
+        "get_body": "Tải gói Support Agent đã ký từ bản phát hành BetterDesk-Client, hoặc chia sẻ cổng công khai của máy chủ này sau khi nhập bên dưới.",
+        "get_github": "Bản phát hành BetterDesk-Client",
+        "get_portal": "Mở cổng tải xuống",
+        "sync_title": "Nhập cho máy chủ này",
+        "sync_hint": "Nhập bản phát hành support-v* đã ký mới nhất để /portal phục vụ trình cài đã xác minh.",
+        "sync_import": "Nhập bản phát hành mới nhất",
+        "sync_importing": "Đang nhập và xác minh bản phát hành đã ký mới nhất…",
+        "sync_imported": "Đã nhập {{tag}}.",
+        "sync_empty": "Chưa nhập bản phát hành nào.",
+        "sync_verified": "đã xác minh",
+        "sync_artifacts": "{{count}} hiện vật nền tảng",
+        "steps_title": "Cách đưa tác nhân vào dùng",
+        "step1": "Nhập bản phát hành đã ký mới nhất (nút ở trên) hoặc tải từ GitHub.",
+        "step2": "Cài tác nhân trên thiết bị và nhập URL công khai của máy chủ này.",
+        "step3": "Khi tác nhân hiện QR, mở Kích hoạt tác nhân và quét.",
+        "step4": "Phê duyệt đăng ký nếu chính sách yêu cầu, rồi kết nối từ Remote Desktop.",
+        "pair_activate": "Kích hoạt tác nhân",
+        "pair_body": "Ghép nối dùng QR do Support Agent chung hiện sau khi đến máy chủ của bạn.",
+        "branding_link": "Thương hiệu máy khách",
+        "branding_body": "Giao diện (logo, màu, nhãn) được tải lúc chạy từ Thương hiệu máy khách — không gắn sẵn trong trình cài."
     }
 }

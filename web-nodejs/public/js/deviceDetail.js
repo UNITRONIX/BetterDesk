@@ -77,6 +77,11 @@ const DeviceDetail = (function () {
     let refreshTimer = null;
     let availableTags = [];
     let availableTagsLoaded = false;
+    let availabilityDay = null; // YYYY-MM-DD (browser-local)
+    let availabilityData = null;
+    let availabilityLoading = false;
+    let connectionSessionsData = null;
+    let connectionSessionsLoading = false;
 
     // ──────────────────────────────────────────────────────────────────────
     // Public API
@@ -86,9 +91,62 @@ const DeviceDetail = (function () {
      * Open device detail panel for the given device ID.
      * @param {string} deviceId
      */
+    function _localDayString(date) {
+        const d = date || new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+    }
+
+    function _shiftDay(dayStr, delta) {
+        const parts = String(dayStr || '').split('-').map(Number);
+        const d = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+        d.setDate(d.getDate() + delta);
+        return _localDayString(d);
+    }
+
+    async function _loadAvailability(dayStr) {
+        if (!device || !device.id) return;
+        availabilityLoading = true;
+        availabilityDay = dayStr || availabilityDay || _localDayString();
+        try {
+            const data = await Utils.api(
+                '/api/devices/' + encodeURIComponent(device.id) + '/availability'
+                + '?day=' + encodeURIComponent(availabilityDay)
+                + '&tz_offset=' + encodeURIComponent(String(new Date().getTimezoneOffset()))
+            );
+            availabilityData = data || null;
+        } catch (err) {
+            console.warn('DeviceDetail: availability load failed', err);
+            availabilityData = { enabled: false, events: [], error: err.message || 'error' };
+        } finally {
+            availabilityLoading = false;
+        }
+    }
+
+    async function _loadConnectionSessions() {
+        if (!device || !device.id) return;
+        connectionSessionsLoading = true;
+        try {
+            const data = await Utils.api(
+                '/api/devices/' + encodeURIComponent(device.id) + '/connection-sessions?limit=50'
+            );
+            connectionSessionsData = data || null;
+        } catch (err) {
+            console.warn('DeviceDetail: connection sessions load failed', err);
+            connectionSessionsData = { sessions: [], error: err.message || 'error' };
+        } finally {
+            connectionSessionsLoading = false;
+        }
+    }
+
     async function open(deviceId) {
         if (!deviceId) return;
         activeTab = 'overview';
+        availabilityDay = _localDayString();
+        availabilityData = null;
+        connectionSessionsData = null;
         _createOverlay();
         _showLoading();
         _show();
@@ -96,6 +154,10 @@ const DeviceDetail = (function () {
 
         try {
             device = await Utils.api('/api/devices/' + encodeURIComponent(deviceId));
+            await Promise.all([
+                _loadAvailability(availabilityDay),
+                _loadConnectionSessions()
+            ]);
             _render();
         } catch (err) {
             console.error('DeviceDetail: failed to load device', err);
@@ -185,6 +247,7 @@ const DeviceDetail = (function () {
         inner.innerHTML = _headerHTML() + _tabsHTML() + _contentHTML() + _footerHTML();
 
         _attachEvents();
+        _bindAvailabilityControls();
         _switchTab(activeTab);
     }
 
@@ -512,71 +575,254 @@ const DeviceDetail = (function () {
         return html;
     }
 
-    // ── Metrics tab (CPU, memory, disk usage) ──
+    // ── Metrics tab (CPU, memory, disk usage + availability history) ──
+
+    function _formatAvailabilityTime(iso) {
+        if (!iso) return '—';
+        try {
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return Utils.escapeHtml(String(iso));
+            return Utils.escapeHtml(d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        } catch (_) {
+            return Utils.escapeHtml(String(iso));
+        }
+    }
+
+    function _availabilityStatusLabel(status) {
+        const s = String(status || '').toUpperCase();
+        const key = 'device_detail.availability_status_' + s.toLowerCase();
+        const translated = _(key);
+        return translated !== key ? translated : s || '—';
+    }
+
+    function _availabilitySourceLabel(source) {
+        const s = String(source || '').toLowerCase();
+        const key = 'device_detail.availability_source_' + s;
+        const translated = _(key);
+        return translated !== key ? translated : (s || '—');
+    }
+
+    function _availabilitySection() {
+        const day = availabilityDay || _localDayString();
+        const enabled = !!(availabilityData && availabilityData.enabled);
+        const events = (availabilityData && Array.isArray(availabilityData.events)) ? availabilityData.events : [];
+        const isToday = day === _localDayString();
+
+        let html = `
+        <div class="device-panel-section" id="dp-availability-section">
+            <div class="device-panel-section-title">
+                <span class="material-icons">timeline</span> ${_('device_detail.section_availability_history')}
+            </div>
+            <div class="device-panel-availability-toolbar">
+                <button type="button" class="btn btn-secondary btn-sm" id="dp-avail-prev" title="${_('device_detail.availability_prev_day')}">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="device-panel-availability-day" id="dp-avail-day">${Utils.escapeHtml(day)}</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="dp-avail-next" title="${_('device_detail.availability_next_day')}" ${isToday ? 'disabled' : ''}>
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>`;
+
+        if (availabilityLoading) {
+            html += `<p class="device-panel-empty-hint">${_('device_detail.availability_loading')}</p>`;
+        } else if (!enabled) {
+            html += `
+            <div class="device-panel-empty-state device-panel-empty-compact">
+                <span class="material-icons">history</span>
+                <p>${_('device_detail.availability_disabled')}</p>
+                <p class="device-panel-empty-hint">${_('device_detail.availability_disabled_hint')}</p>
+            </div>`;
+        } else if (!events.length) {
+            html += `
+            <div class="device-panel-empty-state device-panel-empty-compact">
+                <span class="material-icons">event_note</span>
+                <p>${_('device_detail.availability_empty')}</p>
+                <p class="device-panel-empty-hint">${_('device_detail.availability_empty_hint')}</p>
+            </div>`;
+        } else {
+            html += `
+            <div class="device-panel-table-wrap">
+                <table class="device-panel-availability-table">
+                    <thead>
+                        <tr>
+                            <th>${_('device_detail.availability_col_time')}</th>
+                            <th>${_('device_detail.availability_col_from')}</th>
+                            <th>${_('device_detail.availability_col_to')}</th>
+                            <th>${_('device_detail.availability_col_source')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${events.map(ev => `
+                        <tr>
+                            <td>${_formatAvailabilityTime(ev.created_at)}</td>
+                            <td><span class="device-panel-avail-status avail-${Utils.escapeHtml(String(ev.from_status || '').toLowerCase())}">${Utils.escapeHtml(_availabilityStatusLabel(ev.from_status))}</span></td>
+                            <td><span class="device-panel-avail-status avail-${Utils.escapeHtml(String(ev.to_status || '').toLowerCase())}">${Utils.escapeHtml(_availabilityStatusLabel(ev.to_status))}</span></td>
+                            <td>${Utils.escapeHtml(_availabilitySourceLabel(ev.source))}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    }
+
+    function _bindAvailabilityControls() {
+        const prev = overlayEl?.querySelector('#dp-avail-prev');
+        const next = overlayEl?.querySelector('#dp-avail-next');
+        if (prev) {
+            prev.onclick = async () => {
+                availabilityDay = _shiftDay(availabilityDay || _localDayString(), -1);
+                await _loadAvailability(availabilityDay);
+                _render();
+                _switchTab('metrics');
+            };
+        }
+        if (next) {
+            next.onclick = async () => {
+                const today = _localDayString();
+                const nextDay = _shiftDay(availabilityDay || today, 1);
+                if (nextDay > today) return;
+                availabilityDay = nextDay;
+                await _loadAvailability(availabilityDay);
+                _render();
+                _switchTab('metrics');
+            };
+        }
+    }
+
+    function _formatSessionDuration(seconds, active) {
+        if (active && (seconds == null || seconds < 0)) {
+            return _('device_detail.sessions_active');
+        }
+        const sec = Math.max(0, Math.floor(Number(seconds) || 0));
+        if (active) {
+            return _('device_detail.sessions_active') + ' · ' + _formatDurationHMS(sec);
+        }
+        return _formatDurationHMS(sec);
+    }
+
+    function _formatDurationHMS(sec) {
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        if (h > 0) {
+            return h + 'h ' + String(m).padStart(2, '0') + 'm';
+        }
+        if (m > 0) {
+            return m + 'm ' + String(s).padStart(2, '0') + 's';
+        }
+        return s + 's';
+    }
+
+    function _sessionTransportLabel(transport) {
+        const t = String(transport || '').toLowerCase();
+        if (t === 'punch_hole') return _('device_detail.sessions_transport_punch');
+        if (t === 'request_relay') return _('device_detail.sessions_transport_relay');
+        return transport || '—';
+    }
+
+    function _metricsSummarySection() {
+        const d = device || {};
+        const policy = d.connection_mode || {};
+        const effective = policy.effective_mode || policy.desired_mode || '';
+        const availCount = (availabilityData && Array.isArray(availabilityData.events))
+            ? availabilityData.events.length
+            : 0;
+        const sessCount = (connectionSessionsData && Array.isArray(connectionSessionsData.sessions))
+            ? connectionSessionsData.sessions.length
+            : 0;
+        const statusLabel = d.no_signal
+            ? _('status.no_signal')
+            : (d.status_tier || d.status || '—');
+
+        return `
+        <div class="device-panel-section device-panel-metrics-summary">
+            <div class="device-panel-section-title">
+                <span class="material-icons">assessment</span> ${_('device_detail.section_metrics_summary')}
+            </div>
+            <div class="device-panel-info-grid">
+                ${_infoRow(_('devices.status'), Utils.escapeHtml(String(statusLabel)))}
+                ${_infoRow(_('devices.last_seen'), _lastSeenValue(d.last_online))}
+                ${_infoRow(_('devices.ip_address'), d.ip ? `<span class="mono">${Utils.escapeHtml(d.ip)}</span>` : '—')}
+                ${effective ? _infoRow(_('device_detail.connection_mode_effective'), Utils.escapeHtml(effective)) : ''}
+                ${_infoRow(_('device_detail.metrics_avail_today'), String(availCount))}
+                ${_infoRow(_('device_detail.metrics_sessions_tracked'), String(sessCount))}
+            </div>
+        </div>`;
+    }
+
+    function _connectionSessionsSection() {
+        const sessions = (connectionSessionsData && Array.isArray(connectionSessionsData.sessions))
+            ? connectionSessionsData.sessions
+            : [];
+        let html = `
+        <div class="device-panel-section" id="dp-sessions-section">
+            <div class="device-panel-section-title">
+                <span class="material-icons">link</span> ${_('device_detail.section_connection_sessions')}
+            </div>`;
+
+        if (connectionSessionsLoading) {
+            html += `<p class="device-panel-empty-hint">${_('device_detail.sessions_loading')}</p>`;
+        } else if (connectionSessionsData && connectionSessionsData.error) {
+            html += `
+            <div class="device-panel-empty-state device-panel-empty-compact">
+                <span class="material-icons">link_off</span>
+                <p>${_('device_detail.sessions_error')}</p>
+                <p class="device-panel-empty-hint">${Utils.escapeHtml(connectionSessionsData.error)}</p>
+            </div>`;
+        } else if (!sessions.length) {
+            html += `
+            <div class="device-panel-empty-state device-panel-empty-compact">
+                <span class="material-icons">link_off</span>
+                <p>${_('device_detail.sessions_empty')}</p>
+                <p class="device-panel-empty-hint">${_('device_detail.sessions_empty_hint')}</p>
+            </div>`;
+        } else {
+            html += `
+            <div class="device-panel-table-wrap">
+                <table class="device-panel-availability-table">
+                    <thead>
+                        <tr>
+                            <th>${_('device_detail.sessions_col_when')}</th>
+                            <th>${_('device_detail.sessions_col_who')}</th>
+                            <th>${_('device_detail.sessions_col_from')}</th>
+                            <th>${_('device_detail.sessions_col_transport')}</th>
+                            <th>${_('device_detail.sessions_col_duration')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sessions.map(s => {
+                            const who = s.username || s.peer_name || s.peer_id || '—';
+                            const whoExtra = (s.username && s.peer_name)
+                                ? `<div class="device-panel-session-sub mono">${Utils.escapeHtml(s.peer_name)} · ${Utils.escapeHtml(s.peer_id || '')}</div>`
+                                : (s.peer_id && who !== s.peer_id
+                                    ? `<div class="device-panel-session-sub mono">${Utils.escapeHtml(s.peer_id)}</div>`
+                                    : '');
+                            return `
+                            <tr>
+                                <td>${Utils.escapeHtml(Utils.formatDate(s.started_at) || '—')}</td>
+                                <td>${Utils.escapeHtml(who)}${whoExtra}</td>
+                                <td class="mono">${Utils.escapeHtml(s.peer_ip || '—')}</td>
+                                <td>${Utils.escapeHtml(_sessionTransportLabel(s.transport))}</td>
+                                <td>${Utils.escapeHtml(_formatSessionDuration(s.duration_seconds, !!s.active))}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    }
 
     function _metricsPane() {
-        const d = device;
-        const metricsSnapshot = d.telemetry?.snapshots?.metrics;
-        const metricsData = metricsSnapshot?.data || {};
-        const currentMetrics = d.metrics || (Object.keys(metricsData).length > 0 ? {
-            cpu_usage: metricsData.cpu_percent,
-            memory_usage: metricsData.memory_percent,
-            disk_usage: metricsData.disk_percent,
-            updated_at: metricsSnapshot.collected_at
-        } : null);
         let html = `<div class="device-panel-tab-pane" data-pane="metrics">`;
-
-        if (!currentMetrics && (!d.metrics_history || d.metrics_history.length === 0)) {
-            html += `
-            <div class="device-panel-empty-state">
-                <span class="material-icons">monitoring</span>
-                <p>${_('device_detail.no_metrics')}</p>
-                <p class="device-panel-empty-hint">${_('device_detail.no_metrics_hint')}</p>
-            </div>`;
-            html += `</div>`;
-            return html;
-        }
-
-        // Current metrics
-        if (currentMetrics) {
-            html += `
-            <div class="device-panel-section">
-                <div class="device-panel-section-title"><span class="material-icons">speed</span> ${_('device_detail.section_current_usage')}</div>
-                <div class="device-panel-metrics-grid">
-                    ${_metricCard('CPU', currentMetrics.cpu_usage, 'speed')}
-                    ${_metricCard(_('device_detail.metric_memory'), currentMetrics.memory_usage, 'memory')}
-                    ${_metricCard(_('device_detail.metric_disk'), currentMetrics.disk_usage, 'storage')}
-                </div>
-                ${currentMetrics.updated_at ? `<div class="device-panel-metrics-updated">${_('device_detail.metrics_updated')} ${Utils.formatRelativeTime(currentMetrics.updated_at)}</div>` : ''}
-            </div>`;
-        }
-
-        // Metrics history (simple bar chart)
-        if (d.metrics_history && d.metrics_history.length > 1) {
-            html += `
-            <div class="device-panel-section">
-                <div class="device-panel-section-title"><span class="material-icons">timeline</span> ${_('device_detail.section_usage_history')}</div>
-                <div class="device-panel-chart-container">
-                    <div class="device-panel-chart-label">CPU</div>
-                    <div class="device-panel-mini-chart" id="dp-chart-cpu">
-                        ${_miniBarChart(d.metrics_history.map(m => m.cpu), 'cpu')}
-                    </div>
-                    <div class="device-panel-chart-label">${_('device_detail.metric_memory')}</div>
-                    <div class="device-panel-mini-chart" id="dp-chart-memory">
-                        ${_miniBarChart(d.metrics_history.map(m => m.memory), 'memory')}
-                    </div>
-                    <div class="device-panel-chart-label">${_('device_detail.metric_disk')}</div>
-                    <div class="device-panel-mini-chart" id="dp-chart-disk">
-                        ${_miniBarChart(d.metrics_history.map(m => m.disk), 'disk')}
-                    </div>
-                </div>
-                <div class="device-panel-chart-legend">
-                    <span>${_('device_detail.chart_oldest')}</span>
-                    <span>${_('device_detail.chart_newest')}</span>
-                </div>
-            </div>`;
-        }
-
+        html += _metricsSummarySection();
+        html += _availabilitySection();
+        html += _connectionSessionsSection();
         html += `</div>`;
         return html;
     }
@@ -594,12 +840,13 @@ const DeviceDetail = (function () {
         html += `
         <div class="device-panel-section">
             <div class="device-panel-section-title"><span class="material-icons">sell</span> ${_('device_detail.tags')}</div>
+            <p class="form-hint device-panel-tags-hint">${_('device_detail.tags_unassign_hint') || _('devices.tags_device_hint') || 'Removing a tag here unassigns it from this device only. Use Manage Tags on the Devices page to rename or delete a tag everywhere.'}</p>
             <div class="device-panel-tags-container" id="dp-tags-list">
                 ${hasTags
                     ? tags.map(t => `
                         <span class="device-panel-tag">
                             ${Utils.escapeHtml(t)}
-                            <button class="device-panel-tag-remove" data-tag="${Utils.escapeHtml(t)}" title="${_('actions.delete')}">
+                            <button class="device-panel-tag-remove" data-tag="${Utils.escapeHtml(t)}" title="${_('devices.unassign_tag') || _('actions.delete')}">
                                 <span class="material-icons">close</span>
                             </button>
                         </span>`).join('')

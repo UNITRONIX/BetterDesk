@@ -43,7 +43,7 @@ const POLL_INTERVAL_MS = parseInt(process.env.AGENT_BUILD_POLL_MS || '5000', 10)
 const BUILD_COOLDOWN_MS = parseInt(process.env.AGENT_BUILD_COOLDOWN_MS || '1000', 10);
 const IS_WINDOWS = process.platform === 'win32';
 const EMBEDDED_MODE = String(
-    process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'embedded'
+    process.env.BETTERDESK_CLIENT_GENERATOR_MODE || 'download'
 ).trim().toLowerCase() === 'embedded';
 
 let _pollHandle = null;

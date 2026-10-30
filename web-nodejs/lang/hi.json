@@ -47,7 +47,7 @@
         "dashboard": "डैशबोर्ड",
         "devices": "उपकरण",
         "keys": "Keys",
-        "generator": "Generator",
+        "generator": "BetterDesk एजेंट",
         "settings": "सेटिंग्स",
         "users": "Users",
         "inventory": "Inventory",
@@ -61,6 +61,7 @@
         "reports": "Reports",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "एजेंट सक्रिय करें",
         "management": "प्रबंध",
         "toggle_sidebar": "साइडबार टॉगल करें",
         "cdap": "CDAP उपकरण",
@@ -87,7 +88,8 @@
         "server_attestation": "सर्वर प्रमाणीकरण",
         "commercialization": "व्यावसायीकरण",
         "remote_open_tab": "नए टैब में रिमोट डेस्कटॉप क्लाइंट खोलें",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk एजेंट"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "SSO लॉगिन के दौरान एक त्रुटि उत्पन्न हुई।",
         "oidc_no_account": "आपका खाता नहीं मिला और स्वतः-पंजीकरण अक्षम है।",
         "totp_rate_limited": "बहुत अधिक प्रयास. कृपया बाद में पुन: प्रयास करें।",
-        "emergency_mode_banner": "Go server पहुंच योग्य नहीं - आपातकालीन मोड में चल रहा है (केवल व्यवस्थापक, सीमित कार्यक्षमता)"
+        "emergency_mode_banner": "Go server पहुंच योग्य नहीं - आपातकालीन मोड में चल रहा है (केवल व्यवस्थापक, सीमित कार्यक्षमता)",
+        "session_expired": "आपका सत्र समाप्त हो गया या नई लॉगिन से बदल दिया गया। कृपया फिर से साइन इन करें।",
+        "session_idle_warning_title": "सत्र जल्द समाप्त होगा",
+        "session_idle_warning_body": "निष्क्रियता के कारण {{seconds}} सेकंड में आपको साइन आउट किया जाएगा।",
+        "session_stay_signed_in": "साइन इन रहें"
     },
     "dashboard": {
         "title": "डैशबोर्ड",
@@ -144,7 +150,7 @@
         "quick_actions": "त्वरित कार्रवाई",
         "manage_devices": "कनेक्टेड डिवाइस प्रबंधित करें",
         "view_keys": "सर्वर कुंजियाँ देखें",
-        "generate_config": "क्लाइंट कॉन्फ़िगरेशन जनरेट करें",
+        "generate_config": "केवल इनकमिंग Support एजेंट कहाँ से लें",
         "server_settings": "सेटिंग्स कॉन्फ़िगर करें",
         "greeting_morning": "सुप्रभात, {name}",
         "greeting_afternoon": "शुभ दोपहर, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "API सर्वर",
         "config_key": "कुंजी",
         "client_config_hint": "इन मानों को RustDesk नेटवर्क सेटिंग्स में ID/Relay सर्वर अनुभाग में दर्ज करें।",
-        "open_generator": "क्लाइंट जनरेटर",
+        "open_generator": "BetterDesk एजेंट",
         "open_keys": "कुंजियाँ खोलें",
         "open_remote": "रिमोट डेस्कटॉप कंसोल खोलें",
         "attention_panel": "ध्यान चाहिए",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "कोई फ़ोल्डर नहीं",
         "activate_agent_submit": "डिवाइस सक्रिय करें",
         "activate_agent_submitting": "डिवाइस सक्रिय हो रहा है…",
-        "activate_agent_success": "एजेंट सफलतापूर्वक सक्रिय किया गया।"
+        "activate_agent_success": "एजेंट सफलतापूर्वक सक्रिय किया गया।",
+        "open_agents": "BetterDesk एजेंट",
+        "agents_hint": "केवल इनकमिंग Support एजेंट कहाँ से लें"
     },
     "devices": {
         "title": "उपकरण",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "टैग प्रबंधित करें",
+        "manage_device_tags": "टैग प्रबंधित करें",
+        "rename_tag": "टैग का नाम बदलें",
+        "delete_tag": "टैग हटाएँ",
+        "rename_tag_prompt": "नया टैग नाम",
+        "rename_tag_hint": "इस टैग का नाम सभी दिखाई देने वाले उपकरणों पर बदलता है और मेल खाते गतिशील समूह अपडेट करता है।",
+        "delete_tag_confirm": "टैग \"{tag}\" को {count} उपकरण(ों) से हटाएँ? इसे उपयोग करने वाले गतिशील समूह अपडेट तक खाली रहेंगे।",
+        "tag_renamed": "टैग का नाम बदला गया",
+        "tag_deleted": "टैग हटाया गया",
+        "tag_name_required": "टैग नाम आवश्यक है",
+        "tag_rename_identical": "नया नाम अलग होना चाहिए",
+        "tags_backend_unsupported": "वर्तमान बैकएंड के साथ उपकरण टैग समर्थित नहीं हैं",
+        "tags_manage_hint": "सभी दिखाई देने वाले उपकरणों पर टैग का नाम बदलें या हटाएँ। एक उपकरण से हटाना संपादन या विवरण में होता है।",
+        "tags_device_hint": "यहाँ टैग हटाकर केवल इस उपकरण से अनअसाइन करें। सर्वत्र बदलने के लिए टैग प्रबंधित करें उपयोग करें।",
+        "unassign_tag": "इस उपकरण से हटाएँ",
+        "tag_device_one": "उपकरण",
+        "tag_device_many": "उपकरण",
+        "tag_group_one": "गतिशील समूह",
+        "tag_group_many": "गतिशील समूह"
     },
     "keys": {
         "title": "सर्वर कुंजी",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "इस फ़ाइल में परिवर्तन सहेजें? पिछले संस्करण का बैकअप बनाया जाएगा।",
         "unsaved_restart_message": "आपके पास असहेजे परिवर्तन हैं। खारिज करें?",
         "unsaved_restart_save": "फ़ाइल सहेजें",
-        "unsaved_restart_stay": "रद्द करना"
+        "unsaved_restart_stay": "रद्द करना",
+        "availability_history_title": "उपलब्धता इतिहास",
+        "availability_history_desc": "वैकल्पिक रूप से डिवाइस के ऑनलाइन/ऑफ़लाइन बदलने को रिकॉर्ड करें ताकि Metrics दैनिक इतिहास दिखा सके। DB वृद्धि से बचने के लिए डिफ़ॉल्ट बंद।",
+        "availability_history_enable": "उपलब्धता इतिहास सक्षम करें",
+        "availability_history_enable_hint": "सक्षम होने पर Go सर्वर हार्टबीट और signal/CDAP/Mesh से देखे गए स्थिति परिवर्तन (ONLINE, OFFLINE, DEGRADED, CRITICAL) रिकॉर्ड करता है।",
+        "availability_history_retention": "अवधि (दिन)",
+        "availability_history_retention_hint": "पुरानी घटनाएँ स्वतः हटाई जाती हैं। डिफ़ॉल्ट 30 दिन।",
+        "availability_history_save": "उपलब्धता सेटिंग सहेजें",
+        "availability_history_saved": "उपलब्धता इतिहास सेटिंग सहेजी गईं",
+        "tab_time": "समय / समय क्षेत्र",
+        "time": {
+            "timezone_title": "बिलिंग समय क्षेत्र",
+            "timezone_desc": "व्यावसायीकरण मासिक सीमाओं के लिए वैश्विक IANA क्षेत्र (अधिक शुल्क 1 तारीख की आधी रात को रीसेट)।",
+            "billing_month_hint": "इस क्षेत्र में महीने की पहली तारीख की आधी रात पिछली अवधि बंद करती है और नई खोलती है। सक्रिय सत्र नहीं रुकते।",
+            "billing_timezone": "समय क्षेत्र",
+            "billing_timezone_hint": "उदा. Europe/Warsaw। मासिक उपयोग और अधिक शुल्क पर असर।",
+            "custom_timezone": "कस्टम IANA क्षेत्र (वैकल्पिक)",
+            "detect_os": "सर्वर OS से पहचानें",
+            "detected": "पहचाना गया क्षेत्र: {tz}",
+            "ntp_title": "NTP / घड़ी सिंक",
+            "ntp_desc": "सटीक बिल योग्य सत्र समय के लिए BetterDesk सर्वर घड़ी सिंक रखें।",
+            "save": "समय सेटिंग सहेजें",
+            "save_title": "समय सेटिंग सहेजें",
+            "saved": "समय सेटिंग सहेजी गईं।",
+            "commercialization_link": "व्यावसायीकरण → पैकेज खोलें"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "सत्र बदला गया",
+        "action_session_expired": "सत्र समाप्त",
+        "action_session_ip_change": "सत्र IP बदला"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "सेटिंग्स (केवल व्यवस्थापक)",
         "preview_quit": "छोड़ें (केवल व्यवस्थापक)",
         "download_link_title": "लिंक को डाउनलोड करें",
+        "download_hub": "डाउनलोड हब",
+        "generic_agents_empty": "अभी तक कोई रिलीज़ आयात नहीं की गई।",
+        "generic_agents_hint": "प्राथमिक प्रोडक्शन पथ: GitHub से हस्ताक्षरित BetterDesk-Client रिलीज़ आयात करें, फिर इस इंस्टेंस से सत्यापित एजेंट सर्व करें। स्थानीय Flutter/Cargo बिल्ड आवश्यक नहीं।",
+        "generic_agents_import": "नवीनतम रिलीज़ आयात करें",
+        "generic_agents_title": "सामान्य केवल-इनकमिंग एजेंट",
         "download_link_hint": "इस लिंक को अंतिम उपयोगकर्ताओं के साथ साझा करें. उन्हें एक ब्रांडेड डाउनलोड पेज दिखाई देगा। छोटा लिंक बदलने के बाद भी पुराने hex लिंक काम करते रहेंगे।",
         "open_portal": "खुला",
         "created": "बंडल बनाया गया",
@@ -970,7 +1038,21 @@
             "platforms_required": "बिल्ड के लिए कम से कम एक प्लेटफ़ॉर्म चुनें",
             "no_supported_targets": "अभी कोई बिल्ड लक्ष्य उपलब्ध नहीं है। बिल्डर कॉन्फ़िगरेशन जाँचें।",
             "toolchain_missing": "आवश्यक बिल्ड टूल उपलब्ध नहीं हैं: {{tools}}",
-            "platform_unavailable": "यह लक्ष्य कॉन्फ़िगर किए गए बिल्डर में उपलब्ध नहीं है।"
+            "platform_unavailable": "यह लक्ष्य कॉन्फ़िगर किए गए बिल्डर में उपलब्ध नहीं है।",
+            "generic_agent_release_not_found": "BetterDesk-Client पर कोई हस्ताक्षरित support-v* रिलीज़ उपलब्ध नहीं है (स्थिर होनी चाहिए, draft/prerelease नहीं)।",
+            "generic_agent_release_list_failed": "GitHub से BetterDesk-Client रिलीज़ सूचीबद्ध नहीं की जा सकीं (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "जेनेरिक एजेंट रिलीज़ एसेट डाउनलोड करते समय समय समाप्त।",
+            "generic_agent_release_redirect_limit": "एसेट डाउनलोड करते समय बहुत अधिक रीडायरेक्ट।",
+            "generic_agent_release_redirect_host_invalid": "डाउनलोड अप्रत्याशित होस्ट पर रीडायरेक्ट हो गया।",
+            "generic_agent_release_asset_invalid": "रिलीज़ एसेट का नाम या URL अमान्य है।",
+            "generic_agent_release_asset_download_failed": "रिलीज़ एसेट डाउनलोड विफल: {{detail}}",
+            "generic_agent_release_external_config": "संग्रह में एम्बेडेड सर्वर कॉन्फ़िग (custom.txt) है और अस्वीकृत किया गया।",
+            "generic_agent_release_archive_invalid": "रिलीज़ संग्रह खोला या सत्यापित नहीं किया जा सका।",
+            "generic_agent_release_manifest_missing": "रिलीज़ में manifest.json या manifest.sig नहीं है।",
+            "generic_agent_release_public_key_missing": "हस्ताक्षर सत्यापन के लिए कोई सार्वजनिक कुंजी कॉन्फ़िगर नहीं है।",
+            "generic_agent_release_signature_invalid": "मैनिफ़ेस्ट हस्ताक्षर सत्यापन विफल।",
+            "generic_agent_release_manifest_invalid": "मैनिफ़ेस्ट सत्यापन विफल (schema, sku या assets)।",
+            "generic_agent_release_checksum_mismatch": "एसेट चेकसम मेल नहीं खाता: {{detail}}"
         },
         "legacy_title": "क्लाइंट कॉन्फ़िगरेशन जेनरेटर",
         "connection_section": "सर्वर कनेक्शन",
@@ -993,6 +1075,7 @@
         "builds_hint": "प्रत्येक प्लेटफ़ॉर्म के लिए इस सर्वर पर संकलित इंस्टॉलर। टूलचेन त्रुटियों को ठीक करने या एजेंट स्रोत अपडेट करने के बाद पुनर्निर्माण करें।",
         "builds_loading": "बिल्ड स्थिति लोड हो रही है…",
         "builds_empty": "अभी तक कोई बिल्ड कतार में नहीं — बंडल सहेजें या सभी पुनर्निर्माण क्लिक करें।",
+        "rebuild": "पुनर्निर्माण",
         "rebuild_all": "सभी पुनर्निर्माण",
         "rebuilding_all": "पुनर्निर्माण कतारबद्ध किया जा रहा है…",
         "rebuild_queued": "सभी प्लेटफ़ॉर्म बिल्ड कतारबद्ध",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "ब्रांडिंग हस्ताक्षर विफल — कंसोल पर साइनिंग कुंजी जाँचें, फिर फिर से बनाएँ।",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) नहीं मिला — Windows बिल्ड विफल होंगे।",
         "toolchain_appimage_missing": "appimagetool नहीं मिला — AppImage बिल्ड विफल होंगे।",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "नवीनतम हस्ताक्षरित रिलीज़ आयात और सत्यापित की जा रही है…",
+        "generic_agents_imported": "{{tag}} आयात किया गया.",
+        "generic_agents_verified": "सत्यापित",
+        "generic_agents_artifacts": "{{count}} प्लेटफ़ॉर्म आर्टिफ़ैक्ट"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "अमान्य फ़ाइल प्रकार। PNG, JPG, WebP या GIF उपयोग करें।",
         "bg_upload_success": "पृष्ठभूमि छवि सफलतापूर्वक अपलोड हुई।",
         "login_title": "लॉगिन पेज",
-        "login_desc": "लॉगिन स्क्रीन शीर्षक, उपशीर्षक और पृष्ठभूमि अनुकूलित करें।",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "लॉगिन शीर्षक",
         "login_heading_placeholder": "वापस स्वागत है",
         "login_subheading": "लॉगिन उपशीर्षक",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "प्रीसेट पूरा रंग पैक लागू करते हैं (जैसे BetterDesk या insolv Core Server)। ये त्वरित हल्के/गहरे थीम स्विच से अलग हैं।",
         "readability_check": "पठनीयता जाँच",
         "readability_contrast": "{item} का कंट्रास्ट अनुपात ({ratio}) {minimum}:1 से कम है",
-        "readability_background": "{item} कम ओवरले के साथ {type} का उपयोग करता है; पाठ पढ़ना कठिन हो सकता है।"
+        "readability_background": "{item} कम ओवरले के साथ {type} का उपयोग करता है; पाठ पढ़ना कठिन हो सकता है।",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "सिंहावलोकन",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "कोई हार्डवेयर जानकारी उपलब्ध नहीं है",
         "no_sysinfo_hint": "डिवाइस द्वारा sysinfo रिपोर्ट भेजने के बाद सिस्टम जानकारी दिखाई देगी",
         "no_metrics": "कोई मेट्रिक्स डेटा उपलब्ध नहीं है",
-        "no_metrics_hint": "डिवाइस द्वारा दिल की धड़कन की रिपोर्ट भेजने के बाद मेट्रिक्स दिखाई देंगे",
+        "no_metrics_hint": "ऑनलाइन/ऑफ़लाइन परिवर्तन रिकॉर्ड करने के लिए सेटिंग्स में उपलब्धता इतिहास सक्षम करें। कनेक्शन सत्र तब दिखते हैं जब कोई कनेक्ट करता है।",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "उपलब्धता इतिहास",
+        "availability_prev_day": "पिछला दिन",
+        "availability_next_day": "अगला दिन",
+        "availability_loading": "उपलब्धता इतिहास लोड हो रहा है…",
+        "availability_disabled": "उपलब्धता इतिहास बंद है",
+        "availability_disabled_hint": "सेटिंग → उपलब्धता इतिहास में चालू करें। सर्वर क्लाइंट CPU मेट्रिक्स के बिना स्थिति परिवर्तन रिकॉर्ड करेगा।",
+        "availability_empty": "इस दिन कोई स्थिति परिवर्तन नहीं",
+        "availability_empty_hint": "जब डिवाइस online, offline, degraded या critical होता है तो संक्रमण दिखते हैं।",
+        "availability_col_time": "समय",
+        "availability_col_from": "से",
+        "availability_col_to": "तक",
+        "availability_col_source": "स्रोत",
+        "availability_status_online": "ऑनलाइन",
+        "availability_status_offline": "ऑफ़लाइन",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "स्थिति",
+        "section_metrics_summary": "सर्वर मेट्रिक्स",
+        "metrics_avail_today": "स्थिति परिवर्तन (चयनित दिन)",
+        "metrics_sessions_tracked": "ट्रैक किए गए सत्र",
+        "section_connection_sessions": "कनेक्शन सत्र",
+        "sessions_loading": "कनेक्शन सत्र लोड हो रहे हैं…",
+        "sessions_error": "कनेक्शन सत्र लोड नहीं हो सके",
+        "sessions_empty": "अभी कोई कनेक्शन सत्र नहीं",
+        "sessions_empty_hint": "सत्र तब दिखते हैं जब अधिकृत पीयर कनेक्ट करता है (punch hole या relay)। अवधि relay समाप्त होने पर भरती है।",
+        "sessions_col_when": "कब",
+        "sessions_col_who": "कौन",
+        "sessions_col_from": "IP से",
+        "sessions_col_transport": "ट्रांसपोर्ट",
+        "sessions_col_duration": "अवधि",
+        "sessions_active": "सक्रिय",
+        "sessions_transport_punch": "प्रत्यक्ष / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "यहाँ टैग हटाने से केवल इस उपकरण से अनअसाइन होता है। सर्वत्र बदलने के लिए उपकरण पृष्ठ पर टैग प्रबंधित करें उपयोग करें।"
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "आपके BetterDesk परिनियोजन के लिए सुरक्षा सख्त करने की प्राथमिकताएँ। आइटम गंभीरता के आधार पर ऑर्डर किए जाते हैं।",
         "no_hardening": "कोई सख्त करने वाली वस्तुएँ उपलब्ध नहीं हैं।",
         "vuln_hint": "निर्भरता भेद्यता स्कैन परिणाम। निर्भरता को सुरक्षित रखने के लिए नियमित रूप से एनपीएम ऑडिट चलाएं।",
-        "no_vulns": "कोई कमज़ोरियाँ नहीं मिलीं. आपकी निर्भरताएँ सुरक्षित हैं."
+        "no_vulns": "कोई कमज़ोरियाँ नहीं मिलीं. आपकी निर्भरताएँ सुरक्षित हैं.",
+        "tab_sessions": "पैनल सत्र",
+        "sessions_hint": "आपके कंसोल लॉगिन। प्रति खाता केवल एक सक्रिय सत्र; नया लॉगिन पिछले को समाप्त करता है।",
+        "sessions_policy": "निष्क्रिय समय सीमा: {{idle}} मि · अधिकतम: {{max}} घं · प्रति खाता एक सक्रिय सत्र",
+        "no_sessions": "अभी तक कोई पैनल सत्र दर्ज नहीं।",
+        "session_current": "वर्तमान",
+        "session_active": "सक्रिय",
+        "session_ended": "समाप्त",
+        "col_status": "स्थिति",
+        "col_started": "शुरू",
+        "col_last_activity": "अंतिम गतिविधि",
+        "col_ended": "समाप्ति",
+        "col_reason": "समाप्ति कारण",
+        "col_user_agent": "ब्राउज़र",
+        "reason_logout": "लॉगआउट",
+        "reason_replaced": "नए लॉगिन से बदला",
+        "reason_idle": "निष्क्रिय समय सीमा",
+        "reason_max_age": "अधिकतम अवधि",
+        "reason_revoked": "रद्द",
+        "reason_destroyed": "नष्ट"
     },
     "languages": {
         "title": "भाषा प्रबंधन",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "इंस्टॉल करने से पहले",
         "install_blocked_hint": "ऊपर दिए गए मुद्दों के हल होने तक इंस्टॉल अक्षम है।",
         "preflight_info_title": "इंस्टॉल करने से पहले",
-        "preflight_info_note": "आप अपडेट इंस्टॉल कर सकते हैं — ये केवल सूचनात्मक संदेश हैं।"
+        "preflight_info_note": "आप अपडेट इंस्टॉल कर सकते हैं — ये केवल सूचनात्मक संदेश हैं।",
+        "proxy_timeout_recovering": "गेटवे/प्रॉक्सी समय समाप्त — जाँच रहा है कि अपडेट सर्वर पर अभी भी चल रहा है या नहीं…",
+        "install_still_running": "अपडेट सर्वर पर अभी भी चल रहा है…",
+        "install_recovered": "ब्राउज़र कनेक्शन टूटने के बाद सर्वर पर अपडेट पूरा हो गया",
+        "install_recovery_timeout": "गेटवे डिस्कनेक्ट के बाद अपडेट पूर्ण होने की प्रतीक्षा का समय समाप्त। सेटिंग्स → अपडेट, data/.last_update_result.json या: node scripts/update-cli.js देखें"
     },
     "permissions": {
         "title": "अनुमतियां",
@@ -4149,7 +4314,8 @@
             "status_error": "अंतिम त्रुटि",
             "os_yes": "हाँ",
             "os_no": "नहीं",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "सक्रिय बिल योग्य सत्र",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "डिवाइस",
@@ -4181,7 +4354,11 @@
             "duration": "अवधि",
             "phase": "चरण",
             "amount": "राशि",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "सत्र",
@@ -4228,7 +4405,9 @@
             "skip": "अभी छोड़ें",
             "submit": "रिपोर्ट भेजें",
             "summary_required": "सारांश आवश्यक है",
-            "saved": "कार्य रिपोर्ट सहेजी गई"
+            "saved": "कार्य रिपोर्ट सहेजी गई",
+            "toolbar": "कार्य रिपोर्ट",
+            "intent_hint": "सत्र समाप्त होने पर रिपोर्ट फ़ॉर्म खुलेगा"
         },
         "empty": {
             "packages": "अभी कोई पैकेज नहीं। ऊपर के बटन से एक बनाएं।",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk मुफ़्त है",
+                "body": "ओपन-सोर्स रिमोट डेस्कटॉप — कोई सीट लाइसेंस नहीं, कोई लॉक-इन नहीं। स्वयं होस्ट करें।"
+            },
+            "remote": {
+                "title": "आपके नियंत्रण में रिमोट सपोर्ट",
+                "body": "अपने कंसोल से एंडपॉइंट जोड़ें। सत्र आपके इन्फ्रा पर रहते हैं।"
+            },
+            "secure": {
+                "title": "सुरक्षा अंतर्निहित",
+                "body": "ऑपरेटर प्रमाणीकरण, सत्र नियंत्रण, और जरूरत पर सर्वर attestation।"
+            },
+            "platforms": {
+                "title": "Windows, Linux और macOS",
+                "body": "टीम के पहले से समर्थित प्लेटफ़ॉर्म पर एजेंटों के लिए एक कंसोल।"
+            }
+        },
+        "prev": "पिछली स्लाइड",
+        "next": "अगली स्लाइड"
+    },
+    "agents": {
+        "title": "BetterDesk एजेंट",
+        "subtitle": "केवल इनकमिंग Support क्लाइंट BetterDesk-Client में बनते हैं — यह पैनल उन्हें आयात करके परोसता है।",
+        "what_title": "BetterDesk एजेंट क्या हैं?",
+        "what_body": "BetterDesk Support एजेंट केवल आने वाले कनेक्शन वाले डेस्कटॉप क्लाइंट हैं। वे आपके सर्वर पर पंजीकृत होते हैं, पेयरिंग QR दिखाते हैं और रिमोट सपोर्ट स्वीकार करते हैं। वे अन्य डिवाइसों को आउटबाउंड कनेक्शन नहीं शुरू करते।",
+        "note_no_build": "यह कंसोल अब क्लाइंट इंस्टॉलर नहीं बनाता। हस्ताक्षरित रिलीज़ BetterDesk-Client GitHub रिपॉजिटरी में बनती हैं।",
+        "get_title": "एजेंट कहाँ से लें",
+        "get_body": "BetterDesk-Client रिलीज़ से हस्ताक्षरित Support Agent पैकेज डाउनलोड करें, या नीचे आयात के बाद इस सर्वर का सार्वजनिक पोर्टल साझा करें।",
+        "get_github": "BetterDesk-Client रिलीज़",
+        "get_portal": "डाउनलोड पोर्टल खोलें",
+        "sync_title": "इस सर्वर के लिए आयात",
+        "sync_hint": "नवीनतम हस्ताक्षरित support-v* रिलीज़ आयात करें ताकि /portal सत्यापित इंस्टॉलर परोस सके।",
+        "sync_import": "नवीनतम रिलीज़ आयात करें",
+        "sync_importing": "नवीनतम हस्ताक्षरित रिलीज़ आयात और सत्यापित हो रही है…",
+        "sync_imported": "{{tag}} आयात किया गया।",
+        "sync_empty": "अभी कोई रिलीज़ आयात नहीं हुई।",
+        "sync_verified": "सत्यापित",
+        "sync_artifacts": "{{count}} प्लेटफ़ॉर्म आर्टिफ़ैक्ट",
+        "steps_title": "एजेंट कैसे जोड़ें",
+        "step1": "नवीनतम हस्ताक्षरित रिलीज़ आयात करें (ऊपर बटन) या GitHub से डाउनलोड करें।",
+        "step2": "डिवाइस पर एजेंट इंस्टॉल करें और इस सर्वर का सार्वजनिक URL दर्ज करें।",
+        "step3": "जब एजेंट QR दिखाए, एजेंट सक्रिय करें खोलें और स्कैन करें।",
+        "step4": "यदि नीति माँगती है तो नामांकन स्वीकृत करें, फिर Remote Desktop से कनेक्ट करें।",
+        "pair_activate": "एजेंट सक्रिय करें",
+        "pair_body": "पेयरिंग सामान्य Support Agent द्वारा सर्वर पहुँचने के बाद दिखाए गए QR का उपयोग करता है।",
+        "branding_link": "क्लाइंट ब्रांडिंग",
+        "branding_body": "दिखावट (लोगो, रंग, लेबल) रनटाइम पर क्लाइंट ब्रांडिंग से लोड होती है — इंस्टॉलर में बेक नहीं होती।"
     }
 }

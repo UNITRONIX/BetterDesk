@@ -41,7 +41,7 @@
         "dashboard": "仪表板",
         "devices": "设备",
         "keys": "密钥",
-        "generator": "生成器",
+        "generator": "BetterDesk 代理",
         "settings": "设置",
         "users": "用户",
         "inventory": "资产清单",
@@ -55,6 +55,7 @@
         "reports": "报表",
         "tenants": "租户",
         "registrations": "注册",
+        "activate_agent": "激活代理",
         "management": "管理",
         "toggle_sidebar": "切换侧边栏",
         "cdap": "CDAP 设备",
@@ -81,7 +82,8 @@
         "server_attestation": "服务器性能认证",
         "commercialization": "商业化",
         "remote_open_tab": "在新标签页中打开远程桌面客户端",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk 代理"
     },
     "auth": {
         "login": "登录",
@@ -124,7 +126,11 @@
         "totp_already_enabled": "双因素认证已启用",
         "pro_only_account": "此账户仅适用于 RustDesk 桌面客户端。请使用 RustDesk 应用登录。",
         "passwords_mismatch": "两次输入的密码不一致",
-        "emergency_mode_banner": "Go 服务器不可达 — 紧急模式运行中（仅管理员，功能受限）"
+        "emergency_mode_banner": "Go 服务器不可达 — 紧急模式运行中（仅管理员，功能受限）",
+        "session_expired": "您的会话已过期或被新的登录替换。请重新登录。",
+        "session_idle_warning_title": "会话即将过期",
+        "session_idle_warning_body": "由于无操作，将在 {{seconds}} 秒后退出登录。",
+        "session_stay_signed_in": "保持登录"
     },
     "dashboard": {
         "title": "仪表板",
@@ -138,7 +144,7 @@
         "quick_actions": "快捷操作",
         "manage_devices": "管理已连接的设备",
         "view_keys": "查看服务器密钥",
-        "generate_config": "生成客户端配置",
+        "generate_config": "从何处获取仅入站 Support 代理",
         "server_settings": "配置设置",
         "greeting_morning": "早上好，{name}",
         "greeting_afternoon": "下午好，{name}",
@@ -170,7 +176,7 @@
         "config_api_server": "API 服务器",
         "config_key": "密钥",
         "client_config_hint": "请在 RustDesk 网络设置的 ID/中继服务器部分输入这些值。",
-        "open_generator": "客户端生成器",
+        "open_generator": "BetterDesk 代理",
         "open_keys": "打开密钥",
         "open_remote": "打开远程桌面控制台",
         "attention_panel": "需要注意",
@@ -209,7 +215,9 @@
         "activate_agent_folder_none": "无文件夹",
         "activate_agent_submit": "激活设备",
         "activate_agent_submitting": "正在激活设备…",
-        "activate_agent_success": "代理已成功激活。"
+        "activate_agent_success": "代理已成功激活。",
+        "open_agents": "BetterDesk 代理",
+        "agents_hint": "从何处获取仅入站 Support 代理"
     },
     "devices": {
         "title": "设备",
@@ -422,7 +430,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "管理标签",
+        "manage_device_tags": "管理标签",
+        "rename_tag": "重命名标签",
+        "delete_tag": "删除标签",
+        "rename_tag_prompt": "新标签名称",
+        "rename_tag_hint": "在您可见的所有设备上重命名此标签，并更新匹配的动态组。",
+        "delete_tag_confirm": "从 {count} 台设备移除标签 \"{tag}\"？使用此标签的动态组在更新前将为空。",
+        "tag_renamed": "标签已重命名",
+        "tag_deleted": "标签已删除",
+        "tag_name_required": "标签名称为必填项",
+        "tag_rename_identical": "新名称必须不同",
+        "tags_backend_unsupported": "当前后端不支持设备标签",
+        "tags_manage_hint": "在您可见的所有设备上重命名或删除标签。从单台设备移除请在编辑或详情中操作。",
+        "tags_device_hint": "在此移除标签仅取消本设备的分配。全局重命名或删除请使用管理标签。",
+        "unassign_tag": "从此设备移除",
+        "tag_device_one": "台设备",
+        "tag_device_many": "台设备",
+        "tag_group_one": "个动态组",
+        "tag_group_many": "个动态组"
     },
     "keys": {
         "title": "服务器密钥",
@@ -810,7 +845,32 @@
         "unsaved_restart_title": "保存对此文件的更改？将创建上一版本的备份。",
         "unsaved_restart_message": "存在未保存的更改。放弃？",
         "unsaved_restart_save": "保存文件",
-        "unsaved_restart_stay": "取消"
+        "unsaved_restart_stay": "取消",
+        "availability_history_title": "可用性历史",
+        "availability_history_desc": "可选记录设备上线/离线状态变化，以便 Metrics 按日显示历史。默认关闭以避免数据库增长。",
+        "availability_history_enable": "启用可用性历史",
+        "availability_history_enable_hint": "启用后，Go 服务器会记录从心跳与 signal/CDAP/Mesh 观察到的状态转换（ONLINE、OFFLINE、DEGRADED、CRITICAL）。",
+        "availability_history_retention": "保留天数",
+        "availability_history_retention_hint": "较旧的事件会自动删除。默认 30 天。",
+        "availability_history_save": "保存可用性设置",
+        "availability_history_saved": "可用性历史设置已保存",
+        "tab_time": "时间 / 时区",
+        "time": {
+            "timezone_title": "计费时区",
+            "timezone_desc": "用于商业化月度边界的全局 IANA 时区（超额在每月 1 日午夜清零）。",
+            "billing_month_hint": "该时区每月 1 日午夜关闭上一周期并开启新周期。进行中的会话不会中断。",
+            "billing_timezone": "时区",
+            "billing_timezone_hint": "例如 Europe/Warsaw。影响月度用量与超额。",
+            "custom_timezone": "自定义 IANA 时区（可选）",
+            "detect_os": "从服务器操作系统检测",
+            "detected": "检测到的时区：{tz}",
+            "ntp_title": "NTP / 时钟同步",
+            "ntp_desc": "保持 BetterDesk 服务器时钟同步，以确保可计费会话时间准确。",
+            "save": "保存时间设置",
+            "save_title": "保存时间设置",
+            "saved": "时间设置已保存。",
+            "commercialization_link": "打开商业化 → 套餐"
+        }
     },
     "audit": {
         "time": "时间",
@@ -836,7 +896,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "会话已替换",
+        "action_session_expired": "会话已过期",
+        "action_session_ip_change": "会话 IP 变更"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -928,6 +991,11 @@
         "preview_settings": "设置（仅管理员）",
         "preview_quit": "退出（仅管理员）",
         "download_link_title": "下载链接",
+        "download_hub": "下载中心",
+        "generic_agents_title": "通用仅入站代理",
+        "generic_agents_import": "导入最新发行版",
+        "generic_agents_hint": "主要生产路径：从 GitHub 导入已签名的 BetterDesk-Client 发行版，再由此实例提供已验证的代理。无需本地 Flutter/Cargo 构建。",
+        "generic_agents_empty": "尚未导入任何发行版。",
         "download_link_hint": "将此链接分享给最终用户。他们会看到带品牌标识的下载页面。 更改短链接后，旧的 hex 链接仍然有效。",
         "open_portal": "打开",
         "created": "安装包已创建",
@@ -964,7 +1032,21 @@
             "platforms_required": "请至少选择一个要构建的平台",
             "no_supported_targets": "当前没有可用的构建目标。请检查构建器配置。",
             "toolchain_missing": "缺少必需的构建工具：{{tools}}",
-            "platform_unavailable": "配置的构建器不支持此目标。"
+            "platform_unavailable": "配置的构建器不支持此目标。",
+            "generic_agent_release_not_found": "BetterDesk-Client 上没有可用的已签名 support-v* 版本（须为稳定版，非草稿/预发布）。",
+            "generic_agent_release_list_failed": "无法从 GitHub 列出 BetterDesk-Client 版本（HTTP {{detail}}）。",
+            "generic_agent_release_timeout": "下载通用代理版本资源超时。",
+            "generic_agent_release_redirect_limit": "下载版本资源时重定向次数过多。",
+            "generic_agent_release_redirect_host_invalid": "下载被重定向到意外的主机。",
+            "generic_agent_release_asset_invalid": "版本资源名称或 URL 无效。",
+            "generic_agent_release_asset_download_failed": "下载版本资源失败：{{detail}}",
+            "generic_agent_release_external_config": "压缩包包含嵌入的服务器配置（custom.txt），已被拒绝。",
+            "generic_agent_release_archive_invalid": "无法打开或验证版本压缩包。",
+            "generic_agent_release_manifest_missing": "版本缺少 manifest.json 或 manifest.sig。",
+            "generic_agent_release_public_key_missing": "未配置用于验证签名的公钥。",
+            "generic_agent_release_signature_invalid": "版本清单签名验证失败。",
+            "generic_agent_release_manifest_invalid": "版本清单未通过验证（schema、sku 或 assets）。",
+            "generic_agent_release_checksum_mismatch": "资源校验和不匹配：{{detail}}"
         },
         "legacy_title": "客户端配置生成器",
         "connection_section": "服务器连接",
@@ -987,6 +1069,7 @@
         "builds_hint": "在此服务器上为各平台编译的安装程序。修复工具链错误或更新代理源后重新构建。",
         "builds_loading": "正在加载构建状态…",
         "builds_empty": "尚无构建排队 — 保存安装包或点击\"全部重建\"。",
+        "rebuild": "重新构建",
         "rebuild_all": "全部重建",
         "rebuilding_all": "正在排队重建…",
         "rebuild_queued": "所有平台构建已排队",
@@ -1034,7 +1117,11 @@
         "toolchain_branding_seal": "品牌签名失败 — 请检查控制台上的签名密钥后重新构建。",
         "toolchain_mingw_missing": "未找到 mingw-w64 (x86_64-w64-mingw32-gcc) — Windows 构建将失败。",
         "toolchain_appimage_missing": "未找到 appimagetool — AppImage 构建将失败。",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "正在导入并验证最新已签名版本…",
+        "generic_agents_imported": "已导入 {{tag}}。",
+        "generic_agents_verified": "已验证",
+        "generic_agents_artifacts": "{{count}} 个平台产物"
     },
     "server": {
         "port": "端口",
@@ -1513,7 +1600,7 @@
         "bg_image_invalid_type": "文件类型无效。请使用 PNG、JPG、WebP 或 GIF。",
         "bg_upload_success": "背景图片上传成功。",
         "login_title": "登录页面",
-        "login_desc": "自定义登录界面的标题、副标题和背景。",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "登录标题",
         "login_heading_placeholder": "欢迎回来",
         "login_subheading": "登录副标题",
@@ -1589,7 +1676,23 @@
         "builtin_themes_hint": "预设会应用完整的配色方案（例如 BetterDesk 或 insolv Core Server），与快速明暗切换不同。",
         "readability_check": "可读性检查",
         "readability_contrast": "{item} 的对比度（{ratio}）低于 {minimum}:1",
-        "readability_background": "{item} 使用低覆盖度的 {type}，文字可能难以阅读。"
+        "readability_background": "{item} 使用低覆盖度的 {type}，文字可能难以阅读。",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "概览",
@@ -1682,9 +1785,48 @@
         "no_sysinfo": "暂无硬件信息",
         "no_sysinfo_hint": "设备发送系统信息报告后将显示硬件信息",
         "no_metrics": "暂无指标数据",
-        "no_metrics_hint": "设备发送心跳报告后将显示指标数据",
+        "no_metrics_hint": "在设置中启用可用性历史以记录在线/离线变化。有人连接时会显示连接会话。",
         "chart_oldest": "← 最早",
-        "chart_newest": "最新 →"
+        "chart_newest": "最新 →",
+        "section_availability_history": "可用性历史",
+        "availability_prev_day": "前一天",
+        "availability_next_day": "后一天",
+        "availability_loading": "正在加载可用性历史…",
+        "availability_disabled": "可用性历史已禁用",
+        "availability_disabled_hint": "在设置 → 可用性历史中启用。服务器将记录状态转换，无需客户端 CPU 指标。",
+        "availability_empty": "当天无状态变化",
+        "availability_empty_hint": "设备变为 online、offline、degraded 或 critical 时会出现转换记录。",
+        "availability_col_time": "时间",
+        "availability_col_from": "从",
+        "availability_col_to": "到",
+        "availability_col_source": "来源",
+        "availability_status_online": "在线",
+        "availability_status_offline": "离线",
+        "availability_status_degraded": "降级",
+        "availability_status_critical": "严重",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "心跳",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "管理",
+        "availability_source_status": "状态",
+        "section_metrics_summary": "服务器指标",
+        "metrics_avail_today": "状态变更（所选日期）",
+        "metrics_sessions_tracked": "已跟踪会话",
+        "section_connection_sessions": "连接会话",
+        "sessions_loading": "正在加载连接会话…",
+        "sessions_error": "无法加载连接会话",
+        "sessions_empty": "尚无连接会话",
+        "sessions_empty_hint": "授权对等端连接时会出现会话（打洞或中继）。中继结束时会填充时长。",
+        "sessions_col_when": "时间",
+        "sessions_col_who": "连接方",
+        "sessions_col_from": "来源 IP",
+        "sessions_col_transport": "传输方式",
+        "sessions_col_duration": "时长",
+        "sessions_active": "进行中",
+        "sessions_transport_punch": "直连 / 打洞",
+        "sessions_transport_relay": "中继",
+        "tags_unassign_hint": "在此移除标签仅取消本设备的分配。全局重命名或删除请在设备页使用管理标签。"
     },
     "inventory": {
         "title": "资产清单",
@@ -3565,7 +3707,26 @@
         "hardening_hint": "BetterDesk部署的安全加固优先级。按严重程度排序。",
         "no_hardening": "没有可用的加固项目。",
         "vuln_hint": "依赖项漏洞扫描结果。定期运行npm audit以保持依赖安全。",
-        "no_vulns": "未发现漏洞。您的依赖项是安全的。"
+        "no_vulns": "未发现漏洞。您的依赖项是安全的。",
+        "tab_sessions": "面板会话",
+        "sessions_hint": "您的控制台登录会话。每个账户仅允许一个活动会话；新登录会结束之前的会话。",
+        "sessions_policy": "空闲超时：{{idle}} 分钟 · 绝对上限：{{max}} 小时 · 每账户一个活动会话",
+        "no_sessions": "尚未记录面板会话。",
+        "session_current": "当前",
+        "session_active": "活动",
+        "session_ended": "已结束",
+        "col_status": "状态",
+        "col_started": "开始",
+        "col_last_activity": "最后活动",
+        "col_ended": "结束",
+        "col_reason": "结束原因",
+        "col_user_agent": "浏览器",
+        "reason_logout": "注销",
+        "reason_replaced": "被新登录替换",
+        "reason_idle": "空闲超时",
+        "reason_max_age": "最长生命周期",
+        "reason_revoked": "已吊销",
+        "reason_destroyed": "已销毁"
     },
     "languages": {
         "title": "语言管理",
@@ -3901,7 +4062,11 @@
         "preflight_warnings_title": "安装前",
         "install_blocked_hint": "在上面的问题解决之前，安装已禁用。",
         "preflight_info_title": "安装前",
-        "preflight_info_note": "您可以安装更新 — 这些只是提示信息。"
+        "preflight_info_note": "您可以安装更新 — 这些只是提示信息。",
+        "proxy_timeout_recovering": "网关/代理超时 — 正在检查服务器上更新是否仍在进行…",
+        "install_still_running": "更新仍在服务器上运行…",
+        "install_recovered": "浏览器连接断开后，服务器上的更新已完成",
+        "install_recovery_timeout": "网关断开后等待更新完成超时。请检查 设置 → 更新、data/.last_update_result.json，或运行：node scripts/update-cli.js"
     },
     "accessibility": {
         "title": "无障碍",
@@ -4143,7 +4308,8 @@
             "status_error": "最后错误",
             "os_yes": "是",
             "os_no": "否",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "活动可计费会话",
@@ -4167,7 +4333,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "设备",
@@ -4175,7 +4348,11 @@
             "duration": "时长",
             "phase": "阶段",
             "amount": "金额",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "会话",
@@ -4222,7 +4399,9 @@
             "skip": "暂时跳过",
             "submit": "提交报告",
             "summary_required": "摘要为必填项",
-            "saved": "工作报告已保存"
+            "saved": "工作报告已保存",
+            "toolbar": "工作报告",
+            "intent_hint": "会话结束时将打开报告表单"
         },
         "empty": {
             "packages": "尚无套餐。请使用上方按钮创建。",
@@ -4284,6 +4463,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4513,5 +4706,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk 免费",
+                "body": "开源远程桌面 — 无席位许可、无供应商锁定。自行托管。"
+            },
+            "remote": {
+                "title": "由您掌控的远程支持",
+                "body": "通过自有控制台连接终端。会话保留在您的基础设施上。"
+            },
+            "secure": {
+                "title": "内置安全",
+                "body": "操作员认证、会话控制，以及需要时的服务器证明。"
+            },
+            "platforms": {
+                "title": "Windows、Linux 与 macOS",
+                "body": "一个控制台覆盖团队已支持的各平台代理。"
+            }
+        },
+        "prev": "上一张幻灯片",
+        "next": "下一张幻灯片"
+    },
+    "agents": {
+        "title": "BetterDesk 代理",
+        "subtitle": "仅入站 Support 客户端在 BetterDesk-Client 中构建 — 本面板负责导入并提供下载。",
+        "what_title": "什么是 BetterDesk 代理？",
+        "what_body": "BetterDesk Support 代理是仅入站的桌面客户端。它们向服务器注册、显示配对二维码并接受远程支持，不会向其他设备发起出站连接。",
+        "note_no_build": "本控制台不再在本机构建客户端安装包。已签名的版本在 BetterDesk-Client 的 GitHub 仓库中发布。",
+        "get_title": "从何处获取代理",
+        "get_body": "从 BetterDesk-Client 发行版下载已签名的 Support Agent 包，或在下方导入后分享本服务器的公共门户。",
+        "get_github": "BetterDesk-Client 发行版",
+        "get_portal": "打开下载门户",
+        "sync_title": "导入到本服务器",
+        "sync_hint": "导入最新已签名的 support-v* 发行版，以便 /portal 向用户提供已验证的安装包。",
+        "sync_import": "导入最新发行版",
+        "sync_importing": "正在导入并验证最新已签名发行版…",
+        "sync_imported": "已导入 {{tag}}。",
+        "sync_empty": "尚未导入任何发行版。",
+        "sync_verified": "已验证",
+        "sync_artifacts": "{{count}} 个平台产物",
+        "steps_title": "如何接入代理",
+        "step1": "导入最新已签名发行版（上方按钮）或从 GitHub 下载。",
+        "step2": "在终端设备上安装代理并输入本服务器的公共 URL。",
+        "step3": "当代理显示二维码时，打开“激活代理”并扫描。",
+        "step4": "若策略要求则批准注册，然后从 Remote Desktop 连接。",
+        "pair_activate": "激活代理",
+        "pair_body": "配对使用通用 Support Agent 在联系服务器后显示的二维码。",
+        "branding_link": "客户端品牌",
+        "branding_body": "外观（徽标、颜色、标签）在运行时从客户端品牌加载，不会写入安装包。"
     }
 }

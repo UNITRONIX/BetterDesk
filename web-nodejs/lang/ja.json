@@ -41,7 +41,7 @@
         "dashboard": "ダッシュボード",
         "devices": "デバイス",
         "keys": "キー",
-        "generator": "ジェネレーター",
+        "generator": "BetterDeskエージェント",
         "settings": "設定",
         "users": "ユーザー",
         "inventory": "インベントリ",
@@ -55,6 +55,7 @@
         "reports": "レポート",
         "tenants": "Tenants",
         "registrations": "Registrations",
+        "activate_agent": "エージェントを有効化",
         "management": "管理",
         "toggle_sidebar": "サイドバーの切り替え",
         "cdap": "CDAP デバイス",
@@ -81,7 +82,8 @@
         "server_attestation": "サーバー性能認定",
         "commercialization": "商用化",
         "remote_open_tab": "新しいタブでリモートデスクトップクライアントを開く",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDeskエージェント"
     },
     "auth": {
         "login": "Login",
@@ -124,7 +126,11 @@
         "oidc_error": "SSO ログイン中にエラーが発生しました。",
         "oidc_no_account": "アカウントが見つからなかったため、自動登録が無効になっています。",
         "totp_rate_limited": "試行回数が多すぎます。後でもう一度試してください。",
-        "emergency_mode_banner": "Go server 到達不能 — 緊急モードで実行中 (管理者のみ、機能が制限されています)"
+        "emergency_mode_banner": "Go server 到達不能 — 緊急モードで実行中 (管理者のみ、機能が制限されています)",
+        "session_expired": "セッションの有効期限が切れたか、新しいログインに置き換えられました。再度サインインしてください。",
+        "session_idle_warning_title": "セッションまもなく期限切れ",
+        "session_idle_warning_body": "操作がないため {{seconds}} 秒後にサインアウトされます。",
+        "session_stay_signed_in": "サインインを維持"
     },
     "dashboard": {
         "title": "ダッシュボード",
@@ -138,7 +144,7 @@
         "quick_actions": "クイックアクション",
         "manage_devices": "接続されたデバイスを管理",
         "view_keys": "サーバーキーを表示",
-        "generate_config": "クライアント設定を生成",
+        "generate_config": "受信専用サポートエージェントの入手先",
         "server_settings": "設定を構成",
         "greeting_morning": "おはようございます、{name}",
         "greeting_afternoon": "こんにちは、{name}",
@@ -170,7 +176,7 @@
         "config_api_server": "API サーバー",
         "config_key": "キー",
         "client_config_hint": "RustDesk のネットワーク設定で、ID/リレーサーバー欄にこれらの値を入力してください。",
-        "open_generator": "クライアント生成",
+        "open_generator": "BetterDeskエージェント",
         "open_keys": "キーを開く",
         "open_remote": "リモートデスクトップコンソールを開く",
         "attention_panel": "要確認",
@@ -209,7 +215,9 @@
         "activate_agent_folder_none": "フォルダーなし",
         "activate_agent_submit": "デバイスを有効化",
         "activate_agent_submitting": "デバイスを有効化しています…",
-        "activate_agent_success": "エージェントを有効化しました。"
+        "activate_agent_success": "エージェントを有効化しました。",
+        "open_agents": "BetterDeskエージェント",
+        "agents_hint": "受信専用サポートエージェントの入手先"
     },
     "devices": {
         "title": "デバイス",
@@ -422,7 +430,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "タグを管理",
+        "manage_device_tags": "タグを管理",
+        "rename_tag": "タグ名を変更",
+        "delete_tag": "タグを削除",
+        "rename_tag_prompt": "新しいタグ名",
+        "rename_tag_hint": "表示中のすべてのデバイスでこのタグ名を変更し、一致する動的グループを更新します。",
+        "delete_tag_confirm": "タグ \"{tag}\" を {count} 台のデバイスから削除しますか？このタグを使う動的グループは更新まで空になります。",
+        "tag_renamed": "タグ名を変更しました",
+        "tag_deleted": "タグを削除しました",
+        "tag_name_required": "タグ名は必須です",
+        "tag_rename_identical": "新しい名前は別である必要があります",
+        "tags_backend_unsupported": "現在のバックエンドではデバイスタグはサポートされていません",
+        "tags_manage_hint": "表示中のすべてのデバイスでタグを変更または削除します。1台からの解除は編集または詳細で行います。",
+        "tags_device_hint": "ここでタグを削除すると、このデバイスからのみ割り当てが解除されます。全体の変更にはタグを管理を使います。",
+        "unassign_tag": "このデバイスから削除",
+        "tag_device_one": "デバイス",
+        "tag_device_many": "デバイス",
+        "tag_group_one": "動的グループ",
+        "tag_group_many": "動的グループ"
     },
     "keys": {
         "title": "サーバーキー",
@@ -810,7 +845,32 @@
         "unsaved_restart_title": "このファイルへの変更を保存しますか？以前のバージョンのバックアップが作成されます。",
         "unsaved_restart_message": "未保存の変更があります。破棄しますか？",
         "unsaved_restart_save": "ファイルを保存",
-        "unsaved_restart_stay": "キャンセル"
+        "unsaved_restart_stay": "キャンセル",
+        "availability_history_title": "可用性履歴",
+        "availability_history_desc": "デバイスのオンライン/オフライン変化を任意で記録し、Metricsで日別履歴を表示します。DB肥大化を避けるため既定では無効です。",
+        "availability_history_enable": "可用性履歴を有効にする",
+        "availability_history_enable_hint": "有効時、Goサーバーはハートビートとsignal/CDAP/Meshから観測した状態遷移（ONLINE、OFFLINE、DEGRADED、CRITICAL）を記録します。",
+        "availability_history_retention": "保持期間（日）",
+        "availability_history_retention_hint": "古いイベントは自動削除されます。既定は30日です。",
+        "availability_history_save": "可用性設定を保存",
+        "availability_history_saved": "可用性履歴設定を保存しました",
+        "tab_time": "時刻 / タイムゾーン",
+        "time": {
+            "timezone_title": "請求タイムゾーン",
+            "timezone_desc": "商業化の月次境界用のグローバル IANA ゾーン（超過分は毎月1日の深夜0時にリセット）。",
+            "billing_month_hint": "このゾーンでの毎月1日の深夜0時に前期間を閉じ、新しい期間を開きます。アクティブなセッションは中断されません。",
+            "billing_timezone": "タイムゾーン",
+            "billing_timezone_hint": "例: Europe/Warsaw。月次使用量と超過に影響します。",
+            "custom_timezone": "カスタム IANA ゾーン（任意）",
+            "detect_os": "サーバー OS から検出",
+            "detected": "検出されたゾーン: {tz}",
+            "ntp_title": "NTP / 時計同期",
+            "ntp_desc": "課金可能なセッション時間の精度のため BetterDesk サーバー時計を同期してください。",
+            "save": "時刻設定を保存",
+            "save_title": "時刻設定を保存",
+            "saved": "時刻設定を保存しました。",
+            "commercialization_link": "商業化 → パッケージを開く"
+        }
     },
     "audit": {
         "time": "Time",
@@ -836,7 +896,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "セッション置換",
+        "action_session_expired": "セッション期限切れ",
+        "action_session_ip_change": "セッションIP変更"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -928,6 +991,11 @@
         "preview_settings": "設定 (管理者のみ)",
         "preview_quit": "終了 (管理者のみ)",
         "download_link_title": "ダウンロードリンク",
+        "download_hub": "ダウンロードハブ",
+        "generic_agents_empty": "まだリリースがインポートされていません。",
+        "generic_agents_hint": "本番の主経路：GitHub から署名済み BetterDesk-Client リリースをインポートし、このインスタンスから検証済みエージェントを配信します。ローカルの Flutter/Cargo ビルドは不要です。",
+        "generic_agents_import": "最新リリースをインポート",
+        "generic_agents_title": "汎用着信専用エージェント",
         "download_link_hint": "このリンクをエンド ユーザーと共有します。ブランドのダウンロード ページが表示されます。 短いリンクを変更しても、古い hex リンクは引き続き利用できます。",
         "open_portal": "開く",
         "created": "バンドルが作成されました",
@@ -964,7 +1032,21 @@
             "platforms_required": "ビルドするプラットフォームを少なくとも1つ選択してください",
             "no_supported_targets": "現在利用できるビルド対象がありません。ビルダーの設定を確認してください。",
             "toolchain_missing": "必要なビルドツールがありません: {{tools}}",
-            "platform_unavailable": "この対象は設定されたビルダーでは利用できません。"
+            "platform_unavailable": "この対象は設定されたビルダーでは利用できません。",
+            "generic_agent_release_not_found": "BetterDesk-Client に署名済みの support-v* リリースがありません（安定版・draft/prerelease 以外が必要です）。",
+            "generic_agent_release_list_failed": "GitHub から BetterDesk-Client のリリース一覧を取得できませんでした (HTTP {{detail}})。",
+            "generic_agent_release_timeout": "汎用エージェントリリースのダウンロードがタイムアウトしました。",
+            "generic_agent_release_redirect_limit": "リリースアセットのダウンロードでリダイレクトが多すぎます。",
+            "generic_agent_release_redirect_host_invalid": "ダウンロードが予期しないホストへリダイレクトされました。",
+            "generic_agent_release_asset_invalid": "リリースアセットの名前または URL が無効です。",
+            "generic_agent_release_asset_download_failed": "リリースアセットのダウンロードに失敗しました: {{detail}}",
+            "generic_agent_release_external_config": "アーカイブに埋め込みサーバー設定 (custom.txt) が含まれているため拒否されました。",
+            "generic_agent_release_archive_invalid": "リリースアーカイブを開けないか検証できませんでした。",
+            "generic_agent_release_manifest_missing": "リリースに manifest.json または manifest.sig がありません。",
+            "generic_agent_release_public_key_missing": "署名検証用の公開鍵が設定されていません。",
+            "generic_agent_release_signature_invalid": "リリースマニフェストの署名検証に失敗しました。",
+            "generic_agent_release_manifest_invalid": "リリースマニフェストの検証に失敗しました（schema / sku / assets）。",
+            "generic_agent_release_checksum_mismatch": "アセットのチェックサムが一致しません: {{detail}}"
         },
         "legacy_title": "クライアント構成ジェネレーター",
         "connection_section": "サーバー接続",
@@ -987,6 +1069,7 @@
         "builds_hint": "各プラットフォーム向けにこのサーバーでコンパイルされたインストーラー。ツールチェーンエラーの修正またはエージェントソースの更新後に再ビルドします。",
         "builds_loading": "ビルドステータスを読み込み中…",
         "builds_empty": "まだビルドがキューにありません — バンドルを保存するか「すべて再ビルド」をクリックしてください。",
+        "rebuild": "再ビルド",
         "rebuild_all": "すべて再ビルド",
         "rebuilding_all": "再ビルドをキュー中…",
         "rebuild_queued": "すべてのプラットフォームビルドをキューに追加しました",
@@ -1034,7 +1117,11 @@
         "toolchain_branding_seal": "ブランディングの署名に失敗しました — コンソールの署名鍵を確認して再ビルドしてください。",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) が見つかりません — Windows ビルドは失敗します。",
         "toolchain_appimage_missing": "appimagetool が見つかりません — AppImage ビルドは失敗します。",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "最新の署名済みリリースをインポートして検証しています…",
+        "generic_agents_imported": "{{tag}} をインポートしました。",
+        "generic_agents_verified": "検証済み",
+        "generic_agents_artifacts": "プラットフォーム成果物 {{count}} 件"
     },
     "server": {
         "port": "Port",
@@ -1513,7 +1600,7 @@
         "bg_image_invalid_type": "無効なファイル形式です。PNG、JPG、WebP または GIF を使用してください。",
         "bg_upload_success": "背景画像を正常にアップロードしました。",
         "login_title": "ログインページ",
-        "login_desc": "ログイン画面の見出し、サブタイトル、背景をカスタマイズします。",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "ログイン見出し",
         "login_heading_placeholder": "お帰りなさい",
         "login_subheading": "ログインサブタイトル",
@@ -1589,7 +1676,23 @@
         "builtin_themes_hint": "プリセットは完全なカラーパック（BetterDesk、insolv Core Server など）を適用します。クイック明暗切り替えとは別の機能です。",
         "readability_check": "可読性チェック",
         "readability_contrast": "{item} のコントラスト比 ({ratio}) は {minimum}:1 未満です",
-        "readability_background": "{item} はオーバーレイが弱い {type} を使用しているため、テキストが読みにくい可能性があります。"
+        "readability_background": "{item} はオーバーレイが弱い {type} を使用しているため、テキストが読みにくい可能性があります。",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "概要",
@@ -1666,7 +1769,7 @@
         "no_sysinfo": "ハードウェア情報がありません",
         "no_sysinfo_hint": "システム情報は、デバイスが sysinfo レポートを送信した後に表示されます",
         "no_metrics": "利用可能なメトリクス データがありません",
-        "no_metrics_hint": "デバイスがハートビート レポートを送信した後にメトリクスが表示されます",
+        "no_metrics_hint": "オンライン/オフラインの変化を記録するには、設定で可用性履歴を有効にしてください。接続セッションは誰かが接続すると表示されます。",
         "chart_oldest": "← Oldest",
         "chart_newest": "Newest →",
         "tab_services": "Services",
@@ -1684,7 +1787,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "可用性履歴",
+        "availability_prev_day": "前日",
+        "availability_next_day": "翌日",
+        "availability_loading": "可用性履歴を読み込み中…",
+        "availability_disabled": "可用性履歴は無効です",
+        "availability_disabled_hint": "設定 → 可用性履歴で有効にしてください。クライアントCPUメトリクスなしで状態遷移を記録します。",
+        "availability_empty": "この日の状態変化はありません",
+        "availability_empty_hint": "デバイスが online / offline / degraded / critical になると遷移が表示されます。",
+        "availability_col_time": "時刻",
+        "availability_col_from": "から",
+        "availability_col_to": "へ",
+        "availability_col_source": "ソース",
+        "availability_status_online": "オンライン",
+        "availability_status_offline": "オフライン",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "状態",
+        "section_metrics_summary": "サーバーメトリクス",
+        "metrics_avail_today": "ステータス変更（選択日）",
+        "metrics_sessions_tracked": "追跡セッション",
+        "section_connection_sessions": "接続セッション",
+        "sessions_loading": "接続セッションを読み込み中…",
+        "sessions_error": "接続セッションを読み込めませんでした",
+        "sessions_empty": "接続セッションはまだありません",
+        "sessions_empty_hint": "認可されたピアが接続するとセッションが表示されます（パンチホールまたはリレー）。リレー終了時に所要時間が入ります。",
+        "sessions_col_when": "日時",
+        "sessions_col_who": "接続元",
+        "sessions_col_from": "送信元 IP",
+        "sessions_col_transport": "転送方式",
+        "sessions_col_duration": "所要時間",
+        "sessions_active": "進行中",
+        "sessions_transport_punch": "直接 / パンチ",
+        "sessions_transport_relay": "リレー",
+        "tags_unassign_hint": "ここでタグを削除すると、このデバイスからのみ割り当てが解除されます。全体の変更にはデバイスページのタグを管理を使います。"
     },
     "inventory": {
         "title": "Inventory",
@@ -3493,7 +3635,26 @@
         "hardening_hint": "BetterDeskデプロイのセキュリティハーデニング優先事項。重大度順。",
         "no_hardening": "ハーデニング項目なし。",
         "vuln_hint": "依存関係脆弱性スキャン結果。定期的にnpm auditを実行してください。",
-        "no_vulns": "脆弱性は見つかりませんでした。依存関係は安全です。"
+        "no_vulns": "脆弱性は見つかりませんでした。依存関係は安全です。",
+        "tab_sessions": "パネルセッション",
+        "sessions_hint": "コンソールのログインセッションです。アカウントごとにアクティブなセッションは1つのみで、新しいログインは以前のセッションを終了します。",
+        "sessions_policy": "アイドル: {{idle}} 分 · 絶対上限: {{max}} 時間 · アカウントごとに1セッション",
+        "no_sessions": "パネルセッションはまだ記録されていません。",
+        "session_current": "現在",
+        "session_active": "アクティブ",
+        "session_ended": "終了",
+        "col_status": "状態",
+        "col_started": "開始",
+        "col_last_activity": "最終アクティビティ",
+        "col_ended": "終了",
+        "col_reason": "終了理由",
+        "col_user_agent": "ブラウザ",
+        "reason_logout": "ログアウト",
+        "reason_replaced": "新しいログインで置換",
+        "reason_idle": "アイドルタイムアウト",
+        "reason_max_age": "最大有効期間",
+        "reason_revoked": "取り消し",
+        "reason_destroyed": "破棄"
     },
     "languages": {
         "title": "言語管理",
@@ -3829,7 +3990,11 @@
         "preflight_warnings_title": "インストール前",
         "install_blocked_hint": "上記の問題が解決するまでインストールは無効です。",
         "preflight_info_title": "インストール前",
-        "preflight_info_note": "更新をインストールできます — これらは参考情報です。"
+        "preflight_info_note": "更新をインストールできます — これらは参考情報です。",
+        "proxy_timeout_recovering": "ゲートウェイ/プロキシのタイムアウト — サーバー側で更新が続行中か確認しています…",
+        "install_still_running": "サーバー側で更新が続行中です…",
+        "install_recovered": "ブラウザ接続切断後、サーバー側で更新が完了しました",
+        "install_recovery_timeout": "ゲートウェイ切断後の更新完了待ちがタイムアウトしました。設定 → 更新、data/.last_update_result.json、または node scripts/update-cli.js を確認してください"
     },
     "permissions": {
         "title": "権限",
@@ -4143,7 +4308,8 @@
             "status_error": "最後のエラー",
             "os_yes": "はい",
             "os_no": "いいえ",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "アクティブな課金セッション",
@@ -4167,7 +4333,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "デバイス",
@@ -4175,7 +4348,11 @@
             "duration": "時間",
             "phase": "フェーズ",
             "amount": "金額",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "セッション",
@@ -4222,7 +4399,9 @@
             "skip": "今はスキップ",
             "submit": "レポートを送信",
             "summary_required": "概要は必須です",
-            "saved": "作業レポートを保存しました"
+            "saved": "作業レポートを保存しました",
+            "toolbar": "作業レポート",
+            "intent_hint": "セッション終了時にレポートフォームが開きます"
         },
         "empty": {
             "packages": "パッケージがありません。上のボタンで作成してください。",
@@ -4284,6 +4463,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4513,5 +4706,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk は無料です",
+                "body": "オープンソースのリモートデスクトップ — シートライセンスもロックインもなし。自前でホスト。"
+            },
+            "remote": {
+                "title": "自分で制御するリモートサポート",
+                "body": "自前のコンソールからエンドポイントへ接続。セッションは自社インフラに留まります。"
+            },
+            "secure": {
+                "title": "セキュリティを標準搭載",
+                "body": "オペレーター認証、セッション制御、必要なときのサーバー証明。"
+            },
+            "platforms": {
+                "title": "Windows・Linux・macOS",
+                "body": "チームが既に支えるプラットフォーム向けエージェントを一つのコンソールで。"
+            }
+        },
+        "prev": "前のスライド",
+        "next": "次のスライド"
+    },
+    "agents": {
+        "title": "BetterDeskエージェント",
+        "subtitle": "受信専用サポートクライアントは BetterDesk-Client でビルドされます。このパネルはそれらを取り込み、配信します。",
+        "what_title": "BetterDeskエージェントとは？",
+        "what_body": "BetterDeskサポートエージェントは受信専用のデスクトップクライアントです。サーバーに登録し、ペアリング用QRを表示し、リモートサポートを受け付けます。他デバイスへの送信接続は開始しません。",
+        "note_no_build": "このコンソールはクライアントインストーラーをビルドしなくなりました。署名付きリリースは BetterDesk-Client の GitHub リポジトリで作成されます。",
+        "get_title": "エージェントの入手先",
+        "get_body": "BetterDesk-Client のリリースから署名付き Support Agent パッケージをダウンロードするか、下でインポート後にこのサーバーの公開ポータルを共有してください。",
+        "get_github": "BetterDesk-Client リリース",
+        "get_portal": "ダウンロードポータルを開く",
+        "sync_title": "このサーバーへインポート",
+        "sync_hint": "最新の署名付き support-v* リリースを取り込み、/portal が検証済みインストーラーを配信できるようにします。",
+        "sync_import": "最新リリースをインポート",
+        "sync_importing": "最新の署名付きリリースをインポートして検証しています…",
+        "sync_imported": "{{tag}} をインポートしました。",
+        "sync_empty": "まだリリースがインポートされていません。",
+        "sync_verified": "検証済み",
+        "sync_artifacts": "{{count}} 個のプラットフォーム成果物",
+        "steps_title": "エージェントの導入手順",
+        "step1": "最新の署名付きリリースをインポートする（上のボタン）か、GitHub からダウンロードします。",
+        "step2": "エンドユーザー端末にエージェントをインストールし、このサーバーの公開 URL を入力します。",
+        "step3": "エージェントが QR を表示したら、「エージェントを有効化」を開いてスキャンします。",
+        "step4": "ポリシーで必要な場合は登録を承認し、Remote Desktop から接続します。",
+        "pair_activate": "エージェントを有効化",
+        "pair_body": "ペアリングには、汎用 Support Agent がサーバー到達後に表示する QR を使います。",
+        "branding_link": "クライアントブランディング",
+        "branding_body": "外観（ロゴ・色・ラベル）は実行時にクライアントブランディングから読み込まれます。インストーラーには焼き込まれません。"
     }
 }

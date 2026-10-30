@@ -274,7 +274,7 @@ func TestManagedHeartbeatOnlyDoesNotMakeTargetReachable(t *testing.T) {
 	}
 	// Simulate a recent HTTP heartbeat without a RegisterPeer/RegisterPk
 	// transport. The DB row must not make the target routable by itself.
-	if err := database.UpdatePeerStatus("HEARTBEAT1", "ONLINE", "203.0.113.122"); err != nil {
+	if err := database.UpdatePeerStatus("HEARTBEAT1", "ONLINE", "203.0.113.122", "test"); err != nil {
 		t.Fatalf("update target heartbeat: %v", err)
 	}
 	putOnlinePeer(srv, "INITHEART1", "198.51.100.122", 51002, peer.ConnTCP)

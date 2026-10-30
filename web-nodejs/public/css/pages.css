@@ -1524,6 +1524,41 @@
     display: none;
 }
 
+.login-slides-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.login-slide-card {
+    border: 1px solid var(--border-primary, #30363d);
+    border-radius: var(--radius-md, 8px);
+    background: var(--bg-secondary, #161b22);
+    padding: 14px 16px;
+}
+
+.login-slide-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.login-slide-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.login-slide-card .form-group {
+    margin-bottom: 10px;
+}
+
+.login-slide-card .form-group:last-child {
+    margin-bottom: 0;
+}
+
 .branding-modules .branding-module-panel.active {
     display: block;
 }
@@ -3254,15 +3289,30 @@
     --settings-nav-bleed-x: var(--space-lg);
 }
 
-/* Horizontal scroll lives on the track — not the sticky outer (avoids sticky breakage) */
+/* Horizontal scroll lives on the track — not the sticky outer (avoids sticky breakage).
+ * Explicit overflow-y:hidden — overflow-x:auto alone promotes overflow-y to auto. */
 .settings-shell-nav-track {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    align-items: center;
     gap: 4px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.settings-shell-nav-track::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 /* Settings track: no extra bottom padding from .mobile-tabs-scroll (keeps bar compact) */
@@ -3453,6 +3503,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--space-md);
+    margin-bottom: var(--space-lg);
 }
 
 .settings-choice-card {

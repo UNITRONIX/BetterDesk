@@ -47,7 +47,7 @@
         "dashboard": "Dashbord",
         "devices": "Enheter",
         "keys": "Nøkler",
-        "generator": "Generator",
+        "generator": "BetterDesk-agenter",
         "settings": "Innstillinger",
         "users": "Brukere",
         "inventory": "Inventar",
@@ -61,6 +61,7 @@
         "reports": "Rapporter",
         "tenants": "Leietakere",
         "registrations": "Registrations",
+        "activate_agent": "Aktiver agent",
         "management": "Ledelse",
         "toggle_sidebar": "Bytt sidefelt",
         "cdap": "CDAP-enheter",
@@ -87,7 +88,8 @@
         "server_attestation": "Serverattest",
         "commercialization": "Kommersialisering",
         "remote_open_tab": "Åpne eksternt skrivebordsklient i ny fane",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "BetterDesk-agenter"
     },
     "auth": {
         "login": "Login",
@@ -130,7 +132,11 @@
         "oidc_error": "Det oppstod en feil under SSO-pålogging.",
         "oidc_no_account": "Kontoen din ble ikke funnet og automatisk registrering er deaktivert.",
         "totp_rate_limited": "For mange forsøk. Vennligst prøv igjen senere.",
-        "emergency_mode_banner": "Go server utilgjengelig — kjører i nødmodus (kun admin, begrenset funksjonalitet)"
+        "emergency_mode_banner": "Go server utilgjengelig — kjører i nødmodus (kun admin, begrenset funksjonalitet)",
+        "session_expired": "Økten er utløpt eller erstattet av en ny innlogging. Logg inn på nytt.",
+        "session_idle_warning_title": "Økten utløper snart",
+        "session_idle_warning_body": "Du logges ut på grunn av inaktivitet om {{seconds}} sekunder.",
+        "session_stay_signed_in": "Forbli innlogget"
     },
     "dashboard": {
         "title": "Dashbord",
@@ -144,7 +150,7 @@
         "quick_actions": "Raske handlinger",
         "manage_devices": "Administrer tilkoblede enheter",
         "view_keys": "Se servernøkler",
-        "generate_config": "Generer klientkonfigurasjon",
+        "generate_config": "Hvor du får incoming-only Support-agenter",
         "server_settings": "Konfigurer innstillinger",
         "greeting_morning": "God morgen, {name}",
         "greeting_afternoon": "God ettermiddag, {name}",
@@ -176,7 +182,7 @@
         "config_api_server": "API-server",
         "config_key": "Nøkkel",
         "client_config_hint": "Skriv inn disse verdiene i nettverksinnstillingene i RustDesk, under ID-/Relay-server.",
-        "open_generator": "Klientgenerator",
+        "open_generator": "BetterDesk-agenter",
         "open_keys": "Åpne nøkler",
         "open_remote": "Åpne konsollen for eksternt skrivebord",
         "attention_panel": "Krever oppmerksomhet",
@@ -215,7 +221,9 @@
         "activate_agent_folder_none": "Ingen mappe",
         "activate_agent_submit": "Aktiver enhet",
         "activate_agent_submitting": "Aktiverer enhet…",
-        "activate_agent_success": "Agenten ble aktivert."
+        "activate_agent_success": "Agenten ble aktivert.",
+        "open_agents": "BetterDesk-agenter",
+        "agents_hint": "Hvor du får incoming-only Support-agenter"
     },
     "devices": {
         "title": "Enheter",
@@ -428,7 +436,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Administrer tagger",
+        "manage_device_tags": "Administrer tagger",
+        "rename_tag": "Gi tag nytt navn",
+        "delete_tag": "Slett tag",
+        "rename_tag_prompt": "Nytt tagnavn",
+        "rename_tag_hint": "Gir denne tagen nytt navn på alle synlige enheter og oppdaterer matchende dynamiske grupper.",
+        "delete_tag_confirm": "Fjern tagen \"{tag}\" fra {count} enhet(er)? Dynamiske grupper som bruker den blir tomme til de oppdateres.",
+        "tag_renamed": "Tag omdøpt",
+        "tag_deleted": "Tag slettet",
+        "tag_name_required": "Tagnavn er påkrevd",
+        "tag_rename_identical": "Det nye tagnavnet må være annerledes",
+        "tags_backend_unsupported": "Enhetstagger støttes ikke med gjeldende backend",
+        "tags_manage_hint": "Gi nytt navn eller slett tagger på alle synlige enheter. Fjerning fra én enhet gjøres i Rediger eller Detaljer.",
+        "tags_device_hint": "Fjern en tag her for å frakoble den kun fra denne enheten. Bruk Administrer tagger for global endring.",
+        "unassign_tag": "Fjern fra denne enheten",
+        "tag_device_one": "enhet",
+        "tag_device_many": "enheter",
+        "tag_group_one": "dynamisk gruppe",
+        "tag_group_many": "dynamiske grupper"
     },
     "keys": {
         "title": "Servernøkler",
@@ -816,7 +851,32 @@
         "unsaved_restart_title": "Lagre endringer i denne filen? En sikkerhetskopi av forrige versjon opprettes.",
         "unsaved_restart_message": "Du har ulagrede endringer. Forkast dem?",
         "unsaved_restart_save": "Lagre fil",
-        "unsaved_restart_stay": "Avbryt"
+        "unsaved_restart_stay": "Avbryt",
+        "availability_history_title": "Tilgjengelighetshistorikk",
+        "availability_history_desc": "Valgfritt logg når enheter går online/offline slik at Metrics kan vise daglig historikk. Deaktivert som standard for å unngå databasevekst.",
+        "availability_history_enable": "Aktiver tilgjengelighetshistorikk",
+        "availability_history_enable_hint": "Når aktivert lagrer Go-serveren statusoverganger (ONLINE, OFFLINE, DEGRADED, CRITICAL) fra heartbeats og signal/CDAP/Mesh.",
+        "availability_history_retention": "Oppbevaring (dager)",
+        "availability_history_retention_hint": "Eldre hendelser slettes automatisk. Standard: 30 dager.",
+        "availability_history_save": "Lagre tilgjengelighetsinnstillinger",
+        "availability_history_saved": "Tilgjengelighetshistorikk-innstillinger lagret",
+        "tab_time": "Tid / tidssoner",
+        "time": {
+            "timezone_title": "Faktureringstidssone",
+            "timezone_desc": "Global IANA-sone for kommersialiseringens månedsgrenser (overskridelse nullstilles ved midnatt den 1.).",
+            "billing_month_hint": "Midnatt første dag i måneden i denne sonen lukker forrige periode og åpner en ny. Aktive økter avbrytes ikke.",
+            "billing_timezone": "Tidssone",
+            "billing_timezone_hint": "F.eks. Europe/Warsaw. Påvirker månedlig bruk og overskridelse.",
+            "custom_timezone": "Egendefinert IANA-sone (valgfritt)",
+            "detect_os": "Oppdag fra server-OS",
+            "detected": "Oppdaget sone: {tz}",
+            "ntp_title": "NTP / klokkesynkronisering",
+            "ntp_desc": "Hold BetterDesk-serverklokken synkronisert for nøyaktige fakturerbare økttider.",
+            "save": "Lagre tidsinnstillinger",
+            "save_title": "Lagre tidsinnstillinger",
+            "saved": "Tidsinnstillinger lagret.",
+            "commercialization_link": "Åpne Kommersialisering → Pakker"
+        }
     },
     "audit": {
         "time": "Time",
@@ -842,7 +902,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Økt erstattet",
+        "action_session_expired": "Økt utløpt",
+        "action_session_ip_change": "Økt-IP endret"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -934,6 +997,11 @@
         "preview_settings": "Innstillinger (kun admin)",
         "preview_quit": "Avslutt (kun admin)",
         "download_link_title": "Last ned lenke",
+        "download_hub": "Nedlastningssenter",
+        "generic_agents_empty": "Ingen utgivelse importert ennå.",
+        "generic_agents_hint": "Primær produksjonsvei: importer signerte BetterDesk-Client-utgivelser fra GitHub og server verifiserte agenter fra denne instansen. Ingen lokal Flutter/Cargo-bygging kreves.",
+        "generic_agents_import": "Importer nyeste utgivelse",
+        "generic_agents_title": "Generiske kun-innkommende agenter",
         "download_link_hint": "Del denne lenken med sluttbrukere. De vil se en merkevarenedlastingsside. Gamle hex-lenker fungerer fortsatt etter at du endrer den korte lenken.",
         "open_portal": "Åpne",
         "created": "Bunten er opprettet",
@@ -970,7 +1038,21 @@
             "platforms_required": "Velg minst én plattform å bygge",
             "no_supported_targets": "Ingen byggmål er tilgjengelige nå. Kontroller builder-konfigurasjonen.",
             "toolchain_missing": "Nødvendige byggeverktøy mangler: {{tools}}",
-            "platform_unavailable": "Dette målet er ikke tilgjengelig fra den konfigurerte builderen."
+            "platform_unavailable": "Dette målet er ikke tilgjengelig fra den konfigurerte builderen.",
+            "generic_agent_release_not_found": "Ingen signert support-v*-utgivelse er tilgjengelig på BetterDesk-Client (må være stabil, ikke draft/prerelease).",
+            "generic_agent_release_list_failed": "Kunne ikke liste BetterDesk-Client-utgivelser fra GitHub (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Tidsavbrudd under nedlasting av et generisk agentutgivelsesobjekt.",
+            "generic_agent_release_redirect_limit": "For mange omdirigeringer under nedlasting av et utgivelsesobjekt.",
+            "generic_agent_release_redirect_host_invalid": "Nedlastingen ble omdirigert til en uventet vert.",
+            "generic_agent_release_asset_invalid": "Navn eller URL for et utgivelsesobjekt er ugyldig.",
+            "generic_agent_release_asset_download_failed": "Kunne ikke laste ned utgivelsesobjekt: {{detail}}",
+            "generic_agent_release_external_config": "Arkivet inneholder innebygd serverkonfigurasjon (custom.txt) og ble avvist.",
+            "generic_agent_release_archive_invalid": "Et utgivelsesarkiv kunne ikke åpnes eller valideres.",
+            "generic_agent_release_manifest_missing": "Utgivelsen mangler manifest.json eller manifest.sig.",
+            "generic_agent_release_public_key_missing": "Ingen offentlig nøkkel er konfigurert for å verifisere signaturen.",
+            "generic_agent_release_signature_invalid": "Verifisering av manifestsignatur mislyktes.",
+            "generic_agent_release_manifest_invalid": "Manifestet bestod ikke validering (schema, sku eller assets).",
+            "generic_agent_release_checksum_mismatch": "Sjekksum samsvarer ikke for objekt: {{detail}}"
         },
         "legacy_title": "Klientkonfigurasjonsgenerator",
         "connection_section": "Servertilkobling",
@@ -979,6 +1061,7 @@
         "use_https": "Bruk HTTPS / WSS (anbefalt; fjern avkryssing for LAN-HTTP som RustDesk)",
         "enrollment_per_device": "Per enhet — godkjenn i Registreringer",
         "builds_title": "Klientbygg",
+        "rebuild": "Bygg på nytt",
         "rebuild_all": "Bygg alle på nytt",
         "rebuild_confirm": "Bygg alle plattforminstallasjonsprogrammer for denne pakken på nytt?",
         "build_status_ready": "Klar",
@@ -1040,7 +1123,11 @@
         "toolchain_branding_seal": "Merkevaresignering mislyktes — sjekk signeringsnøkkelen på konsollen og bygg på nytt.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) ikke funnet — Windows-bygg mislykkes.",
         "toolchain_appimage_missing": "appimagetool ikke funnet — AppImage-bygg mislykkes.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Importerer og verifiserer den nyeste signerte utgivelsen…",
+        "generic_agents_imported": "Importerte {{tag}}.",
+        "generic_agents_verified": "verifisert",
+        "generic_agents_artifacts": "{{count}} plattformartefakter"
     },
     "server": {
         "port": "Port",
@@ -1519,7 +1606,7 @@
         "bg_image_invalid_type": "Ugyldig filtype. Bruk PNG, JPG, WebP eller GIF.",
         "bg_upload_success": "Bakgrunnsbilde lastet opp.",
         "login_title": "Innloggingsside",
-        "login_desc": "Tilpass innloggingsskjermens overskrift, underoverskrift og bakgrunn.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Innloggingsoverskrift",
         "login_heading_placeholder": "Velkommen tilbake",
         "login_subheading": "Innloggingsunderoverskrift",
@@ -1595,7 +1682,23 @@
         "builtin_themes_hint": "Forhåndsinnstillinger bruker en komplett fargepalett (for eksempel BetterDesk eller insolv Core Server). De er separate fra hurtigbryteren for lyst/mørkt.",
         "readability_check": "Lesbarhetssjekk",
         "readability_contrast": "Kontrasten for {item} ({ratio}) er under {minimum}:1",
-        "readability_background": "{item} bruker {type} med et svakt overlegg; teksten kan være vanskelig å lese."
+        "readability_background": "{item} bruker {type} med et svakt overlegg; teksten kan være vanskelig å lese.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Oversikt",
@@ -1672,7 +1775,7 @@
         "no_sysinfo": "Ingen maskinvareinformasjon tilgjengelig",
         "no_sysinfo_hint": "Systeminfo vises etter at enheten har sendt en sysinfo-rapport",
         "no_metrics": "Ingen beregningsdata tilgjengelig",
-        "no_metrics_hint": "Beregninger vises etter at enheten har sendt hjerteslagrapporter",
+        "no_metrics_hint": "Aktiver tilgjengelighetshistorikk i Innstillinger for å registrere online/offline-endringer. Tilkoblingsøkter vises når noen kobler til.",
         "chart_oldest": "â† Oldest",
         "chart_newest": "Newest â†’",
         "tab_services": "Services",
@@ -1690,7 +1793,46 @@
         "service_start": "Start mode",
         "process_name": "Name",
         "process_user": "User",
-        "process_memory": "Memory"
+        "process_memory": "Memory",
+        "section_availability_history": "Tilgjengelighetshistorikk",
+        "availability_prev_day": "Forrige dag",
+        "availability_next_day": "Neste dag",
+        "availability_loading": "Laster tilgjengelighetshistorikk…",
+        "availability_disabled": "Tilgjengelighetshistorikk er deaktivert",
+        "availability_disabled_hint": "Aktiver under Innstillinger → Tilgjengelighetshistorikk. Serveren logger overganger uten klient-CPU-metrikker.",
+        "availability_empty": "Ingen statusendringer denne dagen",
+        "availability_empty_hint": "Overganger vises når enheten går online, offline, degraded eller critical.",
+        "availability_col_time": "Tid",
+        "availability_col_from": "Fra",
+        "availability_col_to": "Til",
+        "availability_col_source": "Kilde",
+        "availability_status_online": "Online",
+        "availability_status_offline": "Offline",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Status",
+        "section_metrics_summary": "Servermålinger",
+        "metrics_avail_today": "Statusendringer (valgt dag)",
+        "metrics_sessions_tracked": "Sporede økter",
+        "section_connection_sessions": "Tilkoblingsøkter",
+        "sessions_loading": "Laster tilkoblingsøkter…",
+        "sessions_error": "Kunne ikke laste tilkoblingsøkter",
+        "sessions_empty": "Ingen tilkoblingsøkter ennå",
+        "sessions_empty_hint": "Økter vises når en autorisert peer kobler til (punch hole eller relay). Varighet fylles når relay-økten avsluttes.",
+        "sessions_col_when": "Når",
+        "sessions_col_who": "Hvem",
+        "sessions_col_from": "Fra IP",
+        "sessions_col_transport": "Transport",
+        "sessions_col_duration": "Varighet",
+        "sessions_active": "Aktiv",
+        "sessions_transport_punch": "Direkte / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Fjerning av en tag her frakobler den kun fra denne enheten. Bruk Administrer tagger på Enheter for global endring."
     },
     "inventory": {
         "title": "Inventory",
@@ -3499,7 +3641,26 @@
         "hardening_hint": "Sikkerhetsforsterkende prioriteter for BetterDesk-distribusjonen. Varene er sortert etter alvorlighetsgrad.",
         "no_hardening": "Ingen herdeprodukter tilgjengelig.",
         "vuln_hint": "Resultat av avhengighetssårbarhetsskanning. Kjør npm-revisjon regelmessig for å holde avhengigheter sikre.",
-        "no_vulns": "Ingen sårbarheter funnet. Dine avhengigheter er sikre."
+        "no_vulns": "Ingen sårbarheter funnet. Dine avhengigheter er sikre.",
+        "tab_sessions": "Paneløkter",
+        "sessions_hint": "Konsollinnloggingene dine. Kun én aktiv økt per konto; ny innlogging avslutter den forrige.",
+        "sessions_policy": "Inaktivitet: {{idle}} min · Absolutt maks: {{max}} t · Én aktiv økt per konto",
+        "no_sessions": "Ingen paneløkter registrert ennå.",
+        "session_current": "Nåværende",
+        "session_active": "Aktiv",
+        "session_ended": "Avsluttet",
+        "col_status": "Status",
+        "col_started": "Startet",
+        "col_last_activity": "Siste aktivitet",
+        "col_ended": "Avsluttet",
+        "col_reason": "Avslutningsårsak",
+        "col_user_agent": "Nettleser",
+        "reason_logout": "Logg ut",
+        "reason_replaced": "Erstattet av ny innlogging",
+        "reason_idle": "Inaktivitetstidsavbrudd",
+        "reason_max_age": "Maksimal levetid",
+        "reason_revoked": "Tilbakekalt",
+        "reason_destroyed": "Ødelagt"
     },
     "languages": {
         "title": "Språkhåndtering",
@@ -3835,7 +3996,11 @@
         "preflight_warnings_title": "Før installasjon",
         "install_blocked_hint": "Installasjon er deaktivert til problemene over er løst.",
         "preflight_info_title": "Før installasjon",
-        "preflight_info_note": "Du kan installere oppdateringen — dette er bare informasjonsmeldinger."
+        "preflight_info_note": "Du kan installere oppdateringen — dette er bare informasjonsmeldinger.",
+        "proxy_timeout_recovering": "Gateway-/proxy-tidsavbrudd — sjekker om oppdateringen fortsatt kjører på serveren…",
+        "install_still_running": "Oppdateringen kjører fortsatt på serveren…",
+        "install_recovered": "Oppdateringen fullført på serveren etter at nettlesertilkoblingen ble brutt",
+        "install_recovery_timeout": "Tidsavbrudd under venting på oppdatering etter gateway-brudd. Sjekk Innstillinger → Oppdateringer, data/.last_update_result.json eller: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Tillatelser",
@@ -4149,7 +4314,8 @@
             "status_error": "Siste feil",
             "os_yes": "Ja",
             "os_no": "Nei",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktive fakturerbare økter",
@@ -4173,7 +4339,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Enhet",
@@ -4181,7 +4354,11 @@
             "duration": "Varighet",
             "phase": "Fase",
             "amount": "Beløp",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Økt",
@@ -4228,7 +4405,9 @@
             "skip": "Hopp over nå",
             "submit": "Send rapport",
             "summary_required": "Sammendrag er påkrevd",
-            "saved": "Arbeidsrapport lagret"
+            "saved": "Arbeidsrapport lagret",
+            "toolbar": "Arbeidsrapport",
+            "intent_hint": "Rapportskjemaet åpnes når økten avsluttes"
         },
         "empty": {
             "packages": "Ingen pakker ennå. Opprett en med knappen over.",
@@ -4290,6 +4469,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4519,5 +4712,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk er gratis",
+                "body": "Open source remote desktop — ingen setelisenser, ingen lock-in. Host selv."
+            },
+            "remote": {
+                "title": "Fjernsupport under din kontroll",
+                "body": "Koble til endepunkter fra din egen konsoll. Økter forblir på din infrastruktur."
+            },
+            "secure": {
+                "title": "Sikkerhet innebygd",
+                "body": "Operatørgodkjenning, øktkontroll og serverattestation når du trenger det."
+            },
+            "platforms": {
+                "title": "Windows, Linux og macOS",
+                "body": "Én konsoll for agenter på plattformene teamet allerede støtter."
+            }
+        },
+        "prev": "Forrige lysbilde",
+        "next": "Neste lysbilde"
+    },
+    "agents": {
+        "title": "BetterDesk-agenter",
+        "subtitle": "Incoming-only Support-klienter bygges i BetterDesk-Client — dette panelet importerer og serverer dem.",
+        "what_title": "Hva er BetterDesk-agenter?",
+        "what_body": "BetterDesk Support-agenter er skrivebordsklienter kun for innkommende tilkoblinger. De registrerer seg på serveren, viser en parings-QR og godtar fjernsupport. De starter ikke utgående tilkoblinger til andre enheter.",
+        "note_no_build": "Denne konsollen bygger ikke lenger klientinstallere. Signerte utgivelser produseres i BetterDesk-Client GitHub-repositoriet.",
+        "get_title": "Hvor du får agenter",
+        "get_body": "Last ned signerte Support Agent-pakker fra BetterDesk-Client-utgivelser, eller del denne serverens offentlige portal etter import nedenfor.",
+        "get_github": "BetterDesk-Client-utgivelser",
+        "get_portal": "Åpne nedlastingsportal",
+        "sync_title": "Importer for denne serveren",
+        "sync_hint": "Importer den nyeste signerte support-v*-utgivelsen slik at /portal kan servere verifiserte installere.",
+        "sync_import": "Importer nyeste utgivelse",
+        "sync_importing": "Importerer og verifiserer den nyeste signerte utgivelsen…",
+        "sync_imported": "Importert {{tag}}.",
+        "sync_empty": "Ingen utgivelse importert ennå.",
+        "sync_verified": "verifisert",
+        "sync_artifacts": "{{count}} plattformartefakter",
+        "steps_title": "Slik tar du i bruk en agent",
+        "step1": "Importer den nyeste signerte utgivelsen (knapp over) eller last ned fra GitHub.",
+        "step2": "Installer agenten på enheten og oppgi denne serverens offentlige URL.",
+        "step3": "Når agenten viser en QR, åpne Aktiver agent og skann den.",
+        "step4": "Godkjenn registrering hvis politikken krever det, og koble deretter til via Remote Desktop.",
+        "pair_activate": "Aktiver agent",
+        "pair_body": "Paring bruker QR-koden fra en generisk Support Agent etter at den når serveren din.",
+        "branding_link": "Klientmerking",
+        "branding_body": "Utseende (logo, farger, etiketter) lastes ved kjøring fra Klientmerking — det er ikke innebygd i installeren."
     }
 }

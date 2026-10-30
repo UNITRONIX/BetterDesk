@@ -6,32 +6,45 @@ Run BetterDesk in containers. Quickest path uses pre-built GHCR images.
 
 ## Quick Start (Pre-built Images)
 
-The fastest way to get started — no build required:
+Prefer the official **all-in-one** image (no build required):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml \
+  -o docker-compose.yml
+docker compose pull && docker compose up -d
+```
+
+Legacy **split** GHCR images:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml \
   -o docker-compose.yml
-docker compose up -d
+docker compose pull && docker compose up -d
 ```
 
 Default access:
 - **Web Console:** http://localhost:5000
-- **Default admin:** `admin` / check container logs for password
+- **Client API:** `:21121` (single) or `:21114` (split) — never panel `:5000`
+- **Default admin:** `docker compose exec betterdesk betterdesk-show-admin-credentials` (single) or `… exec console …` (split)
 
-```bash
-# View generated admin password
-docker compose logs console | grep "Admin password"
-```
-
-**Image tags:** prefer pinned versions or `:latest` for stable; `:dev` tracks the development channel. All-in-one **`:dev` images are amd64-only** today — on ARM use split compose, a local AIO build, or a multi-arch tip tag when published (`dev-arm`). Console/server images remain multi-arch.
+**Image tags:** prefer pinned versions or `:latest` for stable; `:dev` tracks the development channel. All-in-one, server, and console **`:dev` images are multi-arch** (amd64 + arm64). CI builds ARM after amd64; if ARM fails, tags may briefly be amd64-only until the next green ARM publish.
 
 Node console images target **Node.js 22** (avoid Node 24.19.x for the panel).
+
+### Source build vs GHCR updates
+
+| File | Images | Update |
+|------|--------|--------|
+| `docker-compose.quick*.yml` | `ghcr.io/unitronix/…` | `docker compose pull && docker compose up -d` |
+| `docker-compose.yml` / `.single.yml` | `betterdesk-*:local` (`pull_policy: never`) | `git pull` then `docker compose up -d --build` |
+
+`docker compose pull` does **not** refresh local source-build tags. See [DOCKER_QUICKSTART](../docker/DOCKER_QUICKSTART.md#source-build-vs-prebuilt-ghcr-do-not-mix-update-commands) and [initiator_token_rejected](../docker/DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected).
 
 ---
 
 ## Deployment Options
 
-### Option 1: Multi-Container (Recommended for Production)
+### Option 1: Multi-Container (source build)
 
 Separate containers for each service:
 
@@ -41,9 +54,9 @@ cd BetterDesk
 docker compose up -d --build
 ```
 
-**`docker-compose.yml`** runs 3 containers:
-- `betterdesk-server` — Go server (signal + relay + API)
-- `betterdesk-console` — Node.js web console
+**`docker-compose.yml`** runs:
+- `betterdesk-server` — Go server (signal + relay + API on **21114**)
+- `betterdesk-console` — Node.js web console (**5000**) + optional Client API compat proxy (**21121**)
 - Shared volume for database and keys
 
 ### Option 2: Single Container
@@ -54,10 +67,9 @@ All services in one container (simpler, good for testing):
 docker compose -f docker-compose.single.yml up -d --build
 ```
 
-Uses `supervisord` to run Go server + Node.js console in a single container.
+Uses `supervisord` to run Go server + Node.js console in a single container. Client API listens on **21121**.
 
 > ⚠️ **Note:** In single-container mode, `SIGNAL_PORT=21116` is set explicitly to prevent conflict with `PORT=5000` (used by Node.js).
-
 ### Option 3: Interactive Docker Script
 
 ```bash

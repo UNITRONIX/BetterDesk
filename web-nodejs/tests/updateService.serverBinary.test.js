@@ -32,6 +32,37 @@ describe('updateService local server build', () => {
         expect(updateService.getServerUpdateInfo().buildMethod).toBe('local');
     });
 
+    it('accepts only HTTPS GitHub API/raw hosts for update requests', () => {
+        expect(updateService.parseAllowedGithubUrl(
+            '/repos/UNITRONIX/BetterDesk/commits/main',
+            'api.github.com'
+        ).hostname).toBe('api.github.com');
+        expect(updateService.parseAllowedGithubUrl(
+            'https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/VERSION',
+            'raw.githubusercontent.com'
+        ).hostname).toBe('raw.githubusercontent.com');
+
+        expect(() => updateService.parseAllowedGithubUrl(
+            'https://evil.example/payload',
+            'api.github.com'
+        )).toThrow(/host is not allowed/i);
+        expect(() => updateService.parseAllowedGithubUrl(
+            'http://api.github.com/insecure',
+            'api.github.com'
+        )).toThrow(/host is not allowed/i);
+        expect(() => updateService.parseAllowedGithubUrl(
+            'https://api.github.com:8443/alternate-port',
+            'api.github.com'
+        )).toThrow(/host is not allowed/i);
+    });
+
+    it('limits GitHub redirect handling to a bounded redirect set', () => {
+        expect(updateService.MAX_GITHUB_REDIRECTS).toBe(3);
+        expect(updateService.isGithubRedirectStatus(301)).toBe(true);
+        expect(updateService.isGithubRedirectStatus(308)).toBe(true);
+        expect(updateService.isGithubRedirectStatus(200)).toBe(false);
+    });
+
     it('enumerates only the requested GitHub subtree', async () => {
         const commit = 'a'.repeat(40);
         const rootTree = 'b'.repeat(40);

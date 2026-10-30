@@ -15,8 +15,18 @@ const billingClockConfig = require('../services/billingClockConfigService');
 const restartCoordinator = require('../services/restartCoordinator');
 
 router.get('/commercialization', requireAuth, requirePermission('billing.view'), (req, res) => {
-    const validTabs = ['overview', 'packages', 'sessions', 'reports', 'settings'];
-    const tab = validTabs.includes(req.query.tab) ? req.query.tab : 'overview';
+    const validTabs = ['packages', 'sessions'];
+    // Legacy tabs redirect into the simplified IA (packages | sessions).
+    const legacyMap = {
+        overview: 'packages',
+        settings: 'packages',
+        reports: 'sessions',
+    };
+    const raw = String(req.query.tab || 'packages');
+    const tab = validTabs.includes(raw)
+        ? raw
+        : (legacyMap[raw] || 'packages');
+    const openSettings = raw === 'settings' || String(req.query.settings || '') === '1';
     const tabKey = `commercialization.tabs.${tab}`;
     res.render('commercialization', {
         title: req.t(tabKey),
@@ -25,6 +35,7 @@ router.get('/commercialization', requireAuth, requirePermission('billing.view'),
         currentPage: 'commercialization',
         currentTab: tab,
         activeTab: tab,
+        openBillingSettings: openSettings,
         breadcrumb: [
             { label: req.t('commercialization.title') },
             { label: req.t(tabKey) }
@@ -90,13 +101,28 @@ router.put('/api/panel/billing/clock/settings', requireAuth, requirePermission('
             dockerMode: !!result.dockerMode,
         });
     } catch (err) {
-        const code = ['invalid_ntp_servers', 'invalid_max_skew'].includes(err.message) ? 400 : 500;
+        const code = ['invalid_ntp_servers', 'invalid_max_skew', 'invalid_billing_timezone'].includes(err.message)
+            ? 400
+            : 500;
         res.status(code).json({ success: false, error: err.message });
     }
 });
 
+router.get('/api/panel/billing/clock/detect-timezone', requireAuth, requirePermission('billing.view'), (req, res) => {
+    res.json({
+        success: true,
+        timezone: billingClockConfig.detectOsTimezone(),
+        common: billingClockConfig.COMMON_TIMEZONES,
+    });
+});
+
 router.get('/api/panel/billing/packages', requireAuth, requirePermission('billing.view'), (req, res) => {
     proxyToGo(apiClient, req, res, 'GET', '/billing/packages');
+});
+
+router.get('/api/panel/billing/packages/:id/preview', requireAuth, requirePermission('billing.view'), (req, res) => {
+    const q = new URLSearchParams(req.query).toString();
+    proxyToGo(apiClient, req, res, 'GET', () => `/billing/packages/${safeSegment(req.params.id, 'packageId')}/preview${q ? `?${q}` : ''}`);
 });
 
 router.post('/api/panel/billing/packages', requireAuth, requirePermission('billing.manage'), (req, res) => {
@@ -135,6 +161,11 @@ router.get('/api/panel/billing/stats', requireAuth, requirePermission('billing.v
 router.get('/api/panel/billing/sessions', requireAuth, requirePermission('billing.view'), (req, res) => {
     const q = new URLSearchParams(req.query).toString();
     proxyToGo(apiClient, req, res, 'GET', () => `/billing/sessions${q ? `?${q}` : ''}`);
+});
+
+router.get('/api/panel/billing/check', requireAuth, requirePermission('device.connect'), (req, res) => {
+    const q = new URLSearchParams(req.query).toString();
+    proxyToGo(apiClient, req, res, 'GET', () => `/billing/check${q ? `?${q}` : ''}`);
 });
 
 router.get('/api/panel/billing/sessions/pending', requireAuth, requirePermission('billing.reports'), (req, res) => {

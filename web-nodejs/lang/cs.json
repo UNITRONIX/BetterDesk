@@ -41,7 +41,7 @@
         "dashboard": "Nástěnka",
         "devices": "Zařízení",
         "keys": "Klíče",
-        "generator": "Generátor",
+        "generator": "Agenti BetterDesk",
         "settings": "Nastavení",
         "users": "Uživatelé",
         "inventory": "Inventář",
@@ -55,6 +55,7 @@
         "reports": "Výkazy",
         "tenants": "Tenanti",
         "registrations": "Registrace",
+        "activate_agent": "Aktivovat agenta",
         "management": "Správa",
         "toggle_sidebar": "Zobrazit/skrýt boční panel",
         "cdap": "CDAP zařízení",
@@ -81,7 +82,8 @@
         "server_attestation": "Atestace serveru",
         "commercialization": "Komerce",
         "remote_open_tab": "Otevřít klienta vzdálené plochy v nové kartě",
-        "client_branding": "Client Branding"
+        "client_branding": "Client Branding",
+        "agents": "Agenti BetterDesk"
     },
     "auth": {
         "login": "Přihlášení",
@@ -124,7 +126,11 @@
         "oidc_error": "Při přihlašování pomocí SSO došlo k chybě.",
         "oidc_no_account": "Váš účet nebyl nalezen a automatická registrace je vypnutá.",
         "totp_rate_limited": "Příliš mnoho pokusů. Zkuste to prosím později.",
-        "emergency_mode_banner": "Go server je nedostupný — běží nouzový režim (pouze admin, omezené funkce)"
+        "emergency_mode_banner": "Go server je nedostupný — běží nouzový režim (pouze admin, omezené funkce)",
+        "session_expired": "Vaše relace vypršela nebo byla nahrazena novým přihlášením. Přihlaste se znovu.",
+        "session_idle_warning_title": "Relace brzy vyprší",
+        "session_idle_warning_body": "Budete odhlášeni kvůli nečinnosti za {{seconds}} s.",
+        "session_stay_signed_in": "Zůstat přihlášen"
     },
     "dashboard": {
         "title": "Nástěnka",
@@ -138,7 +144,7 @@
         "quick_actions": "Rychlé akce",
         "manage_devices": "Spravovat připojená zařízení",
         "view_keys": "Zobrazit klíče serveru",
-        "generate_config": "Vygenerovat konfiguraci klienta",
+        "generate_config": "Odkud získat Support agenty pouze příchozí",
         "server_settings": "Nastavit konfiguraci",
         "greeting_morning": "Dobré ráno, {name}",
         "greeting_afternoon": "Dobré odpoledne, {name}",
@@ -170,7 +176,7 @@
         "config_api_server": "API server",
         "config_key": "Klíč",
         "client_config_hint": "Zadejte tyto hodnoty v síťových nastaveních RustDesk v části ID/Relay server.",
-        "open_generator": "Generátor klienta",
+        "open_generator": "Agenti BetterDesk",
         "open_keys": "Otevřít klíče",
         "open_remote": "Otevřít konzoli vzdálené plochy",
         "attention_panel": "Vyžaduje pozornost",
@@ -209,7 +215,9 @@
         "activate_agent_folder_none": "Bez složky",
         "activate_agent_submit": "Aktivovat zařízení",
         "activate_agent_submitting": "Aktivace zařízení…",
-        "activate_agent_success": "Agent byl úspěšně aktivován."
+        "activate_agent_success": "Agent byl úspěšně aktivován.",
+        "open_agents": "Agenti BetterDesk",
+        "agents_hint": "Odkud získat Support agenty pouze příchozí"
     },
     "devices": {
         "title": "Zařízení",
@@ -422,7 +430,34 @@
         "strategy_assign_hint": "Select devices, users, or device groups that should use this strategy directly (RustDesk Pro priority: device > user > group).",
         "strategy_assign_saved": "Strategy assignments saved",
         "strategy_assign_counts": "{peers} devices, {users} users, {groups} groups",
-        "strategy_assign_none": "No direct assignments"
+        "strategy_assign_none": "No direct assignments",
+        "group_commercialization": "Commercialization",
+        "group_commercialization_title": "Commercialization — {name}",
+        "group_commercialization_hint": "Assign a support package to this group. All devices in the group share the package pool.",
+        "group_commercialization_mode": "Action",
+        "group_commercialization_assign_existing": "Assign existing package",
+        "group_commercialization_create_new": "Create new package and assign",
+        "group_commercialization_saved": "Package assigned to group",
+        "group_one_only": "A device can belong to only one group",
+        "manage_tags": "Spravovat štítky",
+        "manage_device_tags": "Spravovat štítky",
+        "rename_tag": "Přejmenovat štítek",
+        "delete_tag": "Smazat štítek",
+        "rename_tag_prompt": "Nový název štítku",
+        "rename_tag_hint": "Přejmenuje tento štítek na všech viditelných zařízeních a aktualizuje odpovídající dynamické skupiny.",
+        "delete_tag_confirm": "Odebrat štítek \"{tag}\" z {count} zařízení? Dynamické skupiny používající tento štítek budou prázdné do aktualizace.",
+        "tag_renamed": "Štítek přejmenován",
+        "tag_deleted": "Štítek smazán",
+        "tag_name_required": "Název štítku je povinný",
+        "tag_rename_identical": "Nový název musí být jiný",
+        "tags_backend_unsupported": "Štítky zařízení nejsou s aktuálním backendem podporovány",
+        "tags_manage_hint": "Přejmenujte nebo smažte štítky na všech viditelných zařízeních. Odebrání z jednoho zařízení je v Upravit nebo Podrobnostech.",
+        "tags_device_hint": "Odeberte štítek zde, abyste jej odpojili jen od tohoto zařízení. Pro globální změnu použijte Spravovat štítky.",
+        "unassign_tag": "Odebrat z tohoto zařízení",
+        "tag_device_one": "zařízení",
+        "tag_device_many": "zařízení",
+        "tag_group_one": "dynamická skupina",
+        "tag_group_many": "dynamických skupin"
     },
     "keys": {
         "title": "Klíče serveru",
@@ -810,7 +845,32 @@
         "unsaved_restart_title": "Zapisac zmiany w tym souboru? Zostanie utworzona kopia zapasowa poprzedniej wersji.",
         "unsaved_restart_message": "Masz niezapisane zmiany. Odrzucic je?",
         "unsaved_restart_save": "Uložit soubor",
-        "unsaved_restart_stay": "Zrušit"
+        "unsaved_restart_stay": "Zrušit",
+        "availability_history_title": "Historie dostupnosti",
+        "availability_history_desc": "Volitelně zaznamenávejte změny online/offline, aby Metrics ukazovalo denní historii. Ve výchozím stavu vypnuto kvůli růstu databáze.",
+        "availability_history_enable": "Povolit historii dostupnosti",
+        "availability_history_enable_hint": "Po zapnutí Go server zaznamenává přechody (ONLINE, OFFLINE, DEGRADED, CRITICAL) z heartbeatů a signal/CDAP/Mesh.",
+        "availability_history_retention": "Retence (dny)",
+        "availability_history_retention_hint": "Starší události se maží automaticky. Výchozí: 30 dní.",
+        "availability_history_save": "Uložit nastavení dostupnosti",
+        "availability_history_saved": "Nastavení historie dostupnosti uloženo",
+        "tab_time": "Čas / časová pásma",
+        "time": {
+            "timezone_title": "Časové pásmo fakturace",
+            "timezone_desc": "Globální IANA pásmo pro měsíční hranice komercializace (reset překročení o půlnoci 1. dne).",
+            "billing_month_hint": "Půlnoc prvního dne měsíce v tomto pásmu uzavře předchozí období a otevře nové. Aktivní relace se nepřeruší.",
+            "billing_timezone": "Časové pásmo",
+            "billing_timezone_hint": "Např. Europe/Warsaw. Ovlivňuje měsíční spotřebu a překročení.",
+            "custom_timezone": "Vlastní IANA pásmo (volitelné)",
+            "detect_os": "Detekovat z OS serveru",
+            "detected": "Detekované pásmo: {tz}",
+            "ntp_title": "NTP / synchronizace hodin",
+            "ntp_desc": "Udržujte hodiny serveru BetterDesk synchronizované kvůli přesnosti fakturovatelných relací.",
+            "save": "Uložit nastavení času",
+            "save_title": "Uložit nastavení času",
+            "saved": "Nastavení času uloženo.",
+            "commercialization_link": "Otevřít Komercializaci → Balíčky"
+        }
     },
     "audit": {
         "time": "Čas",
@@ -836,7 +896,10 @@
         "action_password_changed": "Password changed",
         "action_conn_start": "Connection started",
         "action_conn_end": "Connection ended",
-        "action_User_logged_in": "User logged in"
+        "action_User_logged_in": "User logged in",
+        "action_session_replaced": "Relace nahrazena",
+        "action_session_expired": "Relace vypršela",
+        "action_session_ip_change": "Změna IP relace"
     },
     "generator": {
         "title": "BetterDesk Support Generator",
@@ -928,6 +991,11 @@
         "preview_settings": "Nastavení (pouze admin)",
         "preview_quit": "Ukončit (pouze admin)",
         "download_link_title": "Odkaz ke stažení",
+        "download_hub": "Centrum stahování",
+        "generic_agents_empty": "Zatím nebylo importováno žádné vydání.",
+        "generic_agents_hint": "Hlavní produkční cesta: importujte podepsané verze BetterDesk-Client z GitHubu a poskytujte ověřené agenty z této instance. Místní sestavení Flutter/Cargo není potřeba.",
+        "generic_agents_import": "Importovat nejnovější vydání",
+        "generic_agents_title": "Obecní agenti pouze příchozí",
         "download_link_hint": "Sdílejte tento odkaz s uživateli — zobrazí se jim brandovaná stránka stažení. Staré hex odkazy nadále fungují i po změně krátkého odkazu.",
         "open_portal": "Otevřít",
         "created": "Balíček vytvořen",
@@ -964,7 +1032,21 @@
             "platforms_required": "Vyberte alespoň jednu platformu ke sestavení",
             "no_supported_targets": "Momentálně nejsou k dispozici žádné cíle sestavení. Zkontrolujte konfiguraci builderu.",
             "toolchain_missing": "Chybí požadované nástroje pro sestavení: {{tools}}",
-            "platform_unavailable": "Tento cíl není v nakonfigurovaném builderu dostupný."
+            "platform_unavailable": "Tento cíl není v nakonfigurovaném builderu dostupný.",
+            "generic_agent_release_not_found": "V BetterDesk-Client není dostupné podepsané vydání support-v* (musí být stabilní, ne draft/prerelease).",
+            "generic_agent_release_list_failed": "Nelze načíst seznam vydání BetterDesk-Client z GitHubu (HTTP {{detail}}).",
+            "generic_agent_release_timeout": "Vypršel časový limit při stahování artefaktu vydání agenta.",
+            "generic_agent_release_redirect_limit": "Příliš mnoho přesměrování při stahování artefaktu.",
+            "generic_agent_release_redirect_host_invalid": "Stahování bylo přesměrováno na neočekávaného hostitele.",
+            "generic_agent_release_asset_invalid": "Název nebo URL artefaktu vydání je neplatný.",
+            "generic_agent_release_asset_download_failed": "Stažení artefaktu se nezdařilo: {{detail}}",
+            "generic_agent_release_external_config": "Archiv obsahuje vestavěnou konfiguraci serveru (custom.txt) a byl odmítnut.",
+            "generic_agent_release_archive_invalid": "Archiv vydání nelze otevřít nebo ověřit.",
+            "generic_agent_release_manifest_missing": "Ve vydání chybí manifest.json nebo manifest.sig.",
+            "generic_agent_release_public_key_missing": "Není nakonfigurován veřejný klíč pro ověření podpisu.",
+            "generic_agent_release_signature_invalid": "Ověření podpisu manifestu se nezdařilo.",
+            "generic_agent_release_manifest_invalid": "Manifest neprošel validací (schema, sku nebo assets).",
+            "generic_agent_release_checksum_mismatch": "Neshoda kontrolního součtu artefaktu: {{detail}}"
         },
         "legacy_title": "Generátor konfigurace klienta",
         "connection_section": "Polaczenie z serverem",
@@ -987,6 +1069,7 @@
         "builds_hint": "Instalatory kompilowane na tym serverze dla kazdej platformy. Přestavět po naprawie toolchaina lub aktualizacji zrodel agenta.",
         "builds_loading": "Ladowanie statusu buildow…",
         "builds_empty": "Žádný buildow w kolejce — zapisz pakiet lub kliknij Přestavět wszystkie.",
+        "rebuild": "Přestavět",
         "rebuild_all": "Přestavět wszystkie",
         "rebuilding_all": "Kolejkowanie buildow…",
         "rebuild_queued": "Wszystkie platformy dodane do kolejki",
@@ -1034,7 +1117,11 @@
         "toolchain_branding_seal": "Podepsání brandingu selhalo — zkontrolujte podpisový klíč na konzoli a sestavte znovu.",
         "toolchain_mingw_missing": "mingw-w64 (x86_64-w64-mingw32-gcc) nenalezen — sestavení pro Windows selže.",
         "toolchain_appimage_missing": "appimagetool nenalezen — sestavení AppImage selže.",
-        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents."
+        "legacy_upgrade_hint": "“Older version” marks a legacy package format. Create or rebuild a new support bundle above to upgrade — ALPHA refers to Generator module maturity, not your client agents.",
+        "generic_agents_importing": "Import a ověření nejnovější podepsané verze…",
+        "generic_agents_imported": "Importováno {{tag}}.",
+        "generic_agents_verified": "ověřeno",
+        "generic_agents_artifacts": "{{count}} platformových artefaktů"
     },
     "server": {
         "port": "Port",
@@ -1513,7 +1600,7 @@
         "bg_image_invalid_type": "Neprawidlowy typ souboru. Uzyj PNG, JPG, WebP lub GIF.",
         "bg_upload_success": "Obrázek tla przeslany pomyslnie.",
         "login_title": "Strona logowania",
-        "login_desc": "Dostosuj naglowek, podtytul i tlo ekranu logowania.",
+        "login_desc": "Customize the login heading, layout, background, and promo slides.",
         "login_heading": "Naglowek logowania",
         "login_heading_placeholder": "Witaj ponownie",
         "login_subheading": "Podtytul logowania",
@@ -1589,7 +1676,23 @@
         "builtin_themes_hint": "Presets apply a full color pack (e.g. BetterDesk, insolv Core Server). They are separate from the quick light/dark toggle.",
         "readability_check": "Kontrola čitelnosti",
         "readability_contrast": "Kontrast {item} ({ratio}) je nižší než {minimum}:1",
-        "readability_background": "{item} používá {type} s nízkým překrytím; text může být špatně čitelný."
+        "readability_background": "{item} používá {type} s nízkým překrytím; text může být špatně čitelný.",
+        "login_promo_mode": "Login layout",
+        "login_promo_mode_hint": "Classic centered card, split with a single image, or a slideshow (up to 10 slides).",
+        "login_promo_classic": "Classic",
+        "login_promo_single": "Single image",
+        "login_promo_slides": "Slideshow",
+        "login_slides_title": "Login slides",
+        "login_slides_desc": "Images are backgrounds; titles and descriptions are separate text overlays.",
+        "login_slides_add": "Add slide",
+        "login_slides_remove": "Remove",
+        "login_slides_restore": "Restore BetterDesk defaults",
+        "login_slides_max": "Maximum 10 slides.",
+        "login_slide_title": "Slide title",
+        "login_slide_body": "Slide description",
+        "login_slide_image": "Slide background",
+        "login_slide_move_up": "Move up",
+        "login_slide_move_down": "Move down"
     },
     "device_detail": {
         "tab_overview": "Přehled",
@@ -1666,7 +1769,7 @@
         "no_sysinfo": "Nejsou k dispozici žádné informace o hardwaru",
         "no_sysinfo_hint": "Systémové informace se zobrazí po odeslání sysinfo reportu zařízením",
         "no_metrics": "Nejsou k dispozici žádná data metrik",
-        "no_metrics_hint": "Metriky se zobrazí po odeslání heartbeat reportů zařízením",
+        "no_metrics_hint": "Povolte historii dostupnosti v Nastavení pro záznam změn online/offline. Relace připojení se objeví, když se někdo připojí.",
         "chart_oldest": "← Nejstarší",
         "chart_newest": "Nejnovější →",
         "tab_services": "Služby",
@@ -1684,7 +1787,46 @@
         "service_start": "Režim spuštění",
         "process_name": "Název",
         "process_user": "Uživatel",
-        "process_memory": "Paměť"
+        "process_memory": "Paměť",
+        "section_availability_history": "Historie dostupnosti",
+        "availability_prev_day": "Předchozí den",
+        "availability_next_day": "Následující den",
+        "availability_loading": "Načítání historie dostupnosti…",
+        "availability_disabled": "Historie dostupnosti je vypnutá",
+        "availability_disabled_hint": "Povolte v Nastavení → Historie dostupnosti. Server pak zaznamená přechody bez CPU metrik klienta.",
+        "availability_empty": "Žádné změny stavu v tento den",
+        "availability_empty_hint": "Přechody se objeví, když zařízení přejde na online, offline, degraded nebo critical.",
+        "availability_col_time": "Čas",
+        "availability_col_from": "Z",
+        "availability_col_to": "Na",
+        "availability_col_source": "Zdroj",
+        "availability_status_online": "Online",
+        "availability_status_offline": "Offline",
+        "availability_status_degraded": "Degraded",
+        "availability_status_critical": "Critical",
+        "availability_source_signal": "Signal",
+        "availability_source_heartbeat": "Heartbeat",
+        "availability_source_cdap": "CDAP",
+        "availability_source_mesh": "Mesh",
+        "availability_source_admin": "Admin",
+        "availability_source_status": "Stav",
+        "section_metrics_summary": "Metriky serveru",
+        "metrics_avail_today": "Změny stavu (vybraný den)",
+        "metrics_sessions_tracked": "Sledované relace",
+        "section_connection_sessions": "Relace připojení",
+        "sessions_loading": "Načítání relací připojení…",
+        "sessions_error": "Nelze načíst relace připojení",
+        "sessions_empty": "Zatím žádné relace připojení",
+        "sessions_empty_hint": "Relace se objeví, když se autorizovaný peer připojí (punch hole nebo relay). Doba trvání se doplní po ukončení relay.",
+        "sessions_col_when": "Kdy",
+        "sessions_col_who": "Kdo",
+        "sessions_col_from": "Z IP",
+        "sessions_col_transport": "Transport",
+        "sessions_col_duration": "Trvání",
+        "sessions_active": "Aktivní",
+        "sessions_transport_punch": "Přímé / punch",
+        "sessions_transport_relay": "Relay",
+        "tags_unassign_hint": "Odebrání štítku zde jej odpojí jen od tohoto zařízení. Pro globální změnu použijte Spravovat štítky na stránce Zařízení."
     },
     "inventory": {
         "title": "Inventář",
@@ -3493,7 +3635,26 @@
         "hardening_hint": "Priority zabezpečení pro vaše nasazení BetterDesk. Položky jsou seřazeny podle závažnosti.",
         "no_hardening": "Žádné položky k zabezpečení nejsou k dispozici.",
         "vuln_hint": "Výsledky skenování zranitelností závislostí. Pravidelně spouštějte 'npm audit' pro udržení bezpečnosti.",
-        "no_vulns": "Nenalezeny žádné zranitelnosti. Vaše závislosti jsou bezpečné."
+        "no_vulns": "Nenalezeny žádné zranitelnosti. Vaše závislosti jsou bezpečné.",
+        "tab_sessions": "Relace panelu",
+        "sessions_hint": "Přihlášení do konzole. Na účet je povolena jen jedna aktivní relace; nové přihlášení ukončí předchozí.",
+        "sessions_policy": "Nečinnost: {{idle}} min · Absolutní max: {{max}} h · Jedna aktivní relace na účet",
+        "no_sessions": "Zatím nejsou zaznamenány žádné relace panelu.",
+        "session_current": "Aktuální",
+        "session_active": "Aktivní",
+        "session_ended": "Ukončená",
+        "col_status": "Stav",
+        "col_started": "Začátek",
+        "col_last_activity": "Poslední aktivita",
+        "col_ended": "Konec",
+        "col_reason": "Důvod ukončení",
+        "col_user_agent": "Prohlížeč",
+        "reason_logout": "Odhlášení",
+        "reason_replaced": "Nahrazena novým přihlášením",
+        "reason_idle": "Timeout nečinnosti",
+        "reason_max_age": "Maximální životnost",
+        "reason_revoked": "Zrušena",
+        "reason_destroyed": "Zničena"
     },
     "languages": {
         "title": "Správa jazyků",
@@ -3829,7 +3990,11 @@
         "preflight_warnings_title": "Před instalací",
         "install_blocked_hint": "Instalace je zakázána, dokud nejsou vyřešeny problémy výše.",
         "preflight_info_title": "Před instalací",
-        "preflight_info_note": "Aktualizaci můžete nainstalovat — jde jen o informační upozornění."
+        "preflight_info_note": "Aktualizaci můžete nainstalovat — jde jen o informační upozornění.",
+        "proxy_timeout_recovering": "Timeout brány/proxy — kontroluji, zda aktualizace na serveru stále běží…",
+        "install_still_running": "Aktualizace na serveru stále běží…",
+        "install_recovered": "Aktualizace na serveru dokončena po přerušení připojení prohlížeče",
+        "install_recovery_timeout": "Vypršel čas čekání na dokončení aktualizace po odpojení brány. Zkontrolujte Nastavení → Aktualizace, data/.last_update_result.json nebo: node scripts/update-cli.js"
     },
     "permissions": {
         "title": "Oprávnění",
@@ -4143,7 +4308,8 @@
             "status_error": "Poslední chyba",
             "os_yes": "Ano",
             "os_no": "Ne",
-            "checked": "Clock check completed"
+            "checked": "Clock check completed",
+            "open_time_settings": "Open Settings → Time / timezones (NTP & billing timezone)"
         },
         "stats": {
             "active_sessions": "Aktivní fakturovatelné relace",
@@ -4167,7 +4333,14 @@
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
-            "delete_confirm": "Delete this package? Assignments using it must be removed first."
+            "delete_confirm": "Delete this package? Assignments using it must be removed first.",
+            "unit": "Unit",
+            "unit_minutes": "Minutes",
+            "unit_hours": "Hours",
+            "included_amount": "Included amount",
+            "rounding": "Billing accuracy (minutes)",
+            "rounding_custom": "Custom",
+            "rounding_custom_value": "Custom minutes"
         },
         "sessions": {
             "device": "Zařízení",
@@ -4175,7 +4348,11 @@
             "duration": "Trvání",
             "phase": "Fáze",
             "amount": "Částka",
-            "org": "Organization"
+            "org": "Organization",
+            "started": "Started",
+            "ended": "Ended",
+            "report": "Report",
+            "complete_report": "Complete report"
         },
         "reports": {
             "session": "Relace",
@@ -4222,7 +4399,9 @@
             "skip": "Přeskočit nyní",
             "submit": "Odeslat zprávu",
             "summary_required": "Shrnutí je povinné",
-            "saved": "Pracovní zpráva uložena"
+            "saved": "Pracovní zpráva uložena",
+            "toolbar": "Pracovní zpráva",
+            "intent_hint": "Formulář zprávy se otevře po ukončení relace"
         },
         "empty": {
             "packages": "Zatím žádné balíčky. Vytvořte první tlačítkem výše.",
@@ -4284,6 +4463,20 @@
             "suspended": "Suspended",
             "pending_report": "Pending report",
             "closed": "Closed"
+        },
+        "preview": {
+            "title": "Package preview",
+            "open": "Month preview",
+            "company": "Company",
+            "devices": "Devices",
+            "used": "Used",
+            "remaining": "Remaining",
+            "overage": "Overage",
+            "month_total": "Month total",
+            "timezone": "Billing timezone",
+            "prev_month": "Older month",
+            "next_month": "Newer month",
+            "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         }
     },
     "remote_dashboard": {
@@ -4513,5 +4706,55 @@
         "load_failed": "Failed to load branding",
         "logo_too_large": "Logo must be at most 512 KiB",
         "logo_invalid": "Invalid logo format"
+    },
+    "login_promo": {
+        "slides": {
+            "free": {
+                "title": "BetterDesk je zdarma",
+                "body": "Open-source vzdálená plocha — bez licencí na místa a bez lock-inu. Hostujte sami."
+            },
+            "remote": {
+                "title": "Vzdálená podpora pod vaší kontrolou",
+                "body": "Připojte endpointy z vlastní konzole. Relace zůstávají na vaší infrastruktuře."
+            },
+            "secure": {
+                "title": "Zabezpečení vestavěně",
+                "body": "Ověření operátorů, řízení relací a attestation serveru, když potřebujete důkaz."
+            },
+            "platforms": {
+                "title": "Windows, Linux a macOS",
+                "body": "Jedna konzole pro agenty na platformách, které tým už podporuje."
+            }
+        },
+        "prev": "Předchozí snímek",
+        "next": "Další snímek"
+    },
+    "agents": {
+        "title": "Agenti BetterDesk",
+        "subtitle": "Support klienti pouze příchozí se vytvářejí v BetterDesk-Client — tento panel je importuje a poskytuje.",
+        "what_title": "Co jsou agenti BetterDesk?",
+        "what_body": "BetterDesk Support agenti jsou desktopoví klienti pouze pro příchozí spojení. Registrují se na serveru, ukazují párovací QR a přijímají vzdálenou podporu. Nezahajují odchozí spojení k jiným zařízením.",
+        "note_no_build": "Tato konzole už nestaví instalátory klienta. Podepsané verze vznikají v GitHub repozitáři BetterDesk-Client.",
+        "get_title": "Odkud získat agenty",
+        "get_body": "Stáhněte podepsané balíčky Support Agent z vydání BetterDesk-Client, nebo sdílejte veřejný portál tohoto serveru po importu níže.",
+        "get_github": "Vydání BetterDesk-Client",
+        "get_portal": "Otevřít portál stahování",
+        "sync_title": "Import pro tento server",
+        "sync_hint": "Importujte nejnovější podepsané vydání support-v*, aby /portal mohl poskytovat ověřené instalátory.",
+        "sync_import": "Importovat nejnovější vydání",
+        "sync_importing": "Import a ověření nejnovějšího podepsaného vydání…",
+        "sync_imported": "Importováno {{tag}}.",
+        "sync_empty": "Zatím nebylo importováno žádné vydání.",
+        "sync_verified": "ověřeno",
+        "sync_artifacts": "{{count}} artefaktů platforem",
+        "steps_title": "Jak připojit agenta",
+        "step1": "Importujte nejnovější podepsané vydání (tlačítko výše) nebo stáhněte z GitHubu.",
+        "step2": "Nainstalujte agenta na zařízení a zadejte veřejnou URL tohoto serveru.",
+        "step3": "Když agent ukáže QR, otevřete Aktivovat agenta a naskenujte ho.",
+        "step4": "Schvalte registraci, pokud to vyžaduje politika, a poté se připojte přes Remote Desktop.",
+        "pair_activate": "Aktivovat agenta",
+        "pair_body": "Párování používá QR zobrazený obecným Support Agentem po kontaktu se serverem.",
+        "branding_link": "Branding klienta",
+        "branding_body": "Vzhled (logo, barvy, popisky) se načítá za běhu z Brandingu klienta — není zabudován do instalátoru."
     }
 }
