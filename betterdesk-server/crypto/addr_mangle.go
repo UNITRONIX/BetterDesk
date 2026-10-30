@@ -6,51 +6,70 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"time"
 )
 
 // AddrMangle encodes and decodes socket addresses in the format used by RustDesk protocol.
 //
 // Format:
-//   IPv4: [4 bytes IP] + [2 bytes port big-endian] = 6 bytes
-//   IPv6: [16 bytes IP] + [2 bytes port big-endian] = 18 bytes
-
+//   - IPv4: timestamp-mangled integer, little-endian with trailing zero bytes removed.
+//   - IPv6: [16 bytes IP] + [2 bytes port little-endian] = 18 bytes.
+//
 // EncodeAddr encodes a UDP address into the mangled byte format.
 func EncodeAddr(addr *net.UDPAddr) []byte {
-	ip4 := addr.IP.To4()
-	if ip4 != nil {
-		// IPv4: 4 bytes IP + 2 bytes port
-		buf := make([]byte, 6)
-		copy(buf[0:4], ip4)
-		binary.BigEndian.PutUint16(buf[4:6], uint16(addr.Port))
-		return buf
+	if addr == nil || addr.Port < 0 || addr.Port > 65535 {
+		return nil
 	}
-	// IPv6: 16 bytes IP + 2 bytes port
-	ip6 := addr.IP.To16()
+	if addr.IP.To4() != nil {
+		return encodeIPv4(addr, uint32(time.Now().UnixMicro()))
+	}
+	// IPv6: 16 bytes IP + 2 bytes port, little-endian.
+	ip := addr.IP.To16()
+	if ip == nil {
+		return nil
+	}
 	buf := make([]byte, 18)
-	copy(buf[0:16], ip6)
-	binary.BigEndian.PutUint16(buf[16:18], uint16(addr.Port))
+	copy(buf, ip)
+	binary.LittleEndian.PutUint16(buf[16:], uint16(addr.Port))
 	return buf
 }
 
-// DecodeAddr decodes a mangled byte slice back to a UDP address.
-// Returns error if the byte slice has an unexpected length.
-func DecodeAddr(b []byte) (*net.UDPAddr, error) {
-	switch len(b) {
-	case 6:
-		// IPv4
-		ip := net.IP(make([]byte, 4))
-		copy(ip, b[0:4])
-		port := binary.BigEndian.Uint16(b[4:6])
-		return &net.UDPAddr{IP: ip, Port: int(port)}, nil
-	case 18:
-		// IPv6
-		ip := net.IP(make([]byte, 16))
-		copy(ip, b[0:16])
-		port := binary.BigEndian.Uint16(b[16:18])
-		return &net.UDPAddr{IP: ip, Port: int(port)}, nil
-	default:
-		return nil, fmt.Errorf("addr_mangle: unexpected length %d (expected 6 or 18)", len(b))
+func encodeIPv4(addr *net.UDPAddr, tm uint32) []byte {
+	// Rust uses a u128: ((ip + tm) << 49) | (tm << 17) | (port + (tm & 0xffff)).
+	// Keep the carry of ip+tm in a uint64 and split the result into two limbs.
+	sum := uint64(binary.LittleEndian.Uint32(addr.IP.To4())) + uint64(tm)
+	lo := (sum << 49) | (uint64(tm) << 17) | (uint64(addr.Port) + uint64(tm&0xffff))
+	hi := sum >> 15
+	buf := make([]byte, 16)
+	binary.LittleEndian.PutUint64(buf, lo)
+	binary.LittleEndian.PutUint64(buf[8:], hi)
+	n := len(buf)
+	for n > 0 && buf[n-1] == 0 {
+		n--
 	}
+	return buf[:n]
+}
+
+// DecodeAddr decodes a mangled byte slice back to a UDP address.
+// Returns error if the byte slice is empty or has an unsupported length.
+func DecodeAddr(b []byte) (*net.UDPAddr, error) {
+	if len(b) == 18 {
+		ip := append(net.IP(nil), b[:16]...)
+		return &net.UDPAddr{IP: ip, Port: int(binary.LittleEndian.Uint16(b[16:]))}, nil
+	}
+	if len(b) == 0 || len(b) > 16 {
+		return nil, fmt.Errorf("addr_mangle: invalid length %d", len(b))
+	}
+	var padded [16]byte
+	copy(padded[:], b)
+	lo := binary.LittleEndian.Uint64(padded[:8])
+	hi := binary.LittleEndian.Uint64(padded[8:])
+	tm := uint32(lo >> 17)
+	ipValue := uint32(((lo >> 49) | (hi << 15)) - uint64(tm))
+	port := uint16(uint32(lo&0xffffff) - (tm & 0xffff))
+	ip := make(net.IP, 4)
+	binary.LittleEndian.PutUint32(ip, ipValue)
+	return &net.UDPAddr{IP: ip, Port: int(port)}, nil
 }
 
 // EncodeAddrFromString encodes a host:port string into the mangled byte format.
