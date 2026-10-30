@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.197] — 2026-10-30
+
+### Changed
 - **Docker `:dev` multi-arch AIO (#476):** All-in-one `ghcr.io/unitronix/betterdesk:dev` builds arm64 again on native runners (after amd64). Soft-merge keeps publishing amd64 if ARM fails. Verify: `docker buildx imagetools inspect ghcr.io/unitronix/betterdesk:dev` shows amd64 + arm64.
 
 ---
@@ -4376,3 +4383,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.194]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.193...v3.5.194
 [3.5.195]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.194...v3.5.195
 [3.5.196]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.195...v3.5.196
+[3.5.197]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.196...v3.5.197
