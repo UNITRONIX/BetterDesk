@@ -1018,6 +1018,10 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 
+	if sameNetwork && target.ConnType != peer.ConnWS && s.requestLANAddr(targetID, raddr, relayServer) {
+		return
+	}
+
 	// Send PunchHole to the TARGET peer (tell it the initiator's address)
 	punchHole := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHole{
@@ -1233,6 +1237,10 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 				PunchHoleResponse: phr,
 			},
 		}
+	}
+
+	if sameNetwork && initiatorHint != peer.ConnWS && target.ConnType != peer.ConnWS && s.requestLANAddr(targetID, raddr, relayServer) {
+		return nil
 	}
 
 	// Forward PunchHole to the TARGET peer (supports UDP, TCP, and WebSocket targets).
@@ -2050,30 +2058,10 @@ func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr
 	s.sendUDP(fetch, targetAddr)
 }
 
-// handleLocalAddr forwards a LocalAddr response from the target peer back to the
-// requester. This completes the FetchLocalAddr→LocalAddr exchange needed for LAN
-// direct connections.
+// handleLocalAddr processes the target's LocalAddr response and returns its LAN
+// endpoint to the initiator in PunchHoleResponse after request and source checks.
 func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
-	// socket_addr identifies the original requester that initiated FetchLocalAddr.
-	requesterAddr, err := crypto.DecodeAddr(msg.SocketAddr)
-	if err != nil || requesterAddr == nil {
-		return
-	}
-
-	// Forward the LocalAddr (with the responder's local address) to the requester.
-	resp := &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_LocalAddr{
-			LocalAddr: &pb.LocalAddr{
-				SocketAddr:   crypto.EncodeAddr(raddr),
-				LocalAddr:    msg.LocalAddr,
-				RelayServer:  msg.RelayServer,
-				Id:           msg.Id,
-				Version:      msg.Version,
-				SocketAddrV6: msg.SocketAddrV6,
-			},
-		},
-	}
-	s.sendUDP(resp, requesterAddr)
+	s.completeLANAddr(msg, raddr)
 }
 
 // handleTestNat handles NAT type detection (TCP port 21115).
