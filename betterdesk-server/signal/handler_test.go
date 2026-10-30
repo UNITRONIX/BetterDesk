@@ -2529,12 +2529,12 @@ func readUDPRendezvous(t *testing.T, conn *net.UDPConn) *pb.RendezvousMessage {
 
 func TestHandlePunchHoleRequestTCPForwardsUDPWhenConnTCP(t *testing.T) {
 	// #382: TCP RegisterPk stamps ConnTCP, but the OS service still heartbeats
-	// on UDP. PunchHole must reach the target UDP socket, not be dropped.
+	// on UDP. For different networks, PunchHole must reach the target UDP socket.
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.cfg.P2PFirst = false
 	recv, targetAddr := attachTestUDPPair(t, srv)
 
-	putOnlinePeer(srv, "INIT382", "127.0.0.1", 51000, peer.ConnTCP)
+	putOnlinePeer(srv, "INIT382", "203.0.113.38", 51000, peer.ConnTCP)
 	srv.peers.Put(&peer.Entry{
 		ID:         "TGT382",
 		UDPAddr:    targetAddr,
@@ -2544,7 +2544,7 @@ func TestHandlePunchHoleRequestTCPForwardsUDPWhenConnTCP(t *testing.T) {
 		StatusTier: peer.StatusOnline,
 	})
 
-	resp := srv.handlePunchHoleRequestTCP(&pb.PunchHoleRequest{Id: "TGT382"}, udpAddr("127.0.0.1", 51000))
+	resp := srv.handlePunchHoleRequestTCP(&pb.PunchHoleRequest{Id: "TGT382"}, udpAddr("203.0.113.38", 51000))
 	if resp == nil || resp.GetPunchHoleResponse() == nil {
 		t.Fatalf("expected PunchHoleResponse, got %+v", resp)
 	}
