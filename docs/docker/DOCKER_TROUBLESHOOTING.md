@@ -452,7 +452,7 @@ If no file is found yet, wait for first boot to finish and check `docker compose
 
 **Also common:** commenting out `INIT_ADMIN_PASS` / `DEFAULT_ADMIN_PASSWORD` / `ADMIN_PASSWORD` in `docker-compose*.yml`. `ADMIN_PASSWORD=… docker compose up -d` on the host only passes the password into the container when those `${ADMIN_PASSWORD}` lines are present in the compose file.
 
-**Also common on ARM64:** the all-in-one image tag `ghcr.io/unitronix/betterdesk:dev` is published as **amd64-only**. Hosts running `linux/arm64` keep an older cached AIO layer (or fail to refresh), while `betterdesk-server` / `betterdesk-console` stay multi-arch. Prefer [docker-compose.quick.yml](../../docker-compose.quick.yml), build AIO locally, or use a multi-arch tip tag such as `dev-arm` when published.
+**Also common on ARM64:** after a failed ARM CI phase, `:dev` / tip tags may briefly be **amd64-only** (soft-merge keeps the amd64 channel publishing). Confirm with `docker buildx imagetools inspect ghcr.io/unitronix/betterdesk:dev` — expect both `linux/amd64` and `linux/arm64` on a healthy publish. If only amd64 is listed, wait for the next green Docker publish or use split compose / a local AIO build meanwhile.
 
 **Workaround (existing broken install):**
 

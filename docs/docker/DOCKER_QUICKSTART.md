@@ -175,14 +175,14 @@ container (issue #385).
 
 | Image | `:dev` platforms | Notes |
 |-------|------------------|-------|
-| `ghcr.io/unitronix/betterdesk` (AIO) | **amd64 only** | Multi-arch AIO on `:dev` often hits the GitHub Actions time limit |
-| `betterdesk-server` / `betterdesk-console` | amd64 + arm64 | Prefer [docker-compose.quick.yml](../../docker-compose.quick.yml) on ARM hosts |
+| `ghcr.io/unitronix/betterdesk` (AIO) | amd64 + arm64 | Native ARM runners; ARM phase runs after amd64 (#476) |
+| `betterdesk-server` / `betterdesk-console` | amd64 + arm64 | Same publish pipeline |
 | `betterdesk` `latest` / release tags | amd64 + arm64 | Stable channel |
 
-On **linux/arm64**, use the split quick-start compose, build AIO locally from
-`docker-compose.single.yml`, or pin a multi-arch tip tag (e.g. `dev-arm`) when
-published. Do not expect a fresh `betterdesk:dev` pull to refresh ARM layers
-while AIO `:dev` remains amd64-only.
+CI builds **amd64 first**, then **ARM**. If an ARM job fails, GHCR may briefly
+publish **amd64-only** tags (with an Actions warning) until the next green ARM
+run. On **linux/arm64**, `docker compose pull` of `:dev` / `:latest` is the
+normal path; split compose or a local AIO build remain optional.
 
 ### PostgreSQL Instead of SQLite
 

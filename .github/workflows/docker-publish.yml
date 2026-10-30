@@ -21,9 +21,9 @@
 # Note: GITHUB_TOKEN pushes do not re-trigger workflows, so version-bump-dev
 # dispatches this workflow with tag=dev after each successful bump.
 #
-# AIO on :dev (branch push or dispatch tag=dev): linux/amd64 only (multi-arch
-# AIO often hit the 6h Actions limit). Console/server stay multi-arch;
-# main/tags/release/non-dev dispatch keep full amd64+arm64 for AIO.
+# Phase 1 (amd64) then Phase 2 (native ubuntu-24.04-arm). AIO :dev is
+# multi-arch again (#476); ARM runs last so amd64 still publishes if ARM fails
+# (soft-merge). Native ARM avoids the old QEMU/npm 6h limit (#401).
 #
 # Triggers: push main/dev (path-filtered), push tag v*, release published, manual
 # =============================================================================
@@ -34,7 +34,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image tag (empty or latest = push latest + VERSION; else custom tag). Use tag=dev for amd64-only AIO :dev; use a tip tag such as dev-arm for multi-arch AIO (issue #385 ARM retest).'
+        description: 'Image tag (empty or latest = push latest + VERSION; else custom tag). Use tag=dev for multi-arch :dev (amd64+arm64); custom tip tags such as dev-arm still work.'
         required: false
         default: 'latest'
         type: string
@@ -256,7 +256,6 @@ jobs:
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
         contains(github.event.head_commit.message, '[version-bump]'))
     runs-on: ubuntu-latest
-    # Multi-arch AIO on dev has hit the 6h Actions limit (#401); fail sooner if stuck.
     timeout-minutes: 330
     permissions:
       contents: read
@@ -311,7 +310,10 @@ jobs:
             BETTERDESK_COMMIT_SHA=${{ github.sha }}
             BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha,scope=betterdesk-aio-amd64
+          cache-from: |
+            type=gha,scope=betterdesk-aio-amd64
+            type=gha,scope=betterdesk-server-amd64
+            type=gha,scope=betterdesk-console-amd64
           cache-to: type=gha,mode=max,scope=betterdesk-aio-amd64
           platforms: ${{ steps.plats.outputs.platforms }}
 
@@ -330,12 +332,15 @@ jobs:
           path: /tmp/digests/betterdesk
           if-no-files-found: error
 
-  # Build the ARM64 legs on a native runner. This avoids the QEMU/npm
-  # combination that previously kept build-console running until the
-  # six-hour GitHub Actions limit.
+  # Phase 2: ARM64 on native runners (after amd64). Soft-merge still
+  # publishes amd64 tags if this job fails (#476).
   build-arm64:
-    needs: read-version
+    needs: [read-version, build-server, build-console]
     if: |
+      always() &&
+      needs.read-version.result == 'success' &&
+      needs.build-server.result == 'success' &&
+      needs.build-console.result == 'success' &&
       (github.event_name == 'workflow_dispatch' ||
        github.event_name == 'release' ||
        (github.event_name == 'push' &&
@@ -400,16 +405,20 @@ jobs:
           path: /tmp/digests/${{ matrix.image }}
           if-no-files-found: error
 
+  # Last ARM job: AIO after server/console ARM (warm GHA cache) and amd64 AIO.
   build-aio-arm64:
-    needs: read-version
+    needs: [read-version, build-allinone, build-arm64]
     if: |
-      github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.tag != 'dev') ||
-      (github.event_name == 'push' &&
+      always() &&
+      needs.read-version.result == 'success' &&
+      needs.build-allinone.result == 'success' &&
+      (needs.build-arm64.result == 'success' || needs.build-arm64.result == 'failure') &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event_name == 'release' ||
+       (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
-        contains(github.event.head_commit.message, '[version-bump]') &&
-        github.ref != 'refs/heads/dev')
+        contains(github.event.head_commit.message, '[version-bump]')))
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 330
     permissions:
@@ -439,7 +448,10 @@ jobs:
             BETTERDESK_COMMIT_SHA=${{ github.sha }}
             BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha,scope=betterdesk-aio-arm64
+          cache-from: |
+            type=gha,scope=betterdesk-aio-arm64
+            type=gha,scope=betterdesk-server-arm64
+            type=gha,scope=betterdesk-console-arm64
           cache-to: type=gha,mode=max,scope=betterdesk-aio-arm64
           platforms: linux/arm64
 
@@ -458,7 +470,8 @@ jobs:
           path: /tmp/digests/betterdesk
           if-no-files-found: error
 
-  # No public image tag is written until all required platform digests exist.
+  # Soft-merge (#476): require amd64 success; include ARM digests when present.
+  # ARM failure still publishes amd64-only (or partial) tags so the channel stays live.
   merge-images:
     needs: [read-version, build-server, build-console, build-allinone, build-arm64, build-aio-arm64]
     if: |
@@ -466,12 +479,7 @@ jobs:
       needs.read-version.result == 'success' &&
       needs.build-server.result == 'success' &&
       needs.build-console.result == 'success' &&
-      needs.build-allinone.result == 'success' &&
-      needs.build-arm64.result == 'success' &&
-      (needs.build-aio-arm64.result == 'success' ||
-       (needs.build-aio-arm64.result == 'skipped' &&
-        ((github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
-         (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev'))))
+      needs.build-allinone.result == 'success'
     strategy:
       fail-fast: false
       matrix:
@@ -495,6 +503,11 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Warn if ARM digests may be missing
+        if: needs.build-arm64.result != 'success' || needs.build-aio-arm64.result != 'success'
+        run: |
+          echo "::warning::ARM64 build did not fully succeed (build-arm64=${{ needs.build-arm64.result }}, build-aio-arm64=${{ needs.build-aio-arm64.result }}). Publishing manifests from available digests (may be amd64-only until the next green ARM run)."
 
       - name: Download platform digests
         uses: actions/download-artifact@v4
@@ -542,6 +555,7 @@ jobs:
             tag_args+=(-t "$tag")
           done
 
+          echo "Publishing ${#digests[@]} platform digest(s) for ${IMAGE}"
           docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"
 
       - name: Resolve server scan reference

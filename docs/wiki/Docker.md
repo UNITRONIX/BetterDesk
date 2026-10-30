@@ -27,7 +27,7 @@ Default access:
 - **Client API:** `:21121` (single) or `:21114` (split) — never panel `:5000`
 - **Default admin:** `docker compose exec betterdesk betterdesk-show-admin-credentials` (single) or `… exec console …` (split)
 
-**Image tags:** prefer pinned versions or `:latest` for stable; `:dev` tracks the development channel. All-in-one **`:dev` images are amd64-only** today — on ARM use split compose, a local AIO build, or a multi-arch tip tag when published (`dev-arm`). Console/server images remain multi-arch.
+**Image tags:** prefer pinned versions or `:latest` for stable; `:dev` tracks the development channel. All-in-one, server, and console **`:dev` images are multi-arch** (amd64 + arm64). CI builds ARM after amd64; if ARM fails, tags may briefly be amd64-only until the next green ARM publish.
 
 Node console images target **Node.js 22** (avoid Node 24.19.x for the panel).
 

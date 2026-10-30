@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Docker `:dev` multi-arch AIO (#476):** All-in-one `ghcr.io/unitronix/betterdesk:dev` builds arm64 again on native runners (after amd64). Soft-merge keeps publishing amd64 if ARM fails. Verify: `docker buildx imagetools inspect ghcr.io/unitronix/betterdesk:dev` shows amd64 + arm64.
 
 ---
 
