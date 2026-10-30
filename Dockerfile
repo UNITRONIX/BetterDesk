@@ -17,7 +17,7 @@
 #   5000  - Web Console (Node.js admin panel)
 
 # ============= Stage 1: Build Go server =============
-FROM golang:1.26-alpine AS go-builder
+FROM golang:1.26.10-alpine AS go-builder
 ARG TARGETARCH
 
 # Retry apk in case of transient DNS failures (common on AlmaLinux/CentOS Docker)
@@ -80,6 +80,10 @@ RUN apk add --no-cache \
     su-exec \
     shadow \
     && mkdir -p /var/log/supervisor; }
+
+# The production image never runs npm; remove its bundled CLI and transitive
+# package tree (including tar) from the runtime attack surface.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Create betterdesk user and directories
 RUN addgroup -g 10001 -S betterdesk && \

@@ -61,6 +61,9 @@ const managementCapabilities = require('../lib/managementCapabilities');
 const GITHUB_OWNER  = process.env.UPDATE_GITHUB_OWNER  || 'UNITRONIX';
 const GITHUB_REPO   = process.env.UPDATE_GITHUB_REPO   || 'BetterDesk';
 const GITHUB_API    = 'https://api.github.com';
+const GITHUB_API_HOST = 'api.github.com';
+const GITHUB_RAW_HOST = 'raw.githubusercontent.com';
+const MAX_GITHUB_REDIRECTS = 3;
 
 /** Update channel → GitHub branch mapping */
 const UPDATE_CHANNELS = Object.freeze({
@@ -337,15 +340,47 @@ function isGithubRateLimitError(err) {
     return !!(err && (err.code === 'GITHUB_RATE_LIMIT' || /rate limit exceeded/i.test(err.message || '')));
 }
 
+function parseAllowedGithubUrl(target, allowedHostname) {
+    const base = allowedHostname === GITHUB_API_HOST
+        ? GITHUB_API
+        : `https://${allowedHostname}`;
+    let url;
+    try {
+        url = new URL(String(target || ''), base);
+    } catch (_err) {
+        throw new Error('Invalid GitHub URL');
+    }
+
+    if (
+        url.protocol !== 'https:'
+        || url.hostname.toLowerCase() !== allowedHostname
+        || url.port
+        || url.username
+        || url.password
+    ) {
+        throw new Error(`GitHub URL host is not allowed: ${allowedHostname}`);
+    }
+    return url;
+}
+
+function isGithubRedirectStatus(statusCode) {
+    return statusCode === 301
+        || statusCode === 302
+        || statusCode === 303
+        || statusCode === 307
+        || statusCode === 308;
+}
+
 function ghGetCacheKey(urlPath) {
     const url = urlPath.startsWith('https://') ? new URL(urlPath) : new URL(urlPath, GITHUB_API);
     return url.pathname + url.search;
 }
 
 /**
- * HTTPS GET → parsed JSON. Follows one redirect.
+ * HTTPS GET → parsed JSON. Follows a small, same-host redirect chain.
  */
-function ghGet(urlPath, { bypassCache = false } = {}) {
+function ghGet(urlPath, { bypassCache = false, redirectCount = 0 } = {}) {
+    const url = parseAllowedGithubUrl(urlPath, GITHUB_API_HOST);
     const cacheKey = ghGetCacheKey(urlPath);
     if (!bypassCache && GH_GET_CACHE_TTL_MS > 0) {
         const cached = GH_GET_CACHE.get(cacheKey);
@@ -355,13 +390,25 @@ function ghGet(urlPath, { bypassCache = false } = {}) {
     }
 
     return new Promise((resolve, reject) => {
-        const url = urlPath.startsWith('https://') ? new URL(urlPath) : new URL(urlPath, GITHUB_API);
         const headers = { 'User-Agent': USER_AGENT, 'Accept': 'application/vnd.github+json' };
         if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
 
         const req = https.get({ hostname: url.hostname, path: url.pathname + url.search, headers }, (res) => {
-            if (res.statusCode === 301 || res.statusCode === 302) {
-                return ghGet(res.headers.location, { bypassCache }).then(resolve, reject);
+            if (isGithubRedirectStatus(res.statusCode)) {
+                res.resume();
+                if (!res.headers.location || redirectCount >= MAX_GITHUB_REDIRECTS) {
+                    return reject(new Error('GitHub API redirect limit exceeded'));
+                }
+                let redirectUrl;
+                try {
+                    redirectUrl = parseAllowedGithubUrl(res.headers.location, GITHUB_API_HOST);
+                } catch (err) {
+                    return reject(err);
+                }
+                return ghGet(redirectUrl.toString(), {
+                    bypassCache,
+                    redirectCount: redirectCount + 1
+                }).then(resolve, reject);
             }
             const chunks = [];
             res.on('data', (c) => chunks.push(c));
@@ -403,10 +450,20 @@ function ghDownloadFileOnce(owner, repo, ref, filePath) {
         const headers = { 'User-Agent': USER_AGENT };
         if (GITHUB_TOKEN) headers['Authorization'] = `Bearer ${GITHUB_TOKEN}`;
 
-        const follow = (target) => {
-            const req = https.get(target, { headers }, (res) => {
-                if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
-                    return follow(res.headers.location);
+        const follow = (target, redirectCount = 0) => {
+            let parsedTarget;
+            try {
+                parsedTarget = parseAllowedGithubUrl(target, GITHUB_RAW_HOST);
+            } catch (err) {
+                return reject(err);
+            }
+            const req = https.get(parsedTarget, { headers }, (res) => {
+                if (isGithubRedirectStatus(res.statusCode)) {
+                    res.resume();
+                    if (!res.headers.location || redirectCount >= MAX_GITHUB_REDIRECTS) {
+                        return reject(new Error('GitHub download redirect limit exceeded'));
+                    }
+                    return follow(res.headers.location, redirectCount + 1);
                 }
                 if (res.statusCode !== 200) {
                     return reject(new Error(`Download failed (${res.statusCode}): ${filePath}`));
@@ -3500,6 +3557,9 @@ module.exports = {
     bootstrapDockerImageDeployment,
     getDockerUpdateInstructions,
     isGithubRateLimitError,
+    parseAllowedGithubUrl,
+    isGithubRedirectStatus,
+    MAX_GITHUB_REDIRECTS,
     ensureMeshEnabledInServiceEnv,
     ensureGoServerEnvironmentFile,
     ensureGoServerSignalRelayPorts,

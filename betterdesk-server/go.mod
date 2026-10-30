@@ -2,14 +2,14 @@ module github.com/unitronix/betterdesk-server
 
 go 1.25.0
 
-toolchain go1.26.9
+toolchain go1.26.10
 
 require (
 	github.com/coder/websocket v1.8.15
 	github.com/go-ldap/ldap/v3 v3.4.14
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
-	golang.org/x/crypto v0.54.0
+	golang.org/x/crypto v0.55.0
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.55.0
 )

@@ -338,22 +338,23 @@ function initWsProxy(server, sessionMiddleware) {
                         return;
                     }
 
+                    const panelRole = request.session?.user?.role;
+                    let canConnect = false;
+                    if (hasUser) {
+                        try {
+                            canConnect = await roleHasEffectivePermission(panelRole, 'device.connect');
+                        } catch (error) {
+                            console.warn(`WS proxy: permission lookup failed: ${error.message || error}`);
+                        }
+                    }
+                    if (hasUser && !canConnect) {
+                        console.warn(`WS proxy: Rejected ${pathname} upgrade for non-operator role ${panelRole || 'unknown'}`);
+                        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                        socket.destroy();
+                        return;
+                    }
+
                     if (pathname === '/ws/rendezvous') {
-                        const panelRole = request.session?.user?.role;
-                        let canConnect = false;
-                        if (hasUser) {
-                            try {
-                                canConnect = await roleHasEffectivePermission(panelRole, 'device.connect');
-                            } catch (error) {
-                                console.warn(`WS proxy: permission lookup failed: ${error.message || error}`);
-                            }
-                        }
-                        if (hasUser && !canConnect) {
-                            console.warn(`WS proxy: Rejected rendezvous upgrade for non-operator role ${panelRole || 'unknown'}`);
-                            socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
-                            socket.destroy();
-                            return;
-                        }
                         rendezvousWss.handleUpgrade(request, socket, head, (ws) => {
                             rendezvousWss.emit('connection', ws, request);
                         });

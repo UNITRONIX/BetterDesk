@@ -366,7 +366,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /api/org/{id}/peer-credentials", s.requireOrgMembership("id", s.handleListOrgPeerCredentials))
 	mux.HandleFunc("PUT /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgPeerCredential)))
 	mux.HandleFunc("DELETE /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleClearOrgPeerCredential)))
-	mux.HandleFunc("GET /api/peers/{id}/connect-password", s.requirePermission(auth.PermDeviceView, s.handleGetPeerConnectPassword))
+	mux.HandleFunc("GET /api/peers/{id}/connect-password", s.requirePermission(auth.PermDeviceConnect, s.handleGetPeerConnectPassword))
 	mux.HandleFunc("POST /api/org/login", s.handleOrgLogin) // public — no auth required
 
 	// User-Org Linking (Issue #106)

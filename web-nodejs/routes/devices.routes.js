@@ -1263,7 +1263,7 @@ router.delete('/api/devices/:id/access-policy', requireAuth, requirePermission('
  * GET /api/devices/:id/connect-password — org vault preset for Web Remote auto-fill (#367).
  * Returns password only for authenticated operators; never logs the secret.
  */
-router.get('/api/devices/:id/connect-password', requireAuth, requirePermission('device.view'), async (req, res) => {
+router.get('/api/devices/:id/connect-password', requireAuth, requirePermission('device.connect'), async (req, res) => {
     try {
         const device = await serverBackend.getDeviceById(req.params.id);
         if (!device) return res.status(404).json({ success: false, error: req.t('devices.not_found') });
@@ -1300,6 +1300,15 @@ const bdRelay = require('../services/bdRelay');
  */
 async function proxyAgentRequest(req, res, type, payload = null, timeoutMs = 15000) {
     try {
+        const device = await serverBackend.getDeviceById(req.params.id);
+        if (!device) {
+            return res.status(404).json({
+                success: false,
+                error: req.t('devices.not_found')
+            });
+        }
+        if (await rejectIfDeviceOutOfScope(req, res, device)) return;
+
         const data = await bdRelay.requestFromDevice(req.params.id, type, payload, timeoutMs);
         res.json({ success: true, data });
     } catch (err) {

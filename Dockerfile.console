@@ -43,6 +43,10 @@ RUN apk add --no-cache \
     && addgroup -g 10001 -S betterdesk \
     && adduser -u 10001 -S -G betterdesk betterdesk
 
+# The production image never runs npm; remove its bundled CLI and transitive
+# package tree (including tar) from the runtime attack surface.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 # Copy application files FIRST, then overlay compiled node_modules.
 # This prevents local node_modules from overwriting Alpine/musl native modules.
 COPY web-nodejs/ .
