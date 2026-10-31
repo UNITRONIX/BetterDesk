@@ -148,6 +148,10 @@ type Server struct {
 	// (issue #157). Key=normalizeAddrKey(initiatorAddr), Value=*pendingPunch.
 	pendingPunches sync.Map // map[string]*pendingPunch
 
+	// pendingLANs tracks native LAN address exchanges independently from relay
+	// correlation and WAN P2P-first fallbacks. Key=target ID + initiator endpoint.
+	pendingLANs sync.Map // map[string]*pendingLAN
+
 	// lastSharedNATWarnUnixNano rate-limits SAME_NAT_RELAY=false warnings (#399).
 	lastSharedNATWarnUnixNano atomic.Int64
 
