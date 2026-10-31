@@ -152,7 +152,12 @@ class RDClipboard {
 
         const needsDecompress = !!clipboard.compress || RDCompress.isZstdMagic(bytes);
         if (needsDecompress) {
-            bytes = await RDCompress.decompressZstd(bytes, { force: true });
+            try {
+                bytes = await RDCompress.decompressZstd(bytes, { force: true });
+            } catch (err) {
+                RDCompress.reportZstdUnavailable(err);
+                return null;
+            }
         }
 
         const fmt = RDClipboard.formatId(clipboard.format);

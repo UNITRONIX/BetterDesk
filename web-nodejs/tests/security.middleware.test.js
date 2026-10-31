@@ -1,4 +1,6 @@
 const request = require('supertest');
+const fs = require('fs');
+const path = require('path');
 const { createTestApp } = require('./helpers');
 
 function getScriptSrcDirective(cspHeader) {
@@ -51,6 +53,16 @@ describe('Security Middleware', () => {
         expect(scriptSrc).toMatch(/'self' 'nonce-[^']+'/);
         expect(scriptSrc).not.toContain("'unsafe-eval'");
         expect(scriptSrc).not.toContain("'unsafe-inline'");
+    });
+
+    it('ships a protobuf runtime without dynamic code generation', () => {
+        const vendor = fs.readFileSync(
+            path.join(__dirname, '..', 'public/js/vendor/protobuf.min.js'),
+            'utf8'
+        );
+
+        expect(vendor).not.toMatch(/\beval\s*\(/);
+        expect(vendor).not.toMatch(/\bFunction\s*\(/);
     });
 
     it('allows unsafe-eval on /remote only when CSP_RELAX_REMOTE=true (rollback)', async () => {

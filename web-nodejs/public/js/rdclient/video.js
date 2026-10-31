@@ -695,8 +695,18 @@ class RDVideo {
             await this.init(frameData.codec, { codecString: frameData.codecString });
         }
 
+        // AV1: do not trust a contradictory wire keyframe flag blindly. A
+        // malformed key flag makes Chromium reject the chunk before decoding.
+        let key = !!frameData.key;
+        if (this.currentCodec === 'av1') {
+            const detectedKey = RDVideo.av1KeyframeState(frameData.data);
+            if (detectedKey !== null) {
+                key = detectedKey;
+            }
+        }
+
         // AV1: apply codec description from the first keyframe (WebKitGTK needs this).
-        if (this.currentCodec === 'av1' && frameData.key && !this._av1DescriptionApplied) {
+        if (this.currentCodec === 'av1' && key && !this._av1DescriptionApplied) {
             const desc = RDVideo.av1DescriptionFromKeyframe(frameData.data);
             if (desc) {
                 try {
@@ -727,7 +737,7 @@ class RDVideo {
         // A WebCodecs decoder must start from a keyframe. Drop delta frames
         // until the first keyframe (or one requested after an error) arrives.
         if (this._needKeyframe) {
-            if (!frameData.key) {
+            if (!key) {
                 this.droppedFrames++;
                 return;
             }
@@ -736,7 +746,7 @@ class RDVideo {
 
         // If the decode queue is backing up (slow/overloaded decoder), drop
         // delta frames to catch up. Keyframes are always decoded.
-        if (!frameData.key && this.decoder.decodeQueueSize > 30) {
+        if (!key && this.decoder.decodeQueueSize > 30) {
             this.droppedFrames++;
             return;
         }
@@ -748,7 +758,7 @@ class RDVideo {
             // yet, which would yield duplicate timestamps).
             const timestamp = (this._decodeInputCount++) * 16667; // ~60fps in microseconds
             const chunk = new EncodedVideoChunk({
-                type: frameData.key ? 'key' : 'delta',
+                type: key ? 'key' : 'delta',
                 timestamp: timestamp,
                 data: frameData.data
             });
@@ -927,6 +937,52 @@ class RDVideo {
                 }
             });
         }
+    }
+
+    /**
+     * Detect an AV1 frame type from the uncompressed frame header when the
+     * access unit contains a frame OBU. Return null when the payload cannot
+     * be classified safely, so the peer's metadata remains the fallback.
+     *
+     * @param {Uint8Array} data
+     * @returns {boolean|null}
+     */
+    static av1KeyframeState(data) {
+        if (!data || data.length < 2) return null;
+
+        let offset = 0;
+        while (offset < data.length) {
+            const header = data[offset++];
+            const obuType = (header >> 3) & 0x0F;
+            const hasExtension = (header >> 2) & 0x01;
+            const hasSize = (header >> 1) & 0x01;
+
+            if (hasExtension) {
+                if (offset >= data.length) return null;
+                offset++;
+            }
+
+            let size;
+            if (hasSize) {
+                const parsed = RDVideo._readLeb128(data, offset);
+                if (!parsed) return null;
+                size = parsed.value;
+                offset += parsed.bytes;
+            } else {
+                size = data.length - offset;
+            }
+            if (size < 1 || offset + size > data.length) return null;
+
+            // OBU_FRAME_HEADER (3) and OBU_FRAME (6) start with
+            // show_existing_frame (1 bit) followed by frame_type (2 bits).
+            if (obuType === 3 || obuType === 6) {
+                const firstByte = data[offset];
+                if ((firstByte & 0x80) !== 0) return false;
+                return ((firstByte >> 5) & 0x03) === 0;
+            }
+            offset += size;
+        }
+        return null;
     }
 
     /**
