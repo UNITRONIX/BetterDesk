@@ -1218,6 +1218,9 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 		writeInternalError(w, err, "DeletePeer")
 		return
 	}
+	if hard {
+		s.forgetSecureDeviceState(id)
+	}
 	if revoke && !hard {
 		if err := s.db.BanPeer(id, "revoked via panel"); err != nil {
 			writeInternalError(w, err, "RevokePeer")
@@ -1246,7 +1249,9 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 	if cascade && len(linkedIDs) > 0 {
 		for _, lid := range linkedIDs {
 			if hard {
-				s.db.HardDeletePeer(lid)
+				if err := s.db.HardDeletePeer(lid); err == nil {
+					s.forgetSecureDeviceState(lid)
+				}
 			} else {
 				s.db.DeletePeer(lid)
 				if revoke {

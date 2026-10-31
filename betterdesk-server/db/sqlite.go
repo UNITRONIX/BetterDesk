@@ -1073,6 +1073,10 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 		`DELETE FROM id_change_history WHERE old_id = ? OR new_id = ?`, id, id); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(
+		`DELETE FROM server_config WHERE key = ?`, "telemetry_seq_"+id); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 

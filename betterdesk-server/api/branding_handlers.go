@@ -943,6 +943,7 @@ func (s *Server) removeEnrollmentRejectAuditPeer(deviceID string) error {
 		log.Printf("[API] removeEnrollmentRejectAuditPeer: HardDeletePeer %s: %v", deviceID, err)
 		return err
 	}
+	s.forgetSecureDeviceState(deviceID)
 	return nil
 }
 

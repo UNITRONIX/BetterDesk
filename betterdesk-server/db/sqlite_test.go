@@ -589,6 +589,9 @@ func TestHardDelete(t *testing.T) {
 	db := newTestDB(t)
 
 	db.UpsertPeer(&Peer{ID: "HARD1", Status: "ONLINE"})
+	if err := db.SetConfig("telemetry_seq_HARD1", "42"); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := db.HardDeletePeer("HARD1"); err != nil {
 		t.Fatal(err)
@@ -600,6 +603,11 @@ func TestHardDelete(t *testing.T) {
 		if p.ID == "HARD1" {
 			t.Error("hard-deleted peer should not appear at all")
 		}
+	}
+	if value, err := db.GetConfig("telemetry_seq_HARD1"); err != nil {
+		t.Fatal(err)
+	} else if value != "" {
+		t.Fatalf("hard delete retained telemetry sequence %q", value)
 	}
 }
 

@@ -58,6 +58,19 @@ func (s *Server) secureClientKey(deviceID string) (*[32]byte, bool) {
 	return &key, true
 }
 
+func (s *Server) forgetSecureDeviceState(deviceID string) {
+	if deviceID == "" {
+		return
+	}
+	telemetrySequenceMu.Lock()
+	delete(telemetryLastSequence, deviceID)
+	telemetrySequenceMu.Unlock()
+
+	s.secureClientsMu.Lock()
+	delete(s.secureClientKeys, deviceID)
+	s.secureClientsMu.Unlock()
+}
+
 func (s *Server) initializeTelemetryKeys() {
 	if encoded, err := s.db.GetConfig(telemetryPrivateKeyConfig); err == nil && encoded != "" {
 		if decoded, err := base64.StdEncoding.DecodeString(encoded); err == nil && len(decoded) == 32 {
