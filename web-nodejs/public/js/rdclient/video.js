@@ -897,6 +897,15 @@ class RDVideo {
             return;
         }
 
+        // Give AV1 one software retry, but do not keep rebuilding a decoder
+        // when the software path rejects the same stream. This usually means
+        // malformed/contradictory keyframe metadata, not a hardware issue.
+        if (this.currentCodec === 'av1' && this._softwareRetry && this.onCodecFailed) {
+            console.warn('[RDVideo] AV1 software decode failed — requesting codec fallback');
+            this.onCodecFailed(this.currentCodec, err);
+            return;
+        }
+
         // Throttle recovery attempts to once per second.
         const now = performance.now();
         if (now - this._lastDecodeErrorTime < 1000) {

@@ -9,6 +9,8 @@ function loadRDVideo() {
         console,
         Uint8Array,
         ArrayBuffer,
+        VideoDecoder: function VideoDecoder() {},
+        navigator: { userAgent: 'Mozilla/5.0 Chrome/131.0.0.0' },
         setTimeout,
         clearTimeout,
         performance: { now: () => 0 },
@@ -42,5 +44,18 @@ describe('RDVideo AV1 keyframe classification', () => {
 
     it('returns unknown when no frame OBU is present', () => {
         expect(RDVideo.av1KeyframeState(new Uint8Array([0x0a, 0x01, 0x00]))).toBeNull();
+    });
+
+    it('switches away from AV1 after the software retry also fails', () => {
+        const video = new RDVideo();
+        video.currentCodec = 'av1';
+        video._softwareRetry = true;
+        video._lastDecodeErrorTime = -Infinity;
+        video.decoder = { state: 'configured', close: jest.fn() };
+        video.onCodecFailed = jest.fn();
+
+        video._handleError(new Error('Decoding error'));
+
+        expect(video.onCodecFailed).toHaveBeenCalledWith('av1', expect.any(Error));
     });
 });
