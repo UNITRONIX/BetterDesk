@@ -5,6 +5,13 @@
 
 ---
 
+## [3.5.205] — 2026-10-31
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.5.204] — 2026-10-31
 
 ### Changed
@@ -4440,3 +4447,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.202]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.201...v3.5.202
 [3.5.203]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.202...v3.5.203
 [3.5.204]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.203...v3.5.204
+[3.5.205]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.204...v3.5.205
