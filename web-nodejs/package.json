@@ -35,11 +35,11 @@
   "dependencies": {
     "adm-zip": "^0.6.1",
     "axios": "^1.20.0",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "better-sqlite3": "^13.0.3",
     "cookie-parser": "^1.4.7",
     "csrf-csrf": "^3.0.6",
-    "ejs": "^3.1.10",
+    "ejs": "^7.0.2",
     "express": "^4.21.2",
     "express-rate-limit": "^7.4.1",
     "express-session": "^1.18.1",
@@ -66,7 +66,7 @@
     "proxy-addr": "^2.0.8",
     "form-data": "^4.0.6",
     "body-parser": "^1.20.9",
-    "follow-redirects": "^1.16.1",
+    "follow-redirects": "^1.16.2",
     "protobufjs": "^7.6.5",
     "qs": "^6.16.1",
     "browserslist": "^4.28.7"
