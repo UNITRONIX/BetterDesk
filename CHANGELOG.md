@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed
+- **Signed BetterDesk Client requests after re-enrollment (#484):** authorized fresh enrollment after permanent removal clears orphaned per-device telemetry replay state, while active and soft-deleted device IDs retain their existing replay protection. Existing 3.5.201 installations with a stale `telemetry_seq_<DEVICE_ID>` row require a database backup, removal of that exact row, an API restart, and an update to `dev`.
+- **Wrapped secure client requests (#484):** `X-BetterDesk-Envelope: 1` requests containing the `betterdesk_envelope` wrapper are accepted by the Go API. Ships via the panel/server update path.
+
 ### Changed
 - _(none yet)_
 

@@ -20,7 +20,10 @@ import (
 var telemetrySequenceMu sync.Mutex
 var telemetryLastSequence = make(map[string]uint64)
 
-const telemetryPrivateKeyConfig = "telemetry_x25519_private"
+const (
+	telemetryPrivateKeyConfig     = "telemetry_x25519_private"
+	telemetrySequenceConfigPrefix = "telemetry_seq_"
+)
 
 type telemetryEnvelope struct {
 	Version            int    `json:"version"`
@@ -69,6 +72,21 @@ func (s *Server) forgetSecureDeviceState(deviceID string) {
 	s.secureClientsMu.Lock()
 	delete(s.secureClientKeys, deviceID)
 	s.secureClientsMu.Unlock()
+}
+
+// resetSecureDeviceState clears durable and in-memory state for a device ID
+// that is being freshly enrolled after the previous peer was permanently
+// removed. Callers must establish that the enrollment is authorized and that
+// the ID is currently missing before invoking this helper.
+func (s *Server) resetSecureDeviceState(deviceID string) error {
+	if deviceID == "" {
+		return fmt.Errorf("device ID is required")
+	}
+	if err := s.db.DeleteConfig(telemetrySequenceConfigPrefix + deviceID); err != nil {
+		return fmt.Errorf("delete telemetry sequence for %s: %w", deviceID, err)
+	}
+	s.forgetSecureDeviceState(deviceID)
+	return nil
 }
 
 func (s *Server) initializeTelemetryKeys() {
@@ -185,7 +203,7 @@ func (s *Server) openTelemetryEnvelope(deviceID string, raw json.RawMessage) (*o
 
 	telemetrySequenceMu.Lock()
 	last := telemetryLastSequence[deviceID]
-	if stored, err := s.db.GetConfig("telemetry_seq_" + deviceID); err == nil {
+	if stored, err := s.db.GetConfig(telemetrySequenceConfigPrefix + deviceID); err == nil {
 		if storedSequence, err := strconv.ParseUint(stored, 10, 64); err == nil && storedSequence > last {
 			last = storedSequence
 		}
@@ -195,7 +213,7 @@ func (s *Server) openTelemetryEnvelope(deviceID string, raw json.RawMessage) (*o
 		return nil, fmt.Errorf("telemetry replay rejected")
 	}
 	telemetryLastSequence[deviceID] = envelope.Sequence
-	if err := s.db.SetConfig("telemetry_seq_"+deviceID, strconv.FormatUint(envelope.Sequence, 10)); err != nil {
+	if err := s.db.SetConfig(telemetrySequenceConfigPrefix+deviceID, strconv.FormatUint(envelope.Sequence, 10)); err != nil {
 		telemetrySequenceMu.Unlock()
 		return nil, fmt.Errorf("telemetry sequence persistence failed: %w", err)
 	}
