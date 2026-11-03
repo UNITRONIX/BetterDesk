@@ -13,7 +13,7 @@
  *   client.disconnect();
  */
 
-/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDPunchHoleResponse, RDConnectionParams */
+/* global RDConnection, RDProtocol, RDCrypto, RDVideo, RDAudio, RDRenderer, RDInput, RDFileConnection, RDClipboard, RDCliprdr, RDPunchHoleResponse, RDConnectionParams, RDKeyboardEncoder */
 
 // eslint-disable-next-line no-unused-vars
 class RDClient {
@@ -1673,6 +1673,54 @@ class RDClient {
     async _sendClipboard(text) {
         const msg = await this.proto.buildClipboard(text);
         this._sendPeerMessage(msg);
+    }
+
+    /**
+     * Type text on the remote as keystrokes (KeyEvent.seq).
+     * Works on Winlogon / password fields where clipboard paste does not.
+     * @param {string} text
+     * @returns {boolean} false when not streaming / view-only / empty
+     */
+    sendText(text) {
+        if (this._state !== 'streaming') return false;
+        if (this._viewOnly) return false;
+        const str = text == null ? '' : String(text);
+        if (!str) return false;
+        void this._sendTextSeq(str);
+        return true;
+    }
+
+    /**
+     * @param {string} text
+     * @returns {Promise<void>}
+     */
+    async _sendTextSeq(text) {
+        if (typeof this.resetKeyboard === 'function') {
+            this.resetKeyboard();
+        }
+        const CHUNK = 64;
+        const DELAY_MS = 12;
+        const encode = (typeof RDKeyboardEncoder !== 'undefined' && RDKeyboardEncoder.encodeTextSeq)
+            ? (chunk) => RDKeyboardEncoder.encodeTextSeq(chunk)
+            : (chunk) => ({
+                seq: chunk,
+                down: true,
+                press: true,
+                modifiers: [],
+                mode: 'Legacy',
+            });
+
+        for (let i = 0; i < text.length; i += CHUNK) {
+            if (this._state !== 'streaming' || this._viewOnly) return;
+            const chunk = text.slice(i, i + CHUNK);
+            const keyEvent = encode(chunk);
+            if (keyEvent) {
+                this._sendPeerMessage({ keyEvent });
+            }
+            if (i + CHUNK < text.length) {
+                await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+            }
+        }
     }
 
     /**

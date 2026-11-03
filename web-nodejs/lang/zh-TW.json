@@ -1533,7 +1533,14 @@
         "file_status_folder_uploaded": "資料夾已上傳",
         "file_status_folder_downloaded": "資料夾已下載",
         "file_status_current_file": "目前：{name}",
-        "file_folder_download_desktop_only": "資料夾下載需要 RdClient 桌面版。請逐一下載檔案，或使用 RdClient 桌面版。"
+        "file_folder_download_desktop_only": "資料夾下載需要 RdClient 桌面版。請逐一下載檔案，或使用 RdClient 桌面版。",
+        "clipboard_paste_hint": "僅同步剪貼簿 — 在 Windows 登入畫面無效。密碼請使用「輸入文字」。",
+        "type_text": "輸入文字",
+        "type_text_placeholder": "貼上或輸入文字（例如密碼）。會在遠端像鍵盤一樣輸入。",
+        "type_text_send": "傳送",
+        "type_text_done": "文字已傳送到遠端鍵盤",
+        "type_text_empty": "請輸入要在遠端鍵入的文字",
+        "type_text_unavailable": "此傳輸不支援輸入文字"
     },
     "branding": {
         "identity_title": "品牌標識",

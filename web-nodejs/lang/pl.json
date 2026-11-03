@@ -1529,7 +1529,14 @@
         "file_status_folder_uploaded": "Folder przesłany",
         "file_status_folder_downloaded": "Folder pobrany",
         "file_status_current_file": "Bieżący: {name}",
-        "file_folder_download_desktop_only": "Pobieranie folderów wymaga RdClient desktop. Pobierz pliki pojedynczo lub użyj RdClient desktop."
+        "file_folder_download_desktop_only": "Pobieranie folderów wymaga RdClient desktop. Pobierz pliki pojedynczo lub użyj RdClient desktop.",
+        "clipboard_paste_hint": "Tylko synchronizacja schowka — nie działa na logowaniu Windows. Do haseł użyj Wpisz tekst.",
+        "type_text": "Wpisz tekst",
+        "type_text_placeholder": "Wklej lub wpisz tekst (np. hasło). Zostanie wpisany na zdalnym urządzeniu jak z klawiatury.",
+        "type_text_send": "Wyślij",
+        "type_text_done": "Tekst wysłany do zdalnej klawiatury",
+        "type_text_empty": "Wpisz tekst do wysłania na zdalne urządzenie",
+        "type_text_unavailable": "Wpisz tekst jest niedostępne na tym transporcie"
     },
     "branding": {
         "identity_title": "Identyfikacja marki",

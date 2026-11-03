@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "Carpeta subida",
         "file_status_folder_downloaded": "Carpeta descargada",
         "file_status_current_file": "Actual: {name}",
-        "file_folder_download_desktop_only": "La descarga de carpetas requiere RdClient desktop. Descargue archivos uno a uno o use RdClient desktop."
+        "file_folder_download_desktop_only": "La descarga de carpetas requiere RdClient desktop. Descargue archivos uno a uno o use RdClient desktop.",
+        "clipboard_paste_hint": "Solo sincroniza el portapapeles — no funciona en el inicio de Windows. Use Escribir texto para contraseñas.",
+        "type_text": "Escribir texto",
+        "type_text_placeholder": "Pegue o escriba texto (p. ej. una contraseña). Se escribe en el remoto como con el teclado.",
+        "type_text_send": "Enviar",
+        "type_text_done": "Texto enviado al teclado remoto",
+        "type_text_empty": "Introduzca el texto a escribir en el remoto",
+        "type_text_unavailable": "Escribir texto no está disponible en este transporte"
     },
     "branding": {
         "identity_title": "Identidad de marca",

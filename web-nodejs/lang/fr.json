@@ -1533,7 +1533,14 @@
         "file_status_folder_uploaded": "Dossier téléversé",
         "file_status_folder_downloaded": "Dossier téléchargé",
         "file_status_current_file": "En cours : {name}",
-        "file_folder_download_desktop_only": "Le téléchargement de dossier nécessite RdClient desktop. Téléchargez les fichiers un par un, ou utilisez RdClient desktop."
+        "file_folder_download_desktop_only": "Le téléchargement de dossier nécessite RdClient desktop. Téléchargez les fichiers un par un, ou utilisez RdClient desktop.",
+        "clipboard_paste_hint": "Synchronise seulement le presse-papiers — inactif sur l’écran de connexion Windows. Utilisez Saisir le texte pour les mots de passe.",
+        "type_text": "Saisir le texte",
+        "type_text_placeholder": "Collez ou saisissez un texte (ex. mot de passe). Il est tapé à distance comme au clavier.",
+        "type_text_send": "Envoyer",
+        "type_text_done": "Texte envoyé au clavier distant",
+        "type_text_empty": "Saisissez le texte à taper à distance",
+        "type_text_unavailable": "Saisir le texte n’est pas disponible sur ce transport"
     },
     "branding": {
         "identity_title": "Identité de marque",

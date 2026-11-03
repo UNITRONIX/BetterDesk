@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "Map geüpload",
         "file_status_folder_downloaded": "Map gedownload",
         "file_status_current_file": "Huidig: {name}",
-        "file_folder_download_desktop_only": "Mapdownload vereist RdClient desktop. Download bestanden afzonderlijk of gebruik RdClient desktop."
+        "file_folder_download_desktop_only": "Mapdownload vereist RdClient desktop. Download bestanden afzonderlijk of gebruik RdClient desktop.",
+        "clipboard_paste_hint": "Alleen klembord-sync — werkt niet op Windows-aanmelding. Gebruik Tekst typen voor wachtwoorden.",
+        "type_text": "Tekst typen",
+        "type_text_placeholder": "Plak of typ tekst (bijv. een wachtwoord). Wordt op afstand als toetsenbord getypt.",
+        "type_text_send": "Verzenden",
+        "type_text_done": "Tekst verzonden naar remote toetsenbord",
+        "type_text_empty": "Voer tekst in om op afstand te typen",
+        "type_text_unavailable": "Tekst typen is niet beschikbaar op dit transport"
     },
     "branding": {
         "identity_title": "Merkidentiteit",

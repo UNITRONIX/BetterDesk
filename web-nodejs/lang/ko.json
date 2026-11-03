@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "폴더 업로드됨",
         "file_status_folder_downloaded": "폴더 다운로드됨",
         "file_status_current_file": "현재: {name}",
-        "file_folder_download_desktop_only": "폴더 다운로드에는 RdClient 데스크톱이 필요합니다. 파일을 개별적으로 다운로드하거나 RdClient 데스크톱을 사용하세요."
+        "file_folder_download_desktop_only": "폴더 다운로드에는 RdClient 데스크톱이 필요합니다. 파일을 개별적으로 다운로드하거나 RdClient 데스크톱을 사용하세요.",
+        "clipboard_paste_hint": "클립보드 동기화만 — Windows 로그인 화면에서는 작동하지 않습니다. 비밀번호는 텍스트 입력을 사용하세요.",
+        "type_text": "텍스트 입력",
+        "type_text_placeholder": "텍스트를 붙여넣거나 입력하세요(예: 비밀번호). 원격에서 키보드처럼 입력됩니다.",
+        "type_text_send": "보내기",
+        "type_text_done": "텍스트가 원격 키보드로 전송됨",
+        "type_text_empty": "원격에 입력할 텍스트를 입력하세요",
+        "type_text_unavailable": "이 전송에서는 텍스트 입력을 사용할 수 없습니다"
     },
     "branding": {
         "identity_title": "브랜드 아이덴티티",

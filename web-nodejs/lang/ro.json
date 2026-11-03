@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Folder încărcat",
         "file_status_folder_downloaded": "Folder descărcat",
         "file_status_current_file": "Curent: {name}",
-        "file_folder_download_desktop_only": "Descărcarea folderelor necesită RdClient desktop. Descărcați fișierele individual sau folosiți RdClient desktop."
+        "file_folder_download_desktop_only": "Descărcarea folderelor necesită RdClient desktop. Descărcați fișierele individual sau folosiți RdClient desktop.",
+        "clipboard_paste_hint": "Doar sincronizare clipboard — nu funcționează pe ecranul de autentificare Windows. Folosiți Introduceți text pentru parole.",
+        "type_text": "Introduceți text",
+        "type_text_placeholder": "Lipiți sau introduceți text (ex. o parolă). Este tastat pe remote ca de pe tastatură.",
+        "type_text_send": "Trimite",
+        "type_text_done": "Text trimis la tastatura remote",
+        "type_text_empty": "Introduceți textul de tastat pe remote",
+        "type_text_unavailable": "Introduceți text nu este disponibil pe acest transport"
     },
     "branding": {
         "identity_title": "Identitatea de marcă",

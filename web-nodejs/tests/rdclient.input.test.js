@@ -28,12 +28,15 @@ function makeDocument() {
         keyup: [],
         pointerlockchange: [],
         visibilitychange: [],
+        compositionstart: [],
+        compositionend: [],
     };
     return {
         activeElement: null,
         visibilityState: 'visible',
         addEventListener(type, fn) {
-            if (documentListeners[type]) documentListeners[type].push(fn);
+            if (!documentListeners[type]) documentListeners[type] = [];
+            documentListeners[type].push(fn);
         },
         removeEventListener(type, fn) {
             if (!documentListeners[type]) return;
@@ -494,6 +497,79 @@ describe('RDInput keyboard parity (RustDesk contract)', () => {
         expect(digit).toBeDefined();
         expect(digit.keyEvent.mode).toBe('Map');
         expect(digit.keyEvent.modifiers).not.toContain(29);
+    });
+
+    it('Auto/Windows Shift+Digit6 with key ^ → Map scancode 0x07', () => {
+        const sent = [];
+        const input = makeInput((msg) => sent.push(msg));
+        input.setPeerPlatform('Windows');
+        input.setKeyboardMode('Auto');
+        input.start();
+
+        input._handleKeyDown(keyEvt({
+            code: 'ShiftLeft',
+            key: 'Shift',
+            shiftKey: true,
+        }));
+        input._handleKeyDown(keyEvt({
+            code: 'Digit6',
+            key: '^',
+            shiftKey: true,
+        }));
+
+        const digit = sent.find((m) => m.keyEvent && m.keyEvent.chr === 0x07);
+        expect(digit).toBeDefined();
+        expect(digit.keyEvent.mode).toBe('Map');
+        expect(digit.keyEvent.modifiers).not.toContain(29);
+    });
+
+    it('re-asserts Shift Map down when shiftKey set but Shift not tracked', () => {
+        const sent = [];
+        const input = makeInput((msg) => sent.push(msg));
+        input.setPeerPlatform('Windows');
+        input.setKeyboardMode('Auto');
+        input.start();
+
+        // Missed Shift keydown — browser still reports shiftKey on Digit6.
+        input._handleKeyDown(keyEvt({
+            code: 'Digit6',
+            key: '^',
+            shiftKey: true,
+        }));
+
+        expect(sent[0].keyEvent.mode).toBe('Map');
+        expect(sent[0].keyEvent.chr).toBe(0x2A);
+        expect(sent[0].keyEvent.down).toBe(true);
+        const digit = sent.find((m) => m.keyEvent && m.keyEvent.chr === 0x07);
+        expect(digit).toBeDefined();
+        expect(digit.keyEvent.mode).toBe('Map');
+    });
+
+    it('Dead Digit6 is suppressed; compositionend sends Legacy ^', () => {
+        const sent = [];
+        const input = makeInput((msg) => sent.push(msg));
+        input.setPeerPlatform('Windows');
+        input.setKeyboardMode('Auto');
+        input.start();
+
+        input._handleKeyDown(keyEvt({
+            code: 'ShiftLeft',
+            key: 'Shift',
+            shiftKey: true,
+        }));
+        input._handleKeyDown(keyEvt({
+            code: 'Digit6',
+            key: 'Dead',
+            shiftKey: true,
+        }));
+
+        expect(sent.every((m) => m.keyEvent.chr !== 0x07)).toBe(true);
+
+        input._handleCompositionEnd({ data: '^' });
+
+        const caret = sent.find((m) => m.keyEvent && m.keyEvent.chr === 0x5E && m.keyEvent.mode === 'Legacy');
+        expect(caret).toBeDefined();
+        expect(caret.keyEvent.press).toBe(true);
     });
 
     it('Auto/Windows unshifted Digit7 → Legacy chr 55', () => {

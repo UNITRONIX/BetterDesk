@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Klasör yüklendi",
         "file_status_folder_downloaded": "Klasör indirildi",
         "file_status_current_file": "Geçerli: {name}",
-        "file_folder_download_desktop_only": "Klasör indirme RdClient masaüstünü gerektirir. Dosyaları tek tek indirin veya RdClient masaüstünü kullanın."
+        "file_folder_download_desktop_only": "Klasör indirme RdClient masaüstünü gerektirir. Dosyaları tek tek indirin veya RdClient masaüstünü kullanın.",
+        "clipboard_paste_hint": "Yalnızca panoyu senkronize eder — Windows oturum açmada çalışmaz. Parolalar için Metin yaz kullanın.",
+        "type_text": "Metin yaz",
+        "type_text_placeholder": "Metin yapıştırın veya yazın (ör. parola). Uzakta klavye gibi yazılır.",
+        "type_text_send": "Gönder",
+        "type_text_done": "Metin uzak klavyeye gönderildi",
+        "type_text_empty": "Uzakta yazılacak metni girin",
+        "type_text_unavailable": "Metin yaz bu taşımada kullanılamaz"
     },
     "branding": {
         "identity_title": "Marka Kimliği",

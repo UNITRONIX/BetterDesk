@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "Složka nahrána",
         "file_status_folder_downloaded": "Složka stažena",
         "file_status_current_file": "Aktuální: {name}",
-        "file_folder_download_desktop_only": "Stahování složek vyžaduje RdClient desktop. Stáhněte soubory jednotlivě, nebo použijte RdClient desktop."
+        "file_folder_download_desktop_only": "Stahování složek vyžaduje RdClient desktop. Stáhněte soubory jednotlivě, nebo použijte RdClient desktop.",
+        "clipboard_paste_hint": "Pouze synchronizace schránky — nefunguje na přihlášení Windows. Pro hesla použijte Napsat text.",
+        "type_text": "Napsat text",
+        "type_text_placeholder": "Vložte nebo napište text (např. heslo). Na vzdáleném zařízení se napíše jako z klávesnice.",
+        "type_text_send": "Odeslat",
+        "type_text_done": "Text odeslán na vzdálenou klávesnici",
+        "type_text_empty": "Zadejte text k napsání na vzdáleném zařízení",
+        "type_text_unavailable": "Napsat text není na tomto transportu dostupné"
     },
     "branding": {
         "identity_title": "Identita značky",

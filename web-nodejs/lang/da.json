@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Mappe uploadet",
         "file_status_folder_downloaded": "Mappe downloadet",
         "file_status_current_file": "Aktuel: {name}",
-        "file_folder_download_desktop_only": "Mappedownload kræver RdClient desktop. Download filer enkeltvis, eller brug RdClient desktop."
+        "file_folder_download_desktop_only": "Mappedownload kræver RdClient desktop. Download filer enkeltvis, eller brug RdClient desktop.",
+        "clipboard_paste_hint": "Synkroniserer kun udklipsholder — virker ikke på Windows-login. Brug Skriv tekst til adgangskoder.",
+        "type_text": "Skriv tekst",
+        "type_text_placeholder": "Indsæt eller skriv tekst (f.eks. en adgangskode). Den skrives remotet som et tastatur.",
+        "type_text_send": "Send",
+        "type_text_done": "Tekst sendt til remote-tastatur",
+        "type_text_empty": "Indtast tekst, der skal skrives på remote",
+        "type_text_unavailable": "Skriv tekst er ikke tilgængelig på denne transport"
     },
     "branding": {
         "identity_title": "Brand Identitet",

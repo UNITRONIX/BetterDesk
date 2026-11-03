@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Mappe lastet opp",
         "file_status_folder_downloaded": "Mappe lastet ned",
         "file_status_current_file": "Gjeldende: {name}",
-        "file_folder_download_desktop_only": "Mappedownload krever RdClient desktop. Last ned filer enkeltvis, eller bruk RdClient desktop."
+        "file_folder_download_desktop_only": "Mappedownload krever RdClient desktop. Last ned filer enkeltvis, eller bruk RdClient desktop.",
+        "clipboard_paste_hint": "Synkroniserer bare utklippstavlen — fungerer ikke på Windows-pålogging. Bruk Skriv tekst for passord.",
+        "type_text": "Skriv tekst",
+        "type_text_placeholder": "Lim inn eller skriv tekst (f.eks. et passord). Skrives på remote som et tastatur.",
+        "type_text_send": "Send",
+        "type_text_done": "Tekst sendt til remote-tastatur",
+        "type_text_empty": "Skriv inn tekst som skal tastes på remote",
+        "type_text_unavailable": "Skriv tekst er ikke tilgjengelig på denne transporten"
     },
     "branding": {
         "identity_title": "Merkeidentitet",

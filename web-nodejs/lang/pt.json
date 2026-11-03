@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "Pasta enviada",
         "file_status_folder_downloaded": "Pasta baixada",
         "file_status_current_file": "Atual: {name}",
-        "file_folder_download_desktop_only": "O download de pastas requer o RdClient desktop. Baixe arquivos individualmente ou use o RdClient desktop."
+        "file_folder_download_desktop_only": "O download de pastas requer o RdClient desktop. Baixe arquivos individualmente ou use o RdClient desktop.",
+        "clipboard_paste_hint": "Apenas sincroniza a área de transferência — não funciona no login do Windows. Use Digitar texto para senhas.",
+        "type_text": "Digitar texto",
+        "type_text_placeholder": "Cole ou digite texto (ex.: uma senha). É digitado no remoto como no teclado.",
+        "type_text_send": "Enviar",
+        "type_text_done": "Texto enviado ao teclado remoto",
+        "type_text_empty": "Introduza o texto a digitar no remoto",
+        "type_text_unavailable": "Digitar texto não está disponível neste transporte"
     },
     "branding": {
         "identity_title": "Identidade da marca",

@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Folder diunggah",
         "file_status_folder_downloaded": "Folder diunduh",
         "file_status_current_file": "Saat ini: {name}",
-        "file_folder_download_desktop_only": "Unduhan folder memerlukan RdClient desktop. Unduh file satu per satu, atau gunakan RdClient desktop."
+        "file_folder_download_desktop_only": "Unduhan folder memerlukan RdClient desktop. Unduh file satu per satu, atau gunakan RdClient desktop.",
+        "clipboard_paste_hint": "Hanya sinkron clipboard — tidak berfungsi di login Windows. Gunakan Ketik teks untuk kata sandi.",
+        "type_text": "Ketik teks",
+        "type_text_placeholder": "Tempel atau ketik teks (mis. kata sandi). Diketik di remote seperti keyboard.",
+        "type_text_send": "Kirim",
+        "type_text_done": "Teks dikirim ke keyboard remote",
+        "type_text_empty": "Masukkan teks untuk diketik di remote",
+        "type_text_unavailable": "Ketik teks tidak tersedia pada transport ini"
     },
     "branding": {
         "identity_title": "Identitas Merek",

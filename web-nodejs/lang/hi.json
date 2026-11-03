@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "फ़ोल्डर अपलोड हो गया",
         "file_status_folder_downloaded": "फ़ोल्डर डाउनलोड हो गया",
         "file_status_current_file": "वर्तमान: {name}",
-        "file_folder_download_desktop_only": "फ़ोल्डर डाउनलोड के लिए RdClient डेस्कटॉप आवश्यक है। फ़ाइलें अलग-अलग डाउनलोड करें, या RdClient डेस्कटॉप उपयोग करें।"
+        "file_folder_download_desktop_only": "फ़ोल्डर डाउनलोड के लिए RdClient डेस्कटॉप आवश्यक है। फ़ाइलें अलग-अलग डाउनलोड करें, या RdClient डेस्कटॉप उपयोग करें।",
+        "clipboard_paste_hint": "केवल क्लिपबोर्ड सिंक — Windows लॉगिन पर काम नहीं करता। पासवर्ड के लिए टेक्स्ट टाइप करें उपयोग करें।",
+        "type_text": "टेक्स्ट टाइप करें",
+        "type_text_placeholder": "टेक्स्ट पेस्ट या टाइप करें (जैसे पासवर्ड)। रिमोट पर कीबोर्ड की तरह टाइप होगा।",
+        "type_text_send": "भेजें",
+        "type_text_done": "टेक्स्ट रिमोट कीबोर्ड पर भेजा गया",
+        "type_text_empty": "रिमोट पर टाइप करने के लिए टेक्स्ट दर्ज करें",
+        "type_text_unavailable": "इस ट्रांसपोर्ट पर टेक्स्ट टाइप उपलब्ध नहीं है"
     },
     "branding": {
         "identity_title": "ब्रांड पहचान",

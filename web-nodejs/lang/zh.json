@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "文件夹已上传",
         "file_status_folder_downloaded": "文件夹已下载",
         "file_status_current_file": "当前：{name}",
-        "file_folder_download_desktop_only": "文件夹下载需要 RdClient 桌面端。请逐个下载文件，或使用 RdClient 桌面端。"
+        "file_folder_download_desktop_only": "文件夹下载需要 RdClient 桌面端。请逐个下载文件，或使用 RdClient 桌面端。",
+        "clipboard_paste_hint": "仅同步剪贴板 — 在 Windows 登录界面无效。密码请使用“输入文本”。",
+        "type_text": "输入文本",
+        "type_text_placeholder": "粘贴或输入文本（例如密码）。将在远程像键盘一样输入。",
+        "type_text_send": "发送",
+        "type_text_done": "文本已发送到远程键盘",
+        "type_text_empty": "请输入要在远程键入的文本",
+        "type_text_unavailable": "此传输不支持输入文本"
     },
     "branding": {
         "identity_title": "品牌标识",

@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "อัปโหลดโฟลเดอร์แล้ว",
         "file_status_folder_downloaded": "ดาวน์โหลดโฟลเดอร์แล้ว",
         "file_status_current_file": "ปัจจุบัน: {name}",
-        "file_folder_download_desktop_only": "การดาวน์โหลดโฟลเดอร์ต้องใช้ RdClient เดสก์ท็อป ดาวน์โหลดไฟล์ทีละไฟล์ หรือใช้ RdClient เดสก์ท็อป"
+        "file_folder_download_desktop_only": "การดาวน์โหลดโฟลเดอร์ต้องใช้ RdClient เดสก์ท็อป ดาวน์โหลดไฟล์ทีละไฟล์ หรือใช้ RdClient เดสก์ท็อป",
+        "clipboard_paste_hint": "ซิงค์คลิปบอร์ดเท่านั้น — ใช้ไม่ได้บนหน้าล็อกอิน Windows ใช้ พิมพ์ข้อความ สำหรับรหัสผ่าน",
+        "type_text": "พิมพ์ข้อความ",
+        "type_text_placeholder": "วางหรือพิมพ์ข้อความ (เช่น รหัสผ่าน) จะถูกพิมพ์บนรีโมตเหมือนแป้นพิมพ์",
+        "type_text_send": "ส่ง",
+        "type_text_done": "ส่งข้อความไปยังแป้นพิมพ์รีโมตแล้ว",
+        "type_text_empty": "ป้อนข้อความที่จะพิมพ์บนรีโมต",
+        "type_text_unavailable": "พิมพ์ข้อความใช้ไม่ได้บนการส่งนี้"
     },
     "branding": {
         "identity_title": "เอกลักษณ์ของแบรนด์",

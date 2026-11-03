@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Папку завантажено",
         "file_status_folder_downloaded": "Папку завантажено",
         "file_status_current_file": "Поточний: {name}",
-        "file_folder_download_desktop_only": "Завантаження папок потребує RdClient desktop. Завантажте файли окремо або скористайтеся RdClient desktop."
+        "file_folder_download_desktop_only": "Завантаження папок потребує RdClient desktop. Завантажте файли окремо або скористайтеся RdClient desktop.",
+        "clipboard_paste_hint": "Лише синхронізація буфера — не працює на екрані входу Windows. Для паролів використовуйте Ввести текст.",
+        "type_text": "Ввести текст",
+        "type_text_placeholder": "Вставте або введіть текст (напр. пароль). Його буде набрано на віддаленому ПК як з клавіатури.",
+        "type_text_send": "Надіслати",
+        "type_text_done": "Текст надіслано на віддалену клавіатуру",
+        "type_text_empty": "Введіть текст для набору на віддаленому ПК",
+        "type_text_unavailable": "Ввести текст недоступно на цьому транспорті"
     },
     "branding": {
         "identity_title": "Ідентичність бренду",

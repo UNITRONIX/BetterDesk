@@ -1523,7 +1523,14 @@
         "file_status_folder_uploaded": "تم رفع المجلد",
         "file_status_folder_downloaded": "تم تنزيل المجلد",
         "file_status_current_file": "الحالي: {name}",
-        "file_folder_download_desktop_only": "يتطلب تنزيل المجلدات تطبيق RdClient لسطح المكتب. نزّل الملفات فرديًا أو استخدم RdClient لسطح المكتب."
+        "file_folder_download_desktop_only": "يتطلب تنزيل المجلدات تطبيق RdClient لسطح المكتب. نزّل الملفات فرديًا أو استخدم RdClient لسطح المكتب.",
+        "clipboard_paste_hint": "يزامن الحافظة فقط — لا يعمل على شاشة تسجيل دخول Windows. استخدم كتابة النص لكلمات المرور.",
+        "type_text": "كتابة النص",
+        "type_text_placeholder": "الصق أو اكتب نصًا (مثل كلمة مرور). يُكتب على الجهاز البعيد كلوحة مفاتيح.",
+        "type_text_send": "إرسال",
+        "type_text_done": "تم إرسال النص إلى لوحة المفاتيح البعيدة",
+        "type_text_empty": "أدخل النص للكتابة على الجهاز البعيد",
+        "type_text_unavailable": "كتابة النص غير متاحة على هذا النقل"
     },
     "branding": {
         "identity_title": "هوية العلامة التجارية",

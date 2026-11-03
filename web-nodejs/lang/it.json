@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "Cartella caricata",
         "file_status_folder_downloaded": "Cartella scaricata",
         "file_status_current_file": "Corrente: {name}",
-        "file_folder_download_desktop_only": "Il download delle cartelle richiede RdClient desktop. Scarica i file singolarmente oppure usa RdClient desktop."
+        "file_folder_download_desktop_only": "Il download delle cartelle richiede RdClient desktop. Scarica i file singolarmente oppure usa RdClient desktop.",
+        "clipboard_paste_hint": "Sincronizza solo gli appunti — non funziona sul login Windows. Per le password usa Digita testo.",
+        "type_text": "Digita testo",
+        "type_text_placeholder": "Incolla o digita testo (es. una password). Viene digitato sul remoto come da tastiera.",
+        "type_text_send": "Invia",
+        "type_text_done": "Testo inviato alla tastiera remota",
+        "type_text_empty": "Inserisci il testo da digitare sul remoto",
+        "type_text_unavailable": "Digita testo non è disponibile su questo trasporto"
     },
     "branding": {
         "identity_title": "Identità del marchio",

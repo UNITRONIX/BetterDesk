@@ -1516,7 +1516,14 @@
         "file_status_folder_uploaded": "Ordner hochgeladen",
         "file_status_folder_downloaded": "Ordner heruntergeladen",
         "file_status_current_file": "Aktuell: {name}",
-        "file_folder_download_desktop_only": "Ordner-Download erfordert RdClient Desktop. Einzelne Dateien herunterladen oder RdClient Desktop verwenden."
+        "file_folder_download_desktop_only": "Ordner-Download erfordert RdClient Desktop. Einzelne Dateien herunterladen oder RdClient Desktop verwenden.",
+        "clipboard_paste_hint": "Nur Zwischenablage — funktioniert nicht am Windows-Anmeldebildschirm. Für Passwörter „Text eingeben“ nutzen.",
+        "type_text": "Text eingeben",
+        "type_text_placeholder": "Text einfügen oder tippen (z. B. Passwort). Wird remote wie über die Tastatur eingegeben.",
+        "type_text_send": "Senden",
+        "type_text_done": "Text an Remote-Tastatur gesendet",
+        "type_text_empty": "Text zum Tippen auf dem Remote eingeben",
+        "type_text_unavailable": "Text eingeben ist auf diesem Transport nicht verfügbar"
     },
     "branding": {
         "identity_title": "Markenidentität",

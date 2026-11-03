@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Mappa feltöltve",
         "file_status_folder_downloaded": "Mappa letöltve",
         "file_status_current_file": "Aktuális: {name}",
-        "file_folder_download_desktop_only": "A mappa letöltéséhez RdClient desktop szükséges. Töltse le a fájlokat egyenként, vagy használja az RdClient desktopot."
+        "file_folder_download_desktop_only": "A mappa letöltéséhez RdClient desktop szükséges. Töltse le a fájlokat egyenként, vagy használja az RdClient desktopot.",
+        "clipboard_paste_hint": "Csak vágólap-szinkron — nem működik a Windows bejelentkezésen. Jelszavakhoz használd a Szöveg beírása funkciót.",
+        "type_text": "Szöveg beírása",
+        "type_text_placeholder": "Illesszen be vagy írjon szöveget (pl. jelszó). Távoli gépen billentyűzetként kerül beírásra.",
+        "type_text_send": "Küldés",
+        "type_text_done": "Szöveg elküldve a távoli billentyűzetre",
+        "type_text_empty": "Adja meg a távoli gépen begépelendő szöveget",
+        "type_text_unavailable": "A Szöveg beírása nem érhető el ezen a szállításon"
     },
     "branding": {
         "identity_title": "Márkaidentitás",

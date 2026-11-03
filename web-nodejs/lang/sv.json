@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Mapp uppladdad",
         "file_status_folder_downloaded": "Mapp nedladdad",
         "file_status_current_file": "Aktuell: {name}",
-        "file_folder_download_desktop_only": "Mappnedladdning kräver RdClient desktop. Ladda ner filer individuellt eller använd RdClient desktop."
+        "file_folder_download_desktop_only": "Mappnedladdning kräver RdClient desktop. Ladda ner filer individuellt eller använd RdClient desktop.",
+        "clipboard_paste_hint": "Synkar bara urklipp — fungerar inte på Windows-inloggning. Använd Skriv text för lösenord.",
+        "type_text": "Skriv text",
+        "type_text_placeholder": "Klistra in eller skriv text (t.ex. ett lösenord). Skrivs på fjärrdatorn som från tangentbord.",
+        "type_text_send": "Skicka",
+        "type_text_done": "Text skickad till fjärrtangentbord",
+        "type_text_empty": "Ange text att skriva på fjärrdatorn",
+        "type_text_unavailable": "Skriv text är inte tillgängligt på denna transport"
     },
     "branding": {
         "identity_title": "Varumärkesidentitet",

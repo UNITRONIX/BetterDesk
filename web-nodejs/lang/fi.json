@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Kansio ladattu",
         "file_status_folder_downloaded": "Kansio ladattu",
         "file_status_current_file": "Nykyinen: {name}",
-        "file_folder_download_desktop_only": "Kansion lataus edellyttää RdClient desktopia. Lataa tiedostot yksitellen tai käytä RdClient desktopia."
+        "file_folder_download_desktop_only": "Kansion lataus edellyttää RdClient desktopia. Lataa tiedostot yksitellen tai käytä RdClient desktopia.",
+        "clipboard_paste_hint": "Synkronoi vain leikepöydän — ei toimi Windowsin kirjautumisessa. Käytä Kirjoita teksti salasanoille.",
+        "type_text": "Kirjoita teksti",
+        "type_text_placeholder": "Liitä tai kirjoita teksti (esim. salasana). Se kirjoitetaan etäkoneelle kuin näppäimistöllä.",
+        "type_text_send": "Lähetä",
+        "type_text_done": "Teksti lähetetty etänäppäimistölle",
+        "type_text_empty": "Kirjoita etäkoneelle kirjoitettava teksti",
+        "type_text_unavailable": "Kirjoita teksti ei ole saatavilla tällä siirtoyhteydellä"
     },
     "branding": {
         "identity_title": "Brändin identiteetti",

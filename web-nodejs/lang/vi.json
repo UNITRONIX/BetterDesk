@@ -1522,7 +1522,14 @@
         "file_status_folder_uploaded": "Đã tải thư mục lên",
         "file_status_folder_downloaded": "Đã tải thư mục xuống",
         "file_status_current_file": "Hiện tại: {name}",
-        "file_folder_download_desktop_only": "Tải thư mục xuống cần RdClient desktop. Hãy tải từng tệp hoặc dùng RdClient desktop."
+        "file_folder_download_desktop_only": "Tải thư mục xuống cần RdClient desktop. Hãy tải từng tệp hoặc dùng RdClient desktop.",
+        "clipboard_paste_hint": "Chỉ đồng bộ clipboard — không hoạt động trên màn hình đăng nhập Windows. Dùng Gõ văn bản cho mật khẩu.",
+        "type_text": "Gõ văn bản",
+        "type_text_placeholder": "Dán hoặc gõ văn bản (ví dụ mật khẩu). Được gõ trên máy từ xa như bàn phím.",
+        "type_text_send": "Gửi",
+        "type_text_done": "Đã gửi văn bản tới bàn phím từ xa",
+        "type_text_empty": "Nhập văn bản để gõ trên máy từ xa",
+        "type_text_unavailable": "Gõ văn bản không khả dụng trên vận chuyển này"
     },
     "branding": {
         "identity_title": "Nhận diện thương hiệu",

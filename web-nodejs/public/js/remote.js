@@ -1417,6 +1417,70 @@
         closeAllDropdowns();
     });
 
+    // Type text as remote keystrokes (Winlogon / password fields)
+    function sendTypeTextFromPanel() {
+        const session = getActiveSession();
+        const input = document.getElementById('type-text-input');
+        const text = input?.value || '';
+        if (!session || !session.client) return;
+        if (session.client.viewOnly) {
+            showToast(_('remote.view_only') || 'View only mode', 'warning');
+            return;
+        }
+        if (!text) {
+            showToast(_('remote.type_text_empty') || 'Enter text to type on the remote', 'warning');
+            return;
+        }
+        if (typeof session.client.sendText !== 'function') {
+            showToast(_('remote.type_text_unavailable') || 'Type text is not available on this transport', 'warning');
+            return;
+        }
+        const ok = session.client.sendText(text);
+        if (ok === false) {
+            showToast(_('remote.type_text_unavailable') || 'Type text is not available on this transport', 'warning');
+            return;
+        }
+        if (input) input.value = '';
+        showToast(_('remote.type_text_done') || 'Text sent to remote keyboard', 'success');
+        closeAllDropdowns();
+    }
+
+    document.getElementById('btn-type-text')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllDropdowns('type-text-menu');
+        const menu = document.getElementById('type-text-menu');
+        const btn = document.getElementById('btn-type-text');
+        menu?.classList.toggle('open');
+        const open = menu?.classList.contains('open');
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) {
+            setTimeout(() => document.getElementById('type-text-input')?.focus(), 0);
+        }
+    });
+
+    document.getElementById('btn-type-text-send')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sendTypeTextFromPanel();
+    });
+
+    document.getElementById('type-text-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            closeAllDropdowns();
+            return;
+        }
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            sendTypeTextFromPanel();
+        }
+    });
+
+    document.getElementById('type-text-menu')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
     // Block Input toggle
     setupToggle('btn-block-input', (on) => withClient(c => c.setBlockInput(on)));
 
@@ -1841,6 +1905,11 @@
         document.querySelectorAll('.toolbar-dropdown-menu.open').forEach(m => {
             if (m.id !== exceptId) m.classList.remove('open');
         });
+        const typeBtn = document.getElementById('btn-type-text');
+        const typeMenu = document.getElementById('type-text-menu');
+        if (typeBtn && typeMenu && !typeMenu.classList.contains('open')) {
+            typeBtn.setAttribute('aria-expanded', 'false');
+        }
     }
 
     function setupToggle(btnId, onChange) {

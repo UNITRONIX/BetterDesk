@@ -249,6 +249,79 @@ const RDKeyboardEncoder = {
     },
 
     /**
+     * Inject a composed / typed character without a DOM KeyboardEvent
+     * (dead-key compositionend, toolbar type-text single chars).
+     * @param {string} ch - one Unicode character (uses first code point)
+     * @returns {object|null}
+     */
+    encodeCharPress(ch) {
+        if (!ch || typeof ch !== 'string') return null;
+        const cp = ch.codePointAt(0);
+        if (cp == null) return null;
+        // BMP Latin-1 and ASCII → Legacy chr (RustDesk host path).
+        if (cp <= 0xff) {
+            return {
+                chr: cp,
+                down: true,
+                press: true,
+                modifiers: [],
+                mode: 'Legacy',
+            };
+        }
+        return {
+            unicode: cp,
+            down: true,
+            press: true,
+            modifiers: [],
+            mode: 'Legacy',
+        };
+    },
+
+    /**
+     * KeyEvent.seq payload for typing a string as remote keystrokes.
+     * @param {string} text
+     * @returns {object|null}
+     */
+    encodeTextSeq(text) {
+        if (!text || typeof text !== 'string') return null;
+        return {
+            seq: text,
+            down: true,
+            press: true,
+            modifiers: [],
+            mode: 'Legacy',
+        };
+    },
+
+    /**
+     * Map-mode ShiftLeft keydown used when e.shiftKey is set but Shift was
+     * never recorded in pressedKeys (sticky / missed keydown desync).
+     * @param {object|null} scancodeLib
+     * @param {string} [peerPlatform]
+     * @returns {object|null}
+     */
+    buildShiftReassertDown(scancodeLib, peerPlatform = '') {
+        const scLib = this._getScancodeLib(scancodeLib);
+        const sc = scLib?.codeToScancode('ShiftLeft', peerPlatform);
+        if (sc != null) {
+            return {
+                chr: sc,
+                down: true,
+                press: false,
+                modifiers: [],
+                mode: 'Map',
+            };
+        }
+        return {
+            controlKey: 'Shift',
+            down: true,
+            press: false,
+            modifiers: [],
+            mode: 'Legacy',
+        };
+    },
+
+    /**
      * Build zero or one RustDesk keyEvent payload.
      * @param {object} opts
      * @param {string} opts.code
@@ -274,6 +347,12 @@ const RDKeyboardEncoder = {
             pressedCodes,
             scancodeLib = null,
         } = opts;
+
+        // Dead keys (e.g. PL Shift+6 → ^) must not emit Map Digit scancodes;
+        // RDInput waits for compositionend and sends encodeCharPress instead.
+        if (key === 'Dead') {
+            return null;
+        }
 
         const modState = this.modifierStateFromPressed(pressedCodes);
         const scLib = this._getScancodeLib(scancodeLib);

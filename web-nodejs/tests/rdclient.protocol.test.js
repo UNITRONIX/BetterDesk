@@ -303,6 +303,23 @@ describe('RDClient KeyEvent protobuf encoding', () => {
         expect(decoded.keyEvent.modifiers).toEqual(['CapsLock']);
     });
 
+    it('encodes KeyEvent.seq for type-as-keystrokes text', () => {
+        const buf = Message.encode(Message.fromObject({
+            keyEvent: {
+                seq: 'P@ssw0rd^!',
+                down: true,
+                press: true,
+                modifiers: [],
+                mode: 'Legacy',
+            },
+        })).finish();
+        expect(buf.length).toBeGreaterThan(0);
+        const decoded = Message.decode(buf).toJSON();
+        expect(decoded.keyEvent.seq).toBe('P@ssw0rd^!');
+        expect(decoded.keyEvent.mode).toBe('Legacy');
+        expect(decoded.keyEvent.press).toBe(true);
+    });
+
     it('does not encode control_key snake_case alias on KeyEvent', () => {
         const buf = Message.encode(Message.fromObject({
             keyEvent: { control_key: 'Shift', down: true, mode: 'Legacy' },
