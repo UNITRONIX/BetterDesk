@@ -180,8 +180,8 @@
                 <td>${(r.bandwidth_mbps || 0).toFixed(1)} Mbps</td>
                 <td><span class="scaling-status ${r.status || 'offline'}">${_('scaling.status_' + (r.status || 'offline'))}</span></td>
                 <td>
-                    <button class="btn-icon" onclick="Scaling.editRelay('${escAttr(r.id)}')" title="${_('scaling.edit')}"><span class="material-icons">edit</span></button>
-                    <button class="btn-icon" onclick="Scaling.deleteRelay('${escAttr(r.id)}')" title="${_('scaling.delete')}"><span class="material-icons">delete</span></button>
+                    <button class="btn-icon" data-bd-call="Scaling.editRelay" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.edit')}"><span class="material-icons">edit</span></button>
+                    <button class="btn-icon" data-bd-call="Scaling.deleteRelay" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.delete')}"><span class="material-icons">delete</span></button>
                 </td>
             </tr>
         `).join('');
@@ -305,8 +305,8 @@
                 <td>${escHtml(r.fallback || 'master')}</td>
                 <td><span class="scaling-status ${r.enabled !== false ? 'enabled' : 'disabled'}">${r.enabled !== false ? _('scaling.status_enabled') : _('scaling.status_disabled')}</span></td>
                 <td>
-                    <button class="btn-icon" onclick="Scaling.editRule('${escAttr(r.id)}')" title="${_('scaling.edit')}"><span class="material-icons">edit</span></button>
-                    <button class="btn-icon" onclick="Scaling.deleteRule('${escAttr(r.id)}')" title="${_('scaling.delete')}"><span class="material-icons">delete</span></button>
+                    <button class="btn-icon" data-bd-call="Scaling.editRule" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.edit')}"><span class="material-icons">edit</span></button>
+                    <button class="btn-icon" data-bd-call="Scaling.deleteRule" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.delete')}"><span class="material-icons">delete</span></button>
                 </td>
             </tr>
         `).join('');

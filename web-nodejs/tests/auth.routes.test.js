@@ -143,12 +143,17 @@ describe('Auth Routes', () => {
 
             const res = await request(app)
                 .post('/api/auth/login')
-                .send({ username: 'admin', password: 'correct' });
+                .send({ username: 'admin', password: 'correct', clientFingerprint: 'aabbccddeeff0011' });
 
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
             expect(res.body.user).toBeDefined();
             expect(res.body.user.username).toBe('admin');
+            expect(res.body.session).toBeDefined();
+            expect(res.body.session.idleTimeoutMs).toBeGreaterThan(0);
+            expect(db.logAction).toHaveBeenCalledWith(
+                1, 'login', expect.stringContaining('ip='), expect.anything()
+            );
         });
 
         it('should return totpRequired when 2FA is enabled', async () => {
@@ -165,6 +170,29 @@ describe('Auth Routes', () => {
 
             expect(res.status).toBe(200);
             expect(res.body.totpRequired).toBe(true);
+        });
+    });
+
+    describe('GET /api/auth/verify', () => {
+        it('returns session policy fields for authenticated users', async () => {
+            const res = await request(authenticatedApp())
+                .get('/api/auth/verify');
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.session).toBeDefined();
+            expect(res.body.session.idleTimeoutMs).toBeGreaterThan(0);
+            expect(res.body.session.maxAgeMs).toBeGreaterThan(0);
+        });
+    });
+
+    describe('GET /api/auth/sessions', () => {
+        it('returns session list payload for the current user', async () => {
+            const res = await request(authenticatedApp())
+                .get('/api/auth/sessions');
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(Array.isArray(res.body.data.sessions)).toBe(true);
+            expect(res.body.data.policy).toBeDefined();
         });
     });
 

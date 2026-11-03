@@ -527,10 +527,28 @@ type Database interface {
 	GetBannedPeerCount() (int, error)
 
 	// Status tracking
-	UpdatePeerStatus(id string, status string, ip string) error
-	BatchUpdatePeerStatus(ids []string, status string) error
+	// source identifies the observer (signal, heartbeat, cdap, mesh, admin, …).
+	// Transitions are recorded to peer_availability_events only when the feature
+	// is enabled in server_config and from_status != to_status.
+	UpdatePeerStatus(id string, status string, ip string, source string) error
+	BatchUpdatePeerStatus(ids []string, status string, source string) error
 	UpdatePeerSysinfo(id, hostname, os, version string) error
+	// SetAllOffline marks every peer OFFLINE at process start. It intentionally
+	// does NOT write availability events (avoids restart downtime floods).
 	SetAllOffline() error
+
+	// Availability history (#455) — optional, gated by server_config.
+	GetPeerAvailabilityEvents(peerID string, from, to time.Time) ([]*PeerAvailabilityEvent, error)
+	CleanupOldAvailabilityEvents(maxAge time.Duration) (int64, error)
+	IsAvailabilityHistoryEnabled() bool
+	AvailabilityHistoryRetentionDays() int
+	InvalidateAvailabilityHistoryCache()
+
+	// Connection sessions — server-observed PunchHole/RequestRelay + relay end.
+	StartPeerConnectionSession(sess *PeerConnectionSession) (int64, error)
+	EndPeerConnectionSessionByRelay(relayUUID string) error
+	ListPeerConnectionSessions(hostID string, limit int) ([]*PeerConnectionSession, error)
+	CleanupOldPeerConnectionSessions(maxAge time.Duration) (int64, error)
 
 	// Peer field updates
 	UpdatePeerFields(id string, fields map[string]string) error
@@ -816,4 +834,10 @@ type Database interface {
 	ListBillingCurrencies() ([]*BillingCurrency, error)
 	UpsertBillingCurrency(c *BillingCurrency) error
 	DeleteBillingCurrency(code string) error
+
+	UpsertBillingPeriodTotal(t *BillingPeriodTotal) error
+	AddBillingPeriodUsage(contractID, packageID, periodYM, timezone string, includedUsed, overageMin int, amountOverage float64, limitSnapshot int) error
+	GetBillingPeriodTotal(contractID, periodYM string) (*BillingPeriodTotal, error)
+	ListBillingPeriodTotalsByPackage(packageID string) ([]*BillingPeriodTotal, error)
+	ListBillingPeriodTotalsByContract(contractID string) ([]*BillingPeriodTotal, error)
 }

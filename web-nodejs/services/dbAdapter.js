@@ -28,6 +28,7 @@ const agentBundleService = require('./agentBundleService');
 const { hashAccessToken } = require('../lib/tokenHash');
 const { redactAuditDetails } = require('../lib/logRedact');
 const { normalizeProductType, normalizeBuildStatus } = require('../lib/generatorBuildTypes');
+const { assertSafeSqlIdent, isSafeSqlIdent } = require('../lib/safeSqlIdent');
 
 // Lazy-loaded drivers — keeps startup fast when one backend isn't installed.
 let _sqlite = null;
@@ -2062,7 +2063,10 @@ function createSqliteAdapter(config) {
         async getBackupStats() {
             const db = openAuth();
             const c = (tbl) => {
-                try { return db.prepare(`SELECT COUNT(*) as c FROM ${tbl}`).get().c; }
+                try {
+                    const safe = assertSafeSqlIdent(tbl);
+                    return db.prepare(`SELECT COUNT(*) as c FROM ${safe}`).get().c;
+                }
                 catch (_) { return 0; }
             };
             return {
@@ -2094,9 +2098,11 @@ function createSqliteAdapter(config) {
             ).all();
             const tables = {};
             for (const { name } of tableRows) {
+                if (!isSafeSqlIdent(name)) continue;
                 try {
-                    const rows = db.prepare(`SELECT * FROM "${name}"`).all();
-                    tables[name] = rows.map((row) => {
+                    const safe = assertSafeSqlIdent(name);
+                    const rows = db.prepare(`SELECT * FROM "${safe}"`).all();
+                    tables[safe] = rows.map((row) => {
                         const out = {};
                         for (const [k, v] of Object.entries(row)) {
                             out[k] = Buffer.isBuffer(v) ? { __buf__: v.toString('base64') } : v;
@@ -2125,13 +2131,16 @@ function createSqliteAdapter(config) {
             db.pragma('foreign_keys = OFF');
             try {
                 for (const [name, rows] of Object.entries(tables)) {
-                    if (!liveTables.has(name) || !Array.isArray(rows)) { result.skipped.push(name); continue; }
-                    const cols = new Set(db.prepare(`PRAGMA table_info("${name}")`).all().map((c) => c.name));
+                    if (!isSafeSqlIdent(name) || !liveTables.has(name) || !Array.isArray(rows)) {
+                        result.skipped.push(name); continue;
+                    }
+                    const safe = assertSafeSqlIdent(name);
+                    const cols = new Set(db.prepare(`PRAGMA table_info("${safe}")`).all().map((c) => c.name));
                     try {
                         const tx = db.transaction(() => {
-                            db.prepare(`DELETE FROM "${name}"`).run();
+                            db.prepare(`DELETE FROM "${safe}"`).run();
                             for (const row of rows) {
-                                const keys = Object.keys(row).filter((k) => cols.has(k));
+                                const keys = Object.keys(row).filter((k) => cols.has(k) && isSafeSqlIdent(k));
                                 if (keys.length === 0) continue;
                                 const vals = keys.map((k) => {
                                     const v = row[k];
@@ -2142,12 +2151,12 @@ function createSqliteAdapter(config) {
                                 });
                                 const placeholders = keys.map(() => '?').join(', ');
                                 db.prepare(
-                                    `INSERT OR REPLACE INTO "${name}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`
+                                    `INSERT OR REPLACE INTO "${safe}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`
                                 ).run(...vals);
                             }
                         });
                         tx();
-                        result.restored.push(name);
+                        result.restored.push(safe);
                     } catch (err) {
                         result.warnings.push(`Table ${name}: ${err.message}`);
                     }
@@ -5554,7 +5563,10 @@ function createPostgresAdapter() {
         },
         async getBackupStats() {
             const c = async (tbl) => {
-                try { return +(await one(`SELECT COUNT(*) AS c FROM ${tbl}`)).c; }
+                try {
+                    const safe = assertSafeSqlIdent(tbl);
+                    return +(await one(`SELECT COUNT(*) AS c FROM ${safe}`)).c;
+                }
                 catch (_) { return 0; }
             };
             return {
@@ -5583,10 +5595,11 @@ function createPostgresAdapter() {
             );
             const tables = {};
             for (const { table_name } of tableRows) {
-                if (!/^[A-Za-z0-9_]+$/.test(table_name)) continue;
+                if (!isSafeSqlIdent(table_name)) continue;
                 try {
-                    const rows = await all(`SELECT * FROM "${table_name}"`);
-                    tables[table_name] = rows.map((row) => {
+                    const safe = assertSafeSqlIdent(table_name);
+                    const rows = await all(`SELECT * FROM "${safe}"`);
+                    tables[safe] = rows.map((row) => {
                         const out = {};
                         for (const [k, v] of Object.entries(row)) {
                             out[k] = Buffer.isBuffer(v) ? { __buf__: v.toString('base64') } : v;
@@ -5615,19 +5628,20 @@ function createPostgresAdapter() {
                 // Relax FK ordering for the bulk reload (best-effort; ignored if not permitted).
                 try { await client.query("SET session_replication_role = 'replica'"); } catch (_) { /* ignore */ }
                 for (const [name, rows] of Object.entries(tables)) {
-                    if (!liveTables.has(name) || !Array.isArray(rows) || !/^[A-Za-z0-9_]+$/.test(name)) {
+                    if (!isSafeSqlIdent(name) || !liveTables.has(name) || !Array.isArray(rows)) {
                         result.skipped.push(name); continue;
                     }
+                    const safe = assertSafeSqlIdent(name);
                     const colRes = await client.query(
                         `SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=$1`,
-                        [name]
+                        [safe]
                     );
                     const cols = new Set(colRes.rows.map((r) => r.column_name));
                     try {
                         await client.query('BEGIN');
-                        await client.query(`DELETE FROM "${name}"`);
+                        await client.query(`DELETE FROM "${safe}"`);
                         for (const row of rows) {
-                            const keys = Object.keys(row).filter((k) => cols.has(k));
+                            const keys = Object.keys(row).filter((k) => cols.has(k) && isSafeSqlIdent(k));
                             if (keys.length === 0) continue;
                             const vals = keys.map((k) => {
                                 const v = row[k];
@@ -5638,12 +5652,12 @@ function createPostgresAdapter() {
                             });
                             const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
                             await client.query(
-                                `INSERT INTO "${name}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`,
+                                `INSERT INTO "${safe}" (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`,
                                 vals
                             );
                         }
                         await client.query('COMMIT');
-                        result.restored.push(name);
+                        result.restored.push(safe);
                     } catch (err) {
                         try { await client.query('ROLLBACK'); } catch (_) { /* ignore */ }
                         result.warnings.push(`Table ${name}: ${err.message}`);

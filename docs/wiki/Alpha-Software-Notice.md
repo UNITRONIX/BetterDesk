@@ -13,7 +13,7 @@ Some desktop apps in this repo are still alpha. The Go server, web console, stoc
 | Go server | Stable (3.5.x) | Yes |
 | Web console (Node.js 22+) | Stable (3.5.x) | Yes |
 | Stock RustDesk client | Stable | Yes |
-| Support Agent (Go / Wails UI) | Production path | Yes — build from [[Client Generator\|Client-Generator]] |
+| Support Agent (incoming-only) | Production path | Yes — import from [[BetterDesk Agents\|Client-Generator]] / BetterDesk-Client |
 | Native CDAP agent (Go) | Stable | Yes for headless / IoT |
 | MeshAgent compat layer | Optional (on by default) | Yes if you need it |
 | MGMT Client (Tauri) | Alpha | No |
@@ -30,7 +30,7 @@ Operator desktop app. Incomplete remote pipeline, token refresh, bulk actions, f
 
 ## Agent Client (Tauri) — alpha
 
-Older endpoint app. Prefer **Support Agent** from the Client Generator for inbound support over Web Remote / CDAP.
+Older endpoint app. Prefer **Support Agent** from BetterDesk Agents / BetterDesk-Client for inbound support over Web Remote / CDAP.
 
 ## Native BetterDesk Desktop (Flutter)
 

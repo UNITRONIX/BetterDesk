@@ -64,12 +64,13 @@ describe('billingClockConfigService Docker split mode', () => {
             trust_os_ntp: false,
         }, { restart: false });
 
-        expect(apiClient.put).toHaveBeenCalledWith('/timesync/config', {
+        expect(apiClient.put).toHaveBeenCalledWith('/timesync/config', expect.objectContaining({
             ntp_servers: 'time.example.com',
             max_skew_ms: 3500,
             require_synced_clock: false,
             trust_os_ntp: false,
-        });
+            billing_timezone: expect.any(String),
+        }));
         expect(result.dockerMode).toBe(true);
         expect(result.restart).toBeNull();
         expect(sanitizeGoServerServiceConfig).not.toHaveBeenCalled();

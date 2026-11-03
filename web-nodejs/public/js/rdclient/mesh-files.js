@@ -226,12 +226,29 @@
 
     MeshFileTransfer.prototype.browseParent = function () {
         if (!this._currentPath) return;
-        var parent = this._currentPath.replace(/[\\/]+$/, '');
-        var sep = parent.indexOf('\\') >= 0 ? '\\' : '/';
-        var lastSep = parent.lastIndexOf(sep);
-        if (lastSep > 0) parent = parent.substring(0, lastSep);
-        else if (lastSep === 0) parent = sep;
-        else parent = '';
+        var parent;
+        if (typeof RDFileTransfer !== 'undefined' && RDFileTransfer.parentRemotePath) {
+            parent = RDFileTransfer.parentRemotePath(this._currentPath);
+        } else {
+            // Fallback when filetransfer.js is not loaded (same Windows drive-root rules)
+            parent = String(this._currentPath).replace(/[\\/]+$/, '');
+            if (!parent) {
+                parent = '';
+            } else if (/^[A-Za-z]:$/.test(parent)) {
+                parent = '';
+            } else {
+                var sep = parent.indexOf('\\') >= 0 ? '\\' : '/';
+                var lastSep = parent.lastIndexOf(sep);
+                if (lastSep > 0) {
+                    parent = parent.substring(0, lastSep);
+                    if (/^[A-Za-z]:$/.test(parent)) parent = parent + '\\';
+                } else if (lastSep === 0) {
+                    parent = sep;
+                } else {
+                    parent = '';
+                }
+            }
+        }
         this.browseDir(parent);
     };
 

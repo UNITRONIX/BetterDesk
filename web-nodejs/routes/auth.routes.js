@@ -25,6 +25,8 @@ try {
 const { guestOnly, requireAuth } = require('../middleware/auth');
 const { clearGuestCookie } = require('../middleware/guestAccess');
 const { loginLimiter, passwordChangeLimiter } = require('../middleware/rateLimiter');
+const panelSessionService = require('../services/panelSessionService');
+const { END_REASONS } = require('../lib/sessionPolicy');
 
 /**
  * Validate that a return URL is a safe relative path. Mirrors
@@ -116,6 +118,7 @@ router.get('/login', guestOnly, async (req, res) => {
 router.post('/api/auth/login', loginLimiter, async (req, res) => {
     try {
         const { username, password } = req.body;
+        const clientMeta = panelSessionService.clientMetaFromRequest(req, req.body || {});
         
         if (!username || !password) {
             return res.status(400).json({
@@ -136,7 +139,12 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
 
         if (authService.isAuthFailure(user)) {
             authService.recordAttempt(username, req.ip, false);
-            await db.logAction(null, 'login_failed', `Username collision: ${username}`, req.ip);
+            await db.logAction(
+                null,
+                'login_failed',
+                `Username collision: ${username}; ip=${clientMeta.ip}; ua=${clientMeta.userAgent.slice(0, 160)}`,
+                req.ip
+            );
 
             if (user.__authFailure === 'username_collision') {
                 return res.status(409).json({
@@ -155,7 +163,12 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
         if (!user) {
             // Record failed attempt (shared brute-force tracker with /api/bd/operator/login)
             authService.recordAttempt(username, req.ip, false);
-            await db.logAction(null, 'login_failed', `Username: ${username}`, req.ip);
+            await db.logAction(
+                null,
+                'login_failed',
+                `Username: ${username}; ip=${clientMeta.ip}; ua=${clientMeta.userAgent.slice(0, 160)}`,
+                req.ip
+            );
             
             return res.status(401).json({
                 success: false,
@@ -179,6 +192,7 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
             // Store pending 2FA session
             req.session.pendingTotpUserId = user.id;
             req.session.pendingTotpUser = user;
+            req.session.pendingClientMeta = clientMeta;
             // Phase A: store Go partial token for delegated TOTP verification
             if (user.goPartialToken) {
                 req.session.goPartialToken = user.goPartialToken;
@@ -191,38 +205,54 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
         }
         
         // Regenerate session to prevent session fixation
-        const oldSession = req.session;
         req.session.regenerate(async (err) => {
             if (err) {
                 console.error('Session regeneration error:', err);
                 return res.status(500).json({ success: false, error: 'Server error' });
             }
-            
-            // Restore session data
-            req.session.userId = user.id;
-            req.session.user = {
-                id: user.id,
-                username: user.username,
-                role: user.role
-            };
-            // Phase A: store emergency mode flag in session for UI banner
-            if (user.emergencyMode) {
-                req.session.emergencyMode = true;
-            }
 
-            // Drop stale guest cookie so Web Remote is not guest-hijacked after login
-            clearGuestCookie(res);
-            
-            // Log successful login
-            await db.logAction(user.id, 'login', `User logged in`, req.ip);
-            
-            res.json({
-                success: true,
-                user: {
-                    username: user.username,
-                    role: user.role
+            try {
+                const { replaced } = await panelSessionService.establishAuthenticatedSession(req, user, {
+                    meta: clientMeta,
+                    extra: user.emergencyMode ? { emergencyMode: true } : undefined
+                });
+                clearGuestCookie(res);
+
+                const replaceNote = replaced.length
+                    ? `; replaced=${replaced.length} prior session(s)`
+                    : '';
+                await db.logAction(
+                    user.id,
+                    'login',
+                    `User logged in; ip=${clientMeta.ip}; ua=${clientMeta.userAgent.slice(0, 160)}; ` +
+                    `fingerprint=${clientMeta.clientFingerprint || 'none'}${replaceNote}`,
+                    req.ip
+                );
+                if (replaced.length) {
+                    await db.logAction(
+                        user.id,
+                        'session_replaced',
+                        `New login replaced ${replaced.length} prior session(s); newIp=${clientMeta.ip}`,
+                        req.ip
+                    );
                 }
-            });
+
+                res.json({
+                    success: true,
+                    user: {
+                        username: user.username,
+                        role: user.role
+                    },
+                    session: {
+                        replacedPriorSessions: replaced.length,
+                        idleTimeoutMs: panelSessionService.getPolicy().idleTimeoutMs,
+                        maxAgeMs: panelSessionService.getPolicy().maxAgeMs
+                    }
+                });
+            } catch (sessionErr) {
+                console.error('Session establish error:', sessionErr);
+                return res.status(500).json({ success: false, error: 'Server error' });
+            }
         });
     } catch (err) {
         console.error('Login error:', err);
@@ -242,6 +272,7 @@ router.post('/api/auth/logout', async (req, res) => {
     if (userId) {
         await db.logAction(userId, 'logout', 'User logged out', req.ip);
     }
+    await panelSessionService.endCurrentSession(req, END_REASONS.LOGOUT);
     
     req.session.destroy((err) => {
         if (err) {
@@ -258,10 +289,48 @@ router.post('/api/auth/logout', async (req, res) => {
  * GET /api/auth/verify - Verify session is valid
  */
 router.get('/api/auth/verify', requireAuth, (req, res) => {
+    const policy = panelSessionService.getPolicy();
+    const createdAt = Number(req.session.createdAt) || null;
+    const lastActivityAt = Number(req.session.lastActivityAt) || null;
+    const now = Date.now();
     res.json({
         success: true,
-        user: req.session.user
+        user: req.session.user,
+        session: {
+            createdAt,
+            lastActivityAt,
+            loginIp: req.session.loginIp || null,
+            idleTimeoutMs: policy.idleTimeoutMs,
+            maxAgeMs: policy.maxAgeMs,
+            warnBeforeMs: policy.warnBeforeMs,
+            idleExpiresAt: lastActivityAt ? lastActivityAt + policy.idleTimeoutMs : null,
+            absoluteExpiresAt: createdAt ? createdAt + policy.maxAgeMs : null,
+            serverNow: now
+        }
     });
+});
+
+/**
+ * GET /api/auth/sessions - Current user's panel session history (owner only)
+ */
+router.get('/api/auth/sessions', requireAuth, async (req, res) => {
+    try {
+        const sessions = await panelSessionService.listSessionsForUser(
+            req.session.userId,
+            req.sessionID,
+            { includeEnded: true, limit: 50 }
+        );
+        res.json({
+            success: true,
+            data: {
+                sessions,
+                policy: panelSessionService.getPolicy()
+            }
+        });
+    } catch (err) {
+        console.error('List sessions error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
 });
 
 /**
@@ -322,7 +391,14 @@ router.post('/api/auth/password', requireAuth, passwordChangeLimiter, async (req
 /**
  * GET /logout - Logout (redirect)
  */
-router.get('/logout', (req, res) => {
+router.get('/logout', async (req, res) => {
+    const userId = req.session?.userId;
+    if (userId) {
+        try {
+            await db.logAction(userId, 'logout', 'User logged out', req.ip);
+        } catch (_) { /* best-effort */ }
+    }
+    await panelSessionService.endCurrentSession(req, END_REASONS.LOGOUT);
     req.session.destroy(() => {
         res.clearCookie('betterdesk.sid');
         res.clearCookie('bd.sid');
@@ -462,7 +538,7 @@ router.get('/api/auth/oidc/session', async (req, res) => {
         }
 
         // Regenerate session to prevent fixation across the authentication boundary.
-        req.session.regenerate((err) => {
+        req.session.regenerate(async (err) => {
             if (err) {
                 console.error('OIDC session regenerate error:', err);
                 return res.redirect('/login?error=oidc_error');
@@ -471,33 +547,59 @@ router.get('/api/auth/oidc/session', async (req, res) => {
             // Trust the role from the exchange response (server-to-server), not
             // the URL. Fall back to the locally stored role only if Go omitted one.
             const effectiveRole = role || user.role || 'viewer';
+            const clientMeta = panelSessionService.clientMetaFromRequest(req);
 
-            req.session.userId = user.id;
-            req.session.username = user.username;
-            req.session.role = effectiveRole;
-            req.session.user = {
-                id: user.id,
-                username: user.username,
-                role: effectiveRole,
-                preferred_language: user.preferred_language || null
-            };
-            req.session.goToken = token;
-            req.session.authMethod = 'oidc';
-            clearGuestCookie(res);
+            try {
+                const { replaced } = await panelSessionService.establishAuthenticatedSession(req, {
+                    id: user.id,
+                    username: user.username,
+                    role: effectiveRole,
+                    preferred_language: user.preferred_language || null
+                }, {
+                    meta: clientMeta,
+                    extra: {
+                        username: user.username,
+                        role: effectiveRole,
+                        goToken: token,
+                        authMethod: 'oidc'
+                    }
+                });
+                clearGuestCookie(res);
 
-            req.session.save(async (saveErr) => {
-                if (saveErr) {
-                    console.error('OIDC session save error:', saveErr);
-                    return res.redirect('/login?error=oidc_error');
-                }
+                req.session.save(async (saveErr) => {
+                    if (saveErr) {
+                        console.error('OIDC session save error:', saveErr);
+                        return res.redirect('/login?error=oidc_error');
+                    }
 
-                try {
-                    await db.updateLastLogin(user.id);
-                } catch (bookkeepingErr) {
-                    console.error('OIDC post-auth bookkeeping error:', bookkeepingErr);
-                }
-                res.redirect(safeReturnUrl);
-            });
+                    try {
+                        await db.updateLastLogin(user.id);
+                        const replaceNote = replaced.length
+                            ? `; replaced=${replaced.length} prior session(s)`
+                            : '';
+                        await db.logAction(
+                            user.id,
+                            'login',
+                            `User logged in via OIDC; ip=${clientMeta.ip}; ua=${clientMeta.userAgent.slice(0, 160)}${replaceNote}`,
+                            req.ip
+                        );
+                        if (replaced.length) {
+                            await db.logAction(
+                                user.id,
+                                'session_replaced',
+                                `OIDC login replaced ${replaced.length} prior session(s); newIp=${clientMeta.ip}`,
+                                req.ip
+                            );
+                        }
+                    } catch (bookkeepingErr) {
+                        console.error('OIDC post-auth bookkeeping error:', bookkeepingErr);
+                    }
+                    res.redirect(safeReturnUrl);
+                });
+            } catch (sessionErr) {
+                console.error('OIDC session establish error:', sessionErr);
+                return res.redirect('/login?error=oidc_error');
+            }
         });
     } catch (err) {
         console.error('OIDC session creation error:', err);
@@ -589,6 +691,7 @@ router.post('/api/auth/totp/verify', loginLimiter, async (req, res) => {
  * Regenerates session, sets user data, logs action.
  */
 function finalizeLoginSession(req, res, pendingUser, method) {
+    const pendingMeta = req.session.pendingClientMeta || panelSessionService.clientMetaFromRequest(req, req.body || {});
     return new Promise((resolve) => {
         req.session.regenerate(async (regenErr) => {
             if (regenErr) {
@@ -600,28 +703,47 @@ function finalizeLoginSession(req, res, pendingUser, method) {
                 return resolve();
             }
 
-            req.session.userId = pendingUser.id;
-            req.session.user = {
-                id: pendingUser.id,
-                username: pendingUser.username,
-                role: pendingUser.role
-            };
-            clearGuestCookie(res);
-
             try {
+                const { replaced } = await panelSessionService.establishAuthenticatedSession(req, pendingUser, {
+                    meta: pendingMeta
+                });
+                clearGuestCookie(res);
+
                 await db.updateLastLogin(pendingUser.id);
-                await db.logAction(pendingUser.id, 'login', `User logged in (2FA: ${method})`, req.ip);
+                const replaceNote = replaced.length
+                    ? `; replaced=${replaced.length} prior session(s)`
+                    : '';
+                await db.logAction(
+                    pendingUser.id,
+                    'login',
+                    `User logged in (2FA: ${method}); ip=${pendingMeta.ip}; ua=${pendingMeta.userAgent.slice(0, 160)}${replaceNote}`,
+                    req.ip
+                );
+                if (replaced.length) {
+                    await db.logAction(
+                        pendingUser.id,
+                        'session_replaced',
+                        `2FA login replaced ${replaced.length} prior session(s); newIp=${pendingMeta.ip}`,
+                        req.ip
+                    );
+                }
+
+                res.json({
+                    success: true,
+                    user: {
+                        username: pendingUser.username,
+                        role: pendingUser.role
+                    },
+                    session: {
+                        replacedPriorSessions: replaced.length,
+                        idleTimeoutMs: panelSessionService.getPolicy().idleTimeoutMs,
+                        maxAgeMs: panelSessionService.getPolicy().maxAgeMs
+                    }
+                });
             } catch (logErr) {
                 console.error('TOTP post-auth bookkeeping error:', logErr);
+                res.status(500).json({ success: false, error: 'Server error' });
             }
-
-            res.json({
-                success: true,
-                user: {
-                    username: pendingUser.username,
-                    role: pendingUser.role
-                }
-            });
             resolve();
         });
     });

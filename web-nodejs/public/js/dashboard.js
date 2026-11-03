@@ -776,9 +776,9 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     function initAgentActivation() {
         activateAgentQrButton = findById('activate-agent-qr-btn');
         activationModal = findById('dashboard-agent-activation-modal');
-        if (!activateAgentQrButton || !activationModal) return;
+        if (!activationModal) return;
         activateAgentQrHandler = openAgentActivation;
-        activateAgentQrButton.addEventListener('click', activateAgentQrHandler);
+        activateAgentQrButton?.addEventListener('click', activateAgentQrHandler);
         activationCloseButton = findById('dashboard-agent-activation-close');
         activationStopButton = findById('dashboard-agent-activation-stop');
         activationFileButton = findById('dashboard-agent-activation-file-btn');
@@ -794,6 +794,18 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         activationFileButton?.addEventListener('click', () => activationFileInput?.click());
         activationFileInput?.addEventListener('change', scanAgentQrImage);
         activationSubmitButton?.addEventListener('click', submitAgentActivation);
+
+        // Deep-link from Główne → Aktywuj agenta (/?activateAgent=1)
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.get('activateAgent') === '1') {
+                const navItem = document.getElementById('nav-activate-agent');
+                if (navItem) navItem.classList.add('active');
+                if (activateAgentQrButton || activationModal) {
+                    openAgentActivation();
+                }
+            }
+        } catch (_) { /* ignore */ }
     }
 
     async function openAgentActivation() {

@@ -10,19 +10,19 @@
 
     <!-- Tab navigation -->
     <div class="crossplatform-tabs">
-        <button class="crossplatform-tab ${activeTab === 'matrix' ? 'active' : ''}" data-tab="matrix" onclick="CrossPlatform.switchTab('matrix')">
+        <button class="crossplatform-tab ${activeTab === 'matrix' ? 'active' : ''}" data-tab="matrix" data-bd-call="CrossPlatform.switchTab" data-bd-args='["matrix"]'>
             <span class="material-icons">grid_on</span>
             <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_matrix') : 'Compatibility Matrix' }</span>
         </button>
-        <button class="crossplatform-tab ${activeTab === 'distribution' ? 'active' : ''}" data-tab="distribution" onclick="CrossPlatform.switchTab('distribution')">
+        <button class="crossplatform-tab ${activeTab === 'distribution' ? 'active' : ''}" data-tab="distribution" data-bd-call="CrossPlatform.switchTab" data-bd-args='["distribution"]'>
             <span class="material-icons">pie_chart</span>
             <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_distribution') : 'Distribution' }</span>
         </button>
-        <button class="crossplatform-tab ${activeTab === 'protocols' ? 'active' : ''}" data-tab="protocols" onclick="CrossPlatform.switchTab('protocols')">
+        <button class="crossplatform-tab ${activeTab === 'protocols' ? 'active' : ''}" data-tab="protocols" data-bd-call="CrossPlatform.switchTab" data-bd-args='["protocols"]'>
             <span class="material-icons">cable</span>
             <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_protocols') : 'Protocols' }</span>
         </button>
-        <button class="crossplatform-tab ${activeTab === 'limitations' ? 'active' : ''}" data-tab="limitations" onclick="CrossPlatform.switchTab('limitations')">
+        <button class="crossplatform-tab ${activeTab === 'limitations' ? 'active' : ''}" data-tab="limitations" data-bd-call="CrossPlatform.switchTab" data-bd-args='["limitations"]'>
             <span class="material-icons">warning_amber</span>
             <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_limitations') : 'Limitations' }</span>
         </button>

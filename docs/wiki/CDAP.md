@@ -14,7 +14,7 @@ CDAP talks to devices over WebSocket (`:21122` by default): metrics, widgets, co
 | Support Agent / Web Remote inbound support | Yes (Generator builds use CDAP) |
 | Custom sensors / IoT bridges | Yes |
 
-Quick path: [[Client Generator|Client-Generator]] → Support Agent, or [SDK docs](https://github.com/UNITRONIX/BetterDesk/tree/dev/docs/sdk).
+Quick path: [[BetterDesk Agents|Client-Generator]] → Import Support Agent, or [SDK docs](https://github.com/UNITRONIX/BetterDesk/tree/dev/docs/sdk).
 
 ---
 

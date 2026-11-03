@@ -133,7 +133,7 @@
                     <td>${badgeFor(res.monitors)}</td>
                     <td>${badgeFor(res.disks)}</td>
                     <td>${badgeFor(res.quotas)}</td>
-                    <td><button class="rc-action-btn" onclick="ResourceControl.configure('${escHtml(d.id)}')">${_('resource_control.btn_configure')}</button></td>
+                    <td><button class="rc-action-btn" data-bd-call="ResourceControl.configure" data-bd-args='["${escHtml(d.id)}"]'>${_('resource_control.btn_configure')}</button></td>
                 </tr>
             `;
         }).join('');

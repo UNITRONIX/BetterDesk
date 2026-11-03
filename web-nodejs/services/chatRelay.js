@@ -33,7 +33,7 @@
 const WebSocket = require('ws');
 const db = require('./database');
 const { verifyDeviceWsAuth } = require('../lib/deviceTokenAuth');
-const { roleHasPermission } = require('../middleware/auth');
+const { roleHasEffectivePermission } = require('../middleware/auth');
 
 const log = {
     info:  (...a) => console.log('[Chat]', ...a),
@@ -708,13 +708,22 @@ function initChatRelay(server, sessionMiddleware, betterdeskApi) {
             const opMatch = pathname.match(/^\/ws\/chat-operator\/([^/]+)$/);
             if (opMatch) {
                 if (!enforceOrigin(req, socket, `chat-operator ${pathname}`)) return;
-                sessionMiddleware(req, {}, () => {
+                sessionMiddleware(req, {}, async () => {
                     if (!req.session || !req.session.userId) {
                         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
                         socket.destroy();
                         return;
                     }
-                    if (!roleHasPermission(req.session.user?.role, 'chat.access')) {
+                    let canAccessChat = false;
+                    try {
+                        canAccessChat = await roleHasEffectivePermission(
+                            req.session.user?.role,
+                            'chat.access'
+                        );
+                    } catch (_) {
+                        canAccessChat = false;
+                    }
+                    if (!canAccessChat) {
                         socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
                         socket.destroy();
                         return;

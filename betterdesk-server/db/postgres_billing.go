@@ -27,10 +27,13 @@ func scanBillingSessionPG(row pgScanner) (*BillingSession, error) {
 }
 
 func (pg *PostgresDB) CreateBillingPackage(p *BillingPackage) error {
+	if p.RoundingMinutes <= 0 {
+		p.RoundingMinutes = 10
+	}
 	_, err := pg.pool.Exec(pg.ctx,
-		`INSERT INTO billing_packages (id, name, description, included_minutes, overage_rate, currency, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
-		p.ID, p.Name, p.Description, p.IncludedMinutes, p.OverageRate, p.Currency,
+		`INSERT INTO billing_packages (id, name, description, included_minutes, rounding_minutes, overage_rate, currency, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+		p.ID, p.Name, p.Description, p.IncludedMinutes, p.RoundingMinutes, p.OverageRate, p.Currency,
 	)
 	return err
 }
@@ -38,9 +41,9 @@ func (pg *PostgresDB) CreateBillingPackage(p *BillingPackage) error {
 func (pg *PostgresDB) GetBillingPackage(id string) (*BillingPackage, error) {
 	var p BillingPackage
 	err := pg.pool.QueryRow(pg.ctx,
-		`SELECT id, name, description, included_minutes, overage_rate, currency, created_at, updated_at
+		`SELECT id, name, description, included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
 		 FROM billing_packages WHERE id = $1`, id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.OverageRate, &p.Currency, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.RoundingMinutes, &p.OverageRate, &p.Currency, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +52,7 @@ func (pg *PostgresDB) GetBillingPackage(id string) (*BillingPackage, error) {
 
 func (pg *PostgresDB) ListBillingPackages() ([]*BillingPackage, error) {
 	rows, err := pg.pool.Query(pg.ctx,
-		`SELECT id, name, description, included_minutes, overage_rate, currency, created_at, updated_at
+		`SELECT id, name, description, included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
 		 FROM billing_packages ORDER BY name`,
 	)
 	if err != nil {
@@ -60,7 +63,7 @@ func (pg *PostgresDB) ListBillingPackages() ([]*BillingPackage, error) {
 	var out []*BillingPackage
 	for rows.Next() {
 		var p BillingPackage
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.OverageRate, &p.Currency, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.RoundingMinutes, &p.OverageRate, &p.Currency, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, &p)
@@ -69,10 +72,13 @@ func (pg *PostgresDB) ListBillingPackages() ([]*BillingPackage, error) {
 }
 
 func (pg *PostgresDB) UpdateBillingPackage(p *BillingPackage) error {
+	if p.RoundingMinutes <= 0 {
+		p.RoundingMinutes = 10
+	}
 	_, err := pg.pool.Exec(pg.ctx,
-		`UPDATE billing_packages SET name = $1, description = $2, included_minutes = $3, overage_rate = $4, currency = $5, updated_at = NOW()
-		 WHERE id = $6`,
-		p.Name, p.Description, p.IncludedMinutes, p.OverageRate, p.Currency, p.ID,
+		`UPDATE billing_packages SET name = $1, description = $2, included_minutes = $3, rounding_minutes = $4, overage_rate = $5, currency = $6, updated_at = NOW()
+		 WHERE id = $7`,
+		p.Name, p.Description, p.IncludedMinutes, p.RoundingMinutes, p.OverageRate, p.Currency, p.ID,
 	)
 	return err
 }
@@ -136,7 +142,7 @@ const pgBillingContractTargetNameSQL = `
 func (pg *PostgresDB) queryBillingContract(where string, args ...any) (*BillingContract, error) {
 	query := `SELECT c.id, c.target_type, c.target_key, c.package_id, c.status, c.remaining_minutes, c.overage_rate,
 		c.hourly_rate, c.currency, c.valid_from, c.valid_until, c.created_at, c.updated_at,
-		COALESCE(p.name, ''), ` + pgBillingContractTargetNameSQL + `
+		COALESCE(c.current_period_ym, ''), COALESCE(p.name, ''), ` + pgBillingContractTargetNameSQL + `
 		FROM billing_contracts c
 		LEFT JOIN billing_packages p ON p.id = c.package_id ` + where
 
@@ -146,7 +152,7 @@ func (pg *PostgresDB) queryBillingContract(where string, args ...any) (*BillingC
 	err := pg.pool.QueryRow(pg.ctx, query, args...).Scan(
 		&c.ID, &c.TargetType, &c.TargetKey, &c.PackageID, &c.Status, &c.RemainingMinutes, &overage,
 		&c.HourlyRate, &c.Currency, &validFrom, &validUntil, &c.CreatedAt, &c.UpdatedAt,
-		&c.PackageName, &c.TargetName,
+		&c.CurrentPeriodYM, &c.PackageName, &c.TargetName,
 	)
 	if err != nil {
 		return nil, err
@@ -191,7 +197,7 @@ func (pg *PostgresDB) ListBillingContracts(filter BillingContractFilter) ([]*Bil
 
 	query := `SELECT c.id, c.target_type, c.target_key, c.package_id, c.status, c.remaining_minutes, c.overage_rate,
 		c.hourly_rate, c.currency, c.valid_from, c.valid_until, c.created_at, c.updated_at,
-		COALESCE(p.name, ''), ` + pgBillingContractTargetNameSQL + `
+		COALESCE(c.current_period_ym, ''), COALESCE(p.name, ''), ` + pgBillingContractTargetNameSQL + `
 		FROM billing_contracts c
 		LEFT JOIN billing_packages p ON p.id = c.package_id`
 	if len(conds) > 0 {
@@ -213,7 +219,7 @@ func (pg *PostgresDB) ListBillingContracts(filter BillingContractFilter) ([]*Bil
 		if err := rows.Scan(
 			&c.ID, &c.TargetType, &c.TargetKey, &c.PackageID, &c.Status, &c.RemainingMinutes, &overage,
 			&c.HourlyRate, &c.Currency, &validFrom, &validUntil, &c.CreatedAt, &c.UpdatedAt,
-			&c.PackageName, &c.TargetName,
+			&c.CurrentPeriodYM, &c.PackageName, &c.TargetName,
 		); err != nil {
 			return nil, err
 		}
@@ -233,9 +239,9 @@ func (pg *PostgresDB) ListBillingOrgContracts(filter BillingContractFilter) ([]*
 func (pg *PostgresDB) UpdateBillingContract(c *BillingContract) error {
 	_, err := pg.pool.Exec(pg.ctx,
 		`UPDATE billing_contracts SET status = $1, remaining_minutes = $2, overage_rate = $3, hourly_rate = $4, currency = $5,
-		 valid_from = $6, valid_until = $7, updated_at = NOW() WHERE id = $8`,
+		 valid_from = $6, valid_until = $7, current_period_ym = $8, updated_at = NOW() WHERE id = $9`,
 		c.Status, c.RemainingMinutes, c.OverageRate, c.HourlyRate, c.Currency,
-		c.ValidFrom, c.ValidUntil, c.ID,
+		c.ValidFrom, c.ValidUntil, c.CurrentPeriodYM, c.ID,
 	)
 	return err
 }
@@ -478,4 +484,91 @@ func (pg *PostgresDB) UpsertBillingCurrency(c *BillingCurrency) error {
 func (pg *PostgresDB) DeleteBillingCurrency(code string) error {
 	_, err := pg.pool.Exec(pg.ctx, `DELETE FROM billing_currencies WHERE code = $1`, strings.ToUpper(code))
 	return err
+}
+
+func (pg *PostgresDB) UpsertBillingPeriodTotal(t *BillingPeriodTotal) error {
+	_, err := pg.pool.Exec(pg.ctx,
+		`INSERT INTO billing_period_totals (contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, included_limit_snapshot, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+		 ON CONFLICT (contract_id, period_ym) DO UPDATE SET
+		   package_id = EXCLUDED.package_id,
+		   timezone = EXCLUDED.timezone,
+		   included_minutes_used = EXCLUDED.included_minutes_used,
+		   overage_minutes = EXCLUDED.overage_minutes,
+		   amount_overage = EXCLUDED.amount_overage,
+		   included_limit_snapshot = CASE WHEN EXCLUDED.included_limit_snapshot > 0 THEN EXCLUDED.included_limit_snapshot ELSE billing_period_totals.included_limit_snapshot END,
+		   updated_at = NOW()`,
+		t.ContractID, t.PackageID, t.PeriodYM, t.Timezone, t.IncludedMinutesUsed, t.OverageMinutes, t.AmountOverage, t.IncludedLimitSnapshot,
+	)
+	return err
+}
+
+func (pg *PostgresDB) AddBillingPeriodUsage(contractID, packageID, periodYM, timezone string, includedUsed, overageMin int, amountOverage float64, limitSnapshot int) error {
+	_, err := pg.pool.Exec(pg.ctx,
+		`INSERT INTO billing_period_totals (contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, included_limit_snapshot, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+		 ON CONFLICT (contract_id, period_ym) DO UPDATE SET
+		   package_id = EXCLUDED.package_id,
+		   timezone = EXCLUDED.timezone,
+		   included_minutes_used = billing_period_totals.included_minutes_used + EXCLUDED.included_minutes_used,
+		   overage_minutes = billing_period_totals.overage_minutes + EXCLUDED.overage_minutes,
+		   amount_overage = billing_period_totals.amount_overage + EXCLUDED.amount_overage,
+		   included_limit_snapshot = CASE WHEN billing_period_totals.included_limit_snapshot > 0 THEN billing_period_totals.included_limit_snapshot ELSE EXCLUDED.included_limit_snapshot END,
+		   updated_at = NOW()`,
+		contractID, packageID, periodYM, timezone, includedUsed, overageMin, amountOverage, limitSnapshot,
+	)
+	return err
+}
+
+func (pg *PostgresDB) GetBillingPeriodTotal(contractID, periodYM string) (*BillingPeriodTotal, error) {
+	var t BillingPeriodTotal
+	err := pg.pool.QueryRow(pg.ctx,
+		`SELECT id, contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, COALESCE(included_limit_snapshot, 0), updated_at
+		 FROM billing_period_totals WHERE contract_id = $1 AND period_ym = $2`, contractID, periodYM,
+	).Scan(&t.ID, &t.ContractID, &t.PackageID, &t.PeriodYM, &t.Timezone, &t.IncludedMinutesUsed, &t.OverageMinutes, &t.AmountOverage, &t.IncludedLimitSnapshot, &t.UpdatedAt)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &t, nil
+}
+
+func (pg *PostgresDB) ListBillingPeriodTotalsByPackage(packageID string) ([]*BillingPeriodTotal, error) {
+	rows, err := pg.pool.Query(pg.ctx,
+		`SELECT id, contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, COALESCE(included_limit_snapshot, 0), updated_at
+		 FROM billing_period_totals WHERE package_id = $1 ORDER BY period_ym DESC`, packageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanBillingPeriodTotalsPG(rows)
+}
+
+func (pg *PostgresDB) ListBillingPeriodTotalsByContract(contractID string) ([]*BillingPeriodTotal, error) {
+	rows, err := pg.pool.Query(pg.ctx,
+		`SELECT id, contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, COALESCE(included_limit_snapshot, 0), updated_at
+		 FROM billing_period_totals WHERE contract_id = $1 ORDER BY period_ym DESC`, contractID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanBillingPeriodTotalsPG(rows)
+}
+
+func scanBillingPeriodTotalsPG(rows interface {
+	Next() bool
+	Scan(dest ...any) error
+	Err() error
+}) ([]*BillingPeriodTotal, error) {
+	var out []*BillingPeriodTotal
+	for rows.Next() {
+		var t BillingPeriodTotal
+		if err := rows.Scan(&t.ID, &t.ContractID, &t.PackageID, &t.PeriodYM, &t.Timezone, &t.IncludedMinutesUsed, &t.OverageMinutes, &t.AmountOverage, &t.IncludedLimitSnapshot, &t.UpdatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, &t)
+	}
+	return out, rows.Err()
 }

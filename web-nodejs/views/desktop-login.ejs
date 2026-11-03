@@ -139,17 +139,6 @@
             </div>
         </div>
 
-        <!-- Session expired indicator (shown when redirected from session timeout) -->
-        <script nonce="<%= cspNonce %>">
-            window.BetterDesk = window.BetterDesk || {};
-            window.BetterDesk.users = <%- JSON.stringify(loginUsers || []) %>;
-            window.BetterDesk.csrfToken = '<%= csrfToken %>';
-            // Detect session expiry: if we arrived from a non-login page, session expired
-            if (document.referrer && !document.referrer.includes('/login')) {
-                window.BetterDesk.sessionExpired = true;
-            }
-        </script>
-
     <% if (typeof attestationBadge !== 'undefined' && attestationBadge && attestationBadge.valid && attestationBadge.tier) { %>
     <div class="login-attestation-badge">
         <%- include('partials/server-attestation-badge', {
@@ -175,6 +164,7 @@
         };
     </script>
     <script src="/js/utils.js?v=<%= cacheVersion %>"></script>
+    <script src="/js/notifications.js?v=<%= cacheVersion %>"></script>
     <script src="/js/i18n-client.js?v=<%= cacheVersion %>"></script>
     <script src="/js/desktop-login.js?v=<%= cacheVersion %>"></script>
 </body>

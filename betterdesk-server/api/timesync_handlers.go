@@ -19,6 +19,7 @@ type timeSyncConfigPayload struct {
 	MaxSkewMS          int    `json:"max_skew_ms"`
 	RequireSyncedClock bool   `json:"require_synced_clock"`
 	TrustOSNTP         bool   `json:"trust_os_ntp"`
+	BillingTimezone    string `json:"billing_timezone,omitempty"`
 }
 
 func timeSyncConfigFromService(service *timesync.Service) timeSyncConfigPayload {
@@ -28,6 +29,7 @@ func timeSyncConfigFromService(service *timesync.Service) timeSyncConfigPayload 
 		MaxSkewMS:          int(cfg.MaxSkew.Milliseconds()),
 		RequireSyncedClock: cfg.RequireSync,
 		TrustOSNTP:         cfg.TrustOSNTP,
+		BillingTimezone:    strings.TrimSpace(cfg.BillingTimezone),
 	}
 }
 
@@ -118,12 +120,20 @@ func (s *Server) handleSetTimeSyncConfig(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "max_skew_ms must be between 1 and 600000"})
 		return
 	}
+	billingTZ := strings.TrimSpace(body.BillingTimezone)
+	if billingTZ != "" {
+		if _, err := time.LoadLocation(billingTZ); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "billing_timezone must be a valid IANA timezone"})
+			return
+		}
+	}
 
 	next := timeSyncConfigPayload{
 		NTPServers:         servers,
 		MaxSkewMS:          body.MaxSkewMS,
 		RequireSyncedClock: body.RequireSyncedClock,
 		TrustOSNTP:         body.TrustOSNTP,
+		BillingTimezone:    billingTZ,
 	}
 	encoded, err := json.Marshal(next)
 	if err != nil {
@@ -137,12 +147,13 @@ func (s *Server) handleSetTimeSyncConfig(w http.ResponseWriter, r *http.Request)
 
 	active := s.timeSync.GetConfig()
 	s.timeSync.ApplyConfig(timesync.Config{
-		Servers:      strings.Split(next.NTPServers, ","),
-		Interval:     active.Interval,
-		QueryTimeout: active.QueryTimeout,
-		MaxSkew:      time.Duration(next.MaxSkewMS) * time.Millisecond,
-		RequireSync:  next.RequireSyncedClock,
-		TrustOSNTP:   next.TrustOSNTP,
+		Servers:         strings.Split(next.NTPServers, ","),
+		Interval:        active.Interval,
+		QueryTimeout:    active.QueryTimeout,
+		MaxSkew:         time.Duration(next.MaxSkewMS) * time.Millisecond,
+		RequireSync:     next.RequireSyncedClock,
+		TrustOSNTP:      next.TrustOSNTP,
+		BillingTimezone: next.BillingTimezone,
 	})
 	status := s.timeSync.CheckNow()
 
@@ -152,6 +163,7 @@ func (s *Server) handleSetTimeSyncConfig(w http.ResponseWriter, r *http.Request)
 			"max_skew_ms":          strconv.Itoa(next.MaxSkewMS),
 			"require_synced_clock": strconv.FormatBool(next.RequireSyncedClock),
 			"trust_os_ntp":         strconv.FormatBool(next.TrustOSNTP),
+			"billing_timezone":     next.BillingTimezone,
 		})
 	}
 

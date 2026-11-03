@@ -22,18 +22,43 @@
     // ============ Session Expiry Detection ============
 
     function checkSessionExpired() {
-        if (window.BetterDesk && window.BetterDesk.sessionExpired) {
-            // Skip lock screen, go straight to login form with message
-            var lockScreen = document.getElementById('dl-lock-screen');
-            var loginLayer = document.getElementById('dl-login-layer');
-            if (lockScreen) lockScreen.classList.remove('active');
-            if (loginLayer) loginLayer.classList.add('active');
-
-            var errorEl = document.getElementById('dl-error');
-            var errorText = document.getElementById('dl-error-text');
-            if (errorEl && errorText) {
-                showError(errorEl, errorText, _t('desktop_login.session_expired') || 'Session expired. Please sign in again.');
+        var expired = false;
+        try {
+            var params = new URLSearchParams(window.location.search || '');
+            expired = params.get('expired') === '1';
+            if (expired) {
+                params.delete('expired');
+                var cleanQuery = params.toString();
+                var cleanUrl = window.location.pathname + (cleanQuery ? '?' + cleanQuery : '') + (window.location.hash || '');
+                window.history.replaceState({}, document.title, cleanUrl);
             }
+        } catch (_) { /* ignore */ }
+
+        if (!expired && window.BetterDesk && window.BetterDesk.sessionExpired) {
+            expired = true;
+        }
+        if (!expired) return;
+
+        // Skip lock screen, go straight to login form
+        var lockScreen = document.getElementById('dl-lock-screen');
+        var loginLayer = document.getElementById('dl-login-layer');
+        if (lockScreen) lockScreen.classList.remove('active');
+        if (loginLayer) loginLayer.classList.add('active');
+
+        var message = _t('desktop_login.session_expired') ||
+            _t('auth.session_expired') ||
+            'Session expired. Please sign in again.';
+
+        // Toast on the right — keeps the login card height stable
+        if (window.Notifications && typeof Notifications.error === 'function') {
+            Notifications.error(message);
+            return;
+        }
+
+        var errorEl = document.getElementById('dl-error');
+        var errorText = document.getElementById('dl-error-text');
+        if (errorEl && errorText) {
+            showError(errorEl, errorText, message);
         }
     }
 
@@ -166,6 +191,25 @@
             submitBtn.disabled = true;
             hideError(errorEl);
 
+            var clientFingerprint = (function () {
+                try {
+                    var parts = [
+                        navigator.userAgent || '',
+                        navigator.language || '',
+                        String(screen.width || '') + 'x' + String(screen.height || ''),
+                        String(new Date().getTimezoneOffset()),
+                        String(navigator.hardwareConcurrency || ''),
+                        String(navigator.platform || '')
+                    ].join('|');
+                    var hash = 2166136261;
+                    for (var i = 0; i < parts.length; i++) {
+                        hash ^= parts.charCodeAt(i);
+                        hash = Math.imul(hash, 16777619);
+                    }
+                    return ('00000000' + (hash >>> 0).toString(16)).slice(-8) +
+                        ('00000000' + ((hash ^ parts.length) >>> 0).toString(16)).slice(-8);
+                } catch (_) { return ''; }
+            })();
             fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -173,7 +217,7 @@
                     'X-CSRF-Token': csrfToken
                 },
                 credentials: 'same-origin',
-                body: JSON.stringify({ username: username, password: password })
+                body: JSON.stringify({ username: username, password: password, clientFingerprint: clientFingerprint })
             })
             .then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data }; }); })
             .then(function (result) {

@@ -10,19 +10,19 @@
 
     <!-- Tab navigation -->
     <div class="scaling-tabs">
-        <button class="scaling-tab ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" onclick="Scaling.switchTab('overview')">
+        <button class="scaling-tab ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" data-bd-call="Scaling.switchTab" data-bd-args='["overview"]'>
             <span class="material-icons">dashboard</span>
             <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_overview') : 'Overview' }</span>
         </button>
-        <button class="scaling-tab ${activeTab === 'relays' ? 'active' : ''}" data-tab="relays" onclick="Scaling.switchTab('relays')">
+        <button class="scaling-tab ${activeTab === 'relays' ? 'active' : ''}" data-tab="relays" data-bd-call="Scaling.switchTab" data-bd-args='["relays"]'>
             <span class="material-icons">cell_tower</span>
             <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_relays') : 'Relay Nodes' }</span>
         </button>
-        <button class="scaling-tab ${activeTab === 'rules' ? 'active' : ''}" data-tab="rules" onclick="Scaling.switchTab('rules')">
+        <button class="scaling-tab ${activeTab === 'rules' ? 'active' : ''}" data-tab="rules" data-bd-call="Scaling.switchTab" data-bd-args='["rules"]'>
             <span class="material-icons">route</span>
             <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_rules') : 'Assignment Rules' }</span>
         </button>
-        <button class="scaling-tab ${activeTab === 'capacity' ? 'active' : ''}" data-tab="capacity" onclick="Scaling.switchTab('capacity')">
+        <button class="scaling-tab ${activeTab === 'capacity' ? 'active' : ''}" data-tab="capacity" data-bd-call="Scaling.switchTab" data-bd-args='["capacity"]'>
             <span class="material-icons">speed</span>
             <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_capacity') : 'Capacity' }</span>
         </button>
@@ -89,7 +89,7 @@
                 <input type="text" id="relay-search" class="scaling-input" placeholder="${ typeof req !== 'undefined' ? req.t('scaling.relay_search') : 'Search relays…' }" oninput="Scaling.filterRelays()">
             </div>
             <div class="scaling-toolbar-right">
-                <button class="btn btn-sm btn-primary" onclick="Scaling.showAddRelay()">
+                <button class="btn btn-sm btn-primary" data-bd-call="Scaling.showAddRelay">
                     <span class="material-icons">add</span> ${ typeof req !== 'undefined' ? req.t('scaling.relay_add') : 'Add Relay' }
                 </button>
             </div>
@@ -123,7 +123,7 @@
                 <p class="scaling-hint">${ typeof req !== 'undefined' ? req.t('scaling.rules_hint') : 'Rules determine which relay node a device is assigned to based on location, group, or network.' }</p>
             </div>
             <div class="scaling-toolbar-right">
-                <button class="btn btn-sm btn-primary" onclick="Scaling.showAddRule()">
+                <button class="btn btn-sm btn-primary" data-bd-call="Scaling.showAddRule">
                     <span class="material-icons">add</span> ${ typeof req !== 'undefined' ? req.t('scaling.rule_add') : 'Add Rule' }
                 </button>
             </div>
@@ -193,7 +193,7 @@
     <div class="modal-card">
         <div class="modal-header">
             <h3 id="relay-modal-title">${ typeof req !== 'undefined' ? req.t('scaling.relay_add') : 'Add Relay' }</h3>
-            <button class="modal-close" onclick="Scaling.closeRelayModal()">&times;</button>
+            <button class="modal-close" data-bd-call="Scaling.closeRelayModal">&times;</button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="relay-edit-id">
@@ -219,8 +219,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-sm btn-secondary" onclick="Scaling.closeRelayModal()">${ typeof req !== 'undefined' ? req.t('scaling.cancel') : 'Cancel' }</button>
-            <button class="btn btn-sm btn-primary" onclick="Scaling.saveRelay()">${ typeof req !== 'undefined' ? req.t('scaling.save') : 'Save' }</button>
+            <button class="btn btn-sm btn-secondary" data-bd-call="Scaling.closeRelayModal">${ typeof req !== 'undefined' ? req.t('scaling.cancel') : 'Cancel' }</button>
+            <button class="btn btn-sm btn-primary" data-bd-call="Scaling.saveRelay">${ typeof req !== 'undefined' ? req.t('scaling.save') : 'Save' }</button>
         </div>
     </div>
 </div>
@@ -230,7 +230,7 @@
     <div class="modal-card">
         <div class="modal-header">
             <h3 id="rule-modal-title">${ typeof req !== 'undefined' ? req.t('scaling.rule_add') : 'Add Rule' }</h3>
-            <button class="modal-close" onclick="Scaling.closeRuleModal()">&times;</button>
+            <button class="modal-close" data-bd-call="Scaling.closeRuleModal">&times;</button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="rule-edit-id">
@@ -268,8 +268,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-sm btn-secondary" onclick="Scaling.closeRuleModal()">${ typeof req !== 'undefined' ? req.t('scaling.cancel') : 'Cancel' }</button>
-            <button class="btn btn-sm btn-primary" onclick="Scaling.saveRule()">${ typeof req !== 'undefined' ? req.t('scaling.save') : 'Save' }</button>
+            <button class="btn btn-sm btn-secondary" data-bd-call="Scaling.closeRuleModal">${ typeof req !== 'undefined' ? req.t('scaling.cancel') : 'Cancel' }</button>
+            <button class="btn btn-sm btn-primary" data-bd-call="Scaling.saveRule">${ typeof req !== 'undefined' ? req.t('scaling.save') : 'Save' }</button>
         </div>
     </div>
 </div>

@@ -13,7 +13,6 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 const https = require('https');
-const http = require('http');
 
 const config = require('../config/config');
 
@@ -288,6 +287,54 @@ async function acceptTerms() {
     return writeState({ termsAccepted: true, error: null });
 }
 
+/** Literal host map so CodeQL sees an untainted hostname after allowlist lookup. */
+const GITHUB_FETCH_HOSTS = Object.freeze({
+    'api.github.com': 'api.github.com',
+    'github.com': 'github.com',
+    'objects.githubusercontent.com': 'objects.githubusercontent.com',
+    'release-assets.githubusercontent.com': 'release-assets.githubusercontent.com',
+});
+
+/**
+ * Resolve hostname to a compile-time allowlisted literal (SSRF guard).
+ * @param {string} hostname
+ * @returns {string}
+ */
+function resolveAllowedGithubHost(hostname) {
+    const allowed = GITHUB_FETCH_HOSTS[String(hostname || '').toLowerCase()];
+    if (!allowed) {
+        throw new Error(`github_fetch_host_not_allowed:${hostname}`);
+    }
+    return allowed;
+}
+
+/**
+ * Only allow HTTPS fetches to known GitHub download/API hosts (SSRF guard).
+ * @param {string} raw
+ * @returns {{ hostname: string, path: string, href: string }}
+ */
+function assertAllowedGithubFetchUrl(raw) {
+    let parsed;
+    try {
+        parsed = new URL(String(raw || ''));
+    } catch (_) {
+        throw new Error('invalid_github_fetch_url');
+    }
+    if (parsed.protocol !== 'https:') {
+        throw new Error('github_fetch_requires_https');
+    }
+    if (parsed.username || parsed.password) {
+        throw new Error('github_fetch_url_must_not_contain_credentials');
+    }
+    const hostname = resolveAllowedGithubHost(parsed.hostname);
+    const requestPath = `${parsed.pathname || '/'}${parsed.search || ''}`;
+    return {
+        hostname,
+        path: requestPath,
+        href: `https://${hostname}${requestPath}`,
+    };
+}
+
 function _githubHeaders(accept) {
     const headers = {
         'User-Agent': 'BetterDesk-Console-Generator',
@@ -305,19 +352,38 @@ function _httpGetBuffer(url, redirects = 0, accept) {
             reject(new Error('too many redirects'));
             return;
         }
-        const lib = String(url).startsWith('https:') ? https : http;
-        const req = lib.get(url, {
+        let validated;
+        try {
+            validated = assertAllowedGithubFetchUrl(url);
+        } catch (err) {
+            reject(err);
+            return;
+        }
+        // Pass hostname/path options (not a full URL string) so the host cannot
+        // be attacker-controlled after resolveAllowedGithubHost().
+        const req = https.get({
+            protocol: 'https:',
+            hostname: validated.hostname,
+            path: validated.path,
             headers: _githubHeaders(accept || 'application/octet-stream, application/json'),
             timeout: 120000,
         }, (res) => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                 res.resume();
-                _httpGetBuffer(res.headers.location, redirects + 1, accept).then(resolve, reject);
+                let next;
+                try {
+                    next = new URL(res.headers.location, validated.href).href;
+                    assertAllowedGithubFetchUrl(next);
+                } catch (err) {
+                    reject(err);
+                    return;
+                }
+                _httpGetBuffer(next, redirects + 1, accept).then(resolve, reject);
                 return;
             }
             if (res.statusCode !== 200) {
                 res.resume();
-                const err = new Error(`HTTP ${res.statusCode} for ${url}`);
+                const err = new Error(`HTTP ${res.statusCode} for ${validated.href}`);
                 err.statusCode = res.statusCode;
                 reject(err);
                 return;

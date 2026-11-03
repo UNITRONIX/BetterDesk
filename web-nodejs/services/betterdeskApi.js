@@ -638,6 +638,42 @@ async function setConfig(key, value) {
     }
 }
 
+/**
+ * GET /api/peers/:id/availability — server-observed status transitions for one local day (#455).
+ */
+async function getPeerAvailability(id, { day, tzOffset } = {}) {
+    try {
+        const params = {};
+        if (day) params.day = day;
+        if (tzOffset !== undefined && tzOffset !== null && tzOffset !== '') {
+            params.tz_offset = tzOffset;
+        }
+        const { data } = await apiClient.get(`/peers/${encodeURIComponent(id)}/availability`, { params });
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * GET /api/peers/:id/connection-sessions — server-observed remote-control sessions.
+ */
+async function getPeerConnectionSessions(id, { limit } = {}) {
+    try {
+        const params = {};
+        if (limit) params.limit = limit;
+        const { data } = await apiClient.get(
+            `/peers/${encodeURIComponent(id)}/connection-sessions`,
+            { params }
+        );
+        return wrap(data);
+    } catch (err) {
+        if (err.response?.data) return wrap(err.response.data);
+        return { success: false, error: err.message };
+    }
+}
+
 // ========================== Server Info ======================================
 
 /**
@@ -1564,6 +1600,8 @@ module.exports = {
     // Config
     getConfig,
     setConfig,
+    getPeerAvailability,
+    getPeerConnectionSessions,
     // Sync (no-op)
     syncOnlineStatus,
     // CDAP

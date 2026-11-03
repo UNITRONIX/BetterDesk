@@ -1,9 +1,16 @@
 # =============================================================================
-# BetterDesk — stable release on merge to main
+# BetterDesk - stable release on merge to main
 # =============================================================================
-# When a PR is merged into main, bump minor version (+0.1.0), tag vX.Y.Z,
-# and publish a GitHub Release. Existing release-server and docker-publish
-# workflows run on the new tag / release event.
+# When a PR is merged into main, bump version, publish tag + GitHub Release from
+# the bump commit, and open a PR to land VERSION files on protected main.
+# Direct push to main is not used (branch protection: require pull request).
+#
+# Repo setting required for the bump PR step:
+#   Settings -> Actions -> General -> Workflow permissions
+#   -> "Allow GitHub Actions to create and approve pull requests"
+# Tag/release still succeed if that checkbox is off.
+#
+# release-server / docker-publish attach artifacts to the tag/release.
 # =============================================================================
 
 name: Version Bump & Release (main)
@@ -15,6 +22,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: stable-release-main
@@ -22,7 +30,11 @@ concurrency:
 
 jobs:
   release-stable:
-    if: github.event.pull_request.merged == true
+    # Skip the auto version-bump PR itself to avoid recursive bumps.
+    if: |
+      github.event.pull_request.merged == true &&
+      !startsWith(github.event.pull_request.head.ref, 'release/v') &&
+      !contains(github.event.pull_request.title, '[version-bump]')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,43 +54,46 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           # Stable feature releases: +0.1.0. Hotfix PRs (label "hotfix" or title
-          # containing "hotfix", e.g. 3.4.0 → 3.4.1): +0.0.1.
+          # containing "hotfix", e.g. 3.4.0 -> 3.4.1): +0.0.1.
           BUMP_ARGS=(--minor)
           LABELS_LC=$(echo "$PR_LABELS" | tr '[:upper:]' '[:lower:]')
           TITLE_LC=$(echo "$PR_TITLE" | tr '[:upper:]' '[:lower:]')
           if echo "$LABELS_LC" | grep -qw 'hotfix' || echo "$TITLE_LC" | grep -q 'hotfix'; then
             BUMP_ARGS=(--patch)
-            echo "Hotfix detected — using patch bump (+0.0.1)"
+            echo "Hotfix detected - using patch bump (+0.0.1)"
           else
-            echo "Stable release — using minor bump (+0.1.0)"
+            echo "Stable release - using minor bump (+0.1.0)"
           fi
           node scripts/bump-version.js "${BUMP_ARGS[@]}"
           NEW_VERSION=$(cat VERSION | tr -d '\n')
           echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "branch=release/v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Commit version bump to main
+      - name: Commit version bump on release branch
+        id: commit
         env:
           NEW_VERSION: ${{ steps.bump.outputs.version }}
+          BUMP_BRANCH: ${{ steps.bump.outputs.branch }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add $(node scripts/bump-version.js --list-paths)
           if git diff --cached --quiet; then
-            echo "No version files changed — skipping release bump commit"
+            echo "No version files changed - tagging current main tip only"
+            echo "has_bump=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          git checkout -B "$BUMP_BRANCH"
           git commit -m "chore: release version ${NEW_VERSION} [version-bump]"
-          git push origin HEAD:main
-
-      - name: Sync checkout to bumped main
-        run: |
-          git fetch origin main --tags
-          git reset --hard origin/main
+          git push -u origin "HEAD:${BUMP_BRANCH}" --force
+          echo "has_bump=true" >> "$GITHUB_OUTPUT"
 
       - name: Create tag and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_VERSION: ${{ steps.bump.outputs.version }}
+          HAS_BUMP: ${{ steps.commit.outputs.has_bump }}
         run: |
           set -euo pipefail
           TAG="v${NEW_VERSION}"
@@ -97,11 +112,23 @@ jobs:
             echo "BetterDesk ${NEW_VERSION} stable release." > "$NOTES_FILE"
           fi
 
+          # Tag the bump commit when present; otherwise clean main tip
+          # (discard uncommitted local bump so tag SHA matches published VERSION).
+          if [ "${HAS_BUMP}" = "true" ]; then
+            git checkout "release/v${NEW_VERSION}"
+          else
+            git fetch origin main
+            git reset --hard origin/main
+            NEW_VERSION=$(tr -d '\n' < VERSION)
+            TAG="v${NEW_VERSION}"
+            echo "No bump commit - using VERSION on main (${NEW_VERSION})"
+          fi
+
           if ! git rev-parse "$TAG" >/dev/null 2>&1; then
             git tag "$TAG"
             git push origin "$TAG"
           else
-            echo "Tag ${TAG} already exists — checking release state"
+            echo "Tag ${TAG} already exists - checking release state"
           fi
 
           if gh release view "$TAG" >/dev/null 2>&1; then
@@ -111,4 +138,36 @@ jobs:
 
           gh release create "$TAG" \
             --title "BetterDesk ${NEW_VERSION}" \
-            --notes-file "$NOTES_FILE"
+            --notes-file "$NOTES_FILE" \
+            --verify-tag
+
+      - name: Open version-bump PR into main
+        if: steps.commit.outputs.has_bump == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.bump.outputs.version }}
+          BUMP_BRANCH: ${{ steps.bump.outputs.branch }}
+        run: |
+          set -euo pipefail
+          if gh pr view "$BUMP_BRANCH" --json number >/dev/null 2>&1; then
+            echo "PR for ${BUMP_BRANCH} already exists"
+            gh pr view "$BUMP_BRANCH" --json url -q .url
+            exit 0
+          fi
+          BODY=$(printf '%s\n' \
+            "Automated stable version bump to ${NEW_VERSION} after merge to main." \
+            "" \
+            "Tag v${NEW_VERSION} and the GitHub Release are created from this bump commit." \
+            "Merge this PR so VERSION on main matches the published tag." \
+            "" \
+            "Do not remove the [version-bump] marker from the title (prevents recursive bumps)." \
+            "Server/Docker asset workflows attach to the tag, not to this PR merge.")
+          if ! gh pr create \
+            --base main \
+            --head "$BUMP_BRANCH" \
+            --title "chore: release version ${NEW_VERSION} [version-bump]" \
+            --body "$BODY"; then
+            echo "::warning::Could not open version-bump PR (enable Settings > Actions > Workflow permissions > Allow GitHub Actions to create and approve pull requests). Branch ${BUMP_BRANCH} is pushed; open the PR manually."
+            exit 1
+          fi

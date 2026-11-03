@@ -5,6 +5,10 @@ jest.mock('../lib/deviceTokenAuth', () => ({
     verifyDeviceWsAuth: jest.fn(),
 }));
 
+jest.mock('../middleware/auth', () => ({
+    roleHasEffectivePermission: jest.fn().mockResolvedValue(true),
+}));
+
 const { verifyDeviceWsAuth } = require('../lib/deviceTokenAuth');
 const { initChatRelay } = require('../services/chatRelay');
 

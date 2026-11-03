@@ -40,6 +40,22 @@ describe('Organizations Routes', () => {
         expect(res.body.error).toBe('Permission denied: org.create');
     });
 
+    it('requires user.view before returning an organization user roster', async () => {
+        const app = createTestApp();
+        withAuth(app, { id: 2, username: 'operator1', role: 'operator' });
+        app.use((req, _res, next) => {
+            req.permissionContextLoaded = true;
+            req.effectivePermissions = new Set(['device.view']);
+            next();
+        });
+        app.use(organizationsRoutes);
+
+        const res = await request(app).get('/api/panel/org/org-1/users');
+
+        expect(res.status).toBe(403);
+        expect(apiClient).not.toHaveBeenCalled();
+    });
+
     it('proxies organization list requests to the Go API', async () => {
         apiClient.mockResolvedValue({
             status: 200,

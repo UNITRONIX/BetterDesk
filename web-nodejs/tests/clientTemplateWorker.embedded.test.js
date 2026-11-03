@@ -38,6 +38,12 @@ jest.mock('../services/keyService', () => ({}));
 jest.mock('../services/agentBundleConnection', () => ({}));
 jest.mock('../services/platformSupportInstaller', () => ({}));
 
+// This suite exercises the optional maintainer-only embedded provider. The
+// production default is download-only, so make the mode explicit instead of
+// relying on the process environment.
+const previousGeneratorMode = process.env.BETTERDESK_CLIENT_GENERATOR_MODE;
+process.env.BETTERDESK_CLIENT_GENERATOR_MODE = 'embedded';
+
 const worker = require('../services/clientTemplateWorker');
 
 describe('clientTemplateWorker embedded artifacts', () => {
@@ -54,6 +60,14 @@ describe('clientTemplateWorker embedded artifacts', () => {
 
     afterEach(() => {
         fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    afterAll(() => {
+        if (previousGeneratorMode === undefined) {
+            delete process.env.BETTERDESK_CLIENT_GENERATOR_MODE;
+        } else {
+            process.env.BETTERDESK_CLIENT_GENERATOR_MODE = previousGeneratorMode;
+        }
     });
 
     test('selects the manifest asset when unrelated archives are also present', () => {

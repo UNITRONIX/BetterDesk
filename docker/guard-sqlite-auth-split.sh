@@ -13,6 +13,16 @@ _guard_run_as_betterdesk() {
     fi
 }
 
+# Self-contained: unit tests source this file alone; entrypoints may also
+# define file_exists_as_betterdesk via bootstrap-admin-credentials.sh.
+_guard_file_exists() {
+    if command -v file_exists_as_betterdesk >/dev/null 2>&1; then
+        file_exists_as_betterdesk "$1"
+    else
+        _guard_run_as_betterdesk test -f "$1"
+    fi
+}
+
 guard_sqlite_auth_split() {
     case "${DB_TYPE:-sqlite}" in
         postgres|postgresql) return 0 ;;
@@ -29,11 +39,11 @@ guard_sqlite_auth_split() {
     _auth_db="${AUTH_DB_PATH:-${DATA_DIR:-/app/data}/auth.db}"
     _primary_db="${DB_PATH:-${DB_URL:-/opt/rustdesk/db_v2.sqlite3}}"
 
-    file_exists_as_betterdesk "$_auth_db" || return 0
+    _guard_file_exists "$_auth_db" || return 0
     command -v sqlite3 >/dev/null 2>&1 || return 0
 
     _has_consolidation_marker=0
-    if file_exists_as_betterdesk "$_primary_db"; then
+    if _guard_file_exists "$_primary_db"; then
         if _guard_run_as_betterdesk sqlite3 "$_primary_db" \
             "SELECT 1 FROM betterdesk_migrations WHERE name='sqlite_auth_consolidation_v1' AND status='complete' LIMIT 1;" 2>/dev/null | grep -q 1; then
             _has_consolidation_marker=1
@@ -54,7 +64,7 @@ guard_sqlite_auth_split() {
     fi
 
     _primary_users=0
-    if file_exists_as_betterdesk "$_primary_db"; then
+    if _guard_file_exists "$_primary_db"; then
         _primary_users=$(_guard_run_as_betterdesk sqlite3 "$_primary_db" \
             "SELECT COUNT(*) FROM users;" 2>/dev/null || echo "0")
         case "$_primary_users" in

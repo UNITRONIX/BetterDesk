@@ -55,10 +55,13 @@ const billingSessionCols = `id, org_id, contract_id, operator_id, operator_name,
 func (s *SQLiteDB) CreateBillingPackage(p *BillingPackage) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if p.RoundingMinutes <= 0 {
+		p.RoundingMinutes = 10
+	}
 	_, err := s.db.Exec(
-		`INSERT INTO billing_packages (id, name, description, included_minutes, overage_rate, currency, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-		p.ID, p.Name, p.Description, p.IncludedMinutes, p.OverageRate, p.Currency,
+		`INSERT INTO billing_packages (id, name, description, included_minutes, rounding_minutes, overage_rate, currency, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+		p.ID, p.Name, p.Description, p.IncludedMinutes, p.RoundingMinutes, p.OverageRate, p.Currency,
 	)
 	return err
 }
@@ -69,9 +72,9 @@ func (s *SQLiteDB) GetBillingPackage(id string) (*BillingPackage, error) {
 	var p BillingPackage
 	var createdAt, updatedAt string
 	err := s.db.QueryRow(
-		`SELECT id, name, description, included_minutes, overage_rate, currency, created_at, updated_at
+		`SELECT id, name, description, included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
 		 FROM billing_packages WHERE id = ?`, id,
-	).Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.OverageRate, &p.Currency, &createdAt, &updatedAt)
+	).Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.RoundingMinutes, &p.OverageRate, &p.Currency, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +87,7 @@ func (s *SQLiteDB) ListBillingPackages() ([]*BillingPackage, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	rows, err := s.db.Query(
-		`SELECT id, name, description, included_minutes, overage_rate, currency, created_at, updated_at
+		`SELECT id, name, description, included_minutes, COALESCE(rounding_minutes, 10), overage_rate, currency, created_at, updated_at
 		 FROM billing_packages ORDER BY name`)
 	if err != nil {
 		return nil, err
@@ -94,7 +97,7 @@ func (s *SQLiteDB) ListBillingPackages() ([]*BillingPackage, error) {
 	for rows.Next() {
 		var p BillingPackage
 		var createdAt, updatedAt string
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.OverageRate, &p.Currency, &createdAt, &updatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.IncludedMinutes, &p.RoundingMinutes, &p.OverageRate, &p.Currency, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
 		p.CreatedAt = parseSQLiteTime(createdAt)
@@ -107,9 +110,12 @@ func (s *SQLiteDB) ListBillingPackages() ([]*BillingPackage, error) {
 func (s *SQLiteDB) UpdateBillingPackage(p *BillingPackage) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if p.RoundingMinutes <= 0 {
+		p.RoundingMinutes = 10
+	}
 	_, err := s.db.Exec(
-		`UPDATE billing_packages SET name=?, description=?, included_minutes=?, overage_rate=?, currency=?, updated_at=datetime('now') WHERE id=?`,
-		p.Name, p.Description, p.IncludedMinutes, p.OverageRate, p.Currency, p.ID,
+		`UPDATE billing_packages SET name=?, description=?, included_minutes=?, rounding_minutes=?, overage_rate=?, currency=?, updated_at=datetime('now') WHERE id=?`,
+		p.Name, p.Description, p.IncludedMinutes, p.RoundingMinutes, p.OverageRate, p.Currency, p.ID,
 	)
 	return err
 }
@@ -191,7 +197,7 @@ const billingContractTargetNameSQL = `
 func (s *SQLiteDB) queryBillingContract(where string, args ...any) (*BillingContract, error) {
 	query := `SELECT c.id, c.target_type, c.target_key, c.package_id, c.status, c.remaining_minutes, c.overage_rate,
 		c.hourly_rate, c.currency, c.valid_from, c.valid_until, c.created_at, c.updated_at,
-		COALESCE(p.name, ''), ` + billingContractTargetNameSQL + `
+		COALESCE(c.current_period_ym, ''), COALESCE(p.name, ''), ` + billingContractTargetNameSQL + `
 		FROM billing_contracts c
 		LEFT JOIN billing_packages p ON p.id = c.package_id ` + where
 
@@ -201,7 +207,7 @@ func (s *SQLiteDB) queryBillingContract(where string, args ...any) (*BillingCont
 	err := s.db.QueryRow(query, args...).Scan(
 		&c.ID, &c.TargetType, &c.TargetKey, &c.PackageID, &c.Status, &c.RemainingMinutes, &overage,
 		&c.HourlyRate, &c.Currency, &validFrom, &validUntil, &createdAt, &updatedAt,
-		&c.PackageName, &c.TargetName,
+		&c.CurrentPeriodYM, &c.PackageName, &c.TargetName,
 	)
 	if err != nil {
 		return nil, err
@@ -249,7 +255,7 @@ func (s *SQLiteDB) ListBillingContracts(filter BillingContractFilter) ([]*Billin
 	}
 	query := `SELECT c.id, c.target_type, c.target_key, c.package_id, c.status, c.remaining_minutes, c.overage_rate,
 		c.hourly_rate, c.currency, c.valid_from, c.valid_until, c.created_at, c.updated_at,
-		COALESCE(p.name, ''), ` + billingContractTargetNameSQL + `
+		COALESCE(c.current_period_ym, ''), COALESCE(p.name, ''), ` + billingContractTargetNameSQL + `
 		FROM billing_contracts c
 		LEFT JOIN billing_packages p ON p.id = c.package_id`
 	if len(conds) > 0 {
@@ -269,7 +275,7 @@ func (s *SQLiteDB) ListBillingContracts(filter BillingContractFilter) ([]*Billin
 		if err := rows.Scan(
 			&c.ID, &c.TargetType, &c.TargetKey, &c.PackageID, &c.Status, &c.RemainingMinutes, &overage,
 			&c.HourlyRate, &c.Currency, &validFrom, &validUntil, &createdAt, &updatedAt,
-			&c.PackageName, &c.TargetName,
+			&c.CurrentPeriodYM, &c.PackageName, &c.TargetName,
 		); err != nil {
 			return nil, err
 		}
@@ -305,9 +311,9 @@ func (s *SQLiteDB) UpdateBillingContract(c *BillingContract) error {
 		overage = sql.NullFloat64{Float64: *c.OverageRate, Valid: true}
 	}
 	_, err := s.db.Exec(
-		`UPDATE billing_contracts SET status=?, remaining_minutes=?, overage_rate=?, hourly_rate=?, currency=?, valid_from=?, valid_until=?, updated_at=datetime('now') WHERE id=?`,
+		`UPDATE billing_contracts SET status=?, remaining_minutes=?, overage_rate=?, hourly_rate=?, currency=?, valid_from=?, valid_until=?, current_period_ym=?, updated_at=datetime('now') WHERE id=?`,
 		c.Status, c.RemainingMinutes, overage, c.HourlyRate, c.Currency,
-		formatSQLiteTimePtr(c.ValidFrom), formatSQLiteTimePtr(c.ValidUntil), c.ID,
+		formatSQLiteTimePtr(c.ValidFrom), formatSQLiteTimePtr(c.ValidUntil), c.CurrentPeriodYM, c.ID,
 	)
 	return err
 }
@@ -582,4 +588,101 @@ func (s *SQLiteDB) DeleteBillingCurrency(code string) error {
 	defer s.mu.Unlock()
 	_, err := s.db.Exec(`DELETE FROM billing_currencies WHERE code = ?`, strings.ToUpper(code))
 	return err
+}
+
+func (s *SQLiteDB) UpsertBillingPeriodTotal(t *BillingPeriodTotal) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(
+		`INSERT INTO billing_period_totals (contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, included_limit_snapshot, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+		 ON CONFLICT(contract_id, period_ym) DO UPDATE SET
+		   package_id=excluded.package_id,
+		   timezone=excluded.timezone,
+		   included_minutes_used=excluded.included_minutes_used,
+		   overage_minutes=excluded.overage_minutes,
+		   amount_overage=excluded.amount_overage,
+		   included_limit_snapshot=CASE WHEN excluded.included_limit_snapshot > 0 THEN excluded.included_limit_snapshot ELSE billing_period_totals.included_limit_snapshot END,
+		   updated_at=datetime('now')`,
+		t.ContractID, t.PackageID, t.PeriodYM, t.Timezone, t.IncludedMinutesUsed, t.OverageMinutes, t.AmountOverage, t.IncludedLimitSnapshot,
+	)
+	return err
+}
+
+func (s *SQLiteDB) AddBillingPeriodUsage(contractID, packageID, periodYM, timezone string, includedUsed, overageMin int, amountOverage float64, limitSnapshot int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(
+		`INSERT INTO billing_period_totals (contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, included_limit_snapshot, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+		 ON CONFLICT(contract_id, period_ym) DO UPDATE SET
+		   package_id=excluded.package_id,
+		   timezone=excluded.timezone,
+		   included_minutes_used=billing_period_totals.included_minutes_used + excluded.included_minutes_used,
+		   overage_minutes=billing_period_totals.overage_minutes + excluded.overage_minutes,
+		   amount_overage=billing_period_totals.amount_overage + excluded.amount_overage,
+		   included_limit_snapshot=CASE WHEN billing_period_totals.included_limit_snapshot > 0 THEN billing_period_totals.included_limit_snapshot ELSE excluded.included_limit_snapshot END,
+		   updated_at=datetime('now')`,
+		contractID, packageID, periodYM, timezone, includedUsed, overageMin, amountOverage, limitSnapshot,
+	)
+	return err
+}
+
+func (s *SQLiteDB) GetBillingPeriodTotal(contractID, periodYM string) (*BillingPeriodTotal, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var t BillingPeriodTotal
+	var updatedAt string
+	err := s.db.QueryRow(
+		`SELECT id, contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, COALESCE(included_limit_snapshot, 0), updated_at
+		 FROM billing_period_totals WHERE contract_id = ? AND period_ym = ?`, contractID, periodYM,
+	).Scan(&t.ID, &t.ContractID, &t.PackageID, &t.PeriodYM, &t.Timezone, &t.IncludedMinutesUsed, &t.OverageMinutes, &t.AmountOverage, &t.IncludedLimitSnapshot, &updatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	t.UpdatedAt = parseSQLiteTime(updatedAt)
+	return &t, nil
+}
+
+func (s *SQLiteDB) ListBillingPeriodTotalsByPackage(packageID string) ([]*BillingPeriodTotal, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(
+		`SELECT id, contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, COALESCE(included_limit_snapshot, 0), updated_at
+		 FROM billing_period_totals WHERE package_id = ? ORDER BY period_ym DESC`, packageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanBillingPeriodTotalsSQLite(rows)
+}
+
+func (s *SQLiteDB) ListBillingPeriodTotalsByContract(contractID string) ([]*BillingPeriodTotal, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(
+		`SELECT id, contract_id, package_id, period_ym, timezone, included_minutes_used, overage_minutes, amount_overage, COALESCE(included_limit_snapshot, 0), updated_at
+		 FROM billing_period_totals WHERE contract_id = ? ORDER BY period_ym DESC`, contractID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanBillingPeriodTotalsSQLite(rows)
+}
+
+func scanBillingPeriodTotalsSQLite(rows *sql.Rows) ([]*BillingPeriodTotal, error) {
+	var out []*BillingPeriodTotal
+	for rows.Next() {
+		var t BillingPeriodTotal
+		var updatedAt string
+		if err := rows.Scan(&t.ID, &t.ContractID, &t.PackageID, &t.PeriodYM, &t.Timezone, &t.IncludedMinutesUsed, &t.OverageMinutes, &t.AmountOverage, &t.IncludedLimitSnapshot, &updatedAt); err != nil {
+			return nil, err
+		}
+		t.UpdatedAt = parseSQLiteTime(updatedAt)
+		out = append(out, &t)
+	}
+	return out, rows.Err()
 }

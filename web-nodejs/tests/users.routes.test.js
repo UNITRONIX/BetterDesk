@@ -104,6 +104,23 @@ describe('Users Routes', () => {
         expect(res.status).not.toBe(401);
     });
 
+    it('blocks the users list when user.view is explicitly denied', async () => {
+        const app = createTestApp();
+        withAuth(app, { id: 12, username: 'operator1', role: 'operator' });
+        app.use((req, _res, next) => {
+            req.permissionContextLoaded = true;
+            req.effectivePermissions = new Set(['device.view']);
+            next();
+        });
+        app.use(usersRoutes);
+
+        const res = await request(app).get('/api/users');
+
+        expect(res.status).toBe(403);
+        expect(mockUserSync.backfillFromGo).not.toHaveBeenCalled();
+        expect(mockDb.getAllUsers).not.toHaveBeenCalled();
+    });
+
     it('returns user groups for panel assignment UIs', async () => {
         const app = createTestApp();
         withAuth(app, { id: 1, username: 'admin', role: 'server_admin' });

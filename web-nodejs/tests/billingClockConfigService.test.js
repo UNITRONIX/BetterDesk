@@ -5,6 +5,8 @@ const {
     normalizeSettings,
     settingsFromEnvContent,
     isValidNTPServerEntry,
+    isValidIanaTimezone,
+    detectOsTimezone,
     envToBool,
     boolToEnv,
 } = require('../services/billingClockConfigService');
@@ -35,12 +37,26 @@ describe('billingClockConfigService', () => {
             'BILLING_MAX_CLOCK_SKEW_MS=1500',
             'BILLING_REQUIRE_SYNCED_CLOCK=0',
             'BILLING_TRUST_OS_NTP=1',
+            'BILLING_TIMEZONE=Europe/Warsaw',
         ].join('\n');
         const settings = settingsFromEnvContent(content);
         expect(settings.ntp_servers).toBe('10.0.0.1');
         expect(settings.max_skew_ms).toBe(1500);
         expect(settings.require_synced_clock).toBe(false);
         expect(settings.trust_os_ntp).toBe(true);
+        expect(settings.billing_timezone).toBe('Europe/Warsaw');
+    });
+
+    test('validateSettings rejects invalid billing timezone', () => {
+        expect(() => validateSettings({
+            ntp_servers: 'pool.ntp.org',
+            billing_timezone: 'Not/A_Real_Zone',
+        })).toThrow('invalid_billing_timezone');
+    });
+
+    test('detectOsTimezone returns a valid IANA zone', () => {
+        const tz = detectOsTimezone();
+        expect(isValidIanaTimezone(tz)).toBe(true);
     });
 
     test('isValidNTPServerEntry validates IP and hostname', () => {

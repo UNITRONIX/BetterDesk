@@ -34,9 +34,51 @@ Internet
    └── /ws/relay (native)──► http://127.0.0.1:21119  (native RustDesk relay WSS — same path; see collision note)
 
 Clients (RustDesk native) ──► TCP/UDP :21116, TCP :21117  (direct to host — not HTTP-proxied)
+Client API                ──► TCP :21114 (split) or :21121 (single / compat) — see below
 ```
 
 > **Web Remote vs native WSS:** Never route `/ws/rendezvous` to Go `:21118`. The browser client sends **TCP-framed** protobufs and the panel bridges them to hbbs TCP. Go WSS expects **raw** protobuf — a wrong upstream closes the socket immediately with code **1000** (see [#329](https://github.com/UNITRONIX/BetterDesk/issues/329)). `/ws/relay` is owned by **both** Web Remote (panel `:5000`) and optional native WebSocket Mode (Go `:21119`); on one hostname prefer the panel catch-all for Web Remote, or put native WSS on a separate host/port.
+
+### Client API vs panel on the same hostname
+
+Panel routes under `/api/...` (auth, settings, panel REST) and RustDesk **Client API** routes (`/api/login`, `/api/ab`, `/api/heartbeat`, …) share the `/api` prefix. Sending **all** `/api/` traffic to panel `:5000` is wrong for desktop clients; sending **only** `/api/ws/` to Go while login stays on `:5000` is a common VPS mistake and leads to `initiator_token_rejected` after a logged-in connect ([Discussion #452](https://github.com/UNITRONIX/BetterDesk/discussions/452)).
+
+**Recommended:** separate public hostname (or port) for Client API.
+
+| Hostname / port | Upstream | Client field |
+|-----------------|----------|--------------|
+| `console.example.com` → `:5000` | Panel + Web Remote | browser only |
+| `api.example.com` → `:21114` (split) or `:21121` (single) | Go Client API | RustDesk **API Server** |
+| `desk.example.com` → `/ws/id` `:21118`, `/ws/relay` `:21119` | Native WSS | ID / Relay + WebSocket Mode |
+
+Nginx sketch (API vhost — adjust port for your layout):
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.example.com;
+    # ssl_certificate …;
+
+    location / {
+        proxy_pass http://127.0.0.1:21114;   # split Go; use 21121 for AIO / Node compat proxy
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        # WebSocket for /api/ws/events if used:
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400s;
+        proxy_buffering off;
+    }
+}
+```
+
+If you must share one hostname, you need an explicit allowlist of Client API paths to Go (or `:21121`) **before** the panel catch-all — and you must not leave `/api/login` on `:5000`. Prefer the separate API host above. Set `PUBLIC_API_URL` / Settings → Public client endpoints accordingly.
+
+When TLS terminates on Nginx/Caddy, keep Go upstreams on **plain HTTP**. Do not set `TLS_API=Y` without `TLS_CERT`/`TLS_KEY`, and do not enable Go signal/relay TLS unless you intend Enterprise dual-TLS.
+
 ---
 
 ## BetterDesk configuration
@@ -356,6 +398,7 @@ BetterDesk LE files under `/opt/rustdesk/ssl/` are unused in external-proxy mode
 | WSS `401` / `403` on `/ws/id` | Routed to panel `:5000` instead of Go | Use exact `/ws/id` → `:21118` before catch-all |
 | Client log `HTTP error: 308` on `ws://…/ws/id` | Plain WS hit Caddy HTTPS redirect | Use WebSocket Mode with HTTPS/WSS host; never `ws://` when Caddy forces HTTPS ([#294](https://github.com/UNITRONIX/BetterDesk/issues/294)) |
 | WSS upgrade OK but PunchHole `initiator_not_registered` | Proxy IP used as peer key / no RegisterPeer | `TRUST_PROXY=Y` + `TRUSTED_PROXIES`; ensure client completes registration (service on, or logged-in token / TCP RegisterPk) |
+| Logged-in connect fails with `initiator_token_rejected` | Client API not hitting Go / stale token / wrong image update path | Point API Server at `:21114`/`:21121`, not panel `:5000`; rebuild local images or pull GHCR correctly; re-login — [DOCKER_TROUBLESHOOTING](../docker/DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected) |
 | `AlertReceived(UnrecognisedName)` | TLS cert hostname mismatch | Fix cert on proxy for client hostname |
 | Double TLS / protocol error | Proxy uses `https://` upstream | Upstream must be `http://127.0.0.1:…` unless Enterprise TLS on Go |
 | Panel works but clients timeout | Firewall | Open 21116 UDP/TCP, 21117 TCP |

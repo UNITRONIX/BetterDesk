@@ -129,7 +129,7 @@ Manage console users and roles. See [[User Management|User-Management]] and [[Or
 | **Organizations** | Multi-tenant orgs, members, scoped devices |
 | **Fleet** | Device groups, batch operations, scaling |
 | **Policies** | Access policies, unattended schedules |
-| **Client Generator** | Branded RustDesk client builds — [[Client Generator\|Client-Generator]] |
+| **BetterDesk Agents** | Incoming-only Support agents (import from BetterDesk-Client) — [[BetterDesk Agents\|Client-Generator]] |
 | **Help Requests** | End-user support inbox |
 | **Tickets** | Internal ticket tracking |
 | **CDAP Devices / Studio** | IoT device management and widget editor |

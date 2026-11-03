@@ -231,7 +231,7 @@ func TestUpdatePeerStatusIgnoresSoftDeleted(t *testing.T) {
 	if err := db.DeletePeer("STATDEL1"); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdatePeerStatus("STATDEL1", "ONLINE", "10.0.0.99"); err != nil {
+	if err := db.UpdatePeerStatus("STATDEL1", "ONLINE", "10.0.0.99", "test"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -260,7 +260,7 @@ func TestBatchUpdatePeerStatus(t *testing.T) {
 		}
 	}
 
-	if err := db.BatchUpdatePeerStatus([]string{"BATCH1", "BATCH2", "MISSING1"}, "DEGRADED"); err != nil {
+	if err := db.BatchUpdatePeerStatus([]string{"BATCH1", "BATCH2", "MISSING1"}, "DEGRADED", "test"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -359,7 +359,7 @@ func TestBatchUpdatePeerStatusIgnoresSoftDeleted(t *testing.T) {
 	if err := db.DeletePeer("BATCHDEL"); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.BatchUpdatePeerStatus([]string{"BATCHDEL"}, "CRITICAL"); err != nil {
+	if err := db.BatchUpdatePeerStatus([]string{"BATCHDEL"}, "CRITICAL", "test"); err != nil {
 		t.Fatal(err)
 	}
 	peers, err := db.ListPeers(true)
@@ -589,6 +589,9 @@ func TestHardDelete(t *testing.T) {
 	db := newTestDB(t)
 
 	db.UpsertPeer(&Peer{ID: "HARD1", Status: "ONLINE"})
+	if err := db.SetConfig("telemetry_seq_HARD1", "42"); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := db.HardDeletePeer("HARD1"); err != nil {
 		t.Fatal(err)
@@ -600,6 +603,11 @@ func TestHardDelete(t *testing.T) {
 		if p.ID == "HARD1" {
 			t.Error("hard-deleted peer should not appear at all")
 		}
+	}
+	if value, err := db.GetConfig("telemetry_seq_HARD1"); err != nil {
+		t.Fatal(err)
+	} else if value != "" {
+		t.Fatalf("hard delete retained telemetry sequence %q", value)
 	}
 }
 

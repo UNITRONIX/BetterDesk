@@ -141,6 +141,7 @@
         initFilters();
         initShowDeletedToggle();
         initTagFilter();
+        initManageTags();
         initSorting();
         initSync();
         document.getElementById('add-remote-target-btn')?.addEventListener('click', () => showRemoteTargetModal());
@@ -401,6 +402,10 @@
                 <span class="material-icons">edit</span>
                 <span>${_('actions.edit')}</span>
             </button>
+            <button type="button" class="kebab-menu-item" data-action="manage-tags" data-id="${eid}">
+                <span class="material-icons">sell</span>
+                <span>${_('devices.manage_device_tags') || 'Manage tags'}</span>
+            </button>
             <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
                 <span class="material-icons">hub</span>
                 <span>${_('devices.manage_groups') || 'Manage Groups'}</span>
@@ -508,6 +513,10 @@
             <button type="button" class="kebab-menu-item" data-action="edit" data-id="${eid}">
                 <span class="material-icons">edit</span>
                 <span>${_('actions.edit')}</span>
+            </button>
+            <button type="button" class="kebab-menu-item" data-action="manage-tags" data-id="${eid}">
+                <span class="material-icons">sell</span>
+                <span>${_('devices.manage_device_tags') || 'Manage tags'}</span>
             </button>
             <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
                 <span class="material-icons">hub</span>
@@ -1283,6 +1292,14 @@
                     showRemoteTargetModal(deviceId);
                 } else {
                     showEditModal(deviceId);
+                }
+                break;
+
+            case 'manage-tags':
+                if (devices.find(d => d.id === deviceId)?.remote_target) {
+                    showEditModal(deviceId);
+                } else {
+                    showEditModal(deviceId, { focusTags: true });
                 }
                 break;
 
@@ -2284,9 +2301,10 @@
     /**
      * Show edit modal
      */
-    function showEditModal(deviceId) {
+    function showEditModal(deviceId, options = {}) {
         const device = devices.find(d => d.id === deviceId);
         if (!device) return;
+        const focusTags = !!(options && options.focusTags);
 
         const editTags = new Set(normalizeTags(device.tags));
         const editTagInputId = 'edit-tag-input';
@@ -2304,7 +2322,7 @@
                         ${Utils.escapeHtml(tag)}
                         <button type="button" class="device-edit-tag-remove"
                                 data-edit-tag-remove="${Utils.escapeHtml(tag)}"
-                                title="${Utils.escapeHtml(_('actions.delete'))}">
+                                title="${Utils.escapeHtml(_('devices.unassign_tag') || _('actions.delete'))}">
                             <span class="material-icons">close</span>
                         </button>
                     </span>
@@ -2347,7 +2365,9 @@
         };
         
         Modal.show({
-            title: _('devices.edit_title'),
+            title: focusTags
+                ? (_('devices.manage_device_tags') || _('devices.edit_title'))
+                : _('devices.edit_title'),
             content: `
                 <div class="device-info-grid">
                     <div class="device-info-item">
@@ -2369,8 +2389,9 @@
                         <textarea id="edit-note" class="form-input" rows="2" 
                                   placeholder="${_('devices.note_placeholder')}" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
                     </div>
-                    <div class="device-info-item full-width device-edit-tags-field">
+                    <div class="device-info-item full-width device-edit-tags-field${focusTags ? ' device-edit-tags-focus' : ''}">
                         <label for="${editTagInputId}">${_('device_detail.tags')}</label>
+                        <p class="form-hint">${Utils.escapeHtml(_('devices.tags_device_hint') || 'Remove a tag here to unassign it from this device only. Use Manage Tags to rename or delete a tag everywhere.')}</p>
                         <div id="${editTagsSelectedId}" class="device-edit-tags-selected"></div>
                         <div id="${editTagOptionsId}" class="device-edit-tag-options"></div>
                         <div class="device-edit-tag-input-row">
@@ -2480,12 +2501,173 @@
                         addEditTag();
                     }
                 });
+                if (focusTags) {
+                    const field = document.querySelector('.device-edit-tags-field');
+                    field?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    setTimeout(() => input?.focus(), 100);
+                }
             }
         });
     }
 
     window.BetterDeskDevices = window.BetterDeskDevices || {};
     window.BetterDeskDevices.showEditModal = showEditModal;
+
+    function countDevicesWithTag(tag) {
+        const expected = String(tag || '').trim().toLowerCase();
+        if (!expected) return 0;
+        return devices.filter(device =>
+            normalizeTags(device.tags).some(t => t.toLowerCase() === expected)
+        ).length;
+    }
+
+    function countGroupsWithTag(tag) {
+        const expected = String(tag || '').trim().toLowerCase();
+        if (!expected) return 0;
+        return deviceGroups.filter(group =>
+            (group.source_type || 'manual') === 'tag'
+            && String(group.tag_filter || '').trim().toLowerCase() === expected
+        ).length;
+    }
+
+    function showManageTagsModal() {
+        const renderList = () => {
+            if (!availableTags.length) {
+                return `<div class="manage-tags-empty">${Utils.escapeHtml(_('devices.no_tags') || 'No tags')}</div>`;
+            }
+            return `<ul class="manage-tags-list">${availableTags.map(tag => {
+                const deviceCount = countDevicesWithTag(tag);
+                const groupCount = countGroupsWithTag(tag);
+                const metaParts = [
+                    `${deviceCount} ${deviceCount === 1 ? (_('devices.tag_device_one') || 'device') : (_('devices.tag_device_many') || 'devices')}`
+                ];
+                if (groupCount > 0) {
+                    metaParts.push(`${groupCount} ${groupCount === 1 ? (_('devices.tag_group_one') || 'dynamic group') : (_('devices.tag_group_many') || 'dynamic groups')}`);
+                }
+                return `<li class="manage-tags-row" data-tag="${Utils.escapeHtml(tag)}">
+                    <div class="manage-tags-info">
+                        <span class="manage-tags-name">${Utils.escapeHtml(tag)}</span>
+                        <span class="manage-tags-meta">${Utils.escapeHtml(metaParts.join(' · '))}</span>
+                    </div>
+                    <div class="manage-tags-actions">
+                        <button type="button" class="btn btn-secondary btn-sm manage-tag-rename" data-tag="${Utils.escapeHtml(tag)}" title="${Utils.escapeHtml(_('devices.rename_tag') || 'Rename')}">
+                            <span class="material-icons">edit</span>
+                            <span>${Utils.escapeHtml(_('devices.rename_tag') || 'Rename')}</span>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm manage-tag-delete" data-tag="${Utils.escapeHtml(tag)}" title="${Utils.escapeHtml(_('devices.delete_tag') || 'Delete')}">
+                            <span class="material-icons">delete</span>
+                            <span>${Utils.escapeHtml(_('devices.delete_tag') || 'Delete')}</span>
+                        </button>
+                    </div>
+                </li>`;
+            }).join('')}</ul>`;
+        };
+
+        const bindActions = () => {
+            document.querySelectorAll('.manage-tag-rename').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const from = button.dataset.tag;
+                    if (!from) return;
+                    const to = await Modal.prompt({
+                        title: _('devices.rename_tag') || 'Rename tag',
+                        label: _('devices.rename_tag_prompt') || 'New tag name',
+                        value: from,
+                        placeholder: from,
+                        hint: _('devices.rename_tag_hint') || 'Renames this tag on all devices you can see and updates matching dynamic groups.',
+                        confirmLabel: _('actions.save')
+                    });
+                    if (to === null) return;
+                    const cleaned = String(to || '').trim();
+                    if (!cleaned) {
+                        Notifications.error(_('devices.tag_name_required') || 'Tag name is required');
+                        return;
+                    }
+                    if (cleaned === from) return;
+                    try {
+                        const result = await Utils.api('/api/tags/rename', {
+                            method: 'POST',
+                            body: { from, to: cleaned }
+                        });
+                        if (selectedTags.has(from)) {
+                            selectedTags.delete(from);
+                            selectedTags.add(result?.to || cleaned);
+                        }
+                        Notifications.success(
+                            (_('devices.tag_renamed') || 'Tag renamed')
+                            + ` (${result?.updatedDevices || 0})`
+                        );
+                        Modal.close();
+                        await loadTags();
+                        await loadDeviceGroups();
+                        await loadDevices();
+                        showManageTagsModal();
+                    } catch (err) {
+                        Notifications.error(err.message || _('errors.server_error'));
+                    }
+                });
+            });
+
+            document.querySelectorAll('.manage-tag-delete').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const tag = button.dataset.tag;
+                    if (!tag) return;
+                    const deviceCount = countDevicesWithTag(tag);
+                    const groupCount = countGroupsWithTag(tag);
+                    const confirmMsg = (_('devices.delete_tag_confirm') || 'Remove tag "{tag}" from {count} device(s)? Dynamic groups that use this tag will become empty until updated.')
+                        .replace('{tag}', tag)
+                        .replace('{count}', String(deviceCount))
+                        .replace('{groups}', String(groupCount));
+                    const confirmed = await Modal.confirm({
+                        title: _('devices.delete_tag') || 'Delete tag',
+                        message: confirmMsg,
+                        danger: true,
+                        confirmLabel: _('actions.delete')
+                    });
+                    if (!confirmed) return;
+                    try {
+                        const result = await Utils.api('/api/tags/delete', {
+                            method: 'POST',
+                            body: { tag }
+                        });
+                        selectedTags.delete(tag);
+                        Notifications.success(
+                            (_('devices.tag_deleted') || 'Tag deleted')
+                            + ` (${result?.updatedDevices || 0})`
+                        );
+                        Modal.close();
+                        await loadTags();
+                        await loadDeviceGroups();
+                        await loadDevices();
+                        showManageTagsModal();
+                    } catch (err) {
+                        Notifications.error(err.message || _('errors.server_error'));
+                    }
+                });
+            });
+        };
+
+        Modal.show({
+            title: _('devices.manage_tags') || 'Manage tags',
+            content: `
+                <p class="form-hint manage-tags-hint">${Utils.escapeHtml(_('devices.tags_manage_hint') || 'Rename or delete tags across all devices you can see. Removing a tag from one device is done in Edit / Device details.')}</p>
+                ${renderList()}
+            `,
+            size: 'medium',
+            buttons: [
+                { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
+            ],
+            onOpen: bindActions
+        });
+    }
+
+    function initManageTags() {
+        const btn = document.getElementById('manage-tags-btn');
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showManageTagsModal();
+        });
+    }
     
     /**
      * Render pagination
@@ -2786,6 +2968,9 @@
                 <span class="chip-label">${Utils.escapeHtml(group.name)}</span>
                 <span class="chip-count">${group.member_count || 0}</span>
                 <span class="chip-actions">
+                    <button type="button" class="chip-action group-chip-action" data-action="commercialization" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.group_commercialization') || 'Commercialization'}">
+                        <span class="material-icons">payments</span>
+                    </button>
                     <button type="button" class="chip-action group-chip-action" data-action="edit" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.edit_group') || 'Edit group'}">
                         <span class="material-icons">edit</span>
                     </button>
@@ -2819,6 +3004,8 @@
                     await showDeviceGroupModal(group);
                 } else if (btn.dataset.action === 'delete') {
                     await deleteDeviceGroup(group);
+                } else if (btn.dataset.action === 'commercialization') {
+                    await openGroupCommercializationModal(group);
                 }
             });
         });
@@ -2844,6 +3031,145 @@
         } catch (error) {
             Notifications.error(error.message || _('errors.server_error'));
         }
+    }
+
+    /**
+     * Commercialization depends on org→default device group; packages attach to groups.
+     * Modal stays on Devices — create a package or assign an existing one to this group.
+     */
+    async function openGroupCommercializationModal(group) {
+        if (!group?.guid) return;
+        let packages = [];
+        try {
+            const data = await Utils.api('/api/panel/billing/packages');
+            packages = data.packages || [];
+        } catch (e) {
+            Notifications.error(e.message || _('errors.server_error'));
+            return;
+        }
+
+        const title = (_('devices.group_commercialization_title') || 'Commercialization — {name}').replace('{name}', group.name);
+        const pkgOptions = packages.map((p) =>
+            `<option value="${Utils.escapeHtml(p.id)}">${Utils.escapeHtml(p.name)} (${p.included_minutes || 0} min)</option>`
+        ).join('');
+
+        const bodyHtml = `
+            <p class="form-hint">${_('devices.group_commercialization_hint') || 'Assign a support package to this group. All devices in the group share the package pool.'}</p>
+            <div class="form-group">
+                <label class="form-label">${_('devices.group_commercialization_mode') || 'Action'}
+                    <select id="gc-mode" class="form-input">
+                        <option value="existing">${_('devices.group_commercialization_assign_existing') || 'Assign existing package'}</option>
+                        <option value="new">${_('devices.group_commercialization_create_new') || 'Create new package and assign'}</option>
+                    </select>
+                </label>
+            </div>
+            <div id="gc-existing-wrap" class="form-group">
+                <label class="form-label">${_('commercialization.contracts.package') || 'Package'}
+                    <select id="gc-package" class="form-input" ${packages.length ? '' : 'disabled'}>
+                        ${pkgOptions || `<option value="">${_('commercialization.contracts.no_packages') || 'No packages yet'}</option>`}
+                    </select>
+                </label>
+            </div>
+            <div id="gc-new-wrap" class="form-group" hidden>
+                <label class="form-label">${_('commercialization.packages.name') || 'Name'}
+                    <input type="text" id="gc-name" class="form-input" maxlength="128">
+                </label>
+                <label class="form-label">${_('commercialization.packages.description') || 'Description'}
+                    <textarea id="gc-desc" class="form-input" rows="2" maxlength="512"></textarea>
+                </label>
+                <label class="form-label">${_('commercialization.packages.included_minutes') || 'Included minutes'}
+                    <input type="number" id="gc-minutes" class="form-input" value="600" min="1" step="1">
+                </label>
+                <label class="form-label">${_('commercialization.packages.overage_rate') || 'Overage rate'}
+                    <input type="number" id="gc-overage" class="form-input" value="100" min="0" step="0.01">
+                </label>
+                <label class="form-label">${_('commercialization.packages.currency') || 'Currency'}
+                    <input type="text" id="gc-currency" class="form-input" value="PLN" maxlength="8">
+                </label>
+            </div>
+            <p id="gc-error" class="form-error" hidden></p>
+        `;
+
+        return new Promise((resolve) => {
+            Modal.show({
+                title,
+                content: bodyHtml,
+                size: 'large',
+                onOpen: () => {
+                    const mode = document.getElementById('gc-mode');
+                    const existingWrap = document.getElementById('gc-existing-wrap');
+                    const newWrap = document.getElementById('gc-new-wrap');
+                    mode?.addEventListener('change', () => {
+                        const isNew = mode.value === 'new';
+                        if (existingWrap) existingWrap.hidden = isNew;
+                        if (newWrap) newWrap.hidden = !isNew;
+                    });
+                },
+                buttons: [
+                    {
+                        label: _('actions.cancel') || 'Cancel',
+                        class: 'btn-secondary',
+                        onClick: () => { Modal.close(); resolve(false); }
+                    },
+                    {
+                        label: _('actions.save') || 'Save',
+                        class: 'btn-primary',
+                        onClick: async () => {
+                            const err = document.getElementById('gc-error');
+                            const showErr = (msg) => {
+                                if (err) { err.hidden = false; err.textContent = msg; }
+                            };
+                            try {
+                                const mode = document.getElementById('gc-mode')?.value || 'existing';
+                                let packageId = document.getElementById('gc-package')?.value;
+                                if (mode === 'new') {
+                                    const name = document.getElementById('gc-name')?.value?.trim();
+                                    if (!name) {
+                                        showErr(_('commercialization.packages.prompt_name') || 'Package name required');
+                                        return;
+                                    }
+                                    await Utils.api('/api/panel/billing/packages', {
+                                        method: 'POST',
+                                        body: {
+                                            name,
+                                            description: document.getElementById('gc-desc')?.value?.trim() || '',
+                                            included_minutes: parseInt(document.getElementById('gc-minutes')?.value, 10) || 600,
+                                            overage_rate: parseFloat(document.getElementById('gc-overage')?.value) || 0,
+                                            currency: (document.getElementById('gc-currency')?.value || 'PLN').trim().toUpperCase()
+                                        }
+                                    });
+                                    const list = await Utils.api('/api/panel/billing/packages');
+                                    const match = (list.packages || []).find((p) => p.name === name);
+                                    packageId = match?.id;
+                                    if (!packageId) {
+                                        showErr(_('errors.server_error') || 'Failed to create package');
+                                        return;
+                                    }
+                                }
+                                if (!packageId) {
+                                    showErr(_('commercialization.contracts.no_packages') || 'Select a package');
+                                    return;
+                                }
+                                await Utils.api('/api/panel/billing/contracts', {
+                                    method: 'POST',
+                                    body: {
+                                        target_type: 'device_group',
+                                        target_key: group.guid,
+                                        package_id: packageId
+                                    }
+                                });
+                                Modal.close();
+                                Notifications.success(_('devices.group_commercialization_saved') || 'Package assigned to group');
+                                resolve(true);
+                            } catch (e) {
+                                showErr(e.message || _('errors.server_error'));
+                            }
+                        }
+                    }
+                ],
+                onClose: () => resolve(false)
+            });
+        });
     }
 
     function updateGroupCounts() {
@@ -3831,8 +4157,9 @@
                         const group = deviceGroups.find(item => item.guid === targetGroup);
                         if (!group || (group.source_type || 'manual') === 'tag') return;
                         const manualGuids = await getDeviceManualGroupGuids(deviceId);
-                        if (manualGuids.includes(targetGroup)) return;
-                        await setDeviceManualGroups(deviceId, [...manualGuids, targetGroup]);
+                        if (manualGuids.includes(targetGroup) && manualGuids.length === 1) return;
+                        // One manual group per device — replace previous membership.
+                        await setDeviceManualGroups(deviceId, [targetGroup]);
                         Notifications.success(_('devices.group_membership_added') || 'Added to group');
                     }
                     loadDevices();

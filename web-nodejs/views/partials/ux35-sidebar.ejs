@@ -19,7 +19,7 @@
                 <span><%= _('nav.main') %></span>
                 <span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span>
             </button>
-            <a href="/" class="ux35-sidebar-item <%= currentPage === 'dashboard' ? 'active' : '' %>">
+            <a href="/" class="ux35-sidebar-item <%= currentPage === 'dashboard' && !(typeof activateAgentNav !== 'undefined' && activateAgentNav) ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">dashboard</span>
                 <span><%= _('nav.dashboard') %></span>
             </a>
@@ -30,6 +30,10 @@
             </a>
             <% } %>
             <% if (hasPermission('enrollment.approve')) { %>
+            <a href="/?activateAgent=1" class="ux35-sidebar-item <%= typeof activateAgentNav !== 'undefined' && activateAgentNav ? 'active' : '' %>" id="nav-activate-agent">
+                <span class="material-icons" aria-hidden="true">qr_code_2</span>
+                <span><%= _('nav.activate_agent') %></span>
+            </a>
             <a href="/registrations" class="ux35-sidebar-item <%= currentPage === 'registrations' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">how_to_reg</span>
                 <span><%= _('nav.registrations') %></span>
@@ -123,10 +127,9 @@
                 <span class="material-icons" aria-hidden="true">vpn_key</span>
                 <span><%= _('nav.keys') %></span>
             </a>
-            <a href="/generator" class="ux35-sidebar-item <%= currentPage === 'generator' ? 'active' : '' %>" title="<%= _('generator.alpha_tooltip') || _('nav.generator') %>">
-                <span class="material-icons" aria-hidden="true">build</span>
-                <span><%= _('nav.generator') %></span>
-                <span class="badge-sidebar badge-sidebar--alpha"><%= _('generator.alpha_badge') || 'ALPHA' %></span>
+            <a href="/agents" class="ux35-sidebar-item <%= currentPage === 'agents' || currentPage === 'generator' ? 'active' : '' %>" title="<%= _('nav.agents') %>">
+                <span class="material-icons" aria-hidden="true">support_agent</span>
+                <span><%= _('nav.agents') %></span>
             </a>
             <% } %>
             <% if (hasPermission('device.connect')) { %>
@@ -237,25 +240,13 @@
         <% if (hasPermission('billing.view')) { %>
         <div class="ux35-sidebar-section" data-panel="commercialization">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle" aria-expanded="true"><span><%= _('nav.commercialization') || 'Commercialization' %></span><span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span></button>
-            <a href="/commercialization?tab=overview" class="ux35-sidebar-item <%= currentPage === 'commercialization' && ux35CommercialTab === 'overview' ? 'active' : '' %>">
-                <span class="material-icons" aria-hidden="true">dashboard</span>
-                <span><%= _('commercialization.tabs.overview_nav') || _('commercialization.tabs.overview') %></span>
-            </a>
-            <a href="/commercialization?tab=packages" class="ux35-sidebar-item <%= currentPage === 'commercialization' && ux35CommercialTab === 'packages' ? 'active' : '' %>">
+            <a href="/commercialization?tab=packages" class="ux35-sidebar-item <%= currentPage === 'commercialization' && (ux35CommercialTab === 'packages' || ux35CommercialTab === 'overview' || ux35CommercialTab === 'settings') ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">inventory_2</span>
                 <span><%= _('commercialization.tabs.packages') %></span>
             </a>
-            <a href="/commercialization?tab=sessions" class="ux35-sidebar-item <%= currentPage === 'commercialization' && ux35CommercialTab === 'sessions' ? 'active' : '' %>">
+            <a href="/commercialization?tab=sessions" class="ux35-sidebar-item <%= currentPage === 'commercialization' && (ux35CommercialTab === 'sessions' || ux35CommercialTab === 'reports') ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">schedule</span>
                 <span><%= _('commercialization.tabs.sessions') %></span>
-            </a>
-            <a href="/commercialization?tab=reports" class="ux35-sidebar-item <%= currentPage === 'commercialization' && ux35CommercialTab === 'reports' ? 'active' : '' %>">
-                <span class="material-icons" aria-hidden="true">description</span>
-                <span><%= _('commercialization.tabs.reports_nav') || _('commercialization.tabs.reports') %></span>
-            </a>
-            <a href="/commercialization?tab=settings" class="ux35-sidebar-item <%= currentPage === 'commercialization' && ux35CommercialTab === 'settings' ? 'active' : '' %>">
-                <span class="material-icons" aria-hidden="true">tune</span>
-                <span><%= _('commercialization.tabs.settings') %></span>
             </a>
         </div>
         <% } %>

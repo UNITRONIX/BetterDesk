@@ -9,27 +9,27 @@
         <div class="rc-header">
             <h2>${_('resource_control.title')}</h2>
             <div class="rc-tabs" id="rc-tabs">
-                <button class="rc-tab active" data-tab="overview" onclick="ResourceControl.switchTab('overview')">
+                <button class="rc-tab active" data-tab="overview" data-bd-call="ResourceControl.switchTab" data-bd-args='["overview"]'>
                     <span class="material-icons-round">dashboard</span>
                     ${_('resource_control.tab_overview')}
                 </button>
-                <button class="rc-tab" data-tab="usb" onclick="ResourceControl.switchTab('usb')">
+                <button class="rc-tab" data-tab="usb" data-bd-call="ResourceControl.switchTab" data-bd-args='["usb"]'>
                     <span class="material-icons-round">usb</span>
                     ${_('resource_control.tab_usb')}
                 </button>
-                <button class="rc-tab" data-tab="optical" onclick="ResourceControl.switchTab('optical')">
+                <button class="rc-tab" data-tab="optical" data-bd-call="ResourceControl.switchTab" data-bd-args='["optical"]'>
                     <span class="material-icons-round">album</span>
                     ${_('resource_control.tab_optical')}
                 </button>
-                <button class="rc-tab" data-tab="monitors" onclick="ResourceControl.switchTab('monitors')">
+                <button class="rc-tab" data-tab="monitors" data-bd-call="ResourceControl.switchTab" data-bd-args='["monitors"]'>
                     <span class="material-icons-round">monitor</span>
                     ${_('resource_control.tab_monitors')}
                 </button>
-                <button class="rc-tab" data-tab="disks" onclick="ResourceControl.switchTab('disks')">
+                <button class="rc-tab" data-tab="disks" data-bd-call="ResourceControl.switchTab" data-bd-args='["disks"]'>
                     <span class="material-icons-round">storage</span>
                     ${_('resource_control.tab_disks')}
                 </button>
-                <button class="rc-tab" data-tab="quotas" onclick="ResourceControl.switchTab('quotas')">
+                <button class="rc-tab" data-tab="quotas" data-bd-call="ResourceControl.switchTab" data-bd-args='["quotas"]'>
                     <span class="material-icons-round">speed</span>
                     ${_('resource_control.tab_quotas')}
                 </button>

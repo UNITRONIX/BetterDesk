@@ -1,0 +1,21 @@
+---
+description: BetterDesk clients are download-only — never built on the panel host
+alwaysApply: true
+---
+
+# Client distribution — download-only
+
+BetterDesk server hosts are primarily Linux. **Do not treat local Flutter/Cargo client builds on the panel host as the product path.**
+
+## Product model
+
+1. **Incoming-only Support / agents** are built **only on GitHub** in **BetterDesk-Client** (signed releases: Windows x86, Windows ARM, Linux for typical distros, macOS).
+2. The BetterDesk server **downloads** verified generic releases and **serves download links** (`genericAgentReleaseService`, Generator import, `/portal`, hub URLs).
+3. Server-side embedded compile (`BETTERDESK_CLIENT_GENERATOR_MODE=embedded`, `localClientBuilder`, `scripts/install-build-toolchain.*`, betterdesk.sh menu **B**) is **legacy / developer-optional**, not required for production.
+
+## When changing Generator, installers, or agent docs
+
+- Prefer import + cache + public links over host toolchain setup.
+- Do not reintroduce “Flutter/vcpkg required for Generator” as the default operator story.
+- Pairing: generic agent asks for server URL and shows QR; panel **Główne → Aktywuj agenta** scans it (`betterdesk-agent-pairing`). Client QR UI lives in BetterDesk-Client.
+- Issue reports about `install-build-toolchain` Flutter SHA256 (#466-class): point operators to **Import latest release**; keep toolchain scripts only as optional maintainer tooling.

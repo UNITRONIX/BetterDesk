@@ -434,6 +434,74 @@
     border-color: var(--accent-blue) !important;
 }
 
+.manage-tags-hint {
+    margin: 0 0 var(--space-md);
+}
+
+.manage-tags-empty {
+    padding: var(--space-md);
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    text-align: center;
+}
+
+.manage-tags-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: min(50vh, 420px);
+    overflow-y: auto;
+}
+
+.manage-tags-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary, transparent);
+}
+
+.manage-tags-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.manage-tags-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+.manage-tags-meta {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+}
+
+.manage-tags-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+.manage-tags-actions .btn .material-icons {
+    font-size: 16px;
+}
+
+.device-edit-tags-focus {
+    outline: 1px solid var(--accent-blue);
+    outline-offset: 4px;
+    border-radius: var(--radius-md);
+    padding: 8px;
+}
+
 /* ==================== Toolbar ==================== */
 
 .devices-toolbar {
@@ -502,6 +570,17 @@
     color: var(--text-secondary);
     cursor: pointer;
     transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* Contain failed Material ligatures (raw icon names) so they cannot spill as huge text */
+.toolbar-icon .material-icons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    overflow: hidden;
 }
 
 .toolbar-icon:hover {

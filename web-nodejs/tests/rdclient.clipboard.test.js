@@ -11,8 +11,10 @@ function loadRdclientModules() {
         TextEncoder,
         Uint8Array,
         Blob: typeof Blob !== 'undefined' ? Blob : undefined,
-        DecompressionStream: typeof DecompressionStream !== 'undefined' ? DecompressionStream : undefined,
-        CompressionStream: typeof CompressionStream !== 'undefined' ? CompressionStream : undefined,
+        // Keep zstd tests deterministic; Node's experimental stream leaves
+        // BlobReader handles open when the format is unsupported.
+        DecompressionStream: undefined,
+        CompressionStream: undefined,
         Response: typeof Response !== 'undefined' ? Response : undefined,
         navigator: { clipboard: { writeText: jest.fn(), write: jest.fn() } },
         DOMParser: class {
@@ -113,6 +115,16 @@ describe('RDClipboard helpers', () => {
         expect(decoded).toHaveLength(1);
         expect(decoded[0].text).toBe('kept');
     });
+
+    it('drops compressed entries when zstd is unavailable', async () => {
+        const decoded = await RDClipboard.decodeEntry({
+            compress: true,
+            format: 'Text',
+            content: new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, 0x01])
+        });
+
+        expect(decoded).toBeNull();
+    });
 });
 
 describe('RDCompress helpers', () => {
@@ -131,6 +143,13 @@ describe('RDCompress helpers', () => {
         const raw = new Uint8Array([72, 105]);
         const out = await RDCompress.decompressZstd(raw);
         expect(Array.from(out)).toEqual([72, 105]);
+    });
+
+    it('rejects compressed bytes when no zstd decoder is available', async () => {
+        await expect(RDCompress.decompressZstd(
+            new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, 0x01]),
+            { force: true }
+        )).rejects.toThrow(/zstandard/i);
     });
 });
 

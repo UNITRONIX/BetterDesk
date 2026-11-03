@@ -2,6 +2,7 @@ package billing
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/db"
@@ -24,12 +25,7 @@ func (m *mockResolver) GetDeviceOrgID(deviceID string) (string, error) {
 }
 
 type mockPanel struct {
-	folders map[string]int64
-	groups  []string
-}
-
-func (m *mockPanel) ListFolderAssignments() (map[string]int64, error) {
-	return m.folders, nil
+	groups []string
 }
 
 func (m *mockPanel) ListDeviceGroupGUIDsForPeer(peerID string) ([]string, error) {
@@ -52,8 +48,7 @@ func TestResolveContractForDevicePriority(t *testing.T) {
 		},
 	}
 	panel := &mockPanel{
-		folders: map[string]int64{"dev1": 5},
-		groups:  []string{"grp-guid"},
+		groups: []string{"grp-guid"},
 	}
 
 	got, err := ResolveContractForDevice(resolver, panel, "dev1")
@@ -64,16 +59,11 @@ func TestResolveContractForDevicePriority(t *testing.T) {
 		t.Fatalf("want device contract, got %#v", got)
 	}
 
+	// Folder contracts must be ignored even when present in the DB map.
 	resolver.byTarget["device:dev1"] = nil
 	got, err = ResolveContractForDevice(resolver, panel, "dev1")
-	if err != nil || got == nil || got.ID != "c-folder" {
-		t.Fatalf("want folder contract, got %#v err=%v", got, err)
-	}
-
-	resolver.byTarget["folder:5"] = nil
-	got, err = ResolveContractForDevice(resolver, panel, "dev1")
 	if err != nil || got == nil || got.ID != "c-group" {
-		t.Fatalf("want group contract, got %#v err=%v", got, err)
+		t.Fatalf("want group contract (folder ignored), got %#v err=%v", got, err)
 	}
 
 	resolver.byTarget["device_group:grp-guid"] = nil
@@ -100,5 +90,16 @@ func TestNormalizeContractTargetInvalid(t *testing.T) {
 	}
 	if !errors.Is(err, err) && err.Error() == "" {
 		t.Fatal("expected non-empty error")
+	}
+}
+
+func TestNormalizeContractTargetRejectsFolder(t *testing.T) {
+	err := NormalizeContractTarget(&db.BillingContract{
+		TargetType: db.BillingTargetFolder,
+		TargetKey:  "12",
+		PackageID:  "pkg-1",
+	})
+	if err == nil || !strings.Contains(err.Error(), "folder") {
+		t.Fatalf("expected folder rejection, got %v", err)
 	}
 }

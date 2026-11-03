@@ -49,6 +49,9 @@ func (s *Server) handleCreateBillingPackage(w http.ResponseWriter, r *http.Reque
 	if body.Currency == "" {
 		body.Currency = "PLN"
 	}
+	if body.RoundingMinutes <= 0 {
+		body.RoundingMinutes = 10
+	}
 	if err := s.db.CreateBillingPackage(&body); err != nil {
 		writeInternalError(w, err, "CreateBillingPackage")
 		return
@@ -462,4 +465,169 @@ func (s *Server) handleExportBillingSessions(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="billing-sessions-%s.csv"`, stamp))
 	w.Write(data)
+}
+
+// GET /api/billing/packages/{id}/preview?period=YYYY-MM
+// Package month preview for commercialization PPM (company, devices, used/remaining/overage).
+func (s *Server) handleBillingPackagePreview(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	pkg, err := s.db.GetBillingPackage(id)
+	if err != nil || pkg == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "package not found"})
+		return
+	}
+
+	period := strings.TrimSpace(r.URL.Query().Get("period"))
+	tzName := "UTC"
+	if s.timeSync != nil {
+		if cfg := s.timeSync.GetConfig(); cfg.BillingTimezone != "" {
+			tzName = cfg.BillingTimezone
+		}
+	}
+	loc := time.UTC
+	if l, err := time.LoadLocation(tzName); err == nil {
+		loc = l
+	}
+	if period == "" {
+		period = string(billing.PeriodYMAt(time.Now().UTC(), loc))
+	}
+
+	contracts, err := s.db.ListBillingContracts(db.BillingContractFilter{})
+	if err != nil {
+		writeInternalError(w, err, "ListBillingContracts")
+		return
+	}
+
+	type groupInfo struct {
+		GUID        string `json:"guid"`
+		Name        string `json:"name"`
+		OrgID       string `json:"org_id,omitempty"`
+		OrgName     string `json:"org_name,omitempty"`
+		DeviceCount int    `json:"device_count"`
+		ContractID  string `json:"contract_id"`
+		Remaining   int    `json:"remaining_minutes"`
+		Status      string `json:"status"`
+	}
+
+	var groups []groupInfo
+	var companyNames []string
+	deviceSet := map[string]struct{}{}
+	includedUsed := 0
+	overageMin := 0
+	amountOverage := 0.0
+	limitSnapshot := pkg.IncludedMinutes
+	isCurrent := period == string(billing.PeriodYMAt(time.Now().UTC(), loc))
+
+	for _, c := range contracts {
+		if c.PackageID != id {
+			continue
+		}
+		pt, _ := s.db.GetBillingPeriodTotal(c.ID, period)
+		if pt != nil {
+			includedUsed += pt.IncludedMinutesUsed
+			overageMin += pt.OverageMinutes
+			amountOverage += pt.AmountOverage
+			if pt.IncludedLimitSnapshot > 0 {
+				limitSnapshot = pt.IncludedLimitSnapshot
+			}
+		} else if isCurrent {
+			used := pkg.IncludedMinutes - c.RemainingMinutes
+			if used < 0 {
+				used = 0
+			}
+			includedUsed += used
+		}
+
+		gi := groupInfo{
+			GUID:       c.TargetKey,
+			Name:       c.TargetName,
+			ContractID: c.ID,
+			Remaining:  c.RemainingMinutes,
+			Status:     c.Status,
+		}
+		if c.TargetType == db.BillingTargetDeviceGroup {
+			if g, _ := s.db.GetDeviceGroup(c.TargetKey); g != nil {
+				gi.Name = g.Name
+				gi.OrgID = g.TeamID
+				if g.TeamID != "" {
+					if org, _ := s.db.GetOrganization(g.TeamID); org != nil {
+						gi.OrgName = org.Name
+						companyNames = append(companyNames, org.Name)
+					}
+				}
+				if lister, ok := s.db.(interface {
+					ListDeviceGroupMemberPeerIDs(deviceGroupID int64) ([]string, error)
+				}); ok {
+					if members, err := lister.ListDeviceGroupMemberPeerIDs(g.ID); err == nil {
+						gi.DeviceCount = len(members)
+						for _, peer := range members {
+							deviceSet[peer] = struct{}{}
+						}
+					}
+				}
+			}
+		} else if c.TargetType == db.BillingTargetOrg {
+			gi.OrgID = c.TargetKey
+			gi.OrgName = c.TargetName
+			if gi.OrgName != "" {
+				companyNames = append(companyNames, gi.OrgName)
+			}
+		}
+		groups = append(groups, gi)
+	}
+
+	periods, _ := s.db.ListBillingPeriodTotalsByPackage(id)
+	periodList := make([]string, 0, len(periods)+1)
+	seen := map[string]struct{}{}
+	cur := string(billing.PeriodYMAt(time.Now().UTC(), loc))
+	periodList = append(periodList, cur)
+	seen[cur] = struct{}{}
+	for _, p := range periods {
+		if _, ok := seen[p.PeriodYM]; ok {
+			continue
+		}
+		seen[p.PeriodYM] = struct{}{}
+		periodList = append(periodList, p.PeriodYM)
+	}
+
+	remaining := limitSnapshot - includedUsed
+	if remaining < 0 {
+		remaining = 0
+	}
+	if isCurrent && len(groups) == 1 {
+		remaining = groups[0].Remaining
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"package":              pkg,
+		"period_ym":            period,
+		"timezone":             tzName,
+		"companies":            uniqueStrings(companyNames),
+		"groups":               groups,
+		"device_count":         len(deviceSet),
+		"included_limit":       limitSnapshot,
+		"included_minutes_used": includedUsed,
+		"remaining_minutes":    remaining,
+		"overage_minutes":      overageMin,
+		"amount_overage":       amountOverage,
+		"currency":             pkg.Currency,
+		"available_periods":    periodList,
+	})
+}
+
+func uniqueStrings(in []string) []string {
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(in))
+	for _, s := range in {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+		if _, ok := seen[s]; ok {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
 }

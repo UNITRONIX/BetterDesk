@@ -96,6 +96,43 @@ describe('i18n System', () => {
             });
         });
 
+        it('should expose the new Auth and scheduled-backup keys in every locale', () => {
+            const files = fs.readdirSync(langDir).filter(f => f.endsWith('.json'));
+            const get = (value, key) => key.split('.').reduce((current, part) => current?.[part], value);
+            const required = [
+                'settings.ui.auth_sub_totp',
+                'backup.schedule_title',
+                'backup.smb_test_success'
+            ];
+            files.forEach(file => {
+                const content = JSON.parse(fs.readFileSync(path.join(langDir, file), 'utf8'));
+                required.forEach(key => expect(get(content, key)).toBeDefined());
+            });
+        });
+
+        it('uses the native language names for the language picker metadata', () => {
+            const expected = {
+                fr: 'Français',
+                'zh-TW': '繁體中文',
+                ar: 'العربية',
+                da: 'Dansk',
+                fi: 'Suomi',
+                hi: 'हिन्दी',
+                id: 'Bahasa Indonesia',
+                nb: 'Norsk',
+                ro: 'Română',
+                sv: 'Svenska',
+                th: 'ไทย',
+                tr: 'Türkçe',
+                uk: 'Українська',
+                vi: 'Tiếng Việt'
+            };
+            for (const [code, nativeName] of Object.entries(expected)) {
+                const content = JSON.parse(fs.readFileSync(path.join(langDir, `${code}.json`), 'utf8'));
+                expect(content.meta.native_name).toBe(nativeName);
+            }
+        });
+
         it('Polish should have all keys from English', () => {
             const en = JSON.parse(fs.readFileSync(path.join(langDir, 'en.json'), 'utf8'));
             const pl = JSON.parse(fs.readFileSync(path.join(langDir, 'pl.json'), 'utf8'));

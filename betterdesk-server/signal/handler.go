@@ -548,7 +548,7 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 
 		// Debounce database status updates — only sync every 60s per peer (P1)
 		if time.Since(existing.LastDBSync) > 60*time.Second {
-			s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String())
+			s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String(), "signal")
 			existing.LastDBSync = time.Now()
 		}
 		return
@@ -642,7 +642,7 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 	s.sendUDP(resp, raddr)
 
 	log.Printf("[signal] New peer registered: %s from %s (pk_loaded=%v)", id, raddr, len(entry.PK) > 0)
-	s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String())
+	s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String(), "signal")
 	s.publishPeerOnline(id)
 }
 
@@ -1003,6 +1003,8 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 	log.Printf("[signal] PunchHole: target %s found (addr=%s, status=%s, lastReg=%v ago), relay=%s",
 		targetID, target.UDPAddr, target.StatusTier, time.Since(target.LastReg), relayServer)
 
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole", "")
+
 	// Correlate initiator identity for a later RelayResponse on shared NAT (#399).
 	s.storePendingUUID(targetID, raddr, "", initiatorID)
 
@@ -1013,6 +1015,25 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole: force relay for %s", targetID)
 		s.sendRelayResponse(target, raddr, msg, relayServer, initiatorID)
+		return
+	}
+
+	// Native peers on the same LAN must exchange their actual listener
+	// endpoint before the initiator receives a PunchHoleResponse. A public
+	// registration endpoint marked is_local is not a valid LAN candidate.
+	if sameNetwork && target.ConnType != peer.ConnWS {
+		pending, started := s.beginLANExchange(
+			targetID, target, initiatorID, raddr, peer.ConnUDP,
+			relayServer, msg.SocketAddrV6,
+		)
+		if started {
+			return
+		}
+		if pending != nil {
+			s.sendUDP(pending.fallback, raddr)
+		} else {
+			s.sendUDP(s.lanFallbackResponse(targetID, target, relayServer, nil), raddr)
+		}
 		return
 	}
 
@@ -1100,10 +1121,9 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 
 // handlePunchHoleRequestTCP handles punch hole over TCP/WS.
 //
-// Matching the UDP handler behavior: always send an immediate PunchHoleResponse
-// to the TCP initiator with the target's signed PK, socket address, relay server,
-// and NAT type.  This ensures the initiator can proceed with the connection
-// (direct P2P or relay fallback) without waiting for the target to respond.
+// Matching the UDP handler behavior for WAN peers: send a PunchHoleResponse
+// with the target's signed PK, socket address, relay server, and NAT type.
+// Genuine native LAN peers use the asynchronous FetchLocalAddr exchange below.
 //
 // Previous behavior (returning nil and waiting for the target's PunchHoleSent)
 // caused "Failed to secure tcp: deadline has elapsed" timeouts when:
@@ -1180,6 +1200,8 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 	log.Printf("[signal] PunchHole (TCP): target %s found (addr=%s, status=%s), relay=%s",
 		targetID, target.UDPAddr, target.StatusTier, relayServer)
 
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole", "")
+
 	// Correlate initiator identity for a later RelayResponse on shared NAT (#399).
 	s.storePendingUUID(targetID, raddr, "", initiatorID)
 
@@ -1229,6 +1251,20 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 				PunchHoleResponse: phr,
 			},
 		}
+	}
+
+	if sameNetwork && initiatorHint != peer.ConnWS && target.ConnType != peer.ConnWS {
+		pending, started := s.beginLANExchange(
+			targetID, target, initiatorID, raddr, peer.ConnTCP,
+			relayServer, msg.SocketAddrV6,
+		)
+		if started {
+			return nil
+		}
+		if pending != nil {
+			return pending.fallback
+		}
+		return s.lanFallbackResponse(targetID, target, relayServer, nil)
 	}
 
 	// Forward PunchHole to the TARGET peer (supports UDP, TCP, and WebSocket targets).
@@ -1547,6 +1583,8 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		log.Printf("[signal] RequestRelay shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", raddr.IP, relayServer)
 	}
 
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
+
 	// Forward relay request to target peer (supports UDP, TCP, and WebSocket targets).
 	// NOTE: Must use RequestRelay type, not RelayResponse — RustDesk client's
 	// handle_resp() dispatches RequestRelay to create_relay() but drops RelayResponse.
@@ -1677,6 +1715,8 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	if !s.authorizeRelayTicket(relayUUID, initiatorID, targetID) {
 		return s.relayTicketRejectedResponse(relayServer)
 	}
+
+	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
 
 	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
 	// public IP peers keep the public relay to avoid NAT hairpin failures (#121).
@@ -2025,47 +2065,35 @@ func (s *Server) relayResponseSourceMatchesTarget(targetID string, senderAddr *n
 // We decode the socket_addr to identify the requester's origin, then forward.
 func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr) {
 	// FetchLocalAddr contains the target's socket_addr from a previous PunchHole.
-	// We forward the request to the peer at that address, including the requester's addr.
+	// Resolve the registered target first so TCP-only native peers are not
+	// forced through a decoded UDP endpoint.
 	targetAddr, err := crypto.DecodeAddr(msg.SocketAddr)
 	if err != nil || targetAddr == nil {
 		return
 	}
 
-	// Forward to target with requester's address
+	// Forward to target with requester's address.
 	fetch := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_FetchLocalAddr{
 			FetchLocalAddr: &pb.FetchLocalAddr{
-				SocketAddr: crypto.EncodeAddr(raddr),
+				SocketAddr:   crypto.EncodeAddr(raddr),
+				RelayServer:  msg.RelayServer,
+				SocketAddrV6: copyBytes(msg.SocketAddrV6),
 			},
 		},
+	}
+	if target := s.peers.FindByAddr(targetAddr); target != nil &&
+		target.ConnType != peer.ConnWS &&
+		s.sendToPeer(target.ID, fetch) {
+		return
 	}
 	s.sendUDP(fetch, targetAddr)
 }
 
-// handleLocalAddr forwards a LocalAddr response from the target peer back to the
-// requester. This completes the FetchLocalAddr→LocalAddr exchange needed for LAN
-// direct connections.
+// handleLocalAddr completes the FetchLocalAddr→LocalAddr exchange and returns
+// the target's actual LAN listener inside a PunchHoleResponse.
 func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
-	// socket_addr identifies the original requester that initiated FetchLocalAddr.
-	requesterAddr, err := crypto.DecodeAddr(msg.SocketAddr)
-	if err != nil || requesterAddr == nil {
-		return
-	}
-
-	// Forward the LocalAddr (with the responder's local address) to the requester.
-	resp := &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_LocalAddr{
-			LocalAddr: &pb.LocalAddr{
-				SocketAddr:   crypto.EncodeAddr(raddr),
-				LocalAddr:    msg.LocalAddr,
-				RelayServer:  msg.RelayServer,
-				Id:           msg.Id,
-				Version:      msg.Version,
-				SocketAddrV6: msg.SocketAddrV6,
-			},
-		},
-	}
-	s.sendUDP(resp, requesterAddr)
+	s.completeLANAddr(msg, raddr)
 }
 
 // handleTestNat handles NAT type detection (TCP port 21115).
@@ -2663,6 +2691,46 @@ func (s *Server) logAuthorizedInitiator(raddr *net.UDPAddr, initiatorID, targetI
 		}
 	}
 	s.auditLog.Log(audit.ActionConnectionAllowed, clientHost, targetID, details)
+}
+
+// recordConnectionSession persists a Metrics-tab session row after the target
+// is confirmed online. Debounced in the DB layer for PunchHole retries.
+func (s *Server) recordConnectionSession(raddr *net.UDPAddr, initiatorID, targetID, token, transport, relayUUID string) {
+	if s.db == nil || strings.TrimSpace(targetID) == "" {
+		return
+	}
+	sess := &db.PeerConnectionSession{
+		HostID:    targetID,
+		PeerID:    initiatorID,
+		Transport: transport,
+		RelayUUID: strings.TrimSpace(relayUUID),
+		Source:    "signal",
+		StartedAt: time.Now().UTC(),
+	}
+	if raddr != nil {
+		sess.PeerIP = raddr.IP.String()
+	}
+	if strings.EqualFold(initiatorID, panelWebRemoteInitiatorID) {
+		sess.PeerName = "Web Remote"
+		sess.Username = "web_remote"
+	} else if s.db != nil {
+		if p, err := s.db.GetPeer(initiatorID); err == nil && p != nil {
+			sess.PeerName = strings.TrimSpace(p.Hostname)
+			if sess.PeerName == "" {
+				sess.PeerName = initiatorID
+			}
+		}
+		if opaqueClientTokenRegexp.MatchString(strings.TrimSpace(token)) {
+			if cs, err := s.db.GetClientSessionByTokenHash(hashOpaqueClientToken(token)); err == nil && cs != nil {
+				if user, userErr := s.db.GetUserByID(cs.UserID); userErr == nil && user != nil {
+					sess.Username = user.Username
+				}
+			}
+		}
+	}
+	if _, err := s.db.StartPeerConnectionSession(sess); err != nil {
+		log.Printf("[signal] connection session record failed: %v", err)
+	}
 }
 
 func (s *Server) shouldForceRelayForPeers(peerIDs ...string) bool {

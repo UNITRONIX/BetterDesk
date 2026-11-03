@@ -917,7 +917,7 @@ router.delete('/help-requests/:id', requireDeviceAuth, requireOperatorRole, asyn
 //  helpRequests. Read state is persisted in notification_reads (per user).
 // ---------------------------------------------------------------------------
 
-const { requireAuth, roleHasPermission } = require('../middleware/auth');
+const { requireAuth, requestHasPermission } = require('../middleware/auth');
 const { listRegistrationNotifications } = require('../services/registrationNotifications');
 
 function sessionUserId(req) {
@@ -939,7 +939,7 @@ function helpRequestToNotif(req, readIds) {
 }
 
 function canViewRegistrationNotifications(req) {
-    return roleHasPermission(req.session?.user?.role, 'enrollment.approve');
+    return requestHasPermission(req, 'enrollment.approve');
 }
 
 async function getRegistrationNotifications(req, readIds) {

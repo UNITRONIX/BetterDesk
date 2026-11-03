@@ -14,8 +14,10 @@ const brandingService = require('../services/brandingService');
 const fontService = require('../services/fontService');
 const serverBackend = require('../services/serverBackend');
 const backupService = require('../services/backupService');
+const scheduledBackupService = require('../services/scheduledBackupService');
 const updateService = require('../services/updateService');
 const { resolveChildPath } = require('../lib/safePath');
+const { unlinkMulterFiles } = require('../lib/multerCleanup');
 const { canScheduleConsoleRestart } = require('../lib/updateFailurePolicy');
 const {
     persistUpdateResult,
@@ -29,9 +31,10 @@ const serverConnectionConfig = require('../services/serverConnectionConfigServic
 const rustDeskPublicEndpoints = require('../services/rustDeskPublicEndpointsService');
 const clientConfigHost = require('../services/clientConfigHost');
 const { getSmtpSettings, putSmtpSettings, testSmtpSettings } = require('../lib/smtpSettingsHandlers');
-const { apiClient } = require('../services/betterdeskApi');
+const betterdeskApi = require('../services/betterdeskApi');
+const { apiClient } = betterdeskApi;
 const { canUsePrivilegedUpdate, invokePrivilegedUpdate } = require('../lib/privilegedUpdateHelper');
-const { requireAuth, requirePermission, roleHasPermission } = require('../middleware/auth');
+const { requireAuth, requirePermission, requestHasPermission } = require('../middleware/auth');
 const deviceGroupService = require('../services/deviceGroupService');
 const managementCapabilities = require('../lib/managementCapabilities');
 const os = require('os');
@@ -41,12 +44,11 @@ const multer = require('multer');
  * GET /settings - Settings page
  */
 router.get('/settings', requireAuth, (req, res) => {
-    const userRole = req.session.user && req.session.user.role;
     res.render('settings', {
         title: req.t('nav.settings'),
         activePage: 'settings',
-        canServerConfig: roleHasPermission(userRole, 'server.config'),
-        canBrandingEdit: roleHasPermission(userRole, 'branding.edit')
+        canServerConfig: requestHasPermission(req, 'server.config'),
+        canBrandingEdit: requestHasPermission(req, 'branding.edit')
     });
 });
 
@@ -226,6 +228,80 @@ router.post('/api/settings/device-scope', requireAuth, requirePermission('server
     }
 });
 
+const AVAIL_HISTORY_ENABLED_KEY = 'availability_history_enabled';
+const AVAIL_HISTORY_RETENTION_KEY = 'availability_history_retention_days';
+const AVAIL_HISTORY_DEFAULT_RETENTION = 30;
+
+function parseTruthy(v) {
+    const s = String(v == null ? '' : v).trim().toLowerCase();
+    return s === '1' || s === 'true' || s === 'y' || s === 'yes' || s === 'on';
+}
+
+/**
+ * GET /api/settings/availability-history — Go server_config gate for #455.
+ */
+router.get('/api/settings/availability-history', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const enabledRes = await betterdeskApi.getConfig(AVAIL_HISTORY_ENABLED_KEY);
+        const retentionRes = await betterdeskApi.getConfig(AVAIL_HISTORY_RETENTION_KEY);
+        let retention = AVAIL_HISTORY_DEFAULT_RETENTION;
+        const rawDays = retentionRes && retentionRes.success !== false
+            ? (retentionRes.value ?? retentionRes.data?.value)
+            : null;
+        const parsed = parseInt(rawDays, 10);
+        if (Number.isFinite(parsed) && parsed > 0) {
+            retention = Math.min(parsed, 3650);
+        }
+        const enabledVal = enabledRes && enabledRes.success !== false
+            ? (enabledRes.value ?? enabledRes.data?.value)
+            : '';
+        res.json({
+            success: true,
+            data: {
+                enabled: parseTruthy(enabledVal),
+                retention_days: retention
+            }
+        });
+    } catch (err) {
+        console.error('Get availability history setting error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * POST /api/settings/availability-history — enable/disable + retention days.
+ */
+router.post('/api/settings/availability-history', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const enabled = !!(req.body && req.body.enabled);
+        let retention = parseInt(req.body && req.body.retention_days, 10);
+        if (!Number.isFinite(retention) || retention < 1) {
+            retention = AVAIL_HISTORY_DEFAULT_RETENTION;
+        }
+        retention = Math.min(retention, 3650);
+
+        const enRes = await betterdeskApi.setConfig(AVAIL_HISTORY_ENABLED_KEY, enabled ? 'true' : 'false');
+        if (enRes && enRes.success === false) {
+            return res.status(502).json({ success: false, error: enRes.error || req.t('errors.server_error') });
+        }
+        const retRes = await betterdeskApi.setConfig(AVAIL_HISTORY_RETENTION_KEY, String(retention));
+        if (retRes && retRes.success === false) {
+            return res.status(502).json({ success: false, error: retRes.error || req.t('errors.server_error') });
+        }
+
+        await db.logAction(
+            req.session.userId,
+            'availability_history_updated',
+            `Availability history: enabled=${enabled}, retention_days=${retention}`,
+            req.ip
+        );
+        res.json({ success: true, data: { enabled, retention_days: retention } });
+    } catch (err) {
+        console.error('Set availability history setting error:', err);
+        res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
 /**
  * GET /api/settings/audit - Get audit log
  */
@@ -354,6 +430,7 @@ const logoUpload = multer({
 router.post('/api/settings/branding/upload-logo', requireAuth, requirePermission('branding.edit'), (req, res) => {
     logoUpload.single('logo')(req, res, async (err) => {
         if (err) {
+            unlinkMulterFiles(req);
             const msg = err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 2 MB)' : (err.message || 'Upload failed');
             return res.status(400).json({ success: false, error: msg });
         }
@@ -454,6 +531,7 @@ router.get('/api/settings/branding/backgrounds', requireAuth, (req, res) => {
 router.post('/api/settings/branding/upload-background', requireAuth, requirePermission('branding.edit'), (req, res) => {
     bgUpload.single('background')(req, res, async (err) => {
         if (err) {
+            unlinkMulterFiles(req);
             const msg = err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 8 MB)' : (err.message || 'Upload failed');
             return res.status(400).json({ success: false, error: msg });
         }
@@ -829,6 +907,7 @@ const fontUpload = multer({
 router.post('/api/settings/fonts/upload', requireAuth, requirePermission('branding.edit'), (req, res) => {
     fontUpload.single('font')(req, res, async (err) => {
         if (err) {
+            unlinkMulterFiles(req);
             const msg = err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 5 MB)' : (err.message || 'Upload failed');
             return res.status(400).json({ success: false, error: msg });
         }
@@ -943,6 +1022,98 @@ router.get('/api/settings/backup', requireAuth, requirePermission('server.config
     } catch (err) {
         console.error('Backup download error:', err);
         res.status(500).json({ success: false, error: req.t('errors.server_error') });
+    }
+});
+
+/**
+ * Scheduled full disaster-recovery backup configuration and controls.
+ */
+router.get('/api/settings/backup/schedule', requireAuth, requirePermission('server.config'), async (_req, res) => {
+    try {
+        const [schedule, status] = await Promise.all([
+            scheduledBackupService.getConfig(),
+            scheduledBackupService.getStatus()
+        ]);
+        res.json({ success: true, data: { schedule, status } });
+    } catch (err) {
+        console.error('Scheduled backup settings read error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.get('/api/settings/backup/schedule/status', requireAuth, requirePermission('server.config'), async (_req, res) => {
+    try {
+        res.json({ success: true, data: await scheduledBackupService.getStatus() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.put('/api/settings/backup/schedule', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const schedule = await scheduledBackupService.saveConfig(req.body || {});
+        res.json({ success: true, data: schedule });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/api/settings/backup/schedule/run', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const result = await scheduledBackupService.createScheduledBackup({ manual: true });
+        await db.logAction(
+            req.session?.userId,
+            'backup_created',
+            `Scheduled full backup created (${result.filename})`,
+            req.ip
+        );
+        res.json({ success: true, data: result });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/api/settings/backup/destination/test', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const result = await scheduledBackupService.testDestination(req.body || {});
+        res.json({ success: true, data: result });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.get('/api/settings/backup/smb', requireAuth, requirePermission('server.config'), async (_req, res) => {
+    try {
+        res.json({ success: true, data: await scheduledBackupService.getSmbSettings() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.put('/api/settings/backup/smb', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        res.json({ success: true, data: await scheduledBackupService.saveSmbSettings(req.body || {}) });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/api/settings/backup/smb/test', requireAuth, requirePermission('server.config'), async (req, res) => {
+    try {
+        const saved = await scheduledBackupService.saveSmbSettings(req.body || {});
+        const raw = { ...(req.body || {}) };
+        if (saved.password === '********') {
+            const current = await db.getSetting('scheduled_backup_smb', null);
+            try {
+                Object.assign(raw, JSON.parse(current || '{}'));
+            } catch (_) {
+                // The validation below will return a useful error.
+            }
+        }
+        const result = await scheduledBackupService.testSmbConnection(raw);
+        res.json({ success: true, data: result });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
     }
 });
 
@@ -1317,6 +1488,19 @@ router.get('/api/settings/updates/last-result', requireAuth, requirePermission('
 });
 
 /**
+ * GET /api/settings/updates/install-status - Live install progress (#464).
+ * Used when the browser loses the long-running install HTTP call (proxy timeout)
+ * so the UI can keep polling until applyUpdate finishes.
+ */
+router.get('/api/settings/updates/install-status', requireAuth, requirePermission('server.config'), (req, res) => {
+    try {
+        res.json({ success: true, data: updateService.getUpdateInstallStatus() });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
  * GET /api/settings/updates/changes - Get list of changed files between local SHA and remote
  */
 router.get('/api/settings/updates/changes', requireAuth, requirePermission('server.config'), async (req, res) => {
@@ -1655,8 +1839,6 @@ router.put('/api/settings/backup/retention', requireAuth, requirePermission('ser
 });
 
 // ==================== Device enrollment settings ============================
-
-const betterdeskApi = require('../services/betterdeskApi');
 
 const ENROLLMENT_SETTING_RICH = 'enrollment_rich_approve';
 const ENROLLMENT_SETTING_TAG_PICKER = 'enrollment_tag_picker';

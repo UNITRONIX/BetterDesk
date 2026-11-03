@@ -37,10 +37,16 @@ curl http://your-server:21114/api/server-config
 3. Configure:
    - **ID Server**: `your-server.com`
    - **Relay Server**: `your-server.com`
-   - **API Server**: `http://your-server.com:21121`
+   - **API Server**: see table below
    - **Key**: paste the public key from the web console
 
-> **Important:** Set **API Server** to port **21121** (RustDesk Client API on Go; some installs still proxy via Node). Do **not** use 21114 for the RustDesk client API field. Include the `http://` or `https://` prefix.
+| Deploy layout | API Server |
+|---------------|------------|
+| Official **single-container** Docker / AIO | `http://your-server.com:21121` |
+| **Split** Docker / systemd (Go on 21114) | `http://your-server.com:21114` (preferred) |
+| Split with Node compat proxy enabled | `http://your-server.com:21121` also works |
+
+> **Important:** Point **API Server** at the **Client API** (Go `:21114` or `:21121`), never at the web panel `:5000`. Include the `http://` or `https://` prefix. Wrong API routing after login often surfaces as `initiator_token_rejected` — see [DOCKER_TROUBLESHOOTING](../docker/DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected).
 
 ### Configuration File
 
@@ -68,7 +74,7 @@ key = "OeVuKk5nl..."
 3. Scan the QR code from the web console, or enter manually:
    - **ID Server**: `your-server.com`
    - **Relay Server**: `your-server.com`
-   - **API Server**: `http://your-server.com:21121`
+   - **API Server**: same rules as desktop (`:21121` single / `:21114` split) — not panel `:5000`
    - **Key**: paste the public key
 
 ---
@@ -184,7 +190,7 @@ curl http://your-server.com:21121/api/login-options
 
 ## Custom Client Branding
 
-RustDesk supports custom branding. Use the built-in **Client Generator** in the web panel to build pre-configured clients — see [[Client Generator|Client-Generator]].
+For incoming-only BetterDesk Support agents, use **BetterDesk Agents** in the web panel (import signed releases) — see [[BetterDesk Agents|Client-Generator]]. Appearance comes from **Client Branding** at runtime.
 
 ---
 

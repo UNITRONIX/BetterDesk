@@ -59,7 +59,7 @@
                                 <option value="hide_always">${_('policies.wallpaper_hide_always') || 'Always hide'}</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="Policies.saveSection('connection')">${_('common.save') || 'Save'}</button>
+                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["connection"]'>${_('common.save') || 'Save'}</button>
                     </div>
                 </div>
 
@@ -92,7 +92,7 @@
                                 <input type="checkbox" id="pol-recording" class="toggle-switch" checked />
                             </div>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="Policies.saveSection('features')">${_('common.save') || 'Save'}</button>
+                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["features"]'>${_('common.save') || 'Save'}</button>
                     </div>
                 </div>
 
@@ -131,7 +131,7 @@
                             <label>${_('policies.allowed_operators') || 'Allowed Operator Roles (comma-separated)'}</label>
                             <input type="text" id="pol-allowed-ops" class="form-input" placeholder="admin, helpdesk" />
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="Policies.saveSection('security')">${_('common.save') || 'Save'}</button>
+                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["security"]'>${_('common.save') || 'Save'}</button>
                     </div>
                 </div>
 
@@ -161,7 +161,7 @@
                             <label>${_('policies.ip_allowlist') || 'IP Allowlist (CIDR, one per line)'}</label>
                             <textarea id="pol-ip-allowlist" class="form-input" rows="3" placeholder="192.168.1.0/24\n10.0.0.0/8"></textarea>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="Policies.saveSection('network')">${_('common.save') || 'Save'}</button>
+                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["network"]'>${_('common.save') || 'Save'}</button>
                     </div>
                 </div>
 
@@ -190,7 +190,7 @@
                                 <option value="dev">Dev</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="Policies.saveSection('update')">${_('common.save') || 'Save'}</button>
+                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["update"]'>${_('common.save') || 'Save'}</button>
                     </div>
                 </div>
 

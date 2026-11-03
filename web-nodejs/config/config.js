@@ -220,9 +220,17 @@ module.exports = {
     // Set to 'true' when using a trusted SMTP server with valid certificates.
     smtpTlsVerify: (process.env.SMTP_TLS_VERIFY || 'false').toLowerCase() === 'true',
 
-    // Session
+    // Session — absolute maxAge + idle timeout (see lib/sessionPolicy.js)
     sessionSecret: sessionSecret,
-    sessionMaxAge: parseInt(process.env.SESSION_MAX_AGE, 10) || 24 * 60 * 60 * 1000, // 24 hours
+    ...(() => {
+        const { resolveSessionPolicy } = require('../lib/sessionPolicy');
+        const policy = resolveSessionPolicy(process.env);
+        return {
+            sessionMaxAge: policy.maxAgeMs,
+            sessionIdleTimeout: policy.idleTimeoutMs,
+            sessionIdleWarnMs: policy.warnBeforeMs
+        };
+    })(),
 
     // Rate limiting
     rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60 * 1000, // 1 minute

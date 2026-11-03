@@ -17,6 +17,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const { apiLimiter } = require('../middleware/rateLimiter');
+const { assertSafeSqlIdent, isSafeSqlIdent } = require('../lib/safeSqlIdent');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -173,9 +174,11 @@ router.get('/api/database/stats', apiLimiter, requireAuth, requirePermission('me
                 `SELECT tablename AS name FROM pg_catalog.pg_tables WHERE schemaname = 'public' ORDER BY tablename`
             );
             for (const tbl of tables) {
+                if (!isSafeSqlIdent(tbl.name)) continue;
                 try {
-                    const row = await db.getAsync(`SELECT COUNT(*) AS count FROM "${tbl.name}"`);
-                    result.tables.push({ name: tbl.name, count: row ? row.count : 0 });
+                    const safe = assertSafeSqlIdent(tbl.name);
+                    const row = await db.getAsync(`SELECT COUNT(*) AS count FROM "${safe}"`);
+                    result.tables.push({ name: safe, count: row ? row.count : 0 });
                 } catch (e) { /* skip */ }
             }
             // DB size
@@ -189,9 +192,11 @@ router.get('/api/database/stats', apiLimiter, requireAuth, requirePermission('me
                 `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`
             );
             for (const tbl of tables) {
+                if (!isSafeSqlIdent(tbl.name)) continue;
                 try {
-                    const row = await db.getAsync(`SELECT COUNT(*) AS count FROM "${tbl.name}"`);
-                    result.tables.push({ name: tbl.name, count: row ? row.count : 0 });
+                    const safe = assertSafeSqlIdent(tbl.name);
+                    const row = await db.getAsync(`SELECT COUNT(*) AS count FROM "${safe}"`);
+                    result.tables.push({ name: safe, count: row ? row.count : 0 });
                 } catch (e) { /* skip */ }
             }
             // DB file size

@@ -103,6 +103,10 @@ function requireJsonContentType(req, res, next) {
     if (req.path.includes('/upload') || req.path.includes('/import')) {
         return next();
     }
+    // Disaster-recovery restore uploads multipart/form-data (field "backup").
+    if (req.path === '/api/settings/restore') {
+        return next();
+    }
     if (!req.is('application/json')) {
         return res.status(415).json({
             success: false,

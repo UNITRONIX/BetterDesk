@@ -1,6 +1,9 @@
 package api
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,6 +15,85 @@ import (
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/peer"
 )
+
+func TestUserViewOverrideBlocksPanelAndClientDirectory(t *testing.T) {
+	cfg := config.DefaultConfig()
+	database := testSetupDB(t)
+	defer database.Close()
+
+	const operatorKey = "operator-api-key-468"
+	keyHash := sha256.Sum256([]byte(operatorKey))
+	if err := database.CreateAPIKey(&db.APIKey{
+		KeyHash:   hex.EncodeToString(keyHash[:]),
+		KeyPrefix: operatorKey[:8],
+		Name:      "operator-468",
+		Role:      auth.RoleOperator,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SetRolePermission(auth.RoleOperator, auth.PermUserView, false); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := database.CreateUser(&db.User{
+		Username:     "directory-user-468",
+		PasswordHash: "hash",
+		Role:         auth.RoleOperator,
+		AuthProvider: db.AuthProviderLocal,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.UpsertPeer(&db.Peer{ID: "peer-468", User: "directory-user-468"}); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg.APIPort = 19894
+	srv := New(cfg, database, peer.NewMap(), nil, "1.0.0-test")
+	if err := srv.Start(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+	time.Sleep(100 * time.Millisecond)
+
+	panelReq, err := http.NewRequest(http.MethodGet,
+		fmt.Sprintf("http://127.0.0.1:%d/api/users", cfg.APIPort), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	panelReq.Header.Set("X-API-Key", operatorKey)
+	panelResp, err := http.DefaultClient.Do(panelReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer panelResp.Body.Close()
+	if panelResp.StatusCode != http.StatusForbidden {
+		t.Fatalf("panel user list status %d, want 403", panelResp.StatusCode)
+	}
+
+	clientReq, err := http.NewRequest(http.MethodGet,
+		fmt.Sprintf("http://127.0.0.1:%d/api/users?accessible=&pageSize=100", cfg.APIPort), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	clientReq.Header.Set("X-API-Key", operatorKey)
+	clientResp, err := http.DefaultClient.Do(clientReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer clientResp.Body.Close()
+	if clientResp.StatusCode != http.StatusOK {
+		t.Fatalf("client user list status %d, want 200", clientResp.StatusCode)
+	}
+	var body struct {
+		Data []map[string]any `json:"data"`
+	}
+	if err := json.NewDecoder(clientResp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Data) != 0 {
+		t.Fatalf("client user list leaked %d users despite user.view deny", len(body.Data))
+	}
+}
 
 func testDeleteUserRequest(port int, userID int64) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("http://127.0.0.1:%d/api/users/%d", port, userID), nil)

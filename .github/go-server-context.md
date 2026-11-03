@@ -370,16 +370,18 @@ Signing IdPk:
 
 ```
 Encode(ip, port):
-  IPv4: [4 bytes IP] + [2 bytes port big-endian] = 6 bytes total
-  IPv6: [16 bytes IP] + [2 bytes port big-endian] = 18 bytes total
+  IPv4: timestamp-mangled 128-bit integer, little-endian,
+        with trailing zero bytes removed (1–16 bytes)
+  IPv6: [16 bytes IP] + [2 bytes port little-endian] = 18 bytes
 
 Decode(bytes):
-  len == 6  → IPv4: ip = bytes[0:4], port = binary.BigEndian.Uint16(bytes[4:6])
-  len == 18 → IPv6: ip = bytes[0:16], port = binary.BigEndian.Uint16(bytes[16:18])
+  len == 18 → IPv6: ip = bytes[0:16], port = binary.LittleEndian.Uint16(bytes[16:18])
+  len 1..16 → IPv4: recover the timestamp, IP and port from the
+                 little-endian mangled integer
 
 Go implementation:
-  func Encode(addr net.UDPAddr) []byte
-  func Decode(b []byte) net.UDPAddr
+  func EncodeAddr(addr *net.UDPAddr) []byte
+  func DecodeAddr(b []byte) (*net.UDPAddr, error)
 ```
 
 ---

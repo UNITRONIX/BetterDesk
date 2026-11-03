@@ -57,10 +57,10 @@
           <td><span class="device-status-dot ${statusClass}"></span> ${escapeHtml(status)}</td>
           <td>${r.last_check ? new Date(r.last_check).toLocaleString() : '—'}</td>
           <td>
-            <button class="btn btn-xs btn-ghost" onclick="Attestation.verify('${escapeAttr(r.device_id)}')" title="Verify">
+            <button class="btn btn-xs btn-ghost" data-bd-call="Attestation.verify" data-bd-args='["${escapeAttr(r.device_id)}"]' title="Verify">
               <span class="material-icons" style="font-size:16px;">verified</span>
             </button>
-            <button class="btn btn-xs btn-ghost" onclick="Attestation.revoke('${escapeAttr(r.device_id)}')" title="Revoke">
+            <button class="btn btn-xs btn-ghost" data-bd-call="Attestation.revoke" data-bd-args='["${escapeAttr(r.device_id)}"]' title="Revoke">
               <span class="material-icons" style="font-size:16px;">block</span>
             </button>
           </td>

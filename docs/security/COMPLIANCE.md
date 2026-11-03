@@ -59,6 +59,6 @@
 - Use PostgreSQL with TLS and disk encryption
 - Enable all TLS flags (`--tls-signal`, `--tls-relay`)
 - Require TOTP 2FA for all operator/admin accounts
-- Set session timeouts to 15 minutes or less
+- Set panel `SESSION_IDLE_TIMEOUT` to 15 minutes or less (default is 30 minutes) and keep absolute `SESSION_MAX_AGE` bounded
 - Enable session recording for audit purposes
 - Regular access reviews via organization user management

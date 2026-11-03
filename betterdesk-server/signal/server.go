@@ -148,6 +148,10 @@ type Server struct {
 	// (issue #157). Key=normalizeAddrKey(initiatorAddr), Value=*pendingPunch.
 	pendingPunches sync.Map // map[string]*pendingPunch
 
+	// pendingLANs tracks native LAN address exchanges independently from relay
+	// correlation and WAN P2P-first fallbacks. Key=target ID + initiator endpoint.
+	pendingLANs sync.Map // map[string]*pendingLAN
+
 	// lastSharedNATWarnUnixNano rate-limits SAME_NAT_RELAY=false warnings (#399).
 	lastSharedNATWarnUnixNano atomic.Int64
 
@@ -961,7 +965,7 @@ func (s *Server) heartbeatCleaner() {
 
 			// Update database for peers that transitioned to DEGRADED
 			if len(degraded) > 0 {
-				if err := s.db.BatchUpdatePeerStatus(degraded, "DEGRADED"); err != nil {
+				if err := s.db.BatchUpdatePeerStatus(degraded, "DEGRADED", "signal"); err != nil {
 					log.Printf("[signal] Failed to mark %d peers degraded: %v", len(degraded), err)
 				}
 				for _, id := range degraded {
@@ -975,7 +979,7 @@ func (s *Server) heartbeatCleaner() {
 
 			// Update database for peers that transitioned to CRITICAL
 			if len(critical) > 0 {
-				if err := s.db.BatchUpdatePeerStatus(critical, "CRITICAL"); err != nil {
+				if err := s.db.BatchUpdatePeerStatus(critical, "CRITICAL", "signal"); err != nil {
 					log.Printf("[signal] Failed to mark %d peers critical: %v", len(critical), err)
 				}
 				for _, id := range critical {
@@ -990,7 +994,7 @@ func (s *Server) heartbeatCleaner() {
 			// Phase 2: Remove fully expired peers (offline)
 			expired := s.peers.CleanExpired(config.RegTimeout)
 			if len(expired) > 0 {
-				if err := s.db.BatchUpdatePeerStatus(expired, "OFFLINE"); err != nil {
+				if err := s.db.BatchUpdatePeerStatus(expired, "OFFLINE", "signal"); err != nil {
 					log.Printf("[signal] Failed to mark %d peers offline: %v", len(expired), err)
 				}
 				for _, id := range expired {

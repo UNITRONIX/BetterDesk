@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -31,6 +33,90 @@ func TestJWTGenerateAndValidate(t *testing.T) {
 	}
 	if claims.Jti == "" {
 		t.Error("Expected non-empty jti")
+	}
+	if claims.Iss != jwtIssuer {
+		t.Errorf("Expected iss=%q, got %q", jwtIssuer, claims.Iss)
+	}
+	if claims.Aud != jwtAudience {
+		t.Errorf("Expected aud=%q, got %q", jwtAudience, claims.Aud)
+	}
+	if claims.Nbf == 0 {
+		t.Error("Expected non-zero nbf")
+	}
+}
+
+func TestJWTRejectsMissingAudienceIssuer(t *testing.T) {
+	mgr := NewJWTManager("test-secret-key-32bytes-minimum!", 1*time.Hour)
+	token, err := mgr.Generate("admin", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.SplitN(token, ".", 3)
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var claims Claims
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		t.Fatal(err)
+	}
+	claims.Aud = ""
+	claims.Iss = ""
+	parts[1] = base64.RawURLEncoding.EncodeToString(mustJSON(claims))
+	parts[2] = mgr.sign(parts[0] + "." + parts[1])
+	tampered := strings.Join(parts, ".")
+	if _, err := mgr.Validate(tampered); err != ErrInvalidToken {
+		t.Fatalf("expected ErrInvalidToken for missing aud/iss, got %v", err)
+	}
+}
+
+func TestJWTRejectsWrongIssuer(t *testing.T) {
+	mgr := NewJWTManager("test-secret-key-32bytes-minimum!", 1*time.Hour)
+	token, err := mgr.Generate("admin", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.SplitN(token, ".", 3)
+	payload, _ := base64.RawURLEncoding.DecodeString(parts[1])
+	var claims Claims
+	_ = json.Unmarshal(payload, &claims)
+	claims.Iss = "evil-issuer"
+	parts[1] = base64.RawURLEncoding.EncodeToString(mustJSON(claims))
+	parts[2] = mgr.sign(parts[0] + "." + parts[1])
+	if _, err := mgr.Validate(strings.Join(parts, ".")); err != ErrInvalidToken {
+		t.Fatalf("expected ErrInvalidToken for wrong iss, got %v", err)
+	}
+}
+
+func TestJWTRejectsFutureNbf(t *testing.T) {
+	mgr := NewJWTManager("test-secret-key-32bytes-minimum!", 1*time.Hour)
+	token, err := mgr.Generate("admin", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.SplitN(token, ".", 3)
+	payload, _ := base64.RawURLEncoding.DecodeString(parts[1])
+	var claims Claims
+	_ = json.Unmarshal(payload, &claims)
+	claims.Nbf = time.Now().Unix() + 3600
+	parts[1] = base64.RawURLEncoding.EncodeToString(mustJSON(claims))
+	parts[2] = mgr.sign(parts[0] + "." + parts[1])
+	if _, err := mgr.Validate(strings.Join(parts, ".")); err != ErrTokenNotYet {
+		t.Fatalf("expected ErrTokenNotYet, got %v", err)
+	}
+}
+
+func TestJWTRejectsNonHS256Alg(t *testing.T) {
+	mgr := NewJWTManager("test-secret-key-32bytes-minimum!", 1*time.Hour)
+	token, err := mgr.Generate("admin", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.SplitN(token, ".", 3)
+	parts[0] = base64.RawURLEncoding.EncodeToString(mustJSON(jwtHeader{Alg: "none", Typ: "JWT"}))
+	parts[2] = mgr.sign(parts[0] + "." + parts[1])
+	if _, err := mgr.Validate(strings.Join(parts, ".")); err != ErrInvalidToken {
+		t.Fatalf("expected ErrInvalidToken for alg=none, got %v", err)
 	}
 }
 

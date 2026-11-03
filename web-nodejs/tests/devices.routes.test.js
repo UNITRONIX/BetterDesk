@@ -43,7 +43,9 @@ jest.mock('../services/serverBackend', () => ({
     updateDevice: jest.fn().mockResolvedValue(undefined),
     deleteDevice: jest.fn().mockResolvedValue(undefined),
     restoreDevice: jest.fn().mockResolvedValue({ success: true }),
-    changePeerId: jest.fn().mockResolvedValue({ success: true })
+    changePeerId: jest.fn().mockResolvedValue({ success: true }),
+    isBetterDesk: jest.fn().mockResolvedValue(true),
+    setPeerTags: jest.fn().mockResolvedValue({ success: true })
 }));
 
 const serverBackend = require('../services/serverBackend');
@@ -235,6 +237,140 @@ describe('Devices Routes', () => {
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
             expect(res.body.data.tags).toEqual(['External', 'Internal', 'Windows']);
+        });
+    });
+
+    describe('POST /api/tags/rename', () => {
+        it('should rename a tag on visible devices and update dynamic group filters', async () => {
+            serverBackend.getAllDevices.mockResolvedValue([
+                { id: 'A1', tags: ['Linux', 'Kiosk'] },
+                { id: 'A2', tags: ['Windows'] },
+                { id: 'A3', tags: 'linux,Lab' }
+            ]);
+            db.getAllDeviceGroups.mockResolvedValue([
+                { guid: 'linux', name: 'Linux Devices', source_type: 'tag', tag_filter: 'Linux', allowed_users: [] }
+            ]);
+            serverBackend.setPeerTags.mockResolvedValue({ success: true });
+
+            const res = await request(app)
+                .post('/api/tags/rename')
+                .send({ from: 'Linux', to: 'GNU/Linux' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.data.updatedDevices).toBe(2);
+            expect(res.body.data.updatedGroups).toBe(1);
+            expect(serverBackend.setPeerTags).toHaveBeenCalledWith('A1', ['GNU/Linux', 'Kiosk']);
+            expect(serverBackend.setPeerTags).toHaveBeenCalledWith('A3', ['GNU/Linux', 'Lab']);
+            expect(serverBackend.setPeerTags).not.toHaveBeenCalledWith('A2', expect.anything());
+            expect(db.updateDeviceGroup).toHaveBeenCalledWith('linux', { tag_filter: 'GNU/Linux' });
+            expect(db.logAction).toHaveBeenCalledWith(
+                1,
+                'device_tag_renamed',
+                expect.stringContaining('Linux'),
+                expect.anything()
+            );
+        });
+
+        it('should reject empty or identical rename', async () => {
+            const empty = await request(app).post('/api/tags/rename').send({ from: '', to: 'X' });
+            expect(empty.status).toBe(400);
+
+            const identical = await request(app).post('/api/tags/rename').send({ from: 'Same', to: 'Same' });
+            expect(identical.status).toBe(400);
+            expect(serverBackend.setPeerTags).not.toHaveBeenCalled();
+        });
+
+        it('should reject rename when backend is not BetterDesk', async () => {
+            serverBackend.isBetterDesk.mockResolvedValueOnce(false);
+            const res = await request(app).post('/api/tags/rename').send({ from: 'A', to: 'B' });
+            expect(res.status).toBe(400);
+            expect(serverBackend.setPeerTags).not.toHaveBeenCalled();
+        });
+
+        it('should only rewrite devices in operator scope', async () => {
+            app = createTestApp();
+            app.use((req, _res, next) => {
+                req.session.userId = 2;
+                req.session.user = { id: 2, username: 'operator1', role: 'operator' };
+                next();
+            });
+            app.use('/', devicesRoutes);
+
+            serverBackend.getAllDevices.mockResolvedValue([
+                { id: 'VISIBLE', tags: ['Fleet'] },
+                { id: 'HIDDEN', tags: ['Fleet'] }
+            ]);
+            db.getAllDeviceGroups.mockResolvedValue([
+                {
+                    guid: 'ops',
+                    name: 'Ops',
+                    source_type: 'manual',
+                    tag_filter: '',
+                    allowed_users: ['operator1']
+                },
+                {
+                    guid: 'other',
+                    name: 'Other',
+                    source_type: 'manual',
+                    tag_filter: '',
+                    allowed_users: ['someone_else']
+                }
+            ]);
+            db.getDeviceGroupMembers.mockImplementation(async (guid) => {
+                if (guid === 'ops') return ['VISIBLE'];
+                if (guid === 'other') return ['HIDDEN'];
+                return [];
+            });
+            serverBackend.setPeerTags.mockResolvedValue({ success: true });
+
+            const res = await request(app)
+                .post('/api/tags/rename')
+                .send({ from: 'Fleet', to: 'Prod' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.updatedDevices).toBe(1);
+            expect(serverBackend.setPeerTags).toHaveBeenCalledTimes(1);
+            expect(serverBackend.setPeerTags).toHaveBeenCalledWith('VISIBLE', ['Prod']);
+            expect(serverBackend.setPeerTags).not.toHaveBeenCalledWith('HIDDEN', expect.anything());
+        });
+    });
+
+    describe('POST /api/tags/delete', () => {
+        it('should remove a tag from all visible devices', async () => {
+            serverBackend.getAllDevices.mockResolvedValue([
+                { id: 'A1', tags: ['Temp', 'Keep'] },
+                { id: 'A2', tags: ['Keep'] },
+                { id: 'A3', tags: 'temp' }
+            ]);
+            db.getAllDeviceGroups.mockResolvedValue([
+                { guid: 'temp-g', name: 'Temp', source_type: 'tag', tag_filter: 'Temp', allowed_users: [] }
+            ]);
+            serverBackend.setPeerTags.mockResolvedValue({ success: true });
+
+            const res = await request(app)
+                .post('/api/tags/delete')
+                .send({ tag: 'Temp' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.data.updatedDevices).toBe(2);
+            expect(res.body.data.affectedGroups).toBe(1);
+            expect(serverBackend.setPeerTags).toHaveBeenCalledWith('A1', ['Keep']);
+            expect(serverBackend.setPeerTags).toHaveBeenCalledWith('A3', []);
+            expect(db.updateDeviceGroup).not.toHaveBeenCalled();
+            expect(db.logAction).toHaveBeenCalledWith(
+                1,
+                'device_tag_deleted',
+                expect.stringContaining('Temp'),
+                expect.anything()
+            );
+        });
+
+        it('should reject empty tag delete', async () => {
+            const res = await request(app).post('/api/tags/delete').send({ tag: '  ' });
+            expect(res.status).toBe(400);
+            expect(serverBackend.setPeerTags).not.toHaveBeenCalled();
         });
     });
 

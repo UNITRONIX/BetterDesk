@@ -17,14 +17,69 @@ const ENV_KEYS = {
     max_skew_ms: 'BILLING_MAX_CLOCK_SKEW_MS',
     require_synced_clock: 'BILLING_REQUIRE_SYNCED_CLOCK',
     trust_os_ntp: 'BILLING_TRUST_OS_NTP',
+    billing_timezone: 'BILLING_TIMEZONE',
 };
+
+/** Common IANA zones for the Settings picker (custom values still allowed if valid). */
+const COMMON_TIMEZONES = [
+    'UTC',
+    'Europe/Warsaw',
+    'Europe/Berlin',
+    'Europe/London',
+    'Europe/Paris',
+    'Europe/Amsterdam',
+    'Europe/Madrid',
+    'Europe/Rome',
+    'Europe/Prague',
+    'Europe/Stockholm',
+    'Europe/Helsinki',
+    'Europe/Athens',
+    'Europe/Bucharest',
+    'Europe/Istanbul',
+    'Europe/Kyiv',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'America/Sao_Paulo',
+    'Asia/Tokyo',
+    'Asia/Shanghai',
+    'Asia/Hong_Kong',
+    'Asia/Singapore',
+    'Asia/Kolkata',
+    'Asia/Dubai',
+    'Australia/Sydney',
+    'Pacific/Auckland',
+];
 
 const DEFAULTS = {
     ntp_servers: 'pool.ntp.org,time.google.com,time.cloudflare.com',
     max_skew_ms: 2000,
     require_synced_clock: true,
     trust_os_ntp: process.platform === 'linux',
+    billing_timezone: 'UTC',
 };
+
+function detectOsTimezone() {
+    try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz && isValidIanaTimezone(tz)) return tz;
+    } catch (_) { /* fall through */ }
+    const envTz = String(process.env.TZ || '').trim();
+    if (envTz && isValidIanaTimezone(envTz)) return envTz;
+    return 'UTC';
+}
+
+function isValidIanaTimezone(tz) {
+    const value = String(tz || '').trim();
+    if (!value || value.length > 64) return false;
+    try {
+        Intl.DateTimeFormat('en-US', { timeZone: value });
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
 
 function parseEnvFile(content) {
     const out = {};
@@ -64,6 +119,8 @@ function normalizeSettings(raw = {}) {
         .map((s) => s.trim())
         .filter(Boolean);
     const maxSkew = Number.parseInt(raw.max_skew_ms, 10);
+    let billingTimezone = String(raw.billing_timezone ?? DEFAULTS.billing_timezone).trim();
+    if (!billingTimezone) billingTimezone = DEFAULTS.billing_timezone;
     return {
         ntp_servers: servers.join(','),
         max_skew_ms: Number.isFinite(maxSkew) && maxSkew > 0 ? maxSkew : DEFAULTS.max_skew_ms,
@@ -73,6 +130,7 @@ function normalizeSettings(raw = {}) {
         trust_os_ntp: raw.trust_os_ntp !== undefined
             ? !!raw.trust_os_ntp
             : DEFAULTS.trust_os_ntp,
+        billing_timezone: billingTimezone,
     };
 }
 
@@ -90,16 +148,21 @@ function validateSettings(settings) {
     if (normalized.max_skew_ms <= 0 || normalized.max_skew_ms > 600000) {
         throw new Error('invalid_max_skew');
     }
+    if (!isValidIanaTimezone(normalized.billing_timezone)) {
+        throw new Error('invalid_billing_timezone');
+    }
     return normalized;
 }
 
 function settingsFromEnvContent(content) {
     const env = parseEnvFile(content);
+    const fromEnv = env[ENV_KEYS.billing_timezone];
     return normalizeSettings({
         ntp_servers: env[ENV_KEYS.ntp_servers] || DEFAULTS.ntp_servers,
         max_skew_ms: env[ENV_KEYS.max_skew_ms] || DEFAULTS.max_skew_ms,
         require_synced_clock: envToBool(env[ENV_KEYS.require_synced_clock], DEFAULTS.require_synced_clock),
         trust_os_ntp: envToBool(env[ENV_KEYS.trust_os_ntp], DEFAULTS.trust_os_ntp),
+        billing_timezone: fromEnv || detectOsTimezone(),
     });
 }
 
@@ -114,9 +177,15 @@ function isDockerSplitDeployment() {
 }
 
 async function getRuntimeClockSettings() {
-    if (!isDockerSplitDeployment()) return getClockSettings();
+    const local = getClockSettings();
+    if (!isDockerSplitDeployment()) return local;
     const response = await apiClient.get('/timesync/config');
-    return normalizeSettings(response.data || {});
+    const remote = response.data || {};
+    return normalizeSettings({
+        ...remote,
+        // Prefer remote timezone when Go persists it; else keep console .env / OS detect.
+        billing_timezone: remote.billing_timezone || local.billing_timezone,
+    });
 }
 
 function writeClockSettingsToEnv(settings) {
@@ -126,6 +195,7 @@ function writeClockSettingsToEnv(settings) {
     content = upsertEnvKey(content, ENV_KEYS.max_skew_ms, String(normalized.max_skew_ms));
     content = upsertEnvKey(content, ENV_KEYS.require_synced_clock, boolToEnv(normalized.require_synced_clock));
     content = upsertEnvKey(content, ENV_KEYS.trust_os_ntp, boolToEnv(normalized.trust_os_ntp));
+    content = upsertEnvKey(content, ENV_KEYS.billing_timezone, normalized.billing_timezone);
     fs.writeFileSync(ENV_PATH, content, { encoding: 'utf8', mode: 0o600 });
     return normalized;
 }
@@ -140,6 +210,9 @@ async function saveClockSettings(settings, opts = {}) {
         const response = await apiClient.put('/timesync/config', normalized);
         const data = response.data || {};
         if (data.error) throw new Error(data.error);
+        try {
+            writeClockSettingsToEnv(normalized);
+        } catch (_) { /* console .env may be read-only in some layouts */ }
         return {
             settings: normalizeSettings(data.config || normalized),
             serviceConfig: null,
@@ -164,12 +237,15 @@ async function saveClockSettings(settings, opts = {}) {
 
 module.exports = {
     DEFAULTS,
+    COMMON_TIMEZONES,
     ENV_PATH,
     ENV_KEYS,
     parseEnvFile,
     envToBool,
     boolToEnv,
     isValidNTPServerEntry,
+    isValidIanaTimezone,
+    detectOsTimezone,
     normalizeSettings,
     validateSettings,
     settingsFromEnvContent,

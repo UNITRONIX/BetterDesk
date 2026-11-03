@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -124,9 +125,29 @@ type oidcAuthCode struct {
 	CreatedAt time.Time
 }
 
-// oidcDiscoveryRetryInterval is how often discovery is retried while it has not
-// yet succeeded (IdP unreachable at boot). Overridable in tests.
-var oidcDiscoveryRetryInterval = 2 * time.Minute
+// oidcDiscoveryRetryIntervalNs is how often discovery is retried while it has
+// not yet succeeded (IdP unreachable at boot). Stored as nanoseconds so tests
+// can override it without racing discoveryRetryLoop readers (atomic).
+var oidcDiscoveryRetryIntervalNs atomic.Int64
+
+func init() {
+	oidcDiscoveryRetryIntervalNs.Store(int64(2 * time.Minute))
+}
+
+func oidcDiscoveryRetryDuration() time.Duration {
+	ns := oidcDiscoveryRetryIntervalNs.Load()
+	if ns <= 0 {
+		return 2 * time.Minute
+	}
+	return time.Duration(ns)
+}
+
+// setOIDCDiscoveryRetryIntervalForTest overrides the retry interval for tests.
+// The returned restore function puts the previous value back.
+func setOIDCDiscoveryRetryIntervalForTest(d time.Duration) (restore func()) {
+	prev := oidcDiscoveryRetryIntervalNs.Swap(int64(d))
+	return func() { oidcDiscoveryRetryIntervalNs.Store(prev) }
+}
 
 // OIDCProvider manages OIDC authentication.
 type OIDCProvider struct {
@@ -138,6 +159,8 @@ type OIDCProvider struct {
 	codes         map[string]*oidcAuthCode      // one-time auth codes for panel exchange
 	clientPending map[string]*ClientOIDCPending // state/code → RustDesk client OIDC pending
 	client        *http.Client
+	stop          chan struct{}
+	stopOnce      sync.Once
 }
 
 // NewOIDCProvider creates a new OIDC provider with the given configuration.
@@ -148,12 +171,21 @@ func NewOIDCProvider(cfg *OIDCConfig) *OIDCProvider {
 		codes:         make(map[string]*oidcAuthCode),
 		clientPending: make(map[string]*ClientOIDCPending),
 		client:        &http.Client{Timeout: 15 * time.Second},
+		stop:          make(chan struct{}),
 	}
 	// Immediate discover + periodic retry while discovery remains nil (see #411).
 	go p.discoveryRetryLoop()
 	// Start state cleanup goroutine
 	go p.cleanupStates()
 	return p
+}
+
+// Close stops background discovery/cleanup goroutines. Safe to call multiple times.
+func (p *OIDCProvider) Close() {
+	if p == nil {
+		return
+	}
+	p.stopOnce.Do(func() { close(p.stop) })
 }
 
 // IsEnabled returns whether OIDC authentication is active.
@@ -207,16 +239,22 @@ func (p *OIDCProvider) needsDiscovery() bool {
 
 // discoveryRetryLoop attempts discovery immediately, then retries on an interval
 // until it succeeds (or OIDC / auto-discovery is disabled). Self-heals when the
-// IdP is unreachable at process start (#411).
+// IdP is unreachable at process start (#411). Exits when Close() is called.
 func (p *OIDCProvider) discoveryRetryLoop() {
 	if p.needsDiscovery() {
 		p.discover()
 	}
-	ticker := time.NewTicker(oidcDiscoveryRetryInterval)
+	ticker := time.NewTicker(oidcDiscoveryRetryDuration())
 	defer ticker.Stop()
-	for range ticker.C {
-		if p.needsDiscovery() {
-			p.discover()
+	for {
+		select {
+		case <-p.stop:
+			return
+		case <-ticker.C:
+			if p.needsDiscovery() {
+				p.discover()
+			}
+			ticker.Reset(oidcDiscoveryRetryDuration())
 		}
 	}
 }
@@ -688,30 +726,36 @@ func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 }
 
 // cleanupStates removes expired state entries every 5 minutes.
+// Exits when Close() is called.
 func (p *OIDCProvider) cleanupStates() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
-	for range ticker.C {
-		p.mu.Lock()
-		now := time.Now()
-		for k, v := range p.states {
-			if now.Sub(v.CreatedAt) > 15*time.Minute {
-				delete(p.states, k)
+	for {
+		select {
+		case <-p.stop:
+			return
+		case <-ticker.C:
+			p.mu.Lock()
+			now := time.Now()
+			for k, v := range p.states {
+				if now.Sub(v.CreatedAt) > 15*time.Minute {
+					delete(p.states, k)
+				}
 			}
-		}
-		// Auth codes are short-lived (60s); anything older is stale.
-		for k, v := range p.codes {
-			if now.Sub(v.CreatedAt) > 60*time.Second {
-				delete(p.codes, k)
+			// Auth codes are short-lived (60s); anything older is stale.
+			for k, v := range p.codes {
+				if now.Sub(v.CreatedAt) > 60*time.Second {
+					delete(p.codes, k)
+				}
 			}
-		}
-		// Client OIDC pending (auth + poll window ~3–10 min).
-		for k, v := range p.clientPending {
-			if now.Sub(v.CreatedAt) > 10*time.Minute {
-				delete(p.clientPending, k)
+			// Client OIDC pending (auth + poll window ~3–10 min).
+			for k, v := range p.clientPending {
+				if now.Sub(v.CreatedAt) > 10*time.Minute {
+					delete(p.clientPending, k)
+				}
 			}
+			p.mu.Unlock()
 		}
-		p.mu.Unlock()
 	}
 }
 

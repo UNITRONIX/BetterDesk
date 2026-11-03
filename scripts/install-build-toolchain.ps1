@@ -1,3 +1,6 @@
+# BetterDesk — OPTIONAL / developer toolchain (Windows)
+# Production servers import signed BetterDesk-Client releases; do not require this.
+# Use only with BETTERDESK_CLIENT_GENERATOR_MODE=embedded for maintainer builds.
 [CmdletBinding()]
 param(
     [switch]$Install,

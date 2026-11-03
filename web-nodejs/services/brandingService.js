@@ -161,6 +161,86 @@ function normalizeBackgroundSize(size) {
     }
 }
 
+const MAX_LOGIN_SLIDES = 10;
+const LOGIN_PROMO_MODES = new Set(['classic', 'single', 'slides']);
+const BUILTIN_SLIDE_KEYS = new Set(['free', 'remote', 'secure', 'platforms']);
+
+/**
+ * Built-in BetterDesk login promo slides (image + optional slideKey for i18n).
+ * @returns {Array<Object>}
+ */
+function getDefaultLoginSlides() {
+    return [
+        { id: 'free', slideKey: 'free', order: 0, imageUrl: '/img/login-slides/free.jpg', title: '', body: '', overlay: '45' },
+        { id: 'remote', slideKey: 'remote', order: 1, imageUrl: '/img/login-slides/remote.jpg', title: '', body: '', overlay: '45' },
+        { id: 'secure', slideKey: 'secure', order: 2, imageUrl: '/img/login-slides/secure.jpg', title: '', body: '', overlay: '45' },
+        { id: 'platforms', slideKey: 'platforms', order: 3, imageUrl: '/img/login-slides/platforms.jpg', title: '', body: '', overlay: '45' }
+    ];
+}
+
+function normalizeLoginPromoMode(mode) {
+    const m = String(mode || '').trim().toLowerCase();
+    return LOGIN_PROMO_MODES.has(m) ? m : 'slides';
+}
+
+/**
+ * Soft-migrate installs that never saved loginPromoMode.
+ * Default to slides (75% promo / 25% form). Operators who want a single wallpaper
+ * or classic card pick that explicitly in Settings → Branding.
+ * @param {string|undefined} storedMode
+ * @param {Object} _branding
+ * @param {boolean} hadExplicitMode
+ * @returns {string}
+ */
+function resolveLoginPromoMode(storedMode, _branding, hadExplicitMode) {
+    if (hadExplicitMode) return normalizeLoginPromoMode(storedMode);
+    return 'slides';
+}
+
+/**
+ * Sanitize and cap login slides array (max 10).
+ * @param {unknown} raw
+ * @returns {Array<Object>}
+ */
+function sanitizeLoginSlides(raw) {
+    let list = raw;
+    if (typeof list === 'string') {
+        try {
+            list = JSON.parse(list);
+        } catch (_) {
+            return getDefaultLoginSlides();
+        }
+    }
+    if (!Array.isArray(list) || list.length === 0) {
+        return getDefaultLoginSlides();
+    }
+
+    const out = [];
+    for (let i = 0; i < list.length && out.length < MAX_LOGIN_SLIDES; i++) {
+        const item = list[i];
+        if (!item || typeof item !== 'object') continue;
+        const imageUrl = validateBrandingUrl(item.imageUrl);
+        if (imageUrl === null) continue;
+        let slideKey = String(item.slideKey || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        if (slideKey && !BUILTIN_SLIDE_KEYS.has(slideKey) && !/^[a-z0-9_-]{1,32}$/.test(slideKey)) {
+            slideKey = '';
+        }
+        const idRaw = String(item.id || slideKey || `slide-${i + 1}`).trim().substring(0, 64);
+        const id = idRaw.replace(/[^a-zA-Z0-9_-]/g, '') || `slide-${i + 1}`;
+        const overlayNum = clampNumber(item.overlay, 0, 90);
+        out.push({
+            id,
+            slideKey: slideKey || '',
+            order: out.length,
+            imageUrl: imageUrl || '',
+            title: String(item.title || '').substring(0, 120),
+            body: String(item.body || '').substring(0, 400),
+            overlay: String(overlayNum)
+        });
+    }
+    return out.length ? out : getDefaultLoginSlides();
+}
+
 function flattenAppearanceInput(input) {
     if (!input || typeof input !== 'object') return {};
     const flat = {};
@@ -268,7 +348,9 @@ function getAppearanceModel(brandingInput = null) {
         },
         login: {
             title: branding.loginTitle,
-            subtitle: branding.loginSubtitle
+            subtitle: branding.loginSubtitle,
+            promoMode: normalizeLoginPromoMode(branding.loginPromoMode),
+            slides: Array.isArray(branding.loginSlides) ? branding.loginSlides : sanitizeLoginSlides(branding.loginSlides)
         },
         footer: {
             text: branding.footerText,
@@ -354,6 +436,9 @@ const DEFAULT_BRANDING = {
     loginBgOverlay: '',     // dark overlay opacity 0-100 (%)
     loginTitle: '',         // overrides the login heading
     loginSubtitle: '',      // overrides the login subtitle
+    // classic = centered card; single = split + loginBg*; slides = carousel (max 10)
+    loginPromoMode: 'slides',
+    loginSlides: [],         // filled with getDefaultLoginSlides() at module init / on load
 
     // Footer / attribution
     footerText: '',         // custom footer / copyright text
@@ -504,7 +589,7 @@ const APPEARANCE_FLAT_MAP = {
     palette: ['themeMode', 'colors'],
     console: ['bgType', 'bgColor', 'bgGradient', 'bgImageUrl', 'bgBlur', 'bgOverlay', 'bgSize'],
     surfaces: ['glassEnabled', 'glassColor', 'glassBlur', 'glassOpacity'],
-    login: ['loginBgType', 'loginBgColor', 'loginBgGradient', 'loginBgImageUrl', 'loginBgOverlay', 'loginTitle', 'loginSubtitle'],
+    login: ['loginBgType', 'loginBgColor', 'loginBgGradient', 'loginBgImageUrl', 'loginBgOverlay', 'loginTitle', 'loginSubtitle', 'loginPromoMode', 'loginSlides'],
     agent: ['agentBgType', 'agentBgColor', 'agentBgGradient', 'agentBgImageUrl', 'agentShowPoweredBy'],
     rdclient: ['rdclientBgType', 'rdclientBgColor', 'rdclientBgGradient', 'rdclientBgImageUrl', 'rdclientBgOverlay', 'rdclientBgSize'],
     footer: ['footerText', 'showPoweredBy'],
@@ -541,6 +626,10 @@ async function loadBranding() {
 
         // Start with defaults
         const branding = JSON.parse(JSON.stringify(DEFAULT_BRANDING));
+        branding.loginSlides = getDefaultLoginSlides();
+
+        let hadExplicitPromoMode = false;
+        let hadExplicitSlides = false;
 
         for (const row of rows) {
             if (row.key === 'colors') {
@@ -550,9 +639,24 @@ async function loadBranding() {
                 } catch (e) {
                     // Ignore invalid JSON
                 }
+            } else if (row.key === 'loginSlides') {
+                hadExplicitSlides = true;
+                branding.loginSlides = sanitizeLoginSlides(row.value);
+            } else if (row.key === 'loginPromoMode') {
+                hadExplicitPromoMode = true;
+                branding.loginPromoMode = normalizeLoginPromoMode(row.value);
             } else if (row.key in branding) {
                 branding[row.key] = row.value;
             }
+        }
+
+        branding.loginPromoMode = resolveLoginPromoMode(
+            branding.loginPromoMode,
+            branding,
+            hadExplicitPromoMode
+        );
+        if (!hadExplicitSlides) {
+            branding.loginSlides = getDefaultLoginSlides();
         }
 
         brandingCache = branding;
@@ -565,7 +669,9 @@ async function loadBranding() {
         return branding;
     } catch (err) {
         console.error('[Branding] Failed to load from DB, using defaults:', err.message);
-        brandingCache = JSON.parse(JSON.stringify(DEFAULT_BRANDING));
+        const fallback = JSON.parse(JSON.stringify(DEFAULT_BRANDING));
+        fallback.loginSlides = getDefaultLoginSlides();
+        brandingCache = fallback;
         bumpBrandingRevision();
         return brandingCache;
     }
@@ -579,7 +685,9 @@ async function loadBranding() {
 function getBranding() {
     if (brandingCache) return brandingCache;
     // Cache not yet loaded — return defaults (startup race condition safety)
-    return JSON.parse(JSON.stringify(DEFAULT_BRANDING));
+    const fallback = JSON.parse(JSON.stringify(DEFAULT_BRANDING));
+    fallback.loginSlides = getDefaultLoginSlides();
+    return fallback;
 }
 
 /**
@@ -608,6 +716,10 @@ async function saveBranding(updates) {
                 const normalized = validateBrandingUrl(value);
                 if (normalized === null) continue; // skip invalid value, keep previous DB value
                 entries.push({ key, value: normalized });
+            } else if (key === 'loginSlides') {
+                entries.push({ key, value: JSON.stringify(sanitizeLoginSlides(value)) });
+            } else if (key === 'loginPromoMode') {
+                entries.push({ key, value: normalizeLoginPromoMode(value) });
             } else if (key === 'bgColor' || key === 'bgGradient' ||
                        key === 'loginBgColor' || key === 'loginBgGradient' ||
                        key === 'agentBgColor' || key === 'agentBgGradient' ||
@@ -986,26 +1098,48 @@ function generateBackgroundCss(branding) {
         out += `body.app-page .main-content,\nbody.app-page .ux35-content { background: transparent; }\n`;
     }
 
-    // ---- Login wallpaper ----
-    let loginBg = '';
-    let loginOverlay = null;
-    if (branding.loginBgType === 'inherit') {
-        loginBg = consoleBg;
-        loginOverlay = clampNumber(branding.bgOverlay, 0, 95);
-    } else if (branding.loginBgType && branding.loginBgType !== 'none') {
-        loginBg = buildBackgroundValue(branding.loginBgType, branding.loginBgColor, branding.loginBgGradient, branding.loginBgImageUrl);
-        loginOverlay = clampNumber(branding.loginBgOverlay, 0, 95);
-    }
-    if (loginBg) {
-        out += `body.login-page::before {\n` +
-               `    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: -2;\n` +
-               `    background: ${loginBg};\n    background-size: cover;\n    background-position: center;\n    background-repeat: no-repeat;\n}\n`;
-        if (loginOverlay) {
-            out += `body.login-page::after {\n` +
-                   `    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: -1;\n` +
-                   `    background: rgba(0, 0, 0, ${(loginOverlay / 100).toFixed(2)});\n    pointer-events: none;\n}\n`;
+    // ---- Login wallpaper (classic centered layout only; split modes paint the promo pane) ----
+    const loginPromoMode = normalizeLoginPromoMode(branding.loginPromoMode);
+    if (loginPromoMode === 'classic') {
+        let loginBg = '';
+        let loginOverlay = null;
+        if (branding.loginBgType === 'inherit') {
+            loginBg = consoleBg;
+            loginOverlay = clampNumber(branding.bgOverlay, 0, 95);
+        } else if (branding.loginBgType && branding.loginBgType !== 'none') {
+            loginBg = buildBackgroundValue(branding.loginBgType, branding.loginBgColor, branding.loginBgGradient, branding.loginBgImageUrl);
+            loginOverlay = clampNumber(branding.loginBgOverlay, 0, 95);
         }
-        out += `body.login-page { background-color: transparent; }\n`;
+        if (loginBg) {
+            out += `body.login-page::before {\n` +
+                   `    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: -2;\n` +
+                   `    background: ${loginBg};\n    background-size: cover;\n    background-position: center;\n    background-repeat: no-repeat;\n}\n`;
+            if (loginOverlay) {
+                out += `body.login-page::after {\n` +
+                       `    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: -1;\n` +
+                       `    background: rgba(0, 0, 0, ${(loginOverlay / 100).toFixed(2)});\n    pointer-events: none;\n}\n`;
+            }
+            out += `body.login-page { background-color: transparent; }\n`;
+        }
+    } else if (loginPromoMode === 'single') {
+        let promoBg = '';
+        if (branding.loginBgType === 'inherit') {
+            promoBg = consoleBg;
+        } else if (branding.loginBgType && branding.loginBgType !== 'none') {
+            promoBg = buildBackgroundValue(branding.loginBgType, branding.loginBgColor, branding.loginBgGradient, branding.loginBgImageUrl);
+        }
+        if (promoBg) {
+            out += `body.login-page.login-layout-single .login-promo {\n    background: ${promoBg};\n    background-size: cover;\n    background-position: center;\n}\n`;
+        }
+        const promoOverlay = clampNumber(
+            branding.loginBgType === 'inherit' ? branding.bgOverlay : branding.loginBgOverlay,
+            0,
+            95
+        );
+        if (promoOverlay) {
+            out += `body.login-page.login-layout-single .login-promo::after {\n` +
+                   `    content: '';\n    position: absolute;\n    inset: 0;\n    background: rgba(0, 0, 0, ${(promoOverlay / 100).toFixed(2)});\n    pointer-events: none;\n}\n`;
+        }
     }
 
     // ---- RdClient / remote dashboard wallpaper ----
@@ -1266,6 +1400,10 @@ async function importPreset(preset) {
                     }
                 }
                 sanitized.colors = colors;
+            } else if (key === 'loginSlides') {
+                sanitized.loginSlides = sanitizeLoginSlides(input[key]);
+            } else if (key === 'loginPromoMode') {
+                sanitized.loginPromoMode = normalizeLoginPromoMode(input[key]);
             } else {
                 // Limit string length for safety (larger caps for markup/CSS fields)
                 let cap = 500;
@@ -1289,10 +1427,14 @@ function invalidateCache() {
     brandingCache = null;
 }
 
+// Ensure default branding carries the built-in slide set
+DEFAULT_BRANDING.loginSlides = getDefaultLoginSlides();
+
 module.exports = {
     DEFAULT_BRANDING,
     COLOR_TO_CSS_VAR,
     BUILTIN_THEME_PALETTES,
+    MAX_LOGIN_SLIDES,
     getThemePalettes,
     normalizeThemeMode,
     resolveThemeColors,
@@ -1322,5 +1464,9 @@ module.exports = {
     sanitizeCustomCss,
     buildBackgroundValue,
     normalizeBackgroundSize,
-    validateBrandingUrl
+    validateBrandingUrl,
+    getDefaultLoginSlides,
+    sanitizeLoginSlides,
+    normalizeLoginPromoMode,
+    resolveLoginPromoMode
 };

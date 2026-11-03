@@ -11,12 +11,22 @@ import (
 	"time"
 )
 
+const (
+	jwtIssuer   = "betterdesk-server"
+	jwtAudience = "betterdesk-api"
+	// Allow small clock skew between issuer and verifier.
+	jwtNbfSkewSeconds = 60
+)
+
 // Claims represents the JWT payload.
 type Claims struct {
 	Sub   string `json:"sub"`              // Subject (username)
 	Role  string `json:"role"`             // User role (admin, operator, viewer)
 	OrgID string `json:"org_id,omitempty"` // Organization ID (empty = global/server-level user)
+	Aud   string `json:"aud"`              // Audience
+	Iss   string `json:"iss"`              // Issuer
 	Iat   int64  `json:"iat"`              // Issued at (Unix)
+	Nbf   int64  `json:"nbf"`              // Not before (Unix)
 	Exp   int64  `json:"exp"`              // Expires at (Unix)
 	Jti   string `json:"jti,omitempty"`    // JWT ID (for revocation)
 }
@@ -35,6 +45,7 @@ type jwtHeader struct {
 var (
 	ErrInvalidToken = errors.New("auth: invalid token")
 	ErrTokenExpired = errors.New("auth: token expired")
+	ErrTokenNotYet  = errors.New("auth: token not yet valid")
 )
 
 // NewJWTManager creates a JWT manager with the given secret and token expiry duration.
@@ -68,7 +79,10 @@ func (m *JWTManager) GenerateOrgToken(subject, role, orgID string, ttl time.Dura
 		Sub:   subject,
 		Role:  role,
 		OrgID: orgID,
+		Aud:   jwtAudience,
+		Iss:   jwtIssuer,
 		Iat:   now,
+		Nbf:   now,
 		Exp:   now + int64(ttl.Seconds()),
 		Jti:   jti,
 	}
@@ -84,6 +98,18 @@ func (m *JWTManager) GenerateOrgToken(subject, role, orgID string, ttl time.Dura
 func (m *JWTManager) Validate(token string) (*Claims, error) {
 	parts := strings.SplitN(token, ".", 3)
 	if len(parts) != 3 {
+		return nil, ErrInvalidToken
+	}
+
+	headerJSON, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+	var hdr jwtHeader
+	if err := json.Unmarshal(headerJSON, &hdr); err != nil {
+		return nil, ErrInvalidToken
+	}
+	if hdr.Alg != "HS256" {
 		return nil, ErrInvalidToken
 	}
 
@@ -103,7 +129,15 @@ func (m *JWTManager) Validate(token string) (*Claims, error) {
 		return nil, fmt.Errorf("auth: parse claims: %w", err)
 	}
 
-	if time.Now().Unix() > claims.Exp {
+	if claims.Iss != jwtIssuer || claims.Aud != jwtAudience {
+		return nil, ErrInvalidToken
+	}
+
+	now := time.Now().Unix()
+	if claims.Nbf > now+jwtNbfSkewSeconds {
+		return nil, ErrTokenNotYet
+	}
+	if now > claims.Exp {
 		return nil, ErrTokenExpired
 	}
 

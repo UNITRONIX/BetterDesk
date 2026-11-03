@@ -162,4 +162,34 @@ describe('updateService console sync helpers', () => {
             fs.rmSync(backupPath, { recursive: true, force: true });
         }
     });
+
+    test('restores mesh_agent_server.pem from special/ without Invalid path segment (#473)', () => {
+        const backupRoot = path.join(config.dataDir, 'backups');
+        const backupName = `pre-update-${Date.now()}-${process.pid}`;
+        const backupPath = path.join(backupRoot, backupName);
+        const keysRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'bd-keys-'));
+        const prevKeys = config.keysPath;
+        const prevRustdesk = config.rustdeskDir;
+
+        fs.mkdirSync(path.join(backupPath, 'special'), { recursive: true });
+        fs.writeFileSync(path.join(backupPath, 'manifest.json'), JSON.stringify({
+            files: [],
+            version: 'test',
+            sha: 'abc',
+        }));
+        fs.writeFileSync(path.join(backupPath, 'special', 'mesh_agent_server.pem'), 'mesh-cert');
+
+        try {
+            config.keysPath = keysRoot;
+            config.rustdeskDir = keysRoot;
+            const result = restoreFromBackup(backupName);
+            expect(result.restored).toBeGreaterThanOrEqual(1);
+            expect(fs.readFileSync(path.join(keysRoot, 'mesh_agent_server.pem'), 'utf8')).toBe('mesh-cert');
+        } finally {
+            config.keysPath = prevKeys;
+            config.rustdeskDir = prevRustdesk;
+            fs.rmSync(backupPath, { recursive: true, force: true });
+            fs.rmSync(keysRoot, { recursive: true, force: true });
+        }
+    });
 });

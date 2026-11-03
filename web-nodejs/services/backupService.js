@@ -316,6 +316,7 @@ async function getBackupStats() {
 //   - goserver/id_ed25519(.pub)      server identity keypair (client trust + relay)
 //   - goserver/.api_key              console <-> Go server API key
 //   - goserver/db_v2.sqlite3         raw Go server DB (when readable)
+//   - goserver/mesh_agent_server.pem Mesh agent server certificate
 //   - README.txt                     human-readable recovery instructions
 //
 // SECURITY: the archive contains secrets (keys, .env, password hashes, 2FA
@@ -334,7 +335,8 @@ function resolveBackupPaths() {
         goPrivKey: path.join(config.keysPath, 'id_ed25519'),
         goPubKey: config.pubKeyPath,
         goApiKey: config.apiKeyPath,
-        goDb: config.dbPath
+        goDb: config.dbPath,
+        meshAgentCert: path.join(config.rustdeskDir || config.keysPath, 'mesh_agent_server.pem')
     };
 }
 
@@ -408,6 +410,7 @@ function buildRecoveryReadme(manifest) {
         '     goserver/id_ed25519     -> <keysPath>/id_ed25519',
         '     goserver/id_ed25519.pub -> <keysPath>/id_ed25519.pub',
         '     goserver/.api_key       -> <keysPath>/.api_key',
+        '     goserver/mesh_agent_server.pem -> <keysPath>/mesh_agent_server.pem',
         '     goserver/db_v2.sqlite3  -> Go server DB path (SQLite backend only)',
         '4. For PostgreSQL backends, the logical dump in console/data.json is',
         '   re-imported through the console Restore action.',
@@ -454,6 +457,7 @@ async function createFullBackup() {
     addFileIfExists(entries, 'goserver/id_ed25519.pub', paths.goPubKey, present);
     addFileIfExists(entries, 'goserver/.api_key', paths.goApiKey, present);
     addFileIfExists(entries, 'goserver/db_v2.sqlite3', paths.goDb, present);
+    addFileIfExists(entries, 'goserver/mesh_agent_server.pem', paths.meshAgentCert, present);
 
     // --- Manifest + README ---
     const manifest = {
@@ -580,7 +584,8 @@ async function restoreFullBackup(buffer, options = {}) {
             ['console/.session_secret', paths.sessionSecret, 0o600],
             ['goserver/id_ed25519', paths.goPrivKey, 0o600],
             ['goserver/id_ed25519.pub', paths.goPubKey, 0o644],
-            ['goserver/.api_key', paths.goApiKey, 0o600]
+            ['goserver/.api_key', paths.goApiKey, 0o600],
+            ['goserver/mesh_agent_server.pem', paths.meshAgentCert, 0o600]
         ];
         let restoredAny = false;
         for (const [archiveName, target, mode] of secretFiles) {
@@ -663,7 +668,8 @@ async function getFullBackupStats() {
             goPrivKey: exists(paths.goPrivKey),
             goPubKey: exists(paths.goPubKey),
             goApiKey: exists(paths.goApiKey),
-            goDb: exists(paths.goDb)
+            goDb: exists(paths.goDb),
+            meshAgentCert: exists(paths.meshAgentCert)
         }
     };
 }

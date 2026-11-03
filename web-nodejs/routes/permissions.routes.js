@@ -8,6 +8,7 @@ const router = express.Router();
 const { assertSafeApiId } = require('../lib/goApiPath');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
+const { invalidateRole } = require('../services/rolePermissionService');
 
 // ── Page Route ───────────────────────────────────
 
@@ -91,6 +92,7 @@ router.post('/api/panel/role-permissions', requireAuth, requirePermission('serve
         if (!result.success) {
             return res.status(400).json({ success: false, error: result.error || 'Failed to set permission' });
         }
+        invalidateRole(safeRole);
         res.json(result);
     } catch (err) {
         if (err.message && /^Invalid /.test(err.message)) {
@@ -112,6 +114,7 @@ router.delete('/api/panel/role-permissions/:role/:permission', requireAuth, requ
         if (!result.success) {
             return res.status(400).json({ success: false, error: result.error || 'Failed to delete override' });
         }
+        invalidateRole(role);
         res.json(result);
     } catch (err) {
         if (err.message && /^Invalid /.test(err.message)) {

@@ -320,24 +320,32 @@ body.device-detail-open {
 /* The inventory-oriented panes use two columns on desktop and collapse on
    narrow screens. Empty/error banners remain full width. */
 .device-panel-tab-pane[data-pane="overview"],
-.device-panel-tab-pane[data-pane="hardware"],
-.device-panel-tab-pane[data-pane="metrics"] {
+.device-panel-tab-pane[data-pane="hardware"] {
     display: none;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
     gap: var(--space-lg, 1.5rem);
 }
 
+/* Metrics is server-observed history only — always full width, not a 2-col grid. */
+.device-panel-tab-pane[data-pane="metrics"] {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-lg, 1.5rem);
+}
+
 .device-panel-tab-pane[data-pane="overview"].active,
-.device-panel-tab-pane[data-pane="hardware"].active,
-.device-panel-tab-pane[data-pane="metrics"].active {
+.device-panel-tab-pane[data-pane="hardware"].active {
     display: grid;
+}
+
+.device-panel-tab-pane[data-pane="metrics"].active {
+    display: flex;
 }
 
 .device-panel-tab-pane[data-pane="overview"] > .device-panel-ban-alert,
 .device-panel-tab-pane[data-pane="overview"] > .device-panel-empty-state,
-.device-panel-tab-pane[data-pane="hardware"] > .device-panel-empty-state,
-.device-panel-tab-pane[data-pane="metrics"] > .device-panel-empty-state {
+.device-panel-tab-pane[data-pane="hardware"] > .device-panel-empty-state {
     grid-column: 1 / -1;
 }
 
@@ -472,6 +480,12 @@ body.device-detail-open {
 /* ═══════════════════════════════════════════════════════════════════════════
    TAGS TAB
    ═══════════════════════════════════════════════════════════════════════════ */
+
+.device-panel-tags-hint {
+    margin: 0 0 var(--space-sm, 0.5rem);
+    color: var(--text-tertiary, #8b949e);
+    font-size: var(--font-size-sm, 0.875rem);
+}
 
 .device-panel-tags-container {
     display: flex;
@@ -788,8 +802,7 @@ body.device-detail-open {
     }
 
     .device-panel-tab-pane[data-pane="overview"],
-    .device-panel-tab-pane[data-pane="hardware"],
-    .device-panel-tab-pane[data-pane="metrics"] {
+    .device-panel-tab-pane[data-pane="hardware"] {
         grid-template-columns: 1fr;
     }
 }
@@ -1326,4 +1339,67 @@ body.device-detail-open {
 
 @keyframes device-panel-spin {
     to { transform: rotate(360deg); }
+}
+
+/* Availability history (#455) */
+.device-panel-availability-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+
+.device-panel-availability-day {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    min-width: 7.5rem;
+    text-align: center;
+}
+
+.device-panel-table-wrap {
+    overflow-x: auto;
+}
+
+.device-panel-availability-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.device-panel-availability-table th,
+.device-panel-availability-table td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #30363d);
+}
+
+.device-panel-availability-table th {
+    color: var(--text-secondary, #8b949e);
+    font-weight: 600;
+}
+
+.device-panel-avail-status {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+}
+
+.device-panel-avail-status.avail-online { color: #3fb950; }
+.device-panel-avail-status.avail-offline { color: #8b949e; }
+.device-panel-avail-status.avail-degraded { color: #d29922; }
+.device-panel-avail-status.avail-critical { color: #f85149; }
+
+.device-panel-empty-compact {
+    padding: 1.25rem 0.5rem;
+}
+
+.device-panel-session-sub {
+    font-size: 11px;
+    color: var(--text-secondary, #8b949e);
+    margin-top: 2px;
+}
+
+.device-panel-metrics-summary .device-panel-info-grid {
+    margin-top: 4px;
 }

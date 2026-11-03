@@ -298,7 +298,7 @@ func (ac *AgentConn) disconnect(reason string) {
 	ac.mu.Unlock()
 	if pid != "" {
 		ac.gw.agents.Delete(pid)
-		ac.gw.db.UpdatePeerStatus(pid, "OFFLINE", ac.clientIP)
+		ac.gw.db.UpdatePeerStatus(pid, "OFFLINE", ac.clientIP, "mesh")
 		if ac.gw.eventBus != nil {
 			ac.gw.eventBus.Publish(events.Event{
 				Type: events.EventType("mesh_agent_disconnect"),

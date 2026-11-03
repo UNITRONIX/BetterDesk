@@ -16,10 +16,10 @@
         <span><%= _('mobile_nav.devices') %></span>
     </a>
     <% } %>
-    <a href="/remote-dashboard"
-       class="mobile-bottom-nav-item <%= ['remote', 'remote-dashboard'].includes(currentPage) ? 'active' : '' %>"
+    <a href="/remote"
+       class="mobile-bottom-nav-item <%= currentPage === 'remote' ? 'active' : '' %>"
        data-nav="remote"
-       <%= ['remote', 'remote-dashboard'].includes(currentPage) ? 'aria-current="page"' : '' %>>
+       <%= currentPage === 'remote' ? 'aria-current="page"' : '' %>>
         <span class="material-icons" aria-hidden="true">desktop_windows</span>
         <span><%= _('mobile_nav.remote') %></span>
     </a>

@@ -518,7 +518,7 @@ func (g *Gateway) removeDevice(dc *DeviceConn) {
 	g.cleanupDeviceSessions(dc.ID, "device disconnected")
 
 	// Update peer status to OFFLINE
-	if err := g.db.UpdatePeerStatus(dc.ID, "OFFLINE", dc.ClientIP); err != nil {
+	if err := g.db.UpdatePeerStatus(dc.ID, "OFFLINE", dc.ClientIP, "cdap"); err != nil {
 		log.Printf("[cdap] %s: failed to set offline: %v", dc.ID, err)
 	}
 

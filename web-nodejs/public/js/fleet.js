@@ -92,8 +92,8 @@
                 <td>${esc(r.scope || 'org')} ${r.scope_value ? '(' + esc(r.scope_value) + ')' : ''}</td>
                 <td><span class="status-badge ${r.active !== false ? 'active' : 'inactive'}">${r.active !== false ? _('fleet.active') : _('fleet.inactive')}</span></td>
                 <td>
-                    <button class="btn-icon" title="Edit" onclick="Fleet.editResource('${esc(r.id)}')"><span class="material-icons">edit</span></button>
-                    <button class="btn-icon" title="Delete" onclick="Fleet.deleteResource('${esc(r.id)}')"><span class="material-icons">delete</span></button>
+                    <button class="btn-icon" title="Edit" data-bd-call="Fleet.editResource" data-bd-args='["${esc(r.id)}"]'><span class="material-icons">edit</span></button>
+                    <button class="btn-icon" title="Delete" data-bd-call="Fleet.deleteResource" data-bd-args='["${esc(r.id)}"]'><span class="material-icons">delete</span></button>
                 </td>
             </tr>
         `).join('');
@@ -202,9 +202,9 @@
                 <td><span class="status-badge ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span></td>
                 <td>${t.last_run ? new Date(t.last_run).toLocaleString() : '-'}</td>
                 <td>
-                    <button class="btn-icon" title="Output" onclick="Fleet.showOutput('${esc(t.id)}')"><span class="material-icons">terminal</span></button>
-                    ${t.status === 'failed' ? `<button class="btn-icon" title="Retry" onclick="Fleet.retryTask('${esc(t.id)}')"><span class="material-icons">replay</span></button>` : ''}
-                    <button class="btn-icon" title="Delete" onclick="Fleet.deleteTask('${esc(t.id)}')"><span class="material-icons">delete</span></button>
+                    <button class="btn-icon" title="Output" data-bd-call="Fleet.showOutput" data-bd-args='["${esc(t.id)}"]'><span class="material-icons">terminal</span></button>
+                    ${t.status === 'failed' ? `<button class="btn-icon" title="Retry" data-bd-call="Fleet.retryTask" data-bd-args='["${esc(t.id)}"]'><span class="material-icons">replay</span></button>` : ''}
+                    <button class="btn-icon" title="Delete" data-bd-call="Fleet.deleteTask" data-bd-args='["${esc(t.id)}"]'><span class="material-icons">delete</span></button>
                 </td>
             </tr>
         `).join('');
@@ -362,8 +362,8 @@
                 <td>${d.issues ?? 0}</td>
                 <td>${d.last_scan ? new Date(d.last_scan).toLocaleString() : '-'}</td>
                 <td>
-                    <button class="btn-icon" title="Scan" onclick="Fleet.scanDevice('${esc(d.device_id || d.id)}')"><span class="material-icons">radar</span></button>
-                    <button class="btn-icon" title="Remediate" onclick="Fleet.remediate('${esc(d.device_id || d.id)}')"><span class="material-icons">build</span></button>
+                    <button class="btn-icon" title="Scan" data-bd-call="Fleet.scanDevice" data-bd-args='["${esc(d.device_id || d.id)}"]'><span class="material-icons">radar</span></button>
+                    <button class="btn-icon" title="Remediate" data-bd-call="Fleet.remediate" data-bd-args='["${esc(d.device_id || d.id)}"]'><span class="material-icons">build</span></button>
                 </td>
             </tr>`;
         }).join('');

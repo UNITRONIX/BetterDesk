@@ -85,7 +85,7 @@ Optional → :21122 CDAP, :21118/:21119 WebSocket signal/relay
 |-----------|--------|
 | Go server + web console | Production |
 | Stock RustDesk client | Production |
-| Support Agent (Go/Wails, from Generator) | Production path for inbound support |
+| Support Agent (from BetterDesk-Client releases) | Production path for inbound support |
 | Native CDAP agent (Go) | OK when you need headless/IoT |
 | MGMT / Agent (Tauri) | Alpha — do not use |
 | Native BetterDesk Desktop (Flutter) | Early — not for production yet |
