@@ -25,7 +25,8 @@ const Modal = (function() {
      * @param {Object} options
      * @param {string} options.title - Modal title
      * @param {string} options.content - Modal body HTML content
-     * @param {Array} options.buttons - Array of button configs [{ label, class, onClick }]
+     * @param {Array} options.buttons - Array of button configs [{ label, class, onClick, icon }];
+     *   icon is a Utils.ICONS meaning (or a Material Symbols name) drawn before the label, which is always escaped
      * @param {boolean} options.closable - Whether the modal can be closed (default: true)
      * @param {string} options.size - 'small', 'medium', 'large' (default: 'medium')
      * @param {Function} options.onOpen - Callback when modal opens
@@ -77,7 +78,7 @@ const Modal = (function() {
                 ${buttons.length > 0 ? `
                     <div class="modal-footer">
                         ${buttons.map((btn, idx) => `
-                            <button type="button" class="btn ${btn.class || 'btn-secondary'}" data-btn-index="${idx}">${Utils.escapeHtml(btn.label)}</button>
+                            <button type="button" class="btn ${btn.class || 'btn-secondary'}" data-btn-index="${idx}">${btn.icon ? Utils.icon(btn.icon) : ''}${Utils.escapeHtml(btn.label)}</button>
                         `).join('')}
                     </div>
                 ` : ''}
