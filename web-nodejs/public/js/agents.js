@@ -1,4 +1,4 @@
-/* BetterDesk Agents — info page + signed release sync for /portal */
+/* Support agents (/agents): the release this server serves on /portal, and how to set an agent up */
 (function () {
     'use strict';
 
@@ -68,51 +68,57 @@
     const statusEl = () => document.getElementById('agents-release-status');
     const syncBtn = () => document.getElementById('agents-sync-release');
 
-    async function loadReleases() {
+    function setStatus(text, kind) {
+        const el = statusEl();
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = `form-status${kind ? ` is-${kind}` : ''}`;
+    }
+
+    /** One facts row: the release this server hands out, or why there is none */
+    function renderRelease(html) {
         const list = listEl();
         if (!list) return;
+        list.innerHTML = `<dt>${escapeText(t('agents.release_label', 'Release'))}</dt><dd>${html}</dd>`;
+    }
+
+    async function loadReleases() {
+        if (!listEl()) return;
         try {
             const data = await api('GET', '/api/agent-releases');
             const releases = (data && data.releases) || [];
             if (!Array.isArray(releases) || releases.length === 0) {
-                list.innerHTML = `<span class="text-muted">${escapeText(t('agents.sync_empty', 'No release imported yet.'))}</span>`;
+                renderRelease(`<span class="text-muted">${escapeText(t('agents.sync_empty', 'No release imported yet.'))}</span>`);
                 return;
             }
-            list.innerHTML = releases.map((release) => {
-                const tag = escapeText(release.tag || 'release');
-                const count = ((release.manifest && release.manifest.assets) || []).length;
-                const artifacts = t('agents.sync_artifacts', '{{count}} platform artifacts')
-                    .split('{{count}}').join(String(count));
-                return `<div class="agents-release-item">
-                    <div><strong>${tag}</strong>
-                        <div class="text-muted">${escapeText(artifacts)}</div>
-                    </div>
-                    <span class="status-badge ready">${escapeText(t('agents.sync_verified', 'verified'))}</span>
-                </div>`;
-            }).join('');
+            const latest = releases[0];
+            const count = ((latest.manifest && latest.manifest.assets) || []).length;
+            const details = [
+                t('agents.sync_artifacts', '{{count}} installers').split('{{count}}').join(String(count)),
+                t('agents.sync_verified', 'signature checked'),
+            ];
+            if (latest.imported_at) {
+                details.unshift(t('agents.imported_on', 'imported {{date}}')
+                    .split('{{date}}').join(Utils.formatDate(latest.imported_at)));
+            }
+            renderRelease(`<span class="mono">${escapeText(latest.tag || 'release')}</span>
+                <span class="text-muted">${escapeText(details.join(', '))}</span>`);
         } catch (error) {
-            const status = statusEl();
-            if (status) status.textContent = errorMessage(error);
+            renderRelease(`<span class="state is-error">${escapeText(errorMessage(error))}
+                <button type="button" class="btn btn-sm" data-retry-releases>${escapeText(t('actions.retry', 'Retry'))}</button></span>`);
         }
     }
 
     async function syncRelease() {
         const button = syncBtn();
-        const status = statusEl();
         if (button) button.disabled = true;
-        if (status) {
-            status.textContent = t('agents.sync_importing', 'Importing and verifying the latest signed release…');
-        }
+        setStatus(t('agents.sync_importing', 'Importing and checking the latest signed release…'));
         try {
             const result = await api('POST', '/api/agent-releases/sync', {});
-            if (status) {
-                status.textContent = t('agents.sync_imported', 'Imported {{tag}}.')
-                    .split('{{tag}}').join(result.tag || '');
-            }
+            setStatus(t('agents.sync_imported', 'Imported {{tag}}.').split('{{tag}}').join(result.tag || ''), 'ok');
             await loadReleases();
         } catch (error) {
-            if (status) status.textContent = errorMessage(error);
-            notify.error(errorMessage(error));
+            setStatus(errorMessage(error), 'error');
         } finally {
             if (button) button.disabled = false;
         }
@@ -120,7 +126,11 @@
 
     function init() {
         const button = syncBtn();
-        if (button) button.addEventListener('click', syncRelease);
+        if (button && window.Utils && Utils.can('enrollment.manage')) button.addEventListener('click', syncRelease);
+        else if (button) button.hidden = true;
+        listEl()?.addEventListener('click', (e) => {
+            if (e.target.closest('[data-retry-releases]')) loadReleases();
+        });
         loadReleases();
     }
 

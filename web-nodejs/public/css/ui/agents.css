@@ -1,0 +1,14 @@
+/* Support agents (/agents). Facts, steps and row links come from components.css. */
+
+.agents-page {
+    max-width: 880px;
+}
+
+.agents-sync-actions {
+    margin-top: 0;
+}
+
+.agents-page .steps {
+    max-width: var(--measure);
+}
+
