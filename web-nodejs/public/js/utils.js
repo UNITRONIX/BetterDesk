@@ -4,13 +4,50 @@
 
 const Utils = {
     /**
-     * Format date to locale string
+     * Turn an API timestamp into a Date, or null when there is no real date.
+     * SQLite writes "2026-11-08 17:05:28" (UTC, no zone); those are read as
+     * UTC, not as local time. Empty values, 0 and Go's zero time
+     * ("0001-01-01T00:00:00Z") count as no date.
+     */
+    parseDate(value) {
+        if (value === null || value === undefined || value === '' || value === 0) return null;
+        let date;
+        if (value instanceof Date) {
+            date = value;
+        } else if (typeof value === 'number') {
+            date = new Date(value);
+        } else {
+            let text = String(value).trim();
+            if (!text) return null;
+            if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(text)) {
+                text = text.replace(' ', 'T') + 'Z';
+            }
+            date = new Date(text);
+        }
+        if (isNaN(date.getTime()) || date.getUTCFullYear() < 1971) return null;
+        return date;
+    },
+
+    /** Console language for date formatting, falling back to the browser's */
+    _dateLocale() {
+        const lang = window.BetterDesk && window.BetterDesk.lang;
+        if (!lang) return undefined;
+        try {
+            return Intl.DateTimeFormat.supportedLocalesOf([lang]).length ? lang : undefined;
+        } catch (e) {
+            return undefined;
+        }
+    },
+
+    /**
+     * Format date to locale string in the console language.
+     * options.empty: text for a missing date (default "-").
      */
     formatDate(dateStr, options = {}) {
-        if (!dateStr) return '-';
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return '-';
-        
+        const { empty = '-', ...formatOptions } = options || {};
+        const date = Utils.parseDate(dateStr);
+        if (!date) return empty;
+
         const defaultOptions = {
             year: 'numeric',
             month: 'short',
@@ -18,31 +55,32 @@ const Utils = {
             hour: '2-digit',
             minute: '2-digit'
         };
-        
-        return date.toLocaleDateString(window.BetterDesk.lang, { ...defaultOptions, ...options });
+
+        return date.toLocaleString(Utils._dateLocale(), { ...defaultOptions, ...formatOptions });
     },
-    
+
     /**
-     * Format relative time (e.g., "5 minutes ago")
+     * Format relative time (e.g., "5 minutes ago").
+     * options.empty: text for a missing date (default "-").
      */
-    formatRelativeTime(dateStr) {
-        if (!dateStr) return '-';
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return '-';
-        
+    formatRelativeTime(dateStr, options = {}) {
+        const empty = options && options.empty !== undefined ? options.empty : '-';
+        const date = Utils.parseDate(dateStr);
+        if (!date) return empty;
+
         const now = new Date();
         const diff = now - date;
         const seconds = Math.floor(diff / 1000);
         const minutes = Math.floor(seconds / 60);
         const hours = Math.floor(minutes / 60);
         const days = Math.floor(hours / 24);
-        
+
         if (seconds < 60) return _('time.just_now');
         if (minutes < 60) return _('time.minutes_ago', { count: minutes });
         if (hours < 24) return _('time.hours_ago', { count: hours });
         if (days < 7) return _('time.days_ago', { count: days });
-        
-        return Utils.formatDate(dateStr);
+
+        return Utils.formatDate(date);
     },
     
     /**
@@ -97,6 +135,24 @@ const Utils = {
     /**
      * Escape HTML to prevent XSS
      */
+    /**
+     * Whether the signed-in user may do something (see BetterDesk.permissions
+     * in the layout). Used to hide actions that would only fail; the server
+     * still checks every request. Unknown on pages without the list: true.
+     */
+    can(permission) {
+        const list = window.BetterDesk && window.BetterDesk.permissions;
+        if (!Array.isArray(list)) return true;
+        return list.includes(permission);
+    },
+
+    /** Plain sentence for a refused request (HTTP 403 from a permission check) */
+    permissionDeniedMessage() {
+        const key = 'errors.no_permission';
+        const text = typeof _ === 'function' ? _(key) : '';
+        return text && text !== key ? text : "You don't have permission to do this. Ask an administrator.";
+    },
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -250,7 +306,16 @@ const Utils = {
                         message = `Request failed (HTTP ${response.status})`;
                     }
                 }
+                // "Permission denied: device.ban" from requirePermission is a raw
+                // permission key; show a sentence instead and keep the key on the error.
+                let permission = null;
+                if (response.status === 403 && (/^Permission denied\b/i.test(message) || /^Request failed \(HTTP 403\)$/.test(message))) {
+                    const match = message.match(/^Permission denied:\s*(.+)$/i);
+                    permission = match ? match[1].trim() : null;
+                    message = Utils.permissionDeniedMessage();
+                }
                 const error = new Error(message);
+                error.permission = permission;
                 error.status = response.status;
                 error.data = data;
                 error.gatewayTimeout = response.status === 502 || response.status === 504
