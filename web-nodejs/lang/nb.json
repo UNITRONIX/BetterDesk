@@ -3348,7 +3348,8 @@
         "trends_help_resolved": "Løst",
         "trends_help_summary": "Siste {days} dager: åpnet {opened}, løst {resolved}. Fortsatt åpne: {open}.",
         "trends_help_empty": "Ingen hjelpeforespørsler de siste {days} dagene.",
-        "saved_row_sub": "{type}, lagret av {user} {date}"
+        "saved_row_sub": "{type}, lagret av {user} {date}",
+        "saved_by": "Lagret av {user} {date}"
     },
     "tenants": {
         "title": "Tenants",

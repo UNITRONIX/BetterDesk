@@ -3342,7 +3342,8 @@
         "trends_help_resolved": "Opgelost",
         "trends_help_summary": "Laatste {days} dagen: geopend {opened}, opgelost {resolved}. Nog open: {open}.",
         "trends_help_empty": "Geen hulpverzoeken in de laatste {days} dagen.",
-        "saved_row_sub": "{type}, opgeslagen door {user} op {date}"
+        "saved_row_sub": "{type}, opgeslagen door {user} op {date}",
+        "saved_by": "Opgeslagen door {user} op {date}"
     },
     "tenants": {
         "title": "Multi-tenancy",

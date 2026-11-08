@@ -32,14 +32,23 @@
         return Utils.formatDate(d.toISOString());
     }
 
+    // Durations, counts and times use the shared helpers (utils.js)
     function formatDuration(seconds) {
-        seconds = Number(seconds) || 0;
-        if (seconds <= 0) return '—';
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        if (h > 0) return _('activity.duration_hm', { h, m });
-        if (m > 0) return _('activity.duration_m', { m });
-        return _('activity.duration_s', { s: Math.round(seconds) });
+        return Utils.formatDuration(Number(seconds) || 0, { largest: 'hour' });
+    }
+
+    function durationCell(seconds) {
+        return Number(seconds) > 0 ? escapeHtml(formatDuration(seconds)) : Utils.emptyHtml();
+    }
+
+    function countCell(n) {
+        return escapeHtml(Utils.formatNumber(Number(n) || 0));
+    }
+
+    function timeCell(value) {
+        let s = value ? String(value) : '';
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(s)) s = s.replace(' ', 'T') + 'Z';
+        return Utils.timeHtml(s, { relative: false });
     }
 
     function categoryLabel(cat) {
@@ -149,11 +158,11 @@
             const name = s.hostname && s.hostname !== s.device_id ? s.hostname : '';
             return `
             <tr>
-                <td>${name ? `${escapeHtml(name)}<span class="cell-sub mono">${escapeHtml(s.device_id)}</span>` : `<span class="mono">${escapeHtml(s.device_id)}</span>`}</td>
-                <td class="activity-num">${escapeHtml(formatDate(s.reported_at))}</td>
-                <td class="activity-num">${escapeHtml(formatDuration(s.total_active_secs))}</td>
-                <td class="activity-num">${escapeHtml(formatDuration(s.idle_seconds))}</td>
-                <td class="activity-num">${Number(s.session_count) || 0}</td>
+                <td>${name ? `${escapeHtml(name)}<span class="cell-sub">${Utils.valueHtml(s.device_id)}</span>` : Utils.valueHtml(s.device_id)}</td>
+                <td class="activity-num">${timeCell(s.reported_at)}</td>
+                <td class="activity-num is-num">${durationCell(s.total_active_secs)}</td>
+                <td class="activity-num is-num">${durationCell(s.idle_seconds)}</td>
+                <td class="activity-num is-num">${countCell(s.session_count)}</td>
                 <td class="actions"><button type="button" class="btn btn-sm detail-btn" data-id="${escapeHtml(s.device_id)}" data-name="${escapeHtml(name || s.device_id)}"
                     aria-label="${escapeHtml(_('activity.details_for', { name: name || s.device_id }))}">${escapeHtml(_('activity.details'))}</button></td>
             </tr>`;
@@ -280,12 +289,12 @@
                 ? `<p class="state">${escapeHtml(_('activity.no_apps'))}</p>`
                 : `<div class="table-scroll" tabindex="0" role="region" aria-labelledby="detail-apps-title"><table class="data-table">
                     <thead><tr><th scope="col">${escapeHtml(_('activity.app_name'))}</th><th scope="col">${escapeHtml(_('activity.category'))}</th>
-                        <th scope="col">${escapeHtml(_('activity.total_time'))}</th><th scope="col">${escapeHtml(_('activity.sessions'))}</th></tr></thead>
+                        <th scope="col" class="is-num">${escapeHtml(_('activity.total_time'))}</th><th scope="col" class="is-num">${escapeHtml(_('activity.sessions'))}</th></tr></thead>
                     <tbody>${appRows.map((a) => `<tr>
-                        <td>${escapeHtml(a.app_name || a.name || '—')}</td>
-                        <td>${escapeHtml(categoryLabel(a.category))}</td>
-                        <td class="activity-num">${escapeHtml(formatDuration(a.total_secs ?? a.total_seconds))}</td>
-                        <td class="activity-num">${Number(a.session_count) || 0}</td></tr>`).join('')}</tbody></table></div>`;
+                        <td>${a.app_name || a.name ? escapeHtml(a.app_name || a.name) : Utils.emptyHtml()}</td>
+                        <td>${a.category ? Utils.tagHtml(categoryLabel(a.category)) : Utils.emptyHtml()}</td>
+                        <td class="activity-num is-num">${durationCell(a.total_secs ?? a.total_seconds)}</td>
+                        <td class="activity-num is-num">${countCell(a.session_count)}</td></tr>`).join('')}</tbody></table></div>`;
 
             const sesRows = Array.isArray(detail) ? detail : (detail.sessions || []);
             sessionsList.innerHTML = !sesRows.length
@@ -293,12 +302,12 @@
                 : `<p class="count-line">${escapeHtml(_('activity.recent_sessions_note', { count: sesRows.length }))}</p>
                     <div class="table-scroll" tabindex="0" role="region" aria-labelledby="detail-sessions-title"><table class="data-table">
                     <thead><tr><th scope="col">${escapeHtml(_('activity.started_at'))}</th><th scope="col">${escapeHtml(_('activity.app_name'))}</th>
-                        <th scope="col">${escapeHtml(_('activity.window_title'))}</th><th scope="col">${escapeHtml(_('activity.duration'))}</th></tr></thead>
+                        <th scope="col">${escapeHtml(_('activity.window_title'))}</th><th scope="col" class="is-num">${escapeHtml(_('activity.duration'))}</th></tr></thead>
                     <tbody>${sesRows.map((s) => `<tr>
-                        <td class="activity-num">${escapeHtml(formatDate(s.started_at || s.session_start))}</td>
-                        <td>${escapeHtml(s.app_name || '—')}<span class="cell-sub">${escapeHtml(categoryLabel(s.category))}</span></td>
-                        <td class="activity-window">${escapeHtml(s.window_title || '—')}</td>
-                        <td class="activity-num">${escapeHtml(formatDuration(s.duration_secs ?? s.duration_seconds))}</td></tr>`).join('')}</tbody></table></div>`;
+                        <td class="activity-num">${timeCell(s.started_at || s.session_start)}</td>
+                        <td>${s.app_name ? escapeHtml(s.app_name) : Utils.emptyHtml()}${s.category ? `<span class="cell-sub">${Utils.tagHtml(categoryLabel(s.category))}</span>` : ''}</td>
+                        <td class="activity-window">${s.window_title ? escapeHtml(s.window_title) : Utils.emptyHtml()}</td>
+                        <td class="activity-num is-num">${durationCell(s.duration_secs ?? s.duration_seconds)}</td></tr>`).join('')}</tbody></table></div>`;
         } catch (err) {
             if (!document.body.contains(appsList)) return;
             appsList.innerHTML = `<p class="state is-error">${escapeHtml(_('activity.detail_failed'))}</p>`;

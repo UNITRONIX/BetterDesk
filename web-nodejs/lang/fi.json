@@ -3348,7 +3348,8 @@
         "trends_help_resolved": "Ratkaistu",
         "trends_help_summary": "Viimeiset {days} päivää: avattu {opened}, ratkaistu {resolved}. Yhä auki: {open}.",
         "trends_help_empty": "Ei tukipyyntöjä viimeisten {days} päivän aikana.",
-        "saved_row_sub": "{type}, tallentanut {user} {date}"
+        "saved_row_sub": "{type}, tallentanut {user} {date}",
+        "saved_by": "Tallentanut {user} {date}"
     },
     "tenants": {
         "title": "Tenants",

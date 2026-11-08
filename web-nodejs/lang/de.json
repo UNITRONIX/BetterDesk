@@ -3342,7 +3342,8 @@
         "trends_help_resolved": "Erledigt",
         "trends_help_summary": "Letzte {days} Tage: eingegangen {opened}, erledigt {resolved}. Noch offen: {open}.",
         "trends_help_empty": "Keine Hilfeanfragen in den letzten {days} Tagen.",
-        "saved_row_sub": "{type}, gespeichert von {user} am {date}"
+        "saved_row_sub": "{type}, gespeichert von {user} am {date}",
+        "saved_by": "Gespeichert von {user} am {date}"
     },
     "tenants": {
         "title": "Dashboard",

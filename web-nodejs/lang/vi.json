@@ -3348,7 +3348,8 @@
         "trends_help_resolved": "Đã xử lý",
         "trends_help_summary": "{days} ngày qua: đã mở {opened}, đã xử lý {resolved}. Còn mở: {open}.",
         "trends_help_empty": "Không có yêu cầu hỗ trợ nào trong {days} ngày qua.",
-        "saved_row_sub": "{type}, do {user} lưu lúc {date}"
+        "saved_row_sub": "{type}, do {user} lưu lúc {date}",
+        "saved_by": "Đã lưu bởi {user} lúc {date}"
     },
     "tenants": {
         "title": "Tenants",

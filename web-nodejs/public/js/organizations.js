@@ -83,7 +83,7 @@
     function countCell(org, field) {
         const c = counts[org.id];
         if (!c) return '<span class="text-muted">…</span>';
-        return c[field] == null ? '<span class="text-muted">—</span>' : escHtml(String(c[field]));
+        return c[field] == null ? Utils.emptyHtml() : escHtml(Utils.formatNumber(c[field]));
     }
 
     function renderCountLine() {
@@ -112,9 +112,9 @@
                     <a href="${href}" class="org-name">${escHtml(org.name)}</a>
                     <span class="cell-sub">${escHtml(org.slug)}</span>
                 </td>
-                <td class="num-col" data-count="users">${countCell(org, 'users')}</td>
-                <td class="num-col" data-count="devices">${countCell(org, 'devices')}</td>
-                <td>${formatDate(org.created_at)}</td>
+                <td class="num-col is-num" data-count="users">${countCell(org, 'users')}</td>
+                <td class="num-col is-num" data-count="devices">${countCell(org, 'devices')}</td>
+                <td>${Utils.timeHtml(org.created_at, { relative: false, format: { hour: undefined, minute: undefined } })}</td>
                 <td class="actions">${canEdit || canDelete ? `
                     <span class="menu-anchor">
                         <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"

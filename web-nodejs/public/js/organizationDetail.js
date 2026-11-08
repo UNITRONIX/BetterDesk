@@ -139,7 +139,7 @@
             li.className = 'org-billing-row';
             li.innerHTML = `<a class="list-row" href="/commercialization?tab=packages">
                 <span class="row-main"><span class="row-title">${escHtml(c.package_name || t('billing_package'))}</span>
-                <span class="row-sub">${escHtml([target, statusText].filter(Boolean).join(' · '))}</span></span>
+                <span class="row-sub">${escHtml(target)}${statusText ? ` · ${Utils.statusHtml(c.status, statusText)}` : ''}</span></span>
                 <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span></a>`;
             list.appendChild(li);
         });
@@ -281,9 +281,9 @@
 
     function renderDetails() {
         document.getElementById('org-detail-name').textContent = currentOrg.name || '';
-        document.getElementById('org-detail-slug').textContent = currentOrg.slug || '—';
-        document.getElementById('org-detail-logo').textContent = currentOrg.logo_url || '—';
-        document.getElementById('org-detail-created').textContent = formatDate(currentOrg.created_at, false);
+        document.getElementById('org-detail-slug').innerHTML = Utils.valueHtml(currentOrg.slug);
+        document.getElementById('org-detail-logo').innerHTML = currentOrg.logo_url ? escHtml(currentOrg.logo_url) : Utils.emptyHtml();
+        document.getElementById('org-detail-created').innerHTML = Utils.timeHtml(currentOrg.created_at, { relative: false, format: { hour: undefined, minute: undefined } });
         if (currentOrg.name) document.title = `${currentOrg.name} - ${document.title.split(' - ').slice(1).join(' - ') || document.title}`;
     }
 
@@ -374,10 +374,10 @@
                     <tbody>
                         ${orgUsers.map((u, i) => `
                             <tr>
-                                <td><strong>${escHtml(u.username)}</strong>${u.display_name ? `<span class="cell-sub">${escHtml(u.display_name)}</span>` : ''}</td>
-                                <td>${u.email ? escHtml(u.email) : '<span class="text-muted">—</span>'}</td>
-                                <td>${escHtml(roleLabel(u.role))}</td>
-                                <td>${formatDate(u.last_login)}</td>
+                                <td>${Utils.userHtml(u.username, { avatar: true })}${u.display_name ? `<span class="cell-sub">${escHtml(u.display_name)}</span>` : ''}</td>
+                                <td>${u.email ? escHtml(u.email) : Utils.emptyHtml()}</td>
+                                <td>${Utils.tagHtml(roleLabel(u.role))}</td>
+                                <td>${Utils.timeHtml(u.last_login, { empty: tr('users.never') })}</td>
                                 ${canUsers ? `<td class="actions">${rowMenu(`org-user-menu-${i}`, t('actions_for', { name: u.username }), `
                                     <button type="button" class="menu-item user-role-btn" role="menuitem" data-user-id="${escHtml(u.id)}" data-role="${escHtml(u.role)}">${Utils.icon('edit')}<span>${escHtml(t('edit_role'))}</span></button>
                                     <span class="menu-divider" role="separator"></span>
@@ -576,11 +576,11 @@
                     <tbody>
                         ${invs.map(inv => `
                             <tr>
-                                <td><span class="mono">${escHtml((inv.token || '').substring(0, 16))}…</span></td>
-                                <td>${inv.email ? escHtml(inv.email) : '<span class="text-muted">—</span>'}</td>
-                                <td>${escHtml(roleLabel(inv.role))}</td>
-                                <td>${formatDate(inv.expires_at)}</td>
-                                <td>${inv.used_at ? formatDate(inv.used_at) : `<span class="text-muted">${escHtml(t('not_used'))}</span>`}</td>
+                                <td>${Utils.valueHtml(inv.token ? inv.token.substring(0, 16) + '…' : '')}</td>
+                                <td>${inv.email ? escHtml(inv.email) : Utils.emptyHtml()}</td>
+                                <td>${Utils.tagHtml(roleLabel(inv.role))}</td>
+                                <td>${Utils.timeHtml(inv.expires_at, { relative: false })}</td>
+                                <td>${Utils.timeHtml(inv.used_at, { empty: t('not_used') })}</td>
                             </tr>`).join('')}
                     </tbody>
                 </table></div>`;
@@ -642,7 +642,7 @@
                 return;
             }
 
-            const cell = (v) => (v ? escHtml(v) : '<span class="text-muted">—</span>');
+            const cell = (v) => (v ? escHtml(v) : Utils.emptyHtml());
             container.innerHTML = `
                 <div class="table-scroll"><table class="data-table">
                     <thead>
@@ -662,7 +662,7 @@
                                 <td>${cell(d.department)}</td>
                                 <td>${cell(d.building)}</td>
                                 <td>${cell(d.location)}</td>
-                                <td>${cell(d.assigned_user_id ? userName(d.assigned_user_id) : '')}</td>
+                                <td>${d.assigned_user_id ? Utils.userHtml(userName(d.assigned_user_id)) : Utils.emptyHtml()}</td>
                                 ${canDevices ? `<td class="actions">${rowMenu(`org-device-menu-${i}`, t('actions_for', { name: d.device_id }), `
                                     <button type="button" class="menu-item danger device-unassign-btn" role="menuitem" data-device-id="${escHtml(d.device_id)}">${Utils.icon('unlink')}<span>${escHtml(t('remove_from_org'))}</span></button>`)}
                                 </td>` : ''}
@@ -768,7 +768,7 @@
                             <tr>
                                 <th scope="col">${escHtml(t('group_name'))}</th>
                                 <th scope="col">${escHtml(t('group_type'))}</th>
-                                <th scope="col">${escHtml(t('group_members'))}</th>
+                                <th scope="col" class="is-num">${escHtml(t('group_members'))}</th>
                                 <th scope="col">${escHtml(t('group_allowed_user_groups'))}</th>
                             </tr>
                         </thead>
@@ -776,9 +776,9 @@
                             ${deviceGroups.map(group => `
                                 <tr>
                                     <td>${groupNameCell(group)}</td>
-                                    <td>${escHtml(groupTypeLabel(group))}</td>
-                                    <td>${escHtml(String(group.member_count ?? 0))}</td>
-                                    <td>${escHtml((group.allowed_user_groups || []).map(g => g.name || g.guid).filter(Boolean).join(', ') || '—')}</td>
+                                    <td>${Utils.tagHtml(groupTypeLabel(group))}</td>
+                                    <td class="is-num">${escHtml(Utils.formatNumber(group.member_count ?? 0))}</td>
+                                    <td>${(group.allowed_user_groups || []).map(g => g.name || g.guid).filter(Boolean).map(escHtml).join(', ') || Utils.emptyHtml()}</td>
                                 </tr>`).join('')}
                         </tbody>
                     </table></div>` : ''}
@@ -791,14 +791,14 @@
                         <thead>
                             <tr>
                                 <th scope="col">${escHtml(t('group_name'))}</th>
-                                <th scope="col">${escHtml(t('group_user_members'))}</th>
+                                <th scope="col" class="is-num">${escHtml(t('group_user_members'))}</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${userGroups.map(group => `
                                 <tr>
                                     <td>${groupNameCell(group)}</td>
-                                    <td>${escHtml(String(group.member_count ?? 0))}</td>
+                                    <td class="is-num">${escHtml(Utils.formatNumber(group.member_count ?? 0))}</td>
                                 </tr>`).join('')}
                         </tbody>
                     </table></div>` : `<p class="state">${escHtml(t('no_org_user_groups'))}</p>`}

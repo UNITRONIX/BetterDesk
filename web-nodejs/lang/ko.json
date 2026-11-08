@@ -3342,7 +3342,8 @@
         "trends_help_resolved": "해결",
         "trends_help_summary": "최근 {days}일: 접수 {opened}, 해결 {resolved}. 아직 열림: {open}.",
         "trends_help_empty": "최근 {days}일 동안 도움 요청이 없습니다.",
-        "saved_row_sub": "{type}, {user}님이 {date}에 저장"
+        "saved_row_sub": "{type}, {user}님이 {date}에 저장",
+        "saved_by": "{user}님이 {date}에 저장"
     },
     "tenants": {
         "title": "Tenants",

@@ -179,3 +179,11 @@ div.secaudit-panel {
     width: 0;
     min-width: 100%;
 }
+
+/* Hardening item: severity mark and area tag on one line */
+.secaudit-meta-marks {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+}

@@ -3342,7 +3342,8 @@
         "trends_help_resolved": "解決済み",
         "trends_help_summary": "過去 {days} 日間: 受付 {opened}、解決 {resolved}。未解決: {open}。",
         "trends_help_empty": "過去 {days} 日間のヘルプリクエストはありません。",
-        "saved_row_sub": "{type}、{user} が {date} に保存"
+        "saved_row_sub": "{type}、{user} が {date} に保存",
+        "saved_by": "{user} が {date} に保存"
     },
     "tenants": {
         "title": "Tenants",

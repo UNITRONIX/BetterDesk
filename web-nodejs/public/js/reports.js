@@ -48,19 +48,26 @@
         return d ? Utils.formatDate(d.toISOString()) : '—';
     }
 
+    // Durations, counts and times use the shared helpers (utils.js)
     function formatDuration(seconds) {
         seconds = Number(seconds) || 0;
         if (seconds <= 0) return _('reports.none_time');
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        if (h > 0) return _('reports.duration_hm', { h, m });
-        return _('reports.duration_m', { m: Math.max(1, m) });
+        return Utils.formatDuration(seconds, { largest: 'hour' });
     }
 
     function num(v) {
         const n = Number(v);
         if (v === null || v === undefined || Number.isNaN(n)) return '—';
-        return n.toLocaleString(window.BetterDesk?.lang || undefined);
+        return Utils.formatNumber(n);
+    }
+
+    // A table cell: plain text, or the empty mark for no value
+    function textCell(v) {
+        return v === null || v === undefined || v === '' || v === '—' ? Utils.emptyHtml() : esc(v);
+    }
+
+    function timeCell(value) {
+        return Utils.timeHtml(toDate(value), { relative: false });
     }
 
     function humanize(key) {
@@ -86,8 +93,8 @@
     // ---- Small builders ----
     function table(columns, rows) {
         return `<div class="table-scroll"><table class="data-table">
-            <thead><tr>${columns.map((c) => `<th scope="col"${c.num ? ' class="report-num"' : ''}>${esc(c.label)}</th>`).join('')}</tr></thead>
-            <tbody>${rows.map((r) => `<tr>${columns.map((c) => `<td${c.num ? ' class="report-num"' : ''}>${c.html ? c.html(r) : esc(c.value(r))}</td>`).join('')}</tr>`).join('')}</tbody>
+            <thead><tr>${columns.map((c) => `<th scope="col"${c.num ? ' class="report-num is-num"' : ''}>${esc(c.label)}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map((r) => `<tr>${columns.map((c) => `<td${c.num ? ' class="report-num is-num"' : ''}>${c.html ? c.html(r) : textCell(c.value(r))}</td>`).join('')}</tr>`).join('')}</tbody>
         </table></div>`;
     }
 
@@ -113,12 +120,12 @@
         const cols = Object.keys(rows[0]);
         return table(cols.map((c) => ({
             label: fieldLabel(c),
-            value: (r) => {
+            html: (r) => {
                 const v = r[c];
-                if (v === null || v === undefined || v === '') return '—';
-                if (typeof v === 'object') return JSON.stringify(v);
-                if (/_at$/.test(c)) return formatDate(v);
-                return v;
+                if (v === null || v === undefined || v === '') return Utils.emptyHtml();
+                if (typeof v === 'object') return esc(JSON.stringify(v));
+                if (/_at$/.test(c)) return timeCell(v);
+                return esc(v);
             }
         })), rows);
     }
@@ -145,7 +152,7 @@
             const appsHtml = apps.length
                 ? table([
                     { label: _('reports.app'), value: (a) => a.name || '—' },
-                    { label: _('reports.category'), value: (a) => (a.category ? levelLabel('activity.category_')(a.category) : '—') },
+                    { label: _('reports.category'), html: (a) => (a.category ? Utils.tagHtml(levelLabel('activity.category_')(a.category)) : Utils.emptyHtml()) },
                     { label: _('reports.time_used'), value: (a) => formatDuration(a.total_secs ?? (a.total_ms ? a.total_ms / 1000 : 0)), num: true },
                     { label: _('reports.app_sessions'), value: (a) => num(a.sessions), num: true },
                     { label: _('reports.devices'), value: (a) => num(a.devices), num: true }
@@ -163,9 +170,9 @@
             const banned = d.banned_devices || [];
             html += block(_('reports.banned_devices'), banned.length
                 ? table([
-                    { label: _('reports.device_id'), html: (b) => `<span class="mono">${esc(b.id)}</span>` },
+                    { label: _('reports.device_id'), html: (b) => Utils.valueHtml(b.id) },
                     { label: _('reports.device_name'), value: (b) => b.hostname || '—' },
-                    { label: _('reports.ip_address'), html: (b) => (b.ip ? `<span class="mono">${esc(b.ip)}</span>` : '—') },
+                    { label: _('reports.ip_address'), html: (b) => Utils.valueHtml(b.ip) },
                     { label: _('reports.ban_reason'), value: (b) => b.ban_reason || '—' }
                 ], banned)
                 : `<p class="state">${esc(_('reports.no_banned'))}</p>`);
@@ -173,9 +180,9 @@
             html += block(_('reports.recent_audit'), audit.length
                 ? `<p class="count-line">${esc(_('reports.recent_audit_note', { shown: audit.length, total: d.audit_log_count ?? audit.length }))}
                     <a href="/security-audit?tab=audit">${esc(_('reports.open_audit_log'))}</a></p>` + table([
-                    { label: _('reports.when'), value: (a) => formatDate(a.created_at) },
-                    { label: _('reports.who'), value: (a) => a.username || '—' },
-                    { label: _('reports.action'), value: (a) => (has('audit.action_' + a.action) ? _('audit.action_' + a.action) : humanize(a.action || '')) },
+                    { label: _('reports.when'), html: (a) => timeCell(a.created_at) },
+                    { label: _('reports.who'), html: (a) => Utils.userHtml(a.username) },
+                    { label: _('reports.action'), html: (a) => (a.action ? Utils.tagHtml(has('audit.action_' + a.action) ? _('audit.action_' + a.action) : humanize(a.action)) : Utils.emptyHtml()) },
                     { label: _('reports.details'), value: (a) => a.details || '—' }
                 ], audit)
                 : `<p class="state">${esc(_('reports.no_rows'))}</p>`);
@@ -199,11 +206,11 @@
             }))}</p>` + block(_('reports.targets_status'), targets.length
                 ? table([
                     { label: _('reports.target_name'), value: (t) => t.name || '—' },
-                    { label: _('reports.target_host'), html: (t) => `<span class="mono">${esc(t.host || '—')}</span>` },
-                    { label: _('reports.check_type'), value: (t) => t.check_type || '—' },
-                    { label: _('reports.status'), value: (t) => t.last_status || '—' },
+                    { label: _('reports.target_host'), html: (t) => Utils.valueHtml(t.host) },
+                    { label: _('reports.check_type'), html: (t) => (t.check_type ? Utils.tagHtml(t.check_type) : Utils.emptyHtml()) },
+                    { label: _('reports.status'), html: (t) => (t.last_status ? Utils.statusHtml(t.last_status === 'up' ? 'good' : t.last_status, has('network.status_' + t.last_status) ? _('network.status_' + t.last_status) : humanize(t.last_status)) : Utils.emptyHtml()) },
                     { label: _('reports.response_time'), value: (t) => (t.last_rtt_ms != null ? _('reports.ms', { ms: num(t.last_rtt_ms) }) : '—'), num: true },
-                    { label: _('reports.last_check'), value: (t) => formatDate(t.last_check_at) }
+                    { label: _('reports.last_check'), html: (t) => Utils.timeHtml(toDate(t.last_check_at)) }
                 ], targets)
                 : `<p class="state">${esc(_('reports.no_targets'))}</p>`);
         },
@@ -402,14 +409,18 @@
                 const name = r.title || r.name || typeLabel(r.report_type);
                 const menuId = 'saved-menu-' + r.id;
                 const type = typeLabel(r.report_type || r.type);
-                const date = formatDate(r.created_at);
-                const sub = r.created_by
-                    ? _('reports.saved_row_sub', { type, user: r.created_by, date })
-                    : `${type}, ${date}`;
+                const date = timeCell(r.created_at);
+                // The type as a tag on its own line, who saved it and when under it
+                const savedBy = has('reports.saved_by')
+                    ? _('reports.saved_by', { user: r.created_by, date: '{{date}}' })
+                    : `Saved by ${r.created_by} on {{date}}`;
+                const sub = `${Utils.tagHtml(type)}</span><span class="row-sub">${r.created_by
+                    ? esc(savedBy).replace('{{date}}', date)
+                    : date}`;
                 return `<li class="list-row">
                     <span class="row-main">
                         <span class="row-title">${esc(name)}</span>
-                        <span class="row-sub">${esc(sub)}</span>
+                        <span class="row-sub">${sub}</span>
                     </span>
                     <span class="row-end">
                         <button type="button" class="btn btn-sm run-btn" data-id="${esc(r.id)}" aria-label="${esc(_('reports.open_named', { name }))}">${Utils.icon('open')}${esc(_('reports.open'))}</button>

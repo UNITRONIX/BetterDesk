@@ -3348,7 +3348,8 @@
         "trends_help_resolved": "Selesai",
         "trends_help_summary": "{days} hari terakhir: masuk {opened}, selesai {resolved}. Masih terbuka: {open}.",
         "trends_help_empty": "Tidak ada permintaan bantuan dalam {days} hari terakhir.",
-        "saved_row_sub": "{type}, disimpan oleh {user} pada {date}"
+        "saved_row_sub": "{type}, disimpan oleh {user} pada {date}",
+        "saved_by": "Disimpan oleh {user} pada {date}"
     },
     "tenants": {
         "title": "Tenants",

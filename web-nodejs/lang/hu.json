@@ -3348,7 +3348,8 @@
         "trends_help_resolved": "Megoldott",
         "trends_help_summary": "Utolsó {days} nap: beérkezett {opened}, megoldva {resolved}. Még nyitott: {open}.",
         "trends_help_empty": "Nincs segítségkérés az utolsó {days} napban.",
-        "saved_row_sub": "{type}, mentette: {user}, {date}"
+        "saved_row_sub": "{type}, mentette: {user}, {date}",
+        "saved_by": "Mentette: {user}, {date}"
     },
     "tenants": {
         "title": "Tenants",

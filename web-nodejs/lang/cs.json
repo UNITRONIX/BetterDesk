@@ -3342,7 +3342,8 @@
         "trends_help_resolved": "Vyřešené",
         "trends_help_summary": "Za posledních {days} dní: otevřeno {opened}, vyřešeno {resolved}. Stále otevřeno: {open}.",
         "trends_help_empty": "Za posledních {days} dní nejsou žádné žádosti o pomoc.",
-        "saved_row_sub": "{type}, uložil(a) {user} {date}"
+        "saved_row_sub": "{type}, uložil(a) {user} {date}",
+        "saved_by": "Uložil(a) {user} dne {date}"
     },
     "tenants": {
         "title": "Tenanti",

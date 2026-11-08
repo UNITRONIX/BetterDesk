@@ -3342,7 +3342,8 @@
         "trends_help_resolved": "Resueltas",
         "trends_help_summary": "Últimos {days} días: abiertas {opened}, resueltas {resolved}. Siguen abiertas: {open}.",
         "trends_help_empty": "No hay solicitudes de ayuda en los últimos {days} días.",
-        "saved_row_sub": "{type}, guardado por {user} el {date}"
+        "saved_row_sub": "{type}, guardado por {user} el {date}",
+        "saved_by": "Guardado por {user} el {date}"
     },
     "tenants": {
         "title": "Panel",

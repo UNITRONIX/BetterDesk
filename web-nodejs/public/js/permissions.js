@@ -225,7 +225,7 @@
                     <label class="check-field">
                         <input type="checkbox" class="toggle-switch" id="${rowId}" data-perm="${escHtml(perm)}" ${granted ? 'checked' : ''}>
                         <span class="check-label">${escHtml(permLabel(perm))}</span>
-                        <span class="form-hint perm-key">${escHtml(perm)}</span>
+                        <span class="form-hint perm-key">${Utils.valueHtml(perm)}</span>
                     </label>
                     <span class="row-end">
                         <span class="perm-status" id="${rowId}-status" aria-live="polite"></span>
