@@ -76,7 +76,9 @@
                 </div>
                 <div class="notif-footer">
                     <a href="/help-requests" class="notif-see-all"><%= _('notifications.see_all') %></a>
+                    <% if (typeof hasPermission !== 'function' || hasPermission('enrollment.approve')) { %>
                     <a href="/registrations" class="notif-see-all"><%= _('nav.registrations') %></a>
+                    <% } %>
                 </div>
             </div>
         </div>
