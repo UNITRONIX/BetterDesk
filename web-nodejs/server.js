@@ -273,6 +273,11 @@ app.use((req, res, next) => {
         ? requestHasPermission(req, perm)
         : false;
     res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
+    // Error pages render inside the console shell when someone is signed in
+    // (views/errors). Pro accounts have no console access, so they get none.
+    res.locals.sessionUser = req.session?.userId && role && role !== 'pro'
+        ? req.session.user
+        : null;
     // Navigation for the sidebar and breadcrumb (lib/consoleNav.js)
     res.locals.consoleNav = (opts) => buildConsoleNav({
         can: res.locals.hasPermission,

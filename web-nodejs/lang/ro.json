@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Comutați bara laterală"
     },
     "errors": {
-        "forbidden_title": "Acces refuzat",
-        "forbidden_message": "Nu aveți permisiunea de a accesa această resursă.",
+        "forbidden_title": "Nu aveți acces la această pagină",
+        "forbidden_message": "Rolul dvs. nu include această pagină. Dacă aveți nevoie de ea pentru muncă, cereți unui administrator să acorde acces rolului dvs.",
         "not_found_title": "Pagina nu a fost găsită",
-        "not_found_message": "Pagina pe care o cauți nu există sau a fost mutată.",
-        "server_error_title": "Eroare de server",
-        "server_error_message": "Ceva a mers prost. Vă rugăm să încercați din nou mai târziu.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "not_found_message": "Verificați dacă adresa conține greșeli de scriere. Este posibil și ca pagina să fi fost mutată sau ștearsă.",
+        "server_error_title": "A apărut o eroare pe server",
+        "server_error_message": "Serverul nu a putut finaliza această cerere. Încercați din nou peste puțin timp.",
+        "go_home": "Mergeți la tabloul de bord",
+        "try_again": "Încercați din nou",
         "load_devices_failed": "Nu s-au încărcat dispozitivele",
         "load_key_failed": "Nu s-a încărcat cheia",
         "load_qr_failed": "Nu s-a încărcat QR",
@@ -1518,7 +1518,11 @@
         "server_error": "Eroare de server",
         "load_device_failed": "Nu s-a încărcat dispozitivul",
         "load_orgs_failed": "Nu s-au încărcat organizațiile",
-        "no_permission": "Nu aveți permisiunea să faceți acest lucru. Cereți-o unui administrator."
+        "no_permission": "Nu aveți permisiunea să faceți acest lucru. Cereți-o unui administrator.",
+        "signed_in_as": "Sunteți conectat ca {user} cu rolul {role}.",
+        "server_error_log": "Dacă se repetă, un administrator găsește detaliile în jurnalul serverului.",
+        "go_sign_in": "Mergeți la pagina de conectare",
+        "error_details": "Detaliile erorii"
     },
     "remote": {
         "title": "Desktop la distanță",

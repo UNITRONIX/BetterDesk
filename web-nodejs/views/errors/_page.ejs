@@ -1,0 +1,106 @@
+<%#
+    Shared error page for 403.ejs, 404.ejs and 500.ejs (local errorKind:
+    'forbidden' | 'not_found' | 'server_error').
+    Signed-in people get the page inside the console shell, so the navigation
+    stays; everyone else gets a standalone page with the same content.
+    Routes may pass title and message (guest links do); the generic English
+    message from the permission middleware is replaced by translated text.
+%>
+<%
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const who = (typeof user !== 'undefined' && user) || (typeof sessionUser !== 'undefined' && sessionUser) || null;
+    const signedIn = !!(who && who.role !== 'pro');
+
+    const GENERIC_MESSAGES = ['You do not have permission to access this resource'];
+    const routeMessage = errorKind === 'forbidden' && typeof message === 'string' && message && !GENERIC_MESSAGES.includes(message) ? message : '';
+    const routeTitle = routeMessage && typeof title === 'string' && title && title !== 'Forbidden' ? title : '';
+
+    let heading;
+    let text;
+    if (errorKind === 'forbidden') {
+        heading = routeTitle || _('errors.forbidden_title');
+        text = routeMessage || _('errors.forbidden_message');
+    } else if (errorKind === 'not_found') {
+        heading = _('errors.not_found_title');
+        text = _('errors.not_found_message');
+    } else {
+        heading = _('errors.server_error_title');
+        text = _('errors.server_error_message');
+    }
+
+    let note = '';
+    if (errorKind === 'forbidden' && !routeMessage && signedIn) {
+        const roleKey = 'users.role_' + who.role;
+        let roleLabel = _(roleKey);
+        if (!roleLabel || roleLabel === roleKey) roleLabel = String(who.role || '').replace(/_/g, ' ');
+        note = esc(_('errors.signed_in_as', { user: '\u0001', role: '\u0002' }))
+            .replace('\u0001', '<strong>' + esc(who.username) + '</strong>')
+            .replace('\u0002', esc(roleLabel));
+    } else if (errorKind === 'server_error') {
+        note = esc(_('errors.server_error_log'));
+    }
+
+    const showDetails = errorKind === 'server_error' && typeof error !== 'undefined' && error && process.env.NODE_ENV === 'development';
+
+    const homeLink = signedIn
+        ? '<a class="btn' + (errorKind === 'server_error' ? '' : ' btn-primary') + '" href="/">' + esc(_('errors.go_home')) + '</a>'
+        : '<a class="btn' + (errorKind === 'server_error' ? '' : ' btn-primary') + '" href="/login">' + esc(_('errors.go_sign_in')) + '</a>';
+    const retryLink = errorKind === 'server_error'
+        ? '<a class="btn btn-primary" href="" id="btn-retry">' + esc(_('errors.try_again')) + '</a>'
+        : '';
+
+    const errorBody =
+        '<div class="page error-page">' +
+            '<div class="page-head">' +
+                '<h1>' + esc(heading) + '</h1>' +
+                '<p class="page-description">' + esc(text) + '</p>' +
+            '</div>' +
+            '<div class="section error-next">' +
+                (note ? '<p class="error-note">' + note + '</p>' : '') +
+                (showDetails
+                    ? '<div><div class="code-block-head"><span class="code-block-title">' + esc(_('errors.error_details')) + '</span></div>' +
+                      '<pre class="code-block">' + esc(error.message || error) + '</pre></div>'
+                    : '') +
+                '<div class="page-actions">' + retryLink + homeLink + '</div>' +
+            '</div>' +
+        '</div>';
+
+    const themeMode = (typeof branding !== 'undefined' && branding && branding.themeMode) || 'system';
+    const dataTheme = themeMode === 'light' || themeMode === 'system' ? 'light' : 'dark';
+    const v = typeof cacheVersion !== 'undefined' ? cacheVersion : '';
+%>
+<% if (signedIn) { %>
+<%- include('../layouts/main', {
+    title: heading,
+    uiReworked: true,
+    pageStyles: ['ui/errors'],
+    pageScripts: [],
+    currentPage: 'error',
+    user: who,
+    body: errorBody
+}) %>
+<% } else { %>
+<!DOCTYPE html>
+<html lang="<%= typeof lang !== 'undefined' && lang ? lang : 'en' %>" dir="<%= typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr' %>" data-theme="<%= dataTheme %>" data-theme-mode="<%= themeMode %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title><%= heading %> - <%= appName %></title>
+    <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
+    <%- include('../partials/theme-head') %>
+    <link rel="preload" href="/fonts/AtkinsonHyperlegibleNext-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : v %>">
+    <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= v %>">
+    <link rel="stylesheet" href="/css/ui/base.css?v=<%= v %>">
+    <link rel="stylesheet" href="/css/ui/components.css?v=<%= v %>">
+    <link rel="stylesheet" href="/css/ui/errors.css?v=<%= v %>">
+</head>
+<body class="error-standalone">
+    <main class="error-main">
+        <p class="error-brand"><%= appName %></p>
+        <%- errorBody %>
+    </main>
+</body>
+</html>
+<% } %>

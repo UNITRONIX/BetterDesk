@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Skift sidebjælke"
     },
     "errors": {
-        "forbidden_title": "Adgang nægtet",
-        "forbidden_message": "Du har ikke tilladelse til at få adgang til denne ressource.",
-        "not_found_title": "Side ikke fundet",
-        "not_found_message": "Den side, du leder efter, findes ikke eller er blevet flyttet.",
-        "server_error_title": "Serverfejl",
-        "server_error_message": "Noget gik galt. Prøv venligst igen senere.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "forbidden_title": "Du har ikke adgang til denne side",
+        "forbidden_message": "Din rolle giver ikke adgang til denne side. Hvis du har brug for den i dit arbejde, så bed en administrator om at give din rolle adgang.",
+        "not_found_title": "Siden blev ikke fundet",
+        "not_found_message": "Kontrollér adressen for stavefejl. Siden kan også være flyttet eller fjernet.",
+        "server_error_title": "Der opstod en fejl på serveren",
+        "server_error_message": "Serveren kunne ikke gennemføre denne forespørgsel. Prøv igen om lidt.",
+        "go_home": "Gå til oversigten",
+        "try_again": "Prøv igen",
         "load_devices_failed": "Kunne ikke indlæse enheder",
         "load_key_failed": "Nøglen kunne ikke indlæses",
         "load_qr_failed": "Kunne ikke indlæse QR",
@@ -1518,7 +1518,11 @@
         "server_error": "Serverfejl",
         "load_device_failed": "Kunne ikke indlæse enheden",
         "load_orgs_failed": "Kunne ikke indlæse organisationer",
-        "no_permission": "Du har ikke tilladelse til dette. Spørg en administrator."
+        "no_permission": "Du har ikke tilladelse til dette. Spørg en administrator.",
+        "signed_in_as": "Du er logget ind som {user} med rollen {role}.",
+        "server_error_log": "Hvis det bliver ved, kan en administrator finde detaljerne i serverloggen.",
+        "go_sign_in": "Gå til login-siden",
+        "error_details": "Fejldetaljer"
     },
     "remote": {
         "title": "Fjernskrivebord",

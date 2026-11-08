@@ -1501,13 +1501,13 @@
         "toggle_sidebar": "Zwiń/rozwiń panel"
     },
     "errors": {
-        "forbidden_title": "Brak dostępu",
-        "forbidden_message": "Nie masz uprawnień do tego zasobu.",
+        "forbidden_title": "Nie masz dostępu do tej strony",
+        "forbidden_message": "Twoja rola nie obejmuje tej strony. Jeśli potrzebujesz jej w pracy, poproś administratora o nadanie dostępu Twojej roli.",
         "not_found_title": "Nie znaleziono strony",
-        "not_found_message": "Strona, której szukasz, nie istnieje lub została przeniesiona.",
-        "server_error_title": "Błąd serwera",
-        "server_error_message": "Coś poszło nie tak. Spróbuj ponownie później.",
-        "go_home": "Strona główna",
+        "not_found_message": "Sprawdź, czy w adresie nie ma literówki. Strona mogła też zostać przeniesiona lub usunięta.",
+        "server_error_title": "Coś poszło nie tak na serwerze",
+        "server_error_message": "Serwer nie mógł dokończyć tego żądania. Spróbuj ponownie za chwilę.",
+        "go_home": "Przejdź do panelu",
         "try_again": "Spróbuj ponownie",
         "load_devices_failed": "Nie udało się załadować urządzeń",
         "load_key_failed": "Nie udało się załadować klucza",
@@ -1530,7 +1530,11 @@
         "server_error": "Błąd serwera",
         "load_device_failed": "Nie udało się załadować urządzenia",
         "load_orgs_failed": "Nie udało się załadować organizacji",
-        "no_permission": "Nie masz uprawnień do tej czynności. Poproś administratora."
+        "no_permission": "Nie masz uprawnień do tej czynności. Poproś administratora.",
+        "signed_in_as": "Jesteś zalogowany jako {user} z rolą {role}.",
+        "server_error_log": "Jeśli to się powtarza, administrator znajdzie szczegóły w logu serwera.",
+        "go_sign_in": "Przejdź do strony logowania",
+        "error_details": "Szczegóły błędu"
     },
     "remote": {
         "title": "Pulpit Zdalny",

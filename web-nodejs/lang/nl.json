@@ -1483,13 +1483,13 @@
         "toggle_sidebar": "Zijbalk in-/uitschakelen"
     },
     "errors": {
-        "forbidden_title": "Toegang geweigerd",
-        "forbidden_message": "U heeft geen toestemming om deze pagina te bekijken.",
+        "forbidden_title": "U hebt geen toegang tot deze pagina",
+        "forbidden_message": "Uw rol omvat deze pagina niet. Hebt u hem nodig voor uw werk, vraag dan een beheerder om uw rol toegang te geven.",
         "not_found_title": "Pagina niet gevonden",
-        "not_found_message": "De pagina die u zoekt bestaat niet of is verplaatst.",
-        "server_error_title": "Serverfout",
-        "server_error_message": "Er is iets misgegaan. Probeer het later opnieuw.",
-        "go_home": "Naar startpagina",
+        "not_found_message": "Controleer het adres op typefouten. De pagina kan ook verplaatst of verwijderd zijn.",
+        "server_error_title": "Er ging iets mis op de server",
+        "server_error_message": "De server kon dit verzoek niet afronden. Probeer het zo opnieuw.",
+        "go_home": "Naar het overzicht",
         "try_again": "Opnieuw proberen",
         "load_devices_failed": "Laden van apparaten mislukt",
         "load_key_failed": "Laden van sleutel mislukt",
@@ -1512,7 +1512,11 @@
         "server_error": "Serverfout",
         "load_device_failed": "Laden van apparaat mislukt",
         "load_orgs_failed": "Organisaties konden niet worden geladen",
-        "no_permission": "U hebt geen toestemming om dit te doen. Vraag het een beheerder."
+        "no_permission": "U hebt geen toestemming om dit te doen. Vraag het een beheerder.",
+        "signed_in_as": "U bent aangemeld als {user} met de rol {role}.",
+        "server_error_log": "Blijft het gebeuren, dan vindt een beheerder de details in het serverlogboek.",
+        "go_sign_in": "Naar de aanmeldpagina",
+        "error_details": "Foutdetails"
     },
     "remote": {
         "title": "Extern bureaublad",

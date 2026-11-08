@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Vaihda sivupalkki"
     },
     "errors": {
-        "forbidden_title": "Pääsy kielletty",
-        "forbidden_message": "Sinulla ei ole lupaa käyttää tätä resurssia.",
-        "not_found_title": "Sivua ei löydy",
-        "not_found_message": "Etsimääsi sivua ei ole olemassa tai se on siirretty.",
-        "server_error_title": "Palvelinvirhe",
-        "server_error_message": "Jotain meni pieleen. Yritä myöhemmin uudelleen.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "forbidden_title": "Sinulla ei ole pääsyä tälle sivulle",
+        "forbidden_message": "Roolisi ei sisällä tätä sivua. Jos tarvitset sitä työssäsi, pyydä järjestelmänvalvojaa antamaan roolillesi pääsy.",
+        "not_found_title": "Sivua ei löytynyt",
+        "not_found_message": "Tarkista, ettei osoitteessa ole kirjoitusvirhettä. Sivu on voitu myös siirtää tai poistaa.",
+        "server_error_title": "Palvelimella tapahtui virhe",
+        "server_error_message": "Palvelin ei voinut suorittaa tätä pyyntöä loppuun. Yritä hetken kuluttua uudelleen.",
+        "go_home": "Siirry kojelautaan",
+        "try_again": "Yritä uudelleen",
         "load_devices_failed": "Laitteiden lataaminen epäonnistui",
         "load_key_failed": "Avaimen lataaminen epäonnistui",
         "load_qr_failed": "QR-koodin lataaminen epäonnistui",
@@ -1518,7 +1518,11 @@
         "server_error": "Palvelinvirhe",
         "load_device_failed": "Laitteen lataaminen epäonnistui",
         "load_orgs_failed": "Organisaatioiden lataaminen epäonnistui",
-        "no_permission": "Sinulla ei ole oikeutta tähän. Pyydä ylläpitäjää."
+        "no_permission": "Sinulla ei ole oikeutta tähän. Pyydä ylläpitäjää.",
+        "signed_in_as": "Olet kirjautunut käyttäjänä {user} roolilla {role}.",
+        "server_error_log": "Jos tämä toistuu, järjestelmänvalvoja löytää tiedot palvelimen lokista.",
+        "go_sign_in": "Siirry kirjautumissivulle",
+        "error_details": "Virheen tiedot"
     },
     "remote": {
         "title": "Etätyöpöytä",

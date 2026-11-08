@@ -1505,13 +1505,13 @@
         "toggle_sidebar": "切換側邊欄"
     },
     "errors": {
-        "forbidden_title": "訪問被拒絕",
-        "forbidden_message": "您沒有權限訪問此資源。",
-        "not_found_title": "頁面未找到",
-        "not_found_message": "您要查找的頁面不存在或已被移動。",
-        "server_error_title": "服務器錯誤",
-        "server_error_message": "出現了問題，請稍後重試。",
-        "go_home": "返回首頁",
+        "forbidden_title": "您沒有存取此頁面的權限",
+        "forbidden_message": "您的角色不包含此頁面。如果工作需要，請向管理員申請為您的角色開放存取權限。",
+        "not_found_title": "找不到頁面",
+        "not_found_message": "請檢查網址是否有輸入錯誤。此頁面也可能已被移動或刪除。",
+        "server_error_title": "伺服器發生錯誤",
+        "server_error_message": "伺服器無法完成此請求。請稍後再試。",
+        "go_home": "前往儀表板",
         "try_again": "重試",
         "load_devices_failed": "加載設備失敗",
         "load_key_failed": "加載密鑰失敗",
@@ -1534,7 +1534,11 @@
         "server_error": "服務器錯誤",
         "load_device_failed": "加載設備失敗",
         "load_orgs_failed": "加載組織失敗",
-        "no_permission": "您沒有執行此操作的權限。請聯絡管理員。"
+        "no_permission": "您沒有執行此操作的權限。請聯絡管理員。",
+        "signed_in_as": "您目前以 {user} 的身分登入，角色為 {role}。",
+        "server_error_log": "如果持續發生，管理員可以在伺服器日誌中查看詳細資訊。",
+        "go_sign_in": "前往登入頁面",
+        "error_details": "錯誤詳細資訊"
     },
     "remote": {
         "title": "遠程桌面",

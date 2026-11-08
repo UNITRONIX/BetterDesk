@@ -1,0 +1,30 @@
+/*
+ * Error pages (views/errors). Inside the console shell they use the normal
+ * page column; the standalone version (not signed in) puts the same column
+ * on the page background with the product name above it.
+ */
+
+.error-page {
+    max-width: var(--measure);
+}
+
+.error-note {
+    max-width: var(--measure);
+}
+
+.error-standalone .error-main {
+    max-width: calc(var(--measure) + 2 * var(--space-4));
+    margin: 0 auto;
+    padding: 12vh var(--space-4) var(--space-6);
+}
+
+.error-brand {
+    margin-bottom: var(--space-6);
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .error-standalone .error-main {
+        padding-top: var(--space-6);
+    }
+}

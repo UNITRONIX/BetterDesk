@@ -1483,13 +1483,13 @@
         "toggle_sidebar": "Alternar barra lateral"
     },
     "errors": {
-        "forbidden_title": "Acceso denegado",
-        "forbidden_message": "No tiene permiso para acceder a esta página.",
+        "forbidden_title": "No tiene acceso a esta página",
+        "forbidden_message": "Su rol no incluye esta página. Si la necesita para su trabajo, pida a un administrador que dé acceso a su rol.",
         "not_found_title": "Página no encontrada",
-        "not_found_message": "La página que busca no existe o ha sido movida.",
-        "server_error_title": "Error del servidor",
-        "server_error_message": "Algo salió mal. Inténtelo de nuevo más tarde.",
-        "go_home": "Ir al inicio",
+        "not_found_message": "Compruebe que la dirección no tenga errores de escritura. La página también puede haberse movido o eliminado.",
+        "server_error_title": "Algo salió mal en el servidor",
+        "server_error_message": "El servidor no pudo completar esta solicitud. Vuelva a intentarlo en un momento.",
+        "go_home": "Ir al panel principal",
         "try_again": "Reintentar",
         "load_devices_failed": "Error al cargar dispositivos",
         "load_key_failed": "Error al cargar la clave",
@@ -1512,7 +1512,11 @@
         "server_error": "Error del servidor",
         "load_device_failed": "No se pudieron cargar los detalles del dispositivo",
         "load_orgs_failed": "No se pudieron cargar las organizaciones",
-        "no_permission": "No tiene permiso para hacer esto. Pídalo a un administrador."
+        "no_permission": "No tiene permiso para hacer esto. Pídalo a un administrador.",
+        "signed_in_as": "Ha iniciado sesión como {user} con el rol {role}.",
+        "server_error_log": "Si sigue ocurriendo, un administrador puede ver los detalles en el registro del servidor.",
+        "go_sign_in": "Ir a la página de inicio de sesión",
+        "error_details": "Detalles del error"
     },
     "remote": {
         "title": "Panel",

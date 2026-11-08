@@ -1483,14 +1483,14 @@
         "toggle_sidebar": "サイドバーの切り替え"
     },
     "errors": {
-        "forbidden_title": "アクセスが拒否されました",
-        "forbidden_message": "このリソースにアクセスする権限がありません。",
+        "forbidden_title": "このページへのアクセス権がありません",
+        "forbidden_message": "あなたのロールにはこのページが含まれていません。業務で必要な場合は、管理者にロールへのアクセス権の付与を依頼してください。",
         "not_found_title": "ページが見つかりません",
-        "not_found_message": "お探しのページは存在しないか、移動されました。",
-        "server_error_title": "サーバーエラー",
-        "server_error_message": "何か問題が発生しました。後でもう一度試してください。",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "not_found_message": "アドレスに入力ミスがないか確認してください。ページが移動または削除された可能性もあります。",
+        "server_error_title": "サーバーでエラーが発生しました",
+        "server_error_message": "サーバーはこのリクエストを完了できませんでした。しばらくしてからもう一度お試しください。",
+        "go_home": "ダッシュボードへ移動",
+        "try_again": "再試行",
         "load_devices_failed": "デバイスのロードに失敗しました",
         "load_key_failed": "キーのロードに失敗しました",
         "load_qr_failed": "QRの読み込みに失敗しました",
@@ -1512,7 +1512,11 @@
         "server_error": "サーバーエラー",
         "load_device_failed": "デバイスの読み込みに失敗しました",
         "load_orgs_failed": "組織のロードに失敗しました",
-        "no_permission": "この操作を行う権限がありません。管理者に依頼してください。"
+        "no_permission": "この操作を行う権限がありません。管理者に依頼してください。",
+        "signed_in_as": "{user} として {role} ロールでサインインしています。",
+        "server_error_log": "繰り返し発生する場合は、管理者がサーバーログで詳細を確認できます。",
+        "go_sign_in": "サインインページへ移動",
+        "error_details": "エラーの詳細"
     },
     "remote": {
         "title": "リモートデスクトップ",

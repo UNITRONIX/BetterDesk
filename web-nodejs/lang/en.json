@@ -1509,14 +1509,14 @@
         "toggle_sidebar": "Toggle sidebar"
     },
     "errors": {
-        "forbidden_title": "Access Denied",
-        "forbidden_message": "You do not have permission to access this resource.",
-        "not_found_title": "Page Not Found",
-        "not_found_message": "The page you're looking for doesn't exist or has been moved.",
-        "server_error_title": "Server Error",
-        "server_error_message": "Something went wrong. Please try again later.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "forbidden_title": "You don't have access to this page",
+        "forbidden_message": "Your role does not include this page. If you need it for your work, ask an administrator to give your role access.",
+        "not_found_title": "Page not found",
+        "not_found_message": "Check the address for typos. The page may also have been moved or removed.",
+        "server_error_title": "Something went wrong on the server",
+        "server_error_message": "The server could not finish this request. Try again in a moment.",
+        "go_home": "Go to the overview",
+        "try_again": "Try again",
         "load_devices_failed": "Failed to load devices",
         "load_key_failed": "Failed to load key",
         "load_qr_failed": "Failed to load QR",
@@ -1538,7 +1538,11 @@
         "server_error": "Server error",
         "load_device_failed": "Failed to load device",
         "load_orgs_failed": "Failed to load organizations",
-        "no_permission": "You don't have permission to do this. Ask an administrator."
+        "no_permission": "You don't have permission to do this. Ask an administrator.",
+        "signed_in_as": "You are signed in as {user} with the role {role}.",
+        "server_error_log": "If it keeps happening, an administrator can find the details in the server log.",
+        "go_sign_in": "Go to the sign-in page",
+        "error_details": "Error details"
     },
     "remote": {
         "title": "Remote Desktop",

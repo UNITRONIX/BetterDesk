@@ -1483,13 +1483,13 @@
         "toggle_sidebar": "Seitenleiste umschalten"
     },
     "errors": {
-        "forbidden_title": "Zugriff verweigert",
-        "forbidden_message": "Sie haben keine Berechtigung, auf diese Seite zuzugreifen.",
+        "forbidden_title": "Sie haben keinen Zugriff auf diese Seite",
+        "forbidden_message": "Ihre Rolle umfasst diese Seite nicht. Wenn Sie sie für Ihre Arbeit brauchen, bitten Sie einen Administrator, Ihrer Rolle den Zugriff zu geben.",
         "not_found_title": "Seite nicht gefunden",
-        "not_found_message": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
-        "server_error_title": "Serverfehler",
-        "server_error_message": "Etwas ist schiefgelaufen. Bitte versuchen Sie es später erneut.",
-        "go_home": "Zur Startseite",
+        "not_found_message": "Prüfen Sie die Adresse auf Tippfehler. Die Seite kann auch verschoben oder entfernt worden sein.",
+        "server_error_title": "Auf dem Server ist ein Fehler aufgetreten",
+        "server_error_message": "Der Server konnte diese Anfrage nicht abschließen. Versuchen Sie es gleich noch einmal.",
+        "go_home": "Zur Übersicht",
         "try_again": "Erneut versuchen",
         "load_devices_failed": "Geräte konnten nicht geladen werden",
         "load_key_failed": "Schlüssel konnte nicht geladen werden",
@@ -1512,7 +1512,11 @@
         "server_error": "Serverfehler",
         "load_device_failed": "Gerätedetails konnten nicht geladen werden",
         "load_orgs_failed": "Organisationen konnten nicht geladen werden",
-        "no_permission": "Sie haben keine Berechtigung dafür. Wenden Sie sich an einen Administrator."
+        "no_permission": "Sie haben keine Berechtigung dafür. Wenden Sie sich an einen Administrator.",
+        "signed_in_as": "Sie sind als {user} mit der Rolle {role} angemeldet.",
+        "server_error_log": "Wenn das wieder passiert, findet ein Administrator die Einzelheiten im Serverprotokoll.",
+        "go_sign_in": "Zur Anmeldung",
+        "error_details": "Fehlerdetails"
     },
     "remote": {
         "title": "Dashboard",

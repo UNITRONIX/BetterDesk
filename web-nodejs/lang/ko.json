@@ -1483,14 +1483,14 @@
         "toggle_sidebar": "사이드바 전환"
     },
     "errors": {
-        "forbidden_title": "액세스가 거부되었습니다.",
-        "forbidden_message": "이 리소스에 액세스할 수 있는 권한이 없습니다.",
-        "not_found_title": "페이지를 찾을 수 없음",
-        "not_found_message": "찾으시는 페이지가 존재하지 않거나 이동되었습니다.",
-        "server_error_title": "서버 오류",
-        "server_error_message": "문제가 발생했습니다. 나중에 다시 시도해 주세요.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "forbidden_title": "이 페이지에 대한 접근 권한이 없습니다",
+        "forbidden_message": "현재 역할에는 이 페이지가 포함되어 있지 않습니다. 업무에 필요하다면 관리자에게 역할에 접근 권한을 추가해 달라고 요청하세요.",
+        "not_found_title": "페이지를 찾을 수 없습니다",
+        "not_found_message": "주소에 오타가 없는지 확인하세요. 페이지가 이동되었거나 삭제되었을 수도 있습니다.",
+        "server_error_title": "서버에서 문제가 발생했습니다",
+        "server_error_message": "서버가 이 요청을 완료하지 못했습니다. 잠시 후 다시 시도하세요.",
+        "go_home": "대시보드로 이동",
+        "try_again": "다시 시도",
         "load_devices_failed": "기기를 로드하지 못했습니다.",
         "load_key_failed": "키를 로드하지 못했습니다.",
         "load_qr_failed": "QR을 로드하지 못했습니다.",
@@ -1512,7 +1512,11 @@
         "server_error": "서버 오류",
         "load_device_failed": "장치를 불러오지 못했습니다",
         "load_orgs_failed": "조직을 로드하지 못했��니다.",
-        "no_permission": "이 작업을 할 권한이 없습니다. 관리자에게 문의하세요."
+        "no_permission": "이 작업을 할 권한이 없습니다. 관리자에게 문의하세요.",
+        "signed_in_as": "{user} 계정, {role} 역할로 로그인되어 있습니다.",
+        "server_error_log": "계속 발생하면 관리자가 서버 로그에서 자세한 내용을 확인할 수 있습니다.",
+        "go_sign_in": "로그인 페이지로 이동",
+        "error_details": "오류 세부 정보"
     },
     "remote": {
         "title": "원격 데스크톱",

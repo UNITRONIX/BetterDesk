@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Kenar çubuğunu aç/kapat"
     },
     "errors": {
-        "forbidden_title": "Erişim Reddedildi",
-        "forbidden_message": "Bu kaynağa erişim izniniz yok.",
-        "not_found_title": "Sayfa Bulunamadı",
-        "not_found_message": "Aradığınız sayfa mevcut değil veya taşınmış.",
-        "server_error_title": "Sunucu Hatası",
-        "server_error_message": "Bir şeyler ters gitti. Lütfen daha sonra tekrar deneyin.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "forbidden_title": "Bu sayfaya erişiminiz yok",
+        "forbidden_message": "Rolünüz bu sayfayı kapsamıyor. İşiniz için gerekiyorsa bir yöneticiden rolünüze erişim vermesini isteyin.",
+        "not_found_title": "Sayfa bulunamadı",
+        "not_found_message": "Adreste yazım hatası olup olmadığını kontrol edin. Sayfa taşınmış veya kaldırılmış da olabilir.",
+        "server_error_title": "Sunucuda bir sorun oluştu",
+        "server_error_message": "Sunucu bu isteği tamamlayamadı. Biraz sonra tekrar deneyin.",
+        "go_home": "Kontrol paneline git",
+        "try_again": "Tekrar dene",
         "load_devices_failed": "Cihazlar yüklenemedi",
         "load_key_failed": "Anahtar yüklenemedi",
         "load_qr_failed": "QR yüklenemedi",
@@ -1518,7 +1518,11 @@
         "server_error": "Sunucu hatası",
         "load_device_failed": "Cihaz yüklenemedi",
         "load_orgs_failed": "Kuruluşlar yüklenemedi",
-        "no_permission": "Bunu yapma izniniz yok. Bir yöneticiye başvurun."
+        "no_permission": "Bunu yapma izniniz yok. Bir yöneticiye başvurun.",
+        "signed_in_as": "{user} olarak, {role} rolüyle oturum açtınız.",
+        "server_error_log": "Bu tekrarlanırsa bir yönetici ayrıntıları sunucu günlüğünde bulabilir.",
+        "go_sign_in": "Oturum açma sayfasına git",
+        "error_details": "Hata ayrıntıları"
     },
     "remote": {
         "title": "Uzak Masaüstü",

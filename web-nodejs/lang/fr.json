@@ -1505,13 +1505,13 @@
         "toggle_sidebar": "Basculer la barre latérale"
     },
     "errors": {
-        "forbidden_title": "Accès refusé",
-        "forbidden_message": "Vous n'avez pas la permission d'accéder à cette page.",
-        "not_found_title": "Page non trouvée",
-        "not_found_message": "La page que vous recherchez n'existe pas ou a été déplacée.",
-        "server_error_title": "Erreur serveur",
-        "server_error_message": "Un problème est survenu. Veuillez réessayer plus tard.",
-        "go_home": "Accueil",
+        "forbidden_title": "Vous n'avez pas accès à cette page",
+        "forbidden_message": "Votre rôle n'inclut pas cette page. Si vous en avez besoin pour votre travail, demandez à un administrateur de donner l'accès à votre rôle.",
+        "not_found_title": "Page introuvable",
+        "not_found_message": "Vérifiez que l'adresse ne contient pas de faute de frappe. La page a peut-être aussi été déplacée ou supprimée.",
+        "server_error_title": "Une erreur s'est produite sur le serveur",
+        "server_error_message": "Le serveur n'a pas pu terminer cette requête. Réessayez dans un instant.",
+        "go_home": "Aller au tableau de bord",
         "try_again": "Réessayer",
         "load_devices_failed": "Échec du chargement des appareils",
         "load_key_failed": "Échec du chargement de la clé",
@@ -1534,7 +1534,11 @@
         "server_error": "Erreur du serveur",
         "load_device_failed": "Impossible de charger les détails de l'appareil",
         "load_orgs_failed": "Failed to load organizations",
-        "no_permission": "Vous n’avez pas l’autorisation de faire ceci. Demandez à un administrateur."
+        "no_permission": "Vous n’avez pas l’autorisation de faire ceci. Demandez à un administrateur.",
+        "signed_in_as": "Vous êtes connecté en tant que {user} avec le rôle {role}.",
+        "server_error_log": "Si cela se reproduit, un administrateur trouvera les détails dans le journal du serveur.",
+        "go_sign_in": "Aller à la page de connexion",
+        "error_details": "Détails de l'erreur"
     },
     "remote": {
         "title": "Tableau de bord",

@@ -1483,13 +1483,13 @@
         "toggle_sidebar": "Zobrazit/skrýt boční panel"
     },
     "errors": {
-        "forbidden_title": "Přístup odepřen",
-        "forbidden_message": "Nemáte oprávnění k přístupu k tomuto prostředku.",
-        "not_found_title": "Stránka nebyla nalezena",
-        "not_found_message": "Stránka, kterou hledáte, neexistuje nebo byla přesunuta.",
-        "server_error_title": "Chyba serveru",
-        "server_error_message": "Něco se pokazilo. Zkuste to prosím znovu později.",
-        "go_home": "Přejít na domů",
+        "forbidden_title": "K této stránce nemáte přístup",
+        "forbidden_message": "Vaše role tuto stránku nezahrnuje. Pokud ji potřebujete k práci, požádejte administrátora, aby vaší roli přístup udělil.",
+        "not_found_title": "Stránka nenalezena",
+        "not_found_message": "Zkontrolujte, zda v adrese není překlep. Stránka mohla být také přesunuta nebo odstraněna.",
+        "server_error_title": "Na serveru se něco pokazilo",
+        "server_error_message": "Server nemohl tento požadavek dokončit. Zkuste to za chvíli znovu.",
+        "go_home": "Přejít na nástěnku",
         "try_again": "Zkusit znovu",
         "load_devices_failed": "Nepodařilo se načíst zařízení",
         "load_key_failed": "Nepodařilo se načíst klíč",
@@ -1512,7 +1512,11 @@
         "server_error": "Chyba serveru",
         "load_device_failed": "Nepodařilo se načíst zařízení",
         "load_orgs_failed": "Nepodařilo se načíst organizace",
-        "no_permission": "K této akci nemáte oprávnění. Obraťte se na správce."
+        "no_permission": "K této akci nemáte oprávnění. Obraťte se na správce.",
+        "signed_in_as": "Jste přihlášeni jako {user} s rolí {role}.",
+        "server_error_log": "Pokud se to opakuje, administrátor najde podrobnosti v protokolu serveru.",
+        "go_sign_in": "Přejít na přihlášení",
+        "error_details": "Podrobnosti chyby"
     },
     "remote": {
         "title": "Vzdálená plocha",

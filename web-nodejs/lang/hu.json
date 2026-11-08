@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Oldalsáv váltása"
     },
     "errors": {
-        "forbidden_title": "Hozzáférés megtagadva",
-        "forbidden_message": "Nincs engedélye az erőforrás elérésére.",
+        "forbidden_title": "Nincs hozzáférése ehhez az oldalhoz",
+        "forbidden_message": "A szerepköre nem tartalmazza ezt az oldalt. Ha szüksége van rá a munkájához, kérje meg egy rendszergazdát, hogy adjon hozzáférést a szerepkörének.",
         "not_found_title": "Az oldal nem található",
-        "not_found_message": "A keresett oldal nem létezik, vagy el lett helyezve.",
-        "server_error_title": "Szerver hiba",
-        "server_error_message": "Valami elromlott. Kérjük, próbálja újra később.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "not_found_message": "Ellenőrizze, nincs-e elírás a címben. Az oldalt áthelyezhették vagy törölhették is.",
+        "server_error_title": "Hiba történt a szerveren",
+        "server_error_message": "A szerver nem tudta befejezni ezt a kérést. Próbálja újra egy kis idő múlva.",
+        "go_home": "Ugrás az irányítópultra",
+        "try_again": "Újrapróbálás",
         "load_devices_failed": "Nem sikerült betölteni az eszközöket",
         "load_key_failed": "Nem sikerült betölteni a kulcsot",
         "load_qr_failed": "Nem sikerült betölteni a QR-kódot",
@@ -1518,7 +1518,11 @@
         "server_error": "Szerver hiba",
         "load_device_failed": "Nem sikerült betölteni az eszközt",
         "load_orgs_failed": "Nem sikerült betölteni a szervezeteket",
-        "no_permission": "Ehhez nincs jogosultsága. Forduljon egy rendszergazdához."
+        "no_permission": "Ehhez nincs jogosultsága. Forduljon egy rendszergazdához.",
+        "signed_in_as": "{user} felhasználóként van bejelentkezve, {role} szerepkörrel.",
+        "server_error_log": "Ha ez ismétlődik, egy rendszergazda a szervernaplóban megtalálja a részleteket.",
+        "go_sign_in": "Ugrás a bejelentkezési oldalra",
+        "error_details": "Hiba részletei"
     },
     "remote": {
         "title": "Távoli asztal",

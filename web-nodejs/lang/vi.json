@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Chuyển đổi thanh bên"
     },
     "errors": {
-        "forbidden_title": "Truy cập bị từ chối",
-        "forbidden_message": "Bạn không có quyền truy cập tài nguyên này.",
+        "forbidden_title": "Bạn không có quyền truy cập trang này",
+        "forbidden_message": "Vai trò của bạn không bao gồm trang này. Nếu cần trang này cho công việc, hãy nhờ quản trị viên cấp quyền truy cập cho vai trò của bạn.",
         "not_found_title": "Không tìm thấy trang",
-        "not_found_message": "Trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.",
-        "server_error_title": "Lỗi máy chủ",
-        "server_error_message": "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "not_found_message": "Hãy kiểm tra xem địa chỉ có gõ sai không. Trang cũng có thể đã bị di chuyển hoặc xóa.",
+        "server_error_title": "Đã xảy ra lỗi trên máy chủ",
+        "server_error_message": "Máy chủ không thể hoàn tất yêu cầu này. Hãy thử lại sau giây lát.",
+        "go_home": "Đến trang tổng quan",
+        "try_again": "Thử lại",
         "load_devices_failed": "Không tải được thiết bị",
         "load_key_failed": "Không thể tải khóa",
         "load_qr_failed": "Không tải được QR",
@@ -1518,7 +1518,11 @@
         "server_error": "Lỗi máy chủ",
         "load_device_failed": "Không tải được thiết bị",
         "load_orgs_failed": "Không tải được tổ chức",
-        "no_permission": "Bạn không có quyền làm việc này. Hãy hỏi quản trị viên."
+        "no_permission": "Bạn không có quyền làm việc này. Hãy hỏi quản trị viên.",
+        "signed_in_as": "Bạn đang đăng nhập với tên {user}, vai trò {role}.",
+        "server_error_log": "Nếu lỗi tiếp tục xảy ra, quản trị viên có thể xem chi tiết trong nhật ký máy chủ.",
+        "go_sign_in": "Đến trang đăng nhập",
+        "error_details": "Chi tiết lỗi"
     },
     "remote": {
         "title": "Máy tính để bàn từ xa",

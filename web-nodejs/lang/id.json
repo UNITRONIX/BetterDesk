@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Alihkan bilah sisi"
     },
     "errors": {
-        "forbidden_title": "Akses Ditolak",
-        "forbidden_message": "Anda tidak memiliki izin untuk mengakses sumber daya ini.",
-        "not_found_title": "Halaman Tidak Ditemukan",
-        "not_found_message": "Halaman yang Anda cari tidak ada atau telah dipindahkan.",
-        "server_error_title": "Kesalahan Server",
-        "server_error_message": "Ada yang tidak beres. Silakan coba lagi nanti.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "forbidden_title": "Anda tidak memiliki akses ke halaman ini",
+        "forbidden_message": "Peran Anda tidak mencakup halaman ini. Jika Anda membutuhkannya untuk pekerjaan, minta administrator memberi akses ke peran Anda.",
+        "not_found_title": "Halaman tidak ditemukan",
+        "not_found_message": "Periksa apakah ada salah ketik di alamat. Halaman ini mungkin juga sudah dipindahkan atau dihapus.",
+        "server_error_title": "Terjadi kesalahan di server",
+        "server_error_message": "Server tidak dapat menyelesaikan permintaan ini. Coba lagi sebentar lagi.",
+        "go_home": "Buka dasbor",
+        "try_again": "Coba lagi",
         "load_devices_failed": "Gagal memuat perangkat",
         "load_key_failed": "Gagal memuat kunci",
         "load_qr_failed": "Gagal memuat QR",
@@ -1518,7 +1518,11 @@
         "server_error": "Kesalahan server",
         "load_device_failed": "Gagal memuat perangkat",
         "load_orgs_failed": "Gagal memuat organisasi",
-        "no_permission": "Anda tidak punya izin untuk melakukan ini. Minta bantuan administrator."
+        "no_permission": "Anda tidak punya izin untuk melakukan ini. Minta bantuan administrator.",
+        "signed_in_as": "Anda masuk sebagai {user} dengan peran {role}.",
+        "server_error_log": "Jika terus terjadi, administrator dapat melihat detailnya di log server.",
+        "go_sign_in": "Buka halaman masuk",
+        "error_details": "Detail kesalahan"
     },
     "remote": {
         "title": "Desktop Jarak Jauh",

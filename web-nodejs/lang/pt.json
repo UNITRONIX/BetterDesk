@@ -1483,13 +1483,13 @@
         "toggle_sidebar": "Alternar barra lateral"
     },
     "errors": {
-        "forbidden_title": "Acesso negado",
-        "forbidden_message": "Não tem permissão para ver esta página.",
+        "forbidden_title": "Você não tem acesso a esta página",
+        "forbidden_message": "A sua função não inclui esta página. Se precisar dela para o seu trabalho, peça a um administrador para dar acesso à sua função.",
         "not_found_title": "Página não encontrada",
-        "not_found_message": "A página que procura não existe ou foi movida.",
-        "server_error_title": "Erro do servidor",
-        "server_error_message": "Algo correu mal. Tente novamente mais tarde.",
-        "go_home": "Ir para a página inicial",
+        "not_found_message": "Verifique se o endereço tem erros de digitação. A página também pode ter sido movida ou removida.",
+        "server_error_title": "Algo deu errado no servidor",
+        "server_error_message": "O servidor não conseguiu concluir esta solicitação. Tente novamente daqui a pouco.",
+        "go_home": "Ir para o painel",
         "try_again": "Tentar novamente",
         "load_devices_failed": "Falha ao carregar dispositivos",
         "load_key_failed": "Falha ao carregar chave",
@@ -1512,7 +1512,11 @@
         "server_error": "Erro do servidor",
         "load_device_failed": "Falha ao carregar dispositivo",
         "load_orgs_failed": "Não foi possível carregar organizações",
-        "no_permission": "Não tem permissão para fazer isto. Peça a um administrador."
+        "no_permission": "Não tem permissão para fazer isto. Peça a um administrador.",
+        "signed_in_as": "Você está conectado como {user} com a função {role}.",
+        "server_error_log": "Se continuar acontecendo, um administrador encontra os detalhes no log do servidor.",
+        "go_sign_in": "Ir para a página de entrada",
+        "error_details": "Detalhes do erro"
     },
     "remote": {
         "title": "Ambiente de trabalho remoto",

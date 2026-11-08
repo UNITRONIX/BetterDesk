@@ -1483,13 +1483,13 @@
         "toggle_sidebar": "切换侧边栏"
     },
     "errors": {
-        "forbidden_title": "访问被拒绝",
-        "forbidden_message": "您没有权限访问此资源。",
-        "not_found_title": "页面未找到",
-        "not_found_message": "您要查找的页面不存在或已被移动。",
-        "server_error_title": "服务器错误",
-        "server_error_message": "出现了问题，请稍后重试。",
-        "go_home": "返回首页",
+        "forbidden_title": "您没有访问此页面的权限",
+        "forbidden_message": "您的角色不包含此页面。如果工作需要，请向管理员申请为您的角色开通访问权限。",
+        "not_found_title": "找不到页面",
+        "not_found_message": "请检查地址是否有拼写错误。该页面也可能已被移动或删除。",
+        "server_error_title": "服务器出错了",
+        "server_error_message": "服务器无法完成此请求。请稍后重试。",
+        "go_home": "前往仪表板",
         "try_again": "重试",
         "load_devices_failed": "加载设备失败",
         "load_key_failed": "加载密钥失败",
@@ -1512,7 +1512,11 @@
         "server_error": "服务器错误",
         "load_device_failed": "加载设备失败",
         "load_orgs_failed": "加载组织失败",
-        "no_permission": "您没有执行此操作的权限。请联系管理员。"
+        "no_permission": "您没有执行此操作的权限。请联系管理员。",
+        "signed_in_as": "您当前以 {user} 的身份登录，角色为 {role}。",
+        "server_error_log": "如果问题持续出现，管理员可以在服务器日志中查看详细信息。",
+        "go_sign_in": "前往登录页面",
+        "error_details": "错误详情"
     },
     "remote": {
         "title": "远程桌面",

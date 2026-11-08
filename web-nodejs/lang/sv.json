@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Växla sidofältet"
     },
     "errors": {
-        "forbidden_title": "Åtkomst nekad",
-        "forbidden_message": "Du har inte behörighet att komma åt den här resursen.",
+        "forbidden_title": "Du har inte åtkomst till den här sidan",
+        "forbidden_message": "Din roll omfattar inte den här sidan. Om du behöver den i ditt arbete, be en administratör ge din roll åtkomst.",
         "not_found_title": "Sidan hittades inte",
-        "not_found_message": "Sidan du letar efter finns inte eller har flyttats.",
-        "server_error_title": "Serverfel",
-        "server_error_message": "Något gick fel. Försök igen senare.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "not_found_message": "Kontrollera att adressen inte har något stavfel. Sidan kan också ha flyttats eller tagits bort.",
+        "server_error_title": "Något gick fel på servern",
+        "server_error_message": "Servern kunde inte slutföra den här begäran. Försök igen om en stund.",
+        "go_home": "Gå till instrumentbrädan",
+        "try_again": "Försök igen",
         "load_devices_failed": "Det gick inte att läsa in enheter",
         "load_key_failed": "Det gick inte att ladda nyckeln",
         "load_qr_failed": "Det gick inte att läsa in QR",
@@ -1518,7 +1518,11 @@
         "server_error": "Serverfel",
         "load_device_failed": "Det gick inte att ladda enheten",
         "load_orgs_failed": "Det gick inte att läsa in organisationer",
-        "no_permission": "Du har inte behörighet att göra detta. Fråga en administratör."
+        "no_permission": "Du har inte behörighet att göra detta. Fråga en administratör.",
+        "signed_in_as": "Du är inloggad som {user} med rollen {role}.",
+        "server_error_log": "Om det fortsätter kan en administratör hitta detaljerna i serverloggen.",
+        "go_sign_in": "Gå till inloggningssidan",
+        "error_details": "Felinformation"
     },
     "remote": {
         "title": "Fjärrskrivbord",

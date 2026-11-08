@@ -1489,14 +1489,14 @@
         "toggle_sidebar": "Bytt sidefelt"
     },
     "errors": {
-        "forbidden_title": "Tilgang nektet",
-        "forbidden_message": "Du har ikke tillatelse til å få tilgang til denne ressursen.",
-        "not_found_title": "Siden ikke funnet",
-        "not_found_message": "Siden du leter etter eksisterer ikke eller har blitt flyttet.",
-        "server_error_title": "Serverfeil",
-        "server_error_message": "Noe gikk galt. Vennligst prøv igjen senere.",
-        "go_home": "Go Home",
-        "try_again": "Try Again",
+        "forbidden_title": "Du har ikke tilgang til denne siden",
+        "forbidden_message": "Rollen din omfatter ikke denne siden. Hvis du trenger den i arbeidet ditt, be en administrator om å gi rollen din tilgang.",
+        "not_found_title": "Fant ikke siden",
+        "not_found_message": "Sjekk adressen for skrivefeil. Siden kan også være flyttet eller fjernet.",
+        "server_error_title": "Noe gikk galt på serveren",
+        "server_error_message": "Serveren kunne ikke fullføre denne forespørselen. Prøv igjen om litt.",
+        "go_home": "Gå til dashbordet",
+        "try_again": "Prøv igjen",
         "load_devices_failed": "Kunne ikke laste inn enheter",
         "load_key_failed": "Kunne ikke laste inn nøkkelen",
         "load_qr_failed": "Kunne ikke laste inn QR",
@@ -1518,7 +1518,11 @@
         "server_error": "Serverfeil",
         "load_device_failed": "Kunne ikke laste inn enheten",
         "load_orgs_failed": "Kunne ikke laste inn organisasjoner",
-        "no_permission": "Du har ikke tillatelse til dette. Spør en administrator."
+        "no_permission": "Du har ikke tillatelse til dette. Spør en administrator.",
+        "signed_in_as": "Du er logget på som {user} med rollen {role}.",
+        "server_error_log": "Hvis det fortsetter, finner en administrator detaljene i serverloggen.",
+        "go_sign_in": "Gå til påloggingssiden",
+        "error_details": "Feildetaljer"
     },
     "remote": {
         "title": "Eksternt skrivebord",

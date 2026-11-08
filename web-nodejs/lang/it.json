@@ -1483,13 +1483,13 @@
         "toggle_sidebar": "Attiva/disattiva barra laterale"
     },
     "errors": {
-        "forbidden_title": "Accesso negato",
-        "forbidden_message": "Non hai i permessi per accedere a questa pagina.",
+        "forbidden_title": "Non ha accesso a questa pagina",
+        "forbidden_message": "Il suo ruolo non include questa pagina. Se le serve per il lavoro, chieda a un amministratore di dare accesso al suo ruolo.",
         "not_found_title": "Pagina non trovata",
-        "not_found_message": "La pagina che cerchi non esiste o è stata spostata.",
-        "server_error_title": "Errore del server",
-        "server_error_message": "Qualcosa è andato storto. Riprova più tardi.",
-        "go_home": "Vai alla home",
+        "not_found_message": "Controlli che l'indirizzo non contenga errori di battitura. La pagina potrebbe anche essere stata spostata o rimossa.",
+        "server_error_title": "Si è verificato un errore sul server",
+        "server_error_message": "Il server non è riuscito a completare questa richiesta. Riprovi tra un momento.",
+        "go_home": "Vai alla panoramica",
         "try_again": "Riprova",
         "load_devices_failed": "Caricamento dispositivi fallito",
         "load_key_failed": "Caricamento chiave fallito",
@@ -1512,7 +1512,11 @@
         "server_error": "Errore del server",
         "load_device_failed": "Impossibile caricare il dispositivo",
         "load_orgs_failed": "Impossibile caricare le organizzazioni",
-        "no_permission": "Non hai i permessi per farlo. Chiedi a un amministratore."
+        "no_permission": "Non hai i permessi per farlo. Chiedi a un amministratore.",
+        "signed_in_as": "Ha effettuato l'accesso come {user} con il ruolo {role}.",
+        "server_error_log": "Se continua a succedere, un amministratore trova i dettagli nel log del server.",
+        "go_sign_in": "Vai alla pagina di accesso",
+        "error_details": "Dettagli dell'errore"
     },
     "remote": {
         "title": "Desktop remoto",
