@@ -153,6 +153,72 @@ const Utils = {
         return text && text !== key ? text : "You don't have permission to do this. Ask an administrator.";
     },
 
+    /**
+     * One icon per meaning, used in menus and on action buttons everywhere,
+     * so the same action always looks the same (Material Symbols names).
+     */
+    ICONS: {
+        connect: 'desktop_windows',        // remote session in the browser
+        connect_app: 'open_in_new',        // open in the RustDesk app / another program
+        guest_link: 'share',
+        snapshot: 'photo_camera',
+        details: 'info',
+        edit: 'edit',
+        rename: 'drive_file_rename_outline',
+        tags: 'sell',
+        groups: 'workspaces',
+        folder: 'folder',
+        access_policy: 'shield',
+        ban: 'block',
+        unban: 'lock_open',
+        delete: 'delete',
+        delete_forever: 'delete_forever',
+        restore: 'restore_from_trash',
+        copy: 'content_copy',
+        download: 'download',
+        upload: 'upload',
+        export: 'download',
+        refresh: 'refresh',
+        add: 'add',
+        approve: 'check',
+        reject: 'close',
+        accept: 'check',
+        resolve: 'task_alt',
+        open: 'arrow_forward',
+        history: 'history',
+        password: 'key',
+        organization: 'business',
+        user: 'person',
+        terminal: 'terminal',
+        files: 'folder_open',
+        run: 'play_arrow',
+        link: 'link',
+        unlink: 'link_off',
+        network_port: 'settings_ethernet',
+        power_on: 'power_settings_new',
+        sleep: 'bedtime',
+        restart: 'restart_alt',
+        power_off: 'power_off',
+        enable: 'toggle_on',
+        disable: 'toggle_off',
+        qr: 'qr_code_2',
+        billing: 'payments',
+        settings: 'settings',
+        search: 'search',
+        send: 'send',
+        print: 'print',
+        check_now: 'network_ping',
+        revoke: 'cancel',
+        view: 'visibility',
+        hide: 'visibility_off',
+    },
+
+    /** <span> for the icon of a meaning (see ICONS); decorative, the label carries the meaning */
+    icon(meaning) {
+        const name = (this.ICONS && this.ICONS[meaning]) || meaning;
+        return `<span class="material-icons" aria-hidden="true">${String(name).replace(/[^a-z0-9_]/g, '')}</span>`;
+    },
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;

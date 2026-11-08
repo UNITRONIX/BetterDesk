@@ -435,7 +435,7 @@
     function menuItem(action, eid, icon, label, extra = '') {
         return `
             <button type="button" class="kebab-menu-item${extra ? ' ' + extra : ''}" data-action="${action}" data-id="${eid}">
-                <span class="material-icons">${icon}</span>
+                <span class="material-icons" aria-hidden="true">${icon}</span>
                 <span>${label}</span>
             </button>`;
     }
@@ -450,12 +450,12 @@
         const banned = !!device.banned;
         if (device.remote_target) {
             const connect = [];
-            if (can('remote_target.connect')) connect.push(menuItem('web-remote', eid, 'screen_share', _('actions.web_remote') || 'Web Remote', 'connect-desktop'));
+            if (can('remote_target.connect')) connect.push(menuItem('web-remote', eid, Utils.ICONS.connect, _('actions.web_remote') || 'Web Remote', 'connect-desktop'));
             const manage = [menuItem('details', eid, 'info', _('actions.details'), 'info')];
             if (can('remote_target.edit')) manage.push(menuItem('edit', eid, 'edit', _('actions.edit')));
             if (can('device.edit')) {
-                manage.push(menuItem('manage-tags', eid, 'sell', _('devices.manage_device_tags') || 'Manage tags'));
-                manage.push(menuItem('groups', eid, 'hub', _('devices.manage_groups') || 'Manage Groups'));
+                manage.push(menuItem('manage-tags', eid, Utils.ICONS.tags, _('devices.manage_device_tags') || 'Manage tags'));
+                manage.push(menuItem('groups', eid, Utils.ICONS.groups, _('devices.manage_groups') || 'Manage Groups'));
             }
             const danger = can('remote_target.delete') ? [menuItem('delete', eid, 'delete', _('actions.delete'), 'danger')] : [];
             return menuGroups([connect, manage, danger]);
@@ -463,7 +463,7 @@
         if (device.soft_deleted) {
             const restore = [];
             if (can('device.delete')) {
-                restore.push(menuItem('restore', eid, 'restore', _('devices.restore_action')));
+                restore.push(menuItem('restore', eid, Utils.ICONS.restore, _('devices.restore_action')));
                 restore.push(menuItem('permanent-delete', eid, 'delete_forever', _('devices.permanent_delete_title'), 'danger'));
             }
             return menuGroups([[menuItem('details', eid, 'info', _('actions.details'), 'info')], restore]);
@@ -474,11 +474,11 @@
         const mesh = [];
         if (meshOnline) {
             if (can('mesh.terminal')) mesh.push(menuItem('mesh-terminal', eid, 'terminal', _('mesh.terminal') || 'Terminal'));
-            if (can('mesh.files') && canConnect) mesh.push(menuItem('mesh-files', eid, 'folder', _('mesh.files') || 'File browser'));
+            if (can('mesh.files') && canConnect) mesh.push(menuItem('mesh-files', eid, Utils.ICONS.files, _('mesh.files') || 'File browser'));
             if (canConnect) mesh.push(menuItem('mesh-run-command', eid, 'play_arrow', _('mesh.run_command') || 'Run command'));
             if (can('cdap.command')) mesh.push(menuItem('mesh-link-peer', eid, 'link', _('mesh.link_peer') || 'Link peer'));
             if (canConnect) {
-                mesh.push(menuItem('mesh-share', eid, 'link', _('mesh.share_link') || 'Guest desktop link'));
+                mesh.push(menuItem('mesh-share', eid, Utils.ICONS.guest_link, _('mesh.share_link') || 'Guest desktop link'));
                 mesh.push(menuItem('mesh-port-tcp', eid, 'settings_ethernet', _('mesh.port_tcp') || 'TCP port relay'));
                 mesh.push(menuItem('mesh-port-udp', eid, 'settings_ethernet', _('mesh.port_udp') || 'UDP port relay'));
             }
@@ -492,24 +492,24 @@
             mesh.push(menuItem('mesh-power-wake', eid, 'power_settings_new', _('mesh.power_wake') || 'Wake'));
         }
         const connect = [];
-        if (canConnect) connect.push(menuItem('web-remote', eid, 'screen_share', _('actions.web_remote') || 'Web Remote', 'connect-desktop'));
-        if (can('guest.create')) connect.push(menuItem('guest-access', eid, 'share', _('guest_access.menu') || 'Guest access link'));
+        if (canConnect) connect.push(menuItem('web-remote', eid, Utils.ICONS.connect, _('actions.web_remote') || 'Web Remote', 'connect-desktop'));
+        if (can('guest.create')) connect.push(menuItem('guest-access', eid, Utils.ICONS.guest_link, _('guest_access.menu') || 'Guest access link'));
         const viewers = [];
         if (canConnect) {
             viewers.push(menuItem('cdap-viewer', eid, 'photo_camera', _('actions.cdap_viewer') || 'CDAP Snapshot Viewer'));
-            viewers.push(menuItem('connect-desktop', eid, 'computer', _('actions.connect_desktop') || 'Desktop Client'));
+            viewers.push(menuItem('connect-desktop', eid, Utils.ICONS.connect_app, _('actions.connect_desktop') || 'Desktop Client'));
         }
         const manage = [menuItem('details', eid, 'info', _('actions.details'), 'info')];
         if (can('device.edit')) {
             manage.push(menuItem('edit', eid, 'edit', _('actions.edit')));
-            manage.push(menuItem('manage-tags', eid, 'sell', _('devices.manage_device_tags') || 'Manage tags'));
-            manage.push(menuItem('groups', eid, 'hub', _('devices.manage_groups') || 'Manage Groups'));
-            manage.push(menuItem('access-policy', eid, 'lock', _('devices.access_policy') || 'Access Policy'));
+            manage.push(menuItem('manage-tags', eid, Utils.ICONS.tags, _('devices.manage_device_tags') || 'Manage tags'));
+            manage.push(menuItem('groups', eid, Utils.ICONS.groups, _('devices.manage_groups') || 'Manage Groups'));
+            manage.push(menuItem('access-policy', eid, Utils.ICONS.access_policy, _('devices.access_policy') || 'Access Policy'));
         }
         if (can('device.ban')) {
             manage.push(`
             <button type="button" class="kebab-menu-item ${banned ? 'unban' : 'ban'}" data-action="toggle-ban" data-id="${eid}" data-banned="${banned}">
-                <span class="material-icons">${banned ? 'check_circle' : 'block'}</span>
+                <span class="material-icons" aria-hidden="true">${banned ? Utils.ICONS.unban : Utils.ICONS.ban}</span>
                 <span>${banned ? _('actions.unban') : _('actions.ban')}</span>
             </button>`);
         }
@@ -555,16 +555,17 @@
     function buildChipContextMenuHtml(type) {
         const billing = type === 'group' && can('billing.manage') ? `
             <button type="button" class="kebab-menu-item" data-action="commercialization">
+                ${Utils.icon('billing')}
                 <span>${_('devices.group_commercialization') || 'Commercialization'}</span>
             </button>` : '';
         return `${billing}
             <button type="button" class="kebab-menu-item" data-action="edit">
-                <span class="material-icons">edit</span>
+                ${Utils.icon('edit')}
                 <span>${_('actions.edit')}</span>
             </button>
             <div class="kebab-divider"></div>
             <button type="button" class="kebab-menu-item danger" data-action="delete">
-                <span class="material-icons">delete</span>
+                ${Utils.icon('delete')}
                 <span>${_('actions.delete')}</span>
             </button>`;
     }

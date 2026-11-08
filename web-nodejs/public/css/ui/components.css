@@ -492,10 +492,27 @@ th.sortable.sort-desc {
     outline: none;
 }
 
+/* Menu icons: one per meaning (Utils.ICONS), muted so the label leads;
+   in a menu with icons, items without one keep the labels aligned */
 .menu-item .material-icons,
 .kebab-menu-item .material-icons,
 .dropdown-item .material-icons {
-    display: none;
+    width: 20px;
+    font-size: 18px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.menu-item.danger .material-icons,
+.kebab-menu-item.danger .material-icons,
+.dropdown-item.danger .material-icons {
+    color: inherit;
+}
+
+:is(.menu, .kebab-menu, .dropdown-menu):has(.material-icons) :is(.menu-item, .kebab-menu-item, .dropdown-item):not(:has(.material-icons))::before {
+    content: "";
+    width: 20px;
+    flex-shrink: 0;
 }
 
 .menu-item.danger,
