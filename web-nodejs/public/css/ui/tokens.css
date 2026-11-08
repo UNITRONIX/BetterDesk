@@ -126,12 +126,11 @@
     --logo-circle: #4d8f06;
     --logo-overlap: #0f9e96;
 
-    /* Operating system marks (.os-icon): each system in its own colour (Linux
-       in the text colour, black or white like Tux), at
+    /* Operating system marks (.os-icon): each system in its own colour, at
        least 4:1 on --bg, --bg-subtle and --hover in light, 6:1 in dark */
     --os-windows: #0067c0;
     --os-android: #1a7f37;
-    --os-linux: var(--text);
+    --os-linux: #8f6d00;
     --os-apple: #68717a;
     --os-chrome: #c5221f;
 
@@ -160,7 +159,7 @@ html[data-a11y-contrast="yellow-black"] {
     --logo-overlap: #3fd0c4;
     --os-windows: #4cc2ff;
     --os-android: #3ddc84;
-    --os-linux: var(--text);
+    --os-linux: #d9ad3c;
     --os-apple: #9aa4a8;
     --os-chrome: #f28b82;
 }
