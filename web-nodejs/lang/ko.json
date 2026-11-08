@@ -5110,7 +5110,7 @@
         "delete": "삭제",
         "close": "닫기",
         "no_rules": "할당 규칙이 없습니다. 규칙이 없으면 모든 기기가 기본 릴레이 서버를 사용합니다.",
-        "relays_info_banner": "이 목록은 기록용입니다. 클라이언트는 여기 있는 서버가 아니라 BetterDesk 서버의 RELAY_SERVERS 옵션에 설정된 릴레이 서버를 사용합니다.",
+        "relays_info_banner": "클라이언트는 이 목록을 사용하지 않습니다. 클라이언트가 받는 릴레이 주소는 BetterDesk 서버 자체 설정에서 오며, 아래 다이어그램에 표시됩니다.",
         "relay_name_address_required": "이름과 주소가 필요합니다.",
         "relay_save_failed": "릴레이 노드를 저장하지 못했습니다.",
         "relay_delete_failed": "릴레이 노드를 삭제하지 못했습니다.",
@@ -5161,7 +5161,8 @@
         "rec_cpu_high_named": "CPU가 80 %를 넘었다고 보고한 릴레이 서버: {names}",
         "diagram_note": "이 서버가 지금 클라이언트에 주는 주소로 그렸습니다.",
         "diagram_loading": "이 서버의 주소를 읽는 중…",
-        "diagram_error": "이 서버의 주소를 읽지 못했습니다."
+        "diagram_error": "이 서버의 주소를 읽지 못했습니다.",
+        "rules_need_relay_note": "규칙은 기기를 릴레이 서버 중 하나로 보냅니다. 위 목록에 서버가 있으면 규칙을 추가할 수 있습니다."
     },
     "cross_platform": {
         "title": "크로스 플랫폼 호환성",
@@ -6213,10 +6214,10 @@
         "svc_enable": "부팅 시 시작",
         "svc_disable": "부팅 시 시작 안 함",
         "svc_status": "Status",
-        "overview_description": "클라이언트가 지금 이 서버에 연결할 수 있는지, 콘솔을 실행하는 머신이 얼마나 바쁜지 보여 줍니다. 새 페이지이며 바뀔 수 있습니다.",
-        "terminal_description": "이 콘솔을 실행하는 머신의 셸입니다. 세션을 열면 감사 로그에 기록됩니다. 새 페이지이며 바뀔 수 있습니다.",
-        "files_description": "이 콘솔을 실행하는 머신의 파일입니다. 일부 폴더만 열 수 있고, 파일은 BetterDesk 및 콘솔 폴더에서만 변경할 수 있습니다. 변경 사항은 감사 로그에 기록됩니다. 새 페이지이며 바뀔 수 있습니다.",
-        "services_description": "이 머신에 있는 BetterDesk 자체 시스템 서비스입니다. 시작, 중지, 다시 시작은 감사 로그에 기록됩니다. 새 페이지이며 바뀔 수 있습니다.",
+        "overview_description": "클라이언트가 지금 이 서버에 연결할 수 있는지, 콘솔을 실행하는 머신이 얼마나 바쁜지 보여 줍니다.",
+        "terminal_description": "이 콘솔을 실행하는 머신의 셸입니다. 세션을 열면 감사 로그에 기록됩니다.",
+        "files_description": "이 콘솔을 실행하는 머신의 파일입니다. 일부 폴더만 열 수 있고, 파일은 BetterDesk 및 콘솔 폴더에서만 변경할 수 있습니다. 변경 사항은 감사 로그에 기록됩니다.",
+        "services_description": "이 머신에 있는 BetterDesk 자체 시스템 서비스입니다. 시작, 중지, 다시 시작은 감사 로그에 기록됩니다.",
         "servers_title": "BetterDesk 서버",
         "server_uptime": "ID 및 릴레이 서버 실행 시간",
         "id_running": "기기가 로그인하고 온라인으로 표시되며 연결을 시작할 수 있습니다.",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "폴더 목록을 불러오지 못했습니다. 파일 목록은 / 에서 시작합니다.",
         "root_writable": "여기서 파일을 변경할 수 있습니다",
         "root_readonly": "읽기 전용",
-        "files_open_root": "{path} 열기"
+        "files_open_root": "{path} 열기",
+        "term_shell_missing": "터미널을 시작할 수 없습니다. 셸 {shell}이(가) 이 컴퓨터에 설치되어 있지 않습니다. 콘솔의 Docker 이미지에는 포함되어 있지 않습니다. 명령을 실행하려면 호스트에서 docker exec를 사용하세요.",
+        "term_shell_ended": "셸이 시작 직후 종료되었습니다(코드 {code}). 터미널 출력에 이유가 나올 수 있습니다."
     },
     "download": {
         "title": "BetterDesk 에이전트 다운로드",

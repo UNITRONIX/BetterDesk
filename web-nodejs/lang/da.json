@@ -5116,7 +5116,7 @@
         "delete": "Slet",
         "close": "Luk",
         "no_rules": "Ingen tildelingsregler. Uden regler bruger alle enheder standard-relay-serveren.",
-        "relays_info_banner": "Listen er en oversigt. Klienter bruger de relay-servere, der er angivet i RELAY_SERVERS på BetterDesk-serveren, ikke dem på listen.",
+        "relays_info_banner": "Klienter bruger ikke denne liste. Den relay-adresse, de får, kommer fra BetterDesk-serverens egen konfiguration; diagrammet nedenfor viser den.",
         "relay_name_address_required": "Navn og adresse er påkrævet.",
         "relay_save_failed": "Relæknudepunktet kunne ikke gemmes.",
         "relay_delete_failed": "Relæknudepunktet kunne ikke slettes.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Disse relay-servere melder CPU over 80 %: {names}.",
         "diagram_note": "Tegnet med de adresser, som denne server giver klienter lige nu.",
         "diagram_loading": "Læser denne servers adresser…",
-        "diagram_error": "Denne servers adresser kunne ikke læses."
+        "diagram_error": "Denne servers adresser kunne ikke læses.",
+        "rules_need_relay_note": "En regel sender enheder til en af dine relay-servere. Du kan tilføje regler, når listen ovenfor har en."
     },
     "cross_platform": {
         "title": "Kompatibilitet på tværs af platforme",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Start ved opstart",
         "svc_disable": "Start ikke ved opstart",
         "svc_status": "Status",
-        "overview_description": "Om klienter kan nå denne server lige nu, og hvor travl maskinen, der kører konsollen, er. Siden er ny og kan stadig ændre sig.",
-        "terminal_description": "En shell på maskinen, der kører denne konsol. Hver åbnet session registreres i revisionsloggen. Siden er ny og kan stadig ændre sig.",
-        "files_description": "Filer på maskinen, der kører denne konsol. Kun nogle mapper kan åbnes, og filer kan kun ændres i BetterDesk- og konsolmapperne. Ændringer registreres i revisionsloggen. Siden er ny og kan stadig ændre sig.",
-        "services_description": "BetterDesks egne systemtjenester på denne maskine. Start, stop og genstart registreres i revisionsloggen. Siden er ny og kan stadig ændre sig.",
+        "overview_description": "Om klienter kan nå denne server lige nu, og hvor travl maskinen, der kører konsollen, er.",
+        "terminal_description": "En shell på maskinen, der kører denne konsol. Hver åbnet session registreres i revisionsloggen.",
+        "files_description": "Filer på maskinen, der kører denne konsol. Kun nogle mapper kan åbnes, og filer kan kun ændres i BetterDesk- og konsolmapperne. Ændringer registreres i revisionsloggen.",
+        "services_description": "BetterDesks egne systemtjenester på denne maskine. Start, stop og genstart registreres i revisionsloggen.",
         "servers_title": "BetterDesk-server",
         "server_uptime": "ID- og relay-server kører i",
         "id_running": "Enheder kan logge på, vises som online og starte forbindelser.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "Listen over mapper kunne ikke indlæses. Fillisten starter i /.",
         "root_writable": "Filer kan ændres her",
         "root_readonly": "Kun læsning",
-        "files_open_root": "Åbn {path}"
+        "files_open_root": "Åbn {path}",
+        "term_shell_missing": "Terminalen kan ikke starte: skallen {shell} er ikke installeret på denne maskine. Konsollens Docker-image indeholder den ikke. Brug docker exec på værten for at køre kommandoer der.",
+        "term_shell_ended": "Skallen stoppede lige efter start (kode {code}). Outputtet i terminalen kan forklare hvorfor."
     },
     "download": {
         "title": "Download BetterDesk-agent",

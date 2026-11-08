@@ -5198,7 +5198,7 @@
         "status_disabled": "Wyłączony",
         "confirm_delete_relay": "Zostanie usunięty z listy. Reguły przypisania, które go używają, nie zostaną usunięte.",
         "confirm_delete_rule": "Pasujące urządzenia przejdą do następnej reguły lub domyślnego serwera.",
-        "relays_info_banner": "Ta lista to tylko spis. Klienci używają serwerów przekaźnikowych z opcji RELAY_SERVERS serwera BetterDesk, a nie wymienionych tutaj.",
+        "relays_info_banner": "Klienci nie korzystają z tej listy. Adres serwera przekaźnikowego, który dostają, pochodzi z konfiguracji serwera BetterDesk; pokazuje go diagram poniżej.",
         "relay_name_address_required": "Nazwa i adres są wymagane.",
         "relay_save_failed": "Nie udało się zapisać węzła przekaźnikowego.",
         "relay_delete_failed": "Nie udało się usunąć węzła przekaźnikowego.",
@@ -5290,7 +5290,8 @@
         "rec_cpu_high_named": "Te serwery zgłaszają CPU powyżej 80 %: {names}.",
         "diagram_note": "Narysowano z adresami, które ten serwer teraz przekazuje klientom.",
         "diagram_loading": "Odczytywanie adresów tego serwera…",
-        "diagram_error": "Nie udało się odczytać adresów tego serwera."
+        "diagram_error": "Nie udało się odczytać adresów tego serwera.",
+        "rules_need_relay_note": "Reguła kieruje urządzenia do jednego z Twoich serwerów przekaźnikowych. Reguły możesz dodać, gdy na liście powyżej będzie serwer."
     },
     "cross_platform": {
         "title": "Kompatybilność wieloplatformowa",
@@ -6231,10 +6232,10 @@
         "svc_enable": "Uruchamiaj przy starcie",
         "svc_disable": "Nie uruchamiaj przy starcie",
         "svc_status": "Status",
-        "overview_description": "Czy klienci mogą teraz połączyć się z tym serwerem i jak obciążona jest maszyna, na której działa konsola. Ta strona jest nowa i może się jeszcze zmienić.",
-        "terminal_description": "Powłoka na maszynie, na której działa ta konsola. Otwarcie sesji jest zapisywane w dzienniku audytu. Ta strona jest nowa i może się jeszcze zmienić.",
-        "files_description": "Pliki na maszynie, na której działa ta konsola. Można otworzyć tylko niektóre foldery, a zmieniać pliki tylko w folderach BetterDesk i konsoli. Zmiany są zapisywane w dzienniku audytu. Ta strona jest nowa i może się jeszcze zmienić.",
-        "services_description": "Własne usługi systemowe BetterDesk na tej maszynie. Uruchamianie, zatrzymywanie i ponowne uruchamianie jest zapisywane w dzienniku audytu. Ta strona jest nowa i może się jeszcze zmienić.",
+        "overview_description": "Czy klienci mogą teraz połączyć się z tym serwerem i jak obciążona jest maszyna, na której działa konsola.",
+        "terminal_description": "Powłoka na maszynie, na której działa ta konsola. Otwarcie sesji jest zapisywane w dzienniku audytu.",
+        "files_description": "Pliki na maszynie, na której działa ta konsola. Można otworzyć tylko niektóre foldery, a zmieniać pliki tylko w folderach BetterDesk i konsoli. Zmiany są zapisywane w dzienniku audytu.",
+        "services_description": "Własne usługi systemowe BetterDesk na tej maszynie. Uruchamianie, zatrzymywanie i ponowne uruchamianie jest zapisywane w dzienniku audytu.",
         "servers_title": "Serwer BetterDesk",
         "server_uptime": "Serwer ID i przekaźnikowy działa od",
         "id_running": "Urządzenia mogą się logować, być widoczne online i rozpoczynać połączenia.",
@@ -6320,7 +6321,9 @@
         "files_roots_error": "Nie udało się wczytać listy folderów. Lista plików zaczyna się w /.",
         "root_writable": "Tutaj można zmieniać pliki",
         "root_readonly": "Tylko do odczytu",
-        "files_open_root": "Otwórz {path}"
+        "files_open_root": "Otwórz {path}",
+        "term_shell_missing": "Terminal nie może się uruchomić: powłoka {shell} nie jest zainstalowana na tym komputerze. Obraz Docker konsoli jej nie zawiera. Aby uruchamiać tam polecenia, użyj docker exec na hoście.",
+        "term_shell_ended": "Powłoka zakończyła się zaraz po uruchomieniu (kod {code}). Wyjście w terminalu może wskazać przyczynę."
     },
     "server_attestation": {
         "title": "Atest serwera",

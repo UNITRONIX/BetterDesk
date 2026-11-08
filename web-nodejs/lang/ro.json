@@ -5116,7 +5116,7 @@
         "delete": "Ștergeți",
         "close": "Închide",
         "no_rules": "Nu există reguli de alocare. Fără reguli, fiecare dispozitiv folosește serverul relay implicit.",
-        "relays_info_banner": "Această listă este un inventar. Clienții folosesc serverele relay setate în opțiunea RELAY_SERVERS a serverului BetterDesk, nu pe cele de aici.",
+        "relays_info_banner": "Clienții nu folosesc această listă. Adresa de releu pe care o primesc vine din configurația serverului BetterDesk; diagrama de mai jos o arată.",
         "relay_name_address_required": "Numele și adresa sunt obligatorii.",
         "relay_save_failed": "Nu s-a salvat nodul releu.",
         "relay_delete_failed": "Nu s-a șters nodul releu.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Aceste servere relay raportează CPU peste 80 %: {names}.",
         "diagram_note": "Desenat cu adresele pe care acest server le dă acum clienților.",
         "diagram_loading": "Se citesc adresele acestui server…",
-        "diagram_error": "Adresele acestui server nu au putut fi citite."
+        "diagram_error": "Adresele acestui server nu au putut fi citite.",
+        "rules_need_relay_note": "O regulă trimite dispozitivele către unul dintre serverele dvs. de releu. Puteți adăuga reguli după ce lista de mai sus conține unul."
     },
     "cross_platform": {
         "title": "Compatibilitate între platforme",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Pornește la boot",
         "svc_disable": "Nu porni la boot",
         "svc_status": "Status",
-        "overview_description": "Dacă clienții pot ajunge acum la acest server și cât de încărcată este mașina care rulează consola. Pagina este nouă și se poate schimba.",
-        "terminal_description": "Un shell pe mașina care rulează această consolă. Deschiderea unei sesiuni este înregistrată în jurnalul de audit. Pagina este nouă și se poate schimba.",
-        "files_description": "Fișierele de pe mașina care rulează această consolă. Se pot deschide doar unele foldere, iar fișierele pot fi modificate doar în folderele BetterDesk și ale consolei. Modificările sunt înregistrate în jurnalul de audit. Pagina este nouă și se poate schimba.",
-        "services_description": "Serviciile de sistem proprii BetterDesk de pe această mașină. Pornirea, oprirea și repornirea sunt înregistrate în jurnalul de audit. Pagina este nouă și se poate schimba.",
+        "overview_description": "Dacă clienții pot ajunge acum la acest server și cât de încărcată este mașina care rulează consola.",
+        "terminal_description": "Un shell pe mașina care rulează această consolă. Deschiderea unei sesiuni este înregistrată în jurnalul de audit.",
+        "files_description": "Fișierele de pe mașina care rulează această consolă. Se pot deschide doar unele foldere, iar fișierele pot fi modificate doar în folderele BetterDesk și ale consolei. Modificările sunt înregistrate în jurnalul de audit.",
+        "services_description": "Serviciile de sistem proprii BetterDesk de pe această mașină. Pornirea, oprirea și repornirea sunt înregistrate în jurnalul de audit.",
         "servers_title": "Server BetterDesk",
         "server_uptime": "Serverul de ID și relay rulează de",
         "id_running": "Dispozitivele se pot autentifica, apar online și pot porni conexiuni.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "Lista de foldere nu a putut fi încărcată. Lista de fișiere pornește din /.",
         "root_writable": "Aici fișierele pot fi modificate",
         "root_readonly": "Doar citire",
-        "files_open_root": "Deschide {path}"
+        "files_open_root": "Deschide {path}",
+        "term_shell_missing": "Terminalul nu poate porni: shell-ul {shell} nu este instalat pe această mașină. Imaginea Docker a consolei nu îl include. Pentru a rula comenzi acolo, folosiți docker exec pe gazdă.",
+        "term_shell_ended": "Shell-ul s-a oprit imediat după pornire (cod {code}). Ieșirea din terminal poate arăta motivul."
     },
     "download": {
         "title": "Descărcați agentul BetterDesk",

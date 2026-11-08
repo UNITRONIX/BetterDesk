@@ -5116,7 +5116,7 @@
         "delete": "Sil",
         "close": "Kapat",
         "no_rules": "Atama kuralı yok. Kural yoksa her cihaz varsayılan aktarma sunucusunu kullanır.",
-        "relays_info_banner": "Bu liste bir envanterdir. İstemciler buradakileri değil, BetterDesk sunucusunun RELAY_SERVERS seçeneğinde ayarlanan aktarma sunucularını kullanır.",
+        "relays_info_banner": "İstemciler bu listeyi kullanmaz. Aldıkları aktarma adresi BetterDesk sunucusunun kendi yapılandırmasından gelir; aşağıdaki diyagram bunu gösterir.",
         "relay_name_address_required": "İsim ve adres gereklidir.",
         "relay_save_failed": "Aktarma düğümü kaydedilemedi.",
         "relay_delete_failed": "Aktarma düğümü silinemedi.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Bu aktarma sunucuları %80'in üzerinde CPU bildiriyor: {names}.",
         "diagram_note": "Bu sunucunun şu anda istemcilere verdiği adreslerle çizildi.",
         "diagram_loading": "Bu sunucunun adresleri okunuyor…",
-        "diagram_error": "Bu sunucunun adresleri okunamadı."
+        "diagram_error": "Bu sunucunun adresleri okunamadı.",
+        "rules_need_relay_note": "Bir kural cihazları aktarma sunucularınızdan birine yönlendirir. Yukarıdaki listede bir sunucu olduğunda kural ekleyebilirsiniz."
     },
     "cross_platform": {
         "title": "Platformlar Arası Uyumluluk",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Açılışta başlat",
         "svc_disable": "Açılışta başlatma",
         "svc_status": "Status",
-        "overview_description": "İstemcilerin bu sunucuya şu anda ulaşıp ulaşamadığı ve konsolu çalıştıran makinenin ne kadar yoğun olduğu. Bu sayfa yeni ve değişebilir.",
-        "terminal_description": "Bu konsolu çalıştıran makinede bir kabuk. Açılan her oturum denetim günlüğüne yazılır. Bu sayfa yeni ve değişebilir.",
-        "files_description": "Bu konsolu çalıştıran makinedeki dosyalar. Yalnızca bazı klasörler açılabilir ve dosyalar yalnızca BetterDesk ile konsol klasörlerinde değiştirilebilir. Değişiklikler denetim günlüğüne yazılır. Bu sayfa yeni ve değişebilir.",
-        "services_description": "Bu makinedeki BetterDesk'in kendi sistem hizmetleri. Başlatma, durdurma ve yeniden başlatma denetim günlüğüne yazılır. Bu sayfa yeni ve değişebilir.",
+        "overview_description": "İstemcilerin bu sunucuya şu anda ulaşıp ulaşamadığı ve konsolu çalıştıran makinenin ne kadar yoğun olduğu.",
+        "terminal_description": "Bu konsolu çalıştıran makinede bir kabuk. Açılan her oturum denetim günlüğüne yazılır.",
+        "files_description": "Bu konsolu çalıştıran makinedeki dosyalar. Yalnızca bazı klasörler açılabilir ve dosyalar yalnızca BetterDesk ile konsol klasörlerinde değiştirilebilir. Değişiklikler denetim günlüğüne yazılır.",
+        "services_description": "Bu makinedeki BetterDesk'in kendi sistem hizmetleri. Başlatma, durdurma ve yeniden başlatma denetim günlüğüne yazılır.",
         "servers_title": "BetterDesk sunucusu",
         "server_uptime": "ID ve aktarma sunucusu çalışma süresi",
         "id_running": "Cihazlar oturum açabilir, çevrimiçi görünebilir ve bağlantı başlatabilir.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "Klasör listesi yüklenemedi. Dosya listesi / konumunda başlar.",
         "root_writable": "Burada dosyalar değiştirilebilir",
         "root_readonly": "Salt okunur",
-        "files_open_root": "{path} aç"
+        "files_open_root": "{path} aç",
+        "term_shell_missing": "Terminal başlatılamıyor: {shell} kabuğu bu makinede kurulu değil. Konsolun Docker imajı bunu içermiyor. Orada komut çalıştırmak için ana makinede docker exec kullanın.",
+        "term_shell_ended": "Kabuk başlar başlamaz kapandı (kod {code}). Terminaldeki çıktı nedenini gösterebilir."
     },
     "download": {
         "title": "BetterDesk Aracısını İndirin",

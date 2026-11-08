@@ -5221,7 +5221,7 @@
         "delete": "删除",
         "close": "关闭",
         "no_rules": "没有分配规则。没有规则时，所有设备都使用默认中继服务器。",
-        "relays_info_banner": "此列表仅供记录。客户端使用的是 BetterDesk 服务器 RELAY_SERVERS 选项中设置的中继服务器，而不是这里列出的。",
+        "relays_info_banner": "客户端不使用此列表。它们获得的中继地址来自 BetterDesk 服务器自身的配置，下方的图示显示了该地址。",
         "relay_name_address_required": "必须填写名称和地址。",
         "relay_save_failed": "保存中继节点失败。",
         "relay_delete_failed": "删除中继节点失败。",
@@ -5272,7 +5272,8 @@
         "rec_cpu_high_named": "这些中继服务器报告 CPU 超过 80 %：{names}。",
         "diagram_note": "按此服务器当前提供给客户端的地址绘制。",
         "diagram_loading": "正在读取此服务器的地址…",
-        "diagram_error": "无法读取此服务器的地址。"
+        "diagram_error": "无法读取此服务器的地址。",
+        "rules_need_relay_note": "规则会将设备指向您的某一台中继服务器。上方列表中有服务器后，即可添加规则。"
     },
     "cross_platform": {
         "title": "跨平台兼容性",
@@ -6213,10 +6214,10 @@
         "svc_enable": "开机时启动",
         "svc_disable": "开机时不启动",
         "svc_status": "Status",
-        "overview_description": "客户端现在能否连接到此服务器，以及运行控制台的机器有多忙。此页面是新的，之后可能还会变化。",
-        "terminal_description": "运行此控制台的机器上的命令行。每次打开会话都会记录在审计日志中。此页面是新的，之后可能还会变化。",
-        "files_description": "运行此控制台的机器上的文件。只能打开部分文件夹，并且只能修改 BetterDesk 和控制台文件夹中的文件。更改会记录在审计日志中。此页面是新的，之后可能还会变化。",
-        "services_description": "此机器上 BetterDesk 自己的系统服务。启动、停止和重启都会记录在审计日志中。此页面是新的，之后可能还会变化。",
+        "overview_description": "客户端现在能否连接到此服务器，以及运行控制台的机器有多忙。",
+        "terminal_description": "运行此控制台的机器上的命令行。每次打开会话都会记录在审计日志中。",
+        "files_description": "运行此控制台的机器上的文件。只能打开部分文件夹，并且只能修改 BetterDesk 和控制台文件夹中的文件。更改会记录在审计日志中。",
+        "services_description": "此机器上 BetterDesk 自己的系统服务。启动、停止和重启都会记录在审计日志中。",
         "servers_title": "BetterDesk 服务器",
         "server_uptime": "ID 和中继服务器已运行",
         "id_running": "设备可以登录、显示为在线并开始连接。",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "无法加载文件夹列表。文件列表从 / 开始。",
         "root_writable": "可在此更改文件",
         "root_readonly": "只读",
-        "files_open_root": "打开 {path}"
+        "files_open_root": "打开 {path}",
+        "term_shell_missing": "终端无法启动：此机器未安装 shell {shell}。控制台的 Docker 镜像不包含它。要在其中运行命令，请在主机上使用 docker exec。",
+        "term_shell_ended": "shell 启动后立即结束（代码 {code}）。终端中的输出可能说明原因。"
     },
     "download": {
         "title": "下载 BetterDesk 代理",

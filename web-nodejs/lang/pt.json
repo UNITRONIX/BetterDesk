@@ -5110,7 +5110,7 @@
         "delete": "Eliminar",
         "close": "Fechar",
         "no_rules": "Não há regras de atribuição. Sem regras, todos os dispositivos usam o servidor relay predefinido.",
-        "relays_info_banner": "Esta lista é um inventário. Os clientes usam os servidores relay definidos na opção RELAY_SERVERS do servidor BetterDesk, não os que estão aqui.",
+        "relays_info_banner": "Os clientes não usam esta lista. O endereço de relay que recebem vem da configuração do próprio servidor BetterDesk; o diagrama abaixo mostra-o.",
         "relay_name_address_required": "Nome e endereço são obrigatórios.",
         "relay_save_failed": "Não foi possível salvar o nó relay.",
         "relay_delete_failed": "Não foi possível excluir o nó relay.",
@@ -5161,7 +5161,8 @@
         "rec_cpu_high_named": "Estes servidores relay reportam CPU acima de 80 %: {names}.",
         "diagram_note": "Desenhado com os endereços que este servidor dá agora aos clientes.",
         "diagram_loading": "A ler os endereços deste servidor…",
-        "diagram_error": "Não foi possível ler os endereços deste servidor."
+        "diagram_error": "Não foi possível ler os endereços deste servidor.",
+        "rules_need_relay_note": "Uma regra encaminha dispositivos para um dos seus servidores de relay. Pode adicionar regras quando a lista acima tiver um."
     },
     "cross_platform": {
         "title": "Compatibilidade multiplataforma",
@@ -6213,10 +6214,10 @@
         "svc_enable": "Iniciar no arranque",
         "svc_disable": "Não iniciar no arranque",
         "svc_status": "Status",
-        "overview_description": "Se os clientes conseguem alcançar este servidor agora e quão ocupada está a máquina que executa a consola. Esta página é nova e ainda pode mudar.",
-        "terminal_description": "Uma shell na máquina que executa esta consola. Abrir uma sessão fica registado no registo de auditoria. Esta página é nova e ainda pode mudar.",
-        "files_description": "Ficheiros da máquina que executa esta consola. Só é possível abrir algumas pastas e alterar ficheiros apenas nas pastas do BetterDesk e da consola. As alterações ficam no registo de auditoria. Esta página é nova e ainda pode mudar.",
-        "services_description": "Os serviços de sistema do próprio BetterDesk nesta máquina. Iniciar, parar e reiniciar fica no registo de auditoria. Esta página é nova e ainda pode mudar.",
+        "overview_description": "Se os clientes conseguem alcançar este servidor agora e quão ocupada está a máquina que executa a consola.",
+        "terminal_description": "Uma shell na máquina que executa esta consola. Abrir uma sessão fica registado no registo de auditoria.",
+        "files_description": "Ficheiros da máquina que executa esta consola. Só é possível abrir algumas pastas e alterar ficheiros apenas nas pastas do BetterDesk e da consola. As alterações ficam no registo de auditoria.",
+        "services_description": "Os serviços de sistema do próprio BetterDesk nesta máquina. Iniciar, parar e reiniciar fica no registo de auditoria.",
         "servers_title": "Servidor BetterDesk",
         "server_uptime": "Servidor de ID e relay a funcionar há",
         "id_running": "Os dispositivos podem iniciar sessão, aparecer online e iniciar ligações.",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "Não foi possível carregar a lista de pastas. A lista de ficheiros começa em /.",
         "root_writable": "Aqui é possível alterar ficheiros",
         "root_readonly": "Só de leitura",
-        "files_open_root": "Abrir {path}"
+        "files_open_root": "Abrir {path}",
+        "term_shell_missing": "O terminal não pode iniciar: o shell {shell} não está instalado nesta máquina. A imagem Docker da consola não o inclui. Para executar comandos ali, use docker exec no anfitrião.",
+        "term_shell_ended": "O shell terminou logo após iniciar (código {code}). A saída do terminal pode indicar o motivo."
     },
     "download": {
         "title": "Baixar BetterDesk Agent",

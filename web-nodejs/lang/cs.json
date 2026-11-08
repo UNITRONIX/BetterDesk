@@ -5110,7 +5110,7 @@
         "delete": "Smazat",
         "close": "Zavřít",
         "no_rules": "Žádná pravidla přiřazení. Bez pravidel používá každé zařízení výchozí relay server.",
-        "relays_info_banner": "Tento seznam je jen přehled. Klienti používají relay servery z volby RELAY_SERVERS serveru BetterDesk, ne ty uvedené zde.",
+        "relays_info_banner": "Klienti tento seznam nepoužívají. Adresu relay serveru dostávají z vlastní konfigurace serveru BetterDesk; ukazuje ji diagram níže.",
         "relay_name_address_required": "Název a adresa jsou povinné.",
         "relay_save_failed": "Uložení relay uzlu selhalo.",
         "relay_delete_failed": "Smazání relay uzlu selhalo.",
@@ -5161,7 +5161,8 @@
         "rec_cpu_high_named": "Tyto relay servery hlásí CPU nad 80 %: {names}.",
         "diagram_note": "Nakresleno s adresami, které tento server právě dává klientům.",
         "diagram_loading": "Načítání adres tohoto serveru…",
-        "diagram_error": "Adresy tohoto serveru se nepodařilo načíst."
+        "diagram_error": "Adresy tohoto serveru se nepodařilo načíst.",
+        "rules_need_relay_note": "Pravidlo směruje zařízení na jeden z vašich relay serverů. Pravidla můžete přidat, jakmile bude v seznamu výše nějaký server."
     },
     "cross_platform": {
         "title": "Meziplatformní kompatibilita",
@@ -6213,10 +6214,10 @@
         "svc_enable": "Spouštět při startu",
         "svc_disable": "Nespouštět při startu",
         "svc_status": "Stav",
-        "overview_description": "Zda se klienti právě teď dostanou k tomuto serveru a jak vytížený je počítač, na kterém konzole běží. Tato stránka je nová a může se ještě měnit.",
-        "terminal_description": "Příkazový řádek na počítači, na kterém běží tato konzole. Otevření relace se zapisuje do protokolu auditu. Tato stránka je nová a může se ještě měnit.",
-        "files_description": "Soubory na počítači, na kterém běží tato konzole. Otevřít lze jen některé složky a měnit soubory jen ve složkách BetterDesk a konzole. Změny se zapisují do protokolu auditu. Tato stránka je nová a může se ještě měnit.",
-        "services_description": "Vlastní systémové služby BetterDesk na tomto počítači. Spuštění, zastavení a restart se zapisují do protokolu auditu. Tato stránka je nová a může se ještě měnit.",
+        "overview_description": "Zda se klienti právě teď dostanou k tomuto serveru a jak vytížený je počítač, na kterém konzole běží.",
+        "terminal_description": "Příkazový řádek na počítači, na kterém běží tato konzole. Otevření relace se zapisuje do protokolu auditu.",
+        "files_description": "Soubory na počítači, na kterém běží tato konzole. Otevřít lze jen některé složky a měnit soubory jen ve složkách BetterDesk a konzole. Změny se zapisují do protokolu auditu.",
+        "services_description": "Vlastní systémové služby BetterDesk na tomto počítači. Spuštění, zastavení a restart se zapisují do protokolu auditu.",
         "servers_title": "Server BetterDesk",
         "server_uptime": "ID a relay server běží",
         "id_running": "Zařízení se mohou přihlásit, zobrazit jako online a zahajovat připojení.",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "Seznam složek se nepodařilo načíst. Seznam souborů začíná v /.",
         "root_writable": "Soubory zde lze měnit",
         "root_readonly": "Jen pro čtení",
-        "files_open_root": "Otevřít {path}"
+        "files_open_root": "Otevřít {path}",
+        "term_shell_missing": "Terminál nelze spustit: shell {shell} není na tomto počítači nainstalován. Obraz Dockeru konzole ho neobsahuje. Pro spouštění příkazů použijte na hostiteli docker exec.",
+        "term_shell_ended": "Shell skončil hned po spuštění (kód {code}). Výstup v terminálu může uvádět důvod."
     },
     "download": {
         "title": "Stáhnout agenta BetterDesk",

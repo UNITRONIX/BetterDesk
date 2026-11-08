@@ -5271,7 +5271,7 @@
         "status_disabled": "Disabled",
         "confirm_delete_relay": "It is removed from this list. Assignment rules that use it are not deleted.",
         "confirm_delete_rule": "Devices that matched it fall back to the next rule or the default relay server.",
-        "relays_info_banner": "This list is an inventory. Clients use the relay servers set in the RELAY_SERVERS option of the BetterDesk server, not the ones listed here.",
+        "relays_info_banner": "Clients don't use this list. The relay address they get comes from the BetterDesk server's own configuration; the diagram below shows it.",
         "relay_name_address_required": "Name and address are required.",
         "relay_save_failed": "Failed to save relay node.",
         "relay_delete_failed": "Failed to delete relay node.",
@@ -5363,7 +5363,8 @@
         "rec_cpu_high_named": "These relay servers report CPU above 80 %: {names}.",
         "diagram_note": "Drawn with the addresses this server gives to clients right now.",
         "diagram_loading": "Reading this server's addresses…",
-        "diagram_error": "Could not read this server's addresses."
+        "diagram_error": "Could not read this server's addresses.",
+        "rules_need_relay_note": "A rule points devices to one of your relay servers. You can add rules once the list above has one."
     },
     "cross_platform": {
         "title": "Cross-Platform Compatibility",
@@ -6304,10 +6305,10 @@
         "svc_enable": "Start at boot",
         "svc_disable": "Don't start at boot",
         "svc_status": "Status",
-        "overview_description": "Whether clients can reach this server now, and how busy the machine that runs the console is. This page is new and may still change.",
-        "terminal_description": "A shell on the machine that runs this console. Opening a session is recorded in the audit log. This page is new and may still change.",
-        "files_description": "Files on the machine that runs this console. Only some folders can be opened, and files can be changed only in the BetterDesk and console folders. Changes are recorded in the audit log. This page is new and may still change.",
-        "services_description": "BetterDesk's own system services on this machine. Starting, stopping and restarting them is recorded in the audit log. This page is new and may still change.",
+        "overview_description": "Whether clients can reach this server now, and how busy the machine that runs the console is.",
+        "terminal_description": "A shell on the machine that runs this console. Opening a session is recorded in the audit log.",
+        "files_description": "Files on the machine that runs this console. Only some folders can be opened, and files can be changed only in the BetterDesk and console folders. Changes are recorded in the audit log.",
+        "services_description": "BetterDesk's own system services on this machine. Starting, stopping and restarting them is recorded in the audit log.",
         "servers_title": "BetterDesk server",
         "server_uptime": "ID and relay server running for",
         "id_running": "Devices can sign in, show as online and start connections.",
@@ -6393,7 +6394,9 @@
         "files_roots_error": "Could not load the list of folders. The file list starts in /.",
         "root_writable": "Files can be changed here",
         "root_readonly": "Read only",
-        "files_open_root": "Open {path}"
+        "files_open_root": "Open {path}",
+        "term_shell_missing": "The terminal can't start: the shell {shell} isn't installed on this machine. The console's Docker image doesn't include it. To run commands there, use docker exec on the host.",
+        "term_shell_ended": "The shell ended right after it started (code {code}). The output in the terminal may say why."
     },
     "server_attestation": {
         "title": "Server Attestation",

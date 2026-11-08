@@ -16,10 +16,13 @@
     currentTab: initialTab,
     breadcrumb: [{ label: smTitle }],
     body: `
-        <div class="page ${initialTab === 'overview' ? '' : 'page-wide'} sm-page" id="server-mgmt-page" data-initial-tab="${initialTab}">
+        <div class="page page-wide sm-page" id="server-mgmt-page" data-initial-tab="${initialTab}">
             <div class="page-head">
                 <h1>${smTitle}</h1>
                 <p class="page-description">${_('server_mgmt.' + initialTab + '_description')}</p>
+                ${initialTab === 'services' ? `<div class="page-actions">
+                    <button type="button" class="btn" id="sm-services-refresh"><span class="material-icons" aria-hidden="true">refresh</span>${_('actions.refresh')}</button>
+                </div>` : ''}
             </div>
 
             ${initialTab === 'overview' ? `
@@ -53,11 +56,11 @@
                     <div class="section-head"><h2 id="sm-servers-title">${_('server_mgmt.servers_title')}</h2></div>
                     <dl class="facts sm-side-facts sm-servers">
                         <dt>${_('dashboard.signal_server')}</dt>
-                        <dd><span class="status" id="sm-hbbs-status">${_('status.checking')}</span><span class="sm-dd-sub" id="sm-hbbs-meaning"></span></dd>
+                        <dd><span class="status is-waiting" id="sm-hbbs-status">${_('status.checking')}</span><span class="sm-dd-sub" id="sm-hbbs-meaning"></span></dd>
                         <dt>${_('dashboard.relay_server_label')}</dt>
-                        <dd><span class="status" id="sm-hbbr-status">${_('status.checking')}</span><span class="sm-dd-sub" id="sm-hbbr-meaning"></span></dd>
+                        <dd><span class="status is-waiting" id="sm-hbbr-status">${_('status.checking')}</span><span class="sm-dd-sub" id="sm-hbbr-meaning"></span></dd>
                         <dt>${_('dashboard.web_console')}</dt>
-                        <dd><span class="status ok">${_('status.running')}</span></dd>
+                        <dd><span class="status is-good">${_('status.running')}</span></dd>
                         <dt id="sm-server-version-label" hidden>${_('server_mgmt.server_version')}</dt>
                         <dd id="sm-server-version" hidden>–</dd>
                     </dl>
@@ -92,6 +95,7 @@
                     <button type="button" class="btn" id="sm-term-clear" disabled>${_('server_mgmt.term_clear')}</button>
                     <span class="sm-term-status" id="sm-term-status" role="status">${_('server_mgmt.term_disconnected')}</span>
                 </div>
+                <p class="notice warning sm-term-notice" id="sm-term-notice" aria-live="polite" hidden></p>
                 <div class="terminal-box sm-terminal-host" id="sm-terminal-host" aria-label="${_('server_mgmt.tab_terminal')}"></div>
             </section>
             ` : ''}
@@ -119,7 +123,7 @@
                         <thead>
                             <tr>
                                 <th scope="col">${_('server_mgmt.files_name')}</th>
-                                <th scope="col" class="num-col">${_('server_mgmt.files_size')}</th>
+                                <th scope="col" class="num-col is-num">${_('server_mgmt.files_size')}</th>
                                 <th scope="col">${_('server_mgmt.files_mtime')}</th>
                                 <th scope="col">${_('server_mgmt.files_perms')}</th>
                                 <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
@@ -159,18 +163,16 @@
 
             ${initialTab === 'services' ? `
             <section class="sm-tab-panel section" id="sm-panel-services" aria-label="${_('server_mgmt.tab_services')}">
-                <div class="toolbar">
+                <p class="state" id="sm-services-empty" hidden>${_('server_mgmt.svc_empty')}</p>
+                <div class="toolbar" id="sm-services-toolbar">
                     <div class="toolbar-search search-wrapper">
                         <span class="material-icons" aria-hidden="true">search</span>
                         <input type="search" class="form-input sm-services-search" id="sm-services-search"
                                aria-label="${_('server_mgmt.svc_search_label')}" placeholder="${_('server_mgmt.svc_search_label')}">
                     </div>
-                    <div class="toolbar-end">
-                        <button type="button" class="btn" id="sm-services-refresh"><span class="material-icons" aria-hidden="true">refresh</span>${_('actions.refresh')}</button>
-                    </div>
                 </div>
                 <p class="count-line" id="sm-services-count" aria-live="polite"></p>
-                <div class="table-scroll" tabindex="0" role="region" aria-label="${_('server_mgmt.tab_services')}">
+                <div class="table-scroll" id="sm-services-list" tabindex="0" role="region" aria-label="${_('server_mgmt.tab_services')}">
                     <table class="data-table sm-services-table">
                         <thead>
                             <tr>

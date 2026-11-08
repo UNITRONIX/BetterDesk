@@ -41,26 +41,22 @@
         return data;
     }
 
+    // Sizes, lengths and shares come from the shared helpers (utils.js, "Data display")
+    const U = () => window.Utils || {};
     function formatBytes(n) {
-        if (!Number.isFinite(n) || n < 0) return '–';
-        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        let i = 0;
-        while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-        return `${n.toFixed(i ? 1 : 0)} ${units[i]}`;
+        return (U().formatBytes && U().formatBytes(n)) || '–';
     }
 
     function formatUptime(s) {
-        if (!Number.isFinite(s) || s < 0) return '–';
-        const d = Math.floor(s / 86400);
-        const h = Math.floor((s % 86400) / 3600);
-        const m = Math.floor((s % 3600) / 60);
-        if (d) return t('server_mgmt.dur_dh', { d, h });
-        if (h) return t('server_mgmt.dur_hm', { h, m });
-        return t('server_mgmt.dur_m', { m });
+        return (U().formatDuration && U().formatDuration(s)) || '–';
     }
 
     function pct(v) {
-        return `${Math.round(v)} %`;
+        return (U().formatPercent && U().formatPercent(Math.round(v))) || `${Math.round(v)} %`;
+    }
+
+    function emptyHtml(word) {
+        return U().emptyHtml ? U().emptyHtml(word) : escapeHtml(word || '–');
     }
 
     function escapeHtml(str) {
@@ -122,15 +118,16 @@
         function setServer(id, state, meaningKey) {
             const el = document.getElementById(`sm-${id}-status`);
             if (!el) return;
-            el.classList.remove('ok', 'error', 'warning');
+            // good: running; danger: stopped (clients can't connect); warning: no answer
+            el.classList.remove('ok', 'error', 'warning', 'is-good', 'is-danger', 'is-warning', 'is-waiting');
             if (state === 'running') {
-                el.classList.add('ok');
+                el.classList.add('is-good');
                 el.textContent = t('status.running');
             } else if (state === 'stopped') {
-                el.classList.add('error');
+                el.classList.add('is-danger');
                 el.textContent = t('status.stopped');
             } else {
-                el.classList.add('warning');
+                el.classList.add('is-warning');
                 el.textContent = t('status.unknown');
             }
             setText(`sm-${id}-meaning`, meaningKey ? t(meaningKey) : '');
@@ -175,7 +172,7 @@
                 if (verLabel) verLabel.hidden = !ver;
                 if (verValue) {
                     verValue.hidden = !ver;
-                    if (ver) verValue.textContent = ver;
+                    if (ver) verValue.innerHTML = U().versionHtml ? U().versionHtml(ver) : escapeHtml(ver);
                 }
             } catch (_) { /* keep last */ }
         }
@@ -231,7 +228,8 @@
             setText('sm-mem-meta', t('server_mgmt.mem_meta', { used: formatBytes(mem.used), total: formatBytes(mem.total) }));
 
             const load = Array.isArray(snap.load) ? snap.load : [0, 0, 0];
-            setText('sm-load', load.slice(0, 3).map((v) => (Number(v) || 0).toFixed(2)).join(', '));
+            const n2 = (v) => (U().formatNumber ? U().formatNumber(Number(v) || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (Number(v) || 0).toFixed(2));
+            setText('sm-load', load.slice(0, 3).map(n2).join(', '));
             setText('sm-load-meta', t('server_mgmt.load_meta', { cores: snap.cpuCount || 0 }));
 
             setText('sm-uptime-meta', formatUptime(snap.uptime));
@@ -251,16 +249,23 @@
 
             // Technical details
             const hi = document.getElementById('sm-host-info');
+            // Copyable values, the version, on/off and the empty dash as on every page
+            const u = U();
+            const value = (v, opts) => (u.valueHtml ? u.valueHtml(v, opts) : escapeHtml(v != null ? String(v) : '–'));
+            const text = (v) => (v ? escapeHtml(v) : emptyHtml());
+            const nodeVer = (info && info.nodeVersion) || snap.nodeVersion;
             const rows = [
-                ['hostname', snap.hostname, true],
-                ['platform', `${snap.platform} (${snap.arch})`],
-                ['kernel', snap.release || snap.osVersion],
-                ['node', (info && info.nodeVersion) || snap.nodeVersion],
-                ['process_id', info ? info.pid : null],
-                ['pty_available', info ? t(info.ptyAvailable ? 'server_mgmt.pty_yes' : 'server_mgmt.pty_no') : null]
+                ['hostname', value(snap.hostname, { copy: true })],
+                ['platform', text(snap.platform ? `${snap.platform} (${snap.arch})` : '')],
+                ['kernel', text(snap.release || snap.osVersion)],
+                ['node', u.versionHtml ? u.versionHtml(nodeVer) : text(nodeVer)],
+                ['process_id', info ? value(info.pid) : emptyHtml()],
+                ['pty_available', !info ? emptyHtml()
+                    : (u.booleanHtml ? u.booleanHtml(info.ptyAvailable, { on: t('server_mgmt.pty_yes'), off: t('server_mgmt.pty_no') })
+                        : escapeHtml(t(info.ptyAvailable ? 'server_mgmt.pty_yes' : 'server_mgmt.pty_no')))]
             ];
-            hi.innerHTML = rows.map(([k, v, mono]) =>
-                `<dt>${escapeHtml(t('server_mgmt.info_' + k))}</dt><dd${mono ? ' class="mono"' : ''}>${escapeHtml(v != null ? String(v) : '–')}</dd>`
+            hi.innerHTML = rows.map(([k, html]) =>
+                `<dt>${escapeHtml(t('server_mgmt.info_' + k))}</dt><dd>${html}</dd>`
             ).join('');
 
             drawHistory(snap.history || []);
@@ -374,12 +379,13 @@
                 const type = entryType(e);
                 const p = escapeHtml(e.path);
                 const n = escapeHtml(e.name);
-                const sizeText = type === 'dir' ? '' : formatBytes(e.size || 0);
-                const perms = e.mode != null ? (e.mode & 0o7777).toString(8).padStart(4, '0') : '–';
-                const mtime = e.mtime ? new Date(e.mtime).toLocaleString() : '';
+                const sizeHtml = type === 'dir' ? '' : escapeHtml(formatBytes(e.size || 0));
+                const perms = e.mode != null ? (e.mode & 0o7777).toString(8).padStart(4, '0') : '';
+                const permsHtml = !perms ? emptyHtml() : (U().valueHtml ? U().valueHtml(perms) : `<span class="mono">${perms}</span>`);
+                const mtimeHtml = U().timeHtml ? U().timeHtml(e.mtime) : escapeHtml(e.mtime ? new Date(e.mtime).toLocaleString() : '');
                 const nameCell = type === 'dir'
                     ? `<button type="button" class="btn-link sm-file-open-dir" data-act="cd" data-path="${p}">${n}/</button>`
-                    : `<span class="sm-file-name">${n}</span>${type === 'symlink' ? `<span class="cell-sub">${escapeHtml(t('server_mgmt.files_link'))}</span>` : ''}`;
+                    : `<span class="sm-file-name">${n}</span>${type === 'symlink' ? ` ${U().tagHtml ? U().tagHtml(t('server_mgmt.files_link')) : escapeHtml(t('server_mgmt.files_link'))}` : ''}`;
                 const menuId = `sm-file-menu-${++menuSeq}`;
                 const items = [];
                 if (type === 'file') items.push(`<button type="button" class="menu-item" role="menuitem" data-act="open" data-path="${p}">${icon('open')}${escapeHtml(t('server_mgmt.files_open'))}</button>`);
@@ -389,9 +395,9 @@
                 return `
                     <tr data-type="${type}" data-path="${p}" data-name="${n}">
                         <td>${nameCell}</td>
-                        <td class="num-col">${sizeText}</td>
-                        <td>${escapeHtml(mtime)}</td>
-                        <td class="mono">${perms}</td>
+                        <td class="num-col is-num">${sizeHtml}</td>
+                        <td>${mtimeHtml}</td>
+                        <td>${permsHtml}</td>
                         <td class="actions">
                             <span class="menu-anchor">
                                 <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"
@@ -589,6 +595,15 @@
             }
         }
 
+        function showEmpty(empty) {
+            const note = document.getElementById('sm-services-empty');
+            if (note) note.hidden = !empty;
+            ['sm-services-toolbar', 'sm-services-list', 'sm-services-count'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.hidden = empty;
+            });
+        }
+
         async function refresh() {
             setBodyState(t('server_mgmt.svc_loading'));
             try {
@@ -597,6 +612,7 @@
                 platform = data.platform || '';
                 render();
             } catch (err) {
+                showEmpty(false);
                 setText('sm-services-count', '');
                 setBodyState(t('server_mgmt.svc_load_failed_reason', { error: err.message }), true);
             }
@@ -608,14 +624,15 @@
 
         function stateHtml(s) {
             const state = String(s.state || s.status || '').toLowerCase();
-            let cls = '';
+            let tone;
             let text;
-            if (isRunning(s)) { cls = 'ok'; text = t('status.running'); }
-            else if (state === 'failed') { cls = 'error'; text = t('server_mgmt.svc_failed'); }
-            else if (state === 'inactive' || state === 'stopped') { cls = 'offline'; text = t('status.stopped'); }
-            else { text = state || t('status.unknown'); }
+            if (isRunning(s)) { tone = 'good'; text = t('status.running'); }
+            else if (state === 'failed') { tone = 'danger'; text = t('server_mgmt.svc_failed'); }
+            else if (state === 'inactive' || state === 'stopped') { tone = 'neutral'; text = t('status.stopped'); }
+            else { tone = U().statusTone ? U().statusTone(state) : 'neutral'; text = state || t('status.unknown'); }
             const sub = s.sub && s.sub !== state ? `<span class="cell-sub">${escapeHtml(s.sub)}</span>` : '';
-            return `<span class="status ${cls}">${escapeHtml(text)}</span>${sub}`;
+            const mark = U().statusHtml ? U().statusHtml(tone, text) : `<span class="status is-${tone}">${escapeHtml(text)}</span>`;
+            return mark + sub;
         }
 
         function render() {
@@ -630,7 +647,9 @@
                 ? (filter ? t('server_mgmt.svc_count_filtered', { shown: filtered.length, total: services.length })
                     : t('server_mgmt.svc_count', { total: services.length, running }))
                 : '');
-            if (!services.length) { setBodyState(t('server_mgmt.svc_empty')); return; }
+            // Nothing to search or control (the Docker image): one sentence instead of an empty table
+            showEmpty(!services.length);
+            if (!services.length) return;
             if (!filtered.length) { setBodyState(t('server_mgmt.svc_no_match')); return; }
 
             const isWin = platform === 'win32';
@@ -650,7 +669,7 @@
                     </span>` : '';
                 return `
                     <tr>
-                        <td><span class="mono">${name}</span>${s.description ? `<span class="cell-sub">${escapeHtml(s.description)}</span>` : ''}</td>
+                        <td>${U().valueHtml ? U().valueHtml(s.name) : `<span class="mono">${name}</span>`}${s.description ? `<span class="cell-sub">${escapeHtml(s.description)}</span>` : ''}</td>
                         <td>${stateHtml(s)}</td>
                         <td class="actions">
                             <button type="button" class="btn btn-sm" data-svc="${name}" data-act="restart">${escapeHtml(t('server_mgmt.svc_restart'))}</button>
@@ -743,6 +762,13 @@
             el.className = 'sm-term-status' + (cls ? ' ' + cls : '');
         }
 
+        function setNotice(text) {
+            const el = document.getElementById('sm-term-notice');
+            if (!el) return;
+            el.textContent = text || '';
+            el.hidden = !text;
+        }
+
         function setButtons(connected) {
             document.getElementById('sm-term-connect').disabled = connected;
             document.getElementById('sm-term-disconnect').disabled = !connected;
@@ -786,14 +812,23 @@
             const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${proto}//${window.location.host}/ws/server-management/terminal`);
             const socket = ws;
+            // A shell that ends within a few seconds never started; say why above the terminal
+            let readyAt = 0;
+            let shellPath = '';
+            let early = '';
+            setNotice('');
 
+            let opened = false;
             socket.onopen = () => {
+                opened = true;
                 socket.send(JSON.stringify({ type: 'init', cols: term.cols, rows: term.rows }));
             };
             socket.onmessage = (ev) => {
                 let msg;
                 try { msg = JSON.parse(ev.data); } catch (_) { return; }
                 if (msg.type === 'ready') {
+                    readyAt = Date.now();
+                    shellPath = msg.shell || '';
                     let text = t('server_mgmt.term_connected_as', { user: msg.user || '?', platform: msg.platform || '' });
                     if (!msg.pty_available || msg.kind === 'pipe') text += ' ' + t('server_mgmt.term_limited');
                     setStatus(text, 'is-ok');
@@ -801,9 +836,16 @@
                     // Only when asked: a focused terminal keeps Tab for the shell
                     if (focusAfter === true) term.focus();
                 } else if (msg.type === 'output') {
+                    if (readyAt && Date.now() - readyAt < 3000 && early.length < 2000) early += msg.data;
                     term.write(msg.data);
                 } else if (msg.type === 'end') {
                     term.writeln(`\r\n[${t('server_mgmt.term_exited', { code: msg.code })}]`);
+                    if (readyAt && Date.now() - readyAt < 3000 && msg.code !== 0) {
+                        const missing = /no such file|not found|execvp|ENOENT/i.test(early);
+                        setNotice(missing
+                            ? t('server_mgmt.term_shell_missing', { shell: shellPath || '/bin/bash' })
+                            : t('server_mgmt.term_shell_ended', { code: msg.code }));
+                    }
                 } else if (msg.type === 'error') {
                     term.writeln(`\r\n[${msg.error}]`);
                     setStatus(t('server_mgmt.term_error_reason', { error: msg.error }), 'is-error');
@@ -812,7 +854,9 @@
             socket.onclose = () => {
                 if (ws !== socket) return;
                 ws = null;
-                setStatus(t('server_mgmt.term_disconnected'));
+                // A socket that never opened keeps its error instead of a plain "Disconnected"
+                if (opened) setStatus(t('server_mgmt.term_disconnected'));
+                else setStatus(t('server_mgmt.term_error'), 'is-error');
                 setButtons(false);
             };
             socket.onerror = () => setStatus(t('server_mgmt.term_error'), 'is-error');

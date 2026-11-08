@@ -5202,7 +5202,7 @@
         "status_disabled": "已禁用",
         "confirm_delete_relay": "它會從此清單移除。使用它的指派規則不會被刪除。",
         "confirm_delete_rule": "符合此規則的裝置會改用下一條規則或預設中繼伺服器。",
-        "relays_info_banner": "此清單僅供記錄。用戶端使用的是 BetterDesk 伺服器 RELAY_SERVERS 選項中設定的中繼伺服器，而非這裡列出的。",
+        "relays_info_banner": "用戶端不會使用此清單。它們取得的中繼位址來自 BetterDesk 伺服器本身的設定，下方的圖示顯示了該位址。",
         "relay_name_address_required": "必須填寫名稱和地址。",
         "relay_save_failed": "保存中繼節點失敗。",
         "relay_delete_failed": "刪除中繼節點失敗。",
@@ -5294,7 +5294,8 @@
         "rec_cpu_high_named": "這些中繼伺服器回報 CPU 超過 80 %：{names}。",
         "diagram_note": "依此伺服器目前提供給用戶端的位址繪製。",
         "diagram_loading": "正在讀取此伺服器的位址…",
-        "diagram_error": "無法讀取此伺服器的位址。"
+        "diagram_error": "無法讀取此伺服器的位址。",
+        "rules_need_relay_note": "規則會將裝置指向您的某一台中繼伺服器。上方清單中有伺服器後，即可新增規則。"
     },
     "cross_platform": {
         "title": "跨平臺兼容性",
@@ -6235,10 +6236,10 @@
         "svc_enable": "開機時啟動",
         "svc_disable": "開機時不啟動",
         "svc_status": "Status",
-        "overview_description": "用戶端現在能否連到這台伺服器，以及執行主控台的機器有多忙。此頁面是新的，之後可能還會變動。",
-        "terminal_description": "執行此主控台的機器上的命令列。每次開啟工作階段都會記錄在稽核記錄中。此頁面是新的，之後可能還會變動。",
-        "files_description": "執行此主控台的機器上的檔案。只能開啟部分資料夾，而且只能修改 BetterDesk 與主控台資料夾中的檔案。變更會記錄在稽核記錄中。此頁面是新的，之後可能還會變動。",
-        "services_description": "此機器上 BetterDesk 自己的系統服務。啟動、停止與重新啟動都會記錄在稽核記錄中。此頁面是新的，之後可能還會變動。",
+        "overview_description": "用戶端現在能否連到這台伺服器，以及執行主控台的機器有多忙。",
+        "terminal_description": "執行此主控台的機器上的命令列。每次開啟工作階段都會記錄在稽核記錄中。",
+        "files_description": "執行此主控台的機器上的檔案。只能開啟部分資料夾，而且只能修改 BetterDesk 與主控台資料夾中的檔案。變更會記錄在稽核記錄中。",
+        "services_description": "此機器上 BetterDesk 自己的系統服務。啟動、停止與重新啟動都會記錄在稽核記錄中。",
         "servers_title": "BetterDesk 伺服器",
         "server_uptime": "ID 與中繼伺服器已執行",
         "id_running": "裝置可以登入、顯示為線上並開始連線。",
@@ -6324,7 +6325,9 @@
         "files_roots_error": "無法載入資料夾清單。檔案清單從 / 開始。",
         "root_writable": "可在此變更檔案",
         "root_readonly": "唯讀",
-        "files_open_root": "開啟 {path}"
+        "files_open_root": "開啟 {path}",
+        "term_shell_missing": "終端機無法啟動：此電腦未安裝 shell {shell}。主控台的 Docker 映像不包含它。若要在其中執行指令，請在主機上使用 docker exec。",
+        "term_shell_ended": "shell 啟動後立即結束（代碼 {code}）。終端機中的輸出可能說明原因。"
     },
     "server_attestation": {
         "title": "服務器性能認證",

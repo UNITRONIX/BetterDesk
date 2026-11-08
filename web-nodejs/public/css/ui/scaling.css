@@ -53,3 +53,18 @@
     min-height: 0;
     padding-top: var(--space-1);
 }
+
+/* Wide screens: the diagram and its numbered steps side by side */
+@media (min-width: 1600px) {
+    #scaling-diagram .diagram {
+        display: grid;
+        grid-template-columns: minmax(0, 760px) minmax(0, var(--measure));
+        gap: var(--space-6);
+        align-items: center;
+    }
+}
+
+/* Screen-reader text from the value helpers stays inside the scroll box */
+.scaling-page .table-scroll {
+    position: relative;
+}

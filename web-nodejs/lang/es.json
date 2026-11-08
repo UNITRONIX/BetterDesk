@@ -5110,7 +5110,7 @@
         "edit": "Editar",
         "delete": "Eliminar",
         "close": "Cerrar",
-        "relays_info_banner": "Esta lista es un inventario. Los clientes usan los servidores relay de la opción RELAY_SERVERS del servidor BetterDesk, no los que aparecen aquí.",
+        "relays_info_banner": "Los clientes no usan esta lista. La dirección de relé que reciben viene de la configuración propia del servidor BetterDesk; el diagrama de abajo la muestra.",
         "relay_name_address_required": "El nombre y la dirección son obligatorios.",
         "relay_save_failed": "No se pudo guardar el nodo relay.",
         "relay_delete_failed": "No se pudo eliminar el nodo relay.",
@@ -5161,7 +5161,8 @@
         "rec_cpu_high_named": "Estos servidores relay informan de una CPU por encima del 80 %: {names}.",
         "diagram_note": "Dibujado con las direcciones que este servidor da ahora a los clientes.",
         "diagram_loading": "Leyendo las direcciones de este servidor…",
-        "diagram_error": "No se pudieron leer las direcciones de este servidor."
+        "diagram_error": "No se pudieron leer las direcciones de este servidor.",
+        "rules_need_relay_note": "Una regla dirige los dispositivos a uno de sus servidores de relé. Podrá añadir reglas cuando la lista de arriba tenga uno."
     },
     "cross_platform": {
         "title": "Panel",
@@ -6213,10 +6214,10 @@
         "svc_enable": "Iniciar al arrancar",
         "svc_disable": "No iniciar al arrancar",
         "svc_status": "Status",
-        "overview_description": "Si los clientes pueden llegar a este servidor ahora y cuánta carga tiene el equipo que ejecuta la consola. Esta página es nueva y puede cambiar.",
-        "terminal_description": "Una terminal en el equipo que ejecuta esta consola. Abrir una sesión queda registrado en el registro de auditoría. Esta página es nueva y puede cambiar.",
-        "files_description": "Archivos del equipo que ejecuta esta consola. Solo se pueden abrir algunas carpetas, y solo se pueden cambiar archivos en las carpetas de BetterDesk y de la consola. Los cambios quedan en el registro de auditoría. Esta página es nueva y puede cambiar.",
-        "services_description": "Los servicios del sistema propios de BetterDesk en este equipo. Iniciarlos, detenerlos y reiniciarlos queda en el registro de auditoría. Esta página es nueva y puede cambiar.",
+        "overview_description": "Si los clientes pueden llegar a este servidor ahora y cuánta carga tiene el equipo que ejecuta la consola.",
+        "terminal_description": "Una terminal en el equipo que ejecuta esta consola. Abrir una sesión queda registrado en el registro de auditoría.",
+        "files_description": "Archivos del equipo que ejecuta esta consola. Solo se pueden abrir algunas carpetas, y solo se pueden cambiar archivos en las carpetas de BetterDesk y de la consola. Los cambios quedan en el registro de auditoría.",
+        "services_description": "Los servicios del sistema propios de BetterDesk en este equipo. Iniciarlos, detenerlos y reiniciarlos queda en el registro de auditoría.",
         "servers_title": "Servidor BetterDesk",
         "server_uptime": "Servidor de ID y relay en marcha desde hace",
         "id_running": "Los dispositivos pueden iniciar sesión, aparecer en línea e iniciar conexiones.",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "No se pudo cargar la lista de carpetas. La lista de archivos empieza en /.",
         "root_writable": "Aquí se pueden cambiar archivos",
         "root_readonly": "Solo lectura",
-        "files_open_root": "Abrir {path}"
+        "files_open_root": "Abrir {path}",
+        "term_shell_missing": "El terminal no puede iniciarse: el shell {shell} no está instalado en esta máquina. La imagen Docker de la consola no lo incluye. Para ejecutar comandos allí, use docker exec en el host.",
+        "term_shell_ended": "El shell terminó justo después de iniciarse (código {code}). La salida del terminal puede indicar el motivo."
     },
     "download": {
         "title": "Descargar BetterDesk Agent",

@@ -5110,7 +5110,7 @@
         "edit": "Bearbeiten",
         "delete": "Löschen",
         "close": "Schließen",
-        "relays_info_banner": "Diese Liste ist eine Bestandsaufnahme. Clients nutzen die Relay-Server aus der Option RELAY_SERVERS des BetterDesk-Servers, nicht die hier aufgeführten.",
+        "relays_info_banner": "Clients nutzen diese Liste nicht. Die Relay-Adresse, die sie bekommen, stammt aus der Konfiguration des BetterDesk-Servers; das Diagramm unten zeigt sie.",
         "relay_name_address_required": "Name und Adresse sind erforderlich.",
         "relay_save_failed": "Relay-Knoten konnte nicht gespeichert werden.",
         "relay_delete_failed": "Relay-Knoten konnte nicht gelöscht werden.",
@@ -5161,7 +5161,8 @@
         "rec_cpu_high_named": "Diese Relay-Server melden über 80 % CPU: {names}.",
         "diagram_note": "Gezeichnet mit den Adressen, die dieser Server Clients gerade mitgibt.",
         "diagram_loading": "Adressen dieses Servers werden gelesen…",
-        "diagram_error": "Die Adressen dieses Servers konnten nicht gelesen werden."
+        "diagram_error": "Die Adressen dieses Servers konnten nicht gelesen werden.",
+        "rules_need_relay_note": "Eine Regel weist Geräte einem Ihrer Relay-Server zu. Sie können Regeln hinzufügen, sobald die Liste oben einen enthält."
     },
     "cross_platform": {
         "title": "Dashboard",
@@ -6213,10 +6214,10 @@
         "svc_enable": "Beim Hochfahren starten",
         "svc_disable": "Nicht beim Hochfahren starten",
         "svc_status": "Status",
-        "overview_description": "Ob Clients diesen Server gerade erreichen und wie ausgelastet der Rechner ist, auf dem die Konsole läuft. Diese Seite ist neu und kann sich noch ändern.",
-        "terminal_description": "Eine Shell auf dem Rechner, auf dem diese Konsole läuft. Jede geöffnete Sitzung wird im Audit-Log festgehalten. Diese Seite ist neu und kann sich noch ändern.",
-        "files_description": "Dateien auf dem Rechner, auf dem diese Konsole läuft. Nur bestimmte Ordner lassen sich öffnen, und ändern können Sie nur Dateien in den BetterDesk- und Konsolenordnern. Änderungen werden im Audit-Log festgehalten. Diese Seite ist neu und kann sich noch ändern.",
-        "services_description": "Die eigenen Systemdienste von BetterDesk auf diesem Rechner. Starten, Stoppen und Neustarten wird im Audit-Log festgehalten. Diese Seite ist neu und kann sich noch ändern.",
+        "overview_description": "Ob Clients diesen Server gerade erreichen und wie ausgelastet der Rechner ist, auf dem die Konsole läuft.",
+        "terminal_description": "Eine Shell auf dem Rechner, auf dem diese Konsole läuft. Jede geöffnete Sitzung wird im Audit-Log festgehalten.",
+        "files_description": "Dateien auf dem Rechner, auf dem diese Konsole läuft. Nur bestimmte Ordner lassen sich öffnen, und ändern können Sie nur Dateien in den BetterDesk- und Konsolenordnern. Änderungen werden im Audit-Log festgehalten.",
+        "services_description": "Die eigenen Systemdienste von BetterDesk auf diesem Rechner. Starten, Stoppen und Neustarten wird im Audit-Log festgehalten.",
         "servers_title": "BetterDesk-Server",
         "server_uptime": "ID- und Relay-Server laufen seit",
         "id_running": "Geräte können sich anmelden, als online erscheinen und Verbindungen starten.",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "Die Liste der Ordner konnte nicht geladen werden. Die Dateiliste beginnt in /.",
         "root_writable": "Dateien können hier geändert werden",
         "root_readonly": "Nur lesen",
-        "files_open_root": "{path} öffnen"
+        "files_open_root": "{path} öffnen",
+        "term_shell_missing": "Das Terminal kann nicht starten: Die Shell {shell} ist auf diesem Rechner nicht installiert. Das Docker-Image der Konsole enthält sie nicht. Um dort Befehle auszuführen, verwenden Sie docker exec auf dem Host.",
+        "term_shell_ended": "Die Shell wurde direkt nach dem Start beendet (Code {code}). Die Ausgabe im Terminal nennt eventuell den Grund."
     },
     "download": {
         "title": "BetterDesk Agent herunterladen",

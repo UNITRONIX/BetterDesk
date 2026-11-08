@@ -6,7 +6,7 @@
     currentPage: 'scaling',
     breadcrumb: [{ label: _('nav.scaling') }],
     body: `
-<div class="page scaling-page" id="scaling-page" data-initial-section="${typeof activeTab !== 'undefined' ? activeTab : 'overview'}">
+<div class="page page-wide scaling-page" id="scaling-page" data-initial-section="${typeof activeTab !== 'undefined' ? activeTab : 'overview'}">
     <div class="page-head">
         <h1>${_('nav.scaling')}</h1>
         <p class="page-description">${_('scaling.page_description', { link: '<a href="/settings?tab=general#public-endpoints">' + _('nav.settings') + ' › ' + _('settings.tab_general') + ' › ' + _('settings.public_endpoints_title') + '</a>' })}</p>
@@ -20,7 +20,7 @@
     <section class="section" id="panel-relays" aria-labelledby="relays-title">
         <div class="section-head"><h2 id="relays-title">${_('scaling.relays_title')}</h2></div>
         <p class="section-note">${_('scaling.relays_info_banner')}</p>
-        <div class="toolbar">
+        <div class="toolbar" id="relay-toolbar" hidden>
             <div class="toolbar-search search-wrapper">
                 <span class="material-icons" aria-hidden="true">search</span>
                 <input type="search" id="relay-search" class="form-input" aria-label="${_('scaling.relay_search')}" placeholder="${_('scaling.relay_search')}">
@@ -48,14 +48,15 @@
     <section class="section" id="panel-rules" aria-labelledby="rules-title">
         <div class="section-head">
             <h2 id="rules-title">${_('scaling.tab_rules')}</h2>
-            <button type="button" class="btn btn-sm" id="rule-add-btn" data-bd-call="Scaling.showAddRule"><span class="material-icons" aria-hidden="true">add</span>${_('scaling.rule_add')}</button>
+            <button type="button" class="btn btn-sm" id="rule-add-btn" data-bd-call="Scaling.showAddRule" hidden><span class="material-icons" aria-hidden="true">add</span>${_('scaling.rule_add')}</button>
         </div>
         <p class="section-note">${_('scaling.rules_hint')}</p>
-        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="rules-title">
+        <p class="state" id="rules-need-relay" hidden>${_('scaling.rules_need_relay_note')}</p>
+        <div class="table-scroll" id="rules-list" tabindex="0" role="region" aria-labelledby="rules-title">
             <table class="data-table" id="rules-table">
                 <thead>
                     <tr>
-                        <th scope="col" class="num-col">${_('scaling.col_priority')}</th>
+                        <th scope="col" class="num-col is-num">${_('scaling.col_priority')}</th>
                         <th scope="col">${_('scaling.col_rule_name')}</th>
                         <th scope="col">${_('scaling.col_match')}</th>
                         <th scope="col">${_('scaling.col_target_relay')}</th>
@@ -85,8 +86,8 @@
                 <thead>
                     <tr>
                         <th scope="col">${_('scaling.cap_config')}</th>
-                        <th scope="col" class="num-col">${_('scaling.cap_max_devices')}</th>
-                        <th scope="col" class="num-col">${_('scaling.cap_max_sessions')}</th>
+                        <th scope="col" class="num-col is-num">${_('scaling.cap_max_devices')}</th>
+                        <th scope="col" class="num-col is-num">${_('scaling.cap_max_sessions')}</th>
                         <th scope="col">${_('scaling.cap_utilization')}</th>
                     </tr>
                 </thead>
@@ -99,8 +100,8 @@
     <aside class="page-side" aria-labelledby="capacity-title">
         <section class="section" id="panel-capacity" aria-labelledby="capacity-title">
             <div class="section-head"><h2 id="capacity-title">${_('scaling.tab_capacity')}</h2></div>
-            <p class="section-note">${_('scaling.capacity_note')}</p>
-            <dl class="facts" id="capacity-tiers">
+            <p class="section-note" id="capacity-note" hidden>${_('scaling.capacity_note')}</p>
+            <dl class="facts" id="capacity-tiers" hidden>
                 <dt>${_('scaling.cap_tier_devices')}</dt><dd>–</dd>
             </dl>
             <p id="capacity-recommendations" class="scaling-recommendation"></p>

@@ -5116,7 +5116,7 @@
         "delete": "Ta bort",
         "close": "Stäng",
         "no_rules": "Inga tilldelningsregler. Utan regler använder alla enheter standardreläservern.",
-        "relays_info_banner": "Listan är en förteckning. Klienter använder reläservrarna i alternativet RELAY_SERVERS på BetterDesk-servern, inte de som står här.",
+        "relays_info_banner": "Klienter använder inte den här listan. Reläadressen de får kommer från BetterDesk-serverns egen konfiguration; diagrammet nedan visar den.",
         "relay_name_address_required": "Namn och adress krävs.",
         "relay_save_failed": "Det gick inte att spara relänoden.",
         "relay_delete_failed": "Det gick inte att ta bort relänod.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Dessa reläservrar rapporterar CPU över 80 %: {names}.",
         "diagram_note": "Ritat med de adresser som den här servern ger klienter just nu.",
         "diagram_loading": "Läser serverns adresser…",
-        "diagram_error": "Det gick inte att läsa serverns adresser."
+        "diagram_error": "Det gick inte att läsa serverns adresser.",
+        "rules_need_relay_note": "En regel skickar enheter till en av dina reläservrar. Du kan lägga till regler när listan ovan har en."
     },
     "cross_platform": {
         "title": "Cross-Platform-kompatibilitet",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Starta vid uppstart",
         "svc_disable": "Starta inte vid uppstart",
         "svc_status": "Status",
-        "overview_description": "Om klienter kan nå den här servern just nu och hur belastad datorn som kör konsolen är. Sidan är ny och kan fortfarande ändras.",
-        "terminal_description": "Ett skal på datorn som kör den här konsolen. Varje session som öppnas loggas i granskningsloggen. Sidan är ny och kan fortfarande ändras.",
-        "files_description": "Filer på datorn som kör den här konsolen. Bara vissa mappar kan öppnas, och filer kan bara ändras i BetterDesk- och konsolmapparna. Ändringar loggas i granskningsloggen. Sidan är ny och kan fortfarande ändras.",
-        "services_description": "BetterDesks egna systemtjänster på den här datorn. Start, stopp och omstart loggas i granskningsloggen. Sidan är ny och kan fortfarande ändras.",
+        "overview_description": "Om klienter kan nå den här servern just nu och hur belastad datorn som kör konsolen är.",
+        "terminal_description": "Ett skal på datorn som kör den här konsolen. Varje session som öppnas loggas i granskningsloggen.",
+        "files_description": "Filer på datorn som kör den här konsolen. Bara vissa mappar kan öppnas, och filer kan bara ändras i BetterDesk- och konsolmapparna. Ändringar loggas i granskningsloggen.",
+        "services_description": "BetterDesks egna systemtjänster på den här datorn. Start, stopp och omstart loggas i granskningsloggen.",
         "servers_title": "BetterDesk-server",
         "server_uptime": "ID- och reläserver körs sedan",
         "id_running": "Enheter kan logga in, visas som online och starta anslutningar.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "Det gick inte att läsa in listan över mappar. Fillistan börjar i /.",
         "root_writable": "Filer kan ändras här",
         "root_readonly": "Endast läsning",
-        "files_open_root": "Öppna {path}"
+        "files_open_root": "Öppna {path}",
+        "term_shell_missing": "Terminalen kan inte starta: skalet {shell} är inte installerat på den här datorn. Konsolens Docker-avbild innehåller det inte. Använd docker exec på värden för att köra kommandon där.",
+        "term_shell_ended": "Skalet avslutades direkt efter start (kod {code}). Utdata i terminalen kan visa varför."
     },
     "download": {
         "title": "Ladda ner BetterDesk Agent",

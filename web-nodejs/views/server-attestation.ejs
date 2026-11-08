@@ -52,13 +52,13 @@
 
     <div class="page-cols">
     <div class="page-main">
-        <section class="section" aria-labelledby="sa-result-title">
+        <section class="section" id="sa-result-section" aria-labelledby="sa-result-title" ${saHasResult ? '' : 'hidden'}>
             <div class="section-head">
                 <h2 id="sa-result-title">${_('server_attestation.result_title')}</h2>
                 <button type="button" class="btn btn-sm" id="sa-download-btn" ${!saHasResult ? 'hidden' : ''}><span class="material-icons" aria-hidden="true">download</span>${_('server_attestation.download_report')}</button>
             </div>
             <p class="sa-result-sentence" id="sa-hero-meta">${saHasResult && lastResult.testedAt
-                ? _('server_attestation.result_sentence', { date: saEsc(new Date(lastResult.testedAt).toLocaleString()), count: saMaxConn || 0, tier: saEsc(saTierLabel) })
+                ? _('server_attestation.result_sentence', { date: '<time class="time" datetime="' + saEsc(new Date(lastResult.testedAt).toISOString()) + '">' + saEsc(new Date(lastResult.testedAt).toLocaleString()) + '</time>', count: saMaxConn || 0, tier: saEsc(saTierLabel) })
                 : _('server_attestation.no_test_yet')}</p>
             <p class="notice" id="sa-estimated-note" ${saHasResult && lastResult.mode === 'estimated' ? '' : 'hidden'}>${_('server_attestation.mode_estimated')}</p>
             <dl class="facts" id="sa-result-facts" ${saHasResult ? '' : 'hidden'}>
@@ -78,6 +78,7 @@
 
         <section class="section" aria-labelledby="sa-run-title">
             <div class="section-head"><h2 id="sa-run-title">${_('server_attestation.run_title')}</h2></div>
+            <p class="sa-no-result" id="sa-no-result" ${saHasResult ? 'hidden' : ''}>${_('server_attestation.no_test_yet')}</p>
             <p class="notice warning">${_('server_attestation.warning_body')}</p>
             <div class="toolbar">
                 <button type="button" class="btn btn-primary" id="sa-run-btn"><span class="material-icons" aria-hidden="true">play_arrow</span>${_('server_attestation.run_benchmark')}</button>

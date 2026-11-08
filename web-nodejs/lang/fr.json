@@ -5202,7 +5202,7 @@
         "status_disabled": "Désactivé",
         "confirm_delete_relay": "Il est retiré de cette liste. Les règles d'attribution qui l'utilisent ne sont pas supprimées.",
         "confirm_delete_rule": "Les appareils concernés passent à la règle suivante ou au serveur relais par défaut.",
-        "relays_info_banner": "Cette liste est un inventaire. Les clients utilisent les serveurs relais définis dans l'option RELAY_SERVERS du serveur BetterDesk, pas ceux listés ici.",
+        "relays_info_banner": "Les clients n'utilisent pas cette liste. L'adresse de relais qu'ils reçoivent vient de la configuration du serveur BetterDesk ; le schéma ci-dessous la montre.",
         "relay_name_address_required": "Name und Adresse sind erforderlich.",
         "relay_save_failed": "Relay-Knoten konnte nicht gespeichert werden.",
         "relay_delete_failed": "Relay-Knoten konnte nicht gelöscht werden.",
@@ -5294,7 +5294,8 @@
         "rec_cpu_high_named": "Ces serveurs relais signalent un processeur au-dessus de 80 % : {names}.",
         "diagram_note": "Dessiné avec les adresses que ce serveur donne actuellement aux clients.",
         "diagram_loading": "Lecture des adresses de ce serveur…",
-        "diagram_error": "Impossible de lire les adresses de ce serveur."
+        "diagram_error": "Impossible de lire les adresses de ce serveur.",
+        "rules_need_relay_note": "Une règle dirige des appareils vers l'un de vos serveurs relais. Vous pourrez ajouter des règles dès que la liste ci-dessus en contient un."
     },
     "cross_platform": {
         "title": "Tableau de bord",
@@ -6235,10 +6236,10 @@
         "svc_enable": "Démarrer au démarrage",
         "svc_disable": "Ne pas démarrer au démarrage",
         "svc_status": "Status",
-        "overview_description": "Si les clients peuvent joindre ce serveur maintenant, et la charge de la machine qui exécute la console. Cette page est nouvelle et peut encore changer.",
-        "terminal_description": "Un shell sur la machine qui exécute cette console. Chaque ouverture de session est inscrite dans le journal d'audit. Cette page est nouvelle et peut encore changer.",
-        "files_description": "Les fichiers de la machine qui exécute cette console. Seuls certains dossiers peuvent être ouverts, et les fichiers ne peuvent être modifiés que dans les dossiers de BetterDesk et de la console. Les modifications sont inscrites dans le journal d'audit. Cette page est nouvelle et peut encore changer.",
-        "services_description": "Les services système propres à BetterDesk sur cette machine. Les démarrages, arrêts et redémarrages sont inscrits dans le journal d'audit. Cette page est nouvelle et peut encore changer.",
+        "overview_description": "Si les clients peuvent joindre ce serveur maintenant, et la charge de la machine qui exécute la console.",
+        "terminal_description": "Un shell sur la machine qui exécute cette console. Chaque ouverture de session est inscrite dans le journal d'audit.",
+        "files_description": "Les fichiers de la machine qui exécute cette console. Seuls certains dossiers peuvent être ouverts, et les fichiers ne peuvent être modifiés que dans les dossiers de BetterDesk et de la console. Les modifications sont inscrites dans le journal d'audit.",
+        "services_description": "Les services système propres à BetterDesk sur cette machine. Les démarrages, arrêts et redémarrages sont inscrits dans le journal d'audit.",
         "servers_title": "Serveur BetterDesk",
         "server_uptime": "Serveur d'ID et relais actif depuis",
         "id_running": "Les appareils peuvent se connecter, apparaître en ligne et ouvrir des connexions.",
@@ -6324,7 +6325,9 @@
         "files_roots_error": "Impossible de charger la liste des dossiers. La liste des fichiers commence dans /.",
         "root_writable": "Les fichiers peuvent être modifiés ici",
         "root_readonly": "Lecture seule",
-        "files_open_root": "Ouvrir {path}"
+        "files_open_root": "Ouvrir {path}",
+        "term_shell_missing": "Le terminal ne peut pas démarrer : le shell {shell} n'est pas installé sur cette machine. L'image Docker de la console ne l'inclut pas. Pour y lancer des commandes, utilisez docker exec sur l'hôte.",
+        "term_shell_ended": "Le shell s'est arrêté juste après son démarrage (code {code}). La sortie du terminal peut en indiquer la raison."
     },
     "server_attestation": {
         "title": "Server-Attestierung",

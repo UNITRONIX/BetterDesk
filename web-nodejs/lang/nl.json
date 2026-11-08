@@ -5110,7 +5110,7 @@
         "delete": "Verwijderen",
         "close": "Sluiten",
         "no_rules": "Geen toewijzingsregels. Zonder regels gebruikt elk apparaat de standaardrelayserver.",
-        "relays_info_banner": "Deze lijst is een inventaris. Clients gebruiken de relayservers uit de optie RELAY_SERVERS van de BetterDesk-server, niet die hier staan.",
+        "relays_info_banner": "Clients gebruiken deze lijst niet. Het relay-adres dat ze krijgen komt uit de eigen configuratie van de BetterDesk-server; het diagram hieronder toont het.",
         "relay_name_address_required": "Relaynaam en adres zijn verplicht",
         "relay_save_failed": "Relay kon niet worden opgeslagen",
         "relay_delete_failed": "Relay kon niet worden verwijderd",
@@ -5161,7 +5161,8 @@
         "rec_cpu_high_named": "Deze relayservers melden een CPU boven 80 %: {names}.",
         "diagram_note": "Getekend met de adressen die deze server nu aan clients geeft.",
         "diagram_loading": "Adressen van deze server lezen…",
-        "diagram_error": "De adressen van deze server konden niet worden gelezen."
+        "diagram_error": "De adressen van deze server konden niet worden gelezen.",
+        "rules_need_relay_note": "Een regel wijst apparaten naar een van uw relay-servers. U kunt regels toevoegen zodra de lijst hierboven er een bevat."
     },
     "cross_platform": {
         "title": "Platformonafhankelijke compatibiliteit",
@@ -6213,10 +6214,10 @@
         "svc_enable": "Starten bij opstarten",
         "svc_disable": "Niet starten bij opstarten",
         "svc_status": "Status",
-        "overview_description": "Of clients deze server nu kunnen bereiken en hoe druk de machine is waarop de console draait. Deze pagina is nieuw en kan nog veranderen.",
-        "terminal_description": "Een shell op de machine waarop deze console draait. Het openen van een sessie wordt vastgelegd in het auditlogboek. Deze pagina is nieuw en kan nog veranderen.",
-        "files_description": "Bestanden op de machine waarop deze console draait. Alleen sommige mappen kunnen worden geopend, en bestanden kunnen alleen worden gewijzigd in de mappen van BetterDesk en de console. Wijzigingen worden vastgelegd in het auditlogboek. Deze pagina is nieuw en kan nog veranderen.",
-        "services_description": "De eigen systeemservices van BetterDesk op deze machine. Starten, stoppen en herstarten wordt vastgelegd in het auditlogboek. Deze pagina is nieuw en kan nog veranderen.",
+        "overview_description": "Of clients deze server nu kunnen bereiken en hoe druk de machine is waarop de console draait.",
+        "terminal_description": "Een shell op de machine waarop deze console draait. Het openen van een sessie wordt vastgelegd in het auditlogboek.",
+        "files_description": "Bestanden op de machine waarop deze console draait. Alleen sommige mappen kunnen worden geopend, en bestanden kunnen alleen worden gewijzigd in de mappen van BetterDesk en de console. Wijzigingen worden vastgelegd in het auditlogboek.",
+        "services_description": "De eigen systeemservices van BetterDesk op deze machine. Starten, stoppen en herstarten wordt vastgelegd in het auditlogboek.",
         "servers_title": "BetterDesk-server",
         "server_uptime": "ID- en relayserver draaien al",
         "id_running": "Apparaten kunnen zich aanmelden, online verschijnen en verbindingen starten.",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "De lijst met mappen kon niet worden geladen. De bestandslijst begint in /.",
         "root_writable": "Bestanden kunnen hier worden gewijzigd",
         "root_readonly": "Alleen lezen",
-        "files_open_root": "{path} openen"
+        "files_open_root": "{path} openen",
+        "term_shell_missing": "De terminal kan niet starten: de shell {shell} is niet geïnstalleerd op deze machine. De Docker-image van de console bevat hem niet. Gebruik docker exec op de host om daar opdrachten uit te voeren.",
+        "term_shell_ended": "De shell stopte direct na het starten (code {code}). De uitvoer in de terminal kan de reden tonen."
     },
     "download": {
         "title": "BetterDesk Agent downloaden",

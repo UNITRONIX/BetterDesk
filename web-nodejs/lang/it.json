@@ -5110,7 +5110,7 @@
         "delete": "Elimina",
         "close": "Chiudi",
         "no_rules": "Nessuna regola di assegnazione. Senza regole ogni dispositivo usa il server relay predefinito.",
-        "relays_info_banner": "Questo elenco è un inventario. I client usano i server relay impostati nell'opzione RELAY_SERVERS del server BetterDesk, non quelli elencati qui.",
+        "relays_info_banner": "I client non usano questo elenco. L'indirizzo relay che ricevono viene dalla configurazione del server BetterDesk; il diagramma qui sotto lo mostra.",
         "relay_name_address_required": "Nome relay e indirizzo sono obbligatori",
         "relay_save_failed": "Impossibile salvare il relay",
         "relay_delete_failed": "Impossibile eliminare il relay",
@@ -5161,7 +5161,8 @@
         "rec_cpu_high_named": "Questi server relay segnalano una CPU sopra l'80 %: {names}.",
         "diagram_note": "Disegnato con gli indirizzi che questo server fornisce ora ai client.",
         "diagram_loading": "Lettura degli indirizzi di questo server…",
-        "diagram_error": "Impossibile leggere gli indirizzi di questo server."
+        "diagram_error": "Impossibile leggere gli indirizzi di questo server.",
+        "rules_need_relay_note": "Una regola indirizza i dispositivi verso uno dei suoi server relay. Potrà aggiungere regole quando l'elenco qui sopra ne conterrà uno."
     },
     "cross_platform": {
         "title": "Compatibilità multipiattaforma",
@@ -6213,10 +6214,10 @@
         "svc_enable": "Avvia all'avvio",
         "svc_disable": "Non avviare all'avvio",
         "svc_status": "Status",
-        "overview_description": "Se i client possono raggiungere questo server adesso e quanto è carica la macchina che esegue la console. Questa pagina è nuova e può ancora cambiare.",
-        "terminal_description": "Una shell sulla macchina che esegue questa console. L'apertura di una sessione viene registrata nel log di audit. Questa pagina è nuova e può ancora cambiare.",
-        "files_description": "I file della macchina che esegue questa console. Si possono aprire solo alcune cartelle e modificare file solo nelle cartelle di BetterDesk e della console. Le modifiche vengono registrate nel log di audit. Questa pagina è nuova e può ancora cambiare.",
-        "services_description": "I servizi di sistema di BetterDesk su questa macchina. Avvii, arresti e riavvii vengono registrati nel log di audit. Questa pagina è nuova e può ancora cambiare.",
+        "overview_description": "Se i client possono raggiungere questo server adesso e quanto è carica la macchina che esegue la console.",
+        "terminal_description": "Una shell sulla macchina che esegue questa console. L'apertura di una sessione viene registrata nel log di audit.",
+        "files_description": "I file della macchina che esegue questa console. Si possono aprire solo alcune cartelle e modificare file solo nelle cartelle di BetterDesk e della console. Le modifiche vengono registrate nel log di audit.",
+        "services_description": "I servizi di sistema di BetterDesk su questa macchina. Avvii, arresti e riavvii vengono registrati nel log di audit.",
         "servers_title": "Server BetterDesk",
         "server_uptime": "Server ID e relay attivi da",
         "id_running": "I dispositivi possono accedere, risultare online e avviare connessioni.",
@@ -6302,7 +6303,9 @@
         "files_roots_error": "Impossibile caricare l'elenco delle cartelle. L'elenco dei file parte da /.",
         "root_writable": "Qui i file si possono modificare",
         "root_readonly": "Sola lettura",
-        "files_open_root": "Apri {path}"
+        "files_open_root": "Apri {path}",
+        "term_shell_missing": "Il terminale non può avviarsi: la shell {shell} non è installata su questa macchina. L'immagine Docker della console non la include. Per eseguire comandi lì, usi docker exec sull'host.",
+        "term_shell_ended": "La shell si è chiusa subito dopo l'avvio (codice {code}). L'output del terminale può indicarne il motivo."
     },
     "download": {
         "title": "Scarica BetterDesk Agent",

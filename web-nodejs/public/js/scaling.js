@@ -51,7 +51,23 @@
         return loadRelays();
     }
 
+    // Show only what applies: no search without relay servers, and no rules
+    // table or "Add rule" until there is a relay server to point a rule to
+    function applyAvailability() {
+        const none = _relaysLoaded && _relays.length === 0;
+        const toolbar = document.getElementById('relay-toolbar');
+        if (toolbar) toolbar.hidden = !_relaysLoaded || none;
+        const addRule = document.getElementById('rule-add-btn');
+        if (addRule) addRule.hidden = none;
+        const folded = none && _rulesLoaded && _rules.length === 0;
+        const note = document.getElementById('rules-need-relay');
+        if (note) note.hidden = !folded;
+        const list = document.getElementById('rules-list');
+        if (list) list.hidden = folded;
+    }
+
     function renderCount() {
+        applyAvailability();
         const el = document.getElementById('relays-count');
         if (!el) return;
         if (!_relaysLoaded || !_relays.length) { el.textContent = ''; return; }
@@ -85,9 +101,9 @@
     function relayStatusCell(r) {
         const status = r.status || 'unknown';
         if (status === 'unknown') {
-            return `<span class="status offline">${escHtml(_('scaling.status_unknown'))}</span>`;
+            return U.statusHtml('neutral', _('scaling.status_unknown'));
         }
-        const cls = status === 'online' ? 'online' : status === 'degraded' ? 'degraded' : 'offline';
+        const tone = status === 'online' ? 'good' : status === 'degraded' ? 'warning' : 'neutral';
         const usage = _('scaling.relay_usage', {
             devices: r.connected_devices || 0,
             sessions: r.active_sessions || 0,
@@ -95,7 +111,7 @@
             cpu: r.cpu || 0,
             memory: r.memory || 0
         });
-        return `<span class="status ${cls}">${escHtml(_('scaling.status_' + status))}</span><span class="cell-sub">${escHtml(usage)}</span>`;
+        return `${U.statusHtml(tone, _('scaling.status_' + status))}<span class="cell-sub">${escHtml(usage)}</span>`;
     }
 
     function renderRelaysTable() {
@@ -108,7 +124,7 @@
         tbody.innerHTML = _relays.map(r => `
             <tr data-id="${escAttr(r.id)}">
                 <td><strong>${escHtml(r.name || r.id)}</strong>${r.location ? `<span class="cell-sub">${escHtml(r.location)}</span>` : ''}</td>
-                <td class="mono">${escHtml(r.address || '–')}</td>
+                <td>${U.valueHtml(r.address, { copy: true, label: r.name || r.address })}</td>
                 <td>${escHtml(_('scaling.relay_limits', { sessions: r.max_sessions || 0, bandwidth: r.max_bandwidth_mbps || 0 }))}</td>
                 <td>${relayStatusCell(r)}</td>
                 <td class="actions">
@@ -299,12 +315,12 @@
         }
         tbody.innerHTML = _rules.sort((a, b) => (a.priority || 0) - (b.priority || 0)).map(r => `
             <tr data-id="${escAttr(r.id)}">
-                <td class="num-col">${r.priority || 0}</td>
+                <td class="num-col is-num">${escHtml(U.formatNumber(r.priority || 0))}</td>
                 <td><strong>${escHtml(r.name || r.id)}</strong></td>
-                <td>${escHtml(matchTypeLabel(r.match_type || ''))}: <span class="mono">${escHtml(r.match_value || '')}</span></td>
+                <td>${U.tagHtml(matchTypeLabel(r.match_type || ''))} ${U.valueHtml(r.match_value)}</td>
                 <td>${escHtml(r.target_relay_name || relayName(r.target_relay))}</td>
                 <td>${escHtml(_('scaling.fallback_' + (r.fallback || 'master')))}</td>
-                <td><span class="status ${r.enabled !== false ? 'ok' : 'offline'}">${r.enabled !== false ? escHtml(_('scaling.status_enabled')) : escHtml(_('scaling.status_disabled'))}</span></td>
+                <td>${U.booleanHtml(r.enabled !== false, { on: _('scaling.status_enabled'), off: _('scaling.status_disabled') })}</td>
                 <td class="actions">
                     <button type="button" class="btn btn-sm" data-bd-call="Scaling.editRule" data-bd-args='["${escAttr(r.id)}"]' aria-label="${escAttr(_('scaling.edit_named', { name: r.name || r.id }))}">${escHtml(_('scaling.edit'))}</button>
                     <button type="button" class="btn btn-sm btn-danger-quiet" data-bd-call="Scaling.deleteRule" data-bd-args='["${escAttr(r.id)}"]' aria-label="${escAttr(_('scaling.delete_named', { name: r.name || r.id }))}">${escHtml(_('scaling.delete'))}…</button>
@@ -443,7 +459,7 @@
     function meter(p) {
         const v = Math.max(0, Math.min(100, Math.round(p)));
         const cls = v >= 95 ? ' is-full' : (v >= 80 ? ' is-high' : '');
-        return `<div class="meter scaling-meter${cls}"><span class="meter-bar"><span class="meter-fill" style="width:${v}%"></span></span><span class="meter-value">${v} %</span></div>`;
+        return `<div class="meter scaling-meter${cls}"><span class="meter-bar"><span class="meter-fill" style="width:${v}%"></span></span><span class="meter-value">${escHtml(U.formatPercent(v))}</span></div>`;
     }
 
     function totals() {
@@ -457,6 +473,11 @@
     function renderCapacityTiers() {
         const container = document.getElementById('capacity-tiers');
         if (!container) return;
+        // Without relay servers there is nothing to add up: the sentence below says so
+        const none = _relays.length === 0;
+        container.hidden = none;
+        const note = document.getElementById('capacity-note');
+        if (note) note.hidden = none;
         const tot = totals();
         const tiers = [
             { key: 'scaling.cap_tier_devices', current: tot.devices, max: _capacity?.max_devices || 500, unit: '' },
@@ -466,7 +487,7 @@
         container.innerHTML = tiers.map(t => {
             const p = t.max > 0 ? (t.current / t.max) * 100 : 0;
             return `<dt>${escHtml(_(t.key))}</dt>
-                <dd>${meter(p)}<span class="cell-sub">${escHtml(_('scaling.cap_of', { current: t.current + t.unit, max: t.max + t.unit }))}</span></dd>`;
+                <dd>${meter(p)}<span class="cell-sub">${escHtml(_('scaling.cap_of', { current: U.formatNumber(t.current) + t.unit, max: U.formatNumber(t.max) + t.unit }))}</span></dd>`;
         }).join('');
     }
 
@@ -498,8 +519,8 @@
         ];
         tbody.innerHTML = tiers.map(t => `<tr>
                 <td>${escHtml(t.config)}</td>
-                <td class="num-col">${t.maxDev.toLocaleString()}</td>
-                <td class="num-col">${t.maxSess.toLocaleString()}</td>
+                <td class="num-col is-num">${escHtml(U.formatNumber(t.maxDev))}</td>
+                <td class="num-col is-num">${escHtml(U.formatNumber(t.maxSess))}</td>
                 <td>${meter(t.maxDev > 0 ? (tot.devices / t.maxDev) * 100 : 0)}</td>
             </tr>`).join('');
     }
@@ -548,6 +569,14 @@
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
+    const U = {
+        statusHtml: (tone, label) => (window.Utils && Utils.statusHtml ? Utils.statusHtml(tone, label) : `<span class="status is-${tone}">${escHtml(label)}</span>`),
+        booleanHtml: (v, o) => (window.Utils && Utils.booleanHtml ? Utils.booleanHtml(v, o) : escHtml(v ? o.on : o.off)),
+        tagHtml: (label) => (window.Utils && Utils.tagHtml ? Utils.tagHtml(label) : escHtml(label)),
+        valueHtml: (v, o) => (window.Utils && Utils.valueHtml ? Utils.valueHtml(v, o) : `<span class="mono">${escHtml(v || '–')}</span>`),
+        formatNumber: (n) => (window.Utils && Utils.formatNumber ? Utils.formatNumber(n) : String(n)),
+        formatPercent: (n) => (window.Utils && Utils.formatPercent ? Utils.formatPercent(n) : n + ' %'),
+    };
     function escHtml(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
     function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;'); }
 

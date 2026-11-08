@@ -5116,7 +5116,7 @@
         "delete": "Törölje",
         "close": "Bezárás",
         "no_rules": "Nincs hozzárendelési szabály. Szabályok nélkül minden eszköz az alapértelmezett relay-szervert használja.",
-        "relays_info_banner": "Ez a lista csak nyilvántartás. A kliensek a BetterDesk-szerver RELAY_SERVERS beállításában megadott relay-szervereket használják, nem az itt felsoroltakat.",
+        "relays_info_banner": "A kliensek nem ezt a listát használják. A kapott továbbítószerver-cím a BetterDesk szerver saját beállításaiból származik; az alábbi ábra mutatja.",
         "relay_name_address_required": "Név és cím megadása kötelező.",
         "relay_save_failed": "Nem sikerült menteni a közvetítő csomópontot.",
         "relay_delete_failed": "Nem sikerült törölni a közvetítő csomópontot.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Ezek a relay-szerverek 80 % feletti CPU-t jelentenek: {names}.",
         "diagram_note": "Azokkal a címekkel rajzolva, amelyeket ez a szerver most ad a klienseknek.",
         "diagram_loading": "A szerver címeinek beolvasása…",
-        "diagram_error": "A szerver címei nem olvashatók be."
+        "diagram_error": "A szerver címei nem olvashatók be.",
+        "rules_need_relay_note": "A szabály az eszközöket az egyik továbbítószerverére irányítja. Szabályt akkor adhat hozzá, ha a fenti listában már van szerver."
     },
     "cross_platform": {
         "title": "Platformok közötti kompatibilitás",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Indítás rendszerindításkor",
         "svc_disable": "Ne induljon rendszerindításkor",
         "svc_status": "Status",
-        "overview_description": "Elérik-e most a kliensek ezt a szervert, és mennyire terhelt a konzolt futtató gép. Ez az oldal új, és még változhat.",
-        "terminal_description": "Parancssor a konzolt futtató gépen. A munkamenet megnyitása bekerül a naplóba. Ez az oldal új, és még változhat.",
-        "files_description": "A konzolt futtató gép fájljai. Csak bizonyos mappák nyithatók meg, és fájlokat csak a BetterDesk és a konzol mappáiban lehet módosítani. A módosítások bekerülnek a naplóba. Ez az oldal új, és még változhat.",
-        "services_description": "A BetterDesk saját rendszerszolgáltatásai ezen a gépen. Az indítás, leállítás és újraindítás bekerül a naplóba. Ez az oldal új, és még változhat.",
+        "overview_description": "Elérik-e most a kliensek ezt a szervert, és mennyire terhelt a konzolt futtató gép.",
+        "terminal_description": "Parancssor a konzolt futtató gépen. A munkamenet megnyitása bekerül a naplóba.",
+        "files_description": "A konzolt futtató gép fájljai. Csak bizonyos mappák nyithatók meg, és fájlokat csak a BetterDesk és a konzol mappáiban lehet módosítani. A módosítások bekerülnek a naplóba.",
+        "services_description": "A BetterDesk saját rendszerszolgáltatásai ezen a gépen. Az indítás, leállítás és újraindítás bekerül a naplóba.",
         "servers_title": "BetterDesk-szerver",
         "server_uptime": "Az ID- és relay-szerver fut",
         "id_running": "Az eszközök bejelentkezhetnek, online látszanak, és kapcsolatot indíthatnak.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "A mappák listája nem tölthető be. A fájllista a / mappában indul.",
         "root_writable": "Itt a fájlok módosíthatók",
         "root_readonly": "Csak olvasható",
-        "files_open_root": "{path} megnyitása"
+        "files_open_root": "{path} megnyitása",
+        "term_shell_missing": "A terminál nem indul el: a(z) {shell} shell nincs telepítve ezen a gépen. A konzol Docker-képe nem tartalmazza. Parancsok futtatásához használja a docker exec parancsot a gazdagépen.",
+        "term_shell_ended": "A shell közvetlenül indulás után leállt ({code} kód). A terminál kimenete megmutathatja az okát."
     },
     "download": {
         "title": "Töltse le a BetterDesk ügynököt",

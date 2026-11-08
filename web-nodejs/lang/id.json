@@ -5116,7 +5116,7 @@
         "delete": "Hapus",
         "close": "Tutup",
         "no_rules": "Tidak ada aturan penetapan. Tanpa aturan, setiap perangkat memakai server relay default.",
-        "relays_info_banner": "Daftar ini hanya inventaris. Klien memakai server relay yang diatur di opsi RELAY_SERVERS pada server BetterDesk, bukan yang tercantum di sini.",
+        "relays_info_banner": "Klien tidak memakai daftar ini. Alamat relay yang mereka terima berasal dari konfigurasi server BetterDesk sendiri; diagram di bawah menampilkannya.",
         "relay_name_address_required": "Nama dan alamat diperlukan.",
         "relay_save_failed": "Gagal menyimpan simpul relai.",
         "relay_delete_failed": "Gagal menghapus simpul relai.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Server relay ini melaporkan CPU di atas 80 %: {names}.",
         "diagram_note": "Digambar dengan alamat yang saat ini diberikan server ini kepada klien.",
         "diagram_loading": "Membaca alamat server ini…",
-        "diagram_error": "Alamat server ini tidak dapat dibaca."
+        "diagram_error": "Alamat server ini tidak dapat dibaca.",
+        "rules_need_relay_note": "Aturan mengarahkan perangkat ke salah satu server relay Anda. Anda dapat menambah aturan setelah daftar di atas berisi satu server."
     },
     "cross_platform": {
         "title": "Kompatibilitas Lintas Platform",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Mulai saat boot",
         "svc_disable": "Jangan mulai saat boot",
         "svc_status": "Status",
-        "overview_description": "Apakah klien dapat menjangkau server ini sekarang, dan seberapa sibuk mesin yang menjalankan konsol. Halaman ini baru dan masih bisa berubah.",
-        "terminal_description": "Shell pada mesin yang menjalankan konsol ini. Setiap sesi yang dibuka dicatat di log audit. Halaman ini baru dan masih bisa berubah.",
-        "files_description": "File di mesin yang menjalankan konsol ini. Hanya beberapa folder yang dapat dibuka, dan file hanya dapat diubah di folder BetterDesk dan konsol. Perubahan dicatat di log audit. Halaman ini baru dan masih bisa berubah.",
-        "services_description": "Layanan sistem milik BetterDesk di mesin ini. Memulai, menghentikan, dan memulai ulang layanan dicatat di log audit. Halaman ini baru dan masih bisa berubah.",
+        "overview_description": "Apakah klien dapat menjangkau server ini sekarang, dan seberapa sibuk mesin yang menjalankan konsol.",
+        "terminal_description": "Shell pada mesin yang menjalankan konsol ini. Setiap sesi yang dibuka dicatat di log audit.",
+        "files_description": "File di mesin yang menjalankan konsol ini. Hanya beberapa folder yang dapat dibuka, dan file hanya dapat diubah di folder BetterDesk dan konsol. Perubahan dicatat di log audit.",
+        "services_description": "Layanan sistem milik BetterDesk di mesin ini. Memulai, menghentikan, dan memulai ulang layanan dicatat di log audit.",
         "servers_title": "Server BetterDesk",
         "server_uptime": "Server ID dan relay berjalan selama",
         "id_running": "Perangkat dapat masuk, tampil online, dan memulai koneksi.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "Daftar folder tidak dapat dimuat. Daftar file mulai di /.",
         "root_writable": "File dapat diubah di sini",
         "root_readonly": "Hanya baca",
-        "files_open_root": "Buka {path}"
+        "files_open_root": "Buka {path}",
+        "term_shell_missing": "Terminal tidak dapat dimulai: shell {shell} tidak terpasang di mesin ini. Image Docker konsol tidak menyertakannya. Untuk menjalankan perintah di sana, gunakan docker exec di host.",
+        "term_shell_ended": "Shell berhenti tepat setelah dimulai (kode {code}). Keluaran di terminal mungkin menjelaskan alasannya."
     },
     "download": {
         "title": "Unduh Agen BetterDesk",

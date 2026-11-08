@@ -5116,7 +5116,7 @@
         "delete": "Poista",
         "close": "Sulje",
         "no_rules": "Ei määrityssääntöjä. Ilman sääntöjä kaikki laitteet käyttävät oletusvälityspalvelinta.",
-        "relays_info_banner": "Tämä luettelo on vain kirjanpito. Asiakkaat käyttävät BetterDesk-palvelimen RELAY_SERVERS-asetuksen välityspalvelimia, eivät tässä lueteltuja.",
+        "relays_info_banner": "Asiakkaat eivät käytä tätä luetteloa. Niiden saama välityspalvelimen osoite tulee BetterDesk-palvelimen omista asetuksista; alla oleva kaavio näyttää sen.",
         "relay_name_address_required": "Nimi ja osoite vaaditaan.",
         "relay_save_failed": "Välityssolmun tallennus epäonnistui.",
         "relay_delete_failed": "Välityssolmun poistaminen epäonnistui.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Nämä välityspalvelimet raportoivat suorittimen yli 80 %: {names}.",
         "diagram_note": "Piirretty osoitteilla, jotka tämä palvelin antaa asiakkaille juuri nyt.",
         "diagram_loading": "Luetaan tämän palvelimen osoitteita…",
-        "diagram_error": "Tämän palvelimen osoitteita ei voitu lukea."
+        "diagram_error": "Tämän palvelimen osoitteita ei voitu lukea.",
+        "rules_need_relay_note": "Sääntö ohjaa laitteet yhdelle välityspalvelimistasi. Voit lisätä sääntöjä, kun yllä olevassa luettelossa on palvelin."
     },
     "cross_platform": {
         "title": "Eri alustojen yhteensopivuus",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Käynnistä käynnistyksen yhteydessä",
         "svc_disable": "Älä käynnistä käynnistyksen yhteydessä",
         "svc_status": "Status",
-        "overview_description": "Tavoittavatko asiakkaat tämän palvelimen nyt ja kuinka kuormitettu konsolia ajava kone on. Tämä sivu on uusi ja voi vielä muuttua.",
-        "terminal_description": "Komentotulkki konsolia ajavalla koneella. Istunnon avaaminen kirjataan valvontalokiin. Tämä sivu on uusi ja voi vielä muuttua.",
-        "files_description": "Konsolia ajavan koneen tiedostot. Vain osa kansioista voidaan avata, ja tiedostoja voi muuttaa vain BetterDeskin ja konsolin kansioissa. Muutokset kirjataan valvontalokiin. Tämä sivu on uusi ja voi vielä muuttua.",
-        "services_description": "BetterDeskin omat järjestelmäpalvelut tällä koneella. Käynnistykset, pysäytykset ja uudelleenkäynnistykset kirjataan valvontalokiin. Tämä sivu on uusi ja voi vielä muuttua.",
+        "overview_description": "Tavoittavatko asiakkaat tämän palvelimen nyt ja kuinka kuormitettu konsolia ajava kone on.",
+        "terminal_description": "Komentotulkki konsolia ajavalla koneella. Istunnon avaaminen kirjataan valvontalokiin.",
+        "files_description": "Konsolia ajavan koneen tiedostot. Vain osa kansioista voidaan avata, ja tiedostoja voi muuttaa vain BetterDeskin ja konsolin kansioissa. Muutokset kirjataan valvontalokiin.",
+        "services_description": "BetterDeskin omat järjestelmäpalvelut tällä koneella. Käynnistykset, pysäytykset ja uudelleenkäynnistykset kirjataan valvontalokiin.",
         "servers_title": "BetterDesk-palvelin",
         "server_uptime": "ID- ja välityspalvelin käynnissä",
         "id_running": "Laitteet voivat kirjautua, näkyä verkossa ja aloittaa yhteyksiä.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "Kansioluetteloa ei voitu ladata. Tiedostoluettelo alkaa kansiosta /.",
         "root_writable": "Tiedostoja voi muuttaa täällä",
         "root_readonly": "Vain luku",
-        "files_open_root": "Avaa {path}"
+        "files_open_root": "Avaa {path}",
+        "term_shell_missing": "Pääte ei käynnisty: komentotulkkia {shell} ei ole asennettu tähän koneeseen. Konsolin Docker-kuva ei sisällä sitä. Suorita komennot isäntäkoneella komennolla docker exec.",
+        "term_shell_ended": "Komentotulkki päättyi heti käynnistyttyään (koodi {code}). Päätteen tuloste voi kertoa syyn."
     },
     "download": {
         "title": "Lataa BetterDesk Agent",

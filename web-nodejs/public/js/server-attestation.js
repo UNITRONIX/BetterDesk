@@ -35,6 +35,17 @@
         }
     }
 
+    // Shared value helpers (utils.js, "Data display")
+    const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const num = (n) => (window.Utils && Utils.formatNumber ? Utils.formatNumber(n) : String(n));
+    const percent = (n) => (window.Utils && Utils.formatPercent ? Utils.formatPercent(n) : n + ' %');
+    const empty = () => (window.Utils && Utils.emptyHtml ? Utils.emptyHtml() : '–');
+
+    function setHtml(id, html) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+    }
+
     function setText(id, text) {
         const el = document.getElementById(id);
         if (el) el.textContent = text;
@@ -157,7 +168,7 @@
         lastResult = result;
 
         updateBadge(result.tier, result.maxConnections);
-        setText('sa-max-conn', result.maxConnections != null ? String(result.maxConnections) : '–');
+        setHtml('sa-max-conn', result.maxConnections != null ? esc(num(result.maxConnections)) : empty());
         setText('sa-tier-value', tierLabel(result.tier));
         // Point at the reached tier in the tier list beside the result
         document.querySelectorAll('.sa-tier-guide .bd-attest-tier').forEach((dt) => {
@@ -169,23 +180,28 @@
 
         if (result.signalConnections != null || result.relaySessions != null) {
             setText('sa-conn-detail', tr('server_attestation.conn_detail', '', {
-                signal: result.signalConnections || 0,
-                relay: result.relaySessions || 0
+                signal: num(result.signalConnections || 0),
+                relay: num(result.relaySessions || 0)
             }));
         }
 
         if (result.finalMetrics) {
-            setText('sa-th-cpu', result.finalMetrics.cpu + ' %');
-            setText('sa-th-mem', result.finalMetrics.mem + ' %');
-            setText('sa-th-disk', result.finalMetrics.disk + ' %');
+            setText('sa-th-cpu', percent(result.finalMetrics.cpu));
+            setText('sa-th-mem', percent(result.finalMetrics.mem));
+            setText('sa-th-disk', percent(result.finalMetrics.disk));
         }
 
         if (result.testedAt) {
-            setText('sa-hero-meta', tr('server_attestation.result_sentence', '', {
-                date: new Date(result.testedAt).toLocaleString(),
-                count: result.maxConnections || 0,
+            // The date as <time> (full date, not "3h ago": it says when the numbers were true)
+            const MARK = '\u0001';
+            const sentence = esc(tr('server_attestation.result_sentence', '', {
+                date: MARK,
+                count: num(result.maxConnections || 0),
                 tier: tierLabel(result.tier)
             }));
+            const when = window.Utils && Utils.timeHtml ? Utils.timeHtml(result.testedAt, { relative: false })
+                : esc(new Date(result.testedAt).toLocaleString());
+            setHtml('sa-hero-meta', sentence.split(MARK).join(when));
         }
         const est = document.getElementById('sa-estimated-note');
         if (est) est.hidden = result.mode !== 'estimated';
@@ -193,6 +209,11 @@
         if (facts) facts.hidden = false;
         const dlBtn = document.getElementById('sa-download-btn');
         if (dlBtn) dlBtn.hidden = false;
+        // The result section stays out of view until there is a result
+        const section = document.getElementById('sa-result-section');
+        if (section) section.hidden = false;
+        const none = document.getElementById('sa-no-result');
+        if (none) none.hidden = true;
     }
 
     function setRunning(running) {

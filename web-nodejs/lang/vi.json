@@ -5116,7 +5116,7 @@
         "delete": "Xóa",
         "close": "Đóng",
         "no_rules": "Chưa có quy tắc gán. Khi không có quy tắc, mọi thiết bị dùng máy chủ chuyển tiếp mặc định.",
-        "relays_info_banner": "Danh sách này chỉ để theo dõi. Máy khách dùng các máy chủ chuyển tiếp đặt trong tùy chọn RELAY_SERVERS của máy chủ BetterDesk, không phải các máy chủ ở đây.",
+        "relays_info_banner": "Máy khách không dùng danh sách này. Địa chỉ relay mà chúng nhận được lấy từ cấu hình riêng của máy chủ BetterDesk; sơ đồ bên dưới hiển thị địa chỉ đó.",
         "relay_name_address_required": "Tên và địa chỉ là bắt buộc.",
         "relay_save_failed": "Không lưu được nút chuyển tiếp.",
         "relay_delete_failed": "Không thể xóa nút chuyển tiếp.",
@@ -5167,7 +5167,8 @@
         "rec_cpu_high_named": "Các máy chủ chuyển tiếp này báo CPU trên 80 %: {names}.",
         "diagram_note": "Vẽ bằng các địa chỉ máy chủ này đang cấp cho máy khách.",
         "diagram_loading": "Đang đọc địa chỉ của máy chủ này…",
-        "diagram_error": "Không đọc được địa chỉ của máy chủ này."
+        "diagram_error": "Không đọc được địa chỉ của máy chủ này.",
+        "rules_need_relay_note": "Quy tắc chuyển thiết bị tới một trong các máy chủ relay của bạn. Bạn có thể thêm quy tắc khi danh sách ở trên có máy chủ."
     },
     "cross_platform": {
         "title": "Khả năng tương thích đa nền tảng",
@@ -6219,10 +6220,10 @@
         "svc_enable": "Khởi động cùng hệ thống",
         "svc_disable": "Không khởi động cùng hệ thống",
         "svc_status": "Status",
-        "overview_description": "Máy khách có thể kết nối tới máy chủ này lúc này không, và máy chạy bảng điều khiển đang bận đến mức nào. Trang này mới và có thể còn thay đổi.",
-        "terminal_description": "Một shell trên máy chạy bảng điều khiển này. Mỗi phiên được mở đều ghi vào nhật ký kiểm tra. Trang này mới và có thể còn thay đổi.",
-        "files_description": "Tệp trên máy chạy bảng điều khiển này. Chỉ mở được một số thư mục, và chỉ sửa được tệp trong thư mục BetterDesk và thư mục bảng điều khiển. Thay đổi được ghi vào nhật ký kiểm tra. Trang này mới và có thể còn thay đổi.",
-        "services_description": "Các dịch vụ hệ thống của chính BetterDesk trên máy này. Việc khởi động, dừng và khởi động lại được ghi vào nhật ký kiểm tra. Trang này mới và có thể còn thay đổi.",
+        "overview_description": "Máy khách có thể kết nối tới máy chủ này lúc này không, và máy chạy bảng điều khiển đang bận đến mức nào.",
+        "terminal_description": "Một shell trên máy chạy bảng điều khiển này. Mỗi phiên được mở đều ghi vào nhật ký kiểm tra.",
+        "files_description": "Tệp trên máy chạy bảng điều khiển này. Chỉ mở được một số thư mục, và chỉ sửa được tệp trong thư mục BetterDesk và thư mục bảng điều khiển. Thay đổi được ghi vào nhật ký kiểm tra.",
+        "services_description": "Các dịch vụ hệ thống của chính BetterDesk trên máy này. Việc khởi động, dừng và khởi động lại được ghi vào nhật ký kiểm tra.",
         "servers_title": "Máy chủ BetterDesk",
         "server_uptime": "Máy chủ ID và chuyển tiếp đã chạy",
         "id_running": "Thiết bị có thể đăng nhập, hiện trực tuyến và bắt đầu kết nối.",
@@ -6308,7 +6309,9 @@
         "files_roots_error": "Không tải được danh sách thư mục. Danh sách tệp bắt đầu ở /.",
         "root_writable": "Có thể thay đổi tệp ở đây",
         "root_readonly": "Chỉ đọc",
-        "files_open_root": "Mở {path}"
+        "files_open_root": "Mở {path}",
+        "term_shell_missing": "Không thể mở terminal: shell {shell} chưa được cài trên máy này. Ảnh Docker của bảng điều khiển không có shell này. Để chạy lệnh ở đó, hãy dùng docker exec trên máy chủ.",
+        "term_shell_ended": "Shell đã dừng ngay sau khi khởi động (mã {code}). Kết quả trong terminal có thể cho biết lý do."
     },
     "download": {
         "title": "Tải xuống Đại lý BetterDesk",
