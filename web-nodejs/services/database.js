@@ -129,6 +129,7 @@ const facade = {
     // ---- Audit Log ----
     logAction:   (userId, action, details, ip) => adapter.logAction(userId, action, details, ip),
     getAuditLogs: (limit) => adapter.getAuditLogs(limit),
+    getLatestAuditEntry: (action, detailsPrefix) => adapter.getLatestAuditEntry(action, detailsPrefix),
 
     // ---- Audit: Connections ----
     insertAuditConnection: (data) => adapter.insertAuditConnection(data),

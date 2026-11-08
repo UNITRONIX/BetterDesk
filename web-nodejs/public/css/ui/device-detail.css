@@ -106,13 +106,14 @@
 
 /* ── Tabs ── */
 
+/* Six tabs; on a narrow panel or with long labels they wrap to a second row
+   instead of scrolling out of sight */
 .device-panel-tabs {
     display: flex;
-    gap: var(--space-4);
+    flex-wrap: wrap;
+    column-gap: var(--space-4);
     padding: 0 var(--space-5);
     border-bottom: 1px solid var(--rule);
-    overflow-x: auto;
-    scrollbar-width: thin;
 }
 
 .device-panel-tab {
@@ -226,6 +227,31 @@
 .device-panel-ban-alert-title {
     color: var(--danger);
     font-weight: 600;
+}
+
+/* "Live data": one tab, the agent views switch inside it */
+.device-panel-live-switch {
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+.device-panel-live-note,
+.device-panel-relative-time {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.device-panel-live-note {
+    margin: var(--space-2) 0 var(--space-3);
+}
+
+.device-panel-live-view[hidden] {
+    display: none;
+}
+
+.device-panel-note-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 /* Metrics: one row per value with a thin bar */
@@ -579,5 +605,22 @@
     .device-panel-info-row {
         grid-template-columns: minmax(0, 1fr);
         gap: 2px;
+    }
+}
+
+/* Touch: every control in the panel gets a 44px hit area */
+@media (pointer: coarse) {
+    .device-panel-tab,
+    .device-panel-tag-remove {
+        min-height: 44px;
+    }
+
+    .device-panel-tag-remove {
+        min-width: 44px;
+    }
+
+    .device-panel-id-row .device-panel-copy-btn {
+        width: 44px;
+        height: 44px;
     }
 }

@@ -273,8 +273,11 @@
      * Update a single device's status indicator without reloading the entire table.
      */
     function updateDeviceStatusInPlace(deviceId, status) {
-        const row = tableBody?.querySelector(`tr[data-id="${deviceId}"]`);
+        const row = tableBody?.querySelector(`tr[data-id="${CSS.escape(String(deviceId))}"]`);
         if (!row) return;
+        // A banned or deleted device keeps that status; a disconnect push must not relabel it
+        const known = devices.find(d => d.id === deviceId);
+        if (known && (known.banned || known.soft_deleted)) return;
 
         const normalizedStatus = String(status || '').toLowerCase();
         const statusClassName = ['online', 'offline', 'no_signal', 'degraded', 'critical'].includes(normalizedStatus)
@@ -424,156 +427,95 @@
         return false;
     }
 
+    /** Whether the signed-in user may do this (hides actions that would only fail) */
+    function can(permission) {
+        return !(window.Utils && typeof Utils.can === 'function') || Utils.can(permission);
+    }
+
+    function menuItem(action, eid, icon, label, extra = '') {
+        return `
+            <button type="button" class="kebab-menu-item${extra ? ' ' + extra : ''}" data-action="${action}" data-id="${eid}">
+                <span class="material-icons">${icon}</span>
+                <span>${label}</span>
+            </button>`;
+    }
+
+    /** Join menu groups with dividers, leaving out empty groups */
+    function menuGroups(groups) {
+        return groups.map(g => g.join('')).filter(Boolean).join('<div class="kebab-divider"></div>');
+    }
+
     function buildDeviceMenuItemsHtml(device) {
         const eid = Utils.escapeHtml(device.id);
         const banned = !!device.banned;
         if (device.remote_target) {
-            return `
-            <button type="button" class="kebab-menu-item connect-desktop" data-action="web-remote" data-id="${eid}">
-                <span class="material-icons">screen_share</span>
-                <span>${_('actions.web_remote') || 'Web Remote'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item info" data-action="details" data-id="${eid}">
-                <span class="material-icons">info</span>
-                <span>${_('actions.details')}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="edit" data-id="${eid}">
-                <span class="material-icons">edit</span>
-                <span>${_('actions.edit')}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="manage-tags" data-id="${eid}">
-                <span class="material-icons">sell</span>
-                <span>${_('devices.manage_device_tags') || 'Manage tags'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
-                <span class="material-icons">hub</span>
-                <span>${_('devices.manage_groups') || 'Manage Groups'}</span>
-            </button>
-            <div class="kebab-divider"></div>
-            <button type="button" class="kebab-menu-item danger" data-action="delete" data-id="${eid}">
-                <span class="material-icons">delete</span>
-                <span>${_('actions.delete')}</span>
-            </button>`;
+            const connect = [];
+            if (can('remote_target.connect')) connect.push(menuItem('web-remote', eid, 'screen_share', _('actions.web_remote') || 'Web Remote', 'connect-desktop'));
+            const manage = [menuItem('details', eid, 'info', _('actions.details'), 'info')];
+            if (can('remote_target.edit')) manage.push(menuItem('edit', eid, 'edit', _('actions.edit')));
+            if (can('device.edit')) {
+                manage.push(menuItem('manage-tags', eid, 'sell', _('devices.manage_device_tags') || 'Manage tags'));
+                manage.push(menuItem('groups', eid, 'hub', _('devices.manage_groups') || 'Manage Groups'));
+            }
+            const danger = can('remote_target.delete') ? [menuItem('delete', eid, 'delete', _('actions.delete'), 'danger')] : [];
+            return menuGroups([connect, manage, danger]);
         }
         if (device.soft_deleted) {
-            return `
-            <button type="button" class="kebab-menu-item info" data-action="details" data-id="${eid}">
-                <span class="material-icons">info</span>
-                <span>${_('actions.details')}</span>
-            </button>
-            <div class="kebab-divider"></div>
-            <button type="button" class="kebab-menu-item" data-action="restore" data-id="${eid}">
-                <span class="material-icons">restore</span>
-                <span>${_('devices.restore_action')}</span>
-            </button>
-            <button type="button" class="kebab-menu-item danger" data-action="permanent-delete" data-id="${eid}">
-                <span class="material-icons">delete_forever</span>
-                <span>${_('devices.permanent_delete_title')}</span>
-            </button>`;
+            const restore = [];
+            if (can('device.delete')) {
+                restore.push(menuItem('restore', eid, 'restore', _('devices.restore_action')));
+                restore.push(menuItem('permanent-delete', eid, 'delete_forever', _('devices.permanent_delete_title'), 'danger'));
+            }
+            return menuGroups([[menuItem('details', eid, 'info', _('actions.details'), 'info')], restore]);
         }
+        const canConnect = can('device.connect');
         const isMesh = String(device.device_type || '').toLowerCase() === 'mesh_agent';
         const meshOnline = isMesh && (device.mesh_connected || device.online);
-        const meshOfflineWake = isMesh && !meshOnline ? `
-            <button type="button" class="kebab-menu-item" data-action="mesh-power-wake" data-id="${eid}">
-                <span class="material-icons">power_settings_new</span>
-                <span>${_('mesh.power_wake') || 'Wake'}</span>
-            </button>
-            <div class="kebab-divider"></div>` : '';
-        const meshActions = meshOnline ? `
-            <button type="button" class="kebab-menu-item" data-action="mesh-terminal" data-id="${eid}">
-                <span class="material-icons">terminal</span>
-                <span>${_('mesh.terminal') || 'Terminal'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-files" data-id="${eid}">
-                <span class="material-icons">folder</span>
-                <span>${_('mesh.files') || 'File browser'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-run-command" data-id="${eid}">
-                <span class="material-icons">play_arrow</span>
-                <span>${_('mesh.run_command') || 'Run command'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-link-peer" data-id="${eid}">
-                <span class="material-icons">link</span>
-                <span>${_('mesh.link_peer') || 'Link peer'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-share" data-id="${eid}">
-                <span class="material-icons">link</span>
-                <span>${_('mesh.share_link') || 'Guest desktop link'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-port-tcp" data-id="${eid}">
-                <span class="material-icons">settings_ethernet</span>
-                <span>${_('mesh.port_tcp') || 'TCP port relay'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-port-udp" data-id="${eid}">
-                <span class="material-icons">settings_ethernet</span>
-                <span>${_('mesh.port_udp') || 'UDP port relay'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-power-wake" data-id="${eid}">
-                <span class="material-icons">power_settings_new</span>
-                <span>${_('mesh.power_wake') || 'Wake'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-power-sleep" data-id="${eid}">
-                <span class="material-icons">bedtime</span>
-                <span>${_('mesh.power_sleep') || 'Sleep'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-power-reset" data-id="${eid}">
-                <span class="material-icons">restart_alt</span>
-                <span>${_('mesh.power_reset') || 'Reset'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="mesh-power-off" data-id="${eid}">
-                <span class="material-icons">power_off</span>
-                <span>${_('mesh.power_off') || 'Power off'}</span>
-            </button>
-            <div class="kebab-divider"></div>` : '';
-        return `
-            <button type="button" class="kebab-menu-item connect-desktop" data-action="web-remote" data-id="${eid}">
-                <span class="material-icons">screen_share</span>
-                <span>${_('actions.web_remote') || 'Web Remote'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="guest-access" data-id="${eid}">
-                <span class="material-icons">share</span>
-                <span>${_('guest_access.menu') || 'Guest access link'}</span>
-            </button>
-            ${meshActions}
-            ${meshOfflineWake}
-            <button type="button" class="kebab-menu-item" data-action="cdap-viewer" data-id="${eid}">
-                <span class="material-icons">photo_camera</span>
-                <span>${_('actions.cdap_viewer') || 'CDAP Snapshot Viewer'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="connect-desktop" data-id="${eid}">
-                <span class="material-icons">computer</span>
-                <span>${_('actions.connect_desktop') || 'Desktop Client'}</span>
-            </button>
-            <div class="kebab-divider"></div>
-            <button type="button" class="kebab-menu-item info" data-action="details" data-id="${eid}">
-                <span class="material-icons">info</span>
-                <span>${_('actions.details')}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="edit" data-id="${eid}">
-                <span class="material-icons">edit</span>
-                <span>${_('actions.edit')}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="manage-tags" data-id="${eid}">
-                <span class="material-icons">sell</span>
-                <span>${_('devices.manage_device_tags') || 'Manage tags'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="groups" data-id="${eid}">
-                <span class="material-icons">hub</span>
-                <span>${_('devices.manage_groups') || 'Manage Groups'}</span>
-            </button>
-            <button type="button" class="kebab-menu-item" data-action="access-policy" data-id="${eid}">
-                <span class="material-icons">lock</span>
-                <span>${_('devices.access_policy') || 'Access Policy'}</span>
-            </button>
+        const mesh = [];
+        if (meshOnline) {
+            if (can('mesh.terminal')) mesh.push(menuItem('mesh-terminal', eid, 'terminal', _('mesh.terminal') || 'Terminal'));
+            if (can('mesh.files') && canConnect) mesh.push(menuItem('mesh-files', eid, 'folder', _('mesh.files') || 'File browser'));
+            if (canConnect) mesh.push(menuItem('mesh-run-command', eid, 'play_arrow', _('mesh.run_command') || 'Run command'));
+            if (can('cdap.command')) mesh.push(menuItem('mesh-link-peer', eid, 'link', _('mesh.link_peer') || 'Link peer'));
+            if (canConnect) {
+                mesh.push(menuItem('mesh-share', eid, 'link', _('mesh.share_link') || 'Guest desktop link'));
+                mesh.push(menuItem('mesh-port-tcp', eid, 'settings_ethernet', _('mesh.port_tcp') || 'TCP port relay'));
+                mesh.push(menuItem('mesh-port-udp', eid, 'settings_ethernet', _('mesh.port_udp') || 'UDP port relay'));
+            }
+            if (can('mesh.power')) {
+                mesh.push(menuItem('mesh-power-wake', eid, 'power_settings_new', _('mesh.power_wake') || 'Wake'));
+                mesh.push(menuItem('mesh-power-sleep', eid, 'bedtime', _('mesh.power_sleep') || 'Sleep'));
+                mesh.push(menuItem('mesh-power-reset', eid, 'restart_alt', _('mesh.power_reset') || 'Reset'));
+                mesh.push(menuItem('mesh-power-off', eid, 'power_off', _('mesh.power_off') || 'Power off'));
+            }
+        } else if (isMesh && can('mesh.power')) {
+            mesh.push(menuItem('mesh-power-wake', eid, 'power_settings_new', _('mesh.power_wake') || 'Wake'));
+        }
+        const connect = [];
+        if (canConnect) connect.push(menuItem('web-remote', eid, 'screen_share', _('actions.web_remote') || 'Web Remote', 'connect-desktop'));
+        if (can('guest.create')) connect.push(menuItem('guest-access', eid, 'share', _('guest_access.menu') || 'Guest access link'));
+        const viewers = [];
+        if (canConnect) {
+            viewers.push(menuItem('cdap-viewer', eid, 'photo_camera', _('actions.cdap_viewer') || 'CDAP Snapshot Viewer'));
+            viewers.push(menuItem('connect-desktop', eid, 'computer', _('actions.connect_desktop') || 'Desktop Client'));
+        }
+        const manage = [menuItem('details', eid, 'info', _('actions.details'), 'info')];
+        if (can('device.edit')) {
+            manage.push(menuItem('edit', eid, 'edit', _('actions.edit')));
+            manage.push(menuItem('manage-tags', eid, 'sell', _('devices.manage_device_tags') || 'Manage tags'));
+            manage.push(menuItem('groups', eid, 'hub', _('devices.manage_groups') || 'Manage Groups'));
+            manage.push(menuItem('access-policy', eid, 'lock', _('devices.access_policy') || 'Access Policy'));
+        }
+        if (can('device.ban')) {
+            manage.push(`
             <button type="button" class="kebab-menu-item ${banned ? 'unban' : 'ban'}" data-action="toggle-ban" data-id="${eid}" data-banned="${banned}">
                 <span class="material-icons">${banned ? 'check_circle' : 'block'}</span>
                 <span>${banned ? _('actions.unban') : _('actions.ban')}</span>
-            </button>
-            <div class="kebab-divider"></div>
-            <button type="button" class="kebab-menu-item danger" data-action="delete" data-id="${eid}">
-                <span class="material-icons">delete</span>
-                <span>${_('actions.delete')}</span>
-            </button>`;
+            </button>`);
+        }
+        const danger = can('device.delete') ? [menuItem('delete', eid, 'delete', _('actions.delete'), 'danger')] : [];
+        const open = mesh.length ? [connect.concat(mesh), viewers] : [connect.concat(viewers)];
+        return menuGroups(open.concat([manage, danger]));
     }
 
     function initContextMenu() {
@@ -605,8 +547,13 @@
 
     }
 
+    /** Folders and groups are changed through routes that require device.edit */
+    function canManageFilters() {
+        return can('device.edit');
+    }
+
     function buildChipContextMenuHtml(type) {
-        const billing = type === 'group' ? `
+        const billing = type === 'group' && can('billing.manage') ? `
             <button type="button" class="kebab-menu-item" data-action="commercialization">
                 <span>${_('devices.group_commercialization') || 'Commercialization'}</span>
             </button>` : '';
@@ -690,6 +637,7 @@
     }
 
     function attachChipContextMenu(el, state) {
+        if (!canManageFilters()) return;
         el.addEventListener('contextmenu', (e) => {
             if (e.target.closest('.chip-action') || e.target.closest('.chip-actions')) return;
             e.preventDefault();
@@ -901,6 +849,12 @@
     }
 
     async function loadUserGroups() {
+        // The route needs user.view or device.edit; without them there is nothing to show
+        if (!can('device.edit') && !can('user.view')) {
+            availableUserGroups = [];
+            userGroupsLoaded = true;
+            return;
+        }
         try {
             const response = await fetchOnce('/api/panel/user-groups', () => Utils.api('/api/panel/user-groups'));
             availableUserGroups = response.groups || [];
@@ -984,6 +938,22 @@
         return `<span class="device-tags tag-list">${tags.map(tag => Utils.escapeHtml(tag)).join(', ')}</span>`;
     }
     
+    /** Text the search box looks through: ID, names, user, platform, type, tags, note, IP */
+    function deviceSearchText(device) {
+        return [
+            device.id,
+            device.display_name,
+            device.hostname,
+            device.username,
+            device.platform || device.os,
+            device.device_type || 'rustdesk',
+            normalizeTags(device.tags).join(' '),
+            device.note,
+            device.ip,
+            device.linked_peer_id
+        ].filter(Boolean).join(' ').toLowerCase();
+    }
+
     /**
      * Apply current filters and render
      */
@@ -1017,17 +987,11 @@
             if (currentFilter === 'banned' && !device.banned) return false;
             if (currentFilter === 'mesh_agent' && String(device.device_type || '').toLowerCase() !== 'mesh_agent') return false;
             
-            // Search filter
+            // Search filter: every word must appear somewhere (any order)
             if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                const match = 
-                    device.id?.toLowerCase().includes(q) ||
-                    device.display_name?.toLowerCase().includes(q) ||
-                    device.hostname?.toLowerCase().includes(q) ||
-                    device.username?.toLowerCase().includes(q) ||
-                    device.platform?.toLowerCase().includes(q) ||
-                    (device.device_type || 'rustdesk').toLowerCase().includes(q);
-                if (!match) return false;
+                const haystack = deviceSearchText(device);
+                const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+                if (!words.every(word => haystack.includes(word))) return false;
             }
             
             return true;
@@ -1099,7 +1063,7 @@
             const eid = Utils.escapeHtml(device.id);
             const statusInfo = deviceStatusInfo(device);
             const sc = statusInfo.className;
-            const rowDraggable = (!device.soft_deleted && !shouldDisableRowDrag()) ? 'true' : 'false';
+            const rowDraggable = (!device.soft_deleted && can('device.edit') && !shouldDisableRowDrag()) ? 'true' : 'false';
             return `
             <tr data-id="${eid}" class="${device.banned ? 'banned-row' : ''}${device.soft_deleted ? ' deleted-row' : ''}" draggable="${rowDraggable}">
                 <td data-column="id">
@@ -1125,7 +1089,7 @@
                     </div>
                 </td>
                 <td data-column="last_online">
-                    <span class="last-seen-text" title="${Utils.formatDate(device.last_online)}">${Utils.formatRelativeTime(device.last_online)}</span>
+                    <span class="last-seen-text" title="${Utils.formatDate(device.last_online, { empty: _('time.never') })}">${Utils.formatRelativeTime(device.last_online, { empty: _('time.never') })}</span>
                 </td>
                 <td data-column="status">
                     <span class="status ${sc}"${statusInfo.title ? ` title="${Utils.escapeHtml(statusInfo.title)}"` : ''}>${statusInfo.label}</span>
@@ -1237,16 +1201,48 @@
      * Try to add a remote session tab in an existing RDClient window via BroadcastChannel.
      * Falls back to opening a new browser tab if no RDClient page is listening.
      */
+    /**
+     * Phone screens: the web viewer only runs on a wider screen, so ask first
+     * whether to open it anyway (for example to turn the phone sideways) or to
+     * hand the ID to the RustDesk app.
+     */
+    function showPhoneConnectChoice(deviceId, data) {
+        const isRemoteTarget = String(deviceId).startsWith('rt_') || !!(data && data.remote_target);
+        const row = (title, text, choice, buttonLabel) => `
+            <li class="list-row connect-choice">
+                <span class="row-main">
+                    <span class="row-title">${Utils.escapeHtml(title)}</span>
+                    <span class="row-sub">${Utils.escapeHtml(text)}</span>
+                </span>
+                <span class="row-end"><button type="button" class="btn btn-sm" data-connect-choice="${choice}">${Utils.escapeHtml(buttonLabel)}</button></span>
+            </li>`;
+        Modal.show({
+            title: _('devices.connect_phone_title'),
+            content: `
+                <p>${Utils.escapeHtml(_('devices.connect_phone_intro'))}</p>
+                <ul class="list connect-choice-list">
+                    ${row(_('devices.connect_phone_web'), _('devices.connect_phone_web_desc'), 'web', _('devices.connect_phone_web_action'))}
+                    ${isRemoteTarget ? '' : row(_('devices.connect_phone_app'), _('devices.connect_phone_app_desc'), 'app', _('devices.connect_phone_app_action'))}
+                </ul>`,
+            buttons: [{ label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() }],
+            closable: true
+        });
+        document.querySelectorAll('[data-connect-choice]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const choice = btn.dataset.connectChoice;
+                Modal.close();
+                if (choice === 'app') {
+                    window.location.href = 'rustdesk://' + encodeURIComponent(deviceId);
+                } else {
+                    window.open(`/remote/${encodeURIComponent(deviceId)}`, '_blank');
+                }
+            });
+        });
+    }
+
     function _tryAddRemoteTab(deviceId, data) {
         if (window.DeviceCapabilities && window.DeviceCapabilities.isPhone()) {
-            if (window.RdClientMobile && window.RdClientMobile.showPhoneUnsupportedToast) {
-                window.RdClientMobile.showPhoneUnsupportedToast();
-            } else if (typeof Modal !== 'undefined') {
-                Modal.alert({
-                    title: _('remote.phone_unsupported_title'),
-                    message: _('remote.phone_unsupported_body')
-                });
-            }
+            showPhoneConnectChoice(deviceId, data);
             return;
         }
 
@@ -1997,7 +1993,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">${_('devices.last_online')}:</span>
-                        <span class="detail-value">${Utils.formatDate(device.last_online)}</span>
+                        <span class="detail-value">${Utils.formatDate(device.last_online, { empty: _('time.never') })}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">${_('devices.created')}:</span>
@@ -2156,19 +2152,70 @@
     /**
      * Toggle device ban status
      */
+    /**
+     * Ask before banning (with an optional reason) or unbanning.
+     * Resolves to { reason } when confirmed, null when cancelled.
+     * Shared with the device panel (deviceDetail.js).
+     */
+    function confirmBanChange(deviceId, currentlyBanned, deviceName) {
+        const label = deviceName ? `${deviceName} (${deviceId})` : deviceId;
+        if (currentlyBanned) {
+            return Modal.confirm({
+                title: _('devices.unban_title'),
+                message: _('devices.unban_effect', { device: label }),
+                confirmLabel: _('actions.unban'),
+                danger: false
+            }).then(ok => (ok ? { reason: '' } : null));
+        }
+        const inputId = Utils.generateId();
+        return new Promise((resolve) => {
+            let done = false;
+            const finish = (value) => {
+                if (done) return;
+                done = true;
+                resolve(value);
+            };
+            const submit = () => {
+                const reason = (document.getElementById(inputId)?.value || '').trim();
+                Modal.close();
+                finish({ reason });
+            };
+            Modal.show({
+                title: _('devices.ban_title'),
+                content: `
+                    <p class="ban-dialog-effect">${Utils.escapeHtml(_('devices.ban_effect', { device: label }))}</p>
+                    <div class="form-group">
+                        <label class="form-label" for="${inputId}">${Utils.escapeHtml(_('devices.ban_reason_label'))}</label>
+                        <input type="text" id="${inputId}" class="form-input" maxlength="500" autocomplete="off" aria-describedby="${inputId}-hint">
+                        <p class="form-hint" id="${inputId}-hint">${Utils.escapeHtml(_('devices.ban_reason_hint'))}</p>
+                    </div>`,
+                buttons: [
+                    { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => { Modal.close(); finish(null); } },
+                    { label: _('actions.ban'), class: 'btn-danger', onClick: submit }
+                ],
+                closable: true,
+                onClose: () => finish(null)
+            });
+            document.getElementById(inputId)?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submit();
+                }
+            });
+        });
+    }
+
     async function toggleBan(deviceId, currentlyBanned) {
         const action = currentlyBanned ? 'unban' : 'ban';
-        const confirmed = await Modal.confirm({
-            title: _(`devices.${action}_title`),
-            message: _(`devices.${action}_confirm`, { id: deviceId }),
-            confirmLabel: _(currentlyBanned ? 'actions.unban' : 'actions.ban'),
-            danger: !currentlyBanned
-        });
-        
-        if (!confirmed) return;
-        
+        const device = devices.find(d => d.id === deviceId);
+        const answer = await confirmBanChange(deviceId, currentlyBanned, device && (device.display_name || device.hostname));
+        if (!answer) return;
+
         try {
-            await Utils.api(`/api/devices/${deviceId}/${action}`, { method: 'POST' });
+            await Utils.api(`/api/devices/${encodeURIComponent(deviceId)}/${action}`, {
+                method: 'POST',
+                body: currentlyBanned ? {} : { reason: answer.reason }
+            });
             Notifications.success(_(`devices.${action}_success`));
             loadDevices();
         } catch (error) {
@@ -2512,7 +2559,7 @@
                     </div>
                     <div class="device-info-item">
                         <label>${_('devices.last_seen')}</label>
-                        <span>${Utils.formatDate(device.last_online)}</span>
+                        <span>${Utils.formatDate(device.last_online, { empty: _('time.never') })}</span>
                     </div>
                 </div>
             `,
@@ -2600,6 +2647,8 @@
 
     window.BetterDeskDevices = window.BetterDeskDevices || {};
     window.BetterDeskDevices.showEditModal = showEditModal;
+    window.BetterDeskDevices.confirmBanChange = confirmBanChange;
+    window.BetterDeskDevices.connect = (deviceId, data) => _tryAddRemoteTab(deviceId, data);
 
     function countDevicesWithTag(tag) {
         const expected = String(tag || '').trim().toLowerCase();
@@ -2753,6 +2802,16 @@
         if (!btn) return;
         btn.addEventListener('click', (e) => {
             e.preventDefault();
+            // The button sits in the tag filter menu: close it and let the dialog return focus to its button
+            const menu = document.getElementById('tags-filter-menu');
+            const opener = document.getElementById('tags-filter-btn');
+            if (menu && menu.contains(btn)) {
+                menu.classList.remove('show');
+                if (opener) {
+                    opener.setAttribute('aria-expanded', 'false');
+                    opener.focus({ preventScroll: true });
+                }
+            }
             showManageTagsModal();
         });
     }
@@ -2997,7 +3056,7 @@
     }
 
     function renderTagFilters() {
-        const menu = document.getElementById('tags-filter-menu');
+        const menu = document.getElementById('tags-filter-options') || document.getElementById('tags-filter-menu');
         const btn = document.getElementById('tags-filter-btn');
         if (!menu) return;
 
@@ -3018,12 +3077,23 @@
                 if (input.checked) selectedTags.add(input.value);
                 else selectedTags.delete(input.value);
                 currentPage = 1;
-                if (btn) btn.classList.toggle('tag-filter-active', selectedTags.size > 0);
+                updateTagFilterButton();
                 applyFilters();
             });
         });
 
+        updateTagFilterButton();
+    }
+
+    /** "Tags: scanner" on the button while a tag filter is on */
+    function updateTagFilterButton() {
+        const btn = document.getElementById('tags-filter-btn');
         if (btn) btn.classList.toggle('tag-filter-active', selectedTags.size > 0);
+        const summary = document.getElementById('tags-filter-summary');
+        if (!summary) return;
+        const list = Array.from(selectedTags);
+        summary.textContent = list.length === 0 ? ''
+            : ': ' + (list.length === 1 ? list[0] : _('devices.tags_selected', { count: list.length }));
     }
 
     /** Escape closes a toolbar dropdown and puts focus back on its button */
@@ -3079,10 +3149,10 @@
                     <span class="chip-label">${name}</span>
                     <span class="chip-count">${group.member_count || 0}</span>
                 </span>
-                <button type="button" class="chip-menu-btn btn-icon" data-type="group" data-group="${guid}"
+                ${canManageFilters() ? `<button type="button" class="chip-menu-btn btn-icon" data-type="group" data-group="${guid}"
                         aria-label="${_('devices.actions')}: ${name}" aria-haspopup="menu">
                     <span class="material-icons" aria-hidden="true">more_vert</span>
-                </button>
+                </button>` : ''}
             </li>`;
         }).join('');
 
@@ -3354,11 +3424,11 @@
                         <span class="strategy-assign-count" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('devices.strategy_assign_none')}</span>
                     </span>
                 </div>
-                <div class="strategy-manager-actions">
+                ${can('device.edit') ? `<div class="strategy-manager-actions">
                     <button type="button" class="btn btn-sm btn-ghost action-btn" data-action="assign-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('devices.strategy_assign')}</button>
                     <button type="button" class="btn btn-sm btn-ghost action-btn" data-action="edit-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('actions.edit')}</button>
                     <button type="button" class="btn btn-sm btn-ghost btn-danger-quiet action-btn danger" data-action="delete-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('actions.delete')}</button>
-                </div>
+                </div>` : ''}
             </div>`;
         }).join('');
 
@@ -3658,10 +3728,10 @@
                     <span class="chip-label">${name}</span>
                     <span class="chip-count">${folder.device_count || 0}</span>
                 </span>
-                <button type="button" class="chip-menu-btn btn-icon" data-type="folder" data-id="${folder.id}"
+                ${canManageFilters() ? `<button type="button" class="chip-menu-btn btn-icon" data-type="folder" data-id="${folder.id}"
                         aria-label="${_('devices.actions')}: ${name}" aria-haspopup="menu">
                     <span class="material-icons" aria-hidden="true">more_vert</span>
-                </button>
+                </button>` : ''}
             </li>
         `}).join('');
         
@@ -4086,7 +4156,7 @@
 
         // Handle drag start on rows
         tableBody?.addEventListener('dragstart', (e) => {
-            if (shouldDisableRowDrag()) {
+            if (shouldDisableRowDrag() || !can('device.edit')) {
                 e.preventDefault();
                 return;
             }

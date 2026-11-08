@@ -183,6 +183,7 @@ function escapeLikePattern(str) {
  * -- Audit --
  * @property {function(number|null, string, string, string): Promise<void>}  logAction
  * @property {function(number, number): Promise<Object[]>}  getAuditLogs
+ * @property {function(string, string): Promise<Object|null>}  getLatestAuditEntry
  *
  * -- Settings --
  * @property {function(string): Promise<string|null>}  getSetting
@@ -1931,6 +1932,14 @@ function createSqliteAdapter(config) {
                 LEFT JOIN users u ON a.user_id = u.id
                 ORDER BY a.created_at DESC LIMIT ? OFFSET ?
             `).all(limit, offset);
+        },
+        async getLatestAuditEntry(action, detailsPrefix) {
+            return openAuth().prepare(`
+                SELECT a.*, u.username FROM audit_log a
+                LEFT JOIN users u ON a.user_id = u.id
+                WHERE a.action = ? AND substr(a.details, 1, length(?)) = ?
+                ORDER BY a.created_at DESC, a.id DESC LIMIT 1
+            `).get(action, detailsPrefix, detailsPrefix) || null;
         },
         async cleanupOldAuditLogs(daysToKeep = 90) {
             const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();
@@ -5411,6 +5420,11 @@ function createPostgresAdapter() {
         },
         async getAuditLogs(limit = 100, offset = 0) {
             return all(`SELECT a.*, u.username FROM audit_log a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.created_at DESC LIMIT $1 OFFSET $2`, [limit, offset]);
+        },
+        async getLatestAuditEntry(action, detailsPrefix) {
+            return one(`SELECT a.*, u.username FROM audit_log a LEFT JOIN users u ON a.user_id = u.id
+                WHERE a.action = $1 AND left(a.details, length($2)) = $2
+                ORDER BY a.created_at DESC, a.id DESC LIMIT 1`, [action, detailsPrefix]);
         },
         async cleanupOldAuditLogs(daysToKeep = 90) {
             const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();

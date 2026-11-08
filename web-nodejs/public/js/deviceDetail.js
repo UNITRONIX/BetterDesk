@@ -46,10 +46,10 @@ const DeviceDetail = (function () {
             const statusInfo = _resolveDeviceStatus(device);
             const badge = statusBar.querySelector('.device-panel-status-badge');
             if (badge) {
-                badge.className = 'device-panel-status-badge ' + statusInfo.className;
+                badge.className = 'device-panel-status-badge status ' + statusInfo.className;
                 if (statusInfo.title) badge.title = statusInfo.title;
                 else badge.removeAttribute('title');
-                badge.innerHTML = '<span class="status-dot"></span>' + statusInfo.label;
+                badge.textContent = statusInfo.label;
             }
         }
     });
@@ -74,6 +74,9 @@ const DeviceDetail = (function () {
     let overlayEl = null;
     let device = null;
     let activeTab = 'overview';
+    let liveView = 'services';
+    // Views inside the "Live data" tab, read from the device's agent on demand
+    const AGENT_TABS = ['services', 'processes', 'events', 'activity', 'files'];
     let refreshTimer = null;
     let availableTags = [];
     let availableTagsLoaded = false;
@@ -144,6 +147,7 @@ const DeviceDetail = (function () {
     async function open(deviceId) {
         if (!deviceId) return;
         activeTab = 'overview';
+        liveView = 'services';
         availabilityDay = _localDayString();
         availabilityData = null;
         connectionSessionsData = null;
@@ -271,10 +275,12 @@ const DeviceDetail = (function () {
 
         // Auto-refresh re-renders the panel; keep keyboard focus where it was
         const focusedAction = document.activeElement && inner.contains(document.activeElement)
-            ? (document.activeElement.id || document.activeElement.dataset.tab || document.activeElement.dataset.action || '')
+            ? (document.activeElement.id || document.activeElement.dataset.tab || document.activeElement.dataset.liveView || document.activeElement.dataset.action || '')
             : '';
 
         inner.innerHTML = _headerHTML() + _tabsHTML() + _contentHTML() + _footerHTML();
+        // The agent panes were just rebuilt empty: load them again when shown
+        Object.keys(_agentTabLoaded).forEach(function (k) { delete _agentTabLoaded[k]; });
 
         _attachEvents();
         _bindAvailabilityControls();
@@ -286,7 +292,7 @@ const DeviceDetail = (function () {
             if (closeBtn) closeBtn.focus({ preventScroll: true });
         } else if (focusedAction) {
             const again = inner.querySelector('#' + CSS.escape(focusedAction)) ||
-                inner.querySelector(`[data-tab="${CSS.escape(focusedAction)}"], [data-action="${CSS.escape(focusedAction)}"]`);
+                inner.querySelector(`[data-tab="${CSS.escape(focusedAction)}"], [data-live-view="${CSS.escape(focusedAction)}"], [data-action="${CSS.escape(focusedAction)}"]`);
             if (again) again.focus({ preventScroll: true });
         }
     }
@@ -354,21 +360,24 @@ const DeviceDetail = (function () {
 
     // ── Tabs ──
 
-    function _tabsHTML() {
+    function _liveViews() {
         const identity = device?.telemetry?.snapshots?.identity?.data || {};
-        const supportAgent = _isSupportAgent(identity);
+        if (_isSupportAgent(identity)) return [];
+        // Browsing files goes through a route that needs device.edit
+        return AGENT_TABS.filter(id => id !== 'files' || _can('device.edit'));
+    }
+
+    function _tabsHTML() {
+        // Five agent views share one "Live data" tab so the row fits the panel
         const tabs = [
-            { id: 'overview',  icon: 'info',            label: _('device_detail.tab_overview') },
-            { id: 'hardware',  icon: 'memory',          label: _('device_detail.tab_hardware') },
-            { id: 'metrics',   icon: 'monitoring',      label: _('device_detail.tab_metrics') },
-            { id: 'services',  icon: 'settings',          label: _('device_detail.tab_services') },
-            { id: 'processes', icon: 'memory',          label: _('device_detail.tab_processes') },
-            { id: 'events',    icon: 'event_note',      label: _('device_detail.tab_events') },
-            { id: 'activity',  icon: 'timeline',        label: _('device_detail.tab_activity') },
-            { id: 'files',     icon: 'folder_open',     label: _('device_detail.tab_files') },
-            { id: 'tags',      icon: 'sell',             label: _('device_detail.tab_tags') },
-            { id: 'actions',   icon: 'play_arrow',       label: _('device_detail.tab_actions') }
-        ].filter(tab => !supportAgent || !['services', 'processes', 'events', 'activity', 'files'].includes(tab.id));
+            { id: 'overview', label: _('device_detail.tab_overview') },
+            { id: 'hardware', label: _('device_detail.tab_hardware') },
+            { id: 'metrics',  label: _('device_detail.tab_metrics') },
+            { id: 'live',     label: _('device_detail.tab_live') },
+            { id: 'tags',     label: _('device_detail.tab_tags') },
+            { id: 'actions',  label: _('device_detail.tab_actions') }
+        ].filter(tab => tab.id !== 'live' || _liveViews().length > 0)
+         .filter(tab => tab.id !== 'actions' || _hasActions());
         return `<div class="device-panel-tabs" role="tablist">` +
             tabs.map(t =>
                 `<button type="button" class="device-panel-tab${t.id === activeTab ? ' active' : ''}" data-tab="${t.id}" role="tab" aria-selected="${t.id === activeTab ? 'true' : 'false'}">${t.label}</button>`
@@ -383,13 +392,21 @@ const DeviceDetail = (function () {
             ${_overviewPane()}
             ${_hardwarePane()}
             ${_metricsPane()}
-            ${_agentPane('services', 'settings', 'tab_services')}
-            ${_agentPane('processes', 'memory', 'tab_processes')}
-            ${_agentPane('events', 'event_note', 'tab_events')}
-            ${_agentPane('activity', 'timeline', 'tab_activity')}
-            ${_agentPane('files', 'folder_open', 'tab_files')}
+            ${_livePane()}
             ${_tagsPane()}
             ${_actionsPane()}
+        </div>`;
+    }
+
+    function _livePane() {
+        const views = _liveViews();
+        if (!views.length) return '';
+        return `<div class="device-panel-tab-pane" data-pane="live">
+            <div class="view-switch device-panel-live-switch" role="group" aria-label="${Utils.escapeHtml(_('device_detail.tab_live'))}">
+                ${views.map(id => `<button type="button" data-live-view="${id}" aria-pressed="${id === liveView ? 'true' : 'false'}">${_('device_detail.tab_' + id)}</button>`).join('')}
+            </div>
+            <p class="device-panel-live-note">${Utils.escapeHtml(_('device_detail.live_note'))}</p>
+            ${views.map(id => _agentPane(id)).join('')}
         </div>`;
     }
 
@@ -400,14 +417,10 @@ const DeviceDetail = (function () {
     // boilerplate. Instead, each pane is a placeholder that shows an empty
     // state and a "Load" button; real data is fetched when tab is shown.
 
-    function _agentPane(paneId, icon, labelKey) {
-        return `<div class="device-panel-tab-pane" data-pane="${paneId}">
+    function _agentPane(paneId) {
+        return `<div class="device-panel-live-view" data-live-pane="${paneId}">
             <div class="device-panel-agent-pane" data-agent-pane="${paneId}">
-                <div class="device-panel-agent-empty">
-                    <span class="material-icons">${icon}</span>
-                    <div>${_('device_detail.' + labelKey)}</div>
-                    <div class="device-panel-agent-hint">${_('device_detail.agent_lazy_hint')}</div>
-                </div>
+                <div class="device-panel-agent-loading">${_('common.loading')}</div>
             </div>
         </div>`;
     }
@@ -430,11 +443,13 @@ const DeviceDetail = (function () {
         // Ban alert
         if (d.banned) {
             html += `
-            <div class="device-panel-ban-alert">
-                <span class="material-icons">gpp_bad</span>
+            <div class="device-panel-ban-alert" role="note">
                 <div class="device-panel-ban-alert-text">
                     <div class="device-panel-ban-alert-title">${_('device_detail.device_banned')}</div>
-                    <div class="device-panel-ban-alert-reason">${d.ban_reason ? Utils.escapeHtml(d.ban_reason) : _('device_detail.no_reason')}</div>
+                    <div class="device-panel-ban-alert-when">${Utils.escapeHtml(_banLine(d))}</div>
+                    <div class="device-panel-ban-alert-reason">${d.ban_reason
+                        ? Utils.escapeHtml(_('device_detail.ban_reason_line', { reason: d.ban_reason }))
+                        : _('device_detail.no_reason')}</div>
                 </div>
             </div>`;
         }
@@ -526,9 +541,7 @@ const DeviceDetail = (function () {
         <div class="device-panel-section">
             <div class="device-panel-section-title">
                 <span class="material-icons">computer</span> ${_('device_detail.section_system')}
-                <button type="button" class="device-panel-inline-action" data-refresh-hardware>
-                    <span class="material-icons">refresh</span> Odśwież
-                </button>
+                ${_can('device.edit') ? `<button type="button" class="btn btn-sm device-panel-inline-action" data-refresh-hardware>${_('device_detail.read_again')}</button>` : ''}
             </div>
             <div class="device-panel-info-grid">
                 ${s.hostname ? _infoRow(_('devices.hostname'), Utils.escapeHtml(s.hostname)) : ''}
@@ -536,12 +549,12 @@ const DeviceDetail = (function () {
                 ${s.os_full ? _infoRow(_('device_detail.os'), Utils.escapeHtml(s.os_full)) : ''}
                 ${s.platform ? _infoRow(_('devices.platform'), Utils.escapeHtml(s.platform)) : ''}
                 ${s.version ? _infoRow(_('device_detail.version'), Utils.escapeHtml(s.version)) : ''}
-                ${s.vendor ? _infoRow('Vendor', Utils.escapeHtml(s.vendor)) : ''}
-                ${s.domain ? _infoRow('Domena', Utils.escapeHtml(s.domain)) : ''}
+                ${s.vendor ? _infoRow(_('device_detail.vendor'), Utils.escapeHtml(s.vendor)) : ''}
+                ${s.domain ? _infoRow(_('device_detail.domain'), Utils.escapeHtml(s.domain)) : ''}
                 ${s.cpu ? _infoRow('CPU', Utils.escapeHtml(s.cpu)) : ''}
                 ${s.memory ? _infoRow(_('device_detail.total_memory'), Utils.escapeHtml(s.memory)) : ''}
                 ${hardwareSnapshot?.status && hardwareSnapshot.status !== 'ok'
-                    ? _infoRow('Status odczytu', Utils.escapeHtml(hardwareSnapshot.status)) : ''}
+                    ? _infoRow(_('device_detail.read_status'), Utils.escapeHtml(hardwareSnapshot.status)) : ''}
             </div>
         </div>`;
 
@@ -551,7 +564,7 @@ const DeviceDetail = (function () {
             <div class="device-panel-section-title"><span class="material-icons">speed</span> ${_('device_detail.section_cpu')}</div>
             <div class="device-panel-info-grid">
                 ${s.cpu_name ? _infoRow(_('device_detail.cpu_model'), Utils.escapeHtml(s.cpu_name)) : ''}
-                ${s.cpu_cores ? _infoRow(_('device_detail.cpu_cores'), s.cpu_cores + ' cores') : ''}
+                ${s.cpu_cores ? _infoRow(_('device_detail.cpu_cores'), Utils.escapeHtml(String(s.cpu_cores))) : ''}
                 ${s.cpu_freq_ghz ? _infoRow(_('device_detail.cpu_freq'), _formatFreq(s.cpu_freq_ghz)) : ''}
             </div>
         </div>`;
@@ -865,49 +878,46 @@ const DeviceDetail = (function () {
         const d = device;
         const tags = d.tags || [];
         const hasTags = tags.length > 0;
+        const canEdit = _can('device.edit');
 
         let html = `<div class="device-panel-tab-pane" data-pane="tags">`;
 
         // Tags section
         html += `
         <div class="device-panel-section">
-            <div class="device-panel-section-title"><span class="material-icons">sell</span> ${_('device_detail.tags')}</div>
-            <p class="form-hint device-panel-tags-hint">${_('device_detail.tags_unassign_hint') || _('devices.tags_device_hint') || 'Removing a tag here unassigns it from this device only. Use Manage Tags on the Devices page to rename or delete a tag everywhere.'}</p>
+            <div class="device-panel-section-title" id="dp-tags-title">${_('device_detail.tags')}</div>
+            ${canEdit ? `<p class="form-hint device-panel-tags-hint">${_('device_detail.tags_unassign_hint') || _('devices.tags_device_hint') || 'Removing a tag here unassigns it from this device only. Use Manage Tags on the Devices page to rename or delete a tag everywhere.'}</p>` : ''}
             <div class="device-panel-tags-container" id="dp-tags-list">
                 ${hasTags
                     ? tags.map(t => `
                         <span class="device-panel-tag">
                             ${Utils.escapeHtml(t)}
-                            <button class="device-panel-tag-remove" data-tag="${Utils.escapeHtml(t)}" title="${_('devices.unassign_tag') || _('actions.delete')}">
-                                <span class="material-icons">close</span>
-                            </button>
+                            ${canEdit ? `<button type="button" class="device-panel-tag-remove" data-tag="${Utils.escapeHtml(t)}" title="${_('devices.unassign_tag') || _('actions.delete')}" aria-label="${Utils.escapeHtml((_('devices.unassign_tag') || _('actions.delete')) + ': ' + t)}">
+                                <span class="material-icons" aria-hidden="true">close</span>
+                            </button>` : ''}
                         </span>`).join('')
                     : `<div class="device-panel-tags-empty">${_('device_detail.no_tags')}</div>`
                 }
             </div>
-            <div class="device-panel-tag-input-row">
-                <input type="text" class="device-panel-tag-input" id="dp-tag-input"
+            ${canEdit ? `<div class="device-panel-tag-input-row">
+                <input type="text" class="device-panel-tag-input form-input" id="dp-tag-input" aria-labelledby="dp-tags-title"
                        placeholder="${_('device_detail.tag_placeholder')}" maxlength="50" list="dp-tag-suggestions">
                 <datalist id="dp-tag-suggestions">
                     ${_tagSuggestionOptions(tags)}
                 </datalist>
-                <button class="device-panel-tag-add-btn" id="dp-tag-add-btn">
-                    <span class="material-icons">add</span>${_('device_detail.add_tag')}
-                </button>
-            </div>
+                <button type="button" class="btn device-panel-tag-add-btn" id="dp-tag-add-btn">${_('device_detail.add_tag')}</button>
+            </div>` : ''}
         </div>`;
 
         // Notes section
         html += `
         <div class="device-panel-section">
-            <div class="device-panel-section-title"><span class="material-icons">notes</span> ${_('device_detail.notes')}</div>
-            <textarea class="device-panel-notes-textarea" id="dp-notes-textarea"
+            <div class="device-panel-section-title" id="dp-notes-title">${_('device_detail.notes')}</div>
+            ${canEdit ? `<textarea class="device-panel-notes-textarea form-input" id="dp-notes-textarea" aria-labelledby="dp-notes-title"
                       placeholder="${_('device_detail.notes_placeholder')}">${Utils.escapeHtml(d.note || '')}</textarea>
             <div class="device-panel-notes-actions">
-                <button class="btn btn-primary btn-sm" id="dp-notes-save">
-                    <span class="material-icons">save</span>${_('actions.save')}
-                </button>
-            </div>
+                <button type="button" class="btn btn-sm" id="dp-notes-save">${_('actions.save')}</button>
+            </div>` : `<p class="device-panel-note-text">${d.note ? Utils.escapeHtml(d.note) : _('device_detail.no_notes')}</p>`}
         </div>`;
 
         html += `</div>`;
@@ -915,6 +925,14 @@ const DeviceDetail = (function () {
     }
 
     // ── Actions tab ──
+
+    function _actionCard(action, title, desc) {
+        return `
+                <button type="button" class="device-panel-action-card" data-action="${action}">
+                    <span class="device-panel-action-text"><span class="device-panel-action-title">${title}</span>
+                    <span class="device-panel-action-desc">${desc}</span></span>
+                </button>`;
+    }
 
     function _actionsPane() {
         const d = device;
@@ -929,47 +947,40 @@ const DeviceDetail = (function () {
             html += `
             <div class="device-panel-section">
                 <p class="form-hint">${Utils.escapeHtml(_('devices.delete_reserved_hint'))}</p>
-            </div>
+            </div>`;
+            if (_can('device.delete')) {
+                html += `
             <div class="device-panel-section">
-                <div class="device-panel-section-title"><span class="material-icons">settings_backup_restore</span> ${_('devices.restore_action')}</div>
+                <div class="device-panel-section-title">${_('devices.restore_action')}</div>
                 <div class="device-panel-actions-grid">
-                    <button type="button" class="device-panel-action-card" data-action="restore">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('devices.restore_action')}</span>
-                            <span class="device-panel-action-desc">${_('devices.restore_confirm', { id: d.id })}</span></span>
-                    </button>
-                    <button type="button" class="device-panel-action-card" data-action="permanent-delete">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('devices.permanent_delete_title')}</span>
-                            <span class="device-panel-action-desc">${_('devices.permanent_delete_confirm', { id: d.id })}</span></span>
-                    </button>
+                    ${_actionCard('restore', _('devices.restore_action'), _('devices.restore_confirm', { id: d.id }))}
+                    ${_actionCard('permanent-delete', _('devices.permanent_delete_title'), _('devices.permanent_delete_confirm', { id: d.id }))}
                 </div>
             </div>`;
+            }
             html += `</div>`;
             return html;
         }
 
         // Connection actions
-        html += `
+        if (_can('device.connect')) {
+            html += `
         <div class="device-panel-section">
-            <div class="device-panel-section-title"><span class="material-icons">link</span> ${_('device_detail.section_connect')}</div>
+            <div class="device-panel-section-title">${_('device_detail.section_connect')}</div>
             <div class="device-panel-actions-grid">
-                <button type="button" class="device-panel-action-card" data-action="connect-desktop">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('device_detail.action_connect_desktop')}</span>
-                        <span class="device-panel-action-desc">${_('device_detail.action_connect_desktop_desc')}</span></span>
-                    </button>
-                <button type="button" class="device-panel-action-card" data-action="connect-web">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('device_detail.action_connect_web')}</span>
-                        <span class="device-panel-action-desc">${_('device_detail.action_connect_web_desc')}</span></span>
-                    </button>
+                ${_actionCard('connect-desktop', _('device_detail.action_connect_desktop'), _('device_detail.action_connect_desktop_desc'))}
+                ${_actionCard('connect-web', _('device_detail.action_connect_web'), _('device_detail.action_connect_web_desc'))}
             </div>
         </div>`;
+        }
 
         if (supportAgent) {
             html += `
             <div class="device-panel-section">
-                <div class="device-panel-section-title"><span class="material-icons">info</span> Tryb Support Agent</div>
+                <div class="device-panel-section-title">${Utils.escapeHtml(_('device_detail.support_mode_title'))}</div>
                 <div class="device-panel-info-grid">
-                    ${_infoRow('Zakres', 'Podstawowe statystyki i pulpit zdalny')}
-                    ${_infoRow('Ograniczenia', 'Funkcje administracyjne są niedostępne')}
+                    ${_infoRow(Utils.escapeHtml(_('device_detail.support_scope_label')), Utils.escapeHtml(_('device_detail.support_scope')))}
+                    ${_infoRow(Utils.escapeHtml(_('device_detail.support_limits_label')), Utils.escapeHtml(_('device_detail.support_limits')))}
                 </div>
             </div>`;
             html += `</div>`;
@@ -977,36 +988,36 @@ const DeviceDetail = (function () {
         }
 
         // Management actions
-        html += `
+        const manage = [];
+        if (_can('device.edit')) {
+            manage.push(_actionCard('edit', _('actions.edit'), `${_('devices.display_name')} / ${_('devices.note')}`));
+        }
+        if (_can('device.change_id')) {
+            manage.push(_actionCard('change-id', _('devices.change_id'), _('device_detail.action_change_id_desc')));
+        }
+        if (_can('device.ban')) {
+            manage.push(_actionCard('toggle-ban', isBanned ? _('actions.unban') : _('actions.ban'),
+                isBanned ? _('device_detail.action_unban_desc') : _('device_detail.action_ban_desc')));
+        }
+        if (manage.length) {
+            html += `
         <div class="device-panel-section">
-            <div class="device-panel-section-title"><span class="material-icons">settings</span> ${_('device_detail.section_manage')}</div>
-            <div class="device-panel-actions-grid">
-                <button type="button" class="device-panel-action-card" data-action="edit">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('actions.edit')}</span>
-                        <span class="device-panel-action-desc">${_('devices.display_name')} / ${_('devices.note')}</span></span>
-                    </button>
-                <button type="button" class="device-panel-action-card" data-action="change-id">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('devices.change_id')}</span>
-                        <span class="device-panel-action-desc">${_('device_detail.action_change_id_desc')}</span></span>
-                    </button>
-                <button type="button" class="device-panel-action-card" data-action="toggle-ban">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${isBanned ? _('actions.unban') : _('actions.ban')}</span>
-                        <span class="device-panel-action-desc">${isBanned ? _('device_detail.action_unban_desc') : _('device_detail.action_ban_desc')}</span></span>
-                    </button>
+            <div class="device-panel-section-title">${_('device_detail.section_manage')}</div>
+            <div class="device-panel-actions-grid">${manage.join('')}
             </div>
         </div>`;
+        }
 
         // Danger zone
-        html += `
+        if (_can('device.delete')) {
+            html += `
         <div class="device-panel-danger-zone">
-            <div class="device-panel-section-title"><span class="material-icons">warning</span> ${_('device_detail.danger_zone')}</div>
+            <div class="device-panel-section-title">${_('device_detail.danger_zone')}</div>
             <div class="device-panel-actions-grid">
-                <button type="button" class="device-panel-action-card" data-action="delete">
-                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('actions.delete')}</span>
-                        <span class="device-panel-action-desc">${_('device_detail.action_delete_desc')}</span></span>
-                    </button>
+                ${_actionCard('delete', _('actions.delete'), _('device_detail.action_delete_desc'))}
             </div>
         </div>`;
+        }
 
         html += `</div>`;
         return html;
@@ -1021,8 +1032,8 @@ const DeviceDetail = (function () {
         return `
         <div class="device-panel-footer">
             ${isDeleted ? '' : `
-            <button type="button" class="btn btn-primary" id="dp-connect-btn">${_('actions.connect')}</button>
-            ${supportAgent ? '' : `<button type="button" class="btn btn-secondary" id="dp-edit-btn">${_('actions.edit')}</button>`}`}
+            ${_can('device.connect') ? `<button type="button" class="btn btn-primary" id="dp-connect-btn">${_('actions.connect')}</button>` : ''}
+            ${supportAgent || !_can('device.edit') ? '' : `<button type="button" class="btn btn-secondary" id="dp-edit-btn">${_('actions.edit')}</button>`}`}
             <button type="button" class="btn btn-ghost" id="dp-close-btn">${_('actions.close')}</button>
         </div>`;
     }
@@ -1192,10 +1203,19 @@ const DeviceDetail = (function () {
     }
 
     function _lastSeenValue(lastOnline) {
-        if (!lastOnline) return '-';
+        if (!Utils.parseDate(lastOnline)) return Utils.escapeHtml(_('time.never'));
         const abs = Utils.formatDate(lastOnline);
         const rel = Utils.formatRelativeTime(lastOnline);
-        return `${abs} <span style="color:var(--text-tertiary);font-size:var(--font-size-xs)">(${rel})</span>`;
+        return `${abs} <span class="device-panel-relative-time">(${rel})</span>`;
+    }
+
+    /** "Banned on 5 Nov 2026, 18:35 by admin" (without "by" when the console has no record of who) */
+    function _banLine(d) {
+        const when = Utils.parseDate(d.banned_at) ? Utils.formatDate(d.banned_at) : '';
+        if (when && d.banned_by) return _('device_detail.banned_on_by', { date: when, user: d.banned_by });
+        if (when) return _('device_detail.banned_on', { date: when });
+        if (d.banned_by) return _('device_detail.banned_by', { user: d.banned_by });
+        return _('device_detail.banned_unknown');
     }
 
     function _folderName(folderId) {
@@ -1236,14 +1256,22 @@ const DeviceDetail = (function () {
             }
         });
         panel.querySelector('#dp-connect-btn')?.addEventListener('click', function () {
-            // Unified web remote client: always /remote/:id
-            if (device) window.open('/remote/' + encodeURIComponent(device.id), '_blank');
+            // Unified web remote client (/remote/:id); on a phone the list asks first
+            _connect('web');
         });
 
         // Tabs
         panel.querySelectorAll('.device-panel-tab').forEach(function (tab) {
             tab.addEventListener('click', function () {
                 _switchTab(tab.dataset.tab);
+            });
+        });
+
+        // Views inside "Live data"
+        panel.querySelectorAll('[data-live-view]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                liveView = btn.dataset.liveView;
+                _switchTab('live');
             });
         });
 
@@ -1270,7 +1298,7 @@ const DeviceDetail = (function () {
                 await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/telemetry/refresh`, {
                     method: 'POST'
                 });
-                Notifications.success('Odświeżenie sprzętu zostało zlecone');
+                Notifications.success(_('device_detail.hardware_refresh_requested'));
             } catch (err) {
                 Notifications.error(err.message || _('errors.server_error'));
             } finally {
@@ -1292,9 +1320,16 @@ const DeviceDetail = (function () {
     }
 
     function _switchTab(tabId) {
-        activeTab = tabId;
+        // The agent views used to be tabs of their own; they now live in "Live data"
+        if (AGENT_TABS.indexOf(tabId) !== -1) {
+            liveView = tabId;
+            tabId = 'live';
+        }
         if (!overlayEl) return;
         const panel = overlayEl.querySelector('#device-panel-inner');
+        // A tab the user can't see (permissions, support agent) falls back to the overview
+        if (!panel.querySelector(`.device-panel-tab[data-tab="${tabId}"]`)) tabId = 'overview';
+        activeTab = tabId;
 
         panel.querySelectorAll('.device-panel-tab').forEach(function (t) {
             t.classList.toggle('active', t.dataset.tab === tabId);
@@ -1304,10 +1339,44 @@ const DeviceDetail = (function () {
             p.classList.toggle('active', p.dataset.pane === tabId);
         });
 
-        // Lazy-load agent-backed tabs on first activation.
-        const AGENT_TABS = ['services', 'processes', 'events', 'activity', 'files'];
-        if (AGENT_TABS.indexOf(tabId) !== -1) {
-            _loadAgentTab(tabId);
+        if (tabId === 'live') {
+            const views = _liveViews();
+            if (views.indexOf(liveView) === -1) liveView = views[0];
+            panel.querySelectorAll('[data-live-view]').forEach(function (b) {
+                b.setAttribute('aria-pressed', b.dataset.liveView === liveView ? 'true' : 'false');
+            });
+            panel.querySelectorAll('.device-panel-live-view').forEach(function (v) {
+                v.hidden = v.dataset.livePane !== liveView;
+            });
+            // Lazy-load agent data on first activation.
+            _loadAgentTab(liveView);
+        }
+    }
+
+    /** Whether the signed-in user may do this; the server checks again */
+    function _can(permission) {
+        return !(window.Utils && typeof Utils.can === 'function') || Utils.can(permission);
+    }
+
+    /** The Actions tab only appears when it holds at least one action for this user */
+    function _hasActions() {
+        if (!device) return false;
+        if (device.soft_deleted) return _can('device.delete');
+        return _can('device.connect') || _can('device.edit') || _can('device.change_id')
+            || _can('device.ban') || _can('device.delete');
+    }
+
+    /** Connect from the panel: same path as the list (asks first on a phone) */
+    function _connect(kind) {
+        if (!device) return;
+        if (kind === 'desktop') {
+            window.open('rustdesk://' + encodeURIComponent(device.id), '_blank');
+            return;
+        }
+        if (window.BetterDeskDevices && typeof window.BetterDeskDevices.connect === 'function') {
+            window.BetterDeskDevices.connect(device.id, { deviceName: device.display_name || device.hostname || '' });
+        } else {
+            window.open('/remote/' + encodeURIComponent(device.id), '_blank');
         }
     }
 
@@ -1380,12 +1449,9 @@ const DeviceDetail = (function () {
         if (data?.pending) {
             pane.innerHTML = `
                 <div class="device-panel-agent-empty">
-                    <span class="material-icons">schedule</span>
-                    <div>Odczyt został zlecony</div>
-                    <div class="device-panel-agent-hint">Dane pojawią się po kolejnym heartbeat urządzenia.</div>
-                    <button type="button" class="btn btn-secondary btn-sm" data-retry-tab="${tabId}">
-                        <span class="material-icons">refresh</span> Odśwież
-                    </button>
+                    <div>${_('device_detail.agent_pending')}</div>
+                    <div class="device-panel-agent-hint">${_('device_detail.agent_pending_hint')}</div>
+                    <button type="button" class="btn btn-sm" data-retry-tab="${tabId}">${_('actions.refresh')}</button>
                 </div>`;
             pane.querySelector('[data-retry-tab]')?.addEventListener('click', function () {
                 _agentTabLoaded[tabId] = false;
@@ -1419,17 +1485,17 @@ const DeviceDetail = (function () {
     function _renderServicesList(data) {
         const services = Array.isArray(data?.services) ? data.services : Array.isArray(data) ? data : [];
         if (!services.length) {
-            return `<div class="device-panel-agent-empty"><span class="material-icons">inbox</span><div>${_('common.no_data')}</div></div>`;
+            return `<div class="device-panel-agent-empty">${_('device_detail.agent_empty')}</div>`;
         }
         const rows = services.slice(0, 500).map(s => `
             <tr data-service-name="${Utils.escapeHtml(s.name || '')}">
                 <td>${Utils.escapeHtml(s.name || '')}</td>
                 <td>${Utils.escapeHtml(s.display_name || s.name || '')}</td>
-                <td><span class="badge ${s.status === 'running' ? 'badge-success' : 'badge-neutral'}">${Utils.escapeHtml(s.status || '-')}</span></td>
+                <td><span class="status ${s.status === 'running' ? 'running' : 'stopped'}">${Utils.escapeHtml(s.status || '-')}</span></td>
                 <td>${Utils.escapeHtml(s.start_type || '-')}</td>
                 <td class="device-panel-agent-actions">
-                    <button type="button" class="btn btn-secondary btn-sm" data-service-action="start">Start</button>
-                    <button type="button" class="btn btn-secondary btn-sm" data-service-action="stop">Stop</button>
+                    ${_can('device.edit') ? `<button type="button" class="btn btn-sm" data-service-action="start">${_('device_detail.service_start_action')}</button>
+                    <button type="button" class="btn btn-sm" data-service-action="stop">${_('device_detail.service_stop_action')}</button>` : ''}
                 </td>
             </tr>`).join('');
         return `<table class="device-panel-agent-table">
@@ -1438,7 +1504,7 @@ const DeviceDetail = (function () {
                 <th>${_('device_detail.service_display') || 'Display'}</th>
                 <th>${_('device_detail.service_status') || 'Status'}</th>
                 <th>${_('device_detail.service_start') || 'Start'}</th>
-                <th>Akcje</th>
+                <th><span class="sr-only">${_('devices.actions')}</span></th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
@@ -1457,9 +1523,9 @@ const DeviceDetail = (function () {
                         body: { command: 'service.control', args: { name, action: button.dataset.serviceAction } }
                     });
                     if (response?.pending || response?.data?.pending) {
-                        Notifications.success('Zmiana usługi została zlecona');
+                        Notifications.success(_('device_detail.command_queued'));
                     } else {
-                        Notifications.success('Polecenie usługi wykonane');
+                        Notifications.success(_('device_detail.service_command_done'));
                     }
                 } catch (err) {
                     Notifications.error(err.message || _('errors.server_error'));
@@ -1473,7 +1539,7 @@ const DeviceDetail = (function () {
     function _renderProcessList(data) {
         const procs = Array.isArray(data?.processes) ? data.processes : Array.isArray(data) ? data : [];
         if (!procs.length) {
-            return `<div class="device-panel-agent-empty"><span class="material-icons">inbox</span><div>${_('common.no_data')}</div></div>`;
+            return `<div class="device-panel-agent-empty">${_('device_detail.agent_empty')}</div>`;
         }
         // Sort by CPU descending, show top 200
         procs.sort((a, b) => (b.cpu || 0) - (a.cpu || 0));
@@ -1484,7 +1550,7 @@ const DeviceDetail = (function () {
                 <td>${Utils.escapeHtml(p.user || '-')}</td>
                 <td>${Number(p.cpu || 0).toFixed(1)}%</td>
                 <td>${Number(p.memory_mb || 0).toFixed(0)} MB</td>
-                <td><button type="button" class="btn btn-secondary btn-sm" data-process-kill="${Utils.escapeHtml(String(p.pid ?? ''))}">Zakończ</button></td>
+                <td>${_can('device.edit') ? `<button type="button" class="btn btn-sm" data-process-kill="${Utils.escapeHtml(String(p.pid ?? ''))}" data-process-name="${Utils.escapeHtml(p.name || '')}">${_('device_detail.process_end')}</button>` : ''}</td>
             </tr>`).join('');
         return `<table class="device-panel-agent-table">
             <thead><tr>
@@ -1493,7 +1559,7 @@ const DeviceDetail = (function () {
                 <th>${_('device_detail.process_user') || 'User'}</th>
                 <th>CPU</th>
                 <th>${_('device_detail.process_memory') || 'Memory'}</th>
-                <th>Akcje</th>
+                <th><span class="sr-only">${_('devices.actions')}</span></th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
@@ -1503,14 +1569,21 @@ const DeviceDetail = (function () {
         pane.querySelectorAll('[data-process-kill]').forEach(button => {
             button.addEventListener('click', async function () {
                 const pid = button.dataset.processKill;
-                if (!pid || !device?.id || !window.confirm('Zakończyć wybrany proces?')) return;
+                if (!pid || !device?.id) return;
+                const ok = await Modal.confirm({
+                    title: _('device_detail.process_end_title'),
+                    message: _('device_detail.process_end_confirm', { name: button.dataset.processName || '-', pid }),
+                    confirmLabel: _('device_detail.process_end'),
+                    danger: true
+                });
+                if (!ok) return;
                 button.disabled = true;
                 try {
                     await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/telemetry/command`, {
                         method: 'POST',
                         body: { command: 'process.terminate', args: { pid: Number(pid) } }
                     });
-                    Notifications.success('Polecenie zakończenia procesu zostało zlecone');
+                    Notifications.success(_('device_detail.command_sent'));
                 } catch (err) {
                     Notifications.error(err.message || _('errors.server_error'));
                 } finally {
@@ -1523,7 +1596,7 @@ const DeviceDetail = (function () {
     function _renderEventList(data) {
         const events = Array.isArray(data?.events) ? data.events : Array.isArray(data) ? data : [];
         if (!events.length) {
-            return `<div class="device-panel-agent-empty"><span class="material-icons">inbox</span><div>${_('common.no_data')}</div></div>`;
+            return `<div class="device-panel-agent-empty">${_('device_detail.agent_empty')}</div>`;
         }
         const rows = events.slice(0, 500).map(e => {
             const level = String(e.level || 'info').toLowerCase();
@@ -1545,7 +1618,7 @@ const DeviceDetail = (function () {
     function _renderActivity(data) {
         const items = Array.isArray(data?.apps) ? data.apps : Array.isArray(data) ? data : [];
         if (!items.length) {
-            return `<div class="device-panel-agent-empty"><span class="material-icons">inbox</span><div>${_('common.no_data')}</div></div>`;
+            return `<div class="device-panel-agent-empty">${_('device_detail.agent_empty')}</div>`;
         }
         // Sort by total seconds
         items.sort((a, b) => (b.seconds || 0) - (a.seconds || 0));
@@ -1575,14 +1648,12 @@ const DeviceDetail = (function () {
                 <span class="material-icons">${icon}</span>
                 <div class="device-panel-file-name">${Utils.escapeHtml(e.name || '')}</div>
                 <div class="device-panel-file-size">${size}</div>
-                ${e.is_dir ? '' : '<span class="material-icons device-panel-file-download" title="Pobierz">download</span>'}
+                ${e.is_dir ? '' : `<button type="button" class="btn btn-sm device-panel-file-download">${_('device_detail.file_download')}</button>`}
             </div>`;
         }).join('');
         return `<div class="device-panel-file-browser">
             <div class="device-panel-file-path">
-                ${parent ? `<button class="btn btn-secondary btn-sm" data-fb-up="${Utils.escapeHtml(parent)}">
-                    <span class="material-icons">arrow_upward</span>
-                </button>` : ''}
+                ${parent ? `<button type="button" class="btn btn-sm" data-fb-up="${Utils.escapeHtml(parent)}">${_('device_detail.parent_folder')}</button>` : ''}
                 <span>${Utils.escapeHtml(path)}</span>
             </div>
             <div class="device-panel-file-list">${rows}</div>
@@ -1617,11 +1688,11 @@ const DeviceDetail = (function () {
             });
             const data = response?.data || response;
             if (data?.pending) {
-                Notifications.success('Pobieranie zostało zlecone');
+                Notifications.success(_('device_detail.download_requested'));
                 return;
             }
             const fileData = data?.data;
-            if (!fileData) throw new Error('Brak danych pliku');
+            if (!fileData) throw new Error(_('device_detail.file_empty'));
             const bytes = Uint8Array.from(atob(fileData), character => character.charCodeAt(0));
             const blob = new Blob([bytes], { type: 'application/octet-stream' });
             const link = document.createElement('a');
@@ -1786,12 +1857,11 @@ const DeviceDetail = (function () {
                 break;
 
             case 'connect-desktop':
-                window.open('rustdesk://' + encodeURIComponent(device.id), '_blank');
+                _connect('desktop');
                 break;
 
             case 'connect-web':
-                // Unified web remote client: always /remote/:id
-                window.open('/remote/' + encodeURIComponent(device.id), '_blank');
+                _connect('web');
                 break;
 
             case 'change-id':
@@ -1866,21 +1936,32 @@ const DeviceDetail = (function () {
         if (!deviceId) return;
 
         const action = isBanned ? 'unban' : 'ban';
-        const confirmed = await Modal.confirm({
-            title: _('devices.' + action + '_title'),
-            message: _('devices.' + action + '_confirm', { id: deviceId }),
-            confirmLabel: _(isBanned ? 'actions.unban' : 'actions.ban'),
-            danger: !isBanned
-        });
-        if (!confirmed) return;
+        const deviceName = device.display_name || device.hostname || '';
+        let answer;
+        if (window.BetterDeskDevices && typeof window.BetterDeskDevices.confirmBanChange === 'function') {
+            answer = await window.BetterDeskDevices.confirmBanChange(deviceId, isBanned, deviceName);
+        } else {
+            const ok = await Modal.confirm({
+                title: _('devices.' + action + '_title'),
+                message: _('devices.' + action + '_confirm', { id: deviceId }),
+                confirmLabel: _(isBanned ? 'actions.unban' : 'actions.ban'),
+                danger: !isBanned
+            });
+            answer = ok ? { reason: '' } : null;
+        }
+        if (!answer) return;
         try {
-            await Utils.api('/api/devices/' + encodeURIComponent(deviceId) + '/' + action, { method: 'POST' });
+            await Utils.api('/api/devices/' + encodeURIComponent(deviceId) + '/' + action, {
+                method: 'POST',
+                body: isBanned ? {} : { reason: answer.reason }
+            });
             Notifications.success(_('devices.' + action + '_success'));
             // Refresh panel if still open
             if (overlayEl) {
                 device = await Utils.api('/api/devices/' + encodeURIComponent(deviceId));
                 _render();
-                _switchTab('actions');
+                // After a ban, the overview shows who banned it, when and why
+                _switchTab(isBanned ? 'actions' : 'overview');
             }
             _notifyChanged();
         } catch (err) {
@@ -2008,13 +2089,13 @@ const DeviceDetail = (function () {
                         const statusInfo = _resolveDeviceStatus(device);
                         const badge = statusBar.querySelector('.device-panel-status-badge');
                         if (badge) {
-                            badge.className = 'device-panel-status-badge ' + statusInfo.className;
+                            badge.className = 'device-panel-status-badge status ' + statusInfo.className;
                             if (statusInfo.title) {
                                 badge.title = statusInfo.title;
                             } else {
                                 badge.removeAttribute('title');
                             }
-                            badge.innerHTML = '<span class="status-dot"></span>' + statusInfo.label;
+                            badge.textContent = statusInfo.label;
                         }
                     }
                 }

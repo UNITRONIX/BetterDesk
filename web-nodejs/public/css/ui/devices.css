@@ -142,50 +142,7 @@
 /* ── Toolbar ── */
 
 .devices-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-4);
     margin-bottom: var(--space-3);
-}
-
-.toolbar-search {
-    flex: 1 1 240px;
-    max-width: 380px;
-}
-
-.toolbar-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-}
-
-.filter-btn {
-    min-height: var(--control-h);
-    padding: 0;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: transparent;
-    color: var(--text-muted);
-    font: inherit;
-    cursor: pointer;
-}
-
-.filter-btn:hover {
-    color: var(--text);
-}
-
-.filter-btn.active {
-    border-bottom-color: var(--accent);
-    color: var(--text);
-    font-weight: 600;
-}
-
-.toolbar-end {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    margin-inline-start: auto;
 }
 
 .show-deleted-toggle {
@@ -199,14 +156,66 @@
     position: relative;
 }
 
+/* "Tags" and "Columns": labelled menu buttons */
+.toolbar-menu-btn {
+    gap: var(--space-1);
+    white-space: nowrap;
+}
+
+.toolbar-menu-btn .material-icons {
+    font-size: 18px;
+}
+
 #tags-filter-btn.tag-filter-active {
-    border-color: var(--border);
     color: var(--accent);
+}
+
+.tag-filter-summary {
+    max-width: 14ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tag-filter-menu {
+    max-height: none;
+    overflow: visible;
+}
+
+.tag-filter-options {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.tag-filter-note {
+    max-width: 260px;
+    padding: var(--space-1) var(--space-3) var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* Ban dialog: the consequence, then the reason field */
+.ban-dialog-effect {
+    margin-bottom: var(--space-4);
+}
+
+/* Phone connect dialog: two ways, each with what it does */
+.connect-choice-list {
+    margin-top: var(--space-3);
+}
+
+.connect-choice-list .list-row {
+    flex-wrap: wrap;
+    padding-inline: 0;
+}
+
+.connect-choice-list .row-main {
+    flex: 1 1 200px;
 }
 
 .tag-filter-menu,
 .column-visibility-menu {
     position: absolute;
+    z-index: 20;
     top: calc(100% + var(--space-1));
     inset-inline-end: 0;
     display: none;
@@ -252,6 +261,12 @@
     cursor: pointer;
 }
 
+@media (pointer: coarse) {
+    .devices-table th .sort-btn {
+        min-height: var(--control-h);
+    }
+}
+
 .devices-table th.col-actions,
 .devices-table td[data-column="actions"] {
     width: 44px;
@@ -276,20 +291,9 @@
     gap: var(--space-1);
 }
 
+/* Copy stays visible (touch and keyboard users can't hover to find it) */
 .device-id .copy-btn {
-    opacity: 0;
-}
-
-.devices-table tr:hover .copy-btn,
-.devices-table .copy-btn:focus-visible,
-.devices-table .copy-btn.copied {
-    opacity: 1;
-}
-
-@media (pointer: coarse) {
-    .device-id .copy-btn {
-        opacity: 1;
-    }
+    flex-shrink: 0;
 }
 
 .device-open {
@@ -332,11 +336,20 @@
     font-size: 16px;
 }
 
+/* Tags and platform may wrap, so the table fits its column without sideways scrolling */
+.devices-table td[data-column="tags"] {
+    min-width: 120px;
+    white-space: normal;
+}
+
+.devices-table td[data-column="platform"] {
+    min-width: 110px;
+    white-space: normal;
+}
+
 .devices-table .tag-list {
     display: inline-block;
     max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
     vertical-align: middle;
 }
 

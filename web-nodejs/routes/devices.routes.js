@@ -45,6 +45,23 @@ function mapChangeIdError(req, error) {
     return error;
 }
 
+/** Parse a stored timestamp; zone-less SQL timestamps are UTC */
+function parseStoredTime(value) {
+    if (!value) return NaN;
+    if (value instanceof Date) return value.getTime();
+    let text = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(text)) text = text.replace(' ', 'T') + 'Z';
+    return new Date(text).getTime();
+}
+
+/** A console audit entry belongs to the current ban when both were written within 5 minutes */
+function auditEntryMatchesBan(auditTime, bannedAt) {
+    const b = parseStoredTime(bannedAt);
+    if (!Number.isFinite(b)) return true;
+    const a = parseStoredTime(auditTime);
+    return Number.isFinite(a) && Math.abs(a - b) <= 5 * 60 * 1000;
+}
+
 router.get('/api/devices', requireAuth, requirePermission('device.view'), async (req, res) => {
     try {
         // Validate and sanitize sort parameters
@@ -669,6 +686,20 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             console.warn('[API:DEVICE] Connection mode lookup failed:', req.params.id, e.message);
         }
 
+        // Who banned it: the console's own audit entry for the ban, if it matches
+        // the ban time the server reports (a ban made elsewhere has no actor here).
+        if (device.banned) {
+            try {
+                const entry = await db.getLatestAuditEntry('device_banned', `Device ${device.id} banned`);
+                if (entry && entry.username && auditEntryMatchesBan(entry.created_at, device.banned_at)) {
+                    device.banned_by = entry.username;
+                    if (!device.banned_at) device.banned_at = entry.created_at;
+                }
+            } catch (e) {
+                // audit lookup is optional
+            }
+        }
+
         // Enrich with device group memberships
         try {
             const groups = await db.getDeviceGroupsForPeer(req.params.id);
@@ -970,8 +1001,8 @@ router.post('/api/devices/:id/connection-mode', requireAuth, requirePermission('
 router.post('/api/devices/:id/ban', requireAuth, requirePermission('device.ban'), async (req, res) => {
     try {
         const id = req.params.id;
-        const { reason } = req.body;
-        
+        const reason = bodyString(req.body && req.body.reason).trim().slice(0, 500);
+
         const device = await serverBackend.getDeviceById(id);
         if (!device) {
             return res.status(404).json({
@@ -981,10 +1012,10 @@ router.post('/api/devices/:id/ban', requireAuth, requirePermission('device.ban')
         }
         if (await rejectIfDeviceOutOfScope(req, res, device)) return;
         
-        await serverBackend.setBanStatus(id, true, reason || '');
-        
-        // Log action
-        await db.logAction(req.session.userId, 'device_banned', `Device ${id} banned: ${reason}`, req.ip);
+        await serverBackend.setBanStatus(id, true, reason);
+
+        // Log action (the device panel reads who banned from this entry)
+        await db.logAction(req.session.userId, 'device_banned', `Device ${id} banned` + (reason ? `: ${reason}` : ''), req.ip);
         
         res.json({ success: true });
     } catch (err) {

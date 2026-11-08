@@ -1,4 +1,7 @@
-<%- include('layouts/main', {
+<%
+    const can = (p) => typeof hasPermission !== 'function' || hasPermission(p);
+    const canEditDevices = can('device.edit');
+%><%- include('layouts/main', {
     title: _('nav.devices'),
     pageStyles: ['ui/devices', 'ui/device-detail'],
     pageScripts: ['devices', 'deviceDetail', 'rdclient/mesh-terminal', 'rdclient/mesh-port-forward'],
@@ -11,7 +14,7 @@
                 <p class="page-meta" id="devices-summary" aria-live="polite"><span id="devices-count" hidden>0</span></p>
                 <div class="page-actions">
                     <button type="button" class="btn btn-secondary" id="sync-btn">${_('devices.sync_status')}</button>
-                    <button type="button" class="btn btn-primary" id="add-remote-target-btn">${_('devices.add_remote_target')}</button>
+                    ${can('remote_target.edit') ? `<button type="button" class="btn btn-primary" id="add-remote-target-btn">${_('devices.add_remote_target')}</button>` : ''}
                 </div>
             </div>
 
@@ -21,7 +24,7 @@
                     <div class="filter-block folders-bar" id="folders-bar">
                         <div class="filter-head">
                             <h2>${_('folders.title')}</h2>
-                            <button type="button" class="btn-link filter-add" id="add-folder-btn">${_('folders.create')}</button>
+                            ${canEditDevices ? `<button type="button" class="btn-link filter-add" id="add-folder-btn">${_('folders.create')}</button>` : ''}
                         </div>
                         <ul class="filter-list folders-chips" id="folders-chips">
                             <li class="filter-item">
@@ -43,7 +46,7 @@
                     <div class="filter-block groups-bar" id="groups-bar">
                         <div class="filter-head">
                             <h2>${_('device_detail.device_groups')}</h2>
-                            <button type="button" class="btn-link filter-add" id="add-device-group-btn">${_('devices.create_group')}</button>
+                            ${canEditDevices ? `<button type="button" class="btn-link filter-add" id="add-device-group-btn">${_('devices.create_group')}</button>` : ''}
                         </div>
                         <ul class="filter-list groups-chips" id="groups-chips">
                             <li class="filter-item filter-item-all-groups">
@@ -78,19 +81,23 @@
                                 <span>${_('devices.show_deleted')}</span>
                             </label>
                             <div class="tag-filter-dropdown">
-                                <button type="button" class="btn-icon" id="tags-filter-btn" title="${_('devices.filter_by_tags')}" aria-label="${_('devices.filter_by_tags')}" aria-haspopup="true" aria-expanded="false" aria-controls="tags-filter-menu">
-                                    <span class="material-icons" aria-hidden="true">sell</span>
+                                <button type="button" class="btn btn-sm toolbar-menu-btn" id="tags-filter-btn" aria-haspopup="true" aria-expanded="false" aria-controls="tags-filter-menu">
+                                    <span class="toolbar-menu-label">${_('devices.tags')}</span><span class="tag-filter-summary" id="tags-filter-summary"></span>
+                                    <span class="material-icons" aria-hidden="true">expand_more</span>
                                 </button>
                                 <div class="tag-filter-menu menu" id="tags-filter-menu">
-                                    <div class="tag-filter-empty">${_('devices.no_tags')}</div>
+                                    <p class="tag-filter-note">${_('devices.tag_filter_note')}</p>
+                                    <div class="tag-filter-options" id="tags-filter-options">
+                                        <div class="tag-filter-empty">${_('devices.no_tags')}</div>
+                                    </div>
+                                    ${canEditDevices ? `<div class="menu-divider"></div>
+                                    <button type="button" class="menu-item" id="manage-tags-btn">${_('devices.manage_tags')}</button>` : ''}
                                 </div>
                             </div>
-                            <button type="button" class="btn-icon" id="manage-tags-btn" title="${_('devices.manage_tags')}" aria-label="${_('devices.manage_tags')}">
-                                <span class="material-icons" aria-hidden="true">label</span>
-                            </button>
                             <div class="column-visibility-dropdown">
-                                <button type="button" class="btn-icon" id="columns-btn" title="${_('devices.toggle_columns')}" aria-label="${_('devices.toggle_columns')}" aria-haspopup="true" aria-expanded="false" aria-controls="columns-menu">
-                                    <span class="material-icons" aria-hidden="true">view_column</span>
+                                <button type="button" class="btn btn-sm toolbar-menu-btn" id="columns-btn" aria-haspopup="true" aria-expanded="false" aria-controls="columns-menu">
+                                    <span class="toolbar-menu-label">${_('devices.columns')}</span>
+                                    <span class="material-icons" aria-hidden="true">expand_more</span>
                                 </button>
                                 <div class="column-visibility-menu menu" id="columns-menu">
                                     <label class="column-toggle checkbox-row">
@@ -170,9 +177,9 @@
                 <div class="devices-strategies-list" id="devices-strategies-list">
                     <p class="empty-state-inline">${_('devices.loading_strategies')}</p>
                 </div>
-                <div>
+                ${canEditDevices ? `<div>
                     <button type="button" class="btn btn-secondary" id="add-strategy-btn">${_('devices.create_strategy')}</button>
-                </div>
+                </div>` : ''}
             </details>
 
             <!-- Shared context menu (devices, folders, groups) -->
