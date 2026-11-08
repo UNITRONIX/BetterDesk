@@ -1,13 +1,15 @@
-/* Client setup (/keys): facts with copy fields, downloads, the QR code.
-   Everything else comes from components.css. */
-
-.keys-page {
-    max-width: 880px;
-}
+/* Client setup (/keys): facts with copy fields and the connection diagram in
+   the main column; the QR code and downloads beside them. Everything else
+   comes from components.css and chart.css. */
 
 .keys-page .public-key-text.is-masked {
     letter-spacing: 0.1em;
     color: var(--text-muted);
+}
+
+.keys-page .notice,
+.keys-page .keys-facts {
+    max-width: 880px;
 }
 
 .keys-fact-hint {
@@ -27,3 +29,13 @@
     background: #ffffff;
 }
 
+/* Copy buttons in value fields carry an icon before the label */
+.keys-page .value-field > button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.keys-page .value-field > button .material-icons {
+    font-size: 18px;
+}

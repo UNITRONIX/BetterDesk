@@ -551,7 +551,9 @@
         "qr_alt": "QR-kód a szerver kapcsolódási adataival",
         "copied": "Másolva",
         "copy_failed": "Nem sikerült másolni. Jelölje ki az értéket, és másolja ki kézzel.",
-        "nothing_to_copy": "Még nincs mit másolni."
+        "nothing_to_copy": "Még nincs mit másolni.",
+        "side_label": "Telefonos beállítás és letöltések",
+        "files_title": "Letöltések"
     },
     "settings": {
         "title": "Beállítások elemre",
@@ -3817,7 +3819,11 @@
         "saved": "Token mentve.",
         "save_failed": "A mentés nem sikerült.",
         "revoke_title": "Visszavonja a tokent?",
-        "revoke_failed": "Nem sikerült visszavonni a tokent."
+        "revoke_failed": "Nem sikerült visszavonni a tokent.",
+        "how_title": "Így használható egy token",
+        "how_step1": "Hozzon létre egy tokent, és adja oda annak, aki a klienst telepíti, vagy írja be a telepítő szkriptbe.",
+        "how_step2": "Az eszköz az első kapcsolódáskor elküldi a tokent, és jóváhagyásra várás nélkül csatlakozik.",
+        "how_step3": "Vonja vissza a tokent, hogy új eszközök ne csatlakozhassanak vele. A már csatlakozott eszközök tovább működnek."
     },
     "help_request": {
         "title": "Segítségkérések",
@@ -6700,7 +6706,10 @@
         "effect": "A kliensek akkor veszik át a változásokat, amikor legközelebb jelentkeznek a szervernél.",
         "save": "Kliensarculat mentése",
         "last_saved": "Utoljára mentve: {date}",
-        "never_saved": "Még nincs mentve"
+        "never_saved": "Még nincs mentve",
+        "preview_title": "Előnézet",
+        "preview_note": "Nagyjából így jeleníti meg a kliens ezeket az értékeket. Az előnézet gépelés közben követi az űrlapot.",
+        "preview_button": "Mintagomb"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "importálva: {{date}}",
         "sync_no_permission": "Az importáláshoz a regisztrációk kezelésére vonatkozó jogosultság kell. Kérje egy rendszergazdától.",
         "portal_hint": "A nyilvános oldal, ahonnan a felhasználók letöltik az ügynököt. Adja meg nekik a címét.",
-        "branding_title": "Név, logó és színek"
+        "branding_title": "Név, logó és színek",
+        "side_label": "Letöltések és arculat"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Lejárt. Hozzon létre új kódot.",
         "copied_short": "Másolva",
         "load_failed": "Nem sikerült betölteni az aktív kódokat.",
-        "no_label": "Nincs címke"
+        "no_label": "Nincs címke",
+        "code_empty": "Hozzon létre egy kódot, és itt jelenik meg, elég nagyban ahhoz, hogy felolvassa."
     },
     "ui_form": {
         "unsaved": "Nem mentett módosítások",

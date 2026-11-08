@@ -551,7 +551,9 @@
         "qr_alt": "QR-kod med den här serverns anslutningsvärden",
         "copied": "Kopierat",
         "copy_failed": "Det gick inte att kopiera. Markera värdet och kopiera det manuellt.",
-        "nothing_to_copy": "Det finns inget värde att kopiera än."
+        "nothing_to_copy": "Det finns inget värde att kopiera än.",
+        "side_label": "Konfigurering på telefon och nedladdningar",
+        "files_title": "Nedladdningar"
     },
     "settings": {
         "title": "Inställningar",
@@ -3817,7 +3819,11 @@
         "saved": "Token sparad.",
         "save_failed": "Det gick inte att spara.",
         "revoke_title": "Återkalla token?",
-        "revoke_failed": "Det gick inte att återkalla token."
+        "revoke_failed": "Det gick inte att återkalla token.",
+        "how_title": "Så används en token",
+        "how_step1": "Skapa en token och ge den till den som installerar klienten, eller lägg in den i installationsskriptet.",
+        "how_step2": "Enheten skickar token vid första anslutningen och ansluter utan att vänta på godkännande.",
+        "how_step3": "Återkalla en token för att hindra nya enheter från att ansluta med den. Enheter som redan anslutit fortsätter att fungera."
     },
     "help_request": {
         "title": "Hjälpförfrågningar",
@@ -6700,7 +6706,10 @@
         "effect": "Klienterna får ändringarna nästa gång de hör av sig till servern.",
         "save": "Spara klientens varumärke",
         "last_saved": "Senast sparat {date}",
-        "never_saved": "Inte sparat än"
+        "never_saved": "Inte sparat än",
+        "preview_title": "Förhandsvisning",
+        "preview_note": "Ungefär så visar klienten dessa värden. Förhandsvisningen följer formuläret medan du skriver.",
+        "preview_button": "Exempelknapp"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "importerad {{date}}",
         "sync_no_permission": "För att importera behöver du behörighet att hantera registreringar. Fråga en administratör.",
         "portal_hint": "Den offentliga sidan där dina användare laddar ner agenten. Ge dem adressen.",
-        "branding_title": "Namn, logotyp och färger"
+        "branding_title": "Namn, logotyp och färger",
+        "side_label": "Nedladdningar och varumärke"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Har gått ut. Skapa en ny kod.",
         "copied_short": "Kopierat",
         "load_failed": "Det gick inte att läsa in de aktiva koderna.",
-        "no_label": "Ingen etikett"
+        "no_label": "Ingen etikett",
+        "code_empty": "Skapa en kod så visas den här, stor nog att läsa upp."
     },
     "ui_form": {
         "unsaved": "Osparade ändringar",

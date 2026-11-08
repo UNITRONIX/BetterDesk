@@ -551,7 +551,9 @@
         "qr_alt": "QR-kode med tilkoblingsverdiene for denne serveren",
         "copied": "Kopiert",
         "copy_failed": "Kunne ikke kopiere. Merk verdien og kopier den manuelt.",
-        "nothing_to_copy": "Det er ingen verdi å kopiere ennå."
+        "nothing_to_copy": "Det er ingen verdi å kopiere ennå.",
+        "side_label": "Oppsett på telefon og nedlastinger",
+        "files_title": "Nedlastinger"
     },
     "settings": {
         "title": "Innstillinger",
@@ -3817,7 +3819,11 @@
         "saved": "Token lagret.",
         "save_failed": "Kunne ikke lagre.",
         "revoke_title": "Tilbakekalle token?",
-        "revoke_failed": "Kunne ikke tilbakekalle tokenet."
+        "revoke_failed": "Kunne ikke tilbakekalle tokenet.",
+        "how_title": "Slik brukes et token",
+        "how_step1": "Opprett et token og gi det til den som installerer klienten, eller legg det i installasjonsskriptet.",
+        "how_step2": "Enheten sender tokenet første gang den kobler til, og blir med uten å vente på godkjenning.",
+        "how_step3": "Tilbakekall et token for å hindre nye enheter i å bli med med det. Enheter som allerede er med, fungerer videre."
     },
     "help_request": {
         "title": "Hjelpeforespørsler",
@@ -6700,7 +6706,10 @@
         "effect": "Klientene tar i bruk endringene neste gang de melder seg hos serveren.",
         "save": "Lagre merkevaren for klienten",
         "last_saved": "Sist lagret {date}",
-        "never_saved": "Ikke lagret ennå"
+        "never_saved": "Ikke lagret ennå",
+        "preview_title": "Forhåndsvisning",
+        "preview_note": "Omtrent slik viser klienten disse verdiene. Forhåndsvisningen følger skjemaet mens du skriver.",
+        "preview_button": "Eksempelknapp"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "importert {{date}}",
         "sync_no_permission": "For å importere trenger du tillatelse til å administrere registreringer. Spør en administrator.",
         "portal_hint": "Den offentlige siden der brukerne dine laster ned agenten. Gi dem adressen.",
-        "branding_title": "Navn, logo og farger"
+        "branding_title": "Navn, logo og farger",
+        "side_label": "Nedlastinger og merkevare"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Utløpt. Opprett en ny kode.",
         "copied_short": "Kopiert",
         "load_failed": "Kunne ikke laste inn de aktive kodene.",
-        "no_label": "Ingen etikett"
+        "no_label": "Ingen etikett",
+        "code_empty": "Opprett en kode, så vises den her, stor nok til å lese høyt."
     },
     "ui_form": {
         "unsaved": "Endringer er ikke lagret",

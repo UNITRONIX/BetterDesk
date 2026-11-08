@@ -545,7 +545,9 @@
         "qr_alt": "Codice QR con i valori di connessione di questo server",
         "copied": "Copiato",
         "copy_failed": "Copia non riuscita. Seleziona il valore e copialo a mano.",
-        "nothing_to_copy": "Non c'è ancora nessun valore da copiare."
+        "nothing_to_copy": "Non c'è ancora nessun valore da copiare.",
+        "side_label": "Configurazione del telefono e download",
+        "files_title": "Download"
     },
     "settings": {
         "title": "Impostazioni",
@@ -3811,7 +3813,11 @@
         "saved": "Token salvato.",
         "save_failed": "Salvataggio non riuscito.",
         "revoke_title": "Revocare il token?",
-        "revoke_failed": "Impossibile revocare il token."
+        "revoke_failed": "Impossibile revocare il token.",
+        "how_title": "Come si usa un token",
+        "how_step1": "Crei un token e lo dia a chi installa il client, oppure lo inserisca nello script di installazione.",
+        "how_step2": "Il dispositivo invia il token alla prima connessione e si unisce senza attendere l’approvazione.",
+        "how_step3": "Revochi un token per impedire che nuovi dispositivi lo usino. I dispositivi già uniti continuano a funzionare."
     },
     "help_request": {
         "title": "Richieste di aiuto",
@@ -6694,7 +6700,10 @@
         "effect": "I client applicano le modifiche la prossima volta che contattano il server.",
         "save": "Salva la personalizzazione del client",
         "last_saved": "Ultimo salvataggio il {date}",
-        "never_saved": "Non ancora salvato"
+        "never_saved": "Non ancora salvato",
+        "preview_title": "Anteprima",
+        "preview_note": "Più o meno come il client mostra questi valori. L’anteprima segue il modulo mentre scrive.",
+        "preview_button": "Pulsante di esempio"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "importata il {{date}}",
         "sync_no_permission": "Per importare serve il permesso di gestire le registrazioni. Chiedi a un amministratore.",
         "portal_hint": "La pagina pubblica da cui i tuoi utenti scaricano l'agente. Condividi con loro il suo indirizzo.",
-        "branding_title": "Nome, logo e colori"
+        "branding_title": "Nome, logo e colori",
+        "side_label": "Download e personalizzazione"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "Scaduto. Crea un nuovo codice.",
         "copied_short": "Copiato",
         "load_failed": "Impossibile caricare i codici attivi.",
-        "no_label": "Nessuna etichetta"
+        "no_label": "Nessuna etichetta",
+        "code_empty": "Crei un codice: appare qui, abbastanza grande da poterlo leggere ad alta voce."
     },
     "ui_form": {
         "unsaved": "Modifiche non salvate",

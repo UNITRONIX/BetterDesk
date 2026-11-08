@@ -545,7 +545,9 @@
         "qr_alt": "Kod QR z danymi połączenia tego serwera",
         "copied": "Skopiowano",
         "copy_failed": "Nie udało się skopiować. Zaznacz wartość i skopiuj ją ręcznie.",
-        "nothing_to_copy": "Nie ma jeszcze nic do skopiowania."
+        "nothing_to_copy": "Nie ma jeszcze nic do skopiowania.",
+        "side_label": "Konfiguracja telefonu i pliki do pobrania",
+        "files_title": "Pliki do pobrania"
     },
     "settings": {
         "title": "Ustawienia",
@@ -3935,7 +3937,11 @@
         "saved": "Token zapisany.",
         "save_failed": "Nie udało się zapisać.",
         "revoke_title": "Unieważnić token?",
-        "revoke_failed": "Nie udało się unieważnić tokenu."
+        "revoke_failed": "Nie udało się unieważnić tokenu.",
+        "how_title": "Jak używa się tokenu",
+        "how_step1": "Utwórz token i przekaż go osobie instalującej klienta albo wpisz go do skryptu instalacyjnego.",
+        "how_step2": "Urządzenie wysyła token przy pierwszym połączeniu i dołącza bez czekania na zatwierdzenie.",
+        "how_step3": "Unieważnij token, aby nowe urządzenia nie mogły z nim dołączyć. Urządzenia, które już dołączyły, działają dalej."
     },
     "help_request": {
         "title": "Prośby o pomoc",
@@ -6694,7 +6700,10 @@
         "effect": "Klienci przejmą zmiany, gdy następnym razem połączą się z serwerem.",
         "save": "Zapisz wygląd klienta",
         "last_saved": "Ostatnio zapisano {date}",
-        "never_saved": "Jeszcze nie zapisano"
+        "never_saved": "Jeszcze nie zapisano",
+        "preview_title": "Podgląd",
+        "preview_note": "Mniej więcej tak klient pokazuje te wartości. Podgląd zmienia się w trakcie wpisywania.",
+        "preview_button": "Przykładowy przycisk"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "zaimportowano {{date}}",
         "sync_no_permission": "Do importu potrzebne jest uprawnienie do zarządzania rejestracją. Poproś administratora.",
         "portal_hint": "Publiczna strona, z której użytkownicy pobierają agenta. Przekaż im jej adres.",
-        "branding_title": "Nazwa, logo i kolory"
+        "branding_title": "Nazwa, logo i kolory",
+        "side_label": "Pliki do pobrania i branding"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "Wygasł. Utwórz nowy kod.",
         "copied_short": "Skopiowano",
         "load_failed": "Nie udało się załadować aktywnych kodów.",
-        "no_label": "Bez etykiety"
+        "no_label": "Bez etykiety",
+        "code_empty": "Utwórz kod, a pojawi się tutaj na tyle duży, by można go było odczytać na głos."
     },
     "ui_form": {
         "unsaved": "Niezapisane zmiany",

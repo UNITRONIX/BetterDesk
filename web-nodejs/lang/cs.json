@@ -545,7 +545,9 @@
         "qr_alt": "QR kód s hodnotami pro připojení k tomuto serveru",
         "copied": "Zkopírováno",
         "copy_failed": "Kopírování se nepovedlo. Označte hodnotu a zkopírujte ji ručně.",
-        "nothing_to_copy": "Zatím není co kopírovat."
+        "nothing_to_copy": "Zatím není co kopírovat.",
+        "side_label": "Nastavení telefonu a stažení",
+        "files_title": "Ke stažení"
     },
     "settings": {
         "title": "Nastavení",
@@ -3811,7 +3813,11 @@
         "saved": "Token uložen.",
         "save_failed": "Uložení se nepovedlo.",
         "revoke_title": "Zneplatnit token?",
-        "revoke_failed": "Token se nepodařilo zneplatnit."
+        "revoke_failed": "Token se nepodařilo zneplatnit.",
+        "how_title": "Jak se token používá",
+        "how_step1": "Vytvořte token a předejte ho tomu, kdo instaluje klienta, nebo ho vložte do instalačního skriptu.",
+        "how_step2": "Zařízení pošle token při prvním připojení a připojí se bez čekání na schválení.",
+        "how_step3": "Odvoláním tokenu zabráníte připojení dalších zařízení. Zařízení, která se už připojila, fungují dál."
     },
     "help_request": {
         "title": "Žádosti o pomoc",
@@ -6694,7 +6700,10 @@
         "effect": "Klienti převezmou změny, až se příště ozvou serveru.",
         "save": "Uložit vzhled klienta",
         "last_saved": "Naposledy uloženo {date}",
-        "never_saved": "Zatím neuloženo"
+        "never_saved": "Zatím neuloženo",
+        "preview_title": "Náhled",
+        "preview_note": "Přibližně takto klient tyto hodnoty zobrazí. Náhled se mění podle toho, co píšete do formuláře.",
+        "preview_button": "Ukázkové tlačítko"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "importováno {{date}}",
         "sync_no_permission": "K importu potřebujete oprávnění ke správě registrací. Požádejte administrátora.",
         "portal_hint": "Veřejná stránka, ze které si vaši uživatelé stahují agenta. Pošlete jim její adresu.",
-        "branding_title": "Název, logo a barvy"
+        "branding_title": "Název, logo a barvy",
+        "side_label": "Ke stažení a branding"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "Platnost vypršela. Vytvořte nový kód.",
         "copied_short": "Zkopírováno",
         "load_failed": "Aktivní kódy se nepodařilo načíst.",
-        "no_label": "Bez štítku"
+        "no_label": "Bez štítku",
+        "code_empty": "Vytvořte kód a zobrazí se zde dost velký na to, aby se dal přečíst nahlas."
     },
     "ui_form": {
         "unsaved": "Neuložené změny",

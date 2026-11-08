@@ -551,7 +551,9 @@
         "qr_alt": "Kode QR berisi nilai koneksi server ini",
         "copied": "Disalin",
         "copy_failed": "Tidak dapat menyalin. Pilih nilainya dan salin secara manual.",
-        "nothing_to_copy": "Belum ada nilai untuk disalin."
+        "nothing_to_copy": "Belum ada nilai untuk disalin.",
+        "side_label": "Penyiapan ponsel dan unduhan",
+        "files_title": "Unduhan"
     },
     "settings": {
         "title": "Pengaturan",
@@ -3817,7 +3819,11 @@
         "saved": "Token disimpan.",
         "save_failed": "Tidak bisa menyimpan.",
         "revoke_title": "Cabut token?",
-        "revoke_failed": "Token tidak bisa dicabut."
+        "revoke_failed": "Token tidak bisa dicabut.",
+        "how_title": "Cara token digunakan",
+        "how_step1": "Buat token dan berikan kepada orang yang memasang klien, atau masukkan ke skrip instalasi.",
+        "how_step2": "Perangkat mengirim token saat pertama kali terhubung dan bergabung tanpa menunggu persetujuan.",
+        "how_step3": "Cabut token agar perangkat baru tidak bisa bergabung dengannya. Perangkat yang sudah bergabung tetap berfungsi."
     },
     "help_request": {
         "title": "Permintaan Bantuan",
@@ -6700,7 +6706,10 @@
         "effect": "Klien menerapkan perubahan saat berikutnya menghubungi server.",
         "save": "Simpan branding klien",
         "last_saved": "Terakhir disimpan {date}",
-        "never_saved": "Belum disimpan"
+        "never_saved": "Belum disimpan",
+        "preview_title": "Pratinjau",
+        "preview_note": "Kira-kira seperti ini klien menampilkan nilai tersebut. Pratinjau mengikuti formulir saat Anda mengetik.",
+        "preview_button": "Tombol contoh"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "diimpor {{date}}",
         "sync_no_permission": "Untuk mengimpor, Anda perlu izin mengelola pendaftaran. Minta kepada administrator.",
         "portal_hint": "Halaman publik tempat pengguna Anda mengunduh agen. Bagikan alamatnya kepada mereka.",
-        "branding_title": "Nama, logo, dan warna"
+        "branding_title": "Nama, logo, dan warna",
+        "side_label": "Unduhan dan branding"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Kedaluwarsa. Buat kode baru.",
         "copied_short": "Disalin",
         "load_failed": "Kode aktif tidak dapat dimuat.",
-        "no_label": "Tanpa label"
+        "no_label": "Tanpa label",
+        "code_empty": "Buat kode dan kode itu muncul di sini, cukup besar untuk dibacakan."
     },
     "ui_form": {
         "unsaved": "Perubahan belum disimpan",

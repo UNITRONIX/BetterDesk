@@ -551,7 +551,9 @@
         "qr_alt": "Cod QR cu valorile de conectare ale acestui server",
         "copied": "Copiat",
         "copy_failed": "Copierea nu a reușit. Selectați valoarea și copiați-o manual.",
-        "nothing_to_copy": "Încă nu există nicio valoare de copiat."
+        "nothing_to_copy": "Încă nu există nicio valoare de copiat.",
+        "side_label": "Configurare pe telefon și descărcări",
+        "files_title": "Descărcări"
     },
     "settings": {
         "title": "Setări",
@@ -3817,7 +3819,11 @@
         "saved": "Token salvat.",
         "save_failed": "Salvarea nu a reușit.",
         "revoke_title": "Revocați tokenul?",
-        "revoke_failed": "Tokenul nu a putut fi revocat."
+        "revoke_failed": "Tokenul nu a putut fi revocat.",
+        "how_title": "Cum se folosește un token",
+        "how_step1": "Creați un token și dați-l celui care instalează clientul sau puneți-l în scriptul de instalare.",
+        "how_step2": "Dispozitivul trimite tokenul la prima conectare și se alătură fără să aștepte aprobarea.",
+        "how_step3": "Revocați un token ca să nu se mai alăture dispozitive noi cu el. Dispozitivele deja alăturate funcționează în continuare."
     },
     "help_request": {
         "title": "Cereri de ajutor",
@@ -6700,7 +6706,10 @@
         "effect": "Clienții preiau modificările data viitoare când contactează serverul.",
         "save": "Salvează personalizarea clientului",
         "last_saved": "Salvat ultima dată pe {date}",
-        "never_saved": "Nesalvat încă"
+        "never_saved": "Nesalvat încă",
+        "preview_title": "Previzualizare",
+        "preview_note": "Aproximativ așa afișează clientul aceste valori. Previzualizarea urmează formularul pe măsură ce scrieți.",
+        "preview_button": "Buton de exemplu"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "importată pe {{date}}",
         "sync_no_permission": "Pentru import aveți nevoie de permisiunea de a gestiona înregistrările. Cereți-o unui administrator.",
         "portal_hint": "Pagina publică de pe care utilizatorii descarcă agentul. Dați-le adresa ei.",
-        "branding_title": "Nume, logo și culori"
+        "branding_title": "Nume, logo și culori",
+        "side_label": "Descărcări și branding"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Expirat. Creați un cod nou.",
         "copied_short": "Copiat",
         "load_failed": "Codurile active nu au putut fi încărcate.",
-        "no_label": "Fără etichetă"
+        "no_label": "Fără etichetă",
+        "code_empty": "Creați un cod și va apărea aici, destul de mare ca să-l citiți cu voce tare."
     },
     "ui_form": {
         "unsaved": "Modificări nesalvate",

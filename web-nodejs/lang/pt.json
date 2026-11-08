@@ -545,7 +545,9 @@
         "qr_alt": "Código QR com os valores de conexão deste servidor",
         "copied": "Copiado",
         "copy_failed": "Não foi possível copiar. Selecione o valor e copie-o manualmente.",
-        "nothing_to_copy": "Ainda não há nenhum valor para copiar."
+        "nothing_to_copy": "Ainda não há nenhum valor para copiar.",
+        "side_label": "Configuração no telemóvel e transferências",
+        "files_title": "Transferências"
     },
     "settings": {
         "title": "Configurações",
@@ -3811,7 +3813,11 @@
         "saved": "Token guardado.",
         "save_failed": "Não foi possível guardar.",
         "revoke_title": "Revogar o token?",
-        "revoke_failed": "Não foi possível revogar o token."
+        "revoke_failed": "Não foi possível revogar o token.",
+        "how_title": "Como um token é usado",
+        "how_step1": "Crie um token e entregue-o a quem instala o cliente, ou coloque-o no script de instalação.",
+        "how_step2": "O dispositivo envia o token na primeira ligação e entra sem esperar aprovação.",
+        "how_step3": "Revogue um token para impedir que novos dispositivos entrem com ele. Os que já entraram continuam a funcionar."
     },
     "help_request": {
         "title": "Solicitações de ajuda",
@@ -6694,7 +6700,10 @@
         "effect": "Os clientes aplicam as alterações da próxima vez que contactarem o servidor.",
         "save": "Guardar a marca do cliente",
         "last_saved": "Guardado pela última vez a {date}",
-        "never_saved": "Ainda não guardado"
+        "never_saved": "Ainda não guardado",
+        "preview_title": "Pré-visualização",
+        "preview_note": "Aproximadamente como o cliente mostra estes valores. A pré-visualização acompanha o formulário enquanto escreve.",
+        "preview_button": "Botão de exemplo"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "importada a {{date}}",
         "sync_no_permission": "Para importar, precisa da permissão para gerir registos. Peça a um administrador.",
         "portal_hint": "A página pública onde os seus utilizadores transferem o agente. Partilhe o endereço com eles.",
-        "branding_title": "Nome, logótipo e cores"
+        "branding_title": "Nome, logótipo e cores",
+        "side_label": "Transferências e marca"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "Expirado. Crie um novo código.",
         "copied_short": "Copiado",
         "load_failed": "Não foi possível carregar os códigos ativos.",
-        "no_label": "Sem rótulo"
+        "no_label": "Sem rótulo",
+        "code_empty": "Crie um código e ele aparece aqui, grande o suficiente para ser lido em voz alta."
     },
     "ui_form": {
         "unsaved": "Alterações por guardar",

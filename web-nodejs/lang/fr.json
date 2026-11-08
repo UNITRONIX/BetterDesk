@@ -549,7 +549,9 @@
         "qr_alt": "Code QR avec les valeurs de connexion de ce serveur",
         "copied": "Copié",
         "copy_failed": "La copie a échoué. Sélectionnez la valeur et copiez-la à la main.",
-        "nothing_to_copy": "Il n'y a encore aucune valeur à copier."
+        "nothing_to_copy": "Il n'y a encore aucune valeur à copier.",
+        "side_label": "Configuration du téléphone et téléchargements",
+        "files_title": "Téléchargements"
     },
     "settings": {
         "title": "Tableau de bord",
@@ -3939,7 +3941,11 @@
         "saved": "Jeton enregistré.",
         "save_failed": "Impossible d'enregistrer.",
         "revoke_title": "Révoquer le jeton ?",
-        "revoke_failed": "Impossible de révoquer le jeton."
+        "revoke_failed": "Impossible de révoquer le jeton.",
+        "how_title": "Comment un jeton est utilisé",
+        "how_step1": "Créez un jeton et donnez-le à la personne qui installe le client, ou mettez-le dans le script d’installation.",
+        "how_step2": "L’appareil envoie le jeton à sa première connexion et rejoint le serveur sans attendre d’approbation.",
+        "how_step3": "Révoquez un jeton pour empêcher de nouveaux appareils de l’utiliser. Les appareils déjà inscrits continuent de fonctionner."
     },
     "help_request": {
         "title": "Tableau de bord",
@@ -6698,7 +6704,10 @@
         "effect": "Les clients appliquent les modifications la prochaine fois qu'ils contactent le serveur.",
         "save": "Enregistrer la personnalisation du client",
         "last_saved": "Dernier enregistrement le {date}",
-        "never_saved": "Pas encore enregistré"
+        "never_saved": "Pas encore enregistré",
+        "preview_title": "Aperçu",
+        "preview_note": "À peu près ce que le client affiche avec ces valeurs. L’aperçu suit le formulaire pendant la saisie.",
+        "preview_button": "Bouton d’exemple"
     },
     "login_promo": {
         "slides": {
@@ -6754,7 +6763,8 @@
         "imported_on": "importée le {{date}}",
         "sync_no_permission": "Pour importer, il faut l'autorisation de gérer les enrôlements. Demandez à un administrateur.",
         "portal_hint": "La page publique où vos utilisateurs téléchargent l'agent. Communiquez-leur son adresse.",
-        "branding_title": "Nom, logo et couleurs"
+        "branding_title": "Nom, logo et couleurs",
+        "side_label": "Téléchargements et personnalisation"
     },
 
     "pairing": {
@@ -6793,7 +6803,8 @@
         "expired_hint": "Expiré. Créez un nouveau code.",
         "copied_short": "Copié",
         "load_failed": "Impossible de charger les codes actifs.",
-        "no_label": "Sans libellé"
+        "no_label": "Sans libellé",
+        "code_empty": "Créez un code : il s’affiche ici, assez grand pour être lu à voix haute."
     },
     "ui_form": {
         "unsaved": "Modifications non enregistrées",

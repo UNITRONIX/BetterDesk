@@ -545,7 +545,9 @@
         "qr_alt": "包含此服务器连接信息的二维码",
         "copied": "已复制",
         "copy_failed": "复制失败。请选中该值后手动复制。",
-        "nothing_to_copy": "还没有可复制的值。"
+        "nothing_to_copy": "还没有可复制的值。",
+        "side_label": "手机设置和下载",
+        "files_title": "下载"
     },
     "settings": {
         "title": "设置",
@@ -3917,7 +3919,11 @@
         "saved": "令牌已保存。",
         "save_failed": "保存失败。",
         "revoke_title": "撤销令牌？",
-        "revoke_failed": "无法撤销令牌。"
+        "revoke_failed": "无法撤销令牌。",
+        "how_title": "令牌的使用方式",
+        "how_step1": "创建令牌并交给安装客户端的人，或放入安装脚本。",
+        "how_step2": "设备首次连接时发送令牌，无需等待批准即可加入。",
+        "how_step3": "撤销令牌后，新设备将无法再用它加入。已加入的设备照常工作。"
     },
     "help_request": {
         "title": "帮助请求",
@@ -6694,7 +6700,10 @@
         "effect": "客户端下次连接服务器时会应用更改。",
         "save": "保存客户端品牌",
         "last_saved": "上次保存于 {date}",
-        "never_saved": "尚未保存"
+        "never_saved": "尚未保存",
+        "preview_title": "预览",
+        "preview_note": "客户端大致会这样显示这些值。预览会随您在表单中的输入而更新。",
+        "preview_button": "示例按钮"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "导入于 {{date}}",
         "sync_no_permission": "导入需要管理注册的权限。请联系管理员。",
         "portal_hint": "用户下载代理的公开页面。请把这个地址发给他们。",
-        "branding_title": "名称、徽标和颜色"
+        "branding_title": "名称、徽标和颜色",
+        "side_label": "下载和品牌"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "已过期。请创建新代码。",
         "copied_short": "已复制",
         "load_failed": "无法加载有效代码。",
-        "no_label": "无标签"
+        "no_label": "无标签",
+        "code_empty": "创建代码后，会在这里以便于朗读的大字显示。"
     },
     "ui_form": {
         "unsaved": "有未保存的更改",

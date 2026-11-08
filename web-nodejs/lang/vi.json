@@ -551,7 +551,9 @@
         "qr_alt": "Mã QR chứa thông tin kết nối của máy chủ này",
         "copied": "Đã sao chép",
         "copy_failed": "Không sao chép được. Hãy chọn giá trị và tự sao chép.",
-        "nothing_to_copy": "Chưa có giá trị nào để sao chép."
+        "nothing_to_copy": "Chưa có giá trị nào để sao chép.",
+        "side_label": "Thiết lập điện thoại và tải xuống",
+        "files_title": "Tải xuống"
     },
     "settings": {
         "title": "Cài đặt",
@@ -3817,7 +3819,11 @@
         "saved": "Đã lưu mã thông báo.",
         "save_failed": "Không thể lưu.",
         "revoke_title": "Thu hồi mã thông báo?",
-        "revoke_failed": "Không thể thu hồi mã thông báo."
+        "revoke_failed": "Không thể thu hồi mã thông báo.",
+        "how_title": "Cách dùng mã thông báo",
+        "how_step1": "Tạo mã thông báo và đưa cho người cài đặt ứng dụng, hoặc đặt nó vào tập lệnh cài đặt.",
+        "how_step2": "Thiết bị gửi mã thông báo khi kết nối lần đầu và tham gia mà không cần chờ phê duyệt.",
+        "how_step3": "Thu hồi mã thông báo để thiết bị mới không thể tham gia bằng nó. Thiết bị đã tham gia vẫn hoạt động."
     },
     "help_request": {
         "title": "Yêu cầu trợ giúp",
@@ -6700,7 +6706,10 @@
         "effect": "Ứng dụng khách nhận thay đổi vào lần kết nối tiếp theo với máy chủ.",
         "save": "Lưu thương hiệu ứng dụng khách",
         "last_saved": "Lưu lần cuối {date}",
-        "never_saved": "Chưa lưu"
+        "never_saved": "Chưa lưu",
+        "preview_title": "Xem trước",
+        "preview_note": "Đại khái ứng dụng hiển thị các giá trị này như sau. Bản xem trước thay đổi theo những gì bạn nhập.",
+        "preview_button": "Nút mẫu"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "đã nhập {{date}}",
         "sync_no_permission": "Cần quyền quản lý đăng ký để nhập. Hãy hỏi quản trị viên.",
         "portal_hint": "Trang công khai nơi người dùng của bạn tải tác tử. Hãy gửi địa chỉ trang cho họ.",
-        "branding_title": "Tên, logo và màu sắc"
+        "branding_title": "Tên, logo và màu sắc",
+        "side_label": "Tải xuống và thương hiệu"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Đã hết hạn. Hãy tạo mã mới.",
         "copied_short": "Đã sao chép",
         "load_failed": "Không tải được các mã đang hoạt động.",
-        "no_label": "Không có nhãn"
+        "no_label": "Không có nhãn",
+        "code_empty": "Tạo mã và mã sẽ hiện ở đây đủ lớn để đọc to."
     },
     "ui_form": {
         "unsaved": "Thay đổi chưa lưu",

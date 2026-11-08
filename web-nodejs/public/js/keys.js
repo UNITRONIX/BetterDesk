@@ -183,6 +183,53 @@
         }
         hostIsLocal = isLocalHost(host);
         syncWarnings();
+        renderDiagram();
+    }
+
+    /** "host:port" or "[v6]:port" into its parts; a bare host keeps the default port */
+    function splitHostPort(value, defaultPort) {
+        const v = String(value || '').trim();
+        const m = v.match(/^\[([^\]]+)\](?::(\d+))?$/) || v.match(/^([^:]+):(\d+)$/);
+        if (m) return { host: m[1], port: m[2] ? Number(m[2]) : defaultPort };
+        return { host: v, port: defaultPort };
+    }
+
+    /**
+     * The connection diagram with this server's values. The direct/relay mode is
+     * read from the server's connection setting when this user may see it.
+     */
+    let diagramMode = null;
+    async function loadDiagramMode() {
+        if (diagramMode) return diagramMode;
+        diagramMode = 'direct-first';
+        const page = document.querySelector('.keys-page');
+        if (!page || page.dataset.canServerConfig !== 'true') return diagramMode;
+        try {
+            const data = await Utils.api('/api/settings/connection-mode');
+            const runtime = data && data.runtime;
+            const relayOnly = runtime
+                ? (runtime.always_use_relay === true || runtime.p2p_first === false)
+                : (data && data.mode === 'relay_only');
+            diagramMode = relayOnly ? 'relay-only' : 'direct-first';
+        } catch {
+            /* keep the default: clients try a direct connection first */
+        }
+        return diagramMode;
+    }
+
+    async function renderDiagram() {
+        const holder = document.getElementById('keys-diagram');
+        if (!holder || !window.UiDiagram) return;
+        const id = splitHostPort(document.getElementById('server-ip')?.textContent, 21116);
+        const relay = splitHostPort(document.getElementById('relay-ip')?.textContent, 21117);
+        const mode = await loadDiagramMode();
+        UiDiagram.connection(holder, {
+            idServer: id.host && id.host !== '-' ? id.host : window.location.hostname,
+            relay: relay.host && relay.host !== '-' ? relay.host : '',
+            idPort: id.port,
+            relayPort: relay.port,
+            mode,
+        });
     }
 
     function syncWarnings() {

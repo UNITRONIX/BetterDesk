@@ -545,7 +545,9 @@
         "qr_alt": "QR-Code mit den Verbindungswerten dieses Servers",
         "copied": "Kopiert",
         "copy_failed": "Kopieren hat nicht geklappt. Markieren Sie den Wert und kopieren Sie ihn von Hand.",
-        "nothing_to_copy": "Es gibt noch keinen Wert zum Kopieren."
+        "nothing_to_copy": "Es gibt noch keinen Wert zum Kopieren.",
+        "side_label": "Einrichtung am Telefon und Downloads",
+        "files_title": "Downloads"
     },
     "settings": {
         "title": "Dashboard",
@@ -3811,7 +3813,11 @@
         "saved": "Token gespeichert.",
         "save_failed": "Speichern hat nicht geklappt.",
         "revoke_title": "Token widerrufen?",
-        "revoke_failed": "Das Token konnte nicht widerrufen werden."
+        "revoke_failed": "Das Token konnte nicht widerrufen werden.",
+        "how_title": "So wird ein Token verwendet",
+        "how_step1": "Erstellen Sie ein Token und geben Sie es der Person, die den Client installiert, oder tragen Sie es ins Installationsskript ein.",
+        "how_step2": "Das Gerät sendet das Token bei der ersten Verbindung und registriert sich, ohne auf eine Freigabe zu warten.",
+        "how_step3": "Widerrufen Sie ein Token, damit sich keine weiteren Geräte damit registrieren. Bereits registrierte Geräte funktionieren weiter."
     },
     "help_request": {
         "title": "Dashboard",
@@ -6694,7 +6700,10 @@
         "effect": "Clients übernehmen Änderungen, wenn sie sich das nächste Mal beim Server melden.",
         "save": "Client-Branding speichern",
         "last_saved": "Zuletzt gespeichert am {date}",
-        "never_saved": "Noch nicht gespeichert"
+        "never_saved": "Noch nicht gespeichert",
+        "preview_title": "Vorschau",
+        "preview_note": "Ungefähr so zeigt der Client diese Werte an. Die Vorschau folgt dem Formular, während Sie tippen.",
+        "preview_button": "Beispiel-Schaltfläche"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "importiert am {{date}}",
         "sync_no_permission": "Zum Importieren brauchen Sie die Berechtigung, Registrierungen zu verwalten. Fragen Sie einen Administrator.",
         "portal_hint": "Die öffentliche Seite, auf der Ihre Nutzer den Agent herunterladen. Geben Sie ihnen die Adresse.",
-        "branding_title": "Name, Logo und Farben"
+        "branding_title": "Name, Logo und Farben",
+        "side_label": "Downloads und Branding"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "Abgelaufen. Erstellen Sie einen neuen Code.",
         "copied_short": "Kopiert",
         "load_failed": "Die aktiven Codes konnten nicht geladen werden.",
-        "no_label": "Ohne Bezeichnung"
+        "no_label": "Ohne Bezeichnung",
+        "code_empty": "Erstellen Sie einen Code. Er erscheint hier groß genug zum Vorlesen."
     },
     "ui_form": {
         "unsaved": "Ungespeicherte Änderungen",

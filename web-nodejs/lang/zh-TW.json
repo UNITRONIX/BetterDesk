@@ -549,7 +549,9 @@
         "qr_alt": "包含此伺服器連線資訊的 QR 碼",
         "copied": "已複製",
         "copy_failed": "無法複製。請選取該值後手動複製。",
-        "nothing_to_copy": "目前還沒有可複製的值。"
+        "nothing_to_copy": "目前還沒有可複製的值。",
+        "side_label": "手機設定與下載",
+        "files_title": "下載"
     },
     "settings": {
         "title": "設置",
@@ -3939,7 +3941,11 @@
         "saved": "令牌已儲存。",
         "save_failed": "儲存失敗。",
         "revoke_title": "撤銷令牌？",
-        "revoke_failed": "無法撤銷令牌。"
+        "revoke_failed": "無法撤銷令牌。",
+        "how_title": "權杖的使用方式",
+        "how_step1": "建立權杖並交給安裝用戶端的人，或放進安裝指令碼。",
+        "how_step2": "裝置首次連線時送出權杖，不必等候核准即可加入。",
+        "how_step3": "撤銷權杖後，新裝置就無法再用它加入。已加入的裝置照常運作。"
     },
     "help_request": {
         "title": "幫助請求",
@@ -6698,7 +6704,10 @@
         "effect": "用戶端下次連線到伺服器時會套用變更。",
         "save": "儲存用戶端品牌",
         "last_saved": "上次儲存於 {date}",
-        "never_saved": "尚未儲存"
+        "never_saved": "尚未儲存",
+        "preview_title": "預覽",
+        "preview_note": "用戶端大致會這樣顯示這些值。預覽會隨您在表單中的輸入而更新。",
+        "preview_button": "範例按鈕"
     },
     "login_promo": {
         "slides": {
@@ -6754,7 +6763,8 @@
         "imported_on": "匯入於 {{date}}",
         "sync_no_permission": "匯入需要管理註冊的權限。請洽詢管理員。",
         "portal_hint": "使用者下載代理程式的公開頁面。請把這個網址提供給他們。",
-        "branding_title": "名稱、標誌和顏色"
+        "branding_title": "名稱、標誌和顏色",
+        "side_label": "下載與品牌"
     },
 
     "pairing": {
@@ -6793,7 +6803,8 @@
         "expired_hint": "已過期。請建立新的代碼。",
         "copied_short": "已複製",
         "load_failed": "無法載入有效代碼。",
-        "no_label": "無標籤"
+        "no_label": "無標籤",
+        "code_empty": "建立代碼後，會在這裡以足以朗讀的大字顯示。"
     },
     "ui_form": {
         "unsaved": "有未儲存的變更",

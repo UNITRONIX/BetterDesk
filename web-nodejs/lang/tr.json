@@ -551,7 +551,9 @@
         "qr_alt": "Bu sunucunun bağlantı değerlerini içeren QR kodu",
         "copied": "Kopyalandı",
         "copy_failed": "Kopyalanamadı. Değeri seçip elle kopyalayın.",
-        "nothing_to_copy": "Henüz kopyalanacak bir değer yok."
+        "nothing_to_copy": "Henüz kopyalanacak bir değer yok.",
+        "side_label": "Telefon kurulumu ve indirmeler",
+        "files_title": "İndirmeler"
     },
     "settings": {
         "title": "Ayarlar",
@@ -3817,7 +3819,11 @@
         "saved": "Jeton kaydedildi.",
         "save_failed": "Kaydedilemedi.",
         "revoke_title": "Jeton iptal edilsin mi?",
-        "revoke_failed": "Jeton iptal edilemedi."
+        "revoke_failed": "Jeton iptal edilemedi.",
+        "how_title": "Bir belirteç nasıl kullanılır",
+        "how_step1": "Bir belirteç oluşturun ve istemciyi kuran kişiye verin ya da kurulum betiğine ekleyin.",
+        "how_step2": "Cihaz ilk bağlandığında belirteci gönderir ve onay beklemeden katılır.",
+        "how_step3": "Yeni cihazların belirteçle katılmasını durdurmak için onu iptal edin. Zaten katılmış cihazlar çalışmaya devam eder."
     },
     "help_request": {
         "title": "Yardım İstekleri",
@@ -6700,7 +6706,10 @@
         "effect": "İstemciler değişiklikleri sunucuyla bir sonraki iletişimlerinde alır.",
         "save": "İstemci markasını kaydet",
         "last_saved": "Son kayıt: {date}",
-        "never_saved": "Henüz kaydedilmedi"
+        "never_saved": "Henüz kaydedilmedi",
+        "preview_title": "Önizleme",
+        "preview_note": "İstemci bu değerleri yaklaşık olarak böyle gösterir. Önizleme siz yazdıkça formu izler.",
+        "preview_button": "Örnek düğme"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "{{date}} tarihinde içe aktarıldı",
         "sync_no_permission": "İçe aktarmak için kayıtları yönetme izni gerekir. Bir yöneticiye sorun.",
         "portal_hint": "Kullanıcılarınızın aracıyı indirdiği herkese açık sayfa. Adresini onlarla paylaşın.",
-        "branding_title": "Ad, logo ve renkler"
+        "branding_title": "Ad, logo ve renkler",
+        "side_label": "İndirmeler ve marka"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Süresi doldu. Yeni bir kod oluşturun.",
         "copied_short": "Kopyalandı",
         "load_failed": "Etkin kodlar yüklenemedi.",
-        "no_label": "Etiket yok"
+        "no_label": "Etiket yok",
+        "code_empty": "Bir kod oluşturun; burada sesli okunabilecek kadar büyük görünür."
     },
     "ui_form": {
         "unsaved": "Kaydedilmemiş değişiklikler",

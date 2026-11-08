@@ -553,7 +553,9 @@
         "qr_alt": "QR code with this server's connection values",
         "copied": "Copied",
         "copy_failed": "Could not copy. Select the value and copy it by hand.",
-        "nothing_to_copy": "There is no value to copy yet."
+        "nothing_to_copy": "There is no value to copy yet.",
+        "side_label": "Phone setup and downloads",
+        "files_title": "Downloads"
     },
     "settings": {
         "title": "Settings",
@@ -3996,7 +3998,11 @@
         "saved": "Token saved.",
         "save_failed": "Could not save.",
         "revoke_title": "Revoke token?",
-        "revoke_failed": "Could not revoke the token."
+        "revoke_failed": "Could not revoke the token.",
+        "how_title": "How a token is used",
+        "how_step1": "Create a token and give it to whoever installs the client, or put it in the install script.",
+        "how_step2": "The device sends the token when it first connects and joins without waiting for approval.",
+        "how_step3": "Revoke a token to stop new devices from joining with it. Devices that already joined keep working."
     },
     "help_request": {
         "title": "Help Requests",
@@ -6694,7 +6700,10 @@
         "effect": "Clients pick up changes the next time they check in with the server.",
         "save": "Save client branding",
         "last_saved": "Last saved {date}",
-        "never_saved": "Not saved yet"
+        "never_saved": "Not saved yet",
+        "preview_title": "Preview",
+        "preview_note": "Roughly how the client shows these values. It follows the form as you type.",
+        "preview_button": "Sample button"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "imported {{date}}",
         "sync_no_permission": "Importing needs the permission to manage enrollment. Ask an administrator.",
         "portal_hint": "The public page where your users download the agent. Share its address with them.",
-        "branding_title": "Name, logo and colors"
+        "branding_title": "Name, logo and colors",
+        "side_label": "Downloads and branding"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "Expired. Create a new code.",
         "copied_short": "Copied",
         "load_failed": "Could not load the active codes.",
-        "no_label": "No label"
+        "no_label": "No label",
+        "code_empty": "Create a code and it shows here, large enough to read out."
     },
     "ui_form": {
         "unsaved": "Unsaved changes",

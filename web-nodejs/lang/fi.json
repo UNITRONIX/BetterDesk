@@ -551,7 +551,9 @@
         "qr_alt": "QR-koodi, jossa on tämän palvelimen yhteysarvot",
         "copied": "Kopioitu",
         "copy_failed": "Kopiointi epäonnistui. Valitse arvo ja kopioi se käsin.",
-        "nothing_to_copy": "Kopioitavaa arvoa ei ole vielä."
+        "nothing_to_copy": "Kopioitavaa arvoa ei ole vielä.",
+        "side_label": "Puhelimen määritys ja lataukset",
+        "files_title": "Lataukset"
     },
     "settings": {
         "title": "Asetukset",
@@ -3817,7 +3819,11 @@
         "saved": "Tunnus tallennettu.",
         "save_failed": "Tallennus ei onnistunut.",
         "revoke_title": "Peruutetaanko tunnus?",
-        "revoke_failed": "Tunnusta ei voitu peruuttaa."
+        "revoke_failed": "Tunnusta ei voitu peruuttaa.",
+        "how_title": "Näin tunnusta käytetään",
+        "how_step1": "Luo tunnus ja anna se asiakasohjelman asentajalle, tai lisää se asennusskriptiin.",
+        "how_step2": "Laite lähettää tunnuksen ensimmäisellä yhteydellä ja liittyy odottamatta hyväksyntää.",
+        "how_step3": "Peruuta tunnus, niin uudet laitteet eivät voi liittyä sillä. Jo liittyneet laitteet toimivat edelleen."
     },
     "help_request": {
         "title": "Apupyynnöt",
@@ -6700,7 +6706,10 @@
         "effect": "Asiakasohjelmat ottavat muutokset käyttöön, kun ne seuraavan kerran ottavat yhteyttä palvelimeen.",
         "save": "Tallenna asiakasohjelman brändäys",
         "last_saved": "Tallennettu viimeksi {date}",
-        "never_saved": "Ei vielä tallennettu"
+        "never_saved": "Ei vielä tallennettu",
+        "preview_title": "Esikatselu",
+        "preview_note": "Suunnilleen näin asiakasohjelma näyttää nämä arvot. Esikatselu päivittyy, kun kirjoitat lomakkeeseen.",
+        "preview_button": "Esimerkkipainike"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "tuotu {{date}}",
         "sync_no_permission": "Tuontiin tarvitaan oikeus hallita rekisteröintejä. Pyydä sitä järjestelmänvalvojalta.",
         "portal_hint": "Julkinen sivu, jolta käyttäjät lataavat agentin. Anna heille sen osoite.",
-        "branding_title": "Nimi, logo ja värit"
+        "branding_title": "Nimi, logo ja värit",
+        "side_label": "Lataukset ja brändäys"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Vanhentunut. Luo uusi koodi.",
         "copied_short": "Kopioitu",
         "load_failed": "Aktiivisten koodien lataaminen epäonnistui.",
-        "no_label": "Ei tunnistetta"
+        "no_label": "Ei tunnistetta",
+        "code_empty": "Luo koodi, niin se näkyy tässä riittävän suurena ääneen luettavaksi."
     },
     "ui_form": {
         "unsaved": "Tallentamattomia muutoksia",

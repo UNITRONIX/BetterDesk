@@ -551,7 +551,9 @@
         "qr_alt": "QR-kode med denne servers forbindelsesværdier",
         "copied": "Kopieret",
         "copy_failed": "Kunne ikke kopiere. Markér værdien, og kopiér den manuelt.",
-        "nothing_to_copy": "Der er ingen værdi at kopiere endnu."
+        "nothing_to_copy": "Der er ingen værdi at kopiere endnu.",
+        "side_label": "Opsætning på telefon og downloads",
+        "files_title": "Downloads"
     },
     "settings": {
         "title": "Indstillinger",
@@ -3817,7 +3819,11 @@
         "saved": "Token gemt.",
         "save_failed": "Kunne ikke gemme.",
         "revoke_title": "Tilbagekald token?",
-        "revoke_failed": "Tokenet kunne ikke tilbagekaldes."
+        "revoke_failed": "Tokenet kunne ikke tilbagekaldes.",
+        "how_title": "Sådan bruges et token",
+        "how_step1": "Opret et token, og giv det til den, der installerer klienten, eller sæt det i installationsscriptet.",
+        "how_step2": "Enheden sender tokenet, første gang den forbinder, og tilslutter sig uden at vente på godkendelse.",
+        "how_step3": "Tilbagekald et token for at forhindre nye enheder i at tilslutte sig med det. Enheder, der allerede er tilsluttet, virker stadig."
     },
     "help_request": {
         "title": "Hjælpeanmodninger",
@@ -6700,7 +6706,10 @@
         "effect": "Klienterne får ændringerne, næste gang de kontakter serveren.",
         "save": "Gem klientbranding",
         "last_saved": "Sidst gemt {date}",
-        "never_saved": "Ikke gemt endnu"
+        "never_saved": "Ikke gemt endnu",
+        "preview_title": "Forhåndsvisning",
+        "preview_note": "Sådan viser klienten omtrent disse værdier. Forhåndsvisningen følger formularen, mens du skriver.",
+        "preview_button": "Eksempelknap"
     },
     "login_promo": {
         "slides": {
@@ -6756,7 +6765,8 @@
         "imported_on": "importeret {{date}}",
         "sync_no_permission": "For at importere skal du have tilladelse til at administrere tilmeldinger. Spørg en administrator.",
         "portal_hint": "Den offentlige side, hvor dine brugere downloader agenten. Giv dem adressen.",
-        "branding_title": "Navn, logo og farver"
+        "branding_title": "Navn, logo og farver",
+        "side_label": "Downloads og branding"
     },
 
     "pairing": {
@@ -6795,7 +6805,8 @@
         "expired_hint": "Udløbet. Opret en ny kode.",
         "copied_short": "Kopieret",
         "load_failed": "De aktive koder kunne ikke indlæses.",
-        "no_label": "Ingen etiket"
+        "no_label": "Ingen etiket",
+        "code_empty": "Opret en kode, så vises den her, stor nok til at læse højt."
     },
     "ui_form": {
         "unsaved": "Ændringer er ikke gemt",

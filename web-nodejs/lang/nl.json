@@ -545,7 +545,9 @@
         "qr_alt": "QR-code met de verbindingsgegevens van deze server",
         "copied": "Gekopieerd",
         "copy_failed": "Kopiëren is niet gelukt. Selecteer de waarde en kopieer hem handmatig.",
-        "nothing_to_copy": "Er is nog geen waarde om te kopiëren."
+        "nothing_to_copy": "Er is nog geen waarde om te kopiëren.",
+        "side_label": "Telefoon instellen en downloads",
+        "files_title": "Downloads"
     },
     "settings": {
         "title": "Instellingen",
@@ -3811,7 +3813,11 @@
         "saved": "Token opgeslagen.",
         "save_failed": "Opslaan is mislukt.",
         "revoke_title": "Token intrekken?",
-        "revoke_failed": "Het token kon niet worden ingetrokken."
+        "revoke_failed": "Het token kon niet worden ingetrokken.",
+        "how_title": "Zo wordt een token gebruikt",
+        "how_step1": "Maak een token en geef het aan wie de client installeert, of zet het in het installatiescript.",
+        "how_step2": "Het apparaat stuurt het token bij de eerste verbinding en doet mee zonder op goedkeuring te wachten.",
+        "how_step3": "Trek een token in om te voorkomen dat nieuwe apparaten ermee meedoen. Apparaten die al meedoen, blijven werken."
     },
     "help_request": {
         "title": "Hulpverzoeken",
@@ -6694,7 +6700,10 @@
         "effect": "Clients nemen wijzigingen over zodra ze zich de volgende keer bij de server melden.",
         "save": "Huisstijl van de client opslaan",
         "last_saved": "Laatst opgeslagen op {date}",
-        "never_saved": "Nog niet opgeslagen"
+        "never_saved": "Nog niet opgeslagen",
+        "preview_title": "Voorbeeld",
+        "preview_note": "Ongeveer zo toont de client deze waarden. Het voorbeeld volgt het formulier terwijl u typt.",
+        "preview_button": "Voorbeeldknop"
     },
     "login_promo": {
         "slides": {
@@ -6750,7 +6759,8 @@
         "imported_on": "geïmporteerd op {{date}}",
         "sync_no_permission": "Voor importeren hebt u de rechten nodig om inschrijvingen te beheren. Vraag het aan een beheerder.",
         "portal_hint": "De openbare pagina waar uw gebruikers de agent downloaden. Geef hun het adres.",
-        "branding_title": "Naam, logo en kleuren"
+        "branding_title": "Naam, logo en kleuren",
+        "side_label": "Downloads en huisstijl"
     },
 
     "pairing": {
@@ -6789,7 +6799,8 @@
         "expired_hint": "Verlopen. Maak een nieuwe code aan.",
         "copied_short": "Gekopieerd",
         "load_failed": "De actieve codes konden niet worden geladen.",
-        "no_label": "Geen label"
+        "no_label": "Geen label",
+        "code_empty": "Maak een code en die verschijnt hier, groot genoeg om voor te lezen."
     },
     "ui_form": {
         "unsaved": "Niet-opgeslagen wijzigingen",
