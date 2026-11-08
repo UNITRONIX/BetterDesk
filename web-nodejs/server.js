@@ -8,6 +8,7 @@
  */
 
 const express = require('express');
+const { buildNav: buildConsoleNav } = require('./lib/consoleNav');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const path = require('path');
@@ -272,6 +273,13 @@ app.use((req, res, next) => {
         ? requestHasPermission(req, perm)
         : false;
     res.locals.isSuperAdmin = role ? isSuperAdminRole(role) : false;
+    // Navigation for the sidebar and breadcrumb (lib/consoleNav.js)
+    res.locals.consoleNav = (opts) => buildConsoleNav({
+        can: res.locals.hasPermission,
+        isSuperAdmin: res.locals.isSuperAdmin,
+        t: res.locals._ || ((key) => key),
+        ...opts
+    });
     res.locals.sessionPolicy = panelSessionService.getPolicy();
     // Prevent HTML page caching — only static assets should be cached
     if (!req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map|proto)$/)) {

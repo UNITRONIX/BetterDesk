@@ -90,7 +90,8 @@
         "remote_open_tab": "Mở client máy tính để bàn từ xa trong tab mới",
         "pairing": "Ghép nối",
         "client_branding": "Client Branding",
-        "agents": "Tác nhân BetterDesk"
+        "agents": "Tác nhân BetterDesk",
+        "section_people": "Thành viên"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Bố cục console Beta — tùy chọn; giao diện cổ điển vẫn là mặc định.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Đường dẫn"
     },
     "help": {
         "panel": {

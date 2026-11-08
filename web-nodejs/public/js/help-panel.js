@@ -42,6 +42,8 @@
         open = !!next;
         panel.classList.toggle('is-open', open);
         panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+        // Closed panel must not take keyboard focus
+        if ('inert' in panel) panel.inert = !open;
 
         var shell = shellEl();
         if (shell) shell.classList.toggle('ux35-help-open', open);

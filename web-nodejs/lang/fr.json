@@ -88,7 +88,8 @@
         "remote_open_tab": "Ouvrir le client Bureau à distance dans un nouvel onglet",
         "pairing": "Appairage",
         "client_branding": "Client Branding",
-        "agents": "Agents BetterDesk"
+        "agents": "Agents BetterDesk",
+        "section_people": "Personnes"
     },
     "auth": {
         "login": "Connexion",
@@ -4678,7 +4679,8 @@
         "beta_badge": "BÊTA",
         "beta_tooltip": "Disposition console en bêta — optionnelle ; l’interface classique reste la valeur par défaut.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Fil d'Ariane"
     },
     "help": {
         "panel": {

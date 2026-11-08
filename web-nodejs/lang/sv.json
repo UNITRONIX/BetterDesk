@@ -90,7 +90,8 @@
         "remote_open_tab": "Öppna fjärrskrivbordsklient i ny flik",
         "pairing": "Parkoppling",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-agenter"
+        "agents": "BetterDesk-agenter",
+        "section_people": "Personer"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Beta-konsollayout — valfritt; klassiskt UI förblir standard.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Brödsmulor"
     },
     "help": {
         "panel": {

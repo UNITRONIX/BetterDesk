@@ -1,11 +1,29 @@
 <% if (typeof emergencyMode !== 'undefined' && emergencyMode) { %>
 <div class="emergency-banner" role="alert">
-    <span class="material-icons" aria-hidden="true">warning</span>
     <span><%= _('auth.emergency_mode_banner') %></span>
 </div>
 <% } %>
+<%
+    const topNav = typeof consoleNav !== 'function' ? {} : consoleNav({
+        currentPage: typeof currentPage !== 'undefined' ? currentPage : '',
+        currentTab: typeof currentTab !== 'undefined' ? currentTab : '',
+        activateAgentNav: typeof activateAgentNav !== 'undefined' && activateAgentNav
+    });
+    const crumbs = [];
+    if (topNav.activeSection) crumbs.push({ label: topNav.activeSection.text });
+    const pageCrumbs = (typeof breadcrumb !== 'undefined' && breadcrumb && breadcrumb.length)
+        ? breadcrumb
+        : (topNav.activePage ? [{ label: topNav.activePage.text }] : (typeof title !== 'undefined' && title ? [{ label: title }] : []));
+    pageCrumbs.forEach(function (c) {
+        if (!crumbs.length || crumbs[crumbs.length - 1].label !== c.label) crumbs.push(c);
+    });
+    const themeMode = (branding && branding.themeMode) || 'system';
+    const themeIcon = themeMode === 'custom' ? 'palette' : (themeMode === 'system' ? 'contrast' : (themeMode === 'light' ? 'light_mode' : 'dark_mode'));
+    const themeName = themeMode === 'custom' ? _('theme.custom') : (themeMode === 'system' ? _('theme.auto') : (themeMode === 'light' ? _('theme.light') : _('theme.dark')));
+    const themeLabel = _('theme.title') + ': ' + themeName;
+%>
 <header class="ux35-topbar" id="ux35-topbar">
-    <button type="button" class="ux35-topbar-menu-btn" id="ux35-menu-btn" aria-label="<%= _('ux35.open_menu') || 'Open menu' %>" aria-controls="ux35-sidebar" aria-expanded="false">
+    <button type="button" class="ux35-topbar-menu-btn" id="ux35-menu-btn" aria-label="<%= _('ux35.open_menu') %>" aria-controls="ux35-sidebar" aria-expanded="false">
         <span class="material-icons" aria-hidden="true">menu</span>
     </button>
 
@@ -14,89 +32,33 @@
         <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
         <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
         <span class="sidebar-logo-svg"><%- branding.logoSvg %></span>
+        <span class="brand-name"><%= appName %></span>
         <% } else if (branding.logoType === 'image' && branding.logoUrl) { %>
-        <img src="<%= branding.logoUrl %>" alt="<%= appName %>">
+        <img src="<%= branding.logoUrl %>" alt="">
+        <span class="brand-name"><%= appName %></span>
         <% } else { %>
         <span class="material-icons" aria-hidden="true"><%= branding.logoIcon || 'dns' %></span>
-        <span><%= appName %></span>
+        <span class="brand-name"><%= appName %></span>
         <% } %>
     </a>
-    <nav class="ux35-topbar-breadcrumb" aria-label="Breadcrumb">
-        <% const isDashboardHome = (typeof currentPage !== 'undefined' && currentPage === 'dashboard'); %>
-        <% if (isDashboardHome && !(typeof breadcrumb !== 'undefined' && breadcrumb.length)) { %>
-            <span class="current"><%= _('nav.dashboard') %></span>
-        <% } else { %>
-            <a href="/"><%= _('nav.dashboard') %></a>
-            <% if (typeof breadcrumb !== 'undefined' && breadcrumb.length) { %>
-                <% breadcrumb.forEach((item, index) => { %>
-                    <span class="separator">/</span>
-                    <% if (index === breadcrumb.length - 1) { %>
-                        <span class="current"><%= item.label %></span>
-                    <% } else if (item.href) { %>
-                        <a href="<%= item.href %>"><%= item.label %></a>
-                    <% } else { %>
-                        <span><%= item.label %></span>
-                    <% } %>
-                <% }); %>
-            <% } else if (typeof title !== 'undefined' && title && title !== _('nav.dashboard')) { %>
-                <span class="separator">/</span>
-                <span class="current"><%= title %></span>
+
+    <nav class="ux35-topbar-breadcrumb" aria-label="<%= _('ux35.breadcrumb') %>">
+        <% crumbs.forEach(function (item, index) { %>
+            <% if (index > 0) { %><span class="separator" aria-hidden="true">/</span><% } %>
+            <% if (index === crumbs.length - 1) { %>
+                <span class="current" aria-current="page"><%= item.label %></span>
+            <% } else if (item.href) { %>
+                <a href="<%= item.href %>"><%= item.label %></a>
+            <% } else { %>
+                <span><%= item.label %></span>
             <% } %>
-        <% } %>
+        <% }); %>
     </nav>
 
     <div class="ux35-topbar-spacer"></div>
 
     <div class="ux35-topbar-actions">
         <div class="ux35-topbar-action-list" id="ux35-topbar-action-list">
-        <button type="button" class="ux35-topbar-btn" id="refresh-btn" title="<%= _('actions.refresh') %>"
-                aria-label="<%= _('actions.refresh') %>">
-            <span class="material-icons" aria-hidden="true">refresh</span>
-        </button>
-
-        <button type="button" class="ux35-topbar-btn" id="ux35-theme-btn" title="<%= (branding.themeMode === 'light' ? (_('theme.switch_to_dark') || 'Switch to dark theme') : (branding.themeMode === 'custom' ? (_('theme.custom') || 'Custom') : (_('theme.switch_to_light') || 'Switch to light theme'))) %>" aria-label="<%= (branding.themeMode === 'light' ? (_('theme.switch_to_dark') || 'Switch to dark theme') : (branding.themeMode === 'custom' ? (_('theme.custom') || 'Custom') : (_('theme.switch_to_light') || 'Switch to light theme'))) %>">
-            <span class="material-icons" id="ux35-theme-icon" aria-hidden="true"><%= branding.themeMode === 'custom' ? 'palette' : (branding.themeMode === 'light' ? 'dark_mode' : 'light_mode') %></span>
-        </button>
-
-        <button type="button" class="ux35-topbar-btn accessibility-btn" id="accessibility-btn" title="<%= _('accessibility.title') %>" aria-label="<%= _('accessibility.title') %>" aria-haspopup="dialog">
-            <span class="material-icons" aria-hidden="true">accessibility_new</span>
-        </button>
-
-        <div class="lang-selector">
-            <button type="button" class="ux35-topbar-btn" id="lang-btn" title="<%= _('settings.language') %>"
-                    aria-label="<%= _('settings.language') %>" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons" aria-hidden="true">language</span>
-            </button>
-            <div class="lang-dropdown" id="lang-dropdown">
-                <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
-                    <div class="lang-option <%= lang === language.code ? 'active' : '' %>" data-lang="<%= language.code %>" role="button" tabindex="0">
-                        <span class="lang-flag"><%= language.flag || '🌐' %></span>
-                        <span class="lang-label"><%= language.native || language.name || language.code %></span>
-                        <% if (lang === language.code) { %>
-                            <span class="material-icons lang-check" aria-hidden="true">check</span>
-                        <% } %>
-                    </div>
-                <% }); %>
-            </div>
-        </div>
-
-        <div class="lang-selector">
-            <button type="button" class="ux35-topbar-btn" id="user-btn" title="<%= user ? user.username : 'User' %>"
-                    aria-label="<%= user ? user.username : 'User' %>" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons" aria-hidden="true">account_circle</span>
-            </button>
-            <div class="lang-dropdown" id="user-dropdown">
-                <div class="lang-option" id="change-password-btn" role="button" tabindex="0">
-                    <span class="material-icons" style="font-size: 18px;" aria-hidden="true">lock</span>
-                    <span><%= _('auth.change_password') %></span>
-                </div>
-                <div class="lang-option" id="logout-btn" role="button" tabindex="0" style="color: var(--accent-red);">
-                    <span class="material-icons" style="font-size: 18px;" aria-hidden="true">logout</span>
-                    <span><%= _('auth.logout') %></span>
-                </div>
-            </div>
-        </div>
-
         <div class="notif-wrapper">
             <button type="button" class="ux35-topbar-btn notif-btn" id="notif-btn" title="<%= _('notifications.title') %>"
                     aria-label="<%= _('notifications.title') %>" aria-haspopup="true" aria-expanded="false">
@@ -117,10 +79,54 @@
                 </div>
             </div>
         </div>
+
+        <button type="button" class="ux35-topbar-btn" id="refresh-btn" title="<%= _('actions.refresh') %>"
+                aria-label="<%= _('actions.refresh') %>">
+            <span class="material-icons" aria-hidden="true">refresh</span>
+        </button>
+
+        <button type="button" class="ux35-topbar-btn" id="ux35-theme-btn" title="<%= themeLabel %>" aria-label="<%= themeLabel %>">
+            <span class="material-icons" id="ux35-theme-icon" aria-hidden="true"><%= themeIcon %></span>
+        </button>
+
+        <button type="button" class="ux35-topbar-btn accessibility-btn" id="accessibility-btn" title="<%= _('accessibility.title') %>" aria-label="<%= _('accessibility.title') %>" aria-haspopup="dialog">
+            <span class="material-icons" aria-hidden="true">accessibility_new</span>
+        </button>
+
+        <div class="lang-selector">
+            <button type="button" class="ux35-topbar-btn" id="lang-btn" title="<%= _('settings.language') %>"
+                    aria-label="<%= _('settings.language') %>" aria-haspopup="true" aria-expanded="false">
+                <span class="material-icons" aria-hidden="true">language</span>
+            </button>
+            <div class="lang-dropdown menu" id="lang-dropdown">
+                <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
+                    <div class="lang-option menu-item <%= lang === language.code ? 'active' : '' %>" data-lang="<%= language.code %>" role="button" tabindex="0"<%- lang === language.code ? ' aria-current="true"' : '' %> lang="<%= language.code %>">
+                        <span class="lang-label"><%= language.native || language.name || language.code %></span>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+
+        <div class="lang-selector">
+            <button type="button" class="ux35-topbar-btn ux35-user-btn" id="user-btn" title="<%= user ? user.username : '' %>"
+                    aria-label="<%= user ? user.username : '' %>" aria-haspopup="true" aria-expanded="false">
+                <span class="material-icons" aria-hidden="true">account_circle</span>
+            </button>
+            <div class="lang-dropdown menu" id="user-dropdown">
+                <div class="menu-label"><%= user ? user.username : '' %></div>
+                <div class="lang-option menu-item" id="change-password-btn" role="button" tabindex="0">
+                    <span><%= _('auth.change_password') %></span>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="lang-option menu-item" id="logout-btn" role="button" tabindex="0">
+                    <span><%= _('auth.logout') %></span>
+                </div>
+            </div>
+        </div>
         </div>
         <button type="button" class="ux35-topbar-btn ux35-topbar-actions-menu-btn" id="ux35-actions-menu-btn"
-                aria-label="<%= _('mobile_nav.more') || 'More actions' %>"
-                title="<%= _('mobile_nav.more') || 'More actions' %>"
+                aria-label="<%= _('mobile_nav.more') %>"
+                title="<%= _('mobile_nav.more') %>"
                 aria-controls="ux35-topbar-action-list" aria-expanded="false">
             <span class="material-icons" aria-hidden="true">more_vert</span>
         </button>

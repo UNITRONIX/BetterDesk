@@ -53,10 +53,18 @@
     function updateBadge() {
         if (!dom) return;
         const count = state.unreadCount;
+        // The badge is a dot; the count goes into the button's name
+        const btn = document.getElementById('notif-btn');
+        if (btn) {
+            if (!btn.dataset.baseLabel) btn.dataset.baseLabel = btn.getAttribute('aria-label') || '';
+            const label = count > 0 ? btn.dataset.baseLabel + ' (' + (count > 99 ? '99+' : count) + ')' : btn.dataset.baseLabel;
+            btn.setAttribute('aria-label', label);
+            btn.setAttribute('title', label);
+        }
         if (count > 0) {
-            dom.badge.textContent = count > 99 ? '99+' : String(count);
+            dom.badge.textContent = '';
             dom.badge.hidden = false;
-            dom.badge.removeAttribute('aria-hidden');
+            dom.badge.setAttribute('aria-hidden', 'true');
         } else {
             dom.badge.textContent = '';
             dom.badge.hidden = true;

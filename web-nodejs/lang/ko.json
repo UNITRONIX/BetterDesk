@@ -84,7 +84,8 @@
         "remote_open_tab": "새 탭에서 원격 데스크톱 클라이언트 열기",
         "pairing": "페어링",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk 에이전트"
+        "agents": "BetterDesk 에이전트",
+        "section_people": "구성원"
     },
     "auth": {
         "login": "Login",
@@ -4674,7 +4675,8 @@
         "beta_badge": "베타",
         "beta_tooltip": "베타 콘솔 레이아웃 — 선택 사항이며 기본값은 클래식 UI입니다.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "탐색 경로"
     },
     "help": {
         "panel": {

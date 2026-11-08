@@ -90,7 +90,8 @@
         "remote_open_tab": "Távoli asztal kliens megnyitása új lapon",
         "pairing": "Párosítás",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk ügynökök"
+        "agents": "BetterDesk ügynökök",
+        "section_people": "Személyek"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "BÉTA",
         "beta_tooltip": "Béta konzol elrendezés — opcionális; az alapértelmezett a klasszikus felület marad.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Morzsamenü"
     },
     "help": {
         "panel": {

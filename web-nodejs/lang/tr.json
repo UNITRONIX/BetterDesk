@@ -90,7 +90,8 @@
         "remote_open_tab": "Uzak masaüstü istemcisini yeni sekmede aç",
         "pairing": "Eşleştirme",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk Aracıları"
+        "agents": "BetterDesk Aracıları",
+        "section_people": "Kişiler"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Beta konsol düzeni — isteğe bağlı; klasik arayüz varsayılan kalır.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "İçerik haritası"
     },
     "help": {
         "panel": {

@@ -90,7 +90,8 @@
         "remote_open_tab": "Buka klien desktop jarak jauh di tab baru",
         "pairing": "Pemasangan",
         "client_branding": "Client Branding",
-        "agents": "Agen BetterDesk"
+        "agents": "Agen BetterDesk",
+        "section_people": "Orang"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Tata letak konsol Beta — opsional; UI klasik tetap default.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Remah roti"
     },
     "help": {
         "panel": {

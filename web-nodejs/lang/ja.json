@@ -84,7 +84,8 @@
         "remote_open_tab": "新しいタブでリモートデスクトップクライアントを開く",
         "pairing": "ペアリング",
         "client_branding": "Client Branding",
-        "agents": "BetterDeskエージェント"
+        "agents": "BetterDeskエージェント",
+        "section_people": "メンバー"
     },
     "auth": {
         "login": "Login",
@@ -4674,7 +4675,8 @@
         "beta_badge": "ベータ",
         "beta_tooltip": "ベータ版コンソールレイアウト — 任意。既定はクラシック UI のままです。",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "パンくずリスト"
     },
     "help": {
         "panel": {

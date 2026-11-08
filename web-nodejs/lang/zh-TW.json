@@ -88,7 +88,8 @@
         "remote_open_tab": "在新分頁中開啟遠端桌面用戶端",
         "pairing": "配對",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk 代理"
+        "agents": "BetterDesk 代理",
+        "section_people": "人員"
     },
     "auth": {
         "login": "登錄",
@@ -4678,7 +4679,8 @@
         "beta_badge": "測試版",
         "beta_tooltip": "測試版主控台版面 — 可選；經典介面仍為預設。",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "麵包屑導覽"
     },
     "help": {
         "panel": {

@@ -84,7 +84,8 @@
         "remote_open_tab": "Otevřít klienta vzdálené plochy v nové kartě",
         "pairing": "Párování",
         "client_branding": "Client Branding",
-        "agents": "Agenti BetterDesk"
+        "agents": "Agenti BetterDesk",
+        "section_people": "Lidé"
     },
     "auth": {
         "login": "Přihlášení",
@@ -4674,7 +4675,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Beta rozložení konzole — volitelné; výchozí zůstává klasické UI.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Drobečková navigace"
     },
     "help": {
         "panel": {

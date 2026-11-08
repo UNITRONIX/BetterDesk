@@ -90,7 +90,8 @@
         "remote_open_tab": "Відкрити клієнт віддаленого робочого столу в новій вкладці",
         "pairing": "Сполучення",
         "client_branding": "Client Branding",
-        "agents": "Агенти BetterDesk"
+        "agents": "Агенти BetterDesk",
+        "section_people": "Люди"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "БЕТА",
         "beta_tooltip": "Бета-макет консолі — необов’язково; класичний UI лишається типовим.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Навігаційний ланцюжок"
     },
     "help": {
         "panel": {

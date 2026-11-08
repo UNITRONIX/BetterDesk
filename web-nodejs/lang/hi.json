@@ -90,7 +90,8 @@
         "remote_open_tab": "नए टैब में रिमोट डेस्कटॉप क्लाइंट खोलें",
         "pairing": "पेयरिंग",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk एजेंट"
+        "agents": "BetterDesk एजेंट",
+        "section_people": "लोग"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "बीटा",
         "beta_tooltip": "बीटा कंसोल लेआउट — वैकल्पिक; क्लासिक UI डिफ़ॉल्ट रहता है।",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "ब्रेडक्रंब"
     },
     "help": {
         "panel": {

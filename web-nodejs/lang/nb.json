@@ -90,7 +90,8 @@
         "remote_open_tab": "Åpne eksternt skrivebordsklient i ny fane",
         "pairing": "Sammenkobling",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-agenter"
+        "agents": "BetterDesk-agenter",
+        "section_people": "Personer"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Beta-konsollayout — valgfritt; klassisk UI forblir standard.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Brødsmulesti"
     },
     "help": {
         "panel": {

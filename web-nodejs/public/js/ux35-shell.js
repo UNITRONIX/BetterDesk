@@ -122,18 +122,20 @@
         var btn = document.getElementById('ux35-theme-btn');
         if (!icon) return;
         var mode = document.documentElement.getAttribute('data-theme-mode') || 'dark';
-        var theme = document.documentElement.getAttribute('data-theme') || 'dark';
         var label;
+        // Icon and label show the current mode; a click moves to the next one.
         if (mode === 'custom') {
             icon.textContent = 'palette';
-            label = t('theme.custom', 'Custom theme — open Appearance');
-        } else if (theme === 'light') {
-            // Icon = target mode (click to switch to dark)
-            icon.textContent = 'dark_mode';
-            label = t('theme.switch_to_dark', 'Switch to dark theme');
-        } else {
+            label = t('theme.title', 'Theme') + ': ' + t('theme.custom', 'Custom');
+        } else if (mode === 'system') {
+            icon.textContent = 'contrast';
+            label = t('theme.title', 'Theme') + ': ' + t('theme.auto', 'System');
+        } else if (mode === 'light') {
             icon.textContent = 'light_mode';
-            label = t('theme.switch_to_light', 'Switch to light theme');
+            label = t('theme.title', 'Theme') + ': ' + t('theme.light', 'Light');
+        } else {
+            icon.textContent = 'dark_mode';
+            label = t('theme.title', 'Theme') + ': ' + t('theme.dark', 'Dark');
         }
         if (btn) {
             btn.setAttribute('title', label);
@@ -183,9 +185,13 @@
         return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + a + ')';
     }
 
-    function applyThemeLocally(next) {
+    var MQ_DARK = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function applyThemeLocally(mode) {
+        // 'system' shows whichever palette the OS asks for right now
+        var next = mode === 'system' ? (MQ_DARK.matches ? 'dark' : 'light') : mode;
         document.documentElement.setAttribute('data-theme', next);
-        document.documentElement.setAttribute('data-theme-mode', next);
+        document.documentElement.setAttribute('data-theme-mode', mode);
         document.documentElement.style.colorScheme = next === 'light' ? 'light' : 'dark';
         var a11yContrast = document.documentElement.getAttribute('data-a11y-contrast');
         if (a11yContrast && a11yContrast !== 'normal') {
@@ -295,8 +301,8 @@
     }
 
     /**
-     * Cycle visual theme: dark ↔ light.
-     * Applies full solid token set immediately, then persists + reconciles branding.css.
+     * Cycle the theme: system → light → dark → system.
+     * Applies the palette immediately, then persists and reloads branding.css.
      */
     function cycleThemePreview() {
         var mode = document.documentElement.getAttribute('data-theme-mode') || 'dark';
@@ -304,8 +310,8 @@
             window.location.href = '/settings#branding';
             return;
         }
-        var prev = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-        var next = prev === 'light' ? 'dark' : 'light';
+        var prev = mode;
+        var next = mode === 'system' ? 'light' : (mode === 'light' ? 'dark' : 'system');
         applyThemeLocally(next);
 
         if (window.BetterDesk && window.BetterDesk.csrfToken) {
@@ -318,7 +324,7 @@
                 credentials: 'same-origin',
                 body: JSON.stringify({
                     themeMode: next,
-                    colors: THEME_PALETTES[next],
+                    colors: THEME_PALETTES[next === 'system' ? 'light' : next],
                     glassColor: next === 'light' ? '#ffffff' : '#161b22'
                 })
             }).then(function (res) {
@@ -326,7 +332,7 @@
                     if (window.BetterDesk.branding) {
                         window.BetterDesk.branding.themeMode = next;
                     }
-                    reloadBrandingStylesheet(next);
+                    reloadBrandingStylesheet(document.documentElement.getAttribute('data-theme'));
                 } else {
                     applyThemeLocally(prev);
                 }
@@ -578,53 +584,38 @@
     function initSidebarNavExtras() {
         var nav = document.getElementById('ux35-sidebar-nav');
         if (!nav) return;
-        var COLLAPSE_KEY = 'bd_ux35_sidebar_collapsed';
+        var COLLAPSE_KEY = 'bd_nav_sections_collapsed';
         var collapsed = {};
         try {
             collapsed = JSON.parse(sessionStorage.getItem(COLLAPSE_KEY) || '{}') || {};
         } catch (e) { collapsed = {}; }
 
+        function setSectionOpen(section, toggle, open) {
+            section.classList.toggle('is-collapsed', !open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            var icon = toggle.querySelector('.ux35-section-chevron');
+            if (icon) icon.textContent = open ? 'expand_less' : 'expand_more';
+        }
+
+        // The section of the current page is always open. Other sections
+        // start closed and remember being opened or closed for this tab.
         nav.querySelectorAll('.ux35-sidebar-section').forEach(function (section) {
             var panel = section.getAttribute('data-panel') || '';
             var toggle = section.querySelector('.ux35-sidebar-heading-toggle');
             if (!toggle) return;
-            if (collapsed[panel]) {
-                section.classList.add('is-collapsed');
-                toggle.setAttribute('aria-expanded', 'false');
-                var chevron = toggle.querySelector('.ux35-section-chevron');
-                if (chevron) chevron.textContent = 'expand_more';
+            var isCurrent = section.classList.contains('is-current');
+            if (!isCurrent && panel && Object.prototype.hasOwnProperty.call(collapsed, panel)) {
+                setSectionOpen(section, toggle, !collapsed[panel]);
             }
             toggle.addEventListener('click', function () {
-                var open = section.classList.toggle('is-collapsed') === false;
-                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                var icon = toggle.querySelector('.ux35-section-chevron');
-                if (icon) icon.textContent = open ? 'expand_less' : 'expand_more';
-                if (panel) {
-                    if (!open) collapsed[panel] = true;
-                    else delete collapsed[panel];
+                var open = section.classList.contains('is-collapsed');
+                setSectionOpen(section, toggle, open);
+                if (panel && !isCurrent) {
+                    collapsed[panel] = !open;
                     try { sessionStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); } catch (e) { /* ignore */ }
                 }
             });
         });
-
-        var filterInput = document.getElementById('ux35-sidebar-filter-input');
-        if (!filterInput) return;
-        function applyFilter() {
-            var q = (filterInput.value || '').trim().toLowerCase();
-            nav.querySelectorAll('.ux35-sidebar-section').forEach(function (section) {
-                var items = section.querySelectorAll('.ux35-sidebar-item');
-                var visible = 0;
-                items.forEach(function (item) {
-                    var label = (item.textContent || '').toLowerCase();
-                    var match = !q || label.indexOf(q) !== -1;
-                    item.classList.toggle('is-filter-hidden', !match);
-                    if (match) visible++;
-                });
-                section.classList.toggle('is-filter-empty', q !== '' && visible === 0);
-                if (q) section.classList.remove('is-collapsed');
-            });
-        }
-        filterInput.addEventListener('input', applyFilter);
     }
 
     function init() {

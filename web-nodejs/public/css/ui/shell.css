@@ -1,0 +1,623 @@
+/*
+ * Console shell: top bar, sidebar navigation, content column, mobile
+ * bottom bar. Loaded on every page that uses layouts/main.ejs.
+ * Below 1100px the sidebar becomes a drawer (ux35-shell.js).
+ */
+
+.ux35-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: var(--text-base);
+    line-height: var(--leading);
+}
+
+.emergency-banner {
+    padding: var(--space-2) var(--space-4);
+    background: var(--danger);
+    color: var(--on-accent);
+    font-weight: 600;
+}
+
+/* ── Top bar ── */
+
+.ux35-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: var(--topbar-h);
+    padding: 0 var(--space-3);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg);
+}
+
+.ux35-topbar-menu-btn,
+.ux35-topbar-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h);
+    height: var(--control-h);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.ux35-topbar-menu-btn:hover,
+.ux35-topbar-btn:hover,
+.ux35-topbar-btn[aria-expanded="true"] {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.ux35-topbar-menu-btn {
+    display: none;
+}
+
+.ux35-topbar-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    padding-inline-end: var(--space-3);
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.ux35-topbar-logo:hover {
+    color: var(--text);
+}
+
+.ux35-topbar-logo img,
+.ux35-topbar-logo .sidebar-logo-svg svg {
+    width: auto;
+    height: 22px;
+    display: block;
+}
+
+.ux35-topbar-logo .brand-text-accent {
+    color: var(--accent);
+}
+
+.ux35-topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    padding-inline-start: var(--space-3);
+    border-inline-start: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.ux35-topbar-breadcrumb a {
+    color: var(--text-muted);
+}
+
+.ux35-topbar-breadcrumb .current {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ux35-topbar-spacer {
+    flex: 1;
+}
+
+.ux35-topbar-actions,
+.ux35-topbar-action-list {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.ux35-topbar-actions-menu-btn {
+    display: none;
+}
+
+/* Notification mark: a dot, the count is for screen readers */
+.notif-badge {
+    position: absolute;
+    top: 6px;
+    inset-inline-end: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    overflow: hidden;
+    color: transparent;
+    font-size: 0;
+}
+
+/* Top bar menus */
+.lang-selector,
+.notif-wrapper {
+    position: relative;
+}
+
+.lang-dropdown,
+.notif-dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    inset-inline-end: 0;
+    z-index: 900;
+    min-width: 200px;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    padding: var(--space-1) 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+}
+
+.lang-dropdown {
+    display: none;
+}
+
+.lang-dropdown.open {
+    display: block;
+}
+
+.lang-option.active {
+    font-weight: 600;
+}
+
+.notif-dropdown {
+    width: min(360px, calc(100vw - 2 * var(--space-4)));
+    padding: 0;
+}
+
+.notif-header,
+.notif-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+}
+
+.notif-header {
+    border-bottom: 1px solid var(--rule);
+    font-weight: 600;
+}
+
+.notif-footer {
+    border-top: 1px solid var(--rule);
+    justify-content: flex-start;
+}
+
+.notif-mark-all {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 400;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.notif-list {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.notif-empty {
+    padding: var(--space-4) var(--space-3);
+    color: var(--text-muted);
+}
+
+.notif-item {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule);
+    color: var(--text);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.notif-item:hover {
+    background: var(--hover);
+}
+
+.notif-item.unread {
+    border-inline-start: 2px solid var(--accent);
+}
+
+.notif-item .material-icons {
+    display: none;
+}
+
+.notif-see-all {
+    font-size: var(--text-sm);
+}
+
+/* ── Body: sidebar + content ── */
+
+.ux35-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.ux35-sidebar {
+    position: sticky;
+    top: var(--topbar-h);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    width: var(--ux35-sidebar-width, var(--sidebar-w));
+    height: calc(100vh - var(--topbar-h));
+    height: calc(100dvh - var(--topbar-h));
+    border-inline-end: 1px solid var(--rule);
+    background: var(--bg-subtle);
+}
+
+.ux35-sidebar-resize {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    inset-inline-end: -3px;
+    z-index: 2;
+    width: 6px;
+    cursor: col-resize;
+}
+
+.ux35-sidebar-resize:hover,
+.ux35-sidebar-resize.active,
+.ux35-sidebar-resize:focus-visible {
+    background: var(--border);
+    outline: none;
+}
+
+.ux35-is-resizing,
+.ux35-is-resizing * {
+    cursor: col-resize;
+    user-select: none;
+}
+
+.ux35-sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-3) var(--space-2);
+}
+
+.ux35-sidebar-section + .ux35-sidebar-section {
+    margin-top: var(--space-1);
+}
+
+.ux35-sidebar-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--control-h);
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-align: start;
+    cursor: pointer;
+}
+
+.ux35-sidebar-heading:hover {
+    background: var(--hover);
+}
+
+.ux35-section-chevron {
+    color: var(--text-muted);
+}
+
+.nav-list {
+    margin: 0 0 var(--space-2);
+    padding: 0;
+    list-style: none;
+}
+
+.ux35-sidebar-section.is-collapsed .nav-list {
+    display: none;
+}
+
+.ux35-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 30px;
+    padding: var(--space-1) var(--space-2);
+    padding-inline-start: var(--space-4);
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+    text-decoration: none;
+}
+
+[dir="rtl"] .ux35-sidebar-item {
+    border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.ux35-sidebar-item:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.ux35-sidebar-item.active {
+    border-inline-start-color: var(--accent);
+    background: var(--bg);
+    font-weight: 600;
+}
+
+.ux35-sidebar-item.is-sub {
+    padding-inline-start: calc(var(--space-4) + var(--space-4));
+    font-size: var(--text-sm);
+}
+
+.nav-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-note,
+.nav-count {
+    margin-inline-start: auto;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.nav-help .ux35-sidebar-heading {
+    margin-top: var(--space-2);
+}
+
+.ux35-sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--rule);
+}
+
+.ux35-sidebar-user {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-2);
+}
+
+.ux35-sidebar-user-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ux35-sidebar-user-role,
+.ux35-sidebar-attribution {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.ux35-sidebar-attribution {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--text-xs);
+}
+
+.ux35-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transition: opacity var(--motion);
+}
+
+.ux35-sidebar-overlay.visible {
+    opacity: 1;
+}
+
+.ux35-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.ux35-content {
+    padding: var(--page-pad);
+    padding-bottom: var(--space-7);
+}
+
+/* ── Drawer below 1100px ── */
+
+@media (max-width: 1099px) {
+    .ux35-topbar-menu-btn {
+        display: inline-flex;
+    }
+
+    .ux35-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        inset-inline-start: 0;
+        z-index: 60;
+        width: min(300px, 86vw);
+        height: auto;
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform var(--motion), visibility 0s linear var(--motion);
+    }
+
+    [dir="rtl"] .ux35-sidebar {
+        transform: translateX(100%);
+    }
+
+    .ux35-drawer-open .ux35-sidebar {
+        transform: none;
+        visibility: visible;
+        box-shadow: var(--shadow-float);
+        transition: transform var(--motion);
+    }
+
+    .ux35-sidebar-resize {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .ux35-topbar {
+        padding: 0 var(--space-2);
+        gap: var(--space-1);
+    }
+
+    .ux35-topbar-logo .brand-name {
+        display: none;
+    }
+
+    .ux35-topbar-breadcrumb {
+        padding-inline-start: var(--space-2);
+    }
+
+    .ux35-topbar-breadcrumb > :not(.current) {
+        display: none;
+    }
+
+    .ux35-topbar-actions-menu-btn {
+        display: inline-flex;
+    }
+
+    /* Extra top bar actions fold into a menu */
+    .ux35-topbar-action-list {
+        position: absolute;
+        top: calc(var(--topbar-h) - var(--space-1));
+        inset-inline-end: var(--space-2);
+        z-index: 900;
+        display: none;
+        padding: var(--space-1);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        background: var(--bg-float);
+        box-shadow: var(--shadow-float);
+    }
+
+    .ux35-topbar-action-list.is-open {
+        display: flex;
+    }
+
+    .ux35-content {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* ── Mobile bottom bar ── */
+
+.mobile-bottom-nav {
+    display: none;
+}
+
+.mobile-more-drawer {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .mobile-bottom-nav {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 40;
+        display: flex;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        border-top: 1px solid var(--rule);
+        background: var(--bg);
+    }
+
+    .mobile-bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        min-height: 56px;
+        padding: var(--space-1) 0;
+        border: 0;
+        border-top: 2px solid transparent;
+        background: transparent;
+        color: var(--text-muted);
+        font: inherit;
+        font-size: var(--text-xs);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .mobile-bottom-nav-item.active {
+        border-top-color: var(--accent);
+        color: var(--text);
+        font-weight: 600;
+    }
+
+    .mobile-bottom-nav-item .material-icons {
+        font-size: 22px;
+    }
+}
+
+@media (pointer: coarse) {
+    .ux35-sidebar-item {
+        min-height: 44px;
+    }
+
+    .ux35-sidebar-heading {
+        min-height: 44px;
+    }
+}
+
+/* ── Embedded pages (desktop mode windows) ── */
+
+.embed-mode .ux35-content {
+    padding: var(--space-4);
+}
+
+/* Pages still on the old stylesheets: main.css makes .main-content a
+   fixed-height scroll box under a fixed navbar. The shell scrolls the
+   document instead. */
+.ux35-content.main-content {
+    flex: none;
+    width: auto;
+    height: auto;
+    margin-top: 0;
+    overflow: visible;
+}
+
+@media (pointer: coarse) {
+    .bd-help-panel-close {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Closed help panel: no shadow peeking in from off-screen */
+.bd-help-panel:not(.is-open) {
+    box-shadow: none;
+    visibility: hidden;
+}

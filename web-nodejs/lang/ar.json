@@ -91,7 +91,8 @@
         "remote_open_tab": "فتح عميل سطح المكتب البعيد في علامة تبويب جديدة",
         "pairing": "الاقتران",
         "client_branding": "Client Branding",
-        "agents": "وكلاء BetterDesk"
+        "agents": "وكلاء BetterDesk",
+        "section_people": "الأشخاص"
     },
     "auth": {
         "login": "Login",
@@ -4681,7 +4682,8 @@
         "beta_badge": "تجريبي",
         "beta_tooltip": "تخطيط لوحة تجريبي — اختياري؛ تبقى الواجهة الكلاسيكية الافتراضية.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "مسار التنقل"
     },
     "help": {
         "panel": {

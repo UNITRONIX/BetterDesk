@@ -1,6 +1,15 @@
-<% const shell = 'ux35'; %>
+<%
+    const shell = 'ux35';
+    // Pages already moved to the new stylesheets (public/css/ui). The rest
+    // still load the old page CSS stack until they are reworked.
+    const REWORKED_PAGES = [];
+    const reworked = typeof currentPage !== 'undefined' && REWORKED_PAGES.includes(currentPage);
+    const themeMode = (branding && branding.themeMode) || 'system';
+    const dataTheme = themeMode === 'light' || themeMode === 'system' ? 'light' : 'dark';
+    const textDir = reworked && typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr';
+%>
 <!DOCTYPE html>
-<html lang="<%= lang || 'en' %>" data-theme="<%= (branding && branding.themeMode === 'light') ? 'light' : 'dark' %>" data-theme-mode="<%= (branding && branding.themeMode) || 'dark' %>" data-ui-shell="<%= shell %>">
+<html lang="<%= lang || 'en' %>" dir="<%= textDir %>" data-theme="<%= dataTheme %>" data-theme-mode="<%= themeMode %>" data-ui-shell="<%= shell %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -9,30 +18,39 @@
     <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %><%= appName %></title>
 
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
+    <%- include('../partials/theme-head') %>
+    <link rel="preload" href="/fonts/AtkinsonHyperlegibleNext-latin.woff2" as="font" type="font/woff2" crossorigin>
 
+    <% if (!reworked) { %>
     <link rel="stylesheet" href="/css/main.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/theme.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/ui-polish.css?v=<%= cacheVersion %>">
+    <% } %>
     <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : cacheVersion %>">
+    <% if (!reworked) { %>
     <link rel="stylesheet" href="/css/transitions.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/notif-center.css?v=<%= cacheVersion %>">
+    <% } %>
     <link rel="stylesheet" href="/css/accessibility.css?v=<%= cacheVersion %>">
-    <% if (shell === 'ux35') { %>
-    <link rel="stylesheet" href="/css/ux35-tokens.css?v=<%= cacheVersion %>">
-    <link rel="stylesheet" href="/css/ux35.css?v=<%= cacheVersion %>">
+    <% if (!embed && !reworked) { %>
+    <link rel="stylesheet" href="/css/mobile-shell.css?v=<%= cacheVersion %>">
     <% } %>
     <% if (!embed) { %>
-    <link rel="stylesheet" href="/css/mobile-shell.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/help-panel.css?v=<%= cacheVersion %>">
+    <% } %>
+    <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= cacheVersion %>">
+    <% if (reworked) { %>
+    <link rel="stylesheet" href="/css/ui/base.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/components.css?v=<%= cacheVersion %>">
     <% } %>
     <% if (typeof pageStyles !== 'undefined' && pageStyles.length) { %>
         <% pageStyles.forEach(style => { %>
     <link rel="stylesheet" href="/css/<%= style %>.css?v=<%= cacheVersion %>">
         <% }); %>
     <% } %>
+    <link rel="stylesheet" href="/css/ui/shell.css?v=<%= cacheVersion %>">
 </head>
-<body class="app-page<%= shell === 'ux35' ? ' ux35-page' : '' %><%= embed ? ' embed-mode' : '' %>">
-    <% if (shell === 'ux35') { %>
+<body class="app-page ux35-page<%= reworked ? ' ui-page' : '' %><%= embed ? ' embed-mode' : '' %>">
     <div class="ux35-shell<%= embed ? ' embed-mode' : '' %>" id="app">
         <% if (!embed) { %>
         <%- include('../partials/ux35-topbar') %>
@@ -54,31 +72,9 @@
         <%- include('../partials/mobile-bottom-nav') %>
         <% } %>
     </div>
-    <% } else { %>
-    <div class="app-layout" id="app">
-        <% if (!embed) { %>
-        <%- include('../partials/sidebar') %>
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-        <% } %>
-        <div class="main-wrapper">
-            <% if (!embed) { %>
-            <%- include('../partials/navbar') %>
-            <% } %>
-            <main class="main-content">
-                <%- body %>
-            </main>
-        </div>
-        <% if (!embed) { %>
-        <%- include('../partials/mobile-bottom-nav') %>
-        <% } %>
-    </div>
-    <% if (!embed) { %>
-    <%- include('../partials/help-panel') %>
-    <% } %>
-    <% } %>
 
     <div id="modal-container"></div>
-    <div id="toast-container" class="toast-container"></div>
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
 
     <script nonce="<%= cspNonce %>">
         window.BetterDesk = {
@@ -111,9 +107,7 @@
     <script defer src="/js/app.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/ui-shell.js?v=<%= cacheVersion %>"></script>
     <% if (!embed) { %>
-    <% if (shell === 'ux35') { %>
     <script defer src="/js/ux35-shell.js?v=<%= cacheVersion %>"></script>
-    <% } %>
     <script defer src="/js/mobile-nav.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/help-panel.js?v=<%= cacheVersion %>"></script>
     <% } %>

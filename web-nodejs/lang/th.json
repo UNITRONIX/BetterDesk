@@ -90,7 +90,8 @@
         "remote_open_tab": "เปิดไคลเอนต์เดสก์ท็อประยะไกลในแท็บใหม่",
         "pairing": "การจับคู่",
         "client_branding": "Client Branding",
-        "agents": "เอเจนต์ BetterDesk"
+        "agents": "เอเจนต์ BetterDesk",
+        "section_people": "บุคคล"
     },
     "auth": {
         "login": "Login",
@@ -4680,7 +4681,8 @@
         "beta_badge": "เบต้า",
         "beta_tooltip": "เลย์เอาต์คอนโซลเบต้า — ไม่บังคับ UI คลาสสิกยังเป็นค่าเริ่มต้น",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "เส้นทางนำทาง"
     },
     "help": {
         "panel": {

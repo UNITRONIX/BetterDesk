@@ -84,7 +84,8 @@
         "remote_open_tab": "Externe-bureaubladclient openen in nieuw tabblad",
         "pairing": "Koppelen",
         "client_branding": "Client Branding",
-        "agents": "BetterDesk-agents"
+        "agents": "BetterDesk-agents",
+        "section_people": "Personen"
     },
     "auth": {
         "login": "Inloggen",
@@ -4674,7 +4675,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Beta-consolelay-out — optioneel; de klassieke UI blijft de standaard.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Kruimelpad"
     },
     "help": {
         "panel": {

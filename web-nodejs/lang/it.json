@@ -84,7 +84,8 @@
         "remote_open_tab": "Apri client desktop remoto in una nuova scheda",
         "pairing": "Abbinamento",
         "client_branding": "Client Branding",
-        "agents": "Agenti BetterDesk"
+        "agents": "Agenti BetterDesk",
+        "section_people": "Persone"
     },
     "auth": {
         "login": "Accedi",
@@ -4674,7 +4675,8 @@
         "beta_badge": "BETA",
         "beta_tooltip": "Layout console in beta — opzionale; l’interfaccia classica resta predefinita.",
         "filter_menu": "Filter menu",
-        "filter_menu_placeholder": "Search menu…"
+        "filter_menu_placeholder": "Search menu…",
+        "breadcrumb": "Percorso"
     },
     "help": {
         "panel": {
