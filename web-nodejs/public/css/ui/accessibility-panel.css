@@ -1,7 +1,8 @@
 /*
  * Accessibility panel: the side sheet opened from the top bar
- * (public/js/accessibility.js). Loaded on every page, old and reworked,
- * so it only relies on tokens.css and styles its own controls.
+ * (public/js/accessibility.js). The sheet itself (layer, width, head, body,
+ * foot, buttons) is the shared .sheet in components.css, which every page
+ * with the panel loads; this file styles what is inside it.
  * The effects of the settings live in public/css/accessibility.css.
  */
 
@@ -9,85 +10,23 @@ body.bd-a11y-modal-open {
     overflow: hidden;
 }
 
-/* The layer is a child of <body>, so its z-index competes with the
-   page's top-level layers only (see the layer scale in tokens.css). */
-.a11y-layer {
-    position: fixed;
-    inset: 0;
-    z-index: var(--layer-dialog, 1000);
-}
-
+/* Click target behind the sheet; the layer (.sheet-layer) dims the page */
 .a11y-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
 }
 
-.a11y-sheet {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    inset-inline-end: 0;
-    display: flex;
-    flex-direction: column;
-    width: min(480px, 100%);
-    border-inline-start: 1px solid var(--rule);
-    background: var(--bg-float);
-    box-shadow: var(--shadow-float);
-    color: var(--text);
-    font-size: var(--text-base);
-    line-height: var(--leading);
-    text-align: start;
-}
-
-.a11y-sheet:focus {
-    outline: none;
-}
-
-.a11y-sheet h2,
 .a11y-sheet h3,
-.a11y-sheet p {
+.a11y-sheet-body p {
     margin: 0;
     color: var(--text);
     letter-spacing: normal;
     text-transform: none;
 }
 
-/* Head: title, one sentence, close */
-.a11y-sheet-head {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-4) var(--space-3) var(--space-4) var(--space-5);
-    padding-inline-start: var(--space-5);
-    padding-inline-end: var(--space-3);
-    border-bottom: 1px solid var(--rule);
-}
-
-.a11y-sheet-titles {
-    flex: 1;
-    min-width: 0;
-}
-
-.a11y-sheet-head h2 {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    line-height: 1.3;
-}
-
-.a11y-sheet-head p {
-    margin-top: var(--space-1);
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-}
-
-/* Body scrolls; head and foot stay */
+/* The sections bring their own padding */
 .a11y-sheet-body {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0 var(--space-5);
+    padding-block: 0;
 }
 
 .a11y-section {
@@ -262,50 +201,6 @@ body.bd-a11y-modal-open {
     grid-column: 2;
 }
 
-/* Foot: reset on the start side, Done at the end */
-.a11y-sheet-foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-5);
-    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid var(--rule);
-    background: var(--bg-float);
-}
-
-.a11y-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: var(--control-h);
-    padding: 0 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg);
-    color: var(--text);
-    font: inherit;
-    font-weight: 600;
-    line-height: 1.2;
-    cursor: pointer;
-    transition: background-color var(--motion), border-color var(--motion);
-}
-
-.a11y-btn:hover {
-    background: var(--hover);
-}
-
-.a11y-btn-primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
-}
-
-.a11y-btn-primary:hover {
-    border-color: var(--accent-hover);
-    background: var(--accent-hover);
-}
-
 .a11y-sheet :focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 2px;
@@ -322,30 +217,9 @@ body.bd-a11y-modal-open {
         align-content: center;
     }
 
-    .a11y-btn,
     .a11y-select,
     .a11y-range input[type="range"] {
         min-height: 44px;
-    }
-}
-
-/* Phones: the sheet takes the whole screen */
-@media (max-width: 640px) {
-    .a11y-sheet {
-        width: 100%;
-        border-inline-start: 0;
-    }
-
-    .a11y-sheet-head {
-        padding-inline-start: var(--space-4);
-    }
-
-    .a11y-sheet-body {
-        padding: 0 var(--space-4);
-    }
-
-    .a11y-sheet-foot {
-        padding-inline: var(--space-4);
     }
 }
 

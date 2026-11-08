@@ -204,6 +204,13 @@
 .form-row {
     display: flex;
     flex-direction: column;
+    margin-bottom: var(--space-4);
+}
+
+/* Its last field has no margin of its own (.form-group:last-child), so the
+   row keeps the gap to the next field */
+.form-row:last-child {
+    margin-bottom: 0;
 }
 
 .form-input,
@@ -413,7 +420,7 @@ input.toggle-switch {
     white-space: nowrap;
 }
 
-:is(.modal, .menu) :is(.data-table, .table) thead th {
+:is(.modal, .sheet, .menu) :is(.data-table, .table) thead th {
     background: var(--bg-float);
 }
 
@@ -1427,11 +1434,11 @@ td.state-cell {
 }
 
 /* Short fields (ports, numbers) do not need the full column */
-.form-input.is-short {
+:is(.form-input, .form-select).is-short {
     max-width: 12ch;
 }
 
-.form-input.is-medium {
+:is(.form-input, .form-select).is-medium {
     max-width: 28ch;
 }
 
@@ -2163,4 +2170,217 @@ time.time {
    where the word says more ("Never", "Unassigned") */
 .value-empty {
     color: var(--text-muted);
+}
+
+/* ── Sheet: a panel on the end side of the screen, over the page ──
+   For creating or editing a thing with more than a few fields, for details
+   and inspectors, and for anything people fill in while they look at the page
+   behind it. Short questions and confirmations stay centred dialogs (.modal).
+   The rule is in GUIDE.md "Dialogs and sheets".
+   Markup (Modal.show({ variant: 'sheet' }) in public/js/modal.js builds it;
+   the device panel and the accessibility panel use the same classes):
+     .sheet-layer          full-screen layer at --layer-dialog; dims the page
+                           lightly and closes the sheet when clicked
+       .sheet[.is-wide]    role="dialog" aria-modal="true": 560px, 720px wide
+         .sheet-header     .sheet-titles (.sheet-title, .sheet-subtitle), close
+         .sheet-body       scrolls; head and foot stay
+         .sheet-footer     Cancel on the start side (.sheet-footer-start),
+                           the answer (primary) last on the end side
+   .open on the layer shows it with a short slide (none with reduced motion).
+   Phones (≤ 640px): the sheet takes the whole screen. */
+
+.sheet-layer {
+    --sheet-pad-x: var(--space-5);
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-dialog);
+    display: block;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity var(--motion);
+}
+
+:root[data-theme="dark"] .sheet-layer {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.sheet-layer.open {
+    opacity: 1;
+}
+
+/* A dialog made by Modal opens on top of a sheet that is already open
+   (the device panel hangs off <body> after #modal-container) */
+#modal-container > .modal-overlay {
+    z-index: calc(var(--layer-dialog) + 1);
+}
+
+.sheet {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    inset-inline-end: 0;
+    display: flex;
+    flex-direction: column;
+    width: min(560px, 100vw);
+    max-width: 100%;
+    border-inline-start: 1px solid var(--rule);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+    text-align: start;
+    transform: translateX(16px);
+    transition: transform var(--motion);
+}
+
+[dir="rtl"] .sheet {
+    transform: translateX(-16px);
+}
+
+.sheet-layer.open .sheet {
+    transform: none;
+}
+
+.sheet.is-wide {
+    width: min(720px, 100vw);
+}
+
+.sheet:focus {
+    outline: none;
+}
+
+.sheet-header {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    padding-inline: var(--sheet-pad-x) var(--space-3);
+    border-bottom: 1px solid var(--rule);
+}
+
+.sheet-titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.sheet-title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.sheet-subtitle {
+    margin: var(--space-1) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-5) var(--sheet-pad-x);
+}
+
+.sheet-footer {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--sheet-pad-x);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--rule);
+    background: var(--bg-float);
+}
+
+.sheet-footer .sheet-footer-start,
+.sheet-footer .modal-footer-start {
+    margin-inline-end: auto;
+}
+
+/* What the last action did ("Reached 10.0.9.14 on port 3389"): a line of its
+   own above the buttons. Empty, it stays in the accessibility tree (so the
+   message is announced) but takes no room. */
+.sheet-status {
+    flex: 1 0 100%;
+    margin: 0;
+}
+
+.sheet-status:empty {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+@media (max-width: 640px) {
+    .sheet-layer {
+        --sheet-pad-x: var(--space-4);
+    }
+
+    .sheet,
+    .sheet.is-wide {
+        width: 100%;
+        border-inline-start: 0;
+        box-shadow: none;
+    }
+
+    .sheet-header {
+        padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
+    }
+}
+
+@media (forced-colors: active) {
+    .sheet {
+        border-inline-start: 1px solid CanvasText;
+    }
+}
+
+/* ── Form sections: a form in a sheet or dialog split into named groups ──
+   <div class="form-stack">
+     <div class="form-group">...</div>
+     <section class="form-section" aria-labelledby="x"><h3 class="form-section-title" id="x">Sign-in</h3>
+       ...fields...</section>
+   </div>
+   Fields are one gap apart, also when some are hidden (a hidden field takes
+   no room and no gap); sections after the first sit under a rule. */
+
+.form-stack,
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+    margin: 0;
+}
+
+.form-stack > .form-group,
+.form-section > .form-group {
+    margin: 0;
+}
+
+.form-stack > .form-section:not(:first-child) {
+    margin-top: var(--space-2);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
+}
+
+/* The title sits closer to its fields than the fields to each other */
+.form-section-title {
+    margin: 0 0 calc(var(--space-2) - var(--space-4));
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* A host name or address: about 40 characters */
+:is(.form-input, .form-select).is-host {
+    max-width: 40ch;
 }

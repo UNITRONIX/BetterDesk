@@ -291,17 +291,17 @@
     function buildPanelHtml() {
         const closeLabel = tr('close', 'Close accessibility settings');
         return `
-            <div class="a11y-sheet bd-a11y-modal" role="dialog" aria-modal="true" aria-labelledby="bd-a11y-title" aria-describedby="bd-a11y-desc" tabindex="-1">
-                <div class="a11y-sheet-head">
-                    <div class="a11y-sheet-titles">
-                        <h2 id="bd-a11y-title">${esc(tr('title', 'Accessibility'))}</h2>
-                        <p id="bd-a11y-desc">${esc(tr('subtitle', 'Changes to text, color and motion apply right away and are saved in this browser.'))}</p>
+            <div class="sheet a11y-sheet bd-a11y-modal" role="dialog" aria-modal="true" aria-labelledby="bd-a11y-title" aria-describedby="bd-a11y-desc" tabindex="-1">
+                <div class="sheet-header a11y-sheet-head">
+                    <div class="sheet-titles a11y-sheet-titles">
+                        <h2 class="sheet-title" id="bd-a11y-title">${esc(tr('title', 'Accessibility'))}</h2>
+                        <p class="sheet-subtitle" id="bd-a11y-desc">${esc(tr('subtitle', 'Changes to text, color and motion apply right away and are saved in this browser.'))}</p>
                     </div>
                     <button type="button" class="a11y-close bd-a11y-close" data-a11y-close aria-label="${esc(closeLabel)}" title="${esc(closeLabel)}">
                         <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                 </div>
-                <div class="a11y-sheet-body">
+                <div class="sheet-body a11y-sheet-body">
                     ${section('profiles', tr('profiles', 'Quick profiles'), `
                         <p class="a11y-note">${esc(tr('profiles_note', 'Each profile changes several settings below at once. Choose it again to go back to the defaults.'))}</p>
                         <ul class="a11y-profiles">
@@ -358,9 +358,9 @@
                         </div>
                     `)}
                 </div>
-                <div class="a11y-sheet-foot">
-                    <button type="button" class="a11y-btn" data-a11y-reset>${esc(tr('reset_defaults', 'Reset to defaults'))}</button>
-                    <button type="button" class="a11y-btn a11y-btn-primary" data-a11y-close>${esc(tr('done', 'Done'))}</button>
+                <div class="sheet-footer a11y-sheet-foot">
+                    <button type="button" class="btn a11y-btn sheet-footer-start" data-a11y-reset>${esc(tr('reset_defaults', 'Reset to defaults'))}</button>
+                    <button type="button" class="btn btn-primary a11y-btn a11y-btn-primary" data-a11y-close>${esc(tr('done', 'Done'))}</button>
                 </div>
             </div>
         `;
@@ -373,9 +373,12 @@
         // The layer hangs off <body>, outside the shell, so no stacking
         // context in the page (sticky headers, the top bar) can cover it.
         modalEl = document.createElement('div');
-        modalEl.className = 'a11y-layer';
+        modalEl.className = 'sheet-layer a11y-layer';
         modalEl.innerHTML = `<div class="a11y-backdrop" data-a11y-close></div>${buildPanelHtml()}`;
         document.body.appendChild(modalEl);
+        // Shown on the next frame, so the sheet slides in like the others (.sheet in components.css)
+        const layer = modalEl;
+        requestAnimationFrame(() => layer.classList.add('open'));
         document.body.classList.add('bd-a11y-modal-open');
         const app = document.getElementById('app');
         if (app && !app.inert) {
