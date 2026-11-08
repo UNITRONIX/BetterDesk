@@ -1,6 +1,7 @@
 <%
     const canApprove = typeof hasPermission === 'function' && hasPermission('enrollment.approve');
     const canSeeDevices = typeof hasPermission === 'function' && hasPermission('device.view');
+    const canServerConfig = typeof hasPermission === 'function' && hasPermission('server.config');
 %>
 <%- include('layouts/main', {
     title: (typeof activateAgentNav !== 'undefined' && activateAgentNav) ? _('nav.activate_agent') : _('nav.dashboard'),
@@ -13,6 +14,20 @@
             <div class="page-head">
                 <h1>${_('nav.dashboard')}</h1>
             </div>
+
+            ${canSeeDevices ? `
+            <!-- The most common job: someone reads out an ID or a name -->
+            <form class="overview-find" action="/devices" method="get" role="search">
+                <label class="form-label" for="overview-find-input">${_('dashboard.find_device')}</label>
+                <div class="overview-find-row">
+                    <div class="search-wrapper">
+                        <span class="material-icons" aria-hidden="true">search</span>
+                        <input type="search" class="form-input" id="overview-find-input" name="search" autocomplete="off" spellcheck="false"
+                               placeholder="${_('dashboard.find_device_placeholder')}">
+                    </div>
+                    <button type="submit" class="btn">${_('dashboard.find_device_button')}</button>
+                </div>
+            </form>` : ''}
 
             <!-- Only things someone has to act on; each row shows when its count is above zero -->
             <section class="section attention" aria-labelledby="attention-title">
@@ -62,6 +77,7 @@
             <section class="section client-setup" aria-labelledby="client-config-title">
                 <div class="section-head"><h2 id="client-config-title">${_('dashboard.client_config_title')}</h2></div>
                 <p class="section-note">${_('dashboard.client_config_hint')}</p>
+                <p class="notice warning" id="client-config-local-warning" hidden>${_('dashboard.client_config_local_warning')}</p>
 
                 <div class="form-group client-config-host-row" id="client-config-host-row">
                     <label class="form-label" for="client-config-host-input">${_('dashboard.client_server_host_label')}</label>
@@ -104,14 +120,18 @@
                 </div>
 
                 <ul class="list client-config-links">
-                    <li><a href="/agents" class="list-row">
+                    <li><a href="https://github.com/rustdesk/rustdesk/releases/latest" class="list-row" target="_blank" rel="noopener noreferrer">
+                        <span class="row-main"><span class="row-title">${_('dashboard.get_rustdesk')}</span><span class="row-sub">${_('dashboard.get_rustdesk_hint')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">open_in_new</span>
+                    </a></li>
+                    ${canServerConfig ? `<li><a href="/agents" class="list-row">
                         <span class="row-main"><span class="row-title">${_('dashboard.open_agents')}</span><span class="row-sub">${_('dashboard.agents_hint')}</span></span>
                         <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
                     </a></li>
                     <li><a href="/keys" class="list-row">
                         <span class="row-main row-title">${_('dashboard.open_keys')}</span>
                         <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
-                    </a></li>
+                    </a></li>` : ''}
                 </ul>
             </section>
 
@@ -119,22 +139,22 @@
             <details class="section disclosure server-details">
                 <summary><h2>${_('dashboard.server_status')}</h2></summary>
                 <dl class="facts">
-                    <dt>Signal server</dt>
+                    <dt>${_('dashboard.signal_server')}</dt>
                     <dd><span class="status server-status-indicator" id="hbbs-status"><span class="status-dot"></span><span class="status-text">${_('status.checking')}</span></span></dd>
-                    <dt>Relay server</dt>
+                    <dt>${_('dashboard.relay_server_label')}</dt>
                     <dd><span class="status server-status-indicator" id="hbbr-status"><span class="status-dot"></span><span class="status-text">${_('status.checking')}</span></span></dd>
-                    <dt>Web console</dt>
+                    <dt>${_('dashboard.web_console')}</dt>
                     <dd><span class="status server-status-indicator running"><span class="status-dot"></span><span class="status-text">${_('status.running')}</span></span></dd>
                     <dt>${_('dashboard.server_uptime')}</dt>
                     <dd id="stat-uptime">–</dd>
-                    <dt>Signal (TCP/UDP)</dt><dd class="mono" id="hbbs-port">–</dd>
-                    <dt>NAT test (TCP)</dt><dd class="mono" id="nat-port">–</dd>
-                    <dt>WS signal</dt><dd class="mono" id="ws-signal-port">–</dd>
-                    <dt>REST API (HTTP)</dt><dd class="mono" id="api-port">–</dd>
-                    <dt>Relay (TCP)</dt><dd class="mono" id="hbbr-port">–</dd>
-                    <dt>WS relay</dt><dd class="mono" id="ws-relay-port">–</dd>
-                    <dt>Console (HTTP)</dt><dd class="mono" id="console-port">–</dd>
-                    <dt>Client API (HTTP)</dt><dd class="mono" id="client-api-port">–</dd>
+                    <dt>${_('dashboard.port_signal')}</dt><dd class="mono" id="hbbs-port">–</dd>
+                    <dt>${_('dashboard.port_nat')}</dt><dd class="mono" id="nat-port">–</dd>
+                    <dt>${_('dashboard.port_ws_signal')}</dt><dd class="mono" id="ws-signal-port">–</dd>
+                    <dt>${_('dashboard.port_api')}</dt><dd class="mono" id="api-port">–</dd>
+                    <dt>${_('dashboard.port_relay')}</dt><dd class="mono" id="hbbr-port">–</dd>
+                    <dt>${_('dashboard.port_ws_relay')}</dt><dd class="mono" id="ws-relay-port">–</dd>
+                    <dt>${_('dashboard.port_console')}</dt><dd class="mono" id="console-port">–</dd>
+                    <dt>${_('dashboard.port_client_api')}</dt><dd class="mono" id="client-api-port">–</dd>
                 </dl>
             </details>
 

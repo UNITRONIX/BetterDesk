@@ -332,8 +332,15 @@
             pill.classList.add('running');
             text.textContent = _('dashboard.system_ready');
         } else if (status) {
+            // Say which part is down and what that means for clients
             pill.classList.add('stopped');
-            text.textContent = _('dashboard.system_attention');
+            if (!signalRunning && !relayRunning) {
+                text.textContent = _('dashboard.status_both_down');
+            } else if (!relayRunning) {
+                text.textContent = _('dashboard.status_relay_down');
+            } else {
+                text.textContent = _('dashboard.status_signal_down');
+            }
         } else {
             pill.classList.add('unknown');
             text.textContent = _('status.unknown');
@@ -395,6 +402,9 @@
             setText('client-config-api-url', clientConfig.api_url || '-');
             renderPublicKeyField(clientConfig.public_key || '', false);
             updateClientHostControls(clientConfig);
+            // localhost or .local values only work on this machine: say so next to them
+            const localWarning = findById('client-config-local-warning');
+            if (localWarning) localWarning.hidden = !clientConfig.phone_unreachable_host;
         } catch (err) {
             console.error('Client config load error:', err);
             clientConfig = null;

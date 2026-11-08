@@ -89,3 +89,21 @@
     border-inline-start: 3px solid var(--warning);
     background: var(--bg-subtle);
 }
+
+/* ── Find a device: the first thing on the page ── */
+
+.overview-find {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    max-width: var(--measure);
+}
+
+.overview-find-row {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.overview-find-row .search-wrapper {
+    flex: 1;
+}
