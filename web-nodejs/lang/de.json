@@ -5328,7 +5328,7 @@
         "compliance_by_category": "Konformität nach Kategorie",
         "device_compliance": "Gerätekonformität",
         "search_devices": "Geräte suchen...",
-        "col_device": "Geräte-ID",
+        "col_device": "Gerät",
         "col_platform": "Plattform",
         "col_status": "Status",
         "col_usb": "USB",
@@ -5383,8 +5383,8 @@
         "quotas_disk_hint": "0 = unbegrenzt",
         "quotas_process_whitelist": "Prozess-Positivliste (einer pro Zeile)",
         "quotas_process_hint": "z. B. chrome.exe, code.exe",
-        "policy_allowed": "Allowed",
-        "policy_blocked": "Blocked",
+        "policy_allowed": "Erlaubt",
+        "policy_blocked": "Gesperrt",
         "policy_whitelist": "Nur Positivliste",
         "policy_any": "Any",
         "page_description": "Erlauben oder sperren Sie USB-Laufwerke, optische Laufwerke, zusätzliche Monitore und Festplattenzugriff pro Gerät und begrenzen Sie CPU, Arbeitsspeicher und Bandbreite. Ein Gerät erhält seine Regeln, wenn sein BetterDesk-Agent sie das nächste Mal vom Server abruft.",
@@ -5477,7 +5477,12 @@
         "legend_all": "halten alle Regeln ein",
         "legend_not": "verstoßen gegen eine Regel",
         "legend_none": "haben keine Regeln",
-        "by_category": "Nach Art der Regel"
+        "by_category": "Nach Art der Regel",
+        "unavailable_note": "Diese Serverversion kann noch keine Regeln für USB und Laufwerke speichern. Sie können die Optionen ansehen, aber das Speichern schlägt fehl, bis ein Server-Update das ergänzt.",
+        "save_unavailable": "Speichern nicht möglich: Diese Serverversion kann diese Regeln noch nicht speichern.",
+        "device_facts_title": "Dieses Gerät",
+        "fact_id": "Geräte-ID",
+        "tabs_save_hint": "Jede Art von Regel hat eine eigene Schaltfläche zum Speichern und wird einzeln gespeichert."
     },
     "sdk_studio": {
         "title": "Dashboard",

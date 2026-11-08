@@ -5342,7 +5342,7 @@
         "col_monitors": "Monitors",
         "col_disks": "Disks",
         "col_quotas": "Quotas",
-        "col_actions": "Actions",
+        "col_actions": "Handlinger",
         "stat_total_devices": "Enheder i alt",
         "stat_compliant": "Compliant",
         "stat_partial": "Partial",
@@ -5389,8 +5389,8 @@
         "quotas_disk_hint": "0 = ubegrænset",
         "quotas_process_whitelist": "Proceshvidliste (én pr. linje)",
         "quotas_process_hint": "f.eks. chrome.exe, code.exe",
-        "policy_allowed": "Allowed",
-        "policy_blocked": "Blocked",
+        "policy_allowed": "Tilladt",
+        "policy_blocked": "Blokeret",
         "policy_whitelist": "Kun hvidliste",
         "policy_any": "Any",
         "page_description": "Tillad eller bloker USB-drev, optiske drev, ekstra skærme og diskadgang på hver enhed, og begræns dens CPU, hukommelse og båndbredde. En enhed får sine regler, næste gang dens BetterDesk-agent henter dem fra serveren.",
@@ -5483,7 +5483,12 @@
         "legend_all": "overholder alle regler",
         "legend_not": "bryder en regel",
         "legend_none": "har ingen regler",
-        "by_category": "Efter type regel"
+        "by_category": "Efter type regel",
+        "unavailable_note": "Denne serverversion kan endnu ikke gemme regler for USB og drev. Du kan se indstillingerne igennem, men det mislykkes at gemme dem, indtil en serveropdatering tilføjer det.",
+        "save_unavailable": "Kunne ikke gemme: denne serverversion kan endnu ikke gemme disse regler.",
+        "device_facts_title": "Denne enhed",
+        "fact_id": "Enheds-id",
+        "tabs_save_hint": "Hver slags regel har sin egen Gem-knap og gemmes for sig."
     },
     "sdk_studio": {
         "title": "SDK Studio",

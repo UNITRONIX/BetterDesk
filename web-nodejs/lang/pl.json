@@ -5459,7 +5459,7 @@
         "search_devices": "Szukaj urządzeń...",
         "col_device": "Urządzenie",
         "col_platform": "Platforma",
-        "col_status": "Status",
+        "col_status": "Stan",
         "col_usb": "USB",
         "col_optical": "Optyczne",
         "col_monitors": "Monitory",
@@ -5606,7 +5606,12 @@
         "legend_all": "przestrzegają wszystkich reguł",
         "legend_not": "łamią regułę",
         "legend_none": "nie mają reguł",
-        "by_category": "Według rodzaju reguły"
+        "by_category": "Według rodzaju reguły",
+        "unavailable_note": "Ta wersja serwera nie potrafi jeszcze zapisywać reguł USB i dysków. Możesz przejrzeć opcje, ale zapis się nie uda, dopóki nie doda tego aktualizacja serwera.",
+        "save_unavailable": "Nie można zapisać: ta wersja serwera nie potrafi jeszcze zapisywać tych reguł.",
+        "device_facts_title": "To urządzenie",
+        "fact_id": "ID urządzenia",
+        "tabs_save_hint": "Każdy rodzaj reguły ma własny przycisk Zapisz i zapisuje się osobno."
     },
     "sdk_studio": {
         "title": "SDK Studio",

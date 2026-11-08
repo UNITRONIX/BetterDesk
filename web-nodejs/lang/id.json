@@ -5342,7 +5342,7 @@
         "col_monitors": "Monitors",
         "col_disks": "Disks",
         "col_quotas": "Quotas",
-        "col_actions": "Actions",
+        "col_actions": "Tindakan",
         "stat_total_devices": "Jumlah Perangkat",
         "stat_compliant": "Compliant",
         "stat_partial": "Partial",
@@ -5389,8 +5389,8 @@
         "quotas_disk_hint": "0 = tidak terbatas",
         "quotas_process_whitelist": "Proses Daftar Putih (satu per baris)",
         "quotas_process_hint": "misalnya chrome.exe, kode.exe",
-        "policy_allowed": "Allowed",
-        "policy_blocked": "Blocked",
+        "policy_allowed": "Diizinkan",
+        "policy_blocked": "Diblokir",
         "policy_whitelist": "Hanya Daftar Putih",
         "policy_any": "Any",
         "page_description": "Izinkan atau blokir drive USB, drive optik, monitor tambahan, dan akses disk di setiap perangkat, serta batasi CPU, memori, dan bandwidth-nya. Perangkat mendapat aturannya saat agen BetterDesk-nya berikutnya mengambilnya dari server.",
@@ -5483,7 +5483,12 @@
         "legend_all": "mematuhi semua aturan",
         "legend_not": "melanggar aturan",
         "legend_none": "tidak punya aturan",
-        "by_category": "Menurut jenis aturan"
+        "by_category": "Menurut jenis aturan",
+        "unavailable_note": "Versi server ini belum bisa menyimpan aturan USB dan drive. Anda bisa melihat opsinya, tetapi penyimpanan gagal sampai pembaruan server menambahkannya.",
+        "save_unavailable": "Tidak bisa menyimpan: versi server ini belum bisa menyimpan aturan ini.",
+        "device_facts_title": "Perangkat ini",
+        "fact_id": "ID perangkat",
+        "tabs_save_hint": "Setiap jenis aturan punya tombol Simpan sendiri dan disimpan terpisah."
     },
     "sdk_studio": {
         "title": "SDK Studio",

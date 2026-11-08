@@ -5461,7 +5461,7 @@
         "compliance_by_category": "Compliance by Category",
         "device_compliance": "Device Compliance",
         "search_devices": "Search devices...",
-        "col_device": "ID d'appareil",
+        "col_device": "Appareil",
         "col_platform": "Plateforme",
         "col_status": "Statut",
         "col_usb": "USB",
@@ -5516,8 +5516,8 @@
         "quotas_disk_hint": "0 = unlimited",
         "quotas_process_whitelist": "Process Whitelist (one per line)",
         "quotas_process_hint": "e.g. chrome.exe, code.exe",
-        "policy_allowed": "Allowed",
-        "policy_blocked": "Blocked",
+        "policy_allowed": "Autorisé",
+        "policy_blocked": "Bloqué",
         "policy_whitelist": "Whitelist Only",
         "policy_any": "Any",
         "page_description": "Autorisez ou bloquez les clés USB, les lecteurs optiques, les écrans supplémentaires et l'accès aux disques sur chaque appareil, et limitez son processeur, sa mémoire et sa bande passante. Un appareil reçoit ses règles la prochaine fois que son agent BetterDesk les récupère sur le serveur.",
@@ -5610,7 +5610,12 @@
         "legend_all": "respectent toutes les règles",
         "legend_not": "enfreignent une règle",
         "legend_none": "n'ont aucune règle",
-        "by_category": "Par type de règle"
+        "by_category": "Par type de règle",
+        "unavailable_note": "Cette version du serveur ne peut pas encore enregistrer les règles USB et lecteurs. Vous pouvez parcourir les options, mais l'enregistrement échoue jusqu'à ce qu'une mise à jour du serveur l'ajoute.",
+        "save_unavailable": "Enregistrement impossible : cette version du serveur ne peut pas encore enregistrer ces règles.",
+        "device_facts_title": "Cet appareil",
+        "fact_id": "ID de l'appareil",
+        "tabs_save_hint": "Chaque type de règle a son propre bouton Enregistrer et s'enregistre séparément."
     },
     "sdk_studio": {
         "title": "Tableau de bord",

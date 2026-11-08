@@ -5679,7 +5679,12 @@
         "legend_all": "follow all rules",
         "legend_not": "break a rule",
         "legend_none": "have no rules",
-        "by_category": "By kind of rule"
+        "by_category": "By kind of rule",
+        "unavailable_note": "This server version can't store USB and drive rules yet. You can look through the options, but saving them fails until a server update adds it.",
+        "save_unavailable": "Could not save: this server version can't store these rules yet.",
+        "device_facts_title": "This device",
+        "fact_id": "Device ID",
+        "tabs_save_hint": "Each kind of rule has its own Save button and is saved on its own."
     },
     "sdk_studio": {
         "title": "SDK Studio",

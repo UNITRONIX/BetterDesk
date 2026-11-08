@@ -5477,7 +5477,12 @@
         "legend_all": "dodržují všechna pravidla",
         "legend_not": "porušují pravidlo",
         "legend_none": "nemají pravidla",
-        "by_category": "Podle druhu pravidla"
+        "by_category": "Podle druhu pravidla",
+        "unavailable_note": "Tato verze serveru zatím neumí ukládat pravidla pro USB a jednotky. Možnosti si můžete prohlédnout, ale uložení selže, dokud to nepřidá aktualizace serveru.",
+        "save_unavailable": "Nelze uložit: tato verze serveru zatím tato pravidla ukládat neumí.",
+        "device_facts_title": "Toto zařízení",
+        "fact_id": "ID zařízení",
+        "tabs_save_hint": "Každý druh pravidla má vlastní tlačítko Uložit a ukládá se samostatně."
     },
     "sdk_studio": {
         "title": "SDK Studio",

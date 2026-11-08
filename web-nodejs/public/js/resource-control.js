@@ -38,7 +38,30 @@
         document.querySelectorAll('.rc-panel').forEach(p => {
             const on = p.id === 'panel-' + tab;
             p.classList.toggle('active', on);
-            p.hidden = !on;
+            p.hidden = !on && !showAll;
+        });
+    }
+
+    // Wide screens show the five forms side by side without tabs; each form
+    // then carries its own heading. Narrower screens keep one tab at a time.
+    let showAll = false;
+    function applyLayout(all) {
+        showAll = all;
+        const editor = document.getElementById('rc-editor');
+        const tabs = document.getElementById('rc-tabs');
+        if (editor) editor.classList.toggle('is-all', all);
+        if (tabs) tabs.hidden = all;
+        document.querySelectorAll('.rc-panel').forEach(p => {
+            const key = p.dataset.category;
+            if (all) {
+                p.removeAttribute('role');
+                p.setAttribute('aria-labelledby', 'rc-title-' + key);
+                p.hidden = false;
+            } else {
+                p.setAttribute('role', 'tabpanel');
+                p.setAttribute('aria-labelledby', 'rc-tab-' + key);
+                p.hidden = key !== currentTab;
+            }
         });
     }
 
@@ -279,9 +302,11 @@
         window._rcDeviceId = deviceId;
         const name = d.hostname || d.id;
         document.getElementById('rc-editor-title').textContent = t('resource_control.editor_title', { name });
-        const noteParts = [t('resource_control.editor_device_id', { id: d.id })];
-        if (d.platform) noteParts.push(d.platform);
-        document.getElementById('rc-editor-note').textContent = noteParts.join(' · ');
+        // ID, platform and status sit in the side column's facts
+        const note = document.getElementById('rc-editor-note');
+        note.textContent = '';
+        note.hidden = true;
+        renderDeviceFacts(d);
         populateForms({}, deviceId);
         CATEGORIES.forEach(k => { const f = document.getElementById('panel-' + k); if (f && window.UiForm) UiForm.reset(f); });
         showEditor(true);
@@ -309,6 +334,26 @@
         }
     }
 
+    function renderDeviceFacts(d) {
+        const el = document.getElementById('rc-device-facts');
+        if (!el) return;
+        const online = isOnline(d);
+        const rows = [
+            [t('resource_control.col_device'), escHtml(d.hostname || d.id)],
+            [t('resource_control.fact_id'), `<span class="mono">${escHtml(d.id)}</span>`],
+            [t('resource_control.col_platform'), escHtml(d.platform || '—')],
+            [t('resource_control.col_status'), `<span class="status ${online ? 'online' : 'offline'}">${escHtml(t(online ? 'status.online' : 'status.offline'))}</span>`],
+        ];
+        el.innerHTML = rows.map(([k, v]) => `<dt>${escHtml(k)}</dt><dd>${v}</dd>`).join('');
+    }
+
+    // The list of allowed USB devices only applies to "Only listed devices"
+    function syncUsbList() {
+        const sel = document.getElementById('usb-storage-policy');
+        const group = document.getElementById('usb-list-group');
+        if (sel && group) group.hidden = sel.value !== 'whitelist';
+    }
+
     function populateForms(policy, deviceId) {
         const usb = policy.usb || {};
         const optical = policy.optical || {};
@@ -319,6 +364,7 @@
         setVal('usb-storage-policy', usb.storage_policy || 'allowed');
         setVal('usb-whitelist', (usb.whitelist || []).join('\n'));
         setChecked('usb-audit-log', usb.audit_log !== false);
+        syncUsbList();
 
         setVal('optical-policy', optical.policy || 'allowed');
         setChecked('optical-audit-log', optical.audit_log !== false);
@@ -401,7 +447,9 @@
             });
             if (window.UiForm) UiForm.saved(form);
         } catch (e) {
-            if (window.UiForm) UiForm.failed(form, t('resource_control.save_failed', { error: e.message }));
+            // The server answers 404 while it has no place to store these rules
+            const msg = e.status === 404 ? t('resource_control.save_unavailable') : t('resource_control.save_failed', { error: e.message });
+            if (window.UiForm) UiForm.failed(form, msg);
         } finally {
             if (btn) btn.disabled = false;
         }
@@ -454,6 +502,17 @@
             const form = document.getElementById('panel-' + k);
             if (form) form.addEventListener('submit', (e) => { e.preventDefault(); save(k, form); });
         });
+
+        if (window.matchMedia) {
+            const mq = window.matchMedia('(min-width: 1600px)');
+            applyLayout(mq.matches);
+            const onChange = () => applyLayout(mq.matches);
+            if (mq.addEventListener) mq.addEventListener('change', onChange);
+            else if (mq.addListener) mq.addListener(onChange);
+        }
+
+        const usbPolicy = document.getElementById('usb-storage-policy');
+        if (usbPolicy) usbPolicy.addEventListener('change', syncUsbList);
 
         const bri = document.getElementById('monitors-brightness');
         if (bri) bri.addEventListener('input', updateBrightnessLabel);

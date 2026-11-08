@@ -90,3 +90,41 @@
         display: block;
     }
 }
+
+/* The note that this server cannot store the rules yet */
+.rc-gap {
+    max-width: var(--measure);
+    margin: 0;
+}
+
+/* Editor: one tab at a time; each form's own heading only shows when all
+   forms sit side by side on wide screens */
+.rc-editor:not(.is-all) .rc-panel-title {
+    display: none;
+}
+
+.rc-panel-title {
+    margin: 0 0 var(--space-2);
+}
+
+/* Columns read top to bottom, then across, so short and long forms pack
+   without gaps; each form stays whole in one column */
+.rc-editor.is-all .rc-panels {
+    columns: 400px 4;
+    column-gap: var(--space-7);
+}
+
+.rc-editor.is-all .rc-panel {
+    break-inside: avoid;
+    max-width: var(--measure);
+    padding: 0 0 var(--space-6);
+}
+
+.rc-editor-side h3 {
+    margin: 0;
+}
+
+/* A check field inside a form group: the shared label rule would make its hint bold */
+.rc-editor .form-group > .check-field .form-hint {
+    font-weight: 400;
+}

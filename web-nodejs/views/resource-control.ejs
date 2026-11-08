@@ -21,11 +21,13 @@
     currentPage: 'resource-control',
     breadcrumb: [{ label: _('nav.resource_control') }],
     body: `
-    <div class="page rc-page">
+    <div class="page page-wide rc-page">
         <div class="page-head">
             <h1>${_('nav.resource_control')}</h1>
             <p class="page-description">${_('resource_control.page_description')}</p>
         </div>
+
+        <p class="notice warning rc-gap" id="rc-unavailable">${_('resource_control.unavailable_note')}</p>
 
         <div class="page-cols rc-overview" id="rc-overview">
         <!-- Device list -->
@@ -81,6 +83,8 @@
                 <h2 id="rc-editor-title"></h2>
             </div>
             <p class="section-note" id="rc-editor-note"></p>
+            <div class="page-cols rc-editor-cols">
+            <div class="page-main">
             <p class="state" id="rc-editor-state" aria-live="polite"></p>
 
             <div class="tabs" role="tablist" id="rc-tabs" aria-label="${_('resource_control.tabs_label')}">
@@ -89,21 +93,24 @@
                     aria-selected="${i === 0 ? 'true' : 'false'}" tabindex="${i === 0 ? '0' : '-1'}">${t.label}</button>`).join('')}
             </div>
 
+            <!-- On wide screens all five forms show side by side and the tabs go away (resource-control.js) -->
+            <div class="rc-panels" id="rc-panels">
             <!-- USB -->
             <form class="rc-panel form-column active" id="panel-usb" data-category="usb" data-save-form
                   role="tabpanel" aria-labelledby="rc-tab-usb" novalidate>
+                <h3 class="rc-panel-title" id="rc-title-usb">${_('resource_control.cat_usb')}</h3>
                 <div class="rc-policy-form" id="usb-form">
                     <p class="section-note">${_('resource_control.usb_note')}</p>
                     <div class="form-group">
                         <label class="form-label" for="usb-storage-policy">${_('resource_control.usb_storage_label')}</label>
-                        <select id="usb-storage-policy" class="form-select is-medium" aria-describedby="usb-storage-hint">
+                        <select id="usb-storage-policy" class="form-select is-medium" aria-describedby="usb-storage-hint" aria-controls="usb-list-group">
                             <option value="allowed">${_('resource_control.policy_allowed')}</option>
                             <option value="blocked">${_('resource_control.policy_blocked')}</option>
                             <option value="whitelist">${_('resource_control.policy_listed')}</option>
                         </select>
                         <p class="form-hint" id="usb-storage-hint">${_('resource_control.usb_storage_hint')}</p>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="usb-list-group">
                         <label class="form-label" for="usb-whitelist">${_('resource_control.usb_list_label')}</label>
                         <textarea id="usb-whitelist" class="form-input mono" rows="4" aria-describedby="usb-whitelist-hint"></textarea>
                         <p class="form-hint" id="usb-whitelist-hint">${_('resource_control.usb_list_hint')}</p>
@@ -123,6 +130,7 @@
             <!-- Optical drives -->
             <form class="rc-panel form-column" id="panel-optical" data-category="optical" data-save-form
                   role="tabpanel" aria-labelledby="rc-tab-optical" hidden novalidate>
+                <h3 class="rc-panel-title" id="rc-title-optical">${_('resource_control.cat_optical')}</h3>
                 <div class="rc-policy-form" id="optical-form">
                     <p class="section-note">${_('resource_control.optical_note')}</p>
                     <div class="form-group">
@@ -148,6 +156,7 @@
             <!-- Monitors -->
             <form class="rc-panel form-column" id="panel-monitors" data-category="monitors" data-save-form
                   role="tabpanel" aria-labelledby="rc-tab-monitors" hidden novalidate>
+                <h3 class="rc-panel-title" id="rc-title-monitors">${_('resource_control.cat_monitors')}</h3>
                 <div class="rc-policy-form" id="monitors-form">
                     <p class="section-note">${_('resource_control.monitors_note')}</p>
                     <div class="form-group">
@@ -186,6 +195,7 @@
             <!-- Disks -->
             <form class="rc-panel form-column" id="panel-disks" data-category="disks" data-save-form
                   role="tabpanel" aria-labelledby="rc-tab-disks" hidden novalidate>
+                <h3 class="rc-panel-title" id="rc-title-disks">${_('resource_control.cat_disks')}</h3>
                 <div class="rc-policy-form" id="disks-form">
                     <p class="section-note">${_('resource_control.disks_note')}</p>
                     <div class="form-group">
@@ -222,6 +232,7 @@
             <!-- Usage limits -->
             <form class="rc-panel form-column" id="panel-quotas" data-category="quotas" data-save-form
                   role="tabpanel" aria-labelledby="rc-tab-quotas" hidden novalidate>
+                <h3 class="rc-panel-title" id="rc-title-quotas">${_('resource_control.cat_quotas')}</h3>
                 <div class="rc-policy-form" id="quotas-form">
                     <p class="section-note">${_('resource_control.quotas_note')}</p>
                     <div class="form-group">
@@ -259,6 +270,18 @@
                 </div>
                 ${saveBar('quotas', _('resource_control.save_quotas'))}
             </form>
+            </div>
+            </div>
+
+            <!-- The device these rules are for -->
+            <aside class="page-side rc-editor-side" aria-labelledby="rc-device-facts-title">
+                <section class="section">
+                    <h3 id="rc-device-facts-title">${_('resource_control.device_facts_title')}</h3>
+                    <dl class="facts" id="rc-device-facts"></dl>
+                    <p class="form-hint">${_('resource_control.tabs_save_hint')}</p>
+                </section>
+            </aside>
+            </div>
         </section>
     </div>
     `

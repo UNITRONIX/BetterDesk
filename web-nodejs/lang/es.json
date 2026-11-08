@@ -5328,7 +5328,7 @@
         "compliance_by_category": "Cumplimiento por categoría",
         "device_compliance": "Cumplimiento de dispositivos",
         "search_devices": "Buscar dispositivos...",
-        "col_device": "ID de dispositivo",
+        "col_device": "Dispositivo",
         "col_platform": "Plataforma",
         "col_status": "Estado",
         "col_usb": "USB",
@@ -5383,8 +5383,8 @@
         "quotas_disk_hint": "0 = ilimitado",
         "quotas_process_whitelist": "Lista de procesos permitidos (uno por línea)",
         "quotas_process_hint": "p. ej. chrome.exe, code.exe",
-        "policy_allowed": "Allowed",
-        "policy_blocked": "Blocked",
+        "policy_allowed": "Permitido",
+        "policy_blocked": "Bloqueado",
         "policy_whitelist": "Solo lista permitida",
         "policy_any": "Any",
         "page_description": "Permita o bloquee unidades USB, unidades ópticas, monitores adicionales y el acceso a discos en cada dispositivo, y limite su CPU, memoria y ancho de banda. Un dispositivo recibe sus reglas la próxima vez que su agente de BetterDesk las obtiene del servidor.",
@@ -5477,7 +5477,12 @@
         "legend_all": "cumplen todas las reglas",
         "legend_not": "incumplen una regla",
         "legend_none": "no tienen reglas",
-        "by_category": "Por tipo de regla"
+        "by_category": "Por tipo de regla",
+        "unavailable_note": "Esta versión del servidor todavía no puede guardar reglas de USB y unidades. Puedes revisar las opciones, pero guardarlas falla hasta que una actualización del servidor lo añada.",
+        "save_unavailable": "No se pudo guardar: esta versión del servidor todavía no puede guardar estas reglas.",
+        "device_facts_title": "Este dispositivo",
+        "fact_id": "ID del dispositivo",
+        "tabs_save_hint": "Cada tipo de regla tiene su propio botón Guardar y se guarda por separado."
     },
     "sdk_studio": {
         "title": "Panel",

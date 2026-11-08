@@ -5336,7 +5336,7 @@
         "col_monitors": "Monitors",
         "col_disks": "Disks",
         "col_quotas": "Quotas",
-        "col_actions": "Actions",
+        "col_actions": "Acties",
         "stat_total_devices": "Totaal apparaten",
         "stat_compliant": "Compliant",
         "stat_partial": "Partial",
@@ -5383,8 +5383,8 @@
         "quotas_disk_hint": "Maximale opslagruimte die BetterDesk-functies mogen gebruiken.",
         "quotas_process_whitelist": "Toegestane processenlijst",
         "quotas_process_hint": "Eén procesnaam per regel.",
-        "policy_allowed": "Allowed",
-        "policy_blocked": "Blocked",
+        "policy_allowed": "Toegestaan",
+        "policy_blocked": "Geblokkeerd",
         "policy_whitelist": "Toegestane lijst",
         "policy_any": "Any",
         "page_description": "Sta USB-schijven, optische stations, extra monitoren en schijftoegang per apparaat toe of blokkeer ze, en beperk CPU, geheugen en bandbreedte. Een apparaat krijgt zijn regels de volgende keer dat zijn BetterDesk-agent ze van de server ophaalt.",
@@ -5477,7 +5477,12 @@
         "legend_all": "leven alle regels na",
         "legend_not": "overtreden een regel",
         "legend_none": "hebben geen regels",
-        "by_category": "Per soort regel"
+        "by_category": "Per soort regel",
+        "unavailable_note": "Deze serverversie kan nog geen regels voor USB en stations opslaan. U kunt de opties bekijken, maar opslaan mislukt tot een serverupdate dat toevoegt.",
+        "save_unavailable": "Opslaan mislukt: deze serverversie kan deze regels nog niet opslaan.",
+        "device_facts_title": "Dit apparaat",
+        "fact_id": "Apparaat-ID",
+        "tabs_save_hint": "Elk soort regel heeft een eigen knop Opslaan en wordt apart opgeslagen."
     },
     "sdk_studio": {
         "title": "SDK Studio",
