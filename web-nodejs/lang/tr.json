@@ -2477,7 +2477,18 @@
         "detail_failed": "Bu cihazın ayrıntıları yüklenemedi.",
         "duration_hm": "{h} sa {m} dk",
         "duration_m": "{m} dk",
-        "duration_s": "{s} sn"
+        "duration_s": "{s} sn",
+        "summary_label": "Raporların özeti",
+        "active_idle_title": "Etkin ve boşta geçen süre",
+        "active_idle_line": "Bu raporlarda cihazlar {active} etkin ve {idle} boşta kaldı; kaydedilen sürenin %{pct} kadarı etkin.",
+        "active_idle_none": "Bu raporlarda etkin veya boşta süre yok.",
+        "top_apps_all_title": "En çok kullanılan uygulamalar",
+        "top_apps_all_note": "Seçilen tarihlerde {devices} cihazda toplanan uygulama başına süre.",
+        "top_apps_all_partial": "{failed} cihaz yüklenemedi ve dahil edilmedi.",
+        "top_apps_all_empty": "Bu tarihlerde uygulama kullanımı yok.",
+        "top_apps_all_failed": "Uygulama kullanımı yüklenemedi.",
+        "top_apps_all_devices": "{count} cihazda kullanılıyor",
+        "top_apps_all_one_device": "1 cihazda kullanılıyor"
     },
     "automation": {
         "title": "Otomasyon ve Uyarılar",

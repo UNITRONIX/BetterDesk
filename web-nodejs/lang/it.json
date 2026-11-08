@@ -2471,7 +2471,18 @@
         "detail_failed": "Impossibile caricare i dettagli di questo dispositivo.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Riepilogo dei rapporti",
+        "active_idle_title": "Tempo attivo e inattivo",
+        "active_idle_line": "In questi rapporti i dispositivi sono stati attivi per {active} e inattivi per {idle}, quindi il {pct} % del tempo registrato è attivo.",
+        "active_idle_none": "Nessun tempo attivo o inattivo in questi rapporti.",
+        "top_apps_all_title": "App più usate",
+        "top_apps_all_note": "Tempo per app, sommato su {devices} dispositivi per le date scelte.",
+        "top_apps_all_partial": "Non è stato possibile caricare {failed} dispositivi, che sono esclusi.",
+        "top_apps_all_empty": "Nessun utilizzo di app in queste date.",
+        "top_apps_all_failed": "Impossibile caricare l’utilizzo delle app.",
+        "top_apps_all_devices": "Usata su {count} dispositivi",
+        "top_apps_all_one_device": "Usata su 1 dispositivo"
     },
     "automation": {
         "title": "Automazione e avvisi",

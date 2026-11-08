@@ -2477,7 +2477,18 @@
         "detail_failed": "Tämän laitteen tietoja ei voitu ladata.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Raporttien yhteenveto",
+        "active_idle_title": "Aktiivinen ja jouten oltu aika",
+        "active_idle_line": "Näissä raporteissa laitteet olivat aktiivisia {active} ja jouten {idle}, eli {pct} % tallennetusta ajasta oli aktiivista.",
+        "active_idle_none": "Näissä raporteissa ei ole aktiivista eikä jouten oltua aikaa.",
+        "top_apps_all_title": "Eniten käytetyt sovellukset",
+        "top_apps_all_note": "Aika sovelluksittain, laskettuna yhteen {devices} laitteelta valituilta päiviltä.",
+        "top_apps_all_partial": "{failed} laitetta ei voitu ladata, joten ne puuttuvat.",
+        "top_apps_all_empty": "Ei sovellusten käyttöä näinä päivinä.",
+        "top_apps_all_failed": "Sovellusten käyttöä ei voitu ladata.",
+        "top_apps_all_devices": "Käytössä {count} laitteella",
+        "top_apps_all_one_device": "Käytössä 1 laitteella"
     },
     "automation": {
         "title": "Automaatio ja hälytykset",

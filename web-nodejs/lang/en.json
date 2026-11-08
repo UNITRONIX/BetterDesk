@@ -2550,7 +2550,18 @@
         "detail_failed": "Could not load the details for this device.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Summary of the reports",
+        "active_idle_title": "Active and idle time",
+        "active_idle_line": "In these reports, devices were active for {active} and idle for {idle}, so {pct} % of the recorded time was active.",
+        "active_idle_none": "No active or idle time in these reports.",
+        "top_apps_all_title": "Most used apps",
+        "top_apps_all_note": "Time per app, added up over {devices} devices for the chosen dates.",
+        "top_apps_all_partial": "{failed} devices could not be loaded and are left out.",
+        "top_apps_all_empty": "No app usage for these dates.",
+        "top_apps_all_failed": "Could not load app usage.",
+        "top_apps_all_devices": "Used on {count} devices",
+        "top_apps_all_one_device": "Used on 1 device"
     },
     "automation": {
         "title": "Automation & Alerts",

@@ -2477,7 +2477,18 @@
         "detail_failed": "โหลดรายละเอียดของอุปกรณ์นี้ไม่ได้",
         "duration_hm": "{h} ชม. {m} นาที",
         "duration_m": "{m} นาที",
-        "duration_s": "{s} วินาที"
+        "duration_s": "{s} วินาที",
+        "summary_label": "สรุปรายงาน",
+        "active_idle_title": "เวลาใช้งานและเวลาว่าง",
+        "active_idle_line": "ในรายงานเหล่านี้ อุปกรณ์ใช้งานอยู่ {active} และว่าง {idle} คิดเป็นเวลาใช้งาน {pct} % ของเวลาที่บันทึก",
+        "active_idle_none": "ไม่มีเวลาใช้งานหรือเวลาว่างในรายงานเหล่านี้",
+        "top_apps_all_title": "แอปที่ใช้มากที่สุด",
+        "top_apps_all_note": "เวลาต่อแอป รวมจากอุปกรณ์ {devices} เครื่องในช่วงวันที่ที่เลือก",
+        "top_apps_all_partial": "โหลดอุปกรณ์ {failed} เครื่องไม่ได้ จึงไม่ได้นับรวม",
+        "top_apps_all_empty": "ไม่มีการใช้แอปในวันที่เหล่านี้",
+        "top_apps_all_failed": "โหลดการใช้แอปไม่ได้",
+        "top_apps_all_devices": "ใช้บนอุปกรณ์ {count} เครื่อง",
+        "top_apps_all_one_device": "ใช้บนอุปกรณ์ 1 เครื่อง"
     },
     "automation": {
         "title": "ระบบอัตโนมัติและการแจ้งเตือน",

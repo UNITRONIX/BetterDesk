@@ -2477,7 +2477,18 @@
         "detail_failed": "Az eszköz részleteit nem sikerült betölteni.",
         "duration_hm": "{h} ó {m} perc",
         "duration_m": "{m} perc",
-        "duration_s": "{s} mp"
+        "duration_s": "{s} mp",
+        "summary_label": "A jelentések összegzése",
+        "active_idle_title": "Aktív és tétlen idő",
+        "active_idle_line": "Ezekben a jelentésekben az eszközök {active} ideig voltak aktívak és {idle} ideig tétlenek, vagyis a rögzített idő {pct} %-a volt aktív.",
+        "active_idle_none": "Ezekben a jelentésekben nincs aktív vagy tétlen idő.",
+        "top_apps_all_title": "Leggyakrabban használt alkalmazások",
+        "top_apps_all_note": "Az egyes alkalmazásokban töltött idő {devices} eszközön összesítve a választott időszakra.",
+        "top_apps_all_partial": "{failed} eszközt nem sikerült betölteni, ezek kimaradtak.",
+        "top_apps_all_empty": "Ezekben a napokban nem volt alkalmazáshasználat.",
+        "top_apps_all_failed": "Nem sikerült betölteni az alkalmazáshasználatot.",
+        "top_apps_all_devices": "{count} eszközön használják",
+        "top_apps_all_one_device": "1 eszközön használják"
     },
     "automation": {
         "title": "Automatizálás és riasztások",

@@ -2477,7 +2477,18 @@
         "detail_failed": "Không tải được chi tiết của thiết bị này.",
         "duration_hm": "{h} giờ {m} phút",
         "duration_m": "{m} phút",
-        "duration_s": "{s} giây"
+        "duration_s": "{s} giây",
+        "summary_label": "Tóm tắt báo cáo",
+        "active_idle_title": "Thời gian hoạt động và nhàn rỗi",
+        "active_idle_line": "Trong các báo cáo này, thiết bị hoạt động {active} và nhàn rỗi {idle}, tức {pct} % thời gian được ghi là hoạt động.",
+        "active_idle_none": "Không có thời gian hoạt động hay nhàn rỗi trong các báo cáo này.",
+        "top_apps_all_title": "Ứng dụng dùng nhiều nhất",
+        "top_apps_all_note": "Thời gian mỗi ứng dụng, cộng trên {devices} thiết bị trong các ngày đã chọn.",
+        "top_apps_all_partial": "Không tải được {failed} thiết bị nên chúng không được tính.",
+        "top_apps_all_empty": "Không có lượt dùng ứng dụng trong các ngày này.",
+        "top_apps_all_failed": "Không tải được dữ liệu dùng ứng dụng.",
+        "top_apps_all_devices": "Dùng trên {count} thiết bị",
+        "top_apps_all_one_device": "Dùng trên 1 thiết bị"
     },
     "automation": {
         "title": "Tự động hóa & Cảnh báo",

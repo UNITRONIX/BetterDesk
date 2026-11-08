@@ -2477,7 +2477,18 @@
         "detail_failed": "Detaliile acestui dispozitiv nu au putut fi încărcate.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Rezumatul rapoartelor",
+        "active_idle_title": "Timp activ și inactiv",
+        "active_idle_line": "În aceste rapoarte, dispozitivele au fost active {active} și inactive {idle}, deci {pct} % din timpul înregistrat a fost activ.",
+        "active_idle_none": "Niciun timp activ sau inactiv în aceste rapoarte.",
+        "top_apps_all_title": "Cele mai folosite aplicații",
+        "top_apps_all_note": "Timpul pe aplicație, adunat pe {devices} dispozitive pentru datele alese.",
+        "top_apps_all_partial": "{failed} dispozitive nu au putut fi încărcate și sunt omise.",
+        "top_apps_all_empty": "Nicio utilizare de aplicații în aceste date.",
+        "top_apps_all_failed": "Utilizarea aplicațiilor nu a putut fi încărcată.",
+        "top_apps_all_devices": "Folosită pe {count} dispozitive",
+        "top_apps_all_one_device": "Folosită pe 1 dispozitiv"
     },
     "automation": {
         "title": "Automatizare și alerte",

@@ -2493,7 +2493,18 @@
         "detail_failed": "無法載入此設備的詳細資料。",
         "duration_hm": "{h} 小時 {m} 分鐘",
         "duration_m": "{m} 分鐘",
-        "duration_s": "{s} 秒"
+        "duration_s": "{s} 秒",
+        "summary_label": "報告摘要",
+        "active_idle_title": "使用與閒置時間",
+        "active_idle_line": "在這些報告中，裝置使用 {active}、閒置 {idle}，記錄時間中有 {pct} % 在使用。",
+        "active_idle_none": "這些報告中沒有使用或閒置時間。",
+        "top_apps_all_title": "最常用的應用程式",
+        "top_apps_all_note": "所選日期內 {devices} 部裝置上每個應用程式的總時間。",
+        "top_apps_all_partial": "有 {failed} 部裝置無法載入，未計入。",
+        "top_apps_all_empty": "這些日期沒有應用程式使用紀錄。",
+        "top_apps_all_failed": "無法載入應用程式使用紀錄。",
+        "top_apps_all_devices": "在 {count} 部裝置上使用",
+        "top_apps_all_one_device": "在 1 部裝置上使用"
     },
     "automation": {
         "title": "自動化與告警",

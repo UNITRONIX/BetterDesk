@@ -2477,7 +2477,18 @@
         "detail_failed": "इस उपकरण का विवरण लोड नहीं हो सका।",
         "duration_hm": "{h} घं. {m} मि.",
         "duration_m": "{m} मि.",
-        "duration_s": "{s} से."
+        "duration_s": "{s} से.",
+        "summary_label": "रिपोर्टों का सारांश",
+        "active_idle_title": "सक्रिय और निष्क्रिय समय",
+        "active_idle_line": "इन रिपोर्टों में डिवाइस {active} सक्रिय और {idle} निष्क्रिय रहे, यानी दर्ज समय का {pct} % सक्रिय था।",
+        "active_idle_none": "इन रिपोर्टों में कोई सक्रिय या निष्क्रिय समय नहीं है।",
+        "top_apps_all_title": "सबसे ज़्यादा उपयोग किए गए ऐप",
+        "top_apps_all_note": "चुनी गई तारीखों के लिए {devices} डिवाइस पर हर ऐप का कुल समय।",
+        "top_apps_all_partial": "{failed} डिवाइस लोड नहीं हो सके और शामिल नहीं हैं।",
+        "top_apps_all_empty": "इन तारीखों में किसी ऐप का उपयोग नहीं हुआ।",
+        "top_apps_all_failed": "ऐप उपयोग लोड नहीं हो सका।",
+        "top_apps_all_devices": "{count} डिवाइस पर उपयोग",
+        "top_apps_all_one_device": "1 डिवाइस पर उपयोग"
     },
     "automation": {
         "title": "स्वचालन एवं अलर्ट",

@@ -58,7 +58,12 @@
     const refreshBtn = document.getElementById('activity-refresh-btn');
     const presets = Array.from(document.querySelectorAll('#activity-presets [data-days]'));
 
+    const timeLine = document.getElementById('activity-time-line');
+    const appsNote = document.getElementById('activity-apps-note');
+    const appsBox = document.getElementById('activity-apps');
+
     let allSummaries = [];
+    let loadToken = 0;
 
     // The API compares ISO timestamps as text, so "to" must cover the whole day.
     function rangeParams() {
@@ -98,13 +103,20 @@
     async function loadActivity() {
         activityBody.innerHTML = `<tr><td colspan="6" class="state-cell">${escapeHtml(_('activity.loading'))}</td></tr>`;
         countLine.textContent = '';
+        timeLine.textContent = _('activity.loading');
         try {
             const data = await getJson(`/api/activity?${rangeParams()}`);
             allSummaries = (Array.isArray(data) ? data : (data.summaries || []))
                 .slice()
                 .sort((a, b) => String(b.reported_at || '').localeCompare(String(a.reported_at || '')));
             filterAndRender();
+            renderTimeLine();
+            loadTopApps();
         } catch (err) {
+            loadToken++;
+            timeLine.textContent = '';
+            appsNote.textContent = '';
+            appsBox.innerHTML = '';
             activityBody.innerHTML = `<tr><td colspan="6" class="state-cell"><span class="state is-error">${escapeHtml(_('activity.load_failed'))}
                 <button type="button" class="btn btn-sm" id="activity-retry">${escapeHtml(_('activity.try_again'))}</button></span></td></tr>`;
             document.getElementById('activity-retry').addEventListener('click', loadActivity);
@@ -153,6 +165,93 @@
                 if (!td.classList.contains('actions') && heads[i]) td.setAttribute('data-label', heads[i]);
             });
         });
+    }
+
+    // ---- Side column: active vs idle time and the most used apps in the range ----
+    function renderTimeLine() {
+        let active = 0;
+        let idle = 0;
+        allSummaries.forEach((r) => {
+            active += Number(r.total_active_secs) || 0;
+            idle += Number(r.idle_seconds) || 0;
+        });
+        if (active + idle <= 0) {
+            timeLine.textContent = _('activity.active_idle_none');
+            return;
+        }
+        timeLine.textContent = _('activity.active_idle_line', {
+            active: formatDuration(active),
+            idle: formatDuration(idle),
+            pct: Math.round((active / (active + idle)) * 100)
+        });
+    }
+
+    // There is no endpoint for all devices, so ask each device in the loaded reports for its
+    // apps (GET /api/activity/:id/top, same date range) and add the times up per app name.
+    const TOP_N = 8;
+    async function loadTopApps() {
+        const token = ++loadToken;
+        const ids = Array.from(new Set(allSummaries.map((r) => r.device_id).filter(Boolean)));
+        appsNote.textContent = '';
+        if (!ids.length) {
+            appsBox.innerHTML = `<p class="state">${escapeHtml(_('activity.top_apps_all_empty'))}</p>`;
+            return;
+        }
+        appsBox.innerHTML = `<p class="state">${escapeHtml(_('activity.loading'))}</p>`;
+        const params = rangeParams();
+        params.set('limit', '500');
+        const totals = new Map();
+        let failed = 0;
+        const queue = ids.slice();
+        async function worker() {
+            while (queue.length) {
+                const id = queue.shift();
+                try {
+                    const top = await getJson(`/api/activity/${encodeURIComponent(id)}/top?${params}`);
+                    (Array.isArray(top) ? top : (top.top_apps || [])).forEach((a) => {
+                        const name = a.app_name || a.name;
+                        if (!name) return;
+                        const t = totals.get(name) || { name, secs: 0, devices: 0 };
+                        t.secs += Number(a.total_secs ?? a.total_seconds) || 0;
+                        t.devices += 1;
+                        totals.set(name, t);
+                    });
+                } catch (_e) {
+                    failed++;
+                }
+            }
+        }
+        await Promise.all(Array.from({ length: Math.min(4, ids.length) }, worker));
+        if (token !== loadToken) return;
+        if (failed === ids.length) {
+            appsBox.innerHTML = `<p class="state is-error">${escapeHtml(_('activity.top_apps_all_failed'))}
+                <button type="button" class="btn btn-sm" id="activity-apps-retry">${escapeHtml(_('activity.try_again'))}</button></p>`;
+            document.getElementById('activity-apps-retry').addEventListener('click', loadTopApps);
+            return;
+        }
+        const ranked = Array.from(totals.values()).filter((a) => a.secs > 0).sort((a, b) => b.secs - a.secs).slice(0, TOP_N);
+        if (!ranked.length) {
+            appsBox.innerHTML = `<p class="state">${escapeHtml(_('activity.top_apps_all_empty'))}</p>`;
+            return;
+        }
+        appsNote.textContent = _('activity.top_apps_all_note', { devices: ids.length - failed })
+            + (failed ? ' ' + _('activity.top_apps_all_partial', { failed }) : '');
+        const max = ranked[0].secs;
+        const list = document.createElement('ol');
+        list.className = 'list activity-apps';
+        ranked.forEach((a) => {
+            const li = document.createElement('li');
+            li.className = 'list-row';
+            li.innerHTML = `<span class="row-main">
+                    <span class="row-title">${escapeHtml(a.name)}</span>
+                    <span class="row-sub">${escapeHtml(a.devices === 1 ? _('activity.top_apps_all_one_device') : _('activity.top_apps_all_devices', { count: a.devices }))}</span>
+                    <span class="meter"><span class="meter-bar" aria-hidden="true"><span class="meter-fill"></span></span><span class="meter-value">${escapeHtml(formatDuration(a.secs))}</span></span>
+                </span>`;
+            li.querySelector('.meter-fill').style.width = Math.max(1, Math.round((a.secs / max) * 100)) + '%';
+            list.appendChild(li);
+        });
+        appsBox.textContent = '';
+        appsBox.appendChild(list);
     }
 
     // ---- Detail dialog ----

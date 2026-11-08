@@ -2471,7 +2471,18 @@
         "detail_failed": "无法加载此设备的详情。",
         "duration_hm": "{h} 小时 {m} 分钟",
         "duration_m": "{m} 分钟",
-        "duration_s": "{s} 秒"
+        "duration_s": "{s} 秒",
+        "summary_label": "报告摘要",
+        "active_idle_title": "使用与空闲时间",
+        "active_idle_line": "在这些报告中，设备使用 {active}、空闲 {idle}，记录时间中有 {pct} % 在使用。",
+        "active_idle_none": "这些报告中没有使用或空闲时间。",
+        "top_apps_all_title": "最常用的应用",
+        "top_apps_all_note": "所选日期内 {devices} 台设备上每个应用的总时间。",
+        "top_apps_all_partial": "有 {failed} 台设备无法加载，未计入。",
+        "top_apps_all_empty": "这些日期没有应用使用记录。",
+        "top_apps_all_failed": "无法加载应用使用记录。",
+        "top_apps_all_devices": "在 {count} 台设备上使用",
+        "top_apps_all_one_device": "在 1 台设备上使用"
     },
     "automation": {
         "title": "自动化与告警",

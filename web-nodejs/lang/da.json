@@ -2477,7 +2477,18 @@
         "detail_failed": "Detaljerne for denne enhed kunne ikke indlæses.",
         "duration_hm": "{h} t {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Oversigt over rapporterne",
+        "active_idle_title": "Aktiv og inaktiv tid",
+        "active_idle_line": "I disse rapporter var enhederne aktive i {active} og inaktive i {idle}, så {pct} % af den registrerede tid var aktiv.",
+        "active_idle_none": "Ingen aktiv eller inaktiv tid i disse rapporter.",
+        "top_apps_all_title": "Mest brugte apps",
+        "top_apps_all_note": "Tid i hver app, lagt sammen for {devices} enheder i de valgte datoer.",
+        "top_apps_all_partial": "{failed} enheder kunne ikke indlæses og er udeladt.",
+        "top_apps_all_empty": "Ingen app-brug i disse datoer.",
+        "top_apps_all_failed": "App-brugen kunne ikke indlæses.",
+        "top_apps_all_devices": "Bruges på {count} enheder",
+        "top_apps_all_one_device": "Bruges på 1 enhed"
     },
     "automation": {
         "title": "Automatisering og advarsler",

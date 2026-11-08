@@ -12,7 +12,8 @@
             <p class="page-description">${_('activity.page_description')}</p>
         </div>
 
-        <section class="section" aria-labelledby="activity-list-title">
+        <div class="page-cols">
+        <section class="section page-main" aria-labelledby="activity-list-title">
             <h2 id="activity-list-title" class="sr-only">${_('activity.title')}</h2>
             <div class="toolbar activity-toolbar">
                 <div class="toolbar-search search-wrapper">
@@ -36,7 +37,7 @@
                     <button type="button" class="filter-btn active" data-days="" aria-pressed="true">${_('activity.preset_all')}</button>
                 </div>
                 <div class="toolbar-end">
-                    <button type="button" class="btn" id="activity-refresh-btn">${_('activity.refresh')}</button>
+                    <button type="button" class="btn" id="activity-refresh-btn"><span class="material-icons" aria-hidden="true">refresh</span>${_('activity.refresh')}</button>
                 </div>
             </div>
             <p class="count-line" id="activity-count" aria-live="polite"></p>
@@ -58,6 +59,20 @@
                 </table>
             </div>
         </section>
+
+        <!-- Summary of the reports in the chosen range (public/js/activity.js renderSummary, loadTopApps) -->
+        <aside class="page-side" aria-label="${_('activity.summary_label')}">
+            <section class="section" aria-labelledby="activity-time-title">
+                <h2 id="activity-time-title">${_('activity.active_idle_title')}</h2>
+                <p id="activity-time-line" aria-live="polite">${_('activity.loading')}</p>
+            </section>
+            <section class="section" aria-labelledby="activity-apps-title">
+                <h2 id="activity-apps-title">${_('activity.top_apps_all_title')}</h2>
+                <p class="section-note" id="activity-apps-note"></p>
+                <div id="activity-apps"><p class="state">${_('activity.loading')}</p></div>
+            </section>
+        </aside>
+        </div>
 
         <template id="activity-detail-tpl">
             <div class="activity-detail">

@@ -2471,7 +2471,18 @@
         "detail_failed": "No se pudieron cargar los detalles de este dispositivo.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Resumen de los informes",
+        "active_idle_title": "Tiempo activo e inactivo",
+        "active_idle_line": "En estos informes los dispositivos estuvieron activos {active} e inactivos {idle}, es decir, el {pct} % del tiempo registrado fue activo.",
+        "active_idle_none": "No hay tiempo activo ni inactivo en estos informes.",
+        "top_apps_all_title": "Aplicaciones más usadas",
+        "top_apps_all_note": "Tiempo por aplicación, sumado en {devices} dispositivos para las fechas elegidas.",
+        "top_apps_all_partial": "No se pudieron cargar {failed} dispositivos y no se incluyen.",
+        "top_apps_all_empty": "No hay uso de aplicaciones en estas fechas.",
+        "top_apps_all_failed": "No se pudo cargar el uso de aplicaciones.",
+        "top_apps_all_devices": "Usada en {count} dispositivos",
+        "top_apps_all_one_device": "Usada en 1 dispositivo"
     },
     "automation": {
         "title": "Panel",

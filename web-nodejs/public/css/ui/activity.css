@@ -43,6 +43,17 @@
     color: var(--text-muted);
 }
 
+/* Most used apps: a ranked list, each app's time as a bar against the top app */
+.activity-apps .meter {
+    margin-top: var(--space-1);
+}
+
+.activity-apps .meter-value {
+    min-width: 11ch;
+    color: var(--text);
+    text-align: end;
+}
+
 /* Phones: each report row becomes a short block with the column names as labels */
 @media (max-width: 640px) {
     .activity-stack thead {

@@ -2477,7 +2477,18 @@
         "detail_failed": "Tidak dapat memuat detail untuk perangkat ini.",
         "duration_hm": "{h} j {m} mnt",
         "duration_m": "{m} mnt",
-        "duration_s": "{s} dtk"
+        "duration_s": "{s} dtk",
+        "summary_label": "Ringkasan laporan",
+        "active_idle_title": "Waktu aktif dan diam",
+        "active_idle_line": "Dalam laporan ini perangkat aktif selama {active} dan diam selama {idle}, jadi {pct} % dari waktu yang tercatat adalah aktif.",
+        "active_idle_none": "Tidak ada waktu aktif atau diam dalam laporan ini.",
+        "top_apps_all_title": "Aplikasi paling sering dipakai",
+        "top_apps_all_note": "Waktu per aplikasi, dijumlahkan dari {devices} perangkat untuk tanggal yang dipilih.",
+        "top_apps_all_partial": "{failed} perangkat tidak dapat dimuat dan tidak dihitung.",
+        "top_apps_all_empty": "Tidak ada penggunaan aplikasi pada tanggal ini.",
+        "top_apps_all_failed": "Tidak dapat memuat penggunaan aplikasi.",
+        "top_apps_all_devices": "Dipakai di {count} perangkat",
+        "top_apps_all_one_device": "Dipakai di 1 perangkat"
     },
     "automation": {
         "title": "Otomatisasi & Peringatan",

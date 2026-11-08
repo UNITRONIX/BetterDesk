@@ -2493,7 +2493,18 @@
         "detail_failed": "Impossible de charger les détails de cet appareil.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Résumé des rapports",
+        "active_idle_title": "Temps actif et inactif",
+        "active_idle_line": "Dans ces rapports, les appareils ont été actifs {active} et inactifs {idle}, soit {pct} % du temps enregistré en activité.",
+        "active_idle_none": "Aucun temps actif ou inactif dans ces rapports.",
+        "top_apps_all_title": "Applications les plus utilisées",
+        "top_apps_all_note": "Temps par application, additionné sur {devices} appareils pour les dates choisies.",
+        "top_apps_all_partial": "{failed} appareils n’ont pas pu être chargés et sont exclus.",
+        "top_apps_all_empty": "Aucune utilisation d’application pour ces dates.",
+        "top_apps_all_failed": "Impossible de charger l’utilisation des applications.",
+        "top_apps_all_devices": "Utilisée sur {count} appareils",
+        "top_apps_all_one_device": "Utilisée sur 1 appareil"
     },
     "automation": {
         "title": "Tableau de bord",

@@ -2471,7 +2471,18 @@
         "detail_failed": "이 장치의 세부 정보를 불러오지 못했습니다.",
         "duration_hm": "{h}시간 {m}분",
         "duration_m": "{m}분",
-        "duration_s": "{s}초"
+        "duration_s": "{s}초",
+        "summary_label": "보고서 요약",
+        "active_idle_title": "활성 시간과 유휴 시간",
+        "active_idle_line": "이 보고서에서 기기는 {active} 동안 활성, {idle} 동안 유휴 상태였습니다. 기록된 시간의 {pct} %가 활성입니다.",
+        "active_idle_none": "이 보고서에는 활성 시간이나 유휴 시간이 없습니다.",
+        "top_apps_all_title": "가장 많이 사용한 앱",
+        "top_apps_all_note": "선택한 날짜 동안 기기 {devices}대의 앱별 시간을 합산했습니다.",
+        "top_apps_all_partial": "기기 {failed}대를 불러오지 못해 제외했습니다.",
+        "top_apps_all_empty": "이 기간에는 앱 사용 기록이 없습니다.",
+        "top_apps_all_failed": "앱 사용 기록을 불러오지 못했습니다.",
+        "top_apps_all_devices": "기기 {count}대에서 사용",
+        "top_apps_all_one_device": "기기 1대에서 사용"
     },
     "automation": {
         "title": "자동화 및 경고",

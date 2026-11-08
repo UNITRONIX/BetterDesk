@@ -2477,7 +2477,18 @@
         "detail_failed": "Kunne ikke laste inn detaljene for denne enheten.",
         "duration_hm": "{h} t {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Sammendrag av rapportene",
+        "active_idle_title": "Aktiv og inaktiv tid",
+        "active_idle_line": "I disse rapportene var enhetene aktive i {active} og inaktive i {idle}, altså {pct} % av den registrerte tiden aktiv.",
+        "active_idle_none": "Ingen aktiv eller inaktiv tid i disse rapportene.",
+        "top_apps_all_title": "Mest brukte apper",
+        "top_apps_all_note": "Tid per app, lagt sammen for {devices} enheter i de valgte datoene.",
+        "top_apps_all_partial": "{failed} enheter kunne ikke lastes inn og er utelatt.",
+        "top_apps_all_empty": "Ingen appbruk i disse datoene.",
+        "top_apps_all_failed": "Kunne ikke laste inn appbruk.",
+        "top_apps_all_devices": "Brukt på {count} enheter",
+        "top_apps_all_one_device": "Brukt på 1 enhet"
     },
     "automation": {
         "title": "Automatisering og varsler",

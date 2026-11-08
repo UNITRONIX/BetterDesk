@@ -2489,7 +2489,18 @@
         "detail_failed": "Nie udało się wczytać szczegółów tego urządzenia.",
         "duration_hm": "{h} godz. {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Podsumowanie raportów",
+        "active_idle_title": "Czas aktywny i bezczynny",
+        "active_idle_line": "W tych raportach urządzenia były aktywne przez {active} i bezczynne przez {idle}, czyli {pct} % zapisanego czasu było aktywne.",
+        "active_idle_none": "Brak czasu aktywnego i bezczynnego w tych raportach.",
+        "top_apps_all_title": "Najczęściej używane aplikacje",
+        "top_apps_all_note": "Czas na aplikację, zsumowany z {devices} urządzeń dla wybranych dat.",
+        "top_apps_all_partial": "Nie udało się wczytać {failed} urządzeń, więc ich nie uwzględniono.",
+        "top_apps_all_empty": "Brak użycia aplikacji w tych dniach.",
+        "top_apps_all_failed": "Nie udało się wczytać użycia aplikacji.",
+        "top_apps_all_devices": "Używana na {count} urządzeniach",
+        "top_apps_all_one_device": "Używana na 1 urządzeniu"
     },
     "automation": {
         "title": "Automatyzacja i alerty",

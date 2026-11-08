@@ -2471,7 +2471,18 @@
         "detail_failed": "De details van dit apparaat konden niet worden geladen.",
         "duration_hm": "{h} u {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Samenvatting van de rapporten",
+        "active_idle_title": "Actieve en inactieve tijd",
+        "active_idle_line": "In deze rapporten waren de apparaten {active} actief en {idle} inactief, dus {pct} % van de vastgelegde tijd was actief.",
+        "active_idle_none": "Geen actieve of inactieve tijd in deze rapporten.",
+        "top_apps_all_title": "Meest gebruikte apps",
+        "top_apps_all_note": "Tijd per app, opgeteld over {devices} apparaten voor de gekozen data.",
+        "top_apps_all_partial": "{failed} apparaten konden niet worden geladen en ontbreken.",
+        "top_apps_all_empty": "Geen appgebruik op deze data.",
+        "top_apps_all_failed": "Kan het appgebruik niet laden.",
+        "top_apps_all_devices": "Gebruikt op {count} apparaten",
+        "top_apps_all_one_device": "Gebruikt op 1 apparaat"
     },
     "automation": {
         "title": "Automatisering en waarschuwingen",

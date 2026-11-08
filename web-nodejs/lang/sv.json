@@ -2477,7 +2477,18 @@
         "detail_failed": "Det gick inte att läsa in detaljerna för den här enheten.",
         "duration_hm": "{h} tim {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Sammanfattning av rapporterna",
+        "active_idle_title": "Aktiv och inaktiv tid",
+        "active_idle_line": "I de här rapporterna var enheterna aktiva i {active} och inaktiva i {idle}, alltså {pct} % av den registrerade tiden aktiv.",
+        "active_idle_none": "Ingen aktiv eller inaktiv tid i de här rapporterna.",
+        "top_apps_all_title": "Mest använda appar",
+        "top_apps_all_note": "Tid per app, sammanlagd över {devices} enheter för de valda datumen.",
+        "top_apps_all_partial": "{failed} enheter kunde inte läsas in och är utelämnade.",
+        "top_apps_all_empty": "Ingen appanvändning för de här datumen.",
+        "top_apps_all_failed": "Det gick inte att läsa in appanvändningen.",
+        "top_apps_all_devices": "Används på {count} enheter",
+        "top_apps_all_one_device": "Används på 1 enhet"
     },
     "automation": {
         "title": "Automatisering",

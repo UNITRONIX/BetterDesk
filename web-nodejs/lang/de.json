@@ -2471,7 +2471,18 @@
         "detail_failed": "Die Details zu diesem Gerät konnten nicht geladen werden.",
         "duration_hm": "{h} Std. {m} Min.",
         "duration_m": "{m} Min.",
-        "duration_s": "{s} Sek."
+        "duration_s": "{s} Sek.",
+        "summary_label": "Zusammenfassung der Berichte",
+        "active_idle_title": "Aktive und inaktive Zeit",
+        "active_idle_line": "In diesen Berichten waren die Geräte {active} aktiv und {idle} inaktiv, also {pct} % der erfassten Zeit aktiv.",
+        "active_idle_none": "Diese Berichte enthalten keine aktive oder inaktive Zeit.",
+        "top_apps_all_title": "Am meisten genutzte Apps",
+        "top_apps_all_note": "Zeit pro App, zusammengezählt über {devices} Geräte im gewählten Zeitraum.",
+        "top_apps_all_partial": "{failed} Geräte konnten nicht geladen werden und fehlen.",
+        "top_apps_all_empty": "Keine App-Nutzung in diesem Zeitraum.",
+        "top_apps_all_failed": "Die App-Nutzung konnte nicht geladen werden.",
+        "top_apps_all_devices": "Auf {count} Geräten genutzt",
+        "top_apps_all_one_device": "Auf 1 Gerät genutzt"
     },
     "automation": {
         "title": "Dashboard",

@@ -2478,7 +2478,18 @@
         "detail_failed": "تعذّر تحميل تفاصيل هذا الجهاز.",
         "duration_hm": "{h} س {m} د",
         "duration_m": "{m} د",
-        "duration_s": "{s} ث"
+        "duration_s": "{s} ث",
+        "summary_label": "ملخص التقارير",
+        "active_idle_title": "وقت النشاط والخمول",
+        "active_idle_line": "في هذه التقارير كانت الأجهزة نشطة لمدة {active} وخاملة لمدة {idle}، أي أن {pct} % من الوقت المسجّل كان نشطًا.",
+        "active_idle_none": "لا يوجد وقت نشاط أو خمول في هذه التقارير.",
+        "top_apps_all_title": "التطبيقات الأكثر استخدامًا",
+        "top_apps_all_note": "الوقت في كل تطبيق، مجموعًا على {devices} أجهزة للتواريخ المختارة.",
+        "top_apps_all_partial": "تعذّر تحميل {failed} من الأجهزة فلم تُحتسب.",
+        "top_apps_all_empty": "لا يوجد استخدام للتطبيقات في هذه التواريخ.",
+        "top_apps_all_failed": "تعذّر تحميل استخدام التطبيقات.",
+        "top_apps_all_devices": "مستخدم على {count} أجهزة",
+        "top_apps_all_one_device": "مستخدم على جهاز واحد"
     },
     "automation": {
         "title": "الأتمتة والتنبيهات",

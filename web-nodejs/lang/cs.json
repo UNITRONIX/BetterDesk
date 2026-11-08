@@ -2471,7 +2471,18 @@
         "detail_failed": "Podrobnosti o tomto zařízení se nepodařilo načíst.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Souhrn hlášení",
+        "active_idle_title": "Aktivní a nečinný čas",
+        "active_idle_line": "V těchto hlášeních byla zařízení aktivní {active} a nečinná {idle}, tedy {pct} % zaznamenaného času aktivně.",
+        "active_idle_none": "V těchto hlášeních není žádný aktivní ani nečinný čas.",
+        "top_apps_all_title": "Nejpoužívanější aplikace",
+        "top_apps_all_note": "Čas v každé aplikaci, sečtený za {devices} zařízení ve zvoleném období.",
+        "top_apps_all_partial": "{failed} zařízení se nepodařilo načíst a nejsou započítána.",
+        "top_apps_all_empty": "V těchto dnech není žádné používání aplikací.",
+        "top_apps_all_failed": "Používání aplikací se nepodařilo načíst.",
+        "top_apps_all_devices": "Používá se na {count} zařízeních",
+        "top_apps_all_one_device": "Používá se na 1 zařízení"
     },
     "automation": {
         "title": "Automatizace a upozornění",

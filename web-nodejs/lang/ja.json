@@ -2471,7 +2471,18 @@
         "detail_failed": "このデバイスの詳細を読み込めませんでした。",
         "duration_hm": "{h}時間{m}分",
         "duration_m": "{m}分",
-        "duration_s": "{s}秒"
+        "duration_s": "{s}秒",
+        "summary_label": "レポートの概要",
+        "active_idle_title": "操作時間とアイドル時間",
+        "active_idle_line": "これらのレポートでは、デバイスの操作時間は {active}、アイドル時間は {idle} で、記録された時間の {pct} % が操作中でした。",
+        "active_idle_none": "これらのレポートには操作時間もアイドル時間もありません。",
+        "top_apps_all_title": "よく使われているアプリ",
+        "top_apps_all_note": "選択した期間の {devices} 台のデバイスを合計した、アプリごとの時間です。",
+        "top_apps_all_partial": "{failed} 台のデバイスを読み込めなかったため、含まれていません。",
+        "top_apps_all_empty": "この期間にアプリの使用はありません。",
+        "top_apps_all_failed": "アプリの使用状況を読み込めませんでした。",
+        "top_apps_all_devices": "{count} 台のデバイスで使用",
+        "top_apps_all_one_device": "1 台のデバイスで使用"
     },
     "automation": {
         "title": "自動化とアラート",

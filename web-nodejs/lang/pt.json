@@ -2471,7 +2471,18 @@
         "detail_failed": "Não foi possível carregar os detalhes deste dispositivo.",
         "duration_hm": "{h} h {m} min",
         "duration_m": "{m} min",
-        "duration_s": "{s} s"
+        "duration_s": "{s} s",
+        "summary_label": "Resumo dos relatórios",
+        "active_idle_title": "Tempo ativo e inativo",
+        "active_idle_line": "Nestes relatórios os dispositivos estiveram ativos {active} e inativos {idle}, ou seja, {pct} % do tempo registado foi ativo.",
+        "active_idle_none": "Sem tempo ativo ou inativo nestes relatórios.",
+        "top_apps_all_title": "Aplicações mais usadas",
+        "top_apps_all_note": "Tempo por aplicação, somado em {devices} dispositivos para as datas escolhidas.",
+        "top_apps_all_partial": "Não foi possível carregar {failed} dispositivos, que ficaram de fora.",
+        "top_apps_all_empty": "Sem utilização de aplicações nestas datas.",
+        "top_apps_all_failed": "Não foi possível carregar a utilização das aplicações.",
+        "top_apps_all_devices": "Usada em {count} dispositivos",
+        "top_apps_all_one_device": "Usada em 1 dispositivo"
     },
     "automation": {
         "title": "Automação e alertas",
