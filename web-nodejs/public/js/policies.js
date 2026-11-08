@@ -1,207 +1,364 @@
-/* policies.js — Organization Policy Management */
+/* policies.js: organization policies (/policies, /policies/<orgId>) */
 (function () {
   'use strict';
 
+  const t = (key, params) => (typeof window._ === 'function' ? window._(key, params || {}) : key);
+
+  const SECTIONS = ['connection', 'features', 'security', 'network', 'update'];
+  const STATUS_IDS = {
+    connection: 'conn-status', features: 'feat-status', security: 'sec-status',
+    network: 'net-status', update: 'upd-status'
+  };
+
   let currentOrgId = null;
   let policyData = {};
+  let orgIds = new Set();
+  let dirtySections = new Set();
+  let loadSeq = 0;
 
-  /* ── Bootstrap ─────────────────────────────────────── */
+  const $ = (id) => document.getElementById(id);
+  const form = () => $('policy-form');
+
   document.addEventListener('DOMContentLoaded', init);
 
-  function init() {
-    loadOrganizations();
-    document.getElementById('policy-org-select').addEventListener('change', onOrgChange);
+  async function init() {
+    $('policy-org-select').addEventListener('change', onOrgChange);
+    const f = form();
+    f.addEventListener('submit', (e) => { e.preventDefault(); saveAll(); });
+    const markSection = (e) => {
+      const sec = e.target.closest('[data-section]');
+      if (sec) dirtySections.add(sec.dataset.section);
+    };
+    f.addEventListener('input', markSection);
+    f.addEventListener('change', markSection);
+
+    await loadOrganizations();
+    const fromUrl = orgIdFromPath();
+    if (fromUrl) {
+      if (orgIds.has(fromUrl)) {
+        $('policy-org-select').value = fromUrl;
+        await selectOrg(fromUrl);
+      } else if (!$('policy-org-select').dataset.failed) {
+        setState(`<p class="state is-error">${esc(t('policies.org_not_found'))}</p>`);
+      }
+    }
   }
 
-  /* ── Organizations ─────────────────────────────────── */
+  // /policies/<orgId> preselects that organization
+  function orgIdFromPath() {
+    const m = window.location.pathname.match(/^\/policies\/([^/?#]+)/);
+    if (!m) return null;
+    try { return decodeURIComponent(m[1]); } catch (_) { return null; }
+  }
+
+  function setState(html) {
+    const el = $('policy-state');
+    el.innerHTML = html;
+    el.hidden = !html;
+  }
+
+  /* ── Organizations ── */
   async function loadOrganizations() {
+    const sel = $('policy-org-select');
     try {
       const resp = await fetch('/api/panel/org', { credentials: 'same-origin' });
-      if (!resp.ok) return;
+      if (!resp.ok) throw new Error(resp.statusText || String(resp.status));
       const data = await resp.json();
       const orgs = data.organizations || data.data || data || [];
-      const sel = document.getElementById('policy-org-select');
       (Array.isArray(orgs) ? orgs : []).forEach(o => {
         const opt = document.createElement('option');
         opt.value = o.id;
         opt.textContent = o.name || o.id;
         sel.appendChild(opt);
+        orgIds.add(String(o.id));
       });
-    } catch (e) { console.warn('Failed to load organizations:', e); }
+      if (!orgIds.size) setState(`<p class="state">${esc(t('policies.no_orgs'))}</p>`);
+    } catch (e) {
+      sel.dataset.failed = '1';
+      setState(`<p class="state is-error">${esc(t('policies.orgs_failed'))} <button type="button" class="btn btn-sm" id="policy-orgs-retry">${esc(t('actions.retry'))}</button></p>`);
+      $('policy-orgs-retry').addEventListener('click', () => window.location.reload());
+    }
   }
 
   async function onOrgChange() {
-    const sel = document.getElementById('policy-org-select');
-    currentOrgId = sel.value;
+    const sel = $('policy-org-select');
+    const next = sel.value;
+    if (currentOrgId && window.UiForm && UiForm.isDirty(form())) {
+      const ok = await Modal.confirm({
+        title: t('policies.discard_title'),
+        message: t('policies.discard_message'),
+        confirmLabel: t('policies.discard_confirm'),
+        danger: true
+      });
+      if (!ok) { sel.value = currentOrgId; return; }
+    }
+    const path = next ? `/policies/${encodeURIComponent(next)}` : '/policies';
+    if (window.location.pathname !== path) window.history.replaceState(null, '', path);
+    await selectOrg(next);
+  }
+
+  async function selectOrg(orgId) {
+    currentOrgId = orgId || null;
+    $('policy-sections').hidden = true;
     if (!currentOrgId) {
-      document.getElementById('policy-sections').style.display = 'none';
+      setState(`<p class="state">${esc(t('policies.pick_org_state'))}</p>`);
       return;
     }
-    document.getElementById('policy-sections').style.display = '';
     await fetchPolicies();
   }
 
-  /* ── Fetch policies ─────────────────────────────────── */
+  /* ── Fetch policies ── */
   async function fetchPolicies() {
     if (!currentOrgId) return;
+    const seq = ++loadSeq;
+    setState(`<p class="state">${esc(t('policies.loading'))}</p>`);
     try {
       const resp = await fetch(`/api/panel/policies/${encodeURIComponent(currentOrgId)}`, { credentials: 'same-origin' });
-      if (!resp.ok) throw new Error(resp.statusText);
+      if (!resp.ok) throw new Error(await errorText(resp));
       const raw = await resp.json();
+      if (seq !== loadSeq) return;
       policyData = raw.data || raw || {};
       populateForms();
+      setState('');
+      $('policy-sections').hidden = false;
       loadAuditLog();
     } catch (e) {
-      console.warn('Failed to fetch policies:', e);
-      if (typeof Notifications !== 'undefined') Notifications.error(_('policies.load_failed') || 'Failed to load policies');
+      if (seq !== loadSeq) return;
+      setState(`<p class="state is-error">${esc(t('policies.load_failed'))} <button type="button" class="btn btn-sm" id="policy-load-retry">${esc(t('actions.retry'))}</button></p>`);
+      $('policy-load-retry').addEventListener('click', fetchPolicies);
     }
   }
 
-  /* ── Populate ────────────────────────────────────────── */
+  /* ── Populate ── */
+  // Keep 0 when it was saved; fall back only when the value is missing
+  const num = (v, d) => (v === undefined || v === null || v === '' || isNaN(Number(v)) ? d : Number(v));
+
   function populateForms() {
     const c = policyData.connection || {};
     setVal('pol-connection-mode', c.mode || 'attended');
-    setVal('pol-max-session', c.max_session_duration || 480);
-    setVal('pol-idle-lock', c.idle_lock_timeout || 15);
+    setVal('pol-max-session', num(c.max_session_duration, 480));
+    setVal('pol-idle-lock', num(c.idle_lock_timeout, 15));
     setVal('pol-wallpaper', c.wallpaper || 'show');
-    setBadge('conn-status', c);
 
     const f = policyData.features || {};
     setChecked('pol-file-transfer', f.allow_file_transfer !== false);
     setChecked('pol-clipboard', f.allow_clipboard !== false);
     setChecked('pol-audio', !!f.allow_audio);
     setChecked('pol-recording', f.allow_recording !== false);
-    setBadge('feat-status', f);
 
     const s = policyData.security || {};
     setChecked('pol-require-2fa', s.require_2fa !== false);
-    setVal('pol-pass-min', s.password_min_length || 12);
+    setVal('pol-pass-min', num(s.password_min_length, 12));
     setChecked('pol-pass-special', s.password_require_special !== false);
-    setVal('pol-pass-age', s.password_max_age_days || 90);
+    setVal('pol-pass-age', num(s.password_max_age_days, 90));
     setVal('pol-allowed-ops', (s.allowed_operators || []).join(', '));
-    setBadge('sec-status', s);
 
     const n = policyData.network || {};
     setChecked('pol-block-p2p', !!n.block_direct_p2p);
     setVal('pol-relay-servers', (n.allowed_relay_servers || []).join('\n'));
     setVal('pol-ip-allowlist', (n.ip_allowlist || []).join('\n'));
-    setBadge('net-status', n);
 
     const u = policyData.update || {};
     setChecked('pol-auto-update', u.auto_update !== false);
     setVal('pol-update-channel', u.channel || 'stable');
-    setBadge('upd-status', u);
+
+    SECTIONS.forEach(sec => setSectionState(sec, policyData[sec] || {}));
+    dirtySections = new Set();
+    if (window.UiForm) UiForm.reset(form());
   }
 
-  function setBadge(id, obj) {
-    const el = document.getElementById(id);
+  function setSectionState(section, obj) {
+    const el = $(STATUS_IDS[section]);
     if (!el) return;
-    const hasData = Object.keys(obj).length > 0;
-    el.textContent = hasData ? (typeof _ === 'function' ? _('policies.configured') : 'Configured') : '—';
-    el.className = 'policy-status-badge' + (hasData ? ' configured' : '');
+    const set = obj && typeof obj === 'object' && Object.keys(obj).length > 0;
+    el.textContent = set ? t('policies.configured') : t('policies.not_configured');
+    el.classList.toggle('is-set', set);
   }
 
-  /* ── Save section ───────────────────────────────────── */
-  async function saveSection(section) {
-    if (!currentOrgId) return;
+  /* ── Save ── */
+  function intField(id, min, max, label) {
+    const raw = getVal(id).trim();
+    const v = Number(raw);
+    if (raw === '' || !Number.isInteger(v) || v < min || v > max) {
+      throw Object.assign(new Error(t('policies.invalid_number', { field: label, min, max })), { field: id });
+    }
+    return v;
+  }
 
-    let body = {};
+  function labelOf(id) {
+    const l = document.querySelector(`label[for="${id}"]`);
+    return l ? l.textContent.trim() : id;
+  }
+
+  function bodyFor(section) {
     switch (section) {
       case 'connection':
-        body = {
+        return {
           mode: getVal('pol-connection-mode'),
-          max_session_duration: parseInt(getVal('pol-max-session')) || 480,
-          idle_lock_timeout: parseInt(getVal('pol-idle-lock')) || 15,
+          max_session_duration: intField('pol-max-session', 0, 1440, labelOf('pol-max-session')),
+          idle_lock_timeout: intField('pol-idle-lock', 0, 120, labelOf('pol-idle-lock')),
           wallpaper: getVal('pol-wallpaper')
         };
-        break;
       case 'features':
-        body = {
+        return {
           allow_file_transfer: isChecked('pol-file-transfer'),
           allow_clipboard: isChecked('pol-clipboard'),
           allow_audio: isChecked('pol-audio'),
           allow_recording: isChecked('pol-recording')
         };
-        break;
       case 'security':
-        body = {
+        return {
           require_2fa: isChecked('pol-require-2fa'),
-          password_min_length: parseInt(getVal('pol-pass-min')) || 12,
+          password_min_length: intField('pol-pass-min', 6, 128, labelOf('pol-pass-min')),
           password_require_special: isChecked('pol-pass-special'),
-          password_max_age_days: parseInt(getVal('pol-pass-age')) || 0,
+          password_max_age_days: intField('pol-pass-age', 0, 365, labelOf('pol-pass-age')),
           allowed_operators: getVal('pol-allowed-ops').split(',').map(s => s.trim()).filter(Boolean)
         };
-        break;
       case 'network':
-        body = {
+        return {
           block_direct_p2p: isChecked('pol-block-p2p'),
           allowed_relay_servers: getVal('pol-relay-servers').split('\n').map(s => s.trim()).filter(Boolean),
           ip_allowlist: getVal('pol-ip-allowlist').split('\n').map(s => s.trim()).filter(Boolean)
         };
-        break;
       case 'update':
-        body = {
+        return {
           auto_update: isChecked('pol-auto-update'),
           channel: getVal('pol-update-channel')
         };
-        break;
       default:
-        return;
-    }
-
-    try {
-      const csrfToken = window.BetterDesk?.csrfToken || '';
-      const resp = await fetch(`/api/panel/policies/${encodeURIComponent(currentOrgId)}/${section}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {})
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify(body)
-      });
-      if (!resp.ok) throw new Error(resp.statusText);
-      if (typeof Notifications !== 'undefined') Notifications.success(_('policies.save_success') || `${section} policy updated`);
-      await fetchPolicies();
-    } catch (e) {
-      console.error('Save failed:', e);
-      if (typeof Notifications !== 'undefined') Notifications.error(_('policies.save_failed') || 'Failed to save policy');
+        return null;
     }
   }
 
-  /* ── Audit log ──────────────────────────────────────── */
+  async function saveSection(section) {
+    const body = bodyFor(section);
+    if (!body) return;
+    const csrfToken = window.BetterDesk?.csrfToken || '';
+    const resp = await fetch(`/api/panel/policies/${encodeURIComponent(currentOrgId)}/${section}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(csrfToken ? { 'x-csrf-token': csrfToken } : {})
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) throw new Error(await errorText(resp));
+    dirtySections.delete(section);
+  }
+
+  // Saves only the sections that changed, so untouched ones stay "not set"
+  async function saveAll() {
+    if (!currentOrgId) return;
+    const f = form();
+    const sections = SECTIONS.filter(s => dirtySections.has(s));
+    if (!sections.length) {
+      if (window.UiForm) UiForm.saved(f, t('policies.no_changes'));
+      return;
+    }
+    const btn = f.querySelector('[data-save-button]');
+    btn.disabled = true;
+    try {
+      // Validate everything first so nothing is half saved because of a typo
+      for (const s of sections) bodyFor(s);
+    } catch (e) {
+      btn.disabled = false;
+      if (window.UiForm) UiForm.failed(f, e.message);
+      if (e.field && $(e.field)) $(e.field).focus();
+      return;
+    }
+    try {
+      for (const s of sections) await saveSection(s);
+      if (window.UiForm) UiForm.saved(f, t('policies.save_success'));
+      // Refresh the section states and the change list
+      const resp = await fetch(`/api/panel/policies/${encodeURIComponent(currentOrgId)}`, { credentials: 'same-origin' });
+      if (resp.ok) {
+        const raw = await resp.json();
+        policyData = raw.data || raw || {};
+        SECTIONS.forEach(sec => setSectionState(sec, policyData[sec] || {}));
+      }
+      loadAuditLog();
+    } catch (e) {
+      if (window.UiForm) UiForm.failed(f, `${t('ui_form.save_failed')} ${e.message || ''}`.trim());
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Change log ── */
+  function sectionName(cat) {
+    const key = { connection: 'connection_title', features: 'features_title', security: 'security_title', network: 'network_title', update: 'update_title' }[cat];
+    return key ? t(`policies.${key}`) : (cat || '');
+  }
+
   async function loadAuditLog() {
     if (!currentOrgId) return;
-    const container = document.getElementById('policy-audit-list');
+    const container = $('policy-audit-list');
+    container.innerHTML = `<p class="state">${esc(t('policies.audit_loading'))}</p>`;
     try {
       const resp = await fetch(`/api/panel/policies/${encodeURIComponent(currentOrgId)}/audit`, { credentials: 'same-origin' });
       if (!resp.ok) throw new Error(resp.statusText);
       const raw = await resp.json();
       const entries = raw.data || raw.entries || raw || [];
       if (!Array.isArray(entries) || entries.length === 0) {
-        container.innerHTML = `<p class="text-muted">${typeof _ === 'function' ? _('policies.no_audit') : 'No policy changes recorded.'}</p>`;
+        container.innerHTML = `<p class="state">${esc(t('policies.no_audit'))}</p>`;
         return;
       }
-      container.innerHTML = entries.map(e => `
-        <div class="audit-entry">
-          <span class="audit-time">${new Date(e.timestamp || e.created_at).toLocaleString()}</span>
-          <span class="audit-actor">${escapeHtml(e.actor || e.user || '?')}</span>
-          <span class="audit-section badge">${escapeHtml(e.section || e.category || '')}</span>
-          <span class="audit-detail">${escapeHtml(e.detail || e.description || '')}</span>
-        </div>
-      `).join('');
+      const rows = entries.map(e => {
+        const when = new Date(e.timestamp || e.created_at);
+        const whenText = isNaN(when) ? '' : when.toLocaleString();
+        const cat = (e.details && e.details.category) || e.section || e.category || '';
+        const who = e.actor || e.user || '';
+        const via = e.target || '';
+        const detail = e.detail || e.description || '';
+        return `<tr>
+            <td class="policy-audit-time">${esc(whenText)}</td>
+            <td>${esc(sectionName(cat))}${detail ? `<span class="cell-sub">${esc(detail)}</span>` : ''}</td>
+            <td><span class="mono">${esc(who)}</span>${via ? `<span class="cell-sub">${esc(via)}</span>` : ''}</td>
+          </tr>`;
+      }).join('');
+      container.innerHTML = `
+        <p class="count-line">${esc(t('policies.audit_count', { count: entries.length }))}</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="${esc(t('policies.audit_title'))}">
+          <table class="data-table policy-audit-table">
+            <thead><tr>
+              <th scope="col">${esc(t('policies.col_time'))}</th>
+              <th scope="col">${esc(t('policies.col_policy'))}</th>
+              <th scope="col">${esc(t('policies.col_source'))}</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
     } catch (e) {
-      container.innerHTML = '<p class="text-muted">Failed to load audit log.</p>';
+      container.innerHTML = `<p class="state is-error">${esc(t('policies.audit_failed'))} <button type="button" class="btn btn-sm" data-audit-retry>${esc(t('actions.retry'))}</button></p>`;
+      container.querySelector('[data-audit-retry]').addEventListener('click', loadAuditLog);
     }
   }
 
-  /* ── Helpers ─────────────────────────────────────────── */
-  function getVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
-  function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
-  function isChecked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
-  function setChecked(id, v) { const el = document.getElementById(id); if (el) el.checked = !!v; }
-  function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  /* ── Helpers ── */
+  async function errorText(resp) {
+    try {
+      const d = await resp.json();
+      return d.error || d.message || resp.statusText || String(resp.status);
+    } catch (_) {
+      return resp.statusText || String(resp.status);
+    }
+  }
+  function getVal(id) { const el = $(id); return el ? el.value : ''; }
+  function setVal(id, v) { const el = $(id); if (el) el.value = v; }
+  function isChecked(id) { const el = $(id); return el ? el.checked : false; }
+  function setChecked(id, v) { const el = $(id); if (el) el.checked = !!v; }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
 
-  /* ── Public API ──────────────────────────────────────── */
-  window.Policies = { saveSection };
+  /* ── Public API ── */
+  window.Policies = {
+    saveSection: async (section) => {
+      dirtySections.add(section);
+      await saveAll();
+    }
+  };
 })();

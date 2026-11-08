@@ -1,214 +1,203 @@
+<%
+    // A field's "when does this apply" line: devices fetch their policy, the
+    // network rules are enforced by the signal server itself.
+    const effectDevice = `<p class="field-effect">${_('policies.effect_device')}</p>`;
+    const effectServer = `<p class="field-effect">${_('policies.effect_server')}</p>`;
+%>
 <%- include('layouts/main', {
-    title: _('policies.title') || 'Organization Policies',
-    pageStyles: ['policies'],
+    title: _('nav.policies'),
+    uiReworked: true,
+    pageStyles: ['ui/policies'],
     pageScripts: ['policies'],
     currentPage: 'policies',
-    breadcrumb: [{ label: _('policies.title') || 'Organization Policies' }],
+    breadcrumb: [{ label: _('nav.policies') }],
     body: `
-        <div class="policy-page">
-            <!-- Header -->
-            <div class="policy-header">
-                <div class="policy-title">
-                    <h1>${_('policies.title') || 'Organization Policies'}</h1>
-                    <p class="policy-subtitle">${_('policies.subtitle') || 'Manage security, connection, and feature policies for your organizations'}</p>
+        <div class="page policy-page">
+            <div class="page-head">
+                <h1>${_('nav.policies')}</h1>
+                <p class="page-description">${_('policies.page_description')}</p>
+            </div>
+
+            <div class="form-column policy-org-field">
+                <div class="form-group">
+                    <label class="form-label" for="policy-org-select">${_('policies.select_org')}</label>
+                    <select id="policy-org-select" class="form-select" aria-describedby="policy-org-hint">
+                        <option value="">${_('policies.select_org_placeholder')}</option>
+                    </select>
+                    <p class="form-hint" id="policy-org-hint">${_('policies.org_hint')}</p>
                 </div>
             </div>
 
-            <!-- Organization selector -->
-            <div class="policy-org-selector">
-                <label>${_('policies.select_org') || 'Organization'}</label>
-                <select id="policy-org-select" class="form-input">
-                    <option value="">${_('policies.select_org_placeholder') || 'Select an organization...'}</option>
-                </select>
+            <div id="policy-state" aria-live="polite">
+                <p class="state">${_('policies.pick_org_state')}</p>
             </div>
 
-            <!-- Policy sections (hidden until org selected) -->
-            <div class="policy-sections" id="policy-sections" style="display:none;">
-                <!-- Connection Policy -->
-                <div class="policy-card" data-section="connection">
-                    <div class="policy-card-header">
-                        <div class="policy-card-icon"><span class="material-icons">settings_remote</span></div>
-                        <div class="policy-card-info">
-                            <h3>${_('policies.connection_title') || 'Connection Policy'}</h3>
-                            <p>${_('policies.connection_desc') || 'Control how remote sessions are established'}</p>
+            <div class="policy-sections" id="policy-sections" hidden>
+                <nav aria-label="${_('policies.on_this_page')}">
+                    <ul class="toc">
+                        <li><a href="#pol-connection-title">${_('policies.connection_title')}</a></li>
+                        <li><a href="#pol-features-title">${_('policies.features_title')}</a></li>
+                        <li><a href="#pol-security-title">${_('policies.security_title')}</a></li>
+                        <li><a href="#pol-network-title">${_('policies.network_title')}</a></li>
+                        <li><a href="#pol-update-title">${_('policies.update_title')}</a></li>
+                        <li><a href="#pol-audit-title">${_('policies.audit_title')}</a></li>
+                    </ul>
+                </nav>
+
+                <form id="policy-form" class="form-column policy-form" autocomplete="off" novalidate data-save-form>
+                    <section class="section" data-section="connection" aria-labelledby="pol-connection-title">
+                        <div class="section-head">
+                            <h2 id="pol-connection-title">${_('policies.connection_title')}</h2>
+                            <span class="policy-state" id="conn-status"></span>
                         </div>
-                        <span class="policy-status-badge" id="conn-status">—</span>
-                    </div>
-                    <div class="policy-card-body">
-                        <div class="policy-field">
-                            <label>${_('policies.connection_mode') || 'Connection Mode'}</label>
-                            <select id="pol-connection-mode" class="form-input">
-                                <option value="attended">${_('policies.mode_attended') || 'Attended (requires user approval)'}</option>
-                                <option value="unattended">${_('policies.mode_unattended') || 'Unattended (always allow)'}</option>
-                                <option value="ask_always">${_('policies.mode_ask') || 'Always Ask'}</option>
+                        <p class="section-note">${_('policies.connection_desc')}</p>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-connection-mode">${_('policies.connection_mode')}</label>
+                            <select id="pol-connection-mode" class="form-select">
+                                <option value="attended">${_('policies.mode_attended')}</option>
+                                <option value="unattended">${_('policies.mode_unattended')}</option>
+                                <option value="ask_always">${_('policies.mode_ask')}</option>
                             </select>
                         </div>
-                        <div class="policy-field">
-                            <label>${_('policies.max_session') || 'Max Session Duration (minutes)'}</label>
-                            <input type="number" id="pol-max-session" class="form-input" min="0" max="1440" value="480" />
+                        <div class="form-group">
+                            <label class="form-label" for="pol-max-session">${_('policies.max_session')}</label>
+                            <input type="number" id="pol-max-session" class="form-input is-short" min="0" max="1440" step="1" inputmode="numeric" aria-describedby="pol-max-session-hint">
+                            <p class="form-hint" id="pol-max-session-hint">${_('policies.max_session_hint')}</p>
                         </div>
-                        <div class="policy-field">
-                            <label>${_('policies.idle_lock') || 'Idle Lock Timeout (minutes)'}</label>
-                            <input type="number" id="pol-idle-lock" class="form-input" min="0" max="120" value="15" />
+                        <div class="form-group">
+                            <label class="form-label" for="pol-idle-lock">${_('policies.idle_lock')}</label>
+                            <input type="number" id="pol-idle-lock" class="form-input is-short" min="0" max="120" step="1" inputmode="numeric" aria-describedby="pol-idle-lock-hint">
+                            <p class="form-hint" id="pol-idle-lock-hint">${_('policies.idle_lock_hint')}</p>
                         </div>
-                        <div class="policy-field">
-                            <label>${_('policies.wallpaper_policy') || 'Wallpaper During Session'}</label>
-                            <select id="pol-wallpaper" class="form-input">
-                                <option value="show">${_('policies.wallpaper_show') || 'Show'}</option>
-                                <option value="hide_during_session">${_('policies.wallpaper_hide_session') || 'Hide during session'}</option>
-                                <option value="hide_always">${_('policies.wallpaper_hide_always') || 'Always hide'}</option>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-wallpaper">${_('policies.wallpaper_policy')}</label>
+                            <select id="pol-wallpaper" class="form-select">
+                                <option value="show">${_('policies.wallpaper_show')}</option>
+                                <option value="hide_during_session">${_('policies.wallpaper_hide_session')}</option>
+                                <option value="hide_always">${_('policies.wallpaper_hide_always')}</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["connection"]'>${_('common.save') || 'Save'}</button>
-                    </div>
-                </div>
+                        ${effectDevice}
+                    </section>
 
-                <!-- Feature Policy -->
-                <div class="policy-card" data-section="features">
-                    <div class="policy-card-header">
-                        <div class="policy-card-icon"><span class="material-icons">extension</span></div>
-                        <div class="policy-card-info">
-                            <h3>${_('policies.features_title') || 'Feature Policy'}</h3>
-                            <p>${_('policies.features_desc') || 'Enable or disable specific features for devices'}</p>
+                    <section class="section" data-section="features" aria-labelledby="pol-features-title">
+                        <div class="section-head">
+                            <h2 id="pol-features-title">${_('policies.features_title')}</h2>
+                            <span class="policy-state" id="feat-status"></span>
                         </div>
-                        <span class="policy-status-badge" id="feat-status">—</span>
-                    </div>
-                    <div class="policy-card-body">
-                        <div class="policy-toggle-group">
-                            <div class="policy-toggle">
-                                <label>${_('policies.allow_file_transfer') || 'Allow File Transfer'}</label>
-                                <input type="checkbox" id="pol-file-transfer" class="toggle-switch" checked />
-                            </div>
-                            <div class="policy-toggle">
-                                <label>${_('policies.allow_clipboard') || 'Allow Clipboard Sync'}</label>
-                                <input type="checkbox" id="pol-clipboard" class="toggle-switch" checked />
-                            </div>
-                            <div class="policy-toggle">
-                                <label>${_('policies.allow_audio') || 'Allow Audio Streaming'}</label>
-                                <input type="checkbox" id="pol-audio" class="toggle-switch" />
-                            </div>
-                            <div class="policy-toggle">
-                                <label>${_('policies.allow_recording') || 'Allow Session Recording'}</label>
-                                <input type="checkbox" id="pol-recording" class="toggle-switch" checked />
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["features"]'>${_('common.save') || 'Save'}</button>
-                    </div>
-                </div>
+                        <p class="section-note">${_('policies.features_desc')}</p>
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-file-transfer">
+                            <span class="check-label">${_('policies.allow_file_transfer')}</span>
+                        </label>
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-clipboard">
+                            <span class="check-label">${_('policies.allow_clipboard')}</span>
+                        </label>
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-audio">
+                            <span class="check-label">${_('policies.allow_audio')}</span>
+                        </label>
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-recording">
+                            <span class="check-label">${_('policies.allow_recording')}</span>
+                        </label>
+                        ${effectDevice}
+                    </section>
 
-                <!-- Security Policy -->
-                <div class="policy-card" data-section="security">
-                    <div class="policy-card-header">
-                        <div class="policy-card-icon"><span class="material-icons">shield</span></div>
-                        <div class="policy-card-info">
-                            <h3>${_('policies.security_title') || 'Security Policy'}</h3>
-                            <p>${_('policies.security_desc') || 'Enforce security requirements for organization devices'}</p>
+                    <section class="section" data-section="security" aria-labelledby="pol-security-title">
+                        <div class="section-head">
+                            <h2 id="pol-security-title">${_('policies.security_title')}</h2>
+                            <span class="policy-state" id="sec-status"></span>
                         </div>
-                        <span class="policy-status-badge" id="sec-status">—</span>
-                    </div>
-                    <div class="policy-card-body">
-                        <div class="policy-toggle-group">
-                            <div class="policy-toggle">
-                                <label>${_('policies.require_2fa') || 'Require 2FA for Unattended Access'}</label>
-                                <input type="checkbox" id="pol-require-2fa" class="toggle-switch" checked />
-                            </div>
+                        <p class="section-note">${_('policies.security_desc')}</p>
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-require-2fa">
+                            <span class="check-label">${_('policies.require_2fa')}</span>
+                        </label>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-pass-min">${_('policies.password_min_length')}</label>
+                            <input type="number" id="pol-pass-min" class="form-input is-short" min="6" max="128" step="1" inputmode="numeric" aria-describedby="pol-pass-min-hint">
+                            <p class="form-hint" id="pol-pass-min-hint">${_('policies.password_min_hint')}</p>
                         </div>
-                        <div class="policy-field">
-                            <label>${_('policies.password_min_length') || 'Minimum Password Length'}</label>
-                            <input type="number" id="pol-pass-min" class="form-input" min="6" max="128" value="12" />
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-pass-special">
+                            <span class="check-label">${_('policies.password_require_special')}</span>
+                        </label>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-pass-age">${_('policies.password_max_age')}</label>
+                            <input type="number" id="pol-pass-age" class="form-input is-short" min="0" max="365" step="1" inputmode="numeric" aria-describedby="pol-pass-age-hint">
+                            <p class="form-hint" id="pol-pass-age-hint">${_('policies.password_max_age_hint')}</p>
                         </div>
-                        <div class="policy-toggle-group">
-                            <div class="policy-toggle">
-                                <label>${_('policies.password_require_special') || 'Require Special Characters'}</label>
-                                <input type="checkbox" id="pol-pass-special" class="toggle-switch" checked />
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-allowed-ops">${_('policies.allowed_operators')}</label>
+                            <input type="text" id="pol-allowed-ops" class="form-input" placeholder="admin, helpdesk" aria-describedby="pol-allowed-ops-hint">
+                            <p class="form-hint" id="pol-allowed-ops-hint">${_('policies.allowed_operators_hint')}</p>
                         </div>
-                        <div class="policy-field">
-                            <label>${_('policies.password_max_age') || 'Password Max Age (days, 0=never)'}</label>
-                            <input type="number" id="pol-pass-age" class="form-input" min="0" max="365" value="90" />
-                        </div>
-                        <div class="policy-field">
-                            <label>${_('policies.allowed_operators') || 'Allowed Operator Roles (comma-separated)'}</label>
-                            <input type="text" id="pol-allowed-ops" class="form-input" placeholder="admin, helpdesk" />
-                        </div>
-                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["security"]'>${_('common.save') || 'Save'}</button>
-                    </div>
-                </div>
+                        ${effectDevice}
+                    </section>
 
-                <!-- Network Policy -->
-                <div class="policy-card" data-section="network">
-                    <div class="policy-card-header">
-                        <div class="policy-card-icon"><span class="material-icons">lan</span></div>
-                        <div class="policy-card-info">
-                            <h3>${_('policies.network_title') || 'Network Policy'}</h3>
-                            <p>${_('policies.network_desc') || 'Control relay servers and direct connections'}</p>
+                    <section class="section" data-section="network" aria-labelledby="pol-network-title">
+                        <div class="section-head">
+                            <h2 id="pol-network-title">${_('policies.network_title')}</h2>
+                            <span class="policy-state" id="net-status"></span>
                         </div>
-                        <span class="policy-status-badge" id="net-status">—</span>
-                    </div>
-                    <div class="policy-card-body">
-                        <div class="policy-toggle-group">
-                            <div class="policy-toggle">
-                                <label>${_('policies.block_direct_p2p') || 'Block Direct P2P (force relay)'}</label>
-                                <input type="checkbox" id="pol-block-p2p" class="toggle-switch" />
-                            </div>
-                            <p class="text-muted policy-hint">${_('policies.block_direct_p2p_hint') || 'Applies to devices in this organization. Global default is configured under Settings → Connection strategy.'}</p>
+                        <p class="section-note">${_('policies.network_desc')}</p>
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-block-p2p">
+                            <span class="check-label">${_('policies.block_direct_p2p')}</span>
+                            <span class="form-hint">${_('policies.block_direct_p2p_hint')}</span>
+                            <span class="field-effect">${_('policies.effect_server')}</span>
+                        </label>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-relay-servers">${_('policies.allowed_relays')}</label>
+                            <textarea id="pol-relay-servers" class="form-input mono" rows="3" dir="ltr" spellcheck="false" placeholder="relay1.example.com:21117" aria-describedby="pol-relay-servers-hint"></textarea>
+                            <p class="form-hint" id="pol-relay-servers-hint">${_('policies.allowed_relays_hint')}</p>
+                            ${effectServer}
                         </div>
-                        <div class="policy-field">
-                            <label>${_('policies.allowed_relays') || 'Allowed Relay Servers (one per line)'}</label>
-                            <textarea id="pol-relay-servers" class="form-input" rows="3" placeholder="relay1.example.com:21117"></textarea>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-ip-allowlist">${_('policies.ip_allowlist')}</label>
+                            <textarea id="pol-ip-allowlist" class="form-input mono" rows="3" dir="ltr" spellcheck="false" placeholder="192.168.1.0/24" aria-describedby="pol-ip-allowlist-hint"></textarea>
+                            <p class="form-hint" id="pol-ip-allowlist-hint">${_('policies.ip_allowlist_hint')}</p>
+                            ${effectDevice}
                         </div>
-                        <div class="policy-field">
-                            <label>${_('policies.ip_allowlist') || 'IP Allowlist (CIDR, one per line)'}</label>
-                            <textarea id="pol-ip-allowlist" class="form-input" rows="3" placeholder="192.168.1.0/24\n10.0.0.0/8"></textarea>
-                        </div>
-                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["network"]'>${_('common.save') || 'Save'}</button>
-                    </div>
-                </div>
+                    </section>
 
-                <!-- Update Policy -->
-                <div class="policy-card" data-section="update">
-                    <div class="policy-card-header">
-                        <div class="policy-card-icon"><span class="material-icons">system_update</span></div>
-                        <div class="policy-card-info">
-                            <h3>${_('policies.update_title') || 'Update Policy'}</h3>
-                            <p>${_('policies.update_desc') || 'Control automatic updates and update channels'}</p>
+                    <section class="section" data-section="update" aria-labelledby="pol-update-title">
+                        <div class="section-head">
+                            <h2 id="pol-update-title">${_('policies.update_title')}</h2>
+                            <span class="policy-state" id="upd-status"></span>
                         </div>
-                        <span class="policy-status-badge" id="upd-status">—</span>
-                    </div>
-                    <div class="policy-card-body">
-                        <div class="policy-toggle-group">
-                            <div class="policy-toggle">
-                                <label>${_('policies.auto_update') || 'Enable Auto-Update'}</label>
-                                <input type="checkbox" id="pol-auto-update" class="toggle-switch" checked />
-                            </div>
-                        </div>
-                        <div class="policy-field">
-                            <label>${_('policies.update_channel') || 'Update Channel'}</label>
-                            <select id="pol-update-channel" class="form-input">
-                                <option value="stable">Stable</option>
-                                <option value="beta">Beta</option>
-                                <option value="dev">Dev</option>
+                        <p class="section-note">${_('policies.update_desc')}</p>
+                        <label class="check-field">
+                            <input type="checkbox" id="pol-auto-update">
+                            <span class="check-label">${_('policies.auto_update')}</span>
+                        </label>
+                        <div class="form-group">
+                            <label class="form-label" for="pol-update-channel">${_('policies.update_channel')}</label>
+                            <select id="pol-update-channel" class="form-select is-medium">
+                                <option value="stable">${_('policies.channel_stable')}</option>
+                                <option value="beta">${_('policies.channel_beta')}</option>
+                                <option value="dev">${_('policies.channel_dev')}</option>
                             </select>
+                            <p class="form-hint">${_('policies.update_channel_hint')}</p>
                         </div>
-                        <button class="btn btn-primary btn-sm" data-bd-call="Policies.saveSection" data-bd-args='["update"]'>${_('common.save') || 'Save'}</button>
-                    </div>
-                </div>
+                        ${effectDevice}
+                    </section>
 
-                <!-- Policy Audit Log -->
-                <div class="policy-card" data-section="audit">
-                    <div class="policy-card-header">
-                        <div class="policy-card-icon"><span class="material-icons">history</span></div>
-                        <div class="policy-card-info">
-                            <h3>${_('policies.audit_title') || 'Policy Changes'}</h3>
-                            <p>${_('policies.audit_desc') || 'Recent policy change history'}</p>
-                        </div>
+                    <div class="save-bar">
+                        <span class="save-status" data-save-status aria-live="polite"></span>
+                        <button type="submit" class="btn btn-primary" data-save-button>${_('policies.save_button')}</button>
                     </div>
-                    <div class="policy-card-body">
-                        <div id="policy-audit-list" class="policy-audit-list">
-                            <p class="text-muted">${_('policies.select_org_first') || 'Select an organization to view policy audit log.'}</p>
-                        </div>
+                </form>
+
+                <section class="section" data-section="audit" aria-labelledby="pol-audit-title">
+                    <h2 id="pol-audit-title">${_('policies.audit_title')}</h2>
+                    <p class="section-note">${_('policies.audit_desc')}</p>
+                    <div id="policy-audit-list" class="policy-audit-list" aria-live="polite">
+                        <p class="state">${_('policies.audit_loading')}</p>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     `

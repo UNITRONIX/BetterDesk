@@ -1,0 +1,49 @@
+/* Policies (/policies, /policies/<orgId>). Fields, save bar, tables and states come from components.css. */
+
+.policy-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.policy-org-field .form-select {
+    max-width: 40ch;
+}
+
+#policy-state:empty {
+    display: none;
+}
+
+.policy-form .section + .section {
+    margin-top: var(--space-6);
+}
+
+/* "Set for this organization" / "Not set" next to the section heading */
+.policy-state {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.policy-state.is-set {
+    color: var(--text);
+}
+
+.policy-form .form-select.is-medium {
+    max-width: 28ch;
+}
+
+.policy-form textarea.mono {
+    font-family: var(--mono);
+}
+
+.policy-audit-table .policy-audit-time {
+    white-space: nowrap;
+}
+
+/* On touch the whole label is the target */
+@media (pointer: coarse) {
+    .policy-form .check-field {
+        min-height: 44px;
+        align-content: center;
+    }
+}
