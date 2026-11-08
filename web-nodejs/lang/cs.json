@@ -531,7 +531,7 @@
         "server_info": "Informace o serveru",
         "download": "Stáhnout soubor s klíčem",
         "show_qr": "Zobrazit QR",
-        "qr_hint": "Naskenujte ho aplikací RustDesk v systému Android nebo iOS a hodnoty výše se vyplní. Od verze aplikace 1.4.9 to vyžaduje volbu allow-deep-link-server-settings; bez ní použijte deploy string z nástěnky.",
+        "qr_hint": "Naskenujte ho aplikací RustDesk v Androidu nebo iOS a hodnoty se vyplní. Od verze aplikace 1.4.9 potřebuje aplikace volbu allow-deep-link-server-settings; bez ní raději zkopírujte konfigurační řetězec.",
         "no_key": "Nebyl nalezen žádný veřejný klíč",
         "no_key_to_copy": "Žádný klíč ke zkopírování",
         "no_qr": "QR kód není k dispozici",
@@ -553,8 +553,24 @@
         "copied": "Zkopírováno",
         "copy_failed": "Kopírování se nepovedlo. Označte hodnotu a zkopírujte ji ručně.",
         "nothing_to_copy": "Zatím není co kopírovat.",
-        "side_label": "Nastavení telefonu a stažení",
-        "files_title": "Ke stažení"
+        "side_label": "Nastavení telefonu, další kroky a stažení",
+        "files_title": "Ke stažení",
+        "config_string": "Konfigurační řetězec",
+        "config_string_hint": "Všechny čtyři hodnoty na jednom řádku. Zkopírujte ho a v síťovém nastavení RustDesku zvolte Import server config. Instalační skripty ho předávají příkazu rustdesk --config.",
+        "config_string_missing": "K dispozici po načtení klíče serveru.",
+        "scripts_title": "Pro skripty",
+        "next_title": "Po nastavení klienta",
+        "next_mode": "Režim registrace: {mode}.",
+        "next_open": "Nové zařízení se připojí, jakmile se spojí, a objeví se v seznamu zařízení.",
+        "next_managed": "Nové zařízení čeká v žádostech o registraci, dokud ho někdo neschválí, pokud nemá token zařízení.",
+        "next_locked": "Nové zařízení se může připojit jen s tokenem zařízení. Bez něj ho server odmítne.",
+        "next_unknown": "Podle režimu registrace se nové zařízení připojí hned, čeká na schválení, nebo potřebuje token zařízení.",
+        "next_requests_sub": "Schvalte zařízení, která čekají na připojení.",
+        "next_tokens_sub": "Vytvářejte tokeny a měňte režim registrace.",
+        "next_pairing_sub": "Pro klienta BetterDesk: adresa serveru a krátký kód místo těchto hodnot.",
+        "next_devices_sub": "Zkontrolujte, že tam nové zařízení je.",
+        "portal_title": "Stránka ke stažení agenta podpory",
+        "portal_sub": "Pro lidi, kterým poskytujete podporu. Pošlete jim adresu."
     },
     "settings": {
         "title": "Nastavení",
@@ -3837,7 +3853,10 @@
         "how_title": "Jak se token používá",
         "how_step1": "Vytvořte token a předejte ho tomu, kdo instaluje klienta, nebo ho vložte do instalačního skriptu.",
         "how_step2": "Zařízení pošle token při prvním připojení a připojí se bez čekání na schválení.",
-        "how_step3": "Odvoláním tokenu zabráníte připojení dalších zařízení. Zařízení, která se už připojila, fungují dál."
+        "how_step3": "Odvoláním tokenu zabráníte připojení dalších zařízení. Zařízení, která se už připojila, fungují dál.",
+        "mode_notice_open": "Režim registrace je Otevřený, takže se nová zařízení připojují bez tokenu. Tokeny platí až v režimu Spravovaný nebo Uzamčený.",
+        "mode_notice_locked": "Režim registrace je Uzamčený: nové zařízení se může připojit jen s tokenem z tohoto seznamu.",
+        "created_next": "Předejte ho tomu, kdo zařízení nastavuje, spolu s hodnotami připojení z {page}."
     },
     "help_request": {
         "title": "Žádosti o pomoc",
@@ -6746,11 +6765,11 @@
         "subtitle": "White-label for BetterDesk desktop clients and a compatible subset for RustDesk.",
         "form_title": "Client Branding profile",
         "hint": "Klienti BetterDesk a agenti podpory používají vše na této stránce. Běžní klienti RustDesk dostanou jen název firmy.",
-        "company_name": "Company name",
-        "support_contact": "Support contact",
-        "phone": "Phone",
-        "email": "Email",
-        "website": "Website",
+        "company_name": "Název firmy",
+        "support_contact": "Kontakt na podporu",
+        "phone": "Telefon",
+        "email": "E-mail",
+        "website": "Web",
         "accent_color": "Barva zvýraznění",
         "logo": "Logo",
         "logo_hint": "PNG, JPEG nebo WebP, nejvýše 512 KiB.",
@@ -6837,7 +6856,9 @@
         "sync_no_permission": "K importu potřebujete oprávnění ke správě registrací. Požádejte administrátora.",
         "portal_hint": "Veřejná stránka, ze které si vaši uživatelé stahují agenta. Pošlete jim její adresu.",
         "branding_title": "Název, logo a barvy",
-        "side_label": "Ke stažení a branding"
+        "side_label": "Ke stažení a branding",
+        "portal_address": "adresa stránky ke stažení",
+        "portal_open_hint": "Zobrazí stránku tak, jak ji vidí vaši uživatelé."
     },
 
     "pairing": {

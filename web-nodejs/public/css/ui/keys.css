@@ -28,3 +28,44 @@
     border-radius: var(--radius);
     background: #ffffff;
 }
+
+/* The config string is long: one line in the field, cut off at its end.
+   Copy takes the whole value; the title shows it on hover. */
+.keys-config-field {
+    width: 100%;
+}
+
+.keys-config-field > code {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+    line-height: var(--control-h-sm);
+}
+
+.keys-config-field > code.is-empty {
+    font-family: var(--font);
+    color: var(--text-muted);
+}
+
+.keys-page #keys-advanced {
+    max-width: 880px;
+}
+
+/* Very wide screens: the page takes the whole width and the diagram sits
+   beside the values instead of below them */
+@media (min-width: 2200px) {
+    .page.keys-page {
+        max-width: none;
+    }
+
+    .keys-page .page-main {
+        display: grid;
+        grid-template-columns: minmax(0, 880px) minmax(0, 1fr);
+        gap: var(--space-6) var(--space-7);
+        align-items: start;
+    }
+}

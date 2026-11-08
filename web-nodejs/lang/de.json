@@ -531,7 +531,7 @@
         "server_info": "Serverinformationen",
         "download": "Schlüsseldatei herunterladen",
         "show_qr": "QR anzeigen",
-        "qr_hint": "Scannen Sie ihn mit der RustDesk-App unter Android oder iOS, um die Werte oben einzutragen. Ab App-Version 1.4.9 braucht das die Option allow-deep-link-server-settings; ohne sie nehmen Sie den Deploy-String aus der Übersicht.",
+        "qr_hint": "Scannen Sie ihn mit der RustDesk-App unter Android oder iOS, um die Werte einzutragen. Ab App-Version 1.4.9 braucht die App die Option allow-deep-link-server-settings; ohne sie kopieren Sie stattdessen die Konfigurationszeichenfolge.",
         "no_key": "Kein öffentlicher Schlüssel gefunden",
         "no_key_to_copy": "Kein Schlüssel zum Kopieren",
         "no_qr": "QR-Code nicht verfügbar",
@@ -553,8 +553,24 @@
         "copied": "Kopiert",
         "copy_failed": "Kopieren hat nicht geklappt. Markieren Sie den Wert und kopieren Sie ihn von Hand.",
         "nothing_to_copy": "Es gibt noch keinen Wert zum Kopieren.",
-        "side_label": "Einrichtung am Telefon und Downloads",
-        "files_title": "Downloads"
+        "side_label": "Einrichtung am Telefon, nächste Schritte und Downloads",
+        "files_title": "Downloads",
+        "config_string": "Konfigurationszeichenfolge",
+        "config_string_hint": "Alle vier Werte in einer Zeile. Kopieren Sie sie und wählen Sie in den RustDesk-Netzwerkeinstellungen Import server config. Installationsskripte übergeben sie an rustdesk --config.",
+        "config_string_missing": "Verfügbar, sobald der Serverschlüssel geladen ist.",
+        "scripts_title": "Für Skripte",
+        "next_title": "Nach der Einrichtung des Clients",
+        "next_mode": "Registrierungsmodus: {mode}.",
+        "next_open": "Ein neues Gerät tritt bei, sobald es sich verbindet, und erscheint in der Geräteliste.",
+        "next_managed": "Ein neues Gerät wartet unter Registrierungsanfragen, bis jemand es freigibt, außer es hat ein Gerätetoken.",
+        "next_locked": "Ein neues Gerät kann nur mit einem Gerätetoken beitreten. Ohne Token weist der Server es ab.",
+        "next_unknown": "Je nach Registrierungsmodus tritt ein neues Gerät sofort bei, wartet auf Freigabe oder braucht ein Gerätetoken.",
+        "next_requests_sub": "Geben Sie Geräte frei, die auf den Beitritt warten.",
+        "next_tokens_sub": "Tokens erstellen und den Registrierungsmodus ändern.",
+        "next_pairing_sub": "Für den BetterDesk-Client: eine Serveradresse und ein kurzer Code statt dieser Werte.",
+        "next_devices_sub": "Prüfen Sie, ob das neue Gerät dort steht.",
+        "portal_title": "Downloadseite für den Support-Agenten",
+        "portal_sub": "Für die Personen, die Sie unterstützen. Geben Sie ihnen die Adresse."
     },
     "settings": {
         "title": "Dashboard",
@@ -3837,7 +3853,10 @@
         "how_title": "So wird ein Token verwendet",
         "how_step1": "Erstellen Sie ein Token und geben Sie es der Person, die den Client installiert, oder tragen Sie es ins Installationsskript ein.",
         "how_step2": "Das Gerät sendet das Token bei der ersten Verbindung und registriert sich, ohne auf eine Freigabe zu warten.",
-        "how_step3": "Widerrufen Sie ein Token, damit sich keine weiteren Geräte damit registrieren. Bereits registrierte Geräte funktionieren weiter."
+        "how_step3": "Widerrufen Sie ein Token, damit sich keine weiteren Geräte damit registrieren. Bereits registrierte Geräte funktionieren weiter.",
+        "mode_notice_open": "Der Registrierungsmodus ist Offen, daher treten neue Geräte ohne Token bei. Tokens zählen erst, wenn der Modus Verwaltet oder Gesperrt ist.",
+        "mode_notice_locked": "Der Registrierungsmodus ist Gesperrt: Ein neues Gerät kann nur mit einem Token aus dieser Liste beitreten.",
+        "created_next": "Geben Sie es der Person, die das Gerät einrichtet, zusammen mit den Verbindungswerten aus {page}."
     },
     "help_request": {
         "title": "Dashboard",
@@ -6746,10 +6765,10 @@
         "subtitle": "White-label for BetterDesk desktop clients and a compatible subset for RustDesk.",
         "form_title": "Client Branding profile",
         "hint": "BetterDesk-Clients und Support-Agenten nutzen alles auf dieser Seite. Normale RustDesk-Clients bekommen nur den Firmennamen.",
-        "company_name": "Company name",
-        "support_contact": "Support contact",
-        "phone": "Phone",
-        "email": "Email",
+        "company_name": "Firmenname",
+        "support_contact": "Support-Kontakt",
+        "phone": "Telefon",
+        "email": "E-Mail",
         "website": "Website",
         "accent_color": "Akzentfarbe",
         "logo": "Logo",
@@ -6837,7 +6856,9 @@
         "sync_no_permission": "Zum Importieren brauchen Sie die Berechtigung, Registrierungen zu verwalten. Fragen Sie einen Administrator.",
         "portal_hint": "Die öffentliche Seite, auf der Ihre Nutzer den Agent herunterladen. Geben Sie ihnen die Adresse.",
         "branding_title": "Name, Logo und Farben",
-        "side_label": "Downloads und Branding"
+        "side_label": "Downloads und Branding",
+        "portal_address": "Adresse der Downloadseite",
+        "portal_open_hint": "Zeigt die Seite so, wie Ihre Benutzer sie sehen."
     },
 
     "pairing": {

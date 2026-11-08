@@ -1,5 +1,8 @@
 <%
-    const canServerConfig = typeof hasPermission === 'function' && hasPermission('server.config');
+    const can = (p) => typeof hasPermission === 'function' && hasPermission(p);
+    const canServerConfig = can('server.config');
+    const canManageEnrollment = can('enrollment.manage');
+    const canApprove = can('enrollment.approve');
 %>
 <%- include('layouts/main', {
     title: _('nav.keys'),
@@ -9,7 +12,7 @@
     currentPage: 'keys',
     breadcrumb: [{ label: _('nav.keys') }],
     body: `
-        <div class="page keys-page" data-can-server-config="${canServerConfig ? 'true' : 'false'}">
+        <div class="page keys-page" data-can-server-config="${canServerConfig ? 'true' : 'false'}" data-can-manage-enrollment="${canManageEnrollment ? 'true' : 'false'}">
             <div class="page-head">
                 <h1>${_('nav.keys')}</h1>
                 <p class="page-description">${_('keys.page_description')}</p>
@@ -35,9 +38,18 @@
                     <dd><span class="value-field"><code id="api-url">…</code><button type="button" data-copy-target="api-url" aria-label="${_('actions.copy')} ${_('dashboard.config_api_server')}"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></span></dd>
                     <dt>${_('dashboard.config_key')}</dt>
                     <dd><span class="value-field"><code class="public-key-text is-masked" id="public-key-text">…</code><button type="button" id="reveal-key-btn" aria-label="${_('actions.show_value')} ${_('dashboard.config_key')}" aria-pressed="false"><span class="btn-label">${_('actions.show_value')}</span></button><button type="button" id="copy-key-btn" aria-label="${_('actions.copy')} ${_('dashboard.config_key')}"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></span></dd>
-                    <dt>${_('keys.server_api_key')}</dt>
-                    <dd><span class="mono" id="api-key">…</span><span class="keys-fact-hint">${_('keys.server_api_key_hint')}</span></dd>
+                    <dt>${_('keys.config_string')}</dt>
+                    <dd><span class="value-field keys-config-field"><code id="config-string">…</code><button type="button" data-copy-target="config-string" aria-label="${_('actions.copy')} ${_('keys.config_string')}"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></span><span class="keys-fact-hint">${_('keys.config_string_hint')}</span></dd>
                 </dl>
+
+                <!-- Not needed to set up a client: only scripts that call the server API use it -->
+                <details class="disclosure" id="keys-advanced">
+                    <summary>${_('keys.scripts_title')}</summary>
+                    <dl class="facts keys-facts">
+                        <dt>${_('keys.server_api_key')}</dt>
+                        <dd><span class="mono" id="api-key">…</span><span class="keys-fact-hint">${_('keys.server_api_key_hint')}</span></dd>
+                    </dl>
+                </details>
             </section>
 
             <!-- How a client uses the values above: ID server first, then direct or through the relay -->
@@ -58,6 +70,30 @@
                 </div>
             </section>
 
+            <!-- What happens once the client has the values: depends on the enrollment mode (keys.js fills in the mode) -->
+            <section class="section" aria-labelledby="keys-next-title">
+                <div class="section-head"><h2 id="keys-next-title">${_('keys.next_title')}</h2></div>
+                <p class="section-note" id="keys-next-mode" data-mode="">${_('keys.next_unknown')}</p>
+                <ul class="list keys-next">
+                    ${canApprove ? `<li data-next-modes="managed unknown"><a href="/registrations" class="list-row">
+                        <span class="row-main"><span class="row-title">${_('nav.registrations')}</span><span class="row-sub">${_('keys.next_requests_sub')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+                    </a></li>` : ''}
+                    ${canManageEnrollment ? `<li><a href="/tokens" class="list-row">
+                        <span class="row-main"><span class="row-title">${_('nav.tokens')}</span><span class="row-sub">${_('keys.next_tokens_sub')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+                    </a></li>` : ''}
+                    ${canApprove ? `<li><a href="/pairing" class="list-row">
+                        <span class="row-main"><span class="row-title">${_('nav.pairing')}</span><span class="row-sub">${_('keys.next_pairing_sub')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+                    </a></li>` : ''}
+                    <li><a href="/devices" class="list-row">
+                        <span class="row-main"><span class="row-title">${_('nav.devices')}</span><span class="row-sub">${_('keys.next_devices_sub')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+                    </a></li>
+                </ul>
+            </section>
+
             <section class="section" aria-labelledby="keys-files-title">
                 <div class="section-head"><h2 id="keys-files-title">${_('keys.files_title')}</h2></div>
                 <ul class="list keys-downloads">
@@ -70,6 +106,10 @@
                     </li>
                     <li><a href="https://github.com/rustdesk/rustdesk/releases/latest" class="list-row" target="_blank" rel="noopener noreferrer">
                         <span class="row-main"><span class="row-title">${_('dashboard.get_rustdesk')}</span><span class="row-sub">${_('dashboard.get_rustdesk_hint')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">open_in_new</span>
+                    </a></li>
+                    <li><a href="/portal" class="list-row" target="_blank" rel="noopener noreferrer">
+                        <span class="row-main"><span class="row-title">${_('keys.portal_title')}</span><span class="row-sub">${_('keys.portal_sub')}</span></span>
                         <span class="material-icons row-chevron" aria-hidden="true">open_in_new</span>
                     </a></li>
                 </ul>

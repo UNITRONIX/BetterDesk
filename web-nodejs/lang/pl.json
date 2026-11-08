@@ -531,7 +531,7 @@
         "server_info": "Informacje o serwerze",
         "download": "Pobierz plik klucza",
         "show_qr": "Pokaż QR",
-        "qr_hint": "Zeskanuj go aplikacją RustDesk w systemie Android lub iOS, żeby wypełnić wartości powyżej. Od wersji aplikacji 1.4.9 wymaga to opcji allow-deep-link-server-settings; bez niej użyj deploy string z panelu.",
+        "qr_hint": "Zeskanuj go aplikacją RustDesk na Androidzie lub iOS, żeby wypełnić wartości. Od wersji 1.4.9 aplikacja potrzebuje opcji allow-deep-link-server-settings; bez niej skopiuj ciąg konfiguracji.",
         "no_key": "Nie znaleziono klucza publicznego",
         "no_key_to_copy": "Brak klucza do skopiowania",
         "no_qr": "Kod QR niedostępny",
@@ -553,8 +553,24 @@
         "copied": "Skopiowano",
         "copy_failed": "Nie udało się skopiować. Zaznacz wartość i skopiuj ją ręcznie.",
         "nothing_to_copy": "Nie ma jeszcze nic do skopiowania.",
-        "side_label": "Konfiguracja telefonu i pliki do pobrania",
-        "files_title": "Pliki do pobrania"
+        "side_label": "Konfiguracja telefonu, kolejne kroki i pliki do pobrania",
+        "files_title": "Pliki do pobrania",
+        "config_string": "Ciąg konfiguracji",
+        "config_string_hint": "Wszystkie cztery wartości w jednym wierszu. Skopiuj go i wybierz Import server config w ustawieniach sieci RustDesk. Skrypty instalacyjne przekazują go do rustdesk --config.",
+        "config_string_missing": "Dostępny po wczytaniu klucza serwera.",
+        "scripts_title": "Dla skryptów",
+        "next_title": "Po skonfigurowaniu klienta",
+        "next_mode": "Tryb rejestracji: {mode}.",
+        "next_open": "Nowe urządzenie dołącza od razu po połączeniu i pojawia się na liście urządzeń.",
+        "next_managed": "Nowe urządzenie czeka w Żądaniach rejestracji, aż ktoś je zatwierdzi, chyba że ma token urządzenia.",
+        "next_locked": "Nowe urządzenie może dołączyć tylko z tokenem urządzenia. Bez niego serwer je odrzuca.",
+        "next_unknown": "Zależnie od trybu rejestracji nowe urządzenie dołącza od razu, czeka na zatwierdzenie albo potrzebuje tokenu urządzenia.",
+        "next_requests_sub": "Zatwierdź urządzenia, które czekają na dołączenie.",
+        "next_tokens_sub": "Twórz tokeny i zmieniaj tryb rejestracji.",
+        "next_pairing_sub": "Dla klienta BetterDesk: adres serwera i krótki kod zamiast tych wartości.",
+        "next_devices_sub": "Sprawdź, czy nowe urządzenie tam jest.",
+        "portal_title": "Strona pobierania agenta wsparcia",
+        "portal_sub": "Dla osób, którym pomagasz. Udostępnij im adres."
     },
     "settings": {
         "title": "Ustawienia",
@@ -3966,7 +3982,10 @@
         "how_title": "Jak używa się tokenu",
         "how_step1": "Utwórz token i przekaż go osobie instalującej klienta albo wpisz go do skryptu instalacyjnego.",
         "how_step2": "Urządzenie wysyła token przy pierwszym połączeniu i dołącza bez czekania na zatwierdzenie.",
-        "how_step3": "Unieważnij token, aby nowe urządzenia nie mogły z nim dołączyć. Urządzenia, które już dołączyły, działają dalej."
+        "how_step3": "Unieważnij token, aby nowe urządzenia nie mogły z nim dołączyć. Urządzenia, które już dołączyły, działają dalej.",
+        "mode_notice_open": "Tryb rejestracji to Otwarty, więc nowe urządzenia dołączają bez tokenu. Tokeny działają dopiero w trybie Zarządzany lub Zablokowany.",
+        "mode_notice_locked": "Tryb rejestracji to Zablokowany: nowe urządzenie może dołączyć tylko z tokenem z tej listy.",
+        "created_next": "Przekaż go osobie, która konfiguruje urządzenie, razem z wartościami połączenia z {page}."
     },
     "help_request": {
         "title": "Prośby o pomoc",
@@ -6837,7 +6856,9 @@
         "sync_no_permission": "Do importu potrzebne jest uprawnienie do zarządzania rejestracją. Poproś administratora.",
         "portal_hint": "Publiczna strona, z której użytkownicy pobierają agenta. Przekaż im jej adres.",
         "branding_title": "Nazwa, logo i kolory",
-        "side_label": "Pliki do pobrania i branding"
+        "side_label": "Pliki do pobrania i branding",
+        "portal_address": "adres strony pobierania",
+        "portal_open_hint": "Pokazuje stronę tak, jak widzą ją użytkownicy."
     },
 
     "pairing": {

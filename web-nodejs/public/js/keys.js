@@ -2,8 +2,9 @@
  * BetterDesk Console - Client setup page (/keys)
  *
  * Shows the values a RustDesk client needs (ID server, relay, API server,
- * public key), the same values as a QR code for the phone app, and the key
- * file download.
+ * public key, and all of them as one config string), the same values as a
+ * QR code for the phone app, what happens next under the current enrollment
+ * mode, and the key file download.
  */
 
 (function() {
@@ -42,6 +43,56 @@
         loadPublicKey();
         loadQRCode();
         loadServerInfo();
+        loadConfigString();
+        loadEnrollmentMode();
+    }
+
+    /**
+     * The config string: every value in one line, for RustDesk's "Import server
+     * config" and for install scripts (rustdesk --config). Same source as the overview.
+     */
+    async function loadConfigString() {
+        const el = document.getElementById('config-string');
+        if (!el) return;
+        let value = '';
+        try {
+            const data = await Utils.api(`/api/dashboard/client-config${clientHostQuery()}`);
+            value = (data && data.deploy_config_string || '').trim();
+        } catch {
+            value = '';
+        }
+        el.textContent = value || _('keys.config_string_missing');
+        el.title = value;
+        el.classList.toggle('is-empty', !value);
+        const button = document.querySelector('[data-copy-target="config-string"]');
+        if (button) button.disabled = !value;
+    }
+
+    /**
+     * "After the client is set up": one sentence for the current enrollment
+     * mode, and only the links that matter in that mode. Without permission
+     * to read the mode, the general sentence and every allowed link stay.
+     */
+    async function loadEnrollmentMode() {
+        const note = document.getElementById('keys-next-mode');
+        const page = document.querySelector('.keys-page');
+        if (!note || !page || page.dataset.canManageEnrollment !== 'true') return;
+        let mode = '';
+        try {
+            const data = await Utils.api('/api/panel/enrollment/mode');
+            mode = data && data.mode;
+        } catch {
+            mode = '';
+        }
+        if (!['open', 'managed', 'locked'].includes(mode)) return;
+        note.dataset.mode = mode;
+        note.replaceChildren();
+        const strong = document.createElement('strong');
+        strong.textContent = _('keys.next_mode', { mode: _('tokens.mode_' + mode) });
+        note.append(strong, ' ', _('keys.next_' + mode));
+        document.querySelectorAll('.keys-next [data-next-modes]').forEach((row) => {
+            row.hidden = !row.dataset.nextModes.split(' ').includes(mode);
+        });
     }
 
     function getStoredClientHost() {
@@ -242,7 +293,7 @@
     async function copyField(button) {
         const id = button.dataset.copyTarget;
         const el = id && document.getElementById(id);
-        const value = el ? el.textContent.trim() : '';
+        const value = el ? (el.classList.contains('is-empty') ? '' : el.textContent.trim()) : '';
         if (!value || value === '-' || value === '…') {
             Notifications.warning(_('keys.nothing_to_copy'));
             return;

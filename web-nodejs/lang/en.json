@@ -539,7 +539,7 @@
         "server_info": "Server Information",
         "download": "Download key file",
         "show_qr": "Show QR",
-        "qr_hint": "Scan it with the RustDesk app on Android or iOS to fill in the values above. From app version 1.4.9 on, this needs the option allow-deep-link-server-settings; without it, use the deploy string from the overview.",
+        "qr_hint": "Scan it with the RustDesk app on Android or iOS to fill in the values. From app version 1.4.9 on, the app needs the option allow-deep-link-server-settings; without it, copy the config string instead.",
         "qr_unreachable_host": "This QR code contains localhost or a .local address, which phones usually can't reach. Set the server's network address first.",
         "no_key": "No public key found",
         "no_key_to_copy": "No key to copy",
@@ -561,8 +561,24 @@
         "copied": "Copied",
         "copy_failed": "Could not copy. Select the value and copy it by hand.",
         "nothing_to_copy": "There is no value to copy yet.",
-        "side_label": "Phone setup and downloads",
-        "files_title": "Downloads"
+        "side_label": "Phone setup, next steps and downloads",
+        "files_title": "Downloads",
+        "config_string": "Config string",
+        "config_string_hint": "All four values in one line. Copy it, then choose Import server config in the RustDesk network settings. Install scripts pass it to rustdesk --config.",
+        "config_string_missing": "Available once the server key has loaded.",
+        "scripts_title": "For scripts",
+        "next_title": "After the client is set up",
+        "next_mode": "Enrollment mode: {mode}.",
+        "next_open": "A new device joins as soon as it connects and shows up in the device list.",
+        "next_managed": "A new device waits under Enrollment requests until someone approves it, unless it has a device token.",
+        "next_locked": "A new device can only join with a device token. Without one, the server turns it away.",
+        "next_unknown": "Depending on the enrollment mode, a new device joins right away, waits for approval, or needs a device token.",
+        "next_requests_sub": "Approve devices that are waiting to join.",
+        "next_tokens_sub": "Create tokens and change the enrollment mode.",
+        "next_pairing_sub": "For the BetterDesk client: a server address and a short code instead of these values.",
+        "next_devices_sub": "Check that the new device is there.",
+        "portal_title": "Support agent download page",
+        "portal_sub": "For people you support. Share the address with them."
     },
     "settings": {
         "title": "Settings",
@@ -4027,7 +4043,10 @@
         "how_title": "How a token is used",
         "how_step1": "Create a token and give it to whoever installs the client, or put it in the install script.",
         "how_step2": "The device sends the token when it first connects and joins without waiting for approval.",
-        "how_step3": "Revoke a token to stop new devices from joining with it. Devices that already joined keep working."
+        "how_step3": "Revoke a token to stop new devices from joining with it. Devices that already joined keep working.",
+        "mode_notice_open": "The enrollment mode is Open, so new devices join without a token. Tokens only count once the mode is Managed or Locked.",
+        "mode_notice_locked": "The enrollment mode is Locked: a new device can only join with a token from this list.",
+        "created_next": "Give it to whoever sets up the device, together with the connection values from {page}."
     },
     "help_request": {
         "title": "Help Requests",
@@ -6837,7 +6856,9 @@
         "sync_no_permission": "Importing needs the permission to manage enrollment. Ask an administrator.",
         "portal_hint": "The public page where your users download the agent. Share its address with them.",
         "branding_title": "Name, logo and colors",
-        "side_label": "Downloads and branding"
+        "side_label": "Downloads and branding",
+        "portal_address": "download page address",
+        "portal_open_hint": "Shows the page as your users see it."
     },
 
     "pairing": {

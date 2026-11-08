@@ -531,7 +531,7 @@
         "server_info": "服务器信息",
         "download": "下载密钥文件",
         "show_qr": "显示二维码",
-        "qr_hint": "用 Android 或 iOS 上的 RustDesk App 扫描，即可填入上方的值。从 App 1.4.9 版起，需要启用 allow-deep-link-server-settings 选项；没有此选项时，请使用仪表板上的部署字符串。",
+        "qr_hint": "用 Android 或 iOS 上的 RustDesk App 扫描即可填入各值。从 App 1.4.9 版起，App 需要 allow-deep-link-server-settings 选项；没有此选项时，请改为复制配置字符串。",
         "no_key": "未找到公钥",
         "no_key_to_copy": "没有可复制的密钥",
         "no_qr": "二维码不可用",
@@ -553,8 +553,24 @@
         "copied": "已复制",
         "copy_failed": "复制失败。请选中该值后手动复制。",
         "nothing_to_copy": "还没有可复制的值。",
-        "side_label": "手机设置和下载",
-        "files_title": "下载"
+        "side_label": "手机设置、后续步骤和下载",
+        "files_title": "下载",
+        "config_string": "配置字符串",
+        "config_string_hint": "四个值合成一行。复制后，在 RustDesk 的网络设置中选择 Import server config。安装脚本会把它传给 rustdesk --config。",
+        "config_string_missing": "服务器密钥加载后即可使用。",
+        "scripts_title": "供脚本使用",
+        "next_title": "客户端设置完成后",
+        "next_mode": "注册模式：{mode}。",
+        "next_open": "新设备一连接就会加入，并出现在设备列表中。",
+        "next_managed": "新设备会在注册申请中等待，直到有人批准，除非它有设备令牌。",
+        "next_locked": "新设备只能用设备令牌加入。没有令牌时，服务器会拒绝它。",
+        "next_unknown": "根据注册模式，新设备会立即加入、等待批准，或需要设备令牌。",
+        "next_requests_sub": "批准等待加入的设备。",
+        "next_tokens_sub": "创建令牌并更改注册模式。",
+        "next_pairing_sub": "适用于 BetterDesk 客户端：用服务器地址和简短代码代替这些值。",
+        "next_devices_sub": "确认新设备已出现在列表中。",
+        "portal_title": "支持代理下载页面",
+        "portal_sub": "供您支持的人使用。把网址分享给他们。"
     },
     "settings": {
         "title": "设置",
@@ -3948,7 +3964,10 @@
         "how_title": "令牌的使用方式",
         "how_step1": "创建令牌并交给安装客户端的人，或放入安装脚本。",
         "how_step2": "设备首次连接时发送令牌，无需等待批准即可加入。",
-        "how_step3": "撤销令牌后，新设备将无法再用它加入。已加入的设备照常工作。"
+        "how_step3": "撤销令牌后，新设备将无法再用它加入。已加入的设备照常工作。",
+        "mode_notice_open": "注册模式为开放，新设备无需令牌即可加入。只有模式为托管或锁定时，令牌才起作用。",
+        "mode_notice_locked": "注册模式为锁定：新设备只能用此列表中的令牌加入。",
+        "created_next": "连同 {page} 中的连接值一起交给设置设备的人。"
     },
     "help_request": {
         "title": "帮助请求",
@@ -6746,13 +6765,13 @@
         "subtitle": "White-label for BetterDesk desktop clients and a compatible subset for RustDesk.",
         "form_title": "Client Branding profile",
         "hint": "BetterDesk 客户端和支持代理会使用此页面上的所有内容。普通 RustDesk 客户端只会收到公司名称。",
-        "company_name": "Company name",
-        "support_contact": "Support contact",
-        "phone": "Phone",
-        "email": "Email",
-        "website": "Website",
+        "company_name": "公司名称",
+        "support_contact": "支持联系人",
+        "phone": "电话",
+        "email": "电子邮件",
+        "website": "网站",
         "accent_color": "强调色",
-        "logo": "Logo",
+        "logo": "标志",
         "logo_hint": "PNG、JPEG 或 WebP，最大 512 KiB。",
         "clear_logo": "移除徽标",
         "preview_betterdesk": "BetterDesk preview",
@@ -6837,7 +6856,9 @@
         "sync_no_permission": "导入需要管理注册的权限。请联系管理员。",
         "portal_hint": "用户下载代理的公开页面。请把这个地址发给他们。",
         "branding_title": "名称、徽标和颜色",
-        "side_label": "下载和品牌"
+        "side_label": "下载和品牌",
+        "portal_address": "下载页面网址",
+        "portal_open_hint": "以用户看到的样子显示此页面。"
     },
 
     "pairing": {
