@@ -95,7 +95,7 @@ const SECTIONS = [
             { page: 'server-management:overview', href: '/server-management?tab=overview', label: 'nav.server_status', when: perm('server.config'), group: 'nav.group_server' },
             { page: 'server-management:terminal', href: '/server-management?tab=terminal', label: 'server_mgmt.tab_terminal', when: perm('server.config'), group: 'nav.group_server' },
             { page: 'server-management:files', href: '/server-management?tab=files', label: 'server_mgmt.tab_files', when: perm('server.config'), group: 'nav.group_server' },
-            { page: 'server-management:services', href: '/server-management?tab=services', label: 'server_mgmt.tab_services', when: perm('server.config'), beta: true, group: 'nav.group_server' },
+            { page: 'server-management:services', href: '/server-management?tab=services', label: 'server_mgmt.tab_services', when: perm('server.config'), group: 'nav.group_server' },
             { page: 'scaling', href: '/scaling', label: 'nav.scaling', when: perm('server.config'), group: 'nav.group_server' },
             { page: 'server-attestation', href: '/server-attestation', label: 'nav.server_attestation', when: perm('server.attestation'), group: 'nav.group_server' },
             { page: 'commercialization:packages', href: '/commercialization?tab=packages', label: 'commercialization.tabs.packages', when: perm('billing.view'), group: 'nav.group_billing' },
