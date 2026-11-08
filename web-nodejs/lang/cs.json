@@ -7172,5 +7172,9 @@
         "group_pages": "Stránky",
         "group_devices": "Zařízení",
         "group_people": "Lidé"
+    },
+    "user_menu": {
+        "label": "Účet",
+        "sign_out": "Odhlásit se"
     }
 }

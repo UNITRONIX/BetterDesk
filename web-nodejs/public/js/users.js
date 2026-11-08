@@ -296,8 +296,8 @@
     function orgsHtml(userId) {
         const orgs = userOrgsCache.get(Number(userId));
         if (!orgs) return '<span class="text-muted">…</span>';
-        if (orgs === 'error') return `<span class="text-muted">${esc(_('users.orgs_unknown'))}</span>`;
-        if (!orgs.length) return `<span class="text-muted">${esc(_('users.orgs_none'))}</span>`;
+        if (orgs === 'error') return Utils.emptyHtml(_('users.orgs_unknown'));
+        if (!orgs.length) return Utils.emptyHtml(_('users.orgs_none'));
         return orgs.map(o => esc(o.org_name)).join(', ');
     }
 
@@ -323,7 +323,6 @@
             const groupNames = (Array.isArray(user.user_groups) ? user.user_groups : [])
                 .map(guid => (userGroups.find(g => g.guid === guid) || {}).name || guid);
             const subs = [];
-            if (!isLocal) subs.push(_('users.provider_account', { provider: providerLabel(provider) }));
             if (groupNames.length) subs.push(_('users.groups_line', { groups: groupNames.join(', ') }));
             if (isSelf) subs.push(_('users.this_is_you'));
 
@@ -363,19 +362,15 @@
             return `
             <tr data-id="${id}" data-username="${esc(String(user.username || '').toLowerCase())}">
                 <td>
-                    <span class="user-name">${esc(user.username)}</span>
+                    ${Utils.userHtml(user, { avatar: true })}
                     ${subs.length ? `<span class="cell-sub">${esc(subs.join(' · '))}</span>` : ''}
                 </td>
-                <td>${user.email ? esc(user.email) : `<span class="text-muted">${esc(_('users.no_email'))}</span>`}</td>
-                <td class="user-role">${esc(roleLabel(user.role))}</td>
+                <td>${user.email ? esc(user.email) : Utils.emptyHtml()}</td>
+                <td class="user-role"><span class="tag-set">${Utils.tagHtml(roleLabel(user.role))}${isLocal ? '' : Utils.tagHtml(providerLabel(provider), { title: _('users.provider_account', { provider: providerLabel(provider) }) })}</span></td>
                 <td class="user-scope-cell${scope.muted ? ' text-muted' : ''}" data-user-id="${id}">${esc(scope.text)}</td>
                 <td class="user-orgs-cell" data-user-id="${id}">${orgsHtml(user.id)}</td>
-                <td class="user-date">${lastLogin
-                    ? `<time datetime="${esc(lastLogin.toISOString())}" title="${esc(Utils.formatDate(lastLogin))}">${esc(Utils.formatRelativeTime(lastLogin))}</time>`
-                    : `<span class="text-muted">${esc(_('users.never'))}</span>`}</td>
-                <td class="user-date">${created
-                    ? `<time datetime="${esc(created.toISOString())}" title="${esc(Utils.formatDate(created))}">${esc(Utils.formatDate(created, { hour: undefined, minute: undefined }))}</time>`
-                    : '<span class="text-muted">-</span>'}</td>
+                <td class="user-date">${Utils.timeHtml(lastLogin, { empty: _('users.never') })}</td>
+                <td class="user-date">${Utils.timeHtml(created, { relative: false, format: { hour: undefined, minute: undefined } })}</td>
                 <td class="actions">${actions}</td>
             </tr>`;
         }).join('');
@@ -538,8 +533,8 @@
         if (editing) {
             accountHtml = `
                 <dl class="facts user-facts">
-                    <dt>${esc(_('users.username'))}</dt><dd>${esc(user.username)}</dd>
-                    <dt>${esc(_('users.sign_in_with'))}</dt><dd>${esc(isLocal ? _('users.provider_local_account') : providerLabel(provider))}</dd>
+                    <dt>${esc(_('users.username'))}</dt><dd>${Utils.userHtml(user, { avatar: true })}</dd>
+                    <dt>${esc(_('users.sign_in_with'))}</dt><dd>${Utils.tagHtml(isLocal ? _('users.provider_local_account') : providerLabel(provider))}</dd>
                 </dl>
                 ${isLocal ? passwordFieldHtml('user-password', _('users.new_password'), _('users.password_leave_empty'))
                     : `<p class="form-hint user-provider-note">${esc(_('users.provider_managed_hint'))}</p>`}`;
@@ -778,7 +773,7 @@
                     <li class="list-row">
                         <span class="row-main">
                             <span class="row-title">${esc(org.org_name)}</span>
-                            ${org.role ? `<span class="row-sub">${esc(_('users.org_role_line', { role: orgRoleLabel(org.role) }))}</span>` : ''}
+                            ${org.role ? `<span class="row-sub"><span class="sr-only">${esc(_('organizations.org_role'))}: </span>${Utils.tagHtml(orgRoleLabel(org.role))}</span>` : ''}
                         </span>
                         ${canManageOrgs ? `<span class="row-end"><button type="button" class="btn btn-sm btn-danger-quiet" data-remove-org="${esc(org.id)}">${esc(_('actions.remove'))}<span class="sr-only"> ${esc(org.org_name)}</span></button></span>` : ''}
                     </li>`).join('')

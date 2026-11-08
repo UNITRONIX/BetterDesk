@@ -126,23 +126,7 @@
             </div>
         </div>
 
-        <div class="lang-selector">
-            <button type="button" class="ux35-topbar-btn ux35-user-btn" id="user-btn" title="<%= user ? user.username : '' %>"
-                    aria-label="<%= user ? user.username : '' %>" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons" aria-hidden="true">account_circle</span>
-            </button>
-            <div class="lang-dropdown menu" id="user-dropdown">
-                <div class="menu-label"><%= user ? user.username : '' %></div>
-                <div class="lang-option menu-item" id="change-password-btn" role="button" tabindex="0">
-                    <span><%= _('auth.change_password') %></span>
-                </div>
-                <a class="menu-item" id="account-2fa-link" href="/settings?tab=auth"><%= _('nav.account_2fa') %></a>
-                <div class="menu-divider"></div>
-                <div class="lang-option menu-item" id="logout-btn" role="button" tabindex="0">
-                    <span><%= _('auth.logout') %></span>
-                </div>
-            </div>
-        </div>
+        <% if (user) { %><%- include('user-menu', { place: 'topbar' }) %><% } %>
         </div>
         <button type="button" class="ux35-topbar-btn ux35-topbar-actions-menu-btn" id="ux35-actions-menu-btn"
                 aria-label="<%= _('mobile_nav.more') %>"

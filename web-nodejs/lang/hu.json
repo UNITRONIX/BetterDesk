@@ -7178,5 +7178,9 @@
         "group_pages": "Oldalak",
         "group_devices": "Eszközök",
         "group_people": "Személyek"
+    },
+    "user_menu": {
+        "label": "Fiók",
+        "sign_out": "Kijelentkezés"
     }
 }

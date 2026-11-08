@@ -7172,5 +7172,9 @@
         "group_pages": "Pagina's",
         "group_devices": "Apparaten",
         "group_people": "Mensen"
+    },
+    "user_menu": {
+        "label": "Account",
+        "sign_out": "Afmelden"
     }
 }

@@ -28,6 +28,11 @@
     return Number.isNaN(d.getTime()) ? null : d;
   }
 
+  // Exact time with seconds (order matters in a log); the helper adds the tooltip and <time>
+  function timeCell(t, options = {}) {
+    return Utils.timeHtml(toDate(t), { relative: false, format: { second: '2-digit' }, ...options });
+  }
+
   function formatTime(t) {
     const d = toDate(t);
     if (!d) return '—';
@@ -129,7 +134,8 @@
     tbody.innerHTML = stateRow(6, _('security_audit.loading'));
     document.getElementById('audit-count').textContent = '';
     try {
-      const json = await getJson('/api/settings/audit?limit=2000');
+      // Who has a profile picture, for the avatars in the "who" column
+      const [json] = await Promise.all([getJson('/api/settings/audit?limit=2000'), Utils.loadAvatars()]);
       const list = Array.isArray(json) ? json : (json.data || []);
       auditRows = list.map((r) => {
         const action = String(r.action || '');
@@ -138,6 +144,7 @@
         return {
           time: r.created_at,
           who: r.username || (r.user_id ? '#' + r.user_id : ''),
+          userId: r.user_id || null,
           action,
           label: actionLabel(action),
           device: m ? m[1] : '',
@@ -181,12 +188,12 @@
     } else {
       tbody.innerHTML = rows.slice(auditPage * PAGE_SIZE, (auditPage + 1) * PAGE_SIZE).map((r) => `
         <tr>
-          <td class="secaudit-time">${esc(formatTime(r.time))}</td>
-          <td>${esc(r.who || '—')}</td>
-          <td>${esc(r.label)}</td>
-          <td>${r.device ? `<span class="mono">${esc(r.device)}</span>` : '—'}</td>
+          <td class="secaudit-time">${timeCell(r.time)}</td>
+          <td>${Utils.userHtml(r.userId ? { id: r.userId, username: r.who } : r.who, { avatar: true })}</td>
+          <td>${Utils.tagHtml(r.label)}</td>
+          <td>${Utils.valueHtml(r.device)}</td>
           <td class="secaudit-details">${detailsHtml(r.details)}</td>
-          <td><span class="mono">${esc(r.ip || '—')}</span></td>
+          <td>${Utils.valueHtml(r.ip)}</td>
         </tr>`).join('');
     }
     renderPager(document.getElementById('audit-pagination'), auditPage, pageCount, (p) => { auditPage = p; renderAudit(); });
@@ -220,10 +227,10 @@
         tbody.innerHTML = stateRow(5, eventsPage > 0 ? _('security_audit.no_more_events') : _('security_audit.no_events'));
       } else {
         tbody.innerHTML = events.map((ev) => `<tr>
-            <td class="secaudit-time">${esc(formatTime(ev.timestamp || ev.created_at))}</td>
-            <td>${esc(actionLabel(ev.action))}</td>
-            <td>${esc(ev.actor || ev.user || '—')}</td>
-            <td>${esc(ev.target || ev.resource || '—')}</td>
+            <td class="secaudit-time">${timeCell(ev.timestamp || ev.created_at)}</td>
+            <td>${Utils.tagHtml(actionLabel(ev.action))}</td>
+            <td>${Utils.userHtml(ev.actor || ev.user)}</td>
+            <td>${Utils.valueHtml(ev.target || ev.resource)}</td>
             <td class="secaudit-details">${detailsHtml(formatDetails(ev.details || ev.detail))}</td>
           </tr>`).join('');
       }
@@ -273,24 +280,24 @@
         const fix = ok ? '' : (_(fixKey) !== fixKey ? _(fixKey) : '');
         return `<tr>
           <td>${esc(name)}</td>
-          <td><span class="status ${ok ? 'ok' : 'error'}">${esc(ok ? _('security_audit.passed') : _('security_audit.failed'))}</span></td>
-          <td class="secaudit-todo">${ok ? '<span class="text-muted">—</span>' : esc(fix)}</td>
+          <td>${Utils.statusHtml(ok ? 'good' : 'danger', ok ? _('security_audit.passed') : _('security_audit.failed'))}</td>
+          <td class="secaudit-todo">${ok ? Utils.emptyHtml() : esc(fix)}</td>
         </tr>`;
       }).join('');
 
       const stats = d.stats || {};
-      const num = (v) => (v === undefined || v === null ? '—' : esc(v));
+      const num = (v) => (v === undefined || v === null ? Utils.emptyHtml() : esc(Utils.formatNumber(v)));
       document.getElementById('overview-stats').innerHTML = `
         <dt>${esc(_('security_audit.stat_failed_logins'))}</dt><dd>${num(stats.failed_logins)}</dd>
         <dt>${esc(_('security_audit.stat_blocked'))}</dt><dd>${num(stats.bans ?? stats.active_bans)}</dd>
-        <dt>${esc(_('security_audit.stat_api_keys'))}</dt><dd>${stats.api_keys === undefined ? '—'
+        <dt>${esc(_('security_audit.stat_api_keys'))}</dt><dd>${stats.api_keys === undefined ? Utils.emptyHtml()
           : esc(_('security_audit.stat_api_keys_value', { total: stats.api_keys, old: stats.old_keys ?? 0 }))}</dd>
         <dt>${esc(_('security_audit.stat_config_changes'))}</dt><dd>${num(stats.config_changes)}</dd>`;
 
       const tls = d.tls || {};
       const tlsValue = (v) => (typeof v !== 'boolean'
-        ? `<span class="text-muted">${esc(_('security_audit.tls_unknown'))}</span>`
-        : esc(v ? _('security_audit.enabled') : _('security_audit.disabled')));
+        ? Utils.statusHtml('neutral', _('security_audit.tls_unknown'))
+        : Utils.booleanHtml(v, { on: _('security_audit.enabled'), off: _('security_audit.disabled') }));
       document.getElementById('tls-grid').innerHTML = [
         [_('security_audit.tls_signal'), tls.signal],
         [_('security_audit.tls_relay'), tls.relay],
@@ -428,9 +435,9 @@
           <span class="row-main">
             <span class="row-title">${esc(h.name)}</span>
             <span class="row-sub">${esc(h.description || '')}</span>
-            <span class="row-sub">${esc(_('security_audit.hardening_meta', { severity: sevLabel, category: h.category || '—' }))}</span>
+            <span class="row-sub secaudit-meta"><span class="sr-only">${esc(_('security_audit.hardening_meta', { severity: sevLabel, category: h.category || '—' }))}</span><span class="secaudit-meta-marks" aria-hidden="true">${Utils.statusHtml(sev, sevLabel.charAt(0).toUpperCase() + sevLabel.slice(1))}${h.category ? Utils.tagHtml(h.category) : ''}</span></span>
           </span>
-          <span class="row-end"><span class="status ${h.implemented ? 'ok' : 'pending'}">${esc(h.implemented ? _('security_audit.done') : _('security_audit.not_done'))}</span></span>
+          <span class="row-end">${Utils.statusHtml(h.implemented ? 'good' : 'waiting', h.implemented ? _('security_audit.done') : _('security_audit.not_done'))}</span>
         </li>`;
       }).join('');
     } catch (e) {
@@ -467,7 +474,7 @@
         const sevKey = 'security_audit.severity_' + sev;
         return `<li class="list-row"><span class="row-main"><span class="row-title">${esc(v.package || v.name)}</span>
           <span class="row-sub">${esc(v.title || v.description || '')}</span></span>
-          <span class="row-end">${esc(_(sevKey) !== sevKey ? _(sevKey) : sev)}</span></li>`;
+          <span class="row-end">${Utils.statusHtml(sev, _(sevKey) !== sevKey ? _(sevKey) : sev)}</span></li>`;
       }).join('')}</ul>`;
     } catch (e) {
       list.innerHTML = `<p class="state is-error">${esc(_('security_audit.vuln_load_failed'))} <button type="button" class="btn btn-sm" id="vuln-retry">${esc(_('security_audit.try_again'))}</button></p>`;
@@ -497,18 +504,18 @@
       tbody.innerHTML = sessions.map((s) => {
         const status = s.current ? 'current' : (s.active ? 'active' : 'ended');
         const label = _('security_audit.session_' + status);
-        let reason = '—';
+        let reason = Utils.emptyHtml();
         if (s.endReason) {
           const key = 'security_audit.reason_' + s.endReason;
-          reason = _(key) !== key ? _(key) : s.endReason;
+          reason = esc(_(key) !== key ? _(key) : s.endReason);
         }
         return `<tr>
-          <td><span class="status ${status === 'ended' ? 'offline' : 'online'}">${esc(label)}</span></td>
-          <td><span class="mono">${esc(s.ipAddress || '—')}</span></td>
-          <td class="secaudit-time">${esc(formatTime(s.createdAt))}</td>
-          <td class="secaudit-time">${esc(formatTime(s.lastActivityAt))}</td>
-          <td class="secaudit-time">${esc(formatTime(s.endedAt))}</td>
-          <td>${esc(reason)}</td>
+          <td>${Utils.statusHtml(status === 'ended' ? 'neutral' : 'good', label)}</td>
+          <td>${Utils.valueHtml(s.ipAddress)}</td>
+          <td class="secaudit-time">${timeCell(s.createdAt)}</td>
+          <td class="secaudit-time">${Utils.timeHtml(toDate(s.lastActivityAt))}</td>
+          <td class="secaudit-time">${timeCell(s.endedAt)}</td>
+          <td>${reason}</td>
           <td class="secaudit-ua">${uaHtml(s.userAgent)}</td>
         </tr>`;
       }).join('');
@@ -540,7 +547,7 @@
   }
 
   function uaHtml(ua) {
-    if (!ua) return '—';
+    if (!ua) return Utils.emptyHtml();
     const name = describeUa(ua);
     if (!name) return `<span class="cell-sub" title="${esc(ua)}">${esc(ua)}</span>`;
     return `<span>${esc(name)}</span><span class="cell-sub" title="${esc(ua)}">${esc(ua)}</span>`;
@@ -555,7 +562,7 @@
   // Long details are cut after two lines; "Show all" opens the rest in place
   const DETAILS_CLAMP = 140;
   function detailsHtml(text) {
-    if (!text) return '—';
+    if (!text) return Utils.emptyHtml();
     if (String(text).length <= DETAILS_CLAMP) return esc(text);
     return `<span class="secaudit-details-text is-clamped">${esc(text)}</span>`
       + `<button type="button" class="btn-link secaudit-details-toggle" aria-expanded="false">${esc(tr('security_audit.details_more', 'Show all'))}</button>`;

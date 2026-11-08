@@ -104,10 +104,7 @@
     </script>
 
     <div class="ux35-sidebar-footer">
-        <div class="ux35-sidebar-user" id="user-menu-trigger">
-            <span class="ux35-sidebar-user-name"><%= user ? user.username : '' %></span>
-            <span class="ux35-sidebar-user-role"><%= _roleLabel %></span>
-        </div>
+        <% if (user) { %><%- include('user-menu', { place: 'sidebar' }) %><% } %>
         <% if ((branding && branding.footerText) || (branding && branding.showPoweredBy !== 'false')) { %>
         <div class="ux35-sidebar-attribution">
             <% if (branding.footerText) { %><span><%= branding.footerText %></span><% } %>

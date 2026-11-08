@@ -7172,5 +7172,9 @@
         "group_pages": "Strony",
         "group_devices": "Urządzenia",
         "group_people": "Osoby"
+    },
+    "user_menu": {
+        "label": "Konto",
+        "sign_out": "Wyloguj się"
     }
 }

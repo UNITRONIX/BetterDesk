@@ -7178,5 +7178,9 @@
         "group_pages": "Сторінки",
         "group_devices": "Пристрої",
         "group_people": "Люди"
+    },
+    "user_menu": {
+        "label": "Обліковий запис",
+        "sign_out": "Вийти"
     }
 }

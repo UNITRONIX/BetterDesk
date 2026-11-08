@@ -2092,6 +2092,20 @@ time.time {
 .avatar.is-c5 { --avatar-c: var(--avatar-5); }
 .avatar.is-c6 { --avatar-c: var(--avatar-6); }
 
+/* A name without letters or digits gets a person icon instead of initials */
+.avatar > .material-icons {
+    font-size: calc(var(--avatar-size) * 0.72);
+}
+
+/* The signed-in person at the top of the account menu: avatar and name */
+.menu-label.menu-person {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-block: var(--space-2);
+    color: var(--text);
+}
+
 @media (forced-colors: active) {
     .avatar { border: 1px solid CanvasText; }
 }

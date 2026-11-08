@@ -7172,5 +7172,9 @@
         "group_pages": "Pagine",
         "group_devices": "Dispositivi",
         "group_people": "Persone"
+    },
+    "user_menu": {
+        "label": "Account",
+        "sign_out": "Esci"
     }
 }

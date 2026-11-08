@@ -7172,5 +7172,9 @@
         "group_pages": "ページ",
         "group_devices": "デバイス",
         "group_people": "ユーザー"
+    },
+    "user_menu": {
+        "label": "アカウント",
+        "sign_out": "サインアウト"
     }
 }

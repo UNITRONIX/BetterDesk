@@ -7178,5 +7178,9 @@
         "group_pages": "Pagini",
         "group_devices": "Dispozitive",
         "group_people": "Persoane"
+    },
+    "user_menu": {
+        "label": "Cont",
+        "sign_out": "Deconectare"
     }
 }

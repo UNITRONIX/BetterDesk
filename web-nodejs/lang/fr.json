@@ -7176,5 +7176,9 @@
         "group_pages": "Pages",
         "group_devices": "Appareils",
         "group_people": "Personnes"
+    },
+    "user_menu": {
+        "label": "Compte",
+        "sign_out": "Se déconnecter"
     }
 }

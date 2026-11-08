@@ -7178,5 +7178,9 @@
         "group_pages": "Sayfalar",
         "group_devices": "Cihazlar",
         "group_people": "Kişiler"
+    },
+    "user_menu": {
+        "label": "Hesap",
+        "sign_out": "Oturumu kapat"
     }
 }

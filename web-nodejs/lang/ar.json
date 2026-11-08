@@ -7179,5 +7179,9 @@
         "group_pages": "الصفحات",
         "group_devices": "الأجهزة",
         "group_people": "الأشخاص"
+    },
+    "user_menu": {
+        "label": "الحساب",
+        "sign_out": "تسجيل الخروج"
     }
 }

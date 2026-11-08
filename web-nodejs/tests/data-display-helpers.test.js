@@ -57,7 +57,55 @@ describe('data display helpers', () => {
         expect(Utils.avatarColor('Linus Rath')).toBe(Utils.avatarColor(' linus rath '));
         expect(Utils.avatarBoxHtml('Linus Rath')).toMatch(/^<span class="avatar is-c[1-6]" aria-hidden="true">LR<\/span>$/);
         expect(Utils.avatarBoxHtml('Jan', { picture: '/api/users/3/avatar', size: 'md' }))
-            .toBe('<span class="avatar is-md" aria-hidden="true"><img src="/api/users/3/avatar" alt="" loading="lazy"></span>');
+            .toBe(`<span class="avatar is-md" aria-hidden="true" data-initials="JA" data-color="${Utils.avatarColor('Jan')}"><img src="/api/users/3/avatar" alt="" loading="lazy"></span>`);
+    });
+
+    test('initials: letters and digits only, two at most', () => {
+        expect(Utils.initials('demo_ui_admin')).toBe('DU');
+        expect(Utils.initials('linus.rath@x')).toBe('LR');
+        expect(Utils.initials('admin')).toBe('AD');
+        expect(Utils.initials('Jürgen Öz')).toBe('JÖ');
+        expect(Utils.initials('#1 (ops)')).toBe('1O');
+        expect(Utils.initials('"admin"')).toBe('AD');
+        expect(Utils.initials('(•_•)')).toBe('');
+        expect(Utils.initials('')).toBe('');
+        expect(Array.from(Utils.initials('ßtraße')).length).toBeLessThanOrEqual(2);
+    });
+
+    test('a name without letters or digits gets a person icon', () => {
+        const html = Utils.avatarBoxHtml('(•_•)');
+        expect(html).toContain('<span class="material-icons" aria-hidden="true">person</span>');
+        expect(html).not.toContain('•');
+    });
+
+    test('helpers take a user object: display name, picture from has_avatar and avatar_version', () => {
+        const user = { id: 7, username: 'demo_ui_admin', has_avatar: true, avatar_version: 'abc123' };
+        expect(Utils.userHtml(user, { avatar: true })).toBe(
+            '<span class="user"><span class="avatar" aria-hidden="true" data-initials="DU" '
+            + `data-color="${Utils.avatarColor('demo_ui_admin')}"><img src="/api/users/7/avatar?v=abc123" alt="" loading="lazy"></span>`
+            + '<span class="user-name">demo_ui_admin</span></span>');
+        expect(Utils.userHtml({ username: 'jan', first_name: 'Jan', last_name: 'Blume' })).toBe('<span class="user-name">Jan Blume</span>');
+        expect(Utils.userHtml({ username: 'jan', display_name: 'J. B.', first_name: 'Jan' })).toBe('<span class="user-name">J. B.</span>');
+        expect(Utils.userHtml({ username: 'bob', has_avatar: false, avatar_version: null }, { avatar: true }))
+            .toMatch(/^<span class="user"><span class="avatar is-c[1-6]" aria-hidden="true">BO<\/span><span class="user-name">bob<\/span><\/span>$/);
+        expect(Utils.avatarBoxHtml({ username: 'bob' })).not.toContain('[object');
+        expect(Utils.avatarHtml({ id: 2, username: 'op', avatar_version: 'v1' }, { size: 'lg' })).toContain('class="avatar is-lg"');
+        expect(Utils.userHtml({}, { avatar: true })).toContain('value-empty');
+    });
+
+    test('a plain name finds its picture once the avatar directory is loaded', () => {
+        const saved = Utils._avatarDirectory;
+        try {
+            Utils._avatarDirectory = {
+                byId: new Map([['2', { id: 2, username: 'demo_operator', avatar_version: 'v9' }]]),
+                byName: new Map([['demo_operator', { id: 2, username: 'demo_operator', avatar_version: 'v9' }]]),
+            };
+            expect(Utils.userHtml('demo_operator', { avatar: true })).toContain('src="/api/users/2/avatar?v=v9"');
+            expect(Utils.userHtml('someone_else', { avatar: true })).not.toContain('<img');
+            expect(Utils.avatarBoxHtml('demo_operator', { picture: '' })).not.toContain('<img');
+        } finally {
+            Utils._avatarDirectory = saved;
+        }
     });
 
     test('numbers, sizes, durations and percentages in the console language', () => {

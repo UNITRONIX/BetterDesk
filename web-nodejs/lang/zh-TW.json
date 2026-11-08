@@ -7176,5 +7176,9 @@
         "group_pages": "頁面",
         "group_devices": "裝置",
         "group_people": "人員"
+    },
+    "user_menu": {
+        "label": "帳戶",
+        "sign_out": "登出"
     }
 }

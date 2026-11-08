@@ -622,11 +622,30 @@ const Utils = {
         return `<span class="platform">${Utils.getPlatformIconHtml(p)}<span>${Utils.escapeAttr(p)}</span></span>`;
     },
 
-    /** Initials for a name: "Linus Rath" → "LR", "admin" → "A" */
+    /**
+     * Initials for a name, letters and digits only: the first letter of the
+     * first two words ("Linus Rath" → "LR", "demo_ui_admin" → "DU",
+     * "linus.rath@x" → "LR"), or the first two letters of a single word
+     * ("admin" → "AD"). Words split on spaces, dots, dashes, underscores and
+     * @. '' when the name has no letters or digits (the box shows a person
+     * icon then). Mirrored on the server in lib/personAvatar.js.
+     */
     initials(name) {
-        const words = String(name || '').trim().split(/[\s._@-]+/).filter(Boolean);
-        const first = (w) => Array.from(w)[0] || '';
-        return (words.length > 1 ? first(words[0]) + first(words[1]) : first(words[0] || '')).toUpperCase();
+        const words = String(name || '').split(/[\s._@-]+/)
+            .map((w) => Array.from(w).filter((ch) => /[\p{L}\p{N}]/u.test(ch)))
+            .filter((chars) => chars.length);
+        if (!words.length) return '';
+        const picked = words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2).join('');
+        let upper;
+        try { upper = picked.toLocaleUpperCase(Utils._dateLocale()); } catch (e) { upper = picked.toUpperCase(); }
+        return Array.from(upper).slice(0, 2).join('');
+    },
+
+    /** Name to show for a user object: display_name, else first + last name, else username */
+    userDisplayName(user) {
+        if (!user || typeof user !== 'object') return String(user === null || user === undefined ? '' : user).trim();
+        const full = [user.first_name, user.last_name].map((v) => String(v || '').trim()).filter(Boolean).join(' ');
+        return String(user.display_name || '').trim() || full || String(user.username || user.name || '').trim();
     },
 
     /** Avatar colour for a name, 1..6 (.avatar.is-c1..6): the same name always gets the same colour */
@@ -638,27 +657,120 @@ const Utils = {
 
     /**
      * The avatar box (components.css .avatar): the picture when there is one,
-     * otherwise the initials in the name's colour. Decorative: the name is
-     * shown next to it. options.picture: image URL; options.size: 'md' | 'lg'.
+     * otherwise the initials in the name's colour (a person icon when the name
+     * has no letters or digits). Decorative: the name is shown next to it.
+     * nameOrUser: a name, or a user object ({ id, username, display_name,
+     * first_name, last_name, has_avatar, avatar_version }) whose picture is
+     * used. A plain name gets the picture of the console user with that
+     * username once Utils.loadAvatars() has resolved.
+     * options.picture: image URL (wins, '' for none); options.size: 'md' | 'lg'.
      */
-    avatarBoxHtml(name, options = {}) {
+    avatarBoxHtml(nameOrUser, options = {}) {
+        const isUser = !!nameOrUser && typeof nameOrUser === 'object';
+        const name = Utils.userDisplayName(nameOrUser);
+        // A plain name finds its picture in the loadAvatars() directory by username
+        const picture = options.picture !== undefined ? options.picture : Utils.avatarUrl(isUser ? nameOrUser : { username: name });
         const size = options.size === 'md' || options.size === 'lg' ? ` is-${options.size}` : '';
-        if (options.picture) {
-            return `<span class="avatar${size}" aria-hidden="true"><img src="${Utils.escapeAttr(options.picture)}" alt="" loading="lazy"></span>`;
+        const initials = Utils.initials(name);
+        if (picture) {
+            // data-initials/data-color: shown instead when the picture fails to load
+            return `<span class="avatar${size}" aria-hidden="true" data-initials="${Utils.escapeAttr(initials)}" data-color="${Utils.avatarColor(name)}"><img src="${Utils.escapeAttr(picture)}" alt="" loading="lazy"></span>`;
         }
-        return `<span class="avatar${size} is-c${Utils.avatarColor(name)}" aria-hidden="true">${Utils.escapeAttr(Utils.initials(name))}</span>`;
+        return `<span class="avatar${size} is-c${Utils.avatarColor(name)}" aria-hidden="true">${initials ? Utils.escapeAttr(initials) : Utils.icon('user')}</span>`;
+    },
+
+    /**
+     * Who has a profile picture, from GET /api/users/avatars. Pages whose user
+     * data has no has_avatar field (chat, audit log) call this once and render
+     * again when it resolves; avatarUrl then finds people by id or username.
+     */
+    _avatarDirectory: null,
+    _avatarDirectoryPromise: null,
+    loadAvatars() {
+        if (!Utils._avatarDirectoryPromise) {
+            Utils._avatarDirectoryPromise = fetch('/api/users/avatars', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+                .then((r) => (r.ok ? r.json() : null))
+                .then((json) => {
+                    const list = (json && json.data && json.data.users) || [];
+                    Utils._avatarDirectory = {
+                        byId: new Map(list.map((u) => [String(u.id), u])),
+                        byName: new Map(list.map((u) => [String(u.username || '').toLowerCase(), u]))
+                    };
+                    return Utils._avatarDirectory;
+                })
+                .catch(() => null);
+        }
+        return Utils._avatarDirectoryPromise;
+    },
+
+    /**
+     * Picture URL for a console user, or '' for initials. Uses the user's
+     * has_avatar/avatar_version (from /api/users), else the directory from
+     * loadAvatars() by id or username. The version in the URL changes with the
+     * picture, so the browser may cache it.
+     */
+    avatarUrl(user) {
+        if (!user || typeof user !== 'object') return '';
+        let id = user.id;
+        let version = user.has_avatar === false ? '' : user.avatar_version;
+        if (user.has_avatar === undefined && !version && Utils._avatarDirectory) {
+            const hit = (id !== undefined && id !== null && Utils._avatarDirectory.byId.get(String(id)))
+                || Utils._avatarDirectory.byName.get(String(user.username || user.name || '').toLowerCase());
+            if (hit) { id = hit.id; version = hit.avatar_version; }
+        }
+        if (!version || id === undefined || id === null || !/^\d+$/.test(String(id))) return '';
+        return `/api/users/${encodeURIComponent(id)}/avatar?v=${encodeURIComponent(version)}`;
+    },
+
+    /** Avatar box for a user object ({ id, username, has_avatar, avatar_version }); options.size: 'md' | 'lg' */
+    avatarHtml(user, options = {}) {
+        const u = user && typeof user === 'object' ? user : { username: user };
+        return Utils.avatarBoxHtml(u, { size: options.size });
     },
 
     /**
      * A person's name. options.avatar adds the avatar box before it (only where
      * people are the subject of the list); options.picture and options.size go
-     * to the box.
+     * to the box. `name` may be a user object ({ id, username, has_avatar,
+     * avatar_version }): then its picture is used unless options.picture is set.
      */
-    userHtml(name, options = {}) {
-        const n = String(name || '').trim();
+    userHtml(nameOrUser, options = {}) {
+        const n = Utils.userDisplayName(nameOrUser);
         if (!n) return Utils.emptyHtml(options.empty);
         if (!options.avatar) return `<span class="user-name">${Utils.escapeAttr(n)}</span>`;
-        return `<span class="user">${Utils.avatarBoxHtml(n, options)}<span class="user-name">${Utils.escapeAttr(n)}</span></span>`;
+        const box = nameOrUser && typeof nameOrUser === 'object' ? nameOrUser : n;
+        return `<span class="user">${Utils.avatarBoxHtml(box, options)}<span class="user-name">${Utils.escapeAttr(n)}</span></span>`;
+    },
+
+    /**
+     * My status (online, away, busy) of the signed-in person. The account
+     * menu sets it and the chat page sends it to the chat relay; both listen
+     * with onChange, so a change in one shows in the other (also across tabs).
+     * Kept in this browser; it starts as online when nothing is stored.
+     */
+    presence: {
+        KEY: 'bd_my_presence',
+        VALUES: ['online', 'away', 'busy'],
+        get() {
+            try {
+                const v = window.localStorage.getItem(Utils.presence.KEY);
+                return Utils.presence.VALUES.includes(v) ? v : 'online';
+            } catch (e) {
+                return Utils.presence._value || 'online';
+            }
+        },
+        set(status) {
+            if (!Utils.presence.VALUES.includes(status)) return;
+            Utils.presence._value = status;
+            try { window.localStorage.setItem(Utils.presence.KEY, status); } catch (e) { /* kept for this page only */ }
+            window.dispatchEvent(new CustomEvent('bd:presence', { detail: { status } }));
+        },
+        onChange(fn) {
+            window.addEventListener('bd:presence', (event) => fn(event.detail.status));
+            window.addEventListener('storage', (event) => {
+                if (event.key === Utils.presence.KEY && Utils.presence.VALUES.includes(event.newValue)) fn(event.newValue);
+            });
+        }
     },
 
     /**
@@ -688,11 +800,17 @@ const Utils = {
         return Utils.formatNumber(v, { style: 'unit', unit: units[i], unitDisplay: 'short', maximumFractionDigits: i ? 1 : 0 });
     },
 
-    /** Seconds as the two largest units: "2d 3h", "5m 40s" (localised short units) */
-    formatDuration(seconds) {
+    /**
+     * Seconds as the two largest units: "2d 3h", "5m 40s" (localised short units).
+     * options.largest: 'hour' counts in hours, not days ("26h 42m"), for
+     * totals people compare in hours such as app usage.
+     */
+    formatDuration(seconds, options = {}) {
         let s = Math.round(Number(seconds));
         if (seconds === null || seconds === undefined || seconds === '' || !isFinite(s) || s < 0) return '';
-        const parts = [['day', 86400], ['hour', 3600], ['minute', 60], ['second', 1]]
+        const units = [['day', 86400], ['hour', 3600], ['minute', 60], ['second', 1]]
+            .filter(([unit]) => !(options && options.largest === 'hour' && unit === 'day'));
+        const parts = units
             .map(([unit, size]) => { const n = Math.floor(s / size); s -= n * size; return [unit, n]; });
         const start = parts.findIndex(([, n]) => n > 0);
         if (start === -1) return Utils.formatNumber(0, { style: 'unit', unit: 'second', unitDisplay: 'narrow' });
@@ -732,6 +850,24 @@ if (typeof document !== 'undefined') {
             else window.Notifications.error(Utils._t('common.copy_failed', 'Could not copy. Select the text and copy it yourself.'));
         }
     });
+}
+
+// A profile picture that fails to load (removed, network error) turns into the
+// initials in the name's colour (data-initials/data-color from avatarBoxHtml
+// and the top bar). Image errors don't bubble, so listen in the capture phase.
+if (typeof document !== 'undefined') {
+    document.addEventListener('error', (event) => {
+        const img = event.target;
+        if (!img || img.tagName !== 'IMG' || !img.parentElement) return;
+        const box = img.parentElement;
+        if (!box.classList.contains('avatar') || !box.hasAttribute('data-initials')) return;
+        const color = Number(box.getAttribute('data-color')) || 6;
+        const initials = box.getAttribute('data-initials') || '';
+        box.classList.add(`is-c${Math.min(6, Math.max(1, color))}`);
+        if (initials) box.textContent = initials;
+        else box.innerHTML = Utils.icon('user');
+        box.removeAttribute('data-initials');
+    }, true);
 }
 
 // Export for modules or attach to window

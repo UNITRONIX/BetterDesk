@@ -7172,5 +7172,9 @@
         "group_pages": "페이지",
         "group_devices": "장치",
         "group_people": "사람"
+    },
+    "user_menu": {
+        "label": "계정",
+        "sign_out": "로그아웃"
     }
 }

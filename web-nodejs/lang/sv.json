@@ -7178,5 +7178,9 @@
         "group_pages": "Sidor",
         "group_devices": "Enheter",
         "group_people": "Personer"
+    },
+    "user_menu": {
+        "label": "Konto",
+        "sign_out": "Logga ut"
     }
 }

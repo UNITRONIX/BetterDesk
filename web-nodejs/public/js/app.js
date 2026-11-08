@@ -139,37 +139,48 @@
      * User menu
      */
     function initUserMenu() {
-        const changePasswordBtn = document.getElementById('change-password-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        
-        changePasswordBtn?.addEventListener('click', () => {
-            window.location.href = '/settings';
-        });
-        
-        logoutBtn?.addEventListener('click', async () => {
-            const confirmed = await Modal.confirm({
-                title: _('auth.logout'),
-                message: _('auth.logout_confirm'),
-                confirmLabel: _('auth.logout'),
-                danger: true
-            });
-            
-            if (confirmed) {
-                try {
-                    await Utils.api('/api/auth/logout', { method: 'POST' });
-                    window.location.href = '/login';
-                } catch (error) {
-                    Notifications.error(_('errors.logout_failed'));
-                }
-            }
-        });
+        // Account menu (views/partials/user-menu.ejs): the same items in the
+        // sidebar footer and the top bar, so they are found by data attributes.
+        const t = (key, fallback) => { const v = _(key); return v && v !== key ? v : fallback; };
 
-        [changePasswordBtn, logoutBtn].filter(Boolean).forEach(btn => {
-            btn.addEventListener('keydown', (event) => {
-                if (event.key !== 'Enter' && event.key !== ' ') return;
-                event.preventDefault();
-                btn.click();
+        async function signOut() {
+            const label = t('user_menu.sign_out', 'Sign out');
+            const confirmed = await Modal.confirm({
+                title: label,
+                message: _('auth.logout_confirm'),
+                confirmLabel: label
             });
+            if (!confirmed) return;
+            try {
+                await Utils.api('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                Notifications.error(_('errors.logout_failed'));
+            }
+        }
+
+        // My status: shared with the chat page through Utils.presence
+        function showPresence(status) {
+            document.querySelectorAll('[data-presence]').forEach((item) => {
+                const on = item.getAttribute('data-presence') === status;
+                item.setAttribute('aria-checked', on ? 'true' : 'false');
+                const mark = item.querySelector('.material-icons');
+                if (mark) mark.textContent = on ? 'check' : '';
+            });
+        }
+        showPresence(Utils.presence.get());
+        Utils.presence.onChange(showPresence);
+
+        document.addEventListener('click', (event) => {
+            const item = event.target.closest('[data-presence], [data-user-action], #change-password-btn, #logout-btn');
+            if (!item) return;
+            if (item.hasAttribute('data-presence')) {
+                Utils.presence.set(item.getAttribute('data-presence'));
+                return;
+            }
+            const action = item.getAttribute('data-user-action') || (item.id === 'logout-btn' ? 'logout' : 'change-password');
+            if (action === 'change-password') window.location.href = '/settings';
+            else if (action === 'logout') signOut();
         });
     }
     

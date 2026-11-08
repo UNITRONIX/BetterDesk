@@ -7172,5 +7172,9 @@
         "group_pages": "页面",
         "group_devices": "设备",
         "group_people": "人员"
+    },
+    "user_menu": {
+        "label": "账户",
+        "sign_out": "退出登录"
     }
 }

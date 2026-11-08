@@ -7178,5 +7178,9 @@
         "group_pages": "หน้า",
         "group_devices": "อุปกรณ์",
         "group_people": "บุคคล"
+    },
+    "user_menu": {
+        "label": "บัญชี",
+        "sign_out": "ออกจากระบบ"
     }
 }

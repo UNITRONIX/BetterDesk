@@ -7178,5 +7178,9 @@
         "group_pages": "पेज",
         "group_devices": "डिवाइस",
         "group_people": "लोग"
+    },
+    "user_menu": {
+        "label": "खाता",
+        "sign_out": "साइन आउट करें"
     }
 }

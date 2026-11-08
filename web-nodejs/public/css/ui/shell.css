@@ -637,6 +637,89 @@
     font-size: var(--text-xs);
 }
 
+/* ── Account menu (views/partials/user-menu.ejs) ──
+   In the sidebar footer while the sidebar is docked; below 1100 px the top
+   bar account button opens the same menu. */
+.user-menu-anchor.is-sidebar {
+    display: block;
+}
+
+.user-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: calc(100% + 2 * var(--space-2));
+    min-height: var(--control-h);
+    margin-inline: calc(-1 * var(--space-2));
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.user-menu-btn:hover,
+.user-menu-btn[aria-expanded="true"] {
+    background: var(--hover);
+}
+
+.user-menu-btn-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+}
+
+.user-menu-name {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-menu-role {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-menu-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+.menu-anchor > .user-menu {
+    width: max-content;
+    min-width: 220px;
+    max-width: min(320px, calc(100vw - 2 * var(--space-3)));
+}
+
+.user-menu-person {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: var(--space-1);
+}
+
+.user-menu-anchor.is-topbar {
+    position: relative;
+}
+
+@media (min-width: 1100px) {
+    .user-menu-anchor.is-topbar {
+        display: none;
+    }
+}
+
 .ux35-sidebar-overlay {
     position: fixed;
     inset: 0;

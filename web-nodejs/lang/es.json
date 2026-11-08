@@ -7172,5 +7172,9 @@
         "group_pages": "Páginas",
         "group_devices": "Dispositivos",
         "group_people": "Personas"
+    },
+    "user_menu": {
+        "label": "Cuenta",
+        "sign_out": "Cerrar sesión"
     }
 }

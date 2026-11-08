@@ -7178,5 +7178,9 @@
         "group_pages": "Trang",
         "group_devices": "Thiết bị",
         "group_people": "Mọi người"
+    },
+    "user_menu": {
+        "label": "Tài khoản",
+        "sign_out": "Đăng xuất"
     }
 }

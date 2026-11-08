@@ -7178,5 +7178,9 @@
         "group_pages": "Halaman",
         "group_devices": "Perangkat",
         "group_people": "Orang"
+    },
+    "user_menu": {
+        "label": "Akun",
+        "sign_out": "Keluar"
     }
 }

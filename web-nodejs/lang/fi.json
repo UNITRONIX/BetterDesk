@@ -7178,5 +7178,9 @@
         "group_pages": "Sivut",
         "group_devices": "Laitteet",
         "group_people": "Henkilöt"
+    },
+    "user_menu": {
+        "label": "Tili",
+        "sign_out": "Kirjaudu ulos"
     }
 }
