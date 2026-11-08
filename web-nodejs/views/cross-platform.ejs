@@ -54,6 +54,7 @@
     <!-- What the registered devices run -->
     <div class="crossplatform-panel" id="panel-distribution" role="tabpanel" aria-labelledby="tab-distribution" ${tab === 'distribution' ? '' : 'hidden'}>
         <p class="count-line" id="summary-grid" aria-live="polite">${_('cross_platform.loading')}</p>
+        <div class="cols cp-cols">
         <section class="section" aria-labelledby="platform-dist-title" id="platform-dist-card">
             <h2 id="platform-dist-title">${_('cross_platform.platform_breakdown')}</h2>
             <div id="platform-chart"></div>
@@ -67,6 +68,7 @@
             <h2 id="arch-dist-title">${_('cross_platform.arch_breakdown')}</h2>
             <div id="arch-chart"></div>
         </section>
+        </div>
     </div>
 
     <!-- How clients tell the server what they can do -->
@@ -78,6 +80,7 @@
                 <svg id="proto-svg" viewBox="0 0 660 120" role="img" aria-label="${_('cross_platform.diagram_label')}"></svg>
             </div>
         </section>
+        <div class="cols cp-cols">
         <section class="section" aria-labelledby="codec-title">
             <h2 id="codec-title">${_('cross_platform.codec_support')}</h2>
             <div id="codec-bars"></div>
@@ -88,6 +91,7 @@
             <div id="feature-bars"></div>
             <p class="state" id="feature-empty" hidden>${_('cross_platform.no_feature_data')}</p>
         </section>
+        </div>
         <section class="section" aria-labelledby="schema-title">
             <h2 id="schema-title">${_('cross_platform.protobuf_schema')}</h2>
             <p class="section-note">${_('cross_platform.schema_note')}</p>

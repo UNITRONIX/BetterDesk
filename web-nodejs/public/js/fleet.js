@@ -217,7 +217,7 @@
                 <td class="actions">
                     <button type="button" class="btn btn-sm" data-bd-call="Fleet.editResource" data-bd-args="${id}">${esc(_('fleet.edit'))}</button>
                     ${rowMenu(_('fleet.actions_for', { name: r.name || r.id }),
-                        `<button type="button" class="menu-item danger" role="menuitem" data-bd-call="Fleet.deleteResource" data-bd-args="${id}">${esc(_('fleet.delete_ellipsis'))}</button>`)}
+                        `<button type="button" class="menu-item danger" role="menuitem" data-bd-call="Fleet.deleteResource" data-bd-args="${id}">${Utils.icon('delete')}${esc(_('fleet.delete_ellipsis'))}</button>`)}
                 </td>
             </tr>`;
         }).join('');
@@ -418,7 +418,7 @@
                     <button type="button" class="btn btn-sm" data-bd-call="Fleet.showOutput" data-bd-args="${id}">${esc(_('fleet.show_output'))}</button>
                     ${st === 'failed' ? `<button type="button" class="btn btn-sm" data-bd-call="Fleet.retryTask" data-bd-args="${id}">${esc(_('fleet.task_retry'))}</button>` : ''}
                     ${rowMenu(_('fleet.actions_for', { name }),
-                        `<button type="button" class="menu-item danger" role="menuitem" data-bd-call="Fleet.deleteTask" data-bd-args="${id}">${esc(_('fleet.delete_ellipsis'))}</button>`)}
+                        `<button type="button" class="menu-item danger" role="menuitem" data-bd-call="Fleet.deleteTask" data-bd-args="${id}">${Utils.icon('delete')}${esc(_('fleet.delete_ellipsis'))}</button>`)}
                 </td>
             </tr>`;
         }).join('');

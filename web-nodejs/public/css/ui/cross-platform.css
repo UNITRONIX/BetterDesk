@@ -102,6 +102,15 @@ section.crossplatform-panel {
     max-width: var(--measure);
 }
 
+/* Wide screens: the count tables (and codec / feature lists) side by side */
+.cp-cols {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.cp-cols .cp-count-table {
+    max-width: none;
+}
+
 .cp-count-table tbody th {
     position: static;
     background: transparent;
@@ -165,7 +174,6 @@ section.crossplatform-panel {
 
 .cp-dg-msg {
     fill: var(--text-muted);
-    font-family: var(--mono);
     font-size: 11px;
 }
 
@@ -181,9 +189,10 @@ section.crossplatform-panel {
 /* ── Limits per system ── */
 
 .cp-limits {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+    gap: var(--space-6) var(--space-7);
+    align-items: start;
 }
 
 .cp-limit h2 {
