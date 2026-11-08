@@ -28,14 +28,3 @@
     border-radius: var(--radius);
     background: #ffffff;
 }
-
-/* Copy buttons in value fields carry an icon before the label */
-.keys-page .value-field > button {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.keys-page .value-field > button .material-icons {
-    font-size: 18px;
-}

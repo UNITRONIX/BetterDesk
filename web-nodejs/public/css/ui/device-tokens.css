@@ -24,15 +24,3 @@
 .tokens-page #enrollment-mode-status {
     max-width: var(--measure);
 }
-
-
-/* Copy buttons in value fields carry an icon before the label */
-.tokens-created .value-field > button {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.tokens-created .value-field > button .material-icons {
-    font-size: 18px;
-}

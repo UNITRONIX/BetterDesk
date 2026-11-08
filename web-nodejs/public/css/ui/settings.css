@@ -827,22 +827,3 @@
     height: 20px;
     object-fit: contain;
 }
-
-/* Copy buttons next to a value carry an icon */
-.settings-page .value-field > button {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.settings-page .value-field > button .material-icons {
-    font-size: 18px;
-}
-
-/* Touch: a one-line checkbox label is still a 44 px target */
-@media (pointer: coarse) {
-    .settings-page .check-field {
-        min-height: 44px;
-        align-content: center;
-    }
-}

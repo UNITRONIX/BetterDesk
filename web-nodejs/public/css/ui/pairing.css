@@ -41,14 +41,3 @@
 .pairing-meta > dd {
     padding-top: var(--space-1);
 }
-
-/* Copy buttons in value fields carry an icon before the label */
-.pairing-page .value-field > button {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.pairing-page .value-field > button .material-icons {
-    font-size: 18px;
-}

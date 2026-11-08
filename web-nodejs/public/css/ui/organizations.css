@@ -92,13 +92,6 @@
     flex-wrap: wrap;
 }
 
-@media (pointer: coarse) {
-    .org-detail-page .check-field {
-        min-height: 44px;
-        align-content: center;
-    }
-}
-
 /* A count that leads a section head pushes its button to the end */
 .org-detail-page .section-head .count-line {
     margin-inline-end: auto;

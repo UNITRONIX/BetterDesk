@@ -999,6 +999,9 @@ a.list-row:hover,
 }
 
 .value-field > button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     flex-shrink: 0;
     width: auto;
     height: auto;
@@ -1011,6 +1014,11 @@ a.list-row:hover,
     font-size: var(--text-sm);
     font-weight: 600;
     cursor: pointer;
+}
+
+/* The copy button may carry the copy icon before its label */
+.value-field > button .material-icons {
+    font-size: 18px;
 }
 
 .value-field > button:hover {
@@ -1355,6 +1363,15 @@ td.state-cell {
 .check-field .form-hint,
 .check-field .field-effect {
     grid-column: 2;
+}
+
+/* On touch the whole label is the target, at least 44 px high */
+@media (pointer: coarse) {
+    .check-field,
+    .checkbox-row {
+        min-height: 44px;
+        align-content: center;
+    }
 }
 
 /* Save bar: at the end of its form; it sticks to the bottom of the view

@@ -40,14 +40,6 @@
     white-space: nowrap;
 }
 
-/* On touch the whole label is the target */
-@media (pointer: coarse) {
-    .policy-form .check-field {
-        min-height: 44px;
-        align-content: center;
-    }
-}
-
 /* ── Side column: organization summary and contents ── */
 .policy-sections > .page-cols {
     gap: var(--space-6) var(--space-7);
@@ -91,7 +83,6 @@
 .policy-toc.is-side .toc a {
     font-weight: 600;
 }
-
 
 /* Contents links land below the top bar */
 .policy-sections h2[id] {

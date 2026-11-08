@@ -53,11 +53,6 @@
 .perm-status.is-error { color: var(--danger); }
 
 @media (pointer: coarse) {
-    .perm-row .check-field {
-        min-height: 44px;
-        align-content: center;
-    }
-
     .perm-row .btn-revert {
         min-height: 44px;
         padding-inline: var(--space-2);

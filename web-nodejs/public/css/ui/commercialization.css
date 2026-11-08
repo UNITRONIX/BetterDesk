@@ -84,14 +84,6 @@
     min-width: 150px;
 }
 
-/* On touch the whole label is the target */
-@media (pointer: coarse) {
-    .billing-notifications .check-field {
-        min-height: 44px;
-        align-content: center;
-    }
-}
-
 /* Side column of the sessions view: included time per assignment */
 .usage-list .meter {
     margin-top: var(--space-1);
