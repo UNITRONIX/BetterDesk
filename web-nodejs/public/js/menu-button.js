@@ -10,6 +10,7 @@
 
     let openMenu = null;
     let openButton = null;
+    let paddedBox = null;
 
     function items(menu) {
         return Array.from(menu.querySelectorAll('button:not([disabled]), a[href], [role="menuitem"]'));
@@ -18,6 +19,10 @@
     function close(returnFocus) {
         if (!openMenu) return;
         openMenu.classList.remove('open');
+        if (paddedBox) {
+            paddedBox.style.paddingBottom = '';
+            paddedBox = null;
+        }
         if (openButton) {
             openButton.setAttribute('aria-expanded', 'false');
             if (returnFocus) openButton.focus();
@@ -28,8 +33,22 @@
 
     function open(button, menu) {
         close(false);
+        menu.classList.remove('menu-up');
         menu.classList.add('open');
         button.setAttribute('aria-expanded', 'true');
+        // A menu that would be cut off by its scroll box (a short table) or
+        // the window opens upwards instead, when there is room above.
+        const box = menu.closest('.table-scroll, .split-list');
+        const limit = Math.min(window.innerHeight, box ? box.getBoundingClientRect().bottom : Infinity);
+        const rect = menu.getBoundingClientRect();
+        const top = Math.max(0, box ? box.getBoundingClientRect().top : 0);
+        if (rect.bottom > limit && button.getBoundingClientRect().top - rect.height - 4 >= top) {
+            menu.classList.add('menu-up');
+        } else if (box && rect.bottom > limit) {
+            // No room above either (a one-row table): make room below while open
+            box.style.paddingBottom = Math.ceil(rect.bottom - limit + 8) + 'px';
+            paddedBox = box;
+        }
         openMenu = menu;
         openButton = button;
         const first = items(menu)[0];
