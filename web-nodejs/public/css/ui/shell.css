@@ -68,6 +68,32 @@
     color: var(--text);
 }
 
+/* With the sidebar docked, the logo sits in its own section on top of the
+   sidebar: same width and background, so they read as one column, and the
+   breadcrumb starts on the content's edge */
+@media (min-width: 1100px) {
+    .ux35-topbar {
+        padding-inline-start: 0;
+    }
+
+    .ux35-topbar-logo {
+        flex: none;
+        align-self: stretch;
+        box-sizing: border-box;
+        width: var(--ux35-sidebar-width, var(--sidebar-w));
+        margin-inline-end: calc(var(--page-pad) - var(--space-2));
+        padding-inline: var(--space-4);
+        overflow: hidden;
+        border-inline-end: 1px solid var(--rule);
+        background: var(--bg-subtle);
+    }
+
+    .ux35-topbar .ux35-topbar-breadcrumb {
+        padding-inline-start: 0;
+        border-inline-start: 0;
+    }
+}
+
 .ux35-topbar-logo img,
 .ux35-topbar-logo .sidebar-logo-svg svg {
     width: auto;
