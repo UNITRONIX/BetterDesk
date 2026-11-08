@@ -17,6 +17,21 @@
 
     const _ = window._ || (k => k);
 
+    // Translated text with {name} placeholders filled in
+    function fmt(key, vars) {
+        let text = _(key);
+        for (const [k, v] of Object.entries(vars || {})) {
+            text = text.split('{' + k + '}').join(String(v));
+        }
+        return text;
+    }
+
+    function toast(type, message) {
+        if (window.Notifications && typeof window.Notifications[type] === 'function') {
+            window.Notifications[type](message);
+        }
+    }
+
     // ─── Node Registry ──────────────────────────────────────────────
 
     const NODE_DEFS = {
@@ -52,6 +67,15 @@
         'email':         { cat: 'outputs', icon: 'email',         label: 'Email', desc: 'Send email notification', ports: { in: 1, out: 0 }, config: { to: '', subject: '', body: '' } },
         'modbus-write':  { cat: 'outputs', icon: 'edit_note',     label: 'Modbus Write', desc: 'Write Modbus register', ports: { in: 1, out: 0 }, config: { host: '', port: 502, register: 0, value: '0' } }
     };
+
+    // Node names come from the language files (sdk_studio.node_*), English as fallback
+    const NODE_LABEL_KEYS = { 'webhook-listen': 'node_webhook' };
+    function nodeLabel(type) {
+        const def = NODE_DEFS[type] || {};
+        const key = 'sdk_studio.' + (NODE_LABEL_KEYS[type] || 'node_' + type.replace(/-/g, '_'));
+        const v = _(key);
+        return v && v !== key ? v : (def.label || type);
+    }
 
     // ─── State ──────────────────────────────────────────────────────
 
@@ -89,11 +113,6 @@
 
     // ─── Helpers ────────────────────────────────────────────────────
 
-    function sanitizeMaterialIcon(name) {
-        const s = String(name || 'apps').trim();
-        return /^[a-z0-9_]+$/.test(s) ? s : 'apps';
-    }
-
     function esc(str) {
         const d = document.createElement('div');
         d.textContent = str;
@@ -124,6 +143,14 @@
         undoStack.push(JSON.stringify(flow));
         if (undoStack.length > 50) undoStack.shift();
         redoStack = [];
+        updateUndoButtons();
+    }
+
+    function updateUndoButtons() {
+        const u = document.getElementById('btn-undo');
+        const r = document.getElementById('btn-redo');
+        if (u) u.disabled = !undoStack.length;
+        if (r) r.disabled = !redoStack.length;
     }
 
     function doUndo() {
@@ -133,7 +160,8 @@
         selectedNodeId = null;
         selectedWireIdx = null;
         renderAll();
-        logConsole('Undo', 'info');
+        clearInspector();
+        logConsole(_('sdk_studio.log_undo'), 'info');
     }
 
     function doRedo() {
@@ -143,7 +171,8 @@
         selectedNodeId = null;
         selectedWireIdx = null;
         renderAll();
-        logConsole('Redo', 'info');
+        clearInspector();
+        logConsole(_('sdk_studio.log_redo'), 'info');
     }
 
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -170,13 +199,16 @@
             if (!container) continue;
             container.innerHTML = '';
             for (const n of cats[cat]) {
-                const el = document.createElement('div');
+                const el = document.createElement('button');
+                el.type = 'button';
                 el.className = 'studio-palette-node';
                 el.dataset.type = n.type;
                 el.dataset.cat = cat;
                 el.draggable = true;
                 el.title = n.desc;
-                el.innerHTML = `<span class="studio-node-dot"></span><span class="material-icons studio-node-icon">${sanitizeMaterialIcon(n.icon)}</span><span>${esc(n.label)}</span>`;
+                el.innerHTML = `<span class="studio-palette-node-label">${esc(nodeLabel(n.type))}</span>`;
+                // Click or Enter adds the node in the middle of the visible canvas
+                el.addEventListener('click', () => addNodeAtCentre(n.type));
                 container.appendChild(el);
             }
         }
@@ -184,7 +216,8 @@
         // Category toggle
         for (const btn of $$('.studio-palette-cat-btn')) {
             btn.addEventListener('click', () => {
-                btn.closest('.studio-palette-category').classList.toggle('collapsed');
+                const collapsed = btn.closest('.studio-palette-category').classList.toggle('collapsed');
+                btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
             });
         }
 
@@ -226,8 +259,21 @@
             pushUndo();
             addNode(type, pos.x, pos.y);
             renderAll();
-            logConsole(`Added node: ${NODE_DEFS[type].label}`, 'success');
+            logConsole(fmt('sdk_studio.log_node_added', { name: nodeLabel(type) }), 'success');
         });
+    }
+
+    function addNodeAtCentre(type) {
+        if (!NODE_DEFS[type]) return;
+        const rect = canvasWrap.getBoundingClientRect();
+        // Offset each new node a little so several clicks don't stack exactly
+        const shift = (flow.nodes.length % 5) * 24;
+        const pos = svgPoint(rect.left + rect.width / 2 - (NODE_W / 2) * zoomLevel + shift, rect.top + rect.height / 2 - (NODE_H / 2) * zoomLevel + shift);
+        pushUndo();
+        const node = addNode(type, pos.x, pos.y);
+        if (node) selectedNodeId = node.id;
+        renderAll();
+        logConsole(fmt('sdk_studio.log_node_added', { name: nodeLabel(type) }), 'success');
     }
 
     // ─── Node Operations ────────────────────────────────────────────
@@ -241,7 +287,7 @@
             type,
             x: Math.round(x),
             y: Math.round(y),
-            label: label || def.label,
+            label: label || nodeLabel(type),
             config: config ? { ...config } : { ...def.config }
         };
         flow.nodes.push(node);
@@ -255,7 +301,8 @@
         flow.wires = flow.wires.filter(w => w.from !== nodeId && w.to !== nodeId);
         if (selectedNodeId === nodeId) selectedNodeId = null;
         renderAll();
-        logConsole('Node deleted', 'warn');
+        clearInspector();
+        logConsole(_('sdk_studio.log_node_deleted'), 'warn');
     }
 
     function getNode(id) {
@@ -287,7 +334,7 @@
         flow.wires.splice(idx, 1);
         if (selectedWireIdx === idx) selectedWireIdx = null;
         renderAll();
-        logConsole('Wire removed', 'warn');
+        logConsole(_('sdk_studio.log_wire_removed'), 'warn');
     }
 
     // ─── Port Positions ─────────────────────────────────────────────
@@ -321,6 +368,7 @@
         renderMinimap();
         updateEmptyState();
         updateStatus();
+        updateUndoButtons();
         if (selectedNodeId) renderInspector(selectedNodeId);
     }
 
@@ -352,18 +400,10 @@
             accent.setAttribute('height', NODE_H);
             g.appendChild(accent);
 
-            // Icon
-            const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            icon.setAttribute('class', 'studio-node-icon');
-            icon.setAttribute('x', 14);
-            icon.setAttribute('y', 22);
-            icon.textContent = def.icon || 'category';
-            g.appendChild(icon);
-
             // Label
             const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             label.setAttribute('class', 'studio-node-label');
-            label.setAttribute('x', 36);
+            label.setAttribute('x', 16);
             label.setAttribute('y', 22);
             label.textContent = (node.label || def.label || node.type).slice(0, 20);
             g.appendChild(label);
@@ -371,7 +411,7 @@
             // Type subtitle
             const typeTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             typeTxt.setAttribute('class', 'studio-node-type');
-            typeTxt.setAttribute('x', 36);
+            typeTxt.setAttribute('x', 16);
             typeTxt.setAttribute('y', 38);
             typeTxt.textContent = node.type;
             g.appendChild(typeTxt);
@@ -461,8 +501,12 @@
         const sh = maxY - minY || 1;
         const scale = Math.min(W / sw, H / sh);
 
+        // Colours follow the theme tokens
+        const css = getComputedStyle(document.documentElement);
+        const tok = (name, fallback) => (css.getPropertyValue(name) || '').trim() || fallback;
+
         // Draw wires
-        ctx.strokeStyle = 'rgba(88,166,255,0.3)';
+        ctx.strokeStyle = tok('--text-muted', '#566064');
         ctx.lineWidth = 1;
         for (const w of flow.wires) {
             const from = getNode(w.from);
@@ -477,7 +521,7 @@
         // Draw nodes
         for (const n of flow.nodes) {
             const def = NODE_DEFS[n.type] || {};
-            ctx.fillStyle = def.cat === 'sources' ? '#1f6feb' : def.cat === 'processing' ? '#9e6a03' : '#238636';
+            ctx.fillStyle = def.cat === 'sources' ? tok('--accent', '#00677a') : def.cat === 'processing' ? tok('--warning', '#875b00') : tok('--success', '#1c7a3b');
             ctx.fillRect((n.x - minX) * scale, (n.y - minY) * scale, NODE_W * scale, NODE_H * scale);
         }
     }
@@ -486,6 +530,8 @@
         if (emptyState) {
             emptyState.style.display = flow.nodes.length ? 'none' : '';
         }
+        const minimap = $('#studio-minimap');
+        if (minimap) minimap.hidden = !flow.nodes.length;
     }
 
     function updateStatus() {
@@ -493,7 +539,7 @@
         const sw = $('#status-wires');
         const sf = $('#status-flow-label');
         const fn = $('#studio-flow-name');
-        if (sn) sn.textContent = flow.nodes.length;
+        if (sn) sn.textContent = String(flow.nodes.length);
         if (sw) sw.textContent = flow.wires.length;
         if (sf) sf.textContent = flowMeta.name;
         if (fn) fn.textContent = flowMeta.name;
@@ -510,46 +556,50 @@
 
         const def = NODE_DEFS[node.type] || {};
         let html = '';
+        let fieldNo = 0;
+        const fid = () => 'studio-field-' + (++fieldNo);
 
         // Node header
-        html += `<div class="studio-inspector-section">${esc(node.label || def.label)} <small>(${esc(node.type)})</small></div>`;
+        html += `<h3 class="studio-inspector-title">${esc(node.label || nodeLabel(node.type))} <span class="studio-inspector-type">${esc(node.type)}</span></h3>`;
 
         // Label field
+        const labelId = fid();
         html += `<div class="studio-field">
-            <label>${_('sdk_studio.label')}</label>
-            <input type="text" data-field="label" value="${esc(node.label || '')}" maxlength="40">
+            <label for="${labelId}">${_('sdk_studio.label')}</label>
+            <input type="text" id="${labelId}" class="form-input" data-field="label" value="${esc(node.label || '')}" maxlength="40">
         </div>`;
 
         // Config fields
-        html += `<div class="studio-inspector-section">${_('sdk_studio.configuration')}</div>`;
+        html += `<h3 class="studio-inspector-section">${_('sdk_studio.configuration')}</h3>`;
 
         const cfg = node.config || {};
         for (const [key, defaultVal] of Object.entries(def.config || {})) {
             const val = cfg[key] !== undefined ? cfg[key] : defaultVal;
             const fieldLabel = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ');
+            const id = fid();
 
             if (typeof defaultVal === 'boolean') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <select data-config="${esc(key)}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <select id="${id}" class="form-select" data-config="${esc(key)}">
                         <option value="true" ${val ? 'selected' : ''}>true</option>
                         <option value="false" ${!val ? 'selected' : ''}>false</option>
                     </select>
                 </div>`;
             } else if (typeof defaultVal === 'number') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <input type="number" data-config="${esc(key)}" value="${val}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <input type="number" id="${id}" class="form-input" data-config="${esc(key)}" value="${val}">
                 </div>`;
             } else if (key === 'code' || key === 'expression') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <textarea data-config="${esc(key)}" rows="4">${esc(String(val))}</textarea>
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <textarea id="${id}" class="form-input" data-config="${esc(key)}" rows="4">${esc(String(val))}</textarea>
                 </div>`;
             } else if (key === 'operator') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <select data-config="${esc(key)}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <select id="${id}" class="form-select" data-config="${esc(key)}">
                         ${['>', '<', '==', '!=', '>=', '<=', 'contains'].map(op =>
                             `<option value="${op}" ${val === op ? 'selected' : ''}>${op}</option>`
                         ).join('')}
@@ -557,8 +607,8 @@
                 </div>`;
             } else if (key === 'severity') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <select data-config="${esc(key)}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <select id="${id}" class="form-select" data-config="${esc(key)}">
                         ${['info', 'warning', 'critical'].map(s =>
                             `<option value="${s}" ${val === s ? 'selected' : ''}>${s}</option>`
                         ).join('')}
@@ -566,8 +616,8 @@
                 </div>`;
             } else if (key === 'level') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <select data-config="${esc(key)}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <select id="${id}" class="form-select" data-config="${esc(key)}">
                         ${['info', 'warn', 'error', 'debug'].map(l =>
                             `<option value="${l}" ${val === l ? 'selected' : ''}>${l}</option>`
                         ).join('')}
@@ -575,8 +625,8 @@
                 </div>`;
             } else if (key === 'method') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <select data-config="${esc(key)}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <select id="${id}" class="form-select" data-config="${esc(key)}">
                         ${['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map(m =>
                             `<option value="${m}" ${val === m ? 'selected' : ''}>${m}</option>`
                         ).join('')}
@@ -587,15 +637,15 @@
                     ? ['avg', 'min', 'max', 'sum', 'count']
                     : ['latest', 'all', 'zip'];
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <select data-config="${esc(key)}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <select id="${id}" class="form-select" data-config="${esc(key)}">
                         ${opts.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
                     </select>
                 </div>`;
             } else if (key === 'dataType') {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <select data-config="${esc(key)}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <select id="${id}" class="form-select" data-config="${esc(key)}">
                         ${['int16', 'uint16', 'int32', 'uint32', 'float32', 'float64'].map(t =>
                             `<option value="${t}" ${val === t ? 'selected' : ''}>${t}</option>`
                         ).join('')}
@@ -603,8 +653,8 @@
                 </div>`;
             } else {
                 html += `<div class="studio-field">
-                    <label>${esc(fieldLabel)}</label>
-                    <input type="text" data-config="${esc(key)}" value="${esc(String(val))}">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <input type="text" id="${id}" class="form-input" data-config="${esc(key)}" value="${esc(String(val))}">
                 </div>`;
             }
         }
@@ -612,17 +662,11 @@
         // Connections info
         const inWires = flow.wires.filter(w => w.to === nodeId);
         const outWires = flow.wires.filter(w => w.from === nodeId);
-        html += `<div class="studio-inspector-section">${_('sdk_studio.connections')}</div>`;
-        html += `<div class="studio-inspector-connections">
-            <span>⮕ ${_('sdk_studio.inputs')}: ${inWires.length}</span>
-            <span>⮕ ${_('sdk_studio.outputs')}: ${outWires.length}</span>
-        </div>`;
+        html += `<h3 class="studio-inspector-section">${_('sdk_studio.connections')}</h3>`;
+        html += `<p class="studio-inspector-connections">${esc(fmt('sdk_studio.connections_line', { in: inWires.length, out: outWires.length }))}</p>`;
 
         // Delete button
-        html += `<button class="studio-delete-node-btn" id="btn-delete-selected-node">
-            <span class="material-icons" style="font-size:14px;vertical-align:middle">delete</span>
-            ${_('sdk_studio.delete_node')}
-        </button>`;
+        html += `<button type="button" class="btn btn-sm btn-danger-quiet studio-delete-node-btn" id="btn-delete-selected-node">${_('sdk_studio.delete_node')}</button>`;
 
         inspectorBody.innerHTML = html;
 
@@ -658,7 +702,6 @@
 
     function clearInspector() {
         inspectorBody.innerHTML = `<div class="studio-inspector-empty">
-            <span class="material-icons">touch_app</span>
             <p>${_('sdk_studio.select_node')}</p>
         </div>`;
     }
@@ -863,7 +906,8 @@
                         }
                         renderWires();
                         renderMinimap();
-                        logConsole('Wire connected', 'success');
+                        if (selectedNodeId) renderInspector(selectedNodeId);
+                        logConsole(_('sdk_studio.log_wire_connected'), 'success');
                     }
                 }
             }
@@ -873,6 +917,7 @@
         document.addEventListener('keydown', (e) => {
             // Skip if typing in input
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+            if (document.querySelector('.modal-overlay.open')) return;
 
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 if (selectedNodeId) {
@@ -902,10 +947,11 @@
                 headers: { ...getCsrf() }
             });
             const data = await resp.json();
+            if (!resp.ok) throw new Error(data.error || resp.statusText);
             return data.flows || [];
         } catch (err) {
-            logConsole('Failed to list flows: ' + err.message, 'error');
-            return [];
+            logConsole(fmt('sdk_studio.log_list_failed', { error: err.message }), 'error');
+            return null;
         }
     }
 
@@ -915,7 +961,7 @@
                 headers: { ...getCsrf() }
             });
             const data = await resp.json();
-            if (!data.success || !data.flow) throw new Error('Flow not found');
+            if (!data.success || !data.flow) throw new Error(data.error || _('sdk_studio.flow_not_found'));
 
             flowMeta.id = data.flow.id;
             flowMeta.name = data.flow.name;
@@ -945,9 +991,10 @@
             renderAll();
             clearInspector();
             zoomFit();
-            logConsole(`Loaded flow: ${flowMeta.name}`, 'success');
+            logConsole(fmt('sdk_studio.log_flow_opened', { name: flowMeta.name }), 'success');
         } catch (err) {
-            logConsole('Failed to load flow: ' + err.message, 'error');
+            logConsole(fmt('sdk_studio.log_open_failed', { error: err.message }), 'error');
+            toast('error', fmt('sdk_studio.log_open_failed', { error: err.message }));
         }
     }
 
@@ -956,6 +1003,8 @@
         const descInput = $('#save-flow-desc');
         if (nameInput) nameInput.value = flowMeta.name || '';
         if (descInput) descInput.value = flowMeta.description || '';
+        const st = $('#save-flow-status');
+        if (st) { st.textContent = ''; st.className = 'form-status'; }
 
         showModal('modal-save-flow');
     }
@@ -992,20 +1041,25 @@
             }
 
             const data = await resp.json();
-            if (!data.success) throw new Error(data.error || 'Save failed');
+            if (!data.success) throw new Error(data.error || resp.statusText);
             if (data.id) flowMeta.id = data.id;
 
             closeAllModals();
             updateStatus();
-            logConsole(`Flow saved: ${flowMeta.name}`, 'success');
+            logConsole(fmt('sdk_studio.log_saved', { name: flowMeta.name }), 'success');
+            toast('success', fmt('sdk_studio.log_saved', { name: flowMeta.name }));
         } catch (err) {
-            logConsole('Save failed: ' + err.message, 'error');
+            const msg = fmt('sdk_studio.log_save_failed', { error: err.message });
+            logConsole(msg, 'error');
+            const st = $('#save-flow-status');
+            if (st) { st.textContent = msg; st.className = 'form-status is-error'; }
         }
     }
 
     async function deployFlow() {
         if (!flowMeta.id) {
-            logConsole('Save the flow before deploying', 'warn');
+            logConsole(_('sdk_studio.log_save_first_deploy'), 'warn');
+            toast('warning', _('sdk_studio.log_save_first_deploy'));
             return;
         }
 
@@ -1015,29 +1069,32 @@
                 headers: { 'Content-Type': 'application/json', ...getCsrf() }
             });
             const data = await resp.json();
-            if (!data.success) throw new Error(data.error || 'Deploy failed');
+            if (!data.success) throw new Error(data.error || resp.statusText);
 
-            logConsole(`Flow deployed: ${flowMeta.name}`, 'success');
+            logConsole(fmt('sdk_studio.log_deployed', { name: flowMeta.name }), 'success');
+            toast('success', fmt('sdk_studio.log_deployed', { name: flowMeta.name }));
 
             // Update status dot
             const dot = $('.studio-status-dot');
             if (dot) {
-                dot.className = 'studio-status-dot studio-status-running';
+                dot.className = 'status ok studio-status-dot studio-status-running';
             }
             const txt = $('#status-state-text');
             if (txt) txt.textContent = _('sdk_studio.status_deployed');
         } catch (err) {
-            logConsole('Deploy failed: ' + err.message, 'error');
+            logConsole(fmt('sdk_studio.log_deploy_failed', { error: err.message }), 'error');
+            toast('error', fmt('sdk_studio.log_deploy_failed', { error: err.message }));
         }
     }
 
     async function testFlow() {
         if (!flowMeta.id) {
-            logConsole('Save the flow before testing', 'warn');
+            logConsole(_('sdk_studio.log_save_first_test'), 'warn');
+            toast('warning', _('sdk_studio.log_save_first_test'));
             return;
         }
 
-        logConsole('Running test (dry-run)...', 'info');
+        logConsole(_('sdk_studio.log_test_started'), 'info');
 
         try {
             const resp = await fetch(`/api/cdap-studio/flows/${encodeURIComponent(flowMeta.id)}/test`, {
@@ -1045,26 +1102,28 @@
                 headers: { 'Content-Type': 'application/json', ...getCsrf() }
             });
             const data = await resp.json();
-            if (!data.success) throw new Error(data.error || 'Test failed');
+            if (!data.success) throw new Error(data.error || resp.statusText);
 
-            logConsole(`Test complete: ${data.nodeCount} nodes, ${data.wireCount} wires`, 'success');
+            logConsole(fmt('sdk_studio.log_test_done', { nodes: data.nodeCount, wires: data.wireCount }), 'success');
 
             for (const r of (data.results || [])) {
                 logConsole(`  [${r.label}] → ${JSON.stringify(r.output)}`, 'data');
             }
         } catch (err) {
-            logConsole('Test failed: ' + err.message, 'error');
+            logConsole(fmt('sdk_studio.log_test_failed', { error: err.message }), 'error');
+            toast('error', fmt('sdk_studio.log_test_failed', { error: err.message }));
         }
     }
 
     async function exportFlow() {
         if (!flowMeta.id) {
-            logConsole('Save the flow before exporting', 'warn');
+            logConsole(_('sdk_studio.log_save_first_export'), 'warn');
+            toast('warning', _('sdk_studio.log_save_first_export'));
             return;
         }
 
         window.open(`/api/cdap-studio/flows/${encodeURIComponent(flowMeta.id)}/export`);
-        logConsole('Exported flow as .bdflow', 'success');
+        logConsole(_('sdk_studio.log_exported'), 'success');
     }
 
     function importFlow() {
@@ -1083,7 +1142,8 @@
             try {
                 var data = JSON.parse(ev.target.result);
                 if (data.format !== 'bdflow' || !data.flow) {
-                    logConsole('Invalid .bdflow file format', 'error');
+                    logConsole(_('sdk_studio.log_import_invalid'), 'error');
+                    toast('error', _('sdk_studio.log_import_invalid'));
                     return;
                 }
                 flow = data.flow;
@@ -1100,9 +1160,11 @@
                 renderAll();
                 clearInspector();
                 zoomFit();
-                logConsole('Imported flow: ' + flowMeta.name, 'success');
+                logConsole(fmt('sdk_studio.log_imported', { name: flowMeta.name }), 'success');
+                toast('success', fmt('sdk_studio.log_imported', { name: flowMeta.name }));
             } catch (err) {
-                logConsole('Import failed: ' + err.message, 'error');
+                logConsole(fmt('sdk_studio.log_import_failed', { error: err.message }), 'error');
+                toast('error', fmt('sdk_studio.log_import_failed', { error: err.message }));
             }
         };
         reader.readAsText(file);
@@ -1110,14 +1172,30 @@
 
     // ─── Modals ─────────────────────────────────────────────────────
 
+    let modalOpener = null;
+
     function showModal(id) {
         const m = document.getElementById(id);
-        if (m) m.style.display = 'flex';
+        if (!m) return;
+        if (!document.querySelector('.modal-overlay.open')) modalOpener = document.activeElement;
+        m.style.display = 'flex';
+        m.classList.add('open');
+        const first = m.querySelector('input, textarea, .modal-body button, .modal-close');
+        if (first) first.focus();
+    }
+
+    function hideModal(m) {
+        m.style.display = 'none';
+        m.classList.remove('open');
+        if (!document.querySelector('.modal-overlay.open') && modalOpener && document.contains(modalOpener)) {
+            modalOpener.focus();
+            modalOpener = null;
+        }
     }
 
     function closeAllModals() {
         for (const m of $$('.modal-overlay')) {
-            m.style.display = 'none';
+            if (m.classList.contains('open') || m.style.display !== 'none') hideModal(m);
         }
     }
 
@@ -1126,14 +1204,33 @@
         for (const btn of $$('[data-close]')) {
             btn.addEventListener('click', () => {
                 const m = document.getElementById(btn.dataset.close);
-                if (m) m.style.display = 'none';
+                if (m) hideModal(m);
             });
         }
 
         // Close on backdrop click
         for (const m of $$('.modal-overlay')) {
             m.addEventListener('click', (e) => {
-                if (e.target === m) m.style.display = 'none';
+                if (e.target === m) hideModal(m);
+            });
+        }
+
+        // Escape closes the open dialog
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const open = document.querySelector('.modal-overlay.open');
+            if (open) {
+                e.preventDefault();
+                hideModal(open);
+            }
+        });
+
+        // Save dialog submits with Enter
+        const form = document.getElementById('save-flow-form');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                doSaveFlow();
             });
         }
     }
@@ -1143,39 +1240,40 @@
     async function showOpenFlowModal() {
         const container = $('#flow-list-container');
         if (!container) return;
-        container.innerHTML = `<p class="text-muted">${_('sdk_studio.loading')}</p>`;
+        container.innerHTML = `<p class="state">${_('sdk_studio.loading')}</p>`;
         showModal('modal-open-flow');
 
         const flows = await listFlows();
+        if (flows === null) {
+            container.innerHTML = `<p class="state is-error">${_('sdk_studio.list_failed')} <button type="button" class="btn btn-sm" id="btn-retry-flows">${_('sdk_studio.try_again')}</button></p>`;
+            const retry = $('#btn-retry-flows');
+            if (retry) retry.addEventListener('click', showOpenFlowModal);
+            return;
+        }
         if (!flows.length) {
-            container.innerHTML = `<p class="text-muted">${_('sdk_studio.no_flows')}</p>`;
+            container.innerHTML = `<p class="state">${_('sdk_studio.no_flows')}</p>`;
             return;
         }
 
-        container.innerHTML = flows.map(f => `
-            <div class="studio-flow-item" data-id="${esc(f.id)}">
-                <div class="studio-flow-item-info">
-                    <div class="studio-flow-item-name">${esc(f.name)}</div>
-                    <div class="studio-flow-item-desc">${esc(f.description || '')}</div>
-                    <div class="studio-flow-item-meta">v${f.version || 1} · ${f.status || 'draft'} · ${f.created_by || ''}</div>
-                </div>
-                <div class="studio-flow-item-actions">
-                    <button class="flow-action-export" data-id="${esc(f.id)}" title="Export">
-                        <span class="material-icons">download</span>
-                    </button>
-                    <button class="flow-action-delete danger" data-id="${esc(f.id)}" title="Delete">
-                        <span class="material-icons">delete</span>
-                    </button>
-                </div>
-            </div>
-        `).join('');
+        container.innerHTML = `<ul class="list">${flows.map(f => `
+            <li class="list-row studio-flow-item" data-id="${esc(f.id)}">
+                <span class="row-main studio-flow-item-info">
+                    <button type="button" class="btn-link studio-flow-item-name flow-action-open" data-id="${esc(f.id)}">${esc(f.name)}</button>
+                    ${f.description ? `<span class="row-sub studio-flow-item-desc">${esc(f.description)}</span>` : ''}
+                    <span class="row-sub studio-flow-item-meta">${esc(fmt('sdk_studio.flow_meta', { version: f.version || 1, status: f.status || 'draft', user: f.created_by || '' }))}</span>
+                </span>
+                <span class="row-end studio-flow-item-actions">
+                    <button type="button" class="btn btn-sm flow-action-export" data-id="${esc(f.id)}">${_('sdk_studio.export_flow')}</button>
+                    <button type="button" class="btn btn-sm btn-danger-quiet flow-action-delete" data-id="${esc(f.id)}" data-name="${esc(f.name)}">${_('sdk_studio.delete_flow')}</button>
+                </span>
+            </li>
+        `).join('')}</ul>`;
 
-        // Click to load
-        for (const item of container.querySelectorAll('.studio-flow-item')) {
-            item.addEventListener('click', (e) => {
-                if (e.target.closest('.studio-flow-item-actions')) return;
+        // Open
+        for (const btn of container.querySelectorAll('.flow-action-open')) {
+            btn.addEventListener('click', () => {
                 closeAllModals();
-                loadFlow(item.dataset.id);
+                loadFlow(btn.dataset.id);
             });
         }
 
@@ -1183,14 +1281,41 @@
         for (const btn of container.querySelectorAll('.flow-action-delete')) {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                if (!confirm(_('sdk_studio.confirm_delete'))) return;
+                const name = btn.dataset.name || '';
+                let ok;
+                if (window.Modal && typeof window.Modal.confirm === 'function') {
+                    // Modal.confirm replaces the open dialog; reopen the list afterwards
+                    hideModal(document.getElementById('modal-open-flow'));
+                    ok = await window.Modal.confirm({
+                        title: _('sdk_studio.delete_title'),
+                        message: fmt('sdk_studio.confirm_delete', { name }),
+                        confirmLabel: _('sdk_studio.delete_flow'),
+                        danger: true
+                    });
+                } else {
+                    ok = window.confirm(fmt('sdk_studio.confirm_delete', { name }));
+                }
+                if (!ok) {
+                    showOpenFlowModal();
+                    return;
+                }
                 try {
-                    await fetch(`/api/cdap-studio/flows/${encodeURIComponent(btn.dataset.id)}`, {
+                    const resp = await fetch(`/api/cdap-studio/flows/${encodeURIComponent(btn.dataset.id)}`, {
                         method: 'DELETE',
                         headers: { ...getCsrf() }
                     });
-                    showOpenFlowModal(); // Refresh
-                } catch (_) {}
+                    const data = await resp.json().catch(() => ({}));
+                    if (!resp.ok || data.success === false) throw new Error(data.error || resp.statusText);
+                    if (flowMeta.id && String(flowMeta.id) === String(btn.dataset.id)) {
+                        flowMeta.id = null;
+                    }
+                    toast('success', fmt('sdk_studio.log_flow_deleted', { name }));
+                    logConsole(fmt('sdk_studio.log_flow_deleted', { name }), 'warn');
+                } catch (err) {
+                    toast('error', fmt('sdk_studio.log_delete_failed', { error: err.message }));
+                    logConsole(fmt('sdk_studio.log_delete_failed', { error: err.message }), 'error');
+                }
+                showOpenFlowModal(); // Refresh
             });
         }
 
@@ -1208,21 +1333,29 @@
     async function showTemplatesModal() {
         const container = $('#template-grid-container');
         if (!container) return;
-        container.innerHTML = `<p class="text-muted">${_('sdk_studio.loading')}</p>`;
+        container.innerHTML = `<p class="state">${_('sdk_studio.loading')}</p>`;
         showModal('modal-templates');
 
         try {
             const resp = await fetch('/api/cdap-studio/templates', { headers: { ...getCsrf() } });
             const data = await resp.json();
+            if (!resp.ok) throw new Error(data.error || resp.statusText);
             const templates = data.templates || [];
 
-            container.innerHTML = templates.map(t => `
-                <div class="studio-template-card" data-id="${esc(t.id)}">
-                    <span class="material-icons">${esc(t.icon || 'auto_awesome')}</span>
-                    <h4>${esc(t.name)}</h4>
-                    <p>${esc(t.description)}</p>
-                </div>
-            `).join('');
+            if (!templates.length) {
+                container.innerHTML = `<p class="state">${_('sdk_studio.no_templates')}</p>`;
+                return;
+            }
+
+            container.innerHTML = `<ul class="list">${templates.map(t => `
+                <li><button type="button" class="list-row is-link studio-template-card" data-id="${esc(t.id)}">
+                    <span class="row-main">
+                        <span class="row-title">${esc(t.name)}</span>
+                        <span class="row-sub">${esc(t.description || '')}</span>
+                    </span>
+                    <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+                </button></li>
+            `).join('')}</ul>`;
 
             for (const card of container.querySelectorAll('.studio-template-card')) {
                 card.addEventListener('click', () => {
@@ -1251,11 +1384,13 @@
                     renderAll();
                     clearInspector();
                     zoomFit();
-                    logConsole(`Loaded template: ${tpl.name}`, 'success');
+                    logConsole(fmt('sdk_studio.log_template_opened', { name: tpl.name }), 'success');
                 });
             }
         } catch (err) {
-            container.innerHTML = `<p class="text-muted">Failed to load templates</p>`;
+            container.innerHTML = `<p class="state is-error">${_('sdk_studio.templates_failed')} <button type="button" class="btn btn-sm" id="btn-retry-templates">${_('sdk_studio.try_again')}</button></p>`;
+            const retry = $('#btn-retry-templates');
+            if (retry) retry.addEventListener('click', showTemplatesModal);
         }
     }
 
@@ -1276,7 +1411,7 @@
         applyTransform();
         renderAll();
         clearInspector();
-        logConsole('New flow created', 'info');
+        logConsole(_('sdk_studio.log_new_flow'), 'info');
     }
 
     // ─── Toolbar Buttons ────────────────────────────────────────────
@@ -1291,6 +1426,7 @@
         bind('btn-open-flow', showOpenFlowModal);
         bind('btn-save-flow', saveFlow);
         bind('btn-import-flow', importFlow);
+        bind('btn-export-flow', exportFlow);
         bind('btn-run-flow', testFlow);
         bind('btn-debug-flow', testFlow); // Debug = test for now
         bind('btn-deploy-flow', deployFlow);
@@ -1300,25 +1436,28 @@
         bind('btn-zoom-out', () => zoomTo(zoomLevel * 0.8));
         bind('btn-zoom-fit', zoomFit);
         bind('btn-clear-console', () => { consoleBody.innerHTML = ''; });
-        bind('btn-save-confirm', doSaveFlow);
         bind('btn-empty-template', showTemplatesModal);
+        bind('btn-empty-template-menu', showTemplatesModal);
 
-        // Grid toggle
-        bind('btn-toggle-grid', () => {
-            showGrid = !showGrid;
-            svgEl.classList.toggle('no-grid', !showGrid);
-        });
+        // Grid: shows the dots and snaps dragged nodes to them
+        const gridToggle = document.getElementById('btn-toggle-grid');
+        if (gridToggle) {
+            gridToggle.addEventListener('change', () => {
+                showGrid = !!gridToggle.checked;
+                svgEl.classList.toggle('no-grid', !showGrid);
+            });
+        }
 
-        // Code mode toggle (placeholder — shows raw JSON)
+        // Show the flow as JSON in the console
         bind('btn-toggle-code', () => {
             const json = JSON.stringify(flow, null, 2);
-            logConsole('--- Flow JSON ---', 'info');
+            logConsole(_('sdk_studio.log_json_heading'), 'info');
             // Output lines (max 20)
             const lines = json.split('\n');
             for (let i = 0; i < Math.min(lines.length, 20); i++) {
                 logConsole(lines[i], 'data');
             }
-            if (lines.length > 20) logConsole(`... (${lines.length - 20} more lines)`, 'info');
+            if (lines.length > 20) logConsole(fmt('sdk_studio.log_json_more', { count: lines.length - 20 }), 'info');
         });
     }
 
@@ -1337,8 +1476,8 @@
         var importInput = document.getElementById('import-flow-input');
         if (importInput) importInput.addEventListener('change', handleImportFile);
 
+        updateUndoButtons();
         logConsole(_('sdk_studio.console_ready'), 'info');
-        logConsole('Drag nodes from the palette to the canvas to start building a flow.', 'info');
     }
 
     // Wait for DOM

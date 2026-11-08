@@ -1,0 +1,655 @@
+/*
+ * Flow builder (SDK): a full-window node editor. Palette on the start
+ * side, the canvas in the middle, inspector and console on the end side.
+ * The canvas follows the theme; the console is dark in both themes like
+ * a terminal.
+ */
+
+html,
+body.studio-body {
+    height: 100%;
+}
+
+body.studio-body {
+    overflow: hidden;
+}
+
+.studio-fullpage {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+}
+
+.studio-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ── Title and toolbar ── */
+
+.studio-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4) var(--space-2);
+}
+
+.studio-back-btn {
+    align-self: flex-start;
+    font-size: var(--text-sm);
+}
+
+.studio-head h1 {
+    font-size: var(--text-lg);
+}
+
+.studio-description {
+    max-width: 80ch;
+    color: var(--text-muted);
+}
+
+.studio-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+}
+
+.studio-toolbar-left,
+.studio-toolbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.studio-flow-name {
+    max-width: 24ch;
+    margin-inline-end: var(--space-2);
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.studio-toolbar-sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 var(--space-1);
+    background: var(--rule);
+}
+
+.studio-grid-toggle {
+    min-height: var(--control-h-sm);
+}
+
+.studio-zoom-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.studio-zoom-group .btn-icon {
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
+}
+
+.studio-zoom-label {
+    min-width: 5ch;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.studio-small-screen {
+    display: none;
+}
+
+/* ── Workspace ── */
+
+.studio-workspace {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.studio-panel-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--rule);
+}
+
+.studio-panel-header h2 {
+    margin-inline-end: auto;
+    font-size: var(--text-base);
+}
+
+/* ── Palette ── */
+
+.studio-palette {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 230px;
+    overflow-y: auto;
+    border-inline-end: 1px solid var(--rule);
+}
+
+.studio-palette-search-wrap {
+    margin: var(--space-2) var(--space-3) 0;
+}
+
+.studio-palette-search {
+    min-height: var(--control-h-sm);
+}
+
+.studio-palette-hint {
+    padding: var(--space-2) var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.studio-palette-category {
+    border-top: 1px solid var(--rule);
+}
+
+.studio-palette-cat-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    width: 100%;
+    min-height: var(--control-h);
+    padding: 0 var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-align: start;
+    cursor: pointer;
+}
+
+.studio-palette-cat-btn:hover {
+    background: var(--hover);
+}
+
+.studio-cat-chevron {
+    color: var(--text-muted);
+    font-size: 20px;
+    transition: transform var(--motion);
+}
+
+.studio-palette-category.collapsed .studio-cat-chevron {
+    transform: rotate(-90deg);
+}
+
+[dir="rtl"] .studio-palette-category.collapsed .studio-cat-chevron {
+    transform: rotate(90deg);
+}
+
+.studio-palette-category.collapsed .studio-palette-items {
+    display: none;
+}
+
+.studio-palette-items {
+    padding-bottom: var(--space-2);
+}
+
+.studio-palette-node {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 32px;
+    padding: var(--space-1) var(--space-3);
+    padding-inline-start: calc(var(--space-2) + 20px + var(--space-1));
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    cursor: grab;
+}
+
+.studio-palette-node:hover {
+    background: var(--hover);
+}
+
+.studio-palette-node:active {
+    cursor: grabbing;
+}
+
+/* ── Canvas ── */
+
+.studio-canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--bg-subtle);
+}
+
+.studio-canvas-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+}
+
+.studio-grid-dot {
+    fill: var(--border);
+    opacity: 0.6;
+}
+
+.studio-canvas-svg.no-grid .studio-grid-rect {
+    display: none;
+}
+
+.studio-arrow-data { fill: var(--text-muted); }
+.studio-arrow-error { fill: var(--danger); }
+
+.studio-node {
+    cursor: move;
+}
+
+.studio-node-body {
+    fill: var(--bg-float);
+    stroke: var(--border);
+    stroke-width: 1;
+    rx: 3;
+}
+
+.studio-node.selected .studio-node-body {
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+
+.studio-node.error .studio-node-body {
+    stroke: var(--danger);
+    stroke-width: 2;
+}
+
+.studio-node.running .studio-node-body {
+    stroke: var(--success);
+    stroke-width: 2;
+}
+
+/* The bar on the start edge says which kind of node it is */
+.studio-node-accent { fill: var(--text-muted); }
+.studio-node[data-category="sources"] .studio-node-accent { fill: var(--accent); }
+.studio-node[data-category="processing"] .studio-node-accent { fill: var(--warning); }
+.studio-node[data-category="outputs"] .studio-node-accent { fill: var(--success); }
+
+.studio-node-label {
+    fill: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.studio-node-type {
+    fill: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    pointer-events: none;
+}
+
+.studio-port {
+    fill: var(--bg-float);
+    stroke: var(--text-muted);
+    stroke-width: 1.5;
+    cursor: crosshair;
+}
+
+.studio-port:hover {
+    fill: var(--accent);
+    stroke: var(--accent);
+}
+
+.studio-wire {
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 2;
+    cursor: pointer;
+}
+
+.studio-wire:hover {
+    stroke: var(--text);
+}
+
+.studio-wire.selected {
+    stroke: var(--accent);
+    stroke-width: 3;
+}
+
+.studio-temp-wire {
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    pointer-events: none;
+}
+
+.studio-select-box {
+    position: absolute;
+    border: 1px dashed var(--accent);
+    background: var(--accent-tint);
+    pointer-events: none;
+}
+
+.studio-minimap {
+    position: absolute;
+    bottom: var(--space-3);
+    inset-inline-end: var(--space-3);
+    width: 160px;
+    height: 100px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg);
+}
+
+.studio-minimap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.studio-minimap-viewport {
+    position: absolute;
+    border: 1px solid var(--accent);
+    pointer-events: none;
+}
+
+.studio-empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    text-align: center;
+    pointer-events: none;
+}
+
+.studio-empty-state h2 {
+    font-size: var(--text-md);
+}
+
+.studio-empty-state p {
+    max-width: 44ch;
+    color: var(--text-muted);
+}
+
+.studio-empty-actions {
+    margin-top: var(--space-2);
+    pointer-events: auto;
+}
+
+/* ── Inspector and console ── */
+
+.studio-right-panel {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 300px;
+    min-height: 0;
+    border-inline-start: 1px solid var(--rule);
+}
+
+.studio-inspector {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.studio-inspector-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-3);
+}
+
+.studio-inspector-empty {
+    color: var(--text-muted);
+}
+
+.studio-inspector-title {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-base);
+    overflow-wrap: anywhere;
+}
+
+.studio-inspector-type {
+    display: block;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+    font-weight: 400;
+}
+
+.studio-inspector-section {
+    margin: var(--space-4) 0 var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule);
+    font-size: var(--text-base);
+}
+
+.studio-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+}
+
+.studio-field label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+.studio-field .form-input,
+.studio-field .form-select {
+    min-height: var(--control-h-sm);
+}
+
+.studio-field textarea.form-input {
+    min-height: 80px;
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+}
+
+.studio-inspector-connections {
+    color: var(--text-muted);
+}
+
+.studio-delete-node-btn {
+    margin-top: var(--space-4);
+}
+
+.studio-console {
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+    min-height: 120px;
+    border-top: 1px solid var(--rule);
+}
+
+.studio-console-header {
+    min-height: 36px;
+    padding-block: var(--space-1);
+}
+
+/* Dark in both themes, like a terminal; every colour passes AA on #111414 */
+.studio-console-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2);
+    background: #111414;
+    color: #e3e6e6;
+    font-family: var(--mono);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+}
+
+.studio-console-line {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.studio-console-time {
+    flex-shrink: 0;
+    color: #a3abad;
+}
+
+.studio-console-msg {
+    min-width: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.studio-console-success .studio-console-msg { color: #72c98c; }
+.studio-console-warn .studio-console-msg { color: #e3b85a; }
+.studio-console-error .studio-console-msg { color: #ff8f80; }
+.studio-console-data .studio-console-msg { color: #a9c7d3; }
+
+/* ── Status line ── */
+
+.studio-statusbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-4);
+    min-height: 32px;
+    padding: var(--space-1) var(--space-4);
+    border-top: 1px solid var(--rule);
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.studio-status-item b {
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.studio-status-right {
+    margin-inline-start: auto;
+}
+
+/* ── Dialogs ── */
+
+.studio-modal-note {
+    margin-bottom: var(--space-3);
+    color: var(--text-muted);
+}
+
+.studio-template-card {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--rule);
+    background: transparent;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.studio-flow-item-name {
+    font-weight: 600;
+    text-align: start;
+}
+
+.studio-flow-item-actions {
+    flex-shrink: 0;
+}
+
+/* ── Touch ── */
+
+@media (pointer: coarse) {
+    .studio-palette-node,
+    .studio-palette-cat-btn,
+    .studio-zoom-group .btn-icon {
+        min-height: 44px;
+    }
+
+    .studio-zoom-group .btn-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .studio-back-btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}
+
+/* ── Narrow screens: the panels stack and the page scrolls ── */
+
+@media (max-width: 899px) {
+    body.studio-body {
+        overflow: auto;
+    }
+
+    .studio-fullpage,
+    .studio-container {
+        height: auto;
+        overflow: visible;
+    }
+
+    .studio-toolbar-sep {
+        display: none;
+    }
+
+    .studio-small-screen {
+        display: block;
+        margin: var(--space-3) var(--space-4) 0;
+    }
+
+    .studio-workspace {
+        flex-direction: column;
+        overflow: visible;
+    }
+
+    .studio-palette {
+        width: auto;
+        max-height: 50vh;
+        border-inline-end: 0;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .studio-canvas-wrap {
+        flex: none;
+        height: 60vh;
+    }
+
+    .studio-right-panel {
+        width: auto;
+        border-inline-start: 0;
+        border-top: 1px solid var(--rule);
+    }
+
+    .studio-inspector-body {
+        overflow: visible;
+    }
+
+    .studio-minimap {
+        display: none;
+    }
+}

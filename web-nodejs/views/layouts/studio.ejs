@@ -1,34 +1,37 @@
+<%
+    const themeMode = (branding && branding.themeMode) || 'system';
+    const dataTheme = themeMode === 'light' || themeMode === 'system' ? 'light' : 'dark';
+    const textDir = typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr';
+%>
 <!DOCTYPE html>
-<html lang="<%= lang || 'en' %>">
+<html lang="<%= lang || 'en' %>" dir="<%= textDir %>" data-theme="<%= dataTheme %>" data-theme-mode="<%= themeMode %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %><%= appName %></title>
-    
-    <!-- Favicon -->
+
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
-    
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="/css/main.css?v=<%= cacheVersion %>">
-    <link rel="stylesheet" href="/css/theme.css?v=<%= cacheVersion %>">
+    <%- include('../partials/theme-head') %>
+    <link rel="preload" href="/fonts/AtkinsonHyperlegibleNext-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/base.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/components.css?v=<%= cacheVersion %>">
     <% if (typeof pageStyles !== 'undefined' && pageStyles.length) { %>
         <% pageStyles.forEach(style => { %>
     <link rel="stylesheet" href="/css/<%= style %>.css?v=<%= cacheVersion %>">
         <% }); %>
     <% } %>
-    <style>
-        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        .studio-fullpage { display: flex; flex-direction: column; height: 100vh; }
-    </style>
 </head>
-<body>
+<body class="studio-body ui-page">
     <div class="studio-fullpage">
         <%- body %>
     </div>
-    
-    <!-- Scripts -->
+
+    <div id="modal-container"></div>
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
     <script nonce="<%= cspNonce %>">
         window.BetterDesk = {
             lang: '<%= lang || "en" %>',
@@ -40,7 +43,10 @@
         };
     </script>
     <script src="/js/i18n-client.js?v=<%= cacheVersion %>"></script>
-    <script src="/js/toast.js?v=<%= cacheVersion %>"></script>
+    <script src="/js/utils.js?v=<%= cacheVersion %>"></script>
+    <script src="/js/notifications.js?v=<%= cacheVersion %>"></script>
+    <script src="/js/modal.js?v=<%= cacheVersion %>"></script>
+    <script src="/js/menu-button.js?v=<%= cacheVersion %>"></script>
     <% if (typeof pageScripts !== 'undefined' && pageScripts.length) { %>
         <% pageScripts.forEach(script => { %>
     <script src="/js/<%= script %>.js?v=<%= cacheVersion %>"></script>
