@@ -6331,7 +6331,19 @@
             "session_id": "Sessions-ID",
             "relay_id": "Relä-ID",
             "no_report": "Ingen arbetsrapport för den här sessionen än.",
-            "report_for": "{device}, startad {date}"
+            "report_for": "{device}, startad {date}",
+            "explain_title": "Så fungerar fakturering",
+            "explain_text": "Ett paket anger hur mycket supporttid som ingår varje månad, hur sessioner avrundas och vad extra tid kostar. En tilldelning ger ett paket till en organisation, enhetsgrupp, mapp eller enhet, och fjärrsessioner på de enheterna dras från den inkluderade tiden.",
+            "usage_title": "Inkluderad tid den här månaden",
+            "usage_note": "Hur mycket av varje tilldelnings inkluderade tid fjärrsessioner har använt den här månaden. Tid utöver den faktureras till överskridandepriset.",
+            "used_of_included": "{used} av {included} använt",
+            "no_included_time": "Ingen inkluderad tid, varje session faktureras",
+            "pending_title": "Väntar på rapport",
+            "pending_note": "Avslutade sessioner som fortfarande behöver en arbetsrapport, i alla organisationer.",
+            "pending_row_sub": "Startad {date} av {operator}",
+            "pending_none": "Inga sessioner väntar på rapport.",
+            "all_sessions_title": "Alla sessioner",
+            "used_this_month": "Använt den här månaden"
         }
     },
     "remote_dashboard": {

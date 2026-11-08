@@ -6325,7 +6325,19 @@
             "session_id": "会话 ID",
             "relay_id": "中继 ID",
             "no_report": "此会话还没有工作报告。",
-            "report_for": "{device}，开始于 {date}"
+            "report_for": "{device}，开始于 {date}",
+            "explain_title": "计费方式",
+            "explain_text": "套餐设定每月包含多少支持时间、会话如何取整，以及超出时间的费用。分配会把套餐给予组织、设备组、文件夹或设备，这些设备上的远程会话会从套餐包含的时间中扣除。",
+            "usage_title": "本月包含时间",
+            "usage_note": "本月远程会话已用掉各分配包含时间的多少。超出的时间按超额费率计费。",
+            "used_of_included": "已用 {used}，共 {included}",
+            "no_included_time": "不含时间，每个会话都计费",
+            "pending_title": "等待报告",
+            "pending_note": "已结束但仍需工作报告的会话，涵盖所有组织。",
+            "pending_row_sub": "由 {operator} 于 {date} 开始",
+            "pending_none": "没有等待报告的会话。",
+            "all_sessions_title": "所有会话",
+            "used_this_month": "本月已用"
         }
     },
     "remote_dashboard": {

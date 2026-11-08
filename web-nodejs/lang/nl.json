@@ -6325,7 +6325,19 @@
             "session_id": "Sessie-ID",
             "relay_id": "Relay-ID",
             "no_report": "Nog geen werkrapport voor deze sessie.",
-            "report_for": "{device}, gestart op {date}"
+            "report_for": "{device}, gestart op {date}",
+            "explain_title": "Zo werkt facturering",
+            "explain_text": "Een pakket bepaalt hoeveel supporttijd elke maand is inbegrepen, hoe sessies worden afgerond en wat extra tijd kost. Een toewijzing geeft een pakket aan een organisatie, apparaatgroep, map of apparaat, en externe sessies op die apparaten gaan af van de inbegrepen tijd.",
+            "usage_title": "Inbegrepen tijd deze maand",
+            "usage_note": "Hoeveel van de inbegrepen tijd van elke toewijzing externe sessies deze maand hebben gebruikt. Tijd daarboven wordt tegen het overschrijdingstarief gefactureerd.",
+            "used_of_included": "{used} van {included} gebruikt",
+            "no_included_time": "Geen inbegrepen tijd, elke sessie wordt gefactureerd",
+            "pending_title": "Wacht op een rapport",
+            "pending_note": "Beëindigde sessies die nog een werkrapport nodig hebben, in alle organisaties.",
+            "pending_row_sub": "Gestart op {date} door {operator}",
+            "pending_none": "Er wachten geen sessies op een rapport.",
+            "all_sessions_title": "Alle sessies",
+            "used_this_month": "Gebruikt deze maand"
         }
     },
     "remote_dashboard": {

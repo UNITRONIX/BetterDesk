@@ -6331,7 +6331,19 @@
             "session_id": "ID sesiune",
             "relay_id": "ID releu",
             "no_report": "Încă nu există raport de lucru pentru această sesiune.",
-            "report_for": "{device}, începută la {date}"
+            "report_for": "{device}, începută la {date}",
+            "explain_title": "Cum funcționează facturarea",
+            "explain_text": "Un pachet stabilește cât timp de asistență este inclus în fiecare lună, cum se rotunjesc sesiunile și cât costă timpul suplimentar. O atribuire dă un pachet unei organizații, unui grup de dispozitive, unui dosar sau unui dispozitiv, iar sesiunile la distanță pe acele dispozitive se scad din timpul inclus.",
+            "usage_title": "Timp inclus luna aceasta",
+            "usage_note": "Cât din timpul inclus al fiecărei atribuiri au folosit sesiunile la distanță luna aceasta. Timpul peste acesta se facturează la tariful de depășire.",
+            "used_of_included": "{used} din {included} folosite",
+            "no_included_time": "Fără timp inclus, fiecare sesiune se facturează",
+            "pending_title": "Așteaptă un raport",
+            "pending_note": "Sesiuni încheiate care încă au nevoie de un raport de lucru, în toate organizațiile.",
+            "pending_row_sub": "Pornită pe {date} de {operator}",
+            "pending_none": "Nicio sesiune nu așteaptă un raport.",
+            "all_sessions_title": "Toate sesiunile",
+            "used_this_month": "Folosit luna aceasta"
         }
     },
     "remote_dashboard": {

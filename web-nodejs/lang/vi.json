@@ -6331,7 +6331,19 @@
             "session_id": "ID phiên",
             "relay_id": "ID chuyển tiếp",
             "no_report": "Phiên này chưa có báo cáo công việc.",
-            "report_for": "{device}, bắt đầu lúc {date}"
+            "report_for": "{device}, bắt đầu lúc {date}",
+            "explain_title": "Cách tính phí hoạt động",
+            "explain_text": "Gói quy định thời gian hỗ trợ được bao gồm mỗi tháng, cách làm tròn phiên và giá của thời gian vượt mức. Phân bổ gán một gói cho tổ chức, nhóm thiết bị, thư mục hoặc thiết bị, và các phiên từ xa trên những thiết bị đó được trừ vào thời gian bao gồm.",
+            "usage_title": "Thời gian bao gồm tháng này",
+            "usage_note": "Các phiên từ xa đã dùng bao nhiêu thời gian bao gồm của mỗi phân bổ trong tháng này. Thời gian vượt quá được tính theo giá vượt mức.",
+            "used_of_included": "Đã dùng {used} trên {included}",
+            "no_included_time": "Không có thời gian bao gồm, mọi phiên đều tính phí",
+            "pending_title": "Đang chờ báo cáo",
+            "pending_note": "Các phiên đã kết thúc vẫn cần báo cáo công việc, trong mọi tổ chức.",
+            "pending_row_sub": "Bắt đầu lúc {date} bởi {operator}",
+            "pending_none": "Không có phiên nào đang chờ báo cáo.",
+            "all_sessions_title": "Tất cả phiên",
+            "used_this_month": "Đã dùng tháng này"
         }
     },
     "remote_dashboard": {

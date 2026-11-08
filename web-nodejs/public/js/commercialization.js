@@ -196,6 +196,21 @@
     let packagesAll = [];
     let previewsById = {};
 
+    // Used against included time as a meter with the numbers in text
+    function usageMeter(used, included) {
+        used = Math.max(0, Number(used) || 0);
+        included = Math.max(0, Number(included) || 0);
+        if (!included) {
+            return `<span class="text-muted">${escapeHtml(t('commercialization.ui.no_included_time', 'No included time, every session is billed'))}</span>`;
+        }
+        const share = used / included;
+        const level = share >= 1 ? ' is-full' : (share >= 0.8 ? ' is-high' : '');
+        return `<span class="meter${level}">
+            <span class="meter-bar" aria-hidden="true"><span class="meter-fill" style="width:${Math.min(100, Math.round(share * 100))}%"></span></span>
+            <span class="meter-value">${escapeHtml(t('commercialization.ui.used_of_included', '{used} of {included} used', { used: formatMinutes(used), included: formatMinutes(included) }))}</span>
+        </span>`;
+    }
+
     function renderPackages() {
         const tbody = document.querySelector('#packages-table tbody');
         if (!tbody) return;
@@ -204,31 +219,29 @@
             ? packagesAll.filter((p) => `${p.name || ''} ${p.description || ''}`.toLowerCase().includes(search))
             : packagesAll;
         if (!packagesAll.length) {
-            stateRow(tbody, 8, t('commercialization.empty.packages', 'No packages yet.'));
+            stateRow(tbody, 7, t('commercialization.empty.packages', 'No packages yet.'));
             return;
         }
         if (!pkgs.length) {
-            stateRow(tbody, 8, t('commercialization.ui.no_match_packages', 'No packages match the search.'));
+            stateRow(tbody, 7, t('commercialization.ui.no_match_packages', 'No packages match the search.'));
             return;
         }
         tbody.innerHTML = pkgs.map((p) => {
             const prev = previewsById[p.id] || {};
             const companies = (prev.companies || []).join(', ');
-            const remaining = prev.remaining_minutes != null ? prev.remaining_minutes : p.included_minutes;
             const label = t('commercialization.ui.actions_for', 'Actions for {name}', { name: p.name || '' });
             const menu = canManage ? rowMenu(label, `
-                <button type="button" class="menu-item" role="menuitem" data-edit-package="${escapeHtml(p.id)}">${escapeHtml(t('commercialization.actions.edit', 'Edit'))}</button>
+                <button type="button" class="menu-item" role="menuitem" data-edit-package="${escapeHtml(p.id)}">${Utils.icon('edit')}${escapeHtml(t('commercialization.actions.edit', 'Edit'))}</button>
                 <span class="menu-divider"></span>
-                <button type="button" class="menu-item danger" role="menuitem" data-delete-package="${escapeHtml(p.id)}">${escapeHtml(t('commercialization.ui.delete_package', 'Delete package'))}</button>`) : '';
+                <button type="button" class="menu-item danger" role="menuitem" data-delete-package="${escapeHtml(p.id)}">${Utils.icon('delete')}${escapeHtml(t('commercialization.ui.delete_package', 'Delete package'))}</button>`) : '';
             return `<tr data-id="${escapeHtml(p.id)}">
                 <td><span class="cell-title">${escapeHtml(p.name)}</span>${p.description ? `<span class="cell-sub">${escapeHtml(p.description)}</span>` : ''}</td>
                 <td>${escapeHtml(companies || '–')}</td>
                 <td class="num-col">${prev.device_count != null ? prev.device_count : '–'}</td>
                 <td class="nowrap">${formatMinutes(p.included_minutes)}</td>
-                <td class="nowrap">${formatMinutes(prev.included_minutes_used || 0)}</td>
-                <td class="nowrap">${formatMinutes(remaining)}</td>
+                <td class="usage-cell">${usageMeter(prev.included_minutes_used || 0, prev.included_limit != null ? prev.included_limit : p.included_minutes)}</td>
                 <td class="nowrap">${escapeHtml(formatMoney(p.overage_rate, p.currency))}</td>
-                <td class="actions"><button type="button" class="btn btn-sm" data-preview-package="${escapeHtml(p.id)}">${escapeHtml(t('commercialization.preview.open', 'Month preview'))}</button>${menu}</td>
+                <td class="actions"><button type="button" class="btn btn-sm" data-preview-package="${escapeHtml(p.id)}">${Utils.icon('view')}${escapeHtml(t('commercialization.preview.open', 'Month preview'))}</button>${menu}</td>
             </tr>`;
         }).join('');
         tbody.querySelectorAll('[data-preview-package]').forEach((btn) => {
@@ -254,8 +267,8 @@
             packagesAll.forEach((p, i) => { if (previews[i]) previewsById[p.id] = previews[i]; });
             renderPackages();
         } catch (e) {
-            stateRow(tbody, 8, t('commercialization.ui.error_packages', 'Could not load packages.'), () => {
-                stateRow(tbody, 8, t('commercialization.ui.loading_packages', 'Loading packages…'));
+            stateRow(tbody, 7, t('commercialization.ui.error_packages', 'Could not load packages.'), () => {
+                stateRow(tbody, 7, t('commercialization.ui.loading_packages', 'Loading packages…'));
                 loadPackages();
             });
         }
@@ -467,10 +480,10 @@
             const suspended = c.status === 'suspended';
             const label = t('commercialization.ui.actions_for', 'Actions for {name}', { name: c.target_name || c.target_key || '' });
             const menu = canManage ? rowMenu(label, `
-                <button type="button" class="menu-item" role="menuitem" data-edit-contract="${escapeHtml(c.id)}">${escapeHtml(t('commercialization.actions.edit', 'Edit'))}</button>
-                <button type="button" class="menu-item" role="menuitem" data-contract-id="${escapeHtml(c.id)}" data-status="${suspended ? 'active' : 'suspended'}">${escapeHtml(suspended ? t('commercialization.contracts.activate', 'Activate') : t('commercialization.contracts.suspend', 'Suspend'))}</button>
+                <button type="button" class="menu-item" role="menuitem" data-edit-contract="${escapeHtml(c.id)}">${Utils.icon('edit')}${escapeHtml(t('commercialization.actions.edit', 'Edit'))}</button>
+                <button type="button" class="menu-item" role="menuitem" data-contract-id="${escapeHtml(c.id)}" data-status="${suspended ? 'active' : 'suspended'}">${Utils.icon(suspended ? 'enable' : 'disable')}${escapeHtml(suspended ? t('commercialization.contracts.activate', 'Activate') : t('commercialization.contracts.suspend', 'Suspend'))}</button>
                 <span class="menu-divider"></span>
-                <button type="button" class="menu-item danger" role="menuitem" data-delete-contract="${escapeHtml(c.id)}">${escapeHtml(t('commercialization.ui.remove_assignment', 'Remove assignment'))}</button>`) : '';
+                <button type="button" class="menu-item danger" role="menuitem" data-delete-contract="${escapeHtml(c.id)}">${Utils.icon('delete')}${escapeHtml(t('commercialization.ui.remove_assignment', 'Remove assignment'))}</button>`) : '';
             return `<tr data-id="${escapeHtml(c.id)}">
                 <td><span class="cell-title">${escapeHtml(c.target_name || c.target_key)}</span><span class="cell-sub">${escapeHtml(targetTypeLabel(c.target_type))}</span></td>
                 <td>${escapeHtml(c.package_name || c.package_id)}</td>
@@ -769,12 +782,10 @@
                 : t('commercialization.empty.sessions', 'No billable sessions yet.'));
             return;
         }
-        const pending = sessionsAll.filter((s) => s.status === 'pending_report').length;
         const active = sessionsAll.filter((s) => s.status === 'active').length;
         if (count) {
             let line = t('commercialization.ui.sessions_count', '{count} sessions', { count: `<strong>${sessionsAll.length}</strong>` });
             if (active) line += `, ${t('commercialization.ui.sessions_active', '{count} active', { count: active })}`;
-            if (pending) line += `, ${t('commercialization.ui.sessions_pending', '{count} waiting for a report', { count: pending })}`;
             count.innerHTML = line;
         }
         tbody.innerHTML = sessionsAll.map((s) => {
@@ -785,7 +796,7 @@
                     ? t('commercialization.ui.report_missing', 'Not written yet')
                     : t('commercialization.ui.report_none', 'None'))}</span>`;
             const write = s.status === 'pending_report' && canWriteReport
-                ? `<button type="button" class="btn btn-sm" data-complete-report="${escapeHtml(s.id)}">${escapeHtml(t('commercialization.ui.write_report', 'Write report'))}</button>`
+                ? `<button type="button" class="btn btn-sm" data-complete-report="${escapeHtml(s.id)}">${Utils.icon('edit')}${escapeHtml(t('commercialization.ui.write_report', 'Write report'))}</button>`
                 : '';
             return `<tr data-id="${escapeHtml(s.id)}">
                 <td class="nowrap"><span class="cell-title">${escapeHtml(s.device_name || s.device_id)}</span><span class="cell-sub mono">${escapeHtml(s.device_id || '')}</span></td>
@@ -795,7 +806,7 @@
                 <td class="nowrap">${formatMinutes(s.billed_minutes)}</td>
                 <td>${statusHtml(s.status)}</td>
                 <td class="report-cell">${reportCell}</td>
-                <td class="actions">${write}<button type="button" class="btn btn-sm" data-session-detail="${escapeHtml(s.id)}">${escapeHtml(t('commercialization.ui.details', 'Details'))}</button></td>
+                <td class="actions">${write}<button type="button" class="btn btn-sm" data-session-detail="${escapeHtml(s.id)}">${Utils.icon('details')}${escapeHtml(t('commercialization.ui.details', 'Details'))}</button></td>
             </tr>`;
         }).join('');
         tbody.querySelectorAll('[data-complete-report]').forEach((btn) => {
@@ -916,11 +927,124 @@
             });
             Modal.close();
             notifySuccess(t('commercialization.report.saved', 'Work report saved'));
-            await loadSessions();
+            await Promise.all([loadSessions(), loadPending()]);
         } catch (e) {
             showError('report-modal-error', e.message);
         }
     }
+
+    /* ── Side column of the sessions view ──
+       Included time per assignment this month: the server counts used time as
+       the package's included minutes minus the assignment's remaining minutes
+       (GET /billing/contracts + /billing/packages), and resets it each month. */
+
+    function sideState(list, text, onRetry) {
+        if (!list) return;
+        if (onRetry) {
+            list.innerHTML = `<li class="list-row is-empty"><span class="state is-error">${escapeHtml(text)}
+                <button type="button" class="btn btn-sm" data-retry>${escapeHtml(t('commercialization.ui.try_again', 'Try again'))}</button></span></li>`;
+            list.querySelector('[data-retry]').addEventListener('click', onRetry);
+        } else {
+            list.innerHTML = `<li class="list-row is-empty">${escapeHtml(text)}</li>`;
+        }
+    }
+
+    function thisMonth() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    async function loadUsage() {
+        const list = document.getElementById('contract-usage');
+        if (!list) return;
+        try {
+            const [cData, pData] = await Promise.all([
+                api('/api/panel/billing/contracts'),
+                api('/api/panel/billing/packages')
+            ]);
+            const pkgs = {};
+            (pData.packages || []).forEach((p) => { pkgs[p.id] = p; });
+            const month = thisMonth();
+            const rows = (cData.contracts || []).map((c) => {
+                const pkg = pkgs[c.package_id] || {};
+                const included = Math.max(0, Number(pkg.included_minutes) || 0);
+                // A period from an earlier month is reset by the server at the next session
+                const stale = c.current_period_ym && c.current_period_ym !== month;
+                const remaining = stale ? included : Math.max(0, Number(c.remaining_minutes) || 0);
+                const used = Math.max(0, included - remaining);
+                return { c, pkg, included, used, share: included ? used / included : -1 };
+            }).sort((a, b) => b.share - a.share);
+            if (!rows.length) {
+                sideState(list, t('commercialization.empty.contracts', 'No package assignments yet.'));
+                return;
+            }
+            list.innerHTML = rows.map(({ c, pkg, included, used }) => {
+                const name = c.target_name || c.target_key || '';
+                const status = c.status === 'suspended' ? statusHtml(c.status) : '';
+                const usage = included
+                    ? usageMeter(used, included)
+                    : `<span class="row-sub">${escapeHtml(t('commercialization.ui.no_included_time', 'No included time, every session is billed'))}</span>`;
+                return `<li class="list-row">
+                    <span class="row-main">
+                        <span class="row-title">${escapeHtml(name)}</span>
+                        <span class="row-sub">${escapeHtml(c.package_name || pkg.name || '')}</span>
+                        ${usage}
+                    </span>
+                    ${status ? `<span class="row-end">${status}</span>` : ''}
+                </li>`;
+            }).join('');
+        } catch (e) {
+            sideState(list, t('commercialization.ui.error_assignments', 'Could not load assignments.'), () => {
+                sideState(list, t('commercialization.ui.loading_assignments', 'Loading assignments…'));
+                loadUsage();
+            });
+        }
+    }
+
+    // Sessions that still need a work report, whatever the table's filters are
+    let pendingAll = [];
+
+    async function loadPending() {
+        const list = document.getElementById('pending-reports');
+        if (!list) return;
+        try {
+            const data = await api('/api/panel/billing/sessions?status=pending_report');
+            pendingAll = (data.sessions || []).filter((s) => s.status === 'pending_report');
+            if (!pendingAll.length) {
+                sideState(list, t('commercialization.ui.pending_none', 'No sessions are waiting for a report.'));
+                return;
+            }
+            list.innerHTML = pendingAll.map((s) => `<li>
+                <button type="button" class="list-row pending-row" data-pending-session="${escapeHtml(s.id)}">
+                    <span class="row-main">
+                        <span class="row-title">${escapeHtml(s.device_name || s.device_id)}</span>
+                        <span class="row-sub">${escapeHtml(t('commercialization.ui.pending_row_sub', 'Started {date} by {operator}', {
+                            date: formatDate(s.started_at), operator: s.operator_name || s.operator_id || ''
+                        }))}</span>
+                    </span>
+                    <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+                </button>
+            </li>`).join('');
+        } catch (e) {
+            sideState(list, t('commercialization.ui.error_sessions', 'Could not load sessions. The billing service did not answer.'), () => {
+                sideState(list, t('commercialization.ui.loading_sessions', 'Loading sessions…'));
+                loadPending();
+            });
+        }
+    }
+
+    document.getElementById('pending-reports')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-pending-session]');
+        if (!btn) return;
+        const id = btn.getAttribute('data-pending-session');
+        // The dialogs look sessions up in the loaded list; add this one if a filter hides it
+        if (!sessionsAll.some((x) => x.id === id)) {
+            const s = pendingAll.find((x) => x.id === id);
+            if (s) sessionsAll.push(s);
+        }
+        if (canWriteReport) completePendingReport(id);
+        else openSessionDetail(id);
+    });
 
     async function populateOrgFilterSelect(selectEl) {
         if (!selectEl) return;
@@ -963,7 +1087,7 @@
     document.getElementById('filter-contract-search')?.addEventListener('input', renderContracts);
     document.getElementById('filter-package-search')?.addEventListener('input', renderPackages);
 
-    document.getElementById('btn-refresh-sessions')?.addEventListener('click', () => loadSessions());
+    document.getElementById('btn-refresh-sessions')?.addEventListener('click', () => { loadSessions(); loadUsage(); loadPending(); });
     document.getElementById('filter-session-org')?.addEventListener('change', () => loadSessions());
     document.getElementById('filter-session-status')?.addEventListener('change', () => loadSessions());
     let deviceTimer = null;
@@ -977,6 +1101,8 @@
     if (tab === 'sessions') {
         populateOrgFilterSelect(document.getElementById('filter-session-org'));
         loadSessions();
+        loadUsage();
+        loadPending();
     } else {
         loadPackages();
         loadContracts();

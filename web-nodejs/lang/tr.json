@@ -6331,7 +6331,19 @@
             "session_id": "Oturum kimliği",
             "relay_id": "Aktarıcı kimliği",
             "no_report": "Bu oturum için henüz iş raporu yok.",
-            "report_for": "{device}, başlangıç {date}"
+            "report_for": "{device}, başlangıç {date}",
+            "explain_title": "Faturalama nasıl çalışır",
+            "explain_text": "Paket, her ay ne kadar destek süresinin dahil olduğunu, oturumların nasıl yuvarlandığını ve ek sürenin ne kadar tuttuğunu belirler. Atama, bir paketi bir kuruluşa, cihaz grubuna, klasöre veya cihaza verir; bu cihazlardaki uzak oturumlar dahil süreden düşülür.",
+            "usage_title": "Bu ayki dahil süre",
+            "usage_note": "Uzak oturumların bu ay her atamanın dahil süresinden ne kadarını kullandığı. Bunun üzerindeki süre aşım ücretiyle faturalanır.",
+            "used_of_included": "{included} sürenin {used} kadarı kullanıldı",
+            "no_included_time": "Dahil süre yok, her oturum faturalanır",
+            "pending_title": "Rapor bekleyenler",
+            "pending_note": "Hâlâ iş raporu gereken bitmiş oturumlar, tüm kuruluşlarda.",
+            "pending_row_sub": "{operator} tarafından {date} tarihinde başlatıldı",
+            "pending_none": "Rapor bekleyen oturum yok.",
+            "all_sessions_title": "Tüm oturumlar",
+            "used_this_month": "Bu ay kullanılan"
         }
     },
     "remote_dashboard": {

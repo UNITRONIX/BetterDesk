@@ -6325,7 +6325,19 @@
             "session_id": "ID sessione",
             "relay_id": "ID relay",
             "no_report": "Ancora nessun rapporto di lavoro per questa sessione.",
-            "report_for": "{device}, iniziata il {date}"
+            "report_for": "{device}, iniziata il {date}",
+            "explain_title": "Come funziona la fatturazione",
+            "explain_text": "Un pacchetto stabilisce quanto tempo di assistenza è incluso ogni mese, come vengono arrotondate le sessioni e quanto costa il tempo extra. Un’assegnazione dà un pacchetto a un’organizzazione, gruppo di dispositivi, cartella o dispositivo, e le sessioni remote su quei dispositivi vengono scalate dal tempo incluso.",
+            "usage_title": "Tempo incluso questo mese",
+            "usage_note": "Quanto del tempo incluso di ogni assegnazione hanno usato le sessioni remote questo mese. Il tempo oltre viene fatturato alla tariffa di eccedenza.",
+            "used_of_included": "{used} di {included} usati",
+            "no_included_time": "Nessun tempo incluso, ogni sessione viene fatturata",
+            "pending_title": "In attesa di un rapporto",
+            "pending_note": "Sessioni terminate che hanno ancora bisogno di un rapporto di lavoro, in tutte le organizzazioni.",
+            "pending_row_sub": "Avviata il {date} da {operator}",
+            "pending_none": "Nessuna sessione è in attesa di un rapporto.",
+            "all_sessions_title": "Tutte le sessioni",
+            "used_this_month": "Usato questo mese"
         }
     },
     "remote_dashboard": {

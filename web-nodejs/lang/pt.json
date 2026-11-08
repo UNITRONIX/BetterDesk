@@ -6325,7 +6325,19 @@
             "session_id": "ID da sessão",
             "relay_id": "ID do relay",
             "no_report": "Esta sessão ainda não tem relatório de trabalho.",
-            "report_for": "{device}, iniciada em {date}"
+            "report_for": "{device}, iniciada em {date}",
+            "explain_title": "Como funciona a faturação",
+            "explain_text": "Um pacote define quanto tempo de suporte está incluído por mês, como as sessões são arredondadas e quanto custa o tempo extra. Uma atribuição dá um pacote a uma organização, grupo de dispositivos, pasta ou dispositivo, e as sessões remotas nesses dispositivos são descontadas do tempo incluído.",
+            "usage_title": "Tempo incluído este mês",
+            "usage_note": "Quanto do tempo incluído de cada atribuição as sessões remotas usaram este mês. O tempo além disso é faturado à tarifa de excesso.",
+            "used_of_included": "{used} de {included} usados",
+            "no_included_time": "Sem tempo incluído, cada sessão é faturada",
+            "pending_title": "À espera de relatório",
+            "pending_note": "Sessões terminadas que ainda precisam de um relatório de trabalho, em todas as organizações.",
+            "pending_row_sub": "Iniciada em {date} por {operator}",
+            "pending_none": "Nenhuma sessão está à espera de relatório.",
+            "all_sessions_title": "Todas as sessões",
+            "used_this_month": "Usado este mês"
         }
     },
     "remote_dashboard": {

@@ -6329,7 +6329,19 @@
             "session_id": "工作階段 ID",
             "relay_id": "中繼 ID",
             "no_report": "此工作階段尚無工作報告。",
-            "report_for": "{device}，開始於 {date}"
+            "report_for": "{device}，開始於 {date}",
+            "explain_title": "計費方式",
+            "explain_text": "方案設定每月包含多少支援時間、工作階段如何進位，以及超出時間的費用。指派會將方案給予組織、裝置群組、資料夾或裝置，這些裝置上的遠端工作階段會從方案包含的時間中扣除。",
+            "usage_title": "本月包含時間",
+            "usage_note": "本月遠端工作階段已用掉各指派包含時間的多少。超出的時間依超額費率計費。",
+            "used_of_included": "已用 {used}，共 {included}",
+            "no_included_time": "不含時間，每個工作階段都計費",
+            "pending_title": "等待報告",
+            "pending_note": "已結束但仍需工作報告的工作階段，涵蓋所有組織。",
+            "pending_row_sub": "由 {operator} 於 {date} 開始",
+            "pending_none": "沒有等待報告的工作階段。",
+            "all_sessions_title": "所有工作階段",
+            "used_this_month": "本月已用"
         }
     },
     "remote_dashboard": {

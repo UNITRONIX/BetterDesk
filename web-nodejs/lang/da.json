@@ -6331,7 +6331,19 @@
             "session_id": "Sessions-id",
             "relay_id": "Relæ-id",
             "no_report": "Der er endnu ingen arbejdsrapport for denne session.",
-            "report_for": "{device}, startet {date}"
+            "report_for": "{device}, startet {date}",
+            "explain_title": "Sådan fungerer fakturering",
+            "explain_text": "En pakke angiver, hvor meget supporttid der er inkluderet hver måned, hvordan sessioner rundes op, og hvad ekstra tid koster. En tildeling giver en pakke til en organisation, enhedsgruppe, mappe eller enhed, og fjernsessioner på de enheder trækkes fra dens inkluderede tid.",
+            "usage_title": "Inkluderet tid denne måned",
+            "usage_note": "Hvor meget af hver tildelings inkluderede tid fjernsessioner har brugt denne måned. Tid ud over det faktureres til overforbrugsprisen.",
+            "used_of_included": "{used} af {included} brugt",
+            "no_included_time": "Ingen inkluderet tid, hver session faktureres",
+            "pending_title": "Venter på en rapport",
+            "pending_note": "Afsluttede sessioner, der stadig mangler en arbejdsrapport, i alle organisationer.",
+            "pending_row_sub": "Startet {date} af {operator}",
+            "pending_none": "Ingen sessioner venter på en rapport.",
+            "all_sessions_title": "Alle sessioner",
+            "used_this_month": "Brugt denne måned"
         }
     },
     "remote_dashboard": {

@@ -91,3 +91,57 @@
         align-content: center;
     }
 }
+
+/* Side column of the sessions view: included time per assignment */
+.usage-list .meter {
+    margin-top: var(--space-1);
+}
+
+.usage-list .row-end {
+    align-self: flex-start;
+}
+
+/* Sessions waiting for a report: each row opens the report dialog */
+.pending-row {
+    width: 100%;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--rule);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.pending-row:hover {
+    background: var(--bg-subtle);
+}
+
+/* Packages table: used against included time as a meter, bar above the numbers */
+#packages-table td.usage-cell {
+    min-width: 180px;
+}
+
+#packages-table td.usage-cell .meter {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+#packages-table td.usage-cell .meter-bar {
+    flex-basis: 100%;
+}
+
+/* The two package tables need about 1,000 px; the side column (what a
+   package is, billing settings) only goes beside them on wide screens */
+@media (max-width: 1679px) {
+    .commercialization-page .page-cols {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+#packages-table td:nth-child(2) {
+    min-width: 140px;
+}
+
+.billing-explain p {
+    max-width: var(--measure);
+}

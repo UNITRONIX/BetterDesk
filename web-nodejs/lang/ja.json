@@ -6325,7 +6325,19 @@
             "session_id": "セッション ID",
             "relay_id": "リレー ID",
             "no_report": "このセッションの作業報告はまだありません。",
-            "report_for": "{device}、{date} 開始"
+            "report_for": "{device}、{date} 開始",
+            "explain_title": "請求のしくみ",
+            "explain_text": "パッケージは、毎月含まれるサポート時間、セッションの切り上げ方、超過時間の料金を決めます。割り当てはパッケージを組織、デバイスグループ、フォルダー、デバイスに付与し、それらのデバイスでのリモートセッションは含まれる時間から差し引かれます。",
+            "usage_title": "今月の含まれる時間",
+            "usage_note": "今月、リモートセッションが各割り当ての含まれる時間をどれだけ使ったか。超えた分は超過料金で請求されます。",
+            "used_of_included": "{included} のうち {used} 使用",
+            "no_included_time": "含まれる時間はなく、すべてのセッションが請求されます",
+            "pending_title": "報告待ち",
+            "pending_note": "作業報告がまだない終了済みセッション（すべての組織）。",
+            "pending_row_sub": "{date} に {operator} が開始",
+            "pending_none": "報告待ちのセッションはありません。",
+            "all_sessions_title": "すべてのセッション",
+            "used_this_month": "今月の使用"
         }
     },
     "remote_dashboard": {

@@ -6331,7 +6331,19 @@
             "session_id": "Munkamenet-azonosító",
             "relay_id": "Továbbító azonosító",
             "no_report": "Ehhez a munkamenethez még nincs munkajelentés.",
-            "report_for": "{device}, kezdés: {date}"
+            "report_for": "{device}, kezdés: {date}",
+            "explain_title": "Így működik a számlázás",
+            "explain_text": "A csomag meghatározza, mennyi támogatási idő jár havonta, hogyan kerekítik a munkameneteket, és mennyibe kerül a többletidő. A hozzárendelés egy szervezethez, eszközcsoporthoz, mappához vagy eszközhöz rendel csomagot, és az ezeken az eszközökön végzett távoli munkamenetek a benne foglalt időből fogynak.",
+            "usage_title": "Benne foglalt idő ebben a hónapban",
+            "usage_note": "Mennyit használtak fel a távoli munkamenetek ebben a hónapban az egyes hozzárendelések benne foglalt idejéből. Az ezen felüli időt túllépési díjjal számlázzák.",
+            "used_of_included": "{included} időből {used} felhasználva",
+            "no_included_time": "Nincs benne foglalt idő, minden munkamenetet számláznak",
+            "pending_title": "Jelentésre vár",
+            "pending_note": "Befejezett munkamenetek, amelyekhez még munkajelentés kell, minden szervezetben.",
+            "pending_row_sub": "Indította: {operator}, {date}",
+            "pending_none": "Egy munkamenet sem vár jelentésre.",
+            "all_sessions_title": "Összes munkamenet",
+            "used_this_month": "Felhasználva ebben a hónapban"
         }
     },
     "remote_dashboard": {

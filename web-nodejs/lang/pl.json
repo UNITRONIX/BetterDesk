@@ -6325,7 +6325,19 @@
             "session_id": "ID sesji",
             "relay_id": "ID przekaźnika",
             "no_report": "Ta sesja nie ma jeszcze raportu z pracy.",
-            "report_for": "{device}, rozpoczęto {date}"
+            "report_for": "{device}, rozpoczęto {date}",
+            "explain_title": "Jak działa rozliczanie",
+            "explain_text": "Pakiet określa, ile czasu wsparcia obejmuje każdy miesiąc, jak zaokrąglane są sesje i ile kosztuje dodatkowy czas. Przypisanie daje pakiet organizacji, grupie urządzeń, folderowi lub urządzeniu, a sesje zdalne na tych urządzeniach są odliczane od jego czasu w pakiecie.",
+            "usage_title": "Czas w pakiecie w tym miesiącu",
+            "usage_note": "Ile czasu w pakiecie każdego przypisania wykorzystały sesje zdalne w tym miesiącu. Czas ponad to jest rozliczany według stawki za przekroczenie.",
+            "used_of_included": "Wykorzystano {used} z {included}",
+            "no_included_time": "Brak czasu w pakiecie, każda sesja jest rozliczana",
+            "pending_title": "Czeka na raport",
+            "pending_note": "Zakończone sesje, które nadal wymagają raportu z pracy, we wszystkich organizacjach.",
+            "pending_row_sub": "Rozpoczęta {date} przez {operator}",
+            "pending_none": "Żadna sesja nie czeka na raport.",
+            "all_sessions_title": "Wszystkie sesje",
+            "used_this_month": "Wykorzystano w tym miesiącu"
         }
     },
     "remote_dashboard": {

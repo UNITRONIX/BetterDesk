@@ -6325,7 +6325,19 @@
             "session_id": "ID de sesión",
             "relay_id": "ID de retransmisión",
             "no_report": "Esta sesión aún no tiene informe de trabajo.",
-            "report_for": "{device}, iniciada el {date}"
+            "report_for": "{device}, iniciada el {date}",
+            "explain_title": "Cómo funciona la facturación",
+            "explain_text": "Un paquete define cuánto tiempo de soporte se incluye cada mes, cómo se redondean las sesiones y cuánto cuesta el tiempo extra. Una asignación da un paquete a una organización, grupo de dispositivos, carpeta o dispositivo, y las sesiones remotas en esos dispositivos se descuentan de su tiempo incluido.",
+            "usage_title": "Tiempo incluido este mes",
+            "usage_note": "Cuánto del tiempo incluido de cada asignación han usado las sesiones remotas este mes. El tiempo adicional se factura con la tarifa de exceso.",
+            "used_of_included": "{used} de {included} usados",
+            "no_included_time": "Sin tiempo incluido, se factura cada sesión",
+            "pending_title": "Esperando un informe",
+            "pending_note": "Sesiones terminadas que aún necesitan un informe de trabajo, en todas las organizaciones.",
+            "pending_row_sub": "Iniciada el {date} por {operator}",
+            "pending_none": "No hay sesiones esperando un informe.",
+            "all_sessions_title": "Todas las sesiones",
+            "used_this_month": "Usado este mes"
         }
     },
     "remote_dashboard": {

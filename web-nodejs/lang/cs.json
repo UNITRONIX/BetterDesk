@@ -6325,7 +6325,19 @@
             "session_id": "ID relace",
             "relay_id": "ID relay",
             "no_report": "K této relaci zatím není pracovní výkaz.",
-            "report_for": "{device}, zahájeno {date}"
+            "report_for": "{device}, zahájeno {date}",
+            "explain_title": "Jak funguje účtování",
+            "explain_text": "Balíček určuje, kolik času podpory je každý měsíc zahrnuto, jak se relace zaokrouhlují a kolik stojí čas navíc. Přiřazení dává balíček organizaci, skupině zařízení, složce nebo zařízení a vzdálené relace na těchto zařízeních se odečítají z jeho zahrnutého času.",
+            "usage_title": "Zahrnutý čas v tomto měsíci",
+            "usage_note": "Kolik zahrnutého času každého přiřazení spotřebovaly vzdálené relace v tomto měsíci. Čas navíc se účtuje sazbou za překročení.",
+            "used_of_included": "Využito {used} z {included}",
+            "no_included_time": "Žádný zahrnutý čas, účtuje se každá relace",
+            "pending_title": "Čeká na výkaz",
+            "pending_note": "Ukončené relace, ke kterým ještě chybí výkaz práce, ve všech organizacích.",
+            "pending_row_sub": "Zahájil(a) {operator} {date}",
+            "pending_none": "Žádná relace nečeká na výkaz.",
+            "all_sessions_title": "Všechny relace",
+            "used_this_month": "Využito tento měsíc"
         }
     },
     "remote_dashboard": {

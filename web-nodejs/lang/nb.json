@@ -6331,7 +6331,19 @@
             "session_id": "Økt-ID",
             "relay_id": "Relé-ID",
             "no_report": "Ingen arbeidsrapport for denne økten ennå.",
-            "report_for": "{device}, startet {date}"
+            "report_for": "{device}, startet {date}",
+            "explain_title": "Slik fungerer fakturering",
+            "explain_text": "En pakke angir hvor mye supporttid som er inkludert hver måned, hvordan økter rundes av og hva ekstra tid koster. En tildeling gir en pakke til en organisasjon, enhetsgruppe, mappe eller enhet, og fjernøkter på disse enhetene trekkes fra den inkluderte tiden.",
+            "usage_title": "Inkludert tid denne måneden",
+            "usage_note": "Hvor mye av hver tildelings inkluderte tid fjernøkter har brukt denne måneden. Tid utover det faktureres til overforbrukspris.",
+            "used_of_included": "{used} av {included} brukt",
+            "no_included_time": "Ingen inkludert tid, hver økt faktureres",
+            "pending_title": "Venter på rapport",
+            "pending_note": "Avsluttede økter som fortsatt trenger en arbeidsrapport, i alle organisasjoner.",
+            "pending_row_sub": "Startet {date} av {operator}",
+            "pending_none": "Ingen økter venter på rapport.",
+            "all_sessions_title": "Alle økter",
+            "used_this_month": "Brukt denne måneden"
         }
     },
     "remote_dashboard": {

@@ -6331,7 +6331,19 @@
             "session_id": "ID sesi",
             "relay_id": "ID relai",
             "no_report": "Belum ada laporan kerja untuk sesi ini.",
-            "report_for": "{device}, dimulai {date}"
+            "report_for": "{device}, dimulai {date}",
+            "explain_title": "Cara kerja penagihan",
+            "explain_text": "Paket menentukan berapa banyak waktu dukungan yang termasuk setiap bulan, cara sesi dibulatkan, dan biaya waktu tambahan. Penetapan memberikan paket ke organisasi, grup perangkat, folder, atau perangkat, dan sesi jarak jauh pada perangkat tersebut mengurangi waktu yang termasuk.",
+            "usage_title": "Waktu yang termasuk bulan ini",
+            "usage_note": "Berapa banyak waktu yang termasuk dari setiap penetapan yang sudah dipakai sesi jarak jauh bulan ini. Waktu di atasnya ditagih dengan tarif kelebihan.",
+            "used_of_included": "{used} dari {included} terpakai",
+            "no_included_time": "Tidak ada waktu yang termasuk, setiap sesi ditagih",
+            "pending_title": "Menunggu laporan",
+            "pending_note": "Sesi yang sudah berakhir dan masih memerlukan laporan kerja, di semua organisasi.",
+            "pending_row_sub": "Dimulai {date} oleh {operator}",
+            "pending_none": "Tidak ada sesi yang menunggu laporan.",
+            "all_sessions_title": "Semua sesi",
+            "used_this_month": "Terpakai bulan ini"
         }
     },
     "remote_dashboard": {

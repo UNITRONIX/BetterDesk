@@ -6329,7 +6329,19 @@
             "session_id": "ID de session",
             "relay_id": "ID du relais",
             "no_report": "Pas encore de rapport d’intervention pour cette session.",
-            "report_for": "{device}, commencée le {date}"
+            "report_for": "{device}, commencée le {date}",
+            "explain_title": "Fonctionnement de la facturation",
+            "explain_text": "Un forfait fixe le temps d’assistance inclus chaque mois, l’arrondi des sessions et le prix du temps supplémentaire. Une attribution donne un forfait à une organisation, un groupe d’appareils, un dossier ou un appareil, et les sessions à distance sur ces appareils sont décomptées de son temps inclus.",
+            "usage_title": "Temps inclus ce mois-ci",
+            "usage_note": "La part du temps inclus de chaque attribution utilisée par les sessions à distance ce mois-ci. Le temps au-delà est facturé au tarif de dépassement.",
+            "used_of_included": "{used} sur {included} utilisés",
+            "no_included_time": "Pas de temps inclus, chaque session est facturée",
+            "pending_title": "En attente d’un rapport",
+            "pending_note": "Sessions terminées qui n’ont pas encore de rapport d’intervention, dans toutes les organisations.",
+            "pending_row_sub": "Démarrée le {date} par {operator}",
+            "pending_none": "Aucune session n’attend de rapport.",
+            "all_sessions_title": "Toutes les sessions",
+            "used_this_month": "Utilisé ce mois-ci"
         }
     },
     "remote_dashboard": {

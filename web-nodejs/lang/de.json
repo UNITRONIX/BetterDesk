@@ -6325,7 +6325,19 @@
             "session_id": "Sitzungs-ID",
             "relay_id": "Relay-ID",
             "no_report": "Für diese Sitzung gibt es noch keinen Arbeitsbericht.",
-            "report_for": "{device}, gestartet am {date}"
+            "report_for": "{device}, gestartet am {date}",
+            "explain_title": "So funktioniert die Abrechnung",
+            "explain_text": "Ein Paket legt fest, wie viel Supportzeit jeden Monat enthalten ist, wie Sitzungen gerundet werden und was zusätzliche Zeit kostet. Eine Zuweisung gibt ein Paket an eine Organisation, Gerätegruppe, einen Ordner oder ein Gerät, und Fernsitzungen auf diesen Geräten werden von der enthaltenen Zeit abgezogen.",
+            "usage_title": "Enthaltene Zeit in diesem Monat",
+            "usage_note": "Wie viel der enthaltenen Zeit jeder Zuweisung Fernsitzungen in diesem Monat verbraucht haben. Zeit darüber hinaus wird mit dem Preis pro zusätzlicher Stunde abgerechnet.",
+            "used_of_included": "{used} von {included} verbraucht",
+            "no_included_time": "Keine enthaltene Zeit, jede Sitzung wird abgerechnet",
+            "pending_title": "Warten auf einen Bericht",
+            "pending_note": "Beendete Sitzungen, für die noch ein Arbeitsbericht fehlt, in allen Organisationen.",
+            "pending_row_sub": "Gestartet am {date} von {operator}",
+            "pending_none": "Keine Sitzung wartet auf einen Bericht.",
+            "all_sessions_title": "Alle Sitzungen",
+            "used_this_month": "Verbraucht in diesem Monat"
         }
     },
     "remote_dashboard": {

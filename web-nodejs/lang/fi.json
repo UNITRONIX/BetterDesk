@@ -6331,7 +6331,19 @@
             "session_id": "Istunnon tunnus",
             "relay_id": "Välitystunnus",
             "no_report": "Tälle istunnolle ei ole vielä työraporttia.",
-            "report_for": "{device}, alkoi {date}"
+            "report_for": "{device}, alkoi {date}",
+            "explain_title": "Näin laskutus toimii",
+            "explain_text": "Paketti määrittää, kuinka paljon tukiaikaa kuukauteen sisältyy, miten istunnot pyöristetään ja mitä lisäaika maksaa. Kohdistus antaa paketin organisaatiolle, laiteryhmälle, kansiolle tai laitteelle, ja näiden laitteiden etäistunnot vähennetään sen sisältyvästä ajasta.",
+            "usage_title": "Sisältyvä aika tässä kuussa",
+            "usage_note": "Kuinka paljon kunkin kohdistuksen sisältyvästä ajasta etäistunnot ovat käyttäneet tässä kuussa. Ylimenevä aika laskutetaan ylitysveloituksella.",
+            "used_of_included": "{used} / {included} käytetty",
+            "no_included_time": "Ei sisältyvää aikaa, jokainen istunto laskutetaan",
+            "pending_title": "Odottaa raporttia",
+            "pending_note": "Päättyneet istunnot, joista puuttuu vielä työraportti, kaikissa organisaatioissa.",
+            "pending_row_sub": "Aloitettu {date}, aloittaja {operator}",
+            "pending_none": "Mikään istunto ei odota raporttia.",
+            "all_sessions_title": "Kaikki istunnot",
+            "used_this_month": "Käytetty tässä kuussa"
         }
     },
     "remote_dashboard": {

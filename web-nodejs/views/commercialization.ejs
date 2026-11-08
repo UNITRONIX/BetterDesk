@@ -12,13 +12,13 @@
     currentPage: currentPage,
     breadcrumb: breadcrumb,
     body: `
-<div class="page page-wide commercialization-page" data-active-tab="${tab}" data-open-settings="${openSettings ? '1' : '0'}">
+<div class="page commercialization-page" data-active-tab="${tab}" data-open-settings="${openSettings ? '1' : '0'}">
     <div class="page-head">
         <h1>${_('commercialization.tabs.' + tab)}</h1>
         ${tab === 'packages' && canManage ? `
         <div class="page-actions">
-            <button type="button" class="btn" id="btn-new-contract">${_('commercialization.contracts.new')}</button>
-            <button type="button" class="btn btn-primary" id="btn-new-package">${_('commercialization.packages.new')}</button>
+            <button type="button" class="btn" id="btn-new-contract"><span class="material-icons" aria-hidden="true">add</span>${_('commercialization.contracts.new')}</button>
+            <button type="button" class="btn btn-primary" id="btn-new-package"><span class="material-icons" aria-hidden="true">add</span>${_('commercialization.packages.new')}</button>
         </div>` : ''}
         <p class="page-description">${_('commercialization.ui.' + tab + '_description')}
             <a href="/commercialization?tab=${tab === 'packages' ? 'sessions' : 'packages'}">${_('commercialization.tabs.' + (tab === 'packages' ? 'sessions' : 'packages'))}</a></p>
@@ -27,88 +27,114 @@
     <p id="timesync-banner" class="notice warning" hidden></p>
 
     ${tab === 'packages' ? `
-    <section class="section" id="tab-packages" aria-labelledby="packages-title">
-        <div class="section-head"><h2 id="packages-title">${_('commercialization.packages.heading')}</h2></div>
-        <div class="toolbar">
-            <div class="toolbar-search search-wrapper">
-                <span class="material-icons" aria-hidden="true">search</span>
-                <input type="search" id="filter-package-search" class="form-input" aria-label="${_('commercialization.ui.search_packages')}" placeholder="${_('commercialization.ui.search_packages')}">
+    <div class="page-cols">
+    <div class="page-main">
+        <section class="section" id="tab-packages" aria-labelledby="packages-title">
+            <div class="section-head"><h2 id="packages-title">${_('commercialization.packages.heading')}</h2></div>
+            <div class="toolbar">
+                <div class="toolbar-search search-wrapper">
+                    <span class="material-icons" aria-hidden="true">search</span>
+                    <input type="search" id="filter-package-search" class="form-input" aria-label="${_('commercialization.ui.search_packages')}" placeholder="${_('commercialization.ui.search_packages')}">
+                </div>
             </div>
-        </div>
-        <div class="table-scroll">
-            <table class="data-table" id="packages-table">
-                <thead>
-                    <tr>
-                        <th>${_('commercialization.packages.name')}</th>
-                        <th>${_('commercialization.preview.company')}</th>
-                        <th class="num-col">${_('commercialization.preview.devices')}</th>
-                        <th>${_('commercialization.ui.included_time')}</th>
-                        <th>${_('commercialization.preview.used')}</th>
-                        <th>${_('commercialization.preview.remaining')}</th>
-                        <th>${_('commercialization.packages.overage_rate')}</th>
-                        <th class="actions"><span class="sr-only">${_('commercialization.contracts.actions')}</span></th>
-                    </tr>
-                </thead>
-                <tbody><tr><td colspan="8" class="state-cell">${_('commercialization.ui.loading_packages')}</td></tr></tbody>
-            </table>
-        </div>
-    </section>
-
-    <section class="section" aria-labelledby="contracts-title">
-        <div class="section-head"><h2 id="contracts-title">${_('commercialization.contracts.assignments_title')}</h2></div>
-        <p class="section-note">${_('commercialization.ui.assignments_note')}</p>
-        <div class="toolbar">
-            <div class="toolbar-search search-wrapper">
-                <span class="material-icons" aria-hidden="true">search</span>
-                <input type="search" id="filter-contract-search" class="form-input" aria-label="${_('commercialization.ui.search_assignments')}" placeholder="${_('commercialization.ui.search_assignments')}">
+            <div class="table-scroll">
+                <table class="data-table" id="packages-table">
+                    <thead>
+                        <tr>
+                            <th>${_('commercialization.packages.name')}</th>
+                            <th>${_('commercialization.preview.company')}</th>
+                            <th class="num-col">${_('commercialization.preview.devices')}</th>
+                            <th>${_('commercialization.ui.included_time')}</th>
+                            <th>${_('commercialization.ui.used_this_month')}</th>
+                            <th>${_('commercialization.packages.overage_rate')}</th>
+                            <th class="actions"><span class="sr-only">${_('commercialization.contracts.actions')}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody><tr><td colspan="7" class="state-cell">${_('commercialization.ui.loading_packages')}</td></tr></tbody>
+                </table>
             </div>
-            <select id="filter-contract-status" class="form-select" aria-label="${_('commercialization.contracts.status')}">
-                <option value="">${_('commercialization.filters.all_statuses')}</option>
-                <option value="active">${_('commercialization.status.active')}</option>
-                <option value="suspended">${_('commercialization.status.suspended')}</option>
-            </select>
-            <input type="hidden" id="filter-contract-type" value="">
-        </div>
-        <div class="table-scroll">
-            <table class="data-table" id="contracts-table">
-                <thead>
-                    <tr>
-                        <th>${_('commercialization.contracts.target')}</th>
-                        <th>${_('commercialization.contracts.package')}</th>
-                        <th>${_('commercialization.preview.remaining')}</th>
-                        <th>${_('commercialization.contracts.status')}</th>
-                        <th>${_('commercialization.contracts.validity')}</th>
-                        <th class="actions"><span class="sr-only">${_('commercialization.contracts.actions')}</span></th>
-                    </tr>
-                </thead>
-                <tbody><tr><td colspan="6" class="state-cell">${_('commercialization.ui.loading_assignments')}</td></tr></tbody>
-            </table>
-        </div>
-    </section>
+        </section>
 
-    <details class="disclosure section" id="billing-settings-panel"${openSettings ? ' open' : ''}>
-        <summary><h2>${_('commercialization.ui.settings_title')}</h2></summary>
-        <p class="section-note">${_('commercialization.ui.settings_note')}</p>
-        <p><a href="/settings#time">${_('commercialization.clock.open_time_settings')}</a></p>
-        <form id="email-notifications-form" class="form-column billing-notifications">
-            <h3>${_('commercialization.notifications.title')}</h3>
-            <p class="form-hint">${_('commercialization.notifications.desc')}</p>
-            <p id="email-smtp-status" class="smtp-status-line"></p>
-            <p><a href="/settings#email">${_('commercialization.notifications.smtp_link')}</a></p>
-            <label class="check-field"><input type="checkbox" id="notif-help-requests-enabled"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.help_requests_enabled')}</span></label>
-            <label class="check-field"><input type="checkbox" id="notif-assigned-operators"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.notify_assigned_operators')}</span></label>
-            <label class="check-field"><input type="checkbox" id="notif-fallback-alert"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.fallback_alert_email')}</span></label>
-            <label class="check-field"><input type="checkbox" id="notif-folder-subject"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.include_folder_in_subject')}</span></label>
-            <p class="field-effect">${_('commercialization.ui.applies_now')}</p>
-            ${canManage ? `
-            <div class="form-actions">
-                <button type="button" class="btn" id="btn-save-email-notifications">${_('commercialization.notifications.save')}</button>
-                <span class="form-status" id="email-notifications-status" aria-live="polite"></span>
-            </div>` : ''}
-        </form>
-    </details>
+        <section class="section" aria-labelledby="contracts-title">
+            <div class="section-head"><h2 id="contracts-title">${_('commercialization.contracts.assignments_title')}</h2></div>
+            <p class="section-note">${_('commercialization.ui.assignments_note')}</p>
+            <div class="toolbar">
+                <div class="toolbar-search search-wrapper">
+                    <span class="material-icons" aria-hidden="true">search</span>
+                    <input type="search" id="filter-contract-search" class="form-input" aria-label="${_('commercialization.ui.search_assignments')}" placeholder="${_('commercialization.ui.search_assignments')}">
+                </div>
+                <select id="filter-contract-status" class="form-select" aria-label="${_('commercialization.contracts.status')}">
+                    <option value="">${_('commercialization.filters.all_statuses')}</option>
+                    <option value="active">${_('commercialization.status.active')}</option>
+                    <option value="suspended">${_('commercialization.status.suspended')}</option>
+                </select>
+                <input type="hidden" id="filter-contract-type" value="">
+            </div>
+            <div class="table-scroll">
+                <table class="data-table" id="contracts-table">
+                    <thead>
+                        <tr>
+                            <th>${_('commercialization.contracts.target')}</th>
+                            <th>${_('commercialization.contracts.package')}</th>
+                            <th>${_('commercialization.preview.remaining')}</th>
+                            <th>${_('commercialization.contracts.status')}</th>
+                            <th>${_('commercialization.contracts.validity')}</th>
+                            <th class="actions"><span class="sr-only">${_('commercialization.contracts.actions')}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody><tr><td colspan="6" class="state-cell">${_('commercialization.ui.loading_assignments')}</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <aside class="page-side" aria-labelledby="billing-explain-title">
+        <div class="section billing-explain">
+            <div class="section-head"><h2 id="billing-explain-title">${_('commercialization.ui.explain_title')}</h2></div>
+            <p>${_('commercialization.ui.explain_text')}</p>
+        </div>
+
+        <details class="disclosure section" id="billing-settings-panel"${openSettings ? ' open' : ''}>
+            <summary><h2>${_('commercialization.ui.settings_title')}</h2></summary>
+            <p class="section-note">${_('commercialization.ui.settings_note')}</p>
+            <p><a href="/settings#time">${_('commercialization.clock.open_time_settings')}</a></p>
+            <form id="email-notifications-form" class="form-column billing-notifications">
+                <h3>${_('commercialization.notifications.title')}</h3>
+                <p class="form-hint">${_('commercialization.notifications.desc')}</p>
+                <p id="email-smtp-status" class="smtp-status-line"></p>
+                <p><a href="/settings#email">${_('commercialization.notifications.smtp_link')}</a></p>
+                <label class="check-field"><input type="checkbox" id="notif-help-requests-enabled"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.help_requests_enabled')}</span></label>
+                <label class="check-field"><input type="checkbox" id="notif-assigned-operators"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.notify_assigned_operators')}</span></label>
+                <label class="check-field"><input type="checkbox" id="notif-fallback-alert"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.fallback_alert_email')}</span></label>
+                <label class="check-field"><input type="checkbox" id="notif-folder-subject"${canManage ? '' : ' disabled'}><span class="check-label">${_('commercialization.notifications.include_folder_in_subject')}</span></label>
+                <p class="field-effect">${_('commercialization.ui.applies_now')}</p>
+                ${canManage ? `
+                <div class="form-actions">
+                    <button type="button" class="btn" id="btn-save-email-notifications">${_('commercialization.notifications.save')}</button>
+                    <span class="form-status" id="email-notifications-status" aria-live="polite"></span>
+                </div>` : ''}
+            </form>
+        </details>
+    </aside>
+    </div>
     ` : `
-    <section class="section" id="tab-sessions" aria-label="${_('commercialization.tabs.sessions')}">
+    <!-- What needs doing and how much included time is left, above the full-width table -->
+    <div class="cols billing-summary">
+        <section class="section" aria-labelledby="pending-title">
+            <div class="section-head"><h2 id="pending-title">${_('commercialization.ui.pending_title')}</h2></div>
+            <p class="section-note">${_('commercialization.ui.pending_note')}</p>
+            <ul class="list pending-list" id="pending-reports"><li class="list-row is-empty">${_('commercialization.ui.loading_sessions')}</li></ul>
+        </section>
+
+        <section class="section" aria-labelledby="usage-title">
+            <div class="section-head"><h2 id="usage-title">${_('commercialization.ui.usage_title')}</h2></div>
+            <p class="section-note">${_('commercialization.ui.usage_note')}</p>
+            <ul class="list usage-list" id="contract-usage"><li class="list-row is-empty">${_('commercialization.ui.loading_assignments')}</li></ul>
+        </section>
+    </div>
+
+    <section class="section" id="tab-sessions" aria-labelledby="sessions-title">
+        <div class="section-head"><h2 id="sessions-title">${_('commercialization.ui.all_sessions_title')}</h2></div>
         <div class="toolbar session-filters">
             <div class="form-group">
                 <label class="form-label" for="filter-session-org">${_('commercialization.filters.organization')}</label>
@@ -128,16 +154,16 @@
                 <input type="search" id="filter-session-device" class="form-input" autocomplete="off">
             </div>
             <div class="toolbar-end">
-                <button type="button" class="btn" id="btn-refresh-sessions">${_('commercialization.actions.refresh')}</button>
+                <button type="button" class="btn" id="btn-refresh-sessions"><span class="material-icons" aria-hidden="true">refresh</span>${_('commercialization.actions.refresh')}</button>
                 ${canExport ? `
                 <span class="menu-anchor">
                     <button type="button" class="btn" id="btn-export-menu" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">
-                        ${_('commercialization.ui.export')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+                        <span class="material-icons" aria-hidden="true">download</span>${_('commercialization.ui.export')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
                     </button>
                     <span class="menu menu-end" id="export-menu" role="menu">
-                        <button type="button" class="menu-item" role="menuitem" id="btn-export-sessions">${_('commercialization.ui.export_sessions_csv')}</button>
-                        <button type="button" class="menu-item" role="menuitem" id="btn-export-reports-csv">${_('commercialization.ui.export_reports_csv')}</button>
-                        <button type="button" class="menu-item" role="menuitem" id="btn-export-reports-pdf">${_('commercialization.ui.export_reports_pdf')}</button>
+                        <button type="button" class="menu-item" role="menuitem" id="btn-export-sessions"><span class="material-icons" aria-hidden="true">download</span>${_('commercialization.ui.export_sessions_csv')}</button>
+                        <button type="button" class="menu-item" role="menuitem" id="btn-export-reports-csv"><span class="material-icons" aria-hidden="true">download</span>${_('commercialization.ui.export_reports_csv')}</button>
+                        <button type="button" class="menu-item" role="menuitem" id="btn-export-reports-pdf"><span class="material-icons" aria-hidden="true">download</span>${_('commercialization.ui.export_reports_pdf')}</button>
                     </span>
                 </span>` : ''}
             </div>

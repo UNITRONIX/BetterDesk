@@ -6398,7 +6398,19 @@
             "session_id": "Session ID",
             "relay_id": "Relay ID",
             "no_report": "No work report for this session yet.",
-            "report_for": "{device}, started {date}"
+            "report_for": "{device}, started {date}",
+            "explain_title": "How billing works",
+            "explain_text": "A package sets how much support time is included each month, how sessions are rounded and what extra time costs. An assignment gives a package to an organization, device group, folder or device, and remote sessions on those devices count against its included time.",
+            "usage_title": "Included time this month",
+            "usage_note": "How much of each assignment's included time remote sessions have used this month. Time beyond it is billed at the overage rate.",
+            "used_of_included": "{used} of {included} used",
+            "no_included_time": "No included time, every session is billed",
+            "pending_title": "Waiting for a report",
+            "pending_note": "Ended sessions that still need a work report, in all organizations.",
+            "pending_row_sub": "Started {date} by {operator}",
+            "pending_none": "No sessions are waiting for a report.",
+            "all_sessions_title": "All sessions",
+            "used_this_month": "Used this month"
         }
     },
     "rdclient_login": {
