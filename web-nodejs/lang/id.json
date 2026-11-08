@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Tidak dapat memuat riwayat.",
         "request_failed": "Permintaan gagal.",
-        "tools_note": "Untuk memeriksa host atau port sekali saja, gunakan {link}."
+        "tools_note": "Untuk memeriksa host atau port sekali saja, gunakan {link}.",
+        "side_label": "Pemantauan dan waktu respons",
+        "monitor_title": "Pemeriksaan otomatis",
+        "rtt_title": "Waktu respons",
+        "rtt_target": "Target",
+        "rtt_label": "Waktu respons {name}",
+        "rtt_summary": "{count} pemeriksaan sejak {since}, {down} tanpa jawaban. Jawaban butuh {min} hingga {max} ms.",
+        "rtt_summary_none": "{count} pemeriksaan sejak {since}, tidak ada yang dijawab."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

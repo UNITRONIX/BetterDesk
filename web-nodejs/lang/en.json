@@ -2916,7 +2916,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Could not load the history.",
         "request_failed": "The request failed.",
-        "tools_note": "For a one-off check of a host or port, use {link}."
+        "tools_note": "For a one-off check of a host or port, use {link}.",
+        "side_label": "Monitoring and response times",
+        "monitor_title": "Automatic checks",
+        "rtt_title": "Response time",
+        "rtt_target": "Target",
+        "rtt_label": "Response time of {name}",
+        "rtt_summary": "{count} checks since {since}, {down} without an answer. Answers took {min} to {max} ms.",
+        "rtt_summary_none": "{count} checks since {since}, none got an answer."
     },
     "dataguard": {
         "title": "DataGuard — DLP",

@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Não foi possível carregar o histórico.",
         "request_failed": "A solicitação falhou.",
-        "tools_note": "Para uma verificação avulsa de um host ou porta, use {link}."
+        "tools_note": "Para uma verificação avulsa de um host ou porta, use {link}.",
+        "side_label": "Monitoramento e tempos de resposta",
+        "monitor_title": "Verificações automáticas",
+        "rtt_title": "Tempo de resposta",
+        "rtt_target": "Destino",
+        "rtt_label": "Tempo de resposta de {name}",
+        "rtt_summary": "{count} verificações desde {since}, {down} sem resposta. As respostas levaram de {min} a {max} ms.",
+        "rtt_summary_none": "{count} verificações desde {since}, nenhuma teve resposta."
     },
     "dataguard": {
         "title": "DataGuard",

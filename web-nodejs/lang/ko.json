@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "기록을 불러올 수 없습니다.",
         "request_failed": "요청이 실패했습니다.",
-        "tools_note": "호스트나 포트를 한 번만 확인하려면 {link} 페이지를 사용하세요."
+        "tools_note": "호스트나 포트를 한 번만 확인하려면 {link} 페이지를 사용하세요.",
+        "side_label": "모니터링과 응답 시간",
+        "monitor_title": "자동 확인",
+        "rtt_title": "응답 시간",
+        "rtt_target": "대상",
+        "rtt_label": "{name} 응답 시간",
+        "rtt_summary": "{since} 이후 {count}회 확인, 응답 없음 {down}회. 응답에 {min}~{max} ms가 걸렸습니다.",
+        "rtt_summary_none": "{since} 이후 {count}회 확인, 응답을 받은 적이 없습니다."
     },
     "dataguard": {
         "title": "데이터 보호",

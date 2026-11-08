@@ -2859,7 +2859,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Impossible de charger l'historique.",
         "request_failed": "La requête a échoué.",
-        "tools_note": "Pour vérifier ponctuellement un hôte ou un port, utilisez la page {link}."
+        "tools_note": "Pour vérifier ponctuellement un hôte ou un port, utilisez la page {link}.",
+        "side_label": "Surveillance et temps de réponse",
+        "monitor_title": "Vérifications automatiques",
+        "rtt_title": "Temps de réponse",
+        "rtt_target": "Cible",
+        "rtt_label": "Temps de réponse de {name}",
+        "rtt_summary": "{count} vérifications depuis le {since}, {down} sans réponse. Les réponses ont pris de {min} à {max} ms.",
+        "rtt_summary_none": "{count} vérifications depuis le {since}, aucune n'a obtenu de réponse."
     },
     "dataguard": {
         "title": "Tableau de bord",

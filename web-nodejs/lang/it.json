@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Impossibile caricare la cronologia.",
         "request_failed": "La richiesta non è riuscita.",
-        "tools_note": "Per un controllo singolo di un host o di una porta, usi {link}."
+        "tools_note": "Per un controllo singolo di un host o di una porta, usi {link}.",
+        "side_label": "Monitoraggio e tempi di risposta",
+        "monitor_title": "Controlli automatici",
+        "rtt_title": "Tempo di risposta",
+        "rtt_target": "Destinazione",
+        "rtt_label": "Tempo di risposta di {name}",
+        "rtt_summary": "{count} controlli da {since}, {down} senza risposta. Le risposte hanno richiesto da {min} a {max} ms.",
+        "rtt_summary_none": "{count} controlli da {since}, nessuno ha ricevuto risposta."
     },
     "dataguard": {
         "title": "DataGuard",

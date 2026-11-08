@@ -1,8 +1,8 @@
 <%- include('layouts/main', {
     title: _('nav.network'),
     uiReworked: true,
-    pageStyles: ['ui/network'],
-    pageScripts: ['network'],
+    pageStyles: ['ui/chart', 'ui/network'],
+    pageScripts: ['ui-chart', 'network'],
     currentPage: 'network',
     breadcrumb: [{ label: _('nav.network') }],
     body: `
@@ -11,17 +11,12 @@
             <h1>${_('nav.network')}</h1>
             <p class="page-description">${_('network.page_description')}</p>
             <div class="page-actions">
-                <button type="button" class="btn btn-primary" id="create-target-btn" hidden>${_('network.add_target')}</button>
+                <button type="button" class="btn btn-primary" id="create-target-btn" hidden><span class="material-icons" aria-hidden="true">add</span>${_('network.add_target')}</button>
             </div>
         </div>
 
-        <div class="monitor-bar" id="monitor-bar">
-            <span class="status stopped" id="monitor-state">${_('network.monitor_loading')}</span>
-            <button type="button" class="btn btn-sm" id="monitor-toggle-btn" hidden>${_('network.monitor_start')}</button>
-            <span class="form-status" id="monitor-status" aria-live="polite"></span>
-        </div>
-
-        <section class="section" aria-label="${_('network.targets')}">
+        <div class="page-cols">
+        <section class="section page-main" aria-label="${_('network.targets')}">
             <div class="toolbar">
                 <div class="toolbar-search search-wrapper">
                     <span class="material-icons" aria-hidden="true">search</span>
@@ -30,7 +25,7 @@
                         placeholder="${_('network.search_label')}">
                 </div>
                 <div class="toolbar-end">
-                    <button type="button" class="btn" id="refresh-btn">${_('actions.refresh')}</button>
+                    <button type="button" class="btn" id="refresh-btn"><span class="material-icons" aria-hidden="true">refresh</span>${_('actions.refresh')}</button>
                 </div>
             </div>
             <p class="count-line" id="targets-count" aria-live="polite"></p>
@@ -54,6 +49,30 @@
             </div>
             <p class="network-tools-note" id="network-tools-note" hidden>${_('network.tools_note').replace('{link}', `<a href="/toolkit">${_('nav.toolkit')}</a>`)}</p>
         </section>
+
+        <aside class="page-side network-side" aria-label="${_('network.side_label')}">
+            <!-- Whether the server checks on its own -->
+            <section class="section" aria-labelledby="monitor-title">
+                <h2 id="monitor-title">${_('network.monitor_title')}</h2>
+                <div class="monitor-bar" id="monitor-bar">
+                    <span class="status stopped" id="monitor-state">${_('network.monitor_loading')}</span>
+                    <button type="button" class="btn btn-sm" id="monitor-toggle-btn" hidden>${_('network.monitor_start')}</button>
+                    <span class="form-status" id="monitor-status" aria-live="polite"></span>
+                </div>
+            </section>
+
+            <!-- Response times of one target from its check history (network.js renderRtt) -->
+            <section class="section" aria-labelledby="rtt-title" id="rtt-section" hidden>
+                <h2 id="rtt-title">${_('network.rtt_title')}</h2>
+                <div class="form-group rtt-pick">
+                    <label class="form-label" for="rtt-target">${_('network.rtt_target')}</label>
+                    <select id="rtt-target" class="form-select"></select>
+                </div>
+                <div id="rtt-chart"></div>
+                <div id="rtt-state"></div>
+            </section>
+        </aside>
+        </div>
     </div>
     `
 }) %>

@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Nem sikerült betölteni az előzményeket.",
         "request_failed": "A kérés sikertelen.",
-        "tools_note": "Gazdagép vagy port egyszeri ellenőrzéséhez használja a {link} oldalt."
+        "tools_note": "Gazdagép vagy port egyszeri ellenőrzéséhez használja a {link} oldalt.",
+        "side_label": "Figyelés és válaszidők",
+        "monitor_title": "Automatikus ellenőrzések",
+        "rtt_title": "Válaszidő",
+        "rtt_target": "Cél",
+        "rtt_label": "{name} válaszideje",
+        "rtt_summary": "{count} ellenőrzés {since} óta, ebből {down} válasz nélkül. A válaszok {min}–{max} ms alatt érkeztek.",
+        "rtt_summary_none": "{count} ellenőrzés {since} óta, egyik sem kapott választ."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

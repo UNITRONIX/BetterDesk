@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Der Verlauf konnte nicht geladen werden.",
         "request_failed": "Die Anfrage ist fehlgeschlagen.",
-        "tools_note": "Für eine einmalige Prüfung eines Hosts oder Ports verwenden Sie {link}."
+        "tools_note": "Für eine einmalige Prüfung eines Hosts oder Ports verwenden Sie {link}.",
+        "side_label": "Überwachung und Antwortzeiten",
+        "monitor_title": "Automatische Prüfungen",
+        "rtt_title": "Antwortzeit",
+        "rtt_target": "Ziel",
+        "rtt_label": "Antwortzeit von {name}",
+        "rtt_summary": "{count} Prüfungen seit {since}, {down} ohne Antwort. Die Antworten dauerten {min} bis {max} ms.",
+        "rtt_summary_none": "{count} Prüfungen seit {since}, keine bekam eine Antwort."
     },
     "dataguard": {
         "title": "Dashboard",

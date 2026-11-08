@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Det gick inte att läsa in historiken.",
         "request_failed": "Begäran misslyckades.",
-        "tools_note": "Använd {link} för en enstaka kontroll av en värd eller port."
+        "tools_note": "Använd {link} för en enstaka kontroll av en värd eller port.",
+        "side_label": "Övervakning och svarstider",
+        "monitor_title": "Automatiska kontroller",
+        "rtt_title": "Svarstid",
+        "rtt_target": "Mål",
+        "rtt_label": "Svarstid för {name}",
+        "rtt_summary": "{count} kontroller sedan {since}, {down} utan svar. Svaren tog {min} till {max} ms.",
+        "rtt_summary_none": "{count} kontroller sedan {since}, ingen fick svar."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

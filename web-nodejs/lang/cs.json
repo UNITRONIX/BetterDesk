@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Historii nelze načíst.",
         "request_failed": "Požadavek se nezdařil.",
-        "tools_note": "Pro jednorázovou kontrolu hostitele nebo portu použijte stránku {link}."
+        "tools_note": "Pro jednorázovou kontrolu hostitele nebo portu použijte stránku {link}.",
+        "side_label": "Sledování a doby odezvy",
+        "monitor_title": "Automatické kontroly",
+        "rtt_title": "Doba odezvy",
+        "rtt_target": "Cíl",
+        "rtt_label": "Doba odezvy: {name}",
+        "rtt_summary": "Kontroly od {since}: {count}, bez odpovědi: {down}. Odpovědi trvaly {min} až {max} ms.",
+        "rtt_summary_none": "Kontroly od {since}: {count}, žádná nedostala odpověď."
     },
     "dataguard": {
         "title": "DataGuard — ochrana DLP",

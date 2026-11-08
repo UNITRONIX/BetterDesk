@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "无法加载历史记录。",
         "request_failed": "请求失败。",
-        "tools_note": "如需对主机或端口进行一次性检查，请使用{link}。"
+        "tools_note": "如需对主机或端口进行一次性检查，请使用{link}。",
+        "side_label": "监控和响应时间",
+        "monitor_title": "自动检查",
+        "rtt_title": "响应时间",
+        "rtt_target": "目标",
+        "rtt_label": "{name} 的响应时间",
+        "rtt_summary": "自 {since} 起检查 {count} 次，{down} 次无应答。应答用时 {min} 到 {max} ms。",
+        "rtt_summary_none": "自 {since} 起检查 {count} 次，均无应答。"
     },
     "dataguard": {
         "title": "数据防护 — DLP",

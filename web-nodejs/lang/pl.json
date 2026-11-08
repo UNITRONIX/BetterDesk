@@ -2855,7 +2855,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Nie udało się załadować historii.",
         "request_failed": "Żądanie nie powiodło się.",
-        "tools_note": "Aby jednorazowo sprawdzić host lub port, użyj strony {link}."
+        "tools_note": "Aby jednorazowo sprawdzić host lub port, użyj strony {link}.",
+        "side_label": "Monitorowanie i czasy odpowiedzi",
+        "monitor_title": "Automatyczne sprawdzanie",
+        "rtt_title": "Czas odpowiedzi",
+        "rtt_target": "Cel",
+        "rtt_label": "Czas odpowiedzi: {name}",
+        "rtt_summary": "Sprawdzenia od {since}: {count}, bez odpowiedzi: {down}. Odpowiedzi trwały od {min} do {max} ms.",
+        "rtt_summary_none": "Sprawdzenia od {since}: {count}, żadne nie dostało odpowiedzi."
     },
     "dataguard": {
         "title": "DataGuard — ochrona DLP",

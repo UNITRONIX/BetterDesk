@@ -2859,7 +2859,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "無法載入記錄。",
         "request_failed": "要求失敗。",
-        "tools_note": "如需對主機或連接埠進行一次性檢查，請使用{link}。"
+        "tools_note": "如需對主機或連接埠進行一次性檢查，請使用{link}。",
+        "side_label": "監控與回應時間",
+        "monitor_title": "自動檢查",
+        "rtt_title": "回應時間",
+        "rtt_target": "目標",
+        "rtt_label": "{name} 的回應時間",
+        "rtt_summary": "自 {since} 起檢查 {count} 次，{down} 次無回應。回應用時 {min} 到 {max} ms。",
+        "rtt_summary_none": "自 {since} 起檢查 {count} 次，皆無回應。"
     },
     "dataguard": {
         "title": "數據防護 — DLP",

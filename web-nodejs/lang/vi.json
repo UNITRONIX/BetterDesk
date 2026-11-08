@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Không thể tải lịch sử.",
         "request_failed": "Yêu cầu không thành công.",
-        "tools_note": "Để kiểm tra một lần cho host hoặc cổng, hãy dùng {link}."
+        "tools_note": "Để kiểm tra một lần cho host hoặc cổng, hãy dùng {link}.",
+        "side_label": "Giám sát và thời gian phản hồi",
+        "monitor_title": "Kiểm tra tự động",
+        "rtt_title": "Thời gian phản hồi",
+        "rtt_target": "Mục tiêu",
+        "rtt_label": "Thời gian phản hồi của {name}",
+        "rtt_summary": "{count} lần kiểm tra từ {since}, {down} lần không phản hồi. Phản hồi mất từ {min} đến {max} ms.",
+        "rtt_summary_none": "{count} lần kiểm tra từ {since}, không lần nào có phản hồi."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

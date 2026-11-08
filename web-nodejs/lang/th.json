@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "ไม่สามารถโหลดประวัติได้",
         "request_failed": "คำขอล้มเหลว",
-        "tools_note": "หากต้องการตรวจสอบโฮสต์หรือพอร์ตเพียงครั้งเดียว ให้ใช้ {link}"
+        "tools_note": "หากต้องการตรวจสอบโฮสต์หรือพอร์ตเพียงครั้งเดียว ให้ใช้ {link}",
+        "side_label": "การตรวจสอบและเวลาตอบสนอง",
+        "monitor_title": "การตรวจสอบอัตโนมัติ",
+        "rtt_title": "เวลาตอบสนอง",
+        "rtt_target": "เป้าหมาย",
+        "rtt_label": "เวลาตอบสนองของ {name}",
+        "rtt_summary": "ตรวจสอบ {count} ครั้งตั้งแต่ {since} ไม่มีการตอบ {down} ครั้ง การตอบใช้เวลา {min} ถึง {max} ms",
+        "rtt_summary_none": "ตรวจสอบ {count} ครั้งตั้งแต่ {since} ไม่มีครั้งใดได้รับการตอบ"
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

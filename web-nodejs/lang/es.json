@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "No se pudo cargar el historial.",
         "request_failed": "La solicitud falló.",
-        "tools_note": "Para una comprobación puntual de un host o puerto, use {link}."
+        "tools_note": "Para una comprobación puntual de un host o puerto, use {link}.",
+        "side_label": "Supervisión y tiempos de respuesta",
+        "monitor_title": "Comprobaciones automáticas",
+        "rtt_title": "Tiempo de respuesta",
+        "rtt_target": "Destino",
+        "rtt_label": "Tiempo de respuesta de {name}",
+        "rtt_summary": "{count} comprobaciones desde {since}, {down} sin respuesta. Las respuestas tardaron entre {min} y {max} ms.",
+        "rtt_summary_none": "{count} comprobaciones desde {since}, ninguna obtuvo respuesta."
     },
     "dataguard": {
         "title": "Panel",

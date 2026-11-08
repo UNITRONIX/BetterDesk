@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "履歴を読み込めませんでした。",
         "request_failed": "リクエストに失敗しました。",
-        "tools_note": "ホストやポートを 1 回だけチェックするには、{link} を使用してください。"
+        "tools_note": "ホストやポートを 1 回だけチェックするには、{link} を使用してください。",
+        "side_label": "監視と応答時間",
+        "monitor_title": "自動チェック",
+        "rtt_title": "応答時間",
+        "rtt_target": "対象",
+        "rtt_label": "{name} の応答時間",
+        "rtt_summary": "{since} 以降 {count} 回チェック、応答なし {down} 回。応答時間は {min}〜{max} ms でした。",
+        "rtt_summary_none": "{since} 以降 {count} 回チェック、応答は一度もありませんでした。"
     },
     "dataguard": {
         "title": "データガード — DLP",

@@ -2837,7 +2837,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Kan de geschiedenis niet laden.",
         "request_failed": "Het verzoek is mislukt.",
-        "tools_note": "Gebruik {link} voor een eenmalige controle van een host of poort."
+        "tools_note": "Gebruik {link} voor een eenmalige controle van een host of poort.",
+        "side_label": "Bewaking en reactietijden",
+        "monitor_title": "Automatische controles",
+        "rtt_title": "Reactietijd",
+        "rtt_target": "Doel",
+        "rtt_label": "Reactietijd van {name}",
+        "rtt_summary": "{count} controles sinds {since}, {down} zonder antwoord. Antwoorden duurden {min} tot {max} ms.",
+        "rtt_summary_none": "{count} controles sinds {since}, geen enkele kreeg antwoord."
     },
     "dataguard": {
         "title": "DataGuard",

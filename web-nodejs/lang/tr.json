@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Geçmiş yüklenemedi.",
         "request_failed": "İstek başarısız oldu.",
-        "tools_note": "Bir ana bilgisayarı veya portu tek seferlik denetlemek için {link} sayfasını kullanın."
+        "tools_note": "Bir ana bilgisayarı veya portu tek seferlik denetlemek için {link} sayfasını kullanın.",
+        "side_label": "İzleme ve yanıt süreleri",
+        "monitor_title": "Otomatik denetimler",
+        "rtt_title": "Yanıt süresi",
+        "rtt_target": "Hedef",
+        "rtt_label": "{name} yanıt süresi",
+        "rtt_summary": "{since} tarihinden beri {count} denetim, {down} tanesi yanıtsız. Yanıtlar {min} ile {max} ms arasında sürdü.",
+        "rtt_summary_none": "{since} tarihinden beri {count} denetim, hiçbiri yanıt almadı."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

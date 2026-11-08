@@ -2844,7 +2844,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "تعذّر تحميل السجل.",
         "request_failed": "فشل الطلب.",
-        "tools_note": "لفحص مضيف أو منفذ مرة واحدة، استخدم صفحة {link}."
+        "tools_note": "لفحص مضيف أو منفذ مرة واحدة، استخدم صفحة {link}.",
+        "side_label": "المراقبة وأزمنة الاستجابة",
+        "monitor_title": "الفحوصات التلقائية",
+        "rtt_title": "زمن الاستجابة",
+        "rtt_target": "الهدف",
+        "rtt_label": "زمن استجابة {name}",
+        "rtt_summary": "{count} فحصًا منذ {since}، منها {down} دون رد. استغرقت الردود من {min} إلى {max} مللي ثانية.",
+        "rtt_summary_none": "{count} فحصًا منذ {since}، ولم يحصل أي منها على رد."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

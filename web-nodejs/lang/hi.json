@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "इतिहास लोड नहीं हो सका।",
         "request_failed": "अनुरोध विफल रहा।",
-        "tools_note": "किसी होस्ट या पोर्ट की एक बार जाँच के लिए {link} का उपयोग करें।"
+        "tools_note": "किसी होस्ट या पोर्ट की एक बार जाँच के लिए {link} का उपयोग करें।",
+        "side_label": "निगरानी और प्रतिक्रिया समय",
+        "monitor_title": "स्वचालित जाँच",
+        "rtt_title": "प्रतिक्रिया समय",
+        "rtt_target": "लक्ष्य",
+        "rtt_label": "{name} का प्रतिक्रिया समय",
+        "rtt_summary": "{since} से {count} जाँच, {down} का कोई जवाब नहीं। जवाब आने में {min} से {max} ms लगे।",
+        "rtt_summary_none": "{since} से {count} जाँच, किसी का जवाब नहीं आया।"
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

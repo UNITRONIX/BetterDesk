@@ -30,10 +30,16 @@
     const monitorBtn = document.getElementById('monitor-toggle-btn');
     const monitorStatus = document.getElementById('monitor-status');
     const toolsNote = document.getElementById('network-tools-note');
+    const rttSection = document.getElementById('rtt-section');
+    const rttSelect = document.getElementById('rtt-target');
+    const rttChart = document.getElementById('rtt-chart');
+    const rttState = document.getElementById('rtt-state');
 
     let allTargets = [];
     let loadError = null;
     let monitorRunning = null;
+    let rttTargetId = null;   // target shown in the response-time chart
+    let rttRequest = 0;       // ignores history answers that arrive after a newer request
 
     if (canManage) createBtn.hidden = false;
     if (canCheck && toolsNote) toolsNote.hidden = false;
@@ -104,6 +110,7 @@
             refreshBtn.disabled = false;
         }
         render();
+        renderRttPicker();
     }
 
     function renderCount(shown) {
@@ -152,11 +159,11 @@
         const id = esc(t.id);
         const menuId = `target-menu-${id}`;
         const nearEnd = total > 3 && index >= total - 2;
-        const items = [`<button type="button" class="menu-item" role="menuitem" data-action="history" data-id="${id}">${esc(_('network.check_history'))}</button>`];
+        const items = [`<button type="button" class="menu-item" role="menuitem" data-action="history" data-id="${id}">${Utils.icon('history')}${esc(_('network.check_history'))}</button>`];
         if (canManage) {
-            items.push(`<button type="button" class="menu-item" role="menuitem" data-action="edit" data-id="${id}">${esc(_('network.edit_target_item'))}</button>`);
+            items.push(`<button type="button" class="menu-item" role="menuitem" data-action="edit" data-id="${id}">${Utils.icon('edit')}${esc(_('network.edit_target_item'))}</button>`);
             items.push('<span class="menu-divider" role="separator"></span>');
-            items.push(`<button type="button" class="menu-item danger" role="menuitem" data-action="delete" data-id="${id}">${esc(_('network.delete_target_item'))}</button>`);
+            items.push(`<button type="button" class="menu-item danger" role="menuitem" data-action="delete" data-id="${id}">${Utils.icon('delete')}${esc(_('network.delete_target_item'))}</button>`);
         }
         const latency = t.last_status === 'up' ? latencyText(t.last_rtt_ms) : '';
         return `
@@ -388,6 +395,109 @@
             body.innerHTML = `<p class="state is-error">${esc(_('network.history_failed'))} ${esc(errorText(err))}</p>`;
         }
     }
+
+    // ---- Response time chart (side column) ----
+
+    const RTT_CHECKS = 100;
+
+    function renderRttPicker() {
+        if (loadError || !allTargets.length) {
+            rttSection.hidden = true;
+            return;
+        }
+        rttSection.hidden = false;
+        if (!findTarget(rttTargetId)) {
+            // Start with a target that has been checked, so there is something to draw
+            const first = allTargets.find((t) => t.last_check_at) || allTargets[0];
+            rttTargetId = String(first.id);
+        }
+        rttSelect.innerHTML = allTargets
+            .map((t) => `<option value="${esc(t.id)}"${String(t.id) === String(rttTargetId) ? ' selected' : ''}>${esc(t.name)}</option>`)
+            .join('');
+        loadRtt();
+    }
+
+    function timeLabel(date, withDay) {
+        const opts = withDay
+            ? { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }
+            : { hour: '2-digit', minute: '2-digit' };
+        try {
+            return new Intl.DateTimeFormat((window.BetterDesk && window.BetterDesk.lang) || undefined, opts).format(date);
+        } catch (e) {
+            return date.toLocaleTimeString();
+        }
+    }
+
+    async function loadRtt() {
+        const id = rttTargetId;
+        const t = findTarget(id);
+        const request = ++rttRequest;
+        if (!rttChart.childElementCount) rttState.innerHTML = `<p class="state">${esc(_('network.loading_history'))}</p>`;
+        let entries;
+        try {
+            const history = await Utils.api(`/api/network/targets/${encodeURIComponent(id)}/history?limit=${RTT_CHECKS}`);
+            entries = Array.isArray(history) ? history : [];
+        } catch (err) {
+            if (request !== rttRequest) return;
+            rttChart.textContent = '';
+            rttState.innerHTML = `<p class="state is-error">${esc(_('network.history_failed'))} ${esc(errorText(err))}
+                <button type="button" class="btn btn-sm" data-rtt-retry>${esc(_('actions.retry'))}</button></p>`;
+            return;
+        }
+        if (request !== rttRequest) return;
+
+        // Oldest first, so time runs left to right
+        const checks = entries
+            .map((e) => ({ e, date: Utils.parseDate(e.checked_at) }))
+            .filter((x) => x.date)
+            .sort((a, b) => a.date - b.date);
+        if (!checks.length) {
+            rttChart.textContent = '';
+            rttState.innerHTML = `<p class="state">${esc(_('network.no_history_yet'))}</p>`;
+            return;
+        }
+        rttState.textContent = '';
+
+        const withDay = checks[checks.length - 1].date - checks[0].date > 20 * 3600 * 1000;
+        // A check without an answer has no response time: it leaves a gap in the line
+        const values = checks.map(({ e }) => (e.status === 'up' && e.rtt_ms != null ? Number(e.rtt_ms) : null));
+        const answered = values.filter((v) => v !== null);
+        const down = checks.length - answered.length;
+        const since = timeLabel(checks[0].date, true);
+        if (!answered.length) {
+            // Nothing to draw: say so instead of an empty plot
+            rttChart.textContent = '';
+            rttState.innerHTML = `<p class="state">${esc(_('network.rtt_summary_none', { count: checks.length, since }))}</p>`;
+            return;
+        }
+        const summary = _('network.rtt_summary', {
+                count: checks.length,
+                since,
+                down,
+                min: Math.round(Math.min(...answered)),
+                max: Math.round(Math.max(...answered)),
+            });
+
+        UiChart.render(rttChart, {
+            kind: 'line',
+            label: _('network.rtt_label', { name: t ? t.name : '' }),
+            summary,
+            labels: checks.map(({ date }) => timeLabel(date, withDay)),
+            series: [{ name: _('network.col_response'), values }],
+            format: (v) => _('network.ms', { value: Math.round(v) }),
+            xHeading: _('network.history_time'),
+        });
+    }
+
+    rttSelect.addEventListener('change', () => {
+        rttTargetId = rttSelect.value;
+        rttChart.textContent = '';
+        loadRtt();
+    });
+
+    rttState.addEventListener('click', (event) => {
+        if (event.target.closest('[data-rtt-retry]')) loadRtt();
+    });
 
     // ---- Monitor ----
 

@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Historiaa ei voitu ladata.",
         "request_failed": "Pyyntö epäonnistui.",
-        "tools_note": "Jos haluat tarkistaa isännän tai portin kerran, käytä sivua {link}."
+        "tools_note": "Jos haluat tarkistaa isännän tai portin kerran, käytä sivua {link}.",
+        "side_label": "Valvonta ja vasteajat",
+        "monitor_title": "Automaattiset tarkistukset",
+        "rtt_title": "Vasteaika",
+        "rtt_target": "Kohde",
+        "rtt_label": "Kohteen {name} vasteaika",
+        "rtt_summary": "{count} tarkistusta {since} alkaen, {down} ilman vastausta. Vastaukset kestivät {min}–{max} ms.",
+        "rtt_summary_none": "{count} tarkistusta {since} alkaen, yksikään ei saanut vastausta."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",

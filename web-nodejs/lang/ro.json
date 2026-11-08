@@ -2843,7 +2843,14 @@
         "http_status": "HTTP {code}",
         "history_failed": "Istoricul nu a putut fi încărcat.",
         "request_failed": "Cererea a eșuat.",
-        "tools_note": "Pentru o verificare unică a unei gazde sau a unui port, folosiți pagina {link}."
+        "tools_note": "Pentru o verificare unică a unei gazde sau a unui port, folosiți pagina {link}.",
+        "side_label": "Monitorizare și timpi de răspuns",
+        "monitor_title": "Verificări automate",
+        "rtt_title": "Timp de răspuns",
+        "rtt_target": "Țintă",
+        "rtt_label": "Timpul de răspuns pentru {name}",
+        "rtt_summary": "{count} verificări din {since}, {down} fără răspuns. Răspunsurile au durat între {min} și {max} ms.",
+        "rtt_summary_none": "{count} verificări din {since}, niciuna nu a primit răspuns."
     },
     "dataguard": {
         "title": "DataGuard â€” DLP",
