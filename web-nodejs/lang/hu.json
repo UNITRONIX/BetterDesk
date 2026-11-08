@@ -3080,7 +3080,8 @@
         "trends_help_opened": "Beérkezett",
         "trends_help_resolved": "Megoldott",
         "trends_help_summary": "Utolsó {days} nap: beérkezett {opened}, megoldva {resolved}. Még nyitott: {open}.",
-        "trends_help_empty": "Nincs segítségkérés az utolsó {days} napban."
+        "trends_help_empty": "Nincs segítségkérés az utolsó {days} napban.",
+        "saved_row_sub": "{type}, mentette: {user}, {date}"
     },
     "tenants": {
         "title": "Tenants",

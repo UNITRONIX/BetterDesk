@@ -3080,7 +3080,8 @@
         "trends_help_opened": "Đã mở",
         "trends_help_resolved": "Đã xử lý",
         "trends_help_summary": "{days} ngày qua: đã mở {opened}, đã xử lý {resolved}. Còn mở: {open}.",
-        "trends_help_empty": "Không có yêu cầu hỗ trợ nào trong {days} ngày qua."
+        "trends_help_empty": "Không có yêu cầu hỗ trợ nào trong {days} ngày qua.",
+        "saved_row_sub": "{type}, do {user} lưu lúc {date}"
     },
     "tenants": {
         "title": "Tenants",

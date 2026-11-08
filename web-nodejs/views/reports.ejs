@@ -14,68 +14,62 @@
             <h1>${_('reports.title')}</h1>
             <p class="page-description">${_('reports.page_description')}</p>
         </div>
-        <section class="section" id="reports-trends" hidden></section>
+        <div class="page-cols">
+        <div class="page-main">
+            <section class="section" aria-labelledby="report-types-title">
+                <div class="section-head"><h2 id="report-types-title">${_('reports.new_report')}</h2></div>
+                <p class="section-note">${_('reports.new_report_note')}</p>
+                <fieldset class="reports-period">
+                    <legend class="reports-period-legend">${_('reports.period')}</legend>
+                    <label class="reports-date"><span>${_('reports.date_from')}</span><input type="date" class="form-input" id="report-from"></label>
+                    <label class="reports-date"><span>${_('reports.date_to')}</span><input type="date" class="form-input" id="report-to"></label>
+                    <span class="form-hint">${_('reports.period_hint')}</span>
+                </fieldset>
+                <ul class="list report-type-list">
+                    ${reportTypes.map(type => `
+                    <li class="list-row report-type-card" data-type="${type}">
+                        <span class="row-main">
+                            <span class="row-title" id="report-type-${type}">${_('reports.type_' + type)}</span>
+                            <span class="row-sub">${_('reports.type_' + type + '_desc')}</span>
+                        </span>
+                        <span class="row-end">
+                            <button type="button" class="btn btn-sm report-generate-btn" data-type="${type}" aria-describedby="report-type-${type}">${_('reports.generate')}</button>
+                        </span>
+                    </li>`).join('')}
+                </ul>
+            </section>
 
-        <section class="section" aria-labelledby="report-types-title">
-            <div class="section-head"><h2 id="report-types-title">${_('reports.new_report')}</h2></div>
-            <p class="section-note">${_('reports.new_report_note')}</p>
-            <fieldset class="reports-period">
-                <legend class="reports-period-legend">${_('reports.period')}</legend>
-                <label class="reports-date"><span>${_('reports.date_from')}</span><input type="date" class="form-input" id="report-from"></label>
-                <label class="reports-date"><span>${_('reports.date_to')}</span><input type="date" class="form-input" id="report-to"></label>
-                <span class="form-hint">${_('reports.period_hint')}</span>
-            </fieldset>
-            <ul class="list report-type-list">
-                ${reportTypes.map(type => `
-                <li class="list-row report-type-card" data-type="${type}">
-                    <span class="row-main">
-                        <span class="row-title" id="report-type-${type}">${_('reports.type_' + type)}</span>
-                        <span class="row-sub">${_('reports.type_' + type + '_desc')}</span>
+            <section class="section report-preview" id="report-preview" aria-labelledby="report-preview-title" hidden tabindex="-1">
+                <div class="section-head">
+                    <h2 id="report-preview-title"></h2>
+                    <button type="button" class="btn btn-sm" id="save-report-btn" hidden>${_('reports.save')}</button>
+                    <span class="menu-anchor">
+                        <button type="button" class="btn btn-sm" id="download-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="download-menu">
+                            <span class="material-icons" aria-hidden="true">download</span>${_('reports.download')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+                        </button>
+                        <span class="menu menu-end" id="download-menu" role="menu">
+                            <button type="button" class="menu-item" role="menuitem" data-download="json"><span class="material-icons" aria-hidden="true">download</span>${_('reports.download_json')}</button>
+                            <button type="button" class="menu-item" role="menuitem" data-download="csv" id="download-csv-item"><span class="material-icons" aria-hidden="true">download</span>${_('reports.download_csv')}</button>
+                        </span>
                     </span>
-                    <span class="row-end">
-                        <button type="button" class="btn btn-sm report-generate-btn" data-type="${type}" aria-describedby="report-type-${type}">${_('reports.generate')}</button>
-                    </span>
-                </li>`).join('')}
-            </ul>
-        </section>
+                </div>
+                <p class="section-note" id="report-preview-meta"></p>
+                <p class="form-status" id="report-status" aria-live="polite"></p>
+                <div id="preview-content" class="report-output"></div>
+            </section>
 
-        <section class="section report-preview" id="report-preview" aria-labelledby="report-preview-title" hidden tabindex="-1">
-            <div class="section-head">
-                <h2 id="report-preview-title"></h2>
-                <button type="button" class="btn btn-sm" id="save-report-btn" hidden>${_('reports.save')}</button>
-                <span class="menu-anchor">
-                    <button type="button" class="btn btn-sm" id="download-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="download-menu">
-                        ${_('reports.download')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
-                    </button>
-                    <span class="menu menu-end" id="download-menu" role="menu">
-                        <button type="button" class="menu-item" role="menuitem" data-download="json">${_('reports.download_json')}</button>
-                        <button type="button" class="menu-item" role="menuitem" data-download="csv" id="download-csv-item">${_('reports.download_csv')}</button>
-                    </span>
-                </span>
+            <!-- Two weeks of sessions and help requests, charts side by side (public/js/reports-trends.js) -->
+            <section class="section" id="reports-trends" hidden></section>
+        </div>
+
+        <aside class="page-side" aria-labelledby="saved-title">
+            <div class="section">
+                <div class="section-head"><h2 id="saved-title">${_('reports.saved')}</h2></div>
+                <p class="section-note">${_('reports.saved_note')}</p>
+                <ul class="list saved-list" id="saved-body"><li class="list-row is-empty">${_('reports.loading')}</li></ul>
             </div>
-            <p class="section-note" id="report-preview-meta"></p>
-            <p class="form-status" id="report-status" aria-live="polite"></p>
-            <div id="preview-content" class="report-output"></div>
-        </section>
-
-        <section class="section" aria-labelledby="saved-title">
-            <div class="section-head"><h2 id="saved-title">${_('reports.saved')}</h2></div>
-            <p class="section-note">${_('reports.saved_note')}</p>
-            <div class="table-scroll">
-                <table class="data-table reports-stack">
-                    <thead>
-                        <tr>
-                            <th scope="col">${_('reports.report_name')}</th>
-                            <th scope="col">${_('reports.report_type')}</th>
-                            <th scope="col">${_('reports.created_by')}</th>
-                            <th scope="col">${_('reports.created_at')}</th>
-                            <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="saved-body"><tr><td colspan="5" class="state-cell">${_('reports.loading')}</td></tr></tbody>
-                </table>
-            </div>
-        </section>
+        </aside>
+        </div>
     </div>
     `
 }) %>

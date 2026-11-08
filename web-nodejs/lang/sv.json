@@ -3080,7 +3080,8 @@
         "trends_help_opened": "Öppnade",
         "trends_help_resolved": "Lösta",
         "trends_help_summary": "Senaste {days} dagarna: öppnade {opened}, lösta {resolved}. Fortfarande öppna: {open}.",
-        "trends_help_empty": "Inga hjälpbegäranden de senaste {days} dagarna."
+        "trends_help_empty": "Inga hjälpbegäranden de senaste {days} dagarna.",
+        "saved_row_sub": "{type}, sparad av {user} {date}"
     },
     "tenants": {
         "title": "Tenants",

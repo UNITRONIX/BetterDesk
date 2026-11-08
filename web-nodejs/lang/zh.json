@@ -3074,7 +3074,8 @@
         "trends_help_opened": "已开启",
         "trends_help_resolved": "已解决",
         "trends_help_summary": "最近 {days} 天：开启 {opened}，解决 {resolved}。仍未解决：{open}。",
-        "trends_help_empty": "最近 {days} 天没有帮助请求。"
+        "trends_help_empty": "最近 {days} 天没有帮助请求。",
+        "saved_row_sub": "{type}，由 {user} 于 {date} 保存"
     },
     "tenants": {
         "title": "多租户",

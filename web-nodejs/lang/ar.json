@@ -3081,7 +3081,8 @@
         "trends_help_opened": "مفتوحة",
         "trends_help_resolved": "محلولة",
         "trends_help_summary": "في آخر {days} يومًا: فُتح {opened}، وحُلّ {resolved}. ما زال مفتوحًا: {open}.",
-        "trends_help_empty": "لا توجد طلبات مساعدة في آخر {days} يومًا."
+        "trends_help_empty": "لا توجد طلبات مساعدة في آخر {days} يومًا.",
+        "saved_row_sub": "{type}، حفظه {user} في {date}"
     },
     "tenants": {
         "title": "Tenants",

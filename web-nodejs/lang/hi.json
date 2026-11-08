@@ -3080,7 +3080,8 @@
         "trends_help_opened": "खोले गए",
         "trends_help_resolved": "हल किए गए",
         "trends_help_summary": "पिछले {days} दिन: खोले गए {opened}, हल किए गए {resolved}। अभी भी खुले: {open}।",
-        "trends_help_empty": "पिछले {days} दिनों में कोई सहायता अनुरोध नहीं।"
+        "trends_help_empty": "पिछले {days} दिनों में कोई सहायता अनुरोध नहीं।",
+        "saved_row_sub": "{type}, {user} द्वारा {date} को सहेजा गया"
     },
     "tenants": {
         "title": "Tenants",

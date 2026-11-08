@@ -3096,7 +3096,8 @@
         "trends_help_opened": "已開啟",
         "trends_help_resolved": "已解決",
         "trends_help_summary": "最近 {days} 天：開啟 {opened}，解決 {resolved}。仍未解決：{open}。",
-        "trends_help_empty": "最近 {days} 天沒有協助請求。"
+        "trends_help_empty": "最近 {days} 天沒有協助請求。",
+        "saved_row_sub": "{type}，由 {user} 於 {date} 儲存"
     },
     "tenants": {
         "title": "多租戶",

@@ -3153,7 +3153,8 @@
         "trends_help_opened": "Opened",
         "trends_help_resolved": "Resolved",
         "trends_help_summary": "Last {days} days: opened {opened}, resolved {resolved}. Still open: {open}.",
-        "trends_help_empty": "No help requests in the last {days} days."
+        "trends_help_empty": "No help requests in the last {days} days.",
+        "saved_row_sub": "{type}, saved by {user} on {date}"
     },
     "tenants": {
         "title": "Tenants",

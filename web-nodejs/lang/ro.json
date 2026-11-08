@@ -3080,7 +3080,8 @@
         "trends_help_opened": "Deschise",
         "trends_help_resolved": "Rezolvate",
         "trends_help_summary": "Ultimele {days} zile: deschise {opened}, rezolvate {resolved}. Încă deschise: {open}.",
-        "trends_help_empty": "Nicio cerere de ajutor în ultimele {days} zile."
+        "trends_help_empty": "Nicio cerere de ajutor în ultimele {days} zile.",
+        "saved_row_sub": "{type}, salvat de {user} pe {date}"
     },
     "tenants": {
         "title": "Tenants",

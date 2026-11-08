@@ -3080,7 +3080,8 @@
         "trends_help_opened": "เปิด",
         "trends_help_resolved": "แก้ไขแล้ว",
         "trends_help_summary": "{days} วันล่าสุด: เปิด {opened} แก้ไขแล้ว {resolved} ยังเปิดอยู่: {open}",
-        "trends_help_empty": "ไม่มีคำขอความช่วยเหลือใน {days} วันล่าสุด"
+        "trends_help_empty": "ไม่มีคำขอความช่วยเหลือใน {days} วันล่าสุด",
+        "saved_row_sub": "{type} บันทึกโดย {user} เมื่อ {date}"
     },
     "tenants": {
         "title": "Tenants",

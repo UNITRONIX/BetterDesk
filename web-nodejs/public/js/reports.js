@@ -389,45 +389,43 @@
     const savedBody = document.getElementById('saved-body');
 
     async function loadSaved() {
-        savedBody.innerHTML = `<tr><td colspan="5" class="state-cell">${esc(_('reports.loading'))}</td></tr>`;
+        savedBody.innerHTML = `<li class="list-row is-empty">${esc(_('reports.loading'))}</li>`;
         try {
             const resp = await apiFetch('/api/reports/saved');
             const data = await resp.json();
             const reports = Array.isArray(data) ? data : [];
             if (!reports.length) {
-                savedBody.innerHTML = `<tr><td colspan="5" class="state-cell">${esc(_('reports.no_saved'))}</td></tr>`;
+                savedBody.innerHTML = `<li class="list-row is-empty">${esc(_('reports.no_saved'))}</li>`;
                 return;
             }
             savedBody.innerHTML = reports.map((r, i) => {
                 const name = r.title || r.name || typeLabel(r.report_type);
                 const menuId = 'saved-menu-' + r.id;
-                return `<tr>
-                    <td>${esc(name)}</td>
-                    <td>${esc(typeLabel(r.report_type || r.type))}</td>
-                    <td>${esc(r.created_by || '—')}</td>
-                    <td class="report-num">${esc(formatDate(r.created_at))}</td>
-                    <td class="actions">
-                        <button type="button" class="btn btn-sm run-btn" data-id="${esc(r.id)}" aria-label="${esc(_('reports.open_named', { name }))}">${esc(_('reports.open'))}</button>
+                const type = typeLabel(r.report_type || r.type);
+                const date = formatDate(r.created_at);
+                const sub = r.created_by
+                    ? _('reports.saved_row_sub', { type, user: r.created_by, date })
+                    : `${type}, ${date}`;
+                return `<li class="list-row">
+                    <span class="row-main">
+                        <span class="row-title">${esc(name)}</span>
+                        <span class="row-sub">${esc(sub)}</span>
+                    </span>
+                    <span class="row-end">
+                        <button type="button" class="btn btn-sm run-btn" data-id="${esc(r.id)}" aria-label="${esc(_('reports.open_named', { name }))}">${Utils.icon('open')}${esc(_('reports.open'))}</button>
                         ${canManage ? `<span class="menu-anchor">
                             <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}" aria-label="${esc(_('reports.actions_for', { name }))}">
                                 <span class="material-icons" aria-hidden="true">more_vert</span></button>
                             <span class="menu menu-end${i >= reports.length - 2 && reports.length > 3 ? ' menu-up' : ''}" id="${menuId}" role="menu">
-                                <button type="button" class="menu-item danger del-btn" role="menuitem" data-id="${esc(r.id)}" data-name="${esc(name)}">${esc(_('reports.delete_saved'))}</button>
+                                <button type="button" class="menu-item danger del-btn" role="menuitem" data-id="${esc(r.id)}" data-name="${esc(name)}">${Utils.icon('delete')}${esc(_('reports.delete_saved'))}</button>
                             </span>
                         </span>` : ''}
-                    </td>
-                </tr>`;
+                    </span>
+                </li>`;
             }).join('');
-            // Phones show each row as a block; cells carry their column name (see ui/reports.css)
-            const heads = Array.from(savedBody.closest('table').querySelectorAll('thead th')).map((th) => th.textContent.trim());
-            savedBody.querySelectorAll('tr').forEach((tr) => {
-                Array.from(tr.children).forEach((td, i) => {
-                    if (!td.classList.contains('actions') && heads[i]) td.setAttribute('data-label', heads[i]);
-                });
-            });
         } catch (err) {
-            savedBody.innerHTML = `<tr><td colspan="5" class="state-cell"><span class="state is-error">${esc(_('reports.saved_load_failed'))}
-                <button type="button" class="btn btn-sm" id="saved-retry">${esc(_('reports.try_again'))}</button></span></td></tr>`;
+            savedBody.innerHTML = `<li class="list-row is-empty"><span class="state is-error">${esc(_('reports.saved_load_failed'))}
+                <button type="button" class="btn btn-sm" id="saved-retry">${esc(_('reports.try_again'))}</button></span></li>`;
             document.getElementById('saved-retry').addEventListener('click', loadSaved);
         }
     }

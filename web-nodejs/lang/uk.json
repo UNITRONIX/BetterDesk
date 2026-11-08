@@ -3080,7 +3080,8 @@
         "trends_help_opened": "Відкриті",
         "trends_help_resolved": "Вирішені",
         "trends_help_summary": "Останні {days} днів: відкрито {opened}, вирішено {resolved}. Досі відкриті: {open}.",
-        "trends_help_empty": "За останні {days} днів запитів на допомогу немає."
+        "trends_help_empty": "За останні {days} днів запитів на допомогу немає.",
+        "saved_row_sub": "{type}, зберіг(ла) {user} {date}"
     },
     "tenants": {
         "title": "Tenants",

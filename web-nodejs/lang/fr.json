@@ -3096,7 +3096,8 @@
         "trends_help_opened": "Ouvertes",
         "trends_help_resolved": "Résolues",
         "trends_help_summary": "{days} derniers jours : ouvertes {opened}, résolues {resolved}. Encore ouvertes : {open}.",
-        "trends_help_empty": "Aucune demande d'aide sur les {days} derniers jours."
+        "trends_help_empty": "Aucune demande d'aide sur les {days} derniers jours.",
+        "saved_row_sub": "{type}, enregistré par {user} le {date}"
     },
     "tenants": {
         "title": "Tableau de bord",

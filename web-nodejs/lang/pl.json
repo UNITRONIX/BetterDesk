@@ -3092,7 +3092,8 @@
         "trends_help_opened": "Otwarte",
         "trends_help_resolved": "Rozwiązane",
         "trends_help_summary": "Ostatnie {days} dni: otwarte {opened}, rozwiązane {resolved}. Nadal otwarte: {open}.",
-        "trends_help_empty": "Brak próśb o pomoc w ciągu ostatnich {days} dni."
+        "trends_help_empty": "Brak próśb o pomoc w ciągu ostatnich {days} dni.",
+        "saved_row_sub": "{type}, zapisał(a) {user} {date}"
     },
     "tenants": {
         "title": "Organizacje",

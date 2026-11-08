@@ -3074,7 +3074,8 @@
         "trends_help_opened": "Aperte",
         "trends_help_resolved": "Risolte",
         "trends_help_summary": "Ultimi {days} giorni: aperte {opened}, risolte {resolved}. Ancora aperte: {open}.",
-        "trends_help_empty": "Nessuna richiesta di aiuto negli ultimi {days} giorni."
+        "trends_help_empty": "Nessuna richiesta di aiuto negli ultimi {days} giorni.",
+        "saved_row_sub": "{type}, salvato da {user} il {date}"
     },
     "tenants": {
         "title": "Multi-tenancy",

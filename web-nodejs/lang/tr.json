@@ -3080,7 +3080,8 @@
         "trends_help_opened": "Açılan",
         "trends_help_resolved": "Çözülen",
         "trends_help_summary": "Son {days} gün: açılan {opened}, çözülen {resolved}. Hâlâ açık: {open}.",
-        "trends_help_empty": "Son {days} günde yardım talebi yok."
+        "trends_help_empty": "Son {days} günde yardım talebi yok.",
+        "saved_row_sub": "{type}, {user} tarafından {date} tarihinde kaydedildi"
     },
     "tenants": {
         "title": "Tenants",
