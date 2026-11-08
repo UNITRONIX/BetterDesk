@@ -211,6 +211,11 @@ const Utils = {
         revoke: 'cancel',
         view: 'visibility',
         hide: 'visibility_off',
+        retry: 'refresh',
+        generate: 'summarize',
+        save: 'save',
+        reset: 'settings_backup_restore',
+        import: 'upload',
     },
 
     /** <span> for the icon of a meaning (see ICONS); decorative, the label carries the meaning */
