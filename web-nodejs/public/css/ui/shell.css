@@ -305,7 +305,8 @@
 }
 
 /* One row: OS mark (or the kind's icon) | what happened, device, details | age.
-   Unread rows carry an accent rule on the start side and a semibold first line. */
+   Unread rows carry an accent rule on the start side, a light accent
+   background and a semibold first line. */
 .notif-row {
     display: grid;
     grid-template-columns: 20px minmax(0, 1fr) auto;
@@ -336,6 +337,11 @@
 
 .notif-row.is-unread {
     border-inline-start-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.notif-row.is-unread:hover {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .notif-row-mark {
