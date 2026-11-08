@@ -73,3 +73,13 @@
 .saved-list .row-title {
     overflow-wrap: anywhere;
 }
+
+/* Wide screens: the report types sit in two columns, so each Generate
+   button stays near its name */
+@media (min-width: 1800px) {
+    .report-type-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: var(--space-7);
+    }
+}

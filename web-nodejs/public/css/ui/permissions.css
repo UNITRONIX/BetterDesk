@@ -16,10 +16,10 @@
     margin-top: var(--space-3);
 }
 
-/* Permission groups flow down two columns on wide screens; a group is
+/* Permission groups flow down two or three columns on wide screens; a group is
    never split, and the reading order is column by column */
 .permissions-matrix {
-    columns: 2 440px;
+    columns: 3 340px;
     column-gap: var(--space-7);
 }
 

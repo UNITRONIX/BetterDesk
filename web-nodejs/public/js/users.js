@@ -567,7 +567,7 @@
                     </div>
                     <fieldset class="form-group">
                         <legend class="form-label">${esc(_('users.role'))}</legend>
-                        <ul class="choice-list" role="radiogroup" aria-label="${esc(_('users.role'))}">${roleChoicesHtml(user)}</ul>
+                        <div role="radiogroup" aria-label="${esc(_('users.role'))}"><ul class="choice-list">${roleChoicesHtml(user)}</ul></div>
                         <p class="form-hint">${esc(_('users.role_note'))}</p>
                     </fieldset>
                     ${deviceAccessHtml(user)}
@@ -789,7 +789,7 @@
             if (!canManageOrgs) {
                 add.innerHTML = '';
             } else if (allOrgsFailed) {
-                add.innerHTML = `<p class="form-hint text-danger">${esc(_('errors.load_orgs_failed'))}</p>`;
+                add.innerHTML = `<p class="notice error">${esc(_('errors.load_orgs_failed'))}</p>`;
             } else if (!available.length) {
                 add.innerHTML = `<p class="form-hint">${esc(allOrgs.length ? _('users.all_orgs_assigned') : _('users.no_orgs_exist'))}</p>`;
             } else {

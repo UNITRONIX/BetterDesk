@@ -9,7 +9,7 @@
     currentPage: 'organizations',
     breadcrumb: [{ label: _('nav.organizations') }],
     body: `
-        <div class="page org-page" data-can-edit="${can('org.edit')}" data-can-delete="${can('org.delete')}">
+        <div class="page page-wide org-page" data-can-edit="${can('org.edit')}" data-can-delete="${can('org.delete')}">
             <div class="page-head">
                 <h1>${_('nav.organizations')}</h1>
                 ${can('org.create') ? `<div class="page-actions">

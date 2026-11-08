@@ -22,7 +22,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
-    padding-top: var(--space-5);
+    /* the column gap already separates the panel from the tabs; this brings
+       it to the same distance as on the other tabbed pages */
+    margin-top: calc(var(--space-5) - var(--space-6));
 }
 
 .org-detail-page .tabs {
@@ -97,8 +99,37 @@
     margin-inline-end: auto;
 }
 
-.org-detail-page .section-head .count-line:empty {
+.org-detail-page .section-head .count-line:empty,
+/* the users and devices counts are shown in the side column instead */
+.org-detail-page #users-count-line,
+.org-detail-page #devices-count-line {
     display: none;
+}
+
+/* With the count in the side column, a tab's add button leads the list
+   instead of floating at the far end of an empty line */
+.org-detail-page .tab-panel > .section:first-child > .section-head {
+    justify-content: flex-start;
+}
+
+/* People who may not add anything get no empty line above the list */
+.org-detail-page .tab-panel > .section:first-child > .section-head:not(:has(> .btn:not([hidden]))) {
+    display: none;
+}
+
+/* Long IDs stay on one line, cut off at the end; Copy takes the whole value */
+.org-detail-page .page-side .value-field {
+    width: 100%;
+}
+
+.org-detail-page .page-side .value-field > code {
+    display: block;
+    flex: 1 1 auto;
+    overflow: hidden;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: var(--control-h-sm);
 }
 
 /* ── Detail side column: label above value, so the ID fits in one line ── */
