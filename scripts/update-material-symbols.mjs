@@ -8,6 +8,10 @@
  * Usage (from repo root):
  *   node scripts/update-material-symbols.mjs
  *
+ * Names come from icon spans, Utils.ICONS and other icon maps, `icon` properties
+ * and variables, and CSS `content` ligatures. collectCandidateIcons() and
+ * collectIcons() are exported so a check can compare the list with the font.
+ *
  * Writes:
  *   web-nodejs/public/fonts/MaterialSymbolsOutlined.woff2
  *   web-nodejs/public/fonts/MaterialSymbolsRounded.woff2
@@ -66,24 +70,36 @@ const PLATFORM_ICON_MAP =
     /\b(?:windows|linux|mac|macos|android|ios)\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 const ICON_HELPER_LINE = /\b(?:createWindowCtrlBtn|createMaterialIconSpan)\b[^;\n]*/g;
 const TEXT_CONTENT_LINE = /\btextContent\s*=[^;\n]*/g;
+/* A line that builds an icon span: names in ternaries such as
+   `material-icons">' + (isDir ? 'folder' : 'insert_drive_file') + '<` */
+const ICON_SPAN_LINE = /^.*material-(?:icons|symbols)[^\n]*$/gm;
+/* Assignments to an icon variable: `var icon = running ? 'play_circle' : 'stop_circle'` */
+const ICON_VAR_LINE = /\b\w*[iI]con\w*\s*=(?![=>])[^;\n]*/g;
+/* Meaning-to-name maps: `ICONS: { … }`, `const iconMap = { … }`, `SVC_ICONS = { … }` */
+const ICON_MAP_BLOCK = /\b\w*icons?\w*\s*[:=]\s*(?:Object\.freeze\(\s*)?\{([^{}]*)\}/gi;
+const MAP_VALUE = /:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
+/* Ligatures drawn from CSS, e.g. the disclosure chevron `content: "expand_more"` */
+const CSS_CONTENT = /\bcontent\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 const QUOTED_ICON_NAME = /['"]([a-z][a-z0-9_]{1,48})['"]/g;
+
+const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'tests', 'data']);
 
 function walkFiles(dir, out = []) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (ent.name === 'node_modules' || ent.name === '.git' || ent.name === 'coverage') {
+        if (SKIP_DIRS.has(ent.name)) {
             continue;
         }
         const full = path.join(dir, ent.name);
         if (ent.isDirectory()) {
             walkFiles(full, out);
-        } else if (SCAN_EXTS.has(path.extname(ent.name))) {
+        } else if (SCAN_EXTS.has(path.extname(ent.name)) && !ent.name.endsWith('.min.js')) {
             out.push(full);
         }
     }
     return out;
 }
 
-async function loadValidIconNames() {
+export async function loadValidIconNames() {
     fs.mkdirSync(path.dirname(CODEPOINTS_CACHE), { recursive: true });
     if (!fs.existsSync(CODEPOINTS_CACHE)) {
         console.log('Downloading Material Symbols codepoints…');
@@ -106,33 +122,48 @@ async function loadValidIconNames() {
     return valid;
 }
 
-function collectCandidateIcons() {
-    const icons = new Set(EXTRA_ICONS);
+/** Every ligature name the console may draw, with the files that use it. */
+export function collectCandidateIcons() {
+    const icons = new Map(EXTRA_ICONS.map((n) => [n, new Set(['(EXTRA_ICONS)'])]));
+    const add = (name, file) => {
+        if (!icons.has(name)) icons.set(name, new Set());
+        icons.get(name).add(path.relative(WEB, file).split(path.sep).join('/'));
+    };
     for (const file of walkFiles(SCAN_ROOT)) {
         const text = fs.readFileSync(file, 'utf8');
-        for (const pattern of [
-            LIGATURE_IN_ICON_SPAN,
-            ICON_PROPERTY,
-            ICON_RETURN,
-            PLATFORM_ICON_MAP,
-        ]) {
+        const patterns = [LIGATURE_IN_ICON_SPAN, ICON_PROPERTY, ICON_RETURN, PLATFORM_ICON_MAP];
+        if (file.endsWith('.css')) patterns.push(CSS_CONTENT);
+        for (const pattern of patterns) {
             pattern.lastIndex = 0;
             let match;
             while ((match = pattern.exec(text)) !== null) {
-                icons.add(match[1]);
+                add(match[1], file);
             }
         }
 
         // Desktop controls and a few widgets assign icon ligatures through
         // textContent or helper calls instead of literal <span> markup.
-        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE]) {
+        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE, ICON_SPAN_LINE, ICON_VAR_LINE]) {
             pattern.lastIndex = 0;
             let line;
             while ((line = pattern.exec(text)) !== null) {
                 QUOTED_ICON_NAME.lastIndex = 0;
                 let match;
                 while ((match = QUOTED_ICON_NAME.exec(line[0])) !== null) {
-                    icons.add(match[1]);
+                    add(match[1], file);
+                }
+            }
+        }
+
+        // Meaning maps (Utils.ICONS and page-local icon tables).
+        if (!file.endsWith('.css')) {
+            ICON_MAP_BLOCK.lastIndex = 0;
+            let block;
+            while ((block = ICON_MAP_BLOCK.exec(text)) !== null) {
+                MAP_VALUE.lastIndex = 0;
+                let match;
+                while ((match = MAP_VALUE.exec(block[1])) !== null) {
+                    add(match[1], file);
                 }
             }
         }
@@ -140,11 +171,11 @@ function collectCandidateIcons() {
     return icons;
 }
 
-function collectIcons(valid) {
-    const candidates = collectCandidateIcons();
+/** Candidates that are real Material Symbols names, sorted; the rest is reported. */
+export function collectIcons(valid, candidates = collectCandidateIcons()) {
     const icons = [];
     const skipped = [];
-    for (const name of candidates) {
+    for (const name of candidates.keys()) {
         if (valid.has(name)) {
             icons.push(name);
         } else {
@@ -227,6 +258,15 @@ async function downloadFamily(familyLabel, familyApiName, outName, icons) {
 }
 
 function updateFontCacheBusters(outlined, rounded) {
+    // The reworked console declares the font in ui/base.css.
+    const basePath = path.join(WEB, 'public', 'css', 'ui', 'base.css');
+    if (fs.existsSync(basePath)) {
+        const base = fs.readFileSync(basePath, 'utf8').replace(
+            /MaterialSymbolsOutlined\.woff2(?:\?v=[^'")]+)?/g,
+            `MaterialSymbolsOutlined.woff2?v=${outlined.sha256.slice(0, 12)}`
+        );
+        fs.writeFileSync(basePath, base, 'utf8');
+    }
     const cssPath = path.join(WEB, 'public', 'css', 'material-icons-local.css');
     let css = fs.readFileSync(cssPath, 'utf8');
     css = css
@@ -310,7 +350,9 @@ async function main() {
     console.log('Done. Review hashes, then commit fonts + CSS together.');
 }
 
-main().catch((err) => {
-    console.error(err);
-    process.exit(1);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+    main().catch((err) => {
+        console.error(err);
+        process.exit(1);
+    });
+}
