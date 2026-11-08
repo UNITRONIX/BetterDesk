@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Genstart tjeneste",
         "cmd_type_reboot": "Genstart enheden",
         "legend_open": "ikke kvitteret",
-        "legend_acknowledged": "kvitteret"
+        "legend_acknowledged": "kvitteret",
+        "rules_not_checked": "Serveren kontrollerer endnu ikke alarmregler. Du kan oprette og gemme regler her, men de udløser ingen alarmer, før en serveropdatering tilføjer kontrollen.",
+        "no_alerts_not_checked": "Ingen alarmer. Serveren kontrollerer endnu ikke alarmregler, så der udløses ingen.",
+        "unit_percent": "%",
+        "unit_seconds": "sekunder"
     },
     "file_transfer": {
         "title": "Filoverførsel",

@@ -2717,7 +2717,11 @@
         "cmd_type_restart_service": "重新啟動服務",
         "cmd_type_reboot": "重新啟動裝置",
         "legend_open": "未確認",
-        "legend_acknowledged": "已確認"
+        "legend_acknowledged": "已確認",
+        "rules_not_checked": "伺服器尚未檢查告警規則。您可以在這裡建立並保留規則，但在伺服器更新加入檢查前，規則不會產生告警。",
+        "no_alerts_not_checked": "沒有告警。伺服器尚未檢查規則，因此不會產生告警。",
+        "unit_percent": "%",
+        "unit_seconds": "秒"
     },
     "file_transfer": {
         "title": "文件傳輸",

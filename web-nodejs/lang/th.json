@@ -2613,7 +2613,7 @@
         "command_type": "ประเภทคำสั่ง",
         "command_payload": "คำสั่ง / สคริปต์",
         "command_result": "ผลลัพธ์",
-        "command_status": "Status",
+        "command_status": "สถานะ",
         "send_command": "ส่งคำสั่ง",
         "status_pending": "รอดำเนินการ",
         "status_running": "กำลังทำงาน",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "รีสตาร์ตบริการ",
         "cmd_type_reboot": "รีสตาร์ตอุปกรณ์",
         "legend_open": "ยังไม่รับทราบ",
-        "legend_acknowledged": "รับทราบแล้ว"
+        "legend_acknowledged": "รับทราบแล้ว",
+        "rules_not_checked": "เซิร์ฟเวอร์ยังไม่ตรวจสอบกฎการแจ้งเตือน คุณสร้างและเก็บกฎไว้ที่นี่ได้ แต่กฎจะไม่แจ้งเตือนจนกว่าการอัปเดตเซิร์ฟเวอร์จะเพิ่มการตรวจสอบ",
+        "no_alerts_not_checked": "ไม่มีการแจ้งเตือน เซิร์ฟเวอร์ยังไม่ตรวจสอบกฎ จึงไม่มีการแจ้งเตือนเกิดขึ้น",
+        "unit_percent": "%",
+        "unit_seconds": "วินาที"
     },
     "file_transfer": {
         "title": "การถ่ายโอนไฟล์",

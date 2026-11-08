@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "Reiniciar servicio",
         "cmd_type_reboot": "Reiniciar el dispositivo",
         "legend_open": "sin confirmar",
-        "legend_acknowledged": "confirmados"
+        "legend_acknowledged": "confirmados",
+        "rules_not_checked": "El servidor todavía no comprueba las reglas de alerta. Puedes crear y guardar reglas aquí, pero no generarán alertas hasta que una actualización del servidor añada la comprobación.",
+        "no_alerts_not_checked": "No hay alertas. El servidor todavía no comprueba las reglas, así que no se genera ninguna.",
+        "unit_percent": "%",
+        "unit_seconds": "segundos"
     },
     "file_transfer": {
         "title": "Panel",

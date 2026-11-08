@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "Dienst neu starten",
         "cmd_type_reboot": "Gerät neu starten",
         "legend_open": "nicht bestätigt",
-        "legend_acknowledged": "bestätigt"
+        "legend_acknowledged": "bestätigt",
+        "rules_not_checked": "Der Server prüft Alarmregeln noch nicht. Sie können hier Regeln anlegen und behalten, aber sie lösen keine Alarme aus, bis ein Server-Update die Prüfung ergänzt.",
+        "no_alerts_not_checked": "Keine Alarme. Der Server prüft Alarmregeln noch nicht, daher werden keine ausgelöst.",
+        "unit_percent": "%",
+        "unit_seconds": "Sekunden"
     },
     "file_transfer": {
         "title": "Dashboard",

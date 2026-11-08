@@ -2607,7 +2607,7 @@
         "command_type": "コマンドの種類",
         "command_payload": "コマンド/スクリプト",
         "command_result": "結果",
-        "command_status": "Status",
+        "command_status": "状態",
         "send_command": "送信コマンド",
         "status_pending": "待機中",
         "status_running": "実行中",
@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "サービスを再起動",
         "cmd_type_reboot": "デバイスを再起動",
         "legend_open": "未確認",
-        "legend_acknowledged": "確認済み"
+        "legend_acknowledged": "確認済み",
+        "rules_not_checked": "サーバーはまだアラートルールを評価しません。ここでルールを作成して保存できますが、サーバーの更新で評価が追加されるまでアラートは発生しません。",
+        "no_alerts_not_checked": "アラートはありません。サーバーはまだルールを評価しないため、アラートは発生しません。",
+        "unit_percent": "%",
+        "unit_seconds": "秒"
     },
     "file_transfer": {
         "title": "ファイル転送",

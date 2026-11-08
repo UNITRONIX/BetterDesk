@@ -2625,7 +2625,7 @@
         "command_type": "Typ polecenia",
         "command_payload": "Polecenie / skrypt",
         "command_result": "Wynik",
-        "command_status": "Status",
+        "command_status": "Stan",
         "send_command": "Wyślij polecenie",
         "status_pending": "Oczekuje",
         "status_running": "W trakcie",
@@ -2713,7 +2713,11 @@
         "cmd_type_restart_service": "Uruchom ponownie usługę",
         "cmd_type_reboot": "Uruchom ponownie urządzenie",
         "legend_open": "niepotwierdzone",
-        "legend_acknowledged": "potwierdzone"
+        "legend_acknowledged": "potwierdzone",
+        "rules_not_checked": "Serwer jeszcze nie sprawdza reguł alertów. Możesz tu tworzyć i przechowywać reguły, ale nie wywołają one alertów, dopóki aktualizacja serwera nie doda sprawdzania.",
+        "no_alerts_not_checked": "Brak alertów. Serwer jeszcze nie sprawdza reguł, więc żadne alerty nie powstają.",
+        "unit_percent": "%",
+        "unit_seconds": "sekund"
     },
     "file_transfer": {
         "title": "Przesyłanie plików",

@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "Restartovat službu",
         "cmd_type_reboot": "Restartovat zařízení",
         "legend_open": "nepotvrzeno",
-        "legend_acknowledged": "potvrzeno"
+        "legend_acknowledged": "potvrzeno",
+        "rules_not_checked": "Server zatím pravidla upozornění nevyhodnocuje. Pravidla zde můžete vytvářet a uchovávat, ale žádná upozornění nespustí, dokud kontrolu nepřidá aktualizace serveru.",
+        "no_alerts_not_checked": "Žádná upozornění. Server zatím pravidla nevyhodnocuje, takže se žádná nespouštějí.",
+        "unit_percent": "%",
+        "unit_seconds": "sekund"
     },
     "file_transfer": {
         "title": "Přenos souborů",

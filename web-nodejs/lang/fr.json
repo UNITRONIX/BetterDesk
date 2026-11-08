@@ -2717,7 +2717,11 @@
         "cmd_type_restart_service": "Redémarrer un service",
         "cmd_type_reboot": "Redémarrer l'appareil",
         "legend_open": "non acquittées",
-        "legend_acknowledged": "acquittées"
+        "legend_acknowledged": "acquittées",
+        "rules_not_checked": "Le serveur ne vérifie pas encore les règles d'alerte. Vous pouvez créer et garder des règles ici, mais elles ne déclenchent aucune alerte tant qu'une mise à jour du serveur n'ajoute pas cette vérification.",
+        "no_alerts_not_checked": "Aucune alerte. Le serveur ne vérifie pas encore les règles, donc aucune alerte n'est déclenchée.",
+        "unit_percent": "%",
+        "unit_seconds": "secondes"
     },
     "file_transfer": {
         "title": "Tableau de bord",

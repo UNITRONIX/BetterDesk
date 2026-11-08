@@ -2607,7 +2607,7 @@
         "command_type": "명령 유형",
         "command_payload": "명령/스크립트",
         "command_result": "결과",
-        "command_status": "Status",
+        "command_status": "상태",
         "send_command": "명령 보내기",
         "status_pending": "대기 중",
         "status_running": "실행 중",
@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "서비스 다시 시작",
         "cmd_type_reboot": "장치 다시 시작",
         "legend_open": "확인 안 됨",
-        "legend_acknowledged": "확인됨"
+        "legend_acknowledged": "확인됨",
+        "rules_not_checked": "서버는 아직 경고 규칙을 확인하지 않습니다. 여기에서 규칙을 만들고 보관할 수 있지만, 서버 업데이트로 확인 기능이 추가될 때까지 경고는 발생하지 않습니다.",
+        "no_alerts_not_checked": "경고가 없습니다. 서버가 아직 규칙을 확인하지 않으므로 경고가 발생하지 않습니다.",
+        "unit_percent": "%",
+        "unit_seconds": "초"
     },
     "file_transfer": {
         "title": "파일 전송",

@@ -2613,7 +2613,7 @@
         "command_type": "कमांड प्रकार",
         "command_payload": "कमांड/स्क्रिप्ट",
         "command_result": "नतीजा",
-        "command_status": "Status",
+        "command_status": "स्थिति",
         "send_command": "आदेश भेजें",
         "status_pending": "लंबित",
         "status_running": "चल रहा है",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "सेवा फिर से शुरू करें",
         "cmd_type_reboot": "डिवाइस फिर से शुरू करें",
         "legend_open": "स्वीकार नहीं किए गए",
-        "legend_acknowledged": "स्वीकार किए गए"
+        "legend_acknowledged": "स्वीकार किए गए",
+        "rules_not_checked": "सर्वर अभी चेतावनी नियमों की जाँच नहीं करता। आप यहाँ नियम बना और रख सकते हैं, लेकिन जब तक कोई सर्वर अपडेट यह जाँच नहीं जोड़ता, वे कोई चेतावनी नहीं देंगे।",
+        "no_alerts_not_checked": "कोई चेतावनी नहीं। सर्वर अभी नियमों की जाँच नहीं करता, इसलिए कोई चेतावनी नहीं बनती।",
+        "unit_percent": "%",
+        "unit_seconds": "सेकंड"
     },
     "file_transfer": {
         "title": "दस्तावेज हस्तांतरण",

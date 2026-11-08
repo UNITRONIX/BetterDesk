@@ -9,10 +9,11 @@
 }
 
 /* The panel's note sits on the left of the section head, its one action on the right */
+/* The button follows the note instead of floating at the far end of a wide page */
 .automation-page .section-head .automation-note {
-    flex: 1 1 320px;
+    flex: 0 1 var(--measure);
     margin: 0;
-    margin-inline-end: auto;
+    margin-inline-end: var(--space-4);
 }
 
 .automation-page .automation-note {
@@ -63,4 +64,25 @@
 
 .automation-table td:first-child {
     min-width: 14ch;
+}
+
+/* Rule dialog: comparison and threshold, hidden for custom rules */
+.automation-dialog .rule-limit {
+    margin-bottom: var(--space-4);
+}
+
+.automation-dialog .rule-value-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.automation-dialog .rule-value-unit {
+    color: var(--text-muted);
+}
+
+/* The note that the server does not check rules yet keeps a readable line length */
+.automation-page .automation-gap {
+    max-width: var(--measure);
+    margin: 0;
 }

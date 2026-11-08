@@ -9,7 +9,7 @@
     currentPage: 'automation',
     breadcrumb: [{ label: _('nav.automation') }],
     body: `
-        <div class="page automation-page" data-can-edit="${canEdit}">
+        <div class="page page-wide automation-page" data-can-edit="${canEdit}">
             <div class="page-head">
                 <h1>${_('nav.automation')}</h1>
                 <p class="page-description">${_('automation.page_description')}</p>
@@ -27,6 +27,7 @@
                     <p class="section-note automation-note">${_('automation.rules_note')}</p>
                     ${canEdit ? `<button type="button" class="btn btn-primary" id="create-rule-btn"><span class="material-icons" aria-hidden="true">add</span>${_('automation.create_rule')}</button>` : ''}
                 </div>
+                <p class="notice warning automation-gap" id="rules-not-checked">${_('automation.rules_not_checked')}</p>
                 <p class="count-line" id="rules-count" aria-live="polite"></p>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="${_('automation.rules')}">
                     <table class="data-table automation-table">

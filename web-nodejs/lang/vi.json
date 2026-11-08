@@ -2613,7 +2613,7 @@
         "command_type": "Loại lệnh",
         "command_payload": "Lệnh / Tập lệnh",
         "command_result": "Kết quả",
-        "command_status": "Status",
+        "command_status": "Trạng thái",
         "send_command": "Gửi lệnh",
         "status_pending": "Đang chờ",
         "status_running": "Đang chạy",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Khởi động lại dịch vụ",
         "cmd_type_reboot": "Khởi động lại thiết bị",
         "legend_open": "chưa xác nhận",
-        "legend_acknowledged": "đã xác nhận"
+        "legend_acknowledged": "đã xác nhận",
+        "rules_not_checked": "Máy chủ chưa kiểm tra các quy tắc cảnh báo. Bạn có thể tạo và giữ quy tắc ở đây, nhưng chúng sẽ không tạo cảnh báo cho đến khi bản cập nhật máy chủ bổ sung việc kiểm tra.",
+        "no_alerts_not_checked": "Không có cảnh báo. Máy chủ chưa kiểm tra các quy tắc nên không có cảnh báo nào.",
+        "unit_percent": "%",
+        "unit_seconds": "giây"
     },
     "file_transfer": {
         "title": "Truyền tệp",

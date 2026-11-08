@@ -2613,7 +2613,7 @@
         "command_type": "Tip de comandă",
         "command_payload": "Comandă / Script",
         "command_result": "Rezultat",
-        "command_status": "Status",
+        "command_status": "Stare",
         "send_command": "Trimite comanda",
         "status_pending": "În așteptare",
         "status_running": "Rulează",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Repornește serviciul",
         "cmd_type_reboot": "Repornește dispozitivul",
         "legend_open": "neconfirmate",
-        "legend_acknowledged": "confirmate"
+        "legend_acknowledged": "confirmate",
+        "rules_not_checked": "Serverul nu verifică încă regulile de alertă. Puteți crea și păstra reguli aici, dar nu declanșează alerte până când o actualizare a serverului nu adaugă verificarea.",
+        "no_alerts_not_checked": "Nicio alertă. Serverul nu verifică încă regulile, așa că nu se declanșează niciuna.",
+        "unit_percent": "%",
+        "unit_seconds": "secunde"
     },
     "file_transfer": {
         "title": "Transfer de fișiere",

@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Mulai ulang layanan",
         "cmd_type_reboot": "Mulai ulang perangkat",
         "legend_open": "belum dikonfirmasi",
-        "legend_acknowledged": "dikonfirmasi"
+        "legend_acknowledged": "dikonfirmasi",
+        "rules_not_checked": "Server belum memeriksa aturan peringatan. Anda bisa membuat dan menyimpan aturan di sini, tetapi aturan tidak memicu peringatan sampai pembaruan server menambahkan pemeriksaannya.",
+        "no_alerts_not_checked": "Tidak ada peringatan. Server belum memeriksa aturan, jadi tidak ada peringatan yang muncul.",
+        "unit_percent": "%",
+        "unit_seconds": "detik"
     },
     "file_transfer": {
         "title": "Pemindahan Berkas",

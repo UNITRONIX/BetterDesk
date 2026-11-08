@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "Riavvia servizio",
         "cmd_type_reboot": "Riavvia il dispositivo",
         "legend_open": "non confermati",
-        "legend_acknowledged": "confermati"
+        "legend_acknowledged": "confermati",
+        "rules_not_checked": "Il server non controlla ancora le regole di avviso. Puoi creare e conservare le regole qui, ma non generano avvisi finché un aggiornamento del server non aggiunge il controllo.",
+        "no_alerts_not_checked": "Nessun avviso. Il server non controlla ancora le regole, quindi non ne vengono generati.",
+        "unit_percent": "%",
+        "unit_seconds": "secondi"
     },
     "file_transfer": {
         "title": "Trasferimento file",

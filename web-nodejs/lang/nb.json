@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Start tjeneste på nytt",
         "cmd_type_reboot": "Start enheten på nytt",
         "legend_open": "ikke kvittert",
-        "legend_acknowledged": "kvittert"
+        "legend_acknowledged": "kvittert",
+        "rules_not_checked": "Serveren sjekker ennå ikke varslingsregler. Du kan opprette og beholde regler her, men de utløser ingen varsler før en serveroppdatering legger til sjekken.",
+        "no_alerts_not_checked": "Ingen varsler. Serveren sjekker ennå ikke reglene, så ingen varsler utløses.",
+        "unit_percent": "%",
+        "unit_seconds": "sekunder"
     },
     "file_transfer": {
         "title": "Filoverføring",

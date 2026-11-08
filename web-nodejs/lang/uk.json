@@ -2613,7 +2613,7 @@
         "command_type": "Тип команди",
         "command_payload": "Команда / Скрипт",
         "command_result": "Результат",
-        "command_status": "Status",
+        "command_status": "Стан",
         "send_command": "Надіслати команду",
         "status_pending": "Очікує",
         "status_running": "Виконується",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Перезапустити службу",
         "cmd_type_reboot": "Перезапустити пристрій",
         "legend_open": "не підтверджено",
-        "legend_acknowledged": "підтверджено"
+        "legend_acknowledged": "підтверджено",
+        "rules_not_checked": "Сервер поки не перевіряє правила сповіщень. Ви можете створювати й зберігати правила тут, але вони не викликатимуть сповіщень, доки оновлення сервера не додасть перевірку.",
+        "no_alerts_not_checked": "Сповіщень немає. Сервер поки не перевіряє правила, тому сповіщення не виникають.",
+        "unit_percent": "%",
+        "unit_seconds": "секунд"
     },
     "file_transfer": {
         "title": "Передача файлів",

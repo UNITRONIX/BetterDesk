@@ -2613,7 +2613,7 @@
         "command_type": "Komut Türü",
         "command_payload": "Komut / Komut Dosyası",
         "command_result": "Sonuç",
-        "command_status": "Status",
+        "command_status": "Durum",
         "send_command": "Komut Gönder",
         "status_pending": "Bekliyor",
         "status_running": "Çalışıyor",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Hizmeti yeniden başlat",
         "cmd_type_reboot": "Cihazı yeniden başlat",
         "legend_open": "onaylanmadı",
-        "legend_acknowledged": "onaylandı"
+        "legend_acknowledged": "onaylandı",
+        "rules_not_checked": "Sunucu uyarı kurallarını henüz denetlemiyor. Kuralları burada oluşturup saklayabilirsiniz, ancak bir sunucu güncellemesi denetimi ekleyene kadar uyarı üretmezler.",
+        "no_alerts_not_checked": "Uyarı yok. Sunucu kuralları henüz denetlemediği için uyarı üretilmiyor.",
+        "unit_percent": "%",
+        "unit_seconds": "saniye"
     },
     "file_transfer": {
         "title": "Dosya Aktarımı",

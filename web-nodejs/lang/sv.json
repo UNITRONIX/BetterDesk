@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Starta om tjänst",
         "cmd_type_reboot": "Starta om enheten",
         "legend_open": "inte kvitterade",
-        "legend_acknowledged": "kvitterade"
+        "legend_acknowledged": "kvitterade",
+        "rules_not_checked": "Servern kontrollerar ännu inte varningsregler. Du kan skapa och behålla regler här, men de ger inga varningar förrän en serveruppdatering lägger till kontrollen.",
+        "no_alerts_not_checked": "Inga varningar. Servern kontrollerar ännu inte reglerna, så inga varningar ges.",
+        "unit_percent": "%",
+        "unit_seconds": "sekunder"
     },
     "file_transfer": {
         "title": "Filöverföring",

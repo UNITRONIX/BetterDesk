@@ -2774,7 +2774,11 @@
         "cmd_type_restart_service": "Restart service",
         "cmd_type_reboot": "Restart the device",
         "legend_open": "not acknowledged",
-        "legend_acknowledged": "acknowledged"
+        "legend_acknowledged": "acknowledged",
+        "rules_not_checked": "The server doesn't check alert rules yet. You can create and keep rules here, but they raise no alerts until a server update adds the checks.",
+        "no_alerts_not_checked": "No alerts. The server doesn't check alert rules yet, so none are raised.",
+        "unit_percent": "%",
+        "unit_seconds": "seconds"
     },
     "file_transfer": {
         "title": "File Transfer",

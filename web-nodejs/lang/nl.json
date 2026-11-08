@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "Service opnieuw starten",
         "cmd_type_reboot": "Apparaat opnieuw opstarten",
         "legend_open": "niet bevestigd",
-        "legend_acknowledged": "bevestigd"
+        "legend_acknowledged": "bevestigd",
+        "rules_not_checked": "De server controleert waarschuwingsregels nog niet. U kunt hier regels maken en bewaren, maar ze geven geen waarschuwingen tot een serverupdate de controle toevoegt.",
+        "no_alerts_not_checked": "Geen waarschuwingen. De server controleert de regels nog niet, dus er worden er geen gegeven.",
+        "unit_percent": "%",
+        "unit_seconds": "seconden"
     },
     "file_transfer": {
         "title": "Bestandsoverdracht",

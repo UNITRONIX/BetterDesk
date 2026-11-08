@@ -2613,7 +2613,7 @@
         "command_type": "Komentotyyppi",
         "command_payload": "Komento / komentosarja",
         "command_result": "Tulos",
-        "command_status": "Status",
+        "command_status": "Tila",
         "send_command": "Lähetä komento",
         "status_pending": "Odottaa",
         "status_running": "Käynnissä",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Käynnistä palvelu uudelleen",
         "cmd_type_reboot": "Käynnistä laite uudelleen",
         "legend_open": "kuittaamatta",
-        "legend_acknowledged": "kuitattu"
+        "legend_acknowledged": "kuitattu",
+        "rules_not_checked": "Palvelin ei vielä tarkista hälytyssääntöjä. Voit luoda ja säilyttää sääntöjä täällä, mutta ne eivät nosta hälytyksiä ennen kuin palvelinpäivitys lisää tarkistuksen.",
+        "no_alerts_not_checked": "Ei hälytyksiä. Palvelin ei vielä tarkista sääntöjä, joten hälytyksiä ei nosteta.",
+        "unit_percent": "%",
+        "unit_seconds": "sekuntia"
     },
     "file_transfer": {
         "title": "Tiedoston siirto",

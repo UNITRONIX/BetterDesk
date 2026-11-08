@@ -220,16 +220,22 @@
                         </select>
                         <p class="form-hint" id="rule-condition-hint">${escapeHtml(_('automation.condition_hint'))}</p>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="rule-operator">${escapeHtml(_('automation.condition_op'))}</label>
-                        <select class="form-input" id="rule-operator">
-                            ${options(['gt', 'gte', 'lt', 'lte', 'eq', 'neq'], 'op', r.condition_op || 'gt')}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="rule-value">${escapeHtml(_('automation.condition_value'))}</label>
-                        <input type="number" class="form-input is-short" id="rule-value" step="any" required aria-describedby="rule-value-hint" value="${escapeHtml(r.condition_value ?? '')}">
-                        <p class="form-hint" id="rule-value-hint">${escapeHtml(_('automation.threshold_hint'))}</p>
+                    <!-- A custom rule has no limit: comparison and threshold show for the other kinds only -->
+                    <div class="rule-limit" id="rule-limit">
+                        <div class="form-group">
+                            <label class="form-label" for="rule-operator">${escapeHtml(_('automation.condition_op'))}</label>
+                            <select class="form-input" id="rule-operator">
+                                ${options(['gt', 'gte', 'lt', 'lte', 'eq', 'neq'], 'op', r.condition_op || 'gt')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="rule-value">${escapeHtml(_('automation.condition_value'))}</label>
+                            <span class="rule-value-row">
+                                <input type="number" class="form-input is-short" id="rule-value" step="any" required aria-describedby="rule-value-unit rule-value-hint" value="${escapeHtml(r.condition_value ?? '')}">
+                                <span class="rule-value-unit" id="rule-value-unit"></span>
+                            </span>
+                            <p class="form-hint" id="rule-value-hint">${escapeHtml(_('automation.threshold_hint'))}</p>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="rule-severity">${escapeHtml(_('automation.severity'))}</label>
@@ -260,8 +266,26 @@
             ],
             onOpen: () => {
                 document.getElementById('rule-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveRule(); });
+                const cond = document.getElementById('rule-condition');
+                cond?.setAttribute('aria-controls', 'rule-limit');
+                cond?.addEventListener('change', syncRuleLimit);
+                syncRuleLimit();
             },
         });
+    }
+
+    // The comparison and threshold only apply to rules that measure something;
+    // the unit next to the threshold follows what the rule watches
+    function syncRuleLimit() {
+        const cond = document.getElementById('rule-condition');
+        const limit = document.getElementById('rule-limit');
+        const unit = document.getElementById('rule-value-unit');
+        if (!cond || !limit) return;
+        limit.hidden = cond.value === 'custom';
+        if (unit) {
+            unit.textContent = /_duration$/.test(cond.value) ? _('automation.unit_seconds')
+                : (cond.value === 'custom' ? '' : _('automation.unit_percent'));
+        }
     }
 
     async function editRule(id) {
@@ -294,7 +318,10 @@
         };
 
         if (!body.name) { formError(_('automation.name_required'), 'rule-name'); return; }
-        if (rawValue === '' || !Number.isFinite(body.condition_value)) { formError(_('automation.threshold_required'), 'rule-value'); return; }
+        if (body.condition_type === 'custom') {
+            // No limit to compare against; keep the stored values as they are
+            body.condition_value = Number.isFinite(body.condition_value) ? body.condition_value : 0;
+        } else if (rawValue === '' || !Number.isFinite(body.condition_value)) { formError(_('automation.threshold_required'), 'rule-value'); return; }
 
         savingRule = true;
         formError('');
@@ -395,7 +422,7 @@
         renderAlertShare(alerts);
         if (!alerts.length) {
             if (alertsCount) alertsCount.textContent = '';
-            alertsBody.innerHTML = stateRow(7, severity ? _('automation.no_alerts_filtered') : _('automation.no_alerts_hint'));
+            alertsBody.innerHTML = stateRow(7, severity ? _('automation.no_alerts_filtered') : _('automation.no_alerts_not_checked'));
             return;
         }
         setCountLine(alertsCount, [

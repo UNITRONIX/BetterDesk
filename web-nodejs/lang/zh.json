@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "重启服务",
         "cmd_type_reboot": "重启设备",
         "legend_open": "未确认",
-        "legend_acknowledged": "已确认"
+        "legend_acknowledged": "已确认",
+        "rules_not_checked": "服务器还不会检查告警规则。您可以在这里创建并保留规则，但在服务器更新加入检查之前，规则不会产生告警。",
+        "no_alerts_not_checked": "没有告警。服务器还不会检查规则，因此不会产生告警。",
+        "unit_percent": "%",
+        "unit_seconds": "秒"
     },
     "file_transfer": {
         "title": "文件传输",

@@ -2702,7 +2702,11 @@
         "cmd_type_restart_service": "إعادة تشغيل خدمة",
         "cmd_type_reboot": "إعادة تشغيل الجهاز",
         "legend_open": "غير مؤكَّدة",
-        "legend_acknowledged": "مؤكَّدة"
+        "legend_acknowledged": "مؤكَّدة",
+        "rules_not_checked": "لا يتحقق الخادم من قواعد التنبيه بعد. يمكنك إنشاء القواعد والاحتفاظ بها هنا، لكنها لن تطلق أي تنبيه حتى يضيف تحديث للخادم هذا التحقق.",
+        "no_alerts_not_checked": "لا توجد تنبيهات. لا يتحقق الخادم من قواعد التنبيه بعد، لذلك لا يُطلق أي تنبيه.",
+        "unit_percent": "%",
+        "unit_seconds": "ثوانٍ"
     },
     "file_transfer": {
         "title": "نقل الملفات",

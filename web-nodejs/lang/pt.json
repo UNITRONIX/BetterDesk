@@ -2632,7 +2632,7 @@
         "rules_note": "Uma regra gera um alerta sempre que um dispositivo informa um valor além do limite, no máximo uma vez a cada 5 minutos por dispositivo.",
         "alerts_note": "Alertas gerados pelas suas regras, os mais recentes primeiro. Confirme um alerta depois que alguém o analisar.",
         "commands_note": "Um comando espera no servidor até o agente do dispositivo se comunicar e então é executado no dispositivo. O resultado aparece aqui quando o agente o envia.",
-        "status": "Status",
+        "status": "Estado",
         "device": "Dispositivo",
         "device_id": "ID do dispositivo",
         "details": "Detalhes",
@@ -2695,7 +2695,11 @@
         "cmd_type_restart_service": "Reiniciar serviço",
         "cmd_type_reboot": "Reiniciar o dispositivo",
         "legend_open": "não confirmados",
-        "legend_acknowledged": "confirmados"
+        "legend_acknowledged": "confirmados",
+        "rules_not_checked": "O servidor ainda não verifica as regras de alerta. Pode criar e manter regras aqui, mas não geram alertas até que uma atualização do servidor adicione a verificação.",
+        "no_alerts_not_checked": "Sem alertas. O servidor ainda não verifica as regras, por isso nenhum é gerado.",
+        "unit_percent": "%",
+        "unit_seconds": "segundos"
     },
     "file_transfer": {
         "title": "Transferência de ficheiros",

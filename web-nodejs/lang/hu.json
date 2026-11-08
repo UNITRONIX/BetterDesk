@@ -2613,7 +2613,7 @@
         "command_type": "Parancs típusa",
         "command_payload": "Parancs / Script",
         "command_result": "Eredmény",
-        "command_status": "Status",
+        "command_status": "Állapot",
         "send_command": "Parancs küldése",
         "status_pending": "Függőben",
         "status_running": "Fut",
@@ -2701,7 +2701,11 @@
         "cmd_type_restart_service": "Szolgáltatás újraindítása",
         "cmd_type_reboot": "Eszköz újraindítása",
         "legend_open": "nyugtázatlan",
-        "legend_acknowledged": "nyugtázva"
+        "legend_acknowledged": "nyugtázva",
+        "rules_not_checked": "A szerver még nem ellenőrzi a riasztási szabályokat. Itt létrehozhat és megtarthat szabályokat, de nem váltanak ki riasztást, amíg egy szerverfrissítés nem pótolja az ellenőrzést.",
+        "no_alerts_not_checked": "Nincs riasztás. A szerver még nem ellenőrzi a szabályokat, ezért nem keletkezik riasztás.",
+        "unit_percent": "%",
+        "unit_seconds": "másodperc"
     },
     "file_transfer": {
         "title": "Fájlátvitel",
