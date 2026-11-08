@@ -1,8 +1,8 @@
 <%- include('layouts/main', {
     title: _('nav.help_requests'),
     uiReworked: true,
-    pageStyles: ['ui/help-requests'],
-    pageScripts: ['help-requests'],
+    pageStyles: ['ui/chart', 'ui/help-requests'],
+    pageScripts: ['ui-chart', 'help-requests'],
     currentPage: 'help-requests',
     breadcrumb: [{ label: _('nav.help_requests') }],
     body: `
@@ -13,6 +13,8 @@
                     ${_('help_request.page_related').replace('{tickets}', '<a href="/tickets">' + _('nav.tickets') + '</a>').replace('{chat}', '<a href="/chat">' + _('nav.chat') + '</a>')}</p>
             </div>
 
+            <div class="page-cols">
+            <div class="page-main">
             <section class="section" aria-label="${_('nav.help_requests')}">
                 <div class="toolbar">
                     <div class="toolbar-filters" role="group" aria-label="${_('help_request.status')}">
@@ -47,6 +49,24 @@
                     </tbody>
                 </table>
             </section>
+            </div>
+
+            <aside class="page-side" aria-label="${_('help_request.side_label')}">
+                <!-- Every loaded request split by status; each part filters the table -->
+                <section class="section" aria-labelledby="hr-share-title">
+                    <div class="section-head"><h2 id="hr-share-title">${_('help_request.share_title')}</h2></div>
+                    <div class="share-bar" id="hr-share-bar" aria-hidden="true" hidden></div>
+                    <ul class="share-legend hr-share-legend" id="hr-share-legend"></ul>
+                </section>
+
+                <!-- Opened and resolved per day, from the same list (public/js/ui-chart.js) -->
+                <section class="section" aria-labelledby="hr-trend-title">
+                    <div class="section-head"><h2 id="hr-trend-title">${_('help_request.trend_title')}</h2></div>
+                    <p class="section-note" id="hr-trend-note">${_('help_request.trend_note')}</p>
+                    <div id="hr-trend"></div>
+                </section>
+            </aside>
+            </div>
         </div>
     `
 }) %>

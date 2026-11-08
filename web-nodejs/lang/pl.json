@@ -3928,7 +3928,21 @@
         "count_none": "Nikt nie czeka.",
         "count_waiting_one": "1 oczekuje, zgłoszono: {age}.",
         "count_waiting_many": "Oczekujące: {count}, najstarsza: {age}.",
-        "count_accepted": "Zaakceptowane i nierozwiązane: {count}."
+        "count_accepted": "Zaakceptowane i nierozwiązane: {count}.",
+        "side_label": "Podsumowanie próśb o pomoc",
+        "count_oldest": "Najstarsza oczekująca prośba wpłynęła {age}.",
+        "share_title": "Według statusu",
+        "share_waiting": "oczekujące",
+        "share_accepted": "przyjęte",
+        "share_resolved": "rozwiązane",
+        "trend_title": "Otwarte i rozwiązane dziennie, ostatnie 14 dni",
+        "trend_note": "Prośba liczy się jako rozwiązana w dniu ostatniej zmiany.",
+        "trend_opened": "Otwarte",
+        "trend_resolved": "Rozwiązane",
+        "trend_day": "Dzień",
+        "trend_summary": "{opened} otwartych i {resolved} rozwiązanych w ostatnich 14 dniach.",
+        "trend_summary_opened": "{opened} otwartych w ostatnich 14 dniach.",
+        "trend_capped": "Liczone są tylko {count} najnowsze prośby."
     },
     "organizations": {
         "title": "Organizacje",

@@ -614,6 +614,7 @@ function normalizeHelpRequest(r) {
     if (!r || typeof r !== 'object') return null;
     const statusMap = { acknowledged: 'accepted' };
     const createdMs = r.created_at ? Date.parse(r.created_at) : Date.now();
+    const updatedMs = r.updated_at ? Date.parse(r.updated_at) : NaN;
     return {
         id: String(r.id),
         device_id: r.device_id || '',
@@ -623,6 +624,8 @@ function normalizeHelpRequest(r) {
         accepted_by: r.status === 'acknowledged' ? (r.handled_by || '') : '',
         resolved_by: r.status === 'resolved' ? (r.handled_by || '') : '',
         created_at: Number.isFinite(createdMs) ? createdMs : Date.now(),
+        // Time of the last status change (the help page counts resolved requests on that day)
+        updated_at: Number.isFinite(updatedMs) ? updatedMs : null,
     };
 }
 

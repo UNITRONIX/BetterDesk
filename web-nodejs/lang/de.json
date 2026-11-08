@@ -3804,7 +3804,21 @@
         "count_none": "Niemand wartet.",
         "count_waiting_one": "1 wartet, angefragt: {age}.",
         "count_waiting_many": "{count} warten, älteste: {age}.",
-        "count_accepted": "{count} angenommen und nicht erledigt."
+        "count_accepted": "{count} angenommen und nicht erledigt.",
+        "side_label": "Übersicht der Hilfeanfragen",
+        "count_oldest": "Die älteste wartende Anfrage kam {age}.",
+        "share_title": "Nach Status",
+        "share_waiting": "wartend",
+        "share_accepted": "angenommen",
+        "share_resolved": "erledigt",
+        "trend_title": "Neu und erledigt pro Tag, letzte 14 Tage",
+        "trend_note": "Eine Anfrage zählt an dem Tag als erledigt, an dem sie zuletzt geändert wurde.",
+        "trend_opened": "Neu",
+        "trend_resolved": "Erledigt",
+        "trend_day": "Tag",
+        "trend_summary": "{opened} neu und {resolved} erledigt in den letzten 14 Tagen.",
+        "trend_summary_opened": "{opened} neu in den letzten 14 Tagen.",
+        "trend_capped": "Gezählt werden nur die neuesten {count} Anfragen."
     },
     "organizations": {
         "title": "Dashboard",

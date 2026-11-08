@@ -3804,7 +3804,21 @@
         "count_none": "待っている人はいません。",
         "count_waiting_one": "1 件待機中、リクエスト: {age}。",
         "count_waiting_many": "{count} 件待機中、最も古いもの: {age}。",
-        "count_accepted": "{count} 件が受け付け済みで未解決です。"
+        "count_accepted": "{count} 件が受け付け済みで未解決です。",
+        "side_label": "ヘルプリクエストの概要",
+        "count_oldest": "最も古い待機中のリクエストは {age} に届きました。",
+        "share_title": "状態別",
+        "share_waiting": "待機中",
+        "share_accepted": "受け付け済み",
+        "share_resolved": "解決済み",
+        "trend_title": "1 日ごとの受信数と解決数（過去 14 日）",
+        "trend_note": "解決数は、リクエストが最後に変更された日に数えます。",
+        "trend_opened": "受信",
+        "trend_resolved": "解決",
+        "trend_day": "日付",
+        "trend_summary": "過去 14 日間に {opened} 件受信、{resolved} 件解決。",
+        "trend_summary_opened": "過去 14 日間に {opened} 件受信。",
+        "trend_capped": "数えているのは最新の {count} 件のみです。"
     },
     "organizations": {
         "title": "組織",

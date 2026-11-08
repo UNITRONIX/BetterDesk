@@ -3810,7 +3810,21 @@
         "count_none": "Nimeni nu așteaptă.",
         "count_waiting_one": "1 în așteptare, cerută: {age}.",
         "count_waiting_many": "{count} în așteptare, cea mai veche: {age}.",
-        "count_accepted": "Acceptate și nerezolvate: {count}."
+        "count_accepted": "Acceptate și nerezolvate: {count}.",
+        "side_label": "Rezumatul cererilor de ajutor",
+        "count_oldest": "Cea mai veche cerere în așteptare a sosit {age}.",
+        "share_title": "După stare",
+        "share_waiting": "în așteptare",
+        "share_accepted": "acceptate",
+        "share_resolved": "rezolvate",
+        "trend_title": "Deschise și rezolvate pe zi, ultimele 14 zile",
+        "trend_note": "O cerere contează ca rezolvată în ziua ultimei modificări.",
+        "trend_opened": "Deschise",
+        "trend_resolved": "Rezolvate",
+        "trend_day": "Zi",
+        "trend_summary": "{opened} deschise și {resolved} rezolvate în ultimele 14 zile.",
+        "trend_summary_opened": "{opened} deschise în ultimele 14 zile.",
+        "trend_capped": "Se numără doar cele mai noi {count} cereri."
     },
     "organizations": {
         "title": "Organizații",

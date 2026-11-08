@@ -3811,7 +3811,21 @@
         "count_none": "لا أحد بالانتظار.",
         "count_waiting_one": "1 قيد الانتظار، وقت الطلب: {age}.",
         "count_waiting_many": "{count} قيد الانتظار، الأقدم: {age}.",
-        "count_accepted": "مقبولة وغير محلولة: {count}."
+        "count_accepted": "مقبولة وغير محلولة: {count}.",
+        "side_label": "ملخص طلبات المساعدة",
+        "count_oldest": "وصل أقدم طلب منتظر {age}.",
+        "share_title": "حسب الحالة",
+        "share_waiting": "منتظرة",
+        "share_accepted": "مقبولة",
+        "share_resolved": "تم حلها",
+        "trend_title": "المفتوحة والمحلولة يوميًا، آخر 14 يومًا",
+        "trend_note": "يُحتسب الطلب محلولًا في يوم آخر تغيير عليه.",
+        "trend_opened": "مفتوحة",
+        "trend_resolved": "محلولة",
+        "trend_day": "اليوم",
+        "trend_summary": "{opened} مفتوحة و{resolved} محلولة في آخر 14 يومًا.",
+        "trend_summary_opened": "{opened} مفتوحة في آخر 14 يومًا.",
+        "trend_capped": "تُحتسب أحدث {count} طلب فقط."
     },
     "organizations": {
         "title": "المنظمات",

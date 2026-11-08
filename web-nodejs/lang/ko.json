@@ -3804,7 +3804,21 @@
         "count_none": "기다리는 사람이 없습니다.",
         "count_waiting_one": "1개 대기 중, 요청: {age}.",
         "count_waiting_many": "{count}개 대기 중, 가장 오래된 요청: {age}.",
-        "count_accepted": "수락했지만 해결되지 않은 요청: {count}개."
+        "count_accepted": "수락했지만 해결되지 않은 요청: {count}개.",
+        "side_label": "도움 요청 요약",
+        "count_oldest": "가장 오래 기다린 요청은 {age} 도착했습니다.",
+        "share_title": "상태별",
+        "share_waiting": "대기 중",
+        "share_accepted": "수락됨",
+        "share_resolved": "해결됨",
+        "trend_title": "일별 접수 및 해결, 최근 14일",
+        "trend_note": "요청은 마지막으로 변경된 날에 해결된 것으로 집계됩니다.",
+        "trend_opened": "접수",
+        "trend_resolved": "해결",
+        "trend_day": "날짜",
+        "trend_summary": "최근 14일 동안 {opened}건 접수, {resolved}건 해결.",
+        "trend_summary_opened": "최근 14일 동안 {opened}건 접수.",
+        "trend_capped": "최신 요청 {count}건만 집계됩니다."
     },
     "organizations": {
         "title": "조직",

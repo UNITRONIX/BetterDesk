@@ -147,9 +147,9 @@
         }
         const me = currentUserName();
         if (action === 'accept') {
-            Object.assign(req, { status: 'accepted', accepted_by: me, _local: true });
+            Object.assign(req, { status: 'accepted', accepted_by: me, updated_at: Date.now(), _local: true });
         } else {
-            Object.assign(req, { status: 'resolved', resolved_by: me, _local: true });
+            Object.assign(req, { status: 'resolved', resolved_by: me, updated_at: Date.now(), _local: true });
         }
         touched.add(id);
         render(true);
@@ -200,25 +200,25 @@
         const isBusy = busy.has(req.id);
         const parts = [];
         if (req.status === 'pending') {
-            parts.push(`<button type="button" class="btn btn-sm" data-action="accept"${isBusy ? ' disabled' : ''} ${named}>${esc(isBusy ? _('help_request.working') : _('help_request.accept'))}</button>`);
+            parts.push(`<button type="button" class="btn btn-sm" data-action="accept"${isBusy ? ' disabled' : ''} ${named}>${Utils.icon('accept')}<span>${esc(isBusy ? _('help_request.working') : _('help_request.accept'))}</span></button>`);
         }
         if (req.status !== 'resolved' && req.device_id && can('device.connect')) {
             const menuId = `hr-connect-${index}`;
             parts.push(`<span class="menu-anchor">
                 <button type="button" class="btn btn-sm" data-hr-connect data-menu-button aria-haspopup="menu" aria-expanded="false"
-                    aria-controls="${menuId}" ${named}>${esc(_('help_request.connect'))}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span></button>
+                    aria-controls="${menuId}" ${named}>${Utils.icon('connect')}<span>${esc(_('help_request.connect'))}</span><span class="material-icons btn-caret" aria-hidden="true">expand_more</span></button>
                 <span class="menu menu-end hr-connect-menu" id="${menuId}" role="menu">
-                    <button type="button" class="menu-item" role="menuitem" data-action="connect-web">
+                    <button type="button" class="menu-item" role="menuitem" data-action="connect-web">${Utils.icon('connect')}<span class="hr-connect-text">
                         <span class="hr-connect-title">${esc(_('help_request.connect_web'))}</span>
-                        <span class="hr-connect-desc">${esc(_('help_request.connect_web_desc'))}</span></button>
-                    <button type="button" class="menu-item" role="menuitem" data-action="connect-app">
+                        <span class="hr-connect-desc">${esc(_('help_request.connect_web_desc'))}</span></span></button>
+                    <button type="button" class="menu-item" role="menuitem" data-action="connect-app">${Utils.icon('connect_app')}<span class="hr-connect-text">
                         <span class="hr-connect-title">${esc(_('help_request.connect_app'))}</span>
-                        <span class="hr-connect-desc">${esc(_('help_request.connect_app_desc'))}</span></button>
+                        <span class="hr-connect-desc">${esc(_('help_request.connect_app_desc'))}</span></span></button>
                 </span>
             </span>`);
         }
         if (req.status !== 'resolved') {
-            parts.push(`<button type="button" class="btn btn-sm" data-action="resolve"${isBusy ? ' disabled' : ''} ${named}>${esc(_('help_request.mark_resolved'))}</button>`);
+            parts.push(`<button type="button" class="btn btn-sm" data-action="resolve"${isBusy ? ' disabled' : ''} ${named}>${Utils.icon('resolve')}<span>${esc(_('help_request.mark_resolved'))}</span></button>`);
         }
         return parts.join('');
     }
@@ -289,23 +289,144 @@
             if (el) el.focus({ preventScroll: true });
         }
         renderCount();
+        renderSummary();
     }
 
+    // The count line only says how long the oldest waiting request has
+    // waited; the numbers per status are in the side column.
     function renderCount() {
         const waiting = requests.filter(r => r.status === 'pending');
-        const accepted = requests.filter(r => r.status === 'accepted').length;
-        const parts = [];
         if (!waiting.length) {
-            parts.push(_('help_request.count_none'));
-        } else {
-            const oldest = waiting.reduce((a, b) => (a.created_at <= b.created_at ? a : b));
-            const age = Utils.formatRelativeTime(Utils.parseDate(oldest.created_at), { empty: '' });
-            parts.push(waiting.length === 1
-                ? _('help_request.count_waiting_one', { age })
-                : _('help_request.count_waiting_many', { count: waiting.length, age }));
+            countEl.textContent = _('help_request.count_none');
+            return;
         }
-        if (accepted) parts.push(_('help_request.count_accepted', { count: accepted }));
-        countEl.textContent = parts.join(' ');
+        const oldest = waiting.reduce((a, b) => (a.created_at <= b.created_at ? a : b));
+        const age = Utils.formatRelativeTime(Utils.parseDate(oldest.created_at), { empty: '' });
+        countEl.textContent = _('help_request.count_oldest', { age });
+    }
+
+    // ---- Side column: share by status and the last 14 days ----
+
+    const shareBar = document.getElementById('hr-share-bar');
+    const shareLegend = document.getElementById('hr-share-legend');
+    const trendEl = document.getElementById('hr-trend');
+    const trendNote = document.getElementById('hr-trend-note');
+    const TREND_DAYS = 14;
+    const LIST_LIMIT = 200; // what /api/help/requests returns at most
+    let trendKey = '';
+
+    function numberFormat() {
+        return new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+    }
+
+    function setFilter(status) {
+        const btn = Array.from(filterButtons).find(b => (b.dataset.status || '') === status);
+        if (btn) btn.click();
+    }
+
+    function renderShare() {
+        if (!shareBar || !shareLegend) return;
+        const fmt = numberFormat();
+        const parts = [
+            { status: 'pending', cls: 'is-warning', label: _('help_request.share_waiting') },
+            { status: 'accepted', cls: 'is-accepted', label: _('help_request.share_accepted') },
+            { status: 'resolved', cls: 'is-ok', label: _('help_request.share_resolved') },
+        ];
+        parts.forEach((p) => { p.n = requests.filter(r => r.status === p.status).length; });
+        const total = parts.reduce((a, p) => a + p.n, 0);
+        shareBar.textContent = '';
+        shareLegend.textContent = '';
+        parts.forEach((p) => {
+            if (p.n > 0) {
+                const seg = document.createElement('span');
+                seg.className = p.cls;
+                seg.style.flexGrow = String(p.n);
+                shareBar.appendChild(seg);
+            }
+            const li = document.createElement('li');
+            const key = document.createElement('span');
+            key.className = 'key ' + p.cls;
+            key.setAttribute('aria-hidden', 'true');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-link hr-share-filter';
+            btn.dataset.shareStatus = p.status;
+            const strong = document.createElement('strong');
+            strong.textContent = fmt.format(p.n);
+            btn.appendChild(strong);
+            btn.appendChild(document.createTextNode(' ' + p.label));
+            li.appendChild(key);
+            li.appendChild(btn);
+            shareLegend.appendChild(li);
+        });
+        shareBar.hidden = total === 0;
+    }
+
+    function dayKey(d) {
+        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    }
+
+    // Opened counts on the day a request came in; resolved on the day of its
+    // last change (the server keeps no separate resolve time).
+    function renderTrend() {
+        if (!trendEl || !window.UiChart) return;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const days = [];
+        for (let i = TREND_DAYS - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            days.push(d);
+        }
+        const index = new Map(days.map((d, i) => [dayKey(d), i]));
+        const opened = days.map(() => 0);
+        const resolved = days.map(() => 0);
+        // Older consoles do not pass the time of the last change on
+        const hasUpdated = requests.some(r => r.updated_at !== undefined);
+        requests.forEach((r) => {
+            const created = Utils.parseDate(r.created_at);
+            if (created) {
+                const i = index.get(dayKey(created));
+                if (i !== undefined) opened[i] += 1;
+            }
+            if (r.status === 'resolved' && r.updated_at) {
+                const changed = Utils.parseDate(r.updated_at);
+                const i = changed ? index.get(dayKey(changed)) : undefined;
+                if (i !== undefined) resolved[i] += 1;
+            }
+        });
+        const capped = requests.length >= LIST_LIMIT
+            && requests.reduce((a, b) => Math.min(a, b.created_at), Infinity) > days[0].getTime();
+        const key = JSON.stringify([dayKey(today), opened, resolved, hasUpdated, capped]);
+        if (key === trendKey) return;
+        trendKey = key;
+
+        const lang = (window.BetterDesk && window.BetterDesk.lang) || undefined;
+        const dayFmt = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' });
+        const fmt = numberFormat();
+        const sum = (a) => a.reduce((x, y) => x + y, 0);
+        const series = [{ name: _('help_request.trend_opened'), values: opened }];
+        if (hasUpdated) series.push({ name: _('help_request.trend_resolved'), values: resolved });
+        let summary = hasUpdated
+            ? _('help_request.trend_summary', { opened: fmt.format(sum(opened)), resolved: fmt.format(sum(resolved)) })
+            : _('help_request.trend_summary_opened', { opened: fmt.format(sum(opened)) });
+        // The list stops at the newest 200; older days may then be missing
+        if (capped) summary += ' ' + _('help_request.trend_capped', { count: fmt.format(LIST_LIMIT) });
+        if (trendNote) trendNote.hidden = !hasUpdated;
+        UiChart.render(trendEl, {
+            kind: 'columns',
+            label: _('help_request.trend_title'),
+            summary,
+            labels: days.map(d => dayFmt.format(d)),
+            series,
+            format: (v) => fmt.format(v),
+            xHeading: _('help_request.trend_day'),
+        });
+    }
+
+    function renderSummary() {
+        renderShare();
+        renderTrend();
     }
 
     // ---- Events ----
@@ -352,6 +473,13 @@
             render(true);
         });
     });
+
+    if (shareLegend) {
+        shareLegend.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-share-status]');
+            if (btn) setFilter(btn.dataset.shareStatus);
+        });
+    }
 
     if (sortEl) {
         sortEl.addEventListener('change', () => {

@@ -54,12 +54,16 @@
 }
 
 .hr-connect-menu .menu-item {
-    flex-direction: column;
     align-items: flex-start;
-    gap: 0;
     padding-top: var(--space-2);
     padding-bottom: var(--space-2);
     white-space: normal;
+}
+
+.hr-connect-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 .hr-connect-title {
@@ -75,8 +79,9 @@
     display: none;
 }
 
-/* Medium widths: device, ID and age move under the message */
-@media (max-width: 1000px) {
+/* Medium widths, and wide screens where the side column takes room:
+   device, ID and age move under the message */
+@media (max-width: 1000px), (min-width: 1200px) and (max-width: 1499px) {
     .hr-table th.col-device,
     .hr-table td.col-device,
     .hr-table th.col-age,
@@ -167,5 +172,25 @@
     .menu-anchor > .hr-connect-menu.menu-end {
         inset-inline-end: auto;
         inset-inline-start: 0;
+    }
+}
+
+/* ── Side column: requests by status ── */
+
+/* Accepted uses the same accent as its status mark in the table */
+.share-bar .is-accepted,
+.share-legend .key.is-accepted {
+    background: var(--accent);
+}
+
+.hr-share-filter {
+    font-weight: 400;
+}
+
+@media (pointer: coarse) {
+    .hr-share-filter {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
     }
 }

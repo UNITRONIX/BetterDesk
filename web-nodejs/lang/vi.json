@@ -3810,7 +3810,21 @@
         "count_none": "Không có ai đang chờ.",
         "count_waiting_one": "1 đang chờ, yêu cầu: {age}.",
         "count_waiting_many": "{count} đang chờ, cũ nhất: {age}.",
-        "count_accepted": "Đã nhận nhưng chưa giải quyết: {count}."
+        "count_accepted": "Đã nhận nhưng chưa giải quyết: {count}.",
+        "side_label": "Tóm tắt yêu cầu trợ giúp",
+        "count_oldest": "Yêu cầu đang chờ lâu nhất được gửi {age}.",
+        "share_title": "Theo trạng thái",
+        "share_waiting": "đang chờ",
+        "share_accepted": "đã nhận",
+        "share_resolved": "đã giải quyết",
+        "trend_title": "Mở và giải quyết mỗi ngày, 14 ngày qua",
+        "trend_note": "Yêu cầu được tính là đã giải quyết vào ngày thay đổi cuối cùng.",
+        "trend_opened": "Đã mở",
+        "trend_resolved": "Đã giải quyết",
+        "trend_day": "Ngày",
+        "trend_summary": "{opened} yêu cầu mở và {resolved} đã giải quyết trong 14 ngày qua.",
+        "trend_summary_opened": "{opened} yêu cầu mở trong 14 ngày qua.",
+        "trend_capped": "Chỉ tính {count} yêu cầu mới nhất."
     },
     "organizations": {
         "title": "Tổ chức",

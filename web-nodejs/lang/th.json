@@ -3810,7 +3810,21 @@
         "count_none": "ไม่มีใครรออยู่",
         "count_waiting_one": "รออยู่ 1 รายการ, ขอเมื่อ: {age}",
         "count_waiting_many": "รออยู่ {count} รายการ, เก่าที่สุด: {age}",
-        "count_accepted": "รับแล้วแต่ยังไม่แก้ไข {count} รายการ"
+        "count_accepted": "รับแล้วแต่ยังไม่แก้ไข {count} รายการ",
+        "side_label": "สรุปคำขอความช่วยเหลือ",
+        "count_oldest": "คำขอที่รอนานที่สุดส่งมาเมื่อ {age}",
+        "share_title": "ตามสถานะ",
+        "share_waiting": "รออยู่",
+        "share_accepted": "รับแล้ว",
+        "share_resolved": "แก้ไขแล้ว",
+        "trend_title": "เปิดและแก้ไขต่อวัน 14 วันล่าสุด",
+        "trend_note": "คำขอจะนับว่าแก้ไขแล้วในวันที่มีการเปลี่ยนแปลงครั้งล่าสุด",
+        "trend_opened": "เปิด",
+        "trend_resolved": "แก้ไขแล้ว",
+        "trend_day": "วัน",
+        "trend_summary": "เปิด {opened} รายการและแก้ไข {resolved} รายการใน 14 วันล่าสุด",
+        "trend_summary_opened": "เปิด {opened} รายการใน 14 วันล่าสุด",
+        "trend_capped": "นับเฉพาะคำขอล่าสุด {count} รายการ"
     },
     "organizations": {
         "title": "องค์กรต่างๆ",

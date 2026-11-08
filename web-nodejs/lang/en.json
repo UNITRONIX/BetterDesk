@@ -3989,7 +3989,21 @@
         "count_none": "No one is waiting.",
         "count_waiting_one": "1 waiting, asked {age}.",
         "count_waiting_many": "{count} waiting, oldest {age}.",
-        "count_accepted": "{count} accepted and not resolved."
+        "count_accepted": "{count} accepted and not resolved.",
+        "side_label": "Help request summary",
+        "count_oldest": "The oldest waiting request was sent {age}.",
+        "share_title": "By status",
+        "share_waiting": "waiting",
+        "share_accepted": "accepted",
+        "share_resolved": "resolved",
+        "trend_title": "Opened and resolved per day, last 14 days",
+        "trend_note": "A request counts as resolved on the day it was last changed.",
+        "trend_opened": "Opened",
+        "trend_resolved": "Resolved",
+        "trend_day": "Day",
+        "trend_summary": "{opened} opened and {resolved} resolved in the last 14 days.",
+        "trend_summary_opened": "{opened} opened in the last 14 days.",
+        "trend_capped": "Only the newest {count} requests are counted."
     },
     "organizations": {
         "title": "Organizations",

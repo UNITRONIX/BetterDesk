@@ -3810,7 +3810,21 @@
         "count_none": "कोई प्रतीक्षा नहीं कर रहा है।",
         "count_waiting_one": "1 प्रतीक्षा में, अनुरोध: {age}।",
         "count_waiting_many": "{count} प्रतीक्षा में, सबसे पुराना: {age}।",
-        "count_accepted": "स्वीकार किए गए और हल नहीं हुए: {count}।"
+        "count_accepted": "स्वीकार किए गए और हल नहीं हुए: {count}।",
+        "side_label": "सहायता अनुरोधों का सारांश",
+        "count_oldest": "सबसे पुराना प्रतीक्षारत अनुरोध {age} आया।",
+        "share_title": "स्थिति के अनुसार",
+        "share_waiting": "प्रतीक्षारत",
+        "share_accepted": "स्वीकार किए गए",
+        "share_resolved": "हल किए गए",
+        "trend_title": "प्रति दिन खुले और हल हुए, पिछले 14 दिन",
+        "trend_note": "कोई अनुरोध उसी दिन हल माना जाता है जिस दिन उसे आख़िरी बार बदला गया।",
+        "trend_opened": "खुले",
+        "trend_resolved": "हल हुए",
+        "trend_day": "दिन",
+        "trend_summary": "पिछले 14 दिनों में {opened} खुले और {resolved} हल हुए।",
+        "trend_summary_opened": "पिछले 14 दिनों में {opened} खुले।",
+        "trend_capped": "केवल नवीनतम {count} अनुरोध गिने जाते हैं।"
     },
     "organizations": {
         "title": "संगठनों",

@@ -3810,7 +3810,21 @@
         "count_none": "Tidak ada yang menunggu.",
         "count_waiting_one": "1 menunggu, diminta: {age}.",
         "count_waiting_many": "{count} menunggu, paling lama: {age}.",
-        "count_accepted": "{count} diterima dan belum selesai."
+        "count_accepted": "{count} diterima dan belum selesai.",
+        "side_label": "Ringkasan permintaan bantuan",
+        "count_oldest": "Permintaan menunggu yang paling lama masuk {age}.",
+        "share_title": "Menurut status",
+        "share_waiting": "menunggu",
+        "share_accepted": "diterima",
+        "share_resolved": "selesai",
+        "trend_title": "Dibuka dan diselesaikan per hari, 14 hari terakhir",
+        "trend_note": "Permintaan dihitung selesai pada hari terakhir kali diubah.",
+        "trend_opened": "Dibuka",
+        "trend_resolved": "Diselesaikan",
+        "trend_day": "Hari",
+        "trend_summary": "{opened} dibuka dan {resolved} diselesaikan dalam 14 hari terakhir.",
+        "trend_summary_opened": "{opened} dibuka dalam 14 hari terakhir.",
+        "trend_capped": "Hanya {count} permintaan terbaru yang dihitung."
     },
     "organizations": {
         "title": "Organisasi",

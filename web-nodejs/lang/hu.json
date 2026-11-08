@@ -3810,7 +3810,21 @@
         "count_none": "Senki sem várakozik.",
         "count_waiting_one": "1 várakozik, kérve: {age}.",
         "count_waiting_many": "{count} várakozik, a legrégebbi: {age}.",
-        "count_accepted": "Elfogadva, de nincs megoldva: {count}."
+        "count_accepted": "Elfogadva, de nincs megoldva: {count}.",
+        "side_label": "A segítségkérések összegzése",
+        "count_oldest": "A legrégebbi várakozó kérés ekkor érkezett: {age}.",
+        "share_title": "Állapot szerint",
+        "share_waiting": "várakozik",
+        "share_accepted": "elfogadva",
+        "share_resolved": "megoldva",
+        "trend_title": "Megnyitott és megoldott kérések naponta, az elmúlt 14 nap",
+        "trend_note": "Egy kérés azon a napon számít megoldottnak, amikor utoljára módosult.",
+        "trend_opened": "Megnyitott",
+        "trend_resolved": "Megoldott",
+        "trend_day": "Nap",
+        "trend_summary": "Az elmúlt 14 napban {opened} kérés érkezett és {resolved} megoldódott.",
+        "trend_summary_opened": "Az elmúlt 14 napban {opened} kérés érkezett.",
+        "trend_capped": "Csak a legújabb {count} kérést számoljuk."
     },
     "organizations": {
         "title": "Szervezetek",

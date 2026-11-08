@@ -3810,7 +3810,21 @@
         "count_none": "Kukaan ei odota.",
         "count_waiting_one": "1 odottaa, pyydetty: {age}.",
         "count_waiting_many": "{count} odottaa, vanhin: {age}.",
-        "count_accepted": "Vastaanotettu, ei ratkaistu: {count}."
+        "count_accepted": "Vastaanotettu, ei ratkaistu: {count}.",
+        "side_label": "Yhteenveto apupyynnöistä",
+        "count_oldest": "Vanhin odottava pyyntö saapui {age}.",
+        "share_title": "Tilan mukaan",
+        "share_waiting": "odottaa",
+        "share_accepted": "otettu vastaan",
+        "share_resolved": "ratkaistu",
+        "trend_title": "Avatut ja ratkaistut päivittäin, viimeiset 14 päivää",
+        "trend_note": "Pyyntö lasketaan ratkaistuksi sinä päivänä, jona sitä viimeksi muutettiin.",
+        "trend_opened": "Avatut",
+        "trend_resolved": "Ratkaistut",
+        "trend_day": "Päivä",
+        "trend_summary": "{opened} avattu ja {resolved} ratkaistu viimeisten 14 päivän aikana.",
+        "trend_summary_opened": "{opened} avattu viimeisten 14 päivän aikana.",
+        "trend_capped": "Vain {count} uusinta pyyntöä lasketaan."
     },
     "organizations": {
         "title": "Organisaatiot",

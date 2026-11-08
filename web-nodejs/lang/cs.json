@@ -3804,7 +3804,21 @@
         "count_none": "Nikdo nečeká.",
         "count_waiting_one": "1 čeká, požádáno: {age}.",
         "count_waiting_many": "Čeká: {count}, nejstarší: {age}.",
-        "count_accepted": "Přijato a nevyřešeno: {count}."
+        "count_accepted": "Přijato a nevyřešeno: {count}.",
+        "side_label": "Přehled žádostí o pomoc",
+        "count_oldest": "Nejstarší čekající žádost přišla {age}.",
+        "share_title": "Podle stavu",
+        "share_waiting": "čekající",
+        "share_accepted": "přijaté",
+        "share_resolved": "vyřešené",
+        "trend_title": "Otevřené a vyřešené za den, posledních 14 dní",
+        "trend_note": "Žádost se počítá jako vyřešená v den své poslední změny.",
+        "trend_opened": "Otevřené",
+        "trend_resolved": "Vyřešené",
+        "trend_day": "Den",
+        "trend_summary": "{opened} otevřených a {resolved} vyřešených za posledních 14 dní.",
+        "trend_summary_opened": "{opened} otevřených za posledních 14 dní.",
+        "trend_capped": "Počítá se jen {count} nejnovějších žádostí."
     },
     "organizations": {
         "title": "Organizace",

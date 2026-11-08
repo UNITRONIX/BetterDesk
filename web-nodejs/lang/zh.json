@@ -3910,7 +3910,21 @@
         "count_none": "没有人在等待。",
         "count_waiting_one": "1 个等待中，请求时间：{age}。",
         "count_waiting_many": "{count} 个等待中，最早的：{age}。",
-        "count_accepted": "已接受但未解决：{count} 个。"
+        "count_accepted": "已接受但未解决：{count} 个。",
+        "side_label": "求助请求概览",
+        "count_oldest": "最早的等待中请求发送于{age}。",
+        "share_title": "按状态",
+        "share_waiting": "等待中",
+        "share_accepted": "已接受",
+        "share_resolved": "已解决",
+        "trend_title": "每天新开和已解决，最近 14 天",
+        "trend_note": "请求按最后一次更改的日期计为已解决。",
+        "trend_opened": "新开",
+        "trend_resolved": "已解决",
+        "trend_day": "日期",
+        "trend_summary": "最近 14 天新开 {opened} 个，已解决 {resolved} 个。",
+        "trend_summary_opened": "最近 14 天新开 {opened} 个。",
+        "trend_capped": "仅统计最新的 {count} 个请求。"
     },
     "organizations": {
         "title": "组织管理",

@@ -3804,7 +3804,21 @@
         "count_none": "Ninguém está à espera.",
         "count_waiting_one": "1 em espera, pedida: {age}.",
         "count_waiting_many": "{count} em espera, a mais antiga: {age}.",
-        "count_accepted": "Aceites e não resolvidas: {count}."
+        "count_accepted": "Aceites e não resolvidas: {count}.",
+        "side_label": "Resumo dos pedidos de ajuda",
+        "count_oldest": "O pedido em espera mais antigo foi enviado {age}.",
+        "share_title": "Por estado",
+        "share_waiting": "em espera",
+        "share_accepted": "aceites",
+        "share_resolved": "resolvidos",
+        "trend_title": "Abertos e resolvidos por dia, últimos 14 dias",
+        "trend_note": "Um pedido conta como resolvido no dia da última alteração.",
+        "trend_opened": "Abertos",
+        "trend_resolved": "Resolvidos",
+        "trend_day": "Dia",
+        "trend_summary": "{opened} abertos e {resolved} resolvidos nos últimos 14 dias.",
+        "trend_summary_opened": "{opened} abertos nos últimos 14 dias.",
+        "trend_capped": "Só são contados os {count} pedidos mais recentes."
     },
     "organizations": {
         "title": "Organizações",

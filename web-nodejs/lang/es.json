@@ -3804,7 +3804,21 @@
         "count_none": "Nadie está esperando.",
         "count_waiting_one": "1 en espera, solicitada: {age}.",
         "count_waiting_many": "{count} en espera, la más antigua: {age}.",
-        "count_accepted": "Aceptadas y sin resolver: {count}."
+        "count_accepted": "Aceptadas y sin resolver: {count}.",
+        "side_label": "Resumen de solicitudes de ayuda",
+        "count_oldest": "La solicitud en espera más antigua se envió {age}.",
+        "share_title": "Por estado",
+        "share_waiting": "en espera",
+        "share_accepted": "aceptadas",
+        "share_resolved": "resueltas",
+        "trend_title": "Abiertas y resueltas por día, últimos 14 días",
+        "trend_note": "Una solicitud cuenta como resuelta el día en que se cambió por última vez.",
+        "trend_opened": "Abiertas",
+        "trend_resolved": "Resueltas",
+        "trend_day": "Día",
+        "trend_summary": "{opened} abiertas y {resolved} resueltas en los últimos 14 días.",
+        "trend_summary_opened": "{opened} abiertas en los últimos 14 días.",
+        "trend_capped": "Solo se cuentan las {count} solicitudes más recientes."
     },
     "organizations": {
         "title": "Panel",

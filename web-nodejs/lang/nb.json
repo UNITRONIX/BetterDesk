@@ -3810,7 +3810,21 @@
         "count_none": "Ingen venter.",
         "count_waiting_one": "1 venter, forespurt: {age}.",
         "count_waiting_many": "{count} venter, eldste: {age}.",
-        "count_accepted": "{count} godtatt og ikke løst."
+        "count_accepted": "{count} godtatt og ikke løst.",
+        "side_label": "Oversikt over hjelpeforespørsler",
+        "count_oldest": "Den eldste ventende forespørselen kom {age}.",
+        "share_title": "Etter status",
+        "share_waiting": "venter",
+        "share_accepted": "godtatt",
+        "share_resolved": "løst",
+        "trend_title": "Åpnet og løst per dag, siste 14 dager",
+        "trend_note": "En forespørsel teller som løst den dagen den sist ble endret.",
+        "trend_opened": "Åpnet",
+        "trend_resolved": "Løst",
+        "trend_day": "Dag",
+        "trend_summary": "{opened} åpnet og {resolved} løst de siste 14 dagene.",
+        "trend_summary_opened": "{opened} åpnet de siste 14 dagene.",
+        "trend_capped": "Bare de {count} nyeste forespørslene telles."
     },
     "organizations": {
         "title": "Organisasjoner",

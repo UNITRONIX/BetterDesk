@@ -3932,7 +3932,21 @@
         "count_none": "沒有人在等待。",
         "count_waiting_one": "1 個等待中，請求時間：{age}。",
         "count_waiting_many": "{count} 個等待中，最早的：{age}。",
-        "count_accepted": "已接受但未解決：{count} 個。"
+        "count_accepted": "已接受但未解決：{count} 個。",
+        "side_label": "求助請求概覽",
+        "count_oldest": "最早的等待中請求發送於{age}。",
+        "share_title": "依狀態",
+        "share_waiting": "等待中",
+        "share_accepted": "已接受",
+        "share_resolved": "已解決",
+        "trend_title": "每天新開和已解決，最近 14 天",
+        "trend_note": "請求依最後一次變更的日期計為已解決。",
+        "trend_opened": "新開",
+        "trend_resolved": "已解決",
+        "trend_day": "日期",
+        "trend_summary": "最近 14 天新開 {opened} 個，已解決 {resolved} 個。",
+        "trend_summary_opened": "最近 14 天新開 {opened} 個。",
+        "trend_capped": "僅統計最新的 {count} 個請求。"
     },
     "organizations": {
         "title": "組織管理",

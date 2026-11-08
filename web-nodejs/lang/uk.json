@@ -3810,7 +3810,21 @@
         "count_none": "Ніхто не чекає.",
         "count_waiting_one": "1 очікує, запитано: {age}.",
         "count_waiting_many": "Очікують: {count}, найстаріший: {age}.",
-        "count_accepted": "Прийнято й не вирішено: {count}."
+        "count_accepted": "Прийнято й не вирішено: {count}.",
+        "side_label": "Підсумок запитів на допомогу",
+        "count_oldest": "Найстаріший запит, що чекає, надійшов {age}.",
+        "share_title": "За статусом",
+        "share_waiting": "чекають",
+        "share_accepted": "прийняті",
+        "share_resolved": "вирішені",
+        "trend_title": "Відкриті й вирішені за день, останні 14 днів",
+        "trend_note": "Запит вважається вирішеним у день останньої зміни.",
+        "trend_opened": "Відкриті",
+        "trend_resolved": "Вирішені",
+        "trend_day": "День",
+        "trend_summary": "{opened} відкрито і {resolved} вирішено за останні 14 днів.",
+        "trend_summary_opened": "{opened} відкрито за останні 14 днів.",
+        "trend_capped": "Враховано лише {count} найновіших запитів."
     },
     "organizations": {
         "title": "організації",

@@ -3810,7 +3810,21 @@
         "count_none": "Bekleyen kimse yok.",
         "count_waiting_one": "1 bekliyor, istek: {age}.",
         "count_waiting_many": "{count} bekliyor, en eskisi: {age}.",
-        "count_accepted": "Kabul edilmiş, çözülmemiş: {count}."
+        "count_accepted": "Kabul edilmiş, çözülmemiş: {count}.",
+        "side_label": "Yardım isteklerinin özeti",
+        "count_oldest": "Bekleyen en eski istek şu zamanda geldi: {age}.",
+        "share_title": "Duruma göre",
+        "share_waiting": "bekliyor",
+        "share_accepted": "kabul edildi",
+        "share_resolved": "çözüldü",
+        "trend_title": "Günlük açılan ve çözülen, son 14 gün",
+        "trend_note": "Bir istek, son değiştirildiği gün çözülmüş sayılır.",
+        "trend_opened": "Açılan",
+        "trend_resolved": "Çözülen",
+        "trend_day": "Gün",
+        "trend_summary": "Son 14 günde {opened} açıldı, {resolved} çözüldü.",
+        "trend_summary_opened": "Son 14 günde {opened} açıldı.",
+        "trend_capped": "Yalnızca en yeni {count} istek sayılır."
     },
     "organizations": {
         "title": "Organizasyonlar",

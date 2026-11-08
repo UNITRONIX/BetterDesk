@@ -3804,7 +3804,21 @@
         "count_none": "Niemand wacht.",
         "count_waiting_one": "1 wachtend, aangevraagd: {age}.",
         "count_waiting_many": "{count} wachtend, oudste: {age}.",
-        "count_accepted": "{count} geaccepteerd en niet opgelost."
+        "count_accepted": "{count} geaccepteerd en niet opgelost.",
+        "side_label": "Overzicht van hulpverzoeken",
+        "count_oldest": "Het oudste wachtende verzoek kwam {age} binnen.",
+        "share_title": "Per status",
+        "share_waiting": "wachtend",
+        "share_accepted": "aangenomen",
+        "share_resolved": "opgelost",
+        "trend_title": "Geopend en opgelost per dag, laatste 14 dagen",
+        "trend_note": "Een verzoek telt als opgelost op de dag van de laatste wijziging.",
+        "trend_opened": "Geopend",
+        "trend_resolved": "Opgelost",
+        "trend_day": "Dag",
+        "trend_summary": "{opened} geopend en {resolved} opgelost in de laatste 14 dagen.",
+        "trend_summary_opened": "{opened} geopend in de laatste 14 dagen.",
+        "trend_capped": "Alleen de nieuwste {count} verzoeken worden geteld."
     },
     "organizations": {
         "title": "Organisaties",
