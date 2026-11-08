@@ -92,6 +92,13 @@
         padding-inline-start: 0;
         border-inline-start: 0;
     }
+
+    /* The logo almost fills its section: the section's width, at most 30 px
+       high (the logo is 815.9 x 132.92), smaller with a narrower sidebar */
+    .ux35-topbar-logo .brand-logo-full {
+        width: min(100%, calc(30px * 815.9 / 132.92));
+        height: auto;
+    }
 }
 
 .ux35-topbar-logo img,
