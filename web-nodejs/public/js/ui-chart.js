@@ -133,9 +133,16 @@
 
             // X labels: at most about one per 64 px
             const every = Math.max(1, Math.ceil(n / Math.max(1, Math.floor((x1 - x0) / 64))));
+            // The last label always shows; one that would sit too close to it is dropped
+            const shown = o.labels.map((lab, i) => i === n - 1 || i % every === 0);
+            for (let i = n - 2; i >= 0; i--) {
+                if (shown[i]) {
+                    if (xAt(n - 1) - xAt(i) < 56) shown[i] = false;
+                    break;
+                }
+            }
             o.labels.forEach((lab, i) => {
-                if (i % every !== 0 && i !== n - 1) return;
-                if (i === n - 1 && i % every !== 0 && (i % every) < every / 2) return;
+                if (!shown[i]) return;
                 const tx = el('text', { x: xAt(i), y: H - 8, 'text-anchor': 'middle', class: 'chart-tick' }, svg);
                 tx.textContent = lab;
             });
