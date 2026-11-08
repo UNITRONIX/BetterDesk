@@ -41,9 +41,10 @@ The console self-hosts these fonts in `web-nodejs/public/fonts/`:
 - Material Symbols (subset), Apache License 2.0, see
   `web-nodejs/public/fonts/MATERIAL_SYMBOLS_VERSION.txt`.
 
-Operating system marks in `web-nodejs/public/img/os-icons.svg` are paths from
-Simple Icons (https://simpleicons.org), CC0 1.0. The logos are trademarks of
-their owners and only name the operating system a device runs.
+Operating system marks in `web-nodejs/public/img/os-icons.svg` are from
+Phosphor Icons (https://phosphoricons.com), MIT License, copyright Phosphor
+Icons. The logos are trademarks of their owners and only name the operating
+system a device runs.
 
 ## Compatibility components
 

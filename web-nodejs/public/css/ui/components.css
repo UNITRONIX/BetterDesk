@@ -866,7 +866,6 @@ th.sortable.sort-desc {
     vertical-align: -3px;
 }
 
-.os-icon-fallback {
-    font-size: 16px;
-    color: var(--text-muted);
+.os-icon-none {
+    display: inline-block;
 }

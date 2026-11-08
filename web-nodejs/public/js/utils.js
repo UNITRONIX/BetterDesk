@@ -299,16 +299,16 @@ const Utils = {
 
     /**
      * Operating system mark for a platform string, as HTML.
-     * Uses the logo sprite (/img/os-icons.svg) when the OS is recognised and
-     * the generic Material icon otherwise. Decorative: the OS name is always
-     * shown as text next to it.
+     * Uses the logo sprite (/img/os-icons.svg) when the OS is recognised and an
+     * empty space of the same size otherwise, so names stay aligned.
+     * Decorative: the OS name is always shown as text next to it.
      * @param {string} platform - e.g. "Windows 11 Pro", "Ubuntu 24.04", "macOS 15.1"
      * @returns {string}
      */
     getPlatformIconHtml(platform) {
         const id = Utils.getPlatformLogoId(platform);
         if (!id) {
-            return `<span class="material-icons os-icon-fallback" aria-hidden="true">${Utils.getPlatformIcon(platform)}</span>`;
+            return '<span class="os-icon os-icon-none" aria-hidden="true"></span>';
         }
         const v = (window.BetterDesk && window.BetterDesk.cacheVersion) || '';
         return `<svg class="os-icon os-${id}" aria-hidden="true" focusable="false"><use href="/img/os-icons.svg?v=${encodeURIComponent(v)}#${id}"></use></svg>`;
@@ -316,29 +316,18 @@ const Utils = {
 
     /**
      * Symbol id in /img/os-icons.svg for a platform string, or '' if unknown.
-     * Distributions are checked before the generic Linux mark.
      */
     getPlatformLogoId(platform) {
         if (!platform) return '';
         const p = String(platform).toLowerCase();
+        // One mark per OS family; distributions use the Linux mark and keep
+        // their name in the text next to it.
         const rules = [
             ['windows', /windows|win32|win64|^win\b/],
             ['apple', /mac ?os|macintosh|darwin|\bmac\b|\bios\b|iphone|ipad|apple/],
             ['android', /android/],
-            ['ubuntu', /ubuntu/],
-            ['debian', /debian/],
-            ['raspberrypi', /raspberry|raspbian/],
-            ['fedora', /fedora/],
-            ['centos', /centos/],
-            ['redhat', /red ?hat|rhel/],
-            ['archlinux', /\barch\b|archlinux|manjaro/],
-            ['alpinelinux', /alpine/],
-            ['linuxmint', /linux ?mint/],
-            ['opensuse', /suse/],
-            ['kalilinux', /kali/],
-            ['freebsd', /freebsd/],
-            ['googlechrome', /chrome ?os|chromeos/],
-            ['linux', /linux/]
+            ['chrome', /chrome ?os|chromeos/],
+            ['linux', /linux|ubuntu|debian|raspberry|raspbian|fedora|centos|red ?hat|rhel|\barch\b|manjaro|alpine|mint|suse|kali|bsd/]
         ];
         const hit = rules.find(([, re]) => re.test(p));
         return hit ? hit[0] : '';
