@@ -1,0 +1,218 @@
+/* Inventory: the device table, its phone layout and the detail dialog.
+   Tables, meters, facts and states come from components.css. */
+
+/* The whole row opens the device; the name is the keyboard target */
+.inventory-table tbody tr[data-id] {
+    cursor: pointer;
+}
+
+/* The name cell is one button: name, ID and (on phones) the system */
+.inventory-table .row-open {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.inventory-table .row-open .row-name {
+    font-weight: 600;
+}
+
+.inventory-table tr[data-id]:hover .row-open .row-name {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.inventory-table .os-name {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.inventory-table .cpu-name {
+    display: block;
+    max-width: 28ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.inventory-table .col-memory {
+    min-width: 160px;
+}
+
+.inventory-table .col-updated {
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.inventory-table .num-cell {
+    font-variant-numeric: tabular-nums;
+}
+
+.inventory-table td.state-cell.is-error {
+    color: var(--danger);
+}
+
+.inventory-page .phone-only {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    .inventory-table .col-disks,
+    .inventory-table .col-cpu {
+        display: none;
+    }
+}
+
+/* Phone: name, ID and system on the start side, memory and age below */
+@media (max-width: 640px) {
+    .inventory-table thead {
+        display: none;
+    }
+
+    .inventory-table,
+    .inventory-table tbody {
+        display: block;
+    }
+
+    .inventory-table tbody {
+        border-top: 1px solid var(--rule);
+    }
+
+    .inventory-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: var(--space-1) var(--space-3);
+        padding: var(--row-pad-y) var(--space-1);
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .inventory-table td {
+        display: none;
+        height: auto;
+        padding: 0;
+        border: 0;
+    }
+
+    .inventory-table td.col-device,
+    .inventory-table td.col-updated,
+    .inventory-table td.col-memory,
+    .inventory-table td.state-cell {
+        display: block;
+    }
+
+    .inventory-table td.col-device {
+        grid-column: 1;
+    }
+
+    .inventory-table td.col-updated {
+        grid-column: 2;
+        grid-row: 1;
+        font-size: var(--text-sm);
+    }
+
+    .inventory-table td.col-memory {
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+
+    .inventory-table td.state-cell {
+        grid-column: 1 / -1;
+    }
+
+    .inventory-table .row-open {
+        min-height: 44px;
+    }
+
+    .inventory-table .memory-detail {
+        display: none;
+    }
+
+    .inventory-page .phone-only {
+        display: block;
+    }
+}
+
+/* Detail dialog */
+.inventory-detail .inv-group {
+    margin: var(--space-5) 0 var(--space-2);
+    font-size: var(--text-md);
+}
+
+.inventory-detail .inv-group:first-child {
+    margin-top: 0;
+}
+
+.inventory-detail .inv-sub {
+    margin: var(--space-4) 0 var(--space-2);
+    font-size: var(--text-base);
+}
+
+.inventory-detail .inv-facts {
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+}
+
+.inventory-detail .inv-facts .meter {
+    flex: 1;
+    max-width: 360px;
+}
+
+.inventory-detail .inv-disk-use {
+    min-width: 200px;
+}
+
+.inventory-detail .inv-apps-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.inventory-detail .inv-apps-head .inv-sub {
+    margin: 0;
+}
+
+.inventory-detail .inv-apps-search {
+    max-width: 320px;
+    margin: var(--space-2) 0 var(--space-3);
+}
+
+.inventory-detail .inv-version {
+    overflow-wrap: anywhere;
+}
+
+.inventory-detail .inv-col-installed {
+    white-space: nowrap;
+}
+
+.inventory-detail .inv-phone-publisher {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .inventory-detail .inv-facts {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .inventory-detail .inv-col-publisher,
+    .inventory-detail .inv-col-installed {
+        display: none;
+    }
+
+    .inventory-detail .inv-phone-publisher {
+        display: block;
+    }
+
+    .inventory-detail .inv-disk-use {
+        min-width: 140px;
+    }
+}
