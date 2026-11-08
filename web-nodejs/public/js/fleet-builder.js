@@ -1,7 +1,9 @@
 /* fleet-builder.js — Visual workflow builder (SVG node editor) */
 'use strict';
 (function () {
-    const _ = window._ || (k => k);
+    const _ = (key, params) => (typeof window._ === 'function' ? window._(key, params || {}) : key);
+    // A translation, or the fallback while the key is missing
+    const tr = (key, fallback, params) => { const v = _(key, params); return v === key ? fallback : v; };
 
     const SVG_NS = 'http://www.w3.org/2000/svg';
     const NODE_W = 180;
@@ -23,36 +25,30 @@
     let _panStart = null;
 
     let _workflowId = null;
-    let _workflowName = 'Untitled';
+    let _workflowName = tr('fleet.untitled', 'Untitled');
 
-    // Category → color mapping
-    const CATS = {
-        trigger:   { color: '#58a6ff', headerFill: 'rgba(88,166,255,.15)' },
-        condition: { color: '#f0b429', headerFill: 'rgba(240,180,41,.15)' },
-        action:    { color: '#3fb950', headerFill: 'rgba(63,185,80,.15)' },
-        result:    { color: '#f85149', headerFill: 'rgba(248,81,73,.15)' },
-        transform: { color: '#bc8cff', headerFill: 'rgba(188,140,255,.15)' }
-    };
+    // Categories; their colours come from the page CSS (.node-header.<cat>, .node-dot-svg.<cat>)
+    const CATS = { trigger: {}, condition: {}, action: {}, result: {}, transform: {} };
 
-    // Node type → category + default label
+    // Node type → category + default label (the palette uses the same keys)
     const NODE_DEFS = {
-        trigger_manual:    { cat: 'trigger',   label: 'Manual Trigger' },
-        trigger_schedule:  { cat: 'trigger',   label: 'Schedule' },
-        trigger_event:     { cat: 'trigger',   label: 'Event Trigger' },
-        cond_os:           { cat: 'condition', label: 'OS Check' },
-        cond_threshold:    { cat: 'condition', label: 'Threshold' },
-        cond_time_window:  { cat: 'condition', label: 'Time Window' },
-        action_script:     { cat: 'action',    label: 'Run Script' },
-        action_install:    { cat: 'action',    label: 'Install Software' },
-        action_restart:    { cat: 'action',    label: 'Restart Service' },
-        action_file_deploy:{ cat: 'action',    label: 'Deploy File' },
-        action_message:    { cat: 'action',    label: 'Send Message' },
-        result_log:        { cat: 'result',    label: 'Log Output' },
-        result_alert:      { cat: 'result',    label: 'Send Alert' },
-        result_chain:      { cat: 'result',    label: 'Chain Workflow' },
-        transform_parse:   { cat: 'transform', label: 'Parse JSON' },
-        transform_filter:  { cat: 'transform', label: 'Filter' },
-        transform_delay:   { cat: 'transform', label: 'Delay' }
+        trigger_manual:    { cat: 'trigger',   key: 'fleet.node_manual',       label: 'Manual trigger' },
+        trigger_schedule:  { cat: 'trigger',   key: 'fleet.node_schedule',     label: 'Schedule' },
+        trigger_event:     { cat: 'trigger',   key: 'fleet.node_event',        label: 'Event trigger' },
+        cond_os:           { cat: 'condition', key: 'fleet.node_os_check',     label: 'OS check' },
+        cond_threshold:    { cat: 'condition', key: 'fleet.node_threshold',    label: 'Threshold' },
+        cond_time_window:  { cat: 'condition', key: 'fleet.node_time_window',  label: 'Time window' },
+        action_script:     { cat: 'action',    key: 'fleet.node_run_script',   label: 'Run script' },
+        action_install:    { cat: 'action',    key: 'fleet.node_install',      label: 'Install software' },
+        action_restart:    { cat: 'action',    key: 'fleet.node_restart',      label: 'Restart service' },
+        action_file_deploy:{ cat: 'action',    key: 'fleet.node_file_deploy',  label: 'Deploy file' },
+        action_message:    { cat: 'action',    key: 'fleet.node_send_message', label: 'Send message' },
+        result_log:        { cat: 'result',    key: 'fleet.node_log_output',   label: 'Log output' },
+        result_alert:      { cat: 'result',    key: 'fleet.node_send_alert',   label: 'Send alert' },
+        result_chain:      { cat: 'result',    key: 'fleet.node_chain',        label: 'Start another workflow' },
+        transform_parse:   { cat: 'transform', key: 'fleet.node_parse_json',   label: 'Parse JSON' },
+        transform_filter:  { cat: 'transform', key: 'fleet.node_filter',       label: 'Filter' },
+        transform_delay:   { cat: 'transform', key: 'fleet.node_delay',        label: 'Delay' }
     };
 
     // -----------------------------------------------------------------------
@@ -65,7 +61,7 @@
         // Marker for arrowheads
         const defs = svgEl('defs');
         const marker = svgEl('marker', { id: 'arrowhead', markerWidth: '8', markerHeight: '6', refX: '8', refY: '3', orient: 'auto' });
-        const poly = svgEl('polygon', { points: '0 0, 8 3, 0 6', fill: '#8b949e' });
+        const poly = svgEl('polygon', { points: '0 0, 8 3, 0 6', class: 'connection-arrow' });
         marker.appendChild(poly);
         defs.appendChild(marker);
         _svg.appendChild(defs);
@@ -123,14 +119,25 @@
         const def = NODE_DEFS[type];
         if (!def) return null;
         const id = 'n' + (_nextId++);
-        const node = { id, type, category: def.cat, label: def.label, x, y, config: {} };
+        const node = { id, type, category: def.cat, label: tr(def.key, def.label), x, y, config: {} };
         _nodes.push(node);
         renderNode(node);
         return node;
     }
 
+    // Palette click or Enter: put the step in the middle of the visible canvas
+    function addFromPalette(type) {
+        if (!_svg || !NODE_DEFS[type]) return;
+        const rect = _svg.getBoundingClientRect();
+        const cx = (rect.width / 2 - _panX) / _zoom;
+        const cy = (rect.height / 2 - _panY) / _zoom;
+        const offset = (_nodes.length % 5) * 24;
+        const node = addNode(type, cx - NODE_W / 2 + offset, cy - NODE_H / 2 + offset);
+        if (node) selectNode(node.id);
+    }
+
     function renderNode(node) {
-        const cat = CATS[node.category] || CATS.action;
+        const cat = CATS[node.category] ? node.category : 'action';
         const g = svgEl('g', { class: 'node-group', 'data-id': node.id, transform: `translate(${node.x},${node.y})` });
 
         // Body
@@ -142,7 +149,7 @@
         g.appendChild(header);
 
         // Category dot
-        const dot = svgEl('circle', { cx: '12', cy: '11', r: '4', fill: cat.color });
+        const dot = svgEl('circle', { cx: '12', cy: '11', r: '4', class: 'node-dot-svg ' + cat });
         g.appendChild(dot);
 
         // Title
@@ -320,7 +327,7 @@
 
     function onKeyDown(e) {
         if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (_selected && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+            if (_selected && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
                 removeNode(_selected);
             }
         }
@@ -360,85 +367,90 @@
 
     function closeProps() { hideProps(); selectNode(null); }
 
+    // Property labels: translation key and the English fallback
+    const PROP = (key, fallback) => tr('fleet.prop_' + key, fallback);
+
     function buildPropsForm(node) {
+        const fid = (key) => `prop-${esc(node.id)}-${esc(key)}`;
         let html = `
             <div class="form-group">
-                <label>Label</label>
-                <input class="form-control" value="${esc(node.label)}" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","label"]' data-bd-on="change" data-bd-value="1">
+                <label class="form-label" for="${fid('label')}">${esc(PROP('label', 'Label'))}</label>
+                <input id="${fid('label')}" class="form-input" value="${esc(node.label)}" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","label"]' data-bd-on="change" data-bd-value="1">
             </div>`;
 
         // Type-specific fields
         if (node.type === 'trigger_schedule') {
-            html += field(node, 'cron', 'Cron Expression', '*/5 * * * *');
+            html += field(node, 'cron', PROP('cron', 'Cron expression'), '*/5 * * * *', true);
         }
         if (node.type === 'trigger_event') {
-            html += selectField(node, 'event', 'Event Type', ['disk_full', 'cpu_high', 'user_login', 'service_down']);
-            html += field(node, 'threshold', 'Threshold (%)', '90');
+            html += selectField(node, 'event', PROP('event', 'Event'), ['disk_full', 'cpu_high', 'user_login', 'service_down']);
+            html += field(node, 'threshold', PROP('threshold', 'Threshold in percent'), '90');
         }
         if (node.type === 'cond_os') {
-            html += selectField(node, 'os', 'Target OS', ['windows', 'linux', 'macos', 'any']);
+            html += selectField(node, 'os', PROP('os', 'Operating system'), ['windows', 'linux', 'macos', 'any']);
         }
         if (node.type === 'cond_threshold') {
-            html += selectField(node, 'metric', 'Metric', ['cpu', 'ram', 'disk', 'network']);
-            html += selectField(node, 'operator', 'Operator', ['>', '<', '>=', '<=', '==']);
-            html += field(node, 'value', 'Value', '80');
+            html += selectField(node, 'metric', PROP('metric', 'Measure'), ['cpu', 'ram', 'disk', 'network']);
+            html += selectField(node, 'operator', PROP('operator', 'Comparison'), ['>', '<', '>=', '<=', '==']);
+            html += field(node, 'value', PROP('value', 'Value'), '80');
         }
         if (node.type === 'cond_time_window') {
-            html += field(node, 'start_time', 'Start Time', '08:00');
-            html += field(node, 'end_time', 'End Time', '18:00');
-            html += field(node, 'days', 'Days (0=Sun..6=Sat)', '1,2,3,4,5');
+            html += field(node, 'start_time', PROP('start_time', 'From'), '08:00');
+            html += field(node, 'end_time', PROP('end_time', 'Until'), '18:00');
+            html += field(node, 'days', PROP('days', 'Days (0 is Sunday, 6 is Saturday)'), '1,2,3,4,5');
         }
         if (node.type === 'action_script') {
-            html += `<div class="form-group"><label>Script</label>
-                <textarea class="form-control code-textarea" rows="5" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","script"]' data-bd-on="change" data-bd-value="1">${esc(node.config.script || '')}</textarea></div>`;
-            html += selectField(node, 'shell', 'Shell', ['bash', 'powershell', 'cmd', 'python']);
+            html += `<div class="form-group"><label class="form-label" for="${fid('script')}">${esc(PROP('script', 'Script'))}</label>
+                <textarea id="${fid('script')}" class="form-input mono" rows="5" spellcheck="false" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","script"]' data-bd-on="change" data-bd-value="1">${esc(node.config.script || '')}</textarea></div>`;
+            html += selectField(node, 'shell', PROP('shell', 'Shell'), ['bash', 'powershell', 'cmd', 'python']);
         }
         if (node.type === 'action_install') {
-            html += field(node, 'package', 'Package/URL', '');
-            html += selectField(node, 'method', 'Method', ['msi', 'deb', 'rpm', 'apt', 'chocolatey', 'winget']);
+            html += field(node, 'package', PROP('package', 'Package or download address'), '', true);
+            html += selectField(node, 'method', PROP('method', 'Installer'), ['msi', 'deb', 'rpm', 'apt', 'chocolatey', 'winget']);
         }
         if (node.type === 'action_restart') {
-            html += field(node, 'service', 'Service Name', '');
+            html += field(node, 'service', PROP('service', 'Service name'), '', true);
         }
         if (node.type === 'action_file_deploy') {
-            html += field(node, 'source', 'Source Path/URL', '');
-            html += field(node, 'destination', 'Destination Path', '');
+            html += field(node, 'source', PROP('source', 'Source path or address'), '', true);
+            html += field(node, 'destination', PROP('destination', 'Destination path'), '', true);
         }
         if (node.type === 'action_message') {
-            html += field(node, 'message', 'Message', '');
+            html += field(node, 'message', PROP('message', 'Message'), '');
         }
         if (node.type === 'result_alert') {
-            html += selectField(node, 'channel', 'Channel', ['console', 'email', 'webhook']);
-            html += field(node, 'recipient', 'Recipient', '');
+            html += selectField(node, 'channel', PROP('channel', 'Send to'), ['console', 'email', 'webhook']);
+            html += field(node, 'recipient', PROP('recipient', 'Recipient'), '');
         }
         if (node.type === 'result_chain') {
-            html += field(node, 'workflow_id', 'Workflow ID', '');
+            html += field(node, 'workflow_id', PROP('workflow_id', 'Workflow ID'), '', true);
         }
         if (node.type === 'transform_delay') {
-            html += field(node, 'seconds', 'Delay (seconds)', '10');
+            html += field(node, 'seconds', PROP('seconds', 'Wait in seconds'), '10');
         }
         if (node.type === 'transform_filter') {
-            html += field(node, 'expression', 'Filter Expression', '');
+            html += field(node, 'expression', PROP('expression', 'Filter expression'), '', true);
         }
 
-        html += `<div class="form-group" style="margin-top:16px;">
-            <button class="btn btn-secondary btn-sm" data-bd-call="FleetBuilder.removeSelected" style="width:100%">
-                <span class="material-icons" style="font-size:14px;vertical-align:middle;">delete</span> Delete Node
-            </button></div>`;
+        html += `<div class="form-group props-delete">
+            <button type="button" class="btn btn-sm btn-danger-quiet" data-bd-call="FleetBuilder.removeSelected">${esc(PROP('delete', 'Remove step'))}</button>
+            </div>`;
         return html;
     }
 
-    function field(node, key, label, placeholder) {
-        return `<div class="form-group"><label>${esc(label)}</label>
-            <input class="form-control" placeholder="${esc(placeholder)}" value="${esc(node.config[key] || '')}"
+    function field(node, key, label, placeholder, mono) {
+        const id = `prop-${esc(node.id)}-${esc(key)}`;
+        return `<div class="form-group"><label class="form-label" for="${id}">${esc(label)}</label>
+            <input id="${id}" class="form-input${mono ? ' mono' : ''}" placeholder="${esc(placeholder)}" value="${esc(node.config[key] || '')}"
                 data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","${key}"]' data-bd-on="change" data-bd-value="1">
         </div>`;
     }
 
     function selectField(node, key, label, opts) {
         const val = node.config[key] || '';
-        return `<div class="form-group"><label>${esc(label)}</label>
-            <select class="form-control" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","${key}"]' data-bd-on="change" data-bd-value="1">
+        const id = `prop-${esc(node.id)}-${esc(key)}`;
+        return `<div class="form-group"><label class="form-label" for="${id}">${esc(label)}</label>
+            <select id="${id}" class="form-select" data-bd-call="FleetBuilder.updateNodeProp" data-bd-args='["${node.id}","${key}"]' data-bd-on="change" data-bd-value="1">
                 ${opts.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
             </select></div>`;
     }
@@ -459,35 +471,61 @@
     // -----------------------------------------------------------------------
     // Workflow operations
     // -----------------------------------------------------------------------
+    function status(text, cls) {
+        if (window.Fleet && Fleet.workflowStatus) Fleet.workflowStatus(text, cls);
+    }
+
+    async function request(url, method, body) {
+        const headers = { 'x-csrf-token': window.BetterDesk?.csrfToken || '' };
+        if (body !== undefined) headers['Content-Type'] = 'application/json';
+        const resp = await fetch(url, { method, credentials: 'same-origin', headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+        let data = null;
+        try { data = await resp.json(); } catch { data = null; }
+        if (!resp.ok || (data && data.success === false)) {
+            throw new Error((data && (data.error || data.message)) || resp.statusText || String(resp.status));
+        }
+        return data || {};
+    }
+
     function newWorkflow() {
         _nodes = []; _connections = []; _nextId = 1; _selected = null; _workflowId = null;
-        _workflowName = 'Untitled';
+        _workflowName = tr('fleet.untitled', 'Untitled');
         _group.innerHTML = '';
         hideProps();
+        const sel = document.getElementById('workflow-select');
+        if (sel) sel.value = '';
         // Add default trigger
         addNode('trigger_manual', 40, 200);
+        status(tr('fleet.workflow_new_status', 'New workflow with a manual trigger. Add steps from the list.'));
     }
 
     async function saveWorkflow() {
-        const name = prompt(_('fleet.workflow_name') || 'Workflow name:', _workflowName);
-        if (!name) return;
-        _workflowName = name;
+        const name = await Modal.prompt({
+            title: tr('fleet.save_workflow_title', 'Save workflow'),
+            label: tr('fleet.workflow_name', 'Workflow name'),
+            value: _workflowName,
+            confirmLabel: tr('fleet.save', 'Save')
+        });
+        if (name === null) return;
+        if (!name.trim()) { status(tr('fleet.name_required', 'Enter a name.'), 'is-error'); return; }
+        _workflowName = name.trim();
         const payload = {
-            name, nodes: _nodes, connections: _connections
+            name: _workflowName, nodes: _nodes, connections: _connections
         };
+        status(tr('fleet.saving', 'Saving…'));
         try {
             const url = _workflowId
                 ? `/api/panel/fleet/workflows/${encodeURIComponent(_workflowId)}`
                 : '/api/panel/fleet/workflows';
-            const resp = await fetch(url, {
-                method: _workflowId ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await resp.json();
+            const data = await request(url, _workflowId ? 'PUT' : 'POST', payload);
             if (data.id) _workflowId = data.id;
-            if (window.Fleet) Fleet.loadWorkflowList();
-        } catch (e) { console.error('saveWorkflow', e); }
+            status(tr('fleet.workflow_saved', 'Workflow saved.', { name: _workflowName }), 'is-ok');
+            if (window.Fleet) await Fleet.loadWorkflowList();
+            const sel = document.getElementById('workflow-select');
+            if (sel && _workflowId) sel.value = _workflowId;
+        } catch (e) {
+            status(tr('fleet.save_failed', 'Could not save.', { error: e.message }), 'is-error');
+        }
     }
 
     function exportWorkflow() {
@@ -504,39 +542,62 @@
         const sel = document.getElementById('workflow-select');
         const wid = id || sel?.value;
         if (!wid) return;
+        status(tr('fleet.loading_workflow', 'Loading workflow…'));
         try {
-            const resp = await fetch(`/api/panel/fleet/workflows/${encodeURIComponent(wid)}`);
-            const data = await resp.json();
+            const data = await request(`/api/panel/fleet/workflows/${encodeURIComponent(wid)}`, 'GET');
             const wf = data.data || data;
             _workflowId = wf.id || wid;
-            _workflowName = wf.name || 'Untitled';
+            _workflowName = wf.name || tr('fleet.untitled', 'Untitled');
             _nodes = wf.nodes || [];
             _connections = wf.connections || [];
-            _nextId = Math.max(..._nodes.map(n => parseInt(n.id?.replace('n', '') || '0')), ..._connections.map(c => parseInt(c.id?.replace('c', '') || '0'))) + 1;
+            _nextId = Math.max(0, ..._nodes.map(n => parseInt(n.id?.replace('n', '') || '0')), ..._connections.map(c => parseInt(c.id?.replace('c', '') || '0'))) + 1;
             _group.innerHTML = '';
+            _selected = null;
+            hideProps();
             _nodes.forEach(n => renderNode(n));
             redrawConnections();
-        } catch (e) { console.error('loadWorkflow', e); }
+            status('');
+        } catch (e) {
+            status(tr('fleet.workflow_load_failed', 'Could not load the workflow.', { error: e.message }), 'is-error');
+        }
     }
 
     async function execute(dryRun) {
-        if (!_workflowId && !_nodes.length) return;
+        if (!_workflowId && !_nodes.length) {
+            status(tr('fleet.workflow_empty', 'Add steps or open a saved workflow first.'), 'is-error');
+            return;
+        }
+        if (!dryRun) {
+            const ok = await Modal.confirm({
+                title: tr('fleet.run_title', 'Run workflow'),
+                message: tr('fleet.run_message', 'The actions in this workflow run on the devices it targets now.', { name: _workflowName }),
+                confirmLabel: tr('fleet.execute', 'Run')
+            });
+            if (!ok) return;
+        }
+        status(dryRun ? tr('fleet.dry_running', 'Trying the workflow…') : tr('fleet.running', 'Starting the workflow…'));
         try {
             const id = _workflowId || 'draft';
-            const resp = await fetch(`/api/panel/fleet/workflows/${encodeURIComponent(id)}/execute`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    dry_run: !!dryRun,
-                    nodes: _nodes,
-                    connections: _connections
-                })
+            const data = await request(`/api/panel/fleet/workflows/${encodeURIComponent(id)}/execute`, 'POST', {
+                dry_run: !!dryRun,
+                nodes: _nodes,
+                connections: _connections
             });
-            const data = await resp.json();
+            status(dryRun ? tr('fleet.dry_run_done', 'Dry run finished. Nothing was changed on the devices.') : tr('fleet.run_started', 'Workflow started.'), 'is-ok');
             if (data.output || data.log) {
-                alert((dryRun ? '[DRY RUN]\n' : '') + (data.output || data.log || 'Workflow executed'));
+                const pre = document.createElement('pre');
+                pre.className = 'code-block';
+                pre.textContent = data.output || data.log;
+                Modal.show({
+                    title: dryRun ? tr('fleet.dry_run_result', 'Dry run result') : tr('fleet.run_result', 'Workflow output'),
+                    content: pre.outerHTML,
+                    size: 'large',
+                    buttons: [{ label: tr('fleet.close', 'Close'), class: 'btn-primary', onClick: () => Modal.close() }]
+                });
             }
-        } catch (e) { console.error('execute', e); }
+        } catch (e) {
+            status(tr('fleet.run_failed', 'Could not run the workflow.', { error: e.message }), 'is-error');
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -553,7 +614,7 @@
     // Public API
     // -----------------------------------------------------------------------
     window.FleetBuilder = {
-        init, newWorkflow, saveWorkflow, exportWorkflow, loadWorkflow, execute,
+        init, newWorkflow, saveWorkflow, exportWorkflow, loadWorkflow, execute, addFromPalette,
         zoomIn, zoomOut, zoomReset, closeProps,
         updateNodeProp, removeSelected() { if (_selected) removeNode(_selected); }
     };
