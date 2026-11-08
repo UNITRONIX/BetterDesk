@@ -98,11 +98,6 @@ body.studio-body {
     gap: var(--space-1);
 }
 
-.studio-zoom-group .btn-icon {
-    width: var(--control-h-sm);
-    height: var(--control-h-sm);
-}
-
 .studio-zoom-label {
     min-width: 5ch;
     color: var(--text-muted);
@@ -577,14 +572,8 @@ body.studio-body {
 
 @media (pointer: coarse) {
     .studio-palette-node,
-    .studio-palette-cat-btn,
-    .studio-zoom-group .btn-icon {
+    .studio-palette-cat-btn {
         min-height: 44px;
-    }
-
-    .studio-zoom-group .btn-icon {
-        width: 44px;
-        height: 44px;
     }
 
     .studio-back-btn {

@@ -37,9 +37,14 @@
     overflow: hidden;
 }
 
+/* Inset like the rows below, with the rule across the whole pane */
 .chat-tabs {
     flex-shrink: 0;
+    margin-inline: 0;
     padding-inline: var(--row-pad-x);
+    scroll-padding-inline: var(--row-pad-x);
+    background-origin: border-box;
+    background-clip: border-box;
 }
 
 .chat-list-wrap {

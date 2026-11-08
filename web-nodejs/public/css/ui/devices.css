@@ -161,8 +161,6 @@
 
 /* The "…" menu shows on hover or keyboard focus; always on touch */
 .chip-menu-btn {
-    width: var(--control-h-sm);
-    height: var(--control-h-sm);
     opacity: 0;
 }
 
@@ -338,11 +336,6 @@
     display: flex;
     align-items: center;
     gap: var(--space-1);
-}
-
-/* Copy stays visible (touch and keyboard users can't hover to find it) */
-.device-id .copy-btn {
-    flex-shrink: 0;
 }
 
 .device-open {

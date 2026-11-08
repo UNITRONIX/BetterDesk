@@ -81,30 +81,6 @@ body.bd-a11y-modal-open {
     font-size: var(--text-sm);
 }
 
-.a11y-close {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: var(--control-h);
-    height: var(--control-h);
-    padding: 0;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-}
-
-.a11y-close:hover {
-    background: var(--hover);
-    color: var(--text);
-}
-
-.a11y-close .material-icons {
-    font-size: 20px;
-}
-
 /* Body scrolls; head and foot stay */
 .a11y-sheet-body {
     flex: 1;
@@ -346,16 +322,10 @@ body.bd-a11y-modal-open {
         align-content: center;
     }
 
-    .a11y-close,
     .a11y-btn,
     .a11y-select,
     .a11y-range input[type="range"] {
         min-height: 44px;
-    }
-
-    .a11y-close {
-        width: 44px;
-        height: 44px;
     }
 }
 

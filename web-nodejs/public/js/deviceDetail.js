@@ -1111,7 +1111,7 @@ const DeviceDetail = (function () {
                     ? tags.map(t => `
                         <span class="device-panel-tag">
                             ${Utils.escapeHtml(t)}
-                            ${canEdit ? `<button type="button" class="device-panel-tag-remove" data-tag="${Utils.escapeHtml(t)}" title="${_('devices.unassign_tag') || _('actions.delete')}" aria-label="${Utils.escapeHtml((_('devices.unassign_tag') || _('actions.delete')) + ': ' + t)}">
+                            ${canEdit ? `<button type="button" class="device-panel-tag-remove btn-icon" data-tag="${Utils.escapeHtml(t)}" title="${_('devices.unassign_tag') || _('actions.delete')}" aria-label="${Utils.escapeHtml((_('devices.unassign_tag') || _('actions.delete')) + ': ' + t)}">
                                 <span class="material-icons" aria-hidden="true">close</span>
                             </button>` : ''}
                         </span>`).join('')

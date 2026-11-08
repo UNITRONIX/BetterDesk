@@ -38,27 +38,14 @@
     background: var(--bg);
 }
 
-.ux35-topbar-menu-btn,
-.ux35-topbar-btn {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--control-h);
-    height: var(--control-h);
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
+/* The top bar's icon buttons are the icon button component (components.css),
+   at the default control height like the bar's other controls (Help, search) */
+.ux35-topbar {
+    --icon-btn-size: var(--control-h);
 }
 
-.ux35-topbar-menu-btn:hover,
-.ux35-topbar-btn:hover,
-.ux35-topbar-btn[aria-expanded="true"] {
-    background: var(--hover);
-    color: var(--text);
+.ux35-topbar-btn {
+    position: relative;
 }
 
 .ux35-topbar-menu-btn {

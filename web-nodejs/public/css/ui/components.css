@@ -128,51 +128,51 @@
     width: 100%;
 }
 
-/* Square icon button: close, row menu, copy. Default size (close, toolbar
-   toggles) or small (.btn-sm, row menu, copy next to a value). */
-.btn-icon,
-.icon-btn,
-.modal-close,
-.toast-close,
-.kebab-btn,
-.copy-btn {
+/* ── Icon buttons ──
+   Every button that shows only a glyph (close, row menu, copy, zoom) is this
+   one component, whatever its class: one square box (--icon-btn-size, 30px,
+   44px on touch), one glyph (--icon-btn-glyph, 20px), the same hover, open,
+   disabled and focus states. In a row of 36px controls it is centred on the
+   row. The one exception is the top bar, where every control is 36px: there
+   the box is --control-h (shell.css sets --icon-btn-size). */
+:is(.btn-icon, .icon-btn, .modal-close, .toast-close, .kebab-btn, .copy-btn, .a11y-close,
+    .ux35-topbar-btn, .ux35-topbar-menu-btn) {
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
-    width: var(--control-h);
-    height: var(--control-h);
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
     padding: 0;
     border: 1px solid transparent;
     border-radius: var(--control-radius);
     background: transparent;
     color: var(--text-muted);
+    font: inherit;
+    line-height: 1;
     cursor: pointer;
     vertical-align: middle;
-    transition: background-color var(--motion);
+    transition: background-color var(--motion), color var(--motion);
 }
 
-/* The row menu and copy buttons sit next to small row buttons: same height */
-.kebab-btn,
-.copy-btn,
-.btn-icon.btn-sm {
-    width: var(--control-h-sm);
-    height: var(--control-h-sm);
+:is(.btn-icon, .icon-btn, .modal-close, .toast-close, .kebab-btn, .copy-btn, .a11y-close,
+    .ux35-topbar-btn, .ux35-topbar-menu-btn) > :is(.material-icons, .material-symbols-outlined) {
+    font-size: var(--icon-btn-glyph);
 }
 
-.btn-icon:hover,
-.icon-btn:hover,
-.modal-close:hover,
-.toast-close:hover,
-.kebab-btn:hover,
-.btn-icon[aria-expanded="true"],
-.kebab-btn[aria-expanded="true"] {
+/* Hover, an open menu ([aria-expanded]), a pressed toggle and "just copied" look the same */
+:is(.btn-icon, .icon-btn, .modal-close, .toast-close, .kebab-btn, .copy-btn, .a11y-close,
+    .ux35-topbar-btn, .ux35-topbar-menu-btn):is(:hover, [aria-expanded="true"], [aria-pressed="true"], .active, .copied) {
     background: var(--hover);
     color: var(--text);
 }
 
-.btn-icon.active {
-    border-color: var(--border);
-    color: var(--text);
+:is(.btn-icon, .icon-btn, .modal-close, .toast-close, .kebab-btn, .copy-btn, .a11y-close,
+    .ux35-topbar-btn, .ux35-topbar-menu-btn):is(:disabled, [aria-disabled="true"]) {
+    background: transparent;
+    color: var(--text-muted);
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ── Form fields ── */
@@ -793,10 +793,10 @@ th.sortable.sort-desc {
     color: var(--text-muted);
 }
 
+/* The close button's glyph sits on the title's line */
 .toast .toast-close {
-    width: 24px;
-    height: 24px;
-    margin: -2px -4px 0 0;
+    margin-block: -5px;
+    margin-inline-end: -6px;
 }
 
 .toast-progress {
@@ -816,11 +816,19 @@ th.sortable.sort-desc {
 
 /* ── Tabs ── */
 
+/* The strip scrolls sideways, which clips anything outside it. It reaches
+   --tab-ring-room past the page edge on both sides so a focus ring has room
+   there, and draws its rule only under the content box, so the rule and the
+   first tab still start on the page's left edge. */
 .tabs,
 .tab-bar {
+    --tab-ring-room: 6px;       /* a 2px ring 4px from the label */
     display: flex;
     gap: var(--space-4);
-    border-bottom: 1px solid var(--rule);
+    margin-inline: calc(-1 * var(--tab-ring-room));
+    padding-inline: var(--tab-ring-room);
+    scroll-padding-inline: var(--tab-ring-room);
+    background: linear-gradient(var(--rule), var(--rule)) no-repeat bottom / 100% 1px content-box;
     overflow-x: auto;
     scrollbar-width: none;
 }
@@ -834,7 +842,6 @@ th.sortable.sort-desc {
     padding: 0;
     border: 0;
     border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
@@ -859,6 +866,28 @@ th.sortable.sort-desc {
 .tab .material-icons,
 .tab-btn .material-icons {
     display: none;
+}
+
+/* Focus: the usual ring, drawn around the label: inside the tab top and
+   bottom (clear of the underline, so it never reads as "selected") and
+   --tab-ring-room past the label at the sides. The device panel's tabs
+   (device-detail.css) use it too. */
+:is(.tab, .tab-btn, .device-panel-tab):focus-visible {
+    outline: none;
+}
+
+:is(.tab, .tab-btn, .device-panel-tab):focus-visible::after {
+    content: "";
+    position: absolute;
+    inset-block: 3px;
+    inset-inline: calc(-1 * var(--tab-ring-room, 6px));
+    border: var(--focus-ring);
+    border-radius: var(--control-radius);
+    pointer-events: none;
+}
+
+html[data-a11y-strong-focus="true"] :is(.tab, .tab-btn, .device-panel-tab):focus-visible::after {
+    border-width: 3px;
 }
 
 /* ── Plain text blocks ── */
@@ -902,18 +931,6 @@ th.sortable.sort-desc {
 
 .skeleton-text {
     height: 0.9em;
-}
-
-/* Copy button next to an ID or key: a small icon button (see "Square icon button") */
-.copy-btn .material-icons,
-.device-panel-copy-btn .material-icons {
-    font-size: 16px;
-}
-
-.copy-btn:hover,
-.copy-btn.copied {
-    color: var(--text);
-    background: var(--hover);
 }
 
 /* Pagination */

@@ -95,6 +95,11 @@
     --control-weight: 500;      /* label of every button, menu button, segment and tab */
     --control-radius: var(--radius);
     --control-leading: 1.25;
+    /* Icon-only buttons (close, row menu, copy): one square box and one glyph.
+       The small control height, so they sit in table rows and dialog heads;
+       the top bar sets --icon-btn-size to --control-h (components.css). */
+    --icon-btn-size: var(--control-h-sm);
+    --icon-btn-glyph: 20px;
     /* One focus ring, outside the control */
     --focus-ring: 2px solid var(--focus);
     --focus-offset: 2px;
