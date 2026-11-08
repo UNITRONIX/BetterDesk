@@ -75,6 +75,7 @@ type OIDCResult struct {
 	ClientID      string
 	ClientUUID    string
 	State         string // OAuth state (= client poll code for client flow)
+	Picture       string // "picture" claim after SanitizeOIDCPicture, "" when absent or refused
 }
 
 // oidcDiscovery holds discovered OIDC endpoints.
@@ -122,6 +123,7 @@ type oidcAuthCode struct {
 	Username  string
 	Role      string
 	ReturnURL string // already validated as a relative path
+	Picture   string // sanitized "picture" claim, "" when none
 	CreatedAt time.Time
 }
 
@@ -536,7 +538,7 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, oidcTokenResponseLimit))
 	if err != nil {
 		return nil, fmt.Errorf("read token response: %w", err)
 	}
@@ -607,6 +609,9 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 	result.Email = getStringClaim(claims, claimEmail)
 	result.DisplayName = getStringClaim(claims, claimName)
 	result.Groups = getStringSliceClaim(claims, claimGroups)
+	if pic, ok := claims["picture"].(string); ok {
+		result.Picture = SanitizeOIDCPicture(pic)
+	}
 
 	// Fallback: use email prefix as username if preferred_username is empty
 	if result.Username == "" && result.Email != "" {
@@ -673,7 +678,7 @@ func (p *OIDCProvider) fetchUserInfo(ctx context.Context, accessToken string) (m
 		return nil, fmt.Errorf("userinfo returned %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, oidcTokenResponseLimit))
 	if err != nil {
 		return nil, err
 	}
@@ -911,7 +916,8 @@ func IsRelativeReturnURL(u string) bool {
 // StoreAuthCode generates a one-time code that maps to a JWT + verified user
 // identity. The panel (Node.js) exchanges the code via a server-to-server
 // POST to /api/auth/oidc/exchange. Codes expire after 60 seconds.
-func (p *OIDCProvider) StoreAuthCode(token, username, role, returnURL string) (string, error) {
+// picture is the user's "picture" claim; it is sanitized again here.
+func (p *OIDCProvider) StoreAuthCode(token, username, role, returnURL, picture string) (string, error) {
 	code, err := generateRandomString(32)
 	if err != nil {
 		return "", err
@@ -922,6 +928,7 @@ func (p *OIDCProvider) StoreAuthCode(token, username, role, returnURL string) (s
 		Username:  username,
 		Role:      role,
 		ReturnURL: returnURL,
+		Picture:   SanitizeOIDCPicture(picture),
 		CreatedAt: time.Now(),
 	}
 	p.mu.Unlock()

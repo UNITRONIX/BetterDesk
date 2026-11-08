@@ -438,7 +438,7 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	// server-to-server POST to /api/auth/oidc/exchange. This prevents the
 	// JWT from being exposed in the browser URL bar, Referer headers,
 	// browser history, and access logs.
-	authCode, err := s.oidcProvider.StoreAuthCode(token, user.Username, user.Role, returnURL)
+	authCode, err := s.oidcProvider.StoreAuthCode(token, user.Username, user.Role, returnURL, result.Picture)
 	if err != nil {
 		log.Printf("[OIDC] Failed to store auth code for %s: %v", user.Username, err)
 		loginErr("oidc_error")
@@ -486,7 +486,12 @@ func (s *Server) handleOIDCSessionRedirect(w http.ResponseWriter, r *http.Reques
 // itself is the credential).
 //
 // Request body: {"code": "..."}
-// Response:     {"token": "...", "username": "...", "role": "...", "return_url": "..."}
+// Response:     {"token": "...", "username": "...", "role": "...", "return_url": "...", "picture": "..."}
+//
+// "picture" is the IdP's picture claim (an http(s) URL or a data:image URL,
+// see auth.SanitizeOIDCPicture). It is always present and "" when the IdP
+// sent none, so the console can tell "no picture" from an older server that
+// does not send the field.
 //
 // Codes are single-use and expire after 60 seconds.
 func (s *Server) handleOIDCExchange(w http.ResponseWriter, r *http.Request) {
@@ -514,6 +519,7 @@ func (s *Server) handleOIDCExchange(w http.ResponseWriter, r *http.Request) {
 		"username":   entry.Username,
 		"role":       entry.Role,
 		"return_url": entry.ReturnURL,
+		"picture":    entry.Picture,
 	})
 }
 
