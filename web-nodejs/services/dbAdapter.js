@@ -949,6 +949,26 @@ function createSqliteAdapter(config) {
         `);
     }
 
+    // -- Flow builder (SDK studio) flows ------------------------------------
+    // Timestamps are ISO 8601 strings written by the adapter, so both
+    // backends return the same format.
+    function ensureStudioFlowTables(db) {
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS studio_flows (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                flow_json TEXT NOT NULL DEFAULT '{}',
+                status TEXT NOT NULL DEFAULT 'draft',
+                version INTEGER NOT NULL DEFAULT 1,
+                created_by TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_studio_flows_owner ON studio_flows (created_by, updated_at);
+        `);
+    }
+
     // -- LAN Discovery / Pending Registrations ----------------------------
     function ensureRegistrationTables(db) {
         db.exec(`
@@ -1408,6 +1428,7 @@ function createSqliteAdapter(config) {
             ensureNetworkTables(main);
             ensureDataGuardTables(main);
             ensureReportTables(main);
+            ensureStudioFlowTables(main);
             ensureTenantTables(main);
             ensureRegistrationTables(main);
             ensureAgentBundleTables(main);
@@ -2763,6 +2784,45 @@ function createSqliteAdapter(config) {
         },
         async deleteSavedReport(id) {
             const r = openMain().prepare('DELETE FROM saved_reports WHERE id = ?').run(id);
+            return r.changes > 0;
+        },
+
+        // -- Flow builder (SDK studio) flows -----------------------------------
+        /** List flows without their flow_json, newest change first. createdBy limits to one owner. */
+        async listStudioFlows({ createdBy } = {}) {
+            const cols = 'id, name, description, status, version, created_by, created_at, updated_at';
+            if (createdBy !== undefined && createdBy !== null) {
+                return openMain().prepare(`SELECT ${cols} FROM studio_flows WHERE created_by = ? ORDER BY updated_at DESC`).all(createdBy);
+            }
+            return openMain().prepare(`SELECT ${cols} FROM studio_flows ORDER BY updated_at DESC`).all();
+        },
+        async getStudioFlow(id) {
+            return openMain().prepare('SELECT * FROM studio_flows WHERE id = ?').get(id) || null;
+        },
+        async createStudioFlow(data) {
+            const now = new Date().toISOString();
+            openMain().prepare(`
+                INSERT INTO studio_flows (id, name, description, flow_json, status, created_by, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(data.id, data.name, data.description || '', data.flow_json || '{}', data.status || 'draft',
+                data.created_by || '', now, now);
+            return this.getStudioFlow(data.id);
+        },
+        /** Change name, description and flow_json; bumps the version. Returns the flow or null. */
+        async updateStudioFlow(id, data) {
+            const r = openMain().prepare(`
+                UPDATE studio_flows SET name = ?, description = ?, flow_json = ?, version = version + 1, updated_at = ?
+                WHERE id = ?
+            `).run(data.name, data.description || '', data.flow_json || '{}', new Date().toISOString(), id);
+            return r.changes > 0 ? this.getStudioFlow(id) : null;
+        },
+        async setStudioFlowStatus(id, status) {
+            const r = openMain().prepare('UPDATE studio_flows SET status = ?, updated_at = ? WHERE id = ?')
+                .run(status, new Date().toISOString(), id);
+            return r.changes > 0;
+        },
+        async deleteStudioFlow(id) {
+            const r = openMain().prepare('DELETE FROM studio_flows WHERE id = ?').run(id);
             return r.changes > 0;
         },
 
@@ -4367,6 +4427,22 @@ function createPostgresAdapter() {
             )
         `);
         await q('CREATE INDEX IF NOT EXISTS idx_saved_reports_type ON saved_reports (report_type)');
+
+        // Flow builder (SDK studio) flows
+        await q(`
+            CREATE TABLE IF NOT EXISTS studio_flows (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                flow_json TEXT NOT NULL DEFAULT '{}',
+                status TEXT NOT NULL DEFAULT 'draft',
+                version INTEGER NOT NULL DEFAULT 1,
+                created_by TEXT NOT NULL DEFAULT '',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `);
+        await q('CREATE INDEX IF NOT EXISTS idx_studio_flows_owner ON studio_flows (created_by, updated_at)');
 
         // Multi-tenancy tables
         await q(`
@@ -6292,6 +6368,40 @@ function createPostgresAdapter() {
         },
         async deleteSavedReport(id) {
             const { rowCount } = await q('DELETE FROM saved_reports WHERE id = $1', [id]);
+            return rowCount > 0;
+        },
+
+        // -- Flow builder (SDK studio) flows -----------------------------------
+        async listStudioFlows({ createdBy } = {}) {
+            const cols = 'id, name, description, status, version, created_by, created_at, updated_at';
+            if (createdBy !== undefined && createdBy !== null) {
+                return all(`SELECT ${cols} FROM studio_flows WHERE created_by = $1 ORDER BY updated_at DESC`, [createdBy]);
+            }
+            return all(`SELECT ${cols} FROM studio_flows ORDER BY updated_at DESC`);
+        },
+        async getStudioFlow(id) {
+            return one('SELECT * FROM studio_flows WHERE id = $1', [id]);
+        },
+        async createStudioFlow(data) {
+            return one(`
+                INSERT INTO studio_flows (id, name, description, flow_json, status, created_by)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *
+            `, [data.id, data.name, data.description || '', data.flow_json || '{}', data.status || 'draft', data.created_by || '']);
+        },
+        async updateStudioFlow(id, data) {
+            return one(`
+                UPDATE studio_flows SET name = $1, description = $2, flow_json = $3, version = version + 1, updated_at = NOW()
+                WHERE id = $4
+                RETURNING *
+            `, [data.name, data.description || '', data.flow_json || '{}', id]);
+        },
+        async setStudioFlowStatus(id, status) {
+            const { rowCount } = await q('UPDATE studio_flows SET status = $1, updated_at = NOW() WHERE id = $2', [status, id]);
+            return rowCount > 0;
+        },
+        async deleteStudioFlow(id) {
+            const { rowCount } = await q('DELETE FROM studio_flows WHERE id = $1', [id]);
             return rowCount > 0;
         },
 
