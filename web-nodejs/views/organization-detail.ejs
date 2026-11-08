@@ -1,116 +1,153 @@
+<%
+    const can = (perm) => typeof hasPermission === 'function' && hasPermission(perm);
+    const canEdit = can('org.edit');
+    const canUsers = can('org.manage_users');
+    const canDevices = can('org.manage_devices');
+%>
 <%- include('layouts/main', {
-    title: _('organizations.detail') || 'Organization Details',
-    pageStyles: ['organizations'],
+    title: _('organizations.detail'),
+    uiReworked: true,
+    pageStyles: ['ui/organizations'],
     pageScripts: ['organizationDetail'],
     currentPage: 'organizations',
     breadcrumb: [
-        { label: _('nav.organizations') || 'Organizations', href: '/organizations' },
-        { label: _('organizations.detail') || 'Details' }
+        { label: _('nav.organizations'), href: '/organizations' },
+        { label: _('organizations.detail') }
     ],
     body: `
-        <div class="org-detail-page" data-org-id="${escapeHtml(orgId)}">
-            <!-- Header -->
-            <div class="org-detail-header" id="org-detail-header">
-                <div class="org-detail-info">
-                    <h1 id="org-detail-name">Loading...</h1>
-                    <span class="org-detail-slug" id="org-detail-slug"></span>
+        <div class="page org-detail-page" data-org-id="${escapeHtml(orgId)}" data-can-edit="${canEdit}" data-can-users="${canUsers}" data-can-devices="${canDevices}">
+            <div class="page-head" id="org-detail-header">
+                <h1 id="org-detail-name">${_('organizations.detail')}</h1>
+                <div class="page-actions">
+                    <button type="button" class="btn" id="org-edit-btn"${canEdit ? '' : ' hidden'}>${_('common.edit')}</button>
                 </div>
-                <div class="org-detail-actions">
-                    <button class="btn btn-secondary btn-sm" id="org-edit-btn">
-                        <span class="material-icons">edit</span> ${_('common.edit') || 'Edit'}
-                    </button>
-                    <button class="btn btn-danger btn-sm" id="org-delete-btn">
-                        <span class="material-icons">delete</span> ${_('common.delete') || 'Delete'}
-                    </button>
-                </div>
+                <p class="page-description">${_('organizations.detail_description')}</p>
             </div>
 
-            <!-- Tabs -->
-            <div class="org-tabs">
-                <button class="org-tab active" data-tab="users">
-                    <span class="material-icons">group</span> ${_('organizations.users') || 'Users'}
-                    <span class="tab-count" id="users-count">0</span>
-                </button>
-                <button class="org-tab" data-tab="devices">
-                    <span class="material-icons">devices</span> ${_('organizations.devices') || 'Devices'}
-                    <span class="tab-count" id="devices-count">0</span>
-                </button>
-                <button class="org-tab" data-tab="invitations">
-                    <span class="material-icons">mail</span> ${_('organizations.invitations') || 'Invitations'}
-                    <span class="tab-count" id="invitations-count">0</span>
-                </button>
-                <button class="org-tab" data-tab="settings">
-                    <span class="material-icons">settings</span> ${_('organizations.settings') || 'Settings'}
-                </button>
-                <button class="org-tab" data-tab="address-book">
-                    <span class="material-icons">contacts</span> ${_('organizations.address_book') || 'Address Book'}
-                </button>
-                <button class="org-tab" data-tab="device-groups">
-                    <span class="material-icons">workspaces</span> ${_('organizations.device_groups_tab') || 'Device Groups'}
-                </button>
-            </div>
+            <p class="state is-error" id="org-load-error" hidden>
+                <span>${_('organizations.org_load_failed')}</span>
+                <button type="button" class="btn btn-sm" id="org-load-retry">${_('actions.retry')}</button>
+            </p>
 
-            <!-- Tab content -->
-            <div class="org-tab-content" id="tab-users">
-                <div class="org-section-header">
-                    <h2>${_('organizations.users') || 'Users'}</h2>
-                    <button class="btn btn-primary btn-sm" id="add-user-btn">
-                        <span class="material-icons">person_add</span> ${_('organizations.add_user') || 'Add User'}
-                    </button>
+            <div class="org-detail-body">
+                <div class="tabs" role="tablist" aria-label="${_('organizations.detail')}">
+                    <button type="button" class="tab org-tab active" role="tab" id="org-tab-users" data-tab="users" aria-selected="true" aria-controls="tab-users">${_('organizations.users')}</button>
+                    <button type="button" class="tab org-tab" role="tab" id="org-tab-devices" data-tab="devices" aria-selected="false" aria-controls="tab-devices" tabindex="-1">${_('organizations.devices')}</button>
+                    <button type="button" class="tab org-tab" role="tab" id="org-tab-address-book" data-tab="address-book" aria-selected="false" aria-controls="tab-address-book" tabindex="-1">${_('organizations.address_book')}</button>
+                    <button type="button" class="tab org-tab" role="tab" id="org-tab-settings" data-tab="settings" aria-selected="false" aria-controls="tab-settings" tabindex="-1">${_('organizations.settings')}</button>
                 </div>
-                <div class="org-table-container" id="users-table"></div>
-            </div>
 
-            <div class="org-tab-content" id="tab-devices" style="display:none;">
-                <div class="org-section-header">
-                    <h2>${_('organizations.devices') || 'Devices'}</h2>
-                    <button class="btn btn-primary btn-sm" id="assign-device-btn">
-                        <span class="material-icons">add_circle</span> ${_('organizations.assign_device') || 'Assign Device'}
-                    </button>
-                </div>
-                <div class="org-table-container" id="devices-table"></div>
-            </div>
+                <!-- Users and invitations -->
+                <div class="tab-panel org-tab-content" id="tab-users" role="tabpanel" aria-labelledby="org-tab-users">
+                    <section class="section" aria-labelledby="org-tab-users">
+                        <div class="section-head">
+                            <p class="count-line" id="users-count-line" aria-live="polite"><span id="users-count" hidden>0</span></p>
+                            <button type="button" class="btn btn-primary" id="add-user-btn"${canUsers ? '' : ' hidden'}>${_('organizations.add_user')}</button>
+                        </div>
+                        <div id="users-table"><p class="state">${_('common.loading')}</p></div>
+                    </section>
 
-            <div class="org-tab-content" id="tab-invitations" style="display:none;">
-                <div class="org-section-header">
-                    <h2>${_('organizations.invitations') || 'Invitations'}</h2>
-                    <button class="btn btn-primary btn-sm" id="create-invite-btn">
-                        <span class="material-icons">link</span> ${_('organizations.create_invitation') || 'Create Invitation'}
-                    </button>
+                    <section class="section" id="tab-invitations" aria-labelledby="org-invitations-title">
+                        <div class="section-head">
+                            <h2 id="org-invitations-title">${_('organizations.invitations')}</h2>
+                            <button type="button" class="btn" id="create-invite-btn"${canUsers ? '' : ' hidden'}>${_('organizations.create_invitation')}</button>
+                        </div>
+                        <span id="invitations-count" hidden>0</span>
+                        <div id="invitations-table"><p class="state">${_('common.loading')}</p></div>
+                    </section>
                 </div>
-                <div class="org-table-container" id="invitations-table"></div>
-            </div>
 
-            <div class="org-tab-content" id="tab-settings" style="display:none;">
-                <div class="org-section-header">
-                    <h2>${_('organizations.settings') || 'Settings'}</h2>
-                </div>
-                <div class="org-settings-container" id="settings-container"></div>
-            </div>
+                <!-- Devices and device groups -->
+                <div class="tab-panel org-tab-content" id="tab-devices" role="tabpanel" aria-labelledby="org-tab-devices" hidden>
+                    <section class="section" aria-labelledby="org-tab-devices">
+                        <div class="section-head">
+                            <p class="count-line" id="devices-count-line" aria-live="polite"><span id="devices-count" hidden>0</span></p>
+                            <button type="button" class="btn btn-primary" id="assign-device-btn"${canDevices ? '' : ' hidden'}>${_('organizations.assign_device')}</button>
+                        </div>
+                        <div id="devices-table"><p class="state">${_('common.loading')}</p></div>
+                    </section>
 
-            <div class="org-tab-content" id="tab-address-book" style="display:none;">
-                <div class="org-section-header">
-                    <h2>${_('organizations.address_book') || 'Address Book'}</h2>
-                    <div class="org-section-actions">
-                        <button class="btn btn-secondary btn-sm" id="import-org-devices-btn">
-                            <span class="material-icons">playlist_add</span> ${_('organizations.address_book_import_devices') || 'Import org devices'}
-                        </button>
-                        <button class="btn btn-primary btn-sm" id="save-address-book-btn">
-                            <span class="material-icons">save</span> ${_('organizations.address_book_save') || 'Save address book'}
-                        </button>
-                    </div>
+                    <section class="section" id="tab-device-groups" aria-labelledby="org-groups-title">
+                        <div class="section-head">
+                            <h2 id="org-groups-title">${_('organizations.device_groups_tab')}</h2>
+                            <a href="/devices" class="btn btn-link" id="org-open-devices-groups-btn">${_('organizations.manage_in_devices')}</a>
+                        </div>
+                        <p class="section-note">${_('organizations.device_groups_intro')}</p>
+                        <div id="device-groups-container"><p class="state">${_('common.loading')}</p></div>
+                    </section>
                 </div>
-                <div class="org-address-book-container" id="address-book-container"></div>
-            </div>
 
-            <div class="org-tab-content" id="tab-device-groups" style="display:none;">
-                <div class="org-section-header">
-                    <h2>${_('organizations.device_groups_tab') || 'Device Groups'}</h2>
-                    <a href="/devices" class="btn btn-secondary btn-sm" id="org-open-devices-groups-btn">
-                        <span class="material-icons">open_in_new</span> ${_('organizations.manage_in_devices') || 'Open Devices → Groups'}
-                    </a>
+                <!-- Shared address book -->
+                <div class="tab-panel org-tab-content" id="tab-address-book" role="tabpanel" aria-labelledby="org-tab-address-book" hidden>
+                    <form class="section" id="org-address-book-form" data-save-form novalidate>
+                        <div id="address-book-container"><p class="state">${_('common.loading')}</p></div>
+                        <div class="save-bar"${canEdit ? '' : ' hidden'}>
+                            <span class="save-status" data-save-status aria-live="polite"></span>
+                            <button type="submit" class="btn btn-primary" id="save-address-book-btn" data-save-button>${_('organizations.address_book_save')}</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="org-settings-container" id="device-groups-container"></div>
+
+                <!-- Details, stored settings, delete -->
+                <div class="tab-panel org-tab-content" id="tab-settings" role="tabpanel" aria-labelledby="org-tab-settings" hidden>
+                    <section class="section" aria-labelledby="org-details-title">
+                        <h2 id="org-details-title">${_('organizations.details_title')}</h2>
+                        <dl class="facts" id="org-details-facts">
+                            <dt>${_('organizations.slug')}</dt><dd id="org-detail-slug">—</dd>
+                            <dt>${_('organizations.logo_url')}</dt><dd id="org-detail-logo">—</dd>
+                            <dt>${_('organizations.created')}</dt><dd id="org-detail-created">—</dd>
+                            <dt>${_('organizations.org_id')}</dt><dd><span class="value-field"><code id="org-detail-id">${escapeHtml(orgId)}</code><button type="button" data-copy-target="org-detail-id">${_('actions.copy')}</button></span></dd>
+                        </dl>
+                    </section>
+
+                    <form class="form-column" id="org-settings-form" data-save-form novalidate>
+                        <section class="section" aria-labelledby="org-conn-title">
+                            <h2 id="org-conn-title">${_('organizations.session_settings')}</h2>
+                            <p class="section-note">${_('organizations.session_settings_note')} <a href="/policies">${_('organizations.policies_link')}</a></p>
+                            <div id="settings-container">
+                                <div class="form-group">
+                                    <label class="form-label" for="setting-connection-policy">${_('organizations.connection_policy')}</label>
+                                    <select id="setting-connection-policy" class="form-select is-medium">
+                                        <option value="unattended">${_('organizations.policy_unattended')}</option>
+                                        <option value="attended">${_('organizations.policy_attended')}</option>
+                                        <option value="ask_always">${_('organizations.policy_ask')}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="check-field"><input type="checkbox" id="setting-allow-file-transfer"><span class="check-label">${_('organizations.allow_file_transfer')}</span></label>
+                                    <label class="check-field"><input type="checkbox" id="setting-allow-clipboard"><span class="check-label">${_('organizations.allow_clipboard')}</span></label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="setting-max-session">${_('organizations.max_session_duration')}</label>
+                                    <input type="number" id="setting-max-session" class="form-input is-short" value="120" min="0">
+                                </div>
+                            </div>
+                        </section>
+                        <div class="save-bar"${canEdit ? '' : ' hidden'}>
+                            <span class="save-status" data-save-status aria-live="polite"></span>
+                            <button type="submit" class="btn btn-primary" id="save-settings-btn" data-save-button>${_('organizations.save')}</button>
+                        </div>
+                    </form>
+
+                    <details class="disclosure section" id="org-raw-settings">
+                        <summary><h2>${_('organizations.raw_settings')}</h2></summary>
+                        <p class="section-note">${_('organizations.raw_settings_note')}</p>
+                        <div id="settings-raw"></div>
+                    </details>
+
+                    ${can('org.delete') ? `<section class="danger-zone" aria-labelledby="org-danger-title">
+                        <h2 id="org-danger-title">${_('common.delete')}</h2>
+                        <ul class="list">
+                            <li class="list-row">
+                                <span class="row-main">
+                                    <span class="row-title">${_('organizations.delete_org')}</span>
+                                    <span class="row-sub">${_('organizations.delete_org_desc')}</span>
+                                </span>
+                                <span class="row-end"><button type="button" class="btn btn-danger-quiet" id="org-delete-btn">${_('organizations.delete_org_button')}</button></span>
+                            </li>
+                        </ul>
+                    </section>` : ''}
+                </div>
             </div>
         </div>
     `

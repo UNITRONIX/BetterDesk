@@ -1,0 +1,109 @@
+/* Organizations list and organization detail.
+   Tables, tabs, facts, menus and the danger zone come from components.css. */
+
+/* ── List ── */
+
+.org-table .num-col {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.org-table tr.org-row {
+    cursor: pointer;
+}
+
+.org-table .org-name {
+    font-weight: 600;
+}
+
+/* ── Detail ── */
+
+.org-detail-page .tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding-top: var(--space-5);
+}
+
+.org-detail-page .tabs {
+    margin-top: calc(-1 * var(--space-3));
+}
+
+/* Values that are long JSON in the stored settings table */
+.org-raw-settings td {
+    overflow-wrap: anywhere;
+}
+
+.org-raw-settings td:first-child {
+    white-space: nowrap;
+}
+
+/* Address book: the contacts table holds fields */
+.org-ab-table td {
+    padding-block: var(--space-1);
+}
+
+.org-ab-table .form-input {
+    min-width: 10ch;
+}
+
+.org-ab-table td.org-ab-password-cell {
+    white-space: nowrap;
+    color: var(--text-muted);
+}
+
+.org-ab-table td.org-ab-password-cell.is-set {
+    color: var(--text);
+}
+
+.org-address-book-json {
+    min-height: 260px;
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+}
+
+/* Create / add dialogs: two ways to add a person */
+.org-add-user-tabs {
+    margin-bottom: var(--space-4);
+}
+
+.org-dialog-note {
+    margin-bottom: var(--space-4);
+}
+
+/* JS fills these with several sections */
+.org-detail-page #address-book-container,
+.org-detail-page #device-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.org-detail-page .org-address-book-structured .form-group {
+    margin-top: var(--space-2);
+}
+
+.org-table td:first-child {
+    min-width: 16ch;
+}
+
+/* Long labels on narrow screens: the button drops below the text */
+.org-detail-page .danger-zone .list-row {
+    flex-wrap: wrap;
+}
+
+@media (pointer: coarse) {
+    .org-detail-page .check-field {
+        min-height: 44px;
+        align-content: center;
+    }
+}
+
+/* A count that leads a section head pushes its button to the end */
+.org-detail-page .section-head .count-line {
+    margin-inline-end: auto;
+}
+
+.org-detail-page .section-head .count-line:empty {
+    display: none;
+}

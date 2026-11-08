@@ -1,190 +1,331 @@
 /**
- * BetterDesk Console — Organization Detail Page JavaScript
+ * BetterDesk Console — Organization detail (/organizations/:id)
  *
- * Handles org detail view with tabs: Users, Devices, Invitations, Settings,
- * Address Book, and Device Groups.
- * Uses Modal.show() for form inputs, i18n for all strings.
+ * Four tabs: Users (members and invitations), Devices (assigned devices and
+ * linked device groups), Address book (shared contacts) and Settings
+ * (details, stored settings, delete). Dialogs use Modal.show(); every
+ * action reports back next to where it happened or in a toast.
  */
 'use strict';
 
 (function () {
-    const orgId = document.querySelector('.org-detail-page')?.dataset.orgId;
+    const page = document.querySelector('.org-detail-page');
+    const orgId = page?.dataset.orgId;
     if (!orgId) return;
 
-    const API = `/api/panel/org/${orgId}`;
-
-    // i18n helper — falls back to key
-    function t(key) {
-        return (typeof _ === 'function') ? _(`organizations.${key}`) || key : key;
-    }
+    const API = `/api/panel/org/${encodeURIComponent(orgId)}`;
+    // What this role may change (the API checks again); buttons it may not use stay hidden
+    const canEdit = page.dataset.canEdit === 'true';
+    const canUsers = page.dataset.canUsers === 'true';
+    const canDevices = page.dataset.canDevices === 'true';
 
     // -----------------------------------------------------------------------
     //  Helpers
     // -----------------------------------------------------------------------
     async function api(method, path, body) {
         const csrfToken = window.BetterDesk?.csrfToken || '';
-        const opts = {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-        };
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
         if (csrfToken) opts.headers['x-csrf-token'] = csrfToken;
         if (body) opts.body = JSON.stringify(body);
         const res = await fetch(API + path, opts);
         if (!res.ok) {
             const err = await res.json().catch(() => ({ error: res.statusText }));
-            throw new Error(err.error || 'Request failed');
+            const e = new Error(err.error || res.statusText || 'Request failed');
+            e.status = res.status;
+            throw e;
         }
         if (res.status === 204) return null;
         return res.json();
     }
 
+    function tr(key, params) {
+        if (typeof _ !== 'function') return key;
+        return _(key, params) || key;
+    }
+
+    function t(key, params) {
+        return tr(`organizations.${key}`, params);
+    }
+
     function toast(msg, type = 'info') {
         if (typeof Notifications !== 'undefined' && Notifications[type]) Notifications[type](msg);
-        else if (window.showToast) window.showToast(msg, type);
-        else console.log(`[${type}]`, msg);
     }
 
     function escHtml(s) {
         const d = document.createElement('div');
-        d.textContent = s || '';
+        d.textContent = s == null ? '' : String(s);
         return d.innerHTML;
     }
 
-    function formatDate(d) {
+    function formatDate(d, withTime = true) {
         if (!d) return '—';
-        return new Date(d).toLocaleDateString(undefined, {
-            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+        const date = new Date(d);
+        if (Number.isNaN(date.getTime())) return '—';
+        const opts = { year: 'numeric', month: 'short', day: 'numeric' };
+        if (withTime) Object.assign(opts, { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleDateString(document.documentElement.lang || undefined, opts);
     }
 
-    // Roles ordered lowest → highest, matching the org membership modal.
-    // (Member/Operator/Admin/Owner). Backend value `user` is preserved for
-    // compatibility but the label is standardized to "Member" via i18n
-    // to avoid vocabulary collision with the server-wide "Viewer" role.
+    function roleLabel(role) {
+        const key = `organizations.role_${role}`;
+        const v = tr(key);
+        return v === key ? (role || '—') : v;
+    }
+
+    // Roles ordered lowest → highest. Backend value `user` is shown as "Member".
     function roleOptions(selected) {
-        const roles = ['user', 'operator', 'admin', 'owner'];
-        return roles.map(r =>
-            `<option value="${r}" ${r === selected ? 'selected' : ''}>${t('role_' + r)}</option>`
+        return ['user', 'operator', 'admin', 'owner'].map(r =>
+            `<option value="${r}" ${r === selected ? 'selected' : ''}>${escHtml(roleLabel(r))}</option>`
         ).join('');
     }
 
-    // -----------------------------------------------------------------------
-    //  Tabs
-    // -----------------------------------------------------------------------
-    document.querySelectorAll('.org-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.org-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.org-tab-content').forEach(c => c.style.display = 'none');
-            tab.classList.add('active');
-            document.getElementById(`tab-${tab.dataset.tab}`).style.display = 'block';
-            if (tab.dataset.tab === 'address-book') loadAddressBook();
-            if (tab.dataset.tab === 'device-groups') loadDeviceGroups();
+    // "4 users" with the number in bold; the hidden span keeps the old count hook.
+    function setCountLine(el, countId, n, oneKey, otherKey) {
+        if (!el) return;
+        const text = escHtml(t(n === 1 ? oneKey : otherKey, { count: '{{n}}' }));
+        el.innerHTML = text.replace('{{n}}', `<strong>${n}</strong>`) + `<span id="${countId}" hidden>${n}</span>`;
+    }
+
+    // Loading, empty and error states: one sentence, a retry button for errors.
+    function errorState(container, message, retry) {
+        container.innerHTML = `<p class="state is-error"><span>${escHtml(message)}</span>
+            ${retry ? `<button type="button" class="btn btn-sm">${escHtml(tr('actions.retry'))}</button>` : ''}</p>`;
+        if (retry) container.querySelector('button').addEventListener('click', retry);
+    }
+
+    function loadErrorMessage(err) {
+        return err && err.status === 403 ? t('no_permission') : t('loading_failed');
+    }
+
+    function rowMenu(id, label, items) {
+        return `
+            <span class="menu-anchor">
+                <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
+                        aria-controls="${id}" aria-label="${escHtml(label)}">
+                    <span class="material-icons" aria-hidden="true">more_vert</span>
+                </button>
+                <span class="menu menu-end" id="${id}" role="menu">${items}</span>
+            </span>`;
+    }
+
+    // Menus near the end of a table open upwards so they are not cut off
+    function flipLastMenus(container) {
+        const menus = container.querySelectorAll('tbody .menu');
+        if (menus.length > 3) {
+            Array.from(menus).slice(-2).forEach(m => m.classList.add('menu-up'));
+        }
+    }
+
+    // A dialog whose form submits with Enter and shows errors inside the dialog
+    function formDialog({ title, fields, submitLabel, onSubmit, focusId }) {
+        Modal.show({
+            title,
+            content: `<form id="org-dialog-form" novalidate>${fields}
+                <p class="form-status is-error" id="org-dialog-status" role="alert"></p>
+                <button type="submit" hidden></button></form>`,
+            buttons: [
+                { label: tr('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: submitLabel, class: 'btn-primary', onClick: () => submit() },
+            ],
+            onOpen: () => {
+                document.getElementById('org-dialog-form')?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    submit();
+                });
+                // Modal.show() already focused the first field; only move focus if it is elsewhere
+                const form = document.getElementById('org-dialog-form');
+                if (focusId && form && !form.contains(document.activeElement)) document.getElementById(focusId)?.focus();
+            },
         });
-    });
-
-    // -----------------------------------------------------------------------
-    //  Load org header
-    // -----------------------------------------------------------------------
-    let currentOrg = {};
-
-    async function loadOrgHeader() {
-        try {
-            const org = await api('GET', '');
-            currentOrg = org;
-            document.getElementById('org-detail-name').textContent = org.name;
-            document.getElementById('org-detail-slug').textContent = org.slug;
-        } catch (err) {
-            toast(t('loading_failed'), 'error');
+        let busy = false;
+        async function submit() {
+            if (busy) return;
+            const status = document.getElementById('org-dialog-status');
+            const fail = (msg) => { if (status) status.textContent = msg; };
+            if (status) status.textContent = '';
+            busy = true;
+            try {
+                await onSubmit(fail);
+            } catch (err) {
+                fail(err.message);
+            } finally {
+                busy = false;
+            }
         }
     }
 
     // -----------------------------------------------------------------------
-    //  Edit org (header button)
+    //  Tabs (arrow keys move between tabs; the hash keeps the open tab)
     // -----------------------------------------------------------------------
+    const tabs = Array.from(document.querySelectorAll('.org-tab'));
+    const TAB_ALIASES = { invitations: 'users', 'device-groups': 'devices' };
+
+    function selectTab(name, focus) {
+        const tab = tabs.find(x => x.dataset.tab === name) || tabs[0];
+        tabs.forEach(x => {
+            const on = x === tab;
+            x.classList.toggle('active', on);
+            x.setAttribute('aria-selected', on ? 'true' : 'false');
+            x.tabIndex = on ? 0 : -1;
+            const panel = document.getElementById(x.getAttribute('aria-controls'));
+            if (panel) panel.hidden = !on;
+        });
+        if (focus) tab.focus();
+        if (history.replaceState) history.replaceState(null, '', `#${tab.dataset.tab}`);
+    }
+
+    tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => selectTab(tab.dataset.tab, false));
+        tab.addEventListener('keydown', (e) => {
+            let next = null;
+            if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+            else if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+            else if (e.key === 'Home') next = tabs[0];
+            else if (e.key === 'End') next = tabs[tabs.length - 1];
+            if (!next) return;
+            if (document.dir === 'rtl' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+                next = tabs[(e.key === 'ArrowRight' ? i - 1 + tabs.length : i + 1) % tabs.length];
+            }
+            e.preventDefault();
+            selectTab(next.dataset.tab, true);
+        });
+    });
+
+    {
+        const hash = location.hash.replace('#', '');
+        const name = TAB_ALIASES[hash] || hash;
+        if (tabs.some(x => x.dataset.tab === name)) selectTab(name, false);
+    }
+
+    // Copy buttons in the details list
+    page.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-copy-target]');
+        if (!btn) return;
+        const src = document.getElementById(btn.dataset.copyTarget);
+        if (!src) return;
+        try {
+            await navigator.clipboard.writeText(src.textContent.trim());
+            const label = btn.textContent;
+            btn.textContent = tr('common.copied');
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1500);
+        } catch (_) {
+            toast(t('copy_failed'), 'error');
+        }
+    });
+
+    // -----------------------------------------------------------------------
+    //  Header and details
+    // -----------------------------------------------------------------------
+    let currentOrg = {};
+
+    function renderDetails() {
+        document.getElementById('org-detail-name').textContent = currentOrg.name || '';
+        document.getElementById('org-detail-slug').textContent = currentOrg.slug || '—';
+        document.getElementById('org-detail-logo').textContent = currentOrg.logo_url || '—';
+        document.getElementById('org-detail-created').textContent = formatDate(currentOrg.created_at, false);
+        if (currentOrg.name) document.title = `${currentOrg.name} - ${document.title.split(' - ').slice(1).join(' - ') || document.title}`;
+    }
+
+    async function loadOrgHeader() {
+        const errorEl = document.getElementById('org-load-error');
+        try {
+            currentOrg = await api('GET', '');
+            errorEl.hidden = true;
+            renderDetails();
+            return true;
+        } catch (err) {
+            errorEl.hidden = false;
+            errorEl.querySelector('span').textContent = err.status === 404 ? t('org_not_found') : t('org_load_failed');
+            return false;
+        }
+    }
+
+    document.getElementById('org-load-retry')?.addEventListener('click', () => loadAll());
+
     document.getElementById('org-edit-btn')?.addEventListener('click', () => {
-        Modal.show({
+        formDialog({
             title: t('edit'),
-            content: `
+            focusId: 'modal-org-name',
+            submitLabel: tr('actions.save'),
+            fields: `
                 <div class="form-group">
-                    <label class="form-label">${escHtml(t('name'))}</label>
-                    <input type="text" id="modal-org-name" class="form-input" value="${escHtml(currentOrg.name || '')}">
+                    <label class="form-label" for="modal-org-name">${escHtml(t('name'))}</label>
+                    <input type="text" id="modal-org-name" class="form-input" maxlength="120" value="${escHtml(currentOrg.name || '')}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${escHtml(t('slug'))}</label>
-                    <input type="text" id="modal-org-slug" class="form-input" value="${escHtml(currentOrg.slug || '')}">
+                    <label class="form-label" for="modal-org-slug">${escHtml(t('slug'))}</label>
+                    <input type="text" id="modal-org-slug" class="form-input" maxlength="64" spellcheck="false" aria-describedby="modal-org-slug-hint" value="${escHtml(currentOrg.slug || '')}">
+                    <p class="form-hint" id="modal-org-slug-hint">${escHtml(t('slug_hint'))}</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${escHtml(t('logo_url'))}</label>
-                    <input type="text" id="modal-org-logo" class="form-input" value="${escHtml(currentOrg.logo_url || '')}">
-                </div>
-            `,
-            buttons: [
-                { label: _('actions.cancel') || 'Cancel', class: 'btn-secondary', onClick: () => Modal.close() },
-                {
-                    label: _('actions.save') || 'Save', class: 'btn-primary', onClick: async () => {
-                        const name = document.getElementById('modal-org-name')?.value?.trim();
-                        const slug = document.getElementById('modal-org-slug')?.value?.trim();
-                        const logo_url = document.getElementById('modal-org-logo')?.value?.trim();
-                        if (!name || !slug) return;
-                        try {
-                            await api('PUT', '', { name, slug, logo_url });
-                            Modal.close();
-                            toast(t('edit'), 'success');
-                            loadOrgHeader();
-                        } catch (err) { toast(err.message, 'error'); }
-                    }
-                }
-            ]
+                    <label class="form-label" for="modal-org-logo">${escHtml(t('logo_url'))}</label>
+                    <input type="url" id="modal-org-logo" class="form-input" spellcheck="false" aria-describedby="modal-org-logo-hint" value="${escHtml(currentOrg.logo_url || '')}">
+                    <p class="form-hint" id="modal-org-logo-hint">${escHtml(t('logo_url_hint'))}</p>
+                </div>`,
+            onSubmit: async (fail) => {
+                const name = document.getElementById('modal-org-name')?.value?.trim();
+                const slug = document.getElementById('modal-org-slug')?.value?.trim().toLowerCase();
+                const logo_url = document.getElementById('modal-org-logo')?.value?.trim() || '';
+                if (!name || !slug) return fail(t('name_slug_required'));
+                await api('PUT', '', { name, slug, logo_url });
+                Modal.close();
+                toast(t('org_updated'), 'success');
+                loadOrgHeader();
+            },
         });
     });
 
     // -----------------------------------------------------------------------
     //  Users tab
     // -----------------------------------------------------------------------
+    let orgUsers = [];
+
+    function userName(id) {
+        const u = orgUsers.find(x => x.id === id);
+        return u ? (u.display_name || u.username) : id;
+    }
+
     async function loadUsers() {
+        const container = document.getElementById('users-table');
+        const line = document.getElementById('users-count-line');
         try {
             const data = await api('GET', '/users');
-            const users = data.users || [];
-            document.getElementById('users-count').textContent = users.length;
-            const container = document.getElementById('users-table');
+            orgUsers = data.users || [];
+            setCountLine(line, 'users-count', orgUsers.length, 'users_count_one', 'users_count_other');
 
-            if (users.length === 0) {
-                container.innerHTML = `<p class="text-muted">${escHtml(t('no_users'))}</p>`;
+            if (orgUsers.length === 0) {
+                container.innerHTML = `<p class="state">${escHtml(t('no_users'))}</p>`;
                 return;
             }
 
             container.innerHTML = `
-                <table class="data-table">
+                <div class="table-scroll"><table class="data-table">
                     <thead>
                         <tr>
-                            <th>${escHtml(t('username'))}</th>
-                            <th>${escHtml(t('display_name'))}</th>
-                            <th>${escHtml(t('email'))}</th>
-                            <th>${escHtml(t('role'))}</th>
-                            <th>${escHtml(t('last_login'))}</th>
-                            <th>${escHtml(t('actions'))}</th>
+                            <th scope="col">${escHtml(t('username'))}</th>
+                            <th scope="col">${escHtml(t('email'))}</th>
+                            <th scope="col">${escHtml(t('role'))}</th>
+                            <th scope="col">${escHtml(t('last_login'))}</th>
+                            ${canUsers ? `<th scope="col" class="actions"><span class="sr-only">${escHtml(t('actions'))}</span></th>` : ''}
                         </tr>
                     </thead>
                     <tbody>
-                        ${users.map(u => `
+                        ${orgUsers.map((u, i) => `
                             <tr>
-                                <td><strong>${escHtml(u.username)}</strong></td>
-                                <td>${escHtml(u.display_name)}</td>
-                                <td>${escHtml(u.email)}</td>
-                                <td><span class="role-badge role-${String(u.role || '').replace(/[^a-z0-9_-]/gi, '')}">${escHtml(t('role_' + u.role) || u.role)}</span></td>
+                                <td><strong>${escHtml(u.username)}</strong>${u.display_name ? `<span class="cell-sub">${escHtml(u.display_name)}</span>` : ''}</td>
+                                <td>${u.email ? escHtml(u.email) : '<span class="text-muted">—</span>'}</td>
+                                <td>${escHtml(roleLabel(u.role))}</td>
                                 <td>${formatDate(u.last_login)}</td>
-                                <td>
-                                    <button class="btn btn-icon btn-sm user-role-btn" data-user-id="${escHtml(u.id)}" data-role="${escHtml(u.role)}" title="${escHtml(t('edit_role'))}">
-                                        <span class="material-icons">edit</span>
-                                    </button>
-                                    <button class="btn btn-icon btn-sm user-remove-btn" data-user-id="${escHtml(u.id)}" title="${escHtml(_('common.delete') || 'Remove')}">
-                                        <span class="material-icons">person_remove</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
+                                ${canUsers ? `<td class="actions">${rowMenu(`org-user-menu-${i}`, t('actions_for', { name: u.username }), `
+                                    <button type="button" class="menu-item user-role-btn" role="menuitem" data-user-id="${escHtml(u.id)}" data-role="${escHtml(u.role)}">${escHtml(t('edit_role'))}</button>
+                                    <span class="menu-divider" role="separator"></span>
+                                    <button type="button" class="menu-item danger user-remove-btn" role="menuitem" data-user-id="${escHtml(u.id)}">${escHtml(t('remove_from_org'))}</button>`)}
+                                </td>` : ''}
+                            </tr>`).join('')}
                     </tbody>
-                </table>`;
+                </table></div>`;
+            flipLastMenus(container);
 
             container.querySelectorAll('.user-remove-btn').forEach(btn => {
                 btn.addEventListener('click', () => deleteUser(btn.dataset.userId));
@@ -193,425 +334,525 @@
                 btn.addEventListener('click', () => editUserRole(btn.dataset.userId, btn.dataset.role));
             });
         } catch (err) {
-            toast(t('loading_failed'), 'error');
+            if (line) line.textContent = '';
+            errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadUsers);
         }
     }
 
-    // Add User modal — supports both creating new org user or linking existing server user
+    // Add user: a new account for this organization, or link an existing server user
     document.getElementById('add-user-btn')?.addEventListener('click', async () => {
-        // Fetch available users first
         let availableUsers = [];
         try {
             const resp = await api('GET', '/available-users');
             availableUsers = resp.users || [];
-        } catch (err) {
-            console.error('Failed to load available users:', err);
+        } catch (_) {
+            availableUsers = [];
         }
+        const hasAvailable = availableUsers.length > 0;
+        let mode = 'create';
 
-        const hasAvailableUsers = availableUsers.length > 0;
-        const userOptions = availableUsers.map(u =>
-            `<option value="${escHtml(u.id)}">${escHtml(u.username)} (${escHtml(u.role)})</option>`
-        ).join('');
-
-        Modal.show({
+        formDialog({
             title: t('add_user'),
-            content: `
-                <div class="modal-tabs">
-                    <button type="button" class="modal-tab active" data-tab="create">${escHtml(t('create_new_user'))}</button>
-                    <button type="button" class="modal-tab" data-tab="existing">${escHtml(t('add_existing_user'))}${!hasAvailableUsers ? ' (' + escHtml(t('none_available')) + ')' : ''}</button>
+            focusId: 'modal-user-name',
+            submitLabel: t('add_user'),
+            fields: `
+                <div class="tabs org-add-user-tabs" role="tablist" aria-label="${escHtml(t('add_user'))}">
+                    <button type="button" class="tab modal-tab active" role="tab" id="modal-tabbtn-create" data-tab="create" aria-selected="true" aria-controls="modal-tab-create">${escHtml(t('create_new_user'))}</button>
+                    <button type="button" class="tab modal-tab" role="tab" id="modal-tabbtn-existing" data-tab="existing" aria-selected="false" aria-controls="modal-tab-existing" tabindex="-1">${escHtml(t('add_existing_user'))}</button>
                 </div>
-                <div id="modal-tab-create" class="modal-tab-content" style="display:block">
+                <div id="modal-tab-create" class="modal-tab-content" role="tabpanel" aria-labelledby="modal-tabbtn-create">
+                    <p class="form-hint org-dialog-note">${escHtml(t('create_new_user_hint'))}</p>
                     <div class="form-group">
-                        <label class="form-label">${escHtml(t('username'))}</label>
-                        <input type="text" id="modal-user-name" class="form-input" required>
+                        <label class="form-label" for="modal-user-name">${escHtml(t('username'))}</label>
+                        <input type="text" id="modal-user-name" class="form-input" autocomplete="off">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">${escHtml(t('password'))}</label>
-                        <input type="password" id="modal-user-pass" class="form-input" required>
+                        <label class="form-label" for="modal-user-pass">${escHtml(t('password'))}</label>
+                        <input type="password" id="modal-user-pass" class="form-input" autocomplete="new-password">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">${escHtml(t('role'))}</label>
-                        <select id="modal-user-role" class="form-input">${roleOptions('user')}</select>
+                        <label class="form-label" for="modal-user-role">${escHtml(t('role'))}</label>
+                        <select id="modal-user-role" class="form-select">${roleOptions('user')}</select>
                     </div>
                 </div>
-                <div id="modal-tab-existing" class="modal-tab-content" style="display:none">
-                    ${hasAvailableUsers ? `
+                <div id="modal-tab-existing" class="modal-tab-content" role="tabpanel" aria-labelledby="modal-tabbtn-existing" hidden>
+                    ${hasAvailable ? `
                         <div class="form-group">
-                            <label class="form-label">${escHtml(t('select_user'))}</label>
-                            <select id="modal-existing-user" class="form-input">
-                                <option value="">— ${escHtml(t('select_user'))} —</option>
-                                ${userOptions}
+                            <label class="form-label" for="modal-existing-user">${escHtml(t('select_user'))}</label>
+                            <select id="modal-existing-user" class="form-select">
+                                <option value="">${escHtml(t('select_user_placeholder'))}</option>
+                                ${availableUsers.map(u => `<option value="${escHtml(u.id)}">${escHtml(u.username)} (${escHtml(tr('users.role_' + u.role) === 'users.role_' + u.role ? u.role : tr('users.role_' + u.role))})</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">${escHtml(t('org_role'))}</label>
-                            <select id="modal-existing-role" class="form-input">${roleOptions('user')}</select>
+                            <label class="form-label" for="modal-existing-role">${escHtml(t('org_role'))}</label>
+                            <select id="modal-existing-role" class="form-select">${roleOptions('user')}</select>
                         </div>
-                        <p class="text-muted text-sm">${escHtml(t('link_user_hint'))}</p>
-                    ` : `
-                        <p class="text-muted">${escHtml(t('no_available_users'))}</p>
-                    `}
-                </div>
-            `,
-            buttons: [
-                { label: _('actions.cancel') || 'Cancel', class: 'btn-secondary', onClick: () => Modal.close() },
-                {
-                    label: t('add_user'), class: 'btn-primary', icon: 'person_add', onClick: async () => {
-                        const activeTab = document.querySelector('.modal-tab.active')?.dataset.tab || 'create';
-                        
-                        if (activeTab === 'create') {
-                            // Create new org user
-                            const username = document.getElementById('modal-user-name')?.value?.trim();
-                            const password = document.getElementById('modal-user-pass')?.value;
-                            const role = document.getElementById('modal-user-role')?.value || 'user';
-                            if (!username || !password) return;
-                            try {
-                                await api('POST', '/users', { username, password, role });
-                                Modal.close();
-                                toast(t('user_added'), 'success');
-                                loadUsers();
-                            } catch (err) { toast(err.message, 'error'); }
-                        } else {
-                            // Link existing server user
-                            const userId = document.getElementById('modal-existing-user')?.value;
-                            const role = document.getElementById('modal-existing-role')?.value || 'user';
-                            if (!userId) {
-                                toast(t('select_user'), 'warning');
-                                return;
-                            }
-                            try {
-                                await api('POST', '/members', { user_id: parseInt(userId, 10), role });
-                                Modal.close();
-                                toast(t('user_linked'), 'success');
-                                loadUsers();
-                            } catch (err) { toast(err.message, 'error'); }
-                        }
-                    }
+                        <p class="form-hint">${escHtml(t('link_user_hint'))}</p>
+                    ` : `<p class="state">${escHtml(t('no_available_users'))}</p>`}
+                </div>`,
+            onSubmit: async (fail) => {
+                if (mode === 'create') {
+                    const username = document.getElementById('modal-user-name')?.value?.trim();
+                    const password = document.getElementById('modal-user-pass')?.value;
+                    const role = document.getElementById('modal-user-role')?.value || 'user';
+                    if (!username || !password) return fail(t('username_password_required'));
+                    await api('POST', '/users', { username, password, role });
+                    Modal.close();
+                    toast(t('user_added'), 'success');
+                } else {
+                    const userId = document.getElementById('modal-existing-user')?.value;
+                    const role = document.getElementById('modal-existing-role')?.value || 'user';
+                    if (!userId) return fail(t('select_user_first'));
+                    await api('POST', '/members', { user_id: parseInt(userId, 10), role });
+                    Modal.close();
+                    toast(t('user_linked'), 'success');
                 }
-            ],
-            onOpen: () => {
-                // Tab switching
-                document.querySelectorAll('.modal-tab').forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-                        document.querySelectorAll('.modal-tab-content').forEach(c => c.style.display = 'none');
-                        tab.classList.add('active');
-                        document.getElementById(`modal-tab-${tab.dataset.tab}`).style.display = 'block';
-                    });
-                });
-                setTimeout(() => document.getElementById('modal-user-name')?.focus(), 50);
-            }
+                loadUsers();
+            },
         });
+
+        // Switch between the two ways of adding someone
+        setTimeout(() => {
+            const btns = Array.from(document.querySelectorAll('.modal-tab'));
+            const pick = (btn, focus) => {
+                mode = btn.dataset.tab;
+                btns.forEach(b => {
+                    const on = b === btn;
+                    b.classList.toggle('active', on);
+                    b.setAttribute('aria-selected', on ? 'true' : 'false');
+                    b.tabIndex = on ? 0 : -1;
+                    const panel = document.getElementById(b.getAttribute('aria-controls'));
+                    if (panel) panel.hidden = !on;
+                });
+                if (focus) btn.focus();
+            };
+            btns.forEach((b, i) => {
+                b.addEventListener('click', () => pick(b, false));
+                b.addEventListener('keydown', (e) => {
+                    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+                    e.preventDefault();
+                    pick(btns[(i + 1) % btns.length], true);
+                });
+            });
+        }, 0);
     });
 
-    // Edit user role modal
-    async function editUserRole(uid, currentRole) {
-        Modal.show({
+    function editUserRole(uid, currentRole) {
+        const u = orgUsers.find(x => x.id === uid);
+        formDialog({
             title: t('edit_role'),
-            content: `
+            focusId: 'modal-edit-role',
+            submitLabel: tr('actions.save'),
+            fields: `
+                ${u ? `<p class="org-dialog-note">${escHtml(u.username)}</p>` : ''}
                 <div class="form-group">
-                    <label class="form-label">${escHtml(t('role'))}</label>
-                    <select id="modal-edit-role" class="form-input">${roleOptions(currentRole)}</select>
-                </div>
-            `,
-            buttons: [
-                { label: _('actions.cancel') || 'Cancel', class: 'btn-secondary', onClick: () => Modal.close() },
-                {
-                    label: _('actions.save') || 'Save', class: 'btn-primary', onClick: async () => {
-                        const role = document.getElementById('modal-edit-role')?.value;
-                        if (!role) return;
-                        try {
-                            await api('PUT', `/users/${uid}`, { role });
-                            Modal.close();
-                            toast(t('user_updated'), 'success');
-                            loadUsers();
-                        } catch (err) { toast(err.message, 'error'); }
-                    }
-                }
-            ]
+                    <label class="form-label" for="modal-edit-role">${escHtml(t('role'))}</label>
+                    <select id="modal-edit-role" class="form-select">${roleOptions(currentRole)}</select>
+                </div>`,
+            onSubmit: async () => {
+                const role = document.getElementById('modal-edit-role')?.value;
+                if (!role) return;
+                await api('PUT', `/users/${encodeURIComponent(uid)}`, { role });
+                Modal.close();
+                toast(t('user_updated'), 'success');
+                loadUsers();
+            },
         });
     }
 
-    // -----------------------------------------------------------------------
-    //  Devices tab
-    // -----------------------------------------------------------------------
-    async function loadDevices() {
+    async function deleteUser(uid) {
+        const u = orgUsers.find(x => x.id === uid);
+        const confirmed = await Modal.confirm({
+            title: t('remove_from_org'),
+            message: t('confirm_remove_user_named', { name: u ? u.username : uid }),
+            confirmLabel: t('remove_from_org'),
+            danger: true,
+        });
+        if (!confirmed) return;
         try {
-            const data = await api('GET', '/devices');
-            const devices = data.devices || [];
-            document.getElementById('devices-count').textContent = devices.length;
-            const container = document.getElementById('devices-table');
-
-            if (devices.length === 0) {
-                container.innerHTML = `<p class="text-muted">${escHtml(t('no_devices'))}</p>`;
-                return;
-            }
-
-            container.innerHTML = `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>${escHtml(t('device_id'))}</th>
-                            <th>${escHtml(t('department'))}</th>
-                            <th>${escHtml(t('building'))}</th>
-                            <th>${escHtml(t('location'))}</th>
-                            <th>${escHtml(t('assigned_user'))}</th>
-                            <th>${escHtml(t('actions'))}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${devices.map(d => `
-                            <tr>
-                                <td><a href="/devices/${escHtml(d.device_id)}">${escHtml(d.device_id)}</a></td>
-                                <td>${escHtml(d.department)}</td>
-                                <td>${escHtml(d.building)}</td>
-                                <td>${escHtml(d.location)}</td>
-                                <td>${escHtml(d.assigned_user_id)}</td>
-                                <td>
-                                    <button class="btn btn-icon btn-sm btn-danger device-unassign-btn" data-device-id="${escHtml(d.device_id)}" title="${escHtml(_('common.delete') || 'Unassign')}">
-                                        <span class="material-icons">link_off</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>`;
-
-            container.querySelectorAll('.device-unassign-btn').forEach(btn => {
-                btn.addEventListener('click', () => unassignDevice(btn.dataset.deviceId));
-            });
+            await api('DELETE', `/users/${encodeURIComponent(uid)}`);
+            toast(t('user_removed'), 'success');
+            loadUsers();
         } catch (err) {
-            toast(t('loading_failed'), 'error');
+            toast(`${t('remove_failed')} ${err.message}`, 'error');
         }
     }
 
-    // Assign Device modal
-    document.getElementById('assign-device-btn')?.addEventListener('click', () => {
-        Modal.show({
-            title: t('assign_device'),
-            content: `
-                <div class="form-group">
-                    <label class="form-label">${escHtml(t('device_id'))}</label>
-                    <input type="text" id="modal-device-id" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">${escHtml(t('department'))}</label>
-                    <input type="text" id="modal-device-dept" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">${escHtml(t('building'))}</label>
-                    <input type="text" id="modal-device-building" class="form-input">
-                </div>
-            `,
-            buttons: [
-                { label: _('actions.cancel') || 'Cancel', class: 'btn-secondary', onClick: () => Modal.close() },
-                {
-                    label: t('assign_device'), class: 'btn-primary', icon: 'add_circle', onClick: async () => {
-                        const device_id = document.getElementById('modal-device-id')?.value?.trim();
-                        const department = document.getElementById('modal-device-dept')?.value?.trim() || '';
-                        const building = document.getElementById('modal-device-building')?.value?.trim() || '';
-                        if (!device_id) return;
-                        try {
-                            await api('POST', '/devices', { device_id, department, building });
-                            Modal.close();
-                            toast(t('device_assigned'), 'success');
-                            loadDevices();
-                        } catch (err) { toast(err.message, 'error'); }
-                    }
-                }
-            ],
-            onOpen: () => setTimeout(() => document.getElementById('modal-device-id')?.focus(), 50)
-        });
-    });
-
     // -----------------------------------------------------------------------
-    //  Invitations tab
+    //  Invitations (on the Users tab)
     // -----------------------------------------------------------------------
     async function loadInvitations() {
+        const container = document.getElementById('invitations-table');
         try {
             const data = await api('GET', '/invitations');
             const invs = data.invitations || [];
-            document.getElementById('invitations-count').textContent = invs.length;
-            const container = document.getElementById('invitations-table');
+            const countEl = document.getElementById('invitations-count');
+            if (countEl) countEl.textContent = invs.length;
 
             if (invs.length === 0) {
-                container.innerHTML = `<p class="text-muted">${escHtml(t('no_invitations'))}</p>`;
+                container.innerHTML = `<p class="state">${escHtml(t('no_invitations'))}</p>`;
                 return;
             }
 
             container.innerHTML = `
-                <table class="data-table">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${escHtml(t('invitations'))}"><table class="data-table">
                     <thead>
                         <tr>
-                            <th>${escHtml(t('token'))}</th>
-                            <th>${escHtml(t('email'))}</th>
-                            <th>${escHtml(t('role'))}</th>
-                            <th>${escHtml(t('expires'))}</th>
-                            <th>${escHtml(t('used'))}</th>
+                            <th scope="col">${escHtml(t('token'))}</th>
+                            <th scope="col">${escHtml(t('email'))}</th>
+                            <th scope="col">${escHtml(t('role'))}</th>
+                            <th scope="col">${escHtml(t('expires'))}</th>
+                            <th scope="col">${escHtml(t('used'))}</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${invs.map(inv => `
                             <tr>
-                                <td><code>${escHtml((inv.token || '').substring(0, 16) + '...')}</code></td>
-                                <td>${escHtml(inv.email)}</td>
-                                <td><span class="role-badge role-${inv.role}">${escHtml(t('role_' + inv.role) || inv.role)}</span></td>
+                                <td><span class="mono">${escHtml((inv.token || '').substring(0, 16))}…</span></td>
+                                <td>${inv.email ? escHtml(inv.email) : '<span class="text-muted">—</span>'}</td>
+                                <td>${escHtml(roleLabel(inv.role))}</td>
                                 <td>${formatDate(inv.expires_at)}</td>
-                                <td>${inv.used_at ? formatDate(inv.used_at) : '—'}</td>
-                            </tr>
-                        `).join('')}
+                                <td>${inv.used_at ? formatDate(inv.used_at) : `<span class="text-muted">${escHtml(t('not_used'))}</span>`}</td>
+                            </tr>`).join('')}
                     </tbody>
-                </table>`;
+                </table></div>`;
         } catch (err) {
-            toast(t('loading_failed'), 'error');
+            errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadInvitations);
         }
     }
 
-    // Create Invitation modal
     document.getElementById('create-invite-btn')?.addEventListener('click', () => {
-        Modal.show({
+        formDialog({
             title: t('create_invitation'),
-            content: `
+            focusId: 'modal-invite-email',
+            submitLabel: t('create_invitation'),
+            fields: `
                 <div class="form-group">
-                    <label class="form-label">${escHtml(t('email'))}</label>
-                    <input type="email" id="modal-invite-email" class="form-input" placeholder="optional">
+                    <label class="form-label" for="modal-invite-email">${escHtml(t('email'))}</label>
+                    <input type="email" id="modal-invite-email" class="form-input" aria-describedby="modal-invite-email-hint">
+                    <p class="form-hint" id="modal-invite-email-hint">${escHtml(t('optional'))}</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${escHtml(t('role'))}</label>
-                    <select id="modal-invite-role" class="form-input">${roleOptions('user')}</select>
+                    <label class="form-label" for="modal-invite-role">${escHtml(t('role'))}</label>
+                    <select id="modal-invite-role" class="form-select">${roleOptions('user')}</select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${escHtml(t('expires_hours'))}</label>
-                    <input type="number" id="modal-invite-hours" class="form-input" value="72" min="1" max="720">
-                </div>
-            `,
-            buttons: [
-                { label: _('actions.cancel') || 'Cancel', class: 'btn-secondary', onClick: () => Modal.close() },
-                {
-                    label: t('create_invitation'), class: 'btn-primary', icon: 'link', onClick: async () => {
-                        const email = document.getElementById('modal-invite-email')?.value?.trim() || '';
-                        const role = document.getElementById('modal-invite-role')?.value || 'user';
-                        const hours = parseInt(document.getElementById('modal-invite-hours')?.value) || 72;
-                        try {
-                            const inv = await api('POST', '/invite', { email, role, expires_in_hours: hours });
-                            Modal.close();
-                            toast(t('invitation_created'), 'success');
-                            loadInvitations();
-                        } catch (err) { toast(err.message, 'error'); }
-                    }
-                }
-            ],
-            onOpen: () => setTimeout(() => document.getElementById('modal-invite-email')?.focus(), 50)
+                    <label class="form-label" for="modal-invite-hours">${escHtml(t('expires_hours'))}</label>
+                    <input type="number" id="modal-invite-hours" class="form-input is-short" value="72" min="1" max="720" aria-describedby="modal-invite-hours-hint">
+                    <p class="form-hint" id="modal-invite-hours-hint">${escHtml(t('expires_hours_hint'))}</p>
+                </div>`,
+            onSubmit: async () => {
+                const email = document.getElementById('modal-invite-email')?.value?.trim() || '';
+                const role = document.getElementById('modal-invite-role')?.value || 'user';
+                const hours = parseInt(document.getElementById('modal-invite-hours')?.value, 10) || 72;
+                await api('POST', '/invite', { email, role, expires_in_hours: hours });
+                Modal.close();
+                toast(t('invitation_created'), 'success');
+                loadInvitations();
+            },
         });
     });
 
     // -----------------------------------------------------------------------
-    //  Settings tab
+    //  Devices tab
     // -----------------------------------------------------------------------
-    async function loadSettings() {
+    let orgDevices = [];
+
+    async function loadDevices() {
+        const container = document.getElementById('devices-table');
+        const line = document.getElementById('devices-count-line');
         try {
-            const data = await api('GET', '/settings');
-            const settings = data.settings || [];
-            const container = document.getElementById('settings-container');
+            const data = await api('GET', '/devices');
+            orgDevices = data.devices || [];
+            setCountLine(line, 'devices-count', orgDevices.length, 'devices_count_one', 'devices_count_other');
 
+            if (orgDevices.length === 0) {
+                container.innerHTML = `<p class="state">${escHtml(t('no_devices'))}</p>`;
+                return;
+            }
+
+            const cell = (v) => (v ? escHtml(v) : '<span class="text-muted">—</span>');
             container.innerHTML = `
-                <div class="org-settings-form">
-                    <div class="form-group">
-                        <label>${escHtml(t('connection_policy'))}</label>
-                        <select id="setting-connection-policy" class="form-input">
-                            <option value="unattended">${escHtml(t('policy_unattended'))}</option>
-                            <option value="attended">${escHtml(t('policy_attended'))}</option>
-                            <option value="ask_always">${escHtml(t('policy_ask'))}</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>${escHtml(t('allow_file_transfer'))}</label>
-                        <select id="setting-allow-file-transfer" class="form-input">
-                            <option value="true">${_('common.yes') || 'Yes'}</option>
-                            <option value="false">${_('common.no') || 'No'}</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>${escHtml(t('allow_clipboard'))}</label>
-                        <select id="setting-allow-clipboard" class="form-input">
-                            <option value="true">${_('common.yes') || 'Yes'}</option>
-                            <option value="false">${_('common.no') || 'No'}</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>${escHtml(t('max_session_duration'))}</label>
-                        <input type="number" id="setting-max-session" class="form-input" value="120" min="0" />
-                    </div>
-                    <button class="btn btn-primary" id="save-settings-btn">
-                        <span class="material-icons">save</span> ${escHtml(t('save'))}
-                    </button>
-                </div>
-                <div class="org-settings-raw">
-                    <h3>${escHtml(t('raw_settings'))}</h3>
-                    <table class="data-table">
-                        <thead><tr><th>${escHtml(t('key'))}</th><th>${escHtml(t('value'))}</th></tr></thead>
-                        <tbody>
-                            ${settings.map(s => `
-                                <tr><td><code>${escHtml(s.key)}</code></td><td>${escHtml(s.value)}</td></tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>`;
+                <div class="table-scroll"><table class="data-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">${escHtml(t('device_id'))}</th>
+                            <th scope="col">${escHtml(t('department'))}</th>
+                            <th scope="col">${escHtml(t('building'))}</th>
+                            <th scope="col">${escHtml(t('location'))}</th>
+                            <th scope="col">${escHtml(t('assigned_user'))}</th>
+                            ${canDevices ? `<th scope="col" class="actions"><span class="sr-only">${escHtml(t('actions'))}</span></th>` : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orgDevices.map((d, i) => `
+                            <tr>
+                                <td><a class="mono" href="/devices/${encodeURIComponent(d.device_id)}">${escHtml(d.device_id)}</a></td>
+                                <td>${cell(d.department)}</td>
+                                <td>${cell(d.building)}</td>
+                                <td>${cell(d.location)}</td>
+                                <td>${cell(d.assigned_user_id ? userName(d.assigned_user_id) : '')}</td>
+                                ${canDevices ? `<td class="actions">${rowMenu(`org-device-menu-${i}`, t('actions_for', { name: d.device_id }), `
+                                    <button type="button" class="menu-item danger device-unassign-btn" role="menuitem" data-device-id="${escHtml(d.device_id)}">${escHtml(t('remove_from_org'))}</button>`)}
+                                </td>` : ''}
+                            </tr>`).join('')}
+                    </tbody>
+                </table></div>`;
+            flipLastMenus(container);
 
-            // Apply current settings to form
-            settings.forEach(s => {
-                const el = document.getElementById(`setting-${s.key.replace(/_/g, '-')}`);
-                if (el) el.value = s.value;
-            });
-
-            document.getElementById('save-settings-btn')?.addEventListener('click', async () => {
-                const saveBtn = document.getElementById('save-settings-btn');
-                const originalContent = saveBtn.innerHTML;
-                
-                // Visual feedback: disable button, show spinner
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<span class="material-icons rotating">sync</span> ' + (t('saving') || 'Saving...');
-                
-                const settingsToSave = [
-                    { key: 'connection_policy', value: document.getElementById('setting-connection-policy')?.value || 'unattended' },
-                    { key: 'allow_file_transfer', value: document.getElementById('setting-allow-file-transfer')?.value || 'true' },
-                    { key: 'allow_clipboard', value: document.getElementById('setting-allow-clipboard')?.value || 'true' },
-                    { key: 'max_session_duration_min', value: document.getElementById('setting-max-session')?.value || '120' },
-                ];
-                
-                console.log('[Org Settings] Saving:', settingsToSave);
-                
-                try {
-                    for (const s of settingsToSave) {
-                        console.log('[Org Settings] PUT', s.key, '=', s.value);
-                        const result = await api('PUT', '/settings', s);
-                        console.log('[Org Settings] Result:', result);
-                    }
-                    toast(t('settings_saved') || 'Settings saved', 'success');
-                    // Reload to confirm persistence
-                    await loadSettings();
-                } catch (err) {
-                    console.error('[Org Settings] Save error:', err);
-                    toast(err.message || 'Failed to save settings', 'error');
-                } finally {
-                    // Restore button
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = originalContent;
-                }
+            container.querySelectorAll('.device-unassign-btn').forEach(btn => {
+                btn.addEventListener('click', () => unassignDevice(btn.dataset.deviceId));
             });
         } catch (err) {
-            toast(t('loading_failed'), 'error');
+            if (line) line.textContent = '';
+            errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadDevices);
+        }
+    }
+
+    document.getElementById('assign-device-btn')?.addEventListener('click', () => {
+        formDialog({
+            title: t('assign_device'),
+            focusId: 'modal-device-id',
+            submitLabel: t('assign_device'),
+            fields: `
+                <div class="form-group">
+                    <label class="form-label" for="modal-device-id">${escHtml(t('device_id'))}</label>
+                    <input type="text" id="modal-device-id" class="form-input is-medium" autocomplete="off" spellcheck="false" aria-describedby="modal-device-id-hint">
+                    <p class="form-hint" id="modal-device-id-hint">${escHtml(t('device_id_hint'))}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modal-device-dept">${escHtml(t('department'))}</label>
+                    <input type="text" id="modal-device-dept" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modal-device-building">${escHtml(t('building'))}</label>
+                    <input type="text" id="modal-device-building" class="form-input">
+                </div>`,
+            onSubmit: async (fail) => {
+                const device_id = document.getElementById('modal-device-id')?.value?.trim();
+                const department = document.getElementById('modal-device-dept')?.value?.trim() || '';
+                const building = document.getElementById('modal-device-building')?.value?.trim() || '';
+                if (!device_id) return fail(t('device_id_required'));
+                if (/\s/.test(device_id)) return fail(t('device_id_invalid'));
+                await api('POST', '/devices', { device_id, department, building });
+                Modal.close();
+                toast(t('device_assigned'), 'success');
+                loadDevices();
+            },
+        });
+    });
+
+    async function unassignDevice(did) {
+        const confirmed = await Modal.confirm({
+            title: t('remove_from_org'),
+            message: t('confirm_unassign_named', { id: did }),
+            confirmLabel: t('remove_from_org'),
+            danger: true,
+        });
+        if (!confirmed) return;
+        try {
+            await api('DELETE', `/devices/${encodeURIComponent(did)}`);
+            toast(t('device_unassigned'), 'success');
+            loadDevices();
+        } catch (err) {
+            toast(`${t('remove_failed')} ${err.message}`, 'error');
         }
     }
 
     // -----------------------------------------------------------------------
+    //  Device groups linked to this organization (team_id), on the Devices tab
+    // -----------------------------------------------------------------------
+    function groupTypeLabel(group) {
+        if ((group.source_type || 'manual') === 'tag' && group.tag_filter) {
+            return `${t('group_type_tag')}: ${group.tag_filter}`;
+        }
+        return t('group_type_manual');
+    }
+
+    function groupNameCell(group) {
+        return `<strong>${escHtml(group.name || group.guid)}</strong>${group.note ? `<span class="cell-sub">${escHtml(group.note)}</span>` : ''}`;
+    }
+
+    async function loadDeviceGroups() {
+        const container = document.getElementById('device-groups-container');
+        if (!container) return;
+        try {
+            const data = await api('GET', '/device-groups');
+            const deviceGroups = data.device_groups || [];
+            const userGroups = data.user_groups || [];
+
+            container.innerHTML = `
+                <div class="section">
+                    <div class="section-head">
+                        <p class="count-line">${deviceGroups.length ? '' : escHtml(t('no_org_device_groups'))}</p>
+                        <button type="button" class="btn" id="create-org-device-group-btn">${escHtml(t('create_org_device_group'))}</button>
+                    </div>
+                    ${deviceGroups.length ? `
+                    <div class="table-scroll" tabindex="0" role="region" aria-label="${escHtml(t('device_groups_tab'))}"><table class="data-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${escHtml(t('group_name'))}</th>
+                                <th scope="col">${escHtml(t('group_type'))}</th>
+                                <th scope="col">${escHtml(t('group_members'))}</th>
+                                <th scope="col">${escHtml(t('group_allowed_user_groups'))}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${deviceGroups.map(group => `
+                                <tr>
+                                    <td>${groupNameCell(group)}</td>
+                                    <td>${escHtml(groupTypeLabel(group))}</td>
+                                    <td>${escHtml(String(group.member_count ?? 0))}</td>
+                                    <td>${escHtml((group.allowed_user_groups || []).map(g => g.name || g.guid).filter(Boolean).join(', ') || '—')}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table></div>` : ''}
+                </div>
+                <div class="section">
+                    <h3>${escHtml(t('org_user_groups_title'))}</h3>
+                    <p class="section-note">${escHtml(t('org_user_groups_intro'))}</p>
+                    ${userGroups.length ? `
+                    <div class="table-scroll" tabindex="0" role="region" aria-label="${escHtml(t('org_user_groups_title'))}"><table class="data-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${escHtml(t('group_name'))}</th>
+                                <th scope="col">${escHtml(t('group_user_members'))}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${userGroups.map(group => `
+                                <tr>
+                                    <td>${groupNameCell(group)}</td>
+                                    <td>${escHtml(String(group.member_count ?? 0))}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table></div>` : `<p class="state">${escHtml(t('no_org_user_groups'))}</p>`}
+                </div>`;
+
+            document.getElementById('create-org-device-group-btn')?.addEventListener('click', createDeviceGroup);
+        } catch (err) {
+            errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadDeviceGroups);
+        }
+    }
+
+    function createDeviceGroup() {
+        const defaultName = currentOrg.name
+            ? `${currentOrg.name} — ${t('group_devices_suffix')}`
+            : '';
+        formDialog({
+            title: t('create_org_device_group'),
+            focusId: 'modal-org-dg-name',
+            submitLabel: tr('actions.create'),
+            fields: `
+                <div class="form-group">
+                    <label class="form-label" for="modal-org-dg-name">${escHtml(t('group_name'))}</label>
+                    <input type="text" id="modal-org-dg-name" class="form-input" value="${escHtml(defaultName)}" maxlength="80" aria-describedby="modal-org-dg-hint">
+                    <p class="form-hint" id="modal-org-dg-hint">${escHtml(t('link_team_id_hint'))}</p>
+                </div>`,
+            onSubmit: async (fail) => {
+                const name = document.getElementById('modal-org-dg-name')?.value?.trim();
+                if (!name) return fail(t('group_name_required'));
+                const csrfToken = window.BetterDesk?.csrfToken || '';
+                const res = await fetch('/api/device-groups', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+                    },
+                    body: JSON.stringify({ name, team_id: orgId, source_type: 'manual' }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || res.statusText || 'Request failed');
+                }
+                Modal.close();
+                toast(t('org_device_group_created'), 'success');
+                loadDeviceGroups();
+            },
+        });
+    }
+
+    // -----------------------------------------------------------------------
+    //  Settings tab: stored settings
+    // -----------------------------------------------------------------------
+    const settingsForm = document.getElementById('org-settings-form');
+    const SETTING_FIELDS = {
+        connection_policy: { id: 'setting-connection-policy', type: 'select', fallback: 'unattended' },
+        allow_file_transfer: { id: 'setting-allow-file-transfer', type: 'bool', fallback: 'true' },
+        allow_clipboard: { id: 'setting-allow-clipboard', type: 'bool', fallback: 'true' },
+        max_session_duration_min: { id: 'setting-max-session', type: 'number', fallback: '120' },
+    };
+
+    function readSetting(key) {
+        const f = SETTING_FIELDS[key];
+        const el = document.getElementById(f.id);
+        if (!el) return f.fallback;
+        if (f.type === 'bool') return el.checked ? 'true' : 'false';
+        return String(el.value || f.fallback);
+    }
+
+    function writeSetting(key, value) {
+        const f = SETTING_FIELDS[key];
+        const el = document.getElementById(f.id);
+        if (!el) return;
+        if (f.type === 'bool') el.checked = String(value) !== 'false';
+        else el.value = value;
+    }
+
+    async function loadSettings() {
+        const raw = document.getElementById('settings-raw');
+        try {
+            const data = await api('GET', '/settings');
+            const settings = data.settings || [];
+            Object.keys(SETTING_FIELDS).forEach(k => writeSetting(k, SETTING_FIELDS[k].fallback));
+            settings.forEach(s => { if (SETTING_FIELDS[s.key]) writeSetting(s.key, s.value); });
+            if (window.UiForm && settingsForm) UiForm.reset(settingsForm);
+            if (!canEdit && settingsForm) settingsForm.querySelectorAll('input, select').forEach(el => { el.disabled = true; });
+
+            raw.innerHTML = settings.length ? `
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${escHtml(t('raw_settings'))}"><table class="data-table org-raw-settings">
+                    <thead><tr><th scope="col">${escHtml(t('key'))}</th><th scope="col">${escHtml(t('value'))}</th></tr></thead>
+                    <tbody>
+                        ${settings.map(s => `<tr><td class="mono">${escHtml(s.key)}</td><td class="mono">${escHtml(s.value)}</td></tr>`).join('')}
+                    </tbody>
+                </table></div>` : `<p class="state">${escHtml(t('no_settings'))}</p>`;
+        } catch (err) {
+            errorState(raw, loadErrorMessage(err), loadSettings);
+        }
+    }
+
+    settingsForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('save-settings-btn');
+        saveBtn.disabled = true;
+        try {
+            for (const key of Object.keys(SETTING_FIELDS)) {
+                await api('PUT', '/settings', { key, value: readSetting(key) });
+            }
+            await loadSettings();
+            if (window.UiForm) UiForm.saved(settingsForm, t('settings_saved'));
+        } catch (err) {
+            if (window.UiForm) UiForm.failed(settingsForm, `${tr('ui_form.save_failed')} ${err.message}`);
+        } finally {
+            saveBtn.disabled = false;
+        }
+    });
+
+    // -----------------------------------------------------------------------
     //  Shared organization address book
     // -----------------------------------------------------------------------
+    const abForm = document.getElementById('org-address-book-form');
     let addressBookEnabled = true;
     let addressBookPeers = [];
     let addressBookTags = [];
     /** peer_id → true when encrypted vault password is set (#367) */
     let addressBookCredentialFlags = {};
+    let addressBookShowJson = false;
+
+    function abDirty() {
+        if (window.UiForm && abForm) UiForm.markDirty(abForm);
+    }
 
     async function loadPeerCredentialFlags() {
         addressBookCredentialFlags = {};
@@ -633,7 +874,12 @@
             toast(t('address_book_peer_id_required'), 'error');
             return;
         }
-        const password = window.prompt(t('address_book_set_password_prompt'));
+        const password = await Modal.prompt({
+            title: t('address_book_set_password'),
+            label: t('address_book_set_password_prompt'),
+            type: 'password',
+            confirmLabel: tr('actions.save'),
+        });
         if (password === null) return;
         if (!String(password).trim()) {
             toast(t('address_book_password_required'), 'error');
@@ -652,7 +898,13 @@
     async function clearPeerCredential(peerId) {
         const id = String(peerId || '').trim();
         if (!id) return;
-        if (!window.confirm(t('address_book_clear_password_confirm'))) return;
+        const confirmed = await Modal.confirm({
+            title: t('address_book_clear_password'),
+            message: t('address_book_clear_password_confirm'),
+            confirmLabel: t('address_book_clear_password'),
+            danger: true,
+        });
+        if (!confirmed) return;
         try {
             await api('DELETE', `/peer-credentials/${encodeURIComponent(id)}`);
             delete addressBookCredentialFlags[id];
@@ -662,7 +914,6 @@
             toast(err.message || t('address_book_password_clear_failed'), 'error');
         }
     }
-    let addressBookShowJson = false;
 
     function parseAddressBook(raw) {
         if (!raw || raw === '{}') return { peers: [], tags: [] };
@@ -696,77 +947,79 @@
         const tbody = document.getElementById('org-address-book-peers-body');
         if (!tbody) return;
         if (!addressBookPeers.length) {
-            tbody.innerHTML = `<tr><td colspan="5" class="org-ab-empty">${escHtml(t('address_book_no_peers'))}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="state-cell org-ab-empty">${escHtml(t('address_book_no_peers'))}</td></tr>`;
             return;
         }
         tbody.innerHTML = addressBookPeers.map((peer, index) => {
             const hasPw = !!(peer.id && addressBookCredentialFlags[peer.id]);
             const pwLabel = hasPw ? t('address_book_password_set') : t('address_book_password_unset');
+            const n = index + 1;
             return `
             <tr data-index="${index}">
-                <td><input type="text" class="form-input org-ab-peer-id" value="${escHtml(peer.id || '')}" maxlength="64" placeholder="123456789"></td>
-                <td><input type="text" class="form-input org-ab-peer-alias" value="${escHtml(peer.alias || '')}" maxlength="120" placeholder="${escHtml(t('address_book_alias'))}"></td>
-                <td><input type="text" class="form-input org-ab-peer-tags" value="${escHtml((peer.tags || []).join(', '))}" maxlength="200" placeholder="${escHtml(t('address_book_peer_tags_placeholder'))}"></td>
-                <td class="org-ab-password-cell">
-                    <span class="org-ab-password-flag ${hasPw ? 'is-set' : ''}">${escHtml(pwLabel)}</span>
-                    <button type="button" class="btn btn-secondary btn-sm org-ab-set-password" data-index="${index}" title="${escHtml(t('address_book_set_password'))}">
-                        <span class="material-icons">lock</span>
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm org-ab-clear-password" data-index="${index}" ${hasPw ? '' : 'disabled'} title="${escHtml(t('address_book_clear_password'))}">
-                        <span class="material-icons">lock_open</span>
-                    </button>
-                </td>
-                <td class="org-ab-actions">
-                    <button type="button" class="action-btn danger org-ab-remove-peer" data-index="${index}" title="${escHtml(t('actions.delete'))}">
-                        <span class="material-icons">delete</span>
-                    </button>
+                <td><input type="text" class="form-input org-ab-peer-id mono" value="${escHtml(peer.id || '')}" maxlength="64" spellcheck="false" aria-label="${escHtml(t('address_book_peer_id'))} ${n}"></td>
+                <td><input type="text" class="form-input org-ab-peer-alias" value="${escHtml(peer.alias || '')}" maxlength="120" aria-label="${escHtml(t('address_book_alias'))} ${n}"></td>
+                <td><input type="text" class="form-input org-ab-peer-tags" value="${escHtml((peer.tags || []).join(', '))}" maxlength="200" aria-label="${escHtml(t('address_book_peer_tags'))} ${n}"></td>
+                <td class="org-ab-password-cell${hasPw ? ' is-set' : ''}"><span class="org-ab-password-flag">${escHtml(pwLabel)}</span></td>
+                <td class="actions">${rowMenu(`org-ab-menu-${index}`, t('actions_for', { name: peer.id || peer.alias || n }), `
+                    <button type="button" class="menu-item org-ab-set-password" role="menuitem" data-index="${index}">${escHtml(t('address_book_set_password'))}</button>
+                    ${hasPw ? `<button type="button" class="menu-item org-ab-clear-password" role="menuitem" data-index="${index}">${escHtml(t('address_book_clear_password'))}</button>` : ''}
+                    <span class="menu-divider" role="separator"></span>
+                    <button type="button" class="menu-item danger org-ab-remove-peer" role="menuitem" data-index="${index}">${escHtml(t('address_book_remove_contact'))}</button>`)}
                 </td>
             </tr>`;
         }).join('');
+        flipLastMenus(tbody.closest('table').parentElement);
 
         tbody.querySelectorAll('.org-ab-remove-peer').forEach(btn => {
             btn.addEventListener('click', () => {
+                syncAddressBookPeersFromTable(true);
                 const idx = parseInt(btn.dataset.index, 10);
                 if (!Number.isNaN(idx)) {
                     addressBookPeers.splice(idx, 1);
                     renderAddressBookPeersTable();
+                    abDirty();
                 }
             });
         });
         tbody.querySelectorAll('.org-ab-set-password').forEach(btn => {
             btn.addEventListener('click', () => {
-                syncAddressBookPeersFromTable();
-                const idx = parseInt(btn.dataset.index, 10);
-                const peer = addressBookPeers[idx];
+                syncAddressBookPeersFromTable(true);
+                const peer = addressBookPeers[parseInt(btn.dataset.index, 10)];
                 if (peer) setPeerCredential(peer.id);
             });
         });
         tbody.querySelectorAll('.org-ab-clear-password').forEach(btn => {
             btn.addEventListener('click', () => {
-                syncAddressBookPeersFromTable();
-                const idx = parseInt(btn.dataset.index, 10);
-                const peer = addressBookPeers[idx];
+                syncAddressBookPeersFromTable(true);
+                const peer = addressBookPeers[parseInt(btn.dataset.index, 10)];
                 if (peer) clearPeerCredential(peer.id);
             });
         });
     }
 
-    function syncAddressBookPeersFromTable() {
+    // keepEmpty: keep rows without an ID so row indexes stay aligned while editing
+    function syncAddressBookPeersFromTable(keepEmpty) {
         const rows = document.querySelectorAll('#org-address-book-peers-body tr[data-index]');
-        addressBookPeers = Array.from(rows).map(row => {
+        const peers = Array.from(rows).map(row => {
             const tagsRaw = row.querySelector('.org-ab-peer-tags')?.value || '';
             return {
                 id: row.querySelector('.org-ab-peer-id')?.value.trim() || '',
                 alias: row.querySelector('.org-ab-peer-alias')?.value.trim() || '',
                 tags: tagsRaw.split(',').map(tag => tag.trim()).filter(Boolean),
             };
-        }).filter(peer => peer.id);
+        });
+        addressBookPeers = keepEmpty ? peers : peers.filter(peer => peer.id);
     }
 
     function currentAddressBookJSON() {
         const textarea = document.getElementById('org-address-book-json');
         const raw = textarea?.value?.trim() || '{}';
-        const parsed = JSON.parse(raw);
+        let parsed;
+        try {
+            parsed = JSON.parse(raw);
+        } catch (_) {
+            throw new Error(t('address_book_invalid_json'));
+        }
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
             throw new Error(t('address_book_invalid_json'));
         }
@@ -782,26 +1035,31 @@
     async function saveAddressBook() {
         let data;
         try {
-            syncAddressBookPeersFromTable();
+            if (!addressBookShowJson) syncAddressBookPeersFromTable(false);
             data = buildAddressBookPayload();
         } catch (err) {
-            toast(err.message || t('address_book_invalid_json'), 'error');
+            if (window.UiForm) UiForm.failed(abForm, err.message || t('address_book_invalid_json'));
             return;
         }
 
+        const saveBtn = document.getElementById('save-address-book-btn');
+        if (saveBtn) saveBtn.disabled = true;
         try {
             const enabled = !!document.getElementById('org-address-book-enabled')?.checked;
             await api('PUT', '/address-book', { data, enabled });
             addressBookEnabled = enabled;
-            toast(t('address_book_saved'), 'success');
+            if (!addressBookShowJson) renderAddressBookPeersTable();
+            if (window.UiForm) UiForm.saved(abForm, t('address_book_saved'));
         } catch (err) {
-            toast(err.message || t('address_book_save_failed'), 'error');
+            if (window.UiForm) UiForm.failed(abForm, `${t('address_book_save_failed')}: ${err.message}`);
+        } finally {
+            if (saveBtn) saveBtn.disabled = false;
         }
     }
 
     async function importOrgDevicesIntoAddressBook() {
         try {
-            syncAddressBookPeersFromTable();
+            syncAddressBookPeersFromTable(false);
             const data = buildAddressBookPayload();
             const deviceResp = await api('GET', '/devices');
             const devices = deviceResp.devices || [];
@@ -812,19 +1070,18 @@
             devices.forEach(device => {
                 const id = String(device.device_id || '').trim();
                 if (!id || seen.has(id)) return;
-                const alias = device.assigned_user_id || device.department || device.location || device.building || id;
-                peers.push({ id, alias });
+                const alias = device.department || device.location || device.building || id;
+                peers.push({ id, alias, tags: [] });
                 seen.add(id);
                 imported += 1;
             });
 
-            data.peers = peers;
-            data.tags = Array.isArray(data.tags) ? data.tags : [];
-            addressBookPeers = peers;
-            addressBookTags = data.tags;
+            addressBookPeers = peers.map(p => ({ id: p.id, alias: p.alias || '', tags: Array.isArray(p.tags) ? p.tags : [] }));
+            addressBookTags = Array.isArray(data.tags) ? data.tags : [];
             renderAddressBookPeersTable();
             const tagsInput = document.getElementById('org-address-book-tags-input');
-            if (tagsInput) tagsInput.value = data.tags.join(', ');
+            if (tagsInput) tagsInput.value = addressBookTags.join(', ');
+            if (imported) abDirty();
             toast(imported ? t('address_book_imported') : t('address_book_import_none'), imported ? 'success' : 'info');
         } catch (err) {
             toast(err.message || t('loading_failed'), 'error');
@@ -832,9 +1089,9 @@
     }
 
     async function loadAddressBook() {
+        const container = document.getElementById('address-book-container');
+        if (!container) return;
         try {
-            const container = document.getElementById('address-book-container');
-            if (!container) return;
             const data = await api('GET', '/address-book');
             const parsed = parseAddressBook(data.data);
             addressBookEnabled = data.enabled !== false;
@@ -847,257 +1104,113 @@
             await loadPeerCredentialFlags();
             addressBookShowJson = false;
             container.innerHTML = `
-                <p class="form-hint">${escHtml(t('address_book_intro'))}</p>
-                <p class="form-hint">${escHtml(t('address_book_password_vault_hint'))}</p>
-                <label class="org-address-book-toggle">
-                    <input type="checkbox" id="org-address-book-enabled" ${addressBookEnabled ? 'checked' : ''}>
-                    <span>${escHtml(t('address_book_enabled'))}</span>
-                </label>
-                <div class="org-address-book-structured" id="org-address-book-structured">
-                    <div class="org-section-header org-ab-section-header">
-                        <h3>${escHtml(t('address_book_contacts'))}</h3>
-                        <button type="button" class="btn btn-secondary btn-sm" id="org-address-book-add-peer-btn">
-                            <span class="material-icons">person_add</span>
-                            ${escHtml(t('address_book_add_peer'))}
-                        </button>
+                <div class="section">
+                    <p class="section-note">${escHtml(t('address_book_intro'))}</p>
+                    <label class="check-field">
+                        <input type="checkbox" id="org-address-book-enabled" ${addressBookEnabled ? 'checked' : ''}>
+                        <span class="check-label">${escHtml(t('address_book_enabled'))}</span>
+                    </label>
+                </div>
+                <div class="section org-address-book-structured" id="org-address-book-structured">
+                    <div class="section-head">
+                        <h2>${escHtml(t('address_book_contacts'))}</h2>
+                        <button type="button" class="btn btn-sm" id="org-address-book-add-peer-btn">${escHtml(t('address_book_add_peer'))}</button>
+                        <button type="button" class="btn btn-sm" id="import-org-devices-btn">${escHtml(t('address_book_import_devices'))}</button>
                     </div>
-                    <div class="org-table-container org-ab-table-wrap">
-                        <table class="org-table org-address-book-table">
+                    <p class="section-note">${escHtml(t('address_book_password_vault_hint'))}</p>
+                    <div class="table-scroll">
+                        <table class="data-table org-ab-table">
                             <thead>
                                 <tr>
-                                    <th>${escHtml(t('address_book_peer_id'))}</th>
-                                    <th>${escHtml(t('address_book_alias'))}</th>
-                                    <th>${escHtml(t('address_book_peer_tags'))}</th>
-                                    <th>${escHtml(t('address_book_preset_password'))}</th>
-                                    <th></th>
+                                    <th scope="col">${escHtml(t('address_book_peer_id'))}</th>
+                                    <th scope="col">${escHtml(t('address_book_alias'))}</th>
+                                    <th scope="col">${escHtml(t('address_book_peer_tags'))}</th>
+                                    <th scope="col">${escHtml(t('address_book_preset_password'))}</th>
+                                    <th scope="col" class="actions"><span class="sr-only">${escHtml(t('actions'))}</span></th>
                                 </tr>
                             </thead>
                             <tbody id="org-address-book-peers-body"></tbody>
                         </table>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group form-column">
                         <label class="form-label" for="org-address-book-tags-input">${escHtml(t('address_book_tags_label'))}</label>
-                        <input type="text" id="org-address-book-tags-input" class="form-input" value="${escHtml(addressBookTags.join(', '))}" placeholder="${escHtml(t('address_book_tags_placeholder'))}">
-                        <p class="form-hint">${escHtml(t('address_book_tags_hint'))}</p>
+                        <input type="text" id="org-address-book-tags-input" class="form-input" value="${escHtml(addressBookTags.join(', '))}" aria-describedby="org-address-book-tags-hint">
+                        <p class="form-hint" id="org-address-book-tags-hint">${escHtml(t('address_book_tags_hint'))}</p>
                     </div>
                 </div>
-                <div class="org-address-book-advanced">
-                    <button type="button" class="btn btn-secondary btn-sm" id="org-address-book-toggle-json">
-                        <span class="material-icons">code</span>
-                        ${escHtml(t('address_book_show_json'))}
-                    </button>
-                    <div class="form-group org-address-book-json-wrap hidden" id="org-address-book-json-wrap">
+                <div class="section org-address-book-advanced">
+                    <div><button type="button" class="btn btn-sm" id="org-address-book-toggle-json">${escHtml(t('address_book_show_json'))}</button></div>
+                    <div class="form-group org-address-book-json-wrap" id="org-address-book-json-wrap" hidden>
                         <label class="form-label" for="org-address-book-json">${escHtml(t('address_book_json'))}</label>
-                        <textarea id="org-address-book-json" class="form-input org-address-book-json" spellcheck="false">${escHtml(formatAddressBook(parsed))}</textarea>
-                        <p class="form-hint">${escHtml(t('address_book_json_hint'))}</p>
+                        <textarea id="org-address-book-json" class="form-input org-address-book-json" spellcheck="false" aria-describedby="org-address-book-json-hint">${escHtml(formatAddressBook(parsed))}</textarea>
+                        <p class="form-hint" id="org-address-book-json-hint">${escHtml(t('address_book_json_hint'))}</p>
                     </div>
                 </div>
             `;
 
             renderAddressBookPeersTable();
+            if (window.UiForm && abForm) UiForm.reset(abForm);
+            if (!canEdit) container.querySelectorAll('input, textarea, button').forEach(el => { el.disabled = true; });
 
             document.getElementById('org-address-book-add-peer-btn')?.addEventListener('click', () => {
-                syncAddressBookPeersFromTable();
+                syncAddressBookPeersFromTable(true);
                 addressBookPeers.push({ id: '', alias: '', tags: [] });
                 renderAddressBookPeersTable();
+                abDirty();
+                const rows = document.querySelectorAll('#org-address-book-peers-body .org-ab-peer-id');
+                rows[rows.length - 1]?.focus();
             });
 
+            document.getElementById('import-org-devices-btn')?.addEventListener('click', importOrgDevicesIntoAddressBook);
+
             document.getElementById('org-address-book-toggle-json')?.addEventListener('click', () => {
-                addressBookShowJson = !addressBookShowJson;
                 const wrap = document.getElementById('org-address-book-json-wrap');
                 const btn = document.getElementById('org-address-book-toggle-json');
                 const structured = document.getElementById('org-address-book-structured');
-                if (addressBookShowJson) {
-                    syncAddressBookPeersFromTable();
+                if (!addressBookShowJson) {
+                    syncAddressBookPeersFromTable(false);
                     const payload = buildAddressBookPayload();
                     document.getElementById('org-address-book-json').value = formatAddressBook(payload);
-                    wrap?.classList.remove('hidden');
-                    structured?.classList.add('hidden');
-                    if (btn) btn.innerHTML = `<span class="material-icons">view_list</span> ${escHtml(t('address_book_hide_json'))}`;
+                    addressBookShowJson = true;
+                    if (wrap) wrap.hidden = false;
+                    if (structured) structured.hidden = true;
+                    btn.textContent = t('address_book_hide_json');
                 } else {
                     try {
                         const parsedJson = currentAddressBookJSON();
                         addressBookPeers = Array.isArray(parsedJson.peers) ? parsedJson.peers : [];
                         addressBookTags = Array.isArray(parsedJson.tags) ? parsedJson.tags : [];
                         document.getElementById('org-address-book-tags-input').value = addressBookTags.join(', ');
+                        addressBookShowJson = false;
                         renderAddressBookPeersTable();
                     } catch (err) {
-                        toast(err.message || t('address_book_invalid_json'), 'error');
-                        addressBookShowJson = true;
+                        if (window.UiForm) UiForm.failed(abForm, err.message || t('address_book_invalid_json'));
                         return;
                     }
-                    wrap?.classList.add('hidden');
-                    structured?.classList.remove('hidden');
-                    if (btn) btn.innerHTML = `<span class="material-icons">code</span> ${escHtml(t('address_book_show_json'))}`;
+                    if (wrap) wrap.hidden = true;
+                    if (structured) structured.hidden = false;
+                    btn.textContent = t('address_book_show_json');
                 }
             });
-
-            const saveBtn = document.getElementById('save-address-book-btn');
-            const importBtn = document.getElementById('import-org-devices-btn');
-            if (saveBtn) saveBtn.onclick = saveAddressBook;
-            if (importBtn) importBtn.onclick = importOrgDevicesIntoAddressBook;
         } catch (err) {
-            toast(t('loading_failed'), 'error');
+            errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadAddressBook);
         }
     }
+
+    abForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveAddressBook();
+    });
 
     // -----------------------------------------------------------------------
-    //  Device groups linked to this organization (team_id)
-    // -----------------------------------------------------------------------
-    function groupTypeLabel(group) {
-        if ((group.source_type || 'manual') === 'tag' && group.tag_filter) {
-            return `${t('group_type_tag')}: ${group.tag_filter}`;
-        }
-        return t('group_type_manual');
-    }
-
-    function renderOrgGroupsList(groups, emptyKey) {
-        if (!groups.length) {
-            return `<p class="form-hint org-groups-empty">${escHtml(t(emptyKey))}</p>`;
-        }
-        return `
-            <table class="data-table org-groups-table">
-                <thead>
-                    <tr>
-                        <th>${escHtml(t('group_name'))}</th>
-                        <th>${escHtml(t('group_type'))}</th>
-                        <th>${escHtml(t('group_members'))}</th>
-                        <th>${escHtml(t('group_allowed_user_groups'))}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${groups.map(group => `
-                        <tr>
-                            <td>
-                                <strong>${escHtml(group.name || group.guid)}</strong>
-                                ${group.note ? `<div class="text-muted org-group-note">${escHtml(group.note)}</div>` : ''}
-                            </td>
-                            <td>${escHtml(groupTypeLabel(group))}</td>
-                            <td>${escHtml(String(group.member_count ?? 0))}</td>
-                            <td>${escHtml(
-                                (group.allowed_user_groups || [])
-                                    .map(g => g.name || g.guid)
-                                    .filter(Boolean)
-                                    .join(', ') || '—'
-                            )}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>`;
-    }
-
-    async function loadDeviceGroups() {
-        try {
-            const data = await api('GET', '/device-groups');
-            const container = document.getElementById('device-groups-container');
-            if (!container) return;
-
-            const deviceGroups = data.device_groups || [];
-            const userGroups = data.user_groups || [];
-
-            container.innerHTML = `
-                <p class="form-hint">${escHtml(t('device_groups_intro'))}</p>
-                <p class="form-hint org-team-id-hint">
-                    <code>${escHtml(t('org_team_id'))}: ${escHtml(orgId)}</code>
-                </p>
-                <div class="org-section-actions">
-                    <button class="btn btn-primary btn-sm" id="create-org-device-group-btn">
-                        <span class="material-icons">add</span> ${escHtml(t('create_org_device_group'))}
-                    </button>
-                </div>
-                ${renderOrgGroupsList(deviceGroups, 'no_org_device_groups')}
-                <h3 class="org-groups-subtitle">${escHtml(t('org_user_groups_title'))}</h3>
-                <p class="form-hint">${escHtml(t('org_user_groups_intro'))}</p>
-                ${userGroups.length ? `
-                    <table class="data-table org-groups-table">
-                        <thead>
-                            <tr>
-                                <th>${escHtml(t('group_name'))}</th>
-                                <th>${escHtml(_('users.members') || 'Members')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${userGroups.map(group => `
-                                <tr>
-                                    <td>
-                                        <strong>${escHtml(group.name || group.guid)}</strong>
-                                        ${group.note ? `<div class="text-muted org-group-note">${escHtml(group.note)}</div>` : ''}
-                                    </td>
-                                    <td>${escHtml(String(group.member_count ?? 0))}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                ` : `<p class="form-hint org-groups-empty">${escHtml(t('no_org_user_groups'))}</p>`}
-            `;
-
-            document.getElementById('create-org-device-group-btn')?.addEventListener('click', () => {
-                const defaultName = currentOrg.name
-                    ? `${currentOrg.name} — ${t('group_devices_suffix')}`
-                    : t('create_org_device_group');
-                Modal.show({
-                    title: t('create_org_device_group'),
-                    content: `
-                        <div class="form-group">
-                            <label class="form-label">${escHtml(t('group_name'))}</label>
-                            <input type="text" id="modal-org-dg-name" class="form-input" value="${escHtml(defaultName)}" maxlength="80">
-                        </div>
-                        <p class="form-hint">${escHtml(t('link_team_id_hint'))}</p>
-                    `,
-                    buttons: [
-                        { label: _('actions.cancel') || 'Cancel', class: 'btn-secondary', onClick: () => Modal.close() },
-                        {
-                            label: _('actions.create') || 'Create',
-                            class: 'btn-primary',
-                            onClick: async () => {
-                                const name = document.getElementById('modal-org-dg-name')?.value?.trim();
-                                if (!name) {
-                                    toast(t('group_name_required'), 'error');
-                                    return;
-                                }
-                                try {
-                                    const csrfToken = window.BetterDesk?.csrfToken || '';
-                                    const res = await fetch('/api/device-groups', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            ...(csrfToken ? { 'x-csrf-token': csrfToken } : {})
-                                        },
-                                        body: JSON.stringify({
-                                            name,
-                                            team_id: orgId,
-                                            source_type: 'manual'
-                                        })
-                                    });
-                                    if (!res.ok) {
-                                        const err = await res.json().catch(() => ({}));
-                                        throw new Error(err.error || 'Request failed');
-                                    }
-                                    Modal.close();
-                                    toast(t('org_device_group_created'), 'success');
-                                    loadDeviceGroups();
-                                } catch (err) {
-                                    toast(err.message || t('loading_failed'), 'error');
-                                }
-                            }
-                        }
-                    ]
-                });
-            });
-        } catch (err) {
-            toast(t('loading_failed'), 'error');
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    //  Delete org
+    //  Delete organization (danger zone at the end of Settings)
     // -----------------------------------------------------------------------
     document.getElementById('org-delete-btn')?.addEventListener('click', async () => {
         const confirmed = await Modal.confirm({
-            title: _('common.delete') || 'Delete',
-            message: t('confirm_delete_org'),
+            title: t('delete_org'),
+            message: t('delete_confirm_named', { name: currentOrg.name || orgId }),
+            confirmLabel: t('delete_org'),
             danger: true,
-            confirmIcon: 'delete'
         });
         if (!confirmed) return;
         try {
@@ -1105,53 +1218,27 @@
             toast(t('org_deleted'), 'success');
             window.location.href = '/organizations';
         } catch (err) {
-            toast(err.message, 'error');
+            toast(`${t('delete_failed')} ${err.message}`, 'error');
         }
     });
-
-    async function deleteUser(uid) {
-        const confirmed = await Modal.confirm({
-            title: _('common.delete') || 'Remove',
-            message: t('confirm_remove_user'),
-            danger: true,
-            confirmIcon: 'person_remove'
-        });
-        if (!confirmed) return;
-        try {
-            await api('DELETE', `/users/${uid}`);
-            toast(t('user_removed'), 'success');
-            loadUsers();
-        } catch (err) {
-            toast(err.message, 'error');
-        }
-    }
-
-    async function unassignDevice(did) {
-        const confirmed = await Modal.confirm({
-            title: _('common.delete') || 'Unassign',
-            message: t('confirm_unassign_device'),
-            danger: true,
-            confirmIcon: 'link_off'
-        });
-        if (!confirmed) return;
-        try {
-            await api('DELETE', `/devices/${did}`);
-            toast(t('device_unassigned'), 'success');
-            loadDevices();
-        } catch (err) {
-            toast(err.message, 'error');
-        }
-    }
 
     // -----------------------------------------------------------------------
     //  Init
     // -----------------------------------------------------------------------
-    loadOrgHeader();
-    loadUsers();
-    loadDevices();
-    loadInvitations();
-    loadSettings();
-    loadAddressBook();
-    loadDeviceGroups();
+    async function loadAll() {
+        const ok = await loadOrgHeader();
+        const body = document.querySelector('.org-detail-body');
+        const edit = document.getElementById('org-edit-btn');
+        if (body) body.hidden = !ok;
+        if (edit) edit.hidden = !ok || !canEdit;
+        if (!ok) return;
+        await loadUsers();          // devices show user names, so users first
+        loadInvitations();
+        loadDevices();
+        loadSettings();
+        loadAddressBook();
+        loadDeviceGroups();
+    }
 
+    loadAll();
 })();

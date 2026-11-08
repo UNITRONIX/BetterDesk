@@ -1,61 +1,43 @@
+<%
+    const can = (perm) => typeof hasPermission === 'function' && hasPermission(perm);
+%>
 <%- include('layouts/main', {
-    title: _('nav.organizations') || 'Organizations',
-    pageStyles: ['organizations'],
+    title: _('nav.organizations'),
+    uiReworked: true,
+    pageStyles: ['ui/organizations'],
     pageScripts: ['organizations'],
     currentPage: 'organizations',
-    breadcrumb: [{ label: _('nav.organizations') || 'Organizations' }],
+    breadcrumb: [{ label: _('nav.organizations') }],
     body: `
-        <div class="org-page">
-            <!-- Header -->
-            <div class="org-header">
-                <div class="org-title">
-                    <h1>${_('organizations.title') || 'Organizations'}</h1>
-                    <span class="org-count" id="org-count">0</span>
-                </div>
-                <div class="org-actions">
-                    <button class="btn btn-primary btn-sm" id="create-org-btn">
-                        <span class="material-icons">add</span>
-                        <span class="btn-label">${_('organizations.create') || 'Create Organization'}</span>
-                    </button>
-                </div>
+        <div class="page org-page" data-can-edit="${can('org.edit')}" data-can-delete="${can('org.delete')}">
+            <div class="page-head">
+                <h1>${_('nav.organizations')}</h1>
+                ${can('org.create') ? `<div class="page-actions">
+                    <button type="button" class="btn btn-primary" id="create-org-btn">${_('organizations.create')}</button>
+                </div>` : ''}
+                <p class="page-description">${_('organizations.page_description')}</p>
             </div>
 
-            <!-- Organization list -->
-            <div class="org-list" id="org-list">
-                <div class="loading-spinner" id="org-loading">
-                    <div class="spinner"></div>
-                    <p>${_('common.loading') || 'Loading...'}</p>
+            <section class="section" aria-labelledby="org-list-title">
+                <h2 id="org-list-title" class="sr-only">${_('nav.organizations')}</h2>
+                <p class="count-line" id="org-count-line" aria-live="polite"></p>
+                <div class="table-scroll">
+                    <table class="data-table org-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${_('organizations.name')}</th>
+                                <th scope="col" class="num-col">${_('organizations.users')}</th>
+                                <th scope="col" class="num-col">${_('organizations.devices')}</th>
+                                <th scope="col">${_('organizations.created')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="org-list">
+                            <tr><td colspan="5" class="state-cell" id="org-loading">${_('organizations.loading_list')}</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-
-            <!-- Create/Edit modal -->
-            <div class="modal-overlay" id="org-modal" style="display:none;">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h3 id="org-modal-title">${_('organizations.create') || 'Create Organization'}</h3>
-                        <button class="modal-close" id="org-modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="org-edit-id" />
-                        <div class="form-group">
-                            <label>${_('organizations.name') || 'Name'}</label>
-                            <input type="text" id="org-name" class="form-input" placeholder="ACME Corp" />
-                        </div>
-                        <div class="form-group">
-                            <label>${_('organizations.slug') || 'Slug (URL-safe)'}</label>
-                            <input type="text" id="org-slug" class="form-input" placeholder="acme-corp" />
-                        </div>
-                        <div class="form-group">
-                            <label>${_('organizations.logo_url') || 'Logo URL'}</label>
-                            <input type="text" id="org-logo-url" class="form-input" placeholder="https://..." />
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" id="org-modal-cancel">${_('common.cancel') || 'Cancel'}</button>
-                        <button class="btn btn-primary" id="org-modal-save">${_('common.save') || 'Save'}</button>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
     `
 }) %>
