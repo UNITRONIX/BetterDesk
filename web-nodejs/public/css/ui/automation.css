@@ -1,0 +1,66 @@
+/* Alerts and automation. Tabs, tables, menus, dialogs and states come from components.css. */
+
+.automation-page .tab-panel {
+    padding-top: var(--space-1);
+}
+
+.automation-page .tabs {
+    margin-top: calc(-1 * var(--space-3));
+}
+
+/* The panel's note sits on the left of the section head, its one action on the right */
+.automation-page .section-head .automation-note {
+    flex: 1 1 320px;
+    margin: 0;
+    margin-inline-end: auto;
+}
+
+.automation-page .automation-note {
+    margin-top: 0;
+}
+
+.automation-table .rule-name {
+    font-weight: 600;
+}
+
+.automation-table .time-cell {
+    white-space: nowrap;
+}
+
+.automation-table .alert-details {
+    min-width: 20ch;
+    max-width: 48ch;
+    overflow-wrap: anywhere;
+}
+
+.automation-table .cmd-payload {
+    max-width: 32ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.automation-table td.state-cell .btn {
+    margin-inline-start: var(--space-2);
+}
+
+/* Command details dialog */
+.automation-facts {
+    margin-bottom: var(--space-4);
+}
+
+.automation-block-head {
+    margin-top: var(--space-3);
+}
+
+.automation-dialog .field-effect {
+    margin-bottom: var(--space-2);
+}
+
+.automation-dialog .form-status:empty {
+    display: none;
+}
+
+.automation-table td:first-child {
+    min-width: 14ch;
+}

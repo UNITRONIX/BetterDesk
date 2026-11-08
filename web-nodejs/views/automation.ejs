@@ -1,250 +1,110 @@
+<%
+    const canEdit = typeof hasPermission === 'function' && hasPermission('server.config');
+%>
 <%- include('layouts/main', {
-    title: _('automation.title'),
-    pageStyles: ['automation'],
+    title: _('nav.automation'),
+    uiReworked: true,
+    pageStyles: ['ui/automation'],
     pageScripts: ['automation'],
     currentPage: 'automation',
-    breadcrumb: [{ label: _('automation.title') }],
+    breadcrumb: [{ label: _('nav.automation') }],
     body: `
-        <div class="automation-page">
-            <!-- Header -->
-            <div class="page-header">
-                <div class="page-title">
-                    <h1>${_('automation.title')}</h1>
-                </div>
-                <p class="page-subtitle">${_('automation.subtitle')}</p>
+        <div class="page automation-page" data-can-edit="${canEdit}">
+            <div class="page-head">
+                <h1>${_('nav.automation')}</h1>
+                <p class="page-description">${_('automation.page_description')}</p>
             </div>
 
-            <!-- Tabs -->
-            <div class="tab-bar">
-                <button class="tab-btn active" data-tab="rules">
-                    <span class="material-icons">rule</span> ${_('automation.rules')}
-                </button>
-                <button class="tab-btn" data-tab="alerts">
-                    <span class="material-icons">notifications</span> ${_('automation.alerts')}
-                </button>
-                <button class="tab-btn" data-tab="commands">
-                    <span class="material-icons">terminal</span> ${_('automation.commands')}
-                </button>
+            <div class="tabs" role="tablist" aria-label="${_('nav.automation')}">
+                <button type="button" class="tab-btn active" role="tab" id="tab-btn-rules" data-tab="rules" aria-selected="true" aria-controls="tab-rules">${_('automation.rules')}</button>
+                <button type="button" class="tab-btn" role="tab" id="tab-btn-alerts" data-tab="alerts" aria-selected="false" aria-controls="tab-alerts" tabindex="-1">${_('automation.alerts')}</button>
+                <button type="button" class="tab-btn" role="tab" id="tab-btn-commands" data-tab="commands" aria-selected="false" aria-controls="tab-commands" tabindex="-1">${_('automation.commands')}</button>
             </div>
 
-            <!-- Rules Tab -->
-            <div class="tab-panel active" id="tab-rules">
-                <div class="panel-actions">
-                    <button class="btn btn-primary" id="create-rule-btn">
-                        <span class="material-icons">add</span> ${_('automation.create_rule')}
-                    </button>
+            <!-- Alert rules -->
+            <section class="tab-panel section active" id="tab-rules" role="tabpanel" aria-labelledby="tab-btn-rules">
+                <div class="section-head">
+                    <p class="section-note automation-note">${_('automation.rules_note')}</p>
+                    ${canEdit ? `<button type="button" class="btn btn-primary" id="create-rule-btn">${_('automation.create_rule')}</button>` : ''}
                 </div>
-                <div class="table-wrapper">
-                    <table class="data-table">
+                <p class="count-line" id="rules-count" aria-live="polite"></p>
+                <div class="table-scroll">
+                    <table class="data-table automation-table">
                         <thead>
                             <tr>
-                                <th>${_('automation.rule_name')}</th>
-                                <th>${_('automation.condition_type')}</th>
-                                <th>${_('automation.condition_op')}</th>
-                                <th>${_('automation.condition_value')}</th>
-                                <th>${_('automation.severity')}</th>
-                                <th>${_('automation.enabled')}</th>
-                                <th>${_('common.actions')}</th>
+                                <th scope="col">${_('automation.rule_name')}</th>
+                                <th scope="col">${_('automation.condition_type')}</th>
+                                <th scope="col">${_('automation.condition_value')}</th>
+                                <th scope="col">${_('automation.severity')}</th>
+                                <th scope="col">${_('automation.scope_device')}</th>
+                                <th scope="col">${_('automation.status')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
                             </tr>
                         </thead>
                         <tbody id="rules-body">
-                            <tr class="empty-row"><td colspan="7">
-                                <div class="empty-state"><span class="material-icons">rule</span>
-                                <p>${_('automation.no_rules')}</p></div>
-                            </td></tr>
+                            <tr><td colspan="7" class="state-cell">${_('automation.loading_rules')}</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
 
-            <!-- Alerts Tab -->
-            <div class="tab-panel" id="tab-alerts">
-                <div class="panel-actions">
-                    <select class="form-input" id="alert-severity-filter" style="width:auto">
-                        <option value="">${_('tickets.filter_all')}</option>
-                        <option value="info">${_('automation.severity_info')}</option>
-                        <option value="warning">${_('automation.severity_warning')}</option>
-                        <option value="critical">${_('automation.severity_critical')}</option>
-                    </select>
+            <!-- Alert history -->
+            <section class="tab-panel section" id="tab-alerts" role="tabpanel" aria-labelledby="tab-btn-alerts" hidden>
+                <p class="section-note automation-note">${_('automation.alerts_note')}</p>
+                <div class="toolbar">
+                    <div class="toolbar-filters" id="alert-severity-filter" role="group" aria-label="${_('automation.severity')}">
+                        <button type="button" class="filter-btn active" data-severity="" aria-pressed="true">${_('common.all')}</button>
+                        <button type="button" class="filter-btn" data-severity="info" aria-pressed="false">${_('automation.severity_info')}</button>
+                        <button type="button" class="filter-btn" data-severity="warning" aria-pressed="false">${_('automation.severity_warning')}</button>
+                        <button type="button" class="filter-btn" data-severity="critical" aria-pressed="false">${_('automation.severity_critical')}</button>
+                    </div>
                 </div>
-                <div class="table-wrapper">
-                    <table class="data-table">
+                <p class="count-line" id="alerts-count" aria-live="polite"></p>
+                <div class="table-scroll">
+                    <table class="data-table automation-table">
                         <thead>
                             <tr>
-                                <th>${_('automation.severity')}</th>
-                                <th>${_('automation.rule_name')}</th>
-                                <th>${_('inventory.device_id')}</th>
-                                <th>${_('automation.condition_value')}</th>
-                                <th>${_('automation.triggered_at')}</th>
-                                <th>${_('automation.acknowledged')}</th>
-                                <th>${_('common.actions')}</th>
+                                <th scope="col">${_('automation.triggered_at')}</th>
+                                <th scope="col">${_('automation.rule_name')}</th>
+                                <th scope="col">${_('automation.device')}</th>
+                                <th scope="col">${_('automation.details')}</th>
+                                <th scope="col">${_('automation.severity')}</th>
+                                <th scope="col">${_('automation.status')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
                             </tr>
                         </thead>
                         <tbody id="alerts-body">
-                            <tr class="empty-row"><td colspan="7">
-                                <div class="empty-state"><span class="material-icons">notifications_none</span>
-                                <p>${_('automation.no_alerts')}</p></div>
-                            </td></tr>
+                            <tr><td colspan="7" class="state-cell">${_('automation.loading_alerts')}</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
 
-            <!-- Commands Tab -->
-            <div class="tab-panel" id="tab-commands">
-                <div class="panel-actions">
-                    <button class="btn btn-primary" id="send-command-btn">
-                        <span class="material-icons">send</span> ${_('automation.send_command')}
-                    </button>
+            <!-- Remote commands -->
+            <section class="tab-panel section" id="tab-commands" role="tabpanel" aria-labelledby="tab-btn-commands" hidden>
+                <div class="section-head">
+                    <p class="section-note automation-note">${_('automation.commands_note')}</p>
+                    ${canEdit ? `<button type="button" class="btn btn-primary" id="send-command-btn">${_('automation.send_command')}</button>` : ''}
                 </div>
-                <div class="table-wrapper">
-                    <table class="data-table">
+                <p class="count-line" id="commands-count" aria-live="polite"></p>
+                <div class="table-scroll">
+                    <table class="data-table automation-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>${_('inventory.device_id')}</th>
-                                <th>${_('automation.command_type')}</th>
-                                <th>${_('automation.command_payload')}</th>
-                                <th>${_('automation.command_status')}</th>
-                                <th>${_('tickets.created_at')}</th>
-                                <th>${_('common.actions')}</th>
+                                <th scope="col">${_('automation.sent_at')}</th>
+                                <th scope="col">${_('automation.device')}</th>
+                                <th scope="col">${_('automation.command_type')}</th>
+                                <th scope="col">${_('automation.command_payload')}</th>
+                                <th scope="col">${_('automation.command_status')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
                             </tr>
                         </thead>
                         <tbody id="commands-body">
-                            <tr class="empty-row"><td colspan="7">
-                                <div class="empty-state"><span class="material-icons">terminal</span>
-                                <p>${_('automation.no_commands')}</p></div>
-                            </td></tr>
+                            <tr><td colspan="6" class="state-cell">${_('automation.loading_commands')}</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <!-- Rule Modal -->
-            <div class="modal-overlay" id="rule-modal" style="display: none;">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h3 id="rule-modal-title">${_('automation.create_rule')}</h3>
-                        <button class="btn-icon modal-close" data-modal="rule-modal">
-                            <span class="material-icons">close</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="rule-form">
-                            <input type="hidden" id="rule-id">
-                            <div class="form-group">
-                                <label>${_('automation.rule_name')} *</label>
-                                <input type="text" class="form-input" id="rule-name" required maxlength="100">
-                            </div>
-                            <div class="form-group">
-                                <label>${_('automation.description')}</label>
-                                <input type="text" class="form-input" id="rule-desc" maxlength="500">
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>${_('automation.condition_type')}</label>
-                                    <select class="form-input" id="rule-condition">
-                                        <option value="cpu_usage">${_('automation.type_cpu_usage')}</option>
-                                        <option value="memory_usage">${_('automation.type_memory_usage')}</option>
-                                        <option value="disk_usage">${_('automation.type_disk_usage')}</option>
-                                        <option value="offline_duration">${_('automation.type_offline_duration')}</option>
-                                        <option value="idle_duration">${_('automation.type_idle_duration')}</option>
-                                        <option value="custom">${_('automation.type_custom')}</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>${_('automation.condition_op')}</label>
-                                    <select class="form-input" id="rule-operator">
-                                        <option value="gt">${_('automation.op_gt')}</option>
-                                        <option value="gte">${_('automation.op_gte')}</option>
-                                        <option value="lt">${_('automation.op_lt')}</option>
-                                        <option value="lte">${_('automation.op_lte')}</option>
-                                        <option value="eq">${_('automation.op_eq')}</option>
-                                        <option value="neq">${_('automation.op_neq')}</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>${_('automation.condition_value')}</label>
-                                    <input type="number" class="form-input" id="rule-value" step="any">
-                                </div>
-                                <div class="form-group">
-                                    <label>${_('automation.severity')}</label>
-                                    <select class="form-input" id="rule-severity">
-                                        <option value="info">${_('automation.severity_info')}</option>
-                                        <option value="warning">${_('automation.severity_warning')}</option>
-                                        <option value="critical">${_('automation.severity_critical')}</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>${_('automation.scope_device')}</label>
-                                <input type="text" class="form-input" id="rule-device" placeholder="${_('automation.scope_all')}">
-                            </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" id="rule-enabled" checked> ${_('automation.enabled')}</label>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary modal-close" data-modal="rule-modal">${_('common.cancel')}</button>
-                        <button class="btn btn-primary" id="rule-save-btn">${_('common.save')}</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Command Modal -->
-            <div class="modal-overlay" id="cmd-modal" style="display: none;">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h3>${_('automation.send_command')}</h3>
-                        <button class="btn-icon modal-close" data-modal="cmd-modal">
-                            <span class="material-icons">close</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>${_('inventory.device_id')} *</label>
-                            <input type="text" class="form-input" id="cmd-device" required>
-                        </div>
-                        <div class="form-group">
-                            <label>${_('automation.command_type')}</label>
-                            <select class="form-input" id="cmd-type">
-                                <option value="shell">Shell</option>
-                                <option value="powershell">PowerShell</option>
-                                <option value="script">Script</option>
-                                <option value="restart_service">Restart Service</option>
-                                <option value="reboot">Reboot</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>${_('automation.command_payload')} *</label>
-                            <textarea class="form-input" id="cmd-payload" rows="4" maxlength="10000" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary modal-close" data-modal="cmd-modal">${_('common.cancel')}</button>
-                        <button class="btn btn-primary" id="cmd-send-btn">${_('automation.send_command')}</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Command Result Modal -->
-            <div class="modal-overlay" id="result-modal" style="display: none;">
-                <div class="modal modal-lg">
-                    <div class="modal-header">
-                        <h3>${_('automation.command_result')}</h3>
-                        <button class="btn-icon modal-close" data-modal="result-modal">
-                            <span class="material-icons">close</span>
-                        </button>
-                    </div>
-                    <div class="modal-body" id="result-body"></div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary modal-close" data-modal="result-modal">${_('actions.close')}</button>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
     `
 }) %>

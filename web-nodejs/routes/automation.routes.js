@@ -136,7 +136,7 @@ router.get('/rules/:id(\\d+)', requireAuth, async (req, res) => {
 /**
  * PATCH /api/automation/rules/:id — Update alert rule.
  */
-router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.patch('/rules/:id(\\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);
@@ -180,7 +180,7 @@ router.patch('/rules/:id(\d+)', requireAuth, requirePermission('server.config'),
 /**
  * DELETE /api/automation/rules/:id — Delete alert rule.
  */
-router.delete('/rules/:id(\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
+router.delete('/rules/:id(\\d+)', requireAuth, requirePermission('server.config'), async (req, res) => {
     try {
         const adapter = getAdapter();
         const rule = await adapter.getAlertRuleById(+req.params.id);
