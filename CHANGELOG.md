@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.209] — 2026-11-08
+
 ### Fixed
 - **Stable releases without binaries or images (#488):** `version-bump-main.yml` created the tag and GitHub Release with `GITHUB_TOKEN`, and `GITHUB_TOKEN`-produced events never trigger other workflows — so `release-server.yml` and `docker-publish.yml` never ran. 3.5.171 and 3.5.200 shipped a Release with zero assets, and GHCR never received the `3.5.200`/`latest` tags. The release job now dispatches both publishers explicitly on the tag ref, and a verification step fails the release when the Release still has no downloadable assets. `docker-publish` also accepts `latest` from a release tag, which it previously refused.
 
@@ -4481,3 +4488,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.206]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.205...v3.5.206
 [3.5.207]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.206...v3.5.207
 [3.5.208]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.207...v3.5.208
+[3.5.209]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.208...v3.5.209
