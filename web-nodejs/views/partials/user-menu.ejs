@@ -88,10 +88,10 @@ const umStatuses = [
                 <% }); %>
             </div>
             <div class="menu-divider" role="separator"></div>
-            <button type="button" class="menu-item" role="menuitem" data-user-action="change-password"><%= umT('auth.change_password', 'Change password') %></button>
-            <a class="menu-item" role="menuitem" href="/settings?tab=auth"><%= umT('nav.account_2fa', 'Two-factor sign-in') %></a>
+            <button type="button" class="menu-item" role="menuitem" data-user-action="change-password"><span class="material-icons" aria-hidden="true">key</span><span><%= umT('auth.change_password', 'Change password') %></span></button>
+            <a class="menu-item" role="menuitem" href="/settings?tab=auth"><span class="material-icons" aria-hidden="true">verified_user</span><span><%= umT('nav.account_2fa', 'Two-factor sign-in') %></span></a>
             <div class="menu-divider" role="separator"></div>
-            <button type="button" class="menu-item" role="menuitem" data-user-action="logout"><%= umT('user_menu.sign_out', 'Sign out') %></button>
+            <button type="button" class="menu-item" role="menuitem" data-user-action="logout"><span class="material-icons" aria-hidden="true">logout</span><span><%= umT('user_menu.sign_out', 'Sign out') %></span></button>
         </div>
     </div>
 </span>
