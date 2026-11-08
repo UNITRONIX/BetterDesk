@@ -187,6 +187,50 @@ html[data-a11y-strong-focus="true"] :focus-visible {
     max-width: none;
 }
 
+/* Two columns on wide screens: the page's task in the main column, what
+   helps with it (status, context, contents, a chart) beside it. Still one
+   grid and one left edge; below 1200 px the side column follows the main. */
+.page-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, var(--side-w));
+    gap: var(--space-6) var(--space-7);
+    align-items: start;
+}
+
+.page-main,
+.page-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    min-width: 0;
+}
+
+.page-side.is-sticky {
+    position: sticky;
+    top: calc(var(--topbar-h) + var(--space-4));
+    max-height: calc(100vh - var(--topbar-h) - 2 * var(--space-4));
+    overflow-y: auto;
+}
+
+@media (max-width: 1199px) {
+    .page-cols {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-side.is-sticky {
+        position: static;
+        max-height: none;
+    }
+}
+
+/* Two or three things of equal weight side by side (charts, short lists) */
+.cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: var(--space-6);
+    align-items: start;
+}
+
 .page-head {
     display: flex;
     flex-wrap: wrap;

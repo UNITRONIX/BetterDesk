@@ -1629,3 +1629,59 @@ input[type="file"]::file-selector-button:hover {
     color: var(--text);
     font-weight: 600;
 }
+
+/* ── Share bar: one whole split into its parts, e.g. devices online /
+   offline / banned. The legend names every part with its number, so the
+   colour is never the only way to read it. ── */
+
+.share-bar {
+    display: flex;
+    gap: 2px;
+    height: 8px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--hover);
+}
+
+.share-bar > span {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+}
+
+.share-bar .is-ok { background: var(--success); }
+.share-bar .is-muted { background: var(--border); }
+.share-bar .is-warning { background: var(--warning); }
+.share-bar .is-danger { background: var(--danger); }
+
+.share-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+}
+
+.share-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.share-legend .key {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.share-legend strong {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+.share-legend .key.is-ok { background: var(--success); }
+.share-legend .key.is-muted { background: var(--border); }
+.share-legend .key.is-warning { background: var(--warning); }
+.share-legend .key.is-danger { background: var(--danger); }

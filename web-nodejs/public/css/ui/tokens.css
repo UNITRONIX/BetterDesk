@@ -87,7 +87,8 @@
     --topbar-h: 48px;
     --page-pad: var(--space-5);
     --measure: 640px;
-    --content-max: 1040px;
+    --content-max: 1600px;
+    --side-w: 360px;
 }
 
 :root[data-theme="dark"] {
