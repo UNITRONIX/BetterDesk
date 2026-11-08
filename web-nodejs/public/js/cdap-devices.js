@@ -54,15 +54,24 @@
 
         var toggleBtn = document.getElementById('cdap-toggle-btn');
         if (toggleBtn) {
+            addIcon(toggleBtn, 'disable');
             toggleBtn.addEventListener('click', function () {
                 confirmDisable();
             });
         }
         var enableBtn = document.getElementById('cdap-enable-btn');
         if (enableBtn) {
+            addIcon(enableBtn, 'enable');
             enableBtn.addEventListener('click', function () {
                 toggleCDAP(true, document.getElementById('cdap-enable-status'));
             });
+        }
+    }
+
+    /** Put the icon of a meaning (Utils.ICONS) before a button's label */
+    function addIcon(btn, meaning) {
+        if (window.Utils && typeof Utils.icon === 'function' && !btn.querySelector('.material-icons')) {
+            btn.insertAdjacentHTML('afterbegin', Utils.icon(meaning));
         }
     }
 

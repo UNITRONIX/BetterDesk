@@ -115,7 +115,7 @@
                 <td>${esc(timeOf(item.expires_at))}</td>
                 <td>${esc(item.created_by || '–')}</td>
                 <td class="actions"><button type="button" class="btn btn-sm btn-danger-quiet" data-revoke="${esc(item.id)}"
-                    aria-label="${esc(t('pairing.revoke'))}: ${esc(item.label || timeOf(item.created_at))}">${esc(t('pairing.revoke'))}</button></td>
+                    aria-label="${esc(t('pairing.revoke'))}: ${esc(item.label || timeOf(item.created_at))}">${Utils.icon('revoke')}${esc(t('pairing.revoke'))}</button></td>
             </tr>`).join('');
         } catch (err) {
             tbody.innerHTML = `<tr><td colspan="5" class="state-cell"><span class="state is-error">${esc(t('pairing.load_failed'))} ${esc(err.message)}

@@ -211,7 +211,16 @@ const Utils = {
         revoke: 'cancel',
         view: 'visibility',
         hide: 'visibility_off',
-        retry: 'refresh',
+        retry: 'replay',                   // run a failed task or request again
+        reload: 'autorenew',               // reload a service's configuration
+        duplicate: 'control_point_duplicate',
+        connect_terminal: 'terminal',      // open a terminal session on a device
+        start: 'play_arrow',               // start a service or a monitor loop
+        stop: 'stop',
+        compliance_scan: 'fact_check',
+        remediate: 'build',                // fix automatically
+        encode: 'code',                    // text to Base64, URL encoding
+        decode: 'text_fields',             // back to readable text
         generate: 'summarize',
         save: 'save',
         reset: 'settings_backup_restore',

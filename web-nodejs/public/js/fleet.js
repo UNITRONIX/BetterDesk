@@ -44,6 +44,8 @@
     // -----------------------------------------------------------------------
     async function init() {
         bindTabs();
+        const scanAllBtn = document.getElementById('comp-scan-all');
+        if (scanAllBtn && !scanAllBtn.querySelector('.material-icons')) scanAllBtn.insertAdjacentHTML('afterbegin', Utils.icon('compliance_scan'));
         const search = document.getElementById('task-search');
         if (search) search.addEventListener('input', filterTasks);
         const active = document.querySelector('.fleet-tab.active')?.dataset.tab || 'resources';
@@ -416,7 +418,7 @@
                 <td>${fmtDate(t.last_run)}</td>
                 <td class="actions">
                     <button type="button" class="btn btn-sm" data-bd-call="Fleet.showOutput" data-bd-args="${id}">${esc(_('fleet.show_output'))}</button>
-                    ${st === 'failed' ? `<button type="button" class="btn btn-sm" data-bd-call="Fleet.retryTask" data-bd-args="${id}">${esc(_('fleet.task_retry'))}</button>` : ''}
+                    ${st === 'failed' ? `<button type="button" class="btn btn-sm" data-bd-call="Fleet.retryTask" data-bd-args="${id}">${Utils.icon('retry')}${esc(_('fleet.task_retry'))}</button>` : ''}
                     ${rowMenu(_('fleet.actions_for', { name }),
                         `<button type="button" class="menu-item danger" role="menuitem" data-bd-call="Fleet.deleteTask" data-bd-args="${id}">${Utils.icon('delete')}${esc(_('fleet.delete_ellipsis'))}</button>`)}
                 </td>
@@ -676,9 +678,9 @@
                 <td>${esc(String(d.issues ?? 0))}</td>
                 <td>${fmtDate(d.last_scan)}</td>
                 <td class="actions">
-                    <button type="button" class="btn btn-sm" data-bd-call="Fleet.scanDevice" data-bd-args="${id}">${esc(_('fleet.comp_scan'))}</button>
+                    <button type="button" class="btn btn-sm" data-bd-call="Fleet.scanDevice" data-bd-args="${id}">${Utils.icon('compliance_scan')}${esc(_('fleet.comp_scan'))}</button>
                     ${rowMenu(_('fleet.actions_for', { name: d.hostname || devId }),
-                        `<button type="button" class="menu-item" role="menuitem" data-bd-call="Fleet.remediate" data-bd-args="${id}">${esc(_('fleet.remediate_ellipsis'))}</button>`)}
+                        `<button type="button" class="menu-item" role="menuitem" data-bd-call="Fleet.remediate" data-bd-args="${id}">${Utils.icon('remediate')}${esc(_('fleet.remediate_ellipsis'))}</button>`)}
                 </td>
             </tr>`;
         }).join('');

@@ -1739,6 +1739,14 @@
             }, _('branding.profile_created'));
         });
 
+        // Profile menu icons come from Utils.ICONS (save, duplicate)
+        [['branding-profile-save-btn', 'save'], ['branding-profile-duplicate-btn', 'duplicate']].forEach(([btnId, meaning]) => {
+            const item = document.getElementById(btnId);
+            if (!item) return;
+            item.querySelector('.material-icons')?.remove();
+            item.insertAdjacentHTML('afterbegin', iconHtml(meaning));
+        });
+
         document.getElementById('branding-profile-save-btn')?.addEventListener('click', () => {
             const id = parseInt(select.value, 10);
             if (!id) {
@@ -3333,8 +3341,7 @@
                 from: channelToBranch(previous),
                 to: channelToBranch(channel)
             }),
-            confirmLabel: _('updates.channel_save'),
-            confirmIcon: 'alt_route'
+            confirmLabel: _('updates.channel_save')
         });
 
         if (!confirmed) {
@@ -4211,7 +4218,7 @@
             title: _('updates.retry_update'),
             message: _('updates.retry_confirm'),
             confirmLabel: _('updates.retry_update'),
-            confirmIcon: 'replay'
+            confirmIcon: 'retry'
         });
         if (!proceed) return;
         window.Modal.close();

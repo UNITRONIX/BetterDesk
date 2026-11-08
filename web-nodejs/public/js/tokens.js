@@ -156,7 +156,7 @@
                 <td>${esc(relative(t.created_at))}${t.created_by ? `<span class="cell-sub">${esc(t.created_by)}</span>` : ''}</td>
                 <td class="actions">${t.status !== 'revoked' ? `
                     <button type="button" class="btn btn-sm" data-token-action="edit" data-id="${esc(t.id)}" aria-label="${esc(_('tokens.edit'))}: ${name}">${esc(_('common.edit'))}</button>
-                    <button type="button" class="btn btn-sm btn-danger-quiet" data-token-action="revoke" data-id="${esc(t.id)}" aria-label="${esc(_('tokens.revoke'))}: ${name}">${esc(_('tokens.revoke'))}</button>
+                    <button type="button" class="btn btn-sm btn-danger-quiet" data-token-action="revoke" data-id="${esc(t.id)}" aria-label="${esc(_('tokens.revoke'))}: ${name}">${Utils.icon('revoke')}${esc(_('tokens.revoke'))}</button>
                 ` : ''}</td>
             </tr>`;
         }).join('');

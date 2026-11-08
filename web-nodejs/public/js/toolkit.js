@@ -380,6 +380,15 @@
         });
     }
 
+    // Encode and decode buttons get their own icons instead of the "run" icon
+    [['b64-encode', 'encode'], ['url-encode', 'encode'], ['b64-decode', 'decode'], ['url-decode', 'decode'], ['jwt-run', 'decode']]
+        .forEach(([id, meaning]) => {
+            const btn = $(id);
+            if (!btn) return;
+            const old = btn.querySelector('.material-icons');
+            if (old) old.remove();
+            btn.insertAdjacentHTML('afterbegin', Utils.icon(meaning));
+        });
     $('b64-encode').addEventListener('click', () => encoder('base64', 'b64-input', 'b64-result', '/api/toolkit/base64', 'encode'));
     $('b64-decode').addEventListener('click', () => encoder('base64', 'b64-input', 'b64-result', '/api/toolkit/base64', 'decode'));
     $('url-encode').addEventListener('click', () => encoder('urlencode', 'url-input', 'url-result', '/api/toolkit/urlencode', 'encode'));

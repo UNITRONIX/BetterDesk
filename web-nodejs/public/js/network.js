@@ -175,7 +175,7 @@
                 <td class="col-latency">${latency ? esc(latency) : DASH}</td>
                 <td class="col-last">${timeHtml(t.last_check_at)}</td>
                 <td class="actions">
-                    ${canCheck ? `<button type="button" class="btn btn-sm check-btn" data-action="check" data-id="${id}">${esc(_('network.check_now'))}</button>` : ''}
+                    ${canCheck ? `<button type="button" class="btn btn-sm check-btn" data-action="check" data-id="${id}">${Utils.icon('check_now')}${esc(_('network.check_now'))}</button>` : ''}
                     <span class="menu-anchor">
                         <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
                             aria-controls="${menuId}" aria-label="${esc(_('network.actions_for', { name: t.name }))}">
@@ -195,7 +195,7 @@
         const t = findTarget(id);
         if (button) {
             button.disabled = true;
-            button.textContent = _('network.checking');
+            button.innerHTML = Utils.icon('check_now') + esc(_('network.checking'));
         }
         try {
             const result = await Utils.api(`/api/network/targets/${encodeURIComponent(id)}/check`, { method: 'POST' });
@@ -505,7 +505,7 @@
         if (monitorRunning === null) return;
         monitorState.className = `status ${monitorRunning ? 'ok' : 'offline'}`;
         monitorState.textContent = monitorRunning ? _('network.monitor_on') : _('network.monitor_off');
-        monitorBtn.textContent = monitorRunning ? _('network.monitor_stop') : _('network.monitor_start');
+        monitorBtn.innerHTML = Utils.icon(monitorRunning ? 'stop' : 'start') + esc(monitorRunning ? _('network.monitor_stop') : _('network.monitor_start'));
         monitorBtn.hidden = !canManage;
     }
 
