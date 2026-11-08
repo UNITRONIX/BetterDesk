@@ -413,11 +413,6 @@
         return false;
     }
 
-    /** Prefer single-tap detail on touch / mobile shell; desktop keeps dblclick */
-    function preferSingleTapDetail() {
-        return shouldDisableRowDrag();
-    }
-
     /** Floating hscroll conflicts with bottom nav on touch + Desktop-site widths */
     function shouldHideHScrollFloat() {
         if (window.innerWidth <= 600) return true;
@@ -1172,7 +1167,11 @@
         });
 
         function openRowDetail(e, row) {
-            if (e.target.closest('.kebab-wrapper') || e.target.closest('.copy-btn') || e.target.closest('.device-open')) return;
+            // Controls in the row keep their own action
+            if (e.target.closest('a, button, input, select, textarea, label, .kebab-wrapper, .copy-btn, .device-open')) return;
+            // Selecting text (an ID, a host name) is not a click on the row
+            const selection = window.getSelection && window.getSelection();
+            if (selection && !selection.isCollapsed && row.contains(selection.anchorNode)) return;
             const deviceId = row.dataset.id;
             if (deviceId && typeof DeviceDetail !== 'undefined') {
                 DeviceDetail.open(deviceId);
@@ -1187,12 +1186,11 @@
             });
         });
 
-        // Touch / mobile: single tap opens detail; desktop keeps double-click
+        // A click anywhere on the row opens the detail panel (the name is the
+        // keyboard way to the same panel)
         tableBody.querySelectorAll('tr[data-id]').forEach(row => {
-            if (preferSingleTapDetail()) {
-                row.addEventListener('click', (e) => openRowDetail(e, row));
-            }
-            row.addEventListener('dblclick', (e) => openRowDetail(e, row));
+            row.classList.add('is-clickable');
+            row.addEventListener('click', (e) => openRowDetail(e, row));
         });
     }
     

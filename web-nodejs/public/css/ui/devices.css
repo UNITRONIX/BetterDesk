@@ -393,6 +393,11 @@
     color: var(--text-muted);
 }
 
+/* A click anywhere on a device row opens its detail panel */
+.devices-table tbody tr.is-clickable {
+    cursor: pointer;
+}
+
 .devices-table tr.dragging {
     opacity: 0.5;
 }
