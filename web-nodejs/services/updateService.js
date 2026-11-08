@@ -35,7 +35,7 @@ const {
     daemonReload: privilegedDaemonReload,
     restartService: privilegedRestartService,
 } = require('../lib/privilegedUpdateHelper');
-const { readProductVersion } = require('../lib/productVersion');
+const { readProductVersion, readEmbeddedServerVersion } = require('../lib/productVersion');
 const { createConsoleDeployGraph } = require('../lib/consoleDeployGraph');
 const { resolveChildPath, resolvePathUnderRoot, existsConfinedChild, removeConfinedChild } = require('../lib/safePath');
 const { runConsoleNpmInstall } = require('../lib/consoleNpmInstall');
@@ -1673,7 +1673,10 @@ async function buildGoServer(preferredGoBinPath = null) {
 
         // Prefer console-local VERSION/package.json: flat installs often leave a
         // stale root-owned /opt/VERSION that the panel cannot overwrite.
-        const productVersion = readProductVersion({
+        // The embedded server VERSION wins: it ships inside the source tree that
+        // ensureServerSource() refreshed before this build, while applyUpdate()
+        // only writes the root VERSION after the build completes.
+        const productVersion = readEmbeddedServerVersion(serverDir) || readProductVersion({
             rootDir: ROOT_DIR,
             consoleDir: ROOT_DIR,
             fallback: readProductVersion({ rootDir: PROJECT_ROOT, consoleDir: ROOT_DIR }),
