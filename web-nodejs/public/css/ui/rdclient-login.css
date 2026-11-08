@@ -36,6 +36,12 @@
     color: var(--accent);
 }
 
+/* BetterDesk logo (partials/brand-logo.ejs), 28px high */
+.rdclient-login-brand .brand-logo {
+    display: block;
+    flex: none;
+}
+
 .rdclient-login-title {
     margin-bottom: var(--space-2);
     font-size: var(--text-lg);

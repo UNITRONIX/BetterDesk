@@ -38,7 +38,7 @@ describe('UX 3.5 theme palettes', () => {
         });
         expect(colors.bgPrimary).toBe(BUILTIN_THEME_PALETTES.light.bgPrimary);
         expect(colors.textPrimary).toBe(BUILTIN_THEME_PALETTES.light.textPrimary);
-        expect(colors.accentBlue).toBe('#00677a');
+        expect(colors.accentBlue).toBe('#1b62cf');
     });
 
     test('dark mode uses built-in dark palette', () => {
@@ -77,13 +77,19 @@ describe('hexToMutedRgba', () => {
         expect(hexToMutedRgba(null)).toBeNull();
     });
 
-    test('built-in muted palette keys convert without staying solid', () => {
-        const darkMuted = hexToMutedRgba(BUILTIN_THEME_PALETTES.dark.accentBlueMuted);
-        const lightMuted = hexToMutedRgba(BUILTIN_THEME_PALETTES.light.accentBlueMuted);
-        expect(darkMuted).toMatch(/^rgba\(/);
-        expect(lightMuted).toMatch(/^rgba\(/);
-        expect(darkMuted).not.toBe(BUILTIN_THEME_PALETTES.dark.accentBlueMuted);
-        expect(lightMuted).not.toBe(BUILTIN_THEME_PALETTES.light.accentBlueMuted);
+    // The theme switch (theme-head.ejs) writes palette values to the page as they are,
+    // so muted colours must already be translucent tints, never solid hex.
+    test('built-in muted palette keys are translucent tints', () => {
+        for (const mode of ['dark', 'light']) {
+            for (const [key, value] of Object.entries(BUILTIN_THEME_PALETTES[mode])) {
+                if (!key.endsWith('Muted')) continue;
+                const m = /^rgba\(\d{1,3}, \d{1,3}, \d{1,3}, (0?\.\d+)\)$/.exec(value);
+                const alpha = m ? Number(m[1]) : NaN;
+                expect([mode, key, alpha >= 0.12 && alpha <= 0.18]).toEqual([mode, key, true]);
+            }
+        }
+        expect(BUILTIN_THEME_PALETTES.dark.accentBlueMuted).toBe(hexToMutedRgba(BUILTIN_THEME_PALETTES.dark.accentBlue));
+        expect(BUILTIN_THEME_PALETTES.light.accentBlueMuted).toBe(hexToMutedRgba(BUILTIN_THEME_PALETTES.light.accentBlue));
     });
 });
 

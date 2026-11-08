@@ -28,7 +28,9 @@
     </button>
 
     <a href="/" class="ux35-topbar-logo" title="<%= appName %>">
-        <% if (branding.logoType === 'text' && branding.logoText) { %>
+        <% if (branding.logoType === 'default') { %>
+        <%- include('brand-logo', { bdLogoName: appName, bdLogoHeight: 20, bdLogoMarkHeight: 24, bdLogoCompact: true }) %>
+        <% } else if (branding.logoType === 'text' && branding.logoText) { %>
         <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
         <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
         <span class="sidebar-logo-svg"><%- branding.logoSvg %></span>
@@ -69,24 +71,30 @@
         <div class="ux35-topbar-action-list" id="ux35-topbar-action-list">
         <div class="notif-wrapper">
             <button type="button" class="ux35-topbar-btn notif-btn" id="notif-btn" title="<%= _('notifications.title') %>"
-                    aria-label="<%= _('notifications.title') %>" aria-haspopup="true" aria-expanded="false">
+                    aria-label="<%= _('notifications.title') %>" aria-haspopup="menu" aria-expanded="false" aria-controls="notif-dropdown">
                 <span class="material-icons" aria-hidden="true">notifications</span>
                 <span class="notif-badge" id="notif-badge" hidden aria-hidden="true"></span>
             </button>
-            <div class="notif-dropdown" id="notif-dropdown" role="menu" hidden>
+            <% const notifHelpLink = typeof hasPermission !== 'function' || hasPermission('device.view'); %>
+            <% const notifRegLink = typeof hasPermission !== 'function' || hasPermission('enrollment.approve'); %>
+            <div class="notif-dropdown" id="notif-dropdown" role="menu" aria-labelledby="notif-title" hidden>
                 <div class="notif-header">
-                    <span><%= _('notifications.title') %></span>
-                    <button type="button" class="notif-mark-all" id="notif-mark-all"><%= _('notifications.mark_all_read') %></button>
+                    <span class="notif-title" id="notif-title"><%= _('notifications.title') %></span>
+                    <button type="button" class="notif-mark-all" id="notif-mark-all" role="menuitem" tabindex="-1" hidden><%= _('notifications.mark_all_read') %></button>
                 </div>
-                <div class="notif-list" id="notif-list" aria-live="polite">
-                    <div class="notif-empty"><%= _('notifications.empty') %></div>
+                <div class="notif-list" id="notif-list">
+                    <p class="notif-state"><%= _('notifications.loading') %></p>
                 </div>
+                <% if (notifHelpLink || notifRegLink) { %>
                 <div class="notif-footer">
-                    <a href="/help-requests" class="notif-see-all"><%= _('notifications.see_all') %></a>
-                    <% if (typeof hasPermission !== 'function' || hasPermission('enrollment.approve')) { %>
-                    <a href="/registrations" class="notif-see-all"><%= _('nav.registrations') %></a>
+                    <% if (notifHelpLink) { %>
+                    <a href="/help-requests" class="notif-see-all" role="menuitem" tabindex="-1"><%= _('notifications.see_all') %></a>
+                    <% } %>
+                    <% if (notifRegLink) { %>
+                    <a href="/registrations" class="notif-see-all" role="menuitem" tabindex="-1"><%= _('nav.registrations') %></a>
                     <% } %>
                 </div>
+                <% } %>
             </div>
         </div>
 
@@ -111,6 +119,7 @@
             <div class="lang-dropdown menu" id="lang-dropdown">
                 <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
                     <div class="lang-option menu-item <%= lang === language.code ? 'active' : '' %>" data-lang="<%= language.code %>" role="button" tabindex="0"<%- lang === language.code ? ' aria-current="true"' : '' %> lang="<%= language.code %>">
+                        <%- include('lang-flag', { flagCode: language.code }) %>
                         <span class="lang-label"><%= language.native || language.name || language.code %></span>
                     </div>
                 <% }); %>

@@ -1940,10 +1940,10 @@
         if (nameInput) nameInput.value = data.appName || '';
         if (descInput) descInput.value = data.appDescription || '';
 
-        const logoTypeRadio = document.querySelector(`input[name="logo-type"][value="${data.logoType || 'icon'}"]`);
+        const logoTypeRadio = document.querySelector(`input[name="logo-type"][value="${data.logoType || 'default'}"]`);
         if (logoTypeRadio) {
             logoTypeRadio.checked = true;
-            showLogoPanel(data.logoType || 'icon');
+            showLogoPanel(data.logoType || 'default');
         }
 
         const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
@@ -2654,7 +2654,7 @@
         const data = {
             appName: document.getElementById('brand-name')?.value || 'BetterDesk',
             appDescription: document.getElementById('brand-description')?.value || '',
-            logoType: document.querySelector('input[name="logo-type"]:checked')?.value || 'icon',
+            logoType: document.querySelector('input[name="logo-type"]:checked')?.value || 'default',
             logoIcon: document.getElementById('logo-icon-name')?.value || 'dns',
             logoSvg: document.getElementById('logo-svg-input')?.value || '',
             logoUrl: document.getElementById('logo-image-url')?.value || '',
@@ -5890,6 +5890,17 @@
         const name = document.getElementById('brand-name')?.value.trim() || 'BetterDesk';
         const nameEl = document.getElementById('theme-preview-name');
         if (nameEl) nameEl.textContent = name;
+        // BetterDesk logo: mark and wordmark with the default name, the mark before any other name
+        const defaultLogo = document.querySelector('input[name="logo-type"]:checked')?.value === 'default';
+        const fullLogo = defaultLogo && name.toLowerCase() === 'betterdesk';
+        const brandFull = document.getElementById('theme-preview-brand');
+        const brandMark = document.getElementById('theme-preview-mark');
+        if (brandFull) brandFull.hidden = !fullLogo;
+        if (brandMark) brandMark.hidden = !defaultLogo || fullLogo;
+        if (nameEl) nameEl.hidden = fullLogo;
+        // The mark takes its on-dark colours when the previewed background is dark
+        const bgLum = luminance(p.bgPrimary);
+        box.dataset.logoOn = bgLum !== null && bgLum < 0.2 ? 'dark' : 'light';
         const descEl = document.getElementById('theme-preview-desc');
         if (descEl) {
             descEl.textContent = document.getElementById('brand-description')?.value.trim() || '';

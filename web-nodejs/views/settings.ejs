@@ -416,7 +416,7 @@
                     ['branding.colors_text', [
                         ['textPrimary', 'color_text', '#1b1e1f'], ['textSecondary', 'color_text_muted', '#566064']]],
                     ['settings.appearance.colors_accents', [
-                        ['accentBlue', 'color_accent', '#00677a'], ['accentGreen', 'color_success', '#1c7a3b'],
+                        ['accentBlue', 'color_accent', '#1b62cf'], ['accentGreen', 'color_success', '#1c7a3b'],
                         ['accentRed', 'color_danger', '#b3261e'], ['accentYellow', 'color_warning', '#875b00'],
                         ['accentPurple', 'color_info', '#4a5a62']]],
                     ['settings.appearance.colors_lines', [
@@ -450,6 +450,7 @@
                     <legend class="form-label">${_('branding.logo_title')}</legend>
                     <p class="form-hint">${_('branding.logo_desc')}</p>
                     <div class="settings-radio-row">
+                        <label class="checkbox-row"><input type="radio" name="logo-type" value="default"> ${_('branding.logo_type_default')}</label>
                         <label class="checkbox-row"><input type="radio" name="logo-type" value="text"> ${_('branding.logo_type_text')}</label>
                         <label class="checkbox-row"><input type="radio" name="logo-type" value="icon"> ${_('branding.logo_type_icon')}</label>
                         <label class="checkbox-row"><input type="radio" name="logo-type" value="svg"> ${_('branding.logo_type_svg')}</label>
@@ -806,7 +807,7 @@
                 <h2 id="branding-preview-title">${_('settings.side.preview_title')}</h2>
                 <p class="section-note">${_('settings.side.preview_note')}</p>
                 <div class="theme-preview" id="theme-preview" aria-hidden="true">
-                    <div class="theme-preview-bar"><img class="theme-preview-logo" id="theme-preview-logo" alt="" hidden><span class="theme-preview-name" id="theme-preview-name">BetterDesk</span></div>
+                    <div class="theme-preview-bar"><img class="theme-preview-logo" id="theme-preview-logo" alt="" hidden><span class="theme-preview-brand" id="theme-preview-brand" hidden>${include('partials/brand-logo', { bdLogoName: 'BetterDesk', bdLogoHeight: 20 })}</span><span class="theme-preview-brand" id="theme-preview-mark" hidden>${include('partials/brand-logo', { bdLogoMarkOnly: true, bdLogoMarkHeight: 20 })}</span><span class="theme-preview-name" id="theme-preview-name">BetterDesk</span></div>
                     <div class="theme-preview-body">
                         <span class="theme-preview-heading">${_('nav.devices')}</span>
                         <span class="theme-preview-row">

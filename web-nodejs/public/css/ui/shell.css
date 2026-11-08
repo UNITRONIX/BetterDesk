@@ -92,6 +92,16 @@
     color: var(--accent);
 }
 
+/* BetterDesk logo (partials/brand-logo.ejs): 20px high, the mark alone on phones */
+.ux35-topbar-logo .brand-logo {
+    display: block;
+    flex: none;
+}
+
+.ux35-topbar-logo .brand-logo-compact {
+    display: none;
+}
+
 .ux35-topbar-breadcrumb {
     display: flex;
     align-items: center;
@@ -195,75 +205,218 @@
     font-weight: 600;
 }
 
+/* Notifications menu: header, rows (one per request), footer links.
+   The rows scroll; header and footer stay. */
 .notif-dropdown {
-    width: min(360px, calc(100vw - 2 * var(--space-4)));
+    width: min(400px, calc(100vw - 2 * var(--space-4)));
+    max-height: min(calc(100vh - var(--topbar-h) - var(--space-5)), 560px);
     padding: 0;
+    overflow: hidden;
+    animation: none;
+}
+
+.notif-dropdown:not([hidden]) {
+    display: flex;
+    flex-direction: column;
 }
 
 .notif-header,
 .notif-footer {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-1) var(--space-3);
+    flex-shrink: 0;
 }
 
 .notif-header {
+    justify-content: space-between;
+    min-height: var(--control-h);
     border-bottom: 1px solid var(--rule);
+}
+
+.notif-title {
     font-weight: 600;
 }
 
 .notif-footer {
     border-top: 1px solid var(--rule);
-    justify-content: flex-start;
 }
 
-.notif-mark-all {
+.notif-mark-all,
+.notif-retry,
+.notif-see-all {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h);
+    padding: 0 var(--space-1);
     border: 0;
+    border-radius: var(--radius);
     background: transparent;
     color: var(--accent);
     font: inherit;
     font-size: var(--text-sm);
     font-weight: 400;
-    cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.notif-mark-all:hover,
+.notif-retry:hover,
+.notif-see-all:hover {
+    color: var(--accent-hover);
+}
+
+.notif-mark-all:focus-visible,
+.notif-retry:focus-visible,
+.notif-see-all:focus-visible {
+    outline-offset: -2px;
 }
 
 .notif-list {
-    max-height: 360px;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
-.notif-empty {
+.notif-state {
+    margin: 0;
     padding: var(--space-4) var(--space-3);
+    color: var(--text-muted);
+    text-align: start;
+}
+
+.notif-state.is-error {
+    color: var(--text);
+}
+
+.notif-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.notif-rows > li + li {
+    border-top: 1px solid var(--rule);
+}
+
+/* One row: OS mark (or the kind's icon) | what happened, device, details | age.
+   Unread rows carry an accent rule on the start side and a semibold first line. */
+.notif-row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    grid-template-areas:
+        "mark kind time"
+        "mark device device"
+        "mark detail detail";
+    column-gap: var(--space-3);
+    row-gap: 2px;
+    min-height: var(--row-h);
+    padding: var(--space-2) var(--space-3);
+    padding-inline-start: calc(var(--space-3) - 3px);
+    border-inline-start: 3px solid transparent;
+    color: var(--text);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.notif-row:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.notif-row:focus-visible {
+    outline-offset: -2px;
+}
+
+.notif-row.is-unread {
+    border-inline-start-color: var(--accent);
+}
+
+.notif-row-mark {
+    grid-area: mark;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
     color: var(--text-muted);
 }
 
-.notif-item {
-    display: block;
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--rule);
+.notif-row-mark .os-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    color: var(--text-muted);
+    vertical-align: 0;
+}
+
+.notif-row-mark .material-icons {
+    display: inline-block;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.notif-row-kind {
+    grid-area: kind;
+    min-width: 0;
     color: var(--text);
-    text-decoration: none;
-    cursor: pointer;
 }
 
-.notif-item:hover {
-    background: var(--hover);
+.notif-row.is-unread .notif-row-kind {
+    font-weight: 600;
 }
 
-.notif-item.unread {
-    border-inline-start: 2px solid var(--accent);
+.notif-row-device {
+    grid-area: device;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.notif-item .material-icons {
-    display: none;
+.notif-row-id {
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: var(--text-xs);
 }
 
-.notif-see-all {
-    font-size: var(--text-sm);
+.notif-row-detail {
+    grid-area: detail;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.notif-row-time {
+    grid-area: time;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    text-align: end;
+    align-self: baseline;
+}
+
+/* Phones: the bell sits in the folded actions menu; the notifications open
+   under the top bar across the screen with a 16 px gutter. */
+@media (max-width: 767px) {
+    .notif-dropdown {
+        position: fixed;
+        top: calc(var(--topbar-h) + var(--space-1));
+        inset-inline: var(--space-4);
+        width: auto;
+        max-height: calc(100vh - var(--topbar-h) - 72px - var(--space-5));
+        max-height: calc(100dvh - var(--topbar-h) - 72px - env(safe-area-inset-bottom, 0px) - var(--space-5));
+    }
 }
 
 /* ── Body: sidebar + content ── */
@@ -532,8 +685,13 @@
         gap: var(--space-1);
     }
 
-    .ux35-topbar-logo .brand-name {
+    .ux35-topbar-logo .brand-name,
+    .ux35-topbar-logo .brand-logo-full {
         display: none;
+    }
+
+    .ux35-topbar-logo .brand-logo-compact {
+        display: block;
     }
 
     .ux35-topbar-breadcrumb {

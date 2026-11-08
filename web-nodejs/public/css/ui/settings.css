@@ -827,3 +827,20 @@
     height: 20px;
     object-fit: contain;
 }
+
+/* BetterDesk logo in the preview: mark colours follow the previewed background */
+.theme-preview-brand svg {
+    display: block;
+}
+
+.theme-preview[data-logo-on="light"] {
+    --logo-square: #1f6feb;
+    --logo-circle: #4d8f06;
+    --logo-overlap: #0f9e96;
+}
+
+.theme-preview[data-logo-on="dark"] {
+    --logo-square: #58a6ff;
+    --logo-circle: #a3e635;
+    --logo-overlap: #3fd0c4;
+}

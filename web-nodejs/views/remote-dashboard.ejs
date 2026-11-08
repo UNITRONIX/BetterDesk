@@ -6,8 +6,10 @@
 <div class="rd-desk-app remote-dashboard-layout" id="rd-desk-app">
     <header class="rd-desk-header">
         <a class="rd-desk-brand" href="/devices">
-            <span class="rd-desk-logo" id="rd-desk-logo" aria-hidden="true"></span>
-            <span class="rd-desk-brand-name">${String(appName).replace(/&/g, "&amp;").replace(/</g, "&lt;")}</span>
+            ${typeof branding !== 'undefined' && branding && branding.logoType === 'default'
+                ? include('partials/brand-logo', { bdLogoName: appName, bdLogoHeight: 20, bdLogoNameClass: 'rd-desk-brand-name' })
+                : `<span class="rd-desk-logo" id="rd-desk-logo" aria-hidden="true"></span>
+            <span class="rd-desk-brand-name">${String(appName).replace(/&/g, "&amp;").replace(/</g, "&lt;")}</span>`}
         </a>
         <div class="rd-desk-header-actions">
             <span class="rd-desk-user" id="rd-desk-user"></span>

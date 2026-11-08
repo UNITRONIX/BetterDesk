@@ -82,7 +82,7 @@
                 <p class="section-note">${_('client_branding.preview_note')}</p>
                 <div class="cb-preview" id="cb-preview">
                     <div class="cb-preview-head">
-                        <img class="cb-pv-logo" id="cb-pv-logo" src="/img/betterdesk_icon.png" alt="" width="32" height="32">
+                        <img class="cb-pv-logo" id="cb-pv-logo" alt="" width="32" height="32" hidden><span class="cb-pv-logo" id="cb-pv-mark">${include('partials/brand-logo', { bdLogoMarkOnly: true, bdLogoMarkHeight: 32 })}</span>
                         <span class="cb-pv-name" id="cb-pv-name">BetterDesk</span>
                     </div>
                     <div class="cb-preview-body">

@@ -4,6 +4,8 @@
  * Stored in auth.db branding_config table
  */
 
+const fs = require('fs');
+const path = require('path');
 const db = require('./database');
 const fontService = require('./fontService');
 const { stripUntilStable, stripTagName } = require('../lib/stripUntilStable');
@@ -398,10 +400,10 @@ const DEFAULT_BRANDING = {
     appDescription: 'BetterDesk Server Management',
     
     // Logo configuration
-    logoType: 'image', // 'icon' | 'svg' | 'image' | 'text'
+    logoType: 'default', // 'default' (BetterDesk logo) | 'icon' | 'svg' | 'image' | 'text'
     logoIcon: 'dns',   // Material Icons name (when logoType === 'icon')
     logoSvg: '',       // Raw SVG markup or SVG path data (when logoType === 'svg')
-    logoUrl: '/img/betterdesk_icon.png', // URL to image file (when logoType === 'image')
+    logoUrl: '',       // URL to image file (when logoType === 'image')
     logoText: '',      // Text to display as logo (when logoType === 'text')
     logoTextAccent: '', // Accent text (different color, e.g. product name after brand)
     
@@ -493,6 +495,35 @@ const DEFAULT_BRANDING = {
     rdclientBgOverlay: '',
     rdclientBgSize: 'cover'
 };
+
+// Logo image that older versions stored as the default; it counts as "no logo of your own".
+const LEGACY_DEFAULT_LOGO_URL = '/img/betterdesk_icon.png';
+
+/**
+ * Whether the console shows the BetterDesk logo: logoType "default", or the
+ * values older versions shipped as the default (Material icon "dns", the old
+ * logo image, or a type whose content is empty and so fell back to the icon).
+ * @param {Object} branding
+ * @returns {boolean}
+ */
+function usesDefaultLogo(branding) {
+    const b = branding || {};
+    const type = String(b.logoType || '');
+    if (type === 'default') return true;
+    if (type === 'text' && b.logoText) return false;
+    if (type === 'svg' && b.logoSvg) return false;
+    if (type === 'image' && b.logoUrl) return b.logoUrl === LEGACY_DEFAULT_LOGO_URL;
+    const icon = String(b.logoIcon || '').trim();
+    return !icon || icon === 'dns';
+}
+
+/** Store the old default logo settings as logoType "default", so every view sees one value. */
+function normalizeLogoType(branding) {
+    if (branding && branding.logoType !== 'default' && usesDefaultLogo(branding)) {
+        branding.logoType = 'default';
+    }
+    return branding;
+}
 
 /** Built-in palettes for themeMode light/dark (custom uses branding.colors). */
 const BUILTIN_THEME_PALETTES = Object.freeze({
@@ -667,6 +698,7 @@ async function loadBranding() {
         if (!hadExplicitSlides) {
             branding.loginSlides = getDefaultLoginSlides();
         }
+        normalizeLogoType(branding);
 
         brandingCache = branding;
         try {
@@ -1332,51 +1364,34 @@ function getPublicAppearance() {
     };
 }
 
-/**
- * Sanitize a CSS hex/rgb color for safe SVG attribute injection.
- * Falls back when the value is not a simple color token.
- * @param {string} value
- * @param {string} fallback
- * @returns {string}
- */
-function sanitizeSvgColor(value, fallback) {
-    const raw = String(value || '').trim();
-    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(raw)) return raw;
-    if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(raw)) return raw;
-    return fallback;
+// The BetterDesk mark alone, cropped to its shapes (public/favicon.svg). It has
+// no tile, so it carries the on-light and on-dark colours and picks one with
+// prefers-color-scheme. The colours are fixed and do not follow the palette.
+const DEFAULT_FAVICON_FILE = path.join(__dirname, '..', 'public', 'favicon.svg');
+const DEFAULT_FAVICON_FALLBACK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="9.5 9.5 45 45"><style>.s{fill:#1f6feb}.c{fill:#4d8f06}.o{fill:#0f9e96}@media (prefers-color-scheme: dark){.s{fill:#58a6ff}.c{fill:#a3e635}.o{fill:#3fd0c4}}</style><defs><clipPath id="bdf"><circle cx="38" cy="26" r="16"/></clipPath></defs><rect class="s" x="10" y="22" width="32" height="32" rx="10"/><circle class="c" cx="38" cy="26" r="16"/><rect class="o" x="10" y="22" width="32" height="32" rx="10" clip-path="url(#bdf)"/></svg>';
+let defaultFaviconCache = null;
+
+function getDefaultFavicon() {
+    if (defaultFaviconCache === null) {
+        try {
+            defaultFaviconCache = fs.readFileSync(DEFAULT_FAVICON_FILE, 'utf8');
+        } catch (_) {
+            defaultFaviconCache = DEFAULT_FAVICON_FALLBACK;
+        }
+    }
+    return defaultFaviconCache;
 }
 
 /**
- * Generate favicon SVG from branding
- * Default mark: large letter "B" on dark tile (readable at 16×16 tab size).
+ * Favicon SVG: the admin's own faviconSvg when set, otherwise the BetterDesk mark.
  * @returns {string} SVG markup for favicon
  */
 function generateFavicon() {
     const branding = getBranding();
-    
-    // If custom favicon SVG is set, use it
     if (branding.faviconSvg && branding.faviconSvg.trim()) {
         return branding.faviconSvg;
     }
-    
-    // Large "B" mark — same idea as Flutter contactRow fontSize bump: fill the
-    // small viewport so the glyph stays legible in browser tabs / PWA icons.
-    const bgColor = sanitizeSvgColor(branding.colors?.bgPrimary, '#0d1117');
-    const accentColor = sanitizeSvgColor(branding.colors?.accentBlue, '#58a6ff');
-    const greenColor = sanitizeSvgColor(branding.colors?.accentGreen, '#a3e635');
-    
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <defs>
-    <linearGradient id="bdMark" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-      <stop stop-color="${accentColor}"/>
-      <stop offset="1" stop-color="${greenColor}"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="7" fill="${bgColor}"/>
-  <text x="16" y="16" text-anchor="middle" dominant-baseline="central"
-        font-family="Arial Black, Arial, Helvetica, sans-serif"
-        font-size="23" font-weight="800" fill="url(#bdMark)">B</text>
-</svg>`;
+    return getDefaultFavicon();
 }
 
 /**
@@ -1468,6 +1483,8 @@ module.exports = {
     resetBranding,
     generateThemeCss,
     generateFavicon,
+    usesDefaultLogo,
+    LEGACY_DEFAULT_LOGO_URL,
     exportPreset,
     importPreset,
     invalidateCache,

@@ -108,7 +108,12 @@
             const own = !state.clearLogo && state.logo && (state.logo.data_base64
                 ? `data:${state.logo.mime};base64,${state.logo.data_base64}`
                 : state.logo.url);
-            logo.src = own || '/img/betterdesk_icon.png';
+            // Without an own logo the client shows the BetterDesk mark
+            if (own) logo.src = own;
+            else logo.removeAttribute('src');
+            logo.hidden = !own;
+            const mark = $('cb-pv-mark');
+            if (mark) mark.hidden = !!own;
         }
 
         // Text on the accent is black or white, whichever reads better on it

@@ -2083,7 +2083,8 @@
         "login_slide_body": "Slide description",
         "login_slide_image": "Slide background",
         "login_slide_move_up": "Move up",
-        "login_slide_move_down": "Move down"
+        "login_slide_move_down": "Move down",
+        "logo_type_default": "شعار BetterDesk"
     },
     "device_detail": {
         "tab_overview": "ملخص",

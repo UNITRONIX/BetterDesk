@@ -81,7 +81,8 @@ describe('Branding routes', () => {
     it('keeps the appearance settings focused on saved configuration', () => {
         const view = fs.readFileSync(path.join(__dirname, '..', 'views', 'settings.ejs'), 'utf8');
         const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'settings.js'), 'utf8');
-        expect(view).not.toContain('branding-preview');
+        // The old BrandingPreview mock-up is gone; the side preview's heading id may reuse the name
+        expect(view).not.toMatch(/branding-preview(?!-title)/);
         expect(view).not.toContain('branding-live-preview');
         expect(view).not.toContain('folder_special');
         expect(script).not.toContain('BrandingPreview');
@@ -324,11 +325,124 @@ describe('brandingService.generateThemeCss', () => {
         expect(readability.issues.some(issue => issue.id === 'page-text')).toBe(true);
     });
 
-    it('default favicon uses a large letter B mark on a dark tile', () => {
+});
+
+describe('BetterDesk favicon and logo', () => {
+    const faviconFile = fs.readFileSync(path.join(__dirname, '..', 'public', 'favicon.svg'), 'utf8');
+
+    async function loadWith(rows) {
+        database.getBrandingConfig.mockResolvedValueOnce(rows);
+        brandingService.invalidateCache();
+        await brandingService.loadBranding();
+    }
+
+    afterEach(async () => {
+        database.getBrandingConfig.mockResolvedValue([]);
+        brandingService.invalidateCache();
+        await brandingService.loadBranding();
+    });
+
+    it('default favicon is the BetterDesk mark from public/favicon.svg, whatever the palette', async () => {
+        await loadWith([
+            { key: 'colors', value: JSON.stringify({ accentBlue: '#123456', bgPrimary: '"/><script>alert(1)</script>' }) }
+        ]);
         const svg = brandingService.generateFavicon();
-        expect(svg).toMatch(/font-size="23"/);
-        expect(svg).toMatch(/>B<\/text>/);
-        expect(svg).toMatch(/fill="#0d1117"/);
-        expect(svg).not.toMatch(/M8 10h16/);
+        expect(svg).toBe(faviconFile);
+        // The mark alone, cropped to its shapes (no tile), in both colour sets
+        expect(svg).toContain('viewBox="9.5 9.5 45 45"');
+        expect(svg).not.toContain('#141616');
+        expect(svg).toContain('.s{fill:#1f6feb}.c{fill:#4d8f06}.o{fill:#0f9e96}');
+        expect(svg).toContain('@media (prefers-color-scheme: dark){.s{fill:#58a6ff}.c{fill:#a3e635}.o{fill:#3fd0c4}}');
+        expect(svg).toContain('clip-path="url(#bdf)"');
+        expect(svg).not.toMatch(/<text|#123456|<script/);
+    });
+
+    it('a custom favicon from the branding settings wins over the mark', async () => {
+        const custom = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#ff0000"/></svg>';
+        await loadWith([{ key: 'faviconSvg', value: custom }]);
+        expect(brandingService.generateFavicon()).toBe(custom);
+    });
+
+    it('serves the favicon as SVG on /branding/favicon.svg', async () => {
+        const app = createTestApp();
+        app.use('/', settingsRoutes);
+        const res = await request(app).get('/branding/favicon.svg');
+        expect(res.status).toBe(200);
+        expect(res.headers['content-type']).toMatch(/image\/svg\+xml/);
+        expect(Buffer.from(res.body).toString('utf8')).toBe(faviconFile);
+    });
+
+    it('strips scripts and event handlers from a saved favicon', async () => {
+        await brandingService.saveBranding({
+            faviconSvg: '<svg onload="alert(1)"><script>alert(1)</script><rect width="4" height="4"/></svg>'
+        });
+        const entries = database.saveBrandingConfigBatch.mock.calls.at(-1)[0];
+        const saved = entries.find((e) => e.key === 'faviconSvg').value;
+        expect(saved).not.toMatch(/script|onload/i);
+        expect(saved).toContain('<rect');
+    });
+
+    it('defaults and "reset to defaults" land on the BetterDesk logo', async () => {
+        expect(brandingService.DEFAULT_BRANDING.logoType).toBe('default');
+        await brandingService.resetBranding();
+        expect(brandingService.getBranding().logoType).toBe('default');
+        for (const preset of ['default', 'light']) {
+            const theme = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'themes', `${preset}.json`), 'utf8'));
+            expect(theme.branding.logoType).toBe('default');
+        }
+        const insolve = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'themes', 'insolve.json'), 'utf8'));
+        expect(insolve.branding.logoType).toBe('text');
+    });
+
+    it.each([
+        ['the Material icon "dns"', [{ key: 'logoType', value: 'icon' }, { key: 'logoIcon', value: 'dns' }]],
+        ['the old logo image', [{ key: 'logoType', value: 'image' }, { key: 'logoUrl', value: '/img/betterdesk_icon.png' }]],
+        ['an image type without an image', [{ key: 'logoType', value: 'image' }, { key: 'logoUrl', value: '' }]]
+    ])('treats %s, the old default, as the BetterDesk logo', async (_label, rows) => {
+        await loadWith(rows);
+        expect(brandingService.getBranding().logoType).toBe('default');
+    });
+
+    it.each([
+        ['text', [{ key: 'logoType', value: 'text' }, { key: 'logoText', value: 'Acme' }]],
+        ['icon', [{ key: 'logoType', value: 'icon' }, { key: 'logoIcon', value: 'cloud' }]],
+        ['image', [{ key: 'logoType', value: 'image' }, { key: 'logoUrl', value: '/uploads/logo-abc.png' }]],
+        ['svg', [{ key: 'logoType', value: 'svg' }, { key: 'logoSvg', value: '<svg viewBox="0 0 4 4"><rect width="4" height="4"/></svg>' }]]
+    ])('keeps an own %s logo', async (type, rows) => {
+        await loadWith(rows);
+        expect(brandingService.getBranding().logoType).toBe(type);
+    });
+
+    describe('views/partials/brand-logo.ejs', () => {
+        const ejs = require('ejs');
+        const partial = path.join(__dirname, '..', 'views', 'partials', 'brand-logo.ejs');
+        const render = (data) => ejs.renderFile(partial, data);
+
+        it('draws mark and wordmark, named after the app, with the wordmark in the text colour', async () => {
+            const html = await render({ bdLogoName: 'BetterDesk', bdLogoHeight: 28 });
+            expect(html).toMatch(/<svg class="brand-logo brand-logo-full"[^>]* height="28" role="img" aria-label="BetterDesk"/);
+            expect(html).toContain('fill="currentColor"');
+            expect(html).toContain('var(--logo-square,#1f6feb)');
+            expect(html).toContain('var(--logo-circle,#4d8f06)');
+            expect(html).toContain('var(--logo-overlap,#0f9e96)');
+            expect(html).not.toMatch(/<text|font-family|gradient|filter/i);
+            expect(html).not.toContain('brand-logo-compact');
+        });
+
+        it('adds the mark alone for tight places when asked', async () => {
+            const html = await render({ bdLogoName: 'BetterDesk', bdLogoCompact: true });
+            expect(html).toMatch(/<svg class="brand-logo brand-logo-compact"[^>]* role="img" aria-label="BetterDesk"/);
+            // Each drawing clips with its own id
+            const ids = [...html.matchAll(/clipPath id="([^"]+)"/g)].map((m) => m[1]);
+            expect(new Set(ids).size).toBe(2);
+        });
+
+        it('keeps a custom app name as text next to a decorative mark, escaped', async () => {
+            const html = await render({ bdLogoName: '<b>Acme</b> Remote', bdLogoNameClass: 'login-logo-text' });
+            expect(html).not.toContain('brand-logo-full');
+            expect(html).not.toContain('currentColor');
+            expect(html).toMatch(/<svg class="brand-logo brand-logo-mark"[^>]* aria-hidden="true"/);
+            expect(html).toContain('<span class="login-logo-text">&lt;b&gt;Acme&lt;/b&gt; Remote</span>');
+        });
     });
 });

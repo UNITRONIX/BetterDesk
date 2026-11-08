@@ -2094,7 +2094,8 @@
         "login_slide_body": "Opis slajdu",
         "login_slide_image": "Tło slajdu",
         "login_slide_move_up": "W górę",
-        "login_slide_move_down": "W dół"
+        "login_slide_move_down": "W dół",
+        "logo_type_default": "Logo BetterDesk"
     },
     "device_detail": {
         "tab_overview": "Przegląd",

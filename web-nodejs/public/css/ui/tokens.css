@@ -24,10 +24,14 @@
     --border: var(--border-primary, #8c9699);
     --rule: var(--border-secondary, #dde1e2);
 
-    /* Accent and states */
-    --accent: var(--accent-blue, #00677a);
-    --accent-hover: var(--accent-blue-hover, #004f5d);
-    --accent-tint: var(--accent-blue-muted, rgba(0, 103, 122, 0.15));
+    /* Accent and states. The accent is the logo blue: #58a6ff in dark mode, and in
+       light mode a step darker than the logo's #1f6feb (#1b62cf), because #1f6feb
+       reaches only 4.2:1 as text on --bg-subtle. Lime is a logo colour only, never a state. */
+    --accent: var(--accent-blue, #1b62cf);
+    --accent-hover: var(--accent-blue-hover, #1854b3);
+    /* Always translucent, whatever the palette gives as "muted" (a custom or
+       per-browser palette may hand over the solid accent). Text on it is --text. */
+    --accent-tint: color-mix(in srgb, var(--accent) 15%, transparent);
     --on-accent: #ffffff;
     --success: var(--accent-green, #1c7a3b);
     --danger: var(--accent-red, #b3261e);
@@ -78,11 +82,20 @@
     --row-pad-x: var(--space-3);
     --row-pad-y: var(--space-2);
 
-    /* Chart series (validated together for colour-blind separation and 3:1 on the surface;
-       petrol is a stronger step of the accent, which itself reads too grey as a mark) */
-    --series-1: #008aa0;
+    /* Chart series from the logo: blue, a warm orange, then the logo teal. Checked
+       with the dataviz palette validator (lightness band, chroma, colour-blind and
+       normal-vision separation, 3:1 on the surface) on #ffffff and, for the dark
+       steps, on #141616. Orange sits between blue and teal because blue and teal
+       alone are close for tritan vision. */
+    --series-1: #1f6feb;
     --series-2: #c85a1e;
-    --series-3: #6250d6;
+    --series-3: #0f9e96;
+
+    /* BetterDesk logo mark (views/partials/brand-logo.ejs). Fixed brand
+       colours, not taken from the branding accent. */
+    --logo-square: #1f6feb;
+    --logo-circle: #4d8f06;
+    --logo-overlap: #0f9e96;
 
     /* Layout */
     --sidebar-w: 232px;
@@ -95,10 +108,24 @@
 
 :root[data-theme="dark"] {
     --on-accent: #0c1b1e;
-    --series-1: #21a3b5;
+    --series-1: #4493ec;
     --series-2: #d06a2c;
-    --series-3: #9085e9;
+    --series-3: #22a49a;
     --shadow-float: 0 8px 28px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="dark"],
+html[data-a11y-contrast="high-dark"],
+html[data-a11y-contrast="yellow-black"] {
+    --logo-square: #58a6ff;
+    --logo-circle: #a3e635;
+    --logo-overlap: #3fd0c4;
+}
+
+html[data-a11y-contrast="high-light"] {
+    --logo-square: #1f6feb;
+    --logo-circle: #4d8f06;
+    --logo-overlap: #0f9e96;
 }
 
 /* Accessibility panel (accessibility.js sets these attributes). Its

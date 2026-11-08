@@ -82,7 +82,9 @@
     <main class="login-main">
         <div class="login-box">
             <div class="login-brand">
-                <% if (branding.logoType === 'text' && branding.logoText) { %>
+                <% if (branding.logoType === 'default') { %>
+                <%- include('partials/brand-logo', { bdLogoName: appName, bdLogoHeight: 28, bdLogoMarkHeight: 28, bdLogoNameClass: 'login-logo-text' }) %>
+                <% } else if (branding.logoType === 'text' && branding.logoText) { %>
                 <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
                 <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
                 <span class="login-logo-svg"><%- branding.logoSvg %></span>
@@ -169,6 +171,7 @@
             <div class="login-footer">
                 <label class="login-language-picker" for="login-language-select">
                     <span><%= _('settings.language') %></span>
+                    <%- include('partials/lang-flag', { flagCode: lang }) %>
                     <select id="login-language-select" class="form-select" data-language-select>
                         <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
                             <option value="<%= language.code %>" <%= lang === language.code ? 'selected' : '' %> lang="<%= language.code %>"><%= language.native || language.name || language.code %></option>

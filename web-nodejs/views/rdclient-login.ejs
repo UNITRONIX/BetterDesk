@@ -23,7 +23,9 @@
     <main class="rdclient-login-main">
         <div class="rdclient-login-box" id="rdclient-login-card">
             <div class="rdclient-login-brand" id="rdclient-login-brand">
-                <% if (branding.logoType === 'text' && branding.logoText) { %>
+                <% if (branding.logoType === 'default') { %>
+                <%- include('partials/brand-logo', { bdLogoName: appName, bdLogoHeight: 28, bdLogoMarkHeight: 28, bdLogoNameClass: 'rdclient-logo-text' }) %>
+                <% } else if (branding.logoType === 'text' && branding.logoText) { %>
                 <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
                 <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
                 <span class="rdclient-logo-svg"><%- branding.logoSvg %></span>
@@ -98,6 +100,7 @@
                 <a href="/login" class="rdclient-login-console-link"><%= _('rdclient_login.open_console_login') %></a>
                 <label class="rdclient-language-picker" for="rdclient-language-select">
                     <span><%= _('settings.language') %></span>
+                    <%- include('partials/lang-flag', { flagCode: lang }) %>
                     <select id="rdclient-language-select" class="form-select" data-language-select>
                         <% (availableLanguageList || []).forEach(function(language) { %>
                             <option value="<%= language.code %>" <%= lang === language.code ? 'selected' : '' %> lang="<%= language.code %>"><%= language.native || language.name || language.code %></option>

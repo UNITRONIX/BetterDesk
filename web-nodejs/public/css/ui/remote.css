@@ -399,3 +399,9 @@
 .rd-guest-facts {
     max-width: var(--measure);
 }
+
+/* BetterDesk logo in the header (partials/brand-logo.ejs) */
+.rd-desk-brand .brand-logo {
+    display: block;
+    flex: none;
+}

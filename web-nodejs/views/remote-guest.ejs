@@ -9,8 +9,10 @@
 <div class="rd-desk-app rd-guest-app" id="rd-guest-app">
     <header class="rd-desk-header">
         <span class="rd-desk-brand">
-            <span class="rd-desk-logo" id="rd-desk-logo" aria-hidden="true"></span>
-            <span class="rd-desk-brand-name">${String(appName).replace(/&/g, "&amp;").replace(/</g, "&lt;")}</span>
+            ${typeof branding !== 'undefined' && branding && branding.logoType === 'default'
+                ? include('partials/brand-logo', { bdLogoName: appName, bdLogoHeight: 20, bdLogoNameClass: 'rd-desk-brand-name' })
+                : `<span class="rd-desk-logo" id="rd-desk-logo" aria-hidden="true"></span>
+            <span class="rd-desk-brand-name">${String(appName).replace(/&/g, "&amp;").replace(/</g, "&lt;")}</span>`}
         </span>
     </header>
 

@@ -521,7 +521,7 @@
         // Draw nodes
         for (const n of flow.nodes) {
             const def = NODE_DEFS[n.type] || {};
-            ctx.fillStyle = def.cat === 'sources' ? tok('--accent', '#00677a') : def.cat === 'processing' ? tok('--warning', '#875b00') : tok('--success', '#1c7a3b');
+            ctx.fillStyle = def.cat === 'sources' ? tok('--accent', '#1b62cf') : def.cat === 'processing' ? tok('--warning', '#875b00') : tok('--success', '#1c7a3b');
             ctx.fillRect((n.x - minX) * scale, (n.y - minY) * scale, NODE_W * scale, NODE_H * scale);
         }
     }
