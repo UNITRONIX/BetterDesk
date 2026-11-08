@@ -293,6 +293,17 @@ app.use((req, res, next) => {
     next();
 });
 
+// Signed-in user's profile picture version for the top bar (null: initials)
+app.use(async (req, res, next) => {
+    res.locals.userAvatarVersion = null;
+    if (req.method === 'GET' && req.session?.userId && !req.path.startsWith('/api/')) {
+        try {
+            res.locals.userAvatarVersion = await require('./services/avatarService').getAvatarVersion(req.session.userId);
+        } catch (_) { /* initials */ }
+    }
+    next();
+});
+
 // CSRF protection — validate on POST/PUT/DELETE/PATCH.
 // Skip CSRF for device-facing API routes (/api/bd/*) — these MUST authenticate
 // via Bearer access token (session-cookie fallback is rejected in requireDeviceAuth).

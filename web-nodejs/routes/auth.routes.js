@@ -11,6 +11,7 @@ const db = require('../services/database');
 const betterdeskApi = require('../services/betterdeskApi');
 const brandingService = require('../services/brandingService');
 const userSync = require('../services/userSync');
+const avatarService = require('../services/avatarService');
 let serverAttestation;
 try {
     serverAttestation = require('../services/serverAttestation');
@@ -536,6 +537,11 @@ router.get('/api/auth/oidc/session', async (req, res) => {
         if (!user) {
             return res.redirect('/login?error=oidc_error');
         }
+
+        // Profile picture from the IdP's "picture" claim. Runs in the
+        // background: a slow or failing picture fetch never delays or stops
+        // the sign-in (services/avatarService.js).
+        avatarService.syncOidcPicture(user.id, exchange.data);
 
         // Regenerate session to prevent fixation across the authentication boundary.
         req.session.regenerate(async (err) => {

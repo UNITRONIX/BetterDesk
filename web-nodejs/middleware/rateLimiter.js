@@ -105,10 +105,20 @@ function isPanelPollRequest(req) {
     return PANEL_POLL_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
+/**
+ * Profile pictures: a page with many people loads one per person. These
+ * routes apply panelReadLimiter themselves (routes/avatars.routes.js).
+ */
+const PANEL_READ_PATTERNS = [
+    /^\/api\/users\/avatars$/,
+    /^\/api\/users\/\d+\/avatar$/
+];
+
 function isPanelReadRequest(req) {
     const method = String(req.method || 'GET').toUpperCase();
     if (method !== 'GET' && method !== 'HEAD') return false;
-    return PANEL_READ_PATHS.has(resolveApiPath(req));
+    const path = resolveApiPath(req);
+    return PANEL_READ_PATHS.has(path) || PANEL_READ_PATTERNS.some((re) => re.test(path));
 }
 
 /** Session-authenticated UI preference writes (desktop layout save). */

@@ -637,6 +637,23 @@ function createSqliteAdapter(config) {
             }
         } catch (e) { console.warn('[DB] Migration users columns error:', e.message); }
 
+        // Profile pictures (lib/avatarImage.js): the checked image bytes, served
+        // by GET /api/users/:id/avatar. source is 'oidc' or 'profile'.
+        try {
+            db.exec(`
+                CREATE TABLE IF NOT EXISTS user_avatars (
+                    user_id INTEGER PRIMARY KEY,
+                    mime_type TEXT NOT NULL,
+                    data BLOB NOT NULL,
+                    version TEXT NOT NULL,
+                    source TEXT NOT NULL DEFAULT 'oidc',
+                    source_url TEXT DEFAULT '',
+                    updated_at TEXT DEFAULT (datetime('now')),
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            `);
+        } catch (e) { console.warn('[DB] Migration user_avatars error:', e.message); }
+
         // Migration: Add updated_at to settings table if missing (for upgrades from older versions)
         try {
             const settingsCols = new Set(db.prepare('PRAGMA table_info(settings)').all().map(c => c.name));
@@ -1660,7 +1677,37 @@ function createSqliteAdapter(config) {
             const db = openAuth();
             db.prepare('DELETE FROM user_group_members WHERE user_id = ?').run(id);
             db.prepare('DELETE FROM device_group_user_access WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM user_avatars WHERE user_id = ?').run(id);
             db.prepare('DELETE FROM users WHERE id = ?').run(id);
+        },
+
+        // ---- Profile pictures ----
+
+        async getUserAvatar(userId) {
+            return openAuth().prepare('SELECT user_id, mime_type, data, version, source, source_url, updated_at FROM user_avatars WHERE user_id = ?').get(userId) || null;
+        },
+        async setUserAvatar(userId, { mimeType, data, version, source = 'oidc', sourceUrl = '' }) {
+            openAuth().prepare(`
+                INSERT INTO user_avatars (user_id, mime_type, data, version, source, source_url, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(user_id) DO UPDATE SET mime_type = excluded.mime_type, data = excluded.data,
+                    version = excluded.version, source = excluded.source, source_url = excluded.source_url,
+                    updated_at = excluded.updated_at
+            `).run(userId, mimeType, data, version, source, sourceUrl || '');
+        },
+        /** Remove a user's picture; with source, only when it came from there. Returns rows removed. */
+        async deleteUserAvatar(userId, source) {
+            const info = source
+                ? openAuth().prepare('DELETE FROM user_avatars WHERE user_id = ? AND source = ?').run(userId, source)
+                : openAuth().prepare('DELETE FROM user_avatars WHERE user_id = ?').run(userId);
+            return info.changes;
+        },
+        /** [{ user_id, username, version }] for every user with a picture */
+        async listUserAvatarVersions() {
+            return openAuth().prepare(`
+                SELECT a.user_id, u.username, a.version FROM user_avatars a
+                INNER JOIN users u ON u.id = a.user_id ORDER BY a.user_id
+            `).all();
         },
         async countAdmins() {
             return openAuth().prepare("SELECT COUNT(*) as c FROM users WHERE role IN ('admin', 'super_admin')").get().c;
@@ -4745,6 +4792,19 @@ function createPostgresAdapter() {
             }
         }
 
+        // Profile pictures (lib/avatarImage.js), served by GET /api/users/:id/avatar
+        await q(`
+            CREATE TABLE IF NOT EXISTS user_avatars (
+                user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                mime_type TEXT NOT NULL,
+                data BYTEA NOT NULL,
+                version TEXT NOT NULL,
+                source TEXT NOT NULL DEFAULT 'oidc',
+                source_url TEXT DEFAULT '',
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+
         // Migration: Add updated_at to settings table if missing (for upgrades from older versions)
         try {
             const settingsColCheck = await all(`SELECT column_name FROM information_schema.columns WHERE table_name = 'settings'`);
@@ -5198,7 +5258,35 @@ function createPostgresAdapter() {
         async deleteUser(id) {
             await q('DELETE FROM user_group_members WHERE user_id = $1', [id]);
             await q('DELETE FROM device_group_user_access WHERE user_id = $1', [id]);
+            await q('DELETE FROM user_avatars WHERE user_id = $1', [id]);
             await q('DELETE FROM users WHERE id = $1', [id]);
+        },
+
+        // ---- Profile pictures ----
+
+        async getUserAvatar(userId) {
+            return one('SELECT user_id, mime_type, data, version, source, source_url, updated_at FROM user_avatars WHERE user_id = $1', [userId]);
+        },
+        async setUserAvatar(userId, { mimeType, data, version, source = 'oidc', sourceUrl = '' }) {
+            await q(`
+                INSERT INTO user_avatars (user_id, mime_type, data, version, source, source_url, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                ON CONFLICT (user_id) DO UPDATE SET mime_type = EXCLUDED.mime_type, data = EXCLUDED.data,
+                    version = EXCLUDED.version, source = EXCLUDED.source, source_url = EXCLUDED.source_url,
+                    updated_at = EXCLUDED.updated_at
+            `, [userId, mimeType, data, version, source, sourceUrl || '']);
+        },
+        async deleteUserAvatar(userId, source) {
+            const r = source
+                ? await q('DELETE FROM user_avatars WHERE user_id = $1 AND source = $2', [userId, source])
+                : await q('DELETE FROM user_avatars WHERE user_id = $1', [userId]);
+            return r && typeof r.rowCount === 'number' ? r.rowCount : 0;
+        },
+        async listUserAvatarVersions() {
+            return all(`
+                SELECT a.user_id, u.username, a.version FROM user_avatars a
+                INNER JOIN users u ON u.id = a.user_id ORDER BY a.user_id
+            `);
         },
         async countAdmins() { return +(await one("SELECT COUNT(*) as c FROM users WHERE role IN ('admin', 'super_admin')")).c; },
 

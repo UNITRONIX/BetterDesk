@@ -17,6 +17,7 @@ const router  = express.Router();
 const crypto  = require('crypto');
 const path    = require('path');
 const db      = require('../services/database');
+const avatarService = require('../services/avatarService');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const { fileAccessLimiter } = require('../middleware/rateLimiter');
 const genericAgentReleases = require('../services/genericAgentReleaseService');
@@ -95,13 +96,30 @@ router.put('/api/users/me/profile', requireAuth, async (req, res) => {
             return res.status(400).json({ success: false, error: 'email_too_long' });
         }
 
+        const before = await db.getUserById(req.session.userId);
         await db.updateUserProfile(req.session.userId, {
             first_name, last_name, email, phone, role_display, avatar_url,
         });
         try {
             await db.logAction(req.session.userId, 'profile_updated', 'Updated operator profile', req.ip);
         } catch (_) {}
-        res.json({ success: true });
+
+        // An http(s) avatar URL is fetched once and stored like a picture from
+        // the identity provider, so the console never hotlinks it. A failed
+        // fetch does not fail the save; the answer says what happened.
+        let avatar = 'unchanged';
+        let avatarError;
+        if (avatar_url !== undefined) {
+            const next = String(avatar_url == null ? '' : avatar_url).trim().slice(0, 200);
+            const prev = String((before && before.avatar_url) || '').trim();
+            const missing = next && !(await avatarService.getAvatarVersion(req.session.userId));
+            if (next !== prev || missing) {
+                const result = await avatarService.syncProfileAvatarUrl(req.session.userId, next);
+                avatar = result.action;
+                avatarError = result.code;
+            }
+        }
+        res.json({ success: true, avatar, ...(avatarError ? { avatar_error: avatarError } : {}) });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }

@@ -93,6 +93,11 @@ const facade = {
         : Promise.resolve(),
     deleteUser:       (id) => adapter.deleteUser(id),
     updateUserProfile: (id, fields) => adapter.updateUserProfile(id, fields),
+    // Profile pictures (services/avatarService.js)
+    getUserAvatar:    (userId) => adapter.getUserAvatar(userId),
+    setUserAvatar:    (userId, avatar) => adapter.setUserAvatar(userId, avatar),
+    deleteUserAvatar: (userId, source) => adapter.deleteUserAvatar(userId, source),
+    listUserAvatarVersions: () => adapter.listUserAvatarVersions(),
     getUsersEmailsByUsernames: (usernames) => adapter.getUsersEmailsByUsernames(usernames),
     getUsernamesByUserGroupGuid: (guid) => adapter.getUsernamesByUserGroupGuid(guid),
     hasEmailNotificationSent: (eventType, eventId, recipient) =>

@@ -10,6 +10,7 @@ const db = require('../services/database');
 const { apiClient } = require('../services/betterdeskApi');
 const { assertSafeApiId } = require('../lib/goApiPath');
 const userSync = require('../services/userSync');
+const avatarService = require('../services/avatarService');
 const userScopeService = require('../services/userScopeService');
 const deviceGroupService = require('../services/deviceGroupService');
 const serverBackend = require('../services/serverBackend');
@@ -324,7 +325,11 @@ router.get('/api/users', requireAuth, requirePermission('user.view'), async (req
         const users = await db.getAllUsers();
         
         // Remove sensitive data
-        const safeUsers = await Promise.all(users.map(u => serializeUserForList(u)));
+        const listed = await Promise.all(users.map(u => serializeUserForList(u)));
+        // has_avatar / avatar_version: Utils.avatarHtml shows the picture
+        let avatarVersions = new Map();
+        try { avatarVersions = await avatarService.getVersionMap(); } catch (_) {}
+        const safeUsers = listed.map(u => avatarService.withAvatarFields(u, avatarVersions));
         
         res.json({
             success: true,
