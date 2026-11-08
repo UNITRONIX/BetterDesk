@@ -82,6 +82,7 @@
         "server_attestation": "Atest serwera",
         "commercialization": "Komercjalizacja",
         "remote_open_tab": "Otwórz klienta pulpitu zdalnego w nowej karcie",
+        "pairing": "Parowanie",
         "client_branding": "Branding klienta",
         "agents": "Agenci BetterDesk"
     },
@@ -4763,5 +4764,36 @@
         "pair_body": "Parowanie używa kodu QR pokazywanego przez generycznego Support Agenta po połączeniu z serwerem.",
         "branding_link": "Branding klienta",
         "branding_body": "Wygląd (logo, kolory, etykiety) jest ładowany w czasie działania z Brandingu klienta — nie jest wbudowany w instalator."
+    },
+
+    "pairing": {
+        "title": "Kod parowania",
+        "subtitle": "Połącz klienta BetterDesk, wpisując adres serwera i krótki jednorazowy kod zamiast długiego ciągu konfiguracji.",
+        "generate_title": "Utwórz kod",
+        "generate_hint": "Kod jest ważny 10 minut i działa jednorazowo. Przekaż osobie konfigurującej klienta adres serwera i kod.",
+        "label_field": "Etykieta (opcjonalnie)",
+        "label_placeholder": "np. laptop Anny",
+        "host_field": "Adres serwera",
+        "host_hint": "Adres, który wpisuje klient: nazwa domenowa lub IP, bez portu.",
+        "generate_button": "Wygeneruj kod",
+        "code_hint": "Wpisz ten kod na urządzeniu. Jest pokazywany tylko raz.",
+        "expires_in": "Wygasa za",
+        "expired": "Wygasł",
+        "copy": "Kopiuj kod",
+        "copied": "Kod skopiowany",
+        "copy_failed": "Zaznacz kod i skopiuj go ręcznie",
+        "active_title": "Aktywne kody",
+        "active_hint": "Przechowywany jest tylko skrót kodu, więc kodów nie można pokazać ponownie. Unieważnij kod, aby natychmiast przestał działać.",
+        "col_label": "Etykieta",
+        "col_created": "Utworzono",
+        "col_expires": "Wygasa",
+        "col_created_by": "Utworzył",
+        "loading": "Ładowanie…",
+        "empty": "Brak aktywnych kodów",
+        "revoke": "Unieważnij",
+        "revoked": "Kod parowania unieważniony",
+        "revoke_failed": "Nie udało się unieważnić kodu",
+        "created": "Kod parowania utworzony",
+        "create_failed": "Nie udało się utworzyć kodu parowania"
     }
 }

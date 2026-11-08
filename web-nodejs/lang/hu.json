@@ -88,6 +88,7 @@
         "server_attestation": "Szerver tanúsítás",
         "commercialization": "Kereskedelmi modul",
         "remote_open_tab": "Távoli asztal kliens megnyitása új lapon",
+        "pairing": "Párosítás",
         "client_branding": "Client Branding",
         "agents": "BetterDesk ügynökök"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "A párosítás a generikus Support Agent által a szerver elérése után mutatott QR-t használja.",
         "branding_link": "Kliens branding",
         "branding_body": "A megjelenés (logó, színek, címkék) futásidőben a Kliens brandingből töltődik — nincs beágyazva a telepítőbe."
+    },
+
+    "pairing": {
+        "title": "Párosítási kód",
+        "subtitle": "Csatlakoztasson BetterDesk klienst a kiszolgáló címe és egy rövid egyszerhasználatos kód megadásával a hosszú konfigurációs szöveg helyett.",
+        "generate_title": "Kód létrehozása",
+        "generate_hint": "A kód 10 percig érvényes és egyszer használható. Adja át a kiszolgáló címét és a kódot a klienst beállító személynek.",
+        "label_field": "Címke (nem kötelező)",
+        "label_placeholder": "pl. Anna laptopja",
+        "host_field": "Kiszolgáló címe",
+        "host_hint": "A cím, amelyet az ügyfelek beírnak: tartománynév vagy IP, port nélkül.",
+        "generate_button": "Kód generálása",
+        "code_hint": "Írja be ezt a kódot az eszközre. Csak egyszer jelenik meg.",
+        "expires_in": "Lejár",
+        "expired": "Lejárt",
+        "copy": "Kód másolása",
+        "copied": "Kód másolva",
+        "copy_failed": "Jelölje ki a kódot és másolja kézzel",
+        "active_title": "Aktív kódok",
+        "active_hint": "Csak a kód hash-e tárolódik, ezért a kódok nem jeleníthetők meg újra. Visszavonással azonnal érvénytelenné válik.",
+        "col_label": "Címke",
+        "col_created": "Létrehozva",
+        "col_expires": "Lejár",
+        "col_created_by": "Létrehozta",
+        "loading": "Betöltés…",
+        "empty": "Nincsenek aktív kódok",
+        "revoke": "Visszavonás",
+        "revoked": "Párosítási kód visszavonva",
+        "revoke_failed": "Nem sikerült visszavonni a kódot",
+        "created": "Párosítási kód létrehozva",
+        "create_failed": "Nem sikerült párosítási kódot létrehozni"
     }
 }

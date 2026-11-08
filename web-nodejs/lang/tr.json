@@ -88,6 +88,7 @@
         "server_attestation": "Sunucu Performans Onayı",
         "commercialization": "Ticarileştirme",
         "remote_open_tab": "Uzak masaüstü istemcisini yeni sekmede aç",
+        "pairing": "Eşleştirme",
         "client_branding": "Client Branding",
         "agents": "BetterDesk Aracıları"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "Eşleştirme, genel bir Support Agent’ın sunucunuza ulaştıktan sonra gösterdiği QR’yi kullanır.",
         "branding_link": "İstemci markası",
         "branding_body": "Görünüm (logo, renkler, etiketler) çalışma zamanında İstemci markasından yüklenir — yükleyiciye gömülmez."
+    },
+
+    "pairing": {
+        "title": "Eşleştirme kodu",
+        "subtitle": "Uzun yapılandırma dizesi yerine sunucu adresini ve kısa, tek kullanımlık bir kodu yazarak BetterDesk istemcisini bağlayın.",
+        "generate_title": "Kod oluştur",
+        "generate_hint": "Kod 10 dakika geçerlidir ve bir kez çalışır. Sunucu adresini ve kodu istemciyi kuran kişiyle paylaşın.",
+        "label_field": "Etiket (isteğe bağlı)",
+        "label_placeholder": "ör. Anna'nın dizüstü bilgisayarı",
+        "host_field": "Sunucu adresi",
+        "host_hint": "İstemcilerin yazdığı adres: alan adı veya IP, bağlantı noktası olmadan.",
+        "generate_button": "Kod oluştur",
+        "code_hint": "Bu kodu cihaza girin. Yalnızca bir kez gösterilir.",
+        "expires_in": "Kalan süre",
+        "expired": "Süresi doldu",
+        "copy": "Kodu kopyala",
+        "copied": "Kod kopyalandı",
+        "copy_failed": "Kodu seçin ve elle kopyalayın",
+        "active_title": "Etkin kodlar",
+        "active_hint": "Yalnızca kodun özeti saklanır, bu yüzden kodlar yeniden gösterilemez. Kullanımdan kaldırmak için iptal edin.",
+        "col_label": "Etiket",
+        "col_created": "Oluşturulma",
+        "col_expires": "Bitiş",
+        "col_created_by": "Oluşturan",
+        "loading": "Yükleniyor…",
+        "empty": "Etkin kod yok",
+        "revoke": "İptal et",
+        "revoked": "Eşleştirme kodu iptal edildi",
+        "revoke_failed": "Kod iptal edilemedi",
+        "created": "Eşleştirme kodu oluşturuldu",
+        "create_failed": "Eşleştirme kodu oluşturulamadı"
     }
 }

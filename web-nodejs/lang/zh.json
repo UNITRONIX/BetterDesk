@@ -82,6 +82,7 @@
         "server_attestation": "服务器性能认证",
         "commercialization": "商业化",
         "remote_open_tab": "在新标签页中打开远程桌面客户端",
+        "pairing": "配对",
         "client_branding": "Client Branding",
         "agents": "BetterDesk 代理"
     },
@@ -4763,5 +4764,36 @@
         "pair_body": "配对使用通用 Support Agent 在联系服务器后显示的二维码。",
         "branding_link": "客户端品牌",
         "branding_body": "外观（徽标、颜色、标签）在运行时从客户端品牌加载，不会写入安装包。"
+    },
+
+    "pairing": {
+        "title": "配对码",
+        "subtitle": "输入服务器地址和短的一次性代码即可连接 BetterDesk 客户端，无需长配置字符串。",
+        "generate_title": "创建代码",
+        "generate_hint": "代码有效期为 10 分钟，仅可使用一次。请将服务器地址和代码告知配置客户端的人。",
+        "label_field": "标签（可选）",
+        "label_placeholder": "例如：Anna 的笔记本电脑",
+        "host_field": "服务器地址",
+        "host_hint": "客户端输入的地址：域名或 IP，不带端口。",
+        "generate_button": "生成代码",
+        "code_hint": "在设备上输入此代码。它只显示一次。",
+        "expires_in": "过期倒计时",
+        "expired": "已过期",
+        "copy": "复制代码",
+        "copied": "代码已复制",
+        "copy_failed": "请选中代码并手动复制",
+        "active_title": "有效代码",
+        "active_hint": "系统仅保存代码哈希，因此无法再次显示。撤销后立即失效。",
+        "col_label": "标签",
+        "col_created": "创建时间",
+        "col_expires": "过期时间",
+        "col_created_by": "创建者",
+        "loading": "加载中…",
+        "empty": "没有有效代码",
+        "revoke": "撤销",
+        "revoked": "配对码已撤销",
+        "revoke_failed": "无法撤销代码",
+        "created": "配对码已创建",
+        "create_failed": "无法创建配对码"
     }
 }

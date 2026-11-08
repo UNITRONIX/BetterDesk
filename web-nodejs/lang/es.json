@@ -82,6 +82,7 @@
         "server_attestation": "Certificación del servidor",
         "commercialization": "Comercialización",
         "remote_open_tab": "Abrir cliente de escritorio remoto en una pestaña nueva",
+        "pairing": "Emparejamiento",
         "client_branding": "Client Branding",
         "agents": "Agentes BetterDesk"
     },
@@ -4763,5 +4764,36 @@
         "pair_body": "El emparejamiento usa el QR que muestra un Support Agent genérico tras contactar con su servidor.",
         "branding_link": "Marca del cliente",
         "branding_body": "La apariencia (logo, colores, etiquetas) se carga en tiempo de ejecución desde la marca del cliente; no va embebida en el instalador."
+    },
+
+    "pairing": {
+        "title": "Código de emparejamiento",
+        "subtitle": "Conecta un cliente BetterDesk escribiendo la dirección del servidor y un código corto de un solo uso en lugar de una cadena larga.",
+        "generate_title": "Crear un código",
+        "generate_hint": "El código es válido durante 10 minutos y se usa una sola vez. Comparte la dirección del servidor y el código con quien configure el cliente.",
+        "label_field": "Etiqueta (opcional)",
+        "label_placeholder": "p. ej. portátil de Anna",
+        "host_field": "Dirección del servidor",
+        "host_hint": "La dirección que escriben los clientes: dominio o IP, sin puerto.",
+        "generate_button": "Generar código",
+        "code_hint": "Escribe este código en el dispositivo. Solo se muestra una vez.",
+        "expires_in": "Caduca en",
+        "expired": "Caducado",
+        "copy": "Copiar código",
+        "copied": "Código copiado",
+        "copy_failed": "Selecciona el código y cópialo manualmente",
+        "active_title": "Códigos activos",
+        "active_hint": "Solo se guarda el hash del código, por lo que no se pueden volver a mostrar. Revoca uno para que deje de funcionar de inmediato.",
+        "col_label": "Etiqueta",
+        "col_created": "Creado",
+        "col_expires": "Caduca",
+        "col_created_by": "Creado por",
+        "loading": "Cargando…",
+        "empty": "No hay códigos activos",
+        "revoke": "Revocar",
+        "revoked": "Código de emparejamiento revocado",
+        "revoke_failed": "No se pudo revocar el código",
+        "created": "Código de emparejamiento creado",
+        "create_failed": "No se pudo crear un código de emparejamiento"
     }
 }

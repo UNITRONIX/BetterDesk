@@ -82,6 +82,7 @@
         "server_attestation": "Serverattestering",
         "commercialization": "Commercialisatie",
         "remote_open_tab": "Externe-bureaubladclient openen in nieuw tabblad",
+        "pairing": "Koppelen",
         "client_branding": "Client Branding",
         "agents": "BetterDesk-agents"
     },
@@ -4763,5 +4764,36 @@
         "pair_body": "Koppelen gebruikt de QR van een generieke Support Agent nadat die uw server bereikt.",
         "branding_link": "Clientbranding",
         "branding_body": "Uiterlijk (logo, kleuren, labels) wordt tijdens runtime geladen uit Clientbranding — niet in de installer gebakken."
+    },
+
+    "pairing": {
+        "title": "Koppelcode",
+        "subtitle": "Verbind een BetterDesk-client met het serveradres en een korte eenmalige code in plaats van een lange configuratiereeks.",
+        "generate_title": "Code aanmaken",
+        "generate_hint": "De code is 10 minuten geldig en werkt één keer. Deel het serveradres en de code met degene die de client instelt.",
+        "label_field": "Label (optioneel)",
+        "label_placeholder": "bijv. laptop van Anna",
+        "host_field": "Serveradres",
+        "host_hint": "Het adres dat clients invoeren: domeinnaam of IP, zonder poort.",
+        "generate_button": "Code genereren",
+        "code_hint": "Voer deze code in op het apparaat. Hij wordt maar één keer getoond.",
+        "expires_in": "Verloopt over",
+        "expired": "Verlopen",
+        "copy": "Code kopiëren",
+        "copied": "Code gekopieerd",
+        "copy_failed": "Selecteer de code en kopieer deze handmatig",
+        "active_title": "Actieve codes",
+        "active_hint": "Alleen de hash van de code wordt opgeslagen, dus codes kunnen niet opnieuw worden getoond. Trek er een in om hem direct ongeldig te maken.",
+        "col_label": "Label",
+        "col_created": "Aangemaakt",
+        "col_expires": "Verloopt",
+        "col_created_by": "Aangemaakt door",
+        "loading": "Laden…",
+        "empty": "Geen actieve codes",
+        "revoke": "Intrekken",
+        "revoked": "Koppelcode ingetrokken",
+        "revoke_failed": "Code kon niet worden ingetrokken",
+        "created": "Koppelcode aangemaakt",
+        "create_failed": "Koppelcode kon niet worden aangemaakt"
     }
 }

@@ -88,6 +88,7 @@
         "server_attestation": "Chứng nhận máy chủ",
         "commercialization": "Thương mại hóa",
         "remote_open_tab": "Mở client máy tính để bàn từ xa trong tab mới",
+        "pairing": "Ghép nối",
         "client_branding": "Client Branding",
         "agents": "Tác nhân BetterDesk"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "Ghép nối dùng QR do Support Agent chung hiện sau khi đến máy chủ của bạn.",
         "branding_link": "Thương hiệu máy khách",
         "branding_body": "Giao diện (logo, màu, nhãn) được tải lúc chạy từ Thương hiệu máy khách — không gắn sẵn trong trình cài."
+    },
+
+    "pairing": {
+        "title": "Mã ghép nối",
+        "subtitle": "Kết nối ứng dụng khách BetterDesk bằng cách nhập địa chỉ máy chủ và mã dùng một lần ngắn thay vì chuỗi cấu hình dài.",
+        "generate_title": "Tạo mã",
+        "generate_hint": "Mã có hiệu lực 10 phút và chỉ dùng một lần. Hãy gửi địa chỉ máy chủ và mã cho người cấu hình ứng dụng khách.",
+        "label_field": "Nhãn (tùy chọn)",
+        "label_placeholder": "ví dụ: laptop của Anna",
+        "host_field": "Địa chỉ máy chủ",
+        "host_hint": "Địa chỉ mà ứng dụng khách nhập: tên miền hoặc IP, không kèm cổng.",
+        "generate_button": "Tạo mã",
+        "code_hint": "Nhập mã này trên thiết bị. Mã chỉ hiển thị một lần.",
+        "expires_in": "Hết hạn sau",
+        "expired": "Đã hết hạn",
+        "copy": "Sao chép mã",
+        "copied": "Đã sao chép mã",
+        "copy_failed": "Chọn mã và sao chép thủ công",
+        "active_title": "Mã đang hoạt động",
+        "active_hint": "Chỉ lưu băm của mã nên không thể hiển thị lại. Thu hồi để vô hiệu hóa ngay.",
+        "col_label": "Nhãn",
+        "col_created": "Đã tạo",
+        "col_expires": "Hết hạn",
+        "col_created_by": "Người tạo",
+        "loading": "Đang tải…",
+        "empty": "Không có mã đang hoạt động",
+        "revoke": "Thu hồi",
+        "revoked": "Đã thu hồi mã ghép nối",
+        "revoke_failed": "Không thể thu hồi mã",
+        "created": "Đã tạo mã ghép nối",
+        "create_failed": "Không thể tạo mã ghép nối"
     }
 }

@@ -88,6 +88,7 @@
         "server_attestation": "Sertifikasi Server",
         "commercialization": "Komersialisasi",
         "remote_open_tab": "Buka klien desktop jarak jauh di tab baru",
+        "pairing": "Pemasangan",
         "client_branding": "Client Branding",
         "agents": "Agen BetterDesk"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "Pemasangan memakai QR yang ditampilkan Support Agent generik setelah mencapai server Anda.",
         "branding_link": "Branding klien",
         "branding_body": "Tampilan (logo, warna, label) dimuat saat runtime dari Branding klien — tidak dibake ke penginstal."
+    },
+
+    "pairing": {
+        "title": "Kode pemasangan",
+        "subtitle": "Hubungkan klien BetterDesk dengan mengetik alamat server dan kode sekali pakai yang singkat, bukan string konfigurasi yang panjang.",
+        "generate_title": "Buat kode",
+        "generate_hint": "Kode berlaku 10 menit dan hanya sekali pakai. Bagikan alamat server dan kode kepada orang yang menyiapkan klien.",
+        "label_field": "Label (opsional)",
+        "label_placeholder": "mis. laptop Anna",
+        "host_field": "Alamat server",
+        "host_hint": "Alamat yang diketik klien: nama domain atau IP, tanpa port.",
+        "generate_button": "Buat kode",
+        "code_hint": "Ketik kode ini di perangkat. Kode hanya ditampilkan sekali.",
+        "expires_in": "Berakhir dalam",
+        "expired": "Kedaluwarsa",
+        "copy": "Salin kode",
+        "copied": "Kode disalin",
+        "copy_failed": "Pilih kode dan salin secara manual",
+        "active_title": "Kode aktif",
+        "active_hint": "Hanya hash kode yang disimpan, jadi kode tidak dapat ditampilkan lagi. Cabut untuk menghentikannya segera.",
+        "col_label": "Label",
+        "col_created": "Dibuat",
+        "col_expires": "Berakhir",
+        "col_created_by": "Dibuat oleh",
+        "loading": "Memuat…",
+        "empty": "Tidak ada kode aktif",
+        "revoke": "Cabut",
+        "revoked": "Kode pemasangan dicabut",
+        "revoke_failed": "Tidak dapat mencabut kode",
+        "created": "Kode pemasangan dibuat",
+        "create_failed": "Tidak dapat membuat kode pemasangan"
     }
 }

@@ -88,6 +88,7 @@
         "server_attestation": "Serverattest",
         "commercialization": "Kommercialisering",
         "remote_open_tab": "Åbn fjernskrivebordsklient i ny fane",
+        "pairing": "Parring",
         "client_branding": "Client Branding",
         "agents": "BetterDesk-agenter"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "Parring bruger QR-koden fra en generisk Support Agent, når den når din server.",
         "branding_link": "Klientbranding",
         "branding_body": "Udseende (logo, farver, etiketter) indlæses ved kørsel fra Klientbranding — det er ikke indbygget i installeren."
+    },
+
+    "pairing": {
+        "title": "Parringskode",
+        "subtitle": "Forbind en BetterDesk-klient ved at indtaste serveradressen og en kort engangskode i stedet for en lang konfigurationsstreng.",
+        "generate_title": "Opret en kode",
+        "generate_hint": "Koden er gyldig i 10 minutter og kan bruges én gang. Del serveradressen og koden med den, der opsætter klienten.",
+        "label_field": "Etiket (valgfrit)",
+        "label_placeholder": "f.eks. Annas bærbare",
+        "host_field": "Serveradresse",
+        "host_hint": "Den adresse, klienter indtaster: domænenavn eller IP, uden port.",
+        "generate_button": "Generér kode",
+        "code_hint": "Indtast denne kode på enheden. Den vises kun én gang.",
+        "expires_in": "Udløber om",
+        "expired": "Udløbet",
+        "copy": "Kopiér kode",
+        "copied": "Kode kopieret",
+        "copy_failed": "Markér koden og kopiér den manuelt",
+        "active_title": "Aktive koder",
+        "active_hint": "Kun kodens hash gemmes, så koder kan ikke vises igen. Tilbagekald en for at gøre den ugyldig med det samme.",
+        "col_label": "Etiket",
+        "col_created": "Oprettet",
+        "col_expires": "Udløber",
+        "col_created_by": "Oprettet af",
+        "loading": "Indlæser…",
+        "empty": "Ingen aktive koder",
+        "revoke": "Tilbagekald",
+        "revoked": "Parringskode tilbagekaldt",
+        "revoke_failed": "Kunne ikke tilbagekalde koden",
+        "created": "Parringskode oprettet",
+        "create_failed": "Kunne ikke oprette en parringskode"
     }
 }

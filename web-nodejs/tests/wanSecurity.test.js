@@ -93,6 +93,25 @@ describe('WAN API path whitelist', () => {
         expect(runWhitelist('/api/devices/register/status', 'GET').nextCalled).toBe(true);
     });
 
+    test('allows pairing redeem and preview, but only as POST', () => {
+        // Redeem must be reachable without credentials; a GET would let a link or a
+        // prefetch spend somebody else's code.
+        expect(runWhitelist('/api/pairing/redeem', 'POST').nextCalled).toBe(true);
+        expect(runWhitelist('/api/pairing/config', 'POST').nextCalled).toBe(true);
+
+        const asGet = runWhitelist('/api/pairing/redeem', 'GET');
+        expect(asGet.nextCalled).toBe(false);
+        expect(asGet.statusCode).toBe(405);
+    });
+
+    test('keeps pairing code minting off the public client API', () => {
+        // Minting and listing codes requires an operator session on the panel; exposing
+        // them on :21121 would let anyone enumerate active code metadata.
+        expect(runWhitelist('/api/pairing/codes', 'POST').nextCalled).toBe(false);
+        expect(runWhitelist('/api/pairing/codes', 'GET').nextCalled).toBe(false);
+    });
+
+
     test('allows both current-user methods used by clients', () => {
         expect(runWhitelist('/api/currentUser', 'GET').nextCalled).toBe(true);
         expect(runWhitelist('/api/currentUser', 'POST').nextCalled).toBe(true);

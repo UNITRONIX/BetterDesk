@@ -82,6 +82,7 @@
         "server_attestation": "サーバー性能認定",
         "commercialization": "商用化",
         "remote_open_tab": "新しいタブでリモートデスクトップクライアントを開く",
+        "pairing": "ペアリング",
         "client_branding": "Client Branding",
         "agents": "BetterDeskエージェント"
     },
@@ -4763,5 +4764,36 @@
         "pair_body": "ペアリングには、汎用 Support Agent がサーバー到達後に表示する QR を使います。",
         "branding_link": "クライアントブランディング",
         "branding_body": "外観（ロゴ・色・ラベル）は実行時にクライアントブランディングから読み込まれます。インストーラーには焼き込まれません。"
+    },
+
+    "pairing": {
+        "title": "ペアリングコード",
+        "subtitle": "長い設定文字列の代わりに、サーバーアドレスと短いワンタイムコードを入力して BetterDesk クライアントを接続します。",
+        "generate_title": "コードを作成",
+        "generate_hint": "コードは 10 分間有効で、一度だけ使用できます。サーバーアドレスとコードをクライアントを設定する人に伝えてください。",
+        "label_field": "ラベル（任意）",
+        "label_placeholder": "例: Anna のノート PC",
+        "host_field": "サーバーアドレス",
+        "host_hint": "クライアントが入力するアドレス：ポートなしのドメイン名または IP。",
+        "generate_button": "コードを生成",
+        "code_hint": "このコードを端末に入力してください。表示は一度だけです。",
+        "expires_in": "有効期限",
+        "expired": "期限切れ",
+        "copy": "コードをコピー",
+        "copied": "コードをコピーしました",
+        "copy_failed": "コードを選択して手動でコピーしてください",
+        "active_title": "有効なコード",
+        "active_hint": "保存されるのはコードのハッシュのみのため、コードを再表示できません。無効にするには取り消してください。",
+        "col_label": "ラベル",
+        "col_created": "作成日時",
+        "col_expires": "有効期限",
+        "col_created_by": "作成者",
+        "loading": "読み込み中…",
+        "empty": "有効なコードはありません",
+        "revoke": "取り消す",
+        "revoked": "ペアリングコードを取り消しました",
+        "revoke_failed": "コードを取り消せませんでした",
+        "created": "ペアリングコードを作成しました",
+        "create_failed": "ペアリングコードを作成できませんでした"
     }
 }

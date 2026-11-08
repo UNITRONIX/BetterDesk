@@ -82,6 +82,7 @@
         "server_attestation": "Server-Attestierung",
         "commercialization": "Kommerzialisierung",
         "remote_open_tab": "Remote-Desktop-Client in neuem Tab öffnen",
+        "pairing": "Kopplung",
         "client_branding": "Client Branding",
         "agents": "BetterDesk-Agenten"
     },
@@ -4763,5 +4764,36 @@
         "pair_body": "Die Kopplung nutzt den QR-Code eines generischen Support-Agenten nach dem Kontakt mit Ihrem Server.",
         "branding_link": "Client-Branding",
         "branding_body": "Erscheinungsbild (Logo, Farben, Beschriftungen) wird zur Laufzeit aus dem Client-Branding geladen — nicht in den Installer eingebettet."
+    },
+
+    "pairing": {
+        "title": "Kopplungscode",
+        "subtitle": "Verbinden Sie einen BetterDesk-Client mit Serveradresse und einem kurzen Einmalcode statt einer langen Konfigurationszeichenfolge.",
+        "generate_title": "Code erstellen",
+        "generate_hint": "Der Code ist 10 Minuten gültig und einmal verwendbar. Geben Sie Serveradresse und Code an die Person weiter, die den Client einrichtet.",
+        "label_field": "Bezeichnung (optional)",
+        "label_placeholder": "z. B. Annas Laptop",
+        "host_field": "Serveradresse",
+        "host_hint": "Die Adresse, die Clients eingeben: Domainname oder IP, ohne Port.",
+        "generate_button": "Code generieren",
+        "code_hint": "Geben Sie diesen Code auf dem Gerät ein. Er wird nur einmal angezeigt.",
+        "expires_in": "Läuft ab in",
+        "expired": "Abgelaufen",
+        "copy": "Code kopieren",
+        "copied": "Code kopiert",
+        "copy_failed": "Markieren Sie den Code und kopieren Sie ihn manuell",
+        "active_title": "Aktive Codes",
+        "active_hint": "Nur der Hash des Codes wird gespeichert, daher können Codes nicht erneut angezeigt werden. Widerrufen Sie einen Code, damit er sofort ungültig wird.",
+        "col_label": "Bezeichnung",
+        "col_created": "Erstellt",
+        "col_expires": "Läuft ab",
+        "col_created_by": "Erstellt von",
+        "loading": "Wird geladen…",
+        "empty": "Keine aktiven Codes",
+        "revoke": "Widerrufen",
+        "revoked": "Kopplungscode widerrufen",
+        "revoke_failed": "Code konnte nicht widerrufen werden",
+        "created": "Kopplungscode erstellt",
+        "create_failed": "Kopplungscode konnte nicht erstellt werden"
     }
 }

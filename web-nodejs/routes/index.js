@@ -60,6 +60,7 @@ const systemRoutes = lazyRoute('./system.routes');
 const cdapStudioRoutes = lazyRoute('./cdap-studio.routes');
 const permissionsRoutes = lazyRoute('./permissions.routes');
 const phase45Routes = lazyRoute('./phase4_5.routes');
+const pairingRoutes = lazyRoute('./pairing.routes');
 const serverManagementRoutes = lazyRoute('./server-management.routes');
 const serverAttestationRoutes = lazyRoute('./server-attestation.routes');
 
@@ -160,5 +161,6 @@ router.use('/', permissionsRoutes);                      // admin-facing: /permi
 router.use('/', serverManagementRoutes);                 // admin-facing: /server-management, /api/server-management/* (BETA)
 router.use('/', serverAttestationRoutes);                // admin-facing: /server-attestation, /api/server-attestation/*
 router.use('/', phase45Routes);                          // Phase 4/5: /api/users/me/profile, /api/agent-templates, /portal
+router.use('/', pairingRoutes);                           // Short-code pairing: /pairing, /api/panel/pairing/codes
 
 module.exports = router;

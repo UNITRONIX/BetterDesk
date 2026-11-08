@@ -88,6 +88,7 @@
         "server_attestation": "Palvelintodistus",
         "commercialization": "Kaupallistaminen",
         "remote_open_tab": "Avaa etätyöpöytäasiakas uuteen välilehteen",
+        "pairing": "Pariliitos",
         "client_branding": "Client Branding",
         "agents": "BetterDesk-agentit"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "Paritus käyttää geneerisen Support Agentin näyttämää QR-koodia palvelimen tavoittamisen jälkeen.",
         "branding_link": "Asiakkaan brändäys",
         "branding_body": "Ulkoasu (logo, värit, tekstit) ladataan ajon aikana Asiakkaan brändäyksestä — sitä ei upoteta asennusohjelmaan."
+    },
+
+    "pairing": {
+        "title": "Pariliitoskoodi",
+        "subtitle": "Yhdistä BetterDesk-asiakas kirjoittamalla palvelimen osoite ja lyhyt kertakäyttöinen koodi pitkän asetustekstin sijaan.",
+        "generate_title": "Luo koodi",
+        "generate_hint": "Koodi on voimassa 10 minuuttia ja toimii kerran. Anna palvelimen osoite ja koodi asiakkaan asentajalle.",
+        "label_field": "Tunniste (valinnainen)",
+        "label_placeholder": "esim. Annan kannettava",
+        "host_field": "Palvelimen osoite",
+        "host_hint": "Osoite, jonka asiakkaat kirjoittavat: verkkotunnus tai IP, ilman porttia.",
+        "generate_button": "Luo koodi",
+        "code_hint": "Syötä tämä koodi laitteeseen. Se näytetään vain kerran.",
+        "expires_in": "Vanhenee",
+        "expired": "Vanhentunut",
+        "copy": "Kopioi koodi",
+        "copied": "Koodi kopioitu",
+        "copy_failed": "Valitse koodi ja kopioi se käsin",
+        "active_title": "Aktiiviset koodit",
+        "active_hint": "Vain koodin tiiviste tallennetaan, joten koodeja ei voi näyttää uudelleen. Peruuta koodi, niin se lakkaa toimimasta heti.",
+        "col_label": "Tunniste",
+        "col_created": "Luotu",
+        "col_expires": "Vanhenee",
+        "col_created_by": "Luonut",
+        "loading": "Ladataan…",
+        "empty": "Ei aktiivisia koodeja",
+        "revoke": "Peruuta",
+        "revoked": "Pariliitoskoodi peruttu",
+        "revoke_failed": "Koodin peruuttaminen epäonnistui",
+        "created": "Pariliitoskoodi luotu",
+        "create_failed": "Pariliitoskoodin luominen epäonnistui"
     }
 }

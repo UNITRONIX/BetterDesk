@@ -82,6 +82,7 @@
         "server_attestation": "Attestazione server",
         "commercialization": "Commercializzazione",
         "remote_open_tab": "Apri client desktop remoto in una nuova scheda",
+        "pairing": "Abbinamento",
         "client_branding": "Client Branding",
         "agents": "Agenti BetterDesk"
     },
@@ -4763,5 +4764,36 @@
         "pair_body": "L’associazione usa il QR mostrato da un Support Agent generico dopo il contatto con il server.",
         "branding_link": "Branding client",
         "branding_body": "Aspetto (logo, colori, etichette) caricato a runtime dal Branding client — non incorporato nell’installer."
+    },
+
+    "pairing": {
+        "title": "Codice di abbinamento",
+        "subtitle": "Connetti un client BetterDesk inserendo l'indirizzo del server e un codice breve monouso invece di una lunga stringa di configurazione.",
+        "generate_title": "Crea un codice",
+        "generate_hint": "Il codice è valido per 10 minuti e utilizzabile una sola volta. Condividi indirizzo del server e codice con chi configura il client.",
+        "label_field": "Etichetta (facoltativa)",
+        "label_placeholder": "es. portatile di Anna",
+        "host_field": "Indirizzo del server",
+        "host_hint": "L'indirizzo che inseriscono i client: dominio o IP, senza porta.",
+        "generate_button": "Genera codice",
+        "code_hint": "Digita questo codice sul dispositivo. Viene mostrato una sola volta.",
+        "expires_in": "Scade tra",
+        "expired": "Scaduto",
+        "copy": "Copia codice",
+        "copied": "Codice copiato",
+        "copy_failed": "Seleziona il codice e copialo manualmente",
+        "active_title": "Codici attivi",
+        "active_hint": "Viene memorizzato solo l'hash del codice, quindi i codici non possono essere mostrati di nuovo. Revocane uno per renderlo subito inutilizzabile.",
+        "col_label": "Etichetta",
+        "col_created": "Creato",
+        "col_expires": "Scade",
+        "col_created_by": "Creato da",
+        "loading": "Caricamento…",
+        "empty": "Nessun codice attivo",
+        "revoke": "Revoca",
+        "revoked": "Codice di abbinamento revocato",
+        "revoke_failed": "Impossibile revocare il codice",
+        "created": "Codice di abbinamento creato",
+        "create_failed": "Impossibile creare un codice di abbinamento"
     }
 }

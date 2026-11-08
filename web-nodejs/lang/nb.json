@@ -88,6 +88,7 @@
         "server_attestation": "Serverattest",
         "commercialization": "Kommersialisering",
         "remote_open_tab": "Åpne eksternt skrivebordsklient i ny fane",
+        "pairing": "Sammenkobling",
         "client_branding": "Client Branding",
         "agents": "BetterDesk-agenter"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "Paring bruker QR-koden fra en generisk Support Agent etter at den når serveren din.",
         "branding_link": "Klientmerking",
         "branding_body": "Utseende (logo, farger, etiketter) lastes ved kjøring fra Klientmerking — det er ikke innebygd i installeren."
+    },
+
+    "pairing": {
+        "title": "Sammenkoblingskode",
+        "subtitle": "Koble til en BetterDesk-klient ved å skrive inn serveradressen og en kort engangskode i stedet for en lang konfigurasjonsstreng.",
+        "generate_title": "Opprett en kode",
+        "generate_hint": "Koden er gyldig i 10 minutter og virker én gang. Del serveradressen og koden med den som setter opp klienten.",
+        "label_field": "Etikett (valgfritt)",
+        "label_placeholder": "f.eks. Annas bærbare",
+        "host_field": "Serveradresse",
+        "host_hint": "Adressen klienter skriver inn: domenenavn eller IP, uten port.",
+        "generate_button": "Generer kode",
+        "code_hint": "Skriv inn denne koden på enheten. Den vises bare én gang.",
+        "expires_in": "Utløper om",
+        "expired": "Utløpt",
+        "copy": "Kopier kode",
+        "copied": "Kode kopiert",
+        "copy_failed": "Merk koden og kopier den manuelt",
+        "active_title": "Aktive koder",
+        "active_hint": "Bare hashen av koden lagres, så koder kan ikke vises igjen. Tilbakekall en for å gjøre den ugyldig med en gang.",
+        "col_label": "Etikett",
+        "col_created": "Opprettet",
+        "col_expires": "Utløper",
+        "col_created_by": "Opprettet av",
+        "loading": "Laster…",
+        "empty": "Ingen aktive koder",
+        "revoke": "Tilbakekall",
+        "revoked": "Sammenkoblingskode tilbakekalt",
+        "revoke_failed": "Kunne ikke tilbakekalle koden",
+        "created": "Sammenkoblingskode opprettet",
+        "create_failed": "Kunne ikke opprette en sammenkoblingskode"
     }
 }

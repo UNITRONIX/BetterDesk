@@ -1089,6 +1089,43 @@ async function clearEnrollmentRejection(deviceId) {
 }
 
 /**
+ * Mint a one-time pairing code (operator). The plaintext code is returned once and never
+ * stored; the server keeps only its sha256.
+ */
+async function createPairingCode(label) {
+    try {
+        const { data } = await apiClient.post('/pairing/codes', { label: label || '' });
+        return { success: true, data };
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response && e.response.status };
+    }
+}
+
+/**
+ * List active pairing codes (no plaintext).
+ */
+async function listPairingCodes() {
+    try {
+        const { data } = await apiClient.get('/pairing/codes');
+        return { success: true, data };
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response && e.response.status };
+    }
+}
+
+/**
+ * Revoke a pairing code before it is redeemed.
+ */
+async function revokePairingCode(id) {
+    try {
+        const { data } = await apiClient.delete(`/pairing/codes/${encodeURIComponent(id)}`);
+        return { success: true, data };
+    } catch (e) {
+        return { success: false, error: e.message, status: e.response && e.response.status };
+    }
+}
+
+/**
  * Get branding configuration from Go server (public endpoint).
  */
 async function getBranding() {
@@ -1634,6 +1671,9 @@ module.exports = {
     // Branding (Go server)
     getBranding: getBranding,
     saveBranding: saveBranding,
+    createPairingCode,
+    listPairingCodes,
+    revokePairingCode,
     // Access Policies (Unattended Access)
     getAccessPolicy,
     saveAccessPolicy,

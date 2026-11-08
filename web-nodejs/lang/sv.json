@@ -88,6 +88,7 @@
         "server_attestation": "Serverattest",
         "commercialization": "Kommersialisering",
         "remote_open_tab": "Öppna fjärrskrivbordsklient i ny flik",
+        "pairing": "Parkoppling",
         "client_branding": "Client Branding",
         "agents": "BetterDesk-agenter"
     },
@@ -4769,5 +4770,36 @@
         "pair_body": "Parning använder QR-koden från en generisk Support Agent efter att den når din server.",
         "branding_link": "Klientvarumärke",
         "branding_body": "Utseendet (logotyp, färger, etiketter) laddas vid körning från Klientvarumärke — det bakas inte in i installaren."
+    },
+
+    "pairing": {
+        "title": "Parkopplingskod",
+        "subtitle": "Anslut en BetterDesk-klient genom att ange serveradressen och en kort engångskod i stället för en lång konfigurationssträng.",
+        "generate_title": "Skapa en kod",
+        "generate_hint": "Koden är giltig i 10 minuter och fungerar en gång. Dela serveradressen och koden med den som installerar klienten.",
+        "label_field": "Etikett (valfritt)",
+        "label_placeholder": "t.ex. Annas bärbara",
+        "host_field": "Serveradress",
+        "host_hint": "Adressen som klienter anger: domännamn eller IP, utan port.",
+        "generate_button": "Generera kod",
+        "code_hint": "Ange den här koden på enheten. Den visas bara en gång.",
+        "expires_in": "Upphör om",
+        "expired": "Upphört",
+        "copy": "Kopiera kod",
+        "copied": "Kod kopierad",
+        "copy_failed": "Markera koden och kopiera den manuellt",
+        "active_title": "Aktiva koder",
+        "active_hint": "Bara kodens hash lagras, så koder kan inte visas igen. Återkalla en för att den ska sluta fungera direkt.",
+        "col_label": "Etikett",
+        "col_created": "Skapad",
+        "col_expires": "Upphör",
+        "col_created_by": "Skapad av",
+        "loading": "Läser in…",
+        "empty": "Inga aktiva koder",
+        "revoke": "Återkalla",
+        "revoked": "Parkopplingskod återkallad",
+        "revoke_failed": "Kunde inte återkalla koden",
+        "created": "Parkopplingskod skapad",
+        "create_failed": "Kunde inte skapa en parkopplingskod"
     }
 }

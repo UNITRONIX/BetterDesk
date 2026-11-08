@@ -86,6 +86,7 @@
         "server_attestation": "服務器性能認證",
         "commercialization": "商業化",
         "remote_open_tab": "在新分頁中開啟遠端桌面用戶端",
+        "pairing": "配對",
         "client_branding": "Client Branding",
         "agents": "BetterDesk 代理"
     },
@@ -4767,5 +4768,36 @@
         "pair_body": "配對使用通用 Support Agent 在聯絡伺服器後顯示的 QR。",
         "branding_link": "用戶端品牌",
         "branding_body": "外觀（標誌、顏色、標籤）在執行時從用戶端品牌載入，不會寫入安裝程式。"
+    },
+
+    "pairing": {
+        "title": "配對碼",
+        "subtitle": "輸入伺服器位址和短的一次性代碼即可連接 BetterDesk 用戶端，無需長設定字串。",
+        "generate_title": "建立代碼",
+        "generate_hint": "代碼有效期為 10 分鐘，僅可使用一次。請將伺服器位址和代碼告知設定用戶端的人。",
+        "label_field": "標籤（選填）",
+        "label_placeholder": "例如：Anna 的筆記型電腦",
+        "host_field": "伺服器位址",
+        "host_hint": "用戶端輸入的位址：網域名稱或 IP，不帶連接埠。",
+        "generate_button": "產生代碼",
+        "code_hint": "在裝置上輸入此代碼。它只顯示一次。",
+        "expires_in": "到期倒數",
+        "expired": "已過期",
+        "copy": "複製代碼",
+        "copied": "代碼已複製",
+        "copy_failed": "請選取代碼並手動複製",
+        "active_title": "有效代碼",
+        "active_hint": "系統僅儲存代碼雜湊，因此無法再次顯示。撤銷後立即失效。",
+        "col_label": "標籤",
+        "col_created": "建立時間",
+        "col_expires": "到期時間",
+        "col_created_by": "建立者",
+        "loading": "載入中…",
+        "empty": "沒有有效代碼",
+        "revoke": "撤銷",
+        "revoked": "配對碼已撤銷",
+        "revoke_failed": "無法撤銷代碼",
+        "created": "配對碼已建立",
+        "create_failed": "無法建立配對碼"
     }
 }

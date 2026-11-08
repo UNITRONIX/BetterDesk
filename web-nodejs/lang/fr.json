@@ -86,6 +86,7 @@
         "server_attestation": "Server-Attestierung",
         "commercialization": "Kommerzialisierung",
         "remote_open_tab": "Ouvrir le client Bureau à distance dans un nouvel onglet",
+        "pairing": "Appairage",
         "client_branding": "Client Branding",
         "agents": "Agents BetterDesk"
     },
@@ -4767,5 +4768,36 @@
         "pair_body": "Le jumelage utilise le QR affiché par un agent Support générique après contact avec votre serveur.",
         "branding_link": "Habillage client",
         "branding_body": "L’apparence (logo, couleurs, libellés) est chargée à l’exécution depuis l’habillage client — elle n’est pas intégrée à l’installateur."
+    },
+
+    "pairing": {
+        "title": "Code d'appairage",
+        "subtitle": "Connectez un client BetterDesk en saisissant l'adresse du serveur et un code court à usage unique au lieu d'une longue chaîne de configuration.",
+        "generate_title": "Créer un code",
+        "generate_hint": "Le code est valable 10 minutes et à usage unique. Transmettez l'adresse du serveur et le code à la personne qui configure le client.",
+        "label_field": "Libellé (facultatif)",
+        "label_placeholder": "ex. portable d'Anna",
+        "host_field": "Adresse du serveur",
+        "host_hint": "L'adresse saisie par les clients : nom de domaine ou IP, sans port.",
+        "generate_button": "Générer le code",
+        "code_hint": "Saisissez ce code sur l'appareil. Il n'est affiché qu'une fois.",
+        "expires_in": "Expire dans",
+        "expired": "Expiré",
+        "copy": "Copier le code",
+        "copied": "Code copié",
+        "copy_failed": "Sélectionnez le code et copiez-le manuellement",
+        "active_title": "Codes actifs",
+        "active_hint": "Seul le hachage du code est stocké, les codes ne peuvent donc pas être réaffichés. Révoquez-en un pour le rendre immédiatement inutilisable.",
+        "col_label": "Libellé",
+        "col_created": "Créé",
+        "col_expires": "Expire",
+        "col_created_by": "Créé par",
+        "loading": "Chargement…",
+        "empty": "Aucun code actif",
+        "revoke": "Révoquer",
+        "revoked": "Code d'appairage révoqué",
+        "revoke_failed": "Impossible de révoquer le code",
+        "created": "Code d'appairage créé",
+        "create_failed": "Impossible de créer un code d'appairage"
     }
 }
