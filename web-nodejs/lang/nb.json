@@ -2419,7 +2419,21 @@
         "save_create": "Opprett sak",
         "priority_hint": "En ny sak har frist om 4 timer (kritisk), 8 (høy), 24 (middels) eller 72 (lav).",
         "device_hint": "Enhets-ID hvis saken gjelder én enhet. Valgfritt.",
-        "device_fixed_hint": "Enheten settes når saken opprettes, og kan ikke endres."
+        "device_fixed_hint": "Enheten settes når saken opprettes, og kan ikke endres.",
+        "side_label": "Oversikt over saker",
+        "count_total": "{total} totalt.",
+        "share_title": "Etter status",
+        "share_open": "åpne",
+        "share_in_progress": "pågår",
+        "share_resolved": "løst",
+        "share_closed": "lukket",
+        "open_by_priority": "Åpne saker etter prioritet",
+        "open_by_priority_note": "Saker som er åpne eller pågår.",
+        "overdue_title": "Forfalte",
+        "overdue_note": "Over fristen og ennå ikke løst. Mest forfalte først.",
+        "overdue_none": "Ingen saker er over fristen.",
+        "overdue_row": "#{id}, {priority}, frist {time}",
+        "summary_failed": "Kunne ikke laste inn oversikten."
     },
     "activity": {
         "title": "Aktivitetsovervåking",

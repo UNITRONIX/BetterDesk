@@ -2419,7 +2419,21 @@
         "save_create": "Skapa ärende",
         "priority_hint": "Ett nytt ärende ska vara klart inom 4 timmar (kritisk), 8 (hög), 24 (medel) eller 72 (låg).",
         "device_hint": "Enhets-ID om ärendet gäller en enhet. Valfritt.",
-        "device_fixed_hint": "Enheten anges när ärendet skapas och kan inte ändras."
+        "device_fixed_hint": "Enheten anges när ärendet skapas och kan inte ändras.",
+        "side_label": "Översikt över ärenden",
+        "count_total": "{total} totalt.",
+        "share_title": "Efter status",
+        "share_open": "öppna",
+        "share_in_progress": "pågår",
+        "share_resolved": "lösta",
+        "share_closed": "stängda",
+        "open_by_priority": "Öppna ärenden efter prioritet",
+        "open_by_priority_note": "Ärenden som är öppna eller pågår.",
+        "overdue_title": "Försenade",
+        "overdue_note": "Efter sin tidsgräns och ännu inte lösta. Mest försenade först.",
+        "overdue_none": "Inget ärende är försenat.",
+        "overdue_row": "#{id}, {priority}, tidsgräns {time}",
+        "summary_failed": "Översikten kunde inte läsas in."
     },
     "activity": {
         "title": "Aktivitetsövervakning",

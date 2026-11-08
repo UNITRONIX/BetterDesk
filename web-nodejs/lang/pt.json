@@ -2413,7 +2413,21 @@
         "save_create": "Criar ticket",
         "priority_hint": "Um ticket novo vence em 4 horas (crítica), 8 (alta), 24 (média) ou 72 (baixa).",
         "device_hint": "ID do dispositivo, se o problema for de um só dispositivo. Opcional.",
-        "device_fixed_hint": "O dispositivo é definido ao criar o ticket e não pode ser alterado."
+        "device_fixed_hint": "O dispositivo é definido ao criar o ticket e não pode ser alterado.",
+        "side_label": "Resumo dos tickets",
+        "count_total": "{total} no total.",
+        "share_title": "Por estado",
+        "share_open": "abertos",
+        "share_in_progress": "em curso",
+        "share_resolved": "resolvidos",
+        "share_closed": "fechados",
+        "open_by_priority": "Tickets abertos por prioridade",
+        "open_by_priority_note": "Tickets abertos ou em curso.",
+        "overdue_title": "Em atraso",
+        "overdue_note": "Prazo ultrapassado e ainda não resolvidos. Os mais atrasados primeiro.",
+        "overdue_none": "Nenhum ticket ultrapassou o prazo.",
+        "overdue_row": "n.º {id}, {priority}, prazo {time}",
+        "summary_failed": "Não foi possível carregar o resumo."
     },
     "activity": {
         "title": "Monitorização de atividade",

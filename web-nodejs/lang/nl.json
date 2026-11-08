@@ -2413,7 +2413,21 @@
         "save_create": "Ticket aanmaken",
         "priority_hint": "Een nieuw ticket moet binnen 4 uur (kritiek), 8 (hoog), 24 (gemiddeld) of 72 (laag) klaar zijn.",
         "device_hint": "Apparaat-ID als het probleem één apparaat betreft. Optioneel.",
-        "device_fixed_hint": "Het apparaat wordt ingesteld bij het aanmaken van het ticket en kan niet worden gewijzigd."
+        "device_fixed_hint": "Het apparaat wordt ingesteld bij het aanmaken van het ticket en kan niet worden gewijzigd.",
+        "side_label": "Overzicht van tickets",
+        "count_total": "{total} in totaal.",
+        "share_title": "Per status",
+        "share_open": "open",
+        "share_in_progress": "in behandeling",
+        "share_resolved": "opgelost",
+        "share_closed": "gesloten",
+        "open_by_priority": "Open tickets per prioriteit",
+        "open_by_priority_note": "Tickets die open of in behandeling zijn.",
+        "overdue_title": "Te laat",
+        "overdue_note": "Na hun deadline en nog niet opgelost. Langst te laat eerst.",
+        "overdue_none": "Geen enkel ticket is te laat.",
+        "overdue_row": "#{id}, {priority}, deadline {time}",
+        "summary_failed": "Het overzicht kon niet worden geladen."
     },
     "activity": {
         "title": "Activiteitsmonitoring",

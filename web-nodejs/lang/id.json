@@ -2419,7 +2419,21 @@
         "save_create": "Buat tiket",
         "priority_hint": "Tiket baru jatuh tempo dalam 4 jam (kritis), 8 (tinggi), 24 (sedang), atau 72 (rendah).",
         "device_hint": "ID perangkat, jika masalahnya pada satu perangkat. Opsional.",
-        "device_fixed_hint": "Perangkat ditetapkan saat tiket dibuat dan tidak bisa diubah."
+        "device_fixed_hint": "Perangkat ditetapkan saat tiket dibuat dan tidak bisa diubah.",
+        "side_label": "Ringkasan tiket",
+        "count_total": "Total {total}.",
+        "share_title": "Menurut status",
+        "share_open": "terbuka",
+        "share_in_progress": "sedang dikerjakan",
+        "share_resolved": "selesai",
+        "share_closed": "ditutup",
+        "open_by_priority": "Tiket terbuka menurut prioritas",
+        "open_by_priority_note": "Tiket yang terbuka atau sedang dikerjakan.",
+        "overdue_title": "Lewat batas waktu",
+        "overdue_note": "Lewat batas waktu dan belum selesai. Yang paling lama terlambat lebih dulu.",
+        "overdue_none": "Tidak ada tiket yang lewat batas waktu.",
+        "overdue_row": "#{id}, {priority}, batas waktu {time}",
+        "summary_failed": "Ringkasan tidak dapat dimuat."
     },
     "activity": {
         "title": "Pemantauan Aktivitas",

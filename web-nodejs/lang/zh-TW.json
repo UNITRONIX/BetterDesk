@@ -2435,7 +2435,21 @@
         "save_create": "建立工單",
         "priority_hint": "新工單的期限為 4 小時（緊急）、8（高）、24（中）或 72（低）。",
         "device_hint": "如果問題與某一台裝置有關，填寫裝置 ID。選填。",
-        "device_fixed_hint": "裝置在建立工單時設定，之後無法變更。"
+        "device_fixed_hint": "裝置在建立工單時設定，之後無法變更。",
+        "side_label": "工單概覽",
+        "count_total": "共 {total} 個。",
+        "share_title": "依狀態",
+        "share_open": "待處理",
+        "share_in_progress": "處理中",
+        "share_resolved": "已解決",
+        "share_closed": "已關閉",
+        "open_by_priority": "依優先順序的未完成工單",
+        "open_by_priority_note": "待處理或處理中的工單。",
+        "overdue_title": "已逾期",
+        "overdue_note": "已過期限且尚未解決。逾期最久的在前。",
+        "overdue_none": "沒有逾期的工單。",
+        "overdue_row": "#{id}，{priority}，期限 {time}",
+        "summary_failed": "無法載入概覽。"
     },
     "activity": {
         "title": "活動監控",

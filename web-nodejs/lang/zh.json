@@ -2413,7 +2413,21 @@
         "save_create": "创建工单",
         "priority_hint": "新工单的期限为 4 小时（紧急）、8（高）、24（中）或 72（低）。",
         "device_hint": "如果问题与某一台设备有关，填写设备 ID。可选。",
-        "device_fixed_hint": "设备在创建工单时设定，之后无法更改。"
+        "device_fixed_hint": "设备在创建工单时设定，之后无法更改。",
+        "side_label": "工单概览",
+        "count_total": "共 {total} 个。",
+        "share_title": "按状态",
+        "share_open": "待处理",
+        "share_in_progress": "处理中",
+        "share_resolved": "已解决",
+        "share_closed": "已关闭",
+        "open_by_priority": "按优先级的未完成工单",
+        "open_by_priority_note": "待处理或处理中的工单。",
+        "overdue_title": "已逾期",
+        "overdue_note": "已过期限且尚未解决。逾期最久的在前。",
+        "overdue_none": "没有逾期的工单。",
+        "overdue_row": "#{id}，{priority}，期限 {time}",
+        "summary_failed": "无法加载概览。"
     },
     "activity": {
         "title": "活动监控",

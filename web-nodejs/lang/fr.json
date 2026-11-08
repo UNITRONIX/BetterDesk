@@ -2435,7 +2435,21 @@
         "save_create": "Créer le ticket",
         "priority_hint": "Un nouveau ticket est dû dans 4 heures (critique), 8 (haute), 24 (moyenne) ou 72 (basse).",
         "device_hint": "ID de l'appareil, si le problème concerne un seul appareil. Facultatif.",
-        "device_fixed_hint": "L'appareil est défini à la création du ticket et ne peut pas être modifié."
+        "device_fixed_hint": "L'appareil est défini à la création du ticket et ne peut pas être modifié.",
+        "side_label": "Résumé des tickets",
+        "count_total": "{total} au total.",
+        "share_title": "Par statut",
+        "share_open": "ouverts",
+        "share_in_progress": "en cours",
+        "share_resolved": "résolus",
+        "share_closed": "fermés",
+        "open_by_priority": "Tickets ouverts par priorité",
+        "open_by_priority_note": "Tickets ouverts ou en cours.",
+        "overdue_title": "En retard",
+        "overdue_note": "Échéance dépassée et pas encore résolus. Les plus en retard en premier.",
+        "overdue_none": "Aucun ticket n'a dépassé son échéance.",
+        "overdue_row": "n° {id}, {priority}, échéance {time}",
+        "summary_failed": "Impossible de charger le résumé."
     },
     "activity": {
         "title": "Tableau de bord",

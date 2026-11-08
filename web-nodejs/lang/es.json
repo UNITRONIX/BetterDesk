@@ -2413,7 +2413,21 @@
         "save_create": "Crear ticket",
         "priority_hint": "Un ticket nuevo vence en 4 horas (crítica), 8 (alta), 24 (media) o 72 (baja).",
         "device_hint": "ID del dispositivo, si la incidencia afecta a uno. Opcional.",
-        "device_fixed_hint": "El dispositivo se fija al crear el ticket y no se puede cambiar."
+        "device_fixed_hint": "El dispositivo se fija al crear el ticket y no se puede cambiar.",
+        "side_label": "Resumen de tickets",
+        "count_total": "{total} en total.",
+        "share_title": "Por estado",
+        "share_open": "abiertos",
+        "share_in_progress": "en curso",
+        "share_resolved": "resueltos",
+        "share_closed": "cerrados",
+        "open_by_priority": "Tickets abiertos por prioridad",
+        "open_by_priority_note": "Tickets abiertos o en curso.",
+        "overdue_title": "Vencidos",
+        "overdue_note": "Pasada la fecha límite y aún sin resolver. Los más atrasados primero.",
+        "overdue_none": "Ningún ticket ha pasado su fecha límite.",
+        "overdue_row": "n.º {id}, {priority}, vencía {time}",
+        "summary_failed": "No se pudo cargar el resumen."
     },
     "activity": {
         "title": "Panel",

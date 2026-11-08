@@ -2419,7 +2419,21 @@
         "save_create": "Jegy létrehozása",
         "priority_hint": "Az új jegy határideje 4 óra (kritikus), 8 (magas), 24 (közepes) vagy 72 (alacsony).",
         "device_hint": "Eszközazonosító, ha a hiba egy eszközt érint. Nem kötelező.",
-        "device_fixed_hint": "Az eszközt a jegy létrehozásakor kell megadni, később nem módosítható."
+        "device_fixed_hint": "Az eszközt a jegy létrehozásakor kell megadni, később nem módosítható.",
+        "side_label": "Jegyek összegzése",
+        "count_total": "Összesen {total}.",
+        "share_title": "Állapot szerint",
+        "share_open": "nyitott",
+        "share_in_progress": "folyamatban",
+        "share_resolved": "megoldva",
+        "share_closed": "lezárva",
+        "open_by_priority": "Nyitott jegyek prioritás szerint",
+        "open_by_priority_note": "Nyitott vagy folyamatban lévő jegyek.",
+        "overdue_title": "Lejárt",
+        "overdue_note": "Lejárt a határidejük, és még nincsenek megoldva. A legrégebben lejártak elöl.",
+        "overdue_none": "Egyik jegy határideje sem járt le.",
+        "overdue_row": "#{id}, {priority}, határidő: {time}",
+        "summary_failed": "Az összegzés nem tölthető be."
     },
     "activity": {
         "title": "Tevékenységfigyelés",

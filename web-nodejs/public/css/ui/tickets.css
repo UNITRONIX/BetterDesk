@@ -152,3 +152,73 @@
 
 /* The description takes its own line under the title (base.css caps it at
    --measure, which lets it sit beside the title on wide screens) */
+
+/* With the side column beside the table, category and device move out of
+   the row (both are in the ticket dialog) so the title keeps its room */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .tickets-table .col-category,
+    .tickets-table .col-device {
+        display: none;
+    }
+}
+
+/* ── Side column ── */
+
+/* In progress uses the same accent as its status mark in the table */
+.share-bar .is-progress,
+.share-legend .key.is-progress {
+    background: var(--accent);
+}
+
+.tickets-share-filter {
+    font-weight: 400;
+}
+
+.tickets-priority-facts {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.tickets-priority-facts > dd {
+    justify-content: flex-end;
+}
+
+/* Overdue tickets: rows are buttons that open the ticket */
+.tickets-overdue-row {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--rule);
+    background: transparent;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.tickets-overdue-row:hover {
+    background: var(--bg-subtle);
+}
+
+.tickets-overdue-row .row-title {
+    overflow-wrap: anywhere;
+}
+
+@media (pointer: coarse) {
+    .tickets-share-filter {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}
+
+/* Short label and number: keep them on one row on a phone too */
+@media (max-width: 640px) {
+    .tickets-priority-facts > dt {
+        min-height: var(--row-h);
+        padding-bottom: var(--row-pad-y);
+        border-bottom: 1px solid var(--rule);
+        font-size: inherit;
+    }
+
+    .tickets-priority-facts > dd {
+        padding-top: var(--row-pad-y);
+    }
+}

@@ -2413,7 +2413,21 @@
         "save_create": "티켓 만들기",
         "priority_hint": "새 티켓의 기한은 4시간(긴급), 8(높음), 24(보통), 72(낮음)입니다.",
         "device_hint": "한 장치에 관한 문제라면 장치 ID. 선택 사항입니다.",
-        "device_fixed_hint": "장치는 티켓을 만들 때 정해지며 바꿀 수 없습니다."
+        "device_fixed_hint": "장치는 티켓을 만들 때 정해지며 바꿀 수 없습니다.",
+        "side_label": "티켓 요약",
+        "count_total": "총 {total}건.",
+        "share_title": "상태별",
+        "share_open": "열림",
+        "share_in_progress": "진행 중",
+        "share_resolved": "해결됨",
+        "share_closed": "닫힘",
+        "open_by_priority": "우선순위별 열린 티켓",
+        "open_by_priority_note": "열림 또는 진행 중인 티켓.",
+        "overdue_title": "기한 초과",
+        "overdue_note": "기한이 지났지만 아직 해결되지 않은 티켓. 가장 오래 초과된 순.",
+        "overdue_none": "기한이 지난 티켓이 없습니다.",
+        "overdue_row": "#{id}, {priority}, 기한 {time}",
+        "summary_failed": "요약을 불러올 수 없습니다."
     },
     "activity": {
         "title": "활동 모니터링",

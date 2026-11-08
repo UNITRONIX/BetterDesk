@@ -2419,7 +2419,21 @@
         "save_create": "Tạo phiếu",
         "priority_hint": "Phiếu mới có hạn trong 4 giờ (khẩn cấp), 8 (cao), 24 (trung bình) hoặc 72 (thấp).",
         "device_hint": "ID thiết bị, nếu sự cố liên quan đến một thiết bị. Không bắt buộc.",
-        "device_fixed_hint": "Thiết bị được đặt khi tạo phiếu và không thể thay đổi."
+        "device_fixed_hint": "Thiết bị được đặt khi tạo phiếu và không thể thay đổi.",
+        "side_label": "Tóm tắt phiếu",
+        "count_total": "Tổng cộng {total}.",
+        "share_title": "Theo trạng thái",
+        "share_open": "đang mở",
+        "share_in_progress": "đang xử lý",
+        "share_resolved": "đã giải quyết",
+        "share_closed": "đã đóng",
+        "open_by_priority": "Phiếu đang mở theo mức ưu tiên",
+        "open_by_priority_note": "Phiếu đang mở hoặc đang xử lý.",
+        "overdue_title": "Quá hạn",
+        "overdue_note": "Đã quá hạn và chưa giải quyết. Quá hạn lâu nhất ở trên.",
+        "overdue_none": "Không có phiếu nào quá hạn.",
+        "overdue_row": "#{id}, {priority}, hạn {time}",
+        "summary_failed": "Không thể tải phần tóm tắt."
     },
     "activity": {
         "title": "Giám sát hoạt động",

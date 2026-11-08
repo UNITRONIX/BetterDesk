@@ -2413,7 +2413,21 @@
         "save_create": "Ticket erstellen",
         "priority_hint": "Ein neues Ticket ist fällig in 4 Stunden (kritisch), 8 (hoch), 24 (mittel) oder 72 (niedrig).",
         "device_hint": "Geräte-ID, wenn das Problem ein bestimmtes Gerät betrifft. Optional.",
-        "device_fixed_hint": "Das Gerät wird beim Anlegen des Tickets festgelegt und lässt sich nicht ändern."
+        "device_fixed_hint": "Das Gerät wird beim Anlegen des Tickets festgelegt und lässt sich nicht ändern.",
+        "side_label": "Übersicht der Tickets",
+        "count_total": "{total} insgesamt.",
+        "share_title": "Nach Status",
+        "share_open": "offen",
+        "share_in_progress": "in Bearbeitung",
+        "share_resolved": "gelöst",
+        "share_closed": "geschlossen",
+        "open_by_priority": "Offene Tickets nach Priorität",
+        "open_by_priority_note": "Tickets, die offen oder in Bearbeitung sind.",
+        "overdue_title": "Überfällig",
+        "overdue_note": "Fälligkeit überschritten und noch nicht gelöst. Die am längsten überfälligen zuerst.",
+        "overdue_none": "Kein Ticket ist überfällig.",
+        "overdue_row": "#{id}, {priority}, fällig {time}",
+        "summary_failed": "Die Übersicht konnte nicht geladen werden."
     },
     "activity": {
         "title": "App-Nutzung",

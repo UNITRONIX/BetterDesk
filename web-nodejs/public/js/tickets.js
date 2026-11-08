@@ -29,6 +29,7 @@
     let currentSearch = '';
     let stats = null;
     let lastTickets = [];
+    let allTickets = [];
     let detailModalId = null;
     let loadSeq = 0;
 
@@ -84,15 +85,19 @@
         renderCount();
     }
 
+    // Every ticket the user can see, unfiltered, for the side column and
+    // the totals in the count line. Viewers get the ones assigned to them.
     async function loadStats() {
-        // The totals cover every ticket; viewers only see the ones assigned to them
-        if (!canEdit) { stats = null; renderCount(); return; }
         try {
-            stats = await apiFetch('/api/tickets/stats');
+            const result = await apiFetch('/api/tickets');
+            allTickets = result.tickets || [];
+            stats = { total: allTickets.length };
         } catch (_e) {
+            allTickets = null;
             stats = null;
         }
         renderCount();
+        renderSummary();
     }
 
     function isFiltered() {
@@ -104,34 +109,120 @@
             && t.status !== 'closed' && t.status !== 'resolved';
     }
 
-    // One sentence with the counts: the totals when nothing is filtered,
-    // otherwise how many of them match.
+    // The count line: how many there are, or how many of them match the
+    // filter. The split by status is in the side column.
     function renderCount() {
         if (!countLine) return;
-        const overdue = lastTickets.filter(isOverdue).length;
-        const overdueText = overdue
-            ? ` <span class="count-overdue">${escapeHtml(fill(_('tickets.count_overdue'), { count: overdue }))}</span>`
-            : '';
+        const num = (n) => `<strong>${Number(n) || 0}</strong>`;
         if (!stats) {
             countLine.innerHTML = lastTickets.length
-                ? `${escapeHtml(fill(_('tickets.count_shown'), { shown: lastTickets.length }))}${overdueText}`
+                ? escapeHtml(fill(_('tickets.count_shown'), { shown: lastTickets.length }))
                 : '';
             return;
         }
-        const num = (n) => `<strong>${Number(n) || 0}</strong>`;
         if (isFiltered()) {
             countLine.innerHTML = fill(escapeHtml(_('tickets.count_filtered')), {
                 shown: num(lastTickets.length), total: Number(stats.total) || 0,
-            }) + overdueText;
+            });
         } else {
-            countLine.innerHTML = fill(escapeHtml(_('tickets.count_all')), {
-                total: num(stats.total),
-                open: Number(stats.open) || 0,
-                in_progress: Number(stats.in_progress) || 0,
-                resolved: Number(stats.resolved) || 0,
-                closed: Number(stats.closed) || 0,
-            }) + overdueText;
+            countLine.innerHTML = fill(escapeHtml(_('tickets.count_total')), { total: num(stats.total) });
         }
+    }
+
+    // ---- Side column ----
+
+    const STATUS_PARTS = [
+        { status: 'open', cls: 'is-warning' },
+        { status: 'in_progress', cls: 'is-progress' },
+        { status: 'resolved', cls: 'is-ok' },
+        { status: 'closed', cls: 'is-muted' },
+    ];
+    const PRIORITIES = ['critical', 'high', 'medium', 'low'];
+
+    function el(tag, cls, text) {
+        const n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (text !== undefined) n.textContent = text;
+        return n;
+    }
+
+    function renderSummary() {
+        const shareBar = document.getElementById('tickets-share-bar');
+        const shareLegend = document.getElementById('tickets-share-legend');
+        const prioList = document.getElementById('tickets-open-priority');
+        const prioSection = document.getElementById('tickets-priority-section');
+        const overdueList = document.getElementById('tickets-overdue-list');
+        if (!shareBar || !shareLegend || !prioList || !overdueList) return;
+        const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+
+        shareBar.textContent = '';
+        shareLegend.textContent = '';
+        prioList.textContent = '';
+        overdueList.textContent = '';
+        if (!allTickets) {
+            shareBar.hidden = true;
+            shareLegend.appendChild(el('li', null, _('tickets.summary_failed')));
+            if (prioSection) prioSection.hidden = true;
+            overdueList.appendChild(el('li', 'list-row is-empty', _('tickets.summary_failed')));
+            return;
+        }
+
+        // By status: one whole, each part filters the table
+        STATUS_PARTS.forEach((p) => {
+            const n = allTickets.filter(t => t.status === p.status).length;
+            if (n > 0) {
+                const seg = el('span', p.cls);
+                seg.style.flexGrow = String(n);
+                shareBar.appendChild(seg);
+            }
+            const li = el('li');
+            const key = el('span', 'key ' + p.cls);
+            key.setAttribute('aria-hidden', 'true');
+            const btn = el('button', 'btn-link tickets-share-filter');
+            btn.type = 'button';
+            btn.dataset.shareStatus = p.status;
+            btn.appendChild(el('strong', null, fmt.format(n)));
+            btn.appendChild(document.createTextNode(' ' + _(`tickets.share_${p.status}`)));
+            li.appendChild(key);
+            li.appendChild(btn);
+            shareLegend.appendChild(li);
+        });
+        shareBar.hidden = allTickets.length === 0;
+
+        // Open and in-progress tickets by priority
+        const active = allTickets.filter(t => t.status === 'open' || t.status === 'in_progress');
+        if (prioSection) prioSection.hidden = active.length === 0;
+        PRIORITIES.forEach((pr) => {
+            prioList.appendChild(el('dt', null, _(`tickets.priority_${pr}`)));
+            prioList.appendChild(el('dd', 'num', fmt.format(active.filter(t => t.priority === pr).length)));
+        });
+
+        // Overdue: past the due time and not resolved or closed, most overdue first
+        const overdue = allTickets.filter(isOverdue)
+            .sort((a, b) => parseDate(a.sla_due_at) - parseDate(b.sla_due_at));
+        if (!overdue.length) {
+            overdueList.appendChild(el('li', 'list-row is-empty', _('tickets.overdue_none')));
+            return;
+        }
+        overdue.forEach((t) => {
+            const li = el('li');
+            const btn = el('button', 'list-row tickets-overdue-row');
+            btn.type = 'button';
+            btn.dataset.id = String(Number(t.id));
+            const main = el('span', 'row-main');
+            main.appendChild(el('span', 'row-title', t.title));
+            main.appendChild(el('span', 'row-sub', fill(_('tickets.overdue_row'), {
+                id: Number(t.id),
+                priority: _(`tickets.priority_${String(t.priority || '').replace(/[^a-z_]/g, '')}`),
+                time: formatTimeAgo(t.sla_due_at),
+            })));
+            btn.appendChild(main);
+            const chev = el('span', 'material-icons row-chevron', 'chevron_right');
+            chev.setAttribute('aria-hidden', 'true');
+            btn.appendChild(chev);
+            li.appendChild(btn);
+            overdueList.appendChild(li);
+        });
     }
 
     // ---- Render ----
@@ -180,9 +271,9 @@
                         <span class="material-icons" aria-hidden="true">more_vert</span>
                     </button>
                     <span class="menu menu-end${up}" id="${menuId}" role="menu">
-                        <button type="button" class="menu-item edit-btn" role="menuitem" data-id="${id}">${escapeHtml(_('actions.edit'))}</button>
+                        <button type="button" class="menu-item edit-btn" role="menuitem" data-id="${id}">${Utils.icon('edit')}<span>${escapeHtml(_('actions.edit'))}</span></button>
                         <span class="menu-divider"></span>
-                        <button type="button" class="menu-item danger delete-btn" role="menuitem" data-id="${id}">${escapeHtml(_('actions.delete'))}</button>
+                        <button type="button" class="menu-item danger delete-btn" role="menuitem" data-id="${id}">${Utils.icon('delete')}<span>${escapeHtml(_('actions.delete'))}</span></button>
                     </span>
                 </span>` : '';
 
@@ -213,7 +304,7 @@
     }
 
     function openDetail(id) {
-        const ticket = lastTickets.find(t => String(t.id) === String(id));
+        const ticket = lastTickets.find(t => String(t.id) === String(id)) || (allTickets || []).find(t => String(t.id) === String(id));
         const title = ticket ? `#${ticket.id} ${ticket.title}` : `#${id}`;
         const buttons = [];
         if (canEdit) {
@@ -301,7 +392,7 @@
                 actions.push(`<button type="button" class="btn btn-sm" data-ticket-detail-action="change-status" data-id="${id}" data-status="in_progress">${escapeHtml(_('tickets.mark_in_progress'))}</button>`);
             }
             if (t.status === 'open' || t.status === 'in_progress') {
-                actions.push(`<button type="button" class="btn btn-sm" data-ticket-detail-action="change-status" data-id="${id}" data-status="resolved">${escapeHtml(_('tickets.mark_resolved'))}</button>`);
+                actions.push(`<button type="button" class="btn btn-sm" data-ticket-detail-action="change-status" data-id="${id}" data-status="resolved">${Utils.icon('resolve')}<span>${escapeHtml(_('tickets.mark_resolved'))}</span></button>`);
             }
             if (t.status !== 'closed') {
                 actions.push(`<button type="button" class="btn btn-sm" data-ticket-detail-action="change-status" data-id="${id}" data-status="closed">${escapeHtml(_('tickets.close_ticket'))}</button>`);
@@ -639,6 +730,20 @@
     });
 
     if (createBtn) createBtn.addEventListener('click', openCreateModal);
+
+    const side = document.getElementById('tickets-side');
+    if (side) {
+        side.addEventListener('click', (e) => {
+            const share = e.target.closest('[data-share-status]');
+            if (share) {
+                const btn = Array.from(filterButtons).find(b => b.dataset.status === share.dataset.shareStatus);
+                if (btn) btn.click();
+                return;
+            }
+            const row = e.target.closest('.tickets-overdue-row');
+            if (row) openDetail(row.dataset.id);
+        });
+    }
 
     tbody.addEventListener('click', (e) => {
         const el = e.target.closest('.ticket-link, .view-btn, .edit-btn, .delete-btn, [data-retry]');

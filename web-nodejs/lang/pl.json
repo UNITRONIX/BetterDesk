@@ -2431,7 +2431,21 @@
         "save_create": "Utwórz zgłoszenie",
         "priority_hint": "Nowe zgłoszenie ma termin za 4 godziny (krytyczny), 8 (wysoki), 24 (średni) lub 72 (niski).",
         "device_hint": "ID urządzenia, jeśli problem dotyczy jednego urządzenia. Opcjonalne.",
-        "device_fixed_hint": "Urządzenie ustawia się przy tworzeniu zgłoszenia i nie można go zmienić."
+        "device_fixed_hint": "Urządzenie ustawia się przy tworzeniu zgłoszenia i nie można go zmienić.",
+        "side_label": "Podsumowanie zgłoszeń",
+        "count_total": "Razem: {total}.",
+        "share_title": "Według statusu",
+        "share_open": "otwarte",
+        "share_in_progress": "w toku",
+        "share_resolved": "rozwiązane",
+        "share_closed": "zamknięte",
+        "open_by_priority": "Otwarte zgłoszenia według priorytetu",
+        "open_by_priority_note": "Zgłoszenia otwarte lub w toku.",
+        "overdue_title": "Po terminie",
+        "overdue_note": "Po terminie i jeszcze nierozwiązane. Najbardziej spóźnione najpierw.",
+        "overdue_none": "Żadne zgłoszenie nie jest po terminie.",
+        "overdue_row": "#{id}, {priority}, termin {time}",
+        "summary_failed": "Nie udało się wczytać podsumowania."
     },
     "activity": {
         "title": "Monitorowanie aktywności",

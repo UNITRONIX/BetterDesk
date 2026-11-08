@@ -2419,7 +2419,21 @@
         "save_create": "Opret sag",
         "priority_hint": "En ny sag har frist om 4 timer (kritisk), 8 (høj), 24 (middel) eller 72 (lav).",
         "device_hint": "Enheds-id, hvis problemet gælder én enhed. Valgfrit.",
-        "device_fixed_hint": "Enheden angives, når sagen oprettes, og kan ikke ændres."
+        "device_fixed_hint": "Enheden angives, når sagen oprettes, og kan ikke ændres.",
+        "side_label": "Oversigt over sager",
+        "count_total": "{total} i alt.",
+        "share_title": "Efter status",
+        "share_open": "åbne",
+        "share_in_progress": "i gang",
+        "share_resolved": "løst",
+        "share_closed": "lukket",
+        "open_by_priority": "Åbne sager efter prioritet",
+        "open_by_priority_note": "Sager, der er åbne eller i gang.",
+        "overdue_title": "Forfaldne",
+        "overdue_note": "Over deres frist og endnu ikke løst. Mest forfaldne først.",
+        "overdue_none": "Ingen sager er over fristen.",
+        "overdue_row": "#{id}, {priority}, frist {time}",
+        "summary_failed": "Oversigten kunne ikke indlæses."
     },
     "activity": {
         "title": "Aktivitetsovervågning",

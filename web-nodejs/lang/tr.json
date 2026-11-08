@@ -2419,7 +2419,21 @@
         "save_create": "Talep oluştur",
         "priority_hint": "Yeni talebin süresi 4 saat (kritik), 8 (yüksek), 24 (orta) veya 72 saattir (düşük).",
         "device_hint": "Sorun tek bir cihazla ilgiliyse cihaz kimliği. İsteğe bağlı.",
-        "device_fixed_hint": "Cihaz, talep oluşturulurken belirlenir ve değiştirilemez."
+        "device_fixed_hint": "Cihaz, talep oluşturulurken belirlenir ve değiştirilemez.",
+        "side_label": "Ticket özeti",
+        "count_total": "Toplam {total}.",
+        "share_title": "Duruma göre",
+        "share_open": "açık",
+        "share_in_progress": "sürüyor",
+        "share_resolved": "çözüldü",
+        "share_closed": "kapalı",
+        "open_by_priority": "Önceliğe göre açık ticketlar",
+        "open_by_priority_note": "Açık veya süren ticketlar.",
+        "overdue_title": "Süresi geçmiş",
+        "overdue_note": "Süresi geçmiş ve henüz çözülmemiş. En çok gecikenler önce.",
+        "overdue_none": "Süresi geçmiş ticket yok.",
+        "overdue_row": "#{id}, {priority}, son tarih {time}",
+        "summary_failed": "Özet yüklenemedi."
     },
     "activity": {
         "title": "Etkinlik İzleme",

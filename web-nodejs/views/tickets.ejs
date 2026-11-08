@@ -13,10 +13,12 @@
                 <h1>${_('nav.tickets')}</h1>
                 <p class="page-description">${_('tickets.page_description')}</p>
                 ${ticketsCanEdit ? `<div class="page-actions">
-                    <button type="button" class="btn btn-primary" id="create-ticket-btn">${_('tickets.create')}</button>
+                    <button type="button" class="btn btn-primary" id="create-ticket-btn"><span class="material-icons" aria-hidden="true">add</span><span>${_('tickets.create')}</span></button>
                 </div>` : ''}
             </div>
 
+            <div class="page-cols">
+            <div class="page-main">
             <section class="section" aria-label="${_('nav.tickets')}">
                 <div class="toolbar">
                     <div class="toolbar-search search-wrapper">
@@ -65,6 +67,31 @@
                     </table>
                 </div>
             </section>
+            </div>
+
+            <aside class="page-side" id="tickets-side" aria-label="${_('tickets.side_label')}">
+                <!-- Every ticket split by status; each part filters the table -->
+                <section class="section" aria-labelledby="tickets-share-title">
+                    <div class="section-head"><h2 id="tickets-share-title">${_('tickets.share_title')}</h2></div>
+                    <div class="share-bar" id="tickets-share-bar" aria-hidden="true" hidden></div>
+                    <ul class="share-legend tickets-share-legend" id="tickets-share-legend"></ul>
+                </section>
+
+                <section class="section" id="tickets-priority-section" aria-labelledby="tickets-priority-title" hidden>
+                    <div class="section-head"><h2 id="tickets-priority-title">${_('tickets.open_by_priority')}</h2></div>
+                    <p class="section-note">${_('tickets.open_by_priority_note')}</p>
+                    <dl class="facts tickets-priority-facts" id="tickets-open-priority"></dl>
+                </section>
+
+                <section class="section" aria-labelledby="tickets-overdue-title">
+                    <div class="section-head"><h2 id="tickets-overdue-title">${_('tickets.overdue_title')}</h2></div>
+                    <p class="section-note">${_('tickets.overdue_note')}</p>
+                    <ul class="list tickets-overdue" id="tickets-overdue-list">
+                        <li class="list-row is-empty">${_('tickets.loading')}</li>
+                    </ul>
+                </section>
+            </aside>
+            </div>
         </div>
     `
 }) %>

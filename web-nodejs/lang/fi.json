@@ -2419,7 +2419,21 @@
         "save_create": "Luo tiketti",
         "priority_hint": "Uuden tiketin määräaika on 4 tuntia (kriittinen), 8 (korkea), 24 (keskitaso) tai 72 (matala).",
         "device_hint": "Laitteen tunnus, jos ongelma koskee yhtä laitetta. Valinnainen.",
-        "device_fixed_hint": "Laite asetetaan tiketin luonnissa, eikä sitä voi muuttaa."
+        "device_fixed_hint": "Laite asetetaan tiketin luonnissa, eikä sitä voi muuttaa.",
+        "side_label": "Tikettien yhteenveto",
+        "count_total": "Yhteensä {total}.",
+        "share_title": "Tilan mukaan",
+        "share_open": "avoimet",
+        "share_in_progress": "työn alla",
+        "share_resolved": "ratkaistu",
+        "share_closed": "suljettu",
+        "open_by_priority": "Avoimet tiketit prioriteetin mukaan",
+        "open_by_priority_note": "Avoimet ja työn alla olevat tiketit.",
+        "overdue_title": "Myöhässä",
+        "overdue_note": "Määräaika ylitetty eikä vielä ratkaistu. Eniten myöhässä olevat ensin.",
+        "overdue_none": "Yksikään tiketti ei ole myöhässä.",
+        "overdue_row": "#{id}, {priority}, määräaika {time}",
+        "summary_failed": "Yhteenvetoa ei voitu ladata."
     },
     "activity": {
         "title": "Toiminnan seuranta",

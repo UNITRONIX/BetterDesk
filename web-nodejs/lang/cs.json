@@ -2413,7 +2413,21 @@
         "save_create": "Vytvořit tiket",
         "priority_hint": "Nový tiket má termín za 4 hodiny (kritická), 8 (vysoká), 24 (střední) nebo 72 (nízká).",
         "device_hint": "ID zařízení, pokud se problém týká jednoho zařízení. Nepovinné.",
-        "device_fixed_hint": "Zařízení se nastavuje při vytvoření tiketu a nelze ho změnit."
+        "device_fixed_hint": "Zařízení se nastavuje při vytvoření tiketu a nelze ho změnit.",
+        "side_label": "Přehled ticketů",
+        "count_total": "Celkem {total}.",
+        "share_title": "Podle stavu",
+        "share_open": "otevřené",
+        "share_in_progress": "v řešení",
+        "share_resolved": "vyřešené",
+        "share_closed": "uzavřené",
+        "open_by_priority": "Otevřené tickety podle priority",
+        "open_by_priority_note": "Tickety, které jsou otevřené nebo v řešení.",
+        "overdue_title": "Po termínu",
+        "overdue_note": "Po termínu a dosud nevyřešené. Nejvíce opožděné nahoře.",
+        "overdue_none": "Žádný ticket není po termínu.",
+        "overdue_row": "#{id}, {priority}, termín {time}",
+        "summary_failed": "Přehled se nepodařilo načíst."
     },
     "activity": {
         "title": "Monitoring aktivity",

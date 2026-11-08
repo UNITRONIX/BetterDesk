@@ -2413,7 +2413,21 @@
         "save_create": "Crea ticket",
         "priority_hint": "Un nuovo ticket scade tra 4 ore (critica), 8 (alta), 24 (media) o 72 (bassa).",
         "device_hint": "ID del dispositivo, se il problema riguarda un solo dispositivo. Facoltativo.",
-        "device_fixed_hint": "Il dispositivo si imposta alla creazione del ticket e non si può cambiare."
+        "device_fixed_hint": "Il dispositivo si imposta alla creazione del ticket e non si può cambiare.",
+        "side_label": "Riepilogo dei ticket",
+        "count_total": "{total} in totale.",
+        "share_title": "Per stato",
+        "share_open": "aperti",
+        "share_in_progress": "in corso",
+        "share_resolved": "risolti",
+        "share_closed": "chiusi",
+        "open_by_priority": "Ticket aperti per priorità",
+        "open_by_priority_note": "Ticket aperti o in corso.",
+        "overdue_title": "Scaduti",
+        "overdue_note": "Scadenza superata e non ancora risolti. Prima i più in ritardo.",
+        "overdue_none": "Nessun ticket ha superato la scadenza.",
+        "overdue_row": "n. {id}, {priority}, scadenza {time}",
+        "summary_failed": "Impossibile caricare il riepilogo."
     },
     "activity": {
         "title": "Monitoraggio attività",

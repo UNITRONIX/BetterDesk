@@ -2413,7 +2413,21 @@
         "save_create": "チケットを作成",
         "priority_hint": "新しいチケットの期限は 4 時間 (緊急)、8 (高)、24 (中)、72 (低) です。",
         "device_hint": "1 台のデバイスに関する問題の場合はデバイス ID。任意です。",
-        "device_fixed_hint": "デバイスはチケット作成時に設定され、変更できません。"
+        "device_fixed_hint": "デバイスはチケット作成時に設定され、変更できません。",
+        "side_label": "チケットの概要",
+        "count_total": "合計 {total} 件。",
+        "share_title": "状態別",
+        "share_open": "未対応",
+        "share_in_progress": "対応中",
+        "share_resolved": "解決済み",
+        "share_closed": "クローズ",
+        "open_by_priority": "優先度別の未完了チケット",
+        "open_by_priority_note": "未対応または対応中のチケット。",
+        "overdue_title": "期限超過",
+        "overdue_note": "期限を過ぎてまだ解決していないチケット。超過の長い順。",
+        "overdue_none": "期限を過ぎたチケットはありません。",
+        "overdue_row": "#{id}、{priority}、期限 {time}",
+        "summary_failed": "概要を読み込めませんでした。"
     },
     "activity": {
         "title": "アクティビティの監視",

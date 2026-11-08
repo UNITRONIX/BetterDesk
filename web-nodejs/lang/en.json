@@ -2492,7 +2492,21 @@
         "save_create": "Create ticket",
         "priority_hint": "A new ticket is due in 4 hours (critical), 8 (high), 24 (medium) or 72 (low).",
         "device_hint": "Device ID, if the issue is about one device. Optional.",
-        "device_fixed_hint": "The device is set when the ticket is created and cannot be changed."
+        "device_fixed_hint": "The device is set when the ticket is created and cannot be changed.",
+        "side_label": "Ticket summary",
+        "count_total": "{total} in total.",
+        "share_title": "By status",
+        "share_open": "open",
+        "share_in_progress": "in progress",
+        "share_resolved": "resolved",
+        "share_closed": "closed",
+        "open_by_priority": "Open tickets by priority",
+        "open_by_priority_note": "Tickets that are open or in progress.",
+        "overdue_title": "Overdue",
+        "overdue_note": "Past their due time and not resolved yet. Most overdue first.",
+        "overdue_none": "No ticket is past its due time.",
+        "overdue_row": "#{id}, {priority}, due {time}",
+        "summary_failed": "Could not load the summary."
     },
     "activity": {
         "title": "App usage",

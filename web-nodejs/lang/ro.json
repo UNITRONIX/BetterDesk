@@ -2419,7 +2419,21 @@
         "save_create": "Creați tichetul",
         "priority_hint": "Un tichet nou are termen în 4 ore (critică), 8 (ridicată), 24 (medie) sau 72 (scăzută).",
         "device_hint": "ID-ul dispozitivului, dacă problema privește un singur dispozitiv. Opțional.",
-        "device_fixed_hint": "Dispozitivul se stabilește la crearea tichetului și nu poate fi schimbat."
+        "device_fixed_hint": "Dispozitivul se stabilește la crearea tichetului și nu poate fi schimbat.",
+        "side_label": "Rezumatul tichetelor",
+        "count_total": "{total} în total.",
+        "share_title": "După stare",
+        "share_open": "deschise",
+        "share_in_progress": "în lucru",
+        "share_resolved": "rezolvate",
+        "share_closed": "închise",
+        "open_by_priority": "Tichete deschise după prioritate",
+        "open_by_priority_note": "Tichete deschise sau în lucru.",
+        "overdue_title": "Întârziate",
+        "overdue_note": "Termenul a trecut și încă nu sunt rezolvate. Cele mai întârziate primele.",
+        "overdue_none": "Niciun tichet nu a depășit termenul.",
+        "overdue_row": "#{id}, {priority}, termen {time}",
+        "summary_failed": "Rezumatul nu a putut fi încărcat."
     },
     "activity": {
         "title": "Monitorizarea activității",
