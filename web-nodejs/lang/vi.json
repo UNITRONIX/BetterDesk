@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Gỡ thiết bị {id} khỏi tổ chức này? Thiết bị vẫn ở trên máy chủ.",
         "group_user_members": "Thành viên",
         "address_book_remove_contact": "Gỡ liên hệ",
-        "device_id_invalid": "ID thiết bị không được chứa khoảng trắng."
+        "device_id_invalid": "ID thiết bị không được chứa khoảng trắng.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} lời mời đang mở",
+        "open_invitations_other": "{count} lời mời đang mở",
+        "related_title": "Trang liên quan",
+        "related_policies_sub": "Cách phiên từ xa hoạt động trên thiết bị của tổ chức này.",
+        "billing_for_org": "Đã gán cho tổ chức",
+        "billing_for_group": "Đã gán cho nhóm thiết bị {name}",
+        "billing_package": "Gói thanh toán"
     },
     "chat": {
         "e2e_enabled": "Mã hóa đầu cuối",

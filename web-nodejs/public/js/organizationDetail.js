@@ -80,10 +80,70 @@
     }
 
     // "4 users" with the number in bold; the hidden span keeps the old count hook.
-    function setCountLine(el, countId, n, oneKey, otherKey) {
+    // The numbers are said once, in the side column (renderSideCounts); the
+    // tab keeps only the hidden count element other scripts read
+    function setCountLine(el, countId, n) {
         if (!el) return;
-        const text = escHtml(t(n === 1 ? oneKey : otherKey, { count: '{{n}}' }));
-        el.innerHTML = text.replace('{{n}}', `<strong>${n}</strong>`) + `<span id="${countId}" hidden>${n}</span>`;
+        el.innerHTML = `<span id="${countId}" hidden>${n}</span>`;
+        renderSideCounts();
+    }
+
+    // -----------------------------------------------------------------------
+    //  Side column: users, devices and open invitations in one sentence
+    // -----------------------------------------------------------------------
+    // null = still loading, 'error' = could not load
+    const sideCounts = { users: null, devices: null, invitations: null };
+
+    function renderSideCounts() {
+        const el = document.getElementById('org-side-counts');
+        if (!el) return;
+        const { users, devices, invitations } = sideCounts;
+        if (users === null || devices === null || invitations === null) return;
+        // A count that failed to load is left out; its tab shows the error
+        const parts = [];
+        if (users !== 'error') parts.push(t(users === 1 ? 'users_count_one' : 'users_count_other', { count: users }));
+        if (devices !== 'error') parts.push(t(devices === 1 ? 'devices_count_one' : 'devices_count_other', { count: devices }));
+        if (invitations !== 'error') parts.push(t(invitations === 1 ? 'open_invitations_one' : 'open_invitations_other', { count: invitations }));
+        if (!parts.length) { el.textContent = ''; return; }
+        const lang = (window.BetterDesk && window.BetterDesk.lang) || document.documentElement.lang || undefined;
+        let list;
+        try { list = new Intl.ListFormat(lang, { style: 'long', type: 'conjunction' }).format(parts); }
+        catch (_) { list = parts.join(', '); }
+        el.textContent = t('side_counts', { list });
+    }
+
+    // Billing packages assigned to this organization or to one of its device groups
+    let orgDeviceGroupGuids = [];
+
+    async function loadBilling() {
+        if (!(window.Utils && Utils.can && Utils.can('billing.view'))) return;
+        const list = document.getElementById('org-related-list');
+        const section = document.getElementById('org-related');
+        if (!list || !section) return;
+        list.querySelectorAll('.org-billing-row').forEach(li => li.remove());
+        let contracts = [];
+        try {
+            const data = await Utils.api('/api/panel/billing/contracts');
+            contracts = (data.contracts || []).filter(c =>
+                (c.target_type === 'org' && (c.target_key === orgId || c.org_id === orgId))
+                || (c.target_type === 'device_group' && orgDeviceGroupGuids.includes(c.target_key)));
+        } catch (_) {
+            return; // billing is extra context here; the billing page reports its own errors
+        }
+        if (!contracts.length) return;
+        contracts.forEach(c => {
+            const status = tr(`commercialization.status.${c.status}`);
+            const statusText = status === `commercialization.status.${c.status}` ? (c.status || '') : status;
+            const target = c.target_type === 'org' ? t('billing_for_org') : t('billing_for_group', { name: c.target_name || c.target_key });
+            const li = document.createElement('li');
+            li.className = 'org-billing-row';
+            li.innerHTML = `<a class="list-row" href="/commercialization?tab=packages">
+                <span class="row-main"><span class="row-title">${escHtml(c.package_name || t('billing_package'))}</span>
+                <span class="row-sub">${escHtml([target, statusText].filter(Boolean).join(' · '))}</span></span>
+                <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span></a>`;
+            list.appendChild(li);
+        });
+        section.hidden = false;
     }
 
     // Loading, empty and error states: one sentence, a retry button for errors.
@@ -292,7 +352,8 @@
         try {
             const data = await api('GET', '/users');
             orgUsers = data.users || [];
-            setCountLine(line, 'users-count', orgUsers.length, 'users_count_one', 'users_count_other');
+            sideCounts.users = orgUsers.length;
+            setCountLine(line, 'users-count', orgUsers.length);
 
             if (orgUsers.length === 0) {
                 container.innerHTML = `<p class="state">${escHtml(t('no_users'))}</p>`;
@@ -318,9 +379,9 @@
                                 <td>${escHtml(roleLabel(u.role))}</td>
                                 <td>${formatDate(u.last_login)}</td>
                                 ${canUsers ? `<td class="actions">${rowMenu(`org-user-menu-${i}`, t('actions_for', { name: u.username }), `
-                                    <button type="button" class="menu-item user-role-btn" role="menuitem" data-user-id="${escHtml(u.id)}" data-role="${escHtml(u.role)}">${escHtml(t('edit_role'))}</button>
+                                    <button type="button" class="menu-item user-role-btn" role="menuitem" data-user-id="${escHtml(u.id)}" data-role="${escHtml(u.role)}">${Utils.icon('edit')}<span>${escHtml(t('edit_role'))}</span></button>
                                     <span class="menu-divider" role="separator"></span>
-                                    <button type="button" class="menu-item danger user-remove-btn" role="menuitem" data-user-id="${escHtml(u.id)}">${escHtml(t('remove_from_org'))}</button>`)}
+                                    <button type="button" class="menu-item danger user-remove-btn" role="menuitem" data-user-id="${escHtml(u.id)}">${Utils.icon('unlink')}<span>${escHtml(t('remove_from_org'))}</span></button>`)}
                                 </td>` : ''}
                             </tr>`).join('')}
                     </tbody>
@@ -335,6 +396,8 @@
             });
         } catch (err) {
             if (line) line.textContent = '';
+            sideCounts.users = 'error';
+            renderSideCounts();
             errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadUsers);
         }
     }
@@ -489,6 +552,10 @@
             const invs = data.invitations || [];
             const countEl = document.getElementById('invitations-count');
             if (countEl) countEl.textContent = invs.length;
+            const now = Date.now();
+            sideCounts.invitations = invs.filter(inv => !inv.used_at
+                && !(inv.expires_at && new Date(inv.expires_at).getTime() < now)).length;
+            renderSideCounts();
 
             if (invs.length === 0) {
                 container.innerHTML = `<p class="state">${escHtml(t('no_invitations'))}</p>`;
@@ -518,6 +585,8 @@
                     </tbody>
                 </table></div>`;
         } catch (err) {
+            sideCounts.invitations = 'error';
+            renderSideCounts();
             errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadInvitations);
         }
     }
@@ -565,7 +634,8 @@
         try {
             const data = await api('GET', '/devices');
             orgDevices = data.devices || [];
-            setCountLine(line, 'devices-count', orgDevices.length, 'devices_count_one', 'devices_count_other');
+            sideCounts.devices = orgDevices.length;
+            setCountLine(line, 'devices-count', orgDevices.length);
 
             if (orgDevices.length === 0) {
                 container.innerHTML = `<p class="state">${escHtml(t('no_devices'))}</p>`;
@@ -594,7 +664,7 @@
                                 <td>${cell(d.location)}</td>
                                 <td>${cell(d.assigned_user_id ? userName(d.assigned_user_id) : '')}</td>
                                 ${canDevices ? `<td class="actions">${rowMenu(`org-device-menu-${i}`, t('actions_for', { name: d.device_id }), `
-                                    <button type="button" class="menu-item danger device-unassign-btn" role="menuitem" data-device-id="${escHtml(d.device_id)}">${escHtml(t('remove_from_org'))}</button>`)}
+                                    <button type="button" class="menu-item danger device-unassign-btn" role="menuitem" data-device-id="${escHtml(d.device_id)}">${Utils.icon('unlink')}<span>${escHtml(t('remove_from_org'))}</span></button>`)}
                                 </td>` : ''}
                             </tr>`).join('')}
                     </tbody>
@@ -606,6 +676,8 @@
             });
         } catch (err) {
             if (line) line.textContent = '';
+            sideCounts.devices = 'error';
+            renderSideCounts();
             errorState(container, loadErrorMessage(err), err.status === 403 ? null : loadDevices);
         }
     }
@@ -681,12 +753,14 @@
             const data = await api('GET', '/device-groups');
             const deviceGroups = data.device_groups || [];
             const userGroups = data.user_groups || [];
+            orgDeviceGroupGuids = deviceGroups.map(g => g.guid).filter(Boolean);
+            loadBilling();
 
             container.innerHTML = `
                 <div class="section">
                     <div class="section-head">
                         <p class="count-line">${deviceGroups.length ? '' : escHtml(t('no_org_device_groups'))}</p>
-                        <button type="button" class="btn" id="create-org-device-group-btn">${escHtml(t('create_org_device_group'))}</button>
+                        <button type="button" class="btn" id="create-org-device-group-btn">${Utils.icon('add')}${escHtml(t('create_org_device_group'))}</button>
                     </div>
                     ${deviceGroups.length ? `
                     <div class="table-scroll" tabindex="0" role="region" aria-label="${escHtml(t('device_groups_tab'))}"><table class="data-table">
@@ -961,10 +1035,10 @@
                 <td><input type="text" class="form-input org-ab-peer-tags" value="${escHtml((peer.tags || []).join(', '))}" maxlength="200" aria-label="${escHtml(t('address_book_peer_tags'))} ${n}"></td>
                 <td class="org-ab-password-cell${hasPw ? ' is-set' : ''}"><span class="org-ab-password-flag">${escHtml(pwLabel)}</span></td>
                 <td class="actions">${rowMenu(`org-ab-menu-${index}`, t('actions_for', { name: peer.id || peer.alias || n }), `
-                    <button type="button" class="menu-item org-ab-set-password" role="menuitem" data-index="${index}">${escHtml(t('address_book_set_password'))}</button>
-                    ${hasPw ? `<button type="button" class="menu-item org-ab-clear-password" role="menuitem" data-index="${index}">${escHtml(t('address_book_clear_password'))}</button>` : ''}
+                    <button type="button" class="menu-item org-ab-set-password" role="menuitem" data-index="${index}">${Utils.icon('password')}<span>${escHtml(t('address_book_set_password'))}</span></button>
+                    ${hasPw ? `<button type="button" class="menu-item org-ab-clear-password" role="menuitem" data-index="${index}">${Utils.icon('delete')}<span>${escHtml(t('address_book_clear_password'))}</span></button>` : ''}
                     <span class="menu-divider" role="separator"></span>
-                    <button type="button" class="menu-item danger org-ab-remove-peer" role="menuitem" data-index="${index}">${escHtml(t('address_book_remove_contact'))}</button>`)}
+                    <button type="button" class="menu-item danger org-ab-remove-peer" role="menuitem" data-index="${index}">${Utils.icon('delete')}<span>${escHtml(t('address_book_remove_contact'))}</span></button>`)}
                 </td>
             </tr>`;
         }).join('');
@@ -1114,7 +1188,7 @@
                 <div class="section org-address-book-structured" id="org-address-book-structured">
                     <div class="section-head">
                         <h2>${escHtml(t('address_book_contacts'))}</h2>
-                        <button type="button" class="btn btn-sm" id="org-address-book-add-peer-btn">${escHtml(t('address_book_add_peer'))}</button>
+                        <button type="button" class="btn btn-sm" id="org-address-book-add-peer-btn">${Utils.icon('add')}${escHtml(t('address_book_add_peer'))}</button>
                         <button type="button" class="btn btn-sm" id="import-org-devices-btn">${escHtml(t('address_book_import_devices'))}</button>
                     </div>
                     <p class="section-note">${escHtml(t('address_book_password_vault_hint'))}</p>

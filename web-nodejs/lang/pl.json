@@ -4078,7 +4078,15 @@
         "confirm_unassign_named": "Usunąć urządzenie {id} z tej organizacji? Urządzenie zostanie na serwerze.",
         "group_user_members": "Członkowie",
         "address_book_remove_contact": "Usuń kontakt",
-        "device_id_invalid": "ID urządzenia nie może zawierać spacji."
+        "device_id_invalid": "ID urządzenia nie może zawierać spacji.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} otwarte zaproszenie",
+        "open_invitations_other": "Otwarte zaproszenia: {count}",
+        "related_title": "Powiązane strony",
+        "related_policies_sub": "Jak działają sesje zdalne na urządzeniach tej organizacji.",
+        "billing_for_org": "Przypisano do organizacji",
+        "billing_for_group": "Przypisano do grupy urządzeń {name}",
+        "billing_package": "Pakiet rozliczeniowy"
     },
     "chat": {
         "e2e_enabled": "Szyfrowanie end-to-end",

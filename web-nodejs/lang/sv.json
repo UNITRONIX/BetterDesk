@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Ta bort enheten {id} från organisationen? Enheten finns kvar på servern.",
         "group_user_members": "Medlemmar",
         "address_book_remove_contact": "Ta bort kontakt",
-        "device_id_invalid": "Ett enhets-ID får inte innehålla mellanslag."
+        "device_id_invalid": "Ett enhets-ID får inte innehålla mellanslag.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} öppen inbjudan",
+        "open_invitations_other": "{count} öppna inbjudningar",
+        "related_title": "Relaterade sidor",
+        "related_policies_sub": "Hur fjärrsessioner fungerar på organisationens enheter.",
+        "billing_for_org": "Tilldelat organisationen",
+        "billing_for_group": "Tilldelat enhetsgruppen {name}",
+        "billing_package": "Faktureringspaket"
     },
     "chat": {
         "e2e_enabled": "End-to-end krypterad",

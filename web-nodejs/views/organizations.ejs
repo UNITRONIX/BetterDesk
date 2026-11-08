@@ -13,7 +13,7 @@
             <div class="page-head">
                 <h1>${_('nav.organizations')}</h1>
                 ${can('org.create') ? `<div class="page-actions">
-                    <button type="button" class="btn btn-primary" id="create-org-btn">${_('organizations.create')}</button>
+                    <button type="button" class="btn btn-primary" id="create-org-btn"><span class="material-icons" aria-hidden="true">add</span>${_('organizations.create')}</button>
                 </div>` : ''}
                 <p class="page-description">${_('organizations.page_description')}</p>
             </div>

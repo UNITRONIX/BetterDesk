@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Eltávolítja a(z) {id} eszközt a szervezetből? Az eszköz a szerveren marad.",
         "group_user_members": "Tagok",
         "address_book_remove_contact": "Névjegy eltávolítása",
-        "device_id_invalid": "Az eszközazonosító nem tartalmazhat szóközt."
+        "device_id_invalid": "Az eszközazonosító nem tartalmazhat szóközt.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} nyitott meghívó",
+        "open_invitations_other": "{count} nyitott meghívó",
+        "related_title": "Kapcsolódó oldalak",
+        "related_policies_sub": "Hogyan működnek a távoli munkamenetek a szervezet eszközein.",
+        "billing_for_org": "A szervezethez rendelve",
+        "billing_for_group": "A(z) {name} eszközcsoporthoz rendelve",
+        "billing_package": "Számlázási csomag"
     },
     "chat": {
         "e2e_enabled": "Végponttól végpontig titkosítva",

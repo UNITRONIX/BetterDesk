@@ -4082,7 +4082,15 @@
         "confirm_unassign_named": "要將裝置 {id} 從此組織移除嗎？裝置會留在伺服器上。",
         "group_user_members": "成員",
         "address_book_remove_contact": "移除聯絡人",
-        "device_id_invalid": "裝置 ID 不能包含空格。"
+        "device_id_invalid": "裝置 ID 不能包含空格。",
+        "side_counts": "{list}。",
+        "open_invitations_one": "{count} 個未使用的邀請",
+        "open_invitations_other": "{count} 個未使用的邀請",
+        "related_title": "相關頁面",
+        "related_policies_sub": "此組織裝置上的遠端工作階段如何運作。",
+        "billing_for_org": "已指派給組織",
+        "billing_for_group": "已指派給裝置群組 {name}",
+        "billing_package": "計費方案"
     },
     "chat": {
         "e2e_enabled": "端到端加密",

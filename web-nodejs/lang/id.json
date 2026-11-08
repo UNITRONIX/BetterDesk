@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Keluarkan perangkat {id} dari organisasi ini? Perangkat tetap ada di server.",
         "group_user_members": "Anggota",
         "address_book_remove_contact": "Hapus kontak",
-        "device_id_invalid": "ID perangkat tidak boleh berisi spasi."
+        "device_id_invalid": "ID perangkat tidak boleh berisi spasi.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} undangan terbuka",
+        "open_invitations_other": "{count} undangan terbuka",
+        "related_title": "Halaman terkait",
+        "related_policies_sub": "Cara kerja sesi jarak jauh di perangkat organisasi ini.",
+        "billing_for_org": "Ditetapkan ke organisasi",
+        "billing_for_group": "Ditetapkan ke grup perangkat {name}",
+        "billing_package": "Paket penagihan"
     },
     "chat": {
         "e2e_enabled": "Dienkripsi ujung ke ujung",

@@ -122,9 +122,9 @@
                             <span class="material-icons" aria-hidden="true">more_vert</span>
                         </button>
                         <span class="menu menu-end${i >= organizations.length - 2 && organizations.length > 3 ? ' menu-up' : ''}" id="${menuId}" role="menu">
-                            ${canEdit ? `<button type="button" class="menu-item org-edit-btn" role="menuitem" data-id="${id}">${escHtml(tr('common.edit'))}</button>` : ''}
+                            ${canEdit ? `<button type="button" class="menu-item org-edit-btn" role="menuitem" data-id="${id}">${Utils.icon('edit')}<span>${escHtml(tr('common.edit'))}</span></button>` : ''}
                             ${canEdit && canDelete ? '<span class="menu-divider" role="separator"></span>' : ''}
-                            ${canDelete ? `<button type="button" class="menu-item danger org-delete-btn" role="menuitem" data-id="${id}">${escHtml(tr('common.delete'))}</button>` : ''}
+                            ${canDelete ? `<button type="button" class="menu-item danger org-delete-btn" role="menuitem" data-id="${id}">${Utils.icon('delete')}<span>${escHtml(tr('common.delete'))}</span></button>` : ''}
                         </span>
                     </span>` : ''}
                 </td>

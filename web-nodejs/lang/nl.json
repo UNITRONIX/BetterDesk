@@ -3954,7 +3954,15 @@
         "confirm_unassign_named": "Apparaat {id} uit deze organisatie verwijderen? Het apparaat blijft op de server.",
         "group_user_members": "Leden",
         "address_book_remove_contact": "Contact verwijderen",
-        "device_id_invalid": "Een apparaat-ID mag geen spaties bevatten."
+        "device_id_invalid": "Een apparaat-ID mag geen spaties bevatten.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} openstaande uitnodiging",
+        "open_invitations_other": "{count} openstaande uitnodigingen",
+        "related_title": "Gerelateerde pagina's",
+        "related_policies_sub": "Hoe externe sessies werken op de apparaten van deze organisatie.",
+        "billing_for_org": "Toegewezen aan de organisatie",
+        "billing_for_group": "Toegewezen aan apparaatgroep {name}",
+        "billing_package": "Factureringspakket"
     },
     "chat": {
         "e2e_enabled": "End-to-end versleuteld",

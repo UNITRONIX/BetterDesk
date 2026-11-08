@@ -3961,7 +3961,15 @@
         "confirm_unassign_named": "إزالة الجهاز {id} من هذه المؤسسة؟ يبقى الجهاز على الخادم.",
         "group_user_members": "الأعضاء",
         "address_book_remove_contact": "إزالة جهة الاتصال",
-        "device_id_invalid": "لا يمكن أن يحتوي معرّف الجهاز على مسافات."
+        "device_id_invalid": "لا يمكن أن يحتوي معرّف الجهاز على مسافات.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} دعوة مفتوحة",
+        "open_invitations_other": "{count} دعوات مفتوحة",
+        "related_title": "صفحات ذات صلة",
+        "related_policies_sub": "كيف تعمل الجلسات البعيدة على أجهزة هذه المؤسسة.",
+        "billing_for_org": "مخصصة للمؤسسة",
+        "billing_for_group": "مخصصة لمجموعة الأجهزة {name}",
+        "billing_package": "باقة الفوترة"
     },
     "chat": {
         "e2e_enabled": "مشفرة من طرف إلى طرف",

@@ -4139,7 +4139,15 @@
         "confirm_unassign_named": "Remove device {id} from this organization? The device stays on the server.",
         "group_user_members": "Members",
         "address_book_remove_contact": "Remove contact",
-        "device_id_invalid": "A device ID cannot contain spaces."
+        "device_id_invalid": "A device ID cannot contain spaces.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} open invitation",
+        "open_invitations_other": "{count} open invitations",
+        "related_title": "Related pages",
+        "related_policies_sub": "How remote sessions work on this organization's devices.",
+        "billing_for_org": "Assigned to the organization",
+        "billing_for_group": "Assigned to device group {name}",
+        "billing_package": "Billing package"
     },
     "chat": {
         "e2e_enabled": "End-to-end encrypted",

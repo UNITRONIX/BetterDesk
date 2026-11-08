@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "นำอุปกรณ์ {id} ออกจากองค์กรนี้หรือไม่ อุปกรณ์ยังอยู่บนเซิร์ฟเวอร์",
         "group_user_members": "สมาชิก",
         "address_book_remove_contact": "นำผู้ติดต่อออก",
-        "device_id_invalid": "ID อุปกรณ์ต้องไม่มีช่องว่าง"
+        "device_id_invalid": "ID อุปกรณ์ต้องไม่มีช่องว่าง",
+        "side_counts": "{list}",
+        "open_invitations_one": "คำเชิญที่ยังเปิดอยู่ {count} รายการ",
+        "open_invitations_other": "คำเชิญที่ยังเปิดอยู่ {count} รายการ",
+        "related_title": "หน้าที่เกี่ยวข้อง",
+        "related_policies_sub": "วิธีการทำงานของเซสชันระยะไกลบนอุปกรณ์ขององค์กรนี้",
+        "billing_for_org": "กำหนดให้กับองค์กร",
+        "billing_for_group": "กำหนดให้กับกลุ่มอุปกรณ์ {name}",
+        "billing_package": "แพ็กเกจการเรียกเก็บเงิน"
     },
     "chat": {
         "e2e_enabled": "เข้ารหัสตั้งแต่ต้นทางถึงปลายทาง",

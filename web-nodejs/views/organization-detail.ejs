@@ -3,6 +3,10 @@
     const canEdit = can('org.edit');
     const canUsers = can('org.manage_users');
     const canDevices = can('org.manage_devices');
+    // /policies/<id> is open to the administrator roles (requireAdmin in routes/policies.routes.js)
+    const role = typeof user !== 'undefined' && user ? user.role : '';
+    const canPolicies = ['super_admin', 'admin', 'global_admin', 'server_admin'].includes(role);
+    const safeOrgId = encodeURIComponent(orgId);
 %>
 <%- include('layouts/main', {
     title: _('organizations.detail'),
@@ -19,7 +23,7 @@
             <div class="page-head" id="org-detail-header">
                 <h1 id="org-detail-name">${_('organizations.detail')}</h1>
                 <div class="page-actions">
-                    <button type="button" class="btn" id="org-edit-btn"${canEdit ? '' : ' hidden'}>${_('common.edit')}</button>
+                    <button type="button" class="btn" id="org-edit-btn"${canEdit ? '' : ' hidden'}><span class="material-icons" aria-hidden="true">edit</span>${_('common.edit')}</button>
                 </div>
                 <p class="page-description">${_('organizations.detail_description')}</p>
             </div>
@@ -29,7 +33,8 @@
                 <button type="button" class="btn btn-sm" id="org-load-retry">${_('actions.retry')}</button>
             </p>
 
-            <div class="org-detail-body">
+            <div class="page-cols org-detail-body">
+            <div class="page-main">
                 <div class="tabs" role="tablist" aria-label="${_('organizations.detail')}">
                     <button type="button" class="tab org-tab active" role="tab" id="org-tab-users" data-tab="users" aria-selected="true" aria-controls="tab-users">${_('organizations.users')}</button>
                     <button type="button" class="tab org-tab" role="tab" id="org-tab-devices" data-tab="devices" aria-selected="false" aria-controls="tab-devices" tabindex="-1">${_('organizations.devices')}</button>
@@ -42,7 +47,7 @@
                     <section class="section" aria-labelledby="org-tab-users">
                         <div class="section-head">
                             <p class="count-line" id="users-count-line" aria-live="polite"><span id="users-count" hidden>0</span></p>
-                            <button type="button" class="btn btn-primary" id="add-user-btn"${canUsers ? '' : ' hidden'}>${_('organizations.add_user')}</button>
+                            <button type="button" class="btn btn-primary" id="add-user-btn"${canUsers ? '' : ' hidden'}><span class="material-icons" aria-hidden="true">add</span>${_('organizations.add_user')}</button>
                         </div>
                         <div id="users-table"><p class="state">${_('common.loading')}</p></div>
                     </section>
@@ -50,7 +55,7 @@
                     <section class="section" id="tab-invitations" aria-labelledby="org-invitations-title">
                         <div class="section-head">
                             <h2 id="org-invitations-title">${_('organizations.invitations')}</h2>
-                            <button type="button" class="btn" id="create-invite-btn"${canUsers ? '' : ' hidden'}>${_('organizations.create_invitation')}</button>
+                            <button type="button" class="btn" id="create-invite-btn"${canUsers ? '' : ' hidden'}><span class="material-icons" aria-hidden="true">add</span>${_('organizations.create_invitation')}</button>
                         </div>
                         <span id="invitations-count" hidden>0</span>
                         <div id="invitations-table"><p class="state">${_('common.loading')}</p></div>
@@ -62,7 +67,7 @@
                     <section class="section" aria-labelledby="org-tab-devices">
                         <div class="section-head">
                             <p class="count-line" id="devices-count-line" aria-live="polite"><span id="devices-count" hidden>0</span></p>
-                            <button type="button" class="btn btn-primary" id="assign-device-btn"${canDevices ? '' : ' hidden'}>${_('organizations.assign_device')}</button>
+                            <button type="button" class="btn btn-primary" id="assign-device-btn"${canDevices ? '' : ' hidden'}><span class="material-icons" aria-hidden="true">add</span>${_('organizations.assign_device')}</button>
                         </div>
                         <div id="devices-table"><p class="state">${_('common.loading')}</p></div>
                     </section>
@@ -90,20 +95,10 @@
 
                 <!-- Details, stored settings, delete -->
                 <div class="tab-panel org-tab-content" id="tab-settings" role="tabpanel" aria-labelledby="org-tab-settings" hidden>
-                    <section class="section" aria-labelledby="org-details-title">
-                        <h2 id="org-details-title">${_('organizations.details_title')}</h2>
-                        <dl class="facts" id="org-details-facts">
-                            <dt>${_('organizations.slug')}</dt><dd id="org-detail-slug">—</dd>
-                            <dt>${_('organizations.logo_url')}</dt><dd id="org-detail-logo">—</dd>
-                            <dt>${_('organizations.created')}</dt><dd id="org-detail-created">—</dd>
-                            <dt>${_('organizations.org_id')}</dt><dd><span class="value-field"><code id="org-detail-id">${escapeHtml(orgId)}</code><button type="button" data-copy-target="org-detail-id">${_('actions.copy')}</button></span></dd>
-                        </dl>
-                    </section>
-
                     <form class="form-column" id="org-settings-form" data-save-form novalidate>
                         <section class="section" aria-labelledby="org-conn-title">
                             <h2 id="org-conn-title">${_('organizations.session_settings')}</h2>
-                            <p class="section-note">${_('organizations.session_settings_note')} <a href="/policies">${_('organizations.policies_link')}</a></p>
+                            <p class="section-note">${_('organizations.session_settings_note')} <a href="${canPolicies ? `/policies/${safeOrgId}` : '/policies'}">${_('organizations.policies_link')}</a></p>
                             <div id="settings-container">
                                 <div class="form-group">
                                     <label class="form-label" for="setting-connection-policy">${_('organizations.connection_policy')}</label>
@@ -148,6 +143,29 @@
                         </ul>
                     </section>` : ''}
                 </div>
+            </div>
+
+            <aside class="page-side" aria-labelledby="org-details-title">
+                <section class="section" aria-labelledby="org-details-title">
+                    <h2 id="org-details-title">${_('organizations.details_title')}</h2>
+                    <p class="org-side-counts" id="org-side-counts" aria-live="polite">${_('common.loading')}</p>
+                    <dl class="facts" id="org-details-facts">
+                        <dt>${_('organizations.slug')}</dt><dd id="org-detail-slug">—</dd>
+                        <dt>${_('organizations.created')}</dt><dd id="org-detail-created">—</dd>
+                        <dt>${_('organizations.logo_url')}</dt><dd id="org-detail-logo">—</dd>
+                        <dt>${_('organizations.org_id')}</dt><dd><span class="value-field"><code id="org-detail-id">${escapeHtml(orgId)}</code><button type="button" data-copy-target="org-detail-id">${_('actions.copy')}</button></span></dd>
+                    </dl>
+                </section>
+
+                <section class="section" aria-labelledby="org-related-title" id="org-related"${canPolicies ? '' : ' hidden'}>
+                    <h2 id="org-related-title">${_('organizations.related_title')}</h2>
+                    <ul class="list" id="org-related-list">
+                        ${canPolicies ? `<li><a class="list-row" href="/policies/${safeOrgId}">
+                            <span class="row-main"><span class="row-title">${_('nav.policies')}</span><span class="row-sub">${_('organizations.related_policies_sub')}</span></span>
+                            <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span></a></li>` : ''}
+                    </ul>
+                </section>
+            </aside>
             </div>
         </div>
     `

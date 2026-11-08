@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Eliminați dispozitivul {id} din această organizație? Dispozitivul rămâne pe server.",
         "group_user_members": "Membri",
         "address_book_remove_contact": "Elimină contactul",
-        "device_id_invalid": "Un ID de dispozitiv nu poate conține spații."
+        "device_id_invalid": "Un ID de dispozitiv nu poate conține spații.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} invitație deschisă",
+        "open_invitations_other": "{count} invitații deschise",
+        "related_title": "Pagini asociate",
+        "related_policies_sub": "Cum funcționează sesiunile la distanță pe dispozitivele acestei organizații.",
+        "billing_for_org": "Atribuit organizației",
+        "billing_for_group": "Atribuit grupului de dispozitive {name}",
+        "billing_package": "Pachet de facturare"
     },
     "chat": {
         "e2e_enabled": "Criptat de la capăt la capăt",

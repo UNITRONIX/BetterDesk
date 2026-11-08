@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Fjerne enheten {id} fra organisasjonen? Enheten blir på serveren.",
         "group_user_members": "Medlemmer",
         "address_book_remove_contact": "Fjern kontakt",
-        "device_id_invalid": "En enhets-ID kan ikke inneholde mellomrom."
+        "device_id_invalid": "En enhets-ID kan ikke inneholde mellomrom.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} åpen invitasjon",
+        "open_invitations_other": "{count} åpne invitasjoner",
+        "related_title": "Relaterte sider",
+        "related_policies_sub": "Hvordan fjernøkter fungerer på organisasjonens enheter.",
+        "billing_for_org": "Tilordnet organisasjonen",
+        "billing_for_group": "Tilordnet enhetsgruppen {name}",
+        "billing_package": "Faktureringspakke"
     },
     "chat": {
         "e2e_enabled": "Ende-til-ende kryptert",

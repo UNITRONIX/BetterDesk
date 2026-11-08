@@ -3954,7 +3954,15 @@
         "confirm_unassign_named": "Rimuovere il dispositivo {id} da questa organizzazione? Il dispositivo resta sul server.",
         "group_user_members": "Membri",
         "address_book_remove_contact": "Rimuovi contatto",
-        "device_id_invalid": "Un ID dispositivo non può contenere spazi."
+        "device_id_invalid": "Un ID dispositivo non può contenere spazi.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} invito aperto",
+        "open_invitations_other": "{count} inviti aperti",
+        "related_title": "Pagine correlate",
+        "related_policies_sub": "Come funzionano le sessioni remote sui dispositivi di questa organizzazione.",
+        "billing_for_org": "Assegnato all'organizzazione",
+        "billing_for_group": "Assegnato al gruppo di dispositivi {name}",
+        "billing_package": "Pacchetto di fatturazione"
     },
     "chat": {
         "e2e_enabled": "Crittografia end-to-end",

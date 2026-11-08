@@ -3954,7 +3954,15 @@
         "confirm_unassign_named": "장치 {id}을(를) 이 조직에서 제거할까요? 장치는 서버에 남습니다.",
         "group_user_members": "구성원",
         "address_book_remove_contact": "연락처 제거",
-        "device_id_invalid": "장치 ID에는 공백을 넣을 수 없습니다."
+        "device_id_invalid": "장치 ID에는 공백을 넣을 수 없습니다.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "열린 초대 {count}개",
+        "open_invitations_other": "열린 초대 {count}개",
+        "related_title": "관련 페이지",
+        "related_policies_sub": "이 조직의 기기에서 원격 세션이 작동하는 방식입니다.",
+        "billing_for_org": "조직에 할당됨",
+        "billing_for_group": "기기 그룹 {name}에 할당됨",
+        "billing_package": "청구 패키지"
     },
     "chat": {
         "e2e_enabled": "종단 간 암호화",

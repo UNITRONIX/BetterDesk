@@ -3954,7 +3954,15 @@
         "confirm_unassign_named": "Gerät {id} aus dieser Organisation entfernen? Das Gerät bleibt auf dem Server.",
         "group_user_members": "Mitglieder",
         "address_book_remove_contact": "Kontakt entfernen",
-        "device_id_invalid": "Eine Geräte-ID darf keine Leerzeichen enthalten."
+        "device_id_invalid": "Eine Geräte-ID darf keine Leerzeichen enthalten.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} offene Einladung",
+        "open_invitations_other": "{count} offene Einladungen",
+        "related_title": "Zugehörige Seiten",
+        "related_policies_sub": "Wie Fernsitzungen auf den Geräten dieser Organisation ablaufen.",
+        "billing_for_org": "Der Organisation zugewiesen",
+        "billing_for_group": "Der Gerätegruppe {name} zugewiesen",
+        "billing_package": "Abrechnungspaket"
     },
     "chat": {
         "e2e_enabled": "Ende-zu-Ende verschlüsselt",

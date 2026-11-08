@@ -4082,7 +4082,15 @@
         "confirm_unassign_named": "Retirer l'appareil {id} de cette organisation ? L'appareil reste sur le serveur.",
         "group_user_members": "Membres",
         "address_book_remove_contact": "Retirer le contact",
-        "device_id_invalid": "Un ID d'appareil ne peut pas contenir d'espaces."
+        "device_id_invalid": "Un ID d'appareil ne peut pas contenir d'espaces.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} invitation en attente",
+        "open_invitations_other": "{count} invitations en attente",
+        "related_title": "Pages associées",
+        "related_policies_sub": "Le fonctionnement des sessions à distance sur les appareils de cette organisation.",
+        "billing_for_org": "Attribué à l'organisation",
+        "billing_for_group": "Attribué au groupe d'appareils {name}",
+        "billing_package": "Forfait de facturation"
     },
     "chat": {
         "e2e_enabled": "Chiffré de bout en bout",

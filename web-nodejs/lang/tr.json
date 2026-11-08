@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "{id} cihazı bu kuruluştan çıkarılsın mı? Cihaz sunucuda kalır.",
         "group_user_members": "Üyeler",
         "address_book_remove_contact": "Kişiyi kaldır",
-        "device_id_invalid": "Cihaz kimliği boşluk içeremez."
+        "device_id_invalid": "Cihaz kimliği boşluk içeremez.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} açık davet",
+        "open_invitations_other": "{count} açık davet",
+        "related_title": "İlgili sayfalar",
+        "related_policies_sub": "Bu kuruluşun cihazlarında uzak oturumların nasıl çalıştığı.",
+        "billing_for_org": "Kuruluşa atandı",
+        "billing_for_group": "{name} cihaz grubuna atandı",
+        "billing_package": "Faturalandırma paketi"
     },
     "chat": {
         "e2e_enabled": "Uçtan uca şifrelenmiş",

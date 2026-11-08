@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "डिवाइस {id} को इस संगठन से हटाएँ? डिवाइस सर्वर पर बना रहता है।",
         "group_user_members": "सदस्य",
         "address_book_remove_contact": "संपर्क हटाएँ",
-        "device_id_invalid": "डिवाइस आईडी में स्पेस नहीं हो सकते।"
+        "device_id_invalid": "डिवाइस आईडी में स्पेस नहीं हो सकते।",
+        "side_counts": "{list}।",
+        "open_invitations_one": "{count} खुला आमंत्रण",
+        "open_invitations_other": "{count} खुले आमंत्रण",
+        "related_title": "संबंधित पेज",
+        "related_policies_sub": "इस संगठन के डिवाइस पर रिमोट सत्र कैसे काम करते हैं।",
+        "billing_for_org": "संगठन को असाइन किया गया",
+        "billing_for_group": "डिवाइस समूह {name} को असाइन किया गया",
+        "billing_package": "बिलिंग पैकेज"
     },
     "chat": {
         "e2e_enabled": "एंड-टू-एंड एन्क्रिप्टेड",

@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Fjern enheden {id} fra organisationen? Enheden bliver på serveren.",
         "group_user_members": "Medlemmer",
         "address_book_remove_contact": "Fjern kontakt",
-        "device_id_invalid": "Et enheds-ID må ikke indeholde mellemrum."
+        "device_id_invalid": "Et enheds-ID må ikke indeholde mellemrum.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} åben invitation",
+        "open_invitations_other": "{count} åbne invitationer",
+        "related_title": "Relaterede sider",
+        "related_policies_sub": "Hvordan fjernsessioner fungerer på organisationens enheder.",
+        "billing_for_org": "Tildelt organisationen",
+        "billing_for_group": "Tildelt enhedsgruppen {name}",
+        "billing_package": "Faktureringspakke"
     },
     "chat": {
         "e2e_enabled": "End-to-end krypteret",

@@ -3954,7 +3954,15 @@
         "confirm_unassign_named": "デバイス {id} をこの組織から外しますか？デバイスはサーバーに残ります。",
         "group_user_members": "メンバー",
         "address_book_remove_contact": "連絡先を削除",
-        "device_id_invalid": "デバイス ID に空白は使えません。"
+        "device_id_invalid": "デバイス ID に空白は使えません。",
+        "side_counts": "{list}。",
+        "open_invitations_one": "未使用の招待 {count} 件",
+        "open_invitations_other": "未使用の招待 {count} 件",
+        "related_title": "関連ページ",
+        "related_policies_sub": "この組織のデバイスでリモートセッションがどう動作するか。",
+        "billing_for_org": "組織に割り当て済み",
+        "billing_for_group": "デバイスグループ {name} に割り当て済み",
+        "billing_package": "請求パッケージ"
     },
     "chat": {
         "e2e_enabled": "エンドツーエンド暗号化",

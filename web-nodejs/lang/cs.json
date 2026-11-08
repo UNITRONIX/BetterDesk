@@ -3954,7 +3954,15 @@
         "confirm_unassign_named": "Odebrat zařízení {id} z této organizace? Zařízení zůstane na serveru.",
         "group_user_members": "Členové",
         "address_book_remove_contact": "Odebrat kontakt",
-        "device_id_invalid": "ID zařízení nesmí obsahovat mezery."
+        "device_id_invalid": "ID zařízení nesmí obsahovat mezery.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} otevřená pozvánka",
+        "open_invitations_other": "Otevřené pozvánky: {count}",
+        "related_title": "Související stránky",
+        "related_policies_sub": "Jak fungují vzdálené relace na zařízeních této organizace.",
+        "billing_for_org": "Přiřazeno organizaci",
+        "billing_for_group": "Přiřazeno skupině zařízení {name}",
+        "billing_package": "Fakturační balíček"
     },
     "chat": {
         "e2e_enabled": "Koncové šifrování aktivní",

@@ -3960,7 +3960,15 @@
         "confirm_unassign_named": "Вилучити пристрій {id} з цієї організації? Пристрій залишиться на сервері.",
         "group_user_members": "Учасники",
         "address_book_remove_contact": "Вилучити контакт",
-        "device_id_invalid": "ID пристрою не може містити пробілів."
+        "device_id_invalid": "ID пристрою не може містити пробілів.",
+        "side_counts": "{list}.",
+        "open_invitations_one": "{count} відкрите запрошення",
+        "open_invitations_other": "Відкриті запрошення: {count}",
+        "related_title": "Пов'язані сторінки",
+        "related_policies_sub": "Як працюють віддалені сеанси на пристроях цієї організації.",
+        "billing_for_org": "Призначено організації",
+        "billing_for_group": "Призначено групі пристроїв {name}",
+        "billing_package": "Пакет оплати"
     },
     "chat": {
         "e2e_enabled": "Наскрізне шифрування",

@@ -107,3 +107,24 @@
 .org-detail-page .section-head .count-line:empty {
     display: none;
 }
+
+/* ── Detail side column: label above value, so the ID fits in one line ── */
+
+.org-detail-page .page-side .facts {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.org-detail-page .page-side .facts > dt {
+    min-height: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: var(--text-sm);
+}
+
+.org-detail-page .page-side .facts > dd {
+    padding-top: var(--space-1);
+}
+
+.org-detail-page .org-side-counts {
+    margin: 0;
+}

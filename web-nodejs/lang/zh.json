@@ -4060,7 +4060,15 @@
         "confirm_unassign_named": "要将设备 {id} 从此组织移除吗？设备会留在服务器上。",
         "group_user_members": "成员",
         "address_book_remove_contact": "移除联系人",
-        "device_id_invalid": "设备 ID 不能包含空格。"
+        "device_id_invalid": "设备 ID 不能包含空格。",
+        "side_counts": "{list}。",
+        "open_invitations_one": "{count} 个未使用的邀请",
+        "open_invitations_other": "{count} 个未使用的邀请",
+        "related_title": "相关页面",
+        "related_policies_sub": "此组织设备上的远程会话如何运行。",
+        "billing_for_org": "已分配给组织",
+        "billing_for_group": "已分配给设备组 {name}",
+        "billing_package": "计费套餐"
     },
     "chat": {
         "e2e_enabled": "端到端加密",
