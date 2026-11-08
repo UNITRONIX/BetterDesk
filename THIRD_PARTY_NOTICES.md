@@ -34,10 +34,11 @@ security-update path are recorded in the release SBOM.
 
 The console self-hosts these fonts in `web-nodejs/public/fonts/`:
 
-- Atkinson Hyperlegible Next and Atkinson Hyperlegible Mono (Latin and Latin
-  Extended subsets, variable weight), SIL Open Font License 1.1, copyright
-  The Atkinson Hyperlegible Next Project Authors. License text:
-  `web-nodejs/public/fonts/AtkinsonHyperlegible-OFL.txt`.
+- IBM Plex Sans (Latin, Latin Extended, Cyrillic, Greek and Vietnamese
+  subsets, variable weight) and IBM Plex Mono (Latin, Latin Extended and
+  Cyrillic subsets, weights 400 and 600), SIL Open Font License 1.1,
+  copyright IBM Corp. License text:
+  `web-nodejs/public/fonts/IBMPlex-OFL.txt`.
 - Material Symbols (subset), Apache License 2.0, see
   `web-nodejs/public/fonts/MATERIAL_SYMBOLS_VERSION.txt`.
 

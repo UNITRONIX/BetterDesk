@@ -37,8 +37,10 @@
     --focus: var(--accent);
 
     /* Type */
-    --font: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
-    --mono: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
+    /* Plex Sans tells I, l and 1 apart, so names read right in the UI font too.
+       Plex Mono (dotted zero) is only for values people copy: IDs, keys, addresses. */
+    --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace;
     /* --font-scale follows the accessibility panel's text size */
     --font-scale: 1;
     --text-xs: calc(0.75rem * var(--font-scale));    /* 12px */

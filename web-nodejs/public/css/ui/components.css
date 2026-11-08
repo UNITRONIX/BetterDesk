@@ -200,6 +200,7 @@ textarea.form-input,
 .form-input::placeholder,
 .form-textarea::placeholder {
     color: var(--text-muted);
+    font-family: var(--font);
     opacity: 1;
 }
 

@@ -14,7 +14,7 @@
 
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
     <%- include('partials/theme-head') %>
-    <link rel="preload" href="/fonts/AtkinsonHyperlegibleNext-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : cacheVersion %>">
     <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/ui/base.css?v=<%= cacheVersion %>">
@@ -86,7 +86,7 @@
 
                 <div class="form-group">
                     <label class="form-label" for="dl-totp-code"><%= _('auth.totp_code') %></label>
-                    <input type="text" id="dl-totp-code" class="form-input totp-input mono"
+                    <input type="text" id="dl-totp-code" class="form-input totp-input"
                            autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
                 </div>
 

@@ -208,7 +208,6 @@
 
 .dg-sub {
     fill: var(--text-muted);
-    font-family: var(--mono);
     font-size: 12px;
 }
 

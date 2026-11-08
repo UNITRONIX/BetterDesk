@@ -104,7 +104,7 @@
         var term = new Terminal({
             cursorBlink: true,
             fontSize: 13,
-            fontFamily: "'Cascadia Code', 'Consolas', monospace",
+            fontFamily: "'IBM Plex Mono', 'Cascadia Code', 'Consolas', monospace",
             theme: { background: '#0d1117', foreground: '#e6edf3' },
             scrollback: 5000,
         });

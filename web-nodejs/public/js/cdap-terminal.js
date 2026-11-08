@@ -88,7 +88,7 @@
             cursorBlink: true,
             cursorStyle: 'block',
             fontSize: 13,
-            fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
+            fontFamily: "'IBM Plex Mono', 'Cascadia Code', 'Consolas', monospace",
             theme: {
                 background: '#0d1117',
                 foreground: '#e6edf3',
