@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed
+- **i18n key parity:** `en.json` was missing `commercialization.packages.select_org` and `commercialization.packages.select_org_placeholder`, which `pl.json` already had. EN now carries both, so parity is clean.
+- **CI i18n gate:** `npm run i18n:check` no longer fails on untranslated strings still falling back to English. Parity breaks, parse errors, missing keys and empty values stay blocking; the remaining translation backlog (~8.1k strings across 26 locales) is reported as a warning instead of turning the gate permanently red and hiding real regressions.
+
 ### Changed
 - _(none yet)_
 
