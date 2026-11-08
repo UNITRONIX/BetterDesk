@@ -72,7 +72,9 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     });
 
     it('escapes dynamic automation values before inserting rule rows', () => {
-        assert.match(automation, /<td>\$\{escapeHtml\(r\.condition_value\)\}<\/td>/);
+        // The threshold cell goes through escapeHtml (formatted as a number, or the empty dash for custom rules)
+        assert.match(automation, /<td class="is-num">\$\{[^\n]*escapeHtml\([^\n]*r\.condition_value[^\n]*\}<\/td>/);
+        assert.doesNotMatch(automation, /<td[^>]*>\$\{r\.condition_value\}<\/td>/);
         assert.match(automation, /function safeSeverity/);
         assert.match(automation, /function safeStatus/);
     });
