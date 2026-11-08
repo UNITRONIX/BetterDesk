@@ -1,0 +1,72 @@
+/* Data loss prevention (/dataguard).
+   Tabs, toolbar, tables, menus, choices and dialogs come from components.css. */
+
+.dg-views {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.dg-table .num-col {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.dg-table .dg-name {
+    font-weight: 600;
+}
+
+.dg-table td:first-child {
+    min-width: 16ch;
+}
+
+.dg-table .dg-time {
+    white-space: nowrap;
+}
+
+/* Event details are JSON from the device: wrap anywhere, keep rows short */
+.dg-table .dg-detail {
+    max-width: 40ch;
+    overflow-wrap: anywhere;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.dg-table .dg-scope {
+    max-width: 24ch;
+    overflow-wrap: anywhere;
+}
+
+/* Policy dialog */
+.dg-fieldset {
+    margin-inline: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.dg-fieldset > legend {
+    padding: 0;
+    margin-bottom: var(--space-1);
+}
+
+.dg-form .dg-rules {
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+}
+
+.dg-form .check-field {
+    margin-bottom: var(--space-3);
+}
+
+.dg-form .form-status:empty {
+    display: none;
+}
+
+/* On a phone an empty table would scroll sideways only to show its
+   headers; show the one-sentence state on its own instead */
+@media (max-width: 640px) {
+    .dg-table.is-empty thead {
+        display: none;
+    }
+}

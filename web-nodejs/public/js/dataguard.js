@@ -1,263 +1,422 @@
 /**
- * BetterDesk Console - DataGuard Page Script
+ * BetterDesk Console - Data loss prevention (/dataguard)
+ *
+ * Two views: the policy table (create, edit, enable/disable, delete) and
+ * the event table (what devices reported). Counts sit in a line above
+ * each table. The policy editor is a Modal.show() dialog built from the
+ * #policy-form-template in the view.
  */
 
 (function () {
     'use strict';
 
-    const _ = window.BetterDesk?.translations
-        ? (key) => {
-            const keys = key.split('.');
-            let val = window.BetterDesk.translations;
-            for (const k of keys) { val = val?.[k]; }
-            return val || key;
-        }
-        : (key) => key;
+    const tr = (key, params) => {
+        if (typeof window._ !== 'function') return key;
+        return window._(key, params);
+    };
+    const t = (key, params) => tr('dataguard.' + key, params);
 
     const csrfToken = window.BetterDesk?.csrfToken || '';
 
     async function apiFetch(url, options = {}) {
         const headers = { 'Content-Type': 'application/json' };
         if (csrfToken) headers['x-csrf-token'] = csrfToken;
-        const resp = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
-        return resp.json();
+        const resp = await fetch(url, { credentials: 'same-origin', ...options, headers: { ...headers, ...options.headers } });
+        const data = await resp.json().catch(() => null);
+        if (!resp.ok) {
+            throw new Error((data && data.error) || resp.statusText || 'Request failed');
+        }
+        return data;
     }
 
     function escapeHtml(str) {
-        if (!str) return '';
+        if (str === null || str === undefined) return '';
         const div = document.createElement('div');
         div.textContent = String(str);
         return div.innerHTML;
     }
 
+    function toast(message, type) {
+        if (typeof Notifications !== 'undefined' && Notifications[type]) Notifications[type](message);
+    }
+
     function formatTimeAgo(dateStr) {
         if (!dateStr) return '—';
         const d = new Date(dateStr);
-        const diff = Math.floor((Date.now() - d) / 1000);
-        if (diff < 60) return _('time.seconds_ago').replace('{count}', diff);
-        if (diff < 3600) return _('time.minutes_ago').replace('{count}', Math.floor(diff / 60));
-        if (diff < 86400) return _('time.hours_ago').replace('{count}', Math.floor(diff / 3600));
-        if (diff < 2592000) return _('time.days_ago').replace('{count}', Math.floor(diff / 86400));
+        if (Number.isNaN(d.getTime())) return '—';
+        const diff = Math.max(0, Math.floor((Date.now() - d) / 1000));
+        if (diff < 60) return tr('time.seconds_ago', { count: diff });
+        if (diff < 3600) return tr('time.minutes_ago', { count: Math.floor(diff / 60) });
+        if (diff < 86400) return tr('time.hours_ago', { count: Math.floor(diff / 3600) });
+        if (diff < 2592000) return tr('time.days_ago', { count: Math.floor(diff / 86400) });
         return d.toLocaleDateString();
     }
 
-    function showToast(message, type) {
-        if (window.BetterDesk?.notify) { window.BetterDesk.notify(message, type); return; }
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type || 'info'}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+    function formatFull(dateStr) {
+        const d = new Date(dateStr);
+        return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
     }
 
-    // ---- Tab switching ----
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            const panel = document.getElementById('tab-' + btn.dataset.tab);
-            if (panel) panel.classList.add('active');
-            if (btn.dataset.tab === 'policies') loadPolicies();
-            else if (btn.dataset.tab === 'events') loadEvents();
-        });
-    });
+    const ACTIONS = ['block', 'log', 'allow'];
+    const TYPES = ['usb', 'file_type', 'clipboard', 'screen_share', 'file_transfer'];
 
-    // ---- Modal close ----
-    document.querySelectorAll('.modal-close').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.modal;
-            if (id) document.getElementById(id).style.display = 'none';
-        });
-    });
-
-    // ==== Stats ====
-    async function loadStats() {
-        try {
-            const stats = await apiFetch('/api/dataguard/stats');
-            document.getElementById('stat-policies').textContent = stats.total_policies ?? 0;
-            document.getElementById('stat-active').textContent = stats.active_policies ?? 0;
-            document.getElementById('stat-violations').textContent = stats.violations ?? 0;
-            document.getElementById('stat-blocked').textContent = stats.blocked ?? 0;
-        } catch (_e) { /* ignore */ }
+    function actionLabel(a) {
+        return ACTIONS.includes(a) ? t('action_' + a) : (a || '—');
     }
+
+    function typeLabel(type) {
+        return TYPES.includes(type) ? t('type_' + type) : (type || '—');
+    }
+
+    function isEnabled(p) {
+        return p.enabled === true || p.enabled === 1 || p.enabled === '1';
+    }
+
+    // Put a bold number into a translated sentence: "{count} policies, ..."
+    function countSentence(key, params, boldKey) {
+        const marker = '\u0000';
+        const text = t(key, { ...params, [boldKey]: marker });
+        return escapeHtml(text).replace(marker, `<strong>${escapeHtml(params[boldKey])}</strong>`);
+    }
+
+    // ---- Tabs ----
+    const tabs = Array.from(document.querySelectorAll('.dg-views [role="tab"]'));
+
+    function selectTab(btn, focus) {
+        tabs.forEach(b => {
+            const on = b === btn;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+            b.tabIndex = on ? 0 : -1;
+            const panel = document.getElementById('tab-' + b.dataset.tab);
+            if (panel) {
+                panel.classList.toggle('active', on);
+                panel.hidden = !on;
+            }
+        });
+        if (focus) btn.focus();
+        if (btn.dataset.tab === 'policies') loadPolicies();
+        else if (btn.dataset.tab === 'events') loadEvents();
+    }
+
+    tabs.forEach((btn, i) => {
+        btn.addEventListener('click', () => selectTab(btn, false));
+        btn.addEventListener('keydown', (e) => {
+            const rtl = document.documentElement.dir === 'rtl';
+            let next = null;
+            if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight')) next = tabs[(i + 1) % tabs.length];
+            else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) next = tabs[(i - 1 + tabs.length) % tabs.length];
+            else if (e.key === 'Home') next = tabs[0];
+            else if (e.key === 'End') next = tabs[tabs.length - 1];
+            if (next) { e.preventDefault(); selectTab(next, true); }
+        });
+    });
 
     // ==== Policies ====
 
     const policiesBody = document.getElementById('policies-body');
+    const policyCount = document.getElementById('dg-policy-count');
     const createBtn = document.getElementById('create-policy-btn');
-    const policyModal = document.getElementById('policy-modal');
-    const saveBtn = document.getElementById('policy-save-btn');
-    const cancelBtn = document.getElementById('policy-cancel-btn');
     const policySearch = document.getElementById('policy-search');
+    const formTemplate = document.getElementById('policy-form-template');
     let allPolicies = [];
+    let eventCounts = null;          // policy id -> number of events, null = unknown
+
+    function policyState(html) {
+        policiesBody.closest('table').classList.add('is-empty');
+        policiesBody.innerHTML = `<tr><td colspan="7" class="state-cell">${html}</td></tr>`;
+    }
 
     async function loadPolicies() {
-        policiesBody.innerHTML = `<tr class="loading-row"><td colspan="7">${_('common.loading')}</td></tr>`;
+        if (!allPolicies.length) policyState(escapeHtml(t('loading_policies')));
         try {
             const data = await apiFetch('/api/dataguard/policies');
             allPolicies = Array.isArray(data) ? data : [];
             filterPolicies();
+            loadEventCounts();
         } catch (err) {
-            policiesBody.innerHTML = `<tr class="empty-row"><td colspan="7">
-                <div class="empty-state"><span class="material-icons">error_outline</span><p>${escapeHtml(err.message)}</p></div></td></tr>`;
+            policyCount.textContent = '';
+            policyState(`<span class="text-danger">${escapeHtml(t('load_policies_failed'))}</span>
+                <button type="button" class="btn btn-sm dg-retry-policies">${escapeHtml(tr('actions.retry'))}</button>`);
+            policiesBody.querySelector('.dg-retry-policies')?.addEventListener('click', loadPolicies);
         }
+    }
+
+    // Events per policy, for the "Events" column. Needs the audit permission;
+    // without it the column shows a dash.
+    async function loadEventCounts() {
+        try {
+            const events = await apiFetch('/api/dataguard/events');
+            eventCounts = {};
+            (Array.isArray(events) ? events : []).forEach(e => {
+                if (e.policy_id == null) return;
+                eventCounts[e.policy_id] = (eventCounts[e.policy_id] || 0) + 1;
+            });
+        } catch (_e) {
+            eventCounts = null;
+        }
+        filterPolicies();
+    }
+
+    function renderPolicyCount() {
+        const n = allPolicies.length;
+        if (!n) { policyCount.textContent = ''; return; }
+        const enabled = allPolicies.filter(isEnabled).length;
+        policyCount.innerHTML = countSentence(n === 1 ? 'policy_count_one' : 'policy_count_many', { count: n, enabled }, 'count');
     }
 
     function filterPolicies() {
-        const q = policySearch.value.toLowerCase();
-        const filtered = q ? allPolicies.filter(p => (p.name + p.description).toLowerCase().includes(q)) : allPolicies;
-        renderPolicies(filtered);
+        renderPolicyCount();
+        const q = policySearch.value.trim().toLowerCase();
+        const filtered = q
+            ? allPolicies.filter(p => [p.name, p.description, p.scope, typeLabel(p.policy_type || p.type)]
+                .join(' ').toLowerCase().includes(q))
+            : allPolicies;
+        renderPolicies(filtered, !!q);
     }
 
-    function renderPolicies(policies) {
+    function renderPolicies(policies, filtered) {
         if (!policies.length) {
-            policiesBody.innerHTML = `<tr class="empty-row"><td colspan="7">
-                <div class="empty-state"><span class="material-icons">policy</span><p>${_('dataguard.no_policies')}</p></div></td></tr>`;
+            policyState(escapeHtml(filtered ? t('empty_policies_filtered') : t('empty_policies')));
             return;
         }
-        policiesBody.innerHTML = policies.map(p => `
-            <tr data-id="${p.id}">
-                <td>${escapeHtml(p.name)}</td>
-                <td><span class="dg-type-badge">${escapeHtml(p.policy_type || p.type)}</span></td>
-                <td><span class="dg-action-badge ${String(p.action || '').replace(/[^a-z0-9_-]/gi, '')}">${escapeHtml(_('dataguard.action_' + p.action) || p.action)}</span></td>
-                <td>${escapeHtml(p.scope || _('dataguard.scope_all'))}</td>
-                <td><span class="policy-status ${p.enabled ? 'active' : 'disabled'}"><span class="dot"></span> ${p.enabled ? _('dataguard.active') : _('dataguard.disabled')}</span></td>
-                <td class="violations-count ${(p.events_count || 0) > 50 ? 'high' : ''}">${p.events_count || 0}</td>
-                <td class="action-btn-group">
-                    <button class="btn btn-sm btn-secondary edit-btn" data-id="${p.id}"><span class="material-icons" style="font-size:16px">edit</span></button>
-                    <button class="btn btn-sm btn-danger del-btn" data-id="${p.id}"><span class="material-icons" style="font-size:16px">delete</span></button>
+        policiesBody.closest('table').classList.remove('is-empty');
+        policiesBody.innerHTML = policies.map((p) => {
+            const id = escapeHtml(p.id);
+            const on = isEnabled(p);
+            const count = eventCounts ? (eventCounts[p.id] || 0) : null;
+            return `
+            <tr data-id="${id}">
+                <td>
+                    <span class="dg-name">${escapeHtml(p.name)}</span>
+                    ${p.description ? `<span class="cell-sub">${escapeHtml(p.description)}</span>` : ''}
                 </td>
-            </tr>
-        `).join('');
+                <td>${escapeHtml(typeLabel(p.policy_type || p.type))}</td>
+                <td>${escapeHtml(actionLabel(p.action))}</td>
+                <td class="dg-scope">${p.scope ? `<span class="mono">${escapeHtml(p.scope)}</span>` : escapeHtml(t('scope_all'))}</td>
+                <td><span class="status ${on ? 'active' : 'offline'}">${escapeHtml(on ? t('enabled') : t('disabled'))}</span></td>
+                <td class="num-col">${count === null ? '<span class="text-muted">—</span>' : escapeHtml(count)}</td>
+                <td class="actions">
+                    <button type="button" class="btn btn-sm edit-btn" data-id="${id}"
+                        aria-label="${escapeHtml(t('edit_named', { name: p.name }))}">${escapeHtml(tr('common.edit'))}</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
 
-        policiesBody.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => editPolicy(btn.dataset.id)));
-        policiesBody.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', () => deletePolicy(btn.dataset.id)));
+    policiesBody.addEventListener('click', (e) => {
+        const edit = e.target.closest('.edit-btn');
+        if (edit) editPolicy(edit.dataset.id);
+    });
+
+    function rulesText(p) {
+        if (!p || p.rules === undefined || p.rules === null) return '';
+        if (typeof p.rules === 'string') return p.rules;
+        if (Array.isArray(p.rules) && p.rules.length === 0) return '';
+        return JSON.stringify(p.rules, null, 2);
     }
 
     function openPolicyModal(p) {
-        document.getElementById('policy-modal-title').textContent = p ? _('dataguard.edit_policy') : _('dataguard.create_policy');
+        Modal.show({
+            title: p ? t('edit_policy') : t('create_policy'),
+            content: formTemplate.innerHTML,
+            buttons: [
+                // Delete sits apart on the start side of the footer
+                ...(p ? [{ label: t('delete_policy'), class: 'btn-danger-quiet del-btn', onClick: () => deletePolicy(p) }] : []),
+                { label: tr('common.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: p ? t('save_policy') : t('create_policy'), class: 'btn-primary', onClick: () => savePolicy() },
+            ],
+        });
         document.getElementById('policy-id').value = p ? p.id : '';
-        document.getElementById('policy-name').value = p ? p.name : '';
+        document.getElementById('policy-name').value = p ? p.name || '' : '';
         document.getElementById('policy-desc').value = p ? p.description || '' : '';
-        document.getElementById('policy-type').value = p ? p.policy_type || p.type : 'usb';
-        document.getElementById('policy-action').value = p ? p.action : 'log';
+        const type = p ? (p.policy_type || p.type) : 'usb';
+        document.getElementById('policy-type').value = TYPES.includes(type) ? type : 'usb';
+        const action = p && ACTIONS.includes(p.action) ? p.action : 'log';
+        const radio = document.querySelector(`#policy-action input[value="${action}"]`);
+        if (radio) radio.checked = true;
         document.getElementById('policy-scope').value = p ? p.scope || '' : '';
-        document.getElementById('policy-rules').value = p ? (typeof p.rules === 'string' ? p.rules : JSON.stringify(p.rules || [], null, 2)) : '';
-        document.getElementById('policy-enabled').checked = p ? !!p.enabled : true;
-        policyModal.style.display = 'flex';
+        document.getElementById('policy-rules').value = rulesText(p);
+        document.getElementById('policy-enabled').checked = p ? isEnabled(p) : true;
+        document.getElementById('policy-form').addEventListener('submit', (e) => { e.preventDefault(); savePolicy(); });
+        document.getElementById('policy-name').focus();
     }
 
     async function editPolicy(id) {
         try {
-            const p = await apiFetch(`/api/dataguard/policies/${id}`);
+            const p = await apiFetch(`/api/dataguard/policies/${encodeURIComponent(id)}`);
             openPolicyModal(p);
-        } catch (err) { showToast(err.message, 'error'); }
+        } catch (err) {
+            toast(`${t('load_policy_failed')} ${err.message}`, 'error');
+        }
     }
 
+    function formError(message, field) {
+        const status = document.getElementById('policy-form-status');
+        if (status) status.textContent = message;
+        if (field) {
+            field.setAttribute('aria-invalid', 'true');
+            field.focus();
+        }
+    }
+
+    let saving = false;
     async function savePolicy() {
+        if (saving) return;
+        const nameEl = document.getElementById('policy-name');
+        const rulesEl = document.getElementById('policy-rules');
+        if (!nameEl) return;
+        nameEl.removeAttribute('aria-invalid');
+        rulesEl.removeAttribute('aria-invalid');
+        formError('');
+
         const id = document.getElementById('policy-id').value;
         let rules;
         try {
-            const raw = document.getElementById('policy-rules').value.trim();
+            const raw = rulesEl.value.trim();
             rules = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(rules)) throw new Error('not an array');
         } catch (_e) {
-            showToast(_('common.invalid_json'), 'error');
+            formError(t('invalid_rules'), rulesEl);
             return;
         }
 
+        const checked = document.querySelector('#policy-action input:checked');
         const body = {
-            name: document.getElementById('policy-name').value.trim(),
+            name: nameEl.value.trim(),
             description: document.getElementById('policy-desc').value.trim(),
             policy_type: document.getElementById('policy-type').value,
-            action: document.getElementById('policy-action').value,
+            action: checked ? checked.value : 'log',
             scope: document.getElementById('policy-scope').value.trim() || null,
             rules,
             enabled: document.getElementById('policy-enabled').checked,
         };
 
-        if (!body.name) { showToast(_('common.name_required'), 'error'); return; }
+        if (!body.name) { formError(t('name_required'), nameEl); return; }
 
+        saving = true;
         try {
-            const url = id ? `/api/dataguard/policies/${id}` : '/api/dataguard/policies';
-            const method = id ? 'PATCH' : 'POST';
-            await apiFetch(url, { method, body: JSON.stringify(body) });
-            policyModal.style.display = 'none';
-            showToast(_('common.saved'), 'success');
+            const url = id ? `/api/dataguard/policies/${encodeURIComponent(id)}` : '/api/dataguard/policies';
+            await apiFetch(url, { method: id ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+            Modal.close();
+            toast(id ? t('policy_saved', { name: body.name }) : t('policy_created', { name: body.name }), 'success');
             loadPolicies();
-            loadStats();
-        } catch (err) { showToast(err.message, 'error'); }
+        } catch (err) {
+            formError(`${t('save_failed')} ${err.message}`);
+        } finally {
+            saving = false;
+        }
     }
 
-    async function deletePolicy(id) {
-        if (!confirm(_('dataguard.delete_policy') + '?')) return;
+    // Called from the edit dialog. Cancelling the confirmation goes back to the dialog.
+    async function deletePolicy(p) {
+        const ok = await Modal.confirm({
+            title: t('delete_policy'),
+            message: t('delete_confirm_message', { name: p.name }),
+            confirmLabel: t('delete_policy'),
+            danger: true,
+        });
+        if (!ok) {
+            openPolicyModal(p);
+            return;
+        }
         try {
-            await apiFetch(`/api/dataguard/policies/${id}`, { method: 'DELETE' });
-            showToast(_('common.success'), 'success');
+            await apiFetch(`/api/dataguard/policies/${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+            toast(t('policy_deleted', { name: p.name }), 'success');
+            // The row and its dialog are gone; keep focus on the page
+            createBtn.focus();
             loadPolicies();
-            loadStats();
-        } catch (err) { showToast(err.message, 'error'); }
+        } catch (err) {
+            toast(`${t('delete_failed')} ${err.message}`, 'error');
+        }
     }
 
     createBtn.addEventListener('click', () => openPolicyModal(null));
-    saveBtn.addEventListener('click', savePolicy);
-    cancelBtn?.addEventListener('click', () => { policyModal.style.display = 'none'; });
     policySearch.addEventListener('input', filterPolicies);
 
     // ==== Events ====
 
     const eventsBody = document.getElementById('events-body');
+    const eventCount = document.getElementById('dg-event-count');
     const eventSearch = document.getElementById('event-search');
     let allEvents = [];
+    let eventsLoaded = false;
     let eventActionFilter = '';
 
-    async function loadEvents() {
-        eventsBody.innerHTML = `<tr class="loading-row"><td colspan="5">${_('common.loading')}</td></tr>`;
-        const params = new URLSearchParams();
-        if (eventActionFilter) params.set('event_type', eventActionFilter);
+    function eventState(html) {
+        eventsBody.closest('table').classList.add('is-empty');
+        eventsBody.innerHTML = `<tr><td colspan="5" class="state-cell">${html}</td></tr>`;
+    }
 
+    async function loadEvents() {
+        if (!eventsLoaded) eventState(escapeHtml(t('loading_events')));
         try {
-            const data = await apiFetch(`/api/dataguard/events?${params}`);
+            const data = await apiFetch('/api/dataguard/events');
             allEvents = Array.isArray(data) ? data : [];
+            eventsLoaded = true;
             filterEvents();
         } catch (err) {
-            eventsBody.innerHTML = `<tr class="empty-row"><td colspan="5">
-                <div class="empty-state"><span class="material-icons">error_outline</span><p>${escapeHtml(err.message)}</p></div></td></tr>`;
+            eventCount.textContent = '';
+            eventState(`<span class="text-danger">${escapeHtml(t('load_events_failed'))}</span>
+                <button type="button" class="btn btn-sm dg-retry-events">${escapeHtml(tr('actions.retry'))}</button>`);
+            eventsBody.querySelector('.dg-retry-events')?.addEventListener('click', loadEvents);
         }
+    }
+
+    function detailText(e) {
+        if (e.details === null || e.details === undefined || e.details === '') return '';
+        if (typeof e.details === 'object') {
+            return Object.keys(e.details).length ? JSON.stringify(e.details) : '';
+        }
+        return String(e.details);
+    }
+
+    function renderEventCount() {
+        const n = allEvents.length;
+        if (!n) { eventCount.textContent = ''; return; }
+        const blocked = allEvents.filter(e => e.action === 'block').length;
+        const logged = allEvents.filter(e => e.action === 'log').length;
+        eventCount.innerHTML = countSentence(n === 1 ? 'event_count_one' : 'event_count_many', { count: n, blocked, logged }, 'count');
     }
 
     function filterEvents() {
-        const q = eventSearch.value.toLowerCase();
-        const filtered = q ? allEvents.filter(e => ((e.device_id || '') + (e.policy_name || '') + (typeof e.details === 'string' ? e.details : JSON.stringify(e.details || ''))).toLowerCase().includes(q)) : allEvents;
-        renderEvents(filtered);
+        renderEventCount();
+        const q = eventSearch.value.trim().toLowerCase();
+        let filtered = allEvents;
+        if (eventActionFilter) filtered = filtered.filter(e => e.action === eventActionFilter);
+        if (q) {
+            filtered = filtered.filter(e => [e.device_id, e.policy_name, detailText(e)].join(' ').toLowerCase().includes(q));
+        }
+        renderEvents(filtered, !!(q || eventActionFilter));
     }
 
-    function renderEvents(events) {
+    function renderEvents(events, filtered) {
         if (!events.length) {
-            eventsBody.innerHTML = `<tr class="empty-row"><td colspan="5">
-                <div class="empty-state"><span class="material-icons">shield</span><p>${_('dataguard.no_events')}</p></div></td></tr>`;
+            eventState(escapeHtml(filtered ? t('empty_events_filtered') : t('empty_events')));
             return;
         }
-        eventsBody.innerHTML = events.map(e => `
+        eventsBody.closest('table').classList.remove('is-empty');
+        eventsBody.innerHTML = events.map(e => {
+            const detail = detailText(e);
+            return `
             <tr>
-                <td class="time-cell">${formatTimeAgo(e.created_at)}</td>
-                <td>${escapeHtml(e.device_id || '—')}</td>
+                <td class="dg-time"><time datetime="${escapeHtml(e.created_at || '')}" title="${escapeHtml(formatFull(e.created_at))}">${escapeHtml(formatTimeAgo(e.created_at))}</time></td>
+                <td>${e.device_id ? `<span class="mono">${escapeHtml(e.device_id)}</span>` : '—'}</td>
                 <td>${escapeHtml(e.policy_name || '—')}</td>
-                <td><span class="dg-action-badge ${e.action}">${_('dataguard.action_' + e.action) || e.action}</span></td>
-                <td class="event-detail" title="${escapeHtml(typeof e.details === 'object' ? JSON.stringify(e.details) : (e.details || ''))}">${escapeHtml(typeof e.details === 'object' ? JSON.stringify(e.details) : (e.details || '—'))}</td>
-            </tr>
-        `).join('');
+                <td>${escapeHtml(actionLabel(e.action))}</td>
+                <td class="dg-detail">${detail ? escapeHtml(detail) : '—'}</td>
+            </tr>`;
+        }).join('');
     }
 
-    // Event action filter buttons
     document.querySelectorAll('#event-action-filter .filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('#event-action-filter .filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            document.querySelectorAll('#event-action-filter .filter-btn').forEach(b => {
+                b.classList.toggle('active', b === btn);
+                b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+            });
             eventActionFilter = btn.dataset.action;
-            loadEvents();
+            filterEvents();
         });
     });
 
@@ -265,5 +424,4 @@
 
     // ---- Init ----
     loadPolicies();
-    loadStats();
 })();
