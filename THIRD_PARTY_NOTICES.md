@@ -30,6 +30,17 @@ xdotool, and ydotool are not silently relicensed by BetterDesk. A package may
 only bundle one of them after its license, redistributability, provenance, and
 security-update path are recorded in the release SBOM.
 
+## Web console fonts
+
+The console self-hosts these fonts in `web-nodejs/public/fonts/`:
+
+- Atkinson Hyperlegible Next and Atkinson Hyperlegible Mono (Latin and Latin
+  Extended subsets, variable weight), SIL Open Font License 1.1, copyright
+  The Atkinson Hyperlegible Next Project Authors. License text:
+  `web-nodejs/public/fonts/AtkinsonHyperlegible-OFL.txt`.
+- Material Symbols (subset), Apache License 2.0, see
+  `web-nodejs/public/fonts/MATERIAL_SYMBOLS_VERSION.txt`.
+
 ## Compatibility components
 
 Any desktop-client compatibility adapter is subject to

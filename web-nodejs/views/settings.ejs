@@ -683,7 +683,14 @@
                         <p class="settings-row-hint">${_('theme.quick_vs_presets') || 'Quick light/dark switch (also available in the top bar). Full color presets are in the gallery above.'}</p>
                         <div class="logo-type-selector" id="theme-mode-selector" role="radiogroup" aria-label="${_('theme.title') || 'Theme'}">
                             <label class="logo-type-option">
-                                <input type="radio" name="theme-mode" value="dark" checked>
+                                <input type="radio" name="theme-mode" value="system" checked>
+                                <span class="logo-type-card">
+                                    <span class="material-icons" aria-hidden="true">contrast</span>
+                                    <span>${_('theme.auto')}</span>
+                                </span>
+                            </label>
+                            <label class="logo-type-option">
+                                <input type="radio" name="theme-mode" value="dark">
                                 <span class="logo-type-card">
                                     <span class="material-icons" aria-hidden="true">dark_mode</span>
                                     <span>${_('theme.dark') || 'Dark'}</span>

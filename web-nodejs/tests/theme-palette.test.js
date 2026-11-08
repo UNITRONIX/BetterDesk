@@ -13,17 +13,18 @@ describe('UX 3.5 theme palettes', () => {
     test('exposes the canonical palettes without shared mutable state', () => {
         const palettes = getThemePalettes();
         expect(palettes).toEqual({
-            dark: expect.objectContaining({ bgPrimary: '#0d1117' }),
-            light: expect.objectContaining({ bgPrimary: '#f0f2f5' })
+            dark: expect.objectContaining({ bgPrimary: '#141616' }),
+            light: expect.objectContaining({ bgPrimary: '#ffffff' })
         });
         palettes.dark.bgPrimary = '#000000';
-        expect(BUILTIN_THEME_PALETTES.dark.bgPrimary).toBe('#0d1117');
+        expect(BUILTIN_THEME_PALETTES.dark.bgPrimary).toBe('#141616');
     });
 
     test('normalizeThemeMode maps auto → dark and rejects junk', () => {
         expect(normalizeThemeMode('auto')).toBe('dark');
         expect(normalizeThemeMode('light')).toBe('light');
         expect(normalizeThemeMode('custom')).toBe('custom');
+        expect(normalizeThemeMode('system')).toBe('system');
         expect(normalizeThemeMode('nope')).toBe('dark');
     });
 
@@ -37,13 +38,18 @@ describe('UX 3.5 theme palettes', () => {
         });
         expect(colors.bgPrimary).toBe(BUILTIN_THEME_PALETTES.light.bgPrimary);
         expect(colors.textPrimary).toBe(BUILTIN_THEME_PALETTES.light.textPrimary);
-        expect(colors.accentBlue).toBe('#0969da');
+        expect(colors.accentBlue).toBe('#00677a');
     });
 
     test('dark mode uses built-in dark palette', () => {
         const colors = resolveThemeColors({ themeMode: 'dark', colors: {} });
-        expect(colors.bgPrimary).toBe('#0d1117');
-        expect(colors.textPrimary).toBe('#e6edf3');
+        expect(colors.bgPrimary).toBe('#141616');
+        expect(colors.textPrimary).toBe('#e4e7e7');
+    });
+
+    test('system mode uses light as the base palette', () => {
+        const colors = resolveThemeColors({ themeMode: 'system', colors: { bgPrimary: '#112233' } });
+        expect(colors.bgPrimary).toBe(BUILTIN_THEME_PALETTES.light.bgPrimary);
     });
 
     test('custom mode keeps operator colors over dark defaults', () => {
@@ -78,5 +84,16 @@ describe('hexToMutedRgba', () => {
         expect(lightMuted).toMatch(/^rgba\(/);
         expect(darkMuted).not.toBe(BUILTIN_THEME_PALETTES.dark.accentBlueMuted);
         expect(lightMuted).not.toBe(BUILTIN_THEME_PALETTES.light.accentBlueMuted);
+    });
+});
+
+describe('generateThemeCss in system mode', () => {
+    test('emits light colours and switches to dark under prefers-color-scheme', () => {
+        const service = require('../services/brandingService');
+        // Defaults (no DB loaded) use the system mode
+        const css = service.generateThemeCss();
+        expect(css).toContain('--bg-primary: ' + service.BUILTIN_THEME_PALETTES.light.bgPrimary);
+        expect(css).toMatch(/@media \(prefers-color-scheme: dark\) \{\s*:root \{[^}]*--bg-primary: #141616/);
+        expect(css).toContain('color-scheme: light dark');
     });
 });

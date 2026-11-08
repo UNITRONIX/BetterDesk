@@ -1,0 +1,17 @@
+<%#
+    Theme bootstrap for <head>. In "system" mode the server cannot know the
+    OS setting, so this sets data-theme before first paint and follows changes.
+%>
+<script nonce="<%= cspNonce %>">
+(function () {
+    var root = document.documentElement;
+    if (root.getAttribute('data-theme-mode') !== 'system' || !window.matchMedia) return;
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+        if (root.getAttribute('data-theme-mode') !== 'system') return;
+        root.setAttribute('data-theme', mq.matches ? 'dark' : 'light');
+    }
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+})();
+</script>

@@ -423,7 +423,7 @@ const DEFAULT_BRANDING = {
     bgSize: 'cover',    // 'cover' | 'contain' | 'repeat' | 'center'
 
     // Glass surfaces (cards, modals, forms, navbar, etc.)
-    glassEnabled: 'true',   // 'true' | 'false'
+    glassEnabled: 'false',  // 'true' | 'false' (new pages use solid surfaces either way)
     glassColor: '#161b22',  // tint color (hex); empty = use bgSecondary
     glassBlur: '16',        // backdrop-filter blur px (0-40)
     glassOpacity: '55',     // tint opacity 0-100 (%)
@@ -456,7 +456,7 @@ const DEFAULT_BRANDING = {
 
     // Appearance model metadata (v2 keeps flat keys for backward compatibility)
     appearanceSchemaVersion: '2',
-    themeMode: 'dark',       // 'dark' | 'light' | 'custom' (auto kept for backward compat → dark)
+    themeMode: 'system',     // 'system' (follow the OS) | 'dark' | 'light' | 'custom' (auto kept for backward compat → dark)
 
     // Color scheme overrides (empty = use defaults from variables.css)
     colors: {
@@ -504,8 +504,14 @@ const BUILTIN_THEME_PALETTES = Object.freeze({
 function normalizeThemeMode(mode) {
     let m = String(mode || 'dark');
     if (m === 'auto') m = 'dark';
-    if (!['dark', 'light', 'custom'].includes(m)) m = 'dark';
+    if (!['system', 'dark', 'light', 'custom'].includes(m)) m = 'dark';
     return m;
+}
+
+/** CSS color-scheme value for a theme mode. */
+function colorSchemeFor(mode) {
+    if (mode === 'system') return 'light dark';
+    return mode === 'light' ? 'light' : 'dark';
 }
 
 function getThemePalettes() {
@@ -523,6 +529,10 @@ function resolveThemeColors(branding) {
     const mode = normalizeThemeMode(branding && branding.themeMode);
     if (mode === 'light' || mode === 'dark') {
         return { ...BUILTIN_THEME_PALETTES[mode] };
+    }
+    if (mode === 'system') {
+        // Light is the base; generateThemeCss adds dark under prefers-color-scheme.
+        return { ...BUILTIN_THEME_PALETTES.light };
     }
     const stored = (branding && branding.colors) || {};
     const merged = { ...BUILTIN_THEME_PALETTES.dark };
@@ -883,7 +893,7 @@ function generateSemanticAliasCss(branding) {
         '    --color-text-muted: var(--text-secondary);',
         '    --color-border: var(--border-primary);',
         '    --focus-ring-color: var(--accent-blue-muted);',
-        `    color-scheme: ${normalizeThemeMode(branding.themeMode) === 'light' ? 'light' : 'dark'};`,
+        `    color-scheme: ${colorSchemeFor(normalizeThemeMode(branding.themeMode))};`,
         '    /* UX 3.5 chrome aliases — solid surfaces (no glass/blur in this shell) */',
         '    --ux35-bg: var(--bg-primary);',
         '    --ux35-sidebar-bg: var(--bg-secondary);',
@@ -925,6 +935,28 @@ function hexToMutedRgba(hex, alpha = 0.15) {
 }
 
 /**
+ * CSS custom property declarations for one palette. Muted colours given
+ * as hex become translucent rgba.
+ * @param {Object} colors - palette keyed like config/theme-palettes.json
+ * @returns {string[]}
+ */
+function paletteDeclarations(colors) {
+    const out = [];
+    for (const [key, cssVar] of Object.entries(COLOR_TO_CSS_VAR)) {
+        const value = colors[key];
+        if (value && String(value).trim()) {
+            if (key.endsWith('Muted') && String(value).startsWith('#')) {
+                const muted = hexToMutedRgba(value, 0.15);
+                out.push(`    ${cssVar}: ${muted || value};`);
+            } else {
+                out.push(`    ${cssVar}: ${value};`);
+            }
+        }
+    }
+    return out;
+}
+
+/**
  * Generate CSS :root overrides from branding colors and fonts
  * @returns {string} CSS string with @font-face imports and :root variable overrides
  */
@@ -932,20 +964,7 @@ function generateThemeCss() {
     const branding = getBranding();
     const themeMode = normalizeThemeMode(branding.themeMode);
     const colors = resolveThemeColors(branding);
-    const overrides = [];
-
-    for (const [key, cssVar] of Object.entries(COLOR_TO_CSS_VAR)) {
-        const value = colors[key];
-        if (value && String(value).trim()) {
-            // For muted colors, auto-generate rgba if a hex color is provided
-            if (key.endsWith('Muted') && String(value).startsWith('#')) {
-                const muted = hexToMutedRgba(value, 0.15);
-                overrides.push(`    ${cssVar}: ${muted || value};`);
-            } else {
-                overrides.push(`    ${cssVar}: ${value};`);
-            }
-        }
-    }
+    const overrides = paletteDeclarations(colors);
 
     let css = '';
 
@@ -959,9 +978,14 @@ function generateThemeCss() {
     if (overrides.length > 0) {
         css += `:root {\n${overrides.join('\n')}\n}\n`;
     }
+    // Follow the system: light above, dark when the OS asks for it
+    if (themeMode === 'system') {
+        const dark = paletteDeclarations(BUILTIN_THEME_PALETTES.dark);
+        css += `@media (prefers-color-scheme: dark) {\n:root {\n${dark.join('\n')}\n}\n}\n`;
+    }
 
     // Keep data-theme attribute in sync for component selectors (ui-polish / theme.css)
-    css += `html { color-scheme: ${themeMode === 'light' ? 'light' : 'dark'}; }\n`;
+    css += `html { color-scheme: ${colorSchemeFor(themeMode)}; }\n`;
 
     // Semantic aliases consumed by newer UI and legacy components that use
     // --color-* names instead of the original BetterDesk token names.

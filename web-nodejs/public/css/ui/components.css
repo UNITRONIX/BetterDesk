@@ -1,0 +1,857 @@
+/*
+ * Components. Class names are the ones the templates and scripts already
+ * use (.btn, .form-input, .modal, .kebab-menu ...), so markup built in
+ * public/js picks up these styles without changes.
+ */
+
+/* ── Buttons ── */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--motion), border-color var(--motion);
+}
+
+.btn:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn .material-icons {
+    font-size: 18px;
+}
+
+.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--on-accent);
+}
+
+.btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--on-accent);
+}
+
+.btn-danger:hover {
+    background: var(--danger-hover);
+    border-color: var(--danger-hover);
+    color: var(--on-accent);
+}
+
+/* A destructive action that is not the dialog's answer: red text only */
+.btn-danger-quiet {
+    color: var(--danger);
+}
+
+.btn-ghost,
+.btn-tertiary,
+.btn-link {
+    border-color: transparent;
+    background: transparent;
+}
+
+.btn-link {
+    color: var(--accent);
+    padding: 0;
+    min-height: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.btn-link:hover {
+    background: transparent;
+    color: var(--accent-hover);
+}
+
+.btn-sm {
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* Square icon button: close, row menu, toolbar toggles */
+.btn-icon,
+.icon-btn,
+.modal-close,
+.toast-close,
+.kebab-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h);
+    height: var(--control-h);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background-color var(--motion);
+}
+
+.btn-icon:hover,
+.icon-btn:hover,
+.modal-close:hover,
+.toast-close:hover,
+.kebab-btn:hover,
+.btn-icon[aria-expanded="true"],
+.kebab-btn[aria-expanded="true"] {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.btn-icon.active {
+    border-color: var(--border);
+    color: var(--text);
+}
+
+/* ── Form fields ── */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+    min-width: 0;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-label,
+.form-group > label:not(.checkbox-row):not(.toggle-row) {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.form-hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-input,
+.form-select,
+.form-control,
+.form-textarea,
+.modal-body input[type="text"],
+.modal-body input[type="password"],
+.modal-body input[type="email"],
+.modal-body input[type="number"],
+.modal-body input[type="url"],
+.modal-body select,
+.modal-body textarea {
+    width: 100%;
+    min-height: var(--control-h);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    line-height: 1.3;
+}
+
+textarea.form-input,
+.form-textarea,
+.modal-body textarea {
+    min-height: 80px;
+    padding: var(--space-2);
+    resize: vertical;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-control:focus,
+.form-textarea:focus,
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: -1px;
+    border-color: var(--focus);
+}
+
+.form-input:disabled,
+.form-select:disabled {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+@media (pointer: coarse) {
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* A checkbox (or radio) with its label on one line */
+.checkbox-row,
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    cursor: pointer;
+}
+
+/* Switches render as plain checkboxes */
+input.toggle-switch {
+    appearance: auto;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+/* Field with a trailing button (password reveal) */
+.input-with-button,
+.password-wrapper {
+    position: relative;
+    display: flex;
+}
+
+.password-wrapper .form-input {
+    padding-inline-end: calc(var(--control-h) + var(--space-1));
+}
+
+.password-wrapper .password-toggle {
+    position: absolute;
+    inset-inline-end: 1px;
+    top: 1px;
+    bottom: 1px;
+    width: var(--control-h);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.password-wrapper .password-toggle:hover {
+    color: var(--text);
+}
+
+/* Search field with a leading icon */
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.search-wrapper > .material-icons {
+    position: absolute;
+    inset-inline-start: var(--space-2);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-wrapper > .form-input {
+    padding-inline-start: calc(var(--space-2) + 18px + var(--space-2));
+}
+
+/* ── Tables ── */
+
+.data-table,
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-base);
+}
+
+.data-table th,
+.table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-align: start;
+    white-space: nowrap;
+}
+
+.data-table td,
+.table td {
+    height: var(--row-h);
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    vertical-align: middle;
+}
+
+.data-table tbody tr:hover td,
+.table tbody tr:hover td {
+    background: var(--bg-subtle);
+}
+
+.data-table tr.selected td,
+.table tr.selected td {
+    background: var(--accent-tint);
+}
+
+/* Sortable header: the whole cell is the control */
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+th.sortable:hover {
+    color: var(--text);
+}
+
+th.sortable::after {
+    content: "";
+    display: inline-block;
+    width: 1ch;
+    margin-inline-start: var(--space-1);
+}
+
+th.sortable.sort-asc::after { content: "↑"; }
+th.sortable.sort-desc::after { content: "↓"; }
+
+th.sortable.sort-asc,
+th.sortable.sort-desc {
+    color: var(--text);
+}
+
+.table-scroll {
+    overflow-x: auto;
+    min-width: 0;
+}
+
+/* ── Status as text with a small mark ── */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    white-space: nowrap;
+}
+
+.status::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-muted);
+    flex-shrink: 0;
+}
+
+.status.online::before,
+.status.is-online::before {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.status.banned,
+.status.is-banned,
+.status.error {
+    color: var(--danger);
+}
+
+.status.banned::before,
+.status.is-banned::before,
+.status.error::before {
+    border-radius: 1px;
+    border-color: var(--danger);
+    background: var(--danger);
+}
+
+.status.warning,
+.status.no_signal,
+.status.degraded {
+    color: var(--warning);
+}
+
+.status.warning::before,
+.status.no_signal::before,
+.status.degraded::before {
+    border-color: var(--warning);
+}
+
+.status.offline,
+.status.deleted {
+    color: var(--text-muted);
+}
+
+/* Tags as plain text: "office, finance" */
+.tag-list {
+    color: var(--text-muted);
+}
+
+/* ── Menus (row menu, dropdowns) ── */
+
+.menu,
+.kebab-menu,
+.dropdown-menu {
+    min-width: 180px;
+    padding: var(--space-1) 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+    z-index: 900;
+}
+
+.menu-item,
+.kebab-menu-item,
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--control-h);
+    padding: var(--space-1) var(--space-3);
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.menu-item:hover,
+.kebab-menu-item:hover,
+.dropdown-item:hover,
+.menu-item:focus-visible,
+.kebab-menu-item:focus-visible,
+.dropdown-item:focus-visible {
+    background: var(--hover);
+    color: var(--text);
+    outline: none;
+}
+
+.menu-item .material-icons,
+.kebab-menu-item .material-icons,
+.dropdown-item .material-icons {
+    display: none;
+}
+
+.menu-item.danger,
+.kebab-menu-item.danger,
+.dropdown-item.danger {
+    color: var(--danger);
+}
+
+.menu-divider,
+.kebab-divider,
+.dropdown-divider {
+    height: 0;
+    margin: var(--space-1) 0;
+    border-top: 1px solid var(--rule);
+}
+
+.menu-label,
+.dropdown-label {
+    padding: var(--space-1) var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* ── Modal ── */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    transition: opacity var(--motion);
+}
+
+.modal-overlay.open,
+.modal-overlay.active,
+.modal-overlay.show {
+    opacity: 1;
+}
+
+.modal {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 520px;
+    max-height: calc(100vh - 2 * var(--space-4));
+    max-height: calc(100dvh - 2 * var(--space-4));
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+}
+
+.modal-lg {
+    max-width: 760px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+    padding-inline-start: var(--space-5);
+    padding-inline-end: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+}
+
+.modal-title,
+.modal-header h2,
+.modal-header h3 {
+    margin-inline-end: auto;
+    font-size: var(--text-md);
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: var(--space-5);
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.modal-body > p + p {
+    margin-top: var(--space-3);
+}
+
+.modal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--rule);
+}
+
+/* Destructive footer action sits apart on the start side */
+.modal-footer .btn-danger-quiet,
+.modal-footer .modal-footer-start {
+    margin-inline-end: auto;
+}
+
+@media (max-width: 640px) {
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal {
+        max-width: none;
+        max-height: 92dvh;
+        border-radius: var(--radius) var(--radius) 0 0;
+    }
+}
+
+/* ── Toasts ── */
+
+.toast-container {
+    position: fixed;
+    inset-inline-end: var(--space-4);
+    bottom: var(--space-4);
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    width: min(380px, calc(100vw - 2 * var(--space-4)));
+    padding: var(--space-3);
+    padding-inline-start: var(--space-3);
+    border: 1px solid var(--rule);
+    border-inline-start: 3px solid var(--info);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+    pointer-events: auto;
+}
+
+.toast.success, .toast.toast-success { border-inline-start-color: var(--success); }
+.toast.error, .toast.toast-error { border-inline-start-color: var(--danger); }
+.toast.warning, .toast.toast-warning { border-inline-start-color: var(--warning); }
+
+.toast-icon {
+    display: none;
+}
+
+.toast-content,
+.toast-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-title {
+    font-weight: 600;
+}
+
+.toast-message {
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.toast-title + .toast-message {
+    color: var(--text-muted);
+}
+
+.toast .toast-close {
+    width: 24px;
+    height: 24px;
+    margin: -2px -4px 0 0;
+}
+
+.toast-progress {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .toast-container {
+        inset-inline: var(--space-4);
+        bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .toast {
+        width: 100%;
+    }
+}
+
+/* ── Tabs ── */
+
+.tabs,
+.tab-bar {
+    display: flex;
+    gap: var(--space-4);
+    border-bottom: 1px solid var(--rule);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tab,
+.tab-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h);
+    padding: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.tab:hover,
+.tab-btn:hover {
+    color: var(--text);
+}
+
+.tab.active,
+.tab-btn.active,
+.tab[aria-selected="true"] {
+    border-bottom-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+}
+
+.tab .material-icons,
+.tab-btn .material-icons {
+    display: none;
+}
+
+/* ── Plain text blocks ── */
+
+.empty-state,
+.empty-state-inline,
+.empty-row td {
+    padding: var(--space-5) 0;
+    color: var(--text-muted);
+}
+
+.empty-state .material-icons,
+.empty-state-inline .material-icons {
+    display: none;
+}
+
+.empty-state h3 {
+    font-size: var(--text-base);
+    color: var(--text);
+    margin-bottom: var(--space-1);
+}
+
+/* A message that has to stand out: a rule on the start side, no box */
+.notice {
+    padding: var(--space-2) var(--space-3);
+    border-inline-start: 3px solid var(--info);
+    background: var(--bg-subtle);
+}
+
+.notice.error { border-inline-start-color: var(--danger); }
+.notice.warning { border-inline-start-color: var(--warning); }
+.notice.success { border-inline-start-color: var(--success); }
+
+/* Loading placeholders are static blocks, no shimmer */
+.skeleton {
+    display: inline-block;
+    min-height: 1em;
+    border-radius: var(--radius-sm);
+    background: var(--hover);
+}
+
+.skeleton-text {
+    height: 0.9em;
+}
+
+/* Copy button next to an ID or key */
+.copy-btn,
+.device-panel-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.copy-btn .material-icons,
+.device-panel-copy-btn .material-icons {
+    font-size: 16px;
+}
+
+.copy-btn:hover,
+.device-panel-copy-btn:hover,
+.copy-btn.copied {
+    color: var(--text);
+    background: var(--hover);
+}
+
+@media (pointer: coarse) {
+    .copy-btn {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.pagination-btn {
+    min-width: var(--control-h-sm);
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--hover);
+}
+
+.pagination-btn.active {
+    border-color: var(--border);
+    font-weight: 600;
+}
+
+.pagination-btn:disabled {
+    color: var(--text-muted);
+    cursor: default;
+}
+
+.pagination-btn .material-icons {
+    font-size: 18px;
+    vertical-align: middle;
+}
+
+.pagination-ellipsis {
+    padding: 0 var(--space-1);
+    color: var(--text-muted);
+}
