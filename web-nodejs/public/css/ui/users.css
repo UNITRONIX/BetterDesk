@@ -1,0 +1,113 @@
+/* Users page and its dialogs. Tables, lists, menus, choices and dialogs
+   come from components.css; only what is specific to this page is here. */
+
+/* Keeps the screen-reader labels in the row buttons inside the scroll area,
+   so a wide table does not widen the page */
+.users-page .table-scroll {
+    position: relative;
+}
+
+.users-table .user-name {
+    font-weight: 600;
+}
+
+.users-table td.user-date,
+.users-table td.user-role,
+.users-table td.user-scope-cell {
+    white-space: nowrap;
+}
+
+.user-group-members {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.users-tips-list {
+    max-width: var(--measure);
+    margin: 0;
+    padding-inline-start: var(--space-5);
+}
+
+.users-tips-list li + li {
+    margin-top: var(--space-1);
+}
+
+/* Dialog: fieldsets are plain groups */
+.user-form fieldset {
+    min-width: 0;
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    border: 0;
+}
+
+.user-form legend {
+    margin-bottom: var(--space-1);
+    padding: 0;
+}
+
+.user-form .facts {
+    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+    margin-bottom: var(--space-4);
+}
+
+.user-form .user-provider-note {
+    margin-bottom: var(--space-4);
+}
+
+.user-form .check-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-access {
+    margin-bottom: var(--space-4);
+}
+
+.user-access > summary h3 {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 600;
+}
+
+.user-access-note {
+    margin-bottom: var(--space-4);
+}
+
+.user-form .form-status:empty,
+.user-orgs-dialog .form-status:empty {
+    display: none;
+}
+
+/* Organizations dialog */
+.user-orgs-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.user-orgs-add-form h3 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-base);
+    font-weight: 600;
+}
+
+/* When the table is wider than the page (phones, long translations) it
+   scrolls sideways; the row actions stay in view at the end */
+.users-table td.actions,
+.users-table th.actions {
+    position: sticky;
+    inset-inline-end: 0;
+}
+
+.users-table td.actions {
+    z-index: 1;
+    background: var(--bg);
+}
+
+.users-table th.actions {
+    z-index: 2;
+}
+
+.users-table td.actions:has(.menu.open) {
+    z-index: 3;
+}

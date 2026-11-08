@@ -1,170 +1,67 @@
-<%- include('layouts/main', {
+<%
+    const can = (p) => typeof hasPermission !== 'function' || hasPermission(p);
+%><%- include('layouts/main', {
     title: _('nav.users'),
-    pageStyles: ['users'],
+    uiReworked: true,
+    pageStyles: ['ui/users'],
     pageScripts: ['users'],
     currentPage: 'users',
     breadcrumb: [{ label: _('nav.users') }],
     body: `
-        <!-- Users Header -->
-        <div class="users-header">
-            <div class="page-title">
-                <h1>${_('users.title')}</h1>
-                <p class="subtitle">${_('users.subtitle')}</p>
+        <div class="page users-page">
+            <div class="page-head">
+                <h1>${_('nav.users')}</h1>
+                ${can('user.create') ? `
+                <div class="page-actions">
+                    <button type="button" class="btn btn-primary" id="add-user-btn">${_('users.add_user')}</button>
+                </div>` : ''}
+                <p class="page-description">${_('users.page_description')}</p>
             </div>
-            <div class="page-actions">
-                <button class="btn btn-primary" id="add-user-btn">
-                    <span class="material-icons">person_add</span>
-                    ${_('users.add_user')}
-                </button>
-            </div>
+
+            <section class="section" aria-labelledby="users-list-title">
+                <h2 id="users-list-title" class="sr-only">${_('nav.users')}</h2>
+                <p class="count-line" id="users-count-line" aria-live="polite"></p>
+                <div class="table-scroll">
+                    <table class="data-table users-table" id="users-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${_('users.username')}</th>
+                                <th scope="col">${_('users.email')}</th>
+                                <th scope="col">${_('users.role')}</th>
+                                <th scope="col">${_('users.column_devices')}</th>
+                                <th scope="col">${_('users.column_organizations')}</th>
+                                <th scope="col">${_('users.last_login')}</th>
+                                <th scope="col">${_('users.created')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('users.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <tr><td colspan="8" class="state-cell">${_('users.loading_list')}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="user-groups" aria-labelledby="user-groups-title">
+                <div class="section-head">
+                    <h2 id="user-groups-title">${_('users.user_groups')}</h2>
+                    ${can('user.edit') ? `<button type="button" class="btn btn-sm" id="add-user-group-btn">${_('users.create_user_group')}</button>` : ''}
+                </div>
+                <p class="section-note">${_('users.user_groups_note')}</p>
+                <ul class="list user-groups-list" id="user-groups-manager-list">
+                    <li class="list-row is-empty">${_('users.loading_user_groups')}</li>
+                </ul>
+            </section>
+
+            <details class="disclosure section users-tips">
+                <summary><h2>${_('users.security_tips_title')}</h2></summary>
+                <ul class="users-tips-list">
+                    <li>${_('users.tip_unique_accounts')}</li>
+                    <li>${_('users.tip_strong_passwords')}</li>
+                    <li>${_('users.tip_least_role')}</li>
+                    <li>${_('users.tip_audit_logs')}</li>
+                </ul>
+            </details>
         </div>
-        
-        <!-- Security Tips Card -->
-        <div class="security-tips-card">
-            <div class="security-tips-header">
-                <span class="material-icons">security</span>
-                <h3>${_('users.security_tips_title')}</h3>
-            </div>
-            <ul class="security-tips-list">
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_strong_passwords')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_unique_accounts')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_operator_role')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_viewer_role')}</li>
-                <li><span class="material-icons">check_circle</span> ${_('users.tip_audit_logs')}</li>
-            </ul>
-        </div>
-
-        <!-- User Groups Manager -->
-        <div class="user-groups-card" id="user-groups">
-            <div class="user-groups-card-header">
-                <div>
-                    <h3>${_('users.user_groups')}</h3>
-                    <p>${_('users.user_groups_hint')}</p>
-                </div>
-                <button class="btn btn-secondary" id="add-user-group-btn">
-                    <span class="material-icons">group_add</span>
-                    ${_('users.create_user_group')}
-                </button>
-            </div>
-            <div class="user-groups-manager-list" id="user-groups-manager-list">
-                <div class="empty-state-inline">${_('users.loading_user_groups')}</div>
-            </div>
-        </div>
-        
-        <!-- Users Table -->
-        <div class="users-table-container">
-            <div class="table-wrapper">
-                <table class="users-table table" id="users-table">
-                    <thead>
-                        <tr>
-                            <th>${_('users.username')}</th>
-                            <th>${_('users.email')}</th>
-                            <th>${_('users.role')}</th>
-                            <th>${_('users.column_scope')}</th>
-                            <th>${_('users.provider')}</th>
-                            <th>${_('users.column_organizations')}</th>
-                            <th>${_('users.created')}</th>
-                            <th>${_('users.last_login')}</th>
-                            <th>${_('users.actions')}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-tbody">
-                        <tr class="loading-row">
-                            <td colspan="8" style="text-align: center; padding: 40px;">
-                                <span class="skeleton skeleton-text" style="width: 200px;"></span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Empty state -->
-        <div class="users-empty hidden" id="users-empty">
-            <span class="material-icons users-empty-icon">group</span>
-            <h3 class="users-empty-title">${_('users.empty_title')}</h3>
-            <p class="users-empty-text">${_('users.empty_text')}</p>
-        </div>
-        
-        <!-- Add/Edit User Modal Template -->
-        <template id="user-form-template">
-            <form id="user-form" class="user-form">
-                <div class="form-group">
-                    <label for="user-username">${_('users.username')}</label>
-                    <input type="text" id="user-username" name="username" class="form-input" 
-                        pattern="[a-zA-Z0-9_]{3,32}" required
-                        placeholder="${_('users.username_placeholder')}">
-                    <span class="form-hint">${_('users.username_hint')}</span>
-                </div>
-                
-                <div class="form-group">
-                    <label for="user-password">${_('users.password')}</label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="user-password" name="password" class="form-input" 
-                            minlength="8" placeholder="${_('users.password_placeholder')}">
-                        <button type="button" class="btn-icon toggle-password" tabindex="-1">
-                            <span class="material-icons">visibility</span>
-                        </button>
-                    </div>
-                    <div class="password-strength" id="password-strength"></div>
-                    <span class="form-hint">${_('users.password_hint')}</span>
-                </div>
-                
-                <div class="form-group">
-                    <label for="user-email">${_('users.email')}</label>
-                    <input type="email" id="user-email" name="email" class="form-input"
-                        placeholder="${_('users.email_placeholder')}">
-                    <span class="form-hint">${_('users.email_hint')}</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="user-role">${_('users.server_role_label')}</label>
-                    <select id="user-role" name="role" class="form-select">
-                        <option value="viewer">${_('users.role_viewer')}</option>
-                        <option value="operator">${_('users.role_operator')}</option>
-                        <option value="admin">${_('users.role_admin')}</option>
-                        <option value="global_admin">${_('users.role_global_admin')}</option>
-                        <option value="server_admin">${_('users.role_server_admin')}</option>
-                        <option value="super_admin">${_('users.role_super_admin')}</option>
-                        <option value="pro">${_('users.role_pro')}</option>
-                    </select>
-                    <p class="form-hint" id="user-role-desc"></p>
-                    <span class="form-hint">${_('users.role_hint')}</span>
-                </div>
-
-                <div class="form-group">
-                    <label>${_('users.user_groups')}</label>
-                    <div class="user-groups-list" id="user-groups-list">
-                        <div class="empty-state-inline">${_('users.loading_user_groups')}</div>
-                    </div>
-                    <span class="form-hint">${_('users.user_groups_hint')}</span>
-                </div>
-
-                <div class="form-group">
-                    <label>${_('users.user_folders')}</label>
-                    <div class="user-folders-list" id="user-folders-list">
-                        <div class="empty-state-inline">${_('users.loading_folders')}</div>
-                    </div>
-                    <span class="form-hint">${_('users.user_folders_hint')}</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="user-direct-devices">${_('users.user_direct_devices')}</label>
-                    <input type="text" id="user-direct-devices" name="peerIds" class="form-input"
-                        placeholder="${_('users.user_direct_devices_placeholder')}">
-                    <span class="form-hint">${_('users.user_direct_devices_hint')}</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="user-strategy">${_('users.pro_strategy_label')}</label>
-                    <select id="user-strategy" name="strategyGuid" class="form-select">
-                        <option value="">${_('users.pro_strategy_none')}</option>
-                    </select>
-                    <span class="form-hint">${_('users.pro_strategy_hint')}</span>
-                </div>
-
-                <p class="form-hint scope-hint">${_('users.scope_hint')}</p>
-            </form>
-        </template>
     `
 }) %>
