@@ -78,7 +78,7 @@
         note.textContent = fill(_('reports.trends_note'), { days: DAYS });
         root.appendChild(note);
         const body = document.createElement('div');
-        body.className = 'trends-body';
+        body.className = 'trends-body cols';
         root.appendChild(body);
         state(body, _('reports.trends_loading'), false);
 

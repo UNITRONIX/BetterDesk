@@ -251,7 +251,13 @@
         "find_device_button": "Hledat",
         "client_config_local_warning": "Tyto hodnoty ukazují jen na tento počítač (localhost), ostatní počítače a telefony se k nim nedostanou. Zadejte níže síťovou adresu serveru nebo ji trvale nastavte v Nastavení.",
         "get_rustdesk": "Stáhnout RustDesk",
-        "get_rustdesk_hint": "Oficiální stránka verzí na GitHubu, pro všechny systémy"
+        "get_rustdesk_hint": "Oficiální stránka verzí na GitHubu, pro všechny systémy",
+        "devices_now_line": "Celkem {total}: online {online}, offline {offline}, zablokováno {banned}.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "zablokováno",
+        "open_device_list": "Otevřít seznam zařízení",
+        "open_server_status": "Otevřít stav serveru"
     },
     "devices": {
         "title": "Zařízení",

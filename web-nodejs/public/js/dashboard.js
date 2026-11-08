@@ -222,6 +222,56 @@
     /**
      * Load device statistics
      */
+    /**
+     * "33 devices: 14 online, 17 offline, 2 banned" plus a share bar.
+     * Banned devices are also offline, so offline here means offline and not banned.
+     */
+    function renderDevicesNow(stats) {
+        const line = findById('devices-now-line');
+        const bar = findById('devices-now-bar');
+        const legend = findById('devices-now-legend');
+        if (!line || !bar || !legend) return;
+        const total = Number(stats.total) || 0;
+        const online = Number(stats.online) || 0;
+        const banned = Number(stats.banned) || 0;
+        const offline = Math.max(0, (Number(stats.offline) || 0) - banned);
+        const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+        line.textContent = _('dashboard.devices_now_line')
+            .replace('{total}', fmt.format(total))
+            .replace('{online}', fmt.format(online))
+            .replace('{offline}', fmt.format(offline))
+            .replace('{banned}', fmt.format(banned));
+        bar.textContent = '';
+        legend.textContent = '';
+        const parts = [
+            { n: online, cls: 'is-ok', label: _('dashboard.devices_now_online'), href: '/devices?status=online' },
+            { n: offline, cls: 'is-muted', label: _('dashboard.devices_now_offline'), href: '/devices?status=offline' },
+            { n: banned, cls: 'is-danger', label: _('dashboard.devices_now_banned'), href: '/devices?status=banned' },
+        ];
+        parts.forEach((p) => {
+            if (total > 0 && p.n > 0) {
+                const seg = document.createElement('span');
+                seg.className = p.cls;
+                seg.style.flexGrow = String(p.n);
+                bar.appendChild(seg);
+            }
+            const li = document.createElement('li');
+            const key = document.createElement('span');
+            key.className = 'key share-bar-key ' + p.cls;
+            key.setAttribute('aria-hidden', 'true');
+            const a = document.createElement('a');
+            a.href = p.href;
+            const strong = document.createElement('strong');
+            strong.textContent = fmt.format(p.n);
+            a.appendChild(strong);
+            a.appendChild(document.createTextNode(' ' + p.label));
+            li.appendChild(key);
+            li.appendChild(a);
+            legend.appendChild(li);
+        });
+        bar.hidden = total === 0;
+    }
+
     async function loadStats() {
         try {
             const data = await fetchApi('/api/stats');
@@ -232,6 +282,7 @@
             setStatValue('stat-online', stats.online ?? 0);
             setStatValue('stat-banned', stats.banned ?? 0);
             setStatValue('stat-connections', stats.offline ?? 0);
+            renderDevicesNow(stats);
             return stats;
             
         } catch (error) {

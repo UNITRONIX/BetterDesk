@@ -1,9 +1,6 @@
 /* Overview: what needs action, then the client setup values.
    Rows, facts, copy fields and the disclosure come from components.css. */
 
-.dashboard-page {
-    max-width: 880px;
-}
 
 /* ── Client setup ── */
 
@@ -106,4 +103,33 @@
 
 .overview-find-row .search-wrapper {
     flex: 1;
+}
+
+/* ── Side column: values and status read top to bottom, label above value ── */
+
+.page-side .client-config-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.page-side .client-config-grid > dt {
+    min-height: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: var(--text-sm);
+}
+
+.page-side .client-config-grid > dd {
+    padding-top: var(--space-1);
+}
+
+.page-side .client-config-host-row {
+    max-width: none;
+}
+
+.devices-now .share-bar {
+    max-width: var(--measure);
+}
+
+.page-side .server-details .facts {
+    grid-template-columns: minmax(0, 1fr) auto;
 }

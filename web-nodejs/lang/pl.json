@@ -251,7 +251,13 @@
         "find_device_button": "Szukaj",
         "client_config_local_warning": "Te wartości wskazują tylko na ten komputer (localhost), więc inne komputery i telefony ich nie osiągną. Wpisz poniżej adres sieciowy serwera albo ustaw go na stałe w Ustawieniach.",
         "get_rustdesk": "Pobierz RustDesk",
-        "get_rustdesk_hint": "Oficjalna strona wydań na GitHubie, dla każdego systemu"
+        "get_rustdesk_hint": "Oficjalna strona wydań na GitHubie, dla każdego systemu",
+        "devices_now_line": "Łącznie {total}: online {online}, offline {offline}, zablokowane {banned}.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "zablokowane",
+        "open_device_list": "Otwórz listę urządzeń",
+        "open_server_status": "Otwórz stan serwera"
     },
     "devices": {
         "title": "Urządzenia",

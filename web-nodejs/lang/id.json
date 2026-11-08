@@ -257,7 +257,13 @@
         "find_device_button": "Cari",
         "client_config_local_warning": "Nilai ini hanya menunjuk ke komputer ini (localhost), jadi komputer dan ponsel lain tidak bisa menjangkaunya. Masukkan alamat jaringan server di bawah, atau tetapkan di Pengaturan.",
         "get_rustdesk": "Unduh RustDesk",
-        "get_rustdesk_hint": "Halaman rilis resmi di GitHub, untuk semua sistem"
+        "get_rustdesk_hint": "Halaman rilis resmi di GitHub, untuk semua sistem",
+        "devices_now_line": "Total {total}: {online} online, {offline} offline, {banned} diblokir.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "diblokir",
+        "open_device_list": "Buka daftar perangkat",
+        "open_server_status": "Buka status server"
     },
     "devices": {
         "title": "Perangkat",

@@ -251,7 +251,13 @@
         "find_device_button": "Suchen",
         "client_config_local_warning": "Diese Werte zeigen nur auf diesen Rechner (localhost), andere Computer und Telefone erreichen sie nicht. Geben Sie unten die Netzwerkadresse des Servers ein oder legen Sie sie dauerhaft in den Einstellungen fest.",
         "get_rustdesk": "RustDesk herunterladen",
-        "get_rustdesk_hint": "Offizielle Release-Seite auf GitHub, für alle Systeme"
+        "get_rustdesk_hint": "Offizielle Release-Seite auf GitHub, für alle Systeme",
+        "devices_now_line": "{total} insgesamt: {online} online, {offline} offline, {banned} gesperrt.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "gesperrt",
+        "open_device_list": "Geräteliste öffnen",
+        "open_server_status": "Serverstatus öffnen"
     },
     "devices": {
         "title": "Geräte",

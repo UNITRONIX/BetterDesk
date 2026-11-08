@@ -257,7 +257,13 @@
         "find_device_button": "खोजें",
         "client_config_local_warning": "ये मान केवल इसी कंप्यूटर (localhost) की ओर इशारा करते हैं, इसलिए दूसरे कंप्यूटर और फ़ोन इन तक नहीं पहुँच सकते। नीचे सर्वर का नेटवर्क पता डालें, या सेटिंग्स में स्थायी रूप से सेट करें।",
         "get_rustdesk": "RustDesk डाउनलोड करें",
-        "get_rustdesk_hint": "GitHub पर आधिकारिक रिलीज़ पेज, हर सिस्टम के लिए"
+        "get_rustdesk_hint": "GitHub पर आधिकारिक रिलीज़ पेज, हर सिस्टम के लिए",
+        "devices_now_line": "कुल {total}: {online} ऑनलाइन, {offline} ऑफ़लाइन, {banned} प्रतिबंधित।",
+        "devices_now_online": "ऑनलाइन",
+        "devices_now_offline": "ऑफ़लाइन",
+        "devices_now_banned": "प्रतिबंधित",
+        "open_device_list": "डिवाइस सूची खोलें",
+        "open_server_status": "सर्वर की स्थिति खोलें"
     },
     "devices": {
         "title": "उपकरण",

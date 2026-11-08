@@ -251,7 +251,13 @@
         "find_device_button": "Pesquisar",
         "client_config_local_warning": "Estes valores apontam só para este computador (localhost), por isso outros computadores e telemóveis não os alcançam. Introduza abaixo o endereço de rede do servidor, ou defina-o nas Definições.",
         "get_rustdesk": "Transferir o RustDesk",
-        "get_rustdesk_hint": "Página oficial de versões no GitHub, para todos os sistemas"
+        "get_rustdesk_hint": "Página oficial de versões no GitHub, para todos os sistemas",
+        "devices_now_line": "{total} no total: {online} online, {offline} offline, {banned} banidos.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "banidos",
+        "open_device_list": "Abrir a lista de dispositivos",
+        "open_server_status": "Abrir o estado do servidor"
     },
     "devices": {
         "title": "Dispositivos",

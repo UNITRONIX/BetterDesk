@@ -257,7 +257,13 @@
         "find_device_button": "Sök",
         "client_config_local_warning": "De här värdena pekar bara på den här datorn (localhost), så andra datorer och telefoner når dem inte. Ange serverns nätverksadress nedan, eller ställ in den permanent i Inställningar.",
         "get_rustdesk": "Ladda ned RustDesk",
-        "get_rustdesk_hint": "Officiell versionssida på GitHub, för alla system"
+        "get_rustdesk_hint": "Officiell versionssida på GitHub, för alla system",
+        "devices_now_line": "{total} totalt: {online} online, {offline} offline, {banned} spärrade.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "spärrade",
+        "open_device_list": "Öppna enhetslistan",
+        "open_server_status": "Öppna serverstatus"
     },
     "devices": {
         "title": "Enheter",

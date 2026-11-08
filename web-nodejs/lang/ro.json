@@ -257,7 +257,13 @@
         "find_device_button": "Caută",
         "client_config_local_warning": "Aceste valori indică doar acest computer (localhost), deci alte computere și telefoane nu le pot accesa. Introduceți mai jos adresa de rețea a serverului sau setați-o permanent în Setări.",
         "get_rustdesk": "Descarcă RustDesk",
-        "get_rustdesk_hint": "Pagina oficială de versiuni pe GitHub, pentru orice sistem"
+        "get_rustdesk_hint": "Pagina oficială de versiuni pe GitHub, pentru orice sistem",
+        "devices_now_line": "{total} în total: {online} online, {offline} offline, {banned} blocate.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "blocate",
+        "open_device_list": "Deschide lista de dispozitive",
+        "open_server_status": "Deschide starea serverului"
     },
     "devices": {
         "title": "Dispozitive",

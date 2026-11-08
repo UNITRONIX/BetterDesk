@@ -251,7 +251,13 @@
         "find_device_button": "搜索",
         "client_config_local_warning": "这些值只指向这台电脑 (localhost)，其他电脑和手机无法访问。请在下方输入服务器的网络地址，或在设置中固定设置。",
         "get_rustdesk": "下载 RustDesk",
-        "get_rustdesk_hint": "GitHub 上的官方发布页面，适用所有系统"
+        "get_rustdesk_hint": "GitHub 上的官方发布页面，适用所有系统",
+        "devices_now_line": "共 {total}：在线 {online}，离线 {offline}，已封禁 {banned}。",
+        "devices_now_online": "在线",
+        "devices_now_offline": "离线",
+        "devices_now_banned": "已封禁",
+        "open_device_list": "打开设备列表",
+        "open_server_status": "打开服务器状态"
     },
     "devices": {
         "title": "设备",

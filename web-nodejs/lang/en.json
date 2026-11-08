@@ -259,7 +259,13 @@
         "find_device_button": "Search",
         "client_config_local_warning": "These values point at this computer only (localhost), so other computers and phones can't reach them. Enter the server's network address below, or set it for good in Settings.",
         "get_rustdesk": "Download RustDesk",
-        "get_rustdesk_hint": "Official release page on GitHub, for every system"
+        "get_rustdesk_hint": "Official release page on GitHub, for every system",
+        "devices_now_line": "{total} in total: {online} online, {offline} offline, {banned} banned.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "banned",
+        "open_device_list": "Open the device list",
+        "open_server_status": "Open server status"
     },
     "devices": {
         "title": "Devices",

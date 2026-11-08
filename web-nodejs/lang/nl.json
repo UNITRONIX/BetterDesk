@@ -251,7 +251,13 @@
         "find_device_button": "Zoeken",
         "client_config_local_warning": "Deze waarden wijzen alleen naar deze computer (localhost), dus andere computers en telefoons kunnen ze niet bereiken. Vul hieronder het netwerkadres van de server in, of stel het vast in bij Instellingen.",
         "get_rustdesk": "RustDesk downloaden",
-        "get_rustdesk_hint": "Officiële releasepagina op GitHub, voor elk systeem"
+        "get_rustdesk_hint": "Officiële releasepagina op GitHub, voor elk systeem",
+        "devices_now_line": "{total} in totaal: {online} online, {offline} offline, {banned} geblokkeerd.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "geblokkeerd",
+        "open_device_list": "Apparatenlijst openen",
+        "open_server_status": "Serverstatus openen"
     },
     "devices": {
         "title": "Apparaten",

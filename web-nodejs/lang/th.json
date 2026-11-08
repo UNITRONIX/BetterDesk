@@ -257,7 +257,13 @@
         "find_device_button": "ค้นหา",
         "client_config_local_warning": "ค่าเหล่านี้ชี้ไปที่คอมพิวเตอร์เครื่องนี้เท่านั้น (localhost) คอมพิวเตอร์และโทรศัพท์เครื่องอื่นจึงเข้าถึงไม่ได้ ให้ใส่ที่อยู่เครือข่ายของเซิร์ฟเวอร์ด้านล่าง หรือตั้งค่าถาวรในการตั้งค่า",
         "get_rustdesk": "ดาวน์โหลด RustDesk",
-        "get_rustdesk_hint": "หน้าเผยแพร่อย่างเป็นทางการบน GitHub สำหรับทุกระบบ"
+        "get_rustdesk_hint": "หน้าเผยแพร่อย่างเป็นทางการบน GitHub สำหรับทุกระบบ",
+        "devices_now_line": "ทั้งหมด {total}: ออนไลน์ {online} ออฟไลน์ {offline} ถูกแบน {banned}",
+        "devices_now_online": "ออนไลน์",
+        "devices_now_offline": "ออฟไลน์",
+        "devices_now_banned": "ถูกแบน",
+        "open_device_list": "เปิดรายการอุปกรณ์",
+        "open_server_status": "เปิดสถานะเซิร์ฟเวอร์"
     },
     "devices": {
         "title": "อุปกรณ์",

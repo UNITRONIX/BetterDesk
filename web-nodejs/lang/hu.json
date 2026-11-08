@@ -257,7 +257,13 @@
         "find_device_button": "Keresés",
         "client_config_local_warning": "Ezek az értékek csak erre a gépre mutatnak (localhost), így más gépek és telefonok nem érik el őket. Adja meg lent a szerver hálózati címét, vagy állítsa be véglegesen a Beállításokban.",
         "get_rustdesk": "RustDesk letöltése",
-        "get_rustdesk_hint": "Hivatalos kiadási oldal a GitHubon, minden rendszerhez"
+        "get_rustdesk_hint": "Hivatalos kiadási oldal a GitHubon, minden rendszerhez",
+        "devices_now_line": "Összesen {total}: {online} online, {offline} offline, {banned} tiltva.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "tiltva",
+        "open_device_list": "Eszközlista megnyitása",
+        "open_server_status": "Szerver állapotának megnyitása"
     },
     "devices": {
         "title": "Eszközök",

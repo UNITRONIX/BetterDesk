@@ -258,7 +258,13 @@
         "find_device_button": "بحث",
         "client_config_local_warning": "تشير هذه القيم إلى هذا الجهاز فقط (localhost)، لذا لا يمكن للحواسيب والهواتف الأخرى الوصول إليها. أدخل عنوان الخادم في الشبكة أدناه، أو اضبطه نهائيًا في الإعدادات.",
         "get_rustdesk": "تنزيل RustDesk",
-        "get_rustdesk_hint": "صفحة الإصدارات الرسمية على GitHub، لكل الأنظمة"
+        "get_rustdesk_hint": "صفحة الإصدارات الرسمية على GitHub، لكل الأنظمة",
+        "devices_now_line": "المجموع {total}: {online} متصل، {offline} غير متصل، {banned} محظور.",
+        "devices_now_online": "متصل",
+        "devices_now_offline": "غير متصل",
+        "devices_now_banned": "محظور",
+        "open_device_list": "فتح قائمة الأجهزة",
+        "open_server_status": "فتح حالة الخادم"
     },
     "devices": {
         "title": "الأجهزة",

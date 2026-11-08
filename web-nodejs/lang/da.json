@@ -257,7 +257,13 @@
         "find_device_button": "Søg",
         "client_config_local_warning": "Disse værdier peger kun på denne computer (localhost), så andre computere og telefoner kan ikke nå dem. Indtast serverens netværksadresse nedenfor, eller angiv den fast under Indstillinger.",
         "get_rustdesk": "Hent RustDesk",
-        "get_rustdesk_hint": "Den officielle udgivelsesside på GitHub, til alle systemer"
+        "get_rustdesk_hint": "Den officielle udgivelsesside på GitHub, til alle systemer",
+        "devices_now_line": "{total} i alt: {online} online, {offline} offline, {banned} spærret.",
+        "devices_now_online": "online",
+        "devices_now_offline": "offline",
+        "devices_now_banned": "spærret",
+        "open_device_list": "Åbn enhedslisten",
+        "open_server_status": "Åbn serverstatus"
     },
     "devices": {
         "title": "Enheder",

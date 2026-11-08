@@ -257,7 +257,13 @@
         "find_device_button": "Ara",
         "client_config_local_warning": "Bu değerler yalnızca bu bilgisayarı (localhost) gösteriyor; diğer bilgisayarlar ve telefonlar onlara ulaşamaz. Sunucunun ağ adresini aşağıya girin veya Ayarlar'da kalıcı olarak belirleyin.",
         "get_rustdesk": "RustDesk'i indir",
-        "get_rustdesk_hint": "GitHub'daki resmi sürüm sayfası, tüm sistemler için"
+        "get_rustdesk_hint": "GitHub'daki resmi sürüm sayfası, tüm sistemler için",
+        "devices_now_line": "Toplam {total}: {online} çevrimiçi, {offline} çevrimdışı, {banned} yasaklı.",
+        "devices_now_online": "çevrimiçi",
+        "devices_now_offline": "çevrimdışı",
+        "devices_now_banned": "yasaklı",
+        "open_device_list": "Cihaz listesini aç",
+        "open_server_status": "Sunucu durumunu aç"
     },
     "devices": {
         "title": "Cihazlar",

@@ -257,7 +257,13 @@
         "find_device_button": "Шукати",
         "client_config_local_warning": "Ці значення вказують лише на цей комп'ютер (localhost), тож інші комп'ютери й телефони до них не дістануться. Введіть нижче мережеву адресу сервера або задайте її в Налаштуваннях.",
         "get_rustdesk": "Завантажити RustDesk",
-        "get_rustdesk_hint": "Офіційна сторінка випусків на GitHub, для всіх систем"
+        "get_rustdesk_hint": "Офіційна сторінка випусків на GitHub, для всіх систем",
+        "devices_now_line": "Усього {total}: у мережі {online}, не в мережі {offline}, заблоковано {banned}.",
+        "devices_now_online": "у мережі",
+        "devices_now_offline": "не в мережі",
+        "devices_now_banned": "заблоковано",
+        "open_device_list": "Відкрити список пристроїв",
+        "open_server_status": "Відкрити стан сервера"
     },
     "devices": {
         "title": "Пристрої",

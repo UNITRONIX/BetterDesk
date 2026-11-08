@@ -5,8 +5,8 @@
 %>
 <%- include('layouts/main', {
     title: (typeof activateAgentNav !== 'undefined' && activateAgentNav) ? _('nav.activate_agent') : _('nav.dashboard'),
-    pageStyles: ['ui/dashboard'],
-    pageScripts: ['dashboard'],
+    pageStyles: ['ui/chart', 'ui/dashboard'],
+    pageScripts: ['dashboard', 'ui-chart', 'reports-trends'],
     currentPage: 'dashboard',
     activateAgentNav: typeof activateAgentNav !== 'undefined' && activateAgentNav,
     body: `
@@ -29,6 +29,8 @@
                 </div>
             </form>` : ''}
 
+            <div class="page-cols">
+            <div class="page-main">
             <!-- Only things someone has to act on; each row shows when its count is above zero -->
             <section class="section attention" aria-labelledby="attention-title">
                 <div class="section-head"><h2 id="attention-title">${_('dashboard.attention_panel')}</h2></div>
@@ -73,6 +75,25 @@
                 </ul>
             </section>
 
+            ${canSeeDevices ? `
+            <!-- How the devices are doing right now: a count sentence and the parts of the whole -->
+            <section class="section devices-now" aria-labelledby="devices-now-title">
+                <div class="section-head">
+                    <h2 id="devices-now-title">${_('nav.devices')}</h2>
+                    <a href="/devices">${_('dashboard.open_device_list')}</a>
+                </div>
+                <p class="count-line" id="devices-now-line" aria-live="polite">${_('status.checking')}</p>
+                <div class="share-bar" id="devices-now-bar" aria-hidden="true"></div>
+                <ul class="share-legend" id="devices-now-legend"></ul>
+                <span id="stat-total" hidden></span><span id="stat-online" hidden></span><span id="stat-banned" hidden></span><span id="stat-connections" hidden></span>
+            </section>` : ''}
+
+            ${typeof hasPermission === 'function' && hasPermission('audit.view') ? `
+            <!-- Two weeks of remote sessions and help requests (public/js/reports-trends.js) -->
+            <section class="section overview-trends" id="reports-trends" data-trends-compact hidden></section>` : ''}
+            </div>
+
+            <aside class="page-side" aria-label="${_('dashboard.client_config_title')}">
             <!-- Values to type into RustDesk -->
             <section class="section client-setup" aria-labelledby="client-config-title">
                 <div class="section-head"><h2 id="client-config-title">${_('dashboard.client_config_title')}</h2></div>
@@ -135,9 +156,12 @@
                 </ul>
             </section>
 
-            <!-- Server processes and ports: rarely needed, kept out of the way -->
-            <details class="section disclosure server-details">
-                <summary><h2>${_('dashboard.server_status')}</h2></summary>
+            <!-- Server processes at a glance; ports are rarely needed and stay folded -->
+            <section class="section server-details" aria-labelledby="server-details-title">
+                <div class="section-head">
+                    <h2 id="server-details-title">${_('dashboard.server_status')}</h2>
+                    ${canServerConfig ? `<a href="/server-management?tab=overview">${_('dashboard.open_server_status')}</a>` : ''}
+                </div>
                 <dl class="facts">
                     <dt>${_('dashboard.signal_server')}</dt>
                     <dd><span class="status server-status-indicator" id="hbbs-status"><span class="status-dot"></span><span class="status-text">${_('status.checking')}</span></span></dd>
@@ -147,6 +171,10 @@
                     <dd><span class="status server-status-indicator running"><span class="status-dot"></span><span class="status-text">${_('status.running')}</span></span></dd>
                     <dt>${_('dashboard.server_uptime')}</dt>
                     <dd id="stat-uptime">–</dd>
+                </dl>
+                <details class="disclosure">
+                    <summary>${_('dashboard.ports_title')}</summary>
+                <dl class="facts">
                     <dt>${_('dashboard.port_signal')}</dt><dd class="mono" id="hbbs-port">–</dd>
                     <dt>${_('dashboard.port_nat')}</dt><dd class="mono" id="nat-port">–</dd>
                     <dt>${_('dashboard.port_ws_signal')}</dt><dd class="mono" id="ws-signal-port">–</dd>
@@ -156,7 +184,10 @@
                     <dt>${_('dashboard.port_console')}</dt><dd class="mono" id="console-port">–</dd>
                     <dt>${_('dashboard.port_client_api')}</dt><dd class="mono" id="client-api-port">–</dd>
                 </dl>
-            </details>
+                </details>
+            </section>
+            </aside>
+            </div>
 
             <div class="modal-overlay open dashboard-agent-activation-modal" id="dashboard-agent-activation-modal"
                  role="dialog" aria-modal="true" aria-labelledby="dashboard-agent-activation-title" hidden>

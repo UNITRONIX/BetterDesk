@@ -257,7 +257,13 @@
         "find_device_button": "Hae",
         "client_config_local_warning": "Nämä arvot osoittavat vain tähän tietokoneeseen (localhost), joten muut tietokoneet ja puhelimet eivät tavoita niitä. Anna palvelimen verkko-osoite alla tai aseta se pysyvästi asetuksissa.",
         "get_rustdesk": "Lataa RustDesk",
-        "get_rustdesk_hint": "Virallinen julkaisusivu GitHubissa, kaikille järjestelmille"
+        "get_rustdesk_hint": "Virallinen julkaisusivu GitHubissa, kaikille järjestelmille",
+        "devices_now_line": "Yhteensä {total}: verkossa {online}, ei verkossa {offline}, estetty {banned}.",
+        "devices_now_online": "verkossa",
+        "devices_now_offline": "ei verkossa",
+        "devices_now_banned": "estetty",
+        "open_device_list": "Avaa laiteluettelo",
+        "open_server_status": "Avaa palvelimen tila"
     },
     "devices": {
         "title": "Laitteet",

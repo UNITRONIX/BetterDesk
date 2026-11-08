@@ -251,7 +251,13 @@
         "find_device_button": "検索",
         "client_config_local_warning": "これらの値はこのコンピューター (localhost) だけを指しているため、他のコンピューターや電話からは届きません。下にサーバーのネットワークアドレスを入力するか、設定で固定してください。",
         "get_rustdesk": "RustDesk をダウンロード",
-        "get_rustdesk_hint": "GitHub の公式リリースページ（全 OS 対応）"
+        "get_rustdesk_hint": "GitHub の公式リリースページ（全 OS 対応）",
+        "devices_now_line": "合計 {total}: オンライン {online}、オフライン {offline}、禁止 {banned}。",
+        "devices_now_online": "オンライン",
+        "devices_now_offline": "オフライン",
+        "devices_now_banned": "禁止",
+        "open_device_list": "デバイス一覧を開く",
+        "open_server_status": "サーバーの状態を開く"
     },
     "devices": {
         "title": "デバイス",

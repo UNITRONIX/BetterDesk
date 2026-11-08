@@ -255,7 +255,13 @@
         "find_device_button": "搜尋",
         "client_config_local_warning": "這些值只指向這台電腦 (localhost)，其他電腦和手機無法連到。請在下方輸入伺服器的網路位址，或在設定中固定設定。",
         "get_rustdesk": "下載 RustDesk",
-        "get_rustdesk_hint": "GitHub 上的官方發行頁面，適用所有系統"
+        "get_rustdesk_hint": "GitHub 上的官方發行頁面，適用所有系統",
+        "devices_now_line": "共 {total}：線上 {online}，離線 {offline}，已封鎖 {banned}。",
+        "devices_now_online": "線上",
+        "devices_now_offline": "離線",
+        "devices_now_banned": "已封鎖",
+        "open_device_list": "開啟裝置清單",
+        "open_server_status": "開啟伺服器狀態"
     },
     "devices": {
         "title": "設備",

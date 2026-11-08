@@ -257,7 +257,13 @@
         "find_device_button": "Tìm",
         "client_config_local_warning": "Các giá trị này chỉ trỏ tới máy này (localhost), nên máy tính và điện thoại khác không truy cập được. Nhập địa chỉ mạng của máy chủ bên dưới, hoặc đặt cố định trong Cài đặt.",
         "get_rustdesk": "Tải RustDesk",
-        "get_rustdesk_hint": "Trang phát hành chính thức trên GitHub, cho mọi hệ điều hành"
+        "get_rustdesk_hint": "Trang phát hành chính thức trên GitHub, cho mọi hệ điều hành",
+        "devices_now_line": "Tổng {total}: {online} trực tuyến, {offline} ngoại tuyến, {banned} bị cấm.",
+        "devices_now_online": "trực tuyến",
+        "devices_now_offline": "ngoại tuyến",
+        "devices_now_banned": "bị cấm",
+        "open_device_list": "Mở danh sách thiết bị",
+        "open_server_status": "Mở trạng thái máy chủ"
     },
     "devices": {
         "title": "Thiết bị",
