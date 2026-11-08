@@ -63,8 +63,3 @@
         align-items: center;
     }
 }
-
-/* Screen-reader text from the value helpers stays inside the scroll box */
-.scaling-page .table-scroll {
-    position: relative;
-}

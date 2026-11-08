@@ -797,7 +797,9 @@ const Utils = {
         let i = 0;
         let v = n;
         while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
-        return Utils.formatNumber(v, { style: 'unit', unit: units[i], unitDisplay: 'short', maximumFractionDigits: i ? 1 : 0 });
+        // Intl writes the short byte unit as "byte" ("152 byte"); use the symbol
+        if (i === 0) return `${Utils.formatNumber(v, { maximumFractionDigits: 0 })} B`;
+        return Utils.formatNumber(v, { style: 'unit', unit: units[i], unitDisplay: 'short', maximumFractionDigits: 1 });
     },
 
     /**

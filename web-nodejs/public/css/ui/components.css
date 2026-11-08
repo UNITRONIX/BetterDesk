@@ -477,8 +477,12 @@ th.sortable.sort-desc {
 /* Row edges: tables, row lists (.list) and facts hang their row padding
    outside the column, so the text in the first column lines up with the
    headings, notes and fields above, while the rules and the hover
-   background reach a little past it (as .disclosure > summary does). */
+   background reach a little past it (as .disclosure > summary does).
+   position: relative makes the box the containing block of the helpers'
+   absolutely positioned screen-reader text (timeHtml, emptyHtml), so that
+   text stays inside the scroll box instead of widening the page on phones. */
 .table-scroll {
+    position: relative;
     overflow-x: auto;
     min-width: 0;
     margin-inline: calc(-1 * var(--row-pad-x));

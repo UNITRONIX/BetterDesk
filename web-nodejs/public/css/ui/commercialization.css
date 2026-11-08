@@ -168,10 +168,3 @@
 #sessions-table td.is-num .value-empty {
     white-space: normal;
 }
-
-/* Screen-reader text in table cells (the full time behind "06:15 PM", "None"
-   behind a dash) is absolutely positioned; with the scroll box as its
-   containing block it stays inside the box instead of widening the page on phones */
-.commercialization-page .table-scroll {
-    position: relative;
-}

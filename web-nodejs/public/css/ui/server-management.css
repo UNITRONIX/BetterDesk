@@ -142,9 +142,3 @@
 #sm-services-empty {
     max-width: var(--measure);
 }
-
-/* The helpers' screen-reader text (timeHtml, emptyHtml) is positioned absolutely;
-   keep it inside the scroll box so it cannot widen the page on phones */
-.sm-page .table-scroll {
-    position: relative;
-}

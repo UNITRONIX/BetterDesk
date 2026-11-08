@@ -110,6 +110,11 @@ describe('data display helpers', () => {
 
     test('numbers, sizes, durations and percentages in the console language', () => {
         expect(Utils.formatBytes(1610612736)).toBe('1.5 GB');
+        expect(Utils.formatBytes(152)).toBe('152 B');
+        expect(Utils.formatBytes(0)).toBe('0 B');
+        expect(Utils.formatBytes(1023)).toBe('1,023 B');
+        expect(Utils.formatBytes(1536)).toBe('1.5 kB');
+        expect(Utils.formatBytes(5 * 1024 * 1024)).toBe('5 MB');
         expect(Utils.formatDuration(183900)).toBe('2d 3h');
         expect(Utils.formatPercent(62.4)).toBe('62%');
         expect(Utils.formatNumber(12345)).toBe('12,345');
