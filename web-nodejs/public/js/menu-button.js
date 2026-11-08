@@ -99,4 +99,32 @@
             next.focus();
         }
     });
+
+    /*
+     * Only one popup open at a time. Pages build their own dropdowns (tag
+     * filter, columns, kebab menus, the top bar menus), and many stop the
+     * click from bubbling, so their outside-click handlers never see a click
+     * on another page's button. Before any handler runs, a click anywhere
+     * closes every other open popup: a button with aria-haspopup (not a
+     * dialog) and aria-expanded="true" is closed by clicking it, unless the
+     * click is on it or inside its popup (aria-controls, or else the button's
+     * parent, which holds the popup in the top bar menus).
+     */
+    const POPUP_BUTTON = '[aria-haspopup]:not([aria-haspopup="false"]):not([aria-haspopup="dialog"])';
+    let closingOthers = false;
+
+    document.addEventListener('click', function (event) {
+        if (closingOthers) return;
+        const target = event.target;
+        if (openMenu && !openMenu.contains(target) && !(openButton && openButton.contains(target))) close(false);
+        document.querySelectorAll(POPUP_BUTTON + '[aria-expanded="true"]').forEach(function (button) {
+            if (button.contains(target) || button.hasAttribute('data-menu-button')) return;
+            const controlled = button.getAttribute('aria-controls');
+            const popup = controlled ? document.getElementById(controlled) : null;
+            const holder = popup || button.parentElement;
+            if (holder && holder.contains(target)) return;
+            closingOthers = true;
+            try { button.click(); } finally { closingOthers = false; }
+        });
+    }, true);
 })();
