@@ -24,7 +24,7 @@ function goApiProxy(req, res, method, path, body) {
 
 // ── Page ─────────────────────────────────────────────────────
 router.get('/security-audit', requireAuth, requirePermission('audit.view'), (req, res) => {
-  const tab = req.query.tab || 'overview';
+  const tab = req.query.tab || 'audit';
   res.render('security-audit', {
     title: req.t('security_audit.title'),
     pageStyles: ['security-audit'],

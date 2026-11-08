@@ -1,124 +1,179 @@
+<%
+    const tabMap = { audit: 'audit', events: 'events', overview: 'overview', hardening: 'hardening', vulnerabilities: 'hardening', sessions: 'sessions' };
+    const tab = tabMap[typeof activeTab !== 'undefined' ? activeTab : ''] || 'audit';
+    const tabs = [
+        ['audit', _('security_audit.tab_audit_log')],
+        ['events', _('security_audit.tab_server_events')],
+        ['overview', _('security_audit.tab_checks')],
+        ['hardening', _('security_audit.tab_hardening')],
+        ['sessions', _('security_audit.tab_your_sessions')]
+    ];
+%>
 <%- include('layouts/main', {
   title,
-  pageStyles,
+  uiReworked: true,
+  pageStyles: ['ui/security-audit'],
   pageScripts,
   currentPage,
   breadcrumb,
   body: `
-<div class="secaudit-container">
-  <h1 class="page-title secaudit-page-title">${_('nav.security_audit') || _('security_audit.title') || title}</h1>
-  <!-- Tab bar -->
-  <div class="secaudit-tabs">
-    <button class="secaudit-tab ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" data-bd-call="SecurityAudit.switchTab" data-bd-args='["overview"]'>
-      <span class="material-icons" aria-hidden="true">dashboard</span> ${_('security_audit.tab_overview')}
-    </button>
-    <button class="secaudit-tab ${activeTab === 'events' ? 'active' : ''}" data-tab="events" data-bd-call="SecurityAudit.switchTab" data-bd-args='["events"]'>
-      <span class="material-icons" aria-hidden="true">history</span> ${_('security_audit.tab_events')}
-    </button>
-    <button class="secaudit-tab ${activeTab === 'hardening' ? 'active' : ''}" data-tab="hardening" data-bd-call="SecurityAudit.switchTab" data-bd-args='["hardening"]'>
-      <span class="material-icons" aria-hidden="true">shield</span> ${_('security_audit.tab_hardening')}
-    </button>
-    <button class="secaudit-tab ${activeTab === 'vulnerabilities' ? 'active' : ''}" data-tab="vulnerabilities" data-bd-call="SecurityAudit.switchTab" data-bd-args='["vulnerabilities"]'>
-      <span class="material-icons" aria-hidden="true">bug_report</span> ${_('security_audit.tab_vulnerabilities')}
-    </button>
-    <button class="secaudit-tab ${activeTab === 'sessions' ? 'active' : ''}" data-tab="sessions" data-bd-call="SecurityAudit.switchTab" data-bd-args='["sessions"]'>
-      <span class="material-icons" aria-hidden="true">devices</span> ${_('security_audit.tab_sessions')}
-    </button>
+<div class="page page-wide secaudit-page">
+  <div class="page-head">
+    <h1>${_('nav.security_audit')}</h1>
+    <p class="page-description">${_('security_audit.page_description')}</p>
   </div>
 
-  <!-- Overview panel -->
-  <div class="secaudit-panel" id="panel-overview" style="display: ${activeTab === 'overview' ? 'block' : 'none'}">
-    <div class="secaudit-score-section">
-      <div class="secaudit-score-ring" id="score-ring">
-        <svg viewBox="0 0 120 120" class="secaudit-ring-svg">
-          <circle cx="60" cy="60" r="52" stroke="var(--border-primary)" stroke-width="8" fill="none"/>
-          <circle cx="60" cy="60" r="52" id="score-circle" stroke="var(--accent-blue)" stroke-width="8" fill="none"
-            stroke-dasharray="326.73" stroke-dashoffset="326.73" stroke-linecap="round" transform="rotate(-90 60 60)"/>
-          <text x="60" y="60" text-anchor="middle" dominant-baseline="central" class="secaudit-score-text" id="score-value">—</text>
-        </svg>
-        <div class="secaudit-score-label">${_('security_audit.security_score')}</div>
-      </div>
-      <div class="secaudit-stats-grid" id="overview-stats">
-        <div class="secaudit-stat-card"><span class="material-icons">warning</span><div class="secaudit-stat-value" id="stat-failed-logins">—</div><div class="secaudit-stat-label">${_('security_audit.failed_logins')}</div></div>
-        <div class="secaudit-stat-card"><span class="material-icons">block</span><div class="secaudit-stat-value" id="stat-bans">—</div><div class="secaudit-stat-label">${_('security_audit.active_bans')}</div></div>
-        <div class="secaudit-stat-card"><span class="material-icons">vpn_key</span><div class="secaudit-stat-value" id="stat-api-keys">—</div><div class="secaudit-stat-label">${_('security_audit.api_keys')}</div></div>
-        <div class="secaudit-stat-card"><span class="material-icons">update</span><div class="secaudit-stat-value" id="stat-old-keys">—</div><div class="secaudit-stat-label">${_('security_audit.old_keys')}</div></div>
-      </div>
-    </div>
-    <h3 class="secaudit-section-title">${_('security_audit.security_checks')}</h3>
-    <div class="secaudit-checks-grid" id="checks-grid"></div>
-    <h3 class="secaudit-section-title">${_('security_audit.tls_status')}</h3>
-    <div class="secaudit-tls-grid" id="tls-grid"></div>
+  <div class="secaudit-body">
+  <div class="tabs secaudit-tabs" role="tablist" aria-label="${_('nav.security_audit')}">
+    ${tabs.map(([id, label]) => `<button type="button" class="tab secaudit-tab ${tab === id ? 'active' : ''}" role="tab" id="tab-${id}" aria-controls="panel-${id}" aria-selected="${tab === id}" tabindex="${tab === id ? '0' : '-1'}" data-tab="${id}">${label}</button>`).join('')}
   </div>
 
-  <!-- Events panel -->
-  <div class="secaudit-panel" id="panel-events" style="display: ${activeTab === 'events' ? 'block' : 'none'}">
-    <div class="secaudit-toolbar">
-      <select class="secaudit-select" id="event-filter" data-bd-call="SecurityAudit.filterEvents" data-bd-on="change">
-        <option value="">${_('security_audit.all_events')}</option>
-        <option value="login_failed">${_('security_audit.event_login_failed')}</option>
-        <option value="login_success">${_('security_audit.event_login_success')}</option>
-        <option value="peer_banned">${_('security_audit.event_peer_banned')}</option>
-        <option value="ip_banned">${_('security_audit.event_ip_banned')}</option>
-        <option value="config_changed">${_('security_audit.event_config_changed')}</option>
-        <option value="key_created">${_('security_audit.event_key_created')}</option>
-      </select>
-      <button class="secaudit-btn" data-bd-call="SecurityAudit.loadEvents"><span class="material-icons">refresh</span> ${_('security_audit.refresh')}</button>
+  <!-- Console audit log: what people did in this console -->
+  <section class="secaudit-panel section" id="panel-audit" role="tabpanel" aria-labelledby="tab-audit" ${tab === 'audit' ? '' : 'hidden'}>
+    <p class="section-note secaudit-note">${_('security_audit.audit_log_note')}</p>
+    <div class="toolbar">
+      <div class="toolbar-search search-wrapper">
+        <span class="material-icons" aria-hidden="true">search</span>
+        <input type="search" class="form-input" id="audit-search" aria-label="${_('security_audit.audit_search')}" placeholder="${_('security_audit.audit_search')}">
+      </div>
+      <label class="secaudit-filter">
+        <span class="secaudit-filter-label">${_('security_audit.show')}</span>
+        <select class="form-select" id="audit-filter">
+          <option value="">${_('security_audit.filter_all')}</option>
+          <option value="bans">${_('security_audit.filter_bans')}</option>
+          <option value="signins">${_('security_audit.filter_signins')}</option>
+          <option value="failed">${_('security_audit.filter_failed')}</option>
+          <option value="devices">${_('security_audit.filter_devices')}</option>
+          <option value="people">${_('security_audit.filter_people')}</option>
+          <option value="settings">${_('security_audit.filter_settings')}</option>
+        </select>
+      </label>
+      <div class="toolbar-end"><button type="button" class="btn" id="audit-refresh">${_('security_audit.refresh')}</button></div>
     </div>
-    <div class="secaudit-table-wrap">
-      <table class="secaudit-table">
+    <p class="count-line" id="audit-count" aria-live="polite"></p>
+    <div class="table-scroll">
+      <table class="data-table secaudit-table secaudit-stack">
         <thead>
           <tr>
-            <th>${_('security_audit.col_time')}</th>
-            <th>${_('security_audit.col_action')}</th>
-            <th>${_('security_audit.col_actor')}</th>
-            <th>${_('security_audit.col_target')}</th>
-            <th>${_('security_audit.col_ip')}</th>
-            <th>${_('security_audit.col_details')}</th>
+            <th scope="col">${_('security_audit.col_time')}</th>
+            <th scope="col">${_('security_audit.col_who')}</th>
+            <th scope="col">${_('security_audit.col_action')}</th>
+            <th scope="col">${_('security_audit.col_device')}</th>
+            <th scope="col">${_('security_audit.col_details')}</th>
+            <th scope="col">${_('security_audit.col_ip')}</th>
           </tr>
         </thead>
-        <tbody id="events-tbody"></tbody>
+        <tbody id="audit-tbody"><tr><td colspan="6" class="state-cell">${_('security_audit.loading')}</td></tr></tbody>
       </table>
     </div>
-    <div class="secaudit-pagination" id="events-pagination"></div>
-  </div>
+    <nav class="pagination" id="audit-pagination" aria-label="${_('security_audit.pages')}"></nav>
+  </section>
 
-  <!-- Hardening panel -->
-  <div class="secaudit-panel" id="panel-hardening" style="display: ${activeTab === 'hardening' ? 'block' : 'none'}">
-    <p class="secaudit-hint">${_('security_audit.hardening_hint')}</p>
-    <div class="secaudit-hardening-list" id="hardening-list"></div>
-  </div>
-
-  <!-- Vulnerabilities panel -->
-  <div class="secaudit-panel" id="panel-vulnerabilities" style="display: ${activeTab === 'vulnerabilities' ? 'block' : 'none'}">
-    <p class="secaudit-hint">${_('security_audit.vuln_hint')}</p>
-    <div class="secaudit-vuln-summary" id="vuln-summary"></div>
-    <div class="secaudit-vuln-list" id="vuln-list"></div>
-  </div>
-
-  <!-- Panel sessions -->
-  <div class="secaudit-panel" id="panel-sessions" style="display: ${activeTab === 'sessions' ? 'block' : 'none'}">
-    <p class="secaudit-hint">${_('security_audit.sessions_hint')}</p>
-    <div class="secaudit-toolbar">
-      <div id="session-policy-summary" class="secaudit-hint"></div>
-      <button class="secaudit-btn" data-bd-call="SecurityAudit.loadSessions"><span class="material-icons">refresh</span> ${_('security_audit.refresh')}</button>
+  <!-- Events the Go server records -->
+  <section class="secaudit-panel section" id="panel-events" role="tabpanel" aria-labelledby="tab-events" ${tab === 'events' ? '' : 'hidden'}>
+    <p class="section-note secaudit-note">${_('security_audit.server_events_note')}</p>
+    <div class="toolbar">
+      <label class="secaudit-filter">
+        <span class="secaudit-filter-label">${_('security_audit.show')}</span>
+        <select class="form-select" id="event-filter">
+          <option value="">${_('security_audit.all_events')}</option>
+          <option value="login_failed">${_('security_audit.event_login_failed')}</option>
+          <option value="login_success">${_('security_audit.event_login_success')}</option>
+          <option value="peer_banned">${_('security_audit.event_peer_banned')}</option>
+          <option value="peer_unbanned">${_('security_audit.event_peer_unbanned')}</option>
+          <option value="ip_banned">${_('security_audit.event_ip_banned')}</option>
+          <option value="device_approved">${_('security_audit.event_device_approved')}</option>
+          <option value="config_changed">${_('security_audit.event_config_changed')}</option>
+          <option value="key_created">${_('security_audit.event_key_created')}</option>
+        </select>
+      </label>
+      <div class="toolbar-end"><button type="button" class="btn" id="events-refresh">${_('security_audit.refresh')}</button></div>
     </div>
-    <div class="secaudit-table-wrap">
-      <table class="secaudit-table">
+    <div class="table-scroll">
+      <table class="data-table secaudit-table secaudit-stack">
         <thead>
           <tr>
-            <th>${_('security_audit.col_status')}</th>
-            <th>${_('security_audit.col_ip')}</th>
-            <th>${_('security_audit.col_started')}</th>
-            <th>${_('security_audit.col_last_activity')}</th>
-            <th>${_('security_audit.col_ended')}</th>
-            <th>${_('security_audit.col_reason')}</th>
-            <th>${_('security_audit.col_user_agent')}</th>
+            <th scope="col">${_('security_audit.col_time')}</th>
+            <th scope="col">${_('security_audit.col_action')}</th>
+            <th scope="col">${_('security_audit.col_actor')}</th>
+            <th scope="col">${_('security_audit.col_target')}</th>
+            <th scope="col">${_('security_audit.col_details')}</th>
           </tr>
         </thead>
-        <tbody id="sessions-tbody"></tbody>
+        <tbody id="events-tbody"><tr><td colspan="5" class="state-cell">${_('security_audit.loading')}</td></tr></tbody>
       </table>
     </div>
+    <nav class="pagination" id="events-pagination" aria-label="${_('security_audit.pages')}"></nav>
+  </section>
+
+  <!-- Security checks -->
+  <div class="secaudit-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" ${tab === 'overview' ? '' : 'hidden'}>
+    <section class="section" aria-labelledby="checks-title">
+      <h2 id="checks-title" class="sr-only">${_('security_audit.tab_checks')}</h2>
+      <p class="secaudit-summary" id="checks-summary" aria-live="polite">${_('security_audit.loading')}</p>
+      <div class="table-scroll">
+        <table class="data-table secaudit-table secaudit-stack secaudit-checks">
+          <thead>
+            <tr>
+              <th scope="col">${_('security_audit.col_check')}</th>
+              <th scope="col">${_('security_audit.col_status')}</th>
+              <th scope="col">${_('security_audit.col_todo')}</th>
+            </tr>
+          </thead>
+          <tbody id="checks-grid"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="section" aria-labelledby="numbers-title">
+      <h2 id="numbers-title">${_('security_audit.numbers_title')}</h2>
+      <dl class="facts" id="overview-stats"></dl>
+    </section>
+    <section class="section" aria-labelledby="tls-title">
+      <h2 id="tls-title">${_('security_audit.tls_status')}</h2>
+      <p class="section-note">${_('security_audit.tls_note')}</p>
+      <dl class="facts" id="tls-grid"></dl>
+    </section>
+  </div>
+
+  <!-- Hardening plan and dependency scan -->
+  <div class="secaudit-panel" id="panel-hardening" role="tabpanel" aria-labelledby="tab-hardening" ${tab === 'hardening' ? '' : 'hidden'}>
+    <section class="section" aria-labelledby="hardening-title">
+      <h2 id="hardening-title" class="sr-only">${_('security_audit.tab_hardening')}</h2>
+      <p class="section-note secaudit-note">${_('security_audit.hardening_hint')}</p>
+      <p class="count-line" id="hardening-count"></p>
+      <ul class="list" id="hardening-list"><li class="list-row is-empty">${_('security_audit.loading')}</li></ul>
+    </section>
+    <section class="section" aria-labelledby="vuln-title">
+      <h2 id="vuln-title">${_('security_audit.vuln_title')}</h2>
+      <p class="count-line" id="vuln-summary"></p>
+      <div id="vuln-list"></div>
+    </section>
+  </div>
+
+  <!-- Your console sign-in sessions -->
+  <section class="secaudit-panel section" id="panel-sessions" role="tabpanel" aria-labelledby="tab-sessions" ${tab === 'sessions' ? '' : 'hidden'}>
+    <p class="section-note secaudit-note">${_('security_audit.sessions_hint')}</p>
+    <div class="toolbar">
+      <p class="count-line" id="session-policy-summary"></p>
+      <div class="toolbar-end"><button type="button" class="btn" id="sessions-refresh">${_('security_audit.refresh')}</button></div>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table secaudit-table secaudit-stack">
+        <thead>
+          <tr>
+            <th scope="col">${_('security_audit.col_status')}</th>
+            <th scope="col">${_('security_audit.col_ip')}</th>
+            <th scope="col">${_('security_audit.col_started')}</th>
+            <th scope="col">${_('security_audit.col_last_activity')}</th>
+            <th scope="col">${_('security_audit.col_ended')}</th>
+            <th scope="col">${_('security_audit.col_reason')}</th>
+            <th scope="col">${_('security_audit.col_user_agent')}</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-tbody"><tr><td colspan="7" class="state-cell">${_('security_audit.loading')}</td></tr></tbody>
+      </table>
+    </div>
+  </section>
   </div>
 </div>
 ` }) %>

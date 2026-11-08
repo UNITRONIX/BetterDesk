@@ -1,0 +1,129 @@
+/* Security and audit: only what the components don't cover */
+
+/* Tabs sit right above their panel */
+.secaudit-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+}
+
+.secaudit-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+div.secaudit-panel {
+    gap: var(--space-6);
+}
+
+.secaudit-note {
+    margin-top: 0;
+}
+
+/* A select with its label on one line inside a toolbar */
+.secaudit-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.secaudit-filter-label {
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.secaudit-filter .form-select {
+    width: auto;
+    max-width: 100%;
+}
+
+.secaudit-summary {
+    font-size: var(--text-md);
+    font-weight: 600;
+}
+
+.secaudit-table .secaudit-time {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.secaudit-table .secaudit-details {
+    min-width: 220px;
+    max-width: 480px;
+    overflow-wrap: anywhere;
+    color: var(--text-muted);
+}
+
+.secaudit-table .secaudit-todo {
+    max-width: var(--measure);
+}
+
+.secaudit-table .secaudit-ua {
+    max-width: 320px;
+    overflow-wrap: anywhere;
+    color: var(--text-muted);
+}
+
+.pagination-info {
+    padding: 0 var(--space-2);
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .secaudit-filter {
+        flex-wrap: wrap;
+    }
+}
+
+/* Phones: each table row becomes a short block with the column names as labels */
+@media (max-width: 640px) {
+    .secaudit-stack thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .secaudit-stack,
+    .secaudit-stack tbody,
+    .secaudit-stack tr,
+    .secaudit-stack td {
+        display: block;
+        width: 100%;
+    }
+
+    .secaudit-stack tr {
+        padding: var(--space-2) 0;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .secaudit-stack tbody tr:hover td {
+        background: transparent;
+    }
+
+    .secaudit-stack td {
+        height: auto;
+        padding: 2px var(--row-pad-x);
+        border-bottom: 0;
+    }
+
+    .secaudit-stack td[data-label]::before {
+        content: attr(data-label) ": ";
+        color: var(--text-muted);
+    }
+
+    .secaudit-table .secaudit-details,
+    .secaudit-table .secaudit-ua {
+        min-width: 0;
+        max-width: none;
+    }
+
+    .secaudit-table .secaudit-time {
+        white-space: normal;
+    }
+}

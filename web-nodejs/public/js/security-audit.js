@@ -1,251 +1,415 @@
-/* Security Audit Dashboard — Phase 8 */
+/* Security and audit: console audit log, server events, checks, hardening, own sessions */
 (function () {
   'use strict';
-  const _ = window._ || (k => k);
+  const _ = (key, params) => (typeof window._ === 'function' ? window._(key, params) : key);
+  const TABS = ['audit', 'events', 'overview', 'hardening', 'sessions'];
+  const TAB_ALIASES = { vulnerabilities: 'hardening' };
+  const PAGE_SIZE = 50;
+  const EVENTS_PAGE_SIZE = 25;
 
-  let activeTab = 'overview';
-  let eventsPage = 0;
-  const PAGE_SIZE = 25;
+  let activeTab = 'audit';
+  const loaded = {};
 
-  /* ── Tab switching ── */
-  function switchTab(tab) {
+  /* ── Helpers ── */
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    const d = document.createElement('div');
+    d.textContent = String(s);
+    return d.innerHTML;
+  }
+
+  // The console stores UTC as "YYYY-MM-DD HH:MM:SS" without a zone; read it as UTC.
+  function toDate(t) {
+    if (t === null || t === undefined || t === '') return null;
+    if (typeof t === 'number') return new Date(t);
+    let s = String(t);
+    if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(s)) s = s.replace(' ', 'T') + 'Z';
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatTime(t) {
+    const d = toDate(t);
+    if (!d) return '—';
+    return Utils.formatDate(d.toISOString(), { second: '2-digit' });
+  }
+
+  function actionLabel(action) {
+    const raw = String(action || '').trim();
+    if (!raw) return '—';
+    const key = 'audit.action_' + raw.replace(/[^a-z0-9_]/gi, '_');
+    const label = _(key);
+    if (label && label !== key) return label;
+    // Unknown action code: "device_group_saved" -> "Device group saved"
+    const words = raw.replace(/[_.-]+/g, ' ').trim().toLowerCase();
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  }
+
+  function errorRow(colspan, message, retryId) {
+    return `<tr><td colspan="${colspan}" class="state-cell"><span class="state is-error">${esc(message)} <button type="button" class="btn btn-sm" id="${retryId}">${esc(_('security_audit.try_again'))}</button></span></td></tr>`;
+  }
+
+  function stateRow(colspan, message) {
+    return `<tr><td colspan="${colspan}" class="state-cell">${esc(message)}</td></tr>`;
+  }
+
+  async function getJson(url) {
+    const res = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+    let json = null;
+    try { json = await res.json(); } catch (_e) { json = null; }
+    if (!res.ok || (json && json.success === false)) {
+      const err = new Error((json && json.error) || ('HTTP ' + res.status));
+      throw err;
+    }
+    return json;
+  }
+
+  function renderPager(nav, page, pageCount, onGo) {
+    if (!nav) return;
+    if (pageCount <= 1) { nav.innerHTML = ''; return; }
+    nav.innerHTML = `
+      <button type="button" class="btn btn-sm" data-go="${page - 1}" ${page <= 0 ? 'disabled' : ''}>${esc(_('security_audit.newer'))}</button>
+      <span class="pagination-info">${esc(_('security_audit.page_of', { page: page + 1, total: pageCount }))}</span>
+      <button type="button" class="btn btn-sm" data-go="${page + 1}" ${page >= pageCount - 1 ? 'disabled' : ''}>${esc(_('security_audit.older'))}</button>`;
+    nav.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => onGo(Number(b.dataset.go))));
+  }
+
+  /* ── Tabs ── */
+  function showTab(tab, focus) {
     activeTab = tab;
-    document.querySelectorAll('.secaudit-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-    document.querySelectorAll('.secaudit-panel').forEach(p => {
-      p.style.display = p.id === 'panel-' + tab ? 'block' : 'none';
+    document.querySelectorAll('.secaudit-tab').forEach((t) => {
+      const on = t.dataset.tab === tab;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      if (on && focus) t.focus();
     });
-    history.replaceState(null, '', '?tab=' + tab);
-    if (tab === 'overview') loadOverview();
+    document.querySelectorAll('.secaudit-panel').forEach((p) => { p.hidden = p.id !== 'panel-' + tab; });
+    if (!loaded[tab]) loadTab(tab);
+  }
+
+  function switchTab(tab) {
+    tab = TAB_ALIASES[tab] || tab;
+    if (!TABS.includes(tab)) tab = 'audit';
+    const params = new URLSearchParams(window.location.search);
+    params.set('tab', tab);
+    if (tab !== 'audit') { params.delete('q'); params.delete('type'); }
+    history.replaceState(null, '', '?' + params.toString());
+    showTab(tab);
+  }
+
+  function loadTab(tab) {
+    loaded[tab] = true;
+    if (tab === 'audit') loadAudit();
     else if (tab === 'events') loadEvents();
-    else if (tab === 'hardening') loadHardening();
-    else if (tab === 'vulnerabilities') loadVulnerabilities();
+    else if (tab === 'overview') loadOverview();
+    else if (tab === 'hardening') { loadHardening(); loadVulnerabilities(); }
     else if (tab === 'sessions') loadSessions();
   }
 
-  /* ── Overview ── */
-  async function loadOverview() {
+  /* ── Console audit log (who did what in this console) ── */
+  const CATEGORY_TESTS = {
+    bans: (a) => /(^|_)(un)?ban|banned|blocklist|ip_block/.test(a),
+    signins: (a) => /^(login|logout|auth_|session_|2fa_|password_)/.test(a),
+    failed: (a) => /(login|auth)(_login)?_failed/.test(a),
+    devices: (a) => /^(device_|devices_|enrollment_|folder_|peer_|remote_|registration)/.test(a),
+    people: (a) => /^(user_|role_|permission|group_|org_|organization_|invite)/.test(a),
+    settings: (a) => /^(settings|setting_|config|theme_|branding_|backup_|restore|server_|update|smtp|commercialization_|billing_|key_|token_|policy)/.test(a)
+  };
+
+  // "Device 900100019 banned", "Approved enrollment for device 900200005", "Banned 900100028 (...)"
+  const DEVICE_RE = /\b(?:device|Device|Banned|Unbanned|Deleted|Restored|Connected to)\s+([A-Za-z0-9_-]*\d[A-Za-z0-9_-]*)\b/;
+
+  let auditRows = [];
+  let auditPage = 0;
+
+  async function loadAudit() {
+    const tbody = document.getElementById('audit-tbody');
+    tbody.innerHTML = stateRow(6, _('security_audit.loading'));
+    document.getElementById('audit-count').textContent = '';
     try {
-      const res = await fetch('/api/panel/security-audit/overview');
-      const json = await res.json();
-      const d = json.data || json;
-
-      // Score ring
-      const score = typeof d.score === 'number' ? d.score : 0;
-      const circle = document.getElementById('score-circle');
-      const circumference = 2 * Math.PI * 52;
-      const offset = circumference - (score / 100) * circumference;
-      circle.style.strokeDashoffset = offset;
-      circle.style.stroke = score >= 80 ? '#3fb950' : score >= 50 ? '#d29922' : '#f85149';
-      document.getElementById('score-value').textContent = score;
-
-      // Stats
-      const stats = d.stats || {};
-      setText('stat-failed-logins', stats.failed_logins ?? '—');
-      setText('stat-bans', stats.active_bans ?? '—');
-      setText('stat-api-keys', stats.api_keys ?? '—');
-      setText('stat-old-keys', stats.old_keys ?? '—');
-
-      // Checks
-      const checksGrid = document.getElementById('checks-grid');
-      const checks = d.checks || [];
-      checksGrid.innerHTML = checks.map(c => {
-        const passed = c.pass ?? c.passed;
-        const cls = passed ? 'pass' : (c.warn ? 'warn' : 'fail');
-        const icon = passed ? 'check_circle' : (c.warn ? 'warning' : 'error');
-        const badge = passed ? _('security_audit.pass') : (c.warn ? _('security_audit.warning') : _('security_audit.fail'));
-        return `<div class="secaudit-check">
-          <span class="material-icons secaudit-check-icon ${cls}">${icon}</span>
-          <span class="secaudit-check-name">${esc(c.name)}</span>
-          <span class="secaudit-check-badge ${cls}">${badge}</span>
-        </div>`;
-      }).join('');
-
-      // TLS
-      const tls = d.tls || {};
-      const tlsGrid = document.getElementById('tls-grid');
-      const tlsItems = [
-        { label: _('security_audit.tls_signal'), value: tls.signal },
-        { label: _('security_audit.tls_relay'), value: tls.relay },
-        { label: _('security_audit.tls_api'), value: tls.api },
-        { label: _('security_audit.tls_wss'), value: tls.wss }
-      ];
-      tlsGrid.innerHTML = tlsItems.map(t => {
-        const known = typeof t.value === 'boolean';
-        const en = t.value === true;
-        return `<div class="secaudit-tls-card">
-          <div class="tls-label">${esc(t.label)}</div>
-          <div class="tls-value ${!known ? '' : en ? 'enabled' : 'disabled'}">${
-            !known ? '—' : en ? _('security_audit.enabled') : _('security_audit.disabled')
-          }</div>
-        </div>`;
-      }).join('');
+      const json = await getJson('/api/settings/audit?limit=2000');
+      const list = Array.isArray(json) ? json : (json.data || []);
+      auditRows = list.map((r) => {
+        const action = String(r.action || '');
+        const details = String(r.details || '');
+        const m = details.match(DEVICE_RE);
+        return {
+          time: r.created_at,
+          who: r.username || (r.user_id ? '#' + r.user_id : ''),
+          action,
+          label: actionLabel(action),
+          device: m ? m[1] : '',
+          details,
+          ip: r.ip_address || ''
+        };
+      });
+      renderAudit();
     } catch (e) {
-      console.error('SecurityAudit overview error:', e);
+      tbody.innerHTML = errorRow(6, _('security_audit.audit_load_failed'), 'audit-retry');
+      document.getElementById('audit-retry').addEventListener('click', loadAudit);
+      document.getElementById('audit-pagination').innerHTML = '';
     }
   }
 
-  /* ── Audit Events ── */
+  function filteredAudit() {
+    const q = (document.getElementById('audit-search').value || '').trim().toLowerCase();
+    const type = document.getElementById('audit-filter').value;
+    const test = CATEGORY_TESTS[type];
+    return auditRows.filter((r) => {
+      if (test && !test(r.action.toLowerCase())) return false;
+      if (!q) return true;
+      return [r.who, r.action, r.label, r.device, r.details, r.ip].join(' ').toLowerCase().includes(q);
+    });
+  }
+
+  function renderAudit() {
+    const tbody = document.getElementById('audit-tbody');
+    const rows = filteredAudit();
+    const count = document.getElementById('audit-count');
+    const filtering = rows.length !== auditRows.length;
+    count.innerHTML = filtering
+      ? _('security_audit.audit_count_filtered', { shown: `<strong>${rows.length}</strong>`, total: auditRows.length })
+      : _('security_audit.audit_count', { total: `<strong>${auditRows.length}</strong>` });
+    const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    if (auditPage >= pageCount) auditPage = pageCount - 1;
+    if (!auditRows.length) {
+      tbody.innerHTML = stateRow(6, _('security_audit.audit_empty'));
+    } else if (!rows.length) {
+      tbody.innerHTML = stateRow(6, _('security_audit.audit_no_match'));
+    } else {
+      tbody.innerHTML = rows.slice(auditPage * PAGE_SIZE, (auditPage + 1) * PAGE_SIZE).map((r) => `
+        <tr>
+          <td class="secaudit-time">${esc(formatTime(r.time))}</td>
+          <td>${esc(r.who || '—')}</td>
+          <td>${esc(r.label)}</td>
+          <td>${r.device ? `<span class="mono">${esc(r.device)}</span>` : '—'}</td>
+          <td class="secaudit-details">${esc(r.details || '—')}</td>
+          <td><span class="mono">${esc(r.ip || '—')}</span></td>
+        </tr>`).join('');
+    }
+    renderPager(document.getElementById('audit-pagination'), auditPage, pageCount, (p) => { auditPage = p; renderAudit(); });
+  }
+
+  function syncAuditUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const q = document.getElementById('audit-search').value.trim();
+    const type = document.getElementById('audit-filter').value;
+    params.set('tab', 'audit');
+    if (q) params.set('q', q); else params.delete('q');
+    if (type) params.set('type', type); else params.delete('type');
+    history.replaceState(null, '', '?' + params.toString());
+  }
+
+  /* ── Server events (recorded by the BetterDesk server) ── */
+  let eventsPage = 0;
+
   async function loadEvents() {
+    const tbody = document.getElementById('events-tbody');
+    const pag = document.getElementById('events-pagination');
+    tbody.innerHTML = stateRow(5, _('security_audit.loading'));
     try {
-      const filter = document.getElementById('event-filter')?.value || '';
-      const params = new URLSearchParams({ limit: PAGE_SIZE, offset: eventsPage * PAGE_SIZE });
+      const filter = document.getElementById('event-filter').value || '';
+      const params = new URLSearchParams({ limit: EVENTS_PAGE_SIZE, offset: eventsPage * EVENTS_PAGE_SIZE });
       if (filter) params.set('action', filter);
-      const res = await fetch('/api/panel/security-audit/events?' + params);
-      const json = await res.json();
+      const json = await getJson('/api/panel/security-audit/events?' + params);
       const d = json.data || json;
       const events = d.events || d.items || [];
-      const total = d.total || events.length;
-
-      const tbody = document.getElementById('events-tbody');
       if (!events.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="secaudit-empty"><span class="material-icons">history</span>${_('security_audit.no_events')}</td></tr>`;
+        tbody.innerHTML = stateRow(5, eventsPage > 0 ? _('security_audit.no_more_events') : _('security_audit.no_events'));
       } else {
-        tbody.innerHTML = events.map(ev => {
-          const cls = actionClass(ev.action);
-          return `<tr>
-            <td>${formatTime(ev.timestamp || ev.created_at)}</td>
-            <td><span class="secaudit-action-badge ${cls}">${esc(Utils.formatAuditAction ? Utils.formatAuditAction(ev.action) : ev.action)}</span></td>
-            <td>${esc(ev.actor || ev.user || '—')}</td>
+        tbody.innerHTML = events.map((ev) => `<tr>
+            <td class="secaudit-time">${esc(formatTime(ev.timestamp || ev.created_at))}</td>
+            <td>${esc(actionLabel(ev.action))}</td>
+            <td><span class="mono">${esc(ev.actor || ev.user || '—')}</span></td>
             <td>${esc(ev.target || ev.resource || '—')}</td>
-            <td>${esc(ev.ip || '—')}</td>
-            <td>${esc(formatDetails(ev.details || ev.detail || '—'))}</td>
-          </tr>`;
-        }).join('');
+            <td class="secaudit-details">${esc(formatDetails(ev.details || ev.detail) || '—')}</td>
+          </tr>`).join('');
       }
-
-      // Pagination
-      const totalPages = Math.ceil(total / PAGE_SIZE);
-      const pag = document.getElementById('events-pagination');
-      if (totalPages <= 1) { pag.innerHTML = ''; return; }
-      let html = '';
-      for (let i = 0; i < totalPages && i < 10; i++) {
-        html += `<button class="secaudit-page-btn ${i === eventsPage ? 'active' : ''}" data-bd-call="SecurityAudit.goPage" data-bd-args='[${i}]'>${i + 1}</button>`;
-      }
-      pag.innerHTML = html;
+      // The server reports the unfiltered total even when filtering, so only trust it without a filter.
+      const total = filter ? null : Number(d.total);
+      const pageCount = total && Number.isFinite(total)
+        ? Math.ceil(total / EVENTS_PAGE_SIZE)
+        : eventsPage + (events.length === EVENTS_PAGE_SIZE ? 2 : 1);
+      renderPager(pag, eventsPage, pageCount, (p) => { eventsPage = p; loadEvents(); });
     } catch (e) {
-      console.error('SecurityAudit events error:', e);
+      tbody.innerHTML = errorRow(5, _('security_audit.events_load_failed'), 'events-retry');
+      document.getElementById('events-retry').addEventListener('click', loadEvents);
+      pag.innerHTML = '';
     }
   }
 
-  function filterEvents() { eventsPage = 0; loadEvents(); }
-  function goPage(p) { eventsPage = p; loadEvents(); }
+  function formatDetails(details) {
+    if (!details) return '';
+    if (typeof details !== 'object') return String(details);
+    return Object.entries(details)
+      .filter(([, v]) => v !== '' && v !== null && v !== undefined)
+      .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join(', ');
+  }
 
-  /* ── Hardening ── */
-  async function loadHardening() {
+  /* ── Security checks ── */
+  async function loadOverview() {
+    const summary = document.getElementById('checks-summary');
+    const tbody = document.getElementById('checks-grid');
+    summary.textContent = _('security_audit.loading');
+    summary.classList.remove('is-error');
+    tbody.innerHTML = '';
     try {
-      const res = await fetch('/api/panel/security-audit/hardening');
-      const json = await res.json();
+      const json = await getJson('/api/panel/security-audit/overview');
+      const d = json.data || json;
+      const checks = d.checks || [];
+      const passed = checks.filter((c) => c.pass ?? c.passed).length;
+      summary.textContent = checks.length
+        ? _('security_audit.checks_summary', { passed, total: checks.length })
+        : _('security_audit.no_checks');
+      tbody.innerHTML = checks.map((c) => {
+        const ok = !!(c.pass ?? c.passed);
+        const nameKey = 'security_audit.check_' + c.id;
+        const fixKey = 'security_audit.fix_' + c.id;
+        const name = _(nameKey) !== nameKey ? _(nameKey) : c.name;
+        const fix = ok ? '' : (_(fixKey) !== fixKey ? _(fixKey) : '');
+        return `<tr>
+          <td>${esc(name)}</td>
+          <td><span class="status ${ok ? 'ok' : 'error'}">${esc(ok ? _('security_audit.passed') : _('security_audit.failed'))}</span></td>
+          <td class="secaudit-todo">${ok ? '<span class="text-muted">—</span>' : esc(fix)}</td>
+        </tr>`;
+      }).join('');
+
+      const stats = d.stats || {};
+      const num = (v) => (v === undefined || v === null ? '—' : esc(v));
+      document.getElementById('overview-stats').innerHTML = `
+        <dt>${esc(_('security_audit.stat_failed_logins'))}</dt><dd>${num(stats.failed_logins)}</dd>
+        <dt>${esc(_('security_audit.stat_blocked'))}</dt><dd>${num(stats.bans ?? stats.active_bans)}</dd>
+        <dt>${esc(_('security_audit.stat_api_keys'))}</dt><dd>${stats.api_keys === undefined ? '—'
+          : esc(_('security_audit.stat_api_keys_value', { total: stats.api_keys, old: stats.old_keys ?? 0 }))}</dd>
+        <dt>${esc(_('security_audit.stat_config_changes'))}</dt><dd>${num(stats.config_changes)}</dd>`;
+
+      const tls = d.tls || {};
+      const tlsValue = (v) => (typeof v !== 'boolean'
+        ? `<span class="text-muted">${esc(_('security_audit.tls_unknown'))}</span>`
+        : esc(v ? _('security_audit.enabled') : _('security_audit.disabled')));
+      document.getElementById('tls-grid').innerHTML = [
+        [_('security_audit.tls_signal'), tls.signal],
+        [_('security_audit.tls_relay'), tls.relay],
+        [_('security_audit.tls_api'), tls.api],
+        [_('security_audit.tls_wss'), tls.wss]
+      ].map(([label, v]) => `<dt>${esc(label)}</dt><dd>${tlsValue(v)}</dd>`).join('');
+    } catch (e) {
+      summary.innerHTML = `<span class="state is-error">${esc(_('security_audit.overview_load_failed'))} <button type="button" class="btn btn-sm" id="overview-retry">${esc(_('security_audit.try_again'))}</button></span>`;
+      document.getElementById('overview-retry').addEventListener('click', loadOverview);
+    }
+  }
+
+  /* ── Hardening plan ── */
+  async function loadHardening() {
+    const list = document.getElementById('hardening-list');
+    const count = document.getElementById('hardening-count');
+    list.innerHTML = `<li class="list-row is-empty">${esc(_('security_audit.loading'))}</li>`;
+    try {
+      const json = await getJson('/api/panel/security-audit/hardening');
       const items = json.data || json.items || json.priorities || json;
-      const list = document.getElementById('hardening-list');
       if (!Array.isArray(items) || !items.length) {
-        list.innerHTML = `<div class="secaudit-empty"><span class="material-icons">shield</span>${_('security_audit.no_hardening')}</div>`;
+        count.textContent = '';
+        list.innerHTML = `<li class="list-row is-empty">${esc(_('security_audit.no_hardening'))}</li>`;
         return;
       }
-      list.innerHTML = items.map(h => `
-        <div class="secaudit-harden-card">
-          <div class="secaudit-harden-status">
-            <span class="material-icons ${h.implemented ? 'done' : 'pending'}">${h.implemented ? 'check_circle' : 'radio_button_unchecked'}</span>
-          </div>
-          <div class="secaudit-harden-body">
-            <div class="secaudit-harden-header">
-              <span class="secaudit-harden-name">${esc(h.name)}</span>
-              <span class="secaudit-harden-severity ${h.severity || 'medium'}">${esc((h.severity || 'medium').toUpperCase())}</span>
-              <span class="secaudit-harden-category">${esc(h.category || '')}</span>
-            </div>
-            <div class="secaudit-harden-desc">${esc(h.description || '')}</div>
-          </div>
-        </div>
-      `).join('');
+      const done = items.filter((h) => h.implemented).length;
+      count.textContent = _('security_audit.hardening_count', { done, total: items.length });
+      list.innerHTML = items.map((h) => {
+        const sev = String(h.severity || 'medium').toLowerCase();
+        const sevKey = 'security_audit.severity_' + sev;
+        const sevLabel = _(sevKey) !== sevKey ? _(sevKey) : sev;
+        return `<li class="list-row">
+          <span class="row-main">
+            <span class="row-title">${esc(h.name)}</span>
+            <span class="row-sub">${esc(h.description || '')}</span>
+            <span class="row-sub">${esc(_('security_audit.hardening_meta', { severity: sevLabel, category: h.category || '—' }))}</span>
+          </span>
+          <span class="row-end"><span class="status ${h.implemented ? 'ok' : 'pending'}">${esc(h.implemented ? _('security_audit.done') : _('security_audit.not_done'))}</span></span>
+        </li>`;
+      }).join('');
     } catch (e) {
-      console.error('SecurityAudit hardening error:', e);
+      count.textContent = '';
+      list.innerHTML = `<li class="list-row"><span class="state is-error">${esc(_('security_audit.hardening_load_failed'))} <button type="button" class="btn btn-sm" id="hardening-retry">${esc(_('security_audit.try_again'))}</button></span></li>`;
+      document.getElementById('hardening-retry').addEventListener('click', loadHardening);
     }
   }
 
-  /* ── Vulnerabilities ── */
+  /* ── Dependency scan ── */
   async function loadVulnerabilities() {
+    const summary = document.getElementById('vuln-summary');
+    const list = document.getElementById('vuln-list');
+    summary.textContent = '';
+    list.innerHTML = `<p class="state">${esc(_('security_audit.loading'))}</p>`;
     try {
-      const res = await fetch('/api/panel/security-audit/vulnerabilities');
-      const json = await res.json();
+      const json = await getJson('/api/panel/security-audit/vulnerabilities');
       const d = json.data || json;
-
-      const summary = document.getElementById('vuln-summary');
-      const counts = d.counts || {};
-      summary.innerHTML = [
-        { label: 'Critical', key: 'critical' },
-        { label: 'High', key: 'high' },
-        { label: 'Medium', key: 'medium' },
-        { label: 'Low', key: 'low' },
-        { label: 'Total', key: 'total' }
-      ].map(s => `
-        <div class="secaudit-vuln-card">
-          <div class="vuln-count ${s.key}">${counts[s.key] ?? 0}</div>
-          <div class="vuln-label">${s.label}</div>
-        </div>
-      `).join('');
-
-      const vulns = d.vulnerabilities || [];
-      const list = document.getElementById('vuln-list');
       if (d.scan_available === false) {
-        list.innerHTML = `<div class="secaudit-empty"><span class="material-icons">hourglass_empty</span>${_('security_audit.vuln_hint')}</div>`;
-      } else if (!vulns.length) {
-        list.innerHTML = `<div class="secaudit-empty"><span class="material-icons">verified</span>${_('security_audit.no_vulns')}</div>`;
-      } else {
-        list.innerHTML = vulns.map(v => `
-          <div class="secaudit-vuln-item">
-            <div class="vuln-pkg">${esc(v.package || v.name)} <span class="secaudit-harden-severity ${v.severity || 'medium'}">${esc((v.severity || '').toUpperCase())}</span></div>
-            <div class="vuln-detail">${esc(v.title || v.description || '')}</div>
-          </div>
-        `).join('');
+        list.innerHTML = `<p class="state">${esc(_('security_audit.vuln_no_scan'))}</p>`;
+        return;
       }
+      const c = d.counts || {};
+      summary.textContent = _('security_audit.vuln_counts', {
+        total: c.total ?? 0, critical: c.critical ?? 0, high: c.high ?? 0, medium: c.medium ?? 0, low: c.low ?? 0
+      });
+      const vulns = d.vulnerabilities || [];
+      if (!vulns.length) {
+        list.innerHTML = `<p class="state">${esc(_('security_audit.no_vulns'))}</p>`;
+        return;
+      }
+      list.innerHTML = `<ul class="list">${vulns.map((v) => {
+        const sev = String(v.severity || '').toLowerCase();
+        const sevKey = 'security_audit.severity_' + sev;
+        return `<li class="list-row"><span class="row-main"><span class="row-title">${esc(v.package || v.name)}</span>
+          <span class="row-sub">${esc(v.title || v.description || '')}</span></span>
+          <span class="row-end">${esc(_(sevKey) !== sevKey ? _(sevKey) : sev)}</span></li>`;
+      }).join('')}</ul>`;
     } catch (e) {
-      console.error('SecurityAudit vulnerabilities error:', e);
+      list.innerHTML = `<p class="state is-error">${esc(_('security_audit.vuln_load_failed'))} <button type="button" class="btn btn-sm" id="vuln-retry">${esc(_('security_audit.try_again'))}</button></p>`;
+      document.getElementById('vuln-retry').addEventListener('click', loadVulnerabilities);
     }
   }
 
-  /* ── Panel sessions ── */
+  /* ── Your console sessions ── */
   async function loadSessions() {
+    const tbody = document.getElementById('sessions-tbody');
+    tbody.innerHTML = stateRow(7, _('security_audit.loading'));
     try {
-      const res = await fetch('/api/auth/sessions', { credentials: 'same-origin' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Failed to load sessions');
+      const json = await getJson('/api/auth/sessions');
       const d = json.data || json;
       const sessions = d.sessions || [];
       const policy = d.policy || {};
       const summary = document.getElementById('session-policy-summary');
-      if (summary) {
-        const idleMin = Math.round((policy.idleTimeoutMs || 0) / 60000);
-        const maxH = Math.round((policy.maxAgeMs || 0) / 3600000);
+      if (summary && (policy.idleTimeoutMs || policy.maxAgeMs)) {
         summary.textContent = _('security_audit.sessions_policy')
-          .replace('{{idle}}', String(idleMin))
-          .replace('{{max}}', String(maxH));
+          .replace('{{idle}}', String(Math.round((policy.idleTimeoutMs || 0) / 60000)))
+          .replace('{{max}}', String(Math.round((policy.maxAgeMs || 0) / 3600000)));
       }
-      const tbody = document.getElementById('sessions-tbody');
       if (!sessions.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="secaudit-empty"><span class="material-icons">devices</span>${_('security_audit.no_sessions')}</td></tr>`;
+        tbody.innerHTML = stateRow(7, _('security_audit.no_sessions'));
         return;
       }
-      tbody.innerHTML = sessions.map(s => {
-        const status = s.current
-          ? _('security_audit.session_current')
-          : (s.active ? _('security_audit.session_active') : _('security_audit.session_ended'));
+      tbody.innerHTML = sessions.map((s) => {
+        const status = s.current ? 'current' : (s.active ? 'active' : 'ended');
+        const label = _('security_audit.session_' + status);
         let reason = '—';
         if (s.endReason) {
           const key = 'security_audit.reason_' + s.endReason;
-          const translated = _(key);
-          reason = (translated && translated !== key) ? translated : s.endReason;
+          reason = _(key) !== key ? _(key) : s.endReason;
         }
         return `<tr>
-          <td>${esc(status)}</td>
-          <td>${esc(s.ipAddress || '—')}</td>
-          <td>${formatTime(s.createdAt)}</td>
-          <td>${formatTime(s.lastActivityAt)}</td>
-          <td>${formatTime(s.endedAt)}</td>
+          <td><span class="status ${status === 'ended' ? 'offline' : 'online'}">${esc(label)}</span></td>
+          <td><span class="mono">${esc(s.ipAddress || '—')}</span></td>
+          <td class="secaudit-time">${esc(formatTime(s.createdAt))}</td>
+          <td class="secaudit-time">${esc(formatTime(s.lastActivityAt))}</td>
+          <td class="secaudit-time">${esc(formatTime(s.endedAt))}</td>
           <td>${esc(reason)}</td>
-          <td title="${esc(s.userAgent || '')}">${esc(shortUa(s.userAgent))}</td>
+          <td class="secaudit-ua" title="${esc(s.userAgent || '')}">${esc(shortUa(s.userAgent))}</td>
         </tr>`;
       }).join('');
     } catch (e) {
-      console.error('SecurityAudit sessions error:', e);
+      tbody.innerHTML = errorRow(7, _('security_audit.sessions_load_failed'), 'sessions-retry');
+      document.getElementById('sessions-retry').addEventListener('click', loadSessions);
     }
   }
 
@@ -254,46 +418,66 @@
     return ua.length > 64 ? ua.slice(0, 61) + '…' : ua;
   }
 
-  /* ── Helpers ── */
-  function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
-  function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-  function formatTime(t) {
-    if (!t) return '—';
-    try { return new Date(t).toLocaleString(); } catch { return t; }
-  }
-  function formatDetails(details) {
-    if (!details || typeof details !== 'object') return details;
-    return Object.entries(details).map(([key, value]) => `${key}=${value}`).join(', ');
-  }
-  function actionClass(a) {
-    if (!a) return 'info';
-    if (/fail|ban|block|denied|revoke/i.test(a)) return 'danger';
-    if (/success|login_success|created/i.test(a)) return 'success';
-    if (/warn|degrade|timeout/i.test(a)) return 'warn';
-    return 'info';
+  // Phones show each row as a block; every cell carries its column name (see ui/security-audit.css)
+  function labelCells(tbody) {
+    const heads = Array.from(tbody.closest('table').querySelectorAll('thead th')).map((th) => th.textContent.trim());
+    tbody.querySelectorAll('tr').forEach((tr) => {
+      Array.from(tr.children).forEach((td, i) => {
+        if (td.classList.contains('state-cell') || !heads[i]) return;
+        if (td.getAttribute('data-label') !== heads[i]) td.setAttribute('data-label', heads[i]);
+      });
+    });
   }
 
   /* ── Init ── */
   function init() {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    if (tab && ['overview', 'events', 'hardening', 'vulnerabilities', 'sessions'].includes(tab)) {
-      activeTab = tab;
-    }
-    // Activate correct tab on load
-    document.querySelectorAll('.secaudit-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === activeTab));
-    document.querySelectorAll('.secaudit-panel').forEach(p => {
-      p.style.display = p.id === 'panel-' + activeTab ? 'block' : 'none';
+    document.querySelectorAll('.secaudit-stack tbody').forEach((tbody) => {
+      new MutationObserver(() => labelCells(tbody)).observe(tbody, { childList: true });
+      labelCells(tbody);
     });
 
-    if (activeTab === 'overview') loadOverview();
-    else if (activeTab === 'events') loadEvents();
-    else if (activeTab === 'hardening') loadHardening();
-    else if (activeTab === 'vulnerabilities') loadVulnerabilities();
-    else if (activeTab === 'sessions') loadSessions();
+    const params = new URLSearchParams(window.location.search);
+    let tab = params.get('tab') || 'audit';
+    tab = TAB_ALIASES[tab] || tab;
+    if (!TABS.includes(tab)) tab = 'audit';
+
+    const search = document.getElementById('audit-search');
+    const filter = document.getElementById('audit-filter');
+    if (params.get('q')) search.value = params.get('q');
+    if (params.get('type') && filter.querySelector(`option[value="${CSS.escape(params.get('type'))}"]`)) filter.value = params.get('type');
+
+    const tabButtons = Array.from(document.querySelectorAll('.secaudit-tab'));
+    tabButtons.forEach((btn, i) => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      btn.addEventListener('keydown', (e) => {
+        let next = null;
+        const rtl = document.documentElement.dir === 'rtl';
+        if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight')) next = tabButtons[(i + 1) % tabButtons.length];
+        else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) next = tabButtons[(i - 1 + tabButtons.length) % tabButtons.length];
+        else if (e.key === 'Home') next = tabButtons[0];
+        else if (e.key === 'End') next = tabButtons[tabButtons.length - 1];
+        if (!next) return;
+        e.preventDefault();
+        switchTab(next.dataset.tab);
+        next.focus();
+      });
+    });
+
+    let searchTimer = null;
+    search.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { auditPage = 0; renderAudit(); syncAuditUrl(); }, 150);
+    });
+    filter.addEventListener('change', () => { auditPage = 0; renderAudit(); syncAuditUrl(); });
+    document.getElementById('audit-refresh').addEventListener('click', loadAudit);
+    document.getElementById('event-filter').addEventListener('change', () => { eventsPage = 0; loadEvents(); });
+    document.getElementById('events-refresh').addEventListener('click', loadEvents);
+    document.getElementById('sessions-refresh').addEventListener('click', loadSessions);
+
+    showTab(tab);
   }
 
-  window.SecurityAudit = { init, switchTab, loadEvents, filterEvents, goPage, loadSessions };
+  window.SecurityAudit = { init, switchTab, loadEvents, loadAudit, loadSessions };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
