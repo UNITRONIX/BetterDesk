@@ -4019,7 +4019,9 @@
         "how_step3": "Vonja vissza a tokent, hogy új eszközök ne csatlakozhassanak vele. A már csatlakozott eszközök tovább működnek.",
         "mode_notice_open": "A regisztrációs mód Nyitott, ezért az új eszközök token nélkül lépnek be. A tokenek csak Felügyelt vagy Zárolt módban számítanak.",
         "mode_notice_locked": "A regisztrációs mód Zárolt: új eszköz csak a lista egyik tokenjével léphet be.",
-        "created_next": "Adja át annak, aki az eszközt beállítja, a(z) {page} oldal kapcsolódási értékeivel együtt."
+        "created_next": "Adja át annak, aki az eszközt beállítja, a(z) {page} oldal kapcsolódási értékeivel együtt.",
+        "status_used_up": "Elfogyott",
+        "actions_for": "Műveletek: {name}"
     },
     "help_request": {
         "title": "Segítségkérések",
@@ -7044,7 +7046,7 @@
         "sync_verified": "aláírás ellenőrizve",
         "sync_artifacts": "{{count}} telepítő",
         "steps_title": "Ügynök beállítása",
-        "step1": "Importálja fent a legújabb kiadást, vagy töltse le az ügynököt a GitHubról.",
+        "step1": "Importálja a legújabb kiadást ezen az oldalon, vagy töltse le az ügynököt a GitHubról.",
         "step2": "Telepítse az ügynököt a másik személy számítógépére, és adja meg ennek a szervernek a címét.",
         "step3": "Amikor az ügynök QR-kódot mutat, nyissa meg ezt: {page}, és olvassa be a kódot.",
         "step4": "Ha a regisztrációs mód jóváhagyást kér, hagyja jóvá az eszközt itt: {page}. Ezután csatlakozzon hozzá az eszközlistából.",

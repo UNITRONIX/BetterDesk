@@ -93,16 +93,17 @@
             }
             const latest = releases[0];
             const count = ((latest.manifest && latest.manifest.assets) || []).length;
+            // Escaped text pieces; the import date goes in as a <time> with the full date on hover
             const details = [
-                t('agents.sync_artifacts', '{{count}} installers').split('{{count}}').join(String(count)),
-                t('agents.sync_verified', 'signature checked'),
+                escapeText(t('agents.sync_artifacts', '{{count}} installers').split('{{count}}').join(Utils.formatNumber(count) || '0')),
+                escapeText(t('agents.sync_verified', 'signature checked')),
             ];
             if (latest.imported_at) {
-                details.unshift(t('agents.imported_on', 'imported {{date}}')
-                    .split('{{date}}').join(Utils.formatDate(latest.imported_at)));
+                details.unshift(escapeText(t('agents.imported_on', 'imported {{date}}'))
+                    .split('{{date}}').join(Utils.timeHtml(latest.imported_at)));
             }
-            renderRelease(`<span>${escapeText(latest.tag || 'release')}</span>
-                <span class="text-muted">${escapeText(details.join(', '))}</span>`);
+            renderRelease(`${latest.tag ? Utils.versionHtml(latest.tag) : escapeText(t('agents.release_label', 'Release'))}
+                <span class="text-muted">${details.join(', ')}</span>`);
         } catch (error) {
             renderRelease(`<span class="state is-error">${escapeText(errorMessage(error))}
                 <button type="button" class="btn btn-sm" data-retry-releases>${escapeText(t('actions.retry', 'Retry'))}</button></span>`);

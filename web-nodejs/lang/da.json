@@ -4019,7 +4019,9 @@
         "how_step3": "Tilbagekald et token for at forhindre nye enheder i at tilslutte sig med det. Enheder, der allerede er tilsluttet, virker stadig.",
         "mode_notice_open": "Tilmeldingstilstanden er Åben, så nye enheder tilmeldes uden token. Tokens tæller først, når tilstanden er Administreret eller Låst.",
         "mode_notice_locked": "Tilmeldingstilstanden er Låst: En ny enhed kan kun tilmeldes med et token fra denne liste.",
-        "created_next": "Giv det til den, der sætter enheden op, sammen med forbindelsesværdierne fra {page}."
+        "created_next": "Giv det til den, der sætter enheden op, sammen med forbindelsesværdierne fra {page}.",
+        "status_used_up": "Opbrugt",
+        "actions_for": "Handlinger for {name}"
     },
     "help_request": {
         "title": "Hjælpeanmodninger",
@@ -7044,7 +7046,7 @@
         "sync_verified": "signatur tjekket",
         "sync_artifacts": "{{count}} installationsprogrammer",
         "steps_title": "Opsæt en agent",
-        "step1": "Importér den seneste release ovenfor, eller download agenten fra GitHub.",
+        "step1": "Importér den seneste release på denne side, eller download agenten fra GitHub.",
         "step2": "Installér agenten på den anden persons computer, og indtast denne servers adresse.",
         "step3": "Når agenten viser en QR-kode, så åbn {page} og scan den.",
         "step4": "Hvis din tilmeldingstilstand kræver godkendelse, så godkend enheden under {page}. Opret derefter forbindelse til den fra enhedslisten.",

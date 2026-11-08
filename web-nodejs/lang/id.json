@@ -4019,7 +4019,9 @@
         "how_step3": "Cabut token agar perangkat baru tidak bisa bergabung dengannya. Perangkat yang sudah bergabung tetap berfungsi.",
         "mode_notice_open": "Mode pendaftaran Terbuka, jadi perangkat baru bergabung tanpa token. Token baru berlaku saat mode Terkelola atau Terkunci.",
         "mode_notice_locked": "Mode pendaftaran Terkunci: perangkat baru hanya bisa bergabung dengan token dari daftar ini.",
-        "created_next": "Berikan kepada orang yang menyiapkan perangkat, bersama nilai koneksi dari {page}."
+        "created_next": "Berikan kepada orang yang menyiapkan perangkat, bersama nilai koneksi dari {page}.",
+        "status_used_up": "Habis",
+        "actions_for": "Tindakan untuk {name}"
     },
     "help_request": {
         "title": "Permintaan Bantuan",
@@ -7044,7 +7046,7 @@
         "sync_verified": "tanda tangan diperiksa",
         "sync_artifacts": "{{count}} penginstal",
         "steps_title": "Siapkan agen",
-        "step1": "Impor rilis terbaru di atas, atau unduh agen dari GitHub.",
+        "step1": "Impor rilis terbaru di halaman ini, atau unduh agen dari GitHub.",
         "step2": "Instal agen di komputer orang yang dibantu dan masukkan alamat server ini.",
         "step3": "Saat agen menampilkan kode QR, buka {page} lalu pindai kodenya.",
         "step4": "Jika mode pendaftaran Anda meminta persetujuan, setujui perangkat di {page}. Lalu hubungkan ke perangkat itu dari daftar perangkat.",

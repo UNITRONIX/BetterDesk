@@ -4146,7 +4146,9 @@
         "how_step3": "Révoquez un jeton pour empêcher de nouveaux appareils de l’utiliser. Les appareils déjà inscrits continuent de fonctionner.",
         "mode_notice_open": "Le mode d'inscription est Ouvert : les nouveaux appareils rejoignent le serveur sans jeton. Les jetons ne comptent qu'en mode Géré ou Verrouillé.",
         "mode_notice_locked": "Le mode d'inscription est Verrouillé : un nouvel appareil ne peut rejoindre le serveur qu'avec un jeton de cette liste.",
-        "created_next": "Donnez-le à la personne qui configure l'appareil, avec les valeurs de connexion de {page}."
+        "created_next": "Donnez-le à la personne qui configure l'appareil, avec les valeurs de connexion de {page}.",
+        "status_used_up": "Épuisé",
+        "actions_for": "Actions pour {name}"
     },
     "help_request": {
         "title": "Tableau de bord",
@@ -7042,7 +7044,7 @@
         "sync_verified": "signature vérifiée",
         "sync_artifacts": "{{count}} installateurs",
         "steps_title": "Configurer un agent",
-        "step1": "Importez la dernière release ci-dessus ou téléchargez l'agent depuis GitHub.",
+        "step1": "Importez la dernière release sur cette page ou téléchargez l'agent depuis GitHub.",
         "step2": "Installez l'agent sur l'ordinateur de l'autre personne et saisissez l'adresse de ce serveur.",
         "step3": "Quand l'agent affiche un code QR, ouvrez {page} et scannez-le.",
         "step4": "Si votre mode d'enrôlement demande une approbation, approuvez l'appareil dans {page}. Connectez-vous ensuite à l'appareil depuis la liste des appareils.",

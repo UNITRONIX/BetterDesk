@@ -4019,7 +4019,9 @@
         "how_step3": "Thu hồi mã thông báo để thiết bị mới không thể tham gia bằng nó. Thiết bị đã tham gia vẫn hoạt động.",
         "mode_notice_open": "Chế độ đăng ký đang Mở, nên thiết bị mới tham gia mà không cần mã thông báo. Mã thông báo chỉ có tác dụng khi chế độ là Được quản lý hoặc Khóa.",
         "mode_notice_locked": "Chế độ đăng ký đang Khóa: thiết bị mới chỉ có thể tham gia bằng mã thông báo trong danh sách này.",
-        "created_next": "Đưa cho người thiết lập thiết bị, cùng với các giá trị kết nối từ {page}."
+        "created_next": "Đưa cho người thiết lập thiết bị, cùng với các giá trị kết nối từ {page}.",
+        "status_used_up": "Đã dùng hết",
+        "actions_for": "Thao tác cho {name}"
     },
     "help_request": {
         "title": "Yêu cầu trợ giúp",
@@ -7044,7 +7046,7 @@
         "sync_verified": "đã kiểm tra chữ ký",
         "sync_artifacts": "{{count}} bộ cài đặt",
         "steps_title": "Thiết lập tác tử",
-        "step1": "Nhập bản phát hành mới nhất ở trên, hoặc tải tác tử từ GitHub.",
+        "step1": "Nhập bản phát hành mới nhất trên trang này, hoặc tải tác tử từ GitHub.",
         "step2": "Cài tác tử trên máy tính của người kia và nhập địa chỉ của máy chủ này.",
         "step3": "Khi tác tử hiện mã QR, hãy mở {page} và quét mã.",
         "step4": "Nếu chế độ đăng ký yêu cầu phê duyệt, hãy phê duyệt thiết bị trong {page}. Sau đó kết nối tới thiết bị từ danh sách thiết bị.",

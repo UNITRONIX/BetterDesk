@@ -130,7 +130,12 @@ const name = (typeof appName !== 'undefined' && appName) || 'BetterDesk';
                 grid.replaceChildren(list);
                 var rel = document.getElementById('portal-release');
                 if (rel && data.release) {
-                    rel.textContent = text.release.split('{tag}').join(data.release);
+                    // "Version 1.4.2": the number as a .version value, no leading "v"
+                    var parts = text.release.split('{tag}');
+                    var v = document.createElement('span');
+                    v.className = 'version';
+                    v.textContent = String(data.release).replace(/^v(?=\d)/i, '');
+                    rel.replaceChildren(parts[0] || '', v, parts.slice(1).join(''));
                     rel.hidden = false;
                 }
             }

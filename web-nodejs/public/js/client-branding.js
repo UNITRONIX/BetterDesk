@@ -134,7 +134,9 @@
         if (!el) return;
         const ms = Number(state.revision);
         if (Number.isFinite(ms) && ms > 1e12) {
-            el.textContent = t('client_branding.last_saved', { date: Utils.formatDate(new Date(ms)) });
+            // "Last saved 3h ago", the full date on hover
+            const text = Utils.escapeHtml(t('client_branding.last_saved', { date: '{date}' }));
+            el.innerHTML = text.split('{date}').join(Utils.timeHtml(new Date(ms)));
         } else {
             el.textContent = t('client_branding.never_saved');
         }

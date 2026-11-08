@@ -4203,7 +4203,9 @@
         "how_step3": "Revoke a token to stop new devices from joining with it. Devices that already joined keep working.",
         "mode_notice_open": "The enrollment mode is Open, so new devices join without a token. Tokens only count once the mode is Managed or Locked.",
         "mode_notice_locked": "The enrollment mode is Locked: a new device can only join with a token from this list.",
-        "created_next": "Give it to whoever sets up the device, together with the connection values from {page}."
+        "created_next": "Give it to whoever sets up the device, together with the connection values from {page}.",
+        "status_used_up": "Used up",
+        "actions_for": "Actions for {name}"
     },
     "help_request": {
         "title": "Help Requests",
@@ -7038,7 +7040,7 @@
         "sync_verified": "signature checked",
         "sync_artifacts": "{{count}} installers",
         "steps_title": "Set up an agent",
-        "step1": "Import the latest release above, or download the agent from GitHub.",
+        "step1": "Import the latest release on this page, or download the agent from GitHub.",
         "step2": "Install the agent on the other person's computer and enter this server's address.",
         "step3": "When the agent shows a QR code, open {page} and scan it.",
         "step4": "If your enrollment mode asks for approval, approve the device under {page}. Then connect to it from the device list.",

@@ -34,9 +34,20 @@
         return t('pairing.valid_minutes', { count: Math.ceil(seconds / 60) });
     }
 
+    /** Clock time only: a code lives for minutes, so the date adds nothing */
+    const CLOCK = { year: undefined, month: undefined, day: undefined };
+
     function timeOf(value) {
         if (!value) return '–';
-        return Utils.formatDate(value, { year: undefined, month: undefined, day: undefined, empty: '–' });
+        return Utils.formatDate(value, { ...CLOCK, empty: '–' });
+    }
+
+    /** A code waits for the device until it is used or runs out */
+    function codeStatus(item) {
+        const ends = Utils.parseDate(item.expires_at);
+        return ends && ends.getTime() <= Date.now()
+            ? Utils.statusHtml('neutral', t('tokens.status_expired'))
+            : Utils.statusHtml('waiting', t('tokens.status_pending'));
     }
 
     let countdown = null;
@@ -107,19 +118,20 @@
             const payload = await api('GET', '/api/panel/pairing/codes');
             const codes = payload.codes || [];
             if (!codes.length) {
-                tbody.innerHTML = `<tr><td colspan="5" class="state-cell">${esc(t('pairing.empty'))}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="state-cell">${esc(t('pairing.empty'))}</td></tr>`;
                 return;
             }
             tbody.innerHTML = codes.map((item) => `<tr>
-                <td>${item.label ? esc(item.label) : `<span class="text-muted">${esc(t('pairing.no_label'))}</span>`}</td>
-                <td>${esc(timeOf(item.created_at))}</td>
-                <td>${esc(timeOf(item.expires_at))}</td>
-                <td>${esc(item.created_by || '–')}</td>
+                <td>${item.label ? esc(item.label) : Utils.emptyHtml(t('pairing.no_label'))}</td>
+                <td>${codeStatus(item)}</td>
+                <td>${Utils.timeHtml(item.created_at)}</td>
+                <td>${Utils.timeHtml(item.expires_at, { relative: false, format: CLOCK })}</td>
+                <td>${Utils.userHtml(item.created_by)}</td>
                 <td class="actions"><button type="button" class="btn btn-sm btn-danger-quiet" data-revoke="${esc(item.id)}"
                     aria-label="${esc(t('pairing.revoke'))}: ${esc(item.label || timeOf(item.created_at))}">${Utils.icon('revoke')}${esc(t('pairing.revoke'))}</button></td>
             </tr>`).join('');
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="5" class="state-cell"><span class="state is-error">${esc(t('pairing.load_failed'))} ${esc(err.message)}
+            tbody.innerHTML = `<tr><td colspan="6" class="state-cell"><span class="state is-error">${esc(t('pairing.load_failed'))} ${esc(err.message)}
                 <button type="button" class="btn btn-sm" data-retry>${esc(t('actions.retry'))}</button></span></td></tr>`;
         }
     }

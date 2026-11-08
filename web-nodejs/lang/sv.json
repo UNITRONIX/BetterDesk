@@ -4019,7 +4019,9 @@
         "how_step3": "Återkalla en token för att hindra nya enheter från att ansluta med den. Enheter som redan anslutit fortsätter att fungera.",
         "mode_notice_open": "Registreringsläget är Öppet, så nya enheter ansluts utan token. Tokens gäller först när läget är Hanterat eller Låst.",
         "mode_notice_locked": "Registreringsläget är Låst: en ny enhet kan bara anslutas med en token från den här listan.",
-        "created_next": "Ge den till den som konfigurerar enheten, tillsammans med anslutningsvärdena från {page}."
+        "created_next": "Ge den till den som konfigurerar enheten, tillsammans med anslutningsvärdena från {page}.",
+        "status_used_up": "Förbrukad",
+        "actions_for": "Åtgärder för {name}"
     },
     "help_request": {
         "title": "Hjälpförfrågningar",
@@ -7044,7 +7046,7 @@
         "sync_verified": "signatur kontrollerad",
         "sync_artifacts": "{{count}} installationsprogram",
         "steps_title": "Konfigurera en agent",
-        "step1": "Importera den senaste releasen ovan eller ladda ner agenten från GitHub.",
+        "step1": "Importera den senaste releasen på den här sidan eller ladda ner agenten från GitHub.",
         "step2": "Installera agenten på den andra personens dator och ange den här serverns adress.",
         "step3": "När agenten visar en QR-kod öppnar du {page} och skannar den.",
         "step4": "Om ditt registreringsläge kräver godkännande godkänner du enheten under {page}. Anslut sedan till den från enhetslistan.",

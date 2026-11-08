@@ -4019,7 +4019,9 @@
         "how_step3": "Revocați un token ca să nu se mai alăture dispozitive noi cu el. Dispozitivele deja alăturate funcționează în continuare.",
         "mode_notice_open": "Modul de înregistrare este Deschis, deci dispozitivele noi se alătură fără token. Tokenurile contează doar în modul Gestionat sau Blocat.",
         "mode_notice_locked": "Modul de înregistrare este Blocat: un dispozitiv nou se poate alătura doar cu un token din această listă.",
-        "created_next": "Dați-l persoanei care configurează dispozitivul, împreună cu valorile de conectare din {page}."
+        "created_next": "Dați-l persoanei care configurează dispozitivul, împreună cu valorile de conectare din {page}.",
+        "status_used_up": "Epuizat",
+        "actions_for": "Acțiuni pentru {name}"
     },
     "help_request": {
         "title": "Cereri de ajutor",
@@ -7044,7 +7046,7 @@
         "sync_verified": "semnătură verificată",
         "sync_artifacts": "programe de instalare: {{count}}",
         "steps_title": "Configurați un agent",
-        "step1": "Importați mai sus ultima versiune sau descărcați agentul de pe GitHub.",
+        "step1": "Importați ultima versiune pe această pagină sau descărcați agentul de pe GitHub.",
         "step2": "Instalați agentul pe computerul celeilalte persoane și introduceți adresa acestui server.",
         "step3": "Când agentul afișează un cod QR, deschideți {page} și scanați-l.",
         "step4": "Dacă modul de înregistrare cere aprobare, aprobați dispozitivul în {page}. Apoi conectați-vă la el din lista de dispozitive.",

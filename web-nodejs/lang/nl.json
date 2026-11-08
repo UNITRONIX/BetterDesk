@@ -4013,7 +4013,9 @@
         "how_step3": "Trek een token in om te voorkomen dat nieuwe apparaten ermee meedoen. Apparaten die al meedoen, blijven werken.",
         "mode_notice_open": "De registratiemodus is Open, dus nieuwe apparaten doen mee zonder token. Tokens tellen pas als de modus Beheerd of Vergrendeld is.",
         "mode_notice_locked": "De registratiemodus is Vergrendeld: een nieuw apparaat kan alleen meedoen met een token uit deze lijst.",
-        "created_next": "Geef het aan wie het apparaat instelt, samen met de verbindingswaarden uit {page}."
+        "created_next": "Geef het aan wie het apparaat instelt, samen met de verbindingswaarden uit {page}.",
+        "status_used_up": "Opgebruikt",
+        "actions_for": "Acties voor {name}"
     },
     "help_request": {
         "title": "Hulpverzoeken",
@@ -7038,7 +7040,7 @@
         "sync_verified": "handtekening gecontroleerd",
         "sync_artifacts": "{{count}} installatieprogramma's",
         "steps_title": "Een agent instellen",
-        "step1": "Importeer hierboven de nieuwste release of download de agent van GitHub.",
+        "step1": "Importeer de nieuwste release op deze pagina of download de agent van GitHub.",
         "step2": "Installeer de agent op de computer van de andere persoon en voer het adres van deze server in.",
         "step3": "Zodra de agent een QR-code toont, opent u {page} en scant u de code.",
         "step4": "Als uw inschrijvingsmodus om goedkeuring vraagt, keurt u het apparaat goed onder {page}. Maak daarna verbinding via de apparatenlijst.",

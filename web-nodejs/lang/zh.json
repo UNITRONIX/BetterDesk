@@ -4124,7 +4124,9 @@
         "how_step3": "撤销令牌后，新设备将无法再用它加入。已加入的设备照常工作。",
         "mode_notice_open": "注册模式为开放，新设备无需令牌即可加入。只有模式为托管或锁定时，令牌才起作用。",
         "mode_notice_locked": "注册模式为锁定：新设备只能用此列表中的令牌加入。",
-        "created_next": "连同 {page} 中的连接值一起交给设置设备的人。"
+        "created_next": "连同 {page} 中的连接值一起交给设置设备的人。",
+        "status_used_up": "已用完",
+        "actions_for": "{name} 的操作"
     },
     "help_request": {
         "title": "帮助请求",
@@ -7038,7 +7040,7 @@
         "sync_verified": "签名已检查",
         "sync_artifacts": "{{count}} 个安装程序",
         "steps_title": "设置代理",
-        "step1": "在上方导入最新发行版，或从 GitHub 下载代理。",
+        "step1": "在此页面导入最新发行版，或从 GitHub 下载代理。",
         "step2": "在对方的电脑上安装代理，并输入本服务器的地址。",
         "step3": "代理显示二维码后，打开 {page} 并扫描。",
         "step4": "如果您的注册模式需要批准，请在 {page} 中批准该设备。然后从设备列表连接到它。",

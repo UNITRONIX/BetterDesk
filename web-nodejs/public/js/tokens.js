@@ -19,18 +19,8 @@
     // ── Helpers ──────────────────────────────────────────────────────────
 
     const esc = (str) => Utils.escapeHtml(str == null ? '' : String(str));
-
-    function relative(dateStr) {
-        return Utils.formatRelativeTime(dateStr, { empty: '–' });
-    }
-
-    /** "in 3 days" / "3 days ago": expiry can be in the future */
-    function expiryText(dateStr) {
-        if (!dateStr) return _('tokens.never');
-        const date = new Date(dateStr);
-        if (Number.isNaN(date.getTime())) return '–';
-        return Utils.formatDate(date);
-    }
+    // Dates in the table without the clock time; the full date and time are in the tooltip
+    const DATE_ONLY = { hour: undefined, minute: undefined };
 
     async function apiFetch(url, opts = {}) {
         const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
@@ -49,12 +39,19 @@
         return t.status === 'pending' && t.expires_at && new Date(t.expires_at) < new Date();
     }
 
-    /** One status word per token: not used yet, used, expired, revoked */
+    /**
+     * One status per token, with its tone (GUIDE.md "Data display"):
+     * not used yet waits for a device, used still lets devices join, used up,
+     * expired and revoked have ended. `key` is the filter group.
+     */
     function statusOf(t) {
-        if (t.status === 'revoked') return { key: 'revoked', cls: 'offline', label: _('tokens.status_revoked') };
-        if (t.status === 'expired' || isExpired(t)) return { key: 'expired', cls: 'warning', label: _('tokens.status_expired') };
-        if (t.status === 'active') return { key: 'active', cls: 'ok', label: _('tokens.status_used') };
-        return { key: 'pending', cls: 'pending', label: _('tokens.status_pending') };
+        if (t.status === 'revoked') return { key: 'revoked', tone: 'neutral', label: _('tokens.status_revoked') };
+        if (t.status === 'expired' || isExpired(t)) return { key: 'expired', tone: 'neutral', label: _('tokens.status_expired') };
+        if (t.status === 'active' && t.max_uses > 0 && t.use_count >= t.max_uses) {
+            return { key: 'active', tone: 'neutral', label: _('tokens.status_used_up') };
+        }
+        if (t.status === 'active') return { key: 'active', tone: 'good', label: _('tokens.status_used') };
+        return { key: 'pending', tone: 'waiting', label: _('tokens.status_pending') };
     }
 
     // ── Data ─────────────────────────────────────────────────────────────
@@ -157,27 +154,45 @@
             return;
         }
 
-        tbody.innerHTML = filtered.map((t) => {
+        tbody.innerHTML = filtered.map((t, i) => {
             const st = statusOf(t);
+            const num = (n) => Utils.formatNumber(n) || '0';
             const uses = t.max_uses === 0
-                ? _('tokens.uses_unlimited', { count: t.use_count })
-                : _('tokens.uses_of', { count: t.use_count, max: t.max_uses });
-            const sub = [t.token_prefix ? `<span class="mono">${esc(t.token_prefix)}…</span>` : '', t.note ? esc(t.note) : '']
+                ? _('tokens.uses_unlimited', { count: num(t.use_count) })
+                : _('tokens.uses_of', { count: num(t.use_count), max: num(t.max_uses) });
+            // The prefix is only the start of the token (the token itself is shown once), so no copy
+            const sub = [t.token_prefix ? Utils.valueHtml(`${t.token_prefix}…`) : '', t.note ? esc(t.note) : '']
                 .filter(Boolean).join(' · ');
             const name = esc(t.name || '–');
             return `<tr data-id="${esc(t.id)}">
                 <td><span class="token-name">${name}</span>${sub ? `<span class="cell-sub">${sub}</span>` : ''}</td>
-                <td><span class="status ${st.cls}">${esc(st.label)}</span></td>
-                <td>${esc(uses)}</td>
-                <td>${t.peer_id ? `<span class="mono">${esc(t.peer_id)}</span>` : '–'}</td>
-                <td>${esc(t.expires_at ? expiryText(t.expires_at) : _('tokens.never'))}</td>
-                <td>${esc(relative(t.created_at))}${t.created_by ? `<span class="cell-sub">${esc(t.created_by)}</span>` : ''}</td>
-                <td class="actions">${t.status !== 'revoked' ? `
-                    <button type="button" class="btn btn-sm" data-token-action="edit" data-id="${esc(t.id)}" aria-label="${esc(_('tokens.edit'))}: ${name}">${esc(_('common.edit'))}</button>
-                    <button type="button" class="btn btn-sm btn-danger-quiet" data-token-action="revoke" data-id="${esc(t.id)}" aria-label="${esc(_('tokens.revoke'))}: ${name}">${Utils.icon('revoke')}${esc(_('tokens.revoke'))}</button>
-                ` : ''}</td>
+                <td>${Utils.statusHtml(st.tone, st.label)}</td>
+                <td class="is-num">${esc(uses)}</td>
+                <td>${Utils.valueHtml(t.peer_id, { copy: true, label: t.peer_id })}</td>
+                <td>${Utils.timeHtml(t.expires_at, { relative: false, format: DATE_ONLY, empty: _('tokens.never') })}</td>
+                <td>${Utils.timeHtml(t.created_at, { relative: false, format: DATE_ONLY })}${t.created_by ? `<span class="cell-sub">${Utils.userHtml(t.created_by)}</span>` : ''}</td>
+                <td class="actions">${t.status !== 'revoked' ? rowMenu(t, i, filtered.length) : ''}</td>
             </tr>`;
         }).join('');
+    }
+
+    /**
+     * Edit and revoke are rare, so they share a row menu: two buttons per row
+     * pushed the table wider than the column at 1440 px.
+     */
+    function rowMenu(t, i, count) {
+        const id = `token-menu-${esc(t.id)}`;
+        const up = count > 3 && i >= count - 2 ? ' menu-up' : '';
+        return `<span class="menu-anchor">
+            <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
+                aria-controls="${id}" aria-label="${esc(_('tokens.actions_for', { name: t.name || '' }))}">
+                <span class="material-icons" aria-hidden="true">more_vert</span></button>
+            <span class="menu menu-end${up}" id="${id}" role="menu">
+                <button type="button" class="menu-item" role="menuitem" data-token-action="edit" data-id="${esc(t.id)}">${Utils.icon('edit')}${esc(_('common.edit'))}</button>
+                <span class="menu-divider" role="separator"></span>
+                <button type="button" class="menu-item danger" role="menuitem" data-token-action="revoke" data-id="${esc(t.id)}">${Utils.icon('revoke')}${esc(_('tokens.revoke'))}</button>
+            </span>
+        </span>`;
     }
 
     // ── Dialogs ──────────────────────────────────────────────────────────

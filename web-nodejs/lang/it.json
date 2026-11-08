@@ -4013,7 +4013,9 @@
         "how_step3": "Revochi un token per impedire che nuovi dispositivi lo usino. I dispositivi già uniti continuano a funzionare.",
         "mode_notice_open": "La modalità di registrazione è Aperta, quindi i nuovi dispositivi si uniscono senza token. I token contano solo in modalità Gestita o Bloccata.",
         "mode_notice_locked": "La modalità di registrazione è Bloccata: un nuovo dispositivo può unirsi solo con un token di questo elenco.",
-        "created_next": "Dallo a chi configura il dispositivo, insieme ai valori di connessione di {page}."
+        "created_next": "Dallo a chi configura il dispositivo, insieme ai valori di connessione di {page}.",
+        "status_used_up": "Esaurito",
+        "actions_for": "Azioni per {name}"
     },
     "help_request": {
         "title": "Richieste di aiuto",
@@ -7038,7 +7040,7 @@
         "sync_verified": "firma controllata",
         "sync_artifacts": "{{count}} programmi di installazione",
         "steps_title": "Configurare un agente",
-        "step1": "Importa qui sopra l'ultima release oppure scarica l'agente da GitHub.",
+        "step1": "Importa l'ultima release in questa pagina oppure scarica l'agente da GitHub.",
         "step2": "Installa l'agente sul computer dell'altra persona e inserisci l'indirizzo di questo server.",
         "step3": "Quando l'agente mostra un codice QR, apri {page} e scansionalo.",
         "step4": "Se la tua modalità di registrazione richiede un'approvazione, approva il dispositivo in {page}. Poi connettiti dall'elenco dei dispositivi.",

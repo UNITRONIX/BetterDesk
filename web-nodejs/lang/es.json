@@ -4013,7 +4013,9 @@
         "how_step3": "Revoque un token para que no se unan más dispositivos con él. Los que ya se unieron siguen funcionando.",
         "mode_notice_open": "El modo de registro es Abierto, así que los dispositivos nuevos se unen sin token. Los tokens solo cuentan cuando el modo es Gestionado o Bloqueado.",
         "mode_notice_locked": "El modo de registro es Bloqueado: un dispositivo nuevo solo puede unirse con un token de esta lista.",
-        "created_next": "Déselo a quien configure el dispositivo, junto con los valores de conexión de {page}."
+        "created_next": "Déselo a quien configure el dispositivo, junto con los valores de conexión de {page}.",
+        "status_used_up": "Agotado",
+        "actions_for": "Acciones para {name}"
     },
     "help_request": {
         "title": "Panel",
@@ -7038,7 +7040,7 @@
         "sync_verified": "firma comprobada",
         "sync_artifacts": "{{count}} instaladores",
         "steps_title": "Configurar un agente",
-        "step1": "Importe arriba la última versión o descargue el agente de GitHub.",
+        "step1": "Importe la última versión en esta página o descargue el agente de GitHub.",
         "step2": "Instale el agente en el ordenador de la otra persona e introduzca la dirección de este servidor.",
         "step3": "Cuando el agente muestre un código QR, abra {page} y escanéelo.",
         "step4": "Si su modo de registro pide aprobación, apruebe el dispositivo en {page}. Después, conéctese a él desde la lista de dispositivos.",

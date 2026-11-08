@@ -4013,7 +4013,9 @@
         "how_step3": "Odvoláním tokenu zabráníte připojení dalších zařízení. Zařízení, která se už připojila, fungují dál.",
         "mode_notice_open": "Režim registrace je Otevřený, takže se nová zařízení připojují bez tokenu. Tokeny platí až v režimu Spravovaný nebo Uzamčený.",
         "mode_notice_locked": "Režim registrace je Uzamčený: nové zařízení se může připojit jen s tokenem z tohoto seznamu.",
-        "created_next": "Předejte ho tomu, kdo zařízení nastavuje, spolu s hodnotami připojení z {page}."
+        "created_next": "Předejte ho tomu, kdo zařízení nastavuje, spolu s hodnotami připojení z {page}.",
+        "status_used_up": "Vyčerpaný",
+        "actions_for": "Akce pro {name}"
     },
     "help_request": {
         "title": "Žádosti o pomoc",
@@ -7038,7 +7040,7 @@
         "sync_verified": "podpis zkontrolován",
         "sync_artifacts": "instalátory: {{count}}",
         "steps_title": "Nastavení agenta",
-        "step1": "Importujte nahoře nejnovější vydání, nebo stáhněte agenta z GitHubu.",
+        "step1": "Importujte nejnovější vydání na této stránce, nebo stáhněte agenta z GitHubu.",
         "step2": "Nainstalujte agenta do počítače druhé osoby a zadejte adresu tohoto serveru.",
         "step3": "Když agent zobrazí QR kód, otevřete {page} a naskenujte ho.",
         "step4": "Pokud váš režim registrace vyžaduje schválení, schvalte zařízení v části {page}. Potom se k němu připojte ze seznamu zařízení.",

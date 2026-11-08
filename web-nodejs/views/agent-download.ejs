@@ -110,9 +110,9 @@ const osMark = { windows: 'windows', macos: 'apple', linux: 'linux' };
                             <% if (p.status === 'ready') { %>
                                 <a class="btn" href="/api/d/<%= bundle.public_id %>/download/<%= p.platform %>/<%= p.arch %>/<%= p.format %>"><%= t('download.download') %></a>
                             <% } else if (p.status === 'failed') { %>
-                                <span class="status error"><%= t('download.failed') %></span>
+                                <span class="status is-danger"><%= t('download.failed') %></span>
                             <% } else { %>
-                                <span class="status pending"><%= t('download.building') %></span>
+                                <span class="status is-waiting"><%= t('download.building') %></span>
                             <% } %>
                         </span>
                     </li>
@@ -201,7 +201,7 @@ const osMark = { windows: 'windows', macos: 'apple', linux: 'linux' };
                     slot.appendChild(a);
                 } else {
                     const s = document.createElement('span');
-                    s.className = p.status === 'failed' ? 'status error' : 'status pending';
+                    s.className = p.status === 'failed' ? 'status is-danger' : 'status is-waiting';
                     s.textContent = p.status === 'failed' ? text.failed : text.building;
                     slot.appendChild(s);
                 }

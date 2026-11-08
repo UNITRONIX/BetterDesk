@@ -4013,7 +4013,9 @@
         "how_step3": "Widerrufen Sie ein Token, damit sich keine weiteren Geräte damit registrieren. Bereits registrierte Geräte funktionieren weiter.",
         "mode_notice_open": "Der Registrierungsmodus ist Offen, daher treten neue Geräte ohne Token bei. Tokens zählen erst, wenn der Modus Verwaltet oder Gesperrt ist.",
         "mode_notice_locked": "Der Registrierungsmodus ist Gesperrt: Ein neues Gerät kann nur mit einem Token aus dieser Liste beitreten.",
-        "created_next": "Geben Sie es der Person, die das Gerät einrichtet, zusammen mit den Verbindungswerten aus {page}."
+        "created_next": "Geben Sie es der Person, die das Gerät einrichtet, zusammen mit den Verbindungswerten aus {page}.",
+        "status_used_up": "Aufgebraucht",
+        "actions_for": "Aktionen für {name}"
     },
     "help_request": {
         "title": "Dashboard",
@@ -7038,7 +7040,7 @@
         "sync_verified": "Signatur geprüft",
         "sync_artifacts": "{{count}} Installationsprogramme",
         "steps_title": "Agent einrichten",
-        "step1": "Importieren Sie oben die neueste Version oder laden Sie den Agent von GitHub.",
+        "step1": "Importieren Sie auf dieser Seite die neueste Version oder laden Sie den Agent von GitHub.",
         "step2": "Installieren Sie den Agent auf dem Computer der anderen Person und geben Sie die Adresse dieses Servers ein.",
         "step3": "Sobald der Agent einen QR-Code zeigt, öffnen Sie {page} und scannen ihn.",
         "step4": "Wenn Ihr Registrierungsmodus eine Freigabe verlangt, geben Sie das Gerät unter {page} frei. Danach verbinden Sie sich aus der Geräteliste.",

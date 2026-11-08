@@ -4019,7 +4019,9 @@
         "how_step3": "Peruuta tunnus, niin uudet laitteet eivät voi liittyä sillä. Jo liittyneet laitteet toimivat edelleen.",
         "mode_notice_open": "Rekisteröintitila on Avoin, joten uudet laitteet liittyvät ilman tunnusta. Tunnukset vaikuttavat vasta tilassa Hallittu tai Lukittu.",
         "mode_notice_locked": "Rekisteröintitila on Lukittu: uusi laite voi liittyä vain tämän luettelon tunnuksella.",
-        "created_next": "Anna se laitteen määrittäjälle yhdessä yhteysarvojen kanssa sivulta {page}."
+        "created_next": "Anna se laitteen määrittäjälle yhdessä yhteysarvojen kanssa sivulta {page}.",
+        "status_used_up": "Käytetty loppuun",
+        "actions_for": "Toiminnot: {name}"
     },
     "help_request": {
         "title": "Apupyynnöt",
@@ -7044,7 +7046,7 @@
         "sync_verified": "allekirjoitus tarkistettu",
         "sync_artifacts": "asennusohjelmia: {{count}}",
         "steps_title": "Ota agentti käyttöön",
-        "step1": "Tuo uusin julkaisu yllä tai lataa agentti GitHubista.",
+        "step1": "Tuo uusin julkaisu tällä sivulla tai lataa agentti GitHubista.",
         "step2": "Asenna agentti toisen henkilön tietokoneelle ja anna tämän palvelimen osoite.",
         "step3": "Kun agentti näyttää QR-koodin, avaa {page} ja skannaa koodi.",
         "step4": "Jos rekisteröintitilasi vaatii hyväksynnän, hyväksy laite kohdassa {page}. Muodosta sitten yhteys laiteluettelosta.",

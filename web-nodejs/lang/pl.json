@@ -4142,7 +4142,9 @@
         "how_step3": "Unieważnij token, aby nowe urządzenia nie mogły z nim dołączyć. Urządzenia, które już dołączyły, działają dalej.",
         "mode_notice_open": "Tryb rejestracji to Otwarty, więc nowe urządzenia dołączają bez tokenu. Tokeny działają dopiero w trybie Zarządzany lub Zablokowany.",
         "mode_notice_locked": "Tryb rejestracji to Zablokowany: nowe urządzenie może dołączyć tylko z tokenem z tej listy.",
-        "created_next": "Przekaż go osobie, która konfiguruje urządzenie, razem z wartościami połączenia z {page}."
+        "created_next": "Przekaż go osobie, która konfiguruje urządzenie, razem z wartościami połączenia z {page}.",
+        "status_used_up": "Wykorzystany",
+        "actions_for": "Akcje dla {name}"
     },
     "help_request": {
         "title": "Prośby o pomoc",
@@ -7038,7 +7040,7 @@
         "sync_verified": "podpis sprawdzony",
         "sync_artifacts": "instalatory: {{count}}",
         "steps_title": "Konfiguracja agenta",
-        "step1": "Zaimportuj powyżej najnowsze wydanie albo pobierz agenta z GitHub.",
+        "step1": "Zaimportuj najnowsze wydanie na tej stronie albo pobierz agenta z GitHub.",
         "step2": "Zainstaluj agenta na komputerze drugiej osoby i wpisz adres tego serwera.",
         "step3": "Gdy agent pokaże kod QR, otwórz {page} i zeskanuj go.",
         "step4": "Jeśli twój tryb rejestracji wymaga zatwierdzenia, zatwierdź urządzenie w sekcji {page}. Potem połącz się z nim z listy urządzeń.",

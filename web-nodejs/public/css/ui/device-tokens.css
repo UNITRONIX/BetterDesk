@@ -33,3 +33,13 @@
     margin-top: var(--space-4);
     max-width: var(--measure);
 }
+
+/* Names get room before dates and IDs, and a date never breaks inside */
+.tokens-page #tokens-table td:first-child {
+    min-width: 18ch;
+}
+
+.tokens-page #tokens-table .time,
+.tokens-page #tokens-table .value-copy {
+    white-space: nowrap;
+}

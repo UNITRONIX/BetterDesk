@@ -4019,7 +4019,9 @@
         "how_step3": "Yeni cihazların belirteçle katılmasını durdurmak için onu iptal edin. Zaten katılmış cihazlar çalışmaya devam eder.",
         "mode_notice_open": "Kayıt modu Açık olduğundan yeni cihazlar belirteç olmadan katılır. Belirteçler yalnızca mod Yönetilen veya Kilitli olduğunda geçerlidir.",
         "mode_notice_locked": "Kayıt modu Kilitli: yeni bir cihaz yalnızca bu listedeki bir belirteçle katılabilir.",
-        "created_next": "Cihazı kuran kişiye, {page} sayfasındaki bağlantı değerleriyle birlikte verin."
+        "created_next": "Cihazı kuran kişiye, {page} sayfasındaki bağlantı değerleriyle birlikte verin.",
+        "status_used_up": "Tükendi",
+        "actions_for": "{name} için işlemler"
     },
     "help_request": {
         "title": "Yardım İstekleri",
@@ -7044,7 +7046,7 @@
         "sync_verified": "imza kontrol edildi",
         "sync_artifacts": "{{count}} yükleyici",
         "steps_title": "Aracı kurma",
-        "step1": "Yukarıdan en son sürümü içe aktarın veya aracıyı GitHub'dan indirin.",
+        "step1": "En son sürümü bu sayfada içe aktarın veya aracıyı GitHub'dan indirin.",
         "step2": "Aracıyı diğer kişinin bilgisayarına kurun ve bu sunucunun adresini girin.",
         "step3": "Aracı bir QR kodu gösterdiğinde {page} sayfasını açın ve kodu tarayın.",
         "step4": "Kayıt modunuz onay istiyorsa cihazı {page} altında onaylayın. Ardından cihaz listesinden cihaza bağlanın.",

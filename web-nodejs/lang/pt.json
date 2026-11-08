@@ -4013,7 +4013,9 @@
         "how_step3": "Revogue um token para impedir que novos dispositivos entrem com ele. Os que já entraram continuam a funcionar.",
         "mode_notice_open": "O modo de inscrição é Aberto, por isso os dispositivos novos juntam-se sem token. Os tokens só contam quando o modo é Gerido ou Bloqueado.",
         "mode_notice_locked": "O modo de inscrição é Bloqueado: um dispositivo novo só se pode juntar com um token desta lista.",
-        "created_next": "Entregue-o a quem configurar o dispositivo, juntamente com os valores de ligação de {page}."
+        "created_next": "Entregue-o a quem configurar o dispositivo, juntamente com os valores de ligação de {page}.",
+        "status_used_up": "Esgotado",
+        "actions_for": "Ações para {name}"
     },
     "help_request": {
         "title": "Solicitações de ajuda",
@@ -7038,7 +7040,7 @@
         "sync_verified": "assinatura verificada",
         "sync_artifacts": "{{count}} instaladores",
         "steps_title": "Configurar um agente",
-        "step1": "Importe acima a release mais recente ou transfira o agente do GitHub.",
+        "step1": "Importe a release mais recente nesta página ou transfira o agente do GitHub.",
         "step2": "Instale o agente no computador da outra pessoa e introduza o endereço deste servidor.",
         "step3": "Quando o agente mostrar um código QR, abra {page} e digitalize-o.",
         "step4": "Se o seu modo de registo pedir aprovação, aprove o dispositivo em {page}. Depois, ligue-se a ele a partir da lista de dispositivos.",

@@ -4019,7 +4019,9 @@
         "how_step3": "Tilbakekall et token for å hindre nye enheter i å bli med med det. Enheter som allerede er med, fungerer videre.",
         "mode_notice_open": "Registreringsmodusen er Åpen, så nye enheter blir med uten token. Tokener teller først når modusen er Administrert eller Låst.",
         "mode_notice_locked": "Registreringsmodusen er Låst: En ny enhet kan bare bli med med et token fra denne listen.",
-        "created_next": "Gi det til den som setter opp enheten, sammen med tilkoblingsverdiene fra {page}."
+        "created_next": "Gi det til den som setter opp enheten, sammen med tilkoblingsverdiene fra {page}.",
+        "status_used_up": "Brukt opp",
+        "actions_for": "Handlinger for {name}"
     },
     "help_request": {
         "title": "Hjelpeforespørsler",
@@ -7044,7 +7046,7 @@
         "sync_verified": "signatur sjekket",
         "sync_artifacts": "{{count}} installasjonsprogrammer",
         "steps_title": "Sett opp en agent",
-        "step1": "Importer den nyeste utgivelsen ovenfor, eller last ned agenten fra GitHub.",
+        "step1": "Importer den nyeste utgivelsen på denne siden, eller last ned agenten fra GitHub.",
         "step2": "Installer agenten på den andre personens datamaskin og skriv inn adressen til denne serveren.",
         "step3": "Når agenten viser en QR-kode, åpner du {page} og skanner den.",
         "step4": "Hvis registreringsmodusen din krever godkjenning, godkjenner du enheten under {page}. Koble deretter til den fra enhetslisten.",
