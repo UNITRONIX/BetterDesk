@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.221] — 2026-11-08
+
 ### Fixed
 - **Console icons chosen in JavaScript no longer render as giant raw labels.**
   The self-hosted Material Symbols subset was built by scanning view markup only, so
@@ -4681,3 +4688,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.218]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.217...v3.5.218
 [3.5.219]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.218...v3.5.219
 [3.5.220]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.219...v3.5.220
+[3.5.221]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.220...v3.5.221
