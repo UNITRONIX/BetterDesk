@@ -203,7 +203,9 @@ textarea.form-input,
     opacity: 1;
 }
 
+/* :focus-within keeps the ring while focus is in a date field's day, month or year part */
 .form-input:focus,
+.form-input:focus-within,
 .form-select:focus,
 .form-control:focus,
 .form-textarea:focus,
