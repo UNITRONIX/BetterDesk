@@ -1,6 +1,17 @@
-/* Pairing codes (/pairing): the form and the active codes in the main column,
-   the new code large in the side column. Form, table and facts come from
-   components.css. */
+/* Pairing codes (/pairing): the form and the new code side by side (the code
+   large, next to the button that made it), the active codes below across the
+   page. Form, table and facts come from components.css. */
+
+.pairing-result-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.pairing-result-area > h3 {
+    margin: 0;
+}
 
 .pairing-result {
     display: flex;
@@ -27,7 +38,7 @@
     text-decoration: line-through;
 }
 
-/* The side column is narrow: label above value */
+/* Label above value, so the facts line up under the code */
 .pairing-meta {
     grid-template-columns: minmax(0, 1fr);
 }
@@ -40,4 +51,13 @@
 
 .pairing-meta > dd {
     padding-top: var(--space-1);
+}
+
+/* A host name: about 40 characters, not the whole column */
+.pairing-form .pairing-host-input {
+    max-width: 44ch;
+}
+
+.pairing-result-area > .state {
+    padding-block: 0;
 }

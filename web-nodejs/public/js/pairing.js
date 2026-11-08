@@ -75,8 +75,9 @@
         tick();
         countdown = setInterval(tick, 5000);
 
-        // Below 1200 px the side column follows the table: bring the code into view
-        if (window.matchMedia && window.matchMedia('(max-width: 1199px)').matches) {
+        // On narrow screens the code sits under the form: bring it into view
+        const box = result.getBoundingClientRect();
+        if (box.top < 0 || box.bottom > window.innerHeight) {
             result.scrollIntoView({ block: 'center' });
         }
     }

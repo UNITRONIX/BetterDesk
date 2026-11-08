@@ -12,21 +12,22 @@
                 <p class="page-description">${_('pairing.subtitle')}</p>
             </div>
 
-            <div class="page-cols">
-            <div class="page-main">
+            <!-- Create a code: the form and the new code side by side, so the code
+                 appears next to the button that made it (below it on narrow screens) -->
             <section class="section" aria-labelledby="pairing-create-title">
                 <div class="section-head"><h2 id="pairing-create-title">${_('pairing.generate_title')}</h2></div>
                 <p class="section-note">${_('pairing.generate_hint')}</p>
+                <div class="cols pairing-create">
                 <form class="form-column pairing-form" id="pairing-form" novalidate>
                     <div class="form-group">
                         <label class="form-label" for="pairing-label">${_('pairing.label_field')}</label>
-                        <input id="pairing-label" class="form-input" maxlength="64" autocomplete="off"
+                        <input id="pairing-label" class="form-input is-medium" maxlength="64" autocomplete="off"
                                placeholder="${_('pairing.label_placeholder')}">
                         <p class="form-hint">${_('pairing.label_hint')}</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="pairing-host">${_('pairing.host_field')}</label>
-                        <input id="pairing-host" class="form-input" value="${escapeHtml(suggested_host || '')}" autocomplete="off" spellcheck="false">
+                        <input id="pairing-host" class="form-input pairing-host-input" value="${escapeHtml(suggested_host || '')}" autocomplete="off" spellcheck="false">
                         <p class="form-hint">${_('pairing.host_hint')}</p>
                     </div>
                     <div class="form-actions">
@@ -34,6 +35,26 @@
                         <span class="form-status" id="pairing-status" aria-live="polite"></span>
                     </div>
                 </form>
+
+                <!-- The new code, shown once, large enough to read out -->
+                <div class="pairing-result-area" role="region" aria-labelledby="pairing-result-title">
+                    <h3 id="pairing-result-title">${_('pairing.title')}</h3>
+                    <p class="state" id="pairing-result-empty">${_('pairing.code_empty')}</p>
+                    <div id="pairing-result" class="pairing-result" hidden>
+                        <p>${_('pairing.code_hint')}</p>
+                        <span class="value-field pairing-code-field">
+                            <code class="pairing-code" id="pairing-code" aria-live="polite"></code>
+                            <button type="button" id="pairing-copy" aria-label="${_('pairing.copy')}"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button>
+                        </span>
+                        <dl class="facts pairing-meta">
+                            <dt>${_('pairing.host_field')}</dt>
+                            <dd class="mono" id="pairing-code-host"></dd>
+                            <dt>${_('pairing.expires_in')}</dt>
+                            <dd id="pairing-code-ttl"></dd>
+                        </dl>
+                    </div>
+                </div>
+                </div>
             </section>
 
             <section class="section" aria-labelledby="pairing-active-title">
@@ -59,29 +80,6 @@
                     </table>
                 </div>
             </section>
-            </div>
-
-            <!-- The new code, shown once, large enough to read out -->
-            <aside class="page-side is-sticky" aria-labelledby="pairing-result-title">
-            <section class="section">
-                <div class="section-head"><h2 id="pairing-result-title">${_('pairing.title')}</h2></div>
-                <p class="state" id="pairing-result-empty">${_('pairing.code_empty')}</p>
-                <div id="pairing-result" class="pairing-result" hidden>
-                    <p>${_('pairing.code_hint')}</p>
-                    <span class="value-field pairing-code-field">
-                        <code class="pairing-code" id="pairing-code" aria-live="polite"></code>
-                        <button type="button" id="pairing-copy" aria-label="${_('pairing.copy')}"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button>
-                    </span>
-                    <dl class="facts pairing-meta">
-                        <dt>${_('pairing.host_field')}</dt>
-                        <dd class="mono" id="pairing-code-host"></dd>
-                        <dt>${_('pairing.expires_in')}</dt>
-                        <dd id="pairing-code-ttl"></dd>
-                    </dl>
-                </div>
-            </section>
-            </aside>
-            </div>
         </div>
     `
 }) %>
