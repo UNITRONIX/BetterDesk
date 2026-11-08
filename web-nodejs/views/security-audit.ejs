@@ -12,8 +12,8 @@
 <%- include('layouts/main', {
   title,
   uiReworked: true,
-  pageStyles: ['ui/security-audit'],
-  pageScripts,
+  pageStyles: ['ui/chart', 'ui/security-audit'],
+  pageScripts: ['ui-chart', 'security-audit'],
   currentPage,
   breadcrumb,
   body: `
@@ -48,7 +48,7 @@
           <option value="settings">${_('security_audit.filter_settings')}</option>
         </select>
       </label>
-      <div class="toolbar-end"><button type="button" class="btn" id="audit-refresh">${_('security_audit.refresh')}</button></div>
+      <div class="toolbar-end"><button type="button" class="btn" id="audit-refresh"><span class="material-icons" aria-hidden="true">refresh</span>${_('security_audit.refresh')}</button></div>
     </div>
     <p class="count-line" id="audit-count" aria-live="polite"></p>
     <div class="table-scroll">
@@ -72,6 +72,12 @@
   <!-- Events the Go server records -->
   <section class="secaudit-panel section" id="panel-events" role="tabpanel" aria-labelledby="tab-events" ${tab === 'events' ? '' : 'hidden'}>
     <p class="section-note secaudit-note">${_('security_audit.server_events_note')}</p>
+    <!-- Events per day (public/js/security-audit.js loadEventsChart): drawn only when the loaded events reach back 14 days -->
+    <section class="section secaudit-events-chart" aria-labelledby="events-chart-title" id="events-chart-section" hidden>
+      <h2 id="events-chart-title">${_('security_audit.events_chart_title')}</h2>
+      <p class="section-note" id="events-range" aria-live="polite"></p>
+      <div id="events-chart"></div>
+    </section>
     <div class="toolbar">
       <label class="secaudit-filter">
         <span class="secaudit-filter-label">${_('security_audit.show')}</span>
@@ -87,7 +93,7 @@
           <option value="key_created">${_('security_audit.event_key_created')}</option>
         </select>
       </label>
-      <div class="toolbar-end"><button type="button" class="btn" id="events-refresh">${_('security_audit.refresh')}</button></div>
+      <div class="toolbar-end"><button type="button" class="btn" id="events-refresh"><span class="material-icons" aria-hidden="true">refresh</span>${_('security_audit.refresh')}</button></div>
     </div>
     <div class="table-scroll">
       <table class="data-table secaudit-table secaudit-stack">
@@ -106,48 +112,65 @@
     <nav class="pagination" id="events-pagination" aria-label="${_('security_audit.pages')}"></nav>
   </section>
 
-  <!-- Security checks -->
+  <!-- Security checks: the table and its facts; the result and the passed/failed split beside them -->
   <div class="secaudit-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" ${tab === 'overview' ? '' : 'hidden'}>
-    <section class="section" aria-labelledby="checks-title">
-      <h2 id="checks-title" class="sr-only">${_('security_audit.tab_checks')}</h2>
-      <p class="secaudit-summary" id="checks-summary" aria-live="polite">${_('security_audit.loading')}</p>
-      <div class="table-scroll">
-        <table class="data-table secaudit-table secaudit-stack secaudit-checks">
-          <thead>
-            <tr>
-              <th scope="col">${_('security_audit.col_check')}</th>
-              <th scope="col">${_('security_audit.col_status')}</th>
-              <th scope="col">${_('security_audit.col_todo')}</th>
-            </tr>
-          </thead>
-          <tbody id="checks-grid"></tbody>
-        </table>
+    <div class="page-cols">
+      <div class="page-main">
+        <section class="section" aria-labelledby="checks-title">
+          <h2 id="checks-title" class="sr-only">${_('security_audit.tab_checks')}</h2>
+          <div class="table-scroll">
+            <table class="data-table secaudit-table secaudit-stack secaudit-checks">
+              <thead>
+                <tr>
+                  <th scope="col">${_('security_audit.col_check')}</th>
+                  <th scope="col">${_('security_audit.col_status')}</th>
+                  <th scope="col">${_('security_audit.col_todo')}</th>
+                </tr>
+              </thead>
+              <tbody id="checks-grid"></tbody>
+            </table>
+          </div>
+        </section>
+        <div class="cols">
+          <section class="section" aria-labelledby="numbers-title">
+            <h2 id="numbers-title">${_('security_audit.numbers_title')}</h2>
+            <dl class="facts" id="overview-stats"></dl>
+          </section>
+          <section class="section" aria-labelledby="tls-title">
+            <h2 id="tls-title">${_('security_audit.tls_status')}</h2>
+            <p class="section-note">${_('security_audit.tls_note')}</p>
+            <dl class="facts" id="tls-grid"></dl>
+          </section>
+        </div>
       </div>
-    </section>
-    <section class="section" aria-labelledby="numbers-title">
-      <h2 id="numbers-title">${_('security_audit.numbers_title')}</h2>
-      <dl class="facts" id="overview-stats"></dl>
-    </section>
-    <section class="section" aria-labelledby="tls-title">
-      <h2 id="tls-title">${_('security_audit.tls_status')}</h2>
-      <p class="section-note">${_('security_audit.tls_note')}</p>
-      <dl class="facts" id="tls-grid"></dl>
-    </section>
+      <aside class="page-side" aria-labelledby="checks-result-title">
+        <section class="section secaudit-result">
+          <h2 id="checks-result-title">${_('security_audit.checks_result_title')}</h2>
+          <p class="secaudit-summary" id="checks-summary" aria-live="polite">${_('security_audit.loading')}</p>
+          <div class="share-bar" id="checks-bar" aria-hidden="true" hidden></div>
+          <ul class="share-legend" id="checks-legend"></ul>
+        </section>
+      </aside>
+    </div>
   </div>
 
-  <!-- Hardening plan and dependency scan -->
+  <!-- Hardening plan; the dependency scan beside it -->
   <div class="secaudit-panel" id="panel-hardening" role="tabpanel" aria-labelledby="tab-hardening" ${tab === 'hardening' ? '' : 'hidden'}>
-    <section class="section" aria-labelledby="hardening-title">
-      <h2 id="hardening-title" class="sr-only">${_('security_audit.tab_hardening')}</h2>
-      <p class="section-note secaudit-note">${_('security_audit.hardening_hint')}</p>
-      <p class="count-line" id="hardening-count"></p>
-      <ul class="list" id="hardening-list"><li class="list-row is-empty">${_('security_audit.loading')}</li></ul>
-    </section>
-    <section class="section" aria-labelledby="vuln-title">
-      <h2 id="vuln-title">${_('security_audit.vuln_title')}</h2>
-      <p class="count-line" id="vuln-summary"></p>
-      <div id="vuln-list"></div>
-    </section>
+    <div class="page-cols">
+      <section class="section page-main" aria-labelledby="hardening-title">
+        <h2 id="hardening-title" class="sr-only">${_('security_audit.tab_hardening')}</h2>
+        <p class="section-note secaudit-note">${_('security_audit.hardening_hint')}</p>
+        <p class="count-line" id="hardening-count"></p>
+        <ul class="list" id="hardening-list"><li class="list-row is-empty">${_('security_audit.loading')}</li></ul>
+      </section>
+      <aside class="page-side" aria-labelledby="vuln-title">
+        <section class="section">
+          <h2 id="vuln-title">${_('security_audit.vuln_title')}</h2>
+          <p class="count-line" id="vuln-summary"></p>
+          <div id="vuln-list"></div>
+        </section>
+      </aside>
+    </div>
   </div>
 
   <!-- Your console sign-in sessions -->
@@ -155,7 +178,7 @@
     <p class="section-note secaudit-note">${_('security_audit.sessions_hint')}</p>
     <div class="toolbar">
       <p class="count-line" id="session-policy-summary"></p>
-      <div class="toolbar-end"><button type="button" class="btn" id="sessions-refresh">${_('security_audit.refresh')}</button></div>
+      <div class="toolbar-end"><button type="button" class="btn" id="sessions-refresh"><span class="material-icons" aria-hidden="true">refresh</span>${_('security_audit.refresh')}</button></div>
     </div>
     <div class="table-scroll">
       <table class="data-table secaudit-table secaudit-stack">

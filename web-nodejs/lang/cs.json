@@ -5089,7 +5089,19 @@
         "vuln_no_scan": "Zatím neproběhla žádná kontrola závislostí. Konzole nespouští npm audit ani govulncheck; spusťte je na serveru, abyste našli známé zranitelnosti.",
         "vuln_counts": "Známé zranitelnosti: {total} ({critical} kritické, {high} vysoké, {medium} střední, {low} nízké).",
         "vuln_load_failed": "Výsledky kontroly se nepodařilo načíst.",
-        "sessions_load_failed": "Vaše relace se nepodařilo načíst."
+        "sessions_load_failed": "Vaše relace se nepodařilo načíst.",
+        "checks_result_title": "Výsledek",
+        "checks_all_pass": "Všechny kontroly prošly.",
+        "checks_some_fail": "Některé kontroly neprošly. Tabulka u každé uvádí, co udělat.",
+        "checks_legend_passed": "{n} prošlo",
+        "checks_legend_failed": "{n} neprošlo",
+        "events_chart_title": "Události za den",
+        "events_range": "Načtené události sahají zpět do {from}.",
+        "events_range_partial": "Starší události se nenačetly: server od posledního spuštění zaznamenal {total}.",
+        "events_chart_needs": "Graf po dnech se zobrazí, až události sahají {days} dní zpět. Server uchovává události jen od posledního spuštění.",
+        "events_chart_summary": "{total} událostí za posledních {days} dní, nejvíce v {peakDay} ({peak}).",
+        "events_chart_series": "Události",
+        "events_chart_day": "Den"
     },
     "languages": {
         "title": "Správa jazyků",

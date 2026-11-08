@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Ingen skanning av avhengigheter er kjørt. Konsollen kjører ikke npm audit eller govulncheck; kjør dem på serveren for å finne kjente sårbarheter.",
         "vuln_counts": "{total} kjente sårbarheter: {critical} kritiske, {high} høye, {medium} middels, {low} lave.",
         "vuln_load_failed": "Kunne ikke laste inn skanneresultatene.",
-        "sessions_load_failed": "Kunne ikke laste inn øktene dine."
+        "sessions_load_failed": "Kunne ikke laste inn øktene dine.",
+        "checks_result_title": "Resultat",
+        "checks_all_pass": "Alle kontroller er bestått.",
+        "checks_some_fail": "Noen kontroller feiler. Tabellen viser hva du gjør med hver av dem.",
+        "checks_legend_passed": "{n} bestått",
+        "checks_legend_failed": "{n} feilet",
+        "events_chart_title": "Hendelser per dag",
+        "events_range": "De innlastede hendelsene går tilbake til {from}.",
+        "events_range_partial": "Eldre hendelser er ikke lastet inn: serveren har registrert {total} siden siste start.",
+        "events_chart_needs": "Et diagram per dag vises når hendelsene går {days} dager tilbake. Serveren beholder bare hendelser siden siste start.",
+        "events_chart_summary": "{total} hendelser de siste {days} dagene, flest {peakDay} ({peak}).",
+        "events_chart_series": "Hendelser",
+        "events_chart_day": "Dag"
     },
     "languages": {
         "title": "Språkhåndtering",

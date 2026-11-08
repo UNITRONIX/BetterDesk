@@ -5089,7 +5089,19 @@
         "vuln_no_scan": "Es lief noch keine Abhängigkeitsprüfung. Die Konsole führt npm audit und govulncheck nicht aus; führen Sie sie auf dem Server aus, um bekannte Schwachstellen zu finden.",
         "vuln_counts": "{total} bekannte Schwachstellen: {critical} kritisch, {high} hoch, {medium} mittel, {low} niedrig.",
         "vuln_load_failed": "Die Prüfergebnisse konnten nicht geladen werden.",
-        "sessions_load_failed": "Ihre Sitzungen konnten nicht geladen werden."
+        "sessions_load_failed": "Ihre Sitzungen konnten nicht geladen werden.",
+        "checks_result_title": "Ergebnis",
+        "checks_all_pass": "Alle Prüfungen bestanden.",
+        "checks_some_fail": "Einige Prüfungen sind fehlgeschlagen. Die Tabelle zeigt, was jeweils zu tun ist.",
+        "checks_legend_passed": "{n} bestanden",
+        "checks_legend_failed": "{n} fehlgeschlagen",
+        "events_chart_title": "Ereignisse pro Tag",
+        "events_range": "Die geladenen Ereignisse reichen bis {from} zurück.",
+        "events_range_partial": "Ältere Ereignisse sind nicht geladen: Der Server hat seit dem letzten Start {total} aufgezeichnet.",
+        "events_chart_needs": "Ein Diagramm pro Tag erscheint, sobald die Ereignisse {days} Tage zurückreichen. Der Server hält Ereignisse nur seit seinem letzten Start.",
+        "events_chart_summary": "{total} Ereignisse in den letzten {days} Tagen, die meisten am {peakDay} ({peak}).",
+        "events_chart_series": "Ereignisse",
+        "events_chart_day": "Tag"
     },
     "languages": {
         "title": "Dashboard",

@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Még nem futott függőségvizsgálat. A konzol nem futtatja az npm audit és a govulncheck parancsot; futtassa őket a szerveren az ismert sérülékenységek kereséséhez.",
         "vuln_counts": "{total} ismert sérülékenység: {critical} kritikus, {high} magas, {medium} közepes, {low} alacsony.",
         "vuln_load_failed": "A vizsgálat eredményei nem tölthetők be.",
-        "sessions_load_failed": "A munkamenetei nem tölthetők be."
+        "sessions_load_failed": "A munkamenetei nem tölthetők be.",
+        "checks_result_title": "Eredmény",
+        "checks_all_pass": "Minden ellenőrzés sikeres.",
+        "checks_some_fail": "Néhány ellenőrzés sikertelen. A táblázat mindegyiknél leírja, mi a teendő.",
+        "checks_legend_passed": "{n} sikeres",
+        "checks_legend_failed": "{n} sikertelen",
+        "events_chart_title": "Események naponta",
+        "events_range": "A betöltött események eddig nyúlnak vissza: {from}.",
+        "events_range_partial": "A régebbi események nincsenek betöltve: a szerver az utolsó indítás óta {total} eseményt rögzített.",
+        "events_chart_needs": "Napi diagram akkor jelenik meg, ha az események {days} napra visszanyúlnak. A szerver csak az utolsó indítás óta őrzi az eseményeket.",
+        "events_chart_summary": "{total} esemény az elmúlt {days} napban, a legtöbb: {peakDay} ({peak}).",
+        "events_chart_series": "Események",
+        "events_chart_day": "Nap"
     },
     "languages": {
         "title": "Nyelvkezelés",

@@ -5213,7 +5213,19 @@
         "vuln_no_scan": "Nie uruchomiono jeszcze skanowania zależności. Konsola nie uruchamia npm audit ani govulncheck; uruchom je na serwerze, aby znaleźć znane podatności.",
         "vuln_counts": "Znane podatności: {total} (krytyczne: {critical}, wysokie: {high}, średnie: {medium}, niskie: {low}).",
         "vuln_load_failed": "Nie udało się wczytać wyników skanowania.",
-        "sessions_load_failed": "Nie udało się wczytać Twoich sesji."
+        "sessions_load_failed": "Nie udało się wczytać Twoich sesji.",
+        "checks_result_title": "Wynik",
+        "checks_all_pass": "Wszystkie kontrole zaliczone.",
+        "checks_some_fail": "Niektóre kontrole nie przeszły. Tabela podaje, co zrobić z każdą z nich.",
+        "checks_legend_passed": "{n} zaliczonych",
+        "checks_legend_failed": "{n} niezaliczonych",
+        "events_chart_title": "Zdarzenia dziennie",
+        "events_range": "Wczytane zdarzenia sięgają do {from}.",
+        "events_range_partial": "Starsze zdarzenia nie zostały wczytane: serwer zapisał {total} od ostatniego uruchomienia.",
+        "events_chart_needs": "Wykres dzienny pojawi się, gdy zdarzenia sięgną {days} dni wstecz. Serwer przechowuje zdarzenia tylko od ostatniego uruchomienia.",
+        "events_chart_summary": "{total} zdarzeń w ostatnich {days} dniach, najwięcej w {peakDay} ({peak}).",
+        "events_chart_series": "Zdarzenia",
+        "events_chart_day": "Dzień"
     },
     "languages": {
         "title": "Zarządzanie językami",

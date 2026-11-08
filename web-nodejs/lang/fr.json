@@ -5217,7 +5217,19 @@
         "vuln_no_scan": "Aucune analyse des dépendances n'a été exécutée. La console n'exécute ni npm audit ni govulncheck ; exécutez-les sur le serveur pour rechercher les vulnérabilités connues.",
         "vuln_counts": "{total} vulnérabilités connues : {critical} critiques, {high} élevées, {medium} moyennes, {low} faibles.",
         "vuln_load_failed": "Impossible de charger les résultats de l'analyse.",
-        "sessions_load_failed": "Impossible de charger vos sessions."
+        "sessions_load_failed": "Impossible de charger vos sessions.",
+        "checks_result_title": "Résultat",
+        "checks_all_pass": "Toutes les vérifications sont réussies.",
+        "checks_some_fail": "Certaines vérifications échouent. Le tableau indique quoi faire pour chacune.",
+        "checks_legend_passed": "{n} réussies",
+        "checks_legend_failed": "{n} échouées",
+        "events_chart_title": "Événements par jour",
+        "events_range": "Les événements chargés remontent au {from}.",
+        "events_range_partial": "Les événements plus anciens ne sont pas chargés : le serveur en a enregistré {total} depuis son dernier démarrage.",
+        "events_chart_needs": "Un graphique par jour apparaît quand les événements remontent à {days} jours. Le serveur ne garde les événements que depuis son dernier démarrage.",
+        "events_chart_summary": "{total} événements sur les {days} derniers jours, le plus le {peakDay} ({peak}).",
+        "events_chart_series": "Événements",
+        "events_chart_day": "Jour"
     },
     "languages": {
         "title": "Tableau de bord",

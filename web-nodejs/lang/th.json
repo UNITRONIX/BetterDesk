@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "ยังไม่มีการสแกน dependency คอนโซลไม่ได้เรียกใช้ npm audit หรือ govulncheck ให้เรียกใช้บนเซิร์ฟเวอร์เพื่อตรวจหาช่องโหว่ที่ทราบ",
         "vuln_counts": "ช่องโหว่ที่ทราบ {total} รายการ: วิกฤต {critical} สูง {high} ปานกลาง {medium} ต่ำ {low}",
         "vuln_load_failed": "โหลดผลการสแกนไม่ได้",
-        "sessions_load_failed": "โหลดเซสชันของคุณไม่ได้"
+        "sessions_load_failed": "โหลดเซสชันของคุณไม่ได้",
+        "checks_result_title": "ผลลัพธ์",
+        "checks_all_pass": "ผ่านการตรวจสอบทั้งหมด",
+        "checks_some_fail": "การตรวจสอบบางรายการไม่ผ่าน ตารางบอกว่าต้องทำอะไรกับแต่ละรายการ",
+        "checks_legend_passed": "ผ่าน {n} รายการ",
+        "checks_legend_failed": "ไม่ผ่าน {n} รายการ",
+        "events_chart_title": "เหตุการณ์ต่อวัน",
+        "events_range": "เหตุการณ์ที่โหลดย้อนไปถึง {from}",
+        "events_range_partial": "ไม่ได้โหลดเหตุการณ์ที่เก่ากว่า เซิร์ฟเวอร์บันทึกไว้ {total} รายการตั้งแต่เริ่มทำงานครั้งล่าสุด",
+        "events_chart_needs": "แผนภูมิรายวันจะแสดงเมื่อเหตุการณ์ย้อนไปถึง {days} วัน เซิร์ฟเวอร์เก็บเหตุการณ์ไว้ตั้งแต่เริ่มทำงานครั้งล่าสุดเท่านั้น",
+        "events_chart_summary": "{total} เหตุการณ์ใน {days} วันที่ผ่านมา มากที่สุดวัน{peakDay} ({peak})",
+        "events_chart_series": "เหตุการณ์",
+        "events_chart_day": "วัน"
     },
     "languages": {
         "title": "การจัดการภาษา",

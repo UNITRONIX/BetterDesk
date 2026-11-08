@@ -5217,7 +5217,19 @@
         "vuln_no_scan": "尚未執行相依套件掃描。主控台不會執行 npm audit 或 govulncheck；請在伺服器上執行它們以檢查已知弱點。",
         "vuln_counts": "{total} 個已知弱點：嚴重 {critical} 個，高 {high} 個，中 {medium} 個，低 {low} 個。",
         "vuln_load_failed": "無法載入掃描結果。",
-        "sessions_load_failed": "無法載入您的工作階段。"
+        "sessions_load_failed": "無法載入您的工作階段。",
+        "checks_result_title": "結果",
+        "checks_all_pass": "所有檢查皆通過。",
+        "checks_some_fail": "部分檢查未通過。表格列出每一項該如何處理。",
+        "checks_legend_passed": "{n} 項通過",
+        "checks_legend_failed": "{n} 項未通過",
+        "events_chart_title": "每日事件",
+        "events_range": "已載入的事件可追溯至 {from}。",
+        "events_range_partial": "較舊的事件未載入：伺服器自上次啟動以來已記錄 {total} 筆。",
+        "events_chart_needs": "事件可追溯 {days} 天後才會顯示每日圖表。伺服器只保留上次啟動以來的事件。",
+        "events_chart_summary": "過去 {days} 天共 {total} 筆，最多在 {peakDay}（{peak} 筆）。",
+        "events_chart_series": "事件",
+        "events_chart_day": "日期"
     },
     "languages": {
         "title": "語言管理",

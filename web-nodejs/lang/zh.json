@@ -5195,7 +5195,19 @@
         "vuln_no_scan": "尚未运行依赖项扫描。控制台不会运行 npm audit 或 govulncheck；请在服务器上运行它们以检查已知漏洞。",
         "vuln_counts": "{total} 个已知漏洞：严重 {critical} 个，高 {high} 个，中 {medium} 个，低 {low} 个。",
         "vuln_load_failed": "无法加载扫描结果。",
-        "sessions_load_failed": "无法加载您的会话。"
+        "sessions_load_failed": "无法加载您的会话。",
+        "checks_result_title": "结果",
+        "checks_all_pass": "所有检查均已通过。",
+        "checks_some_fail": "部分检查未通过。表格列出了每一项的处理方法。",
+        "checks_legend_passed": "{n} 项通过",
+        "checks_legend_failed": "{n} 项未通过",
+        "events_chart_title": "每日事件",
+        "events_range": "已加载的事件可追溯到 {from}。",
+        "events_range_partial": "较早的事件未加载：服务器自上次启动以来已记录 {total} 条。",
+        "events_chart_needs": "事件可追溯 {days} 天后才会显示每日图表。服务器只保留上次启动以来的事件。",
+        "events_chart_summary": "过去 {days} 天共 {total} 条，最多在 {peakDay}（{peak} 条）。",
+        "events_chart_series": "事件",
+        "events_chart_day": "日期"
     },
     "languages": {
         "title": "语言管理",

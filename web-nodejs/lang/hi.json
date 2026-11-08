@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "अभी तक कोई डिपेंडेंसी स्कैन नहीं चला है। कंसोल npm audit या govulncheck नहीं चलाता; ज्ञात कमज़ोरियाँ खोजने के लिए इन्हें सर्वर पर चलाएँ।",
         "vuln_counts": "{total} ज्ञात कमज़ोरियाँ: {critical} गंभीर, {high} उच्च, {medium} मध्यम, {low} निम्न।",
         "vuln_load_failed": "स्कैन के नतीजे लोड नहीं हो सके।",
-        "sessions_load_failed": "आपके सत्र लोड नहीं हो सके।"
+        "sessions_load_failed": "आपके सत्र लोड नहीं हो सके।",
+        "checks_result_title": "परिणाम",
+        "checks_all_pass": "सभी जाँचें पास हैं।",
+        "checks_some_fail": "कुछ जाँचें विफल हैं। तालिका में हर एक के लिए बताया गया है कि क्या करना है।",
+        "checks_legend_passed": "{n} पास",
+        "checks_legend_failed": "{n} विफल",
+        "events_chart_title": "प्रति दिन घटनाएँ",
+        "events_range": "लोड की गई घटनाएँ {from} तक जाती हैं।",
+        "events_range_partial": "पुरानी घटनाएँ लोड नहीं हुईं: सर्वर ने पिछली बार शुरू होने के बाद से {total} दर्ज की हैं।",
+        "events_chart_needs": "जब घटनाएँ {days} दिन पीछे तक पहुँचेंगी, तब प्रति दिन चार्ट दिखेगा। सर्वर घटनाएँ केवल पिछली बार शुरू होने के बाद से रखता है।",
+        "events_chart_summary": "पिछले {days} दिनों में {total} घटनाएँ, सबसे ज़्यादा {peakDay} को ({peak})।",
+        "events_chart_series": "घटनाएँ",
+        "events_chart_day": "दिन"
     },
     "languages": {
         "title": "भाषा प्रबंधन",

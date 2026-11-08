@@ -101,7 +101,7 @@
   function loadTab(tab) {
     loaded[tab] = true;
     if (tab === 'audit') loadAudit();
-    else if (tab === 'events') loadEvents();
+    else if (tab === 'events') { loadEvents(); loadEventsChart(); }
     else if (tab === 'overview') loadOverview();
     else if (tab === 'hardening') { loadHardening(); loadVulnerabilities(); }
     else if (tab === 'sessions') loadSessions();
@@ -221,7 +221,7 @@
         tbody.innerHTML = events.map((ev) => `<tr>
             <td class="secaudit-time">${esc(formatTime(ev.timestamp || ev.created_at))}</td>
             <td>${esc(actionLabel(ev.action))}</td>
-            <td><span class="mono">${esc(ev.actor || ev.user || '—')}</span></td>
+            <td>${esc(ev.actor || ev.user || '—')}</td>
             <td>${esc(ev.target || ev.resource || '—')}</td>
             <td class="secaudit-details">${esc(formatDetails(ev.details || ev.detail) || '—')}</td>
           </tr>`).join('');
@@ -254,14 +254,16 @@
     summary.textContent = _('security_audit.loading');
     summary.classList.remove('is-error');
     tbody.innerHTML = '';
+    renderChecksShare(0, 0);
     try {
       const json = await getJson('/api/panel/security-audit/overview');
       const d = json.data || json;
       const checks = d.checks || [];
       const passed = checks.filter((c) => c.pass ?? c.passed).length;
-      summary.textContent = checks.length
-        ? _('security_audit.checks_summary', { passed, total: checks.length })
-        : _('security_audit.no_checks');
+      // The numbers are in the legend under the bar; the sentence says what to do
+      summary.textContent = !checks.length ? _('security_audit.no_checks')
+        : (passed === checks.length ? _('security_audit.checks_all_pass') : _('security_audit.checks_some_fail'));
+      renderChecksShare(passed, checks.length - passed);
       tbody.innerHTML = checks.map((c) => {
         const ok = !!(c.pass ?? c.passed);
         const nameKey = 'security_audit.check_' + c.id;
@@ -298,6 +300,108 @@
       summary.innerHTML = `<span class="state is-error">${esc(_('security_audit.overview_load_failed'))} <button type="button" class="btn btn-sm" id="overview-retry">${esc(_('security_audit.try_again'))}</button></span>`;
       document.getElementById('overview-retry').addEventListener('click', loadOverview);
     }
+  }
+
+  // Passed and failed checks as one bar with a legend that carries the numbers
+  function renderChecksShare(passed, failed) {
+    const bar = document.getElementById('checks-bar');
+    const legend = document.getElementById('checks-legend');
+    if (!bar || !legend) return;
+    bar.textContent = '';
+    legend.textContent = '';
+    const total = passed + failed;
+    bar.hidden = total === 0;
+    if (!total) return;
+    const num = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+    [
+      { n: passed, cls: 'is-ok', key: 'security_audit.checks_legend_passed' },
+      { n: failed, cls: 'is-danger', key: 'security_audit.checks_legend_failed' }
+    ].forEach((part) => {
+      if (part.n > 0) {
+        const seg = document.createElement('span');
+        seg.className = part.cls;
+        seg.style.flexGrow = String(part.n);
+        bar.appendChild(seg);
+      }
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="key ${part.cls}" aria-hidden="true"></span><span>${
+        esc(_(part.key)).replace('{n}', `<strong>${esc(num.format(part.n))}</strong>`)}</span>`;
+      legend.appendChild(li);
+    });
+  }
+
+  /* ── Server events per day ──
+     The server keeps its events in memory since it last started (newest first, at most
+     1000 per request), so the chart is drawn only when the loaded events reach back to
+     the first of the last 14 days. Otherwise the section says which range they cover. */
+  const CHART_DAYS = 14;
+
+  function dayKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  async function loadEventsChart() {
+    const section = document.getElementById('events-chart-section');
+    const range = document.getElementById('events-range');
+    const chart = document.getElementById('events-chart');
+    if (!section || !range || !chart) return;
+    let events;
+    let total;
+    try {
+      const json = await getJson('/api/panel/security-audit/events?limit=1000');
+      const d = json.data || json;
+      events = (d.events || d.items || []).map((ev) => toDate(ev.timestamp || ev.created_at)).filter(Boolean);
+      total = Number(d.total);
+    } catch (e) {
+      section.hidden = true; // the table below shows the load error
+      return;
+    }
+    chart.textContent = '';
+    if (!events.length) { section.hidden = true; return; }
+    section.hidden = false;
+
+    const lang = (window.BetterDesk && window.BetterDesk.lang) || document.documentElement.lang || 'en';
+    const num = new Intl.NumberFormat(lang);
+    const oldest = new Date(Math.min(...events.map((d) => d.getTime())));
+    let text = _('security_audit.events_range', { from: formatTime(oldest.getTime()), count: num.format(events.length) });
+    if (Number.isFinite(total) && total > events.length) {
+      text += ' ' + _('security_audit.events_range_partial', { total: num.format(total) });
+    }
+
+    const firstDay = new Date();
+    firstDay.setHours(0, 0, 0, 0);
+    firstDay.setDate(firstDay.getDate() - (CHART_DAYS - 1));
+    if (oldest > firstDay) {
+      range.textContent = text + ' ' + _('security_audit.events_chart_needs', { days: CHART_DAYS });
+      return;
+    }
+    range.textContent = text;
+
+    const days = [];
+    for (let i = 0; i < CHART_DAYS; i++) {
+      const d = new Date(firstDay);
+      d.setDate(firstDay.getDate() + i);
+      d.setHours(12);
+      days.push(d);
+    }
+    const keys = days.map(dayKey);
+    const perDay = keys.map(() => 0);
+    events.forEach((d) => { const i = keys.indexOf(dayKey(d)); if (i >= 0) perDay[i]++; });
+    const fmtDay = new Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric' });
+    const fmtLong = new Intl.DateTimeFormat(lang, { weekday: 'long', month: 'long', day: 'numeric' });
+    const sum = perDay.reduce((a, b) => a + b, 0);
+    const peak = perDay.indexOf(Math.max(...perDay));
+    window.UiChart.render(chart, {
+      kind: 'columns',
+      label: _('security_audit.events_chart_title'),
+      summary: _('security_audit.events_chart_summary', {
+        total: num.format(sum), days: CHART_DAYS, peakDay: fmtLong.format(days[peak]), peak: num.format(perDay[peak])
+      }),
+      labels: days.map((d) => fmtDay.format(d)),
+      xHeading: _('security_audit.events_chart_day'),
+      series: [{ name: _('security_audit.events_chart_series'), values: perDay }],
+      format: (v) => num.format(v)
+    });
   }
 
   /* ── Hardening plan ── */
@@ -471,7 +575,7 @@
     filter.addEventListener('change', () => { auditPage = 0; renderAudit(); syncAuditUrl(); });
     document.getElementById('audit-refresh').addEventListener('click', loadAudit);
     document.getElementById('event-filter').addEventListener('change', () => { eventsPage = 0; loadEvents(); });
-    document.getElementById('events-refresh').addEventListener('click', loadEvents);
+    document.getElementById('events-refresh').addEventListener('click', () => { loadEvents(); loadEventsChart(); });
     document.getElementById('sessions-refresh').addEventListener('click', loadSessions);
 
     showTab(tab);

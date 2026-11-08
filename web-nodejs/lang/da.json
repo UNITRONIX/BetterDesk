@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Der er ikke kørt nogen scanning af afhængigheder. Konsollen kører ikke npm audit eller govulncheck; kør dem på serveren for at finde kendte sårbarheder.",
         "vuln_counts": "{total} kendte sårbarheder: {critical} kritiske, {high} høje, {medium} middel, {low} lave.",
         "vuln_load_failed": "Scanningsresultaterne kunne ikke indlæses.",
-        "sessions_load_failed": "Dine sessioner kunne ikke indlæses."
+        "sessions_load_failed": "Dine sessioner kunne ikke indlæses.",
+        "checks_result_title": "Resultat",
+        "checks_all_pass": "Alle kontroller bestået.",
+        "checks_some_fail": "Nogle kontroller fejler. Tabellen viser, hvad du skal gøre ved hver.",
+        "checks_legend_passed": "{n} bestået",
+        "checks_legend_failed": "{n} fejlet",
+        "events_chart_title": "Hændelser pr. dag",
+        "events_range": "De indlæste hændelser går tilbage til {from}.",
+        "events_range_partial": "Ældre hændelser er ikke indlæst: serveren har registreret {total} siden sidste start.",
+        "events_chart_needs": "Et diagram pr. dag vises, når hændelserne går {days} dage tilbage. Serveren gemmer kun hændelser siden sidste start.",
+        "events_chart_summary": "{total} hændelser de seneste {days} dage, flest {peakDay} ({peak}).",
+        "events_chart_series": "Hændelser",
+        "events_chart_day": "Dag"
     },
     "languages": {
         "title": "Sprogstyring",

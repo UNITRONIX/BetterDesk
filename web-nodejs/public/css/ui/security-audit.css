@@ -127,3 +127,9 @@ div.secaudit-panel {
         white-space: normal;
     }
 }
+
+/* Count lines that have nothing to say yet take no space */
+#vuln-summary:empty,
+#hardening-count:empty {
+    display: none;
+}

@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Ingen beroendeskanning har körts. Konsolen kör inte npm audit eller govulncheck; kör dem på servern för att hitta kända sårbarheter.",
         "vuln_counts": "{total} kända sårbarheter: {critical} kritiska, {high} höga, {medium} medel, {low} låga.",
         "vuln_load_failed": "Skanningsresultaten kunde inte läsas in.",
-        "sessions_load_failed": "Dina sessioner kunde inte läsas in."
+        "sessions_load_failed": "Dina sessioner kunde inte läsas in.",
+        "checks_result_title": "Resultat",
+        "checks_all_pass": "Alla kontroller godkända.",
+        "checks_some_fail": "Några kontroller misslyckas. Tabellen visar vad du gör åt var och en.",
+        "checks_legend_passed": "{n} godkända",
+        "checks_legend_failed": "{n} misslyckade",
+        "events_chart_title": "Händelser per dag",
+        "events_range": "De inlästa händelserna går tillbaka till {from}.",
+        "events_range_partial": "Äldre händelser är inte inlästa: servern har registrerat {total} sedan senaste start.",
+        "events_chart_needs": "Ett diagram per dag visas när händelserna når {days} dagar bakåt. Servern sparar bara händelser sedan senaste start.",
+        "events_chart_summary": "{total} händelser de senaste {days} dagarna, flest {peakDay} ({peak}).",
+        "events_chart_series": "Händelser",
+        "events_chart_day": "Dag"
     },
     "languages": {
         "title": "Språkhantering",

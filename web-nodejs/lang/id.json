@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Belum ada pemindaian dependensi yang dijalankan. Konsol tidak menjalankan npm audit atau govulncheck; jalankan keduanya di server untuk memeriksa kerentanan yang diketahui.",
         "vuln_counts": "{total} kerentanan diketahui: {critical} kritis, {high} tinggi, {medium} sedang, {low} rendah.",
         "vuln_load_failed": "Tidak dapat memuat hasil pemindaian.",
-        "sessions_load_failed": "Tidak dapat memuat sesi Anda."
+        "sessions_load_failed": "Tidak dapat memuat sesi Anda.",
+        "checks_result_title": "Hasil",
+        "checks_all_pass": "Semua pemeriksaan lolos.",
+        "checks_some_fail": "Beberapa pemeriksaan gagal. Tabel menjelaskan apa yang harus dilakukan untuk masing-masing.",
+        "checks_legend_passed": "{n} lolos",
+        "checks_legend_failed": "{n} gagal",
+        "events_chart_title": "Peristiwa per hari",
+        "events_range": "Peristiwa yang dimuat mundur hingga {from}.",
+        "events_range_partial": "Peristiwa lama tidak dimuat: server mencatat {total} sejak terakhir dijalankan.",
+        "events_chart_needs": "Grafik per hari muncul setelah peristiwa mencakup {days} hari ke belakang. Server hanya menyimpan peristiwa sejak terakhir dijalankan.",
+        "events_chart_summary": "{total} peristiwa dalam {days} hari terakhir, terbanyak pada {peakDay} ({peak}).",
+        "events_chart_series": "Peristiwa",
+        "events_chart_day": "Hari"
     },
     "languages": {
         "title": "Manajemen Bahasa",

@@ -5286,7 +5286,19 @@
         "vuln_no_scan": "No dependency scan has run. The console does not run npm audit or govulncheck; run them on the server to check for known vulnerabilities.",
         "vuln_counts": "{total} known vulnerabilities: {critical} critical, {high} high, {medium} medium, {low} low.",
         "vuln_load_failed": "Could not load the scan results.",
-        "sessions_load_failed": "Could not load your sessions."
+        "sessions_load_failed": "Could not load your sessions.",
+        "checks_result_title": "Result",
+        "checks_all_pass": "All checks pass.",
+        "checks_some_fail": "Some checks fail. The table says what to do about each one.",
+        "checks_legend_passed": "{n} passed",
+        "checks_legend_failed": "{n} failed",
+        "events_chart_title": "Events per day",
+        "events_range": "The loaded events go back to {from}.",
+        "events_range_partial": "Older events are not loaded: the server has recorded {total} since it last started.",
+        "events_chart_needs": "A chart per day appears once the events reach back {days} days. The server keeps events only since its last start.",
+        "events_chart_summary": "{total} events in the last {days} days, most on {peakDay} ({peak}).",
+        "events_chart_series": "Events",
+        "events_chart_day": "Day"
     },
     "languages": {
         "title": "Language Management",

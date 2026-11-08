@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Сканування залежностей ще не запускалося. Консоль не запускає npm audit чи govulncheck; запустіть їх на сервері, щоб знайти відомі вразливості.",
         "vuln_counts": "Відомих вразливостей: {total} (критичних {critical}, високих {high}, середніх {medium}, низьких {low}).",
         "vuln_load_failed": "Не вдалося завантажити результати сканування.",
-        "sessions_load_failed": "Не вдалося завантажити ваші сеанси."
+        "sessions_load_failed": "Не вдалося завантажити ваші сеанси.",
+        "checks_result_title": "Результат",
+        "checks_all_pass": "Усі перевірки пройдено.",
+        "checks_some_fail": "Деякі перевірки не пройдено. У таблиці написано, що зробити з кожною.",
+        "checks_legend_passed": "{n} пройдено",
+        "checks_legend_failed": "{n} не пройдено",
+        "events_chart_title": "Події за день",
+        "events_range": "Завантажені події сягають {from}.",
+        "events_range_partial": "Старіші події не завантажено: сервер записав {total} з останнього запуску.",
+        "events_chart_needs": "Графік за днями з’явиться, коли події сягатимуть {days} днів тому. Сервер зберігає події лише з останнього запуску.",
+        "events_chart_summary": "{total} подій за останні {days} днів, найбільше — {peakDay} ({peak}).",
+        "events_chart_series": "Події",
+        "events_chart_day": "День"
     },
     "languages": {
         "title": "Управління мовою",

@@ -5089,7 +5089,19 @@
         "vuln_no_scan": "아직 종속성 검사를 실행하지 않았습니다. 콘솔은 npm audit이나 govulncheck를 실행하지 않습니다. 알려진 취약점을 확인하려면 서버에서 직접 실행하세요.",
         "vuln_counts": "알려진 취약점 {total}개: 심각 {critical}, 높음 {high}, 보통 {medium}, 낮음 {low}.",
         "vuln_load_failed": "검사 결과를 불러올 수 없습니다.",
-        "sessions_load_failed": "세션을 불러올 수 없습니다."
+        "sessions_load_failed": "세션을 불러올 수 없습니다.",
+        "checks_result_title": "결과",
+        "checks_all_pass": "모든 검사를 통과했습니다.",
+        "checks_some_fail": "일부 검사가 실패했습니다. 각 항목에 대한 조치는 표에 있습니다.",
+        "checks_legend_passed": "{n}개 통과",
+        "checks_legend_failed": "{n}개 실패",
+        "events_chart_title": "일별 이벤트",
+        "events_range": "불러온 이벤트는 {from}까지 거슬러 올라갑니다.",
+        "events_range_partial": "이전 이벤트는 불러오지 않았습니다. 서버는 마지막 시작 이후 {total}개를 기록했습니다.",
+        "events_chart_needs": "이벤트가 {days}일 전까지 거슬러 올라가면 일별 차트가 표시됩니다. 서버는 마지막 시작 이후의 이벤트만 보관합니다.",
+        "events_chart_summary": "최근 {days}일 동안 {total}개, 가장 많은 날은 {peakDay}({peak}개)입니다.",
+        "events_chart_series": "이벤트",
+        "events_chart_day": "날짜"
     },
     "languages": {
         "title": "언어 관리",

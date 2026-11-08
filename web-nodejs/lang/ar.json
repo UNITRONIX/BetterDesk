@@ -5096,7 +5096,19 @@
         "vuln_no_scan": "لم يتم تشغيل أي فحص للتبعيات. لا تشغّل وحدة التحكم npm audit أو govulncheck؛ شغّلهما على الخادم للبحث عن الثغرات المعروفة.",
         "vuln_counts": "{total} ثغرة معروفة: {critical} حرجة، {high} عالية، {medium} متوسطة، {low} منخفضة.",
         "vuln_load_failed": "تعذّر تحميل نتائج الفحص.",
-        "sessions_load_failed": "تعذّر تحميل جلساتك."
+        "sessions_load_failed": "تعذّر تحميل جلساتك.",
+        "checks_result_title": "النتيجة",
+        "checks_all_pass": "نجحت كل الفحوصات.",
+        "checks_some_fail": "بعض الفحوصات فشلت. يوضح الجدول ما يجب فعله لكل منها.",
+        "checks_legend_passed": "{n} ناجحة",
+        "checks_legend_failed": "{n} فاشلة",
+        "events_chart_title": "الأحداث في اليوم",
+        "events_range": "الأحداث المحمّلة تعود إلى {from}.",
+        "events_range_partial": "لم يتم تحميل الأحداث الأقدم: سجّل الخادم {total} منذ آخر تشغيل.",
+        "events_chart_needs": "يظهر مخطط يومي عندما تعود الأحداث إلى {days} يومًا. يحتفظ الخادم بالأحداث منذ آخر تشغيل فقط.",
+        "events_chart_summary": "{total} حدث في آخر {days} يومًا، وأكثرها في {peakDay} ({peak}).",
+        "events_chart_series": "الأحداث",
+        "events_chart_day": "اليوم"
     },
     "languages": {
         "title": "إدارة اللغة",

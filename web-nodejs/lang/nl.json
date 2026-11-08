@@ -5089,7 +5089,19 @@
         "vuln_no_scan": "Er is nog geen afhankelijkhedenscan uitgevoerd. De console voert npm audit en govulncheck niet uit; voer ze uit op de server om bekende kwetsbaarheden te vinden.",
         "vuln_counts": "{total} bekende kwetsbaarheden: {critical} kritiek, {high} hoog, {medium} gemiddeld, {low} laag.",
         "vuln_load_failed": "De scanresultaten konden niet worden geladen.",
-        "sessions_load_failed": "Uw sessies konden niet worden geladen."
+        "sessions_load_failed": "Uw sessies konden niet worden geladen.",
+        "checks_result_title": "Resultaat",
+        "checks_all_pass": "Alle controles slagen.",
+        "checks_some_fail": "Sommige controles mislukken. De tabel zegt per controle wat u moet doen.",
+        "checks_legend_passed": "{n} geslaagd",
+        "checks_legend_failed": "{n} mislukt",
+        "events_chart_title": "Gebeurtenissen per dag",
+        "events_range": "De geladen gebeurtenissen gaan terug tot {from}.",
+        "events_range_partial": "Oudere gebeurtenissen zijn niet geladen: de server heeft er sinds de laatste start {total} vastgelegd.",
+        "events_chart_needs": "Een grafiek per dag verschijnt zodra de gebeurtenissen {days} dagen teruggaan. De server bewaart gebeurtenissen alleen sinds de laatste start.",
+        "events_chart_summary": "{total} gebeurtenissen in de laatste {days} dagen, de meeste op {peakDay} ({peak}).",
+        "events_chart_series": "Gebeurtenissen",
+        "events_chart_day": "Dag"
     },
     "languages": {
         "title": "Taalbeheer",

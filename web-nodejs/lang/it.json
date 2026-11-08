@@ -5089,7 +5089,19 @@
         "vuln_no_scan": "Non è stata eseguita alcuna analisi delle dipendenze. La console non esegue npm audit né govulncheck; li esegua sul server per cercare vulnerabilità note.",
         "vuln_counts": "{total} vulnerabilità note: {critical} critiche, {high} alte, {medium} medie, {low} basse.",
         "vuln_load_failed": "Impossibile caricare i risultati dell'analisi.",
-        "sessions_load_failed": "Impossibile caricare le sue sessioni."
+        "sessions_load_failed": "Impossibile caricare le sue sessioni.",
+        "checks_result_title": "Risultato",
+        "checks_all_pass": "Tutti i controlli sono superati.",
+        "checks_some_fail": "Alcuni controlli non sono superati. La tabella indica cosa fare per ciascuno.",
+        "checks_legend_passed": "{n} superati",
+        "checks_legend_failed": "{n} non superati",
+        "events_chart_title": "Eventi al giorno",
+        "events_range": "Gli eventi caricati risalgono fino a {from}.",
+        "events_range_partial": "Gli eventi più vecchi non sono caricati: il server ne ha registrati {total} dall’ultimo avvio.",
+        "events_chart_needs": "Un grafico giornaliero compare quando gli eventi risalgono a {days} giorni fa. Il server conserva gli eventi solo dall’ultimo avvio.",
+        "events_chart_summary": "{total} eventi negli ultimi {days} giorni, il massimo il {peakDay} ({peak}).",
+        "events_chart_series": "Eventi",
+        "events_chart_day": "Giorno"
     },
     "languages": {
         "title": "Gestione lingue",

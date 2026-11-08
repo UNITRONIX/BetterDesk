@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Nu a rulat încă nicio scanare a dependențelor. Consola nu rulează npm audit sau govulncheck; rulați-le pe server pentru a găsi vulnerabilitățile cunoscute.",
         "vuln_counts": "{total} vulnerabilități cunoscute: {critical} critice, {high} ridicate, {medium} medii, {low} scăzute.",
         "vuln_load_failed": "Rezultatele scanării nu au putut fi încărcate.",
-        "sessions_load_failed": "Sesiunile dvs. nu au putut fi încărcate."
+        "sessions_load_failed": "Sesiunile dvs. nu au putut fi încărcate.",
+        "checks_result_title": "Rezultat",
+        "checks_all_pass": "Toate verificările trec.",
+        "checks_some_fail": "Unele verificări eșuează. Tabelul arată ce trebuie făcut pentru fiecare.",
+        "checks_legend_passed": "{n} reușite",
+        "checks_legend_failed": "{n} eșuate",
+        "events_chart_title": "Evenimente pe zi",
+        "events_range": "Evenimentele încărcate merg înapoi până la {from}.",
+        "events_range_partial": "Evenimentele mai vechi nu sunt încărcate: serverul a înregistrat {total} de la ultima pornire.",
+        "events_chart_needs": "Un grafic pe zile apare când evenimentele ajung {days} zile în urmă. Serverul păstrează evenimentele doar de la ultima pornire.",
+        "events_chart_summary": "{total} evenimente în ultimele {days} zile, cele mai multe pe {peakDay} ({peak}).",
+        "events_chart_series": "Evenimente",
+        "events_chart_day": "Zi"
     },
     "languages": {
         "title": "Managementul Limbii",

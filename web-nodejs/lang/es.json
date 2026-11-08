@@ -5089,7 +5089,19 @@
         "vuln_no_scan": "No se ha ejecutado ningún análisis de dependencias. La consola no ejecuta npm audit ni govulncheck; ejecútelos en el servidor para buscar vulnerabilidades conocidas.",
         "vuln_counts": "{total} vulnerabilidades conocidas: {critical} críticas, {high} altas, {medium} medias, {low} bajas.",
         "vuln_load_failed": "No se pudieron cargar los resultados del análisis.",
-        "sessions_load_failed": "No se pudieron cargar sus sesiones."
+        "sessions_load_failed": "No se pudieron cargar sus sesiones.",
+        "checks_result_title": "Resultado",
+        "checks_all_pass": "Todas las comprobaciones se superan.",
+        "checks_some_fail": "Algunas comprobaciones fallan. La tabla indica qué hacer con cada una.",
+        "checks_legend_passed": "{n} superadas",
+        "checks_legend_failed": "{n} fallidas",
+        "events_chart_title": "Eventos por día",
+        "events_range": "Los eventos cargados llegan hasta {from}.",
+        "events_range_partial": "Los eventos más antiguos no se cargan: el servidor ha registrado {total} desde su último inicio.",
+        "events_chart_needs": "Aparece un gráfico por día cuando los eventos llegan a {days} días atrás. El servidor solo guarda eventos desde su último inicio.",
+        "events_chart_summary": "{total} eventos en los últimos {days} días, la mayoría el {peakDay} ({peak}).",
+        "events_chart_series": "Eventos",
+        "events_chart_day": "Día"
     },
     "languages": {
         "title": "Panel",

@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Chưa chạy lần quét phụ thuộc nào. Bảng điều khiển không chạy npm audit hay govulncheck; hãy chạy chúng trên máy chủ để tìm lỗ hổng đã biết.",
         "vuln_counts": "{total} lỗ hổng đã biết: {critical} nghiêm trọng, {high} cao, {medium} trung bình, {low} thấp.",
         "vuln_load_failed": "Không thể tải kết quả quét.",
-        "sessions_load_failed": "Không thể tải các phiên của bạn."
+        "sessions_load_failed": "Không thể tải các phiên của bạn.",
+        "checks_result_title": "Kết quả",
+        "checks_all_pass": "Tất cả các kiểm tra đều đạt.",
+        "checks_some_fail": "Một số kiểm tra không đạt. Bảng cho biết cần làm gì với từng mục.",
+        "checks_legend_passed": "{n} đạt",
+        "checks_legend_failed": "{n} không đạt",
+        "events_chart_title": "Sự kiện mỗi ngày",
+        "events_range": "Các sự kiện đã tải bắt đầu từ {from}.",
+        "events_range_partial": "Các sự kiện cũ hơn chưa được tải: máy chủ đã ghi {total} sự kiện kể từ lần khởi động gần nhất.",
+        "events_chart_needs": "Biểu đồ theo ngày sẽ hiện khi sự kiện kéo dài đủ {days} ngày. Máy chủ chỉ giữ sự kiện kể từ lần khởi động gần nhất.",
+        "events_chart_summary": "{total} sự kiện trong {days} ngày qua, nhiều nhất vào {peakDay} ({peak}).",
+        "events_chart_series": "Sự kiện",
+        "events_chart_day": "Ngày"
     },
     "languages": {
         "title": "Quản lý ngôn ngữ",

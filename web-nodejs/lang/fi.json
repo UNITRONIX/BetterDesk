@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Riippuvuuksien tarkistusta ei ole ajettu. Konsoli ei aja npm auditia eikä govulncheckiä; aja ne palvelimella löytääksesi tunnetut haavoittuvuudet.",
         "vuln_counts": "{total} tunnettua haavoittuvuutta: {critical} kriittistä, {high} korkeaa, {medium} keskitason, {low} matalaa.",
         "vuln_load_failed": "Tarkistuksen tuloksia ei voitu ladata.",
-        "sessions_load_failed": "Istuntojasi ei voitu ladata."
+        "sessions_load_failed": "Istuntojasi ei voitu ladata.",
+        "checks_result_title": "Tulos",
+        "checks_all_pass": "Kaikki tarkistukset menivät läpi.",
+        "checks_some_fail": "Osa tarkistuksista epäonnistuu. Taulukko kertoo, mitä kullekin tehdään.",
+        "checks_legend_passed": "{n} läpi",
+        "checks_legend_failed": "{n} epäonnistui",
+        "events_chart_title": "Tapahtumat päivittäin",
+        "events_range": "Ladatut tapahtumat ulottuvat ajankohtaan {from}.",
+        "events_range_partial": "Vanhempia tapahtumia ei ladattu: palvelin on tallentanut {total} viime käynnistyksen jälkeen.",
+        "events_chart_needs": "Päiväkohtainen kaavio näkyy, kun tapahtumat ulottuvat {days} päivän taakse. Palvelin säilyttää tapahtumat vain viime käynnistyksestä.",
+        "events_chart_summary": "{total} tapahtumaa viimeisten {days} päivän aikana, eniten {peakDay} ({peak}).",
+        "events_chart_series": "Tapahtumat",
+        "events_chart_day": "Päivä"
     },
     "languages": {
         "title": "Kielenhallinta",

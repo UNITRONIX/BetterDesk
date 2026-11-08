@@ -5095,7 +5095,19 @@
         "vuln_no_scan": "Henüz bağımlılık taraması çalıştırılmadı. Konsol npm audit veya govulncheck çalıştırmaz; bilinen güvenlik açıklarını bulmak için bunları sunucuda çalıştırın.",
         "vuln_counts": "{total} bilinen güvenlik açığı: {critical} kritik, {high} yüksek, {medium} orta, {low} düşük.",
         "vuln_load_failed": "Tarama sonuçları yüklenemedi.",
-        "sessions_load_failed": "Oturumlarınız yüklenemedi."
+        "sessions_load_failed": "Oturumlarınız yüklenemedi.",
+        "checks_result_title": "Sonuç",
+        "checks_all_pass": "Tüm denetimler geçti.",
+        "checks_some_fail": "Bazı denetimler başarısız. Tablo her biri için ne yapılacağını gösterir.",
+        "checks_legend_passed": "{n} geçti",
+        "checks_legend_failed": "{n} başarısız",
+        "events_chart_title": "Günlük olaylar",
+        "events_range": "Yüklenen olaylar {from} tarihine kadar uzanıyor.",
+        "events_range_partial": "Daha eski olaylar yüklenmedi: sunucu son başlatmadan bu yana {total} olay kaydetti.",
+        "events_chart_needs": "Olaylar {days} gün geriye uzandığında günlük grafik görünür. Sunucu olayları yalnızca son başlatmadan bu yana tutar.",
+        "events_chart_summary": "Son {days} günde {total} olay, en çok {peakDay} ({peak}).",
+        "events_chart_series": "Olaylar",
+        "events_chart_day": "Gün"
     },
     "languages": {
         "title": "Dil Yönetimi",

@@ -5089,7 +5089,19 @@
         "vuln_no_scan": "依存関係のスキャンはまだ実行されていません。コンソールは npm audit や govulncheck を実行しません。既知の脆弱性を確認するには、サーバー上でこれらを実行してください。",
         "vuln_counts": "既知の脆弱性 {total} 件: 緊急 {critical}、高 {high}、中 {medium}、低 {low}。",
         "vuln_load_failed": "スキャン結果を読み込めませんでした。",
-        "sessions_load_failed": "セッションを読み込めませんでした。"
+        "sessions_load_failed": "セッションを読み込めませんでした。",
+        "checks_result_title": "結果",
+        "checks_all_pass": "すべてのチェックに合格しています。",
+        "checks_some_fail": "一部のチェックが失敗しています。対処方法は表に記載されています。",
+        "checks_legend_passed": "{n} 件合格",
+        "checks_legend_failed": "{n} 件失敗",
+        "events_chart_title": "1 日あたりのイベント",
+        "events_range": "読み込んだイベントは {from} までさかのぼります。",
+        "events_range_partial": "古いイベントは読み込まれていません。サーバーは前回の起動以降 {total} 件を記録しています。",
+        "events_chart_needs": "イベントが {days} 日前までさかのぼると、日別のグラフが表示されます。サーバーは前回の起動以降のイベントだけを保持します。",
+        "events_chart_summary": "過去 {days} 日間に {total} 件。最も多いのは {peakDay}（{peak} 件）。",
+        "events_chart_series": "イベント",
+        "events_chart_day": "日付"
     },
     "languages": {
         "title": "言語管理",
