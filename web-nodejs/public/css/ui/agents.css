@@ -11,3 +11,24 @@
 .agents-page .steps {
     max-width: var(--measure);
 }
+
+.agents-portal-field {
+    align-self: flex-start;
+}
+
+/* Wide screens: the installers and the setup steps are independent, so they
+   sit side by side instead of leaving the right half of the main column empty */
+@media (min-width: 1800px) {
+    .agents-page .page-main {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-6) var(--space-7);
+        align-items: start;
+    }
+}
+
+@media (min-width: 2200px) {
+    .page.agents-page {
+        max-width: none;
+    }
+}

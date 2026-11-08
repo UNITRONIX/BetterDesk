@@ -124,7 +124,28 @@
         }
     }
 
+    /** The download page's full address, with Copy feedback on the button itself */
+    function initPortalAddress() {
+        const code = document.getElementById('agents-portal-url');
+        const copy = document.querySelector('[data-copy-target="agents-portal-url"]');
+        if (!code) return;
+        code.textContent = `${window.location.origin}/portal`;
+        copy?.addEventListener('click', async () => {
+            try {
+                await Utils.copyToClipboard(code.textContent.trim());
+                const label = copy.querySelector('.btn-label') || copy;
+                const before = label.textContent;
+                label.textContent = t('keys.copied', 'Copied');
+                copy.classList.add('copied');
+                setTimeout(() => { label.textContent = before; copy.classList.remove('copied'); }, 1600);
+            } catch (_e) {
+                notify.error(t('keys.copy_failed', 'Could not copy.'));
+            }
+        });
+    }
+
     function init() {
+        initPortalAddress();
         const button = syncBtn();
         if (button && window.Utils && Utils.can('enrollment.manage')) button.addEventListener('click', syncRelease);
         else if (button) button.hidden = true;

@@ -119,3 +119,35 @@
     color: var(--text-muted);
     font-size: var(--text-sm);
 }
+
+/* Names, addresses and links: about 40 characters, not the whole column */
+.client-branding-form #cb-company,
+.client-branding-form #cb-support,
+.client-branding-form #cb-email,
+.client-branding-form #cb-website {
+    max-width: 44ch;
+}
+
+/* Wide screens: the two groups of the form side by side, one save bar under
+   both, the preview still beside them */
+@media (min-width: 1700px) {
+    .client-branding-page .page-cols {
+        max-width: none;
+    }
+
+    .client-branding-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 var(--space-7);
+        align-items: start;
+        max-width: none;
+    }
+
+    .client-branding-form .section + .section {
+        margin-top: 0;
+    }
+
+    .client-branding-form > .save-bar {
+        grid-column: 1 / -1;
+    }
+}
