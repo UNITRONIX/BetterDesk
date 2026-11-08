@@ -28,7 +28,7 @@
 .ux35-topbar {
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: var(--layer-topbar);
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -181,7 +181,7 @@
     position: absolute;
     top: calc(100% + var(--space-1));
     inset-inline-end: 0;
-    z-index: 900;
+    z-index: var(--layer-menu);
     min-width: 200px;
     max-height: min(70vh, 480px);
     overflow-y: auto;
@@ -717,7 +717,7 @@
         position: absolute;
         top: calc(var(--topbar-h) - var(--space-1));
         inset-inline-end: var(--space-2);
-        z-index: 900;
+        z-index: var(--layer-menu);
         display: none;
         padding: var(--space-1);
         border: 1px solid var(--rule);
@@ -898,7 +898,7 @@
 .search-overlay {
     position: fixed;
     inset: 0;
-    z-index: 1050;
+    z-index: var(--layer-search);
     display: flex;
     justify-content: center;
     align-items: flex-start;

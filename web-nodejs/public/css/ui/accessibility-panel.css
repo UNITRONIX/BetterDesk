@@ -1,0 +1,386 @@
+/*
+ * Accessibility panel: the side sheet opened from the top bar
+ * (public/js/accessibility.js). Loaded on every page, old and reworked,
+ * so it only relies on tokens.css and styles its own controls.
+ * The effects of the settings live in public/css/accessibility.css.
+ */
+
+body.bd-a11y-modal-open {
+    overflow: hidden;
+}
+
+/* The layer is a child of <body>, so its z-index competes with the
+   page's top-level layers only (see the layer scale in tokens.css). */
+.a11y-layer {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-dialog, 1000);
+}
+
+.a11y-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.a11y-sheet {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    inset-inline-end: 0;
+    display: flex;
+    flex-direction: column;
+    width: min(480px, 100%);
+    border-inline-start: 1px solid var(--rule);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+    font-size: var(--text-base);
+    line-height: var(--leading);
+    text-align: start;
+}
+
+.a11y-sheet:focus {
+    outline: none;
+}
+
+.a11y-sheet h2,
+.a11y-sheet h3,
+.a11y-sheet p {
+    margin: 0;
+    color: var(--text);
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+/* Head: title, one sentence, close */
+.a11y-sheet-head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-3) var(--space-4) var(--space-5);
+    padding-inline-start: var(--space-5);
+    padding-inline-end: var(--space-3);
+    border-bottom: 1px solid var(--rule);
+}
+
+.a11y-sheet-titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.a11y-sheet-head h2 {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.a11y-sheet-head p {
+    margin-top: var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.a11y-close {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h);
+    height: var(--control-h);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.a11y-close:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.a11y-close .material-icons {
+    font-size: 20px;
+}
+
+/* Body scrolls; head and foot stay */
+.a11y-sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 var(--space-5);
+}
+
+.a11y-section {
+    padding: var(--space-5) 0;
+}
+
+.a11y-section + .a11y-section {
+    border-top: 1px solid var(--rule);
+}
+
+.a11y-section h3 {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.a11y-sheet .a11y-note,
+.a11y-hint {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.a11y-sheet .a11y-note {
+    margin-bottom: var(--space-3);
+}
+
+.a11y-label,
+.a11y-check-label,
+.a11y-profile-title {
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* Quick profiles: one row each with a title and a sentence, on rules */
+.a11y-profiles {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.a11y-profiles li + li {
+    border-top: 1px solid var(--rule);
+}
+
+.a11y-profile {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px var(--space-3);
+    align-items: start;
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-3) var(--row-pad-x);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.a11y-profile:hover {
+    background: var(--bg-subtle);
+}
+
+.a11y-profile[aria-pressed="true"] {
+    background: var(--accent-tint);
+}
+
+.a11y-profile .a11y-hint {
+    grid-column: 2;
+}
+
+/* Radio-like mark: empty ring, filled when the profile is on */
+.a11y-profile-mark {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--bg);
+}
+
+.a11y-profile[aria-pressed="true"] .a11y-profile-mark {
+    border: 5px solid var(--accent);
+}
+
+/* Sliders: label and current value on one line, the slider under them */
+.a11y-ranges {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.a11y-ranges:last-child {
+    margin-bottom: 0;
+}
+
+.a11y-range {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: var(--space-3);
+}
+
+.a11y-value {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.a11y-range input[type="range"] {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: var(--control-h);
+    margin: 0;
+    background: transparent;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+/* Selects with the label above */
+.a11y-field {
+    display: grid;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+}
+
+.a11y-select {
+    width: 100%;
+    min-height: var(--control-h);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+}
+
+.a11y-select:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: -1px;
+    border-color: var(--focus);
+}
+
+/* Check fields: a checkbox with a sentence under its label */
+.a11y-checks {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.a11y-check {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px var(--space-2);
+    align-items: start;
+    align-content: start;
+    cursor: pointer;
+}
+
+.a11y-check > input {
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.a11y-check .a11y-hint {
+    grid-column: 2;
+}
+
+/* Foot: reset on the start side, Done at the end */
+.a11y-sheet-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--rule);
+    background: var(--bg-float);
+}
+
+.a11y-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-h);
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color var(--motion), border-color var(--motion);
+}
+
+.a11y-btn:hover {
+    background: var(--hover);
+}
+
+.a11y-btn-primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.a11y-btn-primary:hover {
+    border-color: var(--accent-hover);
+    background: var(--accent-hover);
+}
+
+.a11y-sheet :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.a11y-profile:focus-visible {
+    outline-offset: -2px;
+}
+
+/* Touch: every row and control is at least 44 px high */
+@media (pointer: coarse) {
+    .a11y-check {
+        min-height: 44px;
+        align-content: center;
+    }
+
+    .a11y-close,
+    .a11y-btn,
+    .a11y-select,
+    .a11y-range input[type="range"] {
+        min-height: 44px;
+    }
+
+    .a11y-close {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* Phones: the sheet takes the whole screen */
+@media (max-width: 640px) {
+    .a11y-sheet {
+        width: 100%;
+        border-inline-start: 0;
+    }
+
+    .a11y-sheet-head {
+        padding-inline-start: var(--space-4);
+    }
+
+    .a11y-sheet-body {
+        padding: 0 var(--space-4);
+    }
+
+    .a11y-sheet-foot {
+        padding-inline: var(--space-4);
+    }
+}
+
+/* Top bar button while any setting is on */
+.accessibility-btn.active {
+    background: var(--accent-tint);
+    color: var(--accent);
+}

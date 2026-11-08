@@ -75,6 +75,15 @@
     --motion: 120ms;
 
     /* Control sizes: compact with a mouse, 44px on touch */
+    /* Layers (z-index), lowest to highest. Each applies among elements
+       that share a stacking context; dialogs and sheets hang off <body>. */
+    --layer-sticky: 1;       /* sticky table headers */
+    --layer-topbar: 50;
+    --layer-menu: 900;       /* menus and dropdowns */
+    --layer-dialog: 1000;    /* dialogs and side sheets, the accessibility panel */
+    --layer-search: 1050;
+    --layer-toast: 1100;
+    --layer-reading: 1200;   /* reading guide and mask from the accessibility panel */
     --control-h: 36px;
     --control-h-sm: 30px;
     --row-h: 44px;

@@ -351,7 +351,7 @@ input.toggle-switch {
 .table th {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: var(--layer-sticky);
     height: 40px;
     padding: var(--row-pad-y) var(--row-pad-x);
     border-top: 1px solid var(--rule);
@@ -508,7 +508,7 @@ th.sortable.sort-desc {
     background: var(--bg-float);
     box-shadow: var(--shadow-float);
     color: var(--text);
-    z-index: 900;
+    z-index: var(--layer-menu);
 }
 
 .menu-item,
@@ -598,7 +598,7 @@ th.sortable.sort-desc {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: var(--layer-dialog);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -694,7 +694,7 @@ th.sortable.sort-desc {
     position: fixed;
     inset-inline-end: var(--space-4);
     bottom: var(--space-4);
-    z-index: 1100;
+    z-index: var(--layer-toast);
     display: flex;
     flex-direction: column;
     gap: var(--space-2);

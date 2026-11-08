@@ -207,144 +207,160 @@
         maskBottom.style.height = `${Math.max(0, window.innerHeight - bottom)}px`;
     }
 
-    function optionHtml(value, label, selected) {
-        return `<option value="${esc(value)}"${selected ? ' selected' : ''}>${esc(label)}</option>`;
+    // ── Panel: a side sheet dialog, built on open and removed on close ──
+
+    function uiLang() {
+        return document.documentElement.lang || window.BetterDesk?.lang || 'en';
     }
 
-    function rangeField(key, label, min, max, step, suffix) {
-        const value = settings[key];
+    function formatNumber(value, options) {
+        try {
+            return new Intl.NumberFormat(uiLang(), options).format(value);
+        } catch (_) {
+            return String(value);
+        }
+    }
+
+    // Values in plain units: "100 %", "1.5", "Normal" or "+0.05 em"
+    function formatValue(key, value) {
+        const numeric = Number(value);
+        if (key === 'fontScale' || key === 'saturation') {
+            return formatNumber(numeric / 100, { style: 'percent', maximumFractionDigits: 0 });
+        }
+        if (key === 'lineHeight') return formatNumber(numeric, { maximumFractionDigits: 2 });
+        if (numeric === 0) return tr('spacing_normal', 'Normal');
+        return `+${formatNumber(numeric, { maximumFractionDigits: 3 })} em`;
+    }
+
+    function rangeField(key, label, min, max, step) {
+        const id = `bd-a11y-${key}`;
+        const text = formatValue(key, settings[key]);
         return `
-            <div class="bd-a11y-field">
-                <label for="bd-a11y-${key}">${esc(label)}</label>
-                <input id="bd-a11y-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${esc(value)}" data-a11y-field="${key}">
-                <output data-a11y-output="${key}">${esc(formatValue(key, value, suffix))}</output>
+            <div class="a11y-range">
+                <label class="a11y-label" for="${id}">${esc(label)}</label>
+                <output class="a11y-value" for="${id}" data-a11y-output="${key}">${esc(text)}</output>
+                <input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${esc(settings[key])}" aria-valuetext="${esc(text)}" data-a11y-field="${key}">
             </div>
         `;
     }
 
     function selectField(key, label, options) {
+        const id = `bd-a11y-${key}`;
         return `
-            <div class="bd-a11y-field">
-                <label for="bd-a11y-${key}">${esc(label)}</label>
-                <select id="bd-a11y-${key}" data-a11y-field="${key}">
-                    ${options.map(opt => optionHtml(opt.value, opt.label, settings[key] === opt.value)).join('')}
+            <div class="a11y-field">
+                <label class="a11y-label" for="${id}">${esc(label)}</label>
+                <select class="a11y-select" id="${id}" data-a11y-field="${key}">
+                    ${options.map(opt => `<option value="${esc(opt.value)}"${settings[key] === opt.value ? ' selected' : ''}>${esc(opt.label)}</option>`).join('')}
                 </select>
             </div>
         `;
     }
 
-    function toggleButton(key, icon, label, hint) {
+    function checkField(key, label, hint) {
+        const id = `bd-a11y-${key}`;
         return `
-            <button type="button" class="bd-a11y-toggle" data-a11y-toggle="${key}" aria-pressed="${settings[key] ? 'true' : 'false'}">
-                <span class="material-icons">${esc(icon)}</span>
-                <span><strong>${esc(label)}</strong><small>${esc(hint)}</small></span>
-            </button>
+            <label class="a11y-check" for="${id}">
+                <input id="${id}" type="checkbox" data-a11y-toggle="${key}"${settings[key] ? ' checked' : ''} aria-labelledby="${id}-label" aria-describedby="${id}-hint">
+                <span class="a11y-check-label" id="${id}-label">${esc(label)}</span>
+                <span class="a11y-hint" id="${id}-hint">${esc(hint)}</span>
+            </label>
         `;
     }
 
-    function profileButton(profile, icon, label, hint) {
-        const active = settings.activeProfile === profile;
+    function profileButton(profile, label, hint) {
         return `
-            <button type="button" class="bd-a11y-profile" data-a11y-profile="${profile}" aria-pressed="${active ? 'true' : 'false'}">
-                <span class="material-icons">${esc(icon)}</span>
-                <span><strong>${esc(label)}</strong><small>${esc(hint)}</small></span>
-            </button>
+            <li>
+                <button type="button" class="a11y-profile" data-a11y-profile="${profile}" aria-pressed="${settings.activeProfile === profile ? 'true' : 'false'}">
+                    <span class="a11y-profile-mark" aria-hidden="true"></span>
+                    <span class="a11y-profile-title">${esc(label)}</span>
+                    <span class="a11y-hint">${esc(hint)}</span>
+                </button>
+            </li>
         `;
     }
 
-    function formatValue(key, value, suffix) {
-        if (key === 'fontScale' || key === 'saturation') return `${Math.round(value)}${suffix}`;
-        if (key === 'lineHeight') return Number(value).toFixed(2);
-        return `${Number(value).toFixed(3)}${suffix}`;
+    function section(id, title, inner) {
+        return `
+            <section class="a11y-section" aria-labelledby="bd-a11y-h-${id}">
+                <h3 id="bd-a11y-h-${id}">${esc(title)}</h3>
+                ${inner}
+            </section>
+        `;
     }
 
-    function buildModalHtml() {
+    function buildPanelHtml() {
+        const closeLabel = tr('close', 'Close accessibility settings');
         return `
-            <div class="bd-a11y-modal" role="dialog" aria-modal="true" aria-labelledby="bd-a11y-title">
-                <div class="bd-a11y-header">
-                    <div class="bd-a11y-title">
-                        <span class="material-icons">accessibility_new</span>
-                        <div>
-                            <h2 id="bd-a11y-title">${esc(tr('title', 'Accessibility'))}</h2>
-                            <p>${esc(tr('subtitle', 'Adjust the console to your vision, motion and reading needs.'))}</p>
+            <div class="a11y-sheet bd-a11y-modal" role="dialog" aria-modal="true" aria-labelledby="bd-a11y-title" aria-describedby="bd-a11y-desc" tabindex="-1">
+                <div class="a11y-sheet-head">
+                    <div class="a11y-sheet-titles">
+                        <h2 id="bd-a11y-title">${esc(tr('title', 'Accessibility'))}</h2>
+                        <p id="bd-a11y-desc">${esc(tr('subtitle', 'Changes to text, color and motion apply right away and are saved in this browser.'))}</p>
+                    </div>
+                    <button type="button" class="a11y-close bd-a11y-close" data-a11y-close aria-label="${esc(closeLabel)}" title="${esc(closeLabel)}">
+                        <span class="material-icons" aria-hidden="true">close</span>
+                    </button>
+                </div>
+                <div class="a11y-sheet-body">
+                    ${section('profiles', tr('profiles', 'Quick profiles'), `
+                        <p class="a11y-note">${esc(tr('profiles_note', 'Each profile changes several settings below at once. Choose it again to go back to the defaults.'))}</p>
+                        <ul class="a11y-profiles">
+                            ${profileButton('lowVision', tr('profile_low_vision', 'Low vision'), tr('profile_low_vision_hint', 'Larger text, high contrast, a strong focus ring and a large pointer.'))}
+                            ${profileButton('dyslexia', tr('profile_dyslexia', 'Reading comfort'), tr('profile_dyslexia_hint', 'Readable font, larger text and wider spacing.'))}
+                            ${profileButton('motionSafe', tr('profile_motion_safe', 'Less motion'), tr('profile_motion_safe_hint', 'Stops animations and adds a reading guide and a strong focus ring.'))}
+                            ${profileButton('colorAssist', tr('profile_color_assist', 'Color support'), tr('profile_color_assist_hint', 'Color filter, stronger colors, underlined links and marked headings.'))}
+                        </ul>
+                    `)}
+                    ${section('reading', tr('reading', 'Reading'), `
+                        <div class="a11y-ranges">
+                            ${rangeField('fontScale', tr('font_size', 'Font size'), 90, 160, 5)}
+                            ${rangeField('lineHeight', tr('line_height', 'Line height'), 1.2, 2.1, 0.05)}
+                            ${rangeField('letterSpacing', tr('letter_spacing', 'Letter spacing'), 0, 0.14, 0.005)}
+                            ${rangeField('wordSpacing', tr('word_spacing', 'Word spacing'), 0, 0.22, 0.01)}
                         </div>
-                    </div>
-                    <button type="button" class="bd-a11y-close" aria-label="${esc(tr('close', 'Close'))}">
-                        <span class="material-icons">close</span>
-                    </button>
+                        <div class="a11y-checks">
+                            ${checkField('readableFont', tr('readable_font', 'Readable font'), tr('readable_font_hint', 'Uses a wide, plain font such as Verdana.'))}
+                            ${checkField('dyslexiaFont', tr('dyslexia_spacing', 'Dyslexia spacing'), tr('dyslexia_spacing_hint', 'Adds space between letters and words.'))}
+                        </div>
+                    `)}
+                    ${section('visual', tr('visual', 'Visual'), `
+                        ${selectField('contrast', tr('contrast', 'Contrast'), [
+                            { value: 'normal', label: tr('contrast_normal', 'Normal') },
+                            { value: 'high-dark', label: tr('contrast_high_dark', 'High contrast dark') },
+                            { value: 'high-light', label: tr('contrast_high_light', 'High contrast light') },
+                            { value: 'yellow-black', label: tr('contrast_yellow_black', 'Yellow on black') }
+                        ])}
+                        ${selectField('colorFilter', tr('color_filter', 'Color vision filter'), [
+                            { value: 'none', label: tr('filter_none', 'None') },
+                            { value: 'protanopia', label: tr('filter_protanopia', 'Protanopia (red-blind)') },
+                            { value: 'deuteranopia', label: tr('filter_deuteranopia', 'Deuteranopia (green-blind)') },
+                            { value: 'tritanopia', label: tr('filter_tritanopia', 'Tritanopia (blue-blind)') },
+                            { value: 'achromatopsia', label: tr('filter_achromatopsia', 'Grayscale') }
+                        ])}
+                        <div class="a11y-ranges">
+                            ${rangeField('saturation', tr('saturation', 'Color saturation'), 0, 180, 5)}
+                        </div>
+                        <div class="a11y-checks">
+                            ${checkField('underlineLinks', tr('underline_links', 'Underline links'), tr('underline_links_hint', 'Makes links visible without relying on color.'))}
+                            ${checkField('highlightLinks', tr('highlight_links', 'Highlight actions'), tr('highlight_links_hint', 'Outlines links and buttons.'))}
+                            ${checkField('highlightHeadings', tr('highlight_headings', 'Highlight headings'), tr('highlight_headings_hint', 'Marks section titles with a color bar.'))}
+                            ${checkField('hideMedia', tr('hide_media', 'Dim media'), tr('hide_media_hint', 'Fades out images, videos and charts.'))}
+                        </div>
+                    `)}
+                    ${section('interaction', tr('interaction', 'Interaction'), `
+                        <div class="a11y-checks">
+                            ${checkField('strongFocus', tr('strong_focus', 'Strong focus'), tr('strong_focus_hint', 'Shows a large keyboard focus ring.'))}
+                            ${checkField('largeCursor', tr('large_cursor', 'Large cursor'), tr('large_cursor_hint', 'Uses a larger high-contrast pointer.'))}
+                            ${checkField('reduceMotion', tr('reduce_motion', 'Reduce motion'), tr('reduce_motion_hint', 'Turns off transitions and smooth scrolling.'))}
+                            ${checkField('pauseAnimations', tr('pause_animations', 'Pause animations'), tr('pause_animations_hint', 'Freezes animations such as loading spinners.'))}
+                            ${checkField('readingGuide', tr('reading_guide', 'Reading guide'), tr('reading_guide_hint', 'A line follows the pointer to help you keep your place.'))}
+                            ${checkField('readingMask', tr('reading_mask', 'Reading mask'), tr('reading_mask_hint', 'Dims content above and below the pointer.'))}
+                        </div>
+                    `)}
                 </div>
-                <div class="bd-a11y-body">
-                    <div class="bd-a11y-controls">
-                        <section class="bd-a11y-section">
-                            <div class="bd-a11y-section-title"><span class="material-icons">auto_awesome</span>${esc(tr('profiles', 'Quick profiles'))}</div>
-                            <div class="bd-a11y-profiles">
-                                ${profileButton('lowVision', 'visibility', tr('profile_low_vision', 'Low vision'), tr('profile_low_vision_hint', 'Larger text, strong contrast and focus.'))}
-                                ${profileButton('dyslexia', 'menu_book', tr('profile_dyslexia', 'Reading comfort'), tr('profile_dyslexia_hint', 'Readable font and wider spacing.'))}
-                                ${profileButton('motionSafe', 'speed', tr('profile_motion_safe', 'Motion safe'), tr('profile_motion_safe_hint', 'Reduces transitions and pauses animation.'))}
-                                ${profileButton('colorAssist', 'palette', tr('profile_color_assist', 'Color support'), tr('profile_color_assist_hint', 'Color filter, labels and highlighted links.'))}
-                            </div>
-                        </section>
-
-                        <section class="bd-a11y-section">
-                            <div class="bd-a11y-section-title"><span class="material-icons">text_fields</span>${esc(tr('reading', 'Reading'))}</div>
-                            <div class="bd-a11y-grid">
-                                ${rangeField('fontScale', tr('font_size', 'Font size'), 90, 160, 5, '%')}
-                                ${rangeField('lineHeight', tr('line_height', 'Line height'), 1.2, 2.1, 0.05, '')}
-                                ${rangeField('letterSpacing', tr('letter_spacing', 'Letter spacing'), 0, 0.14, 0.005, 'em')}
-                                ${rangeField('wordSpacing', tr('word_spacing', 'Word spacing'), 0, 0.22, 0.01, 'em')}
-                            </div>
-                            <div class="bd-a11y-grid">
-                                ${toggleButton('readableFont', 'text_fields', tr('readable_font', 'Readable font'), tr('readable_font_hint', 'Uses broad, familiar letter shapes.'))}
-                                ${toggleButton('dyslexiaFont', 'format_align_left', tr('dyslexia_spacing', 'Dyslexia spacing'), tr('dyslexia_spacing_hint', 'Adds extra spacing for long text.'))}
-                            </div>
-                        </section>
-
-                        <section class="bd-a11y-section">
-                            <div class="bd-a11y-section-title"><span class="material-icons">contrast</span>${esc(tr('visual', 'Visual'))}</div>
-                            <div class="bd-a11y-grid">
-                                ${selectField('contrast', tr('contrast', 'Contrast'), [
-                                    { value: 'normal', label: tr('contrast_normal', 'Normal') },
-                                    { value: 'high-dark', label: tr('contrast_high_dark', 'High contrast dark') },
-                                    { value: 'high-light', label: tr('contrast_high_light', 'High contrast light') },
-                                    { value: 'yellow-black', label: tr('contrast_yellow_black', 'Yellow on black') }
-                                ])}
-                                ${selectField('colorFilter', tr('color_filter', 'Color vision filter'), [
-                                    { value: 'none', label: tr('filter_none', 'None') },
-                                    { value: 'protanopia', label: tr('filter_protanopia', 'Protanopia') },
-                                    { value: 'deuteranopia', label: tr('filter_deuteranopia', 'Deuteranopia') },
-                                    { value: 'tritanopia', label: tr('filter_tritanopia', 'Tritanopia') },
-                                    { value: 'achromatopsia', label: tr('filter_achromatopsia', 'Achromatopsia') }
-                                ])}
-                            </div>
-                            ${rangeField('saturation', tr('saturation', 'Color saturation'), 0, 180, 5, '%')}
-                            <div class="bd-a11y-grid">
-                                ${toggleButton('underlineLinks', 'link', tr('underline_links', 'Underline links'), tr('underline_links_hint', 'Makes links visible without relying on color.'))}
-                                ${toggleButton('highlightLinks', 'touch_app', tr('highlight_links', 'Highlight actions'), tr('highlight_links_hint', 'Outlines links and buttons.'))}
-                                ${toggleButton('highlightHeadings', 'title', tr('highlight_headings', 'Highlight headings'), tr('highlight_headings_hint', 'Marks section titles with a color bar.'))}
-                                ${toggleButton('hideMedia', 'image', tr('hide_media', 'Dim media'), tr('hide_media_hint', 'Dims images, videos and canvases.'))}
-                            </div>
-                        </section>
-
-                        <section class="bd-a11y-section">
-                            <div class="bd-a11y-section-title"><span class="material-icons">touch_app</span>${esc(tr('interaction', 'Interaction'))}</div>
-                            <div class="bd-a11y-grid">
-                                ${toggleButton('strongFocus', 'gps_fixed', tr('strong_focus', 'Strong focus'), tr('strong_focus_hint', 'Shows a large keyboard focus ring.'))}
-                                ${toggleButton('largeCursor', 'touch_app', tr('large_cursor', 'Large cursor'), tr('large_cursor_hint', 'Uses a larger high-contrast pointer.'))}
-                                ${toggleButton('reduceMotion', 'speed', tr('reduce_motion', 'Reduce motion'), tr('reduce_motion_hint', 'Shortens transitions and smooth scrolling.'))}
-                                ${toggleButton('pauseAnimations', 'speed', tr('pause_animations', 'Pause animations'), tr('pause_animations_hint', 'Stops looping visual motion.'))}
-                                ${toggleButton('readingGuide', 'drag_handle', tr('reading_guide', 'Reading guide'), tr('reading_guide_hint', 'Follows the pointer with a bright line.'))}
-                                ${toggleButton('readingMask', 'visibility_off', tr('reading_mask', 'Reading mask'), tr('reading_mask_hint', 'Dims content above and below the pointer.'))}
-                            </div>
-                        </section>
-                    </div>
-                </div>
-                <div class="bd-a11y-footer">
-                    <button type="button" class="btn btn-secondary" data-a11y-reset>
-                        <span class="material-icons">restart_alt</span>${esc(tr('reset', 'Reset'))}
-                    </button>
-                    <div class="bd-a11y-footer-actions">
-                        <button type="button" class="btn btn-secondary" data-a11y-close>${esc(tr('done', 'Done'))}</button>
-                    </div>
+                <div class="a11y-sheet-foot">
+                    <button type="button" class="a11y-btn" data-a11y-reset>${esc(tr('reset_defaults', 'Reset to defaults'))}</button>
+                    <button type="button" class="a11y-btn a11y-btn-primary" data-a11y-close>${esc(tr('done', 'Done'))}</button>
                 </div>
             </div>
         `;
@@ -354,46 +370,76 @@
         if (modalEl) return;
         lastFocusedEl = document.activeElement;
 
+        // The layer hangs off <body>, outside the shell, so no stacking
+        // context in the page (sticky headers, the top bar) can cover it.
         modalEl = document.createElement('div');
-        modalEl.className = 'bd-a11y-overlay';
-        modalEl.innerHTML = buildModalHtml();
+        modalEl.className = 'a11y-layer';
+        modalEl.innerHTML = `<div class="a11y-backdrop" data-a11y-close></div>${buildPanelHtml()}`;
         document.body.appendChild(modalEl);
         document.body.classList.add('bd-a11y-modal-open');
-
-        modalEl.addEventListener('click', event => {
-            if (event.target === modalEl || event.target.closest('[data-a11y-close]') || event.target.closest('.bd-a11y-close')) closeModal();
-        });
+        const app = document.getElementById('app');
+        if (app && !app.inert) {
+            app.inert = true;
+            app.dataset.a11yInert = 'true';
+        }
 
         modalEl.addEventListener('keydown', handleModalKeydown);
         modalEl.addEventListener('input', handleModalInput);
         modalEl.addEventListener('change', handleModalInput);
         modalEl.addEventListener('click', handleModalAction);
+        document.addEventListener('focusin', keepFocusInside);
 
-        const first = modalEl.querySelector('button, select, input, [tabindex]:not([tabindex="-1"])');
-        if (first) first.focus();
+        const btn = document.getElementById('accessibility-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+
+        modalEl.querySelector('[role="dialog"]').focus();
     }
 
     function closeModal() {
         if (!modalEl) return;
+        document.removeEventListener('focusin', keepFocusInside);
         modalEl.remove();
         modalEl = null;
         document.body.classList.remove('bd-a11y-modal-open');
-        if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') lastFocusedEl.focus();
+        const app = document.getElementById('app');
+        if (app && app.dataset.a11yInert === 'true') {
+            app.inert = false;
+            delete app.dataset.a11yInert;
+        }
+        const btn = document.getElementById('accessibility-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        // Back to the opener; on phones it sits in the folded top bar menu, which may have closed
+        let target = lastFocusedEl && lastFocusedEl.isConnected && typeof lastFocusedEl.focus === 'function' ? lastFocusedEl : btn;
+        if (target && target.getClientRects().length === 0) target = document.getElementById('ux35-actions-menu-btn') || target;
+        if (target) target.focus();
+    }
+
+    function focusableInPanel() {
+        return [...modalEl.querySelectorAll('button, select, input, a[href], [tabindex]:not([tabindex="-1"])')]
+            .filter(el => !el.disabled && el.getClientRects().length > 0 && !el.classList.contains('a11y-backdrop'));
+    }
+
+    function keepFocusInside(event) {
+        if (!modalEl || modalEl.contains(event.target)) return;
+        const first = focusableInPanel()[0];
+        if (first) first.focus();
     }
 
     function handleModalKeydown(event) {
         if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
             closeModal();
             return;
         }
         if (event.key !== 'Tab') return;
 
-        const focusable = [...modalEl.querySelectorAll('button, select, input, a[href], [tabindex]:not([tabindex="-1"])')]
-            .filter(el => !el.disabled && el.offsetParent !== null);
+        const focusable = focusableInPanel();
         if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
+        const dialog = modalEl.querySelector('[role="dialog"]');
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
             event.preventDefault();
             last.focus();
         } else if (!event.shiftKey && document.activeElement === last) {
@@ -403,23 +449,24 @@
     }
 
     function handleModalInput(event) {
+        const toggle = event.target.closest('[data-a11y-toggle]');
+        if (toggle) {
+            if (event.type !== 'change') return;
+            const key = toggle.dataset.a11yToggle;
+            saveSettings({ ...settings, activeProfile: '', [key]: toggle.checked });
+            syncModalControls();
+            return;
+        }
         const field = event.target.closest('[data-a11y-field]');
         if (!field) return;
         const key = field.dataset.a11yField;
         const value = field.type === 'range' ? Number(field.value) : field.value;
         saveSettings({ ...settings, activeProfile: '', [key]: value });
         updateOutput(key);
+        syncProfiles();
     }
 
     function handleModalAction(event) {
-        const toggle = event.target.closest('[data-a11y-toggle]');
-        if (toggle) {
-            const key = toggle.dataset.a11yToggle;
-            saveSettings({ ...settings, activeProfile: '', [key]: !settings[key] });
-            syncModalControls();
-            return;
-        }
-
         const profile = event.target.closest('[data-a11y-profile]');
         if (profile) {
             applyProfile(profile.dataset.a11yProfile);
@@ -431,14 +478,23 @@
             return;
         }
 
+        if (event.target.closest('[data-a11y-close]')) closeModal();
     }
 
     function updateOutput(key) {
         if (!modalEl) return;
+        const text = formatValue(key, settings[key]);
         const output = modalEl.querySelector(`[data-a11y-output="${key}"]`);
-        if (!output) return;
-        const suffix = key === 'fontScale' || key === 'saturation' ? '%' : key === 'lineHeight' ? '' : 'em';
-        output.textContent = formatValue(key, settings[key], suffix);
+        if (output) output.textContent = text;
+        const field = modalEl.querySelector(`input[type="range"][data-a11y-field="${key}"]`);
+        if (field) field.setAttribute('aria-valuetext', text);
+    }
+
+    function syncProfiles() {
+        if (!modalEl) return;
+        modalEl.querySelectorAll('[data-a11y-profile]').forEach(profile => {
+            profile.setAttribute('aria-pressed', String(settings.activeProfile === profile.dataset.a11yProfile));
+        });
     }
 
     function syncModalControls() {
@@ -449,12 +505,9 @@
             updateOutput(key);
         });
         modalEl.querySelectorAll('[data-a11y-toggle]').forEach(toggle => {
-            const key = toggle.dataset.a11yToggle;
-            toggle.setAttribute('aria-pressed', String(settings[key]));
+            toggle.checked = settings[toggle.dataset.a11yToggle] === true;
         });
-        modalEl.querySelectorAll('[data-a11y-profile]').forEach(profile => {
-            profile.setAttribute('aria-pressed', String(settings.activeProfile === profile.dataset.a11yProfile));
-        });
+        syncProfiles();
     }
 
     function applyProfile(profile) {
@@ -509,7 +562,10 @@
         applySettings(settings);
         syncButtonState();
         const button = document.getElementById('accessibility-btn');
-        if (button) button.addEventListener('click', openModal);
+        if (button) {
+            button.setAttribute('aria-expanded', 'false');
+            button.addEventListener('click', openModal);
+        }
     }
 
     if (document.readyState === 'loading') {
