@@ -1,68 +1,37 @@
 <%- include('layouts/main', {
-    title: _('attestation.title') || 'Device Attestation',
-    pageStyles: ['policies'],
+    title: _('nav.attestation'),
+    uiReworked: true,
+    pageStyles: ['ui/attestation'],
     pageScripts: ['attestation'],
     currentPage: 'attestation',
-    breadcrumb: [{ label: _('attestation.title') || 'Device Attestation' }],
+    breadcrumb: [{ label: _('nav.attestation') }],
     body: `
-        <div class="policy-page">
-            <div class="policy-header">
-                <h1>${_('attestation.title') || 'Device Attestation'}</h1>
-                <p class="policy-subtitle">${_('attestation.subtitle') || 'Monitor device identity verification and hardware fingerprints'}</p>
+        <div class="page att-page">
+            <div class="page-head">
+                <h1>${_('nav.attestation')}</h1>
+                <p class="page-description">${_('attestation.page_description')}</p>
             </div>
 
-            <div class="attestation-stats" id="attestation-stats">
-                <div class="att-stat-card">
-                    <span class="material-icons">verified</span>
-                    <div>
-                        <div class="att-stat-value" id="att-verified">0</div>
-                        <div class="att-stat-label">${_('attestation.verified') || 'Verified'}</div>
-                    </div>
+            <section class="section" aria-labelledby="att-list-title">
+                <h2 id="att-list-title" class="sr-only">${_('nav.attestation')}</h2>
+                <p class="count-line" id="att-count-line" aria-live="polite" hidden></p>
+                <div class="table-scroll">
+                    <table class="data-table att-table" id="attestation-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${_('attestation.col_device_short')}</th>
+                                <th scope="col">${_('attestation.col_fingerprint')}</th>
+                                <th scope="col">${_('attestation.col_status')}</th>
+                                <th scope="col">${_('attestation.col_last_check')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="attestation-body">
+                            <tr><td colspan="5" class="state-cell">${_('attestation.loading')}</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="att-stat-card warning">
-                    <span class="material-icons">warning</span>
-                    <div>
-                        <div class="att-stat-value" id="att-pending">0</div>
-                        <div class="att-stat-label">${_('attestation.pending') || 'Pending'}</div>
-                    </div>
-                </div>
-                <div class="att-stat-card danger">
-                    <span class="material-icons">gpp_bad</span>
-                    <div>
-                        <div class="att-stat-value" id="att-failed">0</div>
-                        <div class="att-stat-label">${_('attestation.failed') || 'Failed'}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="policy-card">
-                <div class="policy-card-header">
-                    <div class="policy-card-icon"><span class="material-icons">fingerprint</span></div>
-                    <div class="policy-card-info">
-                        <h3>${_('attestation.device_list') || 'Device Attestation Records'}</h3>
-                        <p>${_('attestation.device_list_desc') || 'Hardware fingerprints and identity verification status'}</p>
-                    </div>
-                </div>
-                <div class="policy-card-body">
-                    <div class="table-responsive">
-                        <table class="data-table" id="attestation-table">
-                            <thead>
-                                <tr>
-                                    <th>${_('attestation.col_device') || 'Device ID'}</th>
-                                    <th>${_('attestation.col_hostname') || 'Hostname'}</th>
-                                    <th>${_('attestation.col_fingerprint') || 'Fingerprint'}</th>
-                                    <th>${_('attestation.col_status') || 'Status'}</th>
-                                    <th>${_('attestation.col_last_check') || 'Last Check'}</th>
-                                    <th>${_('attestation.col_actions') || 'Actions'}</th>
-                                </tr>
-                            </thead>
-                            <tbody id="attestation-body">
-                                <tr><td colspan="6" class="text-muted text-center">${_('common.loading') || 'Loading...'}</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
     `
 }) %>
