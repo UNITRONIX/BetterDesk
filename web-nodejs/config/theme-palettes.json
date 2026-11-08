@@ -21,7 +21,7 @@
     "accentPurple": "#a9bcc4",
     "accentPurpleHover": "#c2d1d7",
     "accentPurpleMuted": "rgba(169, 188, 196, 0.15)",
-    "borderPrimary": "#626c6c",
+    "borderPrimary": "#6a7474",
     "borderSecondary": "#2c3131"
   },
   "light": {
@@ -46,7 +46,7 @@
     "accentPurple": "#4a5a62",
     "accentPurpleHover": "#36444b",
     "accentPurpleMuted": "rgba(74, 90, 98, 0.15)",
-    "borderPrimary": "#8c9699",
+    "borderPrimary": "#7e888b",
     "borderSecondary": "#dde1e2"
   }
 }

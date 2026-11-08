@@ -93,6 +93,48 @@ describe('hexToMutedRgba', () => {
     });
 });
 
+// WCAG relative luminance and contrast ratio of two #rrggbb colours
+function luminance(hex) {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(a, b) {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+}
+
+describe('field border contrast', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const themesDir = path.join(__dirname, '..', 'themes');
+    const palettes = [
+        ['built-in dark', BUILTIN_THEME_PALETTES.dark],
+        ['built-in light', BUILTIN_THEME_PALETTES.light],
+        ...fs.readdirSync(themesDir).filter((f) => f.endsWith('.json')).map((f) => [
+            'preset ' + f,
+            JSON.parse(fs.readFileSync(path.join(themesDir, f), 'utf8')).branding.colors
+        ])
+    ];
+    // Fields and controls sit on the page, sections, hover rows and floating surfaces
+    const surfaces = ['bgPrimary', 'bgSecondary', 'bgTertiary', 'bgElevated'];
+
+    test.each(palettes)('%s: borderPrimary reaches 3:1 on every surface', (_name, colors) => {
+        const ratios = Object.fromEntries(surfaces.map((s) =>
+            [s, Math.floor(contrast(colors.borderPrimary, colors[s]) * 100) / 100]));
+        const below = Object.entries(ratios).filter(([, r]) => r < 3);
+        expect({ border: colors.borderPrimary, below }).toEqual({ border: colors.borderPrimary, below: [] });
+    });
+
+    test('contrast() matches known WCAG values', () => {
+        expect(contrast('#000000', '#ffffff')).toBeCloseTo(21, 5);
+        expect(contrast('#767676', '#ffffff')).toBeCloseTo(4.54, 2);
+    });
+});
+
 describe('generateThemeCss in system mode', () => {
     test('emits light colours and switches to dark under prefers-color-scheme', () => {
         const service = require('../services/brandingService');
