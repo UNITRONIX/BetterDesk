@@ -91,6 +91,7 @@
     let draggedDeviceId = null;
     let lastDragClientY = null;
     let dragScrollRafId = null;
+    let dragImageEl = null;
     const DRAG_SCROLL_EDGE_PX = 56;
     const DRAG_SCROLL_MIN_SPEED = 4;
     const DRAG_SCROLL_MAX_SPEED = 20;
@@ -2525,6 +2526,14 @@
                         <textarea id="edit-note" class="form-input" rows="2" 
                                   placeholder="${_('devices.note_placeholder')}" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
                     </div>
+                    ${folders.length ? `
+                    <div class="device-info-item full-width">
+                        <label for="edit-folder">${_('device_detail.folder')}</label>
+                        <select id="edit-folder" class="form-select">
+                            <option value="">${Utils.escapeHtml(_('folders.unassigned'))}</option>
+                            ${folders.map(f => `<option value="${Utils.escapeHtml(String(f.id))}"${folderIdsEqual(device.folder_id, f.id) ? ' selected' : ''}>${Utils.escapeHtml(f.name)}</option>`).join('')}
+                        </select>
+                    </div>` : ''}
                     <div class="device-info-item full-width device-edit-tags-field${focusTags ? ' device-edit-tags-focus' : ''}">
                         <label for="${editTagInputId}">${_('device_detail.tags')}</label>
                         <p class="form-hint">${Utils.escapeHtml(_('devices.tags_device_hint') || 'Remove a tag here to unassign it from this device only. Use Manage Tags to rename or delete a tag everywhere.')}</p>
@@ -2568,6 +2577,7 @@
                 { label: _('actions.save'), class: 'btn-primary', onClick: async () => {
                     const displayName = document.getElementById('edit-display-name').value.trim();
                     const note = document.getElementById('edit-note').value.trim();
+                    const folderSelect = document.getElementById('edit-folder');
                     const tags = [...editTags];
                     const saveBtn = document.querySelector('.modal-overlay.open [data-btn-index="0"]');
                     const closeBtn = document.querySelector('.modal-overlay.open [data-btn-index="1"]');
@@ -2596,6 +2606,16 @@
                             body: JSON.stringify({ tags }),
                             headers: { 'Content-Type': 'application/json' }
                         });
+                        // Folder: the keyboard and touch way to do what dragging a row onto a folder does
+                        if (folderSelect && !folderIdsEqual(folderSelect.value || null, device.folder_id || null)) {
+                            const folderId = folderSelect.value ? Number(folderSelect.value) : null;
+                            await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/folder`, {
+                                method: 'PATCH',
+                                body: { folderId }
+                            });
+                            device.folder_id = folderId;
+                            updateFolderCounts();
+                        }
 
                         device.display_name = displayName;
                         device.note = note;
@@ -4156,6 +4176,78 @@
     }
     
     /**
+     * Drag image: the device's OS mark, its name and its ID, instead of the
+     * browser's faded copy of the whole row. The element has to be in the
+     * document and rendered when setDragImage runs, so it sits off-screen
+     * (see .device-drag-image) until dragend removes it.
+     */
+    function removeDragImage() {
+        if (dragImageEl) {
+            dragImageEl.remove();
+            dragImageEl = null;
+        }
+    }
+
+    function buildDragImage(deviceId) {
+        removeDragImage();
+        const device = devices.find(d => d.id === deviceId);
+        const name = device ? (device.display_name || device.hostname || device.note || '') : '';
+        const el = document.createElement('div');
+        el.className = 'device-drag-image';
+        el.setAttribute('aria-hidden', 'true');
+        el.innerHTML = `
+            <span class="device-drag-box">
+                ${Utils.getPlatformIconHtml(device && (device.platform || device.os))}
+                <span class="device-drag-text">
+                    ${name ? `<span class="device-drag-name">${Utils.escapeHtml(name)}</span>` : ''}
+                    <span class="device-drag-id mono">${Utils.escapeHtml(deviceId)}</span>
+                </span>
+            </span>`;
+        document.body.appendChild(el);
+        dragImageEl = el;
+        return el;
+    }
+
+    /** Put back everything a row drag changed (also called on drop: the row may be re-rendered before dragend) */
+    function endRowDrag() {
+        tableBody?.querySelectorAll('tr.dragging').forEach(row => row.classList.remove('dragging'));
+        draggedDeviceId = null;
+        stopDragAutoScroll();
+        removeDragImage();
+        document.querySelectorAll('.folder-chip.drag-over, .group-chip.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+    }
+
+    /** Whether a folder entry takes a dropped device ("All devices" does not) */
+    function folderAcceptsDrop(folder) {
+        return folder.dataset.folder !== 'all';
+    }
+
+    /** Whether a group entry takes a dropped device (tag groups fill themselves; "All groups" only removes from the open group) */
+    function groupAcceptsDrop(chip) {
+        const target = chip.dataset.group;
+        if (target === 'all') return currentGroup !== 'all';
+        const group = deviceGroups.find(item => item.guid === target);
+        return !!group && (group.source_type || 'manual') !== 'tag';
+    }
+
+    /** dragover/dragleave on a folder or group entry: mark it while a device row is over it */
+    function wireDropTarget(el, accepts) {
+        el.addEventListener('dragover', (e) => {
+            if (!draggedDeviceId || !accepts(el)) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            el.classList.add('drag-over');
+        });
+        el.addEventListener('dragleave', (e) => {
+            // Moving onto the label or count inside the entry is not leaving it
+            if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+            el.classList.remove('drag-over');
+        });
+    }
+
+    /**
      * Initialize drag & drop - row drag events only (called once)
      */
     function initDragDrop() {
@@ -4170,29 +4262,25 @@
             }
             const row = e.target.closest('tr');
             if (!row) return;
-            
+
             draggedDeviceId = row.dataset.id;
             row.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', draggedDeviceId);
+            if (typeof e.dataTransfer.setDragImage === 'function') {
+                const image = buildDragImage(draggedDeviceId);
+                // Pointer just outside the box's top start corner, so the
+                // cursor does not cover the OS mark (the wrapper's padding
+                // is transparent).
+                const rtl = getComputedStyle(image).direction === 'rtl';
+                const inset = 6;
+                e.dataTransfer.setDragImage(image, rtl ? image.offsetWidth - inset : inset, inset);
+            }
             lastDragClientY = e.clientY;
             startDragAutoScroll();
         });
-        
-        tableBody?.addEventListener('dragend', (e) => {
-            const row = e.target.closest('tr');
-            if (row) row.classList.remove('dragging');
-            draggedDeviceId = null;
-            stopDragAutoScroll();
-            
-            // Remove drop indicators
-            document.querySelectorAll('.folder-chip.drag-over').forEach(el => {
-                el.classList.remove('drag-over');
-            });
-            document.querySelectorAll('.group-chip.drag-over').forEach(el => {
-                el.classList.remove('drag-over');
-            });
-        });
+
+        tableBody?.addEventListener('dragend', endRowDrag);
     }
     
     /**
@@ -4204,21 +4292,13 @@
             // Skip if already has drag handlers (check with data attribute)
             if (folder.dataset.dragAttached) return;
             folder.dataset.dragAttached = 'true';
-            
-            folder.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                folder.classList.add('drag-over');
-            });
-            
-            folder.addEventListener('dragleave', () => {
-                folder.classList.remove('drag-over');
-            });
-            
+
+            wireDropTarget(folder, folderAcceptsDrop);
+
             folder.addEventListener('drop', async (e) => {
                 e.preventDefault();
-                folder.classList.remove('drag-over');
-                
+                endRowDrag();
+
                 const deviceId = e.dataTransfer.getData('text/plain');
                 if (!deviceId) return;
                 
@@ -4281,19 +4361,11 @@
             if (chip.dataset.groupDropAttached) return;
             chip.dataset.groupDropAttached = 'true';
 
-            chip.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                chip.classList.add('drag-over');
-            });
-
-            chip.addEventListener('dragleave', () => {
-                chip.classList.remove('drag-over');
-            });
+            wireDropTarget(chip, groupAcceptsDrop);
 
             chip.addEventListener('drop', async (e) => {
                 e.preventDefault();
-                chip.classList.remove('drag-over');
+                endRowDrag();
 
                 const deviceId = e.dataTransfer.getData('text/plain');
                 if (!deviceId) return;

@@ -85,9 +85,10 @@
     font-weight: 600;
 }
 
+/* A device row is dragged over an entry that takes it */
 .filter-option.drag-over {
-    outline: 2px dashed var(--accent);
-    outline-offset: -2px;
+    border-inline-start-color: var(--accent);
+    background: var(--accent-tint);
 }
 
 .filter-option .chip-label {
@@ -359,6 +360,57 @@
 
 .devices-table tr.dragging {
     opacity: 0.5;
+}
+
+/* Drag image for a device row (built in devices.js on dragstart, removed on
+   dragend). It must be rendered for setDragImage, so it waits off-screen.
+   The transparent padding leaves room for the shadow and keeps the pointer
+   off the OS mark. */
+.device-drag-image {
+    position: fixed;
+    top: -1000px;
+    inset-inline-start: 0;
+    padding: var(--space-4);
+    pointer-events: none;
+}
+
+.device-drag-box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 280px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text);
+    font-size: var(--text-sm);
+    line-height: 1.35;
+}
+
+.device-drag-box .os-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.device-drag-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.device-drag-name {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.device-drag-id {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
 }
 
 .devices-table td[data-column="last_online"],
@@ -768,6 +820,11 @@
     .filter-option.active {
         border-bottom-color: var(--accent);
         background: transparent;
+    }
+
+    .filter-option.drag-over {
+        border-bottom-color: var(--accent);
+        background: var(--accent-tint);
     }
 
     .chip-menu-btn {
