@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.5.212] — 2026-11-08
+
+### Changed
 - Restrict WAN `/api/currentUser` to GET and POST while preserving OPTIONS handling.
 
 ---
@@ -4509,3 +4516,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.209]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.208...v3.5.209
 [3.5.210]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.209...v3.5.210
 [3.5.211]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.210...v3.5.211
+[3.5.212]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.211...v3.5.212
