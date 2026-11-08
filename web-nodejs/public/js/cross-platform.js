@@ -67,41 +67,65 @@
         ]},
     ];
 
-    const BAR_COLORS = ['#58a6ff','#3fb950','#d29922','#f85149','#a371f7','#f0883e','#79c0ff','#56d364'];
 
     // ── Helpers ──────────────────────────────────────────────────────
-    function _(key) { return (typeof window._ === 'function') ? window._(key) : key.split('.').pop(); }
+    function _(key, params) {
+        if (typeof window._ === 'function') return window._(key, params || {});
+        return key.split('.').pop();
+    }
 
     function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = String(str);
-        return div.innerHTML;
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-    function statusIcon(val) {
-        const map = { full: '✔', partial: '◐', none: '✖', planned: '◎' };
-        return `<span class="cp-status ${val}" title="${_(('cross_platform.legend_' + val))}">${map[val] || '?'}</span>`;
+    // Support in words; the cell class only adds colour on top of the word
+    function statusCell(val) {
+        const known = ['full', 'partial', 'none', 'planned'].includes(val);
+        const word = known ? _('cross_platform.value_' + val) : '?';
+        return `<td class="cp-cell cp-${known ? val : 'unknown'}">${escapeHtml(word)}</td>`;
     }
 
-    function barHtml(label, value, max, color) {
-        const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-        const safeLabel = escapeHtml(label);
-        const safeColor = (typeof Utils !== 'undefined' && Utils.sanitizeColor)
-            ? Utils.sanitizeColor(color) : color;
-        return `<div class="cp-bar-row">
-            <span class="cp-bar-label">${safeLabel}</span>
-            <span class="cp-bar-track"><span class="cp-bar-fill" style="width:${pct}%;background:${safeColor}"></span></span>
-            <span class="cp-bar-value">${value} (${pct}%)</span>
-        </div>`;
+    // Platform key from the server ("windows", "ubuntu 22.04") to a readable name
+    function platformName(key) {
+        const k = String(key || '');
+        if (!/^[a-z_]+$/.test(k)) return k;
+        const t = _('cross_platform.platform_' + k);
+        return t && t !== 'cross_platform.platform_' + k && t !== 'platform_' + k ? t : k;
+    }
+
+    // A table of counts with the share as a meter and in words
+    function countTable(rows, total, colLabel, nameFn) {
+        if (!rows.length) return '';
+        const body = rows.map(([name, value]) => {
+            const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+            return `<tr>
+                <th scope="row">${escapeHtml(nameFn ? nameFn(name) : name)}</th>
+                <td class="cp-num">${escapeHtml(String(value))}</td>
+                <td><div class="meter"><span class="meter-bar"><span class="meter-fill" style="width:${pct}%"></span></span><span class="meter-value">${pct} %</span></div></td>
+            </tr>`;
+        }).join('');
+        return `<div class="table-scroll"><table class="data-table cp-count-table">
+            <thead><tr><th scope="col">${escapeHtml(colLabel)}</th><th scope="col" class="cp-num">${escapeHtml(_('cross_platform.col_devices'))}</th><th scope="col">${escapeHtml(_('cross_platform.col_share'))}</th></tr></thead>
+            <tbody>${body}</tbody></table></div>`;
+    }
+
+    function errorState(text, retry) {
+        return `<span class="state is-error">${escapeHtml(text)} <button type="button" class="btn btn-sm" data-bd-call="${retry}">${escapeHtml(_('cross_platform.try_again'))}</button></span>`;
     }
 
     // ── Tab switching ────────────────────────────────────────────────
+    const TABS = ['matrix', 'distribution', 'protocols', 'limitations'];
+
     function switchTab(tab) {
-        document.querySelectorAll('.crossplatform-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-        document.querySelectorAll('.crossplatform-panel').forEach(p => p.style.display = 'none');
-        const panel = document.getElementById('panel-' + tab);
-        if (panel) panel.style.display = 'block';
+        if (!TABS.includes(tab)) tab = 'matrix';
+        document.querySelectorAll('.crossplatform-tab').forEach(t => {
+            const on = t.dataset.tab === tab;
+            t.classList.toggle('active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            t.tabIndex = on ? 0 : -1;
+        });
+        document.querySelectorAll('.crossplatform-panel').forEach(p => { p.hidden = p.id !== 'panel-' + tab; });
 
         const url = new URL(window.location);
         url.searchParams.set('tab', tab);
@@ -111,170 +135,149 @@
         if (tab === 'protocols') loadProtocols();
     }
 
+    function bindTabKeys() {
+        const buttons = Array.from(document.querySelectorAll('.crossplatform-tab'));
+        buttons.forEach((btn, i) => {
+            btn.addEventListener('keydown', (e) => {
+                const rtl = document.documentElement.dir === 'rtl';
+                let next = null;
+                if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight')) next = buttons[(i + 1) % buttons.length];
+                else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) next = buttons[(i - 1 + buttons.length) % buttons.length];
+                else if (e.key === 'Home') next = buttons[0];
+                else if (e.key === 'End') next = buttons[buttons.length - 1];
+                if (!next) return;
+                e.preventDefault();
+                switchTab(next.dataset.tab);
+                next.focus();
+            });
+        });
+    }
+
     // ── Matrix ───────────────────────────────────────────────────────
     function renderMatrix() {
         const tbody = document.getElementById('matrix-body');
         if (!tbody) return;
         tbody.innerHTML = MATRIX.map(row => {
-            const featLabel = _(row.feature);
-            const cells = row.vals.map(v => `<td>${statusIcon(v)}</td>`).join('');
-            return `<tr><td>${featLabel}</td>${cells}</tr>`;
+            const cells = row.vals.map(statusCell).join('');
+            return `<tr><th scope="row">${escapeHtml(_(row.feature))}</th>${cells}</tr>`;
         }).join('');
     }
 
     // ── Distribution ─────────────────────────────────────────────────
     async function loadDistribution() {
+        const summary = document.getElementById('summary-grid');
         try {
-            const resp = await fetch('/api/panel/cross-platform/distribution');
-            if (!resp.ok) throw new Error(resp.statusText);
+            const resp = await fetch('/api/panel/cross-platform/distribution', { credentials: 'same-origin' });
+            if (!resp.ok) throw new Error(resp.statusText || String(resp.status));
             const data = await resp.json();
             renderDistribution(data);
         } catch (e) {
-            console.error('Distribution fetch error:', e);
+            if (summary) summary.innerHTML = errorState(_('cross_platform.distribution_failed', { error: e.message }), 'CrossPlatform.loadDistribution');
+            ['platform-chart', 'arch-chart', 'version-chart'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
         }
     }
 
     function renderDistribution(data) {
-        // Platform bars
-        const platEl = document.getElementById('platform-chart');
-        if (platEl) {
-            const entries = Object.entries(data.platforms || {}).sort((a, b) => b[1] - a[1]);
-            platEl.innerHTML = entries.length
-                ? entries.map((e, i) => barHtml(e[0], e[1], data.total, BAR_COLORS[i % BAR_COLORS.length])).join('')
-                : `<p class="crossplatform-empty">${_('cross_platform.no_devices')}</p>`;
-        }
+        const total = data.total || 0;
+        const sorted = (obj) => Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
+        const plats = sorted(data.platforms);
+        const archs = sorted(data.archs);
+        const vers = sorted(data.versions);
 
-        // Architecture bars
-        const archEl = document.getElementById('arch-chart');
-        if (archEl) {
-            const entries = Object.entries(data.archs || {}).sort((a, b) => b[1] - a[1]);
-            archEl.innerHTML = entries.length
-                ? entries.map((e, i) => barHtml(e[0], e[1], data.total, BAR_COLORS[(i + 2) % BAR_COLORS.length])).join('')
-                : `<p class="crossplatform-empty">${_('cross_platform.no_devices')}</p>`;
-        }
-
-        // Version bars
-        const verEl = document.getElementById('version-chart');
-        if (verEl) {
-            const entries = Object.entries(data.versions || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
-            verEl.innerHTML = entries.length
-                ? entries.map((e, i) => barHtml(e[0], e[1], data.total, BAR_COLORS[(i + 4) % BAR_COLORS.length])).join('')
-                : `<p class="crossplatform-empty">${_('cross_platform.no_devices')}</p>`;
-        }
-
-        // Summary
         const summaryEl = document.getElementById('summary-grid');
         if (summaryEl) {
-            const platCount = Object.keys(data.platforms || {}).length;
-            const archCount = Object.keys(data.archs || {}).length;
-            const verCount = Object.keys(data.versions || {}).length;
-            summaryEl.innerHTML = `
-                <div class="cp-summary-item"><div class="cp-summary-value">${data.total || 0}</div><div class="cp-summary-label">${_('cross_platform.total_devices')}</div></div>
-                <div class="cp-summary-item"><div class="cp-summary-value">${platCount}</div><div class="cp-summary-label">${_('cross_platform.unique_platforms')}</div></div>
-                <div class="cp-summary-item"><div class="cp-summary-value">${archCount}</div><div class="cp-summary-label">${_('cross_platform.unique_archs')}</div></div>
-                <div class="cp-summary-item"><div class="cp-summary-value">${verCount}</div><div class="cp-summary-label">${_('cross_platform.unique_versions')}</div></div>
-            `;
+            summaryEl.textContent = total
+                ? _('cross_platform.distribution_summary', { count: total, platforms: plats.length, versions: vers.length })
+                : _('cross_platform.no_devices');
         }
+
+        const fill = (id, rows, label, nameFn, limit) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const shown = limit ? rows.slice(0, limit) : rows;
+            el.innerHTML = rows.length
+                ? countTable(shown, total, label, nameFn) + (limit && rows.length > limit
+                    ? `<p class="count-line">${escapeHtml(_('cross_platform.more_versions', { count: rows.length - limit }))}</p>` : '')
+                : `<p class="state">${escapeHtml(_('cross_platform.no_devices'))}</p>`;
+        };
+        fill('platform-chart', plats, _('cross_platform.col_system'), platformName);
+        fill('version-chart', vers, _('cross_platform.col_version'), null, 8);
+        fill('arch-chart', archs, _('cross_platform.col_arch'), (a) => a === 'unknown' ? _('cross_platform.unknown') : a);
     }
 
     // ── Protocols ────────────────────────────────────────────────────
     async function loadProtocols() {
+        renderProtoDiagram();
         try {
-            const resp = await fetch('/api/panel/cross-platform/protocols');
-            if (!resp.ok) throw new Error(resp.statusText);
+            const resp = await fetch('/api/panel/cross-platform/protocols', { credentials: 'same-origin' });
+            if (!resp.ok) throw new Error(resp.statusText || String(resp.status));
             const data = await resp.json();
             renderProtocols(data);
         } catch (e) {
-            console.error('Protocols fetch error:', e);
+            const codecEl = document.getElementById('codec-bars');
+            if (codecEl) codecEl.innerHTML = errorState(_('cross_platform.protocols_failed', { error: e.message }), 'CrossPlatform.loadProtocols');
+            const featEl = document.getElementById('feature-bars');
+            if (featEl) featEl.innerHTML = '';
         }
-        renderProtoDiagram();
     }
 
     function renderProtocols(data) {
-        // Codec bars
-        const codecEl = document.getElementById('codec-bars');
-        const codecEmpty = document.getElementById('codec-empty');
-        if (codecEl) {
-            const entries = Object.entries(data.codecs || {}).sort((a, b) => b[1] - a[1]);
+        const online = data.totalOnline || 0;
+        const block = (elId, emptyId, obj, label, nameFn) => {
+            const el = document.getElementById(elId);
+            const empty = document.getElementById(emptyId);
+            if (!el) return;
+            const entries = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
             if (entries.length) {
-                codecEl.innerHTML = entries.map((e, i) => barHtml(e[0].toUpperCase(), e[1], data.totalOnline, BAR_COLORS[i % BAR_COLORS.length])).join('');
-                if (codecEmpty) codecEmpty.style.display = 'none';
+                el.innerHTML = `<p class="count-line">${escapeHtml(_('cross_platform.online_count', { count: online }))}</p>` + countTable(entries, online, label, nameFn);
+                if (empty) empty.hidden = true;
             } else {
-                codecEl.innerHTML = '';
-                if (codecEmpty) codecEmpty.style.display = 'block';
+                el.innerHTML = '';
+                if (empty) empty.hidden = false;
             }
-        }
-
-        // Feature bars
-        const featEl = document.getElementById('feature-bars');
-        const featEmpty = document.getElementById('feature-empty');
-        if (featEl) {
-            const entries = Object.entries(data.features || {}).sort((a, b) => b[1] - a[1]);
-            if (entries.length) {
-                featEl.innerHTML = entries.map((e, i) => barHtml(e[0], e[1], data.totalOnline, BAR_COLORS[(i + 3) % BAR_COLORS.length])).join('');
-                if (featEmpty) featEmpty.style.display = 'none';
-            } else {
-                featEl.innerHTML = '';
-                if (featEmpty) featEmpty.style.display = 'block';
-            }
-        }
+        };
+        block('codec-bars', 'codec-empty', data.codecs, _('cross_platform.col_codec'), (c) => String(c).toUpperCase());
+        block('feature-bars', 'feature-empty', data.features, _('cross_platform.col_feature'));
     }
 
     function renderProtoDiagram() {
         const svg = document.getElementById('proto-svg');
         if (!svg) return;
-        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#e6edf3';
-        const dimColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#8b949e';
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-blue').trim() || '#58a6ff';
-        const borderC = getComputedStyle(document.documentElement).getPropertyValue('--border-primary').trim() || '#30363d';
-
+        const box = (x, w, title, sub, strong) => `
+            <rect x="${x}" y="40" width="${w}" height="60" rx="3" class="cp-dg-box${strong ? ' is-strong' : ''}"/>
+            <text x="${x + w / 2}" y="66" text-anchor="middle" class="cp-dg-title">${escapeHtml(title)}</text>
+            <text x="${x + w / 2}" y="86" text-anchor="middle" class="cp-dg-sub">${escapeHtml(sub)}</text>`;
+        const arrow = (x1, x2, label) => `
+            <line x1="${x1}" y1="70" x2="${x2 - 2}" y2="70" class="cp-dg-line" marker-end="url(#cpArrow)"/>
+            <text x="${(x1 + x2) / 2}" y="30" text-anchor="middle" class="cp-dg-msg">${escapeHtml(label)}</text>`;
         svg.innerHTML = `
-            <!-- Client -->
-            <rect x="20" y="70" width="140" height="60" rx="8" fill="none" stroke="${borderC}" stroke-width="1.5"/>
-            <text x="90" y="96" fill="${textColor}" text-anchor="middle" font-size="13" font-weight="600">${_('cross_platform.diagram_client')}</text>
-            <text x="90" y="114" fill="${dimColor}" text-anchor="middle" font-size="11">Capabilities</text>
-
-            <!-- Arrow 1 -->
-            <line x1="160" y1="100" x2="250" y2="100" stroke="${accent}" stroke-width="1.5" marker-end="url(#cpArrow)"/>
-            <text x="205" y="90" fill="${dimColor}" text-anchor="middle" font-size="10">ClientCapabilities</text>
-
-            <!-- Server -->
-            <rect x="250" y="70" width="160" height="60" rx="8" fill="none" stroke="${accent}" stroke-width="1.5"/>
-            <text x="330" y="96" fill="${textColor}" text-anchor="middle" font-size="13" font-weight="600">${_('cross_platform.diagram_server')}</text>
-            <text x="330" y="114" fill="${dimColor}" text-anchor="middle" font-size="11">Negotiation</text>
-
-            <!-- Arrow 2 -->
-            <line x1="410" y1="100" x2="500" y2="100" stroke="${accent}" stroke-width="1.5" marker-end="url(#cpArrow)"/>
-            <text x="455" y="90" fill="${dimColor}" text-anchor="middle" font-size="10">SessionConfig</text>
-
-            <!-- Peer -->
-            <rect x="500" y="70" width="140" height="60" rx="8" fill="none" stroke="${borderC}" stroke-width="1.5"/>
-            <text x="570" y="96" fill="${textColor}" text-anchor="middle" font-size="13" font-weight="600">${_('cross_platform.diagram_peer')}</text>
-            <text x="570" y="114" fill="${dimColor}" text-anchor="middle" font-size="11">Adapted stream</text>
-
-            <!-- Marker -->
             <defs><marker id="cpArrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <path d="M0,0 L8,3 L0,6" fill="${accent}"/>
+                <path d="M0,0 L8,3 L0,6" class="cp-dg-arrow"/>
             </marker></defs>
+            ${box(10, 150, _('cross_platform.diagram_client'), _('cross_platform.diagram_client_sub'))}
+            ${arrow(160, 250, 'ClientCapabilities')}
+            ${box(250, 160, _('cross_platform.diagram_server'), _('cross_platform.diagram_server_sub'), true)}
+            ${arrow(410, 500, 'SessionConfig')}
+            ${box(500, 150, _('cross_platform.diagram_peer'), _('cross_platform.diagram_peer_sub'))}
         `;
     }
 
     // ── Limitations ──────────────────────────────────────────────────
+    const STATUS_CLASS = { production: 'ok', testing: 'pending', planned: 'offline', limited: 'warning', experimental: 'warning' };
+
     function renderLimitations() {
         const grid = document.getElementById('limitations-grid');
         if (!grid) return;
         grid.innerHTML = LIMITATIONS.map(lim => {
-            const items = lim.items.map(k => `<li>${_(k)}</li>`).join('');
-            return `<div class="cp-limit-card">
-                <div class="cp-limit-header">
-                    <div class="cp-limit-icon ${lim.platform}">
-                        <span class="material-icons">${lim.icon}</span>
-                    </div>
-                    <span class="cp-limit-name">${_(('cross_platform.platform_' + lim.platform))}</span>
-                    <span class="cp-limit-status ${lim.status}">${_(('cross_platform.status_' + lim.status))}</span>
+            const items = lim.items.map(k => `<li>${escapeHtml(_(k))}</li>`).join('');
+            const id = 'cp-limit-' + lim.platform;
+            return `<section class="section cp-limit" aria-labelledby="${id}">
+                <div class="section-head">
+                    <h2 id="${id}">${escapeHtml(_('cross_platform.platform_' + lim.platform))}</h2>
+                    <span class="status ${STATUS_CLASS[lim.status] || ''}">${escapeHtml(_('cross_platform.status_' + lim.status))}</span>
                 </div>
                 <ul class="cp-limit-list">${items}</ul>
-            </div>`;
+            </section>`;
         }).join('');
     }
 
@@ -282,8 +285,8 @@
     function init() {
         renderMatrix();
         renderLimitations();
+        bindTabKeys();
 
-        // Load data for active tab
         const active = document.querySelector('.crossplatform-tab.active');
         if (active) {
             const tab = active.dataset.tab;
@@ -294,5 +297,5 @@
 
     document.addEventListener('DOMContentLoaded', init);
 
-    window.CrossPlatform = { switchTab };
+    window.CrossPlatform = { switchTab, loadDistribution, loadProtocols };
 })();

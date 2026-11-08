@@ -1,121 +1,97 @@
+<%
+    const cpTabs = ['matrix', 'distribution', 'protocols', 'limitations'];
+    const tab = cpTabs.includes(activeTab) ? activeTab : 'matrix';
+    const tabLabels = {
+        matrix: _('cross_platform.tab_matrix'),
+        distribution: _('cross_platform.tab_distribution'),
+        protocols: _('cross_platform.tab_protocols'),
+        limitations: _('cross_platform.tab_limitations')
+    };
+    const platforms = ['windows', 'linux_x86', 'linux_arm', 'macos', 'android', 'ios', 'web', 'chromeos'];
+%>
 <%- include('layouts/main', {
-    title: title,
-    pageStyles: pageStyles,
+    title: _('nav.cross_platform'),
+    uiReworked: true,
+    pageStyles: ['ui/cross-platform'],
     pageScripts: pageScripts,
     currentPage: currentPage,
-    breadcrumb: breadcrumb,
+    breadcrumb: [{ label: _('nav.cross_platform') }],
     body: `
-
-<div class="crossplatform-page">
-
-    <!-- Tab navigation -->
-    <div class="crossplatform-tabs">
-        <button class="crossplatform-tab ${activeTab === 'matrix' ? 'active' : ''}" data-tab="matrix" data-bd-call="CrossPlatform.switchTab" data-bd-args='["matrix"]'>
-            <span class="material-icons">grid_on</span>
-            <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_matrix') : 'Compatibility Matrix' }</span>
-        </button>
-        <button class="crossplatform-tab ${activeTab === 'distribution' ? 'active' : ''}" data-tab="distribution" data-bd-call="CrossPlatform.switchTab" data-bd-args='["distribution"]'>
-            <span class="material-icons">pie_chart</span>
-            <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_distribution') : 'Distribution' }</span>
-        </button>
-        <button class="crossplatform-tab ${activeTab === 'protocols' ? 'active' : ''}" data-tab="protocols" data-bd-call="CrossPlatform.switchTab" data-bd-args='["protocols"]'>
-            <span class="material-icons">cable</span>
-            <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_protocols') : 'Protocols' }</span>
-        </button>
-        <button class="crossplatform-tab ${activeTab === 'limitations' ? 'active' : ''}" data-tab="limitations" data-bd-call="CrossPlatform.switchTab" data-bd-args='["limitations"]'>
-            <span class="material-icons">warning_amber</span>
-            <span>${ typeof req !== 'undefined' ? req.t('cross_platform.tab_limitations') : 'Limitations' }</span>
-        </button>
+<div class="page page-wide crossplatform-page">
+    <div class="page-head">
+        <h1>${_('nav.cross_platform')}</h1>
+        <p class="page-description">${_('cross_platform.page_description')}</p>
     </div>
 
-    <!-- ======= COMPATIBILITY MATRIX TAB ======= -->
-    <div class="crossplatform-panel" id="panel-matrix" style="display: ${activeTab === 'matrix' ? 'block' : 'none'};">
-        <p class="crossplatform-hint">` + _('cross_platform.matrix_hint') + `</p>
-        <div class="crossplatform-matrix-wrap">
-            <table class="crossplatform-matrix-table" id="matrix-table">
+    <div class="cp-body">
+    <div class="tabs" role="tablist" aria-label="${_('nav.cross_platform')}">
+        ${cpTabs.map(id => `<button type="button" class="tab crossplatform-tab ${tab === id ? 'active' : ''}" role="tab" id="tab-${id}" aria-controls="panel-${id}" aria-selected="${tab === id}" tabindex="${tab === id ? '0' : '-1'}" data-tab="${id}" data-bd-call="CrossPlatform.switchTab" data-bd-args='["${id}"]'>${tabLabels[id]}</button>`).join('')}
+    </div>
+
+    <!-- Which feature works on which system -->
+    <section class="crossplatform-panel section" id="panel-matrix" role="tabpanel" aria-labelledby="tab-matrix" ${tab === 'matrix' ? '' : 'hidden'}>
+        <p class="section-note cp-note">${_('cross_platform.matrix_hint')}</p>
+        <div class="table-scroll cp-matrix-scroll" tabindex="0" role="region" aria-labelledby="tab-matrix">
+            <table class="data-table cp-matrix" id="matrix-table">
+                <caption class="sr-only">${_('cross_platform.matrix_caption')}</caption>
                 <thead>
                     <tr>
-                        <th>` + _('cross_platform.col_feature') + `</th>
-                        <th><span class="material-icons">desktop_windows</span> Windows</th>
-                        <th><span class="material-icons">computer</span> Linux x86</th>
-                        <th><span class="material-icons">memory</span> Linux ARM</th>
-                        <th><span class="material-icons">laptop_mac</span> macOS</th>
-                        <th><span class="material-icons">phone_android</span> Android</th>
-                        <th><span class="material-icons">phone_iphone</span> iOS</th>
-                        <th><span class="material-icons">language</span> Web</th>
-                        <th><span class="material-icons">laptop_chromebook</span> ChromeOS</th>
+                        <th scope="col">${_('cross_platform.col_feature')}</th>
+                        ${platforms.map(p => `<th scope="col">${_('cross_platform.platform_' + p)}</th>`).join('')}
                     </tr>
                 </thead>
                 <tbody id="matrix-body"></tbody>
             </table>
         </div>
+        <dl class="cp-legend">
+            <div><dt>${_('cross_platform.value_full')}</dt><dd>${_('cross_platform.legend_full_desc')}</dd></div>
+            <div><dt>${_('cross_platform.value_partial')}</dt><dd>${_('cross_platform.legend_partial_desc')}</dd></div>
+            <div><dt>${_('cross_platform.value_none')}</dt><dd>${_('cross_platform.legend_none_desc')}</dd></div>
+            <div><dt>${_('cross_platform.value_planned')}</dt><dd>${_('cross_platform.legend_planned_desc')}</dd></div>
+        </dl>
+    </section>
 
-        <div class="crossplatform-legend">
-            <span class="legend-item"><span class="legend-icon full"></span> ` + _('cross_platform.legend_full') + `</span>
-            <span class="legend-item"><span class="legend-icon partial"></span> ` + _('cross_platform.legend_partial') + `</span>
-            <span class="legend-item"><span class="legend-icon none"></span> ` + _('cross_platform.legend_none') + `</span>
-            <span class="legend-item"><span class="legend-icon planned"></span> ` + _('cross_platform.legend_planned') + `</span>
-        </div>
+    <!-- What the registered devices run -->
+    <div class="crossplatform-panel" id="panel-distribution" role="tabpanel" aria-labelledby="tab-distribution" ${tab === 'distribution' ? '' : 'hidden'}>
+        <p class="count-line" id="summary-grid" aria-live="polite">${_('cross_platform.loading')}</p>
+        <section class="section" aria-labelledby="platform-dist-title" id="platform-dist-card">
+            <h2 id="platform-dist-title">${_('cross_platform.platform_breakdown')}</h2>
+            <div id="platform-chart"></div>
+        </section>
+        <section class="section" aria-labelledby="version-dist-title" id="version-dist-card">
+            <h2 id="version-dist-title">${_('cross_platform.version_breakdown')}</h2>
+            <p class="section-note">${_('cross_platform.version_note')}</p>
+            <div id="version-chart"></div>
+        </section>
+        <section class="section" aria-labelledby="arch-dist-title" id="arch-dist-card">
+            <h2 id="arch-dist-title">${_('cross_platform.arch_breakdown')}</h2>
+            <div id="arch-chart"></div>
+        </section>
     </div>
 
-    <!-- ======= DISTRIBUTION TAB ======= -->
-    <div class="crossplatform-panel" id="panel-distribution" style="display: ${activeTab === 'distribution' ? 'block' : 'none'};">
-        <div class="crossplatform-dist-grid">
-            <!-- Platform distribution chart area -->
-            <div class="crossplatform-card" id="platform-dist-card">
-                <h3>` + _('cross_platform.platform_breakdown') + `</h3>
-                <div class="crossplatform-chart" id="platform-chart"></div>
+    <!-- How clients tell the server what they can do -->
+    <div class="crossplatform-panel" id="panel-protocols" role="tabpanel" aria-labelledby="tab-protocols" ${tab === 'protocols' ? '' : 'hidden'}>
+        <section class="section" aria-labelledby="proto-title">
+            <h2 id="proto-title">${_('cross_platform.capability_negotiation')}</h2>
+            <p class="section-note">${_('cross_platform.protocols_hint')}</p>
+            <div class="cp-diagram" id="proto-diagram" tabindex="0" role="region" aria-labelledby="proto-title">
+                <svg id="proto-svg" viewBox="0 0 660 120" role="img" aria-label="${_('cross_platform.diagram_label')}"></svg>
             </div>
-            <!-- Architecture distribution -->
-            <div class="crossplatform-card" id="arch-dist-card">
-                <h3>` + _('cross_platform.arch_breakdown') + `</h3>
-                <div class="crossplatform-chart" id="arch-chart"></div>
-            </div>
-            <!-- Version distribution -->
-            <div class="crossplatform-card" id="version-dist-card">
-                <h3>` + _('cross_platform.version_breakdown') + `</h3>
-                <div class="crossplatform-chart" id="version-chart"></div>
-            </div>
-            <!-- Summary stats -->
-            <div class="crossplatform-card" id="summary-card">
-                <h3>` + _('cross_platform.summary') + `</h3>
-                <div class="crossplatform-summary-grid" id="summary-grid"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ======= PROTOCOLS TAB ======= -->
-    <div class="crossplatform-panel" id="panel-protocols" style="display: ${activeTab === 'protocols' ? 'block' : 'none'};">
-        <p class="crossplatform-hint">` + _('cross_platform.protocols_hint') + `</p>
-
-        <div class="crossplatform-proto-grid">
-            <!-- Capability negotiation diagram -->
-            <div class="crossplatform-card crossplatform-card-wide">
-                <h3>` + _('cross_platform.capability_negotiation') + `</h3>
-                <div class="crossplatform-proto-diagram" id="proto-diagram">
-                    <svg id="proto-svg" viewBox="0 0 700 200"></svg>
-                </div>
-            </div>
-
-            <!-- Codec support across online devices -->
-            <div class="crossplatform-card">
-                <h3>` + _('cross_platform.codec_support') + `</h3>
-                <div class="crossplatform-barlist" id="codec-bars"></div>
-                <p class="crossplatform-empty" id="codec-empty" style="display:none;">` + _('cross_platform.no_codec_data') + `</p>
-            </div>
-
-            <!-- Feature support across online devices -->
-            <div class="crossplatform-card">
-                <h3>` + _('cross_platform.feature_support') + `</h3>
-                <div class="crossplatform-barlist" id="feature-bars"></div>
-                <p class="crossplatform-empty" id="feature-empty" style="display:none;">` + _('cross_platform.no_feature_data') + `</p>
-            </div>
-        </div>
-
-        <!-- Protocol message format reference -->
-        <div class="crossplatform-card crossplatform-card-wide" style="margin-top:16px;">
-            <h3>` + _('cross_platform.protobuf_schema') + `</h3>
-            <pre class="crossplatform-code"><code>message ClientCapabilities {
+        </section>
+        <section class="section" aria-labelledby="codec-title">
+            <h2 id="codec-title">${_('cross_platform.codec_support')}</h2>
+            <div id="codec-bars"></div>
+            <p class="state" id="codec-empty" hidden>${_('cross_platform.no_codec_data')}</p>
+        </section>
+        <section class="section" aria-labelledby="feature-title">
+            <h2 id="feature-title">${_('cross_platform.feature_support')}</h2>
+            <div id="feature-bars"></div>
+            <p class="state" id="feature-empty" hidden>${_('cross_platform.no_feature_data')}</p>
+        </section>
+        <section class="section" aria-labelledby="schema-title">
+            <h2 id="schema-title">${_('cross_platform.protobuf_schema')}</h2>
+            <p class="section-note">${_('cross_platform.schema_note')}</p>
+            <pre class="code-block"><code>message ClientCapabilities {
     bool   can_capture_screen  = 1;
     bool   can_inject_input    = 2;
     bool   can_transfer_files  = 3;
@@ -127,18 +103,14 @@
     string client_version      = 9;
     repeated string supported_features = 10;
 }</code></pre>
-        </div>
+        </section>
     </div>
 
-    <!-- ======= LIMITATIONS TAB ======= -->
-    <div class="crossplatform-panel" id="panel-limitations" style="display: ${activeTab === 'limitations' ? 'block' : 'none'};">
-        <p class="crossplatform-hint">` + _('cross_platform.limitations_hint') + `</p>
-
-        <div class="crossplatform-limitations-grid" id="limitations-grid">
-            <!-- Populated by JS -->
-        </div>
+    <!-- Known limits per system -->
+    <section class="crossplatform-panel section" id="panel-limitations" role="tabpanel" aria-labelledby="tab-limitations" ${tab === 'limitations' ? '' : 'hidden'}>
+        <p class="section-note cp-note">${_('cross_platform.limitations_hint')}</p>
+        <div class="cp-limits" id="limitations-grid"></div>
+    </section>
     </div>
-
 </div>
-
 ` }) %>

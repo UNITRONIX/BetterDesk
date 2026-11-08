@@ -1,0 +1,209 @@
+/* Platform support: only what the components don't cover */
+
+.cp-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+}
+
+.crossplatform-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    min-width: 0;
+}
+
+section.crossplatform-panel {
+    gap: var(--space-3);
+}
+
+.cp-note {
+    margin-top: 0;
+}
+
+/* ── Feature matrix: words in every cell, first column stays in view ── */
+
+.cp-matrix-scroll {
+    border-inline-end: 1px solid var(--rule);
+}
+
+.cp-matrix {
+    min-width: 760px;
+}
+
+.cp-matrix thead th:first-child,
+.cp-matrix tbody th {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 2;
+    border-inline-end: 1px solid var(--rule);
+}
+
+.cp-matrix tbody th {
+    z-index: 1;
+    min-width: 150px;
+    height: var(--row-h);
+    font-size: var(--text-base);
+    white-space: normal;
+    padding: var(--space-1) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg);
+    color: var(--text);
+    font-weight: 400;
+    text-align: start;
+}
+
+.cp-matrix tbody tr:hover th {
+    background: var(--bg-subtle);
+}
+
+.cp-cell {
+    white-space: nowrap;
+}
+
+.cp-cell.cp-partial {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.cp-cell.cp-none,
+.cp-cell.cp-planned {
+    color: var(--text-muted);
+}
+
+.cp-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.cp-legend dt {
+    display: inline;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.cp-legend dt::after {
+    content: ": ";
+}
+
+.cp-legend dd {
+    display: inline;
+    margin: 0;
+}
+
+/* ── Counts per system, version, codec ── */
+
+.cp-count-table {
+    max-width: var(--measure);
+}
+
+.cp-count-table tbody th {
+    position: static;
+    background: transparent;
+    height: var(--row-h);
+    font-size: var(--text-base);
+    white-space: normal;
+    padding: var(--space-1) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+    color: var(--text);
+    font-weight: 400;
+    text-align: start;
+}
+
+.cp-count-table .meter {
+    min-width: 120px;
+}
+
+.cp-num,
+.data-table th.cp-num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Capability exchange diagram ── */
+
+.cp-diagram {
+    max-width: 680px;
+    overflow-x: auto;
+}
+
+.cp-diagram svg {
+    display: block;
+    width: 100%;
+    min-width: 520px;
+    height: auto;
+}
+
+.cp-dg-box {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1;
+}
+
+.cp-dg-box.is-strong {
+    stroke: var(--accent);
+    stroke-width: 1.5;
+}
+
+.cp-dg-title {
+    fill: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.cp-dg-sub {
+    fill: var(--text-muted);
+    font-family: var(--font);
+    font-size: 12px;
+}
+
+.cp-dg-msg {
+    fill: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+}
+
+.cp-dg-line {
+    stroke: var(--accent);
+    stroke-width: 1.5;
+}
+
+.cp-dg-arrow {
+    fill: var(--accent);
+}
+
+/* ── Limits per system ── */
+
+.cp-limits {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.cp-limit h2 {
+    margin-inline-end: 0;
+}
+
+.cp-limit .section-head {
+    gap: var(--space-2) var(--space-4);
+}
+
+.cp-limit-list {
+    margin: 0;
+    padding-inline-start: 1.25em;
+    max-width: var(--measure);
+}
+
+.cp-limit-list > li {
+    padding: 2px 0;
+}
+
+.cp-limit-list > li::marker {
+    color: var(--text-muted);
+}
