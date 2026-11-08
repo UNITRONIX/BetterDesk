@@ -1,0 +1,171 @@
+/* Help requests: the request table, its phone layout and the connect
+   menu. Only what the components don't cover. */
+
+.hr-table .col-message {
+    min-width: 220px;
+}
+
+.hr-table .hr-message {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.hr-table .hr-message.is-missing,
+.hr-table .row-name.is-missing {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.hr-table .col-age {
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.hr-table td.state-cell.is-error {
+    color: var(--danger);
+}
+
+.hr-table td.actions .menu-anchor {
+    vertical-align: middle;
+}
+
+.hr-table td.actions > * + * {
+    margin-inline-start: var(--space-1);
+}
+
+/* Accepted: filled with the accent. Resolved: filled green, plain text. */
+.status.hr-accepted::before {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.status.hr-resolved {
+    color: var(--text-muted);
+}
+
+.status.hr-resolved::before {
+    border-color: var(--success);
+    background: var(--success);
+}
+
+/* Connect menu: each way to connect with one line on what it needs */
+.hr-connect-menu {
+    min-width: 260px;
+}
+
+.hr-connect-menu .menu-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+    white-space: normal;
+}
+
+.hr-connect-title {
+    font-weight: 600;
+}
+
+.hr-connect-desc {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.help-requests-page .phone-only {
+    display: none;
+}
+
+/* Medium widths: device, ID and age move under the message */
+@media (max-width: 1000px) {
+    .hr-table th.col-device,
+    .hr-table td.col-device,
+    .hr-table th.col-age,
+    .hr-table td.col-age {
+        display: none;
+    }
+
+    .hr-table .cell-sub.phone-only {
+        display: block;
+    }
+
+    .hr-table .col-message {
+        min-width: 160px;
+    }
+}
+
+/* Phone: the message first, then device, ID and age, then the status, and
+   the actions on their own line */
+@media (max-width: 640px) {
+    .hr-table thead {
+        display: none;
+    }
+
+    .hr-table,
+    .hr-table tbody {
+        display: block;
+    }
+
+    .hr-table {
+        border-top: 1px solid var(--rule);
+    }
+
+    .hr-table tr {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        padding: var(--space-3) 0;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .hr-table tbody tr:hover td {
+        background: transparent;
+    }
+
+    .hr-table td {
+        height: auto;
+        padding: 0 var(--space-1);
+        border: 0;
+    }
+
+    .hr-table td.col-device,
+    .hr-table td.col-age {
+        display: none;
+    }
+
+    .hr-table td.col-message {
+        min-width: 0;
+    }
+
+    .hr-table td.col-status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 var(--space-2);
+    }
+
+    .hr-table td.col-status .cell-sub {
+        display: inline;
+    }
+
+    .hr-table td.actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin-top: var(--space-1);
+        text-align: start;
+        white-space: normal;
+    }
+
+    .hr-table td.actions > * + * {
+        margin-inline-start: 0;
+    }
+
+    .hr-table .cell-sub .phone-only,
+    .hr-table .cell-sub.phone-only {
+        display: block;
+    }
+
+    .menu-anchor > .hr-connect-menu.menu-end {
+        inset-inline-end: auto;
+        inset-inline-start: 0;
+    }
+}

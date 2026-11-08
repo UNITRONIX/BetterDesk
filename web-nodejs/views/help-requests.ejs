@@ -1,56 +1,52 @@
 <%- include('layouts/main', {
-    title: _('help_request.title'),
-    pageStyles: ['help-requests'],
+    title: _('nav.help_requests'),
+    uiReworked: true,
+    pageStyles: ['ui/help-requests'],
     pageScripts: ['help-requests'],
     currentPage: 'help-requests',
-    breadcrumb: [{ label: _('help_request.title') }],
+    breadcrumb: [{ label: _('nav.help_requests') }],
     body: `
-        <div class="help-requests-page">
-            <!-- Header -->
-            <div class="page-header">
-                <div class="page-title">
-                    <h1>${_('help_request.title')}</h1>
-                </div>
-                <p class="page-subtitle">${_('help_request.subtitle') || 'Manage incoming help requests from desktop clients'}</p>
+        <div class="page page-wide help-requests-page">
+            <div class="page-head">
+                <h1>${_('nav.help_requests')}</h1>
+                <p class="page-description">${_('help_request.page_description')}
+                    ${_('help_request.page_related').replace('{tickets}', '<a href="/tickets">' + _('nav.tickets') + '</a>').replace('{chat}', '<a href="/chat">' + _('nav.chat') + '</a>')}</p>
             </div>
 
-            <!-- Stats -->
-            <div class="hr-stats" id="hr-stats">
-                <div class="stat-card stat-total">
-                    <span class="stat-value" id="stat-total">0</span>
-                    <span class="stat-label">${_('help_request.stats_total') || 'Total'}</span>
+            <section class="section" aria-label="${_('nav.help_requests')}">
+                <div class="toolbar">
+                    <div class="toolbar-filters" role="group" aria-label="${_('help_request.status')}">
+                        <button type="button" class="filter-btn active" aria-pressed="true" data-status="open">${_('help_request.filter_open')}</button>
+                        <button type="button" class="filter-btn" aria-pressed="false" data-status="pending">${_('help_request.filter_waiting')}</button>
+                        <button type="button" class="filter-btn" aria-pressed="false" data-status="accepted">${_('help_request.accepted')}</button>
+                        <button type="button" class="filter-btn" aria-pressed="false" data-status="resolved">${_('help_request.resolved')}</button>
+                        <button type="button" class="filter-btn" aria-pressed="false" data-status="">${_('help_request.filter_all')}</button>
+                    </div>
+                    <div class="toolbar-end">
+                        <select class="form-select" id="hr-sort" aria-label="${_('help_request.sort_label')}">
+                            <option value="oldest">${_('help_request.sort_oldest')}</option>
+                            <option value="newest">${_('help_request.sort_newest')}</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="stat-card stat-pending">
-                    <span class="stat-value" id="stat-pending">0</span>
-                    <span class="stat-label">${_('help_request.pending')}</span>
-                </div>
-                <div class="stat-card stat-accepted">
-                    <span class="stat-value" id="stat-accepted">0</span>
-                    <span class="stat-label">${_('help_request.accepted')}</span>
-                </div>
-                <div class="stat-card stat-resolved">
-                    <span class="stat-value" id="stat-resolved">0</span>
-                    <span class="stat-label">${_('help_request.resolved')}</span>
-                </div>
-            </div>
+                <p class="count-line" id="hr-count"></p>
+                <p class="sr-only" id="hr-live" aria-live="polite"></p>
 
-            <!-- Filters -->
-            <div class="page-filters">
-                <div class="filter-buttons">
-                    <button class="btn filter-btn active" data-status="">${_('help_request.filter_all') || 'All'}</button>
-                    <button class="btn filter-btn" data-status="pending">${_('help_request.pending')}</button>
-                    <button class="btn filter-btn" data-status="accepted">${_('help_request.accepted')}</button>
-                    <button class="btn filter-btn" data-status="resolved">${_('help_request.resolved')}</button>
-                </div>
-            </div>
-
-            <!-- Requests List -->
-            <div class="hr-list" id="hr-list">
-                <div class="empty-state" id="hr-empty">
-                    <span class="material-icons">support_agent</span>
-                    <p>${_('help_request.no_requests')}</p>
-                </div>
-            </div>
+                <table class="data-table hr-table" id="hr-table">
+                    <thead>
+                        <tr>
+                            <th>${_('help_request.message')}</th>
+                            <th class="col-device">${_('help_request.device')}</th>
+                            <th class="col-age">${_('help_request.col_asked')}</th>
+                            <th class="col-status">${_('help_request.status')}</th>
+                            <th class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="hr-list">
+                        <tr><td colspan="5" class="state-cell" id="hr-empty">${_('help_request.loading')}</td></tr>
+                    </tbody>
+                </table>
+            </section>
         </div>
     `
 }) %>
