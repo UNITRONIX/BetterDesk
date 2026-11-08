@@ -1,0 +1,31 @@
+/* Pairing codes (/pairing). Form, table and facts come from components.css. */
+
+.pairing-page {
+    max-width: 880px;
+}
+
+.pairing-result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: var(--measure);
+    margin-top: var(--space-3);
+}
+
+/* The code is read out loud or typed from the screen: make it big */
+.pairing-code-field {
+    align-self: flex-start;
+}
+
+.value-field > code.pairing-code {
+    padding: var(--space-2) var(--space-4);
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+}
+
+.pairing-code.is-expired {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+

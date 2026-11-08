@@ -1,19 +1,11 @@
-/* BetterDesk Console — short-code pairing page */
+/* BetterDesk Console — short-code pairing page (/pairing) */
 
 (function () {
     'use strict';
 
-    const t = (k, def) => {
-        const tr = window.t ? window.t(k) : k;
-        return (tr && tr !== k) ? tr : (def != null ? def : k);
-    };
-    const notify = window.Notifications || {
-        success: console.log,
-        error: console.error,
-        warning: console.warn,
-        info: console.info,
-    };
+    const t = (k, vars) => (typeof window._ === 'function' ? window._(k, vars) : k);
     const csrf = () => (window.BetterDesk && window.BetterDesk.csrfToken) || '';
+    const esc = (s) => Utils.escapeHtml(s == null ? '' : String(s));
 
     async function api(method, url, body) {
         const headers = { Accept: 'application/json' };
@@ -26,6 +18,7 @@
             body: body === undefined ? undefined : JSON.stringify(body),
         });
         const payload = await res.json().catch(() => ({}));
+        if (res.status === 403) throw new Error(Utils.permissionDeniedMessage());
         if (!res.ok || payload.success === false) {
             throw new Error(payload.error || `HTTP ${res.status}`);
         }
@@ -34,53 +27,66 @@
 
     const $ = (id) => document.getElementById(id);
 
-    function formatRemaining(seconds) {
-        if (!Number.isFinite(seconds) || seconds <= 0) return '0:00';
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m}:${String(s).padStart(2, '0')}`;
+    /** "10 minutes, works once" — counted down in whole minutes */
+    function remainingText(seconds) {
+        if (seconds <= 0) return t('pairing.expired_hint');
+        if (seconds < 60) return t('pairing.valid_under_minute');
+        return t('pairing.valid_minutes', { count: Math.ceil(seconds / 60) });
+    }
+
+    function timeOf(value) {
+        if (!value) return '–';
+        return Utils.formatDate(value, { year: undefined, month: undefined, day: undefined, empty: '–' });
     }
 
     let countdown = null;
+
+    function setStatus(text, kind) {
+        const el = $('pairing-status');
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = `form-status${kind ? ` is-${kind}` : ''}`;
+    }
 
     function showCode(payload) {
         const result = $('pairing-result');
         if (!result) return;
         result.hidden = false;
-        $('pairing-code').textContent = payload.code || '';
-        // Show the host the operator must type, so both halves of the pairing are visible
-        // in one place.
+        const code = $('pairing-code');
+        code.textContent = payload.code || '';
+        code.classList.remove('is-expired');
+        // The host the person types, so both halves of the pairing are in one place
         $('pairing-code-host').textContent = $('pairing-host').value.trim() || payload.host || '';
 
-        let remaining = Number(payload.expires_in) || 600;
         const ttl = $('pairing-code-ttl');
-        if (ttl) ttl.textContent = formatRemaining(remaining);
-        if (countdown) clearInterval(countdown);
-        countdown = setInterval(() => {
-            remaining -= 1;
-            if (remaining <= 0) {
+        const endsAt = Date.now() + (Number(payload.expires_in) || 600) * 1000;
+        const tick = () => {
+            const left = Math.round((endsAt - Date.now()) / 1000);
+            if (ttl) ttl.textContent = remainingText(left);
+            if (left <= 0) {
                 clearInterval(countdown);
                 countdown = null;
-                if (ttl) ttl.textContent = t('pairing.expired', 'Expired');
-                const code = $('pairing-code');
-                if (code) code.classList.add('is-expired');
-                return;
+                code.classList.add('is-expired');
             }
-            if (ttl) ttl.textContent = formatRemaining(remaining);
-        }, 1000);
+        };
+        if (countdown) clearInterval(countdown);
+        tick();
+        countdown = setInterval(tick, 5000);
     }
 
-    async function generate() {
+    async function generate(event) {
+        if (event) event.preventDefault();
         const button = $('pairing-generate');
         if (button) button.disabled = true;
+        setStatus(t('pairing.creating'));
         try {
             const label = ($('pairing-label') && $('pairing-label').value.trim()) || '';
             const payload = await api('POST', '/api/panel/pairing/codes', { label });
             showCode(payload);
-            notify.success(t('pairing.created', 'Pairing code created'));
+            setStatus(t('pairing.created'), 'ok');
             await loadCodes();
         } catch (err) {
-            notify.error(`${t('pairing.create_failed', 'Could not create a pairing code')}: ${err.message}`);
+            setStatus(`${t('pairing.create_failed')}: ${err.message}`, 'error');
         } finally {
             if (button) button.disabled = false;
         }
@@ -93,67 +99,61 @@
             const payload = await api('GET', '/api/panel/pairing/codes');
             const codes = payload.codes || [];
             if (!codes.length) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-muted">${t('pairing.empty', 'No active codes')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="state-cell">${esc(t('pairing.empty'))}</td></tr>`;
                 return;
             }
-            tbody.innerHTML = '';
-            for (const item of codes) {
-                const row = document.createElement('tr');
-                const cells = [
-                    item.label || '—',
-                    item.created_at || '—',
-                    item.expires_at || '—',
-                    item.created_by || '—',
-                ];
-                for (const value of cells) {
-                    const td = document.createElement('td');
-                    td.textContent = value;
-                    row.appendChild(td);
-                }
-                const actions = document.createElement('td');
-                const revoke = document.createElement('button');
-                revoke.type = 'button';
-                revoke.className = 'btn btn-secondary btn-sm';
-                revoke.textContent = t('pairing.revoke', 'Revoke');
-                revoke.addEventListener('click', () => revokeCode(item.id));
-                actions.appendChild(revoke);
-                row.appendChild(actions);
-                tbody.appendChild(row);
-            }
+            tbody.innerHTML = codes.map((item) => `<tr>
+                <td>${item.label ? esc(item.label) : `<span class="text-muted">${esc(t('pairing.no_label'))}</span>`}</td>
+                <td>${esc(timeOf(item.created_at))}</td>
+                <td>${esc(timeOf(item.expires_at))}</td>
+                <td>${esc(item.created_by || '–')}</td>
+                <td class="actions"><button type="button" class="btn btn-sm btn-danger-quiet" data-revoke="${esc(item.id)}"
+                    aria-label="${esc(t('pairing.revoke'))}: ${esc(item.label || timeOf(item.created_at))}">${esc(t('pairing.revoke'))}</button></td>
+            </tr>`).join('');
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-muted">${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="state-cell"><span class="state is-error">${esc(t('pairing.load_failed'))} ${esc(err.message)}
+                <button type="button" class="btn btn-sm" data-retry>${esc(t('actions.retry'))}</button></span></td></tr>`;
         }
     }
 
-    async function revokeCode(id) {
+    async function revokeCode(id, button) {
         if (!id) return;
+        if (button) button.disabled = true;
         try {
             await api('DELETE', `/api/panel/pairing/codes/${encodeURIComponent(id)}`);
-            notify.success(t('pairing.revoked', 'Pairing code revoked'));
+            Notifications.success(t('pairing.revoked'));
             await loadCodes();
         } catch (err) {
-            notify.error(`${t('pairing.revoke_failed', 'Could not revoke the code')}: ${err.message}`);
+            if (button) button.disabled = false;
+            Notifications.error(`${t('pairing.revoke_failed')}: ${err.message}`);
         }
     }
 
     async function copyCode() {
-        const text = $('pairing-code') && $('pairing-code').textContent;
+        const button = $('pairing-copy');
+        const text = $('pairing-code') && $('pairing-code').textContent.trim();
         if (!text) return;
         try {
-            await navigator.clipboard.writeText(text.trim());
-            notify.success(t('pairing.copied', 'Code copied'));
+            await Utils.copyToClipboard(text);
+            if (button) {
+                button.textContent = t('pairing.copied_short');
+                button.classList.add('copied');
+                setTimeout(() => { button.textContent = t('actions.copy'); button.classList.remove('copied'); }, 1600);
+            }
         } catch (_) {
-            notify.warning(t('pairing.copy_failed', 'Select the code and copy it manually'));
+            Notifications.warning(t('pairing.copy_failed'));
         }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        const generateBtn = $('pairing-generate');
-        if (generateBtn) generateBtn.addEventListener('click', generate);
-        const refreshBtn = $('pairing-refresh');
-        if (refreshBtn) refreshBtn.addEventListener('click', loadCodes);
-        const copyBtn = $('pairing-copy');
-        if (copyBtn) copyBtn.addEventListener('click', copyCode);
+        $('pairing-form')?.addEventListener('submit', generate);
+        $('pairing-refresh')?.addEventListener('click', loadCodes);
+        $('pairing-copy')?.addEventListener('click', copyCode);
+        $('pairing-tbody')?.addEventListener('click', (e) => {
+            const revoke = e.target.closest('[data-revoke]');
+            if (revoke) revokeCode(revoke.dataset.revoke, revoke);
+            if (e.target.closest('[data-retry]')) loadCodes();
+        });
         if ($('pairing-tbody')) loadCodes();
     });
 })();

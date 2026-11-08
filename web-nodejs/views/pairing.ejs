@@ -1,92 +1,77 @@
 <%- include('layouts/main', {
-    title: _('pairing.title'),
-    pageStyles: ['pages'],
+    title: _('nav.pairing'),
+    uiReworked: true,
+    pageStyles: ['ui/pairing'],
     pageScripts: ['pairing'],
     currentPage: 'pairing',
-    breadcrumb: [{ label: _('pairing.title') }],
+    breadcrumb: [{ label: _('nav.pairing') }],
     body: `
-        <div class="page-header">
-            <h1 class="page-title">
-                <span class="material-icons">pin</span>
-                ${_('pairing.title')}
-            </h1>
-            <p class="page-subtitle">${_('pairing.subtitle')}</p>
-        </div>
-
-        <section class="card">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <span class="material-icons">add_link</span>
-                    ${_('pairing.generate_title')}
-                </h2>
+        <div class="page pairing-page">
+            <div class="page-head">
+                <h1>${_('nav.pairing')}</h1>
+                <p class="page-description">${_('pairing.subtitle')}</p>
             </div>
-            <div class="card-body">
-                <p class="settings-row-hint">${_('pairing.generate_hint')}</p>
-                <div class="form-grid" style="max-width: 520px;">
-                    <label class="form-field">
-                        <span>${_('pairing.label_field')}</span>
-                        <input id="pairing-label" class="form-input" maxlength="64"
-                               placeholder="${_('pairing.label_placeholder')}" autocomplete="off">
-                    </label>
-                    <label class="form-field">
-                        <span>${_('pairing.host_field')}</span>
-                        <input id="pairing-host" class="form-input" value="${suggested_host || ''}"
-                               placeholder="desk.example.com" autocomplete="off">
-                        <small class="settings-row-hint">${_('pairing.host_hint')}</small>
-                    </label>
-                </div>
-                <div style="margin-top: 12px;">
-                    <button type="button" id="pairing-generate" class="btn btn-primary">
-                        <span class="material-icons">vpn_key</span>
-                        ${_('pairing.generate_button')}
-                    </button>
-                </div>
 
+            <section class="section" aria-labelledby="pairing-create-title">
+                <div class="section-head"><h2 id="pairing-create-title">${_('pairing.generate_title')}</h2></div>
+                <p class="section-note">${_('pairing.generate_hint')}</p>
+                <form class="form-column pairing-form" id="pairing-form" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="pairing-label">${_('pairing.label_field')}</label>
+                        <input id="pairing-label" class="form-input" maxlength="64" autocomplete="off"
+                               placeholder="${_('pairing.label_placeholder')}">
+                        <p class="form-hint">${_('pairing.label_hint')}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="pairing-host">${_('pairing.host_field')}</label>
+                        <input id="pairing-host" class="form-input" value="${escapeHtml(suggested_host || '')}" autocomplete="off" spellcheck="false">
+                        <p class="form-hint">${_('pairing.host_hint')}</p>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" id="pairing-generate" class="btn btn-primary">${_('pairing.generate_button')}</button>
+                        <span class="form-status" id="pairing-status" aria-live="polite"></span>
+                    </div>
+                </form>
+
+                <!-- The new code, shown once -->
                 <div id="pairing-result" class="pairing-result" hidden>
-                    <p class="settings-row-hint">${_('pairing.code_hint')}</p>
-                    <div class="pairing-code" id="pairing-code" aria-live="polite"></div>
-                    <div class="pairing-meta">
-                        <span>${_('pairing.host_field')}: <strong id="pairing-code-host"></strong></span>
-                        <span>${_('pairing.expires_in')}: <strong id="pairing-code-ttl"></strong></span>
-                    </div>
-                    <div style="margin-top: 8px;">
-                        <button type="button" id="pairing-copy" class="btn btn-secondary btn-sm">
-                            <span class="material-icons">content_copy</span>
-                            ${_('pairing.copy')}
-                        </button>
-                    </div>
+                    <p>${_('pairing.code_hint')}</p>
+                    <span class="value-field pairing-code-field">
+                        <code class="pairing-code" id="pairing-code" aria-live="polite"></code>
+                        <button type="button" id="pairing-copy" aria-label="${_('pairing.copy')}">${_('actions.copy')}</button>
+                    </span>
+                    <dl class="facts pairing-meta">
+                        <dt>${_('pairing.host_field')}</dt>
+                        <dd class="mono" id="pairing-code-host"></dd>
+                        <dt>${_('pairing.expires_in')}</dt>
+                        <dd id="pairing-code-ttl"></dd>
+                    </dl>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="card" style="margin-top: 16px;">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <span class="material-icons">list</span>
-                    ${_('pairing.active_title')}
-                </h2>
-                <button type="button" id="pairing-refresh" class="btn btn-secondary btn-sm">
-                    <span class="material-icons">refresh</span>
-                    ${_('common.refresh')}
-                </button>
-            </div>
-            <div class="card-body">
-                <p class="settings-row-hint">${_('pairing.active_hint')}</p>
-                <table class="data-table" id="pairing-table">
-                    <thead>
-                        <tr>
-                            <th>${_('pairing.col_label')}</th>
-                            <th>${_('pairing.col_created')}</th>
-                            <th>${_('pairing.col_expires')}</th>
-                            <th>${_('pairing.col_created_by')}</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="pairing-tbody">
-                        <tr><td colspan="5" class="text-muted">${_('pairing.loading')}</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+            <section class="section" aria-labelledby="pairing-active-title">
+                <div class="section-head">
+                    <h2 id="pairing-active-title">${_('pairing.active_title')}</h2>
+                    <button type="button" id="pairing-refresh" class="btn btn-sm">${_('actions.refresh')}</button>
+                </div>
+                <p class="section-note">${_('pairing.active_hint')}</p>
+                <div class="table-scroll" tabindex="0" role="region" aria-labelledby="pairing-active-title">
+                    <table class="data-table" id="pairing-table">
+                        <thead>
+                            <tr>
+                                <th>${_('pairing.col_label')}</th>
+                                <th>${_('pairing.col_created')}</th>
+                                <th>${_('pairing.col_expires')}</th>
+                                <th>${_('pairing.col_created_by')}</th>
+                                <th class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="pairing-tbody">
+                            <tr><td colspan="5" class="state-cell">${_('pairing.loading')}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
     `
 }) %>
