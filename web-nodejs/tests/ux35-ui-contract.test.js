@@ -117,42 +117,15 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.doesNotMatch(classicNavbar, /navbar-btn--shell-beta|ui-shell-beta-badge|data-ui-shell-switch/);
     });
 
-    it('keeps Settings navigation sticky, horizontally scrollable, and compact on mobile shell widths', () => {
-        assert.match(settingsView, /<nav class="settings-shell-nav" role="tablist"/);
-        assert.match(settingsView, /class="settings-shell-nav-track mobile-tabs-scroll"/);
-        assert.match(pagesCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*sticky/);
-        assert.match(pagesCss, /\.settings-shell-nav-track\.mobile-tabs-scroll\s*\{[\s\S]*?padding-bottom:\s*0/);
-        assert.match(
-            pagesCss,
-            /\.settings-shell-nav-track\s*\{[\s\S]*?overflow-x:\s*auto[\s\S]*?overflow-y:\s*hidden[\s\S]*?touch-action:\s*pan-x/
-        );
-        assert.match(
-            ux35Css,
-            /\.ux35-page \.ux35-content:has\(\.settings-shell\)\s*\{[\s\S]*?padding-top:\s*0[\s\S]*?padding-inline:\s*0/
-        );
-        assert.match(
-            ux35Css,
-            /\.ux35-page \.settings-shell-nav\s*\{[\s\S]*?top:\s*0[\s\S]*?width:\s*100%/
-        );
-        assert.match(
-            ux35Css,
-            /\.ux35-page \.settings-shell-nav-track\s*\{[\s\S]*?overflow-y:\s*hidden[\s\S]*?scrollbar-width:\s*none/
-        );
-        assert.match(
-            ux35Css,
-            /\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?justify-content:\s*center[\s\S]*?line-height:\s*1\.2/
-        );
-        assert.match(ux35Css, /@media \(min-width: 768px\) and \(max-width: 1024px\)/);
-        assert.match(
-            ux35Css,
-            /@media \(min-width: 768px\) and \(max-width: 1024px\)[\s\S]*?\.ux35-page \.settings-shell-nav \.settings-shell-tab[\s\S]*?min-height:\s*36px/
-        );
-        assert.match(
-            ux35Css,
-            /@media \(max-width: 767px\)[\s\S]*?\.ux35-page \.ux35-content:has\(\.settings-shell\)\s*\{[\s\S]*?padding-top:\s*0/
-        );
-        assert.doesNotMatch(mobileCss, /\.settings-shell-nav\s*\{[\s\S]*?position:\s*static/);
-        assert.match(settingsJs, /tab\.scrollIntoView\(\{ inline: 'nearest', block: 'nearest' \}\)/);
+    it('renders the settings tab named by currentTab (?tab=) and sends old #tab links there', () => {
+        // Each settings tab is its own page in the sidebar; there is no in-page tab bar.
+        assert.match(settingsView, /typeof currentTab !== 'undefined' && currentTab \? currentTab : 'general'/);
+        assert.match(settingsView, /currentTab: tab,/);
+        assert.match(settingsView, /name === tab \? '' : 'hidden'/);
+        assert.match(settingsView, /data-current-tab="\$\{tab\}"/);
+        assert.doesNotMatch(settingsView, /settings-shell-nav/);
+        assert.match(settingsJs, /function redirectHashTab\(\)/);
+        assert.match(settingsJs, /params\.set\('tab', name\)/);
     });
 
     it('keeps OIDC password recovery explicit on the login page', () => {
@@ -183,11 +156,20 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(settingsJs, /loginSlides/);
     });
 
-    it('keeps personal TOTP in Authentication while gating admin panels', () => {
-        assert.match(settingsView, /id="settings-tab-auth"[^>]*data-tab="auth"/);
-        assert.match(settingsView, /data-auth-panel="totp"/);
-        assert.match(settingsView, /id="auth-panel-totp"/);
-        assert.match(settingsView, /canServerConfig \? `/);
+    it('keeps personal TOTP in Sign-in for everyone while gating admin panels', () => {
+        const auth = settingsView.slice(settingsView.indexOf("panelAttrs('auth')"), settingsView.indexOf("panelAttrs('backup')"));
+        const everyoneAt = auth.lastIndexOf('${canServerConfig', auth.indexOf('for-everyone-title'));
+        const yourAccount = auth.slice(auth.indexOf('your-account-title'), everyoneAt);
+        // Your own password and two-factor setup are not behind a permission check
+        assert.match(yourAccount, /id="password-form"/);
+        assert.match(yourAccount, /id="auth-panel-totp"/);
+        assert.doesNotMatch(yourAccount, /canServerConfig/);
+        const accountAt = auth.indexOf('<section class="section" aria-labelledby="your-account-title">');
+        assert.ok(accountAt > 0);
+        assert.doesNotMatch(auth.slice(Math.max(0, accountAt - 40), accountAt), /canServerConfig \? `\s*$/);
+        // Server-wide sign-in options need server.config
+        assert.match(auth, /\$\{canServerConfig \? `\s*<section class="section" aria-labelledby="for-everyone-title">/);
+        assert.match(auth.slice(auth.indexOf('for-everyone-title')), /id="ldap-form"[\s\S]*id="oidc-form"/);
         assert.match(settingsJs, /initTotpSection\(\)/);
     });
 });

@@ -81,15 +81,21 @@ describe('Branding routes', () => {
     it('keeps the appearance settings focused on saved configuration', () => {
         const view = fs.readFileSync(path.join(__dirname, '..', 'views', 'settings.ejs'), 'utf8');
         const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'settings.js'), 'utf8');
-        const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'pages.css'), 'utf8');
-
         expect(view).not.toContain('branding-preview');
         expect(view).not.toContain('branding-live-preview');
-        expect(view).toContain('branding-management-disclosure');
         expect(view).not.toContain('folder_special');
         expect(script).not.toContain('BrandingPreview');
         expect(script).toContain('initBrandingFieldTracking');
-        expect(styles).toContain('border-right: 2px solid var(--text-secondary);');
+        // One appearance form with one save bar; saved appearances are their own section
+        expect(view).toMatch(/<form class="branding-form-root" id="branding-form" \$\{canBrandingEdit \? 'data-save-form' : ''\}/);
+        expect(view).toContain('id="branding-profiles"');
+        // Without branding.edit the fields are shown read-only and there is no save bar
+        expect(view).toMatch(/<fieldset class="settings-fieldset" \$\{canBrandingEdit \? '' : 'disabled'\}>/);
+        // A picked logo is uploaded by the save, not when the file is chosen
+        const save = script.slice(script.indexOf('async function saveBrandingNow'), script.indexOf('function updateBrandingReadability'));
+        expect(save).toContain('await uploadPendingLogo()');
+        const pick = script.slice(script.indexOf('function handleLogoFileUpload'), script.indexOf('function currentLookPalette'));
+        expect(pick).not.toContain('upload-logo');
     });
 
     describe('GET /css/branding.css', () => {

@@ -13,51 +13,124 @@
     let _restartPollAttempts = 0;
     let _connectionModeSnapshot = null;
     let _connectionModeWritable = false;
-    
+
+    // Each settings tab is its own page (?tab=). Old links used #tab; send
+    // them to the right page before anything loads.
+    const TAB_NAMES = ['general', 'branding', 'auth', 'backup', 'updates', 'email', 'time', 'advanced'];
+    window.addEventListener('hashchange', () => {
+        redirectHashTab();
+        revealHashTarget();
+    });
+    redirectHashTab();
+    function redirectHashTab() {
+        const hash = window.location.hash.replace('#', '');
+        const name = hash === 'server' ? 'general' : hash;
+        if (!TAB_NAMES.includes(name)) return;
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('tab') === name) return;
+        params.set('tab', name);
+        window.location.replace(window.location.pathname + '?' + params.toString());
+    }
+
+    const pageEl = () => document.querySelector('.settings-page');
+    const CURRENT_TAB = () => pageEl()?.dataset.currentTab || 'general';
+    const CAN_SERVER_CONFIG = () => pageEl()?.dataset.canServerConfig === '1';
+
     document.addEventListener('DOMContentLoaded', init);
-    
+
     function init() {
-        initTabs();
-        initRestartCoordinator();
+        if (!pageEl()) return;
+        const tab = CURRENT_TAB();
+        if (CAN_SERVER_CONFIG()) initRestartCoordinator();
         initSettingsSearch();
-        initPasswordForm();
-        initTotpSection();
-        initBrandingSection();
+        revealHashTarget();
 
-        // Only init server-config sections when their admin panels are rendered.
-        if (document.getElementById('auth-panel-enrollment')) {
-            initEnrollmentSection();
-            initClientSessionsSection();
-            initLdapSection();
-            initOidcSection();
-        }
-        if (document.getElementById('tab-backup') && document.getElementById('tab-backup').style.display !== 'none') {
-            initBackupSection();
-        }
-        if (document.getElementById('update-check-btn')) {
-            initUpdateSection();
-        }
-        if (document.getElementById('tab-advanced') && document.getElementById('tab-advanced').style.display !== 'none') {
-            initAdvancedSection();
-        }
-        if (document.getElementById('tab-email') && document.getElementById('tab-email').style.display !== 'none') {
-            initEmailSection();
-        }
-        if (document.getElementById('tab-time') && document.getElementById('tab-time').style.display !== 'none') {
-            initTimeSettingsTab();
+        // Only the visible tab loads its data; the other tabs are in the page
+        // so the search can find their fields.
+        switch (tab) {
+            case 'general':
+                loadServerInfo();
+                initPublicEndpointsSection();
+                initConnectionModeSection();
+                initDeviceScopeSection();
+                initAvailabilityHistorySection();
+                initMeshSettingsSection();
+                break;
+            case 'branding':
+                initBrandingSection();
+                break;
+            case 'auth':
+                initPasswordForm();
+                initTotpSection();
+                if (document.getElementById('enrollment-settings-section')) {
+                    initEnrollmentSection();
+                    initClientSessionsSection();
+                    initLdapSection();
+                    initOidcSection();
+                }
+                break;
+            case 'backup':
+                if (document.getElementById('tab-backup')) initBackupSection();
+                break;
+            case 'updates':
+                if (document.getElementById('update-check-btn')) initUpdateSection();
+                break;
+            case 'email':
+                if (document.getElementById('tab-email')) initEmailSection();
+                break;
+            case 'time':
+                if (document.getElementById('tab-time')) {
+                    initTimeSettingsTab();
+                    loadTimeSettingsTab();
+                }
+                break;
+            case 'advanced':
+                if (document.getElementById('tab-advanced')) initAdvancedSection();
+                break;
+            default:
+                break;
         }
 
-        loadAuditLog();
-        loadServerInfo();
-        initMeshSettingsSection();
-        initDeviceScopeSection();
-        initAvailabilityHistorySection();
-        initConnectionModeSection();
-        initPublicEndpointsSection();
-        initAuthSubnav();
-        
-        // Refresh handler
-        window.addEventListener('app:refresh', loadAuditLog);
+        document.querySelectorAll('[data-copy-from]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const text = document.getElementById(btn.dataset.copyFrom)?.textContent || '';
+                if (!text) return;
+                navigator.clipboard?.writeText(text).then(() => {
+                    btn.textContent = _('common.copied');
+                    setTimeout(() => { btn.textContent = _('actions.copy'); }, 1500);
+                }).catch(() => {});
+            });
+        });
+    }
+
+    /** Text for a form's save bar or status line. */
+    function formOk(form, message) {
+        if (form && window.UiForm) UiForm.saved(form, message);
+    }
+
+    function formFail(form, message) {
+        if (form && window.UiForm) UiForm.failed(form, message);
+        else if (message) Notifications.error(message);
+    }
+
+    /** One-line status next to a button: kind is '', 'ok' or 'error'. */
+    function setStatus(el, text, kind = '') {
+        if (!el) return;
+        el.textContent = text || '';
+        el.classList.toggle('is-ok', kind === 'ok');
+        el.classList.toggle('is-error', kind === 'error');
+    }
+
+    function setBusy(btn, busy, busyText) {
+        if (!btn) return;
+        if (busy) {
+            btn.dataset.idleLabel = btn.dataset.idleLabel || btn.textContent.trim();
+            btn.disabled = true;
+            if (busyText) btn.textContent = busyText;
+        } else {
+            btn.disabled = false;
+            if (btn.dataset.idleLabel) btn.textContent = btn.dataset.idleLabel;
+        }
     }
 
     // ==================== Settings UI helpers ====================
@@ -327,7 +400,6 @@
                 message: options.message || '',
                 confirmLabel: options.confirmLabel || _('actions.confirm'),
                 cancelLabel: options.cancelLabel,
-                confirmIcon: options.icon || 'warning',
                 danger: options.danger
             });
         }
@@ -357,69 +429,36 @@
         }
     }
 
-    function initAuthSubnav() {
-        const subtabs = document.querySelectorAll('.settings-auth-subtab');
-        const panels = document.querySelectorAll('.settings-auth-panel');
-        if (!subtabs.length) return;
+    // ==================== Sub-page links ====================
 
-        subtabs.forEach((tab) => {
-            tab.addEventListener('click', () => {
-                const panelId = tab.dataset.authPanel;
-                if (!panelId) return;
-
-                subtabs.forEach((t) => {
-                    t.classList.remove('active');
-                    t.setAttribute('aria-selected', 'false');
-                });
-                tab.classList.add('active');
-                tab.setAttribute('aria-selected', 'true');
-
-                panels.forEach((panel) => {
-                    const isActive = panel.id === 'auth-panel-' + panelId;
-                    panel.classList.toggle('active', isActive);
-                    panel.hidden = !isActive;
-                });
-
-                applySettingsSearchFilter();
-            });
-        });
-    }
-    
-    // ==================== Tab Navigation ====================
-    
-    function initTabs() {
-        const tabs = document.querySelectorAll('.settings-shell-tab, .settings-tab');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', async (event) => {
-                if (!(await canNavigateAwayFromRestartSettings())) {
-                    event.preventDefault();
-                    return;
-                }
-                tabs.forEach(t => {
-                    t.classList.remove('active');
-                    t.setAttribute('aria-selected', 'false');
-                });
-                document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
-                
-                tab.classList.add('active');
-                tab.setAttribute('aria-selected', 'true');
-                const target = document.getElementById('tab-' + tab.dataset.tab);
-                if (target) target.classList.add('active');
-                window.history.replaceState(null, '', '#' + tab.dataset.tab);
-                if (typeof tab.scrollIntoView === 'function') {
-                    tab.scrollIntoView({ inline: 'nearest', block: 'nearest' });
-                }
-                applySettingsSearchFilter();
-                onSettingsTabChanged(tab.dataset.tab);
-            });
-        });
-        
-        const hash = window.location.hash.replace('#', '');
-        if (['general', 'branding', 'server', 'backup', 'updates', 'auth', 'advanced', 'email', 'time'].includes(hash)) {
-            const tabName = hash === 'server' ? 'general' : hash;
-            const tab = document.querySelector(`.settings-shell-tab[data-tab="${tabName}"], .settings-tab[data-tab="${tabName}"]`);
-            if (tab) tab.click();
+    /**
+     * A link like /settings#public-endpoints may point into another tab's
+     * section: go to that tab. A target on this tab is scrolled to and marked.
+     */
+    function revealHashTarget() {
+        const id = decodeURIComponent(window.location.hash.replace('#', ''));
+        if (!id || TAB_NAMES.includes(id)) return;
+        const target = document.getElementById(id);
+        if (!target) return;
+        const panel = target.closest('.settings-tab-content');
+        if (panel && panel.hidden && panel.dataset.tab) {
+            window.location.replace(`/settings?tab=${encodeURIComponent(panel.dataset.tab)}#${encodeURIComponent(id)}`);
+            return;
         }
+        // Wait a frame so the sticky header is laid out before scrolling.
+        requestAnimationFrame(() => highlightTarget(target));
+    }
+
+    function highlightTarget(target) {
+        const block = target.closest('.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone') || target;
+        const details = target.closest('details');
+        if (details) details.open = true;
+        block.scrollIntoView({ block: 'center' });
+        block.classList.add('is-found');
+        setTimeout(() => block.classList.remove('is-found'), 2400);
+        const field = target.matches('input, select, textarea') ? target
+            : block.querySelector('input:not([type=hidden]), select, textarea');
+        if (field && !field.disabled && field.offsetParent !== null) field.focus({ preventScroll: true });
     }
 
     function isRestartSensitiveDirty() {
@@ -428,39 +467,6 @@
             if (JSON.stringify(current) !== JSON.stringify(_connectionModeSnapshot)) return true;
         }
         return typeof advancedState !== 'undefined' && !!advancedState?.dirty;
-    }
-
-    async function canNavigateAwayFromRestartSettings() {
-        if (_restartPending?.phase === 'pending') {
-            showRestartPrompt(_restartPending);
-            return false;
-        }
-        if (_restartPending?.phase === 'failed') {
-            showRestartFailure(_restartPending, _restartPending.error);
-            return false;
-        }
-        if (!isRestartSensitiveDirty()) return true;
-
-        const save = await settingsConfirmCritical({
-            title: tSettings('unsaved_restart_title', 'Unsaved restart-required changes'),
-            message: tSettings('unsaved_restart_message', 'This section contains changes that need a service restart. Save them before leaving this tab?'),
-            confirmLabel: tSettings('unsaved_restart_save', 'Save changes'),
-            cancelLabel: tSettings('unsaved_restart_stay', 'Stay here'),
-            icon: 'save'
-        });
-        if (!save) return false;
-        if (typeof advancedState !== 'undefined' && advancedState?.dirty) {
-            await saveAdvancedFile();
-        } else {
-            await saveConnectionMode();
-        }
-        return false;
-    }
-
-    function onSettingsTabChanged(tabName) {
-        if (tabName === 'time') {
-            loadTimeSettingsTab();
-        }
     }
 
     // ==================== Time / NTP / billing timezone ====================
@@ -522,14 +528,17 @@
                     ? (typeof __ === 'function' ? __('commercialization.clock.synced_detail') : 'Clock synchronized for billing')
                     : (typeof __ === 'function' ? __('commercialization.clock.unsynced') : 'Server clock is not synchronized');
             }
-            if (offsetEl) offsetEl.textContent = st.offset_ms != null ? `${st.offset_ms} ms` : '—';
-            if (ntpServerEl) ntpServerEl.textContent = st.ntp_server || '—';
+            if (offsetEl) offsetEl.textContent = st.offset_ms != null ? `${st.offset_ms} ms` : '-';
+            if (ntpServerEl) ntpServerEl.textContent = st.ntp_server || '-';
             if (osSyncEl) {
                 if (st.os_clock_synced === true) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_yes') : 'Yes';
                 else if (st.os_clock_synced === false) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_no') : 'No';
-                else osSyncEl.textContent = '—';
+                else osSyncEl.textContent = '-';
             }
-            if (lastErrorEl) lastErrorEl.textContent = st.last_error || '—';
+            if (lastErrorEl) lastErrorEl.textContent = st.last_error || '-';
+            if (detail) {
+                detail.innerHTML = `<span class="status ${synced ? 'ok' : 'warning'}">${Utils.escapeHtml(detail.textContent)}</span>`;
+            }
         } catch (e) {
             console.warn('[settings] timesync status', e);
         }
@@ -543,6 +552,8 @@
 
     function initTimeSettingsTab() {
         if (!document.getElementById('tab-time')) return;
+        const form = document.getElementById('time-clock-settings-form');
+        const checkStatus = document.getElementById('time-check-status');
 
         document.getElementById('time-detect-timezone-btn')?.addEventListener('click', async () => {
             try {
@@ -551,23 +562,34 @@
                 fillTimezoneSelect(tz, data.common || _timeCommonZones);
                 const custom = document.getElementById('time-billing-timezone-custom');
                 if (custom) custom.value = '';
-                Notifications.success(tSettings('time.detected', 'Detected timezone: {tz}').replace('{tz}', tz));
+                if (form && window.UiForm) UiForm.markDirty(form);
+                setStatus(checkStatus, '');
+                if (form && window.UiForm) {
+                    const status = form.querySelector('[data-save-status]');
+                    if (status) status.textContent = tSettings('time.detected', 'Detected timezone: {tz}').replace('{tz}', tz);
+                }
             } catch (e) {
-                Notifications.error(e.message || 'Failed to detect timezone');
+                formFail(form, e.message || _('errors.server_error'));
             }
         });
 
-        document.getElementById('time-timesync-check-btn')?.addEventListener('click', async () => {
+        document.getElementById('time-timesync-check-btn')?.addEventListener('click', async (ev) => {
+            const btn = ev.currentTarget;
+            setBusy(btn, true);
+            setStatus(checkStatus, '');
             try {
                 await Utils.api('/api/panel/billing/timesync/check', { method: 'POST' });
-                Notifications.success(typeof __ === 'function' ? __('commercialization.clock.checked') : 'Clock check completed');
+                setStatus(checkStatus, typeof __ === 'function' ? __('commercialization.clock.checked') : 'Clock check completed', 'ok');
                 await refreshTimeSyncStatus();
             } catch (e) {
-                Notifications.error(e.message || 'Clock check failed');
+                setStatus(checkStatus, e.message || _('errors.server_error'), 'error');
+            } finally {
+                setBusy(btn, false);
             }
         });
 
-        document.getElementById('time-save-clock-settings-btn')?.addEventListener('click', async () => {
+        form?.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
             if (!_timeClockDockerMode) {
                 const ok = await settingsConfirmCritical({
                     title: tSettings('time.save_title', 'Save time settings'),
@@ -595,9 +617,10 @@
                     fillTimezoneSelect(result.settings.billing_timezone || resolveSelectedTimezone(), _timeCommonZones);
                 }
                 if (result.restartRequired && typeof showRestartPrompt === 'function') {
+                    formOk(form);
                     showRestartPrompt(result.restartRequired);
                 } else {
-                    Notifications.success(
+                    formOk(form,
                         result.dockerMode
                             ? (typeof __ === 'function' ? __('commercialization.clock.saved_hot_reload') : 'Clock settings saved.')
                             : tSettings('time.saved', 'Time settings saved.')
@@ -605,97 +628,159 @@
                 }
                 await refreshTimeSyncStatus();
             } catch (e) {
-                Notifications.error(e.message || 'Save failed');
+                formFail(form, e.message || _('errors.server_error'));
             }
         });
     }
 
+    // ==================== Settings search ====================
+    // Finds a setting on any tab the user may open. Results link to the tab
+    // and the field; a field on this tab is scrolled to and marked.
+
+    let _searchIndex = null;
+
+    function buildSearchIndex() {
+        const items = [];
+        const seen = new Set();
+        document.querySelectorAll('.settings-tab-content[data-tab]').forEach((panel) => {
+            const tab = panel.dataset.tab;
+            const tabTitle = panel.dataset.tabTitle || tab;
+            const nodes = panel.querySelectorAll('.form-group, .check-field, .choice, section[id], .settings-subgroup, .facts > dt');
+            nodes.forEach((node) => {
+                let label = '';
+                let targetId = '';
+                if (node.matches('section[id], .settings-subgroup')) {
+                    const heading = node.querySelector('h2, h3');
+                    label = heading?.textContent.trim() || '';
+                    targetId = node.id || heading?.id || '';
+                } else if (node.matches('.facts > dt')) {
+                    label = node.textContent.trim();
+                    const dd = node.nextElementSibling;
+                    targetId = dd?.id || node.closest('section[id]')?.id || '';
+                } else {
+                    const labelEl = node.querySelector('.form-label, .check-label, .choice-title, legend');
+                    label = (labelEl?.textContent || '').trim();
+                    const control = node.querySelector('input[id]:not([type=hidden]), select[id], textarea[id]');
+                    targetId = control?.id || node.closest('[id]')?.id || '';
+                }
+                label = label.replace(/\s+/g, ' ').replace(/:$/, '');
+                if (!label || !targetId) return;
+                const key = tab + '#' + targetId + '#' + label;
+                if (seen.has(key)) return;
+                seen.add(key);
+                const section = node.closest('section[id], .danger-zone, .settings-subgroup');
+                const sectionTitle = section?.querySelector('h2, h3')?.textContent.trim() || '';
+                const hint = Array.from(node.querySelectorAll('.form-hint, .choice-desc, .section-note'))
+                    .slice(0, 2).map((el) => el.textContent).join(' ');
+                items.push({
+                    tab, tabTitle, targetId, label,
+                    where: sectionTitle && sectionTitle !== label ? `${tabTitle} › ${sectionTitle}` : tabTitle,
+                    label_lc: label.toLowerCase(),
+                    text_lc: (label + ' ' + sectionTitle + ' ' + hint).toLowerCase()
+                });
+            });
+        });
+        return items;
+    }
+
     function initSettingsSearch() {
         const input = document.getElementById('settings-search-input');
-        const clear = document.getElementById('settings-search-clear');
         if (!input) return;
         input.addEventListener('input', applySettingsSearchFilter);
-        clear?.addEventListener('click', () => {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const first = document.querySelector('#settings-search-results a');
+                if (first) {
+                    e.preventDefault();
+                    first.click();
+                }
+            } else if (e.key === 'Escape' && input.value) {
+                input.value = '';
+                applySettingsSearchFilter();
+            }
+        });
+        document.getElementById('settings-search-results')?.addEventListener('click', (e) => {
+            const link = e.target.closest('a[data-tab]');
+            if (!link || link.dataset.tab !== CURRENT_TAB()) return;
+            const target = document.getElementById(link.dataset.target);
+            if (!target) return;
+            e.preventDefault();
+            history.replaceState(null, '', '#' + link.dataset.target);
             input.value = '';
             applySettingsSearchFilter();
-            input.focus();
+            highlightTarget(target);
         });
     }
 
     function applySettingsSearchFilter() {
         const input = document.getElementById('settings-search-input');
-        const clear = document.getElementById('settings-search-clear');
-        const status = document.getElementById('settings-search-status');
+        const box = document.getElementById('settings-search-status');
+        const list = document.getElementById('settings-search-results');
+        const count = document.getElementById('settings-search-count');
         const query = (input?.value || '').trim().toLowerCase();
-        if (clear) clear.hidden = !query;
-
-        const activeTab = document.querySelector('.settings-tab-content.active');
-        if (!activeTab) return;
-
-        const panels = activeTab.querySelectorAll('.settings-panel, .settings-auth-panel.active .settings-panel');
-        let visible = 0;
-        panels.forEach(panel => {
-            if (!query) {
-                panel.hidden = false;
-                visible++;
-                return;
-            }
-            const haystack = panel.textContent.toLowerCase();
-            const match = haystack.includes(query);
-            panel.hidden = !match;
-            if (match) visible++;
-        });
-
-        if (status) {
-            if (query) {
-                const tpl = tSettings('ui.search_results', '{count} matching sections');
-                status.textContent = tpl.replace('{count}', String(visible));
-                status.hidden = false;
-            } else {
-                status.textContent = '';
-                status.hidden = true;
-            }
+        if (!box || !list) return;
+        if (query.length < 2) {
+            box.hidden = true;
+            list.innerHTML = '';
+            return;
         }
+        if (!_searchIndex) _searchIndex = buildSearchIndex();
+        const words = query.split(/\s+/).filter(Boolean);
+        const matches = _searchIndex
+            .filter((item) => words.every((w) => item.text_lc.includes(w)))
+            .map((item) => ({ item, score: (item.label_lc.includes(query) ? 0 : 1) + (item.tab === CURRENT_TAB() ? 0 : 0.5) }))
+            .sort((a, b) => a.score - b.score)
+            .slice(0, 8)
+            .map((m) => m.item);
+        box.hidden = false;
+        if (!matches.length) {
+            count.textContent = tSettings('page.search_none', 'No setting matches “{query}”.').replace('{query}', input.value.trim());
+            list.innerHTML = '';
+            return;
+        }
+        count.textContent = tSettings('page.search_count', '{count} settings found').replace('{count}', String(matches.length));
+        list.innerHTML = matches.map((m) => `
+            <li><a class="list-row" data-tab="${Utils.escapeHtml(m.tab)}" data-target="${Utils.escapeHtml(m.targetId)}"
+                   href="/settings?tab=${encodeURIComponent(m.tab)}#${encodeURIComponent(m.targetId)}">
+                <span class="row-main"><span class="row-title">${Utils.escapeHtml(m.label)}</span>
+                <span class="row-sub">${Utils.escapeHtml(m.where)}</span></span>
+                <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+            </a></li>`).join('');
     }
     
     /**
-     * Initialize password change form
+     * Change your own password (Sign-in › Your account)
      */
     function initPasswordForm() {
         const form = document.getElementById('password-form');
         const newPassword = document.getElementById('new-password');
-        
         if (!form) return;
-        
-        // Real-time password validation
+
         newPassword?.addEventListener('input', () => {
             validatePassword(newPassword.value);
         });
-        
-        // Form submission
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const currentPassword = document.getElementById('current-password').value;
             const newPass = document.getElementById('new-password').value;
             const confirmPass = document.getElementById('confirm-password').value;
-            
-            // Validation
+
             if (!currentPassword || !newPass || !confirmPass) {
-                Notifications.error(_('settings.fill_all_fields'));
+                formFail(form, _('settings.fill_all_fields'));
                 return;
             }
-            
             if (newPass !== confirmPass) {
-                Notifications.error(_('settings.passwords_not_match'));
+                formFail(form, _('settings.passwords_not_match'));
                 return;
             }
-            
             if (!validatePassword(newPass)) {
-                Notifications.error(_('settings.password_requirements_not_met'));
+                formFail(form, _('settings.password_requirements_not_met'));
                 return;
             }
-            
+
+            const btn = form.querySelector('[data-save-button]');
+            setBusy(btn, true);
             try {
                 await Utils.api('/api/auth/password', {
                     method: 'POST',
@@ -705,21 +790,17 @@
                         confirmPassword: confirmPass
                     }
                 });
-                
-                Notifications.success(_('settings.password_changed'));
                 form.reset();
-                
-                // Reset validation indicators
-                document.querySelectorAll('.password-requirements li').forEach(li => {
-                    li.classList.remove('valid');
-                });
-                
+                document.querySelectorAll('.password-requirements li').forEach(li => li.classList.remove('valid'));
+                formOk(form, _('settings.password_changed'));
             } catch (error) {
-                Notifications.error(error.message || _('errors.password_change_failed'));
+                formFail(form, error.message || _('errors.password_change_failed'));
+            } finally {
+                setBusy(btn, false);
             }
         });
     }
-    
+
     /**
      * Validate password and update UI indicators
      */
@@ -730,94 +811,75 @@
             'req-lowercase': /[a-z]/.test(password),
             'req-number': /[0-9]/.test(password)
         };
-        
         let allMet = true;
-        
         for (const [id, met] of Object.entries(requirements)) {
             const el = document.getElementById(id);
-            if (el) {
-                el.classList.toggle('valid', met);
-            }
+            if (el) el.classList.toggle('valid', met);
             if (!met) allMet = false;
         }
-        
         return allMet;
     }
-    
+
     /**
-     * Load audit log
+     * Console audit log. The log now lives under Activity › Security and
+     * audit; this stays for a page that still has the table.
      */
     async function loadAuditLog() {
         const tbody = document.getElementById('audit-log-body');
         if (!tbody) return;
-        
         try {
             const logs = await Utils.api('/api/settings/audit');
-            
             if (!logs || logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">${_('settings.no_audit_logs')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="state-cell">${_('settings.no_audit_logs')}</td></tr>`;
                 return;
             }
-            
-            tbody.innerHTML = logs.map(log => {
-                var actionLabel = Utils.formatAuditAction(log.action);
-                var actionClass = String(log.action || '').replace(/[^a-z0-9_-]/gi, '');
-                return `
+            tbody.innerHTML = logs.map(log => `
                 <tr>
                     <td>${Utils.formatDate(log.created_at)}</td>
                     <td>${Utils.escapeHtml(log.username || '-')}</td>
-                    <td><span class="audit-action ${actionClass}">${Utils.escapeHtml(actionLabel)}</span></td>
+                    <td>${Utils.escapeHtml(Utils.formatAuditAction(log.action))}</td>
                     <td>${Utils.escapeHtml(log.details || '-')}</td>
-                </tr>
-            `;
-            }).join('');
-            
+                </tr>`).join('');
         } catch (error) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${_('errors.load_audit_failed')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="state-cell text-danger">${_('errors.load_audit_failed')}</td></tr>`;
         }
     }
-    
+
     /**
      * Load server info
      */
     async function loadServerInfo() {
+        const dbEl = document.getElementById('db-path');
+        const uptimeEl = document.getElementById('uptime');
         try {
             const data = await Utils.api('/api/settings/info');
-            
-            document.getElementById('db-path').textContent = data.paths?.database || '-';
-            document.getElementById('uptime').textContent = formatUptime(data.server?.uptime);
-
+            if (dbEl) dbEl.textContent = data.paths?.database || '-';
+            if (uptimeEl) uptimeEl.textContent = formatUptime(data.server?.uptime);
             const goVerEl = document.getElementById('go-server-version');
             if (goVerEl) {
                 const goVer = data.goServer?.version;
                 goVerEl.textContent = goVer ? `v${goVer}` : '-';
                 if (goVer && goVer === 'dev' && data.app?.version && data.app.version !== 'dev') {
-                    goVerEl.title = typeof _ === 'function' ? _('settings.go_server_version_dev_hint') : '';
-                } else {
-                    goVerEl.title = '';
+                    goVerEl.textContent += ' ' + _('settings.go_server_version_dev_hint');
                 }
             }
-            
         } catch (error) {
-            console.error('Failed to load server info:', error);
+            if (uptimeEl) uptimeEl.textContent = error.message || _('errors.server_error');
         }
     }
-    
+
     /**
      * Format uptime in human-readable format
      */
     function formatUptime(seconds) {
         if (!seconds || seconds < 0) return '-';
-        
         const days = Math.floor(seconds / 86400);
         const hours = Math.floor((seconds % 86400) / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
-        
         const parts = [];
         if (days > 0) parts.push(`${days}d`);
         if (hours > 0) parts.push(`${hours}h`);
         if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
-        
         return parts.join(' ');
     }
 
@@ -826,7 +888,6 @@
     function initDeviceScopeSection() {
         const form = document.getElementById('device-scope-form');
         if (!form) return;
-
         const warningEl = document.getElementById('device-scope-warning');
 
         function updateWarning() {
@@ -844,7 +905,7 @@
                 if (restrictedEl) restrictedEl.checked = mode === 'restricted';
                 updateWarning();
             } catch (err) {
-                console.error('Failed to load device scope setting:', err);
+                formFail(form, err.message || _('errors.server_error'));
             }
         }
 
@@ -857,14 +918,11 @@
             const selected = form.querySelector('input[name="device_scope_mode"]:checked');
             const mode = selected ? selected.value : 'open';
             try {
-                await Utils.api('/api/settings/device-scope', {
-                    method: 'POST',
-                    body: { mode }
-                });
-                Notifications.success(_('settings.device_scope_saved'));
+                await Utils.api('/api/settings/device-scope', { method: 'POST', body: { mode } });
+                formOk(form, _('settings.device_scope_saved'));
                 updateWarning();
             } catch (err) {
-                Notifications.error(err.message || _('errors.server_error'));
+                formFail(form, err.message || _('errors.server_error'));
             }
         });
 
@@ -876,7 +934,6 @@
     function initAvailabilityHistorySection() {
         const form = document.getElementById('availability-history-form');
         if (!form) return;
-
         const enabledEl = document.getElementById('availability-history-enabled');
         const retentionEl = document.getElementById('availability-history-retention');
 
@@ -886,7 +943,7 @@
                 if (enabledEl) enabledEl.checked = !!data.enabled;
                 if (retentionEl) retentionEl.value = data.retention_days || 30;
             } catch (err) {
-                console.error('Failed to load availability history setting:', err);
+                formFail(form, err.message || _('errors.server_error'));
             }
         }
 
@@ -900,9 +957,9 @@
                     method: 'POST',
                     body: { enabled, retention_days: retention }
                 });
-                Notifications.success(_('settings.availability_history_saved'));
+                formOk(form, _('settings.availability_history_saved'));
             } catch (err) {
-                Notifications.error(err.message || _('errors.server_error'));
+                formFail(form, err.message || _('errors.server_error'));
             }
         });
 
@@ -923,34 +980,51 @@
         const nameInput = document.getElementById('mesh-msh-name');
         const certBanner = document.getElementById('mesh-cert-banner');
         const groupsList = document.getElementById('mesh-groups-list');
+        const groupsForm = document.getElementById('mesh-groups-form');
         const recordingsTable = document.getElementById('mesh-recordings-table');
         let meshGroups = [];
+
+        function renderMeshGroups() {
+            if (!groupsList) return;
+            if (!meshGroups.length) {
+                groupsList.innerHTML = `<p class="state">${_('mesh.groups_empty')}</p>`;
+                return;
+            }
+            groupsList.innerHTML = '<ul class="list">' + meshGroups.map((g) => {
+                const meshId = g.mesh_id
+                    ? `<span class="row-sub">MeshID <code>${Utils.escapeHtml(g.mesh_id)}</code></span>`
+                    : '';
+                return `<li class="list-row mesh-group-row"><span class="row-main">
+                    <span class="row-title">${Utils.escapeHtml(g.name || '')} <code>${Utils.escapeHtml(g.id || '')}</code></span>${meshId}
+                </span></li>`;
+            }).join('') + '</ul>';
+        }
 
         async function loadMeshStatus() {
             try {
                 const resp = await Utils.api('/api/mesh/status');
                 const data = resp.data || resp;
                 if (enabledEl) {
-                    enabledEl.textContent = data.enabled
-                        ? (tSettings('mesh.enabled_label', 'Enabled'))
-                        : (tSettings('mesh.disabled_label', 'Disabled'));
+                    enabledEl.innerHTML = data.enabled
+                        ? `<span class="status ok">${Utils.escapeHtml(_('mesh.enabled_label'))}</span>`
+                        : `<span class="status offline">${Utils.escapeHtml(_('mesh.disabled_label'))}</span>`;
                 }
                 if (agentsEl) agentsEl.textContent = String(data.agents_online != null ? data.agents_online : 0);
                 if (serverIdEl && data.server_id) serverIdEl.textContent = data.server_id;
                 if (certBanner) {
                     if (data.enabled && !data.cert_present) {
-                        certBanner.textContent = tSettings('mesh.cert_missing', 'Agent-server certificate not found — backup after first agent connects.');
+                        certBanner.textContent = _('mesh.cert_missing');
                         certBanner.classList.remove('hidden');
+                        certBanner.classList.add('warning');
                     } else if (data.cert_present) {
-                        certBanner.textContent = (tSettings('mesh.cert_ok', 'Certificate present')) + (data.cert_modified ? ' — ' + data.cert_modified : '');
-                        certBanner.classList.remove('hidden', 'alert-warning');
-                        certBanner.classList.add('alert-info');
+                        certBanner.textContent = _('mesh.cert_ok') + (data.cert_modified ? ', ' + data.cert_modified : '');
+                        certBanner.classList.remove('hidden', 'warning');
                     } else {
                         certBanner.classList.add('hidden');
                     }
                 }
             } catch {
-                if (enabledEl) enabledEl.textContent = tSettings('mesh.disabled_label', 'Disabled');
+                if (enabledEl) enabledEl.innerHTML = `<span class="status offline">${Utils.escapeHtml(_('mesh.disabled_label'))}</span>`;
             }
         }
 
@@ -960,15 +1034,9 @@
                 const resp = await Utils.api('/api/mesh/groups');
                 const data = resp.data || resp;
                 meshGroups = Array.isArray(data.groups) ? data.groups : [];
-                groupsList.innerHTML = meshGroups.map((g, idx) => {
-                    const meshId = g.mesh_id || '';
-                    const meshIdLine = meshId
-                        ? `<br><small>MeshID=<code>${Utils.escapeHtml(meshId)}</code></small>`
-                        : '';
-                    return `<div class="mesh-group-row" data-idx="${idx}"><code>${Utils.escapeHtml(g.id || '')}</code> — ${Utils.escapeHtml(g.name || '')}${meshIdLine}</div>`;
-                }).join('') || '<p class="text-muted">' + tSettings('mesh.groups_empty', 'No mesh groups yet.') + '</p>';
+                renderMeshGroups();
             } catch {
-                groupsList.innerHTML = '<p class="text-muted">' + tSettings('mesh.groups_load_error', 'Could not load groups.') + '</p>';
+                groupsList.innerHTML = `<p class="state is-error">${_('mesh.groups_load_error')}</p>`;
             }
         }
 
@@ -979,48 +1047,49 @@
                 const data = resp.data || resp;
                 const rows = Array.isArray(data.recordings) ? data.recordings : [];
                 if (!rows.length) {
-                    recordingsTable.innerHTML = '<p class="text-muted">' + tSettings('mesh.recordings_empty', 'No server recordings yet.') + '</p>';
+                    recordingsTable.innerHTML = `<p class="state">${_('mesh.recordings_empty')}</p>`;
                     return;
                 }
-                recordingsTable.innerHTML = '<table class="data-table"><thead><tr><th>Transport</th><th>Peer</th><th>Type</th><th>Size</th><th></th></tr></thead><tbody>' +
+                recordingsTable.innerHTML = `<div class="table-scroll"><table class="data-table"><thead><tr>
+                    <th>${_('settings.general.rec_transport')}</th><th>${_('settings.general.rec_device')}</th>
+                    <th>${_('settings.general.rec_type')}</th><th>${_('settings.general.rec_size')}</th>
+                    <th class="actions"><span class="sr-only">${_('common.actions')}</span></th></tr></thead><tbody>` +
                     rows.map((r) => {
                         const dl = r.transport === 'mesh' && r.id
-                            ? `<a class="btn btn-sm btn-secondary" href="/api/mesh/recordings/${encodeURIComponent(r.id)}">${tSettings('mesh.recording_download', 'Download')}</a>`
+                            ? `<a class="btn btn-sm" href="/api/mesh/recordings/${encodeURIComponent(r.id)}">${_('mesh.recording_download')}</a>`
                             : '';
-                        return `<tr><td>${Utils.escapeHtml(r.transport || '')}</td><td>${Utils.escapeHtml(r.peer_id || '')}</td><td>${Utils.escapeHtml(r.session_type || '')}</td><td>${r.size || 0}</td><td>${dl}</td></tr>`;
-                    }).join('') + '</tbody></table>';
+                        return `<tr><td>${Utils.escapeHtml(r.transport || '')}</td><td class="mono">${Utils.escapeHtml(r.peer_id || '')}</td><td>${Utils.escapeHtml(r.session_type || '')}</td><td>${Utils.escapeHtml(formatBytes(Number(r.size) || 0))}</td><td class="actions">${dl}</td></tr>`;
+                    }).join('') + '</tbody></table></div>';
             } catch {
-                recordingsTable.innerHTML = '<p class="text-muted">' + tSettings('mesh.recordings_load_error', 'Could not load recordings.') + '</p>';
+                recordingsTable.innerHTML = `<p class="state is-error">${_('mesh.recordings_load_error')}</p>`;
             }
         }
 
         document.getElementById('mesh-group-add')?.addEventListener('click', () => {
-            const id = document.getElementById('mesh-group-id')?.value.trim();
-            const name = document.getElementById('mesh-group-name')?.value.trim();
-            if (!id || !name) return;
-            meshGroups.push({ id, name });
             const idInput = document.getElementById('mesh-group-id');
             const nameInputG = document.getElementById('mesh-group-name');
+            const id = idInput?.value.trim();
+            const name = nameInputG?.value.trim();
+            if (!id || !name) {
+                formFail(groupsForm, _('settings.general.mesh_group_needs_both'));
+                (id ? nameInputG : idInput)?.focus();
+                return;
+            }
+            meshGroups.push({ id, name });
             if (idInput) idInput.value = '';
             if (nameInputG) nameInputG.value = '';
-            if (groupsList) {
-                groupsList.innerHTML = meshGroups.map((g) => {
-                    const meshId = g.mesh_id || '';
-                    const meshIdLine = meshId
-                        ? `<br><small>MeshID=<code>${Utils.escapeHtml(meshId)}</code></small>`
-                        : '';
-                    return `<div class="mesh-group-row"><code>${Utils.escapeHtml(g.id)}</code> — ${Utils.escapeHtml(g.name)}${meshIdLine}</div>`;
-                }).join('');
-            }
+            renderMeshGroups();
+            if (groupsForm && window.UiForm) UiForm.markDirty(groupsForm);
         });
 
-        document.getElementById('mesh-groups-save')?.addEventListener('click', async () => {
+        groupsForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
             try {
                 await Utils.api('/api/mesh/groups', { method: 'POST', body: { groups: meshGroups } });
-                Notifications.success(tSettings('mesh.groups_saved', 'Mesh groups saved'));
+                formOk(groupsForm, _('mesh.groups_saved'));
                 loadMeshGroups();
             } catch (err) {
-                Notifications.error(err.message || tSettings('mesh.groups_save_error', 'Save failed'));
+                formFail(groupsForm, err.message || _('mesh.groups_save_error'));
             }
         });
 
@@ -1030,9 +1099,7 @@
                 const group = meshGroups.find((g) => g.id === 'default') || meshGroups[0];
                 const meshId = (group && group.mesh_id) ? String(group.mesh_id).trim() : '';
                 let href = `/api/mesh/download.msh?name=${name}`;
-                if (meshId) {
-                    href += `&mesh_id=${encodeURIComponent(meshId)}`;
-                }
+                if (meshId) href += `&mesh_id=${encodeURIComponent(meshId)}`;
                 downloadBtn.href = href;
             });
         }
@@ -1041,7 +1108,12 @@
             const text = serverIdEl?.textContent || '';
             if (!text || text === '-') return;
             navigator.clipboard?.writeText(text).then(() => {
-                Notifications.success(tSettings('mesh.copy_server_id_ok', 'Server ID copied'));
+                copyBtn.textContent = _('common.copied');
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = _('actions.copy');
+                    copyBtn.classList.remove('copied');
+                }, 1500);
             }).catch(() => {});
         });
 
@@ -1053,20 +1125,20 @@
     // ==================== Connection Mode (P2P / Relay) ====================
 
     function initConnectionModeSection() {
-        const section = document.getElementById('connection-mode-section');
-        if (!section) return;
-
-        const saveBtn = document.getElementById('connection-mode-save');
-        const saveRestartBtn = document.getElementById('connection-mode-save-restart');
-        saveBtn?.addEventListener('click', () => saveConnectionMode(false));
-        saveRestartBtn?.addEventListener('click', () => saveConnectionMode(true));
-
+        const form = document.getElementById('connection-mode-form');
+        if (!form) return;
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveConnectionMode();
+        });
         loadConnectionMode();
     }
 
     async function loadConnectionMode() {
         const sourceEl = document.getElementById('connection-mode-source');
         const runtimeEl = document.getElementById('connection-mode-runtime');
+        const form = document.getElementById('connection-mode-form');
+        if (!form) return;
         try {
             const resp = await Utils.api('/api/settings/connection-mode');
             const data = resp.data || resp;
@@ -1077,9 +1149,7 @@
             if (relayRadio) relayRadio.checked = mode === 'relay_only';
 
             const fallbackInput = document.getElementById('conn-p2p-fallback-ms');
-            if (fallbackInput && data.p2p_fallback_ms != null) {
-                fallbackInput.value = data.p2p_fallback_ms;
-            }
+            if (fallbackInput && data.p2p_fallback_ms != null) fallbackInput.value = data.p2p_fallback_ms;
             const sameNat = document.getElementById('conn-same-nat-relay');
             if (sameNat) sameNat.checked = data.same_nat_relay !== false;
             const sharedNatInit = document.getElementById('conn-allow-shared-nat-initiator');
@@ -1089,98 +1159,83 @@
             const operatorOnlyOutbound = document.getElementById('conn-operator-only-outbound');
             if (operatorOnlyOutbound) operatorOnlyOutbound.checked = data.operator_only_outbound === true;
 
+            const src = data.source || data.deployment || 'defaults';
+            const writable = data.writable !== false && src !== 'defaults';
+            _connectionModeWritable = writable;
             if (sourceEl) {
-                const src = data.source || data.deployment || 'defaults';
-                const writable = data.writable !== false && src !== 'defaults';
-                _connectionModeWritable = writable;
                 sourceEl.textContent = writable
-                    ? (_('settings.connection_mode_source_saved') || 'Saved in') + ': ' + src
-                    : (_('settings.connection_mode_source_defaults') || 'Using server defaults (not writable from panel)');
+                    ? _('settings.general.conn_saved_in').replace('{place}', src)
+                    : _('settings.connection_mode_source_defaults');
             }
 
             if (runtimeEl && data.runtime) {
                 const r = data.runtime;
                 runtimeEl.hidden = false;
-                runtimeEl.textContent = (_('settings.connection_mode_runtime') || 'Active server') + ': '
-                    + (r.always_use_relay ? 'relay only' : 'P2P first')
-                    + ', fallback=' + (r.p2p_fallback_ms ?? '-')
-                    + 'ms, same_nat_relay=' + (r.same_nat_relay ? 'Y' : 'N')
-                    + ', allow_shared_nat_initiator=' + (r.allow_shared_nat_initiator ? 'Y' : 'N')
-                    + ', logged_in_only_initiator=' + (r.logged_in_only_initiator ? 'Y' : 'N')
-                    + ', operator_only_outbound=' + (r.operator_only_outbound ? 'Y' : 'N');
+                runtimeEl.textContent = _('settings.general.conn_running')
+                    .replace('{mode}', r.always_use_relay ? _('settings.general.conn_relay') : _('settings.general.conn_p2p'))
+                    .replace('{ms}', String(r.p2p_fallback_ms ?? '-'));
             } else if (runtimeEl) {
                 runtimeEl.hidden = true;
             }
 
-            const saveBtns = [document.getElementById('connection-mode-save'), document.getElementById('connection-mode-save-restart')];
-            const disabled = data.writable === false || data.source === 'defaults';
-            saveBtns.forEach((b) => { if (b) b.disabled = disabled; });
+            const saveBtn = document.getElementById('connection-mode-save');
+            if (saveBtn) saveBtn.disabled = !writable;
             _connectionModeSnapshot = getConnectionModePayload();
         } catch (err) {
-            console.error('Failed to load connection mode:', err);
             _connectionModeWritable = false;
-            if (sourceEl) sourceEl.textContent = _('errors.server_error');
+            if (sourceEl) sourceEl.textContent = err.message || _('errors.server_error');
+            formFail(form, err.message || _('errors.server_error'));
         }
     }
 
     function getConnectionModePayload() {
         const mode = document.querySelector('input[name="connection-mode"]:checked')?.value || 'p2p_first';
         const fallbackMs = parseInt(document.getElementById('conn-p2p-fallback-ms')?.value, 10);
-        const sameNatRelay = document.getElementById('conn-same-nat-relay')?.checked !== false;
-        const allowSharedNat = document.getElementById('conn-allow-shared-nat-initiator')?.checked === true;
-        const loggedInOnly = document.getElementById('conn-logged-in-only-initiator')?.checked === true;
-        const operatorOnlyOutbound = document.getElementById('conn-operator-only-outbound')?.checked === true;
         return {
             mode,
             p2p_fallback_ms: Number.isFinite(fallbackMs) ? fallbackMs : 2000,
-            same_nat_relay: sameNatRelay,
-            allow_shared_nat_initiator: allowSharedNat,
-            logged_in_only_initiator: loggedInOnly,
-            operator_only_outbound: operatorOnlyOutbound
+            same_nat_relay: document.getElementById('conn-same-nat-relay')?.checked !== false,
+            allow_shared_nat_initiator: document.getElementById('conn-allow-shared-nat-initiator')?.checked === true,
+            logged_in_only_initiator: document.getElementById('conn-logged-in-only-initiator')?.checked === true,
+            operator_only_outbound: document.getElementById('conn-operator-only-outbound')?.checked === true
         };
     }
 
     async function saveConnectionMode() {
+        const form = document.getElementById('connection-mode-form');
         const saveBtn = document.getElementById('connection-mode-save');
-        const saveRestartBtn = document.getElementById('connection-mode-save-restart');
-        [saveBtn, saveRestartBtn].forEach((b) => { if (b) b.disabled = true; });
-
+        if (saveBtn) saveBtn.disabled = true;
         try {
             const payload = getConnectionModePayload();
             const resp = await Utils.api('/api/settings/connection-mode', {
                 method: 'PUT',
                 body: JSON.stringify(payload)
             });
-
-            if (typeof Notifications !== 'undefined') {
-                Notifications.success(resp.message || _('settings.connection_mode_saved'));
-            }
             await loadConnectionMode();
+            formOk(form, resp.message || _('settings.connection_mode_saved'));
             const result = resp.data || resp;
             if (result.restartRequired) showRestartPrompt(result.restartRequired);
         } catch (err) {
-            console.error('Save connection mode failed:', err);
-            if (typeof Notifications !== 'undefined') {
-                Notifications.error(err.message || _('errors.server_error'));
-            }
+            formFail(form, err.message || _('errors.server_error'));
         } finally {
-            [saveBtn, saveRestartBtn].forEach((b) => {
-                if (b) b.disabled = !_connectionModeWritable;
-            });
+            if (saveBtn) saveBtn.disabled = !_connectionModeWritable;
         }
     }
 
     // ==================== Public RustDesk client endpoints ====================
 
     function initPublicEndpointsSection() {
-        const section = document.getElementById('public-endpoints-section');
-        if (!section) return;
-
-        document.getElementById('public-endpoints-save')?.addEventListener('click', savePublicEndpoints);
+        const form = document.getElementById('public-endpoints-form');
+        if (!form) return;
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            savePublicEndpoints();
+        });
         loadPublicEndpoints();
     }
 
     async function loadPublicEndpoints() {
+        const form = document.getElementById('public-endpoints-form');
         try {
             const resp = await Utils.api('/api/settings/public-endpoints');
             const data = resp.data || resp;
@@ -1191,7 +1246,7 @@
             if (relayEl) relayEl.value = data.public_relay_server || '';
             if (apiEl) apiEl.value = data.public_api_url || '';
         } catch (err) {
-            console.error('Failed to load public endpoints:', err);
+            formFail(form, err.message || _('errors.server_error'));
         }
     }
 
@@ -1204,311 +1259,189 @@
     }
 
     async function savePublicEndpoints() {
+        const form = document.getElementById('public-endpoints-form');
         const confirmed = await settingsConfirmCritical({
             title: tSettings('public_endpoints_save_title', 'Save public client endpoints?'),
             message: tSettings('public_endpoints_save_confirm', 'Update RustDesk client configuration values used on the Dashboard (ID server, relay, API URL)?'),
             confirmLabel: _('settings.public_endpoints_save'),
-            icon: 'public',
             danger: false
         });
         if (!confirmed) return;
 
         const saveBtn = document.getElementById('public-endpoints-save');
         if (saveBtn) saveBtn.disabled = true;
-
         try {
-            const payload = getPublicEndpointsPayload();
             const resp = await Utils.api('/api/settings/public-endpoints', {
                 method: 'PUT',
-                body: JSON.stringify(payload)
+                body: JSON.stringify(getPublicEndpointsPayload())
             });
-
-            if (typeof Notifications !== 'undefined') {
-                Notifications.success(resp.message || _('settings.public_endpoints_saved'));
-            }
-
             await loadPublicEndpoints();
+            formOk(form, resp.message || _('settings.public_endpoints_saved'));
         } catch (err) {
-            console.error('Save public endpoints failed:', err);
-            if (typeof Notifications !== 'undefined') {
-                Notifications.error(err.message || _('errors.server_error'));
-            }
+            formFail(form, err.message || _('errors.server_error'));
         } finally {
             if (saveBtn) saveBtn.disabled = false;
         }
     }
-    
+
     // ==================== TOTP (2FA) Section ====================
     
-    /**
-     * Initialize TOTP section
-     */
     async function initTotpSection() {
         const container = document.getElementById('totp-status-container');
         if (!container) return;
-        
         try {
             const data = await Utils.api('/api/auth/totp/status');
-            
-            if (data.enabled) {
-                renderTotpEnabled(container);
-            } else {
-                renderTotpDisabled(container);
-            }
+            if (data.enabled) renderTotpEnabled(container);
+            else renderTotpDisabled(container);
         } catch (error) {
-            container.innerHTML = `<p class="text-danger">${_('errors.server_error')}</p>`;
+            container.innerHTML = `<p class="state is-error">${Utils.escapeHtml(error.message || _('errors.server_error'))}
+                <button type="button" class="btn btn-sm" id="totp-retry-btn">${_('actions.retry')}</button></p>`;
+            document.getElementById('totp-retry-btn')?.addEventListener('click', initTotpSection);
         }
     }
-    
-    /**
-     * Render TOTP enabled state
-     */
+
     function renderTotpEnabled(container) {
         container.innerHTML = `
-            <div class="totp-status totp-enabled">
-                <div class="totp-status-badge">
-                    <span class="material-icons">verified_user</span>
-                    <span>${_('settings.totp_enabled')}</span>
-                </div>
-                <p class="totp-status-desc">${_('settings.totp_enabled_desc')}</p>
-                <button class="btn btn-danger" id="totp-disable-btn">
-                    <span class="material-icons">lock_open</span>
-                    ${_('settings.totp_disable')}
-                </button>
-            </div>
-        `;
-        
+            <p><span class="status ok">${_('settings.signin.totp_on')}</span></p>
+            <p class="form-hint">${_('settings.totp_enabled_desc')}</p>
+            <p><button type="button" class="btn btn-danger-quiet" id="totp-disable-btn">${_('settings.signin.totp_turn_off')}</button></p>`;
         document.getElementById('totp-disable-btn')?.addEventListener('click', handleDisableTotp);
     }
-    
-    /**
-     * Render TOTP disabled state
-     */
+
     function renderTotpDisabled(container) {
         container.innerHTML = `
-            <div class="totp-status totp-disabled">
-                <div class="totp-status-badge disabled">
-                    <span class="material-icons">shield</span>
-                    <span>${_('settings.totp_disabled')}</span>
-                </div>
-                <p class="totp-status-desc">${_('settings.totp_disabled_desc')}</p>
-                <button class="btn btn-primary" id="totp-setup-btn">
-                    <span class="material-icons">qr_code_2</span>
-                    ${_('settings.totp_setup')}
-                </button>
-            </div>
-        `;
-        
+            <p><span class="status offline">${_('settings.signin.totp_off')}</span></p>
+            <p class="form-hint">${_('settings.totp_disabled_desc')}</p>
+            <p><button type="button" class="btn" id="totp-setup-btn">${_('settings.signin.totp_set_up')}</button></p>
+            <p class="field-effect">${_('settings.signin.totp_effect')}</p>`;
         document.getElementById('totp-setup-btn')?.addEventListener('click', handleSetupTotp);
     }
-    
-    /**
-     * Handle TOTP setup flow
-     */
+
     async function handleSetupTotp() {
         const container = document.getElementById('totp-status-container');
-        
         try {
             const data = await Utils.api('/api/auth/totp/setup', { method: 'POST' });
-            
             container.innerHTML = `
-                <div class="totp-setup">
-                    <div class="totp-setup-steps">
-                        <div class="totp-step">
-                            <span class="step-number">1</span>
-                            <span>${_('settings.totp_step1')}</span>
-                        </div>
-                        <div class="totp-step">
-                            <span class="step-number">2</span>
-                            <span>${_('settings.totp_step2')}</span>
-                        </div>
-                        <div class="totp-step">
-                            <span class="step-number">3</span>
-                            <span>${_('settings.totp_step3')}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="totp-qr-container">
-                        <img src="${data.qrCode}" alt="QR Code" class="totp-qr-image">
-                    </div>
-                    
-                    <div class="totp-manual-key">
-                        <p class="totp-manual-label">${_('settings.totp_manual_key')}:</p>
-                        <code class="totp-secret-code">${data.secret}</code>
-                        <button class="btn btn-sm btn-ghost" id="totp-copy-secret-btn">
-                            <span class="material-icons" style="font-size: 16px;">content_copy</span>
-                        </button>
-                    </div>
-                    
-                    <div class="totp-verify-form">
-                        <label class="form-label">${_('settings.totp_enter_code')}:</label>
-                        <div class="totp-verify-input-group">
-                            <input type="text" id="totp-setup-code" class="form-input totp-input" 
-                                   placeholder="000000" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autofocus>
-                            <button class="btn btn-primary" id="totp-verify-btn">
-                                <span class="material-icons">check</span>
-                                ${_('settings.totp_verify_enable')}
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-ghost totp-cancel-btn" id="totp-cancel-btn">
-                        ${_('actions.cancel')}
-                    </button>
+                <ol class="steps totp-steps">
+                    <li>${_('settings.totp_step1')}</li>
+                    <li>${_('settings.totp_step2')}</li>
+                    <li>${_('settings.totp_step3')}</li>
+                </ol>
+                <img src="${Utils.escapeHtml(data.qrCode)}" alt="${_('settings.signin.totp_qr_alt')}" class="totp-qr-image" width="200" height="200">
+                <div class="form-group">
+                    <span class="form-label">${_('settings.totp_manual_key')}</span>
+                    <span class="value-field"><code id="totp-secret-code">${Utils.escapeHtml(data.secret)}</code><button type="button" id="totp-copy-secret-btn">${_('actions.copy')}</button></span>
                 </div>
-            `;
-            
-            // Handle verify
-            document.getElementById('totp-verify-btn')?.addEventListener('click', async () => {
-                const code = document.getElementById('totp-setup-code').value.trim();
-                if (!code || code.length !== 6) {
-                    Notifications.error(_('auth.totp_enter_code'));
-                    return;
-                }
-                
-                try {
-                    const result = await Utils.api('/api/auth/totp/enable', {
-                        method: 'POST',
-                        body: { code }
-                    });
-                    
-                    // Show recovery codes
-                    showRecoveryCodes(container, result.recoveryCodes);
-                    
-                } catch (err) {
-                    Notifications.error(err.message || _('auth.totp_invalid_code'));
-                }
-            });
-            
-            // Auto-submit on 6 digits
-            document.getElementById('totp-setup-code')?.addEventListener('input', (e) => {
+                <form class="totp-verify-form" id="totp-verify-form" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="totp-setup-code">${_('settings.totp_enter_code')}</label>
+                        <input type="text" id="totp-setup-code" class="form-input is-short totp-input"
+                               inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code">
+                    </div>
+                    <div class="settings-inline-controls">
+                        <button type="submit" class="btn btn-primary" id="totp-verify-btn">${_('settings.signin.totp_verify')}</button>
+                        <button type="button" class="btn" id="totp-cancel-btn">${_('actions.cancel')}</button>
+                        <span class="form-status" id="totp-verify-status" aria-live="polite"></span>
+                    </div>
+                </form>`;
+            const codeInput = document.getElementById('totp-setup-code');
+            const status = document.getElementById('totp-verify-status');
+            codeInput?.focus();
+            codeInput?.addEventListener('input', (e) => {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
             });
-            
-            // Cancel
-            document.getElementById('totp-cancel-btn')?.addEventListener('click', () => {
-                initTotpSection();
+            document.getElementById('totp-verify-form')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const code = codeInput.value.trim();
+                if (!code || code.length !== 6) {
+                    setStatus(status, _('auth.totp_enter_code'), 'error');
+                    codeInput.focus();
+                    return;
+                }
+                try {
+                    const result = await Utils.api('/api/auth/totp/enable', { method: 'POST', body: { code } });
+                    showRecoveryCodes(container, result.recoveryCodes);
+                } catch (err) {
+                    setStatus(status, err.message || _('auth.totp_invalid_code'), 'error');
+                }
             });
-
-            document.getElementById('totp-copy-secret-btn')?.addEventListener('click', () => {
-                navigator.clipboard.writeText(data.secret).catch(() => {});
+            document.getElementById('totp-cancel-btn')?.addEventListener('click', initTotpSection);
+            const copyBtn = document.getElementById('totp-copy-secret-btn');
+            copyBtn?.addEventListener('click', () => {
+                navigator.clipboard?.writeText(data.secret).then(() => {
+                    copyBtn.textContent = _('common.copied');
+                    setTimeout(() => { copyBtn.textContent = _('actions.copy'); }, 1500);
+                }).catch(() => {});
             });
-            
         } catch (error) {
-            Notifications.error(error.message || _('errors.server_error'));
+            container.insertAdjacentHTML('beforeend', `<p class="form-status is-error">${Utils.escapeHtml(error.message || _('errors.server_error'))}</p>`);
         }
     }
-    
-    /**
-     * Show recovery codes after enabling TOTP
-     */
+
     function showRecoveryCodes(container, codes) {
+        const list = Array.isArray(codes) ? codes : [];
         container.innerHTML = `
-            <div class="totp-recovery">
-                <div class="totp-success-header">
-                    <span class="material-icons totp-success-icon">verified_user</span>
-                    <h3>${_('settings.totp_enabled_success')}</h3>
-                </div>
-                
-                <div class="totp-recovery-warning">
-                    <span class="material-icons">warning</span>
-                    <p>${_('settings.totp_recovery_warning')}</p>
-                </div>
-                
-                <div class="totp-recovery-codes">
-                    ${codes.map(code => `<code class="recovery-code">${code}</code>`).join('')}
-                </div>
-                
-                <div class="totp-recovery-actions">
-                    <button class="btn btn-secondary" id="copy-recovery-btn">
-                        <span class="material-icons">content_copy</span>
-                        ${_('actions.copy')}
-                    </button>
-                </div>
-                
-                <button class="btn btn-primary totp-done-btn" id="totp-done-btn">
-                    <span class="material-icons">check</span>
-                    ${_('settings.totp_done')}
-                </button>
-            </div>
-        `;
-        
-        document.getElementById('copy-recovery-btn')?.addEventListener('click', () => {
-            navigator.clipboard.writeText(codes.join('\n'));
-            Notifications.success(_('common.copied'));
+            <p><span class="status ok">${_('settings.totp_enabled_success')}</span></p>
+            <p class="notice warning">${_('settings.totp_recovery_warning')}</p>
+            <div class="code-block-head"><span class="code-block-title">${_('settings.signin.recovery_codes')}</span>
+                <button type="button" class="btn btn-sm" id="copy-recovery-btn">${_('actions.copy')}</button></div>
+            <pre class="code-block totp-recovery-codes">${list.map((c) => Utils.escapeHtml(c)).join('\n')}</pre>
+            <p><button type="button" class="btn btn-primary" id="totp-done-btn">${_('settings.signin.recovery_saved')}</button></p>`;
+        const copyBtn = document.getElementById('copy-recovery-btn');
+        copyBtn?.addEventListener('click', () => {
+            navigator.clipboard?.writeText(list.join('\n')).then(() => {
+                copyBtn.textContent = _('common.copied');
+            }).catch(() => {});
         });
-        
-        document.getElementById('totp-done-btn')?.addEventListener('click', () => {
-            initTotpSection();
-        });
-        
-        Notifications.success(_('settings.totp_enabled_success'));
+        document.getElementById('totp-done-btn')?.addEventListener('click', initTotpSection);
     }
-    
-    /**
-     * Handle TOTP disable
-     */
+
     async function handleDisableTotp() {
         const container = document.getElementById('totp-status-container');
-        
         container.innerHTML = `
-            <div class="totp-disable-confirm">
-                <div class="totp-disable-warning">
-                    <span class="material-icons">warning</span>
-                    <p>${_('settings.totp_disable_warning')}</p>
-                </div>
+            <form id="totp-disable-form" class="totp-disable-confirm" novalidate>
+                <p class="notice warning">${_('settings.totp_disable_warning')}</p>
                 <div class="form-group">
-                    <label class="form-label">${_('settings.current_password')}:</label>
-                    <input type="password" id="totp-disable-password" class="form-input" 
-                           placeholder="${_('auth.password_placeholder')}" required>
+                    <label class="form-label" for="totp-disable-password">${_('settings.current_password')}</label>
+                    <input type="password" id="totp-disable-password" class="form-input" autocomplete="current-password" required>
                 </div>
-                <div class="totp-disable-actions">
-                    <button class="btn btn-danger" id="confirm-disable-btn">
-                        <span class="material-icons">lock_open</span>
-                        ${_('settings.totp_disable')}
-                    </button>
-                    <button class="btn btn-ghost" id="cancel-disable-btn">
-                        ${_('actions.cancel')}
-                    </button>
+                <div class="settings-inline-controls">
+                    <button type="submit" class="btn btn-danger-quiet" id="confirm-disable-btn">${_('settings.signin.totp_turn_off')}</button>
+                    <button type="button" class="btn" id="cancel-disable-btn">${_('actions.cancel')}</button>
+                    <span class="form-status" id="totp-disable-status" aria-live="polite"></span>
                 </div>
-            </div>
-        `;
-        
-        document.getElementById('confirm-disable-btn')?.addEventListener('click', async () => {
-            const password = document.getElementById('totp-disable-password').value;
+            </form>`;
+        const pw = document.getElementById('totp-disable-password');
+        const status = document.getElementById('totp-disable-status');
+        pw?.focus();
+        document.getElementById('totp-disable-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = pw.value;
             if (!password) {
-                Notifications.error(_('auth.fill_all_fields'));
+                setStatus(status, _('auth.fill_all_fields'), 'error');
                 return;
             }
-            
             try {
-                await Utils.api('/api/auth/totp/disable', {
-                    method: 'POST',
-                    body: { password }
-                });
-                
-                Notifications.success(_('settings.totp_disabled_success'));
-                initTotpSection();
-                
+                await Utils.api('/api/auth/totp/disable', { method: 'POST', body: { password } });
+                await initTotpSection();
+                container.insertAdjacentHTML('afterbegin', `<p class="form-status is-ok">${_('settings.totp_disabled_success')}</p>`);
             } catch (err) {
-                Notifications.error(err.message || _('errors.server_error'));
+                setStatus(status, err.message || _('errors.server_error'), 'error');
             }
         });
-        
-        document.getElementById('cancel-disable-btn')?.addEventListener('click', () => {
-            initTotpSection();
-        });
+        document.getElementById('cancel-disable-btn')?.addEventListener('click', initTotpSection);
     }
-    
-    // ==================== Branding / Theming Section ====================
-    
+
+    // ==================== Appearance (branding) ====================
+
     let brandingData = null;
     let _brandingSnapshot = null;
     let _brandingDirty = false;
-    let _autosaveDebounce = null;
     let _canBrandingEdit = true;
     let _fontSource = 'google';
     let _brandingProfiles = [];
+    let _pendingLogoFile = null;
+    let _savedThemeMode = 'system';
     const _backgroundUploads = new Map();
     const MAX_LOGIN_SLIDES = 10;
     const DEFAULT_LOGIN_SLIDES = [
@@ -1518,130 +1451,125 @@
         { id: 'platforms', slideKey: 'platforms', order: 3, imageUrl: '/img/login-slides/platforms.jpg', title: '', body: '', overlay: '45' }
     ];
     let _loginSlides = DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
-    
+
+    const brandingForm = () => document.getElementById('branding-form');
+
     /**
-     * Initialize branding configuration section
+     * Initialize the appearance page
      */
     async function initBrandingSection() {
         const tab = document.getElementById('tab-branding');
         if (!tab) return;
-
         _canBrandingEdit = tab.dataset.canBrandingEdit !== '0';
 
         try {
             const response = await Utils.api('/api/settings/branding');
             brandingData = response.data || response;
-            
+            _savedThemeMode = brandingData.themeMode || 'system';
             populateBrandingForm(brandingData);
             updateBrandingReadability(response.readability);
             _brandingSnapshot = JSON.stringify(collectBrandingData());
-            initBrandingModules();
             initLogoTypeSelector();
             initColorPickers();
             initFontPickers();
             initFontSourceTabs();
             initBackgroundSelectors();
             initLoginSlidesEditor();
-            initBrandingProfiles();
+            if (_canBrandingEdit) {
+                initBrandingProfiles();
+                initBrandingActions();
+            }
             initBuiltinThemes();
-            initBrandingActions();
             initBrandingFieldTracking();
-            setBrandingStatus('saved');
-            
+            setBrandingStatus('saved', '');
         } catch (error) {
-            console.error('Failed to load branding:', error);
+            const form = brandingForm();
+            form?.insertAdjacentHTML('beforebegin', `<p class="state is-error">${Utils.escapeHtml(error.message || _('errors.server_error'))}</p>`);
         }
     }
 
-    function initBrandingModules() {
-        const nav = document.getElementById('branding-module-nav');
-        if (!nav) return;
-        nav.querySelectorAll('.branding-module-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const module = btn.dataset.brandingModule;
-                nav.querySelectorAll('.branding-module-btn').forEach(b => {
-                    b.classList.remove('active');
-                    b.setAttribute('aria-selected', 'false');
-                });
-                btn.classList.add('active');
-                btn.setAttribute('aria-selected', 'true');
-                document.querySelectorAll('.branding-module-panel').forEach(panel => {
-                    panel.classList.toggle('active', panel.dataset.brandingModule === module);
-                });
-            });
-        });
-    }
-
+    /** Appearance save bar: saved / dirty / saving / error. */
     function setBrandingStatus(state, message) {
-        const statusEl = document.getElementById('branding-save-status');
-        const textEl = document.getElementById('branding-status-text');
-        if (!statusEl || !textEl) return;
-        statusEl.classList.remove('is-dirty', 'is-saving', 'is-saved', 'is-error');
-        const map = {
-            saved: [_('branding.status_saved'), 'is-saved', 'check_circle'],
-            dirty: [_('branding.status_dirty'), 'is-dirty', 'edit'],
-            saving: [_('branding.status_saving'), 'is-saving', 'sync'],
-            error: [_('branding.status_error'), 'is-error', 'error']
-        };
-        const cfg = map[state] || map.saved;
-        textEl.textContent = message || cfg[0];
-        statusEl.classList.add(cfg[1]);
-        const icon = statusEl.querySelector('.branding-status-icon');
-        if (icon) icon.textContent = cfg[2];
-        if (state === 'saving' && icon) icon.classList.add('spinning');
-        else if (icon) icon.classList.remove('spinning');
+        const form = brandingForm();
+        if (!form || !window.UiForm) return;
+        const status = form.querySelector('[data-save-status]');
+        if (state === 'dirty') {
+            UiForm.markDirty(form);
+        } else if (state === 'saving') {
+            if (status) status.textContent = _('branding.status_saving');
+        } else if (state === 'error') {
+            UiForm.failed(form, message || _('branding.status_error'));
+        } else if (message === '') {
+            UiForm.reset(form);
+        } else {
+            UiForm.saved(form, message || _('branding.status_saved'));
+        }
     }
 
     function onBrandingFieldChange() {
+        if (!_canBrandingEdit) return;
         const current = JSON.stringify(collectBrandingData());
-        _brandingDirty = current !== _brandingSnapshot;
+        _brandingDirty = current !== _brandingSnapshot || !!_pendingLogoFile;
+        const form = brandingForm();
         if (_brandingDirty) setBrandingStatus('dirty');
-        if (_canBrandingEdit) scheduleBrandingAutosave();
+        else if (form && window.UiForm && UiForm.isDirty(form)) UiForm.reset(form);
     }
 
     function initBrandingFieldTracking() {
-        const tab = document.getElementById('tab-branding');
-        if (!tab) return;
-        tab.addEventListener('input', (event) => {
-            if (event.target.closest('#tab-branding')) onBrandingFieldChange();
-        });
-        tab.addEventListener('change', (event) => {
-            if (event.target?.classList?.contains('branding-bg-file')) return;
-            if (event.target.closest('#tab-branding')) onBrandingFieldChange();
-        });
+        const form = brandingForm();
+        if (!form) return;
+        const onEvent = (event) => {
+            if (event.target?.closest('[data-save-ignore]')) return;
+            onBrandingFieldChange();
+        };
+        form.addEventListener('input', onEvent);
+        form.addEventListener('change', onEvent);
     }
 
-    function scheduleBrandingAutosave() {
-        // Appearance changes can touch many fields at once and the server rate
-        // limiter is intentionally strict. Keep persistence explicit and predictable.
-        clearTimeout(_autosaveDebounce);
+    async function uploadPendingLogo() {
+        if (!_pendingLogoFile) return;
+        const formData = new FormData();
+        formData.append('logo', _pendingLogoFile);
+        const resp = await fetch('/api/settings/branding/upload-logo', {
+            method: 'POST',
+            headers: { 'x-csrf-token': window.BetterDesk?.csrfToken || '' },
+            body: formData
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok || !result.success) throw new Error(result.error || _('errors.server_error'));
+        const urlInput = document.getElementById('logo-image-url');
+        if (urlInput) urlInput.value = result.url;
+        _pendingLogoFile = null;
+        const fileInput = document.getElementById('logo-image-file');
+        if (fileInput) fileInput.value = '';
+        const note = document.getElementById('logo-file-name');
+        if (note) note.textContent = _('settings.appearance.logo_upload_effect');
     }
 
-    async function saveBrandingNow(options = {}) {
-        if (!_canBrandingEdit) return;
+    async function saveBrandingNow() {
+        if (!_canBrandingEdit) return false;
+        const btn = document.getElementById('branding-save-btn');
+        setBusy(btn, true);
         setBrandingStatus('saving');
         try {
             await waitForBackgroundUploads();
+            await uploadPendingLogo();
             const data = collectBrandingData();
-            const resp = await Utils.api('/api/settings/branding', {
-                method: 'POST',
-                body: data
-            });
+            const resp = await Utils.api('/api/settings/branding', { method: 'POST', body: data });
             brandingData = resp.data || data;
+            _savedThemeMode = data.themeMode;
             updateBrandingReadability(resp.readability);
             _brandingSnapshot = JSON.stringify(collectBrandingData());
             _brandingDirty = false;
-            setBrandingStatus('saved', options.silent ? _('branding.autosaved') : _('branding.saved'));
+            setBrandingStatus('saved', _('branding.saved'));
             refreshBrandingStylesheet(resp.revision || Date.now());
             applyBrandingToChrome(data);
-            if (!options.silent) {
-                Notifications.success(_('branding.saved'));
-            }
             return true;
         } catch (error) {
             setBrandingStatus('error', error.message || _('errors.server_error'));
-            if (!options.silent) Notifications.error(error.message || _('errors.server_error'));
             return false;
+        } finally {
+            setBusy(btn, false);
         }
     }
 
@@ -1657,7 +1585,7 @@
         }
         const errors = issues.filter(issue => issue.severity === 'error');
         box.hidden = false;
-        box.classList.toggle('has-errors', errors.length > 0);
+        box.classList.toggle('error', errors.length > 0);
         text.textContent = issues.slice(0, 3).map(issue => {
             if (issue.messageKey) {
                 const translated = _(issue.messageKey, issue.messageParams || {});
@@ -1677,22 +1605,37 @@
         if (!_brandingSnapshot) return;
         try {
             const data = JSON.parse(_brandingSnapshot);
+            _pendingLogoFile = null;
+            const fileInput = document.getElementById('logo-image-file');
+            if (fileInput) fileInput.value = '';
+            const note = document.getElementById('logo-file-name');
+            if (note) note.textContent = _('settings.appearance.logo_upload_effect');
             populateBrandingForm(data);
             _brandingDirty = false;
-            setBrandingStatus('saved');
+            setBrandingStatus('saved', '');
         } catch (e) {
-            console.error('Revert failed:', e);
+            setBrandingStatus('error', e.message);
         }
+    }
+
+    /** Re-read the saved appearance after an action that saved it on the server. */
+    async function reloadBrandingFromServer(revision) {
+        const fresh = await Utils.api('/api/settings/branding');
+        brandingData = fresh.data || fresh;
+        _savedThemeMode = brandingData.themeMode || 'system';
+        populateBrandingForm(brandingData);
+        _brandingSnapshot = JSON.stringify(collectBrandingData());
+        _brandingDirty = false;
+        setBrandingStatus('saved', '');
+        refreshBrandingStylesheet(revision || Date.now());
     }
 
     function applyBrandingToChrome(data) {
         const name = data.appName || 'BetterDesk';
         document.querySelectorAll('.sidebar-logo-text, .brand-text-logo').forEach(el => {
-            if (data.logoType === 'text' && data.logoText) {
-                el.textContent = data.logoText;
-            }
+            if (data.logoType === 'text' && data.logoText) el.textContent = data.logoText;
         });
-        document.title = document.title.replace(/^[^-]+/, name);
+        document.title = document.title.replace(/[^-]+$/, ' ' + name);
         const favicon = document.querySelector('link[rel="icon"]');
         if (favicon) favicon.href = `/branding/favicon.svg?v=${Date.now()}`;
     }
@@ -1731,89 +1674,94 @@
 
     async function initBrandingProfiles() {
         const select = document.getElementById('branding-profile-select');
+        const status = document.getElementById('branding-profile-status');
         if (!select) return;
         await refreshBrandingProfiles(select);
 
-        document.getElementById('branding-profile-apply-btn')?.addEventListener('click', async () => {
-            const id = parseInt(select.value, 10);
-            if (!id) return;
+        const run = async (fn, okMessage) => {
+            setStatus(status, '');
             try {
-                const resp = await Utils.api(`/api/settings/branding/profiles/${id}/apply`, { method: 'POST' });
-                brandingData = resp.data || brandingData;
-                populateBrandingForm(brandingData);
-                _brandingSnapshot = JSON.stringify(collectBrandingData());
-                _brandingDirty = false;
-                setBrandingStatus('saved');
-                refreshBrandingStylesheet(resp.revision || Date.now());
-                Notifications.success(_('branding.profile_applied'));
+                await fn();
+                if (okMessage) setStatus(status, okMessage, 'ok');
             } catch (e) {
-                Notifications.error(e.message || _('errors.server_error'));
+                setStatus(status, e.message || _('errors.server_error'), 'error');
             }
+        };
+
+        document.getElementById('branding-profile-apply-btn')?.addEventListener('click', () => {
+            const id = parseInt(select.value, 10);
+            if (!id) {
+                setStatus(status, _('branding.profile_select_first'), 'error');
+                return;
+            }
+            run(async () => {
+                const resp = await Utils.api(`/api/settings/branding/profiles/${id}/apply`, { method: 'POST' });
+                if (resp.data) {
+                    brandingData = resp.data;
+                    _savedThemeMode = brandingData.themeMode || 'system';
+                    populateBrandingForm(brandingData);
+                    _brandingSnapshot = JSON.stringify(collectBrandingData());
+                    _brandingDirty = false;
+                    setBrandingStatus('saved', '');
+                    refreshBrandingStylesheet(resp.revision || Date.now());
+                } else {
+                    await reloadBrandingFromServer(resp.revision);
+                }
+            }, _('branding.profile_applied'));
         });
 
         document.getElementById('branding-profile-new-btn')?.addEventListener('click', async () => {
             const name = await brandingPrompt(_('branding.profile_name_prompt'));
             if (!name || !name.trim()) return;
-            try {
+            run(async () => {
                 await Utils.api('/api/settings/branding/profiles', {
                     method: 'POST',
                     body: { name: name.trim(), description: '', branding: collectBrandingData() }
                 });
                 await refreshBrandingProfiles(select);
-                Notifications.success(_('branding.profile_created'));
-            } catch (e) {
-                Notifications.error(e.message || _('errors.server_error'));
-            }
+            }, _('branding.profile_created'));
         });
 
-        document.getElementById('branding-profile-save-btn')?.addEventListener('click', async () => {
+        document.getElementById('branding-profile-save-btn')?.addEventListener('click', () => {
             const id = parseInt(select.value, 10);
             if (!id) {
-                Notifications.error(_('branding.profile_select_first'));
+                setStatus(status, _('branding.profile_select_first'), 'error');
                 return;
             }
-            try {
-                await Utils.api(`/api/settings/branding/profiles/${id}`, {
-                    method: 'PUT',
-                    body: { branding: collectBrandingData() }
-                });
-                Notifications.success(_('branding.profile_updated'));
-            } catch (e) {
-                Notifications.error(e.message || _('errors.server_error'));
-            }
+            run(() => Utils.api(`/api/settings/branding/profiles/${id}`, {
+                method: 'PUT',
+                body: { branding: collectBrandingData() }
+            }), _('branding.profile_updated'));
         });
 
-        document.getElementById('branding-profile-duplicate-btn')?.addEventListener('click', async () => {
+        document.getElementById('branding-profile-duplicate-btn')?.addEventListener('click', () => {
             const id = parseInt(select.value, 10);
-            if (!id) return;
-            try {
+            if (!id) {
+                setStatus(status, _('branding.profile_select_first'), 'error');
+                return;
+            }
+            run(async () => {
                 const profile = _brandingProfiles.find(item => String(item.id) === String(id));
-                const copyName = profile
-                    ? `${profile.name} (${_('branding.profile_duplicate')})`
-                    : '';
+                const copyName = profile ? `${profile.name} (${_('branding.profile_duplicate')})` : '';
                 const resp = await Utils.api(`/api/settings/branding/profiles/${id}/duplicate`, {
                     method: 'POST',
                     body: copyName ? { name: copyName } : {}
                 });
-                const duplicatedId = resp?.data?.id;
-                await refreshBrandingProfiles(select, duplicatedId);
-                Notifications.success(_('branding.profile_duplicated'));
-            } catch (e) {
-                Notifications.error(e.message || _('errors.server_error'));
-            }
+                await refreshBrandingProfiles(select, resp?.data?.id);
+            }, _('branding.profile_duplicated'));
         });
 
         document.getElementById('branding-profile-delete-btn')?.addEventListener('click', async () => {
             const id = parseInt(select.value, 10);
-            if (!id) return;
-            if (!(await brandingConfirm(_('branding.profile_delete_confirm'), { danger: true }))) return;
-            try {
+            if (!id) {
+                setStatus(status, _('branding.profile_select_first'), 'error');
+                return;
+            }
+            if (!(await brandingConfirm(_('branding.profile_delete_confirm'), { danger: true, confirmLabel: _('branding.profile_delete') }))) return;
+            run(async () => {
                 await Utils.api(`/api/settings/branding/profiles/${id}`, { method: 'DELETE' });
                 await refreshBrandingProfiles(select);
-                Notifications.success(_('branding.profile_deleted'));
-            } catch (e) {
-                Notifications.error(e.message || _('errors.server_error'));
-            }
+            }, _('branding.profile_deleted'));
         });
     }
 
@@ -1831,67 +1779,67 @@
                 select.appendChild(opt);
             });
         } catch (e) {
-            console.warn('Failed to load profiles:', e);
+            setStatus(document.getElementById('branding-profile-status'), e.message || _('errors.server_error'), 'error');
         }
     }
 
+    /** Built-in themes: a select and an Apply button. Applying saves right away. */
     async function initBuiltinThemes() {
-        const gallery = document.getElementById('branding-theme-gallery');
-        if (!gallery) return;
+        const select = document.getElementById('branding-theme-select');
+        const applyBtn = document.getElementById('branding-theme-apply');
+        if (!select) return;
+        let themes = [];
         try {
             const resp = await Utils.api('/api/settings/themes');
-            const themes = resp.data || resp || [];
-            gallery.innerHTML = '';
-            themes.forEach(theme => {
-                const card = document.createElement('button');
-                card.type = 'button';
-                card.className = 'branding-theme-card';
-                card.title = theme.description || theme.name;
-                const colors = theme.colors || {};
-                const swatches = ['bgPrimary', 'bgSecondary', 'accentBlue', 'accentGreen']
-                    .map(k => colors[k] || '#30363d')
-                    .map(c => `<span class="branding-theme-swatch" style="background:${Utils.escapeHtml(c)}"></span>`)
-                    .join('');
-                card.innerHTML = `<div class="branding-theme-swatches">${swatches}</div><span class="branding-theme-name">${Utils.escapeHtml(theme.name || theme.id)}</span>`;
-                card.addEventListener('click', async () => {
-                    if (!_canBrandingEdit) return;
-                    if (!(await brandingConfirm(_('branding.theme_apply_confirm')))) return;
-                    try {
-                        await Utils.api(`/api/settings/themes/${encodeURIComponent(theme.id)}/apply`, { method: 'POST' });
-                        const fresh = await Utils.api('/api/settings/branding');
-                        brandingData = fresh.data || fresh;
-                        populateBrandingForm(brandingData);
-                        _brandingSnapshot = JSON.stringify(collectBrandingData());
-                        _brandingDirty = false;
-                        setBrandingStatus('saved');
-                        refreshBrandingStylesheet(Date.now());
-                        Notifications.success(_('branding.theme_applied'));
-                    } catch (e) {
-                        Notifications.error(e.message || _('errors.server_error'));
-                    }
-                });
-                gallery.appendChild(card);
+            themes = resp.data || resp || [];
+            themes.forEach((theme) => {
+                const opt = document.createElement('option');
+                opt.value = theme.id;
+                opt.textContent = theme.name || theme.id;
+                if (theme.description) opt.title = theme.description;
+                select.appendChild(opt);
             });
         } catch (e) {
-            console.warn('Builtin themes failed:', e);
+            select.disabled = true;
         }
+
+        applyBtn?.addEventListener('click', async () => {
+            if (!_canBrandingEdit) return;
+            const theme = themes.find((t) => t.id === select.value);
+            if (!theme) {
+                setBrandingStatus('error', _('settings.appearance.pick_theme_first'));
+                select.focus();
+                return;
+            }
+            if (!(await brandingConfirm(_('branding.theme_apply_confirm'), { confirmLabel: _('settings.appearance.apply_theme') }))) return;
+            setBusy(applyBtn, true);
+            try {
+                await Utils.api(`/api/settings/themes/${encodeURIComponent(theme.id)}/apply`, { method: 'POST' });
+                await reloadBrandingFromServer();
+                setBrandingStatus('saved', _('branding.theme_applied'));
+            } catch (e) {
+                setBrandingStatus('error', e.message || _('errors.server_error'));
+            } finally {
+                setBusy(applyBtn, false);
+            }
+        });
     }
 
     function initFontSourceTabs() {
         document.querySelectorAll('.font-source-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 _fontSource = tab.dataset.fontSource || 'google';
-                document.querySelectorAll('.font-source-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
+                document.querySelectorAll('.font-source-tab').forEach(t => {
+                    t.classList.toggle('active', t === tab);
+                    t.setAttribute('aria-pressed', t === tab ? 'true' : 'false');
+                });
                 document.querySelectorAll('.font-source-panel').forEach(p => p.classList.remove('active'));
                 const panel = document.getElementById(`font-source-${_fontSource}`);
                 if (panel) panel.classList.add('active');
                 if (_fontSource === 'local') renderLocalFontList();
             });
         });
-
         document.getElementById('font-upload-file')?.addEventListener('change', handleFontUpload);
-
         renderLocalFontList();
     }
 
@@ -1900,32 +1848,28 @@
         if (!list) return;
         try {
             const fonts = await Utils.api('/api/settings/fonts/local');
-            list.innerHTML = '';
             if (!fonts || !fonts.length) {
-                list.innerHTML = `<div class="font-dropdown-empty">${_('branding.font_local_empty')}</div>`;
+                list.innerHTML = `<li class="list-row is-empty"><span class="row-main">${_('branding.font_local_empty')}</span></li>`;
                 return;
             }
-            fonts.forEach(font => {
-                const row = document.createElement('div');
-                row.className = 'font-local-item';
-                row.innerHTML = `
-                    <span style="font-family:'${Utils.escapeHtml(font.family)}',sans-serif">${Utils.escapeHtml(font.family)}</span>
-                    <button type="button" class="btn btn-ghost btn-sm font-local-delete" data-family="${Utils.escapeHtml(font.family)}" title="${_('branding.font_delete')}">
-                        <span class="material-icons">delete</span>
-                    </button>`;
-                row.querySelector('.font-local-delete')?.addEventListener('click', async () => {
+            list.innerHTML = fonts.map((font) => `
+                <li class="list-row font-local-item">
+                    <span class="row-main"><span class="row-title" style="font-family:'${Utils.escapeHtml(font.family)}',sans-serif">${Utils.escapeHtml(font.family)}</span></span>
+                    <span class="row-end">${_canBrandingEdit ? `<button type="button" class="btn btn-sm btn-danger-quiet font-local-delete" data-family="${Utils.escapeHtml(font.family)}">${_('branding.font_delete')}</button>` : ''}</span>
+                </li>`).join('');
+            list.querySelectorAll('.font-local-delete').forEach((btn) => {
+                btn.addEventListener('click', async () => {
                     try {
-                        await Utils.api(`/api/settings/fonts/${encodeURIComponent(font.family)}`, { method: 'DELETE' });
+                        await Utils.api(`/api/settings/fonts/${encodeURIComponent(btn.dataset.family)}`, { method: 'DELETE' });
                         renderLocalFontList();
                         loadLocalFontCount();
                     } catch (e) {
                         Notifications.error(e.message || _('errors.server_error'));
                     }
                 });
-                list.appendChild(row);
             });
         } catch (e) {
-            list.innerHTML = `<div class="font-dropdown-empty">${_('errors.server_error')}</div>`;
+            list.innerHTML = `<li class="list-row is-empty"><span class="row-main text-danger">${Utils.escapeHtml(e.message || _('errors.server_error'))}</span></li>`;
         }
     }
 
@@ -1943,78 +1887,78 @@
                 body: formData
             });
             const result = await resp.json();
-            if (!resp.ok || !result.success) throw new Error(result.error || 'Upload failed');
-            Notifications.success(_('branding.font_upload_success'));
+            if (!resp.ok || !result.success) throw new Error(result.error || _('errors.server_error'));
+            setBrandingStatus('saved', _('branding.font_upload_success'));
             renderLocalFontList();
             loadLocalFontCount();
-            e.target.value = '';
         } catch (err) {
-            Notifications.error(err.message || _('errors.server_error'));
+            setBrandingStatus('error', err.message || _('errors.server_error'));
+        } finally {
             e.target.value = '';
         }
     }
-    
+
+    /** Show the custom colours only for the Custom theme. */
+    function syncCustomColorsVisibility() {
+        const mode = document.querySelector('input[name="theme-mode"]:checked')?.value || 'system';
+        const section = document.getElementById('branding-custom-colors');
+        if (section) section.hidden = mode !== 'custom';
+        document.querySelectorAll('[data-toc-custom]').forEach((el) => { el.hidden = mode !== 'custom'; });
+    }
+
     /**
      * Populate branding form with current config
      */
     function populateBrandingForm(data) {
-        // Identity fields
         const nameInput = document.getElementById('brand-name');
         const descInput = document.getElementById('brand-description');
         if (nameInput) nameInput.value = data.appName || '';
         if (descInput) descInput.value = data.appDescription || '';
-        
-        // Logo type
+
         const logoTypeRadio = document.querySelector(`input[name="logo-type"][value="${data.logoType || 'icon'}"]`);
         if (logoTypeRadio) {
             logoTypeRadio.checked = true;
             showLogoPanel(data.logoType || 'icon');
         }
-        
-        // Logo fields
-        const iconInput = document.getElementById('logo-icon-name');
-        const svgInput = document.getElementById('logo-svg-input');
-        const imageInput = document.getElementById('logo-image-url');
-        const textInput = document.getElementById('logo-text-input');
-        const textAccentInput = document.getElementById('logo-text-accent');
-        if (iconInput) iconInput.value = data.logoIcon || 'dns';
-        if (svgInput) svgInput.value = data.logoSvg || '';
-        if (imageInput) imageInput.value = data.logoUrl || '';
-        if (textInput) textInput.value = data.logoText || '';
-        if (textAccentInput) textAccentInput.value = data.logoTextAccent || '';
-        
-        // Font fields
-        if (data.fontHeading) {
-            setFontPickerValue('heading', data.fontHeading);
-        }
-        if (data.fontBody) {
-            setFontPickerValue('body', data.fontBody);
-        }
-        
-        // Colors
-        if (data.colors) {
-            for (const [key, value] of Object.entries(data.colors)) {
-                if (!value) continue;
-                const picker = document.querySelector(`.color-picker[data-color="${key}"]`);
-                const hex = document.querySelector(`.color-hex[data-color="${key}"]`);
-                if (picker) picker.value = value;
-                if (hex) hex.value = value;
-            }
-        }
 
-        // Theme mode (dark / light / custom)
-        const themeMode = data.themeMode === 'auto' ? 'dark' : (data.themeMode || 'dark');
-        const themeRadio = document.querySelector(`input[name="theme-mode"][value="${themeMode}"]`)
-            || document.querySelector('input[name="theme-mode"][value="dark"]');
-        if (themeRadio) themeRadio.checked = true;
-        
-        // Background & appearance (console)
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el != null && el) el.value = val; };
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
         const setChecked = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
         const checkRadio = (name, val) => {
             const r = document.querySelector(`input[name="${name}"][value="${val}"]`);
             if (r) r.checked = true;
         };
+        const syncPicker = (pickerId, value) => {
+            const picker = document.getElementById(pickerId);
+            if (picker && /^#[0-9a-fA-F]{6}$/.test(value || '')) picker.value = value;
+        };
+
+        setVal('logo-icon-name', data.logoIcon || 'dns');
+        setVal('logo-svg-input', data.logoSvg || '');
+        setVal('logo-image-url', data.logoUrl || '');
+        setVal('logo-text-input', data.logoText || '');
+        setVal('logo-text-accent', data.logoTextAccent || '');
+
+        setFontPickerValue('heading', data.fontHeading || '', true);
+        setFontPickerValue('body', data.fontBody || '', true);
+
+        // Colours: the stored palette is what the Custom theme uses
+        if (data.colors) {
+            for (const [key, value] of Object.entries(data.colors)) {
+                if (!value) continue;
+                const picker = document.querySelector(`.color-picker[data-color="${key}"]`);
+                const hex = document.querySelector(`.color-hex[data-color="${key}"]`);
+                if (picker && /^#[0-9a-fA-F]{6}$/.test(value)) picker.value = value;
+                if (hex) hex.value = value;
+            }
+        }
+
+        const themeMode = data.themeMode === 'auto' ? 'dark' : (data.themeMode || 'system');
+        const themeRadio = document.querySelector(`input[name="theme-mode"][value="${themeMode}"]`)
+            || document.querySelector('input[name="theme-mode"][value="system"]');
+        if (themeRadio) themeRadio.checked = true;
+        syncCustomColorsVisibility();
+
+        // Console background
         checkRadio('bg-type', data.bgType || 'none');
         setVal('bg-color', data.bgColor || '');
         setVal('bg-gradient', data.bgGradient || '');
@@ -2022,9 +1966,7 @@
         setVal('bg-blur', data.bgBlur || '0');
         setVal('bg-overlay', data.bgOverlay || '0');
         setVal('bg-size', data.bgSize || 'cover');
-        if (data.bgColor && document.getElementById('bg-color-picker') && /^#[0-9a-fA-F]{6}$/.test(data.bgColor)) {
-            document.getElementById('bg-color-picker').value = data.bgColor;
-        }
+        syncPicker('bg-color-picker', data.bgColor);
         const bgBlurVal = document.getElementById('bg-blur-value');
         if (bgBlurVal) bgBlurVal.textContent = data.bgBlur || '0';
         const bgOverlayVal = document.getElementById('bg-overlay-value');
@@ -2036,15 +1978,13 @@
         setVal('glass-color', data.glassColor || '#161b22');
         setVal('glass-blur', data.glassBlur || '16');
         setVal('glass-opacity', data.glassOpacity || '55');
-        if (data.glassColor && document.getElementById('glass-color-picker') && /^#[0-9a-fA-F]{6}$/.test(data.glassColor)) {
-            document.getElementById('glass-color-picker').value = data.glassColor;
-        }
+        syncPicker('glass-color-picker', data.glassColor);
         const glassBlurVal = document.getElementById('glass-blur-value');
         if (glassBlurVal) glassBlurVal.textContent = data.glassBlur || '16';
         const glassOpacityVal = document.getElementById('glass-opacity-value');
         if (glassOpacityVal) glassOpacityVal.textContent = data.glassOpacity || '55';
-        
-        // Login page
+
+        // Sign-in page
         setVal('login-title', data.loginTitle || '');
         setVal('login-subtitle', data.loginSubtitle || '');
         checkRadio('login-promo-mode', data.loginPromoMode || 'slides');
@@ -2053,9 +1993,7 @@
         setVal('login-bg-gradient', data.loginBgGradient || '');
         setVal('login-bg-image-url', data.loginBgImageUrl || '');
         setVal('login-bg-overlay', data.loginBgOverlay || '0');
-        if (data.loginBgColor && document.getElementById('login-bg-color-picker') && /^#[0-9a-fA-F]{6}$/.test(data.loginBgColor)) {
-            document.getElementById('login-bg-color-picker').value = data.loginBgColor;
-        }
+        syncPicker('login-bg-color-picker', data.loginBgColor);
         const loginOverlayVal = document.getElementById('login-bg-overlay-value');
         if (loginOverlayVal) loginOverlayVal.textContent = data.loginBgOverlay || '0';
         showBackgroundPanel('login-bg', data.loginBgType || 'inherit');
@@ -2072,44 +2010,39 @@
             : DEFAULT_LOGIN_SLIDES.map((s) => ({ ...s }));
         renderLoginSlidesEditor();
         syncLoginPromoPanels();
-        
-        // Agent download page
+
+        // Download page
         checkRadio('agent-bg-type', data.agentBgType || 'none');
         setVal('agent-bg-color', data.agentBgColor || '');
         setVal('agent-bg-gradient', data.agentBgGradient || '');
         setVal('agent-bg-image-url', data.agentBgImageUrl || '');
         setChecked('agent-show-powered', data.agentShowPoweredBy !== 'false');
-        if (data.agentBgColor && document.getElementById('agent-bg-color-picker') && /^#[0-9a-fA-F]{6}$/.test(data.agentBgColor)) {
-            document.getElementById('agent-bg-color-picker').value = data.agentBgColor;
-        }
+        syncPicker('agent-bg-color-picker', data.agentBgColor);
         showBackgroundPanel('agent-bg', data.agentBgType || 'none');
 
-        // RdClient / remote dashboard
+        // Remote client (RdClient)
         checkRadio('rdclient-bg-type', data.rdclientBgType || 'inherit');
         setVal('rdclient-bg-color', data.rdclientBgColor || '');
         setVal('rdclient-bg-gradient', data.rdclientBgGradient || '');
         setVal('rdclient-bg-image-url', data.rdclientBgImageUrl || '');
         setVal('rdclient-bg-overlay', data.rdclientBgOverlay || '0');
         setVal('rdclient-bg-size', data.rdclientBgSize || 'cover');
-        if (data.rdclientBgColor && document.getElementById('rdclient-bg-color-picker') && /^#[0-9a-fA-F]{6}$/.test(data.rdclientBgColor)) {
-            document.getElementById('rdclient-bg-color-picker').value = data.rdclientBgColor;
-        }
+        syncPicker('rdclient-bg-color-picker', data.rdclientBgColor);
         const rdclientOverlayVal = document.getElementById('rdclient-bg-overlay-value');
         if (rdclientOverlayVal) rdclientOverlayVal.textContent = data.rdclientBgOverlay || '0';
         showBackgroundPanel('rdclient-bg', data.rdclientBgType || 'inherit');
         syncExistingBackgroundUploadStatuses(data);
         markSelectedBackgroundImage(data.bgImageUrl || '');
-        
+
         // Footer & custom CSS
         setVal('footer-text', data.footerText || '');
         setChecked('show-powered', data.showPoweredBy !== 'false');
         setVal('custom-css', data.customCss || '');
-        
     }
-    
+
     /**
-     * Show the active panel for a background group (bg / login-bg / agent-bg)
-     * and hide the rest. "none"/"inherit" hide all detail panels.
+     * Show the active panel for a background group (bg / login-bg / agent-bg /
+     * rdclient-bg) and hide the rest. "none"/"inherit" hide all detail panels.
      */
     function showBackgroundPanel(prefix, type) {
         ['none', 'inherit', 'color', 'gradient', 'image'].forEach(t => {
@@ -2119,11 +2052,7 @@
         const active = document.getElementById(`${prefix}-${type}-panel`);
         if (active) active.classList.remove('hidden');
     }
-    
-    /**
-     * Wire background selectors: radio toggles, range value labels,
-     * color picker sync and image uploads for console/login/agent groups.
-     */
+
     function syncLoginPromoPanels() {
         const mode = document.querySelector('input[name="login-promo-mode"]:checked')?.value || 'slides';
         const slidesPanel = document.getElementById('login-slides-panel');
@@ -2150,64 +2079,46 @@
     function renderLoginSlidesEditor() {
         const list = document.getElementById('login-slides-list');
         if (!list) return;
-        const esc = (typeof Utils !== 'undefined' && Utils.escapeHtml)
-            ? Utils.escapeHtml
-            : (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        list.innerHTML = _loginSlides.map((slide, idx) => `
-            <div class="login-slide-card" data-slide-id="${esc(slide.id)}" data-slide-key="${esc(slide.slideKey || '')}" data-index="${idx}">
+        const esc = Utils.escapeHtml;
+        const n = _loginSlides.length;
+        list.innerHTML = _loginSlides.map((slide, idx) => {
+            const p = `login-slide-${idx}`;
+            const label = _('settings.appearance.slide_n').replace('{n}', String(idx + 1));
+            return `
+            <li class="login-slide-card" data-slide-id="${esc(slide.id)}" data-slide-key="${esc(slide.slideKey || '')}" data-index="${idx}">
                 <div class="login-slide-card-header">
-                    <strong>#${idx + 1}</strong>
-                    <div class="login-slide-card-actions">
-                        <button type="button" class="btn btn-ghost btn-sm login-slide-up" title="${esc(_('branding.login_slide_move_up'))}" ${idx === 0 ? 'disabled' : ''}>
-                            <span class="material-icons" aria-hidden="true">arrow_upward</span>
-                        </button>
-                        <button type="button" class="btn btn-ghost btn-sm login-slide-down" title="${esc(_('branding.login_slide_move_down'))}" ${idx >= _loginSlides.length - 1 ? 'disabled' : ''}>
-                            <span class="material-icons" aria-hidden="true">arrow_downward</span>
-                        </button>
-                        <button type="button" class="btn btn-ghost btn-sm login-slide-remove" title="${esc(_('branding.login_slides_remove'))}">
-                            <span class="material-icons" aria-hidden="true">delete</span>
-                        </button>
+                    <h4>${esc(label)}</h4>
+                    <div class="settings-inline-controls">
+                        <button type="button" class="btn btn-sm login-slide-up" ${idx === 0 ? 'disabled' : ''}>${esc(_('branding.login_slide_move_up'))}</button>
+                        <button type="button" class="btn btn-sm login-slide-down" ${idx >= n - 1 ? 'disabled' : ''}>${esc(_('branding.login_slide_move_down'))}</button>
+                        <button type="button" class="btn btn-sm btn-danger-quiet login-slide-remove" ${n <= 1 ? 'disabled' : ''}>${esc(_('branding.login_slides_remove'))}</button>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${esc(_('branding.login_slide_image'))}</label>
-                    <div class="logo-upload-area">
-                        <input type="file" class="logo-file-input login-slide-file" accept="image/png,image/jpeg,image/webp,image/gif" data-index="${idx}">
-                        <label class="logo-upload-btn login-slide-file-label">
-                            <span class="material-icons" aria-hidden="true">upload_file</span>
-                            <span>${esc(_('branding.bg_image_choose'))}</span>
-                        </label>
-                    </div>
-                    <input type="text" class="form-input login-slide-image-url" value="${esc(slide.imageUrl || '')}" placeholder="/img/login-slides/free.jpg">
+                    <label class="form-label" for="${p}-file">${esc(_('branding.login_slide_image'))}</label>
+                    <input type="file" id="${p}-file" class="login-slide-file" accept="image/png,image/jpeg,image/webp,image/gif" data-index="${idx}" data-save-ignore>
+                    <label class="sr-only" for="${p}-url">${esc(_('branding.bg_image_url'))}</label>
+                    <input type="text" id="${p}-url" class="form-input mono-input login-slide-image-url" value="${esc(slide.imageUrl || '')}" placeholder="/img/login-slides/free.jpg">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${esc(_('branding.login_slide_title'))}</label>
-                    <input type="text" class="form-input login-slide-title" maxlength="120" value="${esc(slide.title || '')}" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.title') : '')}">
+                    <label class="form-label" for="${p}-title">${esc(_('branding.login_slide_title'))}</label>
+                    <input type="text" id="${p}-title" class="form-input login-slide-title" maxlength="120" value="${esc(slide.title || '')}" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.title') : '')}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${esc(_('branding.login_slide_body'))}</label>
-                    <textarea class="form-input login-slide-body" rows="2" maxlength="400" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.body') : '')}">${esc(slide.body || '')}</textarea>
+                    <label class="form-label" for="${p}-body">${esc(_('branding.login_slide_body'))}</label>
+                    <textarea id="${p}-body" class="form-input form-textarea login-slide-body" rows="2" maxlength="400" placeholder="${esc(slide.slideKey ? _('login_promo.slides.' + slide.slideKey + '.body') : '')}">${esc(slide.body || '')}</textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">${esc(_('branding.bg_overlay'))} (<span class="login-slide-overlay-value">${esc(slide.overlay || '45')}</span>%)</label>
-                    <input type="range" class="form-range login-slide-overlay" min="0" max="90" step="5" value="${esc(slide.overlay || '45')}">
+                    <label class="form-label" for="${p}-overlay">${esc(_('branding.bg_overlay'))}: <span class="login-slide-overlay-value">${esc(slide.overlay || '45')}</span> %</label>
+                    <input type="range" id="${p}-overlay" class="form-range login-slide-overlay" min="0" max="90" step="5" value="${esc(slide.overlay || '45')}">
                 </div>
-            </div>
-        `).join('');
+            </li>`;
+        }).join('');
 
         const addBtn = document.getElementById('login-slides-add');
         const maxHint = document.getElementById('login-slides-max-hint');
-        if (addBtn) addBtn.disabled = _loginSlides.length >= MAX_LOGIN_SLIDES;
-        if (maxHint) maxHint.hidden = _loginSlides.length < MAX_LOGIN_SLIDES;
-
-        list.querySelectorAll('.login-slide-file-label').forEach((label) => {
-            const input = label.parentElement?.querySelector('.login-slide-file');
-            if (input && !input.id) {
-                const id = `login-slide-file-${label.closest('.login-slide-card')?.dataset.index || '0'}`;
-                input.id = id;
-                label.setAttribute('for', id);
-            }
-        });
+        if (addBtn) addBtn.disabled = n >= MAX_LOGIN_SLIDES;
+        if (maxHint) maxHint.hidden = n < MAX_LOGIN_SLIDES;
     }
 
     function initLoginSlidesEditor() {
@@ -2245,6 +2156,15 @@
             const card = e.target.closest('.login-slide-card');
             if (!card) return;
             const idx = Number(card.dataset.index);
+            const move = (to) => {
+                _loginSlides = collectLoginSlidesFromDom();
+                const tmp = _loginSlides[to];
+                _loginSlides[to] = _loginSlides[idx];
+                _loginSlides[idx] = tmp;
+                renderLoginSlidesEditor();
+                onBrandingFieldChange();
+                list.querySelector(`.login-slide-card[data-index="${to}"] h4`)?.scrollIntoView({ block: 'nearest' });
+            };
             if (e.target.closest('.login-slide-remove')) {
                 _loginSlides = collectLoginSlidesFromDom();
                 if (_loginSlides.length <= 1) return;
@@ -2253,23 +2173,8 @@
                 onBrandingFieldChange();
                 return;
             }
-            if (e.target.closest('.login-slide-up') && idx > 0) {
-                _loginSlides = collectLoginSlidesFromDom();
-                const tmp = _loginSlides[idx - 1];
-                _loginSlides[idx - 1] = _loginSlides[idx];
-                _loginSlides[idx] = tmp;
-                renderLoginSlidesEditor();
-                onBrandingFieldChange();
-                return;
-            }
-            if (e.target.closest('.login-slide-down') && idx < _loginSlides.length - 1) {
-                _loginSlides = collectLoginSlidesFromDom();
-                const tmp = _loginSlides[idx + 1];
-                _loginSlides[idx + 1] = _loginSlides[idx];
-                _loginSlides[idx] = tmp;
-                renderLoginSlidesEditor();
-                onBrandingFieldChange();
-            }
+            if (e.target.closest('.login-slide-up') && idx > 0) move(idx - 1);
+            else if (e.target.closest('.login-slide-down') && idx < _loginSlides.length - 1) move(idx + 1);
         });
 
         list?.addEventListener('input', (e) => {
@@ -2303,9 +2208,8 @@
                 if (_loginSlides[idx]) _loginSlides[idx].imageUrl = url;
                 renderLoginSlidesEditor();
                 onBrandingFieldChange();
-                Notifications.success(_('branding.bg_upload_success'));
             } catch (err) {
-                Notifications.error(err.message || _('errors.server_error'));
+                setBrandingStatus('error', err.message || _('errors.server_error'));
             } finally {
                 fileInput.value = '';
             }
@@ -2314,15 +2218,17 @@
         syncLoginPromoPanels();
     }
 
+    /**
+     * Wire background selectors: radio toggles, range value labels,
+     * colour picker sync and image uploads for console/login/agent groups.
+     */
     function initBackgroundSelectors() {
-        // Radio toggles for the three background groups
         [['bg-type', 'bg'], ['login-bg-type', 'login-bg'], ['agent-bg-type', 'agent-bg'], ['rdclient-bg-type', 'rdclient-bg']].forEach(([name, prefix]) => {
             document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
                 radio.addEventListener('change', () => showBackgroundPanel(prefix, radio.value));
             });
         });
-        
-        // Color picker <-> hex text sync for the standalone background pickers
+
         [['bg-color-picker', 'bg-color'], ['login-bg-color-picker', 'login-bg-color'], ['agent-bg-color-picker', 'agent-bg-color'], ['rdclient-bg-color-picker', 'rdclient-bg-color'], ['glass-color-picker', 'glass-color']].forEach(([pickerId, textId]) => {
             const picker = document.getElementById(pickerId);
             const text = document.getElementById(textId);
@@ -2333,24 +2239,15 @@
                 });
             }
         });
-        
-        // Range value labels
+
         [['bg-blur', 'bg-blur-value'], ['bg-overlay', 'bg-overlay-value'], ['login-bg-overlay', 'login-bg-overlay-value'], ['rdclient-bg-overlay', 'rdclient-bg-overlay-value'], ['glass-blur', 'glass-blur-value'], ['glass-opacity', 'glass-opacity-value']].forEach(([rangeId, labelId]) => {
             const range = document.getElementById(rangeId);
             const label = document.getElementById(labelId);
-            if (range && label) {
-                range.addEventListener('input', () => { label.textContent = range.value; });
-            }
+            if (range && label) range.addEventListener('input', () => { label.textContent = range.value; });
         });
-        
-        // Background image uploads (shared route, data-target picks the URL field)
+
         document.querySelectorAll('.branding-bg-file').forEach(input => {
             input.addEventListener('change', handleBackgroundFileUpload);
-            const label = document.querySelector(`label[for="${input.id}"]`);
-            label?.addEventListener('click', (event) => {
-                event.preventDefault();
-                input.click();
-            });
         });
         initBackgroundLibrary();
     }
@@ -2360,7 +2257,7 @@
         if (!library) return;
         library.addEventListener('click', (event) => {
             const item = event.target.closest('.background-library-item');
-            if (!item) return;
+            if (!item || item.disabled) return;
             selectBackgroundLibraryImage(item.dataset.url || '');
         });
         await loadBackgroundLibrary(document.getElementById('bg-image-url')?.value || '');
@@ -2369,13 +2266,13 @@
     async function loadBackgroundLibrary(selectedUrl = '') {
         const library = document.getElementById('bg-image-library');
         if (!library) return;
-        library.innerHTML = `<div class="background-library-empty">${_('common.loading')}</div>`;
+        library.innerHTML = `<p class="state">${_('common.loading')}</p>`;
         try {
             const resp = await Utils.api('/api/settings/branding/backgrounds');
             const items = Array.isArray(resp.data) ? resp.data : [];
             renderBackgroundLibrary(items, selectedUrl || document.getElementById('bg-image-url')?.value || '');
         } catch (err) {
-            library.innerHTML = `<div class="background-library-empty">${Utils.escapeHtml(err.message || _('errors.server_error'))}</div>`;
+            library.innerHTML = `<p class="state is-error">${Utils.escapeHtml(err.message || _('errors.server_error'))}</p>`;
         }
     }
 
@@ -2383,7 +2280,7 @@
         const library = document.getElementById('bg-image-library');
         if (!library) return;
         if (!items.length) {
-            library.innerHTML = `<div class="background-library-empty">${_('desktop.wp_unavailable')}</div>`;
+            library.innerHTML = `<p class="state">${_('desktop.wp_unavailable')}</p>`;
             return;
         }
         library.innerHTML = items.map(item => {
@@ -2391,11 +2288,10 @@
             const name = String(item.name || url.split('/').pop() || '');
             const isActive = url === selectedUrl;
             return `
-                <button type="button" class="background-library-item${isActive ? ' active' : ''}" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)}">
+                <button type="button" class="background-library-item${isActive ? ' active' : ''}" aria-pressed="${isActive ? 'true' : 'false'}" data-url="${Utils.escapeHtml(url)}">
                     <span class="background-library-thumb" style="background-image:url('${Utils.escapeHtml(url).replace(/'/g, '%27')}')"></span>
                     <span class="background-library-name">${Utils.escapeHtml(name)}</span>
-                </button>
-            `;
+                </button>`;
         }).join('');
     }
 
@@ -2404,7 +2300,7 @@
         const input = document.getElementById('bg-image-url');
         if (input) input.value = url;
         selectBackgroundImageType('bg-image-url');
-        setBackgroundUploadStatus(document.getElementById('bg-file-name'), url.split('/').pop() || url, url);
+        setBackgroundUploadStatus(document.getElementById('bg-file-name'), url.split('/').pop() || url, '');
         markSelectedBackgroundImage(url);
         onBrandingFieldChange();
     }
@@ -2413,42 +2309,38 @@
         const library = document.getElementById('bg-image-library');
         if (!library) return;
         library.querySelectorAll('.background-library-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.url === url);
+            const on = item.dataset.url === url;
+            item.classList.toggle('active', on);
+            item.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
     }
-    
+
     /**
-     * Handle background image upload — uploads to the shared background route
-     * and fills the URL field referenced by the input's data-target attribute.
+     * Background image upload: the shared route stores the file and saves it
+     * as the background right away (the field effect says so).
      */
     async function handleBackgroundFileUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
-        
-        const maxSize = 8 * 1024 * 1024; // 8 MB
-        if (file.size > maxSize) {
-            Notifications.error(_('branding.bg_image_too_large'));
-            e.target.value = '';
-            return;
-        }
+        const statusEl = getBackgroundUploadStatusElement(e.target);
+
+        const maxSize = 8 * 1024 * 1024;
         const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            Notifications.error(_('branding.bg_image_invalid_type'));
+        if (file.size > maxSize || !validTypes.includes(file.type)) {
+            updateBackgroundUploadPanel(statusEl, {
+                state: 'error',
+                message: file.size > maxSize ? _('branding.bg_image_too_large') : _('branding.bg_image_invalid_type'),
+                percent: 0
+            });
             e.target.value = '';
             return;
         }
-        
+
         const targetId = e.target.dataset.target;
         const nameEl = getBackgroundFileNameElement(e.target);
-        const statusEl = getBackgroundUploadStatusElement(e.target);
-        setBackgroundUploadStatus(nameEl, file.name, _('branding.status_saving'));
-        updateBackgroundUploadPanel(statusEl, {
-            state: 'uploading',
-            icon: 'sync',
-            message: `${file.name} — ${_('branding.status_saving')}`,
-            percent: 1
-        });
-        
+        setBackgroundUploadStatus(nameEl, file.name, '');
+        updateBackgroundUploadPanel(statusEl, { state: 'uploading', message: `${file.name}: ${_('branding.status_saving')}`, percent: 1 });
+
         const formData = new FormData();
         formData.append('background', file);
         formData.append('target', backgroundTargetToBrandingKey(targetId));
@@ -2456,30 +2348,17 @@
         const uploadKey = targetId || e.target.id;
         const uploadPromise = (async () => {
             const result = await uploadBackgroundImage(formData, (percent) => {
-                setBackgroundUploadStatus(nameEl, file.name, `${percent}%`);
-                updateBackgroundUploadPanel(statusEl, {
-                    state: 'uploading',
-                    icon: 'sync',
-                    message: `${file.name} — ${percent}%`,
-                    percent
-                });
+                updateBackgroundUploadPanel(statusEl, { state: 'uploading', message: `${file.name}: ${percent} %`, percent });
             });
             const urlInput = document.getElementById(targetId);
             if (urlInput) urlInput.value = result.url;
-            setBackgroundUploadStatus(nameEl, file.name, result.url || 'OK');
-            updateBackgroundUploadPanel(statusEl, {
-                state: 'saving',
-                icon: 'sync',
-                message: `${_('branding.bg_upload_success')} ${_('branding.status_saving')}`,
-                percent: 100
-            });
             selectBackgroundImageType(targetId);
             if (result.data && typeof result.data === 'object') {
                 brandingData = result.data;
                 populateBrandingForm(brandingData);
                 _brandingSnapshot = JSON.stringify(collectBrandingData());
                 _brandingDirty = false;
-                setBrandingStatus('saved', _('branding.autosaved'));
+                setBrandingStatus('saved', '');
                 refreshBrandingStylesheet(result.revision || Date.now());
             } else {
                 onBrandingFieldChange();
@@ -2488,37 +2367,24 @@
         })();
 
         _backgroundUploads.set(uploadKey, uploadPromise);
-
         let uploadedUrl = '';
         try {
             uploadedUrl = await uploadPromise;
         } catch (err) {
-            setBackgroundUploadStatus(nameEl, file.name, err.message || _('errors.server_error'));
-            updateBackgroundUploadPanel(statusEl, {
-                state: 'error',
-                icon: 'error',
-                message: err.message || _('errors.server_error'),
-                percent: 100
-            });
-            Notifications.error(err.message || _('errors.server_error'));
+            updateBackgroundUploadPanel(statusEl, { state: 'error', message: err.message || _('errors.server_error'), percent: 0 });
         } finally {
-            if (_backgroundUploads.get(uploadKey) === uploadPromise) {
-                _backgroundUploads.delete(uploadKey);
-            }
+            if (_backgroundUploads.get(uploadKey) === uploadPromise) _backgroundUploads.delete(uploadKey);
             e.target.value = '';
         }
 
         if (uploadedUrl) {
-            clearTimeout(_autosaveDebounce);
             await loadBackgroundLibrary(uploadedUrl);
             markSelectedBackgroundImage(uploadedUrl);
             updateBackgroundUploadPanel(statusEl, {
                 state: 'success',
-                icon: 'check_circle',
                 message: `${_('branding.bg_upload_success')} ${_('branding.autosaved')}`,
                 percent: 100
             });
-            Notifications.success(`${_('branding.bg_upload_success')} ${_('branding.autosaved')}`);
         }
     }
 
@@ -2529,14 +2395,12 @@
             'agent-bg-image-file': 'agent-bg-file-name',
             'rdclient-bg-image-file': 'rdclient-bg-file-name'
         };
-        return document.getElementById(map[input.id])
-            || document.getElementById(input.id.replace('-file', '-file-name'));
+        return document.getElementById(map[input.id]);
     }
 
     function setBackgroundUploadStatus(el, fileName, status) {
         if (!el) return;
         el.textContent = status ? `${fileName} (${status})` : fileName;
-        el.title = el.textContent;
     }
 
     function syncExistingBackgroundUploadStatuses(data) {
@@ -2548,19 +2412,11 @@
         ].forEach(item => {
             const statusEl = getBackgroundUploadStatusElementByTarget(item.targetId);
             const labelEl = document.getElementById(item.labelId);
-            if (!item.url || item.type !== 'image') {
-                if (statusEl) statusEl.hidden = true;
-                if (labelEl) labelEl.textContent = '';
-                return;
-            }
-            const fileName = item.url.split('/').pop() || item.url;
-            setBackgroundUploadStatus(labelEl, fileName, item.url);
-            updateBackgroundUploadPanel(statusEl, {
-                state: 'success',
-                icon: 'check_circle',
-                message: `${_('branding.status_saved')}: ${item.url}`,
-                percent: 100
-            });
+            if (statusEl) statusEl.hidden = true;
+            if (!labelEl) return;
+            labelEl.textContent = (item.url && item.type === 'image')
+                ? _('settings.appearance.current_image').replace('{name}', item.url.split('/').pop() || item.url)
+                : '';
         });
     }
 
@@ -2578,16 +2434,18 @@
         return document.getElementById(map[targetId]);
     }
 
-    function updateBackgroundUploadPanel(el, { state, icon, message, percent }) {
+    function updateBackgroundUploadPanel(el, { state, message, percent }) {
         if (!el) return;
         el.hidden = false;
-        el.classList.remove('is-uploading', 'is-saving', 'is-success', 'is-error');
-        if (state) el.classList.add(`is-${state}`);
-        const iconEl = el.querySelector('.branding-upload-status-icon');
         const messageEl = el.querySelector('.branding-upload-message');
         const fillEl = el.querySelector('.branding-upload-progress-fill');
-        if (iconEl && icon) iconEl.textContent = icon;
-        if (messageEl) messageEl.textContent = message || '';
+        const meter = el.querySelector('.meter');
+        if (messageEl) {
+            messageEl.textContent = message || '';
+            messageEl.classList.toggle('is-ok', state === 'success');
+            messageEl.classList.toggle('is-error', state === 'error');
+        }
+        if (meter) meter.hidden = state !== 'uploading';
         if (fillEl && Number.isFinite(percent)) {
             fillEl.style.width = `${Math.max(0, Math.min(100, percent))}%`;
         }
@@ -2601,13 +2459,10 @@
             const token = window.BetterDesk?.csrfToken || '';
             if (token) xhr.setRequestHeader('x-csrf-token', token);
             xhr.responseType = 'json';
-
             xhr.upload.onprogress = (event) => {
                 if (!event.lengthComputable || typeof onProgress !== 'function') return;
-                const percent = Math.max(1, Math.min(99, Math.round((event.loaded / event.total) * 100)));
-                onProgress(percent);
+                onProgress(Math.max(1, Math.min(99, Math.round((event.loaded / event.total) * 100))));
             };
-
             xhr.onload = () => {
                 const result = xhr.response || parseUploadJsonResponse(xhr.responseText);
                 if (xhr.status < 200 || xhr.status >= 300 || !result?.success) {
@@ -2617,9 +2472,8 @@
                 if (typeof onProgress === 'function') onProgress(100);
                 resolve(result);
             };
-
-            xhr.onerror = () => reject(new Error('Upload failed'));
-            xhr.onabort = () => reject(new Error('Upload cancelled'));
+            xhr.onerror = () => reject(new Error(_('errors.server_error')));
+            xhr.onabort = () => reject(new Error(_('errors.server_error')));
             xhr.send(formData);
         });
     }
@@ -2628,7 +2482,7 @@
         if (!text) return null;
         try {
             return JSON.parse(text);
-        } catch (_) {
+        } catch (_e) {
             return null;
         }
     }
@@ -2659,136 +2513,115 @@
         };
         return map[targetId] || '';
     }
-    
-    /**
-     * Initialize logo type selector
-     */
+
     function initLogoTypeSelector() {
-        const radios = document.querySelectorAll('input[name="logo-type"]');
-        radios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                showLogoPanel(radio.value);
-            });
+        document.querySelectorAll('input[name="logo-type"]').forEach(radio => {
+            radio.addEventListener('change', () => showLogoPanel(radio.value));
         });
-        
-        // File upload handler
         document.getElementById('logo-image-file')?.addEventListener('change', handleLogoFileUpload);
     }
-    
-    /**
-     * Show the correct logo config panel
-     */
+
     function showLogoPanel(type) {
-        document.querySelectorAll('.logo-config-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('#branding-identity .logo-config-panel').forEach(p => p.classList.add('hidden'));
         const panel = document.getElementById(`logo-${type}-panel`);
         if (panel) panel.classList.remove('hidden');
     }
-    
+
     /**
-     * Handle logo image file upload — uploads to server disk and fills URL field
+     * Picking a logo file only remembers it. It is uploaded when the
+     * appearance is saved, so the current logo stays until then.
      */
-    async function handleLogoFileUpload(e) {
+    function handleLogoFileUpload(e) {
         const file = e.target.files[0];
-        if (!file) return;
-        
-        const maxSize = 2 * 1024 * 1024; // 2 MB
-        if (file.size > maxSize) {
-            Notifications.error(_('branding.logo_image_too_large'));
-            e.target.value = '';
+        const note = document.getElementById('logo-file-name');
+        if (!file) {
+            _pendingLogoFile = null;
+            if (note) note.textContent = _('settings.appearance.logo_upload_effect');
+            onBrandingFieldChange();
             return;
         }
-        
         const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
-        if (!validTypes.includes(file.type)) {
-            Notifications.error(_('branding.logo_image_invalid_type'));
+        let problem = '';
+        if (file.size > 2 * 1024 * 1024) problem = _('branding.logo_image_too_large');
+        else if (!validTypes.includes(file.type)) problem = _('branding.logo_image_invalid_type');
+        if (problem) {
             e.target.value = '';
+            _pendingLogoFile = null;
+            if (note) {
+                note.textContent = problem;
+                note.classList.add('text-danger');
+            }
             return;
         }
-        
-        // Show filename
-        const nameEl = document.getElementById('logo-file-name');
-        if (nameEl) nameEl.textContent = file.name;
-
-        // Upload to server
-        const formData = new FormData();
-        formData.append('logo', file);
-
-        try {
-            const resp = await fetch('/api/settings/branding/upload-logo', {
-                method: 'POST',
-                headers: { 'x-csrf-token': window.BetterDesk?.csrfToken || '' },
-                body: formData
-            });
-            const result = await resp.json();
-            if (!resp.ok || !result.success) {
-                throw new Error(result.error || 'Upload failed');
-            }
-            const urlInput = document.getElementById('logo-image-url');
-            if (urlInput) urlInput.value = result.url;
-            Notifications.success(_('branding.logo_upload_success'));
-        } catch (err) {
-            Notifications.error(err.message || _('errors.server_error'));
+        _pendingLogoFile = file;
+        if (note) {
+            note.classList.remove('text-danger');
+            note.textContent = _('settings.appearance.logo_pending').replace('{name}', file.name);
         }
+        onBrandingFieldChange();
     }
-    
-    /**
-     * Initialize color picker sync (picker <-> hex input)
-     */
+
+    /** The palette the console shows right now (System follows the device). */
+    function currentLookPalette(mode) {
+        const palettes = window.BetterDesk?.themePalettes || {};
+        if (mode === 'dark') return palettes.dark || {};
+        if (mode === 'light') return palettes.light || {};
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return (prefersDark ? palettes.dark : palettes.light) || {};
+    }
+
     function initColorPickers() {
-        document.querySelectorAll('.color-picker').forEach(picker => {
+        document.querySelectorAll('.color-picker[data-color]').forEach(picker => {
             picker.addEventListener('input', () => {
-                const key = picker.dataset.color;
-                const hex = document.querySelector(`.color-hex[data-color="${key}"]`);
+                const hex = document.querySelector(`.color-hex[data-color="${picker.dataset.color}"]`);
                 if (hex) hex.value = picker.value;
-                const customRadio = document.querySelector('input[name="theme-mode"][value="custom"]');
-                if (customRadio) customRadio.checked = true;
                 onBrandingFieldChange();
             });
         });
-        
-        document.querySelectorAll('.color-hex').forEach(hex => {
+        document.querySelectorAll('.color-hex[data-color]').forEach(hex => {
             hex.addEventListener('input', () => {
-                const key = hex.dataset.color;
-                const picker = document.querySelector(`.color-picker[data-color="${key}"]`);
-                if (picker && /^#[0-9a-fA-F]{6}$/.test(hex.value)) {
-                    picker.value = hex.value;
-                }
-                const customRadio = document.querySelector('input[name="theme-mode"][value="custom"]');
-                if (customRadio) customRadio.checked = true;
-                onBrandingFieldChange();
+                const picker = document.querySelector(`.color-picker[data-color="${hex.dataset.color}"]`);
+                if (picker && /^#[0-9a-fA-F]{6}$/.test(hex.value)) picker.value = hex.value;
             });
         });
 
+        let previousMode = document.querySelector('input[name="theme-mode"]:checked')?.value || 'system';
         document.querySelectorAll('input[name="theme-mode"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 if (!radio.checked) return;
-                if (radio.value === 'light') {
-                    applyBuiltInPalette(window.BetterDesk?.themePalettes?.light || {});
-                    const glassColor = document.getElementById('glass-color');
-                    const glassPicker = document.getElementById('glass-color-picker');
-                    if (glassColor) glassColor.value = '#ffffff';
-                    if (glassPicker) glassPicker.value = '#ffffff';
-                } else if (radio.value === 'dark') {
-                    applyBuiltInPalette(window.BetterDesk?.themePalettes?.dark || {});
-                    const glassColor = document.getElementById('glass-color');
-                    const glassPicker = document.getElementById('glass-color-picker');
-                    if (glassColor) glassColor.value = '#161b22';
-                    if (glassPicker) glassPicker.value = '#161b22';
+                const glassColor = document.getElementById('glass-color');
+                const glassPicker = document.getElementById('glass-color-picker');
+                if (radio.value === 'light' || radio.value === 'dark') {
+                    const tint = radio.value === 'light' ? '#ffffff' : '#161b22';
+                    if (glassColor) glassColor.value = tint;
+                    if (glassPicker) glassPicker.value = tint;
+                } else if (radio.value === 'custom' && previousMode !== 'custom' && _savedThemeMode !== 'custom') {
+                    // Start the custom colours from what the console looks like now
+                    applyBuiltInPalette(currentLookPalette(previousMode));
                 }
+                previousMode = radio.value;
+                syncCustomColorsVisibility();
+                onBrandingFieldChange();
+            });
+        });
+
+        document.querySelectorAll('[data-palette-start]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                applyBuiltInPalette(currentLookPalette(btn.dataset.paletteStart));
                 onBrandingFieldChange();
             });
         });
     }
 
     function applyBuiltInPalette(colors) {
-        Object.entries(colors).forEach(([key, value]) => {
+        Object.entries(colors || {}).forEach(([key, value]) => {
             const picker = document.querySelector(`.color-picker[data-color="${key}"]`);
             const hex = document.querySelector(`.color-hex[data-color="${key}"]`);
-            if (picker) picker.value = value;
+            if (picker && /^#[0-9a-fA-F]{6}$/.test(value)) picker.value = value;
             if (hex) hex.value = value;
         });
     }
-    
+
     /**
      * Collect branding form data
      */
@@ -2806,19 +2639,14 @@
             fontBody: document.getElementById('font-body-value')?.value || '',
             colors: {}
         };
-        
-        // Collect colors
-        document.querySelectorAll('.color-hex').forEach(hex => {
-            const key = hex.dataset.color;
+
+        document.querySelectorAll('.color-hex[data-color]').forEach(hex => {
             const value = hex.value.trim();
-            if (value && /^#[0-9a-fA-F]{6}$/.test(value)) {
-                data.colors[key] = value;
-            }
+            if (value && /^#[0-9a-fA-F]{6}$/.test(value)) data.colors[hex.dataset.color] = value;
         });
 
-        data.themeMode = document.querySelector('input[name="theme-mode"]:checked')?.value || 'dark';
-        
-        // Background & appearance (console)
+        data.themeMode = document.querySelector('input[name="theme-mode"]:checked')?.value || 'system';
+
         data.bgType = document.querySelector('input[name="bg-type"]:checked')?.value || 'none';
         data.bgColor = document.getElementById('bg-color')?.value.trim() || '';
         data.bgGradient = document.getElementById('bg-gradient')?.value.trim() || '';
@@ -2827,13 +2655,11 @@
         data.bgOverlay = document.getElementById('bg-overlay')?.value || '';
         data.bgSize = document.getElementById('bg-size')?.value || 'cover';
 
-        // Glass surfaces
         data.glassEnabled = document.getElementById('glass-enabled')?.checked ? 'true' : 'false';
         data.glassColor = document.getElementById('glass-color')?.value.trim() || '';
         data.glassBlur = document.getElementById('glass-blur')?.value || '';
         data.glassOpacity = document.getElementById('glass-opacity')?.value || '';
-        
-        // Login page
+
         data.loginBgType = document.querySelector('input[name="login-bg-type"]:checked')?.value || 'inherit';
         data.loginBgColor = document.getElementById('login-bg-color')?.value.trim() || '';
         data.loginBgGradient = document.getElementById('login-bg-gradient')?.value.trim() || '';
@@ -2843,200 +2669,163 @@
         data.loginSubtitle = document.getElementById('login-subtitle')?.value.trim() || '';
         data.loginPromoMode = document.querySelector('input[name="login-promo-mode"]:checked')?.value || 'slides';
         data.loginSlides = collectLoginSlidesFromDom();
-        
-        // Agent download page
+
         data.agentBgType = document.querySelector('input[name="agent-bg-type"]:checked')?.value || 'none';
         data.agentBgColor = document.getElementById('agent-bg-color')?.value.trim() || '';
         data.agentBgGradient = document.getElementById('agent-bg-gradient')?.value.trim() || '';
         data.agentBgImageUrl = document.getElementById('agent-bg-image-url')?.value.trim() || '';
         data.agentShowPoweredBy = document.getElementById('agent-show-powered')?.checked ? 'true' : 'false';
 
-        // RdClient / remote dashboard
         data.rdclientBgType = document.querySelector('input[name="rdclient-bg-type"]:checked')?.value || 'inherit';
         data.rdclientBgColor = document.getElementById('rdclient-bg-color')?.value.trim() || '';
         data.rdclientBgGradient = document.getElementById('rdclient-bg-gradient')?.value.trim() || '';
         data.rdclientBgImageUrl = document.getElementById('rdclient-bg-image-url')?.value.trim() || '';
         data.rdclientBgOverlay = document.getElementById('rdclient-bg-overlay')?.value || '';
         data.rdclientBgSize = document.getElementById('rdclient-bg-size')?.value || 'cover';
-        
-        // Footer & custom CSS
+
         data.footerText = document.getElementById('footer-text')?.value.trim() || '';
         data.showPoweredBy = document.getElementById('show-powered')?.checked ? 'true' : 'false';
         data.customCss = document.getElementById('custom-css')?.value || '';
-        
         return data;
     }
-    
-    /**
-     * Font picker state
-     */
+
+    // ---------- Font pickers ----------
+
     let _fontSearchTimeout = null;
     let _fontCategory = '';
 
-    /**
-     * Set font picker value
-     */
-    function setFontPickerValue(slot, family) {
+    function setFontPickerValue(slot, family, silent = false) {
         const valueInput = document.getElementById(`font-${slot}-value`);
         const currentLabel = document.getElementById(`font-${slot}-current`);
-        const clearBtn = document.querySelector(`#font-${slot}-slot .font-clear-btn`);
-        
+        const clearBtn = document.getElementById(`font-${slot}-clear`);
         if (valueInput) valueInput.value = family || '';
         if (currentLabel) currentLabel.textContent = family || _('branding.font_system_default');
-        if (clearBtn) clearBtn.style.display = family ? 'inline-flex' : 'none';
+        if (clearBtn) clearBtn.classList.toggle('hidden', !family);
+        if (!silent) onBrandingFieldChange();
     }
 
-    /**
-     * Initialize font pickers
-     */
+    function showFontDropdown(dropdown, show) {
+        dropdown.classList.toggle('hidden', !show);
+    }
+
     function initFontPickers() {
         ['heading', 'body'].forEach(slot => {
             const searchInput = document.getElementById(`font-${slot}-search`);
             const dropdown = document.getElementById(`font-${slot}-dropdown`);
-            const clearBtn = document.querySelector(`#font-${slot}-slot .font-clear-btn`);
-            
+            const clearBtn = document.getElementById(`font-${slot}-clear`);
             if (!searchInput || !dropdown) return;
 
-            // Search input
             searchInput.addEventListener('input', () => {
                 clearTimeout(_fontSearchTimeout);
-                _fontSearchTimeout = setTimeout(() => {
-                    searchFonts(slot, searchInput.value.trim());
-                }, 300);
+                _fontSearchTimeout = setTimeout(() => searchFonts(slot, searchInput.value.trim()), 300);
             });
-
             searchInput.addEventListener('focus', () => {
-                if (!dropdown.children.length) {
-                    searchFonts(slot, '');
-                }
-                dropdown.style.display = 'block';
+                if (!dropdown.children.length) searchFonts(slot, '');
+                else showFontDropdown(dropdown, true);
             });
-
-            // Close dropdown on outside click
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') showFontDropdown(dropdown, false);
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    dropdown.querySelector('button')?.focus();
+                }
+            });
+            dropdown.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    showFontDropdown(dropdown, false);
+                    searchInput.focus();
+                }
+            });
             document.addEventListener('click', (e) => {
-                if (!e.target.closest(`#font-${slot}-slot`)) {
-                    dropdown.style.display = 'none';
-                }
+                if (!e.target.closest(`#font-${slot}-slot`)) showFontDropdown(dropdown, false);
             });
-
-            // Clear button
-            if (clearBtn) {
-                clearBtn.addEventListener('click', () => {
-                    setFontPickerValue(slot, '');
-                });
-            }
+            clearBtn?.addEventListener('click', () => setFontPickerValue(slot, ''));
         });
 
-        // Category filter buttons
         document.querySelectorAll('.font-cat-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.font-cat-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                _fontCategory = btn.dataset.category || '';
-                // Re-search both slots with new category
+                document.querySelectorAll('.font-cat-btn').forEach(b => {
+                    b.classList.toggle('active', b === btn);
+                    b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+                });
+                _fontCategory = btn.dataset.category === 'all' ? '' : (btn.dataset.category || '');
                 ['heading', 'body'].forEach(slot => {
                     const searchInput = document.getElementById(`font-${slot}-search`);
                     const dropdown = document.getElementById(`font-${slot}-dropdown`);
-                    if (searchInput && dropdown && dropdown.style.display === 'block') {
+                    if (searchInput && dropdown && !dropdown.classList.contains('hidden')) {
                         searchFonts(slot, searchInput.value.trim());
                     }
                 });
             });
         });
 
-        // Load local fonts count
         loadLocalFontCount();
     }
 
-    /**
-     * Search fonts and populate dropdown
-     */
     async function searchFonts(slot, query) {
         const dropdown = document.getElementById(`font-${slot}-dropdown`);
         if (!dropdown) return;
-
         try {
             const params = new URLSearchParams();
             if (query) params.set('q', query);
             if (_fontCategory) params.set('category', _fontCategory);
             if (_fontSource === 'google') params.set('source', 'google');
-            
             const fonts = await Utils.api(`/api/settings/fonts?${params}`);
-            
-            dropdown.innerHTML = '';
-            
             if (!fonts || !fonts.length) {
-                dropdown.innerHTML = '<div class="font-dropdown-empty">No fonts found</div>';
-                dropdown.style.display = 'block';
+                dropdown.innerHTML = `<p class="state">${_('settings.appearance.font_none')}</p>`;
+                showFontDropdown(dropdown, true);
                 return;
             }
-
+            dropdown.innerHTML = '';
             fonts.forEach(font => {
-                const item = document.createElement('div');
+                const item = document.createElement('button');
+                item.type = 'button';
                 item.className = 'font-dropdown-item';
-                
-                item.innerHTML = `
-                    <span class="font-item-name">${Utils.escapeHtml(font.family)}</span>
-                    <span class="font-item-meta">
-                        <span class="font-item-category">${Utils.escapeHtml(font.category)}</span>
-                        ${font.downloaded ? '<span class="font-item-local" title="Downloaded">●</span>' : ''}
-                    </span>
-                `;
-                
+                item.innerHTML = `<span class="font-item-name">${Utils.escapeHtml(font.family)}</span>
+                    <span class="font-item-meta">${Utils.escapeHtml(font.category || '')}${font.downloaded ? ', ' + Utils.escapeHtml(_('branding.font_local')) : ''}</span>`;
                 item.addEventListener('click', async () => {
-                    // Auto-download if not yet cached
-                    if (!font.downloaded) {
-                        item.classList.add('font-downloading');
+                    if (!font.downloaded && _canBrandingEdit) {
+                        item.disabled = true;
                         try {
-                            await Utils.api('/api/settings/fonts/download', {
-                                method: 'POST',
-                                body: { family: font.family }
-                            });
+                            await Utils.api('/api/settings/fonts/download', { method: 'POST', body: { family: font.family } });
                             loadLocalFontCount();
                         } catch (e) {
-                            // Still use via CDN even if download fails
-                            console.warn('Font download failed, using CDN:', e);
+                            // The font still works from the CDN if the download fails
                         }
-                        item.classList.remove('font-downloading');
+                        item.disabled = false;
                     }
-                    
                     setFontPickerValue(slot, font.family);
-                    dropdown.style.display = 'none';
+                    showFontDropdown(dropdown, false);
+                    document.getElementById(`font-${slot}-search`)?.focus();
                 });
-                
                 dropdown.appendChild(item);
             });
-            
-            dropdown.style.display = 'block';
+            showFontDropdown(dropdown, true);
         } catch (error) {
-            console.error('Font search failed:', error);
-            dropdown.innerHTML = '<div class="font-dropdown-empty">Search failed</div>';
-            dropdown.style.display = 'block';
+            dropdown.innerHTML = `<p class="state is-error">${Utils.escapeHtml(error.message || _('errors.server_error'))}</p>`;
+            showFontDropdown(dropdown, true);
         }
     }
 
-    /**
-     * Load local font count
-     */
     async function loadLocalFontCount() {
         try {
             const fonts = await Utils.api('/api/settings/fonts/local');
             const counter = document.getElementById('font-local-count');
-            if (counter && Array.isArray(fonts)) {
-                counter.textContent = fonts.length;
-            }
+            if (counter && Array.isArray(fonts)) counter.textContent = fonts.length;
         } catch (e) {
-            // ignore
+            // count is informational
         }
     }
 
-    /**
-     * Initialize branding action buttons
-     */
     function initBrandingActions() {
-        document.getElementById('branding-save-btn')?.addEventListener('click', () => saveBrandingNow());
+        const form = brandingForm();
+        form?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveBrandingNow();
+        });
         document.getElementById('branding-revert-btn')?.addEventListener('click', revertBrandingChanges);
-        
+        const ieStatus = document.getElementById('branding-ie-status');
+
         document.getElementById('branding-export-btn')?.addEventListener('click', async () => {
             try {
                 const response = await Utils.api('/api/settings/branding/export');
@@ -3047,184 +2836,202 @@
                 a.download = 'betterdesk-theme.json';
                 a.click();
                 URL.revokeObjectURL(url);
-                Notifications.success(_('branding.exported'));
+                setStatus(ieStatus, _('branding.exported'), 'ok');
             } catch (error) {
-                Notifications.error(error.message || _('errors.server_error'));
+                setStatus(ieStatus, error.message || _('errors.server_error'), 'error');
             }
         });
-        
-        // Import
+
         document.getElementById('branding-import-input')?.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
             try {
-                const text = await file.text();
-                const preset = JSON.parse(text);
-                
-                await Utils.api('/api/settings/branding/import', {
-                    method: 'POST',
-                    body: preset
-                });
-                
-                const fresh = await Utils.api('/api/settings/branding');
-                brandingData = fresh.data || fresh;
-                populateBrandingForm(brandingData);
-                _brandingSnapshot = JSON.stringify(collectBrandingData());
-                _brandingDirty = false;
-                setBrandingStatus('saved');
-                refreshBrandingStylesheet(Date.now());
-                Notifications.success(_('branding.imported'));
-                
+                const preset = JSON.parse(await file.text());
+                await Utils.api('/api/settings/branding/import', { method: 'POST', body: preset });
+                await reloadBrandingFromServer();
+                setStatus(ieStatus, _('branding.imported'), 'ok');
             } catch (error) {
-                Notifications.error(error.message || _('branding.import_error'));
+                setStatus(ieStatus, error.message || _('branding.import_error'), 'error');
             }
-            
-            // Reset file input
             e.target.value = '';
         });
-        
-        // Reset
+
         document.getElementById('branding-reset-btn')?.addEventListener('click', async () => {
-            if (!(await brandingConfirm(_('branding.reset_confirm'), { danger: true }))) return;
-            
+            if (!(await brandingConfirm(_('branding.reset_confirm'), { danger: true, title: _('settings.appearance.reset_title'), confirmLabel: _('settings.appearance.reset_button') }))) return;
             try {
                 await Utils.api('/api/settings/branding/reset', { method: 'POST' });
-                const fresh = await Utils.api('/api/settings/branding');
-                brandingData = fresh.data || fresh;
-                populateBrandingForm(brandingData);
-                _brandingSnapshot = JSON.stringify(collectBrandingData());
-                _brandingDirty = false;
-                setBrandingStatus('saved');
-                refreshBrandingStylesheet(Date.now());
-                Notifications.success(_('branding.reset_success'));
+                await reloadBrandingFromServer();
+                setBrandingStatus('saved', _('branding.reset_success'));
             } catch (error) {
-                Notifications.error(error.message || _('errors.server_error'));
+                setBrandingStatus('error', error.message || _('errors.server_error'));
             }
         });
     }
-    
+
     // ==================== Backup & Restore ======================================
-    
+
+    const RESTORE_OPTIONS = [
+        { id: 'restore-database', field: 'restoreDatabase', label: 'settings.backup_tab.opt_database' },
+        { id: 'restore-uploads', field: 'restoreUploads', label: 'settings.backup_tab.opt_uploads' },
+        { id: 'restore-secrets', field: 'restoreSecrets', label: 'settings.backup_tab.opt_secrets' },
+        { id: 'restore-env', field: 'restoreEnv', label: 'settings.backup_tab.opt_env' },
+        { id: 'restore-godb', field: 'restoreGoDb', label: 'settings.backup_tab.opt_godb' }
+    ];
+
     function initBackupSection() {
         loadBackupStats();
         initScheduledBackupSection();
-        
-        // Download backup
+        initRestoreSection();
+
+        const downloadStatus = document.getElementById('backup-download-status');
         document.getElementById('backup-download-btn')?.addEventListener('click', async () => {
             const btn = document.getElementById('backup-download-btn');
             if (!btn) return;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-icons spinning">sync</span> ' + _('backup.creating');
-            
+            setBusy(btn, true, _('backup.creating'));
+            setStatus(downloadStatus, '');
             try {
                 const fetchHeaders = {};
                 if (window.BetterDesk && window.BetterDesk.csrfToken) {
                     fetchHeaders['X-CSRF-Token'] = window.BetterDesk.csrfToken;
                 }
-                const response = await fetch('/api/settings/backup', {
-                    credentials: 'same-origin',
-                    headers: fetchHeaders
-                });
-                if (!response.ok) throw new Error('Backup failed');
-                
+                const response = await fetch('/api/settings/backup', { credentials: 'same-origin', headers: fetchHeaders });
+                if (!response.ok) {
+                    const body = await response.json().catch(() => null);
+                    throw new Error(body?.error || _('errors.server_error'));
+                }
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                // Prefer the server-provided filename (full backup .tar.gz).
                 let filename = '';
                 const disp = response.headers.get('Content-Disposition') || '';
                 const match = disp.match(/filename="?([^";]+)"?/i);
                 if (match) filename = match[1];
-                if (!filename) {
-                    const date = new Date().toISOString().slice(0, 10);
-                    filename = `betterdesk-backup-${date}.tar.gz`;
-                }
+                if (!filename) filename = `betterdesk-backup-${new Date().toISOString().slice(0, 10)}.tar.gz`;
                 a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
-                
-                Notifications.success(_('backup.download_success'));
+                setStatus(downloadStatus, _('settings.backup_tab.downloaded').replace('{name}', filename), 'ok');
             } catch (error) {
-                Notifications.error(error.message || _('errors.server_error'));
+                setStatus(downloadStatus, error.message || _('errors.server_error'), 'error');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<span class="material-icons">download</span> ' + _('backup.download');
+                setBusy(btn, false);
             }
         });
-        
-        // Restore from file
-        document.getElementById('restore-file-input')?.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
+    }
+
+    /**
+     * Restore: pick the file, tick what to restore (nothing is ticked), then
+     * "Restore…" asks for confirmation and lists exactly what is replaced.
+     */
+    function initRestoreSection() {
+        const fileInput = document.getElementById('restore-file-input');
+        const options = document.getElementById('restore-options');
+        const optionsHint = document.getElementById('restore-options-hint');
+        const jsonNote = document.getElementById('restore-json-note');
+        const startBtn = document.getElementById('restore-start-btn');
+        const status = document.getElementById('restore-status');
+        const resultEl = document.getElementById('restore-result');
+        if (!fileInput || !startBtn) return;
+
+        const fileKind = () => {
+            const file = fileInput.files?.[0];
+            if (!file) return '';
             const name = file.name.toLowerCase();
-            const isArchive = name.endsWith('.gz') || name.endsWith('.tar.gz');
-            const isJson = name.endsWith('.json');
-            if (!isArchive && !isJson) {
-                Notifications.error(_('backup.invalid_format'));
-                e.target.value = '';
-                return;
+            if (name.endsWith('.json')) return 'json';
+            if (name.endsWith('.gz')) return 'archive';
+            return 'invalid';
+        };
+        const selected = () => RESTORE_OPTIONS.filter((o) => document.getElementById(o.id)?.checked);
+
+        const sync = () => {
+            const kind = fileKind();
+            if (options) options.disabled = kind !== 'archive';
+            if (optionsHint) optionsHint.hidden = kind === 'archive';
+            if (jsonNote) jsonNote.hidden = kind !== 'json';
+            startBtn.disabled = !(kind === 'json' || (kind === 'archive' && selected().length > 0));
+            if (kind === 'invalid') setStatus(status, _('backup.invalid_format'), 'error');
+            else setStatus(status, '');
+        };
+
+        fileInput.addEventListener('change', () => {
+            if (resultEl) {
+                resultEl.style.display = 'none';
+                resultEl.innerHTML = '';
             }
-            
-            if (!await settingsConfirmCritical({
-                title: tSettings('confirm.backup_restore_title', 'Restore backup?'),
-                message: tSettings('confirm.backup_restore', _('backup.restore_confirm')),
-                confirmLabel: _('backup.upload'),
-                icon: 'restore',
-                danger: true
-            })) {
-                e.target.value = '';
-                return;
-            }
-            
-            const resultEl = document.getElementById('restore-result');
-            const label = document.getElementById('restore-upload-label');
-            
+            sync();
+        });
+        RESTORE_OPTIONS.forEach((o) => document.getElementById(o.id)?.addEventListener('change', sync));
+        sync();
+
+        startBtn.addEventListener('click', async () => {
+            const file = fileInput.files?.[0];
+            const kind = fileKind();
+            if (!file || (kind !== 'archive' && kind !== 'json')) return;
+            const chosen = kind === 'json'
+                ? [_('backup.opt_settings'), _('settings.tab_branding'), _('backup.opt_folders'), _('backup.opt_groups'), _('backup.opt_addressbooks')]
+                : selected().map((o) => _(o.label));
+            const needsRestart = kind === 'archive' && selected().some((o) => ['restoreSecrets', 'restoreEnv', 'restoreGoDb'].includes(o.field));
+
+            const ok = await confirmRestore(file.name, chosen, needsRestart);
+            if (!ok) return;
+
+            const formData = new FormData();
+            formData.append('backup', file);
+            RESTORE_OPTIONS.forEach((o) => {
+                formData.append(o.field, String(!!document.getElementById(o.id)?.checked));
+            });
+
+            setBusy(startBtn, true, _('settings.backup_tab.restoring'));
+            setStatus(status, '');
             try {
-                // Build FormData with restore options. The server auto-detects the
-                // archive format (gzip magic bytes) vs a legacy JSON snapshot.
-                const formData = new FormData();
-                formData.append('backup', file);
-                // Full disaster-recovery archive options
-                formData.append('restoreDatabase', document.getElementById('restore-database')?.checked ?? true);
-                formData.append('restoreUploads', document.getElementById('restore-uploads')?.checked ?? true);
-                formData.append('restoreSecrets', document.getElementById('restore-secrets')?.checked ?? false);
-                formData.append('restoreEnv', document.getElementById('restore-env')?.checked ?? false);
-                formData.append('restoreGoDb', document.getElementById('restore-godb')?.checked ?? false);
-                
-                if (label) label.classList.add('loading');
-                
                 const headers = {};
-                if (window.BetterDesk && window.BetterDesk.csrfToken) {
-                    headers['X-CSRF-Token'] = window.BetterDesk.csrfToken;
-                }
-                
+                if (window.BetterDesk && window.BetterDesk.csrfToken) headers['X-CSRF-Token'] = window.BetterDesk.csrfToken;
                 const response = await fetch('/api/settings/restore', {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: headers,
+                    headers,
                     body: formData
                 });
-                
-                const result = await response.json();
-                
+                const result = await response.json().catch(() => ({}));
                 if (result.success) {
-                    Notifications.success(_('backup.restore_success'));
-                    showRestoreResult(result.data, resultEl);
-                    if (result.data && result.data.requiresRestart) {
-                        Notifications.warning(_('backup.restart_required'));
-                    }
+                    setStatus(status, _('backup.restore_success'), 'ok');
+                    showRestoreResult(result.data || {}, resultEl);
                 } else {
-                    Notifications.error(result.error || _('errors.server_error'));
+                    setStatus(status, result.error || _('errors.server_error'), 'error');
                 }
             } catch (error) {
-                Notifications.error(error.message || _('errors.server_error'));
+                setStatus(status, error.message || _('errors.server_error'), 'error');
             } finally {
-                e.target.value = '';
-                if (label) label.classList.remove('loading');
+                setBusy(startBtn, false);
+                sync();
             }
+        });
+    }
+
+    function confirmRestore(fileName, items, needsRestart) {
+        return new Promise((resolve) => {
+            let answered = false;
+            const done = (value) => {
+                if (answered) return;
+                answered = true;
+                if (value) Modal.close();
+                resolve(value);
+            };
+            Modal.show({
+                title: _('settings.backup_tab.confirm_title'),
+                content: `
+                    <p>${Utils.escapeHtml(_('settings.backup_tab.confirm_intro').replace('{file}', fileName))}</p>
+                    <ul>${items.map((i) => `<li>${Utils.escapeHtml(i)}</li>`).join('')}</ul>
+                    <p>${Utils.escapeHtml(_('settings.backup_tab.confirm_undo'))}</p>
+                    ${needsRestart ? `<p class="notice warning">${Utils.escapeHtml(_('backup.restart_required'))}</p>` : ''}`,
+                buttons: [
+                    { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => { Modal.close(); done(false); } },
+                    { label: _('settings.backup_tab.confirm_button'), class: 'btn-danger', onClick: () => done(true) }
+                ],
+                closable: true,
+                onClose: () => done(false)
+            });
         });
     }
 
@@ -3238,23 +3045,19 @@
         const destinationPath = document.getElementById('scheduled-backup-path');
         const pathGroup = document.getElementById('scheduled-backup-path-group');
         const statusEl = document.getElementById('scheduled-backup-status');
-        const showStatus = (message, ok = true) => {
-            if (!statusEl) return;
-            statusEl.style.display = 'block';
-            statusEl.innerHTML = `<p class="${ok ? 'restore-ok' : 'restore-warn'}">${Utils.escapeHtml(message)}</p>`;
-        };
+        const showStatus = (message, ok = true) => setStatus(statusEl, message, ok ? 'ok' : 'error');
         const syncPathVisibility = () => {
             if (pathGroup) pathGroup.hidden = destinationType?.value !== 'path';
         };
         destinationType?.addEventListener('change', syncPathVisibility);
         syncPathVisibility();
 
-        const renderStatus = (status) => {
-            if (!status?.lastAttemptAt) return;
-            const label = status.lastError
-                ? `${_('backup.schedule_last_run')}: ${status.lastError}`
-                : `${_('backup.schedule_last_run')}: ${status.lastSuccessAt || status.lastAttemptAt}`;
-            showStatus(label, !status.lastError);
+        const renderStatus = (st) => {
+            if (!st?.lastAttemptAt) return;
+            const label = st.lastError
+                ? `${_('backup.schedule_last_run')}: ${st.lastError}`
+                : `${_('backup.schedule_last_run')}: ${Utils.formatDate ? Utils.formatDate(st.lastSuccessAt || st.lastAttemptAt) : (st.lastSuccessAt || st.lastAttemptAt)}`;
+            setStatus(statusEl, label, st.lastError ? 'error' : '');
         };
 
         try {
@@ -3285,13 +3088,15 @@
                     }
                 });
                 if (destinationType) destinationType.value = saved?.destinationType || destinationType.value;
-                Notifications.success(_('backup.schedule_saved'));
+                formOk(form, _('backup.schedule_saved'));
             } catch (err) {
-                showStatus(err.message || _('errors.server_error'), false);
+                formFail(form, err.message || _('errors.server_error'));
             }
         });
 
-        document.getElementById('scheduled-backup-test-btn')?.addEventListener('click', async () => {
+        document.getElementById('scheduled-backup-test-btn')?.addEventListener('click', async (ev) => {
+            const btn = ev.currentTarget;
+            setBusy(btn, true);
             try {
                 const result = await Utils.api('/api/settings/backup/destination/test', {
                     method: 'POST',
@@ -3303,81 +3108,77 @@
                 showStatus(`${_('backup.schedule_destination_ok')}: ${result?.destination || ''}`);
             } catch (err) {
                 showStatus(err.message || _('errors.server_error'), false);
+            } finally {
+                setBusy(btn, false);
             }
         });
 
-        document.getElementById('scheduled-backup-run-btn')?.addEventListener('click', async () => {
-            const button = document.getElementById('scheduled-backup-run-btn');
-            if (button) button.disabled = true;
+        document.getElementById('scheduled-backup-run-btn')?.addEventListener('click', async (ev) => {
+            const button = ev.currentTarget;
+            setBusy(button, true, _('backup.creating'));
             try {
                 const result = await Utils.api('/api/settings/backup/schedule/run', { method: 'POST' });
                 showStatus(`${_('backup.schedule_run_success')}: ${result?.filename || ''}`);
-                Notifications.success(_('backup.schedule_run_success'));
             } catch (err) {
                 showStatus(err.message || _('errors.server_error'), false);
             } finally {
-                if (button) button.disabled = false;
+                setBusy(button, false);
             }
         });
 
         const smbForm = document.getElementById('scheduled-backup-smb-form');
         const smbStatus = document.getElementById('backup-smb-status');
         const smbField = (name) => document.getElementById('backup-smb-' + name);
-        const showSmbStatus = (message, ok = true) => {
-            if (!smbStatus) return;
-            smbStatus.style.display = 'block';
-            smbStatus.innerHTML = `<p class="${ok ? 'restore-ok' : 'restore-warn'}">${Utils.escapeHtml(message)}</p>`;
-        };
+        const smbIds = { host: 'host', share: 'share', domain: 'domain', username: 'username', password: 'password', mountPath: 'mount-path' };
         const smbPayload = () => ({
             host: smbField('host')?.value || '',
             share: smbField('share')?.value || '',
             domain: smbField('domain')?.value || '',
             username: smbField('username')?.value || '',
             password: smbField('password')?.value || '',
-            mountPath: smbField('mountPath')?.value || ''
+            mountPath: smbField('mount-path')?.value || ''
         });
         try {
             const smb = await Utils.api('/api/settings/backup/smb');
-            for (const key of ['host', 'share', 'domain', 'username', 'password', 'mountPath']) {
-                const field = smbField(key);
+            for (const [key, id] of Object.entries(smbIds)) {
+                const field = smbField(id);
                 if (field) field.value = smb?.[key] || '';
             }
         } catch (err) {
-            showSmbStatus(err.message || _('errors.server_error'), false);
+            setStatus(smbStatus, err.message || _('errors.server_error'), 'error');
         }
         smbForm?.addEventListener('submit', async (event) => {
             event.preventDefault();
             try {
                 await Utils.api('/api/settings/backup/smb', { method: 'PUT', body: smbPayload() });
-                Notifications.success(_('backup.smb_saved'));
+                formOk(smbForm, _('backup.smb_saved'));
             } catch (err) {
-                showSmbStatus(err.message || _('errors.server_error'), false);
+                formFail(smbForm, err.message || _('errors.server_error'));
             }
         });
-        document.getElementById('backup-smb-test-btn')?.addEventListener('click', async () => {
+        document.getElementById('backup-smb-test-btn')?.addEventListener('click', async (ev) => {
+            const btn = ev.currentTarget;
+            setBusy(btn, true);
             try {
-                const result = await Utils.api('/api/settings/backup/smb/test', {
-                    method: 'POST',
-                    body: smbPayload()
-                });
-                showSmbStatus(`${_('backup.smb_test_success')}: ${result?.target || ''}`);
+                const result = await Utils.api('/api/settings/backup/smb/test', { method: 'POST', body: smbPayload() });
+                setStatus(smbStatus, `${_('backup.smb_test_success')}: ${result?.target || ''}`, 'ok');
             } catch (err) {
-                showSmbStatus(err.message || _('errors.server_error'), false);
+                setStatus(smbStatus, err.message || _('errors.server_error'), 'error');
+            } finally {
+                setBusy(btn, false);
             }
         });
     }
-    
+
     async function loadBackupStats() {
         try {
             const data = await Utils.api('/api/settings/backup/stats');
             if (!data) return;
-            
             const setVal = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = val;
             };
             const yn = (b) => b ? _('common.yes') : _('common.no');
-            
             setVal('backup-stat-users', data.users || 0);
             setVal('backup-stat-settings', data.settings || 0);
             setVal('backup-stat-folders', data.folders || 0);
@@ -3389,30 +3190,29 @@
             setVal('backup-stat-keys', yn(comp.goPrivKey || comp.goApiKey));
             setVal('backup-stat-env', yn(comp.env));
             setVal('backup-stat-uploads', comp.uploads || 0);
-        } catch { /* silent */ }
+        } catch (err) {
+            const dd = document.getElementById('backup-stat-users');
+            if (dd) dd.textContent = err.message || _('errors.server_error');
+        }
     }
-    
+
     function showRestoreResult(data, el) {
         if (!el) return;
         el.style.display = 'block';
-        
-        let html = '<div class="restore-result-inner">';
-        if (data.restored.length) {
-            html += `<p class="restore-ok"><span class="material-icons">check_circle</span> ${_('backup.restored')}: <strong>${Utils.escapeHtml(data.restored.join(', '))}</strong></p>`;
+        const rows = [];
+        if (data.restored?.length) rows.push(`<dt>${_('backup.restored')}</dt><dd>${Utils.escapeHtml(data.restored.join(', '))}</dd>`);
+        if (data.skipped?.length) rows.push(`<dt>${_('backup.skipped')}</dt><dd>${Utils.escapeHtml(data.skipped.join(', '))}</dd>`);
+        if (data.backupDate) rows.push(`<dt>${_('backup.backup_date')}</dt><dd>${Utils.escapeHtml(data.backupDate)}</dd>`);
+        let html = rows.length ? `<dl class="facts">${rows.join('')}</dl>` : '';
+        if (data.warnings?.length) {
+            html += `<p class="notice warning">${data.warnings.map(w => Utils.escapeHtml(w)).join('<br>')}</p>`;
         }
-        if (data.skipped.length) {
-            html += `<p class="restore-skip"><span class="material-icons">skip_next</span> ${_('backup.skipped')}: ${Utils.escapeHtml(data.skipped.join(', '))}</p>`;
+        if (data.requiresRestart) {
+            html += `<p class="notice warning">${Utils.escapeHtml(_('backup.restart_required'))}</p>`;
         }
-        if (data.warnings && data.warnings.length) {
-            html += `<p class="restore-warn"><span class="material-icons">warning</span> ${data.warnings.map(w => Utils.escapeHtml(w)).join('<br>')}</p>`;
-        }
-        if (data.backupDate) {
-            html += `<p class="restore-meta">${_('backup.backup_date')}: ${Utils.escapeHtml(data.backupDate)}</p>`;
-        }
-        html += '</div>';
         el.innerHTML = html;
     }
-    
+
     // ==================== Self-Update ====================
     
     let _updateState = { remoteSHA: null, changedData: null };
@@ -3421,41 +3221,9 @@
     let _updatePreflight = { ready: null, issues: [], warnings: [] };
 
     function renderUpdateHeroStatus(state, opts = {}) {
-        const icon = document.getElementById('update-hero-icon');
-        const badge = document.getElementById('update-hero-badge');
         const headline = document.getElementById('update-status-headline');
         const desc = document.getElementById('update-status-desc');
-        if (!icon || !headline) return;
-
-        const iconStateByStatus = {
-            idle: 'idle',
-            checking: 'checking',
-            uptodate: 'success',
-            available: 'warning',
-            baseline: 'success',
-            error: 'error'
-        };
-        icon.dataset.state = iconStateByStatus[state] || 'idle';
-
-        const badgeByStatus = {
-            uptodate: { variant: 'success', icon: 'check' },
-            available: { variant: 'warning', icon: 'priority_high' },
-            baseline: { variant: 'success', icon: 'check' },
-            error: { variant: 'error', icon: 'error_outline' }
-        };
-        const badgeCfg = badgeByStatus[state];
-        if (badge) {
-            if (badgeCfg) {
-                badge.hidden = false;
-                badge.className = 'win11-updates-hero-badge win11-updates-hero-badge--' + badgeCfg.variant;
-                const badgeIcon = badge.querySelector('.material-icons');
-                if (badgeIcon) badgeIcon.textContent = badgeCfg.icon;
-            } else {
-                badge.hidden = true;
-                badge.className = 'win11-updates-hero-badge';
-            }
-        }
-
+        if (!headline) return;
         const messages = {
             idle:      { h: _('updates.title'), d: _('updates.desc') },
             checking:  { h: _('updates.checking'), d: _('updates.desc') },
@@ -3468,7 +3236,7 @@
         headline.textContent = msg.h;
         if (desc) desc.textContent = msg.d;
     }
-    
+
     function initUpdateSection() {
         const checkBtn = document.getElementById('update-check-btn');
         const installBtn = document.getElementById('update-install-btn');
@@ -3496,7 +3264,6 @@
         const badge = document.getElementById('update-channel-active-badge');
         if (!badge || !data?.channel) return;
         const isDev = data.channel === 'development';
-        badge.className = `badge badge-sm ${isDev ? 'badge-warning' : 'badge-success'}`;
         badge.textContent = isDev ? _('updates.channel_development') : _('updates.channel_stable');
     }
 
@@ -3513,10 +3280,10 @@
             if (branchEl) {
                 branchEl.textContent = data?.branch
                     ? `${data.branch} · ${data.owner || 'UNITRONIX'}/${data.repo || 'BetterDesk'}`
-                    : '—';
+                    : '-';
             }
         } catch (_e) {
-            if (branchEl) branchEl.textContent = '—';
+            if (branchEl) branchEl.textContent = '-';
         }
     }
 
@@ -3570,7 +3337,7 @@
                 const detailsSection = document.getElementById('update-details-section');
                 if (detailsSection) detailsSection.style.display = 'none';
                 const remoteEl = document.getElementById('update-remote-version');
-                if (remoteEl) remoteEl.textContent = '—';
+                if (remoteEl) remoteEl.textContent = '-';
                 const statusRow = document.getElementById('update-status-row');
                 if (statusRow) statusRow.style.display = 'none';
             }
@@ -3597,22 +3364,16 @@
             if (!banner) {
                 banner = document.createElement('div');
                 banner.id = 'update-last-result-banner';
-                banner.className = 'update-stale-warning';
-                banner.style.marginTop = '12px';
+                banner.className = 'notice error update-last-result';
                 host.appendChild(banner);
             }
             const lines = [];
-            lines.push(`<strong>${Utils.escapeHtml(_('updates.complete_with_errors'))}</strong>`);
-            lines.push(`<div style="font-size:12px;margin-top:6px;">SHA: ${Utils.escapeHtml(String(record.sha || '').slice(0, 7))} · ${Utils.escapeHtml(record.savedAt || '')}</div>`);
-            for (const f of (record.failed || [])) {
-                lines.push(`<div style="font-size:12px;color:var(--danger,#e34935);">${Utils.escapeHtml(f.file)}: ${Utils.escapeHtml(f.error || '')}</div>`);
-            }
-            for (const s of (record.servicesFailed || [])) {
-                lines.push(`<div style="font-size:12px;color:var(--danger,#e34935);">${Utils.escapeHtml(s.service)}: ${Utils.escapeHtml(s.error || '')}</div>`);
-            }
-            if (record.consoleRestartBlocked) {
-                lines.push(`<div style="font-size:12px;color:var(--danger,#e34935);">${Utils.escapeHtml(record.consoleRestartBlocked)}</div>`);
-            }
+            lines.push(`<p><strong>${Utils.escapeHtml(_('updates.complete_with_errors'))}</strong> <span class="mono">${Utils.escapeHtml(String(record.sha || '').slice(0, 7))}</span>, ${Utils.escapeHtml(record.savedAt || '')}</p>`);
+            const items = [];
+            for (const fl of (record.failed || [])) items.push(`${Utils.escapeHtml(fl.file)}: ${Utils.escapeHtml(fl.error || '')}`);
+            for (const sv of (record.servicesFailed || [])) items.push(`${Utils.escapeHtml(sv.service)}: ${Utils.escapeHtml(sv.error || '')}`);
+            if (record.consoleRestartBlocked) items.push(Utils.escapeHtml(record.consoleRestartBlocked));
+            if (items.length) lines.push(`<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`);
             banner.innerHTML = lines.join('');
         } catch (_) {
             /* optional panel */
@@ -3647,9 +3408,7 @@
     async function rebuildServerBinary() {
         const btn = document.getElementById('update-rebuild-server-btn');
         if (!btn) return;
-        const original = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = `<span class="material-icons spinning">sync</span> ${_('updates.rebuilding_server')}`;
+        setBusy(btn, true, _('updates.rebuilding_server'));
         try {
             const result = await Utils.api('/api/settings/updates/server-binary/rebuild', { method: 'POST' });
             if (result && result.success) {
@@ -3661,8 +3420,7 @@
         } catch (error) {
             Notifications.error(error.message || _('updates.rebuild_server_failed'));
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = original;
+            setBusy(btn, false);
         }
     }
     
@@ -3743,14 +3501,12 @@
         }
 
         const blocked = !pf.ready && issues.length > 0;
-        banner.className = blocked
-            ? 'update-stale-warning win11-updates-alert update-preflight-blocked'
-            : 'win11-updates-alert update-preflight-info';
+        banner.className = blocked ? 'notice error update-preflight' : 'notice update-preflight';
 
         const parts = [];
         if (blocked) {
             parts.push(`<strong>${Utils.escapeHtml(updateI18n('updates.preflight_blocked_title', 'Update install blocked'))}</strong>`);
-            parts.push(`<ul style="margin:8px 0 0 0;padding-left:18px;font-size:12px;">${
+            parts.push(`<ul>${
                 issues.map((item) => `<li>${Utils.escapeHtml(item)}</li>`).join('')
             }</ul>`);
         }
@@ -3758,14 +3514,14 @@
             const title = blocked
                 ? updateI18n('updates.preflight_warnings_title', 'Before installing')
                 : updateI18n('updates.preflight_info_title', 'Before installing');
-            parts.push(`<div style="margin-top:${blocked ? '8px' : '0'};font-size:12px;">`);
+            parts.push('<div>');
             parts.push(`<strong>${Utils.escapeHtml(title)}</strong>`);
             if (!blocked) {
-                parts.push(`<p style="margin:6px 0 0;font-size:12px;color:var(--text-secondary);">${Utils.escapeHtml(
+                parts.push(`<p class="form-hint">${Utils.escapeHtml(
                     updateI18n('updates.preflight_info_note', 'You can install the update — these notices are informational.')
                 )}</p>`);
             }
-            parts.push(`<ul style="margin:4px 0 0;padding-left:18px;">${
+            parts.push(`<ul>${
                 allWarnings.map((item) => `<li>${Utils.escapeHtml(formatPreflightWarning(item))}</li>`).join('')
             }</ul></div>`);
         }
@@ -3855,9 +3611,8 @@
         const installBtn = document.getElementById('update-install-btn');
         
         if (!btn) return;
-        btn.disabled = true;
+        setBusy(btn, true, _('updates.checking'));
         renderUpdateHeroStatus('checking');
-        btn.innerHTML = `<span class="material-icons spinning">sync</span> ${_('updates.checking')}`;
         
         try {
             const data = await Utils.api('/api/settings/updates/check');
@@ -3865,21 +3620,21 @@
             
             // Show commit SHA + message
             if (remoteEl) {
-                const sha = data.remoteSHA ? data.remoteSHA.slice(0, 7) : '—';
+                const sha = data.remoteSHA ? data.remoteSHA.slice(0, 7) : '-';
                 remoteEl.textContent = sha;
                 if (data.latestMessage) remoteEl.title = data.latestMessage;
             }
             if (statusRow) statusRow.style.display = '';
             
             if (data.baselineEstablished) {
-                if (statusBadge) statusBadge.innerHTML = `<span class="badge badge-info">${_('updates.baseline_set')}</span>`;
+                if (statusBadge) statusBadge.innerHTML = `<span class="status ok">${_('updates.baseline_set')}</span>`;
                 renderUpdateHeroStatus('baseline');
                 if (detailsSection) detailsSection.style.display = 'none';
                 if (installBtn) installBtn.disabled = true;
             } else if (data.updateAvailable) {
                 const behind = data.commitsBehind > 0 ? ` (${data.commitsBehind} ${_('updates.commits_behind')})` : '';
                 const badgeLabel = dockerMode ? _('updates.docker_update_available') : _('updates.update_available');
-                if (statusBadge) statusBadge.innerHTML = `<span class="badge badge-warning">${badgeLabel}${behind}</span>`;
+                if (statusBadge) statusBadge.innerHTML = `<span class="status warning">${badgeLabel}${behind}</span>`;
                 const detail = data.latestMessage
                     ? `${data.latestMessage}${behind}`
                     : `${badgeLabel}${behind}`.trim();
@@ -3894,7 +3649,7 @@
                     renderUpdateDetails(data, changes, dockerMode);
                 } catch (_e) {
                     const cl = document.getElementById('update-changelog');
-                    if (cl) cl.innerHTML = `<p class="text-muted">${_('updates.changes_unavailable')}</p>`;
+                    if (cl) cl.innerHTML = `<p class="state">${_('updates.changes_unavailable')}</p>`;
                 }
 
                 if (detailsSection) detailsSection.style.display = '';
@@ -3902,7 +3657,7 @@
             } else {
                 if (statusBadge) {
                     const label = data.dockerShaUnknown ? _('updates.docker_sha_unknown') : _('updates.up_to_date');
-                    statusBadge.innerHTML = `<span class="badge badge-success">${label}</span>`;
+                    statusBadge.innerHTML = `<span class="status ok">${label}</span>`;
                 }
                 const detail = data.latestMessage || (data.remoteSHA ? `SHA ${data.remoteSHA.slice(0, 7)}` : '');
                 renderUpdateHeroStatus('uptodate', { detail: detail || _('updates.desc') });
@@ -3913,86 +3668,60 @@
             renderUpdateHeroStatus('error', { detail: error.message || _('errors.server_error') });
             Notifications.error(error.message || _('errors.server_error'));
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<span class="material-icons">refresh</span> ${_('updates.check_now')}`;
+            setBusy(btn, false);
         }
     }
     
     function renderUpdateDetails(checkData, changesData, dockerMode = false) {
         const changelogEl = document.getElementById('update-changelog');
         const summaryEl = document.getElementById('update-files-summary');
-        
-        // ---- Recent commits ----
+
         if (changelogEl) {
             const commits = changesData.commits || [];
             if (commits.length > 0) {
-                let html = '<div class="update-commits">';
-                for (const c of commits.slice(0, 20)) {
+                changelogEl.innerHTML = '<ul class="list update-commits">' + commits.slice(0, 20).map((c) => {
                     const d = c.date ? new Date(c.date).toLocaleDateString() : '';
-                    html += `<div class="update-commit-item">
-                        <code class="update-commit-sha">${Utils.escapeHtml(c.sha || '')}</code>
-                        <span class="update-commit-msg">${Utils.escapeHtml(c.message || '')}</span>
-                        <span class="update-commit-meta">${Utils.escapeHtml(c.author || '')} · ${d}</span>
-                    </div>`;
-                }
-                html += '</div>';
-                changelogEl.innerHTML = html;
+                    return `<li class="list-row update-commit-item"><span class="row-main">
+                        <span class="row-title update-commit-msg">${Utils.escapeHtml(c.message || '')}</span>
+                        <span class="row-sub"><span class="mono">${Utils.escapeHtml(c.sha || '')}</span>, ${Utils.escapeHtml(c.author || '')}, ${d}</span>
+                    </span></li>`;
+                }).join('') + '</ul>';
             } else {
-                changelogEl.innerHTML = `<p class="text-muted">${_('updates.no_changelog')}</p>`;
+                changelogEl.innerHTML = `<p class="state">${_('updates.no_changelog')}</p>`;
             }
         }
-        
-        // ---- Component breakdown ----
+
         if (summaryEl) {
             const grouped = changesData.grouped || {};
             const meta = {
-                console: { icon: 'web',       label: _('updates.component_console'),  auto: true },
-                server:  { icon: 'dns',       label: _('updates.component_server'),   auto: true },
-                agent:   { icon: 'smart_toy', label: _('updates.component_agent'),    auto: false },
-                scripts: { icon: 'terminal',  label: _('updates.component_scripts'),  auto: true },
-                other:   { icon: 'folder',    label: _('updates.component_other'),    auto: false }
+                console: { label: _('updates.component_console'), auto: true },
+                server:  { label: _('updates.component_server'), auto: true },
+                agent:   { label: _('updates.component_agent'), auto: false },
+                scripts: { label: _('updates.component_scripts'), auto: true },
+                other:   { label: _('updates.component_other'), auto: false }
             };
-            
-            let html = '<div class="update-components">';
-            for (const [comp, files] of Object.entries(grouped)) {
-                if (!files || files.length === 0) continue;
-                const m = meta[comp] || meta.other;
-                const badge = m.auto
-                    ? `<span class="badge badge-success badge-sm">${_('updates.auto')}</span>`
-                    : `<span class="badge badge-warning badge-sm">${_('updates.manual')}</span>`;
-                html += `<div class="update-component-row">
-                    <span class="material-icons">${m.icon}</span>
-                    <span class="update-component-label">${m.label}</span>
-                    <span class="update-component-count">${files.length} ${_('updates.files')}</span>
-                    ${badge}
-                </div>`;
-            }
-            html += '</div>';
-            html += `<p class="text-muted" style="margin-top:8px;font-size:12px;">${_('updates.total_files')}: <strong>${changesData.totalFiles || 0}</strong></p>`;
-            
+            const rows = Object.entries(grouped)
+                .filter(([, files]) => files && files.length)
+                .map(([comp, files]) => {
+                    const m = meta[comp] || meta.other;
+                    return `<tr><td>${m.label}</td><td class="num">${files.length}</td><td>${m.auto ? _('updates.auto') : _('updates.manual')}</td></tr>`;
+                }).join('');
+            let html = `<div class="table-scroll"><table class="data-table update-components"><thead><tr>
+                <th>${_('settings.updates_tab.component')}</th><th>${_('settings.updates_tab.files')}</th><th>${_('settings.updates_tab.how')}</th>
+                </tr></thead><tbody>${rows}</tbody></table></div>`;
+            html += `<p class="count-line">${_('updates.total_files')}: <strong>${changesData.totalFiles || 0}</strong></p>`;
             if (grouped.server?.length > 0) {
-                html += `<div class="update-server-section" style="margin-top:12px;padding:12px;border:1px solid var(--border-color, #333);border-radius:8px;">
-                    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
-                        <span class="material-icons" style="font-size:20px;color:var(--primary);">auto_mode</span>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-weight:600;color:var(--text-primary);">${_('updates.include_server')}</div>
-                            <div class="text-muted" style="font-size:12px;margin-top:2px;">${_('updates.auto_strategy_hint')}</div>
-                        </div>
-                        <span id="update-server-status" class="badge badge-warning badge-sm">${_('updates.checking_go')}</span>
-                    </div>
-                    <div id="update-server-info" class="text-muted" style="font-size:11px;"></div>
+                html += `<div class="update-server-section">
+                    <p><strong>${_('updates.include_server')}</strong> <span id="update-server-status" class="status pending">${_('updates.checking_go')}</span></p>
+                    <p class="form-hint">${_('updates.auto_strategy_hint')}</p>
+                    <p class="form-hint" id="update-server-info"></p>
                 </div>`;
             }
-            
             summaryEl.innerHTML = html;
-            
-            // Check Go availability when server section is shown
-            if (grouped.server?.length > 0 && !dockerMode) {
-                checkServerBuildInfo();
-            }
+            if (grouped.server?.length > 0 && !dockerMode) checkServerBuildInfo();
         }
     }
-    
+
     async function checkServerBuildInfo() {
         const statusEl = document.getElementById('update-server-status');
         const infoEl = document.getElementById('update-server-info');
@@ -4007,13 +3736,13 @@
 
             // Status badge
             if (hasGo) {
-                statusEl.className = 'badge badge-success badge-sm';
+                statusEl.className = 'status ok';
                 statusEl.textContent = info.goVersion ? info.goVersion.replace('go version ', '') : 'Go';
             } else if (goNeedsUpgrade || canInstallGo) {
-                statusEl.className = 'badge badge-info badge-sm';
+                statusEl.className = 'status pending';
                 statusEl.textContent = vendoredReady ? _('updates.toolchain_ready') : _('updates.auto_available');
             } else {
-                statusEl.className = 'badge badge-warning badge-sm';
+                statusEl.className = 'status warning';
                 statusEl.textContent = _('updates.no_method');
             }
 
@@ -4028,7 +3757,7 @@
                 infoEl.textContent = parts.join(' · ');
             }
         } catch (_e) {
-            statusEl.className = 'badge badge-warning badge-sm';
+            statusEl.className = 'status warning';
             statusEl.textContent = _('updates.go_check_failed');
         }
     }
@@ -4103,7 +3832,6 @@
         footer.classList.add('update-wizard-footer-enter');
         footer.innerHTML = buttons.map((btn, idx) => `
             <button type="button" class="btn ${btn.class || 'btn-secondary'}" data-btn-index="${idx}">
-                ${btn.icon ? `<span class="material-icons">${btn.icon}</span>` : ''}
                 ${Utils.escapeHtml(btn.label)}
             </button>
         `).join('');
@@ -4124,7 +3852,6 @@
             .replace('{total}', String(UPDATE_PHASES.length));
         const items = UPDATE_PHASES.map(p => `
             <div class="update-phase is-pending" data-phase="${p.id}">
-                <span class="update-phase-icon material-icons">${p.icon}</span>
                 <span class="update-phase-label">${_(p.key)}</span>
                 <span class="update-phase-state" data-phase-state="${p.id}">
                     <span class="material-icons">radio_button_unchecked</span>
@@ -4148,11 +3875,8 @@
                     <div class="update-wizard-log-toolbar">
                         <span class="update-wizard-log-title">${Utils.escapeHtml(_('updates.log_title'))}</span>
                         <div class="update-wizard-log-actions">
-                            <button type="button" class="btn btn-ghost btn-sm" id="update-log-expand">${Utils.escapeHtml(_('updates.log_expand'))}</button>
-                            <button type="button" class="btn btn-ghost btn-sm" id="update-log-copy">
-                                <span class="material-icons">content_copy</span>
-                                ${Utils.escapeHtml(_('updates.log_copy'))}
-                            </button>
+                            <button type="button" class="btn btn-sm" id="update-log-expand">${Utils.escapeHtml(_('updates.log_expand'))}</button>
+                            <button type="button" class="btn btn-sm" id="update-log-copy">${Utils.escapeHtml(_('updates.log_copy'))}</button>
                         </div>
                     </div>
                     <pre class="update-progress-log" id="update-modal-log" aria-live="polite"></pre>
@@ -4337,7 +4061,7 @@
         if (deployFailed) {
             const errMsg = result.serverDeploy.error || '';
             lines.push(`<p class="update-wizard-error-list"><strong>${Utils.escapeHtml(_('updates.server_deploy_failed'))}</strong></p>`);
-            if (errMsg) lines.push(`<pre style="font-size:11px;white-space:pre-wrap;margin:4px 0 0;">${Utils.escapeHtml(errMsg)}</pre>`);
+            if (errMsg) lines.push(`<pre class="code-block">${Utils.escapeHtml(errMsg)}</pre>`);
         } else if (result?.serverBuild?.success) {
             lines.push(`<p>${Utils.escapeHtml(_('updates.server_built'))}</p>`);
         }
@@ -4853,7 +4577,12 @@
             Notifications.error(_('updates.retention_required_for_prune'));
             return;
         }
-        if (!confirm(_('updates.prune_confirm').replace('{n}', String(count)))) return;
+        if (!(await settingsConfirmCritical({
+            title: _('settings.updates_tab.prune_now'),
+            message: _('updates.prune_confirm').replace('{n}', String(count)),
+            confirmLabel: _('settings.updates_tab.prune_now'),
+            danger: true
+        }))) return;
         try {
             const data = await Utils.api('/api/settings/updates/backups/prune', {
                 method: 'POST',
@@ -4868,7 +4597,12 @@
     }
 
     async function deleteBackup(name, btn) {
-        if (!confirm(_('updates.delete_confirm').replace('{name}', name))) return;
+        if (!(await settingsConfirmCritical({
+            title: _('updates.delete'),
+            message: _('updates.delete_confirm').replace('{name}', name),
+            confirmLabel: _('updates.delete'),
+            danger: true
+        }))) return;
         if (btn) btn.disabled = true;
         try {
             await Utils.api(`/api/settings/updates/backups/${encodeURIComponent(name)}`, {
@@ -4886,57 +4620,48 @@
         const listEl = document.getElementById('update-backups-list');
         if (!listEl) return;
         const summaryEl = document.getElementById('backup-summary');
-        
         try {
             const data = await Utils.api('/api/settings/updates/backups');
             const backups = Array.isArray(data) ? data : (data.backups || []);
-            
             if (!backups.length) {
-                listEl.innerHTML = `<p class="text-muted">${_('updates.no_backups')}</p>`;
+                listEl.innerHTML = `<p class="state">${_('updates.no_backups')}</p>`;
                 if (summaryEl) summaryEl.textContent = '';
                 return;
             }
-
             const totalBytes = backups.reduce((acc, b) => acc + (b.sizeBytes || 0), 0);
             if (summaryEl) {
-                summaryEl.textContent = `${_('updates.total_size')}: ${formatBytes(totalBytes)} · ${backups.length} ${_('updates.backups_count')}`;
+                summaryEl.innerHTML = _('settings.updates_tab.backups_summary')
+                    .replace('{count}', `<strong>${backups.length}</strong>`)
+                    .replace('{size}', Utils.escapeHtml(formatBytes(totalBytes)));
             }
-            
-            let html = '<div class="update-backups">';
-            for (const b of backups) {
+            listEl.innerHTML = '<ul class="list update-backups">' + backups.map((b) => {
                 const date = b.timestamp ? new Date(b.timestamp).toLocaleString() : '';
-                const sha = b.sha ? ` · ${Utils.escapeHtml(b.sha)}` : '';
+                const sha = b.sha ? `, <span class="mono">${Utils.escapeHtml(b.sha)}</span>` : '';
                 const size = formatBytes(b.sizeBytes || 0);
-                html += `<div class="update-backup-item">
-                    <div class="update-backup-info">
-                        <strong>${Utils.escapeHtml(b.name)}</strong>
-                        <span class="text-muted">${date}${sha} · ${b.fileCount || b.filesBackedUp || 0} ${_('updates.files')} · ${size}</span>
-                    </div>
-                    <div class="update-backup-actions">
-                        <button class="btn btn-sm btn-outline" data-backup-restore="${Utils.escapeHtml(b.name)}">
-                            <span class="material-icons">restore</span> ${_('updates.restore')}
-                        </button>
-                        <button class="btn btn-sm btn-danger" data-backup-delete="${Utils.escapeHtml(b.name)}">
-                            <span class="material-icons">delete</span> ${_('updates.delete')}
-                        </button>
-                    </div>
-                </div>`;
-            }
-            html += '</div>';
-            listEl.innerHTML = html;
-            
-            // Attach restore handlers
+                return `<li class="list-row update-backup-item">
+                    <span class="row-main">
+                        <span class="row-title mono">${Utils.escapeHtml(b.name)}</span>
+                        <span class="row-sub">${date}${sha}, ${b.fileCount || b.filesBackedUp || 0} ${_('updates.files')}, ${size}</span>
+                    </span>
+                    <span class="row-end">
+                        <button type="button" class="btn btn-sm" data-backup-restore="${Utils.escapeHtml(b.name)}">${_('settings.updates_tab.restore_files')}</button>
+                        <button type="button" class="btn btn-sm btn-danger-quiet" data-backup-delete="${Utils.escapeHtml(b.name)}">${_('updates.delete')}</button>
+                    </span>
+                </li>`;
+            }).join('') + '</ul>';
+
             listEl.querySelectorAll('[data-backup-restore]').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const name = btn.dataset.backupRestore;
-                    if (!confirm(_('updates.restore_confirm'))) return;
-                    
+                    if (!(await settingsConfirmCritical({
+                        title: _('settings.updates_tab.restore_files'),
+                        message: _('updates.restore_confirm'),
+                        confirmLabel: _('settings.updates_tab.restore_files'),
+                        danger: true
+                    }))) return;
                     btn.disabled = true;
                     try {
-                        await Utils.api('/api/settings/updates/restore', {
-                            method: 'POST',
-                            body: { backupName: name }
-                        });
+                        await Utils.api('/api/settings/updates/restore', { method: 'POST', body: { backupName: name } });
                         Notifications.success(_('updates.restore_success'));
                         setTimeout(() => window.location.reload(), 2000);
                     } catch (error) {
@@ -4945,13 +4670,13 @@
                     }
                 });
             });
-
-            // Attach delete handlers
             listEl.querySelectorAll('[data-backup-delete]').forEach(btn => {
                 btn.addEventListener('click', () => deleteBackup(btn.dataset.backupDelete, btn));
             });
-        } catch {
-            listEl.innerHTML = `<p class="text-muted">${_('updates.no_backups')}</p>`;
+        } catch (err) {
+            listEl.innerHTML = `<p class="state is-error">${Utils.escapeHtml(err.message || _('errors.server_error'))}
+                <button type="button" class="btn btn-sm" id="update-backups-retry">${_('actions.retry')}</button></p>`;
+            document.getElementById('update-backups-retry')?.addEventListener('click', loadUpdateBackups);
             if (summaryEl) summaryEl.textContent = '';
         }
     }
@@ -4973,111 +4698,56 @@
      * Initialize LDAP settings section
      */
     async function initEnrollmentSection() {
-        const section = document.getElementById('enrollment-settings-section');
-        if (!section) return;
-
-        const modeRadios = document.querySelectorAll('input[name="settings_enrollment_mode"]');
-        const requireCb = document.getElementById('enrollment-require-approval');
+        const form = document.getElementById('enrollment-settings-section');
+        if (!form) return;
+        const modeRadios = form.querySelectorAll('input[name="settings_enrollment_mode"]');
         const richCb = document.getElementById('enrollment-rich-approve');
         const tagPickerCb = document.getElementById('enrollment-tag-picker');
         const pendingHint = document.getElementById('enrollment-pending-hint');
-
-        let saveTimer = null;
-
         let enrollmentMode = 'open';
 
         async function loadEnrollmentSettings() {
             try {
                 const res = await Utils.api('/api/settings/enrollment');
                 const data = res.data || res;
-                const mode = data.mode || 'open';
-                enrollmentMode = mode;
-                modeRadios.forEach(r => { r.checked = r.value === mode; });
-                if (requireCb) requireCb.checked = mode === 'managed';
+                enrollmentMode = data.mode || 'open';
+                modeRadios.forEach(r => { r.checked = r.value === enrollmentMode; });
                 if (richCb) richCb.checked = data.rich_approve !== false;
                 if (tagPickerCb) tagPickerCb.checked = data.tag_picker !== false;
-                if (pendingHint && data.pending_count > 0) {
-                    const msg = (window.BetterDesk?.translations?.settings?.enrollment_pending_count
-                        || '{count} pending enrollment request(s)')
-                        .replace('{count}', String(data.pending_count));
-                    pendingHint.textContent = msg;
-                } else if (pendingHint) {
-                    pendingHint.textContent = '';
+                if (pendingHint) {
+                    pendingHint.textContent = data.pending_count > 0
+                        ? _('settings.enrollment_pending_count').replace('{count}', String(data.pending_count))
+                        : '';
                 }
             } catch (err) {
-                console.error('Load enrollment settings:', err);
+                formFail(form, err.message || _('errors.server_error'));
             }
         }
 
-        function scheduleSave(patch) {
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(async () => {
-                try {
-                    await Utils.api('/api/settings/enrollment', {
-                        method: 'PUT',
-                        body: patch,
-                    });
-                    Notifications?.success?.(window.BetterDesk?.translations?.common?.saved || 'Saved');
-                    await loadEnrollmentSettings();
-                } catch (err) {
-                    Notifications?.error?.(err.message || 'Save failed');
-                }
-            }, 400);
-        }
-
-        modeRadios.forEach(radio => {
-            radio.addEventListener('change', async () => {
-                if (!radio.checked) return;
-                const previous = enrollmentMode;
-                const next = radio.value;
-                if (next === previous) return;
-
-                const modeLabel = (window.BetterDesk?.translations?.tokens?.['mode_' + next]
-                    || next);
-                const ok = await applyWithConfirm({
-                    previousValue: previous,
-                    newValue: next,
-                    setUiValue: (val) => {
-                        modeRadios.forEach(r => { r.checked = r.value === val; });
-                        if (requireCb) requireCb.checked = val === 'managed';
-                    },
-                    confirmOptions: {
-                        title: tSettings('confirm.enrollment_mode_title', 'Change enrollment mode?'),
-                        message: tSettings('confirm.enrollment_mode', 'Switch enrollment to “{mode}”? This affects how new RustDesk clients can register.')
-                            .replace('{mode}', modeLabel),
-                        confirmLabel: _('actions.save'),
-                        icon: 'how_to_reg'
-                    },
-                    save: async (mode) => {
-                        if (requireCb) requireCb.checked = mode === 'managed';
-                        await Utils.api('/api/settings/enrollment', {
-                            method: 'PUT',
-                            body: { mode },
-                        });
-                        enrollmentMode = mode;
-                        Notifications?.success?.(window.BetterDesk?.translations?.common?.saved || 'Saved');
-                        await loadEnrollmentSettings();
-                    }
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mode = form.querySelector('input[name="settings_enrollment_mode"]:checked')?.value || enrollmentMode;
+            if (mode !== enrollmentMode) {
+                const modeLabel = _('tokens.mode_' + mode);
+                const ok = await settingsConfirmCritical({
+                    title: tSettings('confirm.enrollment_mode_title', 'Change enrollment mode?'),
+                    message: tSettings('confirm.enrollment_mode', 'Switch enrollment to “{mode}”? This affects how new RustDesk clients can register.')
+                        .replace('{mode}', modeLabel),
+                    confirmLabel: _('settings.signin.enrollment_save')
                 });
-                if (!ok && requireCb) requireCb.checked = previous === 'managed';
-            });
+                if (!ok) return;
+            }
+            try {
+                await Utils.api('/api/settings/enrollment', {
+                    method: 'PUT',
+                    body: { mode, rich_approve: !!richCb?.checked, tag_picker: !!tagPickerCb?.checked }
+                });
+                await loadEnrollmentSettings();
+                formOk(form);
+            } catch (err) {
+                formFail(form, err.message || _('errors.server_error'));
+            }
         });
-
-        if (requireCb) {
-            requireCb.addEventListener('change', () => {
-                scheduleSave({ require_approval: requireCb.checked });
-            });
-        }
-        if (richCb) {
-            richCb.addEventListener('change', () => {
-                scheduleSave({ rich_approve: richCb.checked });
-            });
-        }
-        if (tagPickerCb) {
-            tagPickerCb.addEventListener('change', () => {
-                scheduleSave({ tag_picker: tagPickerCb.checked });
-            });
-        }
 
         await loadEnrollmentSettings();
     }
@@ -5098,7 +4768,7 @@
                 if (slidingCb) slidingCb.checked = data.sliding !== false;
                 if (maxDaysInput) maxDaysInput.value = String(data.max_days ?? 30);
             } catch (err) {
-                console.error('Load client session settings:', err);
+                formFail(form, err.message || _('errors.server_error'));
             }
         }
 
@@ -5115,10 +4785,10 @@
                         max_days: maxDays,
                     },
                 });
-                Notifications?.success?.(window.BetterDesk?.translations?.common?.saved || 'Saved');
                 await loadClientSessionsSettings();
+                formOk(form);
             } catch (err) {
-                Notifications?.error?.(err.message || 'Save failed');
+                formFail(form, err.message || _('errors.server_error'));
             }
         });
 
@@ -5301,16 +4971,14 @@
      * Save LDAP configuration
      */
     async function saveLdapConfig() {
+        const form = document.getElementById('ldap-form');
         try {
             const data = collectLdapData();
-            await Utils.api('/api/settings/ldap', {
-                method: 'PUT',
-                body: data
-            });
-            Notifications.success(_('settings.ldap_saved'));
+            await Utils.api('/api/settings/ldap', { method: 'PUT', body: data });
             _ldapWasEnabled = data.enabled;
+            formOk(form, _('settings.ldap_saved'));
         } catch (error) {
-            Notifications.error(error.message || _('errors.server_error'));
+            formFail(form, error.message || _('errors.server_error'));
         }
     }
 
@@ -5321,38 +4989,16 @@
         const btn = document.getElementById('ldap-test-btn');
         const resultEl = document.getElementById('ldap-test-result');
         if (!btn) return;
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons spin">sync</span> ' + _('settings.ldap_testing');
-
-        if (resultEl) {
-            resultEl.innerHTML = '';
-            resultEl.style.display = 'none';
-        }
-
+        setBusy(btn, true, _('settings.ldap_testing'));
+        setStatus(resultEl, '');
         try {
-            const data = collectLdapData();
-            const result = await Utils.api('/api/settings/ldap/test', {
-                method: 'POST',
-                body: data
-            });
-
-            if (resultEl) {
-                resultEl.style.display = 'block';
-                if (result.success) {
-                    resultEl.innerHTML = '<div class="alert alert-success"><span class="material-icons">check_circle</span> ' + _('settings.ldap_test_success') + '</div>';
-                } else {
-                    resultEl.innerHTML = '<div class="alert alert-danger"><span class="material-icons">error</span> ' + Utils.escapeHtml(result.error || _('settings.ldap_test_failed')) + '</div>';
-                }
-            }
+            const result = await Utils.api('/api/settings/ldap/test', { method: 'POST', body: collectLdapData() });
+            if (result.success) setStatus(resultEl, _('settings.ldap_test_success'), 'ok');
+            else setStatus(resultEl, result.error || _('settings.ldap_test_failed'), 'error');
         } catch (error) {
-            if (resultEl) {
-                resultEl.style.display = 'block';
-                resultEl.innerHTML = '<div class="alert alert-danger"><span class="material-icons">error</span> ' + Utils.escapeHtml(error.message || _('settings.ldap_test_failed')) + '</div>';
-            }
+            setStatus(resultEl, error.message || _('settings.ldap_test_failed'), 'error');
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons">cable</span> ' + _('settings.ldap_test_connection');
+            setBusy(btn, false);
         }
     }
 
@@ -5463,7 +5109,7 @@
             if (data.enabled) {
                 if (!isValidOidcRedirectUrlClient(data.redirect_url)) {
                     updateOidcRedirectWarning();
-                    Notifications.error(_('settings.oidc_redirect_url_invalid'));
+                    formFail(form, _('settings.oidc_redirect_url_invalid'));
                     document.getElementById('oidc-redirect-url')?.focus();
                     return;
                 }
@@ -5569,16 +5215,14 @@
     }
 
     async function saveOidcConfig() {
+        const form = document.getElementById('oidc-form');
         try {
             const data = collectOidcData();
-            await Utils.api('/api/settings/oidc', {
-                method: 'PUT',
-                body: data
-            });
-            Notifications.success(_('settings.oidc_saved'));
+            await Utils.api('/api/settings/oidc', { method: 'PUT', body: data });
             _oidcWasEnabled = data.enabled;
+            formOk(form, _('settings.oidc_saved'));
         } catch (error) {
-            Notifications.error(error.message || _('errors.server_error'));
+            formFail(form, error.message || _('errors.server_error'));
         }
     }
 
@@ -5586,21 +5230,15 @@
         const btn = document.getElementById('oidc-test-btn');
         const resultEl = document.getElementById('oidc-test-result');
         if (!btn) return;
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons spin">sync</span> ' + _('settings.oidc_testing');
-
-        if (resultEl) {
-            resultEl.innerHTML = '';
-            resultEl.style.display = 'none';
+        setStatus(resultEl, '');
+        const issuerUrl = document.getElementById('oidc-issuer-url')?.value?.trim();
+        if (!issuerUrl) {
+            setStatus(resultEl, _('settings.oidc_issuer_required'), 'error');
+            document.getElementById('oidc-issuer-url')?.focus();
+            return;
         }
-
+        setBusy(btn, true, _('settings.oidc_testing'));
         try {
-            const issuerUrl = document.getElementById('oidc-issuer-url')?.value?.trim();
-            if (!issuerUrl) {
-                throw new Error(_('settings.oidc_issuer_required'));
-            }
-
             const result = await Utils.api('/api/settings/oidc/test', {
                 method: 'POST',
                 body: {
@@ -5608,27 +5246,16 @@
                     allowed_private_cidrs: document.getElementById('oidc-allowed-private-cidrs')?.value?.trim() || ''
                 }
             });
-
-            if (resultEl) {
-                resultEl.style.display = 'block';
-                if (result.success) {
-                    let details = '';
-                    if (result.authorization_endpoint) details += '<br><small>Authorization: ' + Utils.escapeHtml(result.authorization_endpoint) + '</small>';
-                    if (result.token_endpoint) details += '<br><small>Token: ' + Utils.escapeHtml(result.token_endpoint) + '</small>';
-                    if (result.userinfo_endpoint) details += '<br><small>Userinfo: ' + Utils.escapeHtml(result.userinfo_endpoint) + '</small>';
-                    resultEl.innerHTML = '<div class="alert alert-success"><span class="material-icons">check_circle</span> ' + _('settings.oidc_test_success') + details + '</div>';
-                } else {
-                    resultEl.innerHTML = '<div class="alert alert-danger"><span class="material-icons">error</span> ' + Utils.escapeHtml(result.error || _('settings.oidc_test_failed')) + '</div>';
-                }
+            if (result.success) {
+                const found = [result.authorization_endpoint, result.token_endpoint, result.userinfo_endpoint].filter(Boolean);
+                setStatus(resultEl, _('settings.oidc_test_success') + (found.length ? ' ' + found.join(', ') : ''), 'ok');
+            } else {
+                setStatus(resultEl, result.error || _('settings.oidc_test_failed'), 'error');
             }
         } catch (error) {
-            if (resultEl) {
-                resultEl.style.display = 'block';
-                resultEl.innerHTML = '<div class="alert alert-danger"><span class="material-icons">error</span> ' + Utils.escapeHtml(error.message || _('settings.oidc_test_failed')) + '</div>';
-            }
+            setStatus(resultEl, error.message || _('settings.oidc_test_failed'), 'error');
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons">travel_explore</span> ' + _('settings.oidc_test_discovery');
+            setBusy(btn, false);
         }
     }
 
@@ -5684,7 +5311,7 @@
             advancedState.files = unwrapAdvancedPayload(resp) || [];
             if (!Array.isArray(advancedState.files)) advancedState.files = [];
             if (!advancedState.files.length) {
-                listEl.innerHTML = '<li class="text-muted">' + _('settings.advanced_no_files') + '</li>';
+                listEl.innerHTML = '<li class="list-row is-empty"><span class="row-main">' + _('settings.advanced_no_files') + '</span></li>';
                 return;
             }
             listEl.innerHTML = advancedState.files.map((f) => {
@@ -5692,14 +5319,15 @@
                     ? _('settings.advanced_file_' + f.id)
                     : f.id;
                 const status = f.exists
-                    ? (f.writable ? '' : ' <span class="badge badge-muted">' + _('settings.advanced_readonly') + '</span>')
-                    : ' <span class="badge badge-muted">' + _('settings.advanced_missing') + '</span>';
+                    ? (f.writable ? '' : _('settings.advanced_readonly'))
+                    : _('settings.advanced_missing');
                 const disabled = !f.exists && !f.canCreate;
-                return '<li><button type="button" class="advanced-config-file-btn' +
-                    (advancedState.activeId === f.id ? ' active' : '') +
-                    '" data-id="' + Utils.escapeHtml(f.id) + '"' +
-                    (disabled ? ' disabled' : '') + '>' +
-                    Utils.escapeHtml(label) + status + '</button></li>';
+                const active = advancedState.activeId === f.id;
+                return '<li><button type="button" class="list-row advanced-config-file-btn' + (active ? ' active' : '') +
+                    '" data-id="' + Utils.escapeHtml(f.id) + '"' + (active ? ' aria-current="true"' : '') +
+                    (disabled ? ' disabled' : '') + '><span class="row-main"><span class="row-title">' +
+                    Utils.escapeHtml(label) + '</span>' + (status ? '<span class="row-sub">' + Utils.escapeHtml(status) + '</span>' : '') +
+                    '</span></button></li>';
             }).join('');
 
             listEl.querySelectorAll('.advanced-config-file-btn').forEach((btn) => {
@@ -5718,7 +5346,7 @@
             });
 
         } catch (err) {
-            listEl.innerHTML = '<li class="text-danger">' + Utils.escapeHtml(err.message || _('errors.server_error')) + '</li>';
+            listEl.innerHTML = '<li class="list-row is-empty"><span class="row-main text-danger">' + Utils.escapeHtml(err.message || _('errors.server_error')) + '</span></li>';
         }
     }
 
@@ -5777,9 +5405,7 @@
             }
             if (saveBtn) saveBtn.disabled = !catalog.writable;
             updateAdvancedRestartButton(catalog);
-            document.querySelectorAll('.advanced-config-file-btn').forEach((b) => {
-                b.classList.toggle('active', b.getAttribute('data-id') === id);
-            });
+            markActiveAdvancedFile(id);
             return;
         }
 
@@ -5810,12 +5436,20 @@
             if (saveBtn) saveBtn.disabled = !cat || !cat.writable;
             updateAdvancedRestartButton(cat || { exists: true });
 
-            document.querySelectorAll('.advanced-config-file-btn').forEach((b) => {
-                b.classList.toggle('active', b.getAttribute('data-id') === id);
-            });
+            markActiveAdvancedFile(id);
         } catch (err) {
             Notifications.error(err.message || _('errors.server_error'));
         }
+    }
+
+    function markActiveAdvancedFile(id) {
+        document.querySelectorAll('.advanced-config-file-btn').forEach((b) => {
+            const on = b.getAttribute('data-id') === id;
+            b.classList.toggle('active', on);
+            if (on) b.setAttribute('aria-current', 'true');
+            else b.removeAttribute('aria-current');
+        });
+        document.querySelector('.advanced-config-layout')?.classList.add('is-detail-open');
     }
 
     async function saveAdvancedFile() {
@@ -5919,13 +5553,15 @@
     // ==================== Email / SMTP ====================
 
     function initEmailSection() {
-        const saveBtn = document.getElementById('email-smtp-save-btn');
+        const form = document.getElementById('email-smtp-form');
         const testBtn = document.getElementById('email-smtp-test-btn');
-        if (!saveBtn || !testBtn) return;
+        const testStatus = document.getElementById('email-smtp-test-status');
+        if (!form || !testBtn) return;
 
         loadEmailSmtpConfig();
 
-        saveBtn.addEventListener('click', async () => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
             const body = {
                 host: document.getElementById('email-smtp-host')?.value.trim() || '',
                 port: parseInt(document.getElementById('email-smtp-port')?.value, 10) || 587,
@@ -5939,31 +5575,31 @@
                 const confirmed = await settingsConfirmCritical({
                     title: tSettings('confirm.smtp_save_title', 'Save SMTP settings?'),
                     message: tSettings('confirm.smtp_save', 'Save SMTP configuration? Alert emails and notifications will use this mail server.'),
-                    confirmLabel: _('settings.email.smtp_save') || _('actions.save'),
-                    icon: 'email'
+                    confirmLabel: _('settings.email.smtp_save') || _('actions.save')
                 });
                 if (!confirmed) return;
             }
             try {
                 await Utils.api('/api/settings/email/smtp', { method: 'PUT', body });
-                Notifications.success(_('settings.email.smtp_saved'));
                 document.getElementById('email-smtp-pass').value = '';
                 await loadEmailSmtpConfig();
+                formOk(form, _('settings.email.smtp_saved'));
             } catch (err) {
-                Notifications.error(err.message || _('errors.server_error'));
+                formFail(form, err.message || _('errors.server_error'));
             }
         });
 
         testBtn.addEventListener('click', async () => {
+            setBusy(testBtn, true);
+            setStatus(testStatus, '');
             try {
                 const data = await Utils.api('/api/settings/email/smtp/test', { method: 'POST', body: {} });
-                if (data.success) {
-                    Notifications.success(_('settings.email.smtp_test_success'));
-                } else {
-                    Notifications.error(data.error || _('settings.email.smtp_test_failed'));
-                }
-            } catch (_) {
-                Notifications.error(_('settings.email.smtp_test_failed'));
+                if (data.success) setStatus(testStatus, _('settings.email.smtp_test_success'), 'ok');
+                else setStatus(testStatus, data.error || _('settings.email.smtp_test_failed'), 'error');
+            } catch (err) {
+                setStatus(testStatus, err.message || _('settings.email.smtp_test_failed'), 'error');
+            } finally {
+                setBusy(testBtn, false);
             }
         });
     }
@@ -5976,13 +5612,17 @@
                 return;
             }
             _smtpWasConfigured = true;
-            document.getElementById('email-smtp-host').value = config.host || '';
-            document.getElementById('email-smtp-port').value = config.port || 587;
-            document.getElementById('email-smtp-secure').checked = !!config.secure;
-            document.getElementById('email-smtp-user').value = config.user || '';
-            document.getElementById('email-smtp-from').value = config.from || '';
-            document.getElementById('email-smtp-alert').value = config.alert_email || '';
-        } catch (_) { /* not configured yet */ }
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+            set('email-smtp-host', config.host || '');
+            set('email-smtp-port', config.port || 587);
+            const secure = document.getElementById('email-smtp-secure');
+            if (secure) secure.checked = !!config.secure;
+            set('email-smtp-user', config.user || '');
+            set('email-smtp-from', config.from || '');
+            set('email-smtp-alert', config.alert_email || '');
+        } catch (err) {
+            formFail(document.getElementById('email-smtp-form'), err.message || _('errors.server_error'));
+        }
     }
     
 })();
