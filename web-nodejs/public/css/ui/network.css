@@ -1,0 +1,147 @@
+/* Network monitoring: monitor state line, target table and its phone
+   layout, and the dialogs. Everything else comes from components.css. */
+
+.network-page .monitor-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: calc(-1 * var(--space-3));
+}
+
+.network-page .monitor-bar .status {
+    white-space: normal;
+}
+
+.network-table .target-name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.network-table .col-name .cell-sub {
+    overflow-wrap: anywhere;
+}
+
+.network-table .col-check,
+.network-table .col-status,
+.network-table .col-latency,
+.network-table .col-last {
+    white-space: nowrap;
+}
+
+.network-table .col-latency {
+    font-variant-numeric: tabular-nums;
+}
+
+.network-table .col-last {
+    color: var(--text-muted);
+}
+
+.network-table td.state-cell.is-error {
+    color: var(--danger);
+}
+
+.network-table td.actions .menu-anchor {
+    vertical-align: middle;
+    margin-inline-start: var(--space-1);
+}
+
+.network-page .phone-only {
+    display: none;
+}
+
+.network-tools-note {
+    color: var(--text-muted);
+}
+
+@media (max-width: 1100px) {
+    .network-table .col-last {
+        display: none;
+    }
+}
+
+/* Phone: name and address, then check type and status; actions at the end */
+@media (max-width: 640px) {
+    .network-table thead {
+        display: none;
+    }
+
+    .network-table,
+    .network-table tbody {
+        display: block;
+    }
+
+    .network-table tbody {
+        border-top: 1px solid var(--rule);
+    }
+
+    .network-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: var(--space-1) var(--space-2);
+        padding: var(--row-pad-y) var(--space-1);
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .network-table td {
+        display: none;
+        height: auto;
+        padding: 0;
+        border: 0;
+    }
+
+    .network-table td.col-name,
+    .network-table td.col-status,
+    .network-table td.state-cell {
+        display: block;
+        grid-column: 1;
+    }
+
+    .network-table td.state-cell {
+        grid-column: 1 / -1;
+    }
+
+    .network-table td.actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+
+    .network-table .col-status .phone-only {
+        display: inline;
+        margin-inline-start: var(--space-2);
+    }
+
+    .network-table .col-status .cell-sub {
+        display: inline;
+    }
+}
+
+/* Dialogs */
+.target-form .form-group {
+    margin-bottom: var(--space-4);
+}
+
+.target-form .mono-input {
+    font-family: var(--mono);
+}
+
+.target-form .form-status:not(:empty) {
+    margin-top: var(--space-3);
+}
+
+.history-table .history-time {
+    white-space: nowrap;
+}
+
+.history-table .history-detail {
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+#history-body .count-line {
+    margin-bottom: var(--space-3);
+}

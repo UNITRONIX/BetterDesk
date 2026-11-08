@@ -1,310 +1,457 @@
 /**
- * BetterDesk Console - Network Monitor Script
+ * BetterDesk Console - Network monitoring page
+ *
+ * Targets: GET/POST /api/network/targets, PATCH/DELETE /api/network/targets/:id,
+ * POST .../:id/check, GET .../:id/history. Monitor loop: GET /api/network/monitor/status,
+ * POST /api/network/monitor/start|stop. Adding, editing, deleting and starting or
+ * stopping the monitor need server.config; running a check needs device.connect.
  */
 
 (function () {
     'use strict';
 
-    const _ = window.BetterDesk?.translations
-        ? (key) => {
-            const keys = key.split('.');
-            let val = window.BetterDesk.translations;
-            for (const k of keys) { val = val?.[k]; }
-            return val || key;
-        }
-        : (key) => key;
+    const _ = (key, params) => (typeof window._ === 'function' ? window._(key, params) : key);
+    const esc = (value) => Utils.escapeHtml(value == null ? '' : String(value));
+    const DASH = '<span class="text-muted">–</span>';
 
-    const csrfToken = window.BetterDesk?.csrfToken || '';
+    const canManage = Utils.can('server.config');
+    const canCheck = Utils.can('device.connect');
 
-    async function apiFetch(url, options = {}) {
-        const headers = { 'Content-Type': 'application/json' };
-        if (csrfToken) headers['x-csrf-token'] = csrfToken;
-        const resp = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
-        return resp.json();
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = String(str);
-        return div.innerHTML;
-    }
-
-    function formatTimeAgo(dateStr) {
-        if (!dateStr) return '—';
-        const d = new Date(dateStr);
-        const diff = Math.floor((Date.now() - d) / 1000);
-        if (diff < 60) return _('time.seconds_ago').replace('{count}', diff);
-        if (diff < 3600) return _('time.minutes_ago').replace('{count}', Math.floor(diff / 60));
-        if (diff < 86400) return _('time.hours_ago').replace('{count}', Math.floor(diff / 3600));
-        if (diff < 2592000) return _('time.days_ago').replace('{count}', Math.floor(diff / 86400));
-        return d.toLocaleDateString();
-    }
-
-    function showToast(message, type) {
-        if (window.BetterDesk?.notify) { window.BetterDesk.notify(message, type); return; }
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type || 'info'}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-    }
-
-    // ---- Tab switching ----
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            const panel = document.getElementById('tab-' + btn.dataset.tab);
-            if (panel) panel.classList.add('active');
-        });
-    });
-
-    // ---- Modal close ----
-    document.querySelectorAll('.modal-close').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.modal;
-            if (id) document.getElementById(id).style.display = 'none';
-        });
-    });
-
-    // ---- Searching ----
-    let allTargets = [];
-    const searchInput = document.getElementById('target-search');
-    searchInput.addEventListener('input', () => {
-        const q = searchInput.value.toLowerCase();
-        const filtered = q ? allTargets.filter(t => (t.name + t.host).toLowerCase().includes(q)) : allTargets;
-        renderTargets(filtered);
-    });
-
-    // ==== TARGETS ====
+    // The monitor loop runs this often and checks each target when its own interval is due
+    const MONITOR_TICK_MS = 30000;
+    const INTERVALS = [30, 60, 300, 600];
 
     const targetsBody = document.getElementById('targets-body');
+    const countLine = document.getElementById('targets-count');
+    const searchInput = document.getElementById('target-search');
+    const refreshBtn = document.getElementById('refresh-btn');
     const createBtn = document.getElementById('create-target-btn');
-    const targetModal = document.getElementById('target-modal');
-    const saveBtn = document.getElementById('target-save-btn');
-    const cancelBtn = document.getElementById('target-cancel-btn');
+    const monitorState = document.getElementById('monitor-state');
+    const monitorBtn = document.getElementById('monitor-toggle-btn');
+    const monitorStatus = document.getElementById('monitor-status');
+    const toolsNote = document.getElementById('network-tools-note');
+
+    let allTargets = [];
+    let loadError = null;
+    let monitorRunning = null;
+
+    if (canManage) createBtn.hidden = false;
+    if (canCheck && toolsNote) toolsNote.hidden = false;
+
+    // ---- Formatting ----
+
+    function intervalSeconds(t) {
+        return t.interval_ms ? Math.round(t.interval_ms / 1000) : 60;
+    }
+
+    function intervalLabel(seconds) {
+        if (seconds % 60 === 0) return _('network.every_minutes', { count: seconds / 60 });
+        return _('network.every_seconds', { count: seconds });
+    }
+
+    function checkLabel(t) {
+        switch (t.check_type) {
+            case 'tcp': return _('network.check_tcp', { port: t.port || 80 });
+            case 'http': return 'HTTP';
+            case 'https': return 'HTTPS';
+            default: return _('network.check_ping');
+        }
+    }
+
+    function address(t) {
+        if (t.url) return t.url;
+        if (t.port && t.check_type !== 'ping') return `${t.host}:${t.port}`;
+        return t.host || '';
+    }
+
+    function statusHtml(t) {
+        if (!Number(t.enabled)) return `<span class="status offline">${esc(_('network.status_paused'))}</span>`;
+        if (t.last_status === 'up') return `<span class="status ok">${esc(_('network.status_up'))}</span>`;
+        if (t.last_status === 'down') return `<span class="status error">${esc(_('network.status_down'))}</span>`;
+        return `<span class="status offline">${esc(_('network.status_unchecked'))}</span>`;
+    }
+
+    function latencyText(ms) {
+        if (ms == null || ms === '') return '';
+        return _('network.ms', { value: Math.round(Number(ms)) });
+    }
+
+    function timeHtml(value) {
+        const date = Utils.parseDate(value);
+        if (!date) return DASH;
+        return `<time datetime="${esc(date.toISOString())}" title="${esc(Utils.formatDate(date))}">${esc(Utils.formatRelativeTime(date))}</time>`;
+    }
+
+    function errorText(err) {
+        return (err && err.message) || _('network.request_failed');
+    }
+
+    // ---- Targets ----
 
     async function loadTargets() {
-        targetsBody.innerHTML = `<tr class="loading-row"><td colspan="8">${_('common.loading')}</td></tr>`;
-        try {
-            const data = await apiFetch('/api/network/targets');
-            allTargets = Array.isArray(data) ? data : [];
-            renderTargets(allTargets);
-        } catch (err) {
-            targetsBody.innerHTML = `<tr class="empty-row"><td colspan="8">
-                <div class="empty-state"><span class="material-icons">error_outline</span><p>${escapeHtml(err.message)}</p></div></td></tr>`;
+        loadError = null;
+        refreshBtn.disabled = true;
+        if (!allTargets.length) {
+            targetsBody.innerHTML = `<tr><td colspan="6" class="state-cell">${esc(_('network.loading'))}</td></tr>`;
         }
-    }
-
-    async function loadStats() {
         try {
-            const stats = await apiFetch('/api/network/stats');
-            document.getElementById('stat-total').textContent = stats.total ?? 0;
-            document.getElementById('stat-up').textContent = stats.up ?? 0;
-            document.getElementById('stat-down').textContent = stats.down ?? 0;
-            document.getElementById('stat-avg-latency').textContent = stats.avg_latency != null ? Math.round(stats.avg_latency) + ' ms' : '—';
-        } catch (_e) { /* ignore */ }
+            const data = await Utils.api('/api/network/targets');
+            allTargets = Array.isArray(data) ? data : [];
+        } catch (err) {
+            loadError = err;
+            allTargets = [];
+        } finally {
+            refreshBtn.disabled = false;
+        }
+        render();
     }
 
-    function renderTargets(targets) {
-        if (!targets.length) {
-            targetsBody.innerHTML = `<tr class="empty-row"><td colspan="8">
-                <div class="empty-state"><span class="material-icons">dns</span><p>${_('network.no_targets')}</p></div></td></tr>`;
+    function renderCount(shown) {
+        if (loadError || !allTargets.length) { countLine.textContent = ''; return; }
+        const parts = [allTargets.length === 1 ? _('network.count_one') : _('network.count_many', { count: allTargets.length })];
+        const active = allTargets.filter((t) => Number(t.enabled));
+        const down = active.filter((t) => t.last_status === 'down').length;
+        const unchecked = active.filter((t) => t.last_status !== 'up' && t.last_status !== 'down').length;
+        if (down) parts.push(_('network.count_down', { count: down }));
+        else if (active.length && !unchecked) parts.push(_('network.count_all_up'));
+        if (unchecked) parts.push(_('network.count_unchecked', { count: unchecked }));
+        const times = active.filter((t) => t.last_status === 'up' && t.last_rtt_ms != null).map((t) => Number(t.last_rtt_ms));
+        if (times.length) {
+            parts.push(_('network.count_latency', { ms: Math.round(times.reduce((a, b) => a + b, 0) / times.length) }));
+        }
+        if (searchInput.value.trim()) parts.push(_('network.count_shown', { count: shown }));
+        countLine.textContent = parts.join(' ');
+    }
+
+    function render() {
+        if (loadError) {
+            targetsBody.innerHTML = `<tr><td colspan="6" class="state-cell is-error">${esc(_('network.load_failed'))} ${esc(errorText(loadError))}
+                <button type="button" class="btn btn-sm" data-retry>${esc(_('actions.retry'))}</button></td></tr>`;
+            targetsBody.querySelector('[data-retry]').addEventListener('click', loadTargets);
+            renderCount(0);
             return;
         }
-        targetsBody.innerHTML = targets.map(t => {
-            const status = t.last_status || 'unknown';
-            const latency = t.last_latency_ms;
-            const latencyClass = latency == null ? '' : latency < 100 ? 'good' : latency < 500 ? 'warn' : 'bad';
-            return `
-            <tr data-id="${t.id}">
-                <td>${escapeHtml(t.name)}</td>
-                <td>${escapeHtml(t.host)}</td>
-                <td>${escapeHtml(t.check_type || 'ping')}</td>
-                <td>${t.port || '—'}</td>
-                <td>${t.interval_ms ? Math.round(t.interval_ms / 1000) : (t.check_interval || 60)}s</td>
-                <td><span class="target-status ${status}"><span class="dot"></span> ${status.toUpperCase()}</span></td>
-                <td><span class="latency-val ${latencyClass}">${latency != null ? latency + ' ms' : '—'}</span></td>
-                <td class="action-btn-group">
-                    <button class="btn btn-sm btn-secondary check-btn" data-id="${t.id}" title="${_('network.check_now')}"><span class="material-icons" style="font-size:16px">refresh</span></button>
-                    <button class="btn btn-sm btn-secondary hist-btn" data-id="${t.id}" title="${_('network.check_history')}"><span class="material-icons" style="font-size:16px">history</span></button>
-                    <button class="btn btn-sm btn-secondary edit-btn" data-id="${t.id}"><span class="material-icons" style="font-size:16px">edit</span></button>
-                    <button class="btn btn-sm btn-danger del-btn" data-id="${t.id}"><span class="material-icons" style="font-size:16px">delete</span></button>
+        const q = searchInput.value.trim().toLowerCase();
+        const filtered = q
+            ? allTargets.filter((t) => [t.name, t.host, t.url].some((v) => String(v || '').toLowerCase().includes(q)))
+            : allTargets;
+        renderCount(filtered.length);
+
+        if (!allTargets.length) {
+            targetsBody.innerHTML = `<tr><td colspan="6" class="state-cell">${esc(canManage ? _('network.empty_manage') : _('network.empty'))}</td></tr>`;
+            return;
+        }
+        if (!filtered.length) {
+            targetsBody.innerHTML = `<tr><td colspan="6" class="state-cell">${esc(_('network.no_match'))}</td></tr>`;
+            return;
+        }
+        targetsBody.innerHTML = filtered.map((t, i) => rowHtml(t, i, filtered.length)).join('');
+    }
+
+    function rowHtml(t, index, total) {
+        const id = esc(t.id);
+        const menuId = `target-menu-${id}`;
+        const nearEnd = total > 3 && index >= total - 2;
+        const items = [`<button type="button" class="menu-item" role="menuitem" data-action="history" data-id="${id}">${esc(_('network.check_history'))}</button>`];
+        if (canManage) {
+            items.push(`<button type="button" class="menu-item" role="menuitem" data-action="edit" data-id="${id}">${esc(_('network.edit_target_item'))}</button>`);
+            items.push('<span class="menu-divider" role="separator"></span>');
+            items.push(`<button type="button" class="menu-item danger" role="menuitem" data-action="delete" data-id="${id}">${esc(_('network.delete_target_item'))}</button>`);
+        }
+        const latency = t.last_status === 'up' ? latencyText(t.last_rtt_ms) : '';
+        return `
+            <tr data-id="${id}">
+                <td class="col-name"><span class="target-name">${esc(t.name)}</span>
+                    <span class="cell-sub mono">${esc(address(t))}</span></td>
+                <td class="col-check">${esc(checkLabel(t))}<span class="cell-sub">${esc(intervalLabel(intervalSeconds(t)))}</span></td>
+                <td class="col-status">${statusHtml(t)}${t.last_status === 'down' || !latency ? '' : `<span class="cell-sub phone-only">${esc(latency)}</span>`}</td>
+                <td class="col-latency">${latency ? esc(latency) : DASH}</td>
+                <td class="col-last">${timeHtml(t.last_check_at)}</td>
+                <td class="actions">
+                    ${canCheck ? `<button type="button" class="btn btn-sm check-btn" data-action="check" data-id="${id}">${esc(_('network.check_now'))}</button>` : ''}
+                    <span class="menu-anchor">
+                        <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
+                            aria-controls="${menuId}" aria-label="${esc(_('network.actions_for', { name: t.name }))}">
+                            <span class="material-icons" aria-hidden="true">more_vert</span>
+                        </button>
+                        <span class="menu menu-end${nearEnd ? ' menu-up' : ''}" id="${menuId}" role="menu">${items.join('')}</span>
+                    </span>
                 </td>
             </tr>`;
-        }).join('');
-
-        targetsBody.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', () => checkTarget(btn.dataset.id)));
-        targetsBody.querySelectorAll('.hist-btn').forEach(btn => btn.addEventListener('click', () => showHistory(btn.dataset.id)));
-        targetsBody.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => editTarget(btn.dataset.id)));
-        targetsBody.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', () => deleteTarget(btn.dataset.id)));
     }
 
-    function openTargetModal(t) {
-        document.getElementById('target-modal-title').textContent = t ? _('network.edit_target') : _('network.add_target');
-        document.getElementById('target-id').value = t ? t.id : '';
-        document.getElementById('target-name').value = t ? t.name : '';
-        document.getElementById('target-host').value = t ? t.host : '';
-        document.getElementById('target-type').value = t ? t.check_type : 'ping';
-        document.getElementById('target-port').value = t ? t.port || 80 : 80;
-        document.getElementById('target-interval').value = t ? String(t.interval_ms ? Math.round(t.interval_ms / 1000) : (t.check_interval || 60)) : '60';
-        document.getElementById('target-enabled').checked = t ? !!t.enabled : true;
-        targetModal.style.display = 'flex';
+    function findTarget(id) {
+        return allTargets.find((t) => String(t.id) === String(id));
     }
 
-    async function editTarget(id) {
+    async function checkTarget(id, button) {
+        const t = findTarget(id);
+        if (button) {
+            button.disabled = true;
+            button.textContent = _('network.checking');
+        }
         try {
-            const t = await apiFetch(`/api/network/targets/${id}`);
-            openTargetModal(t);
-        } catch (err) { showToast(err.message, 'error'); }
+            const result = await Utils.api(`/api/network/targets/${encodeURIComponent(id)}/check`, { method: 'POST' });
+            const name = t ? t.name : '';
+            if (result && result.status === 'up') {
+                Notifications.success(_('network.check_up', { name, ms: Math.round(Number(result.rtt_ms) || 0) }));
+            } else {
+                Notifications.error(_('network.check_down', { name, reason: (result && result.error) || _('network.no_answer') }));
+            }
+        } catch (err) {
+            Notifications.error(_('network.check_failed', { reason: errorText(err) }));
+        }
+        await loadTargets();
     }
 
-    async function saveTarget() {
-        const id = document.getElementById('target-id').value;
+    // ---- Add / edit dialog ----
+
+    function formHtml(t) {
+        const type = t ? t.check_type : 'ping';
+        const seconds = t ? intervalSeconds(t) : 60;
+        const options = INTERVALS.includes(seconds) ? INTERVALS : INTERVALS.concat(seconds).sort((a, b) => a - b);
+        return `
+            <form class="target-form" id="target-form" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="target-name">${esc(_('network.name'))}</label>
+                    <input type="text" id="target-name" class="form-input" maxlength="120" value="${esc(t ? t.name : '')}" required>
+                    <p class="form-hint">${esc(_('network.name_hint'))}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="target-type">${esc(_('network.check_type'))}</label>
+                    <select id="target-type" class="form-select is-medium">
+                        <option value="ping"${type === 'ping' ? ' selected' : ''}>${esc(_('network.type_ping_long'))}</option>
+                        <option value="tcp"${type === 'tcp' ? ' selected' : ''}>${esc(_('network.type_tcp_long'))}</option>
+                        <option value="http"${type === 'http' ? ' selected' : ''}>${esc(_('network.type_http_long'))}</option>
+                        <option value="https"${type === 'https' ? ' selected' : ''}>${esc(_('network.type_https_long'))}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="target-host">${esc(_('network.host'))}</label>
+                    <input type="text" id="target-host" class="form-input mono-input" value="${esc(t ? t.host : '')}"
+                        autocapitalize="off" autocomplete="off" spellcheck="false" required>
+                    <p class="form-hint">${esc(_('network.host_hint'))}</p>
+                </div>
+                <div class="form-group" id="target-port-group">
+                    <label class="form-label" for="target-port">${esc(_('network.port'))}</label>
+                    <input type="number" id="target-port" class="form-input is-short" min="1" max="65535" value="${esc(t && t.port ? t.port : '')}">
+                    <p class="form-hint" id="target-port-hint"></p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="target-interval">${esc(_('network.interval_label'))}</label>
+                    <select id="target-interval" class="form-select is-medium">
+                        ${options.map((s) => `<option value="${s}"${s === seconds ? ' selected' : ''}>${esc(intervalLabel(s))}</option>`).join('')}
+                    </select>
+                    <p class="form-hint">${esc(_('network.interval_hint'))}</p>
+                </div>
+                <label class="check-field">
+                    <input type="checkbox" id="target-enabled"${!t || Number(t.enabled) ? ' checked' : ''}>
+                    <span class="check-label">${esc(_('network.enabled_label'))}</span>
+                    <span class="form-hint">${esc(_('network.enabled_hint'))}</span>
+                </label>
+                <p class="form-status" id="target-form-status" role="alert"></p>
+            </form>`;
+    }
+
+    function updatePortField() {
+        const type = document.getElementById('target-type').value;
+        const group = document.getElementById('target-port-group');
+        const hint = document.getElementById('target-port-hint');
+        group.hidden = type === 'ping';
+        const defaults = { tcp: '80', http: '80', https: '443' };
+        document.getElementById('target-port').placeholder = defaults[type] || '';
+        hint.textContent = type === 'tcp' ? _('network.port_hint_tcp') : _('network.port_hint_web', { port: defaults[type] || '' });
+    }
+
+    function openTargetDialog(t) {
+        Modal.show({
+            title: t ? _('network.edit_target_title', { name: t.name }) : _('network.add_target'),
+            content: formHtml(t),
+            buttons: [
+                { label: _('actions.cancel'), class: 'btn', onClick: () => Modal.close() },
+                { label: t ? _('network.save_target') : _('network.add_target'), class: 'btn-primary', onClick: () => saveTarget(t) },
+            ],
+        });
+        document.getElementById('target-type').addEventListener('change', updatePortField);
+        document.getElementById('target-form').addEventListener('submit', (e) => { e.preventDefault(); saveTarget(t); });
+        updatePortField();
+    }
+
+    async function saveTarget(t) {
+        const status = document.getElementById('target-form-status');
+        const nameEl = document.getElementById('target-name');
+        const hostEl = document.getElementById('target-host');
+        const type = document.getElementById('target-type').value;
+        const portRaw = document.getElementById('target-port').value.trim();
+        const seconds = parseInt(document.getElementById('target-interval').value, 10) || 60;
+        const name = nameEl.value.trim();
+        const host = hostEl.value.trim().replace(/^[a-z]+:\/\//i, '').replace(/\/.*$/, '');
+
+        status.className = 'form-status is-error';
+        if (!name) { status.textContent = _('network.name_required'); nameEl.focus(); return; }
+        if (!host) { status.textContent = _('network.host_required'); hostEl.focus(); return; }
+        let port = null;
+        if (type !== 'ping') {
+            port = portRaw ? parseInt(portRaw, 10) : (type === 'https' ? 443 : 80);
+            if (!Number.isInteger(port) || port < 1 || port > 65535) {
+                status.textContent = _('network.port_invalid');
+                document.getElementById('target-port').focus();
+                return;
+            }
+        }
+
         const body = {
-            name: document.getElementById('target-name').value.trim(),
-            host: document.getElementById('target-host').value.trim(),
-            check_type: document.getElementById('target-type').value,
-            port: parseInt(document.getElementById('target-port').value, 10) || null,
-            check_interval: parseInt(document.getElementById('target-interval').value, 10) || 60,
-            interval_ms: (parseInt(document.getElementById('target-interval').value, 10) || 60) * 1000,
+            name,
+            host,
+            check_type: type,
+            port,
+            interval_ms: seconds * 1000,
             enabled: document.getElementById('target-enabled').checked,
         };
-        if (!body.name || !body.host) { showToast(_('network.name_host_required'), 'error'); return; }
+        const buttons = document.querySelectorAll('.modal-footer .btn');
+        buttons.forEach((b) => { b.disabled = true; });
+        status.className = 'form-status';
+        status.textContent = _('network.saving');
         try {
-            const url = id ? `/api/network/targets/${id}` : '/api/network/targets';
-            const method = id ? 'PATCH' : 'POST';
-            await apiFetch(url, { method, body: JSON.stringify(body) });
-            targetModal.style.display = 'none';
-            showToast(_('common.saved'), 'success');
+            if (t) {
+                await Utils.api(`/api/network/targets/${encodeURIComponent(t.id)}`, { method: 'PATCH', body });
+            } else {
+                await Utils.api('/api/network/targets', { method: 'POST', body });
+            }
+            Modal.close();
+            Notifications.success(t ? _('network.saved_target', { name }) : _('network.added_target', { name }));
             loadTargets();
-            loadStats();
-        } catch (err) { showToast(err.message, 'error'); }
+        } catch (err) {
+            buttons.forEach((b) => { b.disabled = false; });
+            status.className = 'form-status is-error';
+            status.textContent = _('network.save_failed', { reason: errorText(err) });
+        }
     }
 
     async function deleteTarget(id) {
-        if (!confirm(_('network.delete_target') + '?')) return;
+        const t = findTarget(id);
+        if (!t) return;
+        const ok = await Modal.confirm({
+            title: _('network.delete_title'),
+            message: _('network.delete_message', { name: t.name }),
+            confirmLabel: _('network.delete_target_item'),
+            danger: true,
+        });
+        if (!ok) return;
         try {
-            await apiFetch(`/api/network/targets/${id}`, { method: 'DELETE' });
-            showToast(_('common.success'), 'success');
-            loadTargets();
-            loadStats();
-        } catch (err) { showToast(err.message, 'error'); }
+            await Utils.api(`/api/network/targets/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            Notifications.success(_('network.deleted_target', { name: t.name }));
+        } catch (err) {
+            Notifications.error(_('network.delete_failed', { reason: errorText(err) }));
+        }
+        loadTargets();
     }
 
-    async function checkTarget(id) {
-        try {
-            const result = await apiFetch(`/api/network/targets/${id}/check`, { method: 'POST' });
-            showToast(`${result.status === 'up' ? '✓' : '✗'} ${result.latency_ms != null ? result.latency_ms + 'ms' : ''}`, result.status === 'up' ? 'success' : 'error');
-            loadTargets();
-            loadStats();
-        } catch (err) { showToast(err.message, 'error'); }
-    }
-
-    createBtn?.addEventListener('click', () => openTargetModal(null));
-    saveBtn?.addEventListener('click', saveTarget);
-    cancelBtn?.addEventListener('click', () => { targetModal.style.display = 'none'; });
+    // ---- History dialog ----
 
     async function showHistory(id) {
-        const modal = document.getElementById('history-modal');
+        const t = findTarget(id);
+        Modal.show({
+            title: _('network.history_title', { name: t ? t.name : '' }),
+            size: 'large',
+            content: `<div id="history-body"><p class="state">${esc(_('network.loading_history'))}</p></div>`,
+            buttons: [{ label: _('actions.close'), class: 'btn', onClick: () => Modal.close() }],
+        });
         const body = document.getElementById('history-body');
-        modal.style.display = 'flex';
-        body.innerHTML = `<p>${_('common.loading')}</p>`;
         try {
-            const history = await apiFetch(`/api/network/targets/${id}/history`);
+            const history = await Utils.api(`/api/network/targets/${encodeURIComponent(id)}/history?limit=100`);
+            if (!document.body.contains(body)) return;
             const entries = Array.isArray(history) ? history : [];
             if (!entries.length) {
-                body.innerHTML = `<div class="empty-state"><span class="material-icons">history</span><p>${_('network.no_history')}</p></div>`;
+                body.innerHTML = `<p class="state">${esc(_('network.no_history_yet'))}</p>`;
                 return;
             }
-            body.innerHTML = `<div class="history-timeline">${entries.map(e => `
-                <div class="history-entry">
-                    <span class="time">${formatTimeAgo(e.checked_at)}</span>
-                    <span class="status-dot ${e.status}"></span>
-                    <span>${e.status.toUpperCase()}</span>
-                    <span class="latency">${e.latency_ms != null ? e.latency_ms + ' ms' : '—'}</span>
-                </div>`).join('')}</div>`;
+            const down = entries.filter((e) => e.status !== 'up').length;
+            body.innerHTML = `
+                <p class="count-line">${esc(_('network.history_count', { count: entries.length, down }))}</p>
+                <div class="table-scroll"><table class="data-table history-table">
+                    <thead><tr><th>${esc(_('network.history_time'))}</th><th>${esc(_('network.status'))}</th><th>${esc(_('network.col_response'))}</th><th>${esc(_('network.history_detail'))}</th></tr></thead>
+                    <tbody>${entries.map((e) => {
+                        const date = Utils.parseDate(e.checked_at);
+                        const up = e.status === 'up';
+                        const detail = e.error_msg || (e.status_code ? _('network.http_status', { code: e.status_code }) : '');
+                        return `<tr>
+                            <td class="history-time">${date ? esc(Utils.formatDate(date, { second: '2-digit' })) : DASH}</td>
+                            <td><span class="status ${up ? 'ok' : 'error'}">${esc(up ? _('network.status_up') : _('network.status_down'))}</span></td>
+                            <td>${up && e.rtt_ms != null ? esc(latencyText(e.rtt_ms)) : DASH}</td>
+                            <td class="history-detail">${detail ? esc(detail) : DASH}</td>
+                        </tr>`;
+                    }).join('')}</tbody>
+                </table></div>`;
         } catch (err) {
-            body.innerHTML = `<p class="text-error">${escapeHtml(err.message)}</p>`;
+            if (!document.body.contains(body)) return;
+            body.innerHTML = `<p class="state is-error">${esc(_('network.history_failed'))} ${esc(errorText(err))}</p>`;
         }
     }
 
-    createBtn.addEventListener('click', () => openTargetModal(null));
-    saveBtn.addEventListener('click', saveTarget);
+    // ---- Monitor ----
 
-    // ==== TOOLS ====
+    function renderMonitor() {
+        if (monitorRunning === null) return;
+        monitorState.className = `status ${monitorRunning ? 'ok' : 'offline'}`;
+        monitorState.textContent = monitorRunning ? _('network.monitor_on') : _('network.monitor_off');
+        monitorBtn.textContent = monitorRunning ? _('network.monitor_stop') : _('network.monitor_start');
+        monitorBtn.hidden = !canManage;
+    }
 
-    async function runTool(endpoint, body, resultEl) {
-        resultEl.textContent = _('common.loading');
-        resultEl.className = 'tool-result';
+    async function loadMonitorStatus() {
         try {
-            const result = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
-            resultEl.className = 'tool-result ' + (result.success ? 'success' : 'error');
-            resultEl.textContent = JSON.stringify(result, null, 2);
+            const data = await Utils.api('/api/network/monitor/status');
+            monitorRunning = !!(data && data.running);
+            renderMonitor();
         } catch (err) {
-            resultEl.className = 'tool-result error';
-            resultEl.textContent = err.message;
-        }
-    }
-
-    document.getElementById('tool-ping-btn').addEventListener('click', () => {
-        runTool('/api/network/ping', { host: document.getElementById('tool-ping-host').value.trim() }, document.getElementById('tool-ping-result'));
-    });
-
-    document.getElementById('tool-tcp-btn').addEventListener('click', () => {
-        runTool('/api/network/tcp', {
-            host: document.getElementById('tool-tcp-host').value.trim(),
-            port: parseInt(document.getElementById('tool-tcp-port').value, 10) || 80
-        }, document.getElementById('tool-tcp-result'));
-    });
-
-    document.getElementById('tool-http-btn').addEventListener('click', () => {
-        runTool('/api/network/http', { url: document.getElementById('tool-http-url').value.trim() }, document.getElementById('tool-http-result'));
-    });
-
-    document.getElementById('tool-dns-btn').addEventListener('click', () => {
-        runTool('/api/network/resolve', { host: document.getElementById('tool-dns-host').value.trim() }, document.getElementById('tool-dns-result'));
-    });
-
-    // ==== Monitor toggle ====
-
-    const monitorBtn = document.getElementById('monitor-toggle-btn');
-    let monitorRunning = false;
-
-    async function checkMonitorStatus() {
-        try {
-            const data = await apiFetch('/api/network/monitor/status');
-            monitorRunning = !!data.running;
-            updateMonitorBtn();
-        } catch (_e) { /* ignore */ }
-    }
-
-    function updateMonitorBtn() {
-        if (monitorRunning) {
-            monitorBtn.innerHTML = `<span class="material-icons">stop</span> ${_('network.monitor_stop')}`;
-            monitorBtn.classList.add('monitor-active');
-        } else {
-            monitorBtn.innerHTML = `<span class="material-icons">play_arrow</span> ${_('network.monitor_start')}`;
-            monitorBtn.classList.remove('monitor-active');
+            monitorState.className = 'status error';
+            monitorState.textContent = _('network.monitor_unknown', { reason: errorText(err) });
         }
     }
 
     monitorBtn.addEventListener('click', async () => {
         const action = monitorRunning ? 'stop' : 'start';
+        monitorBtn.disabled = true;
+        monitorStatus.className = 'form-status';
+        monitorStatus.textContent = action === 'start' ? _('network.monitor_starting') : _('network.monitor_stopping');
         try {
-            await apiFetch(`/api/network/monitor/${action}`, { method: 'POST' });
-            monitorRunning = !monitorRunning;
-            updateMonitorBtn();
-            showToast(_('common.success'), 'success');
-        } catch (err) { showToast(err.message, 'error'); }
+            await Utils.api(`/api/network/monitor/${action}`, {
+                method: 'POST',
+                body: action === 'start' ? { interval_ms: MONITOR_TICK_MS } : {},
+            });
+            monitorRunning = action === 'start';
+            renderMonitor();
+            monitorStatus.className = 'form-status is-ok';
+            monitorStatus.textContent = monitorRunning ? _('network.monitor_started') : _('network.monitor_stopped_msg');
+            if (monitorRunning) setTimeout(loadTargets, 4000);
+        } catch (err) {
+            monitorStatus.className = 'form-status is-error';
+            monitorStatus.textContent = _('network.monitor_failed', { reason: errorText(err) });
+        } finally {
+            monitorBtn.disabled = false;
+        }
     });
 
-    // ---- Init ----
+    // ---- Events ----
+
+    targetsBody.addEventListener('click', (event) => {
+        const el = event.target.closest('[data-action]');
+        if (!el) return;
+        const id = el.dataset.id;
+        switch (el.dataset.action) {
+            case 'check': checkTarget(id, el); break;
+            case 'history': showHistory(id); break;
+            case 'edit': { const t = findTarget(id); if (t) openTargetDialog(t); break; }
+            case 'delete': deleteTarget(id); break;
+            default: break;
+        }
+    });
+
+    createBtn.addEventListener('click', () => openTargetDialog(null));
+    refreshBtn.addEventListener('click', () => { loadTargets(); loadMonitorStatus(); });
+    searchInput.addEventListener('input', Utils.debounce(render, 150));
+
     loadTargets();
-    loadStats();
-    checkMonitorStatus();
+    loadMonitorStatus();
 })();

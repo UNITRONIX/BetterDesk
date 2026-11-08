@@ -1,184 +1,59 @@
 <%- include('layouts/main', {
-    title: typeof title !== 'undefined' ? title : 'Network Monitor',
-    pageStyles: ['network'],
+    title: _('nav.network'),
+    uiReworked: true,
+    pageStyles: ['ui/network'],
     pageScripts: ['network'],
     currentPage: 'network',
-    breadcrumb: [{ label: _('nav.management') }, { label: _('network.title') }],
+    breadcrumb: [{ label: _('nav.network') }],
     body: `
-    <div class="page-header">
-        <h1>${_('network.title')}</h1>
-    </div>
+    <div class="page page-wide network-page">
+        <div class="page-head">
+            <h1>${_('nav.network')}</h1>
+            <p class="page-description">${_('network.page_description')}</p>
+            <div class="page-actions">
+                <button type="button" class="btn btn-primary" id="create-target-btn" hidden>${_('network.add_target')}</button>
+            </div>
+        </div>
 
-    <!-- Stats -->
-    <div class="stat-cards">
-        <div class="stat-card">
-            <div class="stat-icon"><span class="material-icons">dns</span></div>
-            <div class="stat-info">
-                <span class="stat-value" id="stat-total">0</span>
-                <span class="stat-label">${_('network.total_targets')}</span>
-            </div>
+        <div class="monitor-bar" id="monitor-bar">
+            <span class="status stopped" id="monitor-state">${_('network.monitor_loading')}</span>
+            <button type="button" class="btn btn-sm" id="monitor-toggle-btn" hidden>${_('network.monitor_start')}</button>
+            <span class="form-status" id="monitor-status" aria-live="polite"></span>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon online"><span class="material-icons">check_circle</span></div>
-            <div class="stat-info">
-                <span class="stat-value" id="stat-up">0</span>
-                <span class="stat-label">${_('network.targets_up')}</span>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon offline"><span class="material-icons">error</span></div>
-            <div class="stat-info">
-                <span class="stat-value" id="stat-down">0</span>
-                <span class="stat-label">${_('network.targets_down')}</span>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><span class="material-icons">speed</span></div>
-            <div class="stat-info">
-                <span class="stat-value" id="stat-avg-latency">—</span>
-                <span class="stat-label">${_('network.avg_latency')}</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- Tab bar -->
-    <div class="tab-bar">
-        <button class="tab-btn active" data-tab="targets">${_('network.tab_targets')}</button>
-        <button class="tab-btn" data-tab="tools">${_('network.tab_tools')}</button>
-    </div>
+        <section class="section" aria-label="${_('network.targets')}">
+            <div class="toolbar">
+                <div class="toolbar-search search-wrapper">
+                    <span class="material-icons" aria-hidden="true">search</span>
+                    <input type="search" class="form-input" id="target-search"
+                        aria-label="${_('network.search_label')}"
+                        placeholder="${_('network.search_label')}">
+                </div>
+                <div class="toolbar-end">
+                    <button type="button" class="btn" id="refresh-btn">${_('actions.refresh')}</button>
+                </div>
+            </div>
+            <p class="count-line" id="targets-count" aria-live="polite"></p>
 
-    <!-- Targets panel -->
-    <div class="tab-panel active" id="tab-targets">
-        <div class="panel-actions">
-            <div class="search-wrapper">
-                <span class="material-icons">search</span>
-                <input type="text" id="target-search" placeholder="${_('network.search_targets')}" />
+            <div class="table-scroll">
+                <table class="data-table network-table">
+                    <thead>
+                        <tr>
+                            <th class="col-name">${_('network.col_target')}</th>
+                            <th class="col-check">${_('network.col_check')}</th>
+                            <th class="col-status">${_('network.status')}</th>
+                            <th class="col-latency">${_('network.col_response')}</th>
+                            <th class="col-last">${_('network.last_check')}</th>
+                            <th class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="targets-body">
+                        <tr><td colspan="6" class="state-cell">${_('network.loading')}</td></tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="panel-actions-right">
-                <button class="btn btn-secondary" id="monitor-toggle-btn">
-                    <span class="material-icons">play_arrow</span> ${_('network.monitor_start')}
-                </button>
-                <button class="btn btn-primary" id="create-target-btn">
-                    <span class="material-icons">add</span> ${_('network.add_target')}
-                </button>
-            </div>
-        </div>
-        <div class="table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>${_('network.name')}</th>
-                        <th>${_('network.host')}</th>
-                        <th>${_('network.type')}</th>
-                        <th>${_('network.port')}</th>
-                        <th>${_('network.interval')}</th>
-                        <th>${_('network.status')}</th>
-                        <th>${_('network.latency')}</th>
-                        <th>${_('common.actions')}</th>
-                    </tr>
-                </thead>
-                <tbody id="targets-body"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Tools panel -->
-    <div class="tab-panel" id="tab-tools">
-        <div class="tools-grid">
-            <div class="tool-card">
-                <h3><span class="material-icons">cell_tower</span> Ping</h3>
-                <div class="tool-form">
-                    <input type="text" id="tool-ping-host" placeholder="${_('network.host')}" />
-                    <button class="btn btn-primary" id="tool-ping-btn">Ping</button>
-                </div>
-                <div class="tool-result" id="tool-ping-result"></div>
-            </div>
-            <div class="tool-card">
-                <h3><span class="material-icons">cable</span> TCP</h3>
-                <div class="tool-form">
-                    <input type="text" id="tool-tcp-host" placeholder="${_('network.host')}" />
-                    <input type="number" id="tool-tcp-port" placeholder="${_('network.port')}" value="80" style="width:100px" />
-                    <button class="btn btn-primary" id="tool-tcp-btn">Check</button>
-                </div>
-                <div class="tool-result" id="tool-tcp-result"></div>
-            </div>
-            <div class="tool-card">
-                <h3><span class="material-icons">http</span> HTTP</h3>
-                <div class="tool-form">
-                    <input type="text" id="tool-http-url" placeholder="https://example.com" />
-                    <button class="btn btn-primary" id="tool-http-btn">Check</button>
-                </div>
-                <div class="tool-result" id="tool-http-result"></div>
-            </div>
-            <div class="tool-card">
-                <h3><span class="material-icons">dns</span> DNS</h3>
-                <div class="tool-form">
-                    <input type="text" id="tool-dns-host" placeholder="${_('network.host')}" />
-                    <button class="btn btn-primary" id="tool-dns-btn">Resolve</button>
-                </div>
-                <div class="tool-result" id="tool-dns-result"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- History modal -->
-    <div class="modal-overlay" id="history-modal" style="display:none">
-        <div class="modal modal-lg">
-            <div class="modal-header">
-                <h2 id="history-modal-title">${_('network.check_history')}</h2>
-                <button class="modal-close" data-modal="history-modal"><span class="material-icons">close</span></button>
-            </div>
-            <div class="modal-body" id="history-body"></div>
-        </div>
-    </div>
-
-    <!-- Target modal -->
-    <div class="modal-overlay" id="target-modal" style="display:none">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 id="target-modal-title">${_('network.add_target')}</h2>
-                <button class="modal-close" data-modal="target-modal"><span class="material-icons">close</span></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="target-id" />
-                <div class="form-row">
-                    <label for="target-name">${_('network.name')}</label>
-                    <input type="text" id="target-name" />
-                </div>
-                <div class="form-row">
-                    <label for="target-host">${_('network.host')}</label>
-                    <input type="text" id="target-host" placeholder="192.168.1.1 or example.com" />
-                </div>
-                <div class="form-row">
-                    <label for="target-type">${_('network.type')}</label>
-                    <select id="target-type">
-                        <option value="ping">Ping (ICMP)</option>
-                        <option value="tcp">TCP Port</option>
-                        <option value="http">HTTP(S)</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <label for="target-port">${_('network.port')}</label>
-                    <input type="number" id="target-port" value="80" />
-                </div>
-                <div class="form-row">
-                    <label for="target-interval">${_('network.interval')}</label>
-                    <select id="target-interval">
-                        <option value="30">30s</option>
-                        <option value="60" selected>60s</option>
-                        <option value="300">5m</option>
-                        <option value="600">10m</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <label><input type="checkbox" id="target-enabled" checked /> ${_('network.enabled')}</label>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="target-cancel-btn">${_('common.cancel')}</button>
-                <button class="btn btn-primary" id="target-save-btn">${_('common.save')}</button>
-            </div>
-        </div>
+            <p class="network-tools-note" id="network-tools-note" hidden>${_('network.tools_note').replace('{link}', `<a href="/toolkit">${_('nav.toolkit')}</a>`)}</p>
+        </section>
     </div>
     `
 }) %>
