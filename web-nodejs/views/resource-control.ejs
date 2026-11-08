@@ -1,245 +1,256 @@
+<%
+    const rcTabs = [
+        { key: 'usb', label: _('resource_control.cat_usb') },
+        { key: 'optical', label: _('resource_control.cat_optical') },
+        { key: 'monitors', label: _('resource_control.cat_monitors') },
+        { key: 'disks', label: _('resource_control.cat_disks') },
+        { key: 'quotas', label: _('resource_control.cat_quotas') },
+    ];
+    const effect = `<p class="field-effect">${_('resource_control.effect_next_fetch')}</p>`;
+    const saveBar = (key, label) => `
+                    <div class="save-bar">
+                        <span class="save-status" data-save-status aria-live="polite"></span>
+                        <button type="submit" class="btn btn-primary" data-save-button>${label}</button>
+                    </div>`;
+%>
 <%- include('layouts/main', {
-    title: typeof title !== 'undefined' ? title : 'Resource Control',
-    pageStyles: typeof pageStyles !== 'undefined' ? pageStyles : ['resource-control'],
-    pageScripts: typeof pageScripts !== 'undefined' ? pageScripts : ['resource-control'],
-    currentPage: typeof currentPage !== 'undefined' ? currentPage : 'resource-control',
-    breadcrumb: typeof breadcrumb !== 'undefined' ? breadcrumb : [{ label: 'Resource Control' }],
+    title: _('nav.resource_control'),
+    uiReworked: true,
+    pageStyles: ['ui/resource-control'],
+    pageScripts: ['resource-control'],
+    currentPage: 'resource-control',
+    breadcrumb: [{ label: _('nav.resource_control') }],
     body: `
-    <div class="page-content" style="max-width: 1400px; margin: 0 auto;">
-        <div class="rc-header">
-            <h2>${_('resource_control.title')}</h2>
-            <div class="rc-tabs" id="rc-tabs">
-                <button class="rc-tab active" data-tab="overview" data-bd-call="ResourceControl.switchTab" data-bd-args='["overview"]'>
-                    <span class="material-icons-round">dashboard</span>
-                    ${_('resource_control.tab_overview')}
-                </button>
-                <button class="rc-tab" data-tab="usb" data-bd-call="ResourceControl.switchTab" data-bd-args='["usb"]'>
-                    <span class="material-icons-round">usb</span>
-                    ${_('resource_control.tab_usb')}
-                </button>
-                <button class="rc-tab" data-tab="optical" data-bd-call="ResourceControl.switchTab" data-bd-args='["optical"]'>
-                    <span class="material-icons-round">album</span>
-                    ${_('resource_control.tab_optical')}
-                </button>
-                <button class="rc-tab" data-tab="monitors" data-bd-call="ResourceControl.switchTab" data-bd-args='["monitors"]'>
-                    <span class="material-icons-round">monitor</span>
-                    ${_('resource_control.tab_monitors')}
-                </button>
-                <button class="rc-tab" data-tab="disks" data-bd-call="ResourceControl.switchTab" data-bd-args='["disks"]'>
-                    <span class="material-icons-round">storage</span>
-                    ${_('resource_control.tab_disks')}
-                </button>
-                <button class="rc-tab" data-tab="quotas" data-bd-call="ResourceControl.switchTab" data-bd-args='["quotas"]'>
-                    <span class="material-icons-round">speed</span>
-                    ${_('resource_control.tab_quotas')}
-                </button>
-            </div>
+    <div class="page rc-page">
+        <div class="page-head">
+            <h1>${_('nav.resource_control')}</h1>
+            <p class="page-description">${_('resource_control.page_description')}</p>
         </div>
 
-        <div class="rc-content">
-            <!-- Overview tab -->
-            <div class="rc-panel active" id="panel-overview">
-                <div class="rc-compliance-row" id="compliance-stats"></div>
-                <div class="rc-section">
-                    <h3>${_('resource_control.compliance_by_category')}</h3>
-                    <div class="rc-category-grid" id="compliance-categories"></div>
+        <!-- Device list -->
+        <section class="section rc-list" id="rc-list" aria-labelledby="rc-list-title">
+            <h2 id="rc-list-title" class="sr-only">${_('resource_control.devices_title')}</h2>
+            <div class="toolbar">
+                <div class="toolbar-search search-wrapper">
+                    <span class="material-icons" aria-hidden="true">search</span>
+                    <input type="search" class="form-input" id="rc-device-search"
+                           aria-label="${_('resource_control.search_label')}"
+                           placeholder="${_('resource_control.search_label')}">
                 </div>
-                <div class="rc-section">
-                    <h3>${_('resource_control.device_compliance')}</h3>
-                    <div class="rc-device-filter">
-                        <input type="text" class="rc-search" id="rc-device-search"
-                               placeholder="${_('resource_control.search_devices')}"
-                               oninput="ResourceControl.filterDevices()">
-                    </div>
-                    <div class="rc-table-scroll">
-                        <table class="rc-table" id="rc-device-table">
-                            <thead>
-                                <tr>
-                                    <th>${_('resource_control.col_device')}</th>
-                                    <th>${_('resource_control.col_platform')}</th>
-                                    <th>${_('resource_control.col_status')}</th>
-                                    <th>${_('resource_control.col_usb')}</th>
-                                    <th>${_('resource_control.col_optical')}</th>
-                                    <th>${_('resource_control.col_monitors')}</th>
-                                    <th>${_('resource_control.col_disks')}</th>
-                                    <th>${_('resource_control.col_quotas')}</th>
-                                    <th>${_('resource_control.col_actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rc-device-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
+            </div>
+            <p class="count-line" id="compliance-stats" aria-live="polite"></p>
+            <div class="table-scroll">
+                <table class="data-table rc-table" id="rc-device-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">${_('resource_control.col_device')}</th>
+                            <th scope="col" class="rc-platform-col">${_('resource_control.col_platform')}</th>
+                            <th scope="col">${_('resource_control.col_status')}</th>
+                            <th scope="col" class="rc-rules-col">${_('resource_control.col_rules')}</th>
+                            <th scope="col" class="actions"><span class="sr-only">${_('resource_control.col_actions')}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="rc-device-tbody">
+                        <tr><td colspan="5" class="state-cell">${_('resource_control.loading')}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <details class="disclosure section rc-compliance" id="rc-compliance">
+            <summary><h2>${_('resource_control.compliance_title')}</h2></summary>
+            <p class="section-note">${_('resource_control.compliance_note')}</p>
+            <dl class="facts" id="compliance-categories"></dl>
+        </details>
+
+        <!-- Rules of one device; shown instead of the list after "Edit rules" -->
+        <section class="section rc-editor" id="rc-editor" aria-labelledby="rc-editor-title" hidden>
+            <div>
+                <button type="button" class="btn btn-sm" id="rc-editor-back">${_('resource_control.back_to_list')}</button>
+            </div>
+            <div class="section-head">
+                <h2 id="rc-editor-title"></h2>
+            </div>
+            <p class="section-note" id="rc-editor-note"></p>
+            <p class="state" id="rc-editor-state" aria-live="polite"></p>
+
+            <div class="tabs" role="tablist" id="rc-tabs" aria-label="${_('resource_control.tabs_label')}">
+                ${rcTabs.map((t, i) => `<button type="button" class="tab rc-tab${i === 0 ? ' active' : ''}" role="tab"
+                    id="rc-tab-${t.key}" data-tab="${t.key}" aria-controls="panel-${t.key}"
+                    aria-selected="${i === 0 ? 'true' : 'false'}" tabindex="${i === 0 ? '0' : '-1'}">${t.label}</button>`).join('')}
             </div>
 
-            <!-- USB tab -->
-            <div class="rc-panel" id="panel-usb">
-                <div class="rc-section">
-                    <div class="rc-section-header">
-                        <h3><span class="material-icons-round">usb</span> ${_('resource_control.usb_title')}</h3>
+            <!-- USB -->
+            <form class="rc-panel form-column active" id="panel-usb" data-category="usb" data-save-form
+                  role="tabpanel" aria-labelledby="rc-tab-usb" novalidate>
+                <div class="rc-policy-form" id="usb-form">
+                    <p class="section-note">${_('resource_control.usb_note')}</p>
+                    <div class="form-group">
+                        <label class="form-label" for="usb-storage-policy">${_('resource_control.usb_storage_label')}</label>
+                        <select id="usb-storage-policy" class="form-select is-medium" aria-describedby="usb-storage-hint">
+                            <option value="allowed">${_('resource_control.policy_allowed')}</option>
+                            <option value="blocked">${_('resource_control.policy_blocked')}</option>
+                            <option value="whitelist">${_('resource_control.policy_listed')}</option>
+                        </select>
+                        <p class="form-hint" id="usb-storage-hint">${_('resource_control.usb_storage_hint')}</p>
                     </div>
-                    <p class="rc-hint">${_('resource_control.usb_hint')}</p>
-                    <div class="rc-policy-form" id="usb-form">
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.usb_storage_policy')}</label>
-                            <select id="usb-storage-policy">
-                                <option value="allowed">${_('resource_control.policy_allowed')}</option>
-                                <option value="blocked">${_('resource_control.policy_blocked')}</option>
-                                <option value="whitelist">${_('resource_control.policy_whitelist')}</option>
-                            </select>
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.usb_whitelist')}</label>
-                            <textarea id="usb-whitelist" placeholder="${_('resource_control.usb_whitelist_hint')}" rows="4"></textarea>
-                        </div>
-                        <div class="rc-form-group">
-                            <label class="rc-toggle-label">
-                                <input type="checkbox" id="usb-audit-log"> ${_('resource_control.usb_audit_log')}
-                            </label>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="usb-whitelist">${_('resource_control.usb_list_label')}</label>
+                        <textarea id="usb-whitelist" class="form-input mono" rows="4" aria-describedby="usb-whitelist-hint"></textarea>
+                        <p class="form-hint" id="usb-whitelist-hint">${_('resource_control.usb_list_hint')}</p>
                     </div>
+                    <div class="form-group">
+                        <label class="check-field">
+                            <input type="checkbox" id="usb-audit-log">
+                            <span class="check-label">${_('resource_control.usb_log_label')}</span>
+                            <span class="form-hint">${_('resource_control.usb_log_hint')}</span>
+                        </label>
+                    </div>
+                    ${effect}
                 </div>
-            </div>
+                ${saveBar('usb', _('resource_control.save_usb'))}
+            </form>
 
-            <!-- Optical tab -->
-            <div class="rc-panel" id="panel-optical">
-                <div class="rc-section">
-                    <div class="rc-section-header">
-                        <h3><span class="material-icons-round">album</span> ${_('resource_control.optical_title')}</h3>
+            <!-- Optical drives -->
+            <form class="rc-panel form-column" id="panel-optical" data-category="optical" data-save-form
+                  role="tabpanel" aria-labelledby="rc-tab-optical" hidden novalidate>
+                <div class="rc-policy-form" id="optical-form">
+                    <p class="section-note">${_('resource_control.optical_note')}</p>
+                    <div class="form-group">
+                        <label class="form-label" for="optical-policy">${_('resource_control.cat_optical')}</label>
+                        <select id="optical-policy" class="form-select is-medium" aria-describedby="optical-policy-hint">
+                            <option value="allowed">${_('resource_control.policy_allowed')}</option>
+                            <option value="blocked">${_('resource_control.policy_blocked')}</option>
+                        </select>
+                        <p class="form-hint" id="optical-policy-hint">${_('resource_control.optical_hint_new')}</p>
                     </div>
-                    <p class="rc-hint">${_('resource_control.optical_hint')}</p>
-                    <div class="rc-policy-form" id="optical-form">
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.optical_policy')}</label>
-                            <select id="optical-policy">
-                                <option value="allowed">${_('resource_control.policy_allowed')}</option>
-                                <option value="blocked">${_('resource_control.policy_blocked')}</option>
-                            </select>
-                        </div>
-                        <div class="rc-form-group">
-                            <label class="rc-toggle-label">
-                                <input type="checkbox" id="optical-audit-log"> ${_('resource_control.optical_audit_log')}
-                            </label>
-                        </div>
+                    <div class="form-group">
+                        <label class="check-field">
+                            <input type="checkbox" id="optical-audit-log">
+                            <span class="check-label">${_('resource_control.optical_log_label')}</span>
+                            <span class="form-hint">${_('resource_control.optical_log_hint')}</span>
+                        </label>
                     </div>
+                    ${effect}
                 </div>
-            </div>
+                ${saveBar('optical', _('resource_control.save_optical'))}
+            </form>
 
-            <!-- Monitors tab -->
-            <div class="rc-panel" id="panel-monitors">
-                <div class="rc-section">
-                    <div class="rc-section-header">
-                        <h3><span class="material-icons-round">monitor</span> ${_('resource_control.monitors_title')}</h3>
+            <!-- Monitors -->
+            <form class="rc-panel form-column" id="panel-monitors" data-category="monitors" data-save-form
+                  role="tabpanel" aria-labelledby="rc-tab-monitors" hidden novalidate>
+                <div class="rc-policy-form" id="monitors-form">
+                    <p class="section-note">${_('resource_control.monitors_note')}</p>
+                    <div class="form-group">
+                        <label class="form-label" for="monitors-max-count">${_('resource_control.monitors_count_label')}</label>
+                        <input type="number" id="monitors-max-count" class="form-input is-short" min="0" max="16" value="0" aria-describedby="monitors-max-hint">
+                        <p class="form-hint" id="monitors-max-hint">${_('resource_control.zero_no_limit')}</p>
                     </div>
-                    <p class="rc-hint">${_('resource_control.monitors_hint')}</p>
-                    <div class="rc-policy-form" id="monitors-form">
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.monitors_max_count')}</label>
-                            <input type="number" id="monitors-max-count" min="0" max="16" value="0"
-                                   placeholder="${_('resource_control.monitors_max_hint')}">
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.monitors_resolution')}</label>
-                            <select id="monitors-resolution">
-                                <option value="any">${_('resource_control.policy_any')}</option>
-                                <option value="1920x1080">1920×1080 (Full HD)</option>
-                                <option value="2560x1440">2560×1440 (QHD)</option>
-                                <option value="3840x2160">3840×2160 (4K UHD)</option>
-                            </select>
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.monitors_brightness')}</label>
-                            <input type="range" id="monitors-brightness" min="0" max="100" value="100">
-                            <span id="monitors-brightness-val">100%</span>
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.monitors_power_schedule')}</label>
-                            <input type="text" id="monitors-power-schedule"
-                                   placeholder="${_('resource_control.monitors_power_hint')}">
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="monitors-resolution">${_('resource_control.monitors_resolution_label')}</label>
+                        <select id="monitors-resolution" class="form-select is-medium" aria-describedby="monitors-resolution-hint">
+                            <option value="any">${_('resource_control.policy_any')}</option>
+                            <option value="1920x1080">1920 × 1080 (Full HD)</option>
+                            <option value="2560x1440">2560 × 1440 (QHD)</option>
+                            <option value="3840x2160">3840 × 2160 (4K UHD)</option>
+                        </select>
+                        <p class="form-hint" id="monitors-resolution-hint">${_('resource_control.monitors_resolution_hint')}</p>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="monitors-brightness">${_('resource_control.monitors_brightness_label')}</label>
+                        <div class="rc-range">
+                            <input type="range" id="monitors-brightness" min="0" max="100" value="100" aria-describedby="monitors-brightness-hint">
+                            <output id="monitors-brightness-val" for="monitors-brightness">100%</output>
+                        </div>
+                        <p class="form-hint" id="monitors-brightness-hint">${_('resource_control.monitors_brightness_hint')}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="monitors-power-schedule">${_('resource_control.monitors_power_label')}</label>
+                        <input type="text" id="monitors-power-schedule" class="form-input is-medium mono" aria-describedby="monitors-power-hint">
+                        <p class="form-hint" id="monitors-power-hint">${_('resource_control.monitors_power_hint_new')}</p>
+                    </div>
+                    ${effect}
                 </div>
-            </div>
+                ${saveBar('monitors', _('resource_control.save_monitors'))}
+            </form>
 
-            <!-- Disks tab -->
-            <div class="rc-panel" id="panel-disks">
-                <div class="rc-section">
-                    <div class="rc-section-header">
-                        <h3><span class="material-icons-round">storage</span> ${_('resource_control.disks_title')}</h3>
+            <!-- Disks -->
+            <form class="rc-panel form-column" id="panel-disks" data-category="disks" data-save-form
+                  role="tabpanel" aria-labelledby="rc-tab-disks" hidden novalidate>
+                <div class="rc-policy-form" id="disks-form">
+                    <p class="section-note">${_('resource_control.disks_note')}</p>
+                    <div class="form-group">
+                        <label class="check-field">
+                            <input type="checkbox" id="disks-readonly">
+                            <span class="check-label">${_('resource_control.disks_readonly_label')}</span>
+                            <span class="form-hint">${_('resource_control.disks_readonly_hint')}</span>
+                        </label>
                     </div>
-                    <p class="rc-hint">${_('resource_control.disks_hint')}</p>
-                    <div class="rc-policy-form" id="disks-form">
-                        <div class="rc-form-group">
-                            <label class="rc-toggle-label">
-                                <input type="checkbox" id="disks-readonly"> ${_('resource_control.disks_readonly')}
-                            </label>
-                        </div>
-                        <div class="rc-form-group">
-                            <label class="rc-toggle-label">
-                                <input type="checkbox" id="disks-encryption"> ${_('resource_control.disks_encryption')}
-                            </label>
-                        </div>
-                        <div class="rc-form-group">
-                            <label class="rc-toggle-label">
-                                <input type="checkbox" id="disks-smart"> ${_('resource_control.disks_smart')}
-                            </label>
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.disks_hidden')}</label>
-                            <input type="text" id="disks-hidden-partitions"
-                                   placeholder="${_('resource_control.disks_hidden_hint')}">
-                        </div>
+                    <div class="form-group">
+                        <label class="check-field">
+                            <input type="checkbox" id="disks-encryption">
+                            <span class="check-label">${_('resource_control.disks_encryption_label')}</span>
+                            <span class="form-hint">${_('resource_control.disks_encryption_hint')}</span>
+                        </label>
                     </div>
+                    <div class="form-group">
+                        <label class="check-field">
+                            <input type="checkbox" id="disks-smart">
+                            <span class="check-label">${_('resource_control.disks_smart_label')}</span>
+                            <span class="form-hint">${_('resource_control.disks_smart_hint')}</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="disks-hidden-partitions">${_('resource_control.disks_hidden_label')}</label>
+                        <input type="text" id="disks-hidden-partitions" class="form-input is-medium mono" aria-describedby="disks-hidden-hint">
+                        <p class="form-hint" id="disks-hidden-hint">${_('resource_control.disks_hidden_hint_new')}</p>
+                    </div>
+                    ${effect}
                 </div>
-            </div>
+                ${saveBar('disks', _('resource_control.save_disks'))}
+            </form>
 
-            <!-- Quotas tab -->
-            <div class="rc-panel" id="panel-quotas">
-                <div class="rc-section">
-                    <div class="rc-section-header">
-                        <h3><span class="material-icons-round">speed</span> ${_('resource_control.quotas_title')}</h3>
+            <!-- Usage limits -->
+            <form class="rc-panel form-column" id="panel-quotas" data-category="quotas" data-save-form
+                  role="tabpanel" aria-labelledby="rc-tab-quotas" hidden novalidate>
+                <div class="rc-policy-form" id="quotas-form">
+                    <p class="section-note">${_('resource_control.quotas_note')}</p>
+                    <div class="form-group">
+                        <label class="form-label" for="quotas-cpu">${_('resource_control.quotas_cpu_label')}</label>
+                        <div class="rc-range">
+                            <input type="range" id="quotas-cpu" min="0" max="100" value="100" aria-describedby="quotas-cpu-hint">
+                            <output id="quotas-cpu-val" for="quotas-cpu">100%</output>
+                        </div>
+                        <p class="form-hint" id="quotas-cpu-hint">${_('resource_control.quotas_cpu_hint')}</p>
                     </div>
-                    <p class="rc-hint">${_('resource_control.quotas_hint')}</p>
-                    <div class="rc-policy-form" id="quotas-form">
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.quotas_cpu')}</label>
-                            <div class="rc-range-group">
-                                <input type="range" id="quotas-cpu" min="0" max="100" value="100">
-                                <span id="quotas-cpu-val">100%</span>
-                            </div>
+                    <div class="form-group">
+                        <label class="form-label" for="quotas-ram">${_('resource_control.quotas_ram_label')}</label>
+                        <div class="rc-range">
+                            <input type="range" id="quotas-ram" min="0" max="100" value="100" aria-describedby="quotas-ram-hint">
+                            <output id="quotas-ram-val" for="quotas-ram">100%</output>
                         </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.quotas_ram')}</label>
-                            <div class="rc-range-group">
-                                <input type="range" id="quotas-ram" min="0" max="100" value="100">
-                                <span id="quotas-ram-val">100%</span>
-                            </div>
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.quotas_bandwidth')}</label>
-                            <input type="number" id="quotas-bandwidth" min="0" value="0"
-                                   placeholder="${_('resource_control.quotas_bandwidth_hint')}">
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.quotas_disk_quota')}</label>
-                            <input type="number" id="quotas-disk" min="0" value="0"
-                                   placeholder="${_('resource_control.quotas_disk_hint')}">
-                        </div>
-                        <div class="rc-form-group">
-                            <label>${_('resource_control.quotas_process_whitelist')}</label>
-                            <textarea id="quotas-process-whitelist" rows="4"
-                                      placeholder="${_('resource_control.quotas_process_hint')}"></textarea>
-                        </div>
+                        <p class="form-hint" id="quotas-ram-hint">${_('resource_control.quotas_ram_hint')}</p>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="quotas-bandwidth">${_('resource_control.quotas_bandwidth_label')}</label>
+                        <input type="number" id="quotas-bandwidth" class="form-input is-short" min="0" value="0" aria-describedby="quotas-bandwidth-hint">
+                        <p class="form-hint" id="quotas-bandwidth-hint">${_('resource_control.zero_no_limit')}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="quotas-disk">${_('resource_control.quotas_disk_label')}</label>
+                        <input type="number" id="quotas-disk" class="form-input is-short" min="0" value="0" aria-describedby="quotas-disk-hint">
+                        <p class="form-hint" id="quotas-disk-hint">${_('resource_control.zero_no_limit')}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="quotas-process-whitelist">${_('resource_control.quotas_programs_label')}</label>
+                        <textarea id="quotas-process-whitelist" class="form-input mono" rows="4" aria-describedby="quotas-programs-hint"></textarea>
+                        <p class="form-hint" id="quotas-programs-hint">${_('resource_control.quotas_programs_hint')}</p>
+                    </div>
+                    ${effect}
                 </div>
-            </div>
-        </div>
+                ${saveBar('quotas', _('resource_control.save_quotas'))}
+            </form>
+        </section>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.ResourceControl) ResourceControl.init();
-        });
-    </script>
     `
 }) %>

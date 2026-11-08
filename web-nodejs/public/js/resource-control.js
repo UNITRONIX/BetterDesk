@@ -1,172 +1,274 @@
 /* ============================================
-   Resource Control — resource-control.js
+   USB and drive access (resource control) — resource-control.js
+   The page lists devices; "Edit rules" opens the rules of one device
+   with one tab and one save per category.
    ============================================ */
 (function () {
     'use strict';
-    const _ = window._ || (k => k);
 
-    let currentTab = 'overview';
+    const CATEGORIES = ['usb', 'optical', 'monitors', 'disks', 'quotas'];
+
+    let currentTab = 'usb';
     let devices = [];
     let complianceData = null;
+    let loadFailed = false;
+    let currentDevice = null;
+    let listOpener = null;
 
-    // ---- Tab switching ----
-    function switchTab(tab) {
-        currentTab = tab;
-        document.querySelectorAll('.rc-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-        document.querySelectorAll('.rc-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+    function t(key, params) {
+        const fn = window._;
+        let s = typeof fn === 'function' ? fn(key, params) : key;
+        if (params && typeof s === 'string') {
+            s = s.replace(/\{(\w+)\}/g, (m, p) => (params[p] !== undefined ? params[p] : m));
+        }
+        return s;
     }
 
-    // ---- Compliance overview ----
+    // ---- Tabs inside the device editor ----
+    function switchTab(tab) {
+        if (tab === 'overview') { closeEditor(); return; }
+        if (!CATEGORIES.includes(tab)) return;
+        currentTab = tab;
+        document.querySelectorAll('.rc-tab').forEach(btn => {
+            const on = btn.dataset.tab === tab;
+            btn.classList.toggle('active', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            btn.tabIndex = on ? 0 : -1;
+        });
+        document.querySelectorAll('.rc-panel').forEach(p => {
+            const on = p.id === 'panel-' + tab;
+            p.classList.toggle('active', on);
+            p.hidden = !on;
+        });
+    }
+
+    function onTabKey(e) {
+        const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        if (!keys.includes(e.key)) return;
+        e.preventDefault();
+        const rtl = document.documentElement.dir === 'rtl';
+        let i = CATEGORIES.indexOf(currentTab);
+        if (e.key === 'Home') i = 0;
+        else if (e.key === 'End') i = CATEGORIES.length - 1;
+        else {
+            const forward = (e.key === 'ArrowRight') !== rtl;
+            i = (i + (forward ? 1 : -1) + CATEGORIES.length) % CATEGORIES.length;
+        }
+        switchTab(CATEGORIES[i]);
+        const btn = document.getElementById('rc-tab-' + CATEGORIES[i]);
+        if (btn) btn.focus();
+    }
+
+    // ---- Compliance summary (facts in a disclosure) ----
     async function loadCompliance() {
         try {
-            const resp = await fetch('/api/panel/resource-control/compliance');
+            const resp = await fetch('/api/panel/resource-control/compliance', { credentials: 'same-origin' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();
             complianceData = data.data || data;
-            renderComplianceStats(complianceData);
-            renderComplianceCategories(complianceData);
         } catch (e) {
-            console.warn('Resource control compliance load error:', e);
-            renderComplianceStats(null);
+            complianceData = null;
         }
+        renderComplianceCategories(complianceData);
     }
 
-    function renderComplianceStats(d) {
-        const el = document.getElementById('compliance-stats');
-        if (!el) return;
-        const total = d ? (d.total_devices || 0) : 0;
-        const compliant = d ? (d.compliant || 0) : 0;
-        const partial = d ? (d.partial || 0) : 0;
-        const noncomp = d ? (d.noncompliant || 0) : 0;
-        const pct = total > 0 ? Math.round((compliant / total) * 100) : 0;
-
-        el.innerHTML = `
-            <div class="rc-stat-card">
-                <div class="rc-stat-value">${total}</div>
-                <div class="rc-stat-label">${_('resource_control.stat_total_devices')}</div>
-            </div>
-            <div class="rc-stat-card">
-                <div class="rc-stat-value green">${compliant}</div>
-                <div class="rc-stat-label">${_('resource_control.stat_compliant')}</div>
-            </div>
-            <div class="rc-stat-card">
-                <div class="rc-stat-value yellow">${partial}</div>
-                <div class="rc-stat-label">${_('resource_control.stat_partial')}</div>
-            </div>
-            <div class="rc-stat-card">
-                <div class="rc-stat-value red">${noncomp}</div>
-                <div class="rc-stat-label">${_('resource_control.stat_noncompliant')}</div>
-            </div>
-            <div class="rc-stat-card">
-                <div class="rc-stat-value ${pct >= 80 ? 'green' : pct >= 50 ? 'yellow' : 'red'}">${pct}%</div>
-                <div class="rc-stat-label">${_('resource_control.stat_compliance_rate')}</div>
-            </div>
-        `;
+    function categoryLabel(key) {
+        return t('resource_control.cat_' + key);
     }
 
     function renderComplianceCategories(d) {
         const el = document.getElementById('compliance-categories');
         if (!el) return;
-        const cats = d && d.categories ? d.categories : [
-            { key: 'usb', icon: 'usb', pct: 0 },
-            { key: 'optical', icon: 'album', pct: 0 },
-            { key: 'monitors', icon: 'monitor', pct: 0 },
-            { key: 'disks', icon: 'storage', pct: 0 },
-            { key: 'quotas', icon: 'speed', pct: 0 }
+        if (!d) {
+            el.innerHTML = `<dt>${escHtml(t('resource_control.compliance_title'))}</dt><dd>${escHtml(t('resource_control.compliance_failed'))}</dd>`;
+            return;
+        }
+        const total = Number(d.total_devices) || 0;
+        const rows = [
+            [t('resource_control.compliance_all'), t('resource_control.of_devices', { n: Number(d.compliant) || 0, total })],
+            [t('resource_control.compliance_not'), t('resource_control.of_devices', { n: Number(d.non_compliant ?? d.noncompliant) || 0, total })],
+            [t('resource_control.compliance_none'), t('resource_control.of_devices', { n: Number(d.no_policy) || 0, total })],
         ];
-        const catMap = { usb: 'usb', optical: 'optical', monitors: 'monitor', disks: 'disk', quotas: 'quota' };
-        el.innerHTML = cats.map(c => {
-            const pct = c.pct || 0;
-            const colorCls = pct >= 80 ? 'green' : pct >= 50 ? 'yellow' : 'red';
-            return `
-                <div class="rc-category-card">
-                    <div class="rc-category-icon ${catMap[c.key] || c.key}">
-                        <span class="material-icons-round">${c.icon || 'settings'}</span>
-                    </div>
-                    <div class="rc-category-info">
-                        <div class="rc-category-name">${_('resource_control.tab_' + c.key)}</div>
-                        <div class="rc-category-bar">
-                            <div class="rc-category-fill ${colorCls}" style="width:${pct}%"></div>
-                        </div>
-                        <div class="rc-category-pct">${pct}% ${_('resource_control.stat_compliant').toLowerCase()}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        // The server sends categories as { usb: { enforced, total } }; older builds sent [{ key, pct }]
+        const cats = d.categories || {};
+        if (Array.isArray(cats)) {
+            cats.forEach(c => rows.push([categoryLabel(c.key), `${Number(c.pct) || 0} %`]));
+        } else {
+            CATEGORIES.forEach(k => {
+                const c = cats[k] || {};
+                rows.push([categoryLabel(k), t('resource_control.of_devices', { n: Number(c.enforced) || 0, total: Number(c.total) || 0 })]);
+            });
+        }
+        el.innerHTML = rows.map(([k, v]) => `<dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd>`).join('');
     }
 
     // ---- Device list ----
     async function loadDevices() {
+        const tbody = document.getElementById('rc-device-tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="state-cell">${escHtml(t('resource_control.loading'))}</td></tr>`;
         try {
-            const resp = await fetch('/api/panel/resource-control/devices');
+            const resp = await fetch('/api/panel/resource-control/devices', { credentials: 'same-origin' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();
             devices = data.data || data.devices || data || [];
             if (!Array.isArray(devices)) devices = [];
-            renderDevices(devices);
+            loadFailed = false;
         } catch (e) {
-            console.warn('Resource control devices load error:', e);
             devices = [];
-            renderDevices([]);
+            loadFailed = true;
         }
+        filterDevices();
+    }
+
+    function isOnline(d) {
+        if (d.online === true) return true;
+        return String(d.status || '').toLowerCase() === 'online';
+    }
+
+    function rulesText(res) {
+        if (!res || typeof res !== 'object') return t('resource_control.rules_unknown');
+        const parts = CATEGORIES
+            .filter(k => res[k] && res[k] !== 'na')
+            .map(k => `${categoryLabel(k)}: ${t('resource_control.rule_state_' + (['compliant', 'partial'].includes(res[k]) ? res[k] : 'noncompliant'))}`);
+        return parts.length ? parts.join(', ') : t('resource_control.rules_unknown');
+    }
+
+    function renderCount(shown) {
+        const el = document.getElementById('compliance-stats');
+        if (!el) return;
+        if (loadFailed) { el.textContent = ''; return; }
+        const total = devices.length;
+        const key = shown === total
+            ? (total === 1 ? 'resource_control.count_one' : 'resource_control.count_many')
+            : 'resource_control.count_filtered';
+        const html = escHtml(t(key, { count: '{{c}}', shown: '{{s}}', total: '{{t}}' }))
+            .replace('{{c}}', `<strong>${total}</strong>`)
+            .replace('{{s}}', `<strong>${shown}</strong>`)
+            .replace('{{t}}', String(total));
+        el.innerHTML = html;
     }
 
     function renderDevices(list) {
         const tbody = document.getElementById('rc-device-tbody');
         if (!tbody) return;
-        if (!list.length) {
-            tbody.innerHTML = `<tr><td colspan="9">
-                <div class="rc-empty">
-                    <span class="material-icons-round">devices</span>
-                    <p>${_('resource_control.no_devices')}</p>
-                </div>
-            </td></tr>`;
+        renderCount(list.length);
+        if (loadFailed) {
+            tbody.innerHTML = `<tr><td colspan="5" class="state-cell"><span class="state is-error">${escHtml(t('resource_control.load_failed'))}
+                <button type="button" class="btn btn-sm" id="rc-retry">${escHtml(t('resource_control.try_again'))}</button></span></td></tr>`;
+            const retry = document.getElementById('rc-retry');
+            if (retry) retry.addEventListener('click', () => { loadDevices(); loadCompliance(); });
             return;
         }
+        if (!list.length) {
+            const msg = devices.length ? t('resource_control.no_match') : t('resource_control.empty_list');
+            tbody.innerHTML = `<tr><td colspan="5" class="state-cell">${escHtml(msg)}</td></tr>`;
+            return;
+        }
+        // The rules column only earns its place once some device reports its rules
+        const table = document.getElementById('rc-device-table');
+        if (table) table.classList.toggle('rc-no-rules', !devices.some(d => d.resources && typeof d.resources === 'object'));
         tbody.innerHTML = list.map(d => {
-            const res = d.resources || {};
+            const name = d.hostname || d.id;
+            const online = isOnline(d);
             return `
                 <tr>
-                    <td><strong>${escHtml(d.hostname || d.id)}</strong><br><span style="color:var(--text-secondary);font-size:12px">${escHtml(d.id)}</span></td>
-                    <td>${escHtml(d.platform || '-')}</td>
-                    <td>${d.online ? '<span style="color:#3fb950">● Online</span>' : '<span style="color:#8b949e">○ Offline</span>'}</td>
-                    <td>${badgeFor(res.usb)}</td>
-                    <td>${badgeFor(res.optical)}</td>
-                    <td>${badgeFor(res.monitors)}</td>
-                    <td>${badgeFor(res.disks)}</td>
-                    <td>${badgeFor(res.quotas)}</td>
-                    <td><button class="rc-action-btn" data-bd-call="ResourceControl.configure" data-bd-args='["${escHtml(d.id)}"]'>${_('resource_control.btn_configure')}</button></td>
+                    <td><span class="rc-device-name">${escHtml(name)}</span>${d.hostname ? `<span class="cell-sub mono">${escHtml(d.id)}</span>` : ''}${d.platform ? `<span class="cell-sub rc-platform-sub">${escHtml(d.platform)}</span>` : ''}</td>
+                    <td class="rc-platform-col">${escHtml(d.platform || '—')}</td>
+                    <td><span class="status ${online ? 'online' : 'offline'}">${escHtml(t(online ? 'status.online' : 'status.offline'))}</span></td>
+                    <td class="rc-rules-cell rc-rules-col">${escHtml(rulesText(d.resources))}</td>
+                    <td class="actions"><button type="button" class="btn btn-sm" data-rc-configure="${escHtml(d.id)}"
+                        aria-label="${escHtml(t('resource_control.edit_rules_for', { name }))}">${escHtml(t('resource_control.edit_rules'))}</button></td>
                 </tr>
             `;
         }).join('');
     }
 
-    function badgeFor(status) {
-        if (!status || status === 'na') return `<span class="rc-badge na">${_('resource_control.badge_na')}</span>`;
-        if (status === 'compliant') return `<span class="rc-badge compliant"><span class="material-icons-round">check</span>${_('resource_control.badge_compliant')}</span>`;
-        if (status === 'partial') return `<span class="rc-badge partial"><span class="material-icons-round">warning</span>${_('resource_control.badge_partial')}</span>`;
-        return `<span class="rc-badge noncompliant"><span class="material-icons-round">close</span>${_('resource_control.badge_noncompliant')}</span>`;
-    }
-
     function filterDevices() {
-        const q = (document.getElementById('rc-device-search') || {}).value || '';
-        const lq = q.toLowerCase();
-        const filtered = devices.filter(d =>
-            (d.id || '').toLowerCase().includes(lq) ||
-            (d.hostname || '').toLowerCase().includes(lq) ||
-            (d.platform || '').toLowerCase().includes(lq)
+        const q = ((document.getElementById('rc-device-search') || {}).value || '').trim().toLowerCase();
+        const filtered = !q ? devices : devices.filter(d =>
+            String(d.id || '').toLowerCase().includes(q) ||
+            String(d.hostname || '').toLowerCase().includes(q) ||
+            String(d.platform || '').toLowerCase().includes(q)
         );
         renderDevices(filtered);
     }
 
-    // ---- Configure device ----
+    // ---- Device editor ----
+    function anyDirty() {
+        return CATEGORIES.some(k => {
+            const f = document.getElementById('panel-' + k);
+            return f && window.UiForm && UiForm.isDirty(f);
+        });
+    }
+
+    function showEditor(on) {
+        const list = document.getElementById('rc-list');
+        const comp = document.getElementById('rc-compliance');
+        const editor = document.getElementById('rc-editor');
+        if (list) list.hidden = on;
+        if (comp) comp.hidden = on;
+        if (editor) editor.hidden = !on;
+    }
+
+    async function closeEditor() {
+        if (anyDirty()) {
+            const ok = await Modal.confirm({
+                title: t('resource_control.discard_title'),
+                message: t('resource_control.discard_message'),
+                confirmLabel: t('resource_control.discard_confirm'),
+                danger: true,
+            });
+            if (!ok) return;
+        }
+        CATEGORIES.forEach(k => { const f = document.getElementById('panel-' + k); if (f && window.UiForm) UiForm.reset(f); });
+        currentDevice = null;
+        window._rcDeviceId = null;
+        showEditor(false);
+        if (listOpener && document.contains(listOpener)) listOpener.focus();
+        else { const s = document.getElementById('rc-device-search'); if (s) s.focus(); }
+    }
+
+    function setEditorState(text, isError) {
+        const el = document.getElementById('rc-editor-state');
+        if (!el) return;
+        el.textContent = text || '';
+        el.hidden = !text;
+        el.classList.toggle('is-error', !!isError);
+    }
+
     async function configure(deviceId) {
+        const d = devices.find(x => String(x.id) === String(deviceId)) || { id: deviceId };
+        currentDevice = d;
+        window._rcDeviceId = deviceId;
+        const name = d.hostname || d.id;
+        document.getElementById('rc-editor-title').textContent = t('resource_control.editor_title', { name });
+        const noteParts = [t('resource_control.editor_device_id', { id: d.id })];
+        if (d.platform) noteParts.push(d.platform);
+        document.getElementById('rc-editor-note').textContent = noteParts.join(' · ');
+        populateForms({}, deviceId);
+        CATEGORIES.forEach(k => { const f = document.getElementById('panel-' + k); if (f && window.UiForm) UiForm.reset(f); });
+        showEditor(true);
         switchTab('usb');
+        setEditorState(t('resource_control.editor_loading'));
+        const title = document.getElementById('rc-editor-title');
+        if (title) { title.tabIndex = -1; title.focus(); }
+
         try {
-            const resp = await fetch('/api/panel/resource-control/policies/' + encodeURIComponent(deviceId));
-            const data = await resp.json();
-            const policy = data.data || data;
-            populateForms(policy, deviceId);
+            const resp = await fetch('/api/panel/resource-control/policies/' + encodeURIComponent(deviceId), { credentials: 'same-origin' });
+            if (currentDevice !== d) return;
+            if (resp.status === 404) {
+                setEditorState(t('resource_control.editor_none'));
+                return;
+            }
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok) throw new Error(data.error || data.message || ('HTTP ' + resp.status));
+            const policy = data.data || data.policy || data;
+            populateForms(policy || {}, deviceId);
+            CATEGORIES.forEach(k => { const f = document.getElementById('panel-' + k); if (f && window.UiForm) UiForm.reset(f); });
+            setEditorState('');
         } catch (e) {
-            console.warn('Load policy error:', e);
+            if (currentDevice !== d) return;
+            setEditorState(t('resource_control.editor_load_failed', { error: e.message }), true);
         }
     }
 
@@ -206,7 +308,69 @@
         window._rcDeviceId = deviceId;
     }
 
-    // ---- Range slider labels ----
+    function lines(id, sep) {
+        return getVal(id).split(sep).map(s => s.trim()).filter(Boolean);
+    }
+
+    function int(id, fallback) {
+        const n = parseInt(getVal(id), 10);
+        return Number.isFinite(n) && n >= 0 ? n : fallback;
+    }
+
+    function collect(category) {
+        switch (category) {
+            case 'usb': return {
+                storage_policy: getVal('usb-storage-policy'),
+                whitelist: lines('usb-whitelist', /\n/),
+                audit_log: isChecked('usb-audit-log'),
+            };
+            case 'optical': return {
+                policy: getVal('optical-policy'),
+                audit_log: isChecked('optical-audit-log'),
+            };
+            case 'monitors': return {
+                max_count: int('monitors-max-count', 0),
+                resolution: getVal('monitors-resolution'),
+                brightness: int('monitors-brightness', 100),
+                power_schedule: getVal('monitors-power-schedule').trim(),
+            };
+            case 'disks': return {
+                readonly: isChecked('disks-readonly'),
+                encryption_required: isChecked('disks-encryption'),
+                smart_monitoring: isChecked('disks-smart'),
+                hidden_partitions: lines('disks-hidden-partitions', ','),
+            };
+            case 'quotas': return {
+                cpu_limit: int('quotas-cpu', 100),
+                ram_limit: int('quotas-ram', 100),
+                bandwidth_limit: int('quotas-bandwidth', 0),
+                disk_quota: int('quotas-disk', 0),
+                process_whitelist: lines('quotas-process-whitelist', /\n/),
+            };
+            default: return null;
+        }
+    }
+
+    async function save(category, form) {
+        const deviceId = window._rcDeviceId;
+        const body = collect(category);
+        if (!deviceId || !body) return;
+        const btn = form.querySelector('[data-save-button]');
+        if (btn) btn.disabled = true;
+        try {
+            await Utils.api('/api/panel/resource-control/policies/' + encodeURIComponent(deviceId) + '/' + category, {
+                method: 'POST',
+                body,
+            });
+            if (window.UiForm) UiForm.saved(form);
+        } catch (e) {
+            if (window.UiForm) UiForm.failed(form, t('resource_control.save_failed', { error: e.message }));
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    // ---- Range labels ----
     function updateBrightnessLabel() {
         const v = document.getElementById('monitors-brightness');
         const l = document.getElementById('monitors-brightness-val');
@@ -223,11 +387,37 @@
     }
 
     // ---- Init ----
+    let started = false;
     function init() {
+        if (started) return;
+        started = true;
         loadCompliance();
         loadDevices();
 
-        // Range slider listeners
+        const search = document.getElementById('rc-device-search');
+        if (search) search.addEventListener('input', filterDevices);
+
+        const tbody = document.getElementById('rc-device-tbody');
+        if (tbody) tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-rc-configure]');
+            if (!btn) return;
+            listOpener = btn;
+            configure(btn.getAttribute('data-rc-configure'));
+        });
+
+        const back = document.getElementById('rc-editor-back');
+        if (back) back.addEventListener('click', () => closeEditor());
+
+        document.querySelectorAll('.rc-tab').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            btn.addEventListener('keydown', onTabKey);
+        });
+
+        CATEGORIES.forEach(k => {
+            const form = document.getElementById('panel-' + k);
+            if (form) form.addEventListener('submit', (e) => { e.preventDefault(); save(k, form); });
+        });
+
         const bri = document.getElementById('monitors-brightness');
         if (bri) bri.addEventListener('input', updateBrightnessLabel);
         const cpu = document.getElementById('quotas-cpu');
@@ -237,9 +427,14 @@
     }
 
     // ---- Helpers ----
-    function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML.replace(/"/g, '&quot;'); }
+    function getVal(id) { const el = document.getElementById(id); return el ? String(el.value || '') : ''; }
+    function isChecked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
     function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
     function setChecked(id, v) { const el = document.getElementById(id); if (el) el.checked = v; }
 
-    window.ResourceControl = { init, switchTab, filterDevices, configure };
+    window.ResourceControl = { init, switchTab, filterDevices, configure, close: closeEditor };
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();

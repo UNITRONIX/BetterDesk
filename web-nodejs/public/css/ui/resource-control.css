@@ -1,0 +1,87 @@
+/* USB and drive access (/resource-control).
+   Table, tabs, facts, disclosure and save bar come from components.css. */
+
+.rc-table .rc-device-name {
+    font-weight: 600;
+}
+
+.rc-table .rc-rules-cell {
+    color: var(--text-muted);
+}
+
+.rc-table.rc-no-rules .rc-rules-col {
+    display: none;
+}
+
+/* Selects in the rule forms do not need the full column */
+.rc-editor .form-select.is-medium {
+    max-width: 28ch;
+}
+
+.rc-editor .tabs {
+    margin-top: var(--space-2);
+}
+
+.rc-editor .rc-panel {
+    padding-top: var(--space-2);
+}
+
+.rc-editor .rc-panel > .rc-policy-form > .section-note {
+    margin: 0 0 var(--space-4);
+}
+
+.rc-editor .field-effect {
+    margin-top: var(--space-4);
+}
+
+.rc-editor #rc-editor-title:focus {
+    outline: none;
+}
+
+.rc-editor .state:empty {
+    display: none;
+}
+
+/* Slider with its value as text beside it */
+.rc-range {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: 360px;
+}
+
+.rc-range input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--control-h);
+    accent-color: var(--accent);
+}
+
+.rc-range output {
+    min-width: 5ch;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+.rc-compliance .facts {
+    max-width: var(--measure);
+}
+
+.rc-editor .state {
+    padding: 0;
+}
+
+/* Narrow screens: the platform moves under the device name */
+.rc-table .rc-platform-sub {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .rc-table .rc-platform-col {
+        display: none;
+    }
+
+    .rc-table .rc-platform-sub {
+        display: block;
+    }
+}
