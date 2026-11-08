@@ -28,7 +28,10 @@
                 <span class="material-icons ux35-section-chevron" aria-hidden="true"><%= section.active ? 'expand_less' : 'expand_more' %></span>
             </button>
             <ul class="nav-list" id="nav-section-<%= section.id %>">
-                <% section.pages.forEach(function(item) { %>
+                <% var lastGroup = ''; section.pages.forEach(function(item) { %>
+                <% if (item.groupText && item.groupText !== lastGroup) { lastGroup = item.groupText; %>
+                <li class="nav-group"><span class="nav-group-label"><%= item.groupText %></span></li>
+                <% } %>
                 <li>
                     <a href="<%= item.href %>"
                        class="ux35-sidebar-item<%= item.active ? ' active' : '' %><%= item.sub ? ' is-sub' : '' %>"
@@ -45,12 +48,6 @@
             </ul>
         </div>
         <% }); %>
-        <div class="ux35-sidebar-section nav-help">
-            <button type="button" class="ux35-sidebar-heading" id="ux35-help-btn" aria-haspopup="dialog">
-                <span class="material-icons nav-section-icon" aria-hidden="true">help_outline</span>
-                <span class="nav-section-label"><%= _('nav.help') %></span>
-            </button>
-        </div>
     </nav>
 
     <div class="ux35-sidebar-footer">

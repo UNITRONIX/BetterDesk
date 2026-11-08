@@ -58,6 +58,7 @@
     <div class="ux35-topbar-spacer"></div>
 
     <div class="ux35-topbar-actions">
+        <button type="button" class="ux35-topbar-text-btn" id="ux35-help-btn" aria-haspopup="dialog"><%= _('nav.help') %></button>
         <div class="ux35-topbar-action-list" id="ux35-topbar-action-list">
         <div class="notif-wrapper">
             <button type="button" class="ux35-topbar-btn notif-btn" id="notif-btn" title="<%= _('notifications.title') %>"
@@ -117,6 +118,7 @@
                 <div class="lang-option menu-item" id="change-password-btn" role="button" tabindex="0">
                     <span><%= _('auth.change_password') %></span>
                 </div>
+                <a class="menu-item" id="account-2fa-link" href="/settings?tab=auth"><%= _('nav.account_2fa') %></a>
                 <div class="menu-divider"></div>
                 <div class="lang-option menu-item" id="logout-btn" role="button" tabindex="0">
                     <span><%= _('auth.logout') %></span>

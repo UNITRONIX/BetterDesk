@@ -126,6 +126,22 @@
     gap: 2px;
 }
 
+/* Help: the one top bar control with a word, since it opens a panel, not a setting */
+.ux35-topbar-text-btn {
+    min-height: var(--control-h);
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.ux35-topbar-text-btn:hover {
+    background: var(--hover);
+}
+
 .ux35-topbar-actions-menu-btn {
     display: none;
 }
@@ -282,10 +298,14 @@
 }
 
 .ux35-sidebar-resize:hover,
-.ux35-sidebar-resize.active,
-.ux35-sidebar-resize:focus-visible {
+.ux35-sidebar-resize.active {
     background: var(--border);
-    outline: none;
+}
+
+.ux35-sidebar-resize:focus-visible {
+    background: var(--focus);
+    outline: 2px solid var(--focus);
+    outline-offset: 0;
 }
 
 .ux35-is-resizing,
@@ -402,8 +422,16 @@
     font-variant-numeric: tabular-nums;
 }
 
-.nav-help .ux35-sidebar-heading {
-    margin-top: var(--space-2);
+/* Small heading that splits a long section (Settings) into groups */
+.nav-group {
+    padding: var(--space-3) var(--space-2) var(--space-1);
+    padding-inline-start: calc(var(--space-2) + 20px + 10px);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.nav-list > .nav-group:first-child {
+    padding-top: var(--space-1);
 }
 
 .ux35-sidebar-footer {
