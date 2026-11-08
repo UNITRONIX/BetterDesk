@@ -23,7 +23,10 @@ function attachStore(sessionStore) {
         policy = {
             idleTimeoutMs: sessionStore.idleTimeoutMs,
             maxAgeMs: sessionStore.maxAgeMs,
-            warnBeforeMs: resolveSessionPolicy().warnBeforeMs
+            warnBeforeMs: resolveSessionPolicy().warnBeforeMs,
+            maxSessionsPerUser: Number.isInteger(sessionStore.maxSessionsPerUser)
+                ? sessionStore.maxSessionsPerUser
+                : resolveSessionPolicy().maxSessionsPerUser
         };
     }
 }
@@ -46,7 +49,8 @@ function clientMetaFromRequest(req, body = {}) {
 }
 
 /**
- * Stamp an authenticated express session and enforce single-session-per-account.
+ * Stamp an authenticated express session and enforce the per-account
+ * concurrent session limit (SESSION_MAX_PER_USER).
  */
 async function establishAuthenticatedSession(req, user, options = {}) {
     const now = Date.now();

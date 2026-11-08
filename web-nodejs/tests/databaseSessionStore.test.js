@@ -116,6 +116,71 @@ describe('DatabaseSessionStore', () => {
         expect(Number(ended.is_active)).toBe(0);
     });
 
+    async function loginAs(target, sid, userId, lastActivityAt) {
+        const session = {
+            userId,
+            user: { id: userId, username: `user${userId}`, role: 'admin' },
+            createdAt: lastActivityAt,
+            lastActivityAt,
+            cookie: { expires: new Date(Date.now() + 30_000).toISOString() }
+        };
+        await invoke(target.set.bind(target), sid, session);
+        return target.activateExclusiveSession(sid, {
+            userId,
+            username: `user${userId}`,
+            createdAt: lastActivityAt,
+            lastActivityAt
+        });
+    }
+
+    async function storeWithLimit(maxSessionsPerUser) {
+        await store.close();
+        store = new DatabaseSessionStore({
+            config: { dbPath: path.join(tempDir, 'db_v2.sqlite3') },
+            ttlMs: 24 * 60 * 60 * 1000,
+            idleTimeoutMs: 60_000,
+            maxAgeMs: 24 * 60 * 60 * 1000,
+            maxSessionsPerUser
+        });
+        await store.ready;
+        return store;
+    }
+
+    it('allows unlimited concurrent sessions when maxSessionsPerUser is 0', async () => {
+        const s = await storeWithLimit(0);
+        const now = Date.now();
+        for (const sid of ['u-a', 'u-b', 'u-c']) {
+            const result = await loginAs(s, sid, 50, now);
+            expect(result.replaced).toHaveLength(0);
+        }
+        for (const sid of ['u-a', 'u-b', 'u-c']) {
+            expect(await invoke(s.get.bind(s), sid)).toBeTruthy();
+        }
+    });
+
+    it('keeps the N most recently active sessions and replaces the oldest', async () => {
+        const s = await storeWithLimit(2);
+        const now = Date.now();
+        await loginAs(s, 'n-old', 51, now - 3000);
+        await loginAs(s, 'n-mid', 51, now - 2000);
+        const result = await loginAs(s, 'n-new', 51, now - 1000);
+
+        expect(result.replaced.map((r) => r.sid)).toEqual(['n-old']);
+        expect(await invoke(s.get.bind(s), 'n-old')).toBeNull();
+        expect(await invoke(s.get.bind(s), 'n-mid')).toBeTruthy();
+        expect(await invoke(s.get.bind(s), 'n-new')).toBeTruthy();
+        expect((await s.getSessionRecord('n-old')).end_reason).toBe(END_REASONS.REPLACED);
+    });
+
+    it('does not let one account\'s limit end another account\'s sessions', async () => {
+        const s = await storeWithLimit(1);
+        const now = Date.now();
+        await loginAs(s, 'x-1', 60, now);
+        const result = await loginAs(s, 'y-1', 61, now);
+        expect(result.replaced).toHaveLength(0);
+        expect(await invoke(s.get.bind(s), 'x-1')).toBeTruthy();
+    });
+
     it('rejects idle sessions on get()', async () => {
         const sid = 'idle-sid';
         const created = Date.now() - 10 * 60 * 1000;

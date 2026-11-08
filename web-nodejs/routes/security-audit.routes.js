@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
+const { resolveSessionPolicy } = require('../lib/sessionPolicy');
 
 let apiClient = null;
 try { ({ apiClient } = require('../services/betterdeskApi')); } catch (e) { apiClient = null; }
@@ -122,12 +123,13 @@ router.get('/api/panel/security-audit/events', requireAuth, requirePermission('a
 // ── API: Hardening checklist ─────────────────────────────────
 router.get('/api/panel/security-audit/hardening', requireAuth, requirePermission('audit.view'), async (req, res) => {
   try {
+    const { maxSessionsPerUser } = resolveSessionPolicy();
     const priorities = [
       { id: 'mutual_tls', name: 'Mutual TLS Console ↔ Go Server', category: 'network', severity: 'high', implemented: false, description: 'Replace plain HTTP localhost with mutual TLS authentication between web console and Go server.' },
       { id: 'api_key_rotation', name: 'API Key Auto-Rotation', category: 'auth', severity: 'high', implemented: false, description: 'Automatically rotate API keys every 30 days with a grace period for old keys.' },
       { id: 'audit_tamper', name: 'Audit Log Tamper Detection', category: 'audit', severity: 'medium', implemented: false, description: 'HMAC chain where each audit entry signs the previous — detects log tampering.' },
       { id: 'session_timeout', name: 'Panel Idle and Absolute Session Timeout', category: 'auth', severity: 'medium', implemented: true, description: 'Server-enforced idle timeout and absolute max age for console sessions (SESSION_IDLE_TIMEOUT / SESSION_MAX_AGE).' },
-      { id: 'single_session', name: 'Single Active Panel Session per Account', category: 'auth', severity: 'high', implemented: true, description: 'A new console login replaces any prior active session for the same account and records IP/User-Agent for audit.' },
+      { id: 'single_session', name: 'Concurrent Panel Session Limit per Account', category: 'auth', severity: 'high', implemented: maxSessionsPerUser > 0, description: `A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently ${maxSessionsPerUser > 0 ? maxSessionsPerUser : 'unlimited'}) and records IP/User-Agent for audit.` },
       { id: 'ip_allowlist', name: 'IP Allowlisting', category: 'network', severity: 'medium', implemented: false, description: 'Restrict console and API access to specific IP ranges per organization.' },
       { id: 'cert_pinning', name: 'Certificate Pinning', category: 'network', severity: 'low', implemented: false, description: 'Pin TLS certificates in desktop client to prevent MITM attacks.' },
       { id: 'mem_safe_creds', name: 'Memory-Safe Credential Handling', category: 'crypto', severity: 'medium', implemented: false, description: 'Zeroize secrets in memory after use to prevent memory dump attacks.' },
