@@ -55,12 +55,28 @@ Choose **1** for a new install, or `sudo ./betterdesk.sh --auto`.
 
 ### Docker
 
+One container with everything inside (server + relay + web console) — the recommended setup:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
-docker compose up -d
+curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+docker compose pull && docker compose up -d
+docker compose exec betterdesk betterdesk-show-admin-credentials
 ```
 
-Open **http://your-server:5000**.
+Open **http://your-server:5000** (plain HTTP, not HTTPS).
+
+<details>
+<summary>Legacy two-container layout (split images)</summary>
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
+docker compose pull && docker compose up -d
+docker compose exec console betterdesk-show-admin-credentials
+```
+
+The split layout is kept for existing deployments (API port **21114**, single container uses **21121**). New installs should use the all-in-one image above.
+
+</details>
 
 ### Windows
 

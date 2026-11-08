@@ -147,10 +147,28 @@ Services are registered via NSSM and can be managed from `services.msc`.
 
 ### Quick Start (Pre-built Images)
 
+All-in-one image (server + relay + web console in one container) — recommended:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+docker compose pull && docker compose up -d
+docker compose exec betterdesk betterdesk-show-admin-credentials
+```
+
+Open **http://your-server:5000** (plain HTTP, not HTTPS) and log in with the password printed above.
+
+<details>
+<summary>Legacy two-container layout</summary>
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
-docker compose up -d
+docker compose pull && docker compose up -d
+docker compose exec console betterdesk-show-admin-credentials
 ```
+
+Split layout uses API port **21114**; the all-in-one container uses **21121**.
+
+</details>
 
 ### Build Locally
 

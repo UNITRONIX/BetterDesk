@@ -40,12 +40,15 @@ Pick **1** for a new install, or `sudo ./betterdesk.sh --auto` for non-interacti
 
 ### Docker
 
+All-in-one container (server + relay + console) — recommended:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
-docker compose up -d
+curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+docker compose pull && docker compose up -d
+docker compose exec betterdesk betterdesk-show-admin-credentials
 ```
 
-Panel: **http://your-server:5000**. Default paths: Go `/opt/betterdesk`, console `/opt/BetterDeskConsole` (legacy `/opt/rustdesk` still detected).
+Panel: **http://your-server:5000** (plain HTTP). Default paths: Go `/opt/betterdesk`, console `/opt/BetterDeskConsole` (legacy `/opt/rustdesk` still detected). The two-container split layout lives in `docker-compose.quick.yml` — see [[Docker]].
 
 Windows: see [[Installation]].
 

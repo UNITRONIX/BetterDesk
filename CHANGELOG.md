@@ -36,6 +36,14 @@
 - **Client branding docs:** `docs/README.md` marks `architecture/PORT_SECURITY.md` as
   historical and points to `CONNECTION_PORTS.md`; `docs/wiki/Installation.md` no longer tells
   operators to expose the panel to WAN.
+- **Docs — Docker quick start now leads with the all-in-one image:** `README.md`,
+  `docs/wiki/Home.md` and `docs/wiki/Installation.md` showed the legacy split layout
+  (`docker-compose.quick.yml`) as the only Docker path, even though `install.sh` and
+  `docs/docker/GHCR_PACKAGE_README.md` have defaulted to the all-in-one
+  `ghcr.io/unitronix/betterdesk` image since 3.3.114. New installs follow the single-container
+  layout now; the split layout moved into a collapsible "Legacy" block. No code change —
+  existing split deployments keep working unchanged (API port `21114` vs `21121` noted in
+  both places).
 
 ### Fixed
 - **Stale port advice:** `docs/architecture/PORT_SECURITY.md` documented an API on

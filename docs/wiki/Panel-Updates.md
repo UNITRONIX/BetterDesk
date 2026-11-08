@@ -46,7 +46,7 @@ Script updates also clear stale panel warning banners from failed in-panel attem
 
 ## Docker (GHCR images)
 
-When running pre-built images from GHCR (`docker-compose.quick.yml`):
+When running pre-built images from GHCR (all-in-one `docker-compose.quick.single.yml`, or legacy split `docker-compose.quick.yml`):
 
 - In-panel **Install** is disabled — use image pull instead
 - Panel shows pull instructions:
