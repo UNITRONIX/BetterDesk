@@ -3160,12 +3160,13 @@
         "totp_title": "双因素认证",
         "totp_subtitle": "输入验证器应用中的6位数代码",
         "back_to_login": "返回登录",
-        "fill_all_fields": "请填写所有字段",
+        "fill_all_fields": "请输入用户名和密码。",
         "invalid_credentials": "用户名或密码无效",
         "invalid_code": "验证码无效",
         "enter_6_digits": "请输入全部6位数字",
-        "network_error": "网络错误 — 请检查连接",
-        "session_expired": "会话已过期。请重新登录。"
+        "network_error": "无法连接到服务器。请检查网络连接后重试。",
+        "session_expired": "会话已过期。请重新登录。",
+        "accounts_title": "选择您的账号"
     },
     "permissions": {
         "title": "权限管理",

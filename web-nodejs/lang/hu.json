@@ -3158,12 +3158,13 @@
         "totp_title": "Kéttényezős hitelesítés",
         "totp_subtitle": "Írja be a hatjegyű kódot a hitelesítő alkalmazásból",
         "back_to_login": "Vissza a bejelentkezéshez",
-        "fill_all_fields": "Kérjük, töltse ki az összes mezőt",
+        "fill_all_fields": "Adja meg a felhasználónevét és a jelszavát.",
         "invalid_credentials": "Érvénytelen felhasználónév vagy jelszó",
         "invalid_code": "Érvénytelen ellenőrző kód",
         "enter_6_digits": "Írja be mind a 6 számjegyet",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "A munkamenet lejárt. Kérjük, jelentkezzen be újra."
+        "network_error": "Nem sikerült elérni a szervert. Ellenőrizze a kapcsolatot, és próbálja újra.",
+        "session_expired": "A munkamenet lejárt. Kérjük, jelentkezzen be újra.",
+        "accounts_title": "Válassza ki a fiókját"
     },
     "tokens": {
         "title": "Eszköztokenek",

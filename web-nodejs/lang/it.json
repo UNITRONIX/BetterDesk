@@ -3152,12 +3152,13 @@
         "totp_title": "Codice di verifica richiesto",
         "totp_subtitle": "Inserisci il codice a sei cifre dalla tua app di autenticazione.",
         "back_to_login": "Torna all’accesso",
-        "fill_all_fields": "Compila tutti i campi",
+        "fill_all_fields": "Inserisca nome utente e password.",
         "invalid_credentials": "Nome utente o password non validi",
         "invalid_code": "Codice di verifica non valido",
         "enter_6_digits": "Inserisci 6 cifre",
-        "network_error": "Errore di rete. Riprova.",
-        "session_expired": "La sessione è scaduta. Accedi di nuovo."
+        "network_error": "Impossibile raggiungere il server. Controlli la connessione e riprovi.",
+        "session_expired": "La sessione è scaduta. Accedi di nuovo.",
+        "accounts_title": "Scelga il suo account"
     },
     "tokens": {
         "title": "Token di accesso",

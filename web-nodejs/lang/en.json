@@ -3224,12 +3224,13 @@
         "totp_title": "Two-Factor Authentication",
         "totp_subtitle": "Enter the 6-digit code from your authenticator app",
         "back_to_login": "Back to login",
-        "fill_all_fields": "Please fill in all fields",
+        "fill_all_fields": "Enter your username and password.",
         "invalid_credentials": "Invalid username or password",
         "invalid_code": "Invalid verification code",
         "enter_6_digits": "Enter all 6 digits",
-        "network_error": "Network error — check your connection",
-        "session_expired": "Session expired. Please sign in again."
+        "network_error": "Could not reach the server. Check your connection and try again.",
+        "session_expired": "Session expired. Please sign in again.",
+        "accounts_title": "Choose your account"
     },
     "permissions": {
         "title": "Permissions",

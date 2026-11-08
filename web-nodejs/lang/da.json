@@ -3158,12 +3158,13 @@
         "totp_title": "To-faktor-godkendelse",
         "totp_subtitle": "Indtast den 6-cifrede kode fra din autentificeringsapp",
         "back_to_login": "Tilbage til login",
-        "fill_all_fields": "Udfyld venligst alle felter",
+        "fill_all_fields": "Indtast dit brugernavn og din adgangskode.",
         "invalid_credentials": "Ugyldigt brugernavn eller adgangskode",
         "invalid_code": "Ugyldig bekræftelseskode",
         "enter_6_digits": "Indtast alle 6 cifre",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Session udløb. Log venligst ind igen."
+        "network_error": "Kunne ikke få forbindelse til serveren. Kontrollér din forbindelse, og prøv igen.",
+        "session_expired": "Session udløb. Log venligst ind igen.",
+        "accounts_title": "Vælg din konto"
     },
     "tokens": {
         "title": "Enhedstokens",

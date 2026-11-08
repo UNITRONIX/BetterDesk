@@ -3152,12 +3152,13 @@
         "totp_title": "Verificatiecode vereist",
         "totp_subtitle": "Voer de zescijferige code uit uw authenticator-app in.",
         "back_to_login": "Terug naar aanmelden",
-        "fill_all_fields": "Vul alle velden in",
+        "fill_all_fields": "Vul uw gebruikersnaam en wachtwoord in.",
         "invalid_credentials": "Ongeldige gebruikersnaam of wachtwoord",
         "invalid_code": "Ongeldige verificatiecode",
         "enter_6_digits": "Voer 6 cijfers in",
-        "network_error": "Netwerkfout. Probeer het opnieuw.",
-        "session_expired": "Uw sessie is verlopen. Meld u opnieuw aan."
+        "network_error": "De server is niet bereikbaar. Controleer uw verbinding en probeer het opnieuw.",
+        "session_expired": "Uw sessie is verlopen. Meld u opnieuw aan.",
+        "accounts_title": "Kies uw account"
     },
     "tokens": {
         "title": "Toegangstokens",

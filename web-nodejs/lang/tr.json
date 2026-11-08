@@ -3158,12 +3158,13 @@
         "totp_title": "İki Faktörlü Kimlik Doğrulama",
         "totp_subtitle": "Kimlik doğrulayıcı uygulamanızdan 6 haneli kodu girin",
         "back_to_login": "Girişe geri dön",
-        "fill_all_fields": "Lütfen tüm alanları doldurun",
+        "fill_all_fields": "Kullanıcı adınızı ve parolanızı girin.",
         "invalid_credentials": "Geçersiz kullanıcı adı veya şifre",
         "invalid_code": "Geçersiz doğrulama kodu",
         "enter_6_digits": "6 rakamın tamamını girin",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Oturumun süresi doldu. Lütfen tekrar oturum açın."
+        "network_error": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
+        "session_expired": "Oturumun süresi doldu. Lütfen tekrar oturum açın.",
+        "accounts_title": "Hesabınızı seçin"
     },
     "tokens": {
         "title": "Cihaz Jetonları",

@@ -3152,12 +3152,13 @@
         "totp_title": "Autenticación de dos factores",
         "totp_subtitle": "Introduzca el código de 6 dígitos de su aplicación de autenticación",
         "back_to_login": "Volver al inicio de sesión",
-        "fill_all_fields": "Por favor, rellene todos los campos",
+        "fill_all_fields": "Introduzca su nombre de usuario y su contraseña.",
         "invalid_credentials": "Nombre de usuario o contraseña inválidos.",
         "invalid_code": "Código no válido",
         "enter_6_digits": "Introduce 6 dígitos",
-        "network_error": "Error de red",
-        "session_expired": "Sesión caducada"
+        "network_error": "No se pudo conectar con el servidor. Compruebe su conexión y vuelva a intentarlo.",
+        "session_expired": "Sesión caducada",
+        "accounts_title": "Elija su cuenta"
     },
     "tokens": {
         "title": "Panel",

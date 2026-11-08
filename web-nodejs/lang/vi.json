@@ -3158,12 +3158,13 @@
         "totp_title": "Xác thực hai yếu tố",
         "totp_subtitle": "Nhập mã gồm 6 chữ số từ ứng dụng xác thực của bạn",
         "back_to_login": "Quay lại để đăng nhập",
-        "fill_all_fields": "Vui lòng điền vào tất cả các trường",
+        "fill_all_fields": "Nhập tên người dùng và mật khẩu.",
         "invalid_credentials": "Tên người dùng hoặc mật khẩu không hợp lệ",
         "invalid_code": "Mã xác minh không h��p lệ",
         "enter_6_digits": "Nhập đầy đủ 6 chữ số",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Phiên đã hết hạn. Vui lòng đăng nhập lại."
+        "network_error": "Không thể kết nối tới máy chủ. Hãy kiểm tra kết nối rồi thử lại.",
+        "session_expired": "Phiên đã hết hạn. Vui lòng đăng nhập lại.",
+        "accounts_title": "Chọn tài khoản của bạn"
     },
     "tokens": {
         "title": "Mã thông báo thiết bị",

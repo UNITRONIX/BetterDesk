@@ -1,21 +1,16 @@
 /**
- * BetterDesk Console — Desktop Login Screen (Phase 46)
- * Windows 11-style full-screen login with lock screen, TOTP 2FA, and multi-user selector.
+ * BetterDesk Console — sign-in page for the desktop mode (views/desktop-login.ejs).
+ * Same form as the console sign-in, plus a list of the accounts on this
+ * server: picking one fills in the username. Two-factor code as a second step.
  */
 
 (function () {
     'use strict';
 
-    var WALLPAPER_STORAGE = 'bd_widget_wallpaper';
-    var _clockTimer = null;
-
     function init() {
-        preloadWallpaper();
-        startClock();
-        bindLockScreen();
         bindLoginForm();
         bindTotpForm();
-        renderUserChips();
+        renderUserList();
         checkSessionExpired();
     }
 
@@ -39,17 +34,11 @@
         }
         if (!expired) return;
 
-        // Skip lock screen, go straight to login form
-        var lockScreen = document.getElementById('dl-lock-screen');
-        var loginLayer = document.getElementById('dl-login-layer');
-        if (lockScreen) lockScreen.classList.remove('active');
-        if (loginLayer) loginLayer.classList.add('active');
-
         var message = _t('desktop_login.session_expired') ||
             _t('auth.session_expired') ||
             'Session expired. Please sign in again.';
 
-        // Toast on the right — keeps the login card height stable
+        // Toast, so the form keeps its height
         if (window.Notifications && typeof Notifications.error === 'function') {
             Notifications.error(message);
             return;
@@ -60,96 +49,6 @@
         if (errorEl && errorText) {
             showError(errorEl, errorText, message);
         }
-    }
-
-    // ============ Wallpaper Preload ============
-
-    var DEFAULT_LOGIN_GRADIENT = 'linear-gradient(135deg, #0d1117 0%, #161b22 40%, #1a1a2e 70%, #0f3460 100%)';
-
-    function preloadWallpaper() {
-        var saved = localStorage.getItem(WALLPAPER_STORAGE);
-        var el = document.getElementById('dl-wallpaper');
-        if (!el) return;
-
-        // No saved wallpaper — use gradient immediately (no 404 probe)
-        if (!saved) {
-            el.style.background = DEFAULT_LOGIN_GRADIENT;
-            el.classList.add('loaded');
-            return;
-        }
-
-        var isSolid = saved.indexOf('solid:') === 0;
-        if (isSolid) {
-            el.style.background = saved.substring(6);
-            el.classList.add('loaded');
-            return;
-        }
-
-        var img = new Image();
-        img.onload = function () {
-            el.style.backgroundImage = 'url("' + saved + '")';
-            el.style.backgroundSize = 'cover';
-            el.style.backgroundPosition = 'center';
-            el.classList.add('loaded');
-        };
-        img.onerror = function () {
-            // Wallpaper file missing — clear stale pref, use gradient
-            localStorage.removeItem(WALLPAPER_STORAGE);
-            el.style.background = DEFAULT_LOGIN_GRADIENT;
-            el.classList.add('loaded');
-        };
-        img.src = saved;
-    }
-
-    // ============ Clock ============
-
-    function startClock() {
-        updateClock();
-        _clockTimer = setInterval(updateClock, 1000);
-    }
-
-    function updateClock() {
-        var now = new Date();
-        var timeEl = document.getElementById('dl-lock-time');
-        var dateEl = document.getElementById('dl-lock-date');
-        if (timeEl) {
-            var h = String(now.getHours()).padStart(2, '0');
-            var m = String(now.getMinutes()).padStart(2, '0');
-            timeEl.textContent = h + ':' + m;
-        }
-        if (dateEl) {
-            dateEl.textContent = now.toLocaleDateString(undefined, {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-    }
-
-    // ============ Lock Screen ============
-
-    function bindLockScreen() {
-        var lockScreen = document.getElementById('dl-lock-screen');
-        var loginLayer = document.getElementById('dl-login-layer');
-        if (!lockScreen || !loginLayer) return;
-
-        function dismissLock() {
-            lockScreen.classList.remove('active');
-            loginLayer.classList.add('active');
-            // Focus username input after transition
-            setTimeout(function () {
-                var input = document.getElementById('dl-username');
-                if (input && !input.value) input.focus();
-            }, 400);
-        }
-
-        lockScreen.addEventListener('click', dismissLock);
-        document.addEventListener('keydown', function handler(e) {
-            if (lockScreen.classList.contains('active')) {
-                dismissLock();
-            }
-        }, { once: false });
     }
 
     // ============ Login Form ============
@@ -166,29 +65,31 @@
 
         var csrfToken = (window.BetterDesk && window.BetterDesk.csrfToken) || '';
 
-        // Password toggle
+        // Show or hide the password; aria-pressed tells screen readers which
         if (passwordToggle && passwordInput) {
             passwordToggle.addEventListener('click', function () {
-                var isPassword = passwordInput.type === 'password';
-                passwordInput.type = isPassword ? 'text' : 'password';
+                var show = passwordInput.type === 'password';
+                passwordInput.type = show ? 'text' : 'password';
+                passwordToggle.setAttribute('aria-pressed', show ? 'true' : 'false');
                 passwordToggle.querySelector('.material-icons').textContent =
-                    isPassword ? 'visibility_off' : 'visibility';
+                    show ? 'visibility_off' : 'visibility';
             });
         }
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            var username = (document.getElementById('dl-username').value || '').trim();
-            var password = (document.getElementById('dl-password').value || '');
+            var usernameInput = document.getElementById('dl-username');
+            var username = (usernameInput.value || '').trim();
+            var password = (passwordInput.value || '');
 
             if (!username || !password) {
-                showError(errorEl, errorText, _t('desktop_login.fill_all_fields') || 'Please fill in all fields');
+                showError(errorEl, errorText, _t('desktop_login.fill_all_fields') || 'Enter your username and password.');
+                (username ? passwordInput : usernameInput).focus();
                 return;
             }
 
-            submitBtn.classList.add('loading');
-            submitBtn.disabled = true;
+            setBusy(submitBtn, true);
             hideError(errorEl);
 
             var clientFingerprint = (function () {
@@ -221,28 +122,25 @@
             })
             .then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data }; }); })
             .then(function (result) {
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
+                setBusy(submitBtn, false);
 
                 if (result.data.success && result.data.totpRequired) {
-                    // Show TOTP form
                     showTotpForm();
                     return;
                 }
 
                 if (result.data.success) {
-                    // Login success — redirect to dashboard
                     window.location.href = '/';
                     return;
                 }
 
-                // Error
-                showError(errorEl, errorText, result.data.error || _t('desktop_login.invalid_credentials') || 'Invalid credentials');
+                showError(errorEl, errorText, result.data.error || _t('desktop_login.invalid_credentials') || 'Invalid username or password.');
+                passwordInput.select();
+                passwordInput.focus();
             })
-            .catch(function (err) {
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
-                showError(errorEl, errorText, _t('desktop_login.network_error') || 'Network error');
+            .catch(function () {
+                setBusy(submitBtn, false);
+                showError(errorEl, errorText, _t('desktop_login.network_error') || 'Could not reach the server. Check your connection.');
             });
         });
     }
@@ -252,31 +150,27 @@
     function showTotpForm() {
         var loginForm = document.getElementById('dl-login-form');
         var totpForm = document.getElementById('dl-totp-form');
+        var users = document.querySelector('.dl-accounts');
         if (loginForm) loginForm.classList.add('hidden');
+        if (users) users.classList.add('hidden');
         if (totpForm) {
             totpForm.classList.remove('hidden');
-            // Focus first digit
-            var first = totpForm.querySelector('.dl-totp-digit[data-idx="0"]');
-            if (first) setTimeout(function () { first.focus(); }, 100);
+            var code = document.getElementById('dl-totp-code');
+            if (code) code.focus();
         }
     }
 
     function hideTotpForm() {
         var loginForm = document.getElementById('dl-login-form');
         var totpForm = document.getElementById('dl-totp-form');
+        var users = document.querySelector('.dl-accounts');
         if (loginForm) loginForm.classList.remove('hidden');
+        if (users) users.classList.remove('hidden');
         if (totpForm) totpForm.classList.add('hidden');
-        clearTotpDigits();
-    }
-
-    function clearTotpDigits() {
-        document.querySelectorAll('.dl-totp-digit').forEach(function (d) { d.value = ''; });
-    }
-
-    function getTotpCode() {
-        var code = '';
-        document.querySelectorAll('.dl-totp-digit').forEach(function (d) { code += d.value; });
-        return code;
+        var code = document.getElementById('dl-totp-code');
+        if (code) code.value = '';
+        var pwd = document.getElementById('dl-password');
+        if (pwd) pwd.focus();
     }
 
     function bindTotpForm() {
@@ -285,47 +179,18 @@
         var errorEl = document.getElementById('dl-totp-error');
         var errorText = document.getElementById('dl-totp-error-text');
         var backLink = document.getElementById('dl-totp-back-link');
+        var codeInput = document.getElementById('dl-totp-code');
 
-        if (!form) return;
+        if (!form || !codeInput) return;
 
         var csrfToken = (window.BetterDesk && window.BetterDesk.csrfToken) || '';
+        var submitting = false;
 
-        // Digit input navigation + auto-submit on 6th digit
-        var digits = form.querySelectorAll('.dl-totp-digit');
-        digits.forEach(function (digit, idx) {
-            digit.addEventListener('input', function () {
-                var val = digit.value.replace(/\D/g, '');
-                digit.value = val.substring(0, 1);
-                if (val && idx < 5) {
-                    digits[idx + 1].focus();
-                }
-                // Auto-submit when all 6 digits are filled
-                if (getTotpCode().length === 6) {
-                    submitTotp();
-                }
-            });
-
-            digit.addEventListener('keydown', function (e) {
-                if (e.key === 'Backspace' && !digit.value && idx > 0) {
-                    digits[idx - 1].focus();
-                    digits[idx - 1].value = '';
-                }
-            });
-
-            // Paste support
-            digit.addEventListener('paste', function (e) {
-                e.preventDefault();
-                var text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
-                if (text.length >= 6) {
-                    for (var i = 0; i < 6; i++) {
-                        digits[i].value = text[i] || '';
-                    }
-                    digits[5].focus();
-                    if (getTotpCode().length === 6) {
-                        setTimeout(submitTotp, 50);
-                    }
-                }
-            });
+        // Digits only; send as soon as six are there (typed or pasted)
+        codeInput.addEventListener('input', function () {
+            var digits = codeInput.value.replace(/\D/g, '').substring(0, 6);
+            if (digits !== codeInput.value) codeInput.value = digits;
+            if (digits.length === 6) submitTotp();
         });
 
         form.addEventListener('submit', function (e) {
@@ -334,14 +199,16 @@
         });
 
         function submitTotp() {
-            var code = getTotpCode();
+            if (submitting) return;
+            var code = codeInput.value.replace(/\D/g, '');
             if (code.length !== 6) {
-                showError(errorEl, errorText, _t('desktop_login.enter_6_digits') || 'Enter all 6 digits');
+                showError(errorEl, errorText, _t('desktop_login.enter_6_digits') || 'Enter all 6 digits.');
+                codeInput.focus();
                 return;
             }
 
-            submitBtn.classList.add('loading');
-            submitBtn.disabled = true;
+            submitting = true;
+            setBusy(submitBtn, true);
             hideError(errorEl);
 
             fetch('/api/auth/totp/verify', {
@@ -355,42 +222,44 @@
             })
             .then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data }; }); })
             .then(function (result) {
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
+                submitting = false;
+                setBusy(submitBtn, false);
 
                 if (result.data.success) {
                     window.location.href = '/';
                     return;
                 }
 
-                // Shake animation
-                showError(errorEl, errorText, result.data.error || _t('desktop_login.invalid_code') || 'Invalid code');
-                errorEl.classList.add('shake');
-                setTimeout(function () { errorEl.classList.remove('shake'); }, 500);
-                clearTotpDigits();
-                var first = document.querySelector('.dl-totp-digit[data-idx="0"]');
-                if (first) first.focus();
+                showError(errorEl, errorText, result.data.error || _t('desktop_login.invalid_code') || 'Invalid code.');
+                codeInput.value = '';
+                codeInput.focus();
             })
             .catch(function () {
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
-                showError(errorEl, errorText, _t('desktop_login.network_error') || 'Network error');
+                submitting = false;
+                setBusy(submitBtn, false);
+                showError(errorEl, errorText, _t('desktop_login.network_error') || 'Could not reach the server. Check your connection.');
             });
         }
 
-        // Back link
         if (backLink) {
             backLink.addEventListener('click', function (e) {
                 e.preventDefault();
-                hideTotpForm();
                 hideError(errorEl);
+                hideTotpForm();
             });
         }
     }
 
-    // ============ Multi-user Selector ============
+    // ============ Accounts on this server ============
 
-    function renderUserChips() {
+    function roleLabel(role) {
+        var key = 'users.role_' + (role || 'operator');
+        var label = _t(key);
+        if (!label || label === key) label = String(role || 'operator').replace(/_/g, ' ');
+        return label;
+    }
+
+    function renderUserList() {
         var container = document.getElementById('dl-users');
         if (!container) return;
         var users = (window.BetterDesk && window.BetterDesk.users) || [];
@@ -398,45 +267,26 @@
 
         var html = '';
         users.forEach(function (user) {
-            var initials = (user.username || '?').substring(0, 2).toUpperCase();
-            html += '<div class="dl-user-chip" data-username="' + _esc(user.username) + '">' +
-                '<div class="dl-user-chip-avatar">' + _esc(initials) + '</div>' +
-                '<div class="dl-user-chip-info">' +
-                '<div class="dl-user-chip-name">' + _esc(user.username) + '</div>' +
-                '<div class="dl-user-chip-role">' + _esc(user.role || 'operator') + '</div>' +
-                '</div></div>';
+            html += '<li><button type="button" class="list-row dl-user-chip" aria-pressed="false" data-username="' + _esc(user.username) + '">' +
+                '<span class="row-main">' +
+                '<span class="row-title">' + _esc(user.username) + '</span>' +
+                '<span class="row-sub">' + _esc(roleLabel(user.role)) + '</span>' +
+                '</span></button></li>';
         });
         container.innerHTML = html;
 
         container.querySelectorAll('.dl-user-chip').forEach(function (chip) {
             chip.addEventListener('click', function () {
-                var username = chip.dataset.username;
-                // Pre-fill username
                 var input = document.getElementById('dl-username');
-                if (input) {
-                    input.value = username;
-                    // Focus password
-                    var pwd = document.getElementById('dl-password');
-                    if (pwd) pwd.focus();
-                }
-                // Highlight selected chip
-                container.querySelectorAll('.dl-user-chip').forEach(function (c) { c.classList.remove('selected'); });
+                if (input) input.value = chip.dataset.username;
+                container.querySelectorAll('.dl-user-chip').forEach(function (c) {
+                    c.classList.remove('selected');
+                    c.setAttribute('aria-pressed', 'false');
+                });
                 chip.classList.add('selected');
-
-                // Update avatar with initials
-                var avatarEl = document.getElementById('dl-avatar');
-                if (avatarEl) {
-                    var initials = (username || '?').substring(0, 2).toUpperCase();
-                    avatarEl.innerHTML = '<span class="dl-avatar-initials">' + _esc(initials) + '</span>';
-                }
-
-                // Dismiss lock screen if still active
-                var lock = document.getElementById('dl-lock-screen');
-                var loginLayer = document.getElementById('dl-login-layer');
-                if (lock && lock.classList.contains('active')) {
-                    lock.classList.remove('active');
-                    if (loginLayer) loginLayer.classList.add('active');
-                }
+                chip.setAttribute('aria-pressed', 'true');
+                var pwd = document.getElementById('dl-password');
+                if (pwd) pwd.focus();
             });
         });
     }
@@ -462,9 +312,16 @@
         return d.innerHTML;
     }
 
+    function setBusy(btn, busy) {
+        if (!btn) return;
+        btn.classList.toggle('loading', busy);
+        btn.disabled = busy;
+        btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+    }
+
     function showError(el, textEl, msg) {
-        if (el) el.classList.remove('hidden');
         if (textEl) textEl.textContent = msg;
+        if (el) el.classList.remove('hidden');
     }
 
     function hideError(el) {

@@ -3158,12 +3158,13 @@
         "totp_title": "Tvåfaktorsautentisering",
         "totp_subtitle": "Ange den sexsiffriga koden från din autentiseringsapp",
         "back_to_login": "Tillbaka till inloggning",
-        "fill_all_fields": "Vänligen fyll i alla fält",
+        "fill_all_fields": "Ange ditt användarnamn och lösenord.",
         "invalid_credentials": "Ogiltigt användarnamn eller lösenord",
         "invalid_code": "Ogiltig verifieringskod",
         "enter_6_digits": "Ange alla 6 siffrorna",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Sessionen har löpt ut. Logga in igen."
+        "network_error": "Det gick inte att nå servern. Kontrollera anslutningen och försök igen.",
+        "session_expired": "Sessionen har löpt ut. Logga in igen.",
+        "accounts_title": "Välj ditt konto"
     },
     "tokens": {
         "title": "Enhetstokens",

@@ -3152,12 +3152,13 @@
         "totp_title": "Verificação em duas etapas",
         "totp_subtitle": "Digite o código de 6 dígitos do seu aplicativo autenticador.",
         "back_to_login": "Voltar ao login",
-        "fill_all_fields": "Preencha todos os campos",
+        "fill_all_fields": "Digite seu nome de usuário e sua senha.",
         "invalid_credentials": "Credenciais inválidas",
         "invalid_code": "Código inválido",
         "enter_6_digits": "Digite 6 dígitos",
-        "network_error": "Erro de rede",
-        "session_expired": "Sessão expirada"
+        "network_error": "Não foi possível acessar o servidor. Verifique sua conexão e tente novamente.",
+        "session_expired": "Sessão expirada",
+        "accounts_title": "Escolha a sua conta"
     },
     "tokens": {
         "title": "Tokens de acesso",

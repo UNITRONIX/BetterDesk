@@ -3158,12 +3158,13 @@
         "totp_title": "Autentificare cu doi factori",
         "totp_subtitle": "Introdu codul din 6 cifre din aplicația de autentificare",
         "back_to_login": "Înapoi la autentificare",
-        "fill_all_fields": "Vă rugăm să completați toate câmpurile",
+        "fill_all_fields": "Introduceți numele de utilizator și parola.",
         "invalid_credentials": "Nume de utilizator sau parolă nevalidă",
         "invalid_code": "Cod de verificare nevalid",
         "enter_6_digits": "Introduceți toate cele 6 cifre",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Sesiunea a expirat. Vă rugăm să vă conectați din nou."
+        "network_error": "Serverul nu poate fi accesat. Verificați conexiunea și încercați din nou.",
+        "session_expired": "Sesiunea a expirat. Vă rugăm să vă conectați din nou.",
+        "accounts_title": "Alegeți contul"
     },
     "tokens": {
         "title": "Jetoane de dispozitiv",

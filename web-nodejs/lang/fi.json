@@ -3158,12 +3158,13 @@
         "totp_title": "Kaksitekijäinen todennus",
         "totp_subtitle": "Syötä 6-numeroinen koodi todennussovelluksesta",
         "back_to_login": "Takaisin kirjautumiseen",
-        "fill_all_fields": "Täytä kaikki kentät",
+        "fill_all_fields": "Anna käyttäjätunnus ja salasana.",
         "invalid_credentials": "Virheellinen käyttäjätunnus tai salasana",
         "invalid_code": "Virheellinen vahvistuskoodi",
         "enter_6_digits": "Syötä kaikki 6 numeroa",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Istunto vanhentunut. Kirjaudu uudelleen sisään."
+        "network_error": "Palvelimeen ei saatu yhteyttä. Tarkista yhteys ja yritä uudelleen.",
+        "session_expired": "Istunto vanhentunut. Kirjaudu uudelleen sisään.",
+        "accounts_title": "Valitse tilisi"
     },
     "tokens": {
         "title": "Laitteen tunnukset",

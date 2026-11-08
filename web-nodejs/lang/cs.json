@@ -3152,12 +3152,13 @@
         "totp_title": "Dvoufázové ověření",
         "totp_subtitle": "Zadejte 6místný kód z vaší autentizační aplikace",
         "back_to_login": "Zpět na přihlášení",
-        "fill_all_fields": "Prosím vyplňte všechna pole",
+        "fill_all_fields": "Zadejte uživatelské jméno a heslo.",
         "invalid_credentials": "Neplatné uživatelské jméno nebo heslo",
         "invalid_code": "Neplatný ověřovací kód",
         "enter_6_digits": "Zadejte všech 6 číslic",
-        "network_error": "Chyba sítě — zkontrolujte připojení",
-        "session_expired": "Relace vypršela. Přihlaste se prosím znovu."
+        "network_error": "Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste to znovu.",
+        "session_expired": "Relace vypršela. Přihlaste se prosím znovu.",
+        "accounts_title": "Vyberte svůj účet"
     },
     "tokens": {
         "title": "Tokeny zařízení",

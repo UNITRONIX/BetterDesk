@@ -3178,12 +3178,13 @@
         "totp_title": "Uwierzytelnianie dwuskładnikowe",
         "totp_subtitle": "Wprowadź 6-cyfrowy kod z aplikacji uwierzytelniającej",
         "back_to_login": "Powrót do logowania",
-        "fill_all_fields": "Wypełnij wszystkie pola",
+        "fill_all_fields": "Wpisz nazwę użytkownika i hasło.",
         "invalid_credentials": "Nieprawidłowa nazwa użytkownika lub hasło",
         "invalid_code": "Nieprawidłowy kod weryfikacyjny",
         "enter_6_digits": "Wprowadź wszystkie 6 cyfr",
-        "network_error": "Błąd sieci — sprawdź połączenie",
-        "session_expired": "Sesja wygasła. Zaloguj się ponownie."
+        "network_error": "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.",
+        "session_expired": "Sesja wygasła. Zaloguj się ponownie.",
+        "accounts_title": "Wybierz swoje konto"
     },
     "permissions": {
         "title": "Uprawnienia",

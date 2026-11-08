@@ -3158,12 +3158,13 @@
         "totp_title": "Tofaktorautentisering",
         "totp_subtitle": "Skriv inn den 6-sifrede koden fra autentiseringsappen din",
         "back_to_login": "Tilbake til innlogging",
-        "fill_all_fields": "Vennligst fyll ut alle feltene",
+        "fill_all_fields": "Skriv inn brukernavn og passord.",
         "invalid_credentials": "Ugyldig brukernavn eller passord",
         "invalid_code": "Ugyldig bekreftelseskode",
         "enter_6_digits": "Skriv inn alle 6 sifrene",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Økten er utløpt. Logg på igjen."
+        "network_error": "Fikk ikke kontakt med serveren. Sjekk tilkoblingen og prøv igjen.",
+        "session_expired": "Økten er utløpt. Logg på igjen.",
+        "accounts_title": "Velg kontoen din"
     },
     "tokens": {
         "title": "Enhetstokens",

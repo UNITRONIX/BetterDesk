@@ -1,157 +1,135 @@
+<%
+    var themeMode = (branding && branding.themeMode) || 'system';
+    var dataTheme = themeMode === 'light' || themeMode === 'system' ? 'light' : 'dark';
+    var hasUsers = typeof loginUsers !== 'undefined' && Array.isArray(loginUsers) && loginUsers.length > 0;
+%>
 <!DOCTYPE html>
-<html lang="<%= lang || 'en' %>">
+<html lang="<%= lang || 'en' %>" dir="<%= typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr' %>" data-theme="<%= dataTheme %>" data-theme-mode="<%= themeMode %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<%= appName %> - Login">
+    <meta name="description" content="<%= appName %> - <%= _('auth.login_title') %>">
     <meta name="robots" content="noindex, nofollow">
-    <title><%= _('auth.login') %> - <%= appName %></title>
-    
+    <title><%= _('auth.login_title') %> - <%= appName %></title>
+
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
-    <link rel="stylesheet" href="/css/main.css?v=<%= cacheVersion %>">
-    <link rel="stylesheet" href="/css/theme.css?v=<%= cacheVersion %>">
+    <%- include('partials/theme-head') %>
+    <link rel="preload" href="/fonts/AtkinsonHyperlegibleNext-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : cacheVersion %>">
-    <link rel="stylesheet" href="/css/desktop-login.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/base.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/components.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/login.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/desktop-login.css?v=<%= cacheVersion %>">
     <link rel="stylesheet" href="/css/server-attestation.css?v=<%= cacheVersion %>">
 </head>
-<body class="desktop-login-page">
-    <div class="dl-language-picker">
-        <span class="material-icons" aria-hidden="true">language</span>
-        <select id="desktop-language-select" data-language-select aria-label="<%= _('settings.language') %>">
-            <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
-                <option value="<%= language.code %>" <%= lang === language.code ? 'selected' : '' %>><%= language.native || language.name || language.code %></option>
-            <% }); %>
-        </select>
-    </div>
+<body class="login-page desktop-login">
+    <main class="login-main">
+        <div class="login-box">
+            <div class="login-brand">
+                <% if (branding.logoType === 'text' && branding.logoText) { %>
+                <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
+                <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
+                <span class="login-logo-svg"><%- branding.logoSvg %></span>
+                <span class="login-logo-text"><%= appName %></span>
+                <% } else if (branding.logoType === 'image' && branding.logoUrl) { %>
+                <img src="<%= branding.logoUrl %>" alt="" class="login-logo-img">
+                <span class="login-logo-text"><%= appName %></span>
+                <% } else { %>
+                <span class="login-logo-text"><%= appName %></span>
+                <% } %>
+            </div>
 
-    <!-- Wallpaper layer -->
-    <div class="dl-wallpaper" id="dl-wallpaper">
-        <div class="dl-wallpaper-overlay"></div>
-    </div>
+            <h1 class="login-title"><%= _('auth.login_title') %></h1>
 
-    <!-- Lock screen overlay (click/key to dismiss) -->
-    <div class="dl-lock-screen active" id="dl-lock-screen">
-        <div class="dl-lock-clock" id="dl-lock-clock">
-            <div class="dl-lock-time" id="dl-lock-time"></div>
-            <div class="dl-lock-date" id="dl-lock-date"></div>
-        </div>
-        <div class="dl-lock-hint"><%= _('desktop_login.click_to_sign_in') || 'Click anywhere or press a key to sign in' %></div>
-    </div>
+            <% if (hasUsers) { %>
+            <!-- Accounts on this server: picking one fills in the username (desktop-login.js) -->
+            <section class="dl-accounts" aria-labelledby="dl-users-title">
+                <h2 class="dl-users-title" id="dl-users-title"><%= _('desktop_login.accounts_title') %></h2>
+                <ul class="list dl-users" id="dl-users"></ul>
+            </section>
+            <% } %>
 
-    <!-- Login form layer -->
-    <div class="dl-login-layer" id="dl-login-layer">
-        <!-- Multi-user selector (bottom-left) -->
-        <div class="dl-users" id="dl-users"></div>
-
-        <!-- Center login card -->
-        <div class="dl-card-wrapper">
-            <div class="dl-card" id="dl-card">
-                <!-- Avatar -->
-                <div class="dl-avatar" id="dl-avatar">
-                    <span class="material-icons">person</span>
+            <!-- Step 1: username and password -->
+            <form class="login-form" id="dl-login-form" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="dl-username"><%= _('auth.username') %></label>
+                    <input type="text" id="dl-username" class="form-input"
+                           autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
                 </div>
 
-                <!-- Username display (when user is pre-selected) -->
-                <div class="dl-username-display hidden" id="dl-username-display"></div>
-
-                <!-- Step 1: Credentials form -->
-                <form class="dl-form" id="dl-login-form">
-                    <div class="dl-field">
-                        <input
-                            type="text"
-                            id="dl-username"
-                            class="dl-input"
-                            placeholder="<%= _('desktop_login.username_placeholder') || 'Username' %>"
-                            autocomplete="username"
-                            required
-                            autofocus
-                        >
+                <div class="form-group">
+                    <label class="form-label" for="dl-password"><%= _('auth.password') %></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="dl-password" class="form-input"
+                               autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" id="dl-password-toggle" aria-pressed="false"
+                                aria-label="<%= _('auth.show_password') %>" title="<%= _('auth.show_password') %>">
+                            <span class="material-icons" aria-hidden="true">visibility</span>
+                        </button>
                     </div>
-                    <div class="dl-field">
-                        <div class="dl-password-wrapper">
-                            <input
-                                type="password"
-                                id="dl-password"
-                                class="dl-input"
-                                placeholder="<%= _('desktop_login.password_placeholder') || 'Password' %>"
-                                autocomplete="current-password"
-                                required
-                            >
-                            <button type="button" class="dl-password-toggle" id="dl-password-toggle">
-                                <span class="material-icons">visibility</span>
-                            </button>
-                        </div>
-                    </div>
+                </div>
 
-                    <!-- Error message -->
-                    <div class="dl-error hidden" id="dl-error">
-                        <span class="material-icons">error</span>
-                        <span id="dl-error-text"></span>
-                    </div>
+                <div class="login-error notice error hidden" id="dl-error" role="alert">
+                    <span id="dl-error-text"></span>
+                </div>
 
-                    <button type="submit" class="dl-submit" id="dl-submit-btn">
-                        <span class="dl-submit-text"><%= _('desktop_login.sign_in') || 'Sign in' %></span>
-                        <span class="dl-submit-arrow"><span class="material-icons">arrow_forward</span></span>
-                    </button>
-                </form>
+                <button type="submit" class="btn btn-primary btn-block login-btn" id="dl-submit-btn"><%= _('auth.login') %></button>
+            </form>
 
-                <!-- Step 2: TOTP 2FA form (hidden by default) -->
-                <form class="dl-form hidden" id="dl-totp-form">
-                    <div class="dl-totp-header">
-                        <span class="material-icons dl-totp-icon">security</span>
-                        <div class="dl-totp-title"><%= _('desktop_login.totp_title') || 'Two-Factor Authentication' %></div>
-                        <div class="dl-totp-subtitle"><%= _('desktop_login.totp_subtitle') || 'Enter the 6-digit code from your authenticator app' %></div>
-                    </div>
+            <!-- Step 2: two-factor code (shown when the password is accepted) -->
+            <form class="login-form hidden" id="dl-totp-form" novalidate>
+                <div class="totp-header">
+                    <h2 class="totp-title"><%= _('auth.totp_title') %></h2>
+                    <p class="totp-subtitle"><%= _('auth.totp_subtitle') %></p>
+                </div>
 
-                    <div class="dl-totp-inputs" id="dl-totp-inputs">
-                        <input type="text" class="dl-totp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="0" autofocus>
-                        <input type="text" class="dl-totp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="1">
-                        <input type="text" class="dl-totp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="2">
-                        <span class="dl-totp-separator">–</span>
-                        <input type="text" class="dl-totp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="3">
-                        <input type="text" class="dl-totp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="4">
-                        <input type="text" class="dl-totp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="5">
-                    </div>
+                <div class="form-group">
+                    <label class="form-label" for="dl-totp-code"><%= _('auth.totp_code') %></label>
+                    <input type="text" id="dl-totp-code" class="form-input totp-input mono"
+                           autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+                </div>
 
-                    <div class="dl-error hidden" id="dl-totp-error">
-                        <span class="material-icons">error</span>
-                        <span id="dl-totp-error-text"></span>
-                    </div>
+                <div class="login-error notice error hidden" id="dl-totp-error" role="alert">
+                    <span id="dl-totp-error-text"></span>
+                </div>
 
-                    <button type="submit" class="dl-submit" id="dl-totp-submit">
-                        <span class="dl-submit-text"><%= _('desktop_login.verify') || 'Verify' %></span>
-                        <span class="dl-submit-arrow"><span class="material-icons">verified_user</span></span>
-                    </button>
+                <button type="submit" class="btn btn-primary btn-block login-btn" id="dl-totp-submit"><%= _('auth.totp_verify') %></button>
 
-                    <div class="dl-totp-back">
-                        <a href="#" id="dl-totp-back-link">
-                            <span class="material-icons" style="font-size:16px">arrow_back</span>
-                            <%= _('desktop_login.back_to_login') || 'Back to login' %>
-                        </a>
-                    </div>
-                </form>
+                <p class="totp-links">
+                    <a href="#" id="dl-totp-back-link"><%= _('auth.totp_back_to_login') %></a>
+                </p>
+            </form>
+
+            <div class="login-footer">
+                <label class="login-language-picker" for="desktop-language-select">
+                    <span><%= _('settings.language') %></span>
+                    <select id="desktop-language-select" class="form-select" data-language-select>
+                        <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
+                            <option value="<%= language.code %>" <%= lang === language.code ? 'selected' : '' %> lang="<%= language.code %>"><%= language.native || language.name || language.code %></option>
+                        <% }); %>
+                    </select>
+                </label>
+                <p class="login-version"><%= appName %> <%= appVersion %></p>
             </div>
-        </div>
 
-            <!-- Version footer -->
-            <div class="dl-footer">
-                <span><%= appName %> v<%= appVersion %></span>
+            <% if (typeof attestationBadge !== 'undefined' && attestationBadge && attestationBadge.valid && attestationBadge.tier) { %>
+            <div class="login-attestation-badge">
+                <%- include('partials/server-attestation-badge', {
+                    tier: attestationBadge.tier,
+                    size: 'small',
+                    showConnections: false,
+                    maxConnections: attestationBadge.maxConnections,
+                    brandName: attestationBadge.brand,
+                    badgeTitle: attestationBadge.badgeTitle,
+                    tierLabel: attestationBadge.tierLabel
+                }) %>
             </div>
+            <% } %>
         </div>
+    </main>
 
-    <% if (typeof attestationBadge !== 'undefined' && attestationBadge && attestationBadge.valid && attestationBadge.tier) { %>
-    <div class="login-attestation-badge">
-        <%- include('partials/server-attestation-badge', {
-            tier: attestationBadge.tier,
-            size: 'small',
-            showConnections: false,
-            maxConnections: attestationBadge.maxConnections,
-            brandName: attestationBadge.brand,
-            badgeTitle: attestationBadge.badgeTitle,
-            tierLabel: attestationBadge.tierLabel
-        }) %>
-    </div>
-    <% } %>
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
 
     <script nonce="<%= cspNonce %>">
         window.BetterDesk = {
@@ -160,7 +138,7 @@
             availableLanguages: <%- JSON.stringify(availableLanguageList || []) %>,
             translations: <%- JSON.stringify(translations || {}) %>,
             branding: <%- JSON.stringify(branding || {}) %>,
-            users: <%- JSON.stringify(loginUsers || []) %>
+            users: <%- JSON.stringify(typeof loginUsers !== 'undefined' && loginUsers ? loginUsers : []) %>
         };
     </script>
     <script src="/js/utils.js?v=<%= cacheVersion %>"></script>

@@ -3158,12 +3158,13 @@
         "totp_title": "Otentikasi Dua Faktor",
         "totp_subtitle": "Masukkan kode 6 digit dari aplikasi autentikator Anda",
         "back_to_login": "Kembali untuk masuk",
-        "fill_all_fields": "Silakan isi semua kolom",
+        "fill_all_fields": "Masukkan nama pengguna dan kata sandi Anda.",
         "invalid_credentials": "Nama pengguna atau kata sandi tidak valid",
         "invalid_code": "Kode verifikasi tidak valid",
         "enter_6_digits": "Masukkan semua 6 digit",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "Sesi berakhir. Silakan masuk lagi."
+        "network_error": "Tidak dapat menghubungi server. Periksa koneksi Anda lalu coba lagi.",
+        "session_expired": "Sesi berakhir. Silakan masuk lagi.",
+        "accounts_title": "Pilih akun Anda"
     },
     "tokens": {
         "title": "Token Perangkat",

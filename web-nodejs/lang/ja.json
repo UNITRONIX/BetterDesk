@@ -3152,12 +3152,13 @@
         "totp_title": "二要素認証",
         "totp_subtitle": "認証アプリから 6 桁のコードを入力してください",
         "back_to_login": "ログインに戻る",
-        "fill_all_fields": "すべてのフィールドに入力してください",
+        "fill_all_fields": "ユーザー名とパスワードを入力してください。",
         "invalid_credentials": "無効なユーザー名またはパスワード",
         "invalid_code": "無効な確認コード",
         "enter_6_digits": "6桁すべてを入力してください",
-        "network_error": "ネットワーク エラー - 接続を確認してください",
-        "session_expired": "セッションの有効期限が切れました。再度サインインしてください。"
+        "network_error": "サーバーに接続できませんでした。接続を確認してもう一度お試しください。",
+        "session_expired": "セッションの有効期限が切れました。再度サインインしてください。",
+        "accounts_title": "アカウントを選択"
     },
     "tokens": {
         "title": "デバイストークン",

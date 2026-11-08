@@ -3152,12 +3152,13 @@
         "totp_title": "Zwei-Faktor-Authentifizierung",
         "totp_subtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein",
         "back_to_login": "Zurück zur Anmeldung",
-        "fill_all_fields": "Bitte füllen Sie alle Felder aus",
+        "fill_all_fields": "Geben Sie Benutzernamen und Passwort ein.",
         "invalid_credentials": "Ungültiger Benutzername oder Passwort.",
         "invalid_code": "Ungültiger Code",
         "enter_6_digits": "Geben Sie 6 Ziffern ein",
-        "network_error": "Netzwerkfehler",
-        "session_expired": "Sitzung abgelaufen"
+        "network_error": "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+        "session_expired": "Sitzung abgelaufen",
+        "accounts_title": "Wählen Sie Ihr Konto"
     },
     "tokens": {
         "title": "Dashboard",

@@ -3182,12 +3182,13 @@
         "totp_title": "雙因素認證",
         "totp_subtitle": "輸入驗證器應用中的6位數代碼",
         "back_to_login": "返回登錄",
-        "fill_all_fields": "請填寫所有字段",
+        "fill_all_fields": "請輸入使用者名稱和密碼。",
         "invalid_credentials": "用戶名或密碼無效",
         "invalid_code": "驗證碼無效",
         "enter_6_digits": "請輸入全部6位數字",
-        "network_error": "網絡錯誤 — 請檢查連接",
-        "session_expired": "會話已過期。請重新登錄。"
+        "network_error": "無法連線到伺服器。請檢查網路連線後再試一次。",
+        "session_expired": "會話已過期。請重新登錄。",
+        "accounts_title": "選擇您的帳號"
     },
     "permissions": {
         "title": "權限管理",

@@ -3182,12 +3182,13 @@
         "totp_title": "Authentification à deux facteurs",
         "totp_subtitle": "Entrez le code à 6 chiffres de votre application d'authentification",
         "back_to_login": "Back to login",
-        "fill_all_fields": "Veuillez remplir tous les champs",
+        "fill_all_fields": "Saisissez votre nom d'utilisateur et votre mot de passe.",
         "invalid_credentials": "Nom d'utilisateur ou mot de passe invalide.",
-        "invalid_code": "Invalid verification code",
+        "invalid_code": "Code de vérification non valide",
         "enter_6_digits": "Enter all 6 digits",
-        "network_error": "Network error — check your connection",
-        "session_expired": "Session expired. Please sign in again."
+        "network_error": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+        "session_expired": "Session expirée. Reconnectez-vous.",
+        "accounts_title": "Choisissez votre compte"
     },
     "permissions": {
         "title": "Permissions",

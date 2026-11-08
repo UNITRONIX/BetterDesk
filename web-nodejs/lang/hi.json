@@ -3158,12 +3158,13 @@
         "totp_title": "दो-कारक प्रमाणीकरण",
         "totp_subtitle": "अपने प्रमाणक ऐप से 6 अंकों का कोड दर्ज करें",
         "back_to_login": "लॉगिन पर वापस जाएं",
-        "fill_all_fields": "कृपया सभी स्थानों को भरें",
+        "fill_all_fields": "अपना उपयोगकर्ता नाम और पासवर्ड दर्ज करें।",
         "invalid_credentials": "अमान्य उपयोगकर्ता नाम या पासवर्ड",
         "invalid_code": "अवैध सत्यापन संकेत",
         "enter_6_digits": "सभी 6 अंक दर्ज करें",
-        "network_error": "Network error â€” check your connection",
-        "session_expired": "सत्र समाप्त हुआ। कृपया पुनः साइन इन करें."
+        "network_error": "सर्वर तक नहीं पहुँच सके। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
+        "session_expired": "सत्र समाप्त हुआ। कृपया पुनः साइन इन करें.",
+        "accounts_title": "अपना खाता चुनें"
     },
     "tokens": {
         "title": "डिवाइस टोकन",
