@@ -1,69 +1,76 @@
 <%- include('layouts/main', {
-    title: typeof title !== 'undefined' ? title : 'Activity',
-    pageStyles: ['activity'],
+    title: typeof title !== 'undefined' ? title : _('activity.title'),
+    uiReworked: true,
+    pageStyles: ['ui/activity'],
     pageScripts: ['activity'],
     currentPage: 'activity',
-    breadcrumb: [{ label: _('nav.management') }, { label: _('activity.title') }],
+    breadcrumb: [{ label: _('nav.activity') }, { label: _('activity.title') }],
     body: `
-    <div class="page-header">
-        <h1>${_('activity.title')}</h1>
-    </div>
-
-    <!-- Filters -->
-    <div class="page-filters">
-        <div class="search-wrapper">
-            <span class="material-icons">search</span>
-            <input type="text" id="activity-search" placeholder="${_('activity.search')}" />
+    <div class="page page-wide activity-page">
+        <div class="page-head">
+            <h1>${_('activity.title')}</h1>
+            <p class="page-description">${_('activity.page_description')}</p>
         </div>
-        <div class="filter-group">
-            <label>${_('activity.date_range')}</label>
-            <input type="date" id="activity-from" />
-            <span class="range-sep">—</span>
-            <input type="date" id="activity-to" />
-        </div>
-        <button class="btn btn-secondary" id="activity-refresh-btn">
-            <span class="material-icons">refresh</span>
-        </button>
-    </div>
 
-    <!-- Activity list -->
-    <div class="table-wrapper">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>${_('activity.device_id')}</th>
-                    <th>${_('activity.hostname')}</th>
-                    <th>${_('activity.session_count')}</th>
-                    <th>${_('activity.active_time')}</th>
-                    <th>${_('activity.idle_time')}</th>
-                    <th>${_('activity.reported_at')}</th>
-                    <th>${_('common.actions')}</th>
-                </tr>
-            </thead>
-            <tbody id="activity-body"></tbody>
-        </table>
-    </div>
-
-    <!-- Detail modal -->
-    <div class="modal-overlay" id="detail-modal" style="display:none">
-        <div class="modal modal-lg">
-            <div class="modal-header">
-                <h2 id="detail-modal-title">${_('activity.detail')}</h2>
-                <button class="modal-close" data-modal="detail-modal"><span class="material-icons">close</span></button>
-            </div>
-            <div class="modal-body">
-                <!-- Sessions -->
-                <div class="detail-section" id="detail-sessions">
-                    <h3><span class="material-icons">schedule</span> ${_('activity.sessions')}</h3>
-                    <div id="sessions-list"></div>
+        <section class="section" aria-labelledby="activity-list-title">
+            <h2 id="activity-list-title" class="sr-only">${_('activity.title')}</h2>
+            <div class="toolbar activity-toolbar">
+                <div class="toolbar-search search-wrapper">
+                    <span class="material-icons" aria-hidden="true">search</span>
+                    <input type="search" class="form-input" id="activity-search" aria-label="${_('activity.search')}" placeholder="${_('activity.search')}">
                 </div>
-                <!-- Top apps -->
-                <div class="detail-section" id="detail-apps">
-                    <h3><span class="material-icons">apps</span> ${_('activity.top_apps')}</h3>
-                    <div id="apps-list"></div>
+                <fieldset class="activity-range">
+                    <legend class="sr-only">${_('activity.date_range')}</legend>
+                    <label class="activity-date">
+                        <span>${_('activity.filter_from')}</span>
+                        <input type="date" class="form-input" id="activity-from">
+                    </label>
+                    <label class="activity-date">
+                        <span>${_('activity.filter_to')}</span>
+                        <input type="date" class="form-input" id="activity-to">
+                    </label>
+                </fieldset>
+                <div class="toolbar-filters" role="group" aria-label="${_('activity.date_range')}" id="activity-presets">
+                    <button type="button" class="filter-btn" data-days="7" aria-pressed="false">${_('activity.preset_7')}</button>
+                    <button type="button" class="filter-btn" data-days="30" aria-pressed="false">${_('activity.preset_30')}</button>
+                    <button type="button" class="filter-btn active" data-days="" aria-pressed="true">${_('activity.preset_all')}</button>
+                </div>
+                <div class="toolbar-end">
+                    <button type="button" class="btn" id="activity-refresh-btn">${_('activity.refresh')}</button>
                 </div>
             </div>
-        </div>
+            <p class="count-line" id="activity-count" aria-live="polite"></p>
+            <div class="table-scroll">
+                <table class="data-table activity-table activity-stack">
+                    <thead>
+                        <tr>
+                            <th scope="col">${_('activity.device')}</th>
+                            <th scope="col">${_('activity.reported_at')}</th>
+                            <th scope="col">${_('activity.active_time')}</th>
+                            <th scope="col">${_('activity.idle_time')}</th>
+                            <th scope="col">${_('activity.session_count')}</th>
+                            <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-body">
+                        <tr><td colspan="6" class="state-cell">${_('activity.loading')}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <template id="activity-detail-tpl">
+            <div class="activity-detail">
+                <section class="section" aria-labelledby="detail-apps-title">
+                    <h3 id="detail-apps-title">${_('activity.top_apps')}</h3>
+                    <div id="apps-list"><p class="state">${_('activity.loading')}</p></div>
+                </section>
+                <section class="section" aria-labelledby="detail-sessions-title">
+                    <h3 id="detail-sessions-title">${_('activity.recent_sessions')}</h3>
+                    <div id="sessions-list"><p class="state">${_('activity.loading')}</p></div>
+                </section>
+            </div>
+        </template>
     </div>
     `
 }) %>

@@ -1,190 +1,225 @@
 /**
- * BetterDesk Console - Activity Page Script
+ * BetterDesk Console - App usage page
+ * Daily usage reports from devices running the BetterDesk agent with activity tracking.
  */
 
 (function () {
     'use strict';
 
-    const _ = window.BetterDesk?.translations
-        ? (key) => {
-            const keys = key.split('.');
-            let val = window.BetterDesk.translations;
-            for (const k of keys) { val = val?.[k]; }
-            return val || key;
-        }
-        : (key) => key;
-
-    const csrfToken = window.BetterDesk?.csrfToken || '';
-
-    async function apiFetch(url, options = {}) {
-        const headers = { 'Content-Type': 'application/json' };
-        if (csrfToken) headers['x-csrf-token'] = csrfToken;
-        const resp = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
-        return resp.json();
-    }
+    const _ = (key, params) => (typeof window._ === 'function' ? window._(key, params) : key);
 
     function escapeHtml(str) {
-        if (!str) return '';
+        if (str === null || str === undefined) return '';
         const div = document.createElement('div');
         div.textContent = String(str);
         return div.innerHTML;
     }
 
-    function formatTimeAgo(dateStr) {
-        if (!dateStr) return '—';
-        const d = new Date(dateStr);
-        const diff = Math.floor((Date.now() - d) / 1000);
-        if (diff < 60) return _('time.seconds_ago').replace('{count}', diff);
-        if (diff < 3600) return _('time.minutes_ago').replace('{count}', Math.floor(diff / 60));
-        if (diff < 86400) return _('time.hours_ago').replace('{count}', Math.floor(diff / 3600));
-        if (diff < 2592000) return _('time.days_ago').replace('{count}', Math.floor(diff / 86400));
-        return d.toLocaleDateString();
+    async function getJson(url) {
+        const resp = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+        let data = null;
+        try { data = await resp.json(); } catch (_e) { data = null; }
+        if (!resp.ok) throw new Error((data && data.error) || ('HTTP ' + resp.status));
+        return data;
+    }
+
+    function formatDate(value) {
+        if (!value) return '—';
+        let s = String(value);
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(s)) s = s.replace(' ', 'T') + 'Z';
+        const d = new Date(s);
+        if (Number.isNaN(d.getTime())) return '—';
+        return Utils.formatDate(d.toISOString());
     }
 
     function formatDuration(seconds) {
-        if (!seconds || seconds < 0) return '—';
+        seconds = Number(seconds) || 0;
+        if (seconds <= 0) return '—';
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        if (h > 0) return `${h}h ${m}m`;
-        if (m > 0) return `${m}m ${s}s`;
-        return `${s}s`;
+        if (h > 0) return _('activity.duration_hm', { h, m });
+        if (m > 0) return _('activity.duration_m', { m });
+        return _('activity.duration_s', { s: Math.round(seconds) });
     }
 
-    function showToast(message, type) {
-        if (window.BetterDesk?.notify) { window.BetterDesk.notify(message, type); return; }
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type || 'info'}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+    function categoryLabel(cat) {
+        if (!cat) return '—';
+        const key = 'activity.category_' + String(cat).toLowerCase();
+        const label = _(key);
+        return label !== key ? label : cat;
     }
-
-    // ---- Modal close ----
-    document.querySelectorAll('.modal-close').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.modal;
-            if (id) document.getElementById(id).style.display = 'none';
-        });
-    });
 
     // ---- Elements ----
     const activityBody = document.getElementById('activity-body');
+    const countLine = document.getElementById('activity-count');
     const searchInput = document.getElementById('activity-search');
     const dateFrom = document.getElementById('activity-from');
     const dateTo = document.getElementById('activity-to');
     const refreshBtn = document.getElementById('activity-refresh-btn');
+    const presets = Array.from(document.querySelectorAll('#activity-presets [data-days]'));
 
-    let allSessions = [];
+    let allSummaries = [];
+
+    // The API compares ISO timestamps as text, so "to" must cover the whole day.
+    function rangeParams() {
+        const params = new URLSearchParams();
+        if (dateFrom.value) params.set('from', dateFrom.value);
+        if (dateTo.value) params.set('to', dateTo.value + 'T23:59:59.999Z');
+        return params;
+    }
+
+    function isoDay(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function markPreset(days) {
+        presets.forEach((b) => {
+            const on = b.dataset.days === days;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+    }
+
+    function applyPreset(days) {
+        if (days) {
+            const from = new Date();
+            from.setDate(from.getDate() - (Number(days) - 1));
+            dateFrom.value = isoDay(from);
+            dateTo.value = isoDay(new Date());
+        } else {
+            dateFrom.value = '';
+            dateTo.value = '';
+        }
+        markPreset(days);
+        loadActivity();
+    }
 
     // ---- Load ----
     async function loadActivity() {
-        activityBody.innerHTML = `<tr class="loading-row"><td colspan="7">${_('common.loading')}</td></tr>`;
-        const params = new URLSearchParams();
-        if (dateFrom.value) params.set('from', dateFrom.value);
-        if (dateTo.value) params.set('to', dateTo.value);
-
+        activityBody.innerHTML = `<tr><td colspan="6" class="state-cell">${escapeHtml(_('activity.loading'))}</td></tr>`;
+        countLine.textContent = '';
         try {
-            const data = await apiFetch(`/api/activity?${params}`);
-            allSessions = Array.isArray(data) ? data : (data.summaries || []);
+            const data = await getJson(`/api/activity?${rangeParams()}`);
+            allSummaries = (Array.isArray(data) ? data : (data.summaries || []))
+                .slice()
+                .sort((a, b) => String(b.reported_at || '').localeCompare(String(a.reported_at || '')));
             filterAndRender();
         } catch (err) {
-            activityBody.innerHTML = `<tr class="empty-row"><td colspan="7">
-                <div class="empty-state"><span class="material-icons">error_outline</span><p>${escapeHtml(err.message)}</p></div></td></tr>`;
+            activityBody.innerHTML = `<tr><td colspan="6" class="state-cell"><span class="state is-error">${escapeHtml(_('activity.load_failed'))}
+                <button type="button" class="btn btn-sm" id="activity-retry">${escapeHtml(_('activity.try_again'))}</button></span></td></tr>`;
+            document.getElementById('activity-retry').addEventListener('click', loadActivity);
         }
     }
 
     function filterAndRender() {
-        const q = searchInput.value.toLowerCase();
+        const q = searchInput.value.trim().toLowerCase();
         const filtered = q
-            ? allSessions.filter(s => ((s.device_id || '') + (s.hostname || '')).toLowerCase().includes(q))
-            : allSessions;
+            ? allSummaries.filter((s) => `${s.device_id || ''} ${s.hostname || ''}`.toLowerCase().includes(q))
+            : allSummaries;
         renderActivity(filtered);
     }
 
-    function renderActivity(sessions) {
-        if (!sessions.length) {
-            activityBody.innerHTML = `<tr class="empty-row"><td colspan="7">
-                <div class="empty-state"><span class="material-icons">history</span><p>${_('activity.no_activity')}</p></div></td></tr>`;
+    function renderActivity(rows) {
+        const devices = new Set(rows.map((s) => s.device_id)).size;
+        countLine.innerHTML = allSummaries.length
+            ? _('activity.count_line', { reports: `<strong>${rows.length}</strong>`, devices })
+            : '';
+        if (!allSummaries.length) {
+            const hasRange = dateFrom.value || dateTo.value;
+            activityBody.innerHTML = `<tr><td colspan="6" class="state-cell">${escapeHtml(hasRange ? _('activity.empty_range') : _('activity.empty'))}</td></tr>`;
             return;
         }
-        activityBody.innerHTML = sessions.map(s => `
+        if (!rows.length) {
+            activityBody.innerHTML = `<tr><td colspan="6" class="state-cell">${escapeHtml(_('activity.no_match'))}</td></tr>`;
+            return;
+        }
+        activityBody.innerHTML = rows.map((s) => {
+            const name = s.hostname && s.hostname !== s.device_id ? s.hostname : '';
+            return `
             <tr>
-                <td>${escapeHtml(s.device_id)}</td>
-                <td>${escapeHtml(s.hostname || '—')}</td>
-                <td>${s.session_count || 0}</td>
-                <td class="duration-cell">${formatDuration(s.total_active_secs)}</td>
-                <td class="duration-cell">${formatDuration(s.idle_seconds)}</td>
-                <td class="time-cell">${formatTimeAgo(s.reported_at)}</td>
-                <td><button class="btn btn-sm btn-secondary detail-btn" data-id="${escapeHtml(s.device_id)}"><span class="material-icons" style="font-size:16px">visibility</span></button></td>
-            </tr>
-        `).join('');
-
-        activityBody.querySelectorAll('.detail-btn').forEach(btn => {
-            btn.addEventListener('click', () => showDetail(btn.dataset.id));
+                <td>${name ? `${escapeHtml(name)}<span class="cell-sub mono">${escapeHtml(s.device_id)}</span>` : `<span class="mono">${escapeHtml(s.device_id)}</span>`}</td>
+                <td class="activity-num">${escapeHtml(formatDate(s.reported_at))}</td>
+                <td class="activity-num">${escapeHtml(formatDuration(s.total_active_secs))}</td>
+                <td class="activity-num">${escapeHtml(formatDuration(s.idle_seconds))}</td>
+                <td class="activity-num">${Number(s.session_count) || 0}</td>
+                <td class="actions"><button type="button" class="btn btn-sm detail-btn" data-id="${escapeHtml(s.device_id)}" data-name="${escapeHtml(name || s.device_id)}"
+                    aria-label="${escapeHtml(_('activity.details_for', { name: name || s.device_id }))}">${escapeHtml(_('activity.details'))}</button></td>
+            </tr>`;
+        }).join('');
+        // Phones show each row as a block; cells carry their column name (see ui/activity.css)
+        const heads = Array.from(activityBody.closest('table').querySelectorAll('thead th')).map((th) => th.textContent.trim());
+        activityBody.querySelectorAll('tr').forEach((tr) => {
+            Array.from(tr.children).forEach((td, i) => {
+                if (!td.classList.contains('actions') && heads[i]) td.setAttribute('data-label', heads[i]);
+            });
         });
     }
 
-    async function showDetail(deviceId) {
-        const modal = document.getElementById('detail-modal');
+    // ---- Detail dialog ----
+    async function showDetail(deviceId, name) {
+        const tpl = document.getElementById('activity-detail-tpl');
+        Modal.show({
+            title: _('activity.detail_title', { name }),
+            content: tpl.innerHTML,
+            size: 'large',
+            buttons: [{ label: _('common.close'), class: 'btn-secondary', onClick: () => Modal.close() }]
+        });
         const sessionsList = document.getElementById('sessions-list');
         const appsList = document.getElementById('apps-list');
-        modal.style.display = 'flex';
-        document.getElementById('detail-modal-title').textContent = `${_('activity.detail')} — ${deviceId}`;
-        sessionsList.innerHTML = `<p>${_('common.loading')}</p>`;
-        appsList.innerHTML = `<p>${_('common.loading')}</p>`;
+        const params = rangeParams();
+        const qs = params.toString() ? `?${params}` : '';
 
         try {
-            const [sessions, top] = await Promise.all([
-                apiFetch(`/api/activity/${deviceId}`),
-                apiFetch(`/api/activity/${deviceId}/top`)
+            const [detail, top] = await Promise.all([
+                getJson(`/api/activity/${encodeURIComponent(deviceId)}${qs}`),
+                getJson(`/api/activity/${encodeURIComponent(deviceId)}/top${qs}`)
             ]);
+            if (!document.body.contains(appsList)) return;
 
-            // Sessions
-            const sesList = Array.isArray(sessions) ? sessions : (sessions.sessions || []);
-            if (!sesList.length) {
-                sessionsList.innerHTML = `<p class="text-muted">${_('activity.no_sessions')}</p>`;
-            } else {
-                sessionsList.innerHTML = sesList.map(s => `
-                    <div class="session-item">
-                        <span class="session-time">${formatTimeAgo(s.session_start)}</span>
-                        <span class="session-user">${escapeHtml(s.user || '—')}</span>
-                        <span class="session-dur">${formatDuration(s.duration_seconds)}</span>
-                    </div>
-                `).join('');
-            }
+            const appRows = Array.isArray(top) ? top : (top.top_apps || []);
+            appsList.innerHTML = !appRows.length
+                ? `<p class="state">${escapeHtml(_('activity.no_apps'))}</p>`
+                : `<div class="table-scroll"><table class="data-table">
+                    <thead><tr><th scope="col">${escapeHtml(_('activity.app_name'))}</th><th scope="col">${escapeHtml(_('activity.category'))}</th>
+                        <th scope="col">${escapeHtml(_('activity.total_time'))}</th><th scope="col">${escapeHtml(_('activity.sessions'))}</th></tr></thead>
+                    <tbody>${appRows.map((a) => `<tr>
+                        <td>${escapeHtml(a.app_name || a.name || '—')}</td>
+                        <td>${escapeHtml(categoryLabel(a.category))}</td>
+                        <td class="activity-num">${escapeHtml(formatDuration(a.total_secs ?? a.total_seconds))}</td>
+                        <td class="activity-num">${Number(a.session_count) || 0}</td></tr>`).join('')}</tbody></table></div>`;
 
-            // Top apps
-            const appList = Array.isArray(top) ? top : (top.top_apps || []);
-            if (!appList.length) {
-                appsList.innerHTML = `<p class="text-muted">${_('activity.no_apps')}</p>`;
-            } else {
-                const maxTime = Math.max(...appList.map(a => a.total_seconds || 0), 1);
-                appsList.innerHTML = appList.map(a => {
-                    const pct = Math.round(((a.total_seconds || 0) / maxTime) * 100);
-                    return `
-                    <div class="app-item">
-                        <span class="app-name">${escapeHtml(a.name)}</span>
-                        <div class="app-bar-wrapper">
-                            <div class="app-bar"><div class="app-bar-fill" style="width:${pct}%"></div></div>
-                            <span class="app-time">${formatDuration(a.total_seconds)}</span>
-                        </div>
-                    </div>`;
-                }).join('');
-            }
+            const sesRows = Array.isArray(detail) ? detail : (detail.sessions || []);
+            sessionsList.innerHTML = !sesRows.length
+                ? `<p class="state">${escapeHtml(_('activity.no_sessions'))}</p>`
+                : `<p class="count-line">${escapeHtml(_('activity.recent_sessions_note', { count: sesRows.length }))}</p>
+                    <div class="table-scroll"><table class="data-table">
+                    <thead><tr><th scope="col">${escapeHtml(_('activity.started_at'))}</th><th scope="col">${escapeHtml(_('activity.app_name'))}</th>
+                        <th scope="col">${escapeHtml(_('activity.window_title'))}</th><th scope="col">${escapeHtml(_('activity.duration'))}</th></tr></thead>
+                    <tbody>${sesRows.map((s) => `<tr>
+                        <td class="activity-num">${escapeHtml(formatDate(s.started_at || s.session_start))}</td>
+                        <td>${escapeHtml(s.app_name || '—')}<span class="cell-sub">${escapeHtml(categoryLabel(s.category))}</span></td>
+                        <td class="activity-window">${escapeHtml(s.window_title || '—')}</td>
+                        <td class="activity-num">${escapeHtml(formatDuration(s.duration_secs ?? s.duration_seconds))}</td></tr>`).join('')}</tbody></table></div>`;
         } catch (err) {
-            sessionsList.innerHTML = `<p class="text-error">${escapeHtml(err.message)}</p>`;
-            appsList.innerHTML = '';
+            if (!document.body.contains(appsList)) return;
+            appsList.innerHTML = `<p class="state is-error">${escapeHtml(_('activity.detail_failed'))}</p>`;
+            sessionsList.innerHTML = '';
         }
     }
 
     // ---- Events ----
-    searchInput.addEventListener('input', filterAndRender);
-    dateFrom.addEventListener('change', loadActivity);
-    dateTo.addEventListener('change', loadActivity);
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(filterAndRender, 150);
+    });
+    [dateFrom, dateTo].forEach((input) => input.addEventListener('change', () => { markPreset(null); loadActivity(); }));
+    presets.forEach((b) => b.addEventListener('click', () => applyPreset(b.dataset.days)));
     refreshBtn.addEventListener('click', loadActivity);
+    activityBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.detail-btn');
+        if (btn) showDetail(btn.dataset.id, btn.dataset.name);
+    });
 
     // ---- Init ----
     loadActivity();
