@@ -1,85 +1,54 @@
 <%- include('layouts/main', {
-    title: _('permissions.title'),
-    pageStyles: ['permissions'],
+    title: _('nav.permissions'),
+    uiReworked: true,
+    pageStyles: ['ui/permissions'],
     pageScripts: ['permissions'],
     currentPage: 'permissions',
-    breadcrumb: [{ label: _('permissions.title') }],
+    breadcrumb: [{ label: _('nav.permissions') }],
     body: `
-        <div class="permissions-page">
-            <!-- Header -->
-            <div class="page-header">
-                <div class="page-title">
-                    <h1>${_('permissions.title')}</h1>
-                </div>
-                <p class="page-subtitle">${_('permissions.subtitle')}</p>
+        <div class="page permissions-page">
+            <div class="page-head">
+                <h1>${_('nav.permissions')}</h1>
+                <p class="page-description">${_('permissions.page_description')}</p>
             </div>
 
-            <!-- Info Card -->
-            <div class="permissions-info-card">
-                <span class="material-icons">info</span>
-                <div class="info-content">
-                    <strong>${_('permissions.info_title')}</strong>
-                    <p>${_('permissions.info_desc')}</p>
+            <section class="section" aria-labelledby="perm-role-title">
+                <h2 id="perm-role-title" class="sr-only">${_('permissions.select_role')}</h2>
+                <div class="form-group perm-role-field">
+                    <label class="form-label" for="role-select">${_('permissions.select_role')}</label>
+                    <select id="role-select" class="form-select is-medium" aria-describedby="role-info-banner">
+                        <option value="" disabled selected>${_('permissions.select_role_placeholder')}</option>
+                    </select>
                 </div>
-            </div>
-
-            <!-- Role Selector -->
-            <div class="permissions-toolbar">
-                <div class="toolbar-left">
-                    <div class="role-selector">
-                        <label>${_('permissions.select_role')}</label>
-                        <select id="role-select">
-                            <option value="" disabled selected>${_('permissions.select_role_placeholder')}</option>
-                        </select>
-                    </div>
+                <div class="role-info" id="role-info-banner" aria-live="polite" hidden>
+                    <p class="role-info-desc" id="role-info-name"></p>
+                    <p class="count-line" id="role-info-level"><span id="role-perm-count" hidden>0</span><span id="role-override-count" hidden>0</span></p>
                 </div>
-                <div class="toolbar-right">
-                    <button class="btn btn-secondary" id="btn-reset-overrides" disabled>
-                        <span class="material-icons">restart_alt</span>
-                        ${_('permissions.reset_overrides')}
-                    </button>
-                </div>
-            </div>
+            </section>
 
-            <!-- Role Info Banner -->
-            <div class="role-info-banner hidden" id="role-info-banner">
-                <div class="role-info-left">
-                    <span class="material-icons role-info-icon" id="role-info-icon">shield</span>
-                    <div>
-                        <div class="role-info-name" id="role-info-name"></div>
-                        <div class="role-info-level" id="role-info-level"></div>
-                    </div>
-                </div>
-                <div class="role-info-right">
-                    <div class="role-info-stat">
-                        <span class="stat-num" id="role-perm-count">0</span>
-                        <span class="stat-label">${_('permissions.granted')}</span>
-                    </div>
-                    <div class="role-info-stat">
-                        <span class="stat-num" id="role-override-count">0</span>
-                        <span class="stat-label">${_('permissions.overrides')}</span>
-                    </div>
-                </div>
-            </div>
+            <p class="state" id="permissions-loading">${_('permissions.loading')}</p>
+            <p class="state is-error" id="permissions-error" hidden>
+                <span>${_('permissions.load_failed')}</span>
+                <button type="button" class="btn btn-sm" id="permissions-retry">${_('actions.retry')}</button>
+            </p>
+            <p class="state" id="permissions-empty" hidden>${_('permissions.empty_desc')}</p>
+            <p class="notice" id="permissions-locked" hidden>${_('permissions.locked_desc')}</p>
 
-            <!-- Permissions Matrix -->
-            <div class="permissions-matrix hidden" id="permissions-matrix">
-                <!-- Categories rendered by JS -->
-            </div>
+            <!-- Permission groups, rendered by permissions.js -->
+            <div class="permissions-matrix" id="permissions-matrix" hidden></div>
 
-            <!-- Empty State -->
-            <div class="permissions-empty" id="permissions-empty">
-                <span class="material-icons">admin_panel_settings</span>
-                <h3>${_('permissions.empty_title')}</h3>
-                <p>${_('permissions.empty_desc')}</p>
-            </div>
-
-            <!-- Super Admin Notice -->
-            <div class="permissions-locked hidden" id="permissions-locked">
-                <span class="material-icons">lock</span>
-                <h3>${_('permissions.locked_title')}</h3>
-                <p>${_('permissions.locked_desc')}</p>
-            </div>
+            <section class="danger-zone" id="permissions-danger" aria-labelledby="perm-danger-title" hidden>
+                <h2 id="perm-danger-title">${_('permissions.danger_title')}</h2>
+                <ul class="list">
+                    <li class="list-row">
+                        <span class="row-main">
+                            <span class="row-title">${_('permissions.reset_overrides')}</span>
+                            <span class="row-sub" id="reset-overrides-desc">${_('permissions.reset_overrides_desc')}</span>
+                        </span>
+                        <span class="row-end"><button type="button" class="btn btn-danger-quiet" id="btn-reset-overrides" aria-describedby="reset-overrides-desc" disabled>${_('permissions.reset_overrides_button')}</button></span>
+                    </li>
+                </ul>
+            </section>
         </div>
     `
 }) %>
