@@ -5,7 +5,7 @@
     currentPage: 'devices',
     breadcrumb: [{ label: _('folders.all_devices') }],
     body: `
-        <div class="page devices-page">
+        <div class="page page-wide devices-page">
             <div class="page-head">
                 <h1>${_('devices.title')}</h1>
                 <p class="page-meta" id="devices-summary" aria-live="polite"><span id="devices-count" hidden>0</span></p>
@@ -164,10 +164,8 @@
             </div>
 
             <!-- Access control strategies (RustDesk Pro): set up rarely, kept off the list -->
-            <details class="section devices-strategies" id="devices-strategies-card">
-                <summary class="section-head">
-                    <h2>${_('devices.strategies_title')}</h2>
-                </summary>
+            <details class="section disclosure devices-strategies" id="devices-strategies-card">
+                <summary><h2>${_('devices.strategies_title')}</h2></summary>
                 <p class="section-note">${_('devices.strategies_hint')}</p>
                 <div class="devices-strategies-list" id="devices-strategies-list">
                     <p class="empty-state-inline">${_('devices.loading_strategies')}</p>

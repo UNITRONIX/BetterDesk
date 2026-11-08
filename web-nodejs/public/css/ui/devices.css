@@ -460,26 +460,6 @@
     margin-top: var(--space-4);
 }
 
-.devices-strategies > summary {
-    cursor: pointer;
-    list-style: none;
-}
-
-.devices-strategies > summary::-webkit-details-marker {
-    display: none;
-}
-
-.devices-strategies > summary h2::before {
-    content: "▸";
-    display: inline-block;
-    width: 1.2em;
-    color: var(--text-muted);
-}
-
-.devices-strategies[open] > summary h2::before {
-    content: "▾";
-}
-
 .strategy-manager-item {
     display: flex;
     flex-wrap: wrap;

@@ -97,7 +97,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--text);
 }
 
-h1 { font-size: var(--text-lg); }
+h1 { font-size: var(--text-xl); letter-spacing: -0.01em; }
 h2 { font-size: var(--text-md); }
 h3, h4, h5, h6 { font-size: var(--text-base); }
 
@@ -172,19 +172,25 @@ html[data-a11y-strong-focus="true"] :focus-visible {
 
 /* ── Page column ──
    Every page has one left edge: the content column. Headers, toolbars,
-   tables and forms all start there. */
+   lists, tables and forms all start there. Sections are separated by
+   space; rules separate rows. */
 
 .page {
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-6);
     min-width: 0;
+    max-width: var(--content-max);
+}
+
+.page.page-wide {
+    max-width: none;
 }
 
 .page-head {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-2) var(--space-4);
 }
 
@@ -194,7 +200,13 @@ html[data-a11y-strong-focus="true"] :focus-visible {
 
 .page-head .page-meta {
     color: var(--text-muted);
-    font-size: var(--text-sm);
+}
+
+.page-description {
+    flex-basis: 100%;
+    margin-top: calc(-1 * var(--space-1));
+    color: var(--text-muted);
+    max-width: var(--measure);
 }
 
 .page-actions {
@@ -204,7 +216,7 @@ html[data-a11y-strong-focus="true"] :focus-visible {
     align-items: center;
 }
 
-/* A section on the page: a heading and its content, no box around it */
+/* A section: heading, optional note, content. No box around it. */
 .section {
     display: flex;
     flex-direction: column;
@@ -212,15 +224,11 @@ html[data-a11y-strong-focus="true"] :focus-visible {
     min-width: 0;
 }
 
-.section + .section {
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--rule);
-}
-
 .section-head {
     display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
 }
 
 .section-head h2 {
@@ -228,35 +236,36 @@ html[data-a11y-strong-focus="true"] :focus-visible {
 }
 
 .section-note {
+    margin-top: calc(-1 * var(--space-2));
     color: var(--text-muted);
     max-width: var(--measure);
 }
 
-/* Definition list: label/value pairs (client setup, device facts) */
+/* Facts: label and value on one row, rows separated by rules */
 .facts {
     display: grid;
-    grid-template-columns: minmax(120px, max-content) minmax(0, 1fr);
-    gap: 0;
+    grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
     margin: 0;
-    max-width: 880px;
+    border-top: 1px solid var(--rule);
 }
 
 .facts > dt,
 .facts > dd {
+    display: flex;
+    align-items: center;
+    min-height: var(--row-h);
     margin: 0;
-    padding: var(--space-2) 0;
+    padding: var(--row-pad-y) var(--row-pad-x);
     border-bottom: 1px solid var(--rule);
     min-width: 0;
 }
 
 .facts > dt {
     color: var(--text-muted);
-    padding-inline-end: var(--space-5);
 }
 
 .facts > dd {
-    display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-2);
     overflow-wrap: anywhere;
 }
@@ -267,8 +276,13 @@ html[data-a11y-strong-focus="true"] :focus-visible {
     }
 
     .facts > dt {
-        border-bottom: 0;
+        min-height: 0;
         padding-bottom: 0;
+        border-bottom: 0;
+        font-size: var(--text-sm);
+    }
+
+    .facts > dd {
+        padding-top: var(--space-1);
     }
 }
-

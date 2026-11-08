@@ -46,6 +46,7 @@
     --text-base: calc(0.875rem * var(--font-scale)); /* 14px */
     --text-md: calc(1rem * var(--font-scale));       /* 16px */
     --text-lg: calc(1.25rem * var(--font-scale));    /* 20px */
+    --text-xl: calc(1.5rem * var(--font-scale));     /* 24px, page titles */
     --leading: 1.45;
 
     /* Space (4px steps) */
@@ -58,8 +59,8 @@
     --space-7: 48px;
 
     /* Shape */
-    --radius: 3px;
-    --radius-sm: 2px;
+    --radius: 4px;
+    --radius-sm: 3px;
 
     /* Only floating things cast a shadow */
     --shadow-float: 0 6px 24px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -68,15 +69,19 @@
     --motion: 120ms;
 
     /* Control sizes: compact with a mouse, 44px on touch */
-    --control-h: 32px;
-    --control-h-sm: 28px;
-    --row-h: 36px;
+    --control-h: 36px;
+    --control-h-sm: 30px;
+    --row-h: 44px;
+    /* Every row (nav, lists, facts, tables, menus) uses the same inset */
+    --row-pad-x: var(--space-3);
+    --row-pad-y: var(--space-2);
 
     /* Layout */
     --sidebar-w: 232px;
     --topbar-h: 48px;
     --page-pad: var(--space-5);
     --measure: 640px;
+    --content-max: 1040px;
 }
 
 :root[data-theme="dark"] {

@@ -166,6 +166,7 @@
 
 .device-panel-section-title {
     margin-bottom: var(--space-2);
+    font-size: var(--text-md);
     font-weight: 600;
 }
 
@@ -177,22 +178,25 @@
 }
 
 /* Facts: label above value */
+/* Facts: same rows as .facts elsewhere, label on the start side */
 .device-panel-info-grid {
     display: flex;
     flex-direction: column;
+    border-top: 1px solid var(--rule);
 }
 
 .device-panel-info-row {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    padding: var(--space-2) 0;
+    display: grid;
+    grid-template-columns: minmax(110px, 38%) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--row-h);
+    padding: var(--row-pad-y) var(--row-pad-x);
     border-bottom: 1px solid var(--rule);
 }
 
 .device-panel-info-label {
     color: var(--text-muted);
-    font-size: var(--text-sm);
 }
 
 .device-panel-info-value {
@@ -473,7 +477,7 @@
     margin-inline-start: var(--space-2);
 }
 
-.device-panel-copy-btn {
+.device-panel-id-row .device-panel-copy-btn {
     width: 24px;
     height: 24px;
 }
@@ -568,5 +572,12 @@
 
     .device-panel-tabs {
         padding-inline: var(--space-4);
+    }
+}
+
+@media (max-width: 480px) {
+    .device-panel-info-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
     }
 }

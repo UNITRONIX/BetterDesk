@@ -1,43 +1,8 @@
-/* Overview: what needs action, then the client setup values. */
+/* Overview: what needs action, then the client setup values.
+   Rows, facts, copy fields and the disclosure come from components.css. */
 
 .dashboard-page {
     max-width: 880px;
-}
-
-/* ── Needs attention ── */
-
-.attention-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-top: 1px solid var(--rule);
-}
-
-.attention-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-4);
-    min-height: var(--row-h);
-    padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--rule);
-}
-
-.attention-row .attention-label {
-    font-weight: 600;
-}
-
-.attention-count {
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-}
-
-.attention-server .attention-value {
-    color: var(--danger);
-}
-
-.attention-list:not(:has(.attention-row:not([hidden]))) {
-    border-top: 0;
 }
 
 /* ── Client setup ── */
@@ -57,56 +22,12 @@
     min-width: 0;
 }
 
-.client-config-value {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
 .client-config-value.is-masked {
     letter-spacing: 0.1em;
     color: var(--text-muted);
 }
 
-.client-config-copy.copied {
-    color: var(--success);
-}
-
-.client-config-links {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    color: var(--text-muted);
-}
-
-.client-config-links li + li {
-    margin-top: var(--space-1);
-}
-
-/* ── Server status (collapsed) ── */
-
-.server-details > summary {
-    cursor: pointer;
-    list-style: none;
-}
-
-.server-details > summary::-webkit-details-marker {
-    display: none;
-}
-
-.server-details > summary h2::before {
-    content: "▸";
-    display: inline-block;
-    width: 1.2em;
-    color: var(--text-muted);
-}
-
-.server-details[open] > summary h2::before {
-    content: "▾";
-}
-
-.server-details .facts + .facts {
-    margin-top: var(--space-4);
-}
+/* ── Server status ── */
 
 .server-status-indicator .status-dot {
     display: none;
@@ -151,7 +72,8 @@
     margin-top: var(--space-4);
 }
 
-/* QR dialog */
+/* ── QR dialog ── */
+
 .client-config-qr-frame img {
     display: block;
     max-width: 100%;

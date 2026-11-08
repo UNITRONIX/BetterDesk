@@ -456,6 +456,8 @@
         revealBtn.setAttribute('aria-label', `${label} ${_('dashboard.config_key')}`);
         revealBtn.setAttribute('aria-pressed', publicKeyVisible ? 'true' : 'false');
         if (icon) icon.textContent = publicKeyVisible ? 'visibility_off' : 'visibility';
+        const text = revealBtn.querySelector('.btn-label');
+        if (text) text.textContent = label;
     }
 
     function togglePublicKeyVisibility() {

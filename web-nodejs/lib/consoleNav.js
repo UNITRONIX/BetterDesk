@@ -20,6 +20,7 @@ const SECTIONS = [
     {
         id: 'devices',
         label: 'nav.devices',
+        icon: 'devices',
         pages: [
             { page: 'dashboard', href: '/', label: 'nav.dashboard', when: always },
             { page: 'devices', href: '/devices', label: 'folders.all_devices', when: perm('device.view') },
@@ -40,6 +41,7 @@ const SECTIONS = [
     {
         id: 'people',
         label: 'nav.section_people',
+        icon: 'group',
         pages: [
             { page: 'users', href: '/users', label: 'nav.users', when: perm('user.view') },
             { page: 'organizations', href: '/organizations', label: 'nav.organizations', when: anyPerm('org.create', 'org.edit', 'org.manage_users') },
@@ -49,6 +51,7 @@ const SECTIONS = [
     {
         id: 'activity',
         label: 'nav.activity',
+        icon: 'history',
         pages: [
             { page: 'security-audit', href: '/security-audit', label: 'nav.security_audit', when: perm('audit.view') },
             { page: 'activity', href: '/activity', label: 'activity.title', when: perm('audit.view') },
@@ -59,6 +62,7 @@ const SECTIONS = [
     {
         id: 'settings',
         label: 'nav.settings',
+        icon: 'settings',
         pages: [
             { page: 'settings', href: '/settings', label: 'settings.tab_general', when: always },
             { page: 'keys', href: '/keys', label: 'nav.keys', when: perm('server.config') },
@@ -119,7 +123,7 @@ function buildNav({ can, isSuperAdmin, t, currentPage, currentTab, activateAgent
                 if (active) activePage = item;
                 return item;
             });
-        const out = { id: section.id, text: t(section.label), pages, active: pages.some((p) => p.active) };
+        const out = { id: section.id, icon: section.icon, text: t(section.label), pages, active: pages.some((p) => p.active) };
         if (out.active) activeSection = out;
         return out;
     }).filter((s) => s.pages.length > 0);

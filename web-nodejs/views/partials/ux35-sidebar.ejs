@@ -23,7 +23,8 @@
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle"
                     aria-expanded="<%= section.active ? 'true' : 'false' %>"
                     aria-controls="nav-section-<%= section.id %>">
-                <span><%= section.text %></span>
+                <span class="material-icons nav-section-icon" aria-hidden="true"><%= section.icon %></span>
+                <span class="nav-section-label"><%= section.text %></span>
                 <span class="material-icons ux35-section-chevron" aria-hidden="true"><%= section.active ? 'expand_less' : 'expand_more' %></span>
             </button>
             <ul class="nav-list" id="nav-section-<%= section.id %>">
@@ -46,7 +47,8 @@
         <% }); %>
         <div class="ux35-sidebar-section nav-help">
             <button type="button" class="ux35-sidebar-heading" id="ux35-help-btn" aria-haspopup="dialog">
-                <span><%= _('nav.help') %></span>
+                <span class="material-icons nav-section-icon" aria-hidden="true">help_outline</span>
+                <span class="nav-section-label"><%= _('nav.help') %></span>
             </button>
         </div>
     </nav>

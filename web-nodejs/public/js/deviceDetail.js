@@ -1116,15 +1116,13 @@ const DeviceDetail = (function () {
     }
 
     function _infoRow(label, valueHTML, copyValue) {
-        const copyBtn = copyValue
-            ? `<button class="device-panel-copy-btn" data-copy="${Utils.escapeHtml(copyValue)}" title="${_('actions.copy')}">
-                <span class="material-icons">content_copy</span>
-               </button>`
-            : '';
+        const value = copyValue
+            ? `<span class="value-field"><span class="value">${valueHTML}</span><button type="button" class="device-panel-copy-btn" data-copy="${Utils.escapeHtml(copyValue)}" aria-label="${_('actions.copy')} ${Utils.escapeHtml(label)}">${_('actions.copy')}</button></span>`
+            : valueHTML;
         return `
         <div class="device-panel-info-row">
             <span class="device-panel-info-label">${label}</span>
-            <span class="device-panel-info-value">${valueHTML}${copyBtn}</span>
+            <span class="device-panel-info-value">${value}</span>
         </div>`;
     }
 

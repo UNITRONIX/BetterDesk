@@ -12,13 +12,13 @@
     justify-content: center;
     gap: var(--space-2);
     min-height: var(--control-h);
-    padding: 0 var(--space-3);
+    padding: 0 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--bg);
     color: var(--text);
     font: inherit;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.2;
     text-decoration: none;
     white-space: nowrap;
@@ -325,9 +325,11 @@ input.toggle-switch {
     position: sticky;
     top: 0;
     z-index: 1;
-    padding: var(--space-2);
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
+    height: 40px;
+    padding: var(--row-pad-y) var(--row-pad-x);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg-subtle);
     color: var(--text-muted);
     font-size: var(--text-sm);
     font-weight: 600;
@@ -338,7 +340,7 @@ input.toggle-switch {
 .data-table td,
 .table td {
     height: var(--row-h);
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-1) var(--row-pad-x);
     border-bottom: 1px solid var(--rule);
     vertical-align: middle;
 }
@@ -868,4 +870,222 @@ th.sortable.sort-desc {
 
 .os-icon-none {
     display: inline-block;
+}
+
+/* ── Row list ──
+   The one list pattern: rows on rules, same height and inset as table
+   rows, facts and nav items. A row that goes somewhere is a link with a
+   hover background and a chevron. */
+
+.list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--rule);
+}
+
+.list-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--row-h);
+    padding: var(--row-pad-y) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+    color: var(--text);
+    text-decoration: none;
+}
+
+a.list-row:hover,
+.list-row.is-link:hover {
+    background: var(--bg-subtle);
+    color: var(--text);
+}
+
+.list-row .row-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.list-row .row-title {
+    font-weight: 600;
+}
+
+.list-row .row-sub {
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.list-row .row-end {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-muted);
+}
+
+.list-row .row-chevron {
+    color: var(--text-muted);
+    font-size: 20px;
+}
+
+[dir="rtl"] .list-row .row-chevron {
+    transform: scaleX(-1);
+}
+
+.list-row.is-empty {
+    color: var(--text-muted);
+}
+
+/* A count that leads a row: "3  Enrollment requests" */
+.row-count {
+    min-width: 2ch;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+.row-mark {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--warning);
+}
+
+.row-mark.danger { background: var(--danger); }
+.row-mark.info { background: var(--accent); }
+
+/* ── Copyable value: the value in an inset field with a labelled button ── */
+
+.value-field {
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 100%;
+    min-height: var(--control-h-sm);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-subtle);
+}
+
+.value-field > code,
+.value-field > .value {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0 var(--space-3);
+    overflow-wrap: anywhere;
+    font-family: var(--mono);
+    font-size: var(--text-base);
+}
+
+.value-field > button {
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-inline-start: 1px solid var(--rule);
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.value-field > button:hover {
+    background: var(--hover);
+}
+
+.value-field > button.copied {
+    color: var(--success);
+}
+
+.value-field > button:last-child {
+    border-start-end-radius: calc(var(--radius) - 1px);
+    border-end-end-radius: calc(var(--radius) - 1px);
+}
+
+@media (pointer: coarse) {
+    .value-field > button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* ── Disclosure: a section that starts closed. Same chevron as the sidebar. ── */
+
+.disclosure > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--row-h);
+    padding: 0 var(--row-pad-x);
+    margin: 0 calc(-1 * var(--row-pad-x));
+    border-radius: var(--radius);
+    cursor: pointer;
+    list-style: none;
+}
+
+.disclosure > summary::-webkit-details-marker {
+    display: none;
+}
+
+.disclosure > summary:hover {
+    background: var(--bg-subtle);
+}
+
+.disclosure > summary::before {
+    content: "expand_more";
+    font-family: "Material Symbols Outlined";
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text-muted);
+    transform: rotate(-90deg);
+    transition: transform var(--motion);
+    font-feature-settings: "liga";
+}
+
+[dir="rtl"] .disclosure > summary::before {
+    transform: rotate(90deg);
+}
+
+.disclosure[open] > summary::before {
+    transform: none;
+}
+
+.disclosure > summary h2 {
+    margin: 0;
+}
+
+.disclosure > summary .summary-meta {
+    margin-inline-start: auto;
+    color: var(--text-muted);
+}
+
+.disclosure[open] > summary {
+    margin-bottom: var(--space-3);
+}
+
+/* ── Menu button: a button that opens a small menu of rarely used actions ── */
+
+.menu-anchor {
+    position: relative;
+    display: inline-flex;
+}
+
+.menu-anchor > .menu {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    inset-inline-start: 0;
+    display: none;
+}
+
+.menu-anchor > .menu.open {
+    display: block;
+}
+
+.btn .btn-caret {
+    margin-inline-end: -4px;
+    font-size: 18px;
 }
