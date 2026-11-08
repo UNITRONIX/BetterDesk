@@ -5863,7 +5863,12 @@
         "mark_all_read": "모두 읽은 것으로 표시",
         "see_all": "모든 도움 요청 보기",
         "help_request": "도움 요청",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "새 장치가 가입을 요청함",
+        "unread": "읽지 않음",
+        "empty_hint": "도움 요청이나 가입을 요청하는 장치가 없습니다.",
+        "loading": "알림을 불러오는 중…",
+        "load_failed": "알림을 불러올 수 없습니다."
     },
     "accessibility": {
         "title": "접근성",

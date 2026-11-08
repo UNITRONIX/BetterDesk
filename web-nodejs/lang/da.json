@@ -5868,8 +5868,13 @@
         "empty": "Ingen nye meddelelser",
         "mark_all_read": "Marker alt som læst",
         "see_all": "Se alle anmodninger om hjælp",
-        "help_request": "Hjælp anmodning",
-        "just_now": "just now"
+        "help_request": "Anmodning om hjælp",
+        "just_now": "just now",
+        "kind_registration": "Ny enhed beder om at blive tilføjet",
+        "unread": "Ulæst",
+        "empty_hint": "Ingen anmodninger om hjælp eller enheder, der beder om at blive tilføjet.",
+        "loading": "Indlæser meddelelser…",
+        "load_failed": "Meddelelserne kunne ikke indlæses."
     },
     "accessibility": {
         "title": "Accessibility",

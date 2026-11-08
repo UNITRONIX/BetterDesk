@@ -5863,7 +5863,12 @@
         "mark_all_read": "Alles als gelezen markeren",
         "see_all": "Alle hulpverzoeken bekijken",
         "help_request": "Hulpverzoek",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Nieuw apparaat vraagt om toegang",
+        "unread": "Ongelezen",
+        "empty_hint": "Geen hulpverzoeken of apparaten die om toegang vragen.",
+        "loading": "Meldingen laden…",
+        "load_failed": "Meldingen konden niet worden geladen."
     },
     "accessibility": {
         "title": "Toegankelijkheid",

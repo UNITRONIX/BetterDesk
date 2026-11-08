@@ -5866,10 +5866,15 @@
     "notifications": {
         "title": "सूचनाएं",
         "empty": "कोई नए संदेश नहीं",
-        "mark_all_read": "सभी को पढ़ा दिखाएं",
+        "mark_all_read": "सभी को पढ़ा हुआ चिह्नित करें",
         "see_all": "सभी सहायता अनुरोध देखें",
         "help_request": "मदद अनुरोध",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "नया डिवाइस जुड़ने का अनुरोध कर रहा है",
+        "unread": "अपठित",
+        "empty_hint": "कोई सहायता अनुरोध या जुड़ने का अनुरोध करने वाला डिवाइस नहीं है।",
+        "loading": "सूचनाएं लोड हो रही हैं…",
+        "load_failed": "सूचनाएं लोड नहीं हो सकीं।"
     },
     "accessibility": {
         "title": "पहुंच योग्यता",

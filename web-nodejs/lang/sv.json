@@ -5868,8 +5868,13 @@
         "empty": "Inga nya aviseringar",
         "mark_all_read": "Markera allt som läst",
         "see_all": "Se alla hjälpförfrågningar",
-        "help_request": "Begäran om hjälp",
-        "just_now": "just now"
+        "help_request": "Hjälpförfrågan",
+        "just_now": "just now",
+        "kind_registration": "Ny enhet ber om att få ansluta",
+        "unread": "Oläst",
+        "empty_hint": "Inga hjälpförfrågningar eller enheter som ber om att få ansluta.",
+        "loading": "Läser in aviseringar…",
+        "load_failed": "Det gick inte att läsa in aviseringarna."
     },
     "accessibility": {
         "title": "Accessibility",

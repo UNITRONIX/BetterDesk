@@ -3559,7 +3559,12 @@
         "mark_all_read": "全部标记为已读",
         "see_all": "查看所有求助请求",
         "help_request": "求助请求",
-        "just_now": "刚刚"
+        "just_now": "刚刚",
+        "kind_registration": "新设备请求加入",
+        "unread": "未读",
+        "empty_hint": "没有求助请求，也没有请求加入的设备。",
+        "loading": "正在加载通知…",
+        "load_failed": "无法加载通知。"
     },
     "desktop": {
         "switch_mode": "桌面模式",

@@ -5863,7 +5863,12 @@
         "mark_all_read": "Marcar todo como leído",
         "see_all": "Ver todas las solicitudes de ayuda",
         "help_request": "Solicitud de ayuda",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Un dispositivo nuevo pide unirse",
+        "unread": "No leído",
+        "empty_hint": "No hay solicitudes de ayuda ni dispositivos que pidan unirse.",
+        "loading": "Cargando notificaciones…",
+        "load_failed": "No se pudieron cargar las notificaciones."
     },
     "accessibility": {
         "title": "Accesibilidad",

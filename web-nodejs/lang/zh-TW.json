@@ -3581,7 +3581,12 @@
         "mark_all_read": "全部標記爲已讀",
         "see_all": "查看所有求助請求",
         "help_request": "求助請求",
-        "just_now": "剛剛"
+        "just_now": "剛剛",
+        "kind_registration": "新裝置請求加入",
+        "unread": "未讀",
+        "empty_hint": "沒有求助請求，也沒有請求加入的裝置。",
+        "loading": "正在載入通知…",
+        "load_failed": "無法載入通知。"
     },
     "desktop": {
         "switch_mode": "桌面模式",

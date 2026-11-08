@@ -3577,7 +3577,12 @@
         "mark_all_read": "Oznacz wszystkie jako przeczytane",
         "see_all": "Zobacz wszystkie prośby o pomoc",
         "help_request": "Prośba o pomoc",
-        "just_now": "przed chwilą"
+        "just_now": "przed chwilą",
+        "kind_registration": "Nowe urządzenie prosi o dołączenie",
+        "unread": "Nieprzeczytane",
+        "empty_hint": "Brak próśb o pomoc i urządzeń proszących o dołączenie.",
+        "loading": "Wczytywanie powiadomień…",
+        "load_failed": "Nie udało się wczytać powiadomień."
     },
     "desktop": {
         "switch_mode": "Tryb pulpitu",

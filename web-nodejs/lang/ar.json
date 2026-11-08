@@ -5867,10 +5867,15 @@
     "notifications": {
         "title": "إشعارات",
         "empty": "لا توجد إشعارات جديدة",
-        "mark_all_read": "وضع علامة على كل قراءة",
+        "mark_all_read": "تعليم الكل كمقروء",
         "see_all": "شاهد جميع طلبات المساعدة",
         "help_request": "طلب مساعدة",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "جهاز جديد يطلب الانضمام",
+        "unread": "غير مقروء",
+        "empty_hint": "لا توجد طلبات مساعدة أو أجهزة تطلب الانضمام.",
+        "loading": "جارٍ تحميل الإشعارات…",
+        "load_failed": "تعذّر تحميل الإشعارات."
     },
     "accessibility": {
         "title": "إمكانية الوصول",

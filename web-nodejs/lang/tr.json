@@ -5867,9 +5867,14 @@
         "title": "Bildirimler",
         "empty": "Yeni bildirim yok",
         "mark_all_read": "Tümünü okundu olarak işaretle",
-        "see_all": "Tüm yardım isteklerini görün",
+        "see_all": "Tüm yardım isteklerini gör",
         "help_request": "Yardım isteği",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Yeni cihaz katılmak istiyor",
+        "unread": "Okunmadı",
+        "empty_hint": "Yardım isteği veya katılmak isteyen cihaz yok.",
+        "loading": "Bildirimler yükleniyor…",
+        "load_failed": "Bildirimler yüklenemedi."
     },
     "accessibility": {
         "title": "Erişilebilirlik",

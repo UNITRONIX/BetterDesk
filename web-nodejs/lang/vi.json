@@ -5869,7 +5869,12 @@
         "mark_all_read": "Đánh dấu tất cả đã đọc",
         "see_all": "Xem tất cả yêu cầu trợ giúp",
         "help_request": "Yêu cầu trợ giúp",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Thiết bị mới xin tham gia",
+        "unread": "Chưa đọc",
+        "empty_hint": "Không có yêu cầu trợ giúp hoặc thiết bị nào xin tham gia.",
+        "loading": "Đang tải thông báo…",
+        "load_failed": "Không tải được thông báo."
     },
     "accessibility": {
         "title": "Accessibility",

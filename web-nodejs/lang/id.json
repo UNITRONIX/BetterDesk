@@ -5869,7 +5869,12 @@
         "mark_all_read": "Tandai semua telah dibaca",
         "see_all": "Lihat semua permintaan bantuan",
         "help_request": "Permintaan bantuan",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Perangkat baru meminta bergabung",
+        "unread": "Belum dibaca",
+        "empty_hint": "Tidak ada permintaan bantuan atau perangkat yang meminta bergabung.",
+        "loading": "Memuat pemberitahuan…",
+        "load_failed": "Pemberitahuan tidak dapat dimuat."
     },
     "accessibility": {
         "title": "Accessibility",

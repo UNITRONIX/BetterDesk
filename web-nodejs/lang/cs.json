@@ -5863,7 +5863,12 @@
         "mark_all_read": "Označit vše jako přečtené",
         "see_all": "Zobrazit všechny žádosti o pomoc",
         "help_request": "Žádost o pomoc",
-        "just_now": "právě teď"
+        "just_now": "právě teď",
+        "kind_registration": "Nové zařízení žádá o připojení",
+        "unread": "Nepřečteno",
+        "empty_hint": "Žádné žádosti o pomoc ani zařízení, která žádají o připojení.",
+        "loading": "Načítání oznámení…",
+        "load_failed": "Oznámení se nepodařilo načíst."
     },
     "accessibility": {
         "title": "Usnadnění",

@@ -34,6 +34,33 @@ describe('registration notification view model', () => {
         });
     });
 
+    it('passes hostname, platform and address as fields for the notification row', () => {
+        expect(lanRegistrationToNotification({
+            id: 13,
+            device_id: '900300001',
+            hostname: 'demo-lan-printer-pc',
+            platform: 'Windows',
+            ip_address: '10.0.9.14',
+            created_at: '2026-08-23T12:00:00.000Z',
+        })).toMatchObject({
+            hostname: 'demo-lan-printer-pc',
+            platform: 'Windows',
+            ip: '10.0.9.14',
+        });
+
+        expect(enrollmentToNotification({
+            device_id: '900200002',
+            platform: 'Android',
+            ip: '10.0.0.52',
+            created_at: '2026-08-23T12:01:00.000Z',
+        })).toMatchObject({
+            title: '900200002',
+            hostname: '',
+            platform: 'Android',
+            ip: '10.0.0.52',
+        });
+    });
+
     it('combines both stores and tolerates one unavailable source', async () => {
         const result = await listRegistrationNotifications(
             {

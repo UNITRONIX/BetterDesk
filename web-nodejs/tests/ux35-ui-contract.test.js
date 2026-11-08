@@ -17,6 +17,7 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
     const topbar = read('views', 'partials', 'ux35-topbar.ejs');
     const bottomNav = read('views', 'partials', 'mobile-bottom-nav.ejs');
     const sidebar = read('views', 'partials', 'ux35-sidebar.ejs');
+    const navItem = read('views', 'partials', 'nav-item.ejs');
     const consoleNav = read('lib', 'consoleNav.js');
     const layout = read('views', 'layouts', 'main.ejs');
     const automation = read('public', 'js', 'automation.js');
@@ -91,7 +92,7 @@ describe('UX 3.5 mobile and accessibility contracts', () => {
         assert.match(topbar, /id="notif-badge"/);
         assert.match(topbar, /href="\/registrations"/);
         assert.match(consoleNav, /countId: 'reg-sidebar-badge'/);
-        assert.match(sidebar, /id="<%= item.countId %>"/);
+        assert.match(navItem, /id="<%= item.countId %>"/);
     });
 
     it('keeps the notification badge hidden when unread count is zero', () => {

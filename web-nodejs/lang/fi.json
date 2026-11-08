@@ -5869,7 +5869,12 @@
         "mark_all_read": "Merkitse kaikki luetuiksi",
         "see_all": "Katso kaikki avunpyynnöt",
         "help_request": "Apupyyntö",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Uusi laite pyytää liittymistä",
+        "unread": "Lukematon",
+        "empty_hint": "Ei avunpyyntöjä eikä liittymistä pyytäviä laitteita.",
+        "loading": "Ladataan ilmoituksia…",
+        "load_failed": "Ilmoituksia ei voitu ladata."
     },
     "accessibility": {
         "title": "Accessibility",

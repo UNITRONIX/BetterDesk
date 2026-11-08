@@ -225,6 +225,8 @@ const Utils = {
         save: 'save',
         reset: 'settings_backup_restore',
         import: 'upload',
+        help_request: 'support_agent',    // someone asked for help from the desktop app
+        enrollment_request: 'how_to_reg', // a new device asks to join the server
     },
 
     /** <span> for the icon of a meaning (see ICONS); decorative, the label carries the meaning */

@@ -5863,7 +5863,12 @@
         "mark_all_read": "Segna tutto come letto",
         "see_all": "Vedi tutte le richieste di aiuto",
         "help_request": "Richiesta di aiuto",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Un nuovo dispositivo chiede di unirsi",
+        "unread": "Non letto",
+        "empty_hint": "Nessuna richiesta di aiuto né dispositivi che chiedono di unirsi.",
+        "loading": "Caricamento delle notifiche…",
+        "load_failed": "Impossibile caricare le notifiche."
     },
     "accessibility": {
         "title": "Accessibilità",

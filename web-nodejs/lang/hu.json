@@ -5866,10 +5866,15 @@
     "notifications": {
         "title": "Értesítések",
         "empty": "Nincsenek új értesítések",
-        "mark_all_read": "Jelölje meg az összeset olvasottnak",
+        "mark_all_read": "Az összes olvasottnak jelölése",
         "see_all": "Tekintse meg az összes segítségkérést",
         "help_request": "Segítségkérés",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Új eszköz csatlakozást kér",
+        "unread": "Olvasatlan",
+        "empty_hint": "Nincs segítségkérés, és egy eszköz sem kér csatlakozást.",
+        "loading": "Értesítések betöltése…",
+        "load_failed": "Az értesítéseket nem sikerült betölteni."
     },
     "accessibility": {
         "title": "Accessibility",

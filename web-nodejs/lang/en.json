@@ -3638,7 +3638,12 @@
         "mark_all_read": "Mark all read",
         "see_all": "See all help requests",
         "help_request": "Help request",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "New device asks to join",
+        "unread": "Unread",
+        "empty_hint": "No help requests or devices asking to join.",
+        "loading": "Loading notifications…",
+        "load_failed": "Could not load notifications."
     },
     "desktop": {
         "switch_mode": "Desktop Mode",

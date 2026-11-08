@@ -5866,10 +5866,15 @@
     "notifications": {
         "title": "Notificări",
         "empty": "Fără notificări noi",
-        "mark_all_read": "Marcați toate citite",
+        "mark_all_read": "Marcați toate ca citite",
         "see_all": "Vedeți toate cererile de ajutor",
         "help_request": "Cerere de ajutor",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Un dispozitiv nou cere să se alăture",
+        "unread": "Necitit",
+        "empty_hint": "Nu există cereri de ajutor sau dispozitive care cer să se alăture.",
+        "loading": "Se încarcă notificările…",
+        "load_failed": "Notificările nu au putut fi încărcate."
     },
     "accessibility": {
         "title": "Accessibility",

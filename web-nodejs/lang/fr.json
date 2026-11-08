@@ -3576,12 +3576,17 @@
         "gateway_note": "Les appareils IoT se connectent au serveur sur ce port. Chacun apparaît dans la liste tant qu'il est connecté."
     },
     "notifications": {
-        "title": "Benachrichtigungen",
-        "empty": "Keine neuen Benachrichtigungen",
-        "mark_all_read": "Alle als gelesen markieren",
-        "see_all": "Alle Hilfeanfragen anzeigen",
-        "help_request": "Hilfeanfrage",
-        "just_now": "just now"
+        "title": "Notifications",
+        "empty": "Aucune nouvelle notification",
+        "mark_all_read": "Tout marquer comme lu",
+        "see_all": "Voir toutes les demandes d'aide",
+        "help_request": "Demande d'aide",
+        "just_now": "just now",
+        "kind_registration": "Un nouvel appareil demande à rejoindre",
+        "unread": "Non lu",
+        "empty_hint": "Aucune demande d'aide ni aucun appareil qui demande à rejoindre.",
+        "loading": "Chargement des notifications…",
+        "load_failed": "Impossible de charger les notifications."
     },
     "desktop": {
         "switch_mode": "Desktop Mode",

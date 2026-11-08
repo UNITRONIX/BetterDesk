@@ -4,13 +4,19 @@
  * Responsibilities:
  *  - Fetches recent notifications from /api/bd/notifications on load
  *  - Subscribes to the shared authenticated panel event stream
- *  - Renders a dropdown list of recent items with action/link
+ *  - Renders the dropdown (a menu): one row per help request or enrollment
+ *    request, with the device's OS mark, what happened, the device and the age
  *  - Marks items as read via POST /api/bd/notifications/:id/read
  *  - Updates badge counter
+ *
+ * Keyboard: Enter/Space or ArrowDown on the bell opens the menu and focuses the
+ * first notification; ArrowUp/ArrowDown, Home and End move between items;
+ * Escape closes and returns focus to the bell; Tab closes and moves on.
  *
  * Defense in depth:
  *  - All server-provided text is inserted via textContent (never innerHTML) to
  *    prevent stored-XSS from compromised agent names or help request bodies.
+ *    Only icon markup from Utils (fixed names) goes through innerHTML.
  *  - CSRF token is sent with mutation requests (read / mark-all).
  */
 (function () {
@@ -20,13 +26,15 @@
     const state = {
         items: [],
         unreadCount: 0,
+        loaded: false,
+        failed: false,
     };
 
     let dom = null;
 
-    function _(key) {
+    function _(key, params) {
         try {
-            return (window.BetterDesk && window._) ? window._(key) : key;
+            return (window.BetterDesk && window._) ? window._(key, params) : key;
         } catch {
             return key;
         }
@@ -38,16 +46,73 @@
 
     function formatTime(iso) {
         try {
+            if (window.Utils && typeof Utils.formatRelativeTime === 'function') {
+                return Utils.formatRelativeTime(iso, { empty: '' });
+            }
             const d = new Date(iso);
-            if (Number.isNaN(d.getTime())) return '';
-            const diff = Date.now() - d.getTime();
-            if (diff < 60_000) return _('notifications.just_now');
-            if (diff < 3_600_000) return Math.floor(diff / 60_000) + 'm';
-            if (diff < 86_400_000) return Math.floor(diff / 3_600_000) + 'h';
-            return d.toLocaleDateString();
+            return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
         } catch {
             return '';
         }
+    }
+
+    function formatFullTime(iso) {
+        try {
+            if (window.Utils && typeof Utils.formatDate === 'function') return Utils.formatDate(iso);
+            return new Date(iso).toLocaleString();
+        } catch {
+            return '';
+        }
+    }
+
+    function looksLikeAddress(part) {
+        return /^\d{1,3}(\.\d{1,3}){3}$/.test(part) || /^[0-9a-f]*:[0-9a-f:.]*$/i.test(part);
+    }
+
+    /**
+     * What a row shows, from either notification kind. Registration items
+     * carry "ID · platform · address" in their message; newer servers also
+     * send platform and ip as fields.
+     */
+    function describe(item) {
+        const isRegistration = item.kind === 'registration' || String(item.id).startsWith('registration:');
+        const deviceId = String(item.device_id || '');
+        const title = String(item.title || '');
+        const name = String(item.hostname || (title && title !== deviceId ? title : ''));
+
+        if (isRegistration) {
+            const parts = String(item.message || '').split(' · ').map(p => p.trim()).filter(Boolean);
+            if (parts[0] && parts[0] === deviceId) parts.shift();
+            const platform = String(item.platform || parts.find(p => !looksLikeAddress(p)) || '');
+            const ip = String(item.ip || parts.find(looksLikeAddress) || '');
+            return {
+                kindLabel: _('notifications.kind_registration'),
+                icon: 'enrollment_request',
+                link: item.link || '/registrations',
+                name,
+                deviceId,
+                platform,
+                detail: [platform, ip].filter(Boolean).join(' · '),
+            };
+        }
+        return {
+            kindLabel: _('notifications.help_request'),
+            icon: 'help_request',
+            link: item.link || '/help-requests',
+            name: name || (deviceId ? '' : title),
+            deviceId,
+            platform: String(item.platform || ''),
+            detail: String(item.message || ''),
+        };
+    }
+
+    function markHtml(view) {
+        const U = window.Utils;
+        if (U && view.platform && typeof U.getPlatformLogoId === 'function' && U.getPlatformLogoId(view.platform)) {
+            return U.getPlatformIconHtml(view.platform);
+        }
+        if (U && typeof U.icon === 'function') return U.icon(view.icon);
+        return '';
     }
 
     function updateBadge() {
@@ -61,6 +126,7 @@
             btn.setAttribute('aria-label', label);
             btn.setAttribute('title', label);
         }
+        if (dom.markAll) dom.markAll.hidden = !(count > 0);
         if (count > 0) {
             dom.badge.textContent = '';
             dom.badge.hidden = false;
@@ -72,57 +138,129 @@
         }
     }
 
-    function renderList() {
-        if (!dom) return;
-        dom.list.textContent = '';
+    function stateLine(text, className) {
+        const p = document.createElement('p');
+        p.className = className;
+        p.textContent = text;
+        return p;
+    }
 
-        if (state.items.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'notif-empty';
-            empty.textContent = _('notifications.empty');
-            dom.list.appendChild(empty);
-            return;
+    function buildRow(item) {
+        const view = describe(item);
+        const row = document.createElement('a');
+        row.className = 'notif-row' + (item.read ? '' : ' is-unread');
+        row.href = view.link;
+        row.setAttribute('role', 'menuitem');
+        row.tabIndex = -1;
+        row.dataset.id = String(item.id);
+
+        const mark = document.createElement('span');
+        mark.className = 'notif-row-mark';
+        mark.setAttribute('aria-hidden', 'true');
+        mark.innerHTML = markHtml(view);
+
+        const kind = document.createElement('span');
+        kind.className = 'notif-row-kind';
+        kind.textContent = view.kindLabel;
+
+        row.appendChild(mark);
+        row.appendChild(kind);
+
+        if (view.name || view.deviceId) {
+            const device = document.createElement('span');
+            device.className = 'notif-row-device';
+            if (view.name) {
+                const name = document.createElement('span');
+                name.className = 'notif-row-name';
+                name.textContent = view.name;
+                device.appendChild(name);
+            }
+            if (view.deviceId) {
+                if (view.name) device.appendChild(document.createTextNode(' '));
+                const id = document.createElement('span');
+                id.className = 'notif-row-id';
+                id.textContent = view.deviceId;
+                device.appendChild(id);
+            }
+            row.appendChild(device);
         }
 
-        for (const item of state.items.slice(0, MAX_ITEMS)) {
-            const row = document.createElement('a');
-            row.className = 'notif-item' + (item.read ? '' : ' notif-unread');
-            row.href = item.link || '/help-requests';
-            row.dataset.id = String(item.id);
+        if (view.detail) {
+            const detail = document.createElement('span');
+            detail.className = 'notif-row-detail';
+            detail.textContent = view.detail;
+            row.appendChild(detail);
+        }
 
-            const icon = document.createElement('span');
-            icon.className = 'material-icons notif-item-icon';
-            icon.textContent = item.icon || 'support_agent';
+        const age = formatTime(item.created_at);
+        if (age) {
+            const time = document.createElement('time');
+            time.className = 'notif-row-time';
+            time.dateTime = String(item.created_at || '');
+            time.title = formatFullTime(item.created_at);
+            time.textContent = age;
+            row.appendChild(time);
+        }
 
-            const body = document.createElement('div');
-            body.className = 'notif-item-body';
+        if (!item.read) {
+            const unread = document.createElement('span');
+            unread.className = 'sr-only';
+            unread.textContent = ', ' + _('notifications.unread');
+            row.appendChild(unread);
+        }
 
-            const title = document.createElement('div');
-            title.className = 'notif-item-title';
-            title.textContent = item.title || _('notifications.help_request');
+        row.addEventListener('click', () => {
+            if (!item.read) {
+                markRead(item.id).catch(() => { /* best effort */ });
+            }
+        });
+        return row;
+    }
 
-            const sub = document.createElement('div');
-            sub.className = 'notif-item-sub';
-            sub.textContent = item.message || '';
+    function renderList() {
+        if (!dom) return;
+        // Re-rendering replaces the rows; keep keyboard focus on the same one
+        const active = document.activeElement;
+        const hadFocus = !!(active && dom.list.contains(active));
+        const focusedId = hadFocus && active.dataset ? active.dataset.id : null;
 
-            const time = document.createElement('div');
-            time.className = 'notif-item-time';
-            time.textContent = formatTime(item.created_at);
+        dom.list.textContent = '';
 
-            body.appendChild(title);
-            body.appendChild(sub);
-            body.appendChild(time);
-
-            row.appendChild(icon);
-            row.appendChild(body);
-
-            row.addEventListener('click', () => {
-                if (!item.read) {
-                    markRead(item.id).catch(() => { /* best effort */ });
-                }
+        if (state.failed && state.items.length === 0) {
+            const p = stateLine(_('notifications.load_failed') + ' ', 'notif-state is-error');
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'notif-retry';
+            retry.setAttribute('role', 'menuitem');
+            retry.tabIndex = -1;
+            retry.textContent = _('errors.try_again');
+            retry.addEventListener('click', (e) => {
+                e.stopPropagation();
+                fetchNotifications();
             });
+            p.appendChild(retry);
+            dom.list.appendChild(p);
+        } else if (!state.loaded) {
+            dom.list.appendChild(stateLine(_('notifications.loading'), 'notif-state'));
+        } else if (state.items.length === 0) {
+            dom.list.appendChild(stateLine(_('notifications.empty_hint'), 'notif-state notif-empty'));
+        } else {
+            const ul = document.createElement('ul');
+            ul.className = 'notif-rows';
+            ul.setAttribute('role', 'none');
+            for (const item of state.items.slice(0, MAX_ITEMS)) {
+                const li = document.createElement('li');
+                li.setAttribute('role', 'none');
+                li.appendChild(buildRow(item));
+                ul.appendChild(li);
+            }
+            dom.list.appendChild(ul);
+        }
 
-            dom.list.appendChild(row);
+        if (hadFocus) {
+            const same = focusedId ? dom.list.querySelector('[data-id="' + CSS.escape(focusedId) + '"]') : null;
+            const target = same || menuItems()[0];
+            if (target) target.focus();
         }
     }
 
@@ -132,10 +270,12 @@
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' },
             });
-            if (!resp.ok) return;
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();
             const items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
             state.items = items;
+            state.loaded = true;
+            state.failed = false;
             const serverUnreadCount = Number(data.unread_count);
             state.unreadCount = Number.isFinite(serverUnreadCount) && serverUnreadCount >= 0
                 ? serverUnreadCount
@@ -143,7 +283,9 @@
             updateBadge();
             renderList();
         } catch {
-            // Silent — dropdown stays empty, badge stays hidden.
+            // Keep what was shown; with nothing to show, say so and offer a retry.
+            state.failed = true;
+            renderList();
         }
     }
 
@@ -153,6 +295,8 @@
             await fetch('/api/bd/notifications/' + encodeURIComponent(id) + '/read', {
                 method: 'POST',
                 credentials: 'same-origin',
+                // The row is a link: let the request finish after navigation
+                keepalive: true,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrf(),
@@ -172,7 +316,7 @@
 
     async function markAllRead() {
         try {
-            await fetch('/api/bd/notifications/read-all', {
+            const resp = await fetch('/api/bd/notifications/read-all', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -180,25 +324,43 @@
                     'X-CSRF-Token': csrf(),
                 },
             });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const hadFocus = document.activeElement === dom.markAll;
             state.items = state.items.map(i => ({ ...i, read: true }));
             state.unreadCount = 0;
             updateBadge();
             renderList();
+            // The button hides once nothing is unread; keep focus in the menu
+            if (hadFocus) {
+                const first = menuItems()[0];
+                if (first) first.focus();
+            }
         } catch {
-            // Silent.
+            if (window.Notifications && typeof Notifications.error === 'function') {
+                Notifications.error(_('errors.try_again'));
+            }
         }
     }
 
     function onHelpRequestEvent(payload) {
         try {
+            // Status changes (accepted, resolved) are not new requests: reload
+            // the list so they don't show up as a new unread item.
+            if (payload.status && payload.status !== 'pending' && payload.status !== 'open') {
+                fetchNotifications();
+                return;
+            }
             const item = {
                 id: payload.id || Date.now(),
-                title: payload.device_name || _('notifications.help_request'),
-                message: payload.description || payload.message || '',
+                kind: 'help_request',
+                title: payload.hostname || payload.device_name || payload.device_id || _('notifications.help_request'),
+                hostname: payload.hostname || payload.device_name || '',
+                device_id: payload.device_id || '',
+                message: payload.message || payload.description || '',
                 icon: 'support_agent',
                 link: '/help-requests',
                 read: false,
-                created_at: payload.timestamp || new Date().toISOString(),
+                created_at: payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString(),
             };
             // Insert at top, cap list.
             const existingIndex = state.items.findIndex((entry) => String(entry.id) === String(item.id));
@@ -208,19 +370,12 @@
                 state.unreadCount += 1;
             }
             state.items.unshift(item);
+            state.loaded = true;
             if (state.items.length > MAX_ITEMS) {
                 state.items = state.items.slice(0, MAX_ITEMS);
             }
             updateBadge();
             renderList();
-
-            // Subtle badge pulse for real-time feedback.
-            if (dom && dom.btn) {
-                dom.btn.classList.remove('notif-pulse');
-                // Force reflow so the class re-application restarts the animation.
-                void dom.btn.offsetWidth;
-                dom.btn.classList.add('notif-pulse');
-            }
         } catch {
             // Ignore malformed payloads.
         }
@@ -240,16 +395,65 @@
         });
     }
 
+    function isOpen() {
+        return !!dom && !dom.dropdown.hidden;
+    }
+
+    /** Focusable menu items in order: mark all read, the rows, retry, footer links */
+    function menuItems() {
+        if (!dom) return [];
+        return Array.from(dom.dropdown.querySelectorAll('[role="menuitem"]'))
+            .filter(el => !el.hidden && el.getClientRects().length > 0);
+    }
+
+    function focusFirst() {
+        const rows = dom.list.querySelectorAll('.notif-row');
+        const target = rows[0] || menuItems()[0];
+        if (target) target.focus();
+    }
+
     function toggleDropdown(open) {
         if (!dom) return;
-        const isOpen = open !== undefined ? open : dom.dropdown.hidden;
-        if (isOpen && window.BetterDesk && typeof window.BetterDesk.closeAllTopbarPopovers === 'function') {
+        const willOpen = open !== undefined ? open : dom.dropdown.hidden;
+        if (willOpen && window.BetterDesk && typeof window.BetterDesk.closeAllTopbarPopovers === 'function') {
             window.BetterDesk.closeAllTopbarPopovers(dom.dropdown);
         }
-        dom.dropdown.hidden = !isOpen;
-        dom.btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        if (isOpen) {
+        dom.dropdown.hidden = !willOpen;
+        dom.btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        if (willOpen) {
+            renderList();
+            focusFirst();
             fetchNotifications();
+        }
+    }
+
+    function onMenuKeydown(e) {
+        if (!isOpen()) return;
+        if (e.key === 'Escape') {
+            const focusInside = dom.wrapper.contains(document.activeElement);
+            // Handled here only: a menu around the bell (phones) stays open
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDropdown(false);
+            if (focusInside) dom.btn.focus();
+            return;
+        }
+        if (!dom.dropdown.contains(document.activeElement)) return;
+        if (e.key === 'Tab') {
+            toggleDropdown(false);
+            return;
+        }
+        const list = menuItems();
+        if (!list.length) return;
+        const i = list.indexOf(document.activeElement);
+        let next = null;
+        if (e.key === 'ArrowDown') next = list[(i + 1) % list.length];
+        else if (e.key === 'ArrowUp') next = list[(i - 1 + list.length) % list.length];
+        else if (e.key === 'Home') next = list[0];
+        else if (e.key === 'End') next = list[list.length - 1];
+        if (next) {
+            e.preventDefault();
+            next.focus();
         }
     }
 
@@ -272,6 +476,13 @@
             toggleDropdown();
         });
 
+        dom.btn.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' && !isOpen()) {
+                e.preventDefault();
+                toggleDropdown(true);
+            }
+        });
+
         if (dom.markAll) {
             dom.markAll.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -280,15 +491,19 @@
             });
         }
 
+        // Clicks on the menu's text or background keep it open
+        dom.dropdown.addEventListener('click', (e) => {
+            if (!e.target.closest('a[href]')) e.stopPropagation();
+        });
+
         document.addEventListener('click', (e) => {
             if (!dom.wrapper.contains(e.target)) {
                 toggleDropdown(false);
             }
         });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') toggleDropdown(false);
-        });
+        // Capture phase, so Escape closes this menu before other top bar menus see it
+        document.addEventListener('keydown', onMenuKeydown, true);
 
         fetchNotifications();
         attachPanelEvents();

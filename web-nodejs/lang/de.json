@@ -5863,7 +5863,12 @@
         "mark_all_read": "Alle als gelesen markieren",
         "see_all": "Alle Hilfeanfragen anzeigen",
         "help_request": "Hilfeanfrage",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "Neues Gerät möchte beitreten",
+        "unread": "Ungelesen",
+        "empty_hint": "Keine Hilfeanfragen und keine Geräte, die beitreten möchten.",
+        "loading": "Benachrichtigungen werden geladen…",
+        "load_failed": "Benachrichtigungen konnten nicht geladen werden."
     },
     "accessibility": {
         "title": "Barrierefreiheit",

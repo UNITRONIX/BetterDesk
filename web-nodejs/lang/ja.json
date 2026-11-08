@@ -5863,7 +5863,12 @@
         "mark_all_read": "すべて既読としてマークする",
         "see_all": "すべてのヘルプリクエストを表示",
         "help_request": "ヘルプリクエスト",
-        "just_now": "just now"
+        "just_now": "just now",
+        "kind_registration": "新しいデバイスが参加をリクエストしています",
+        "unread": "未読",
+        "empty_hint": "ヘルプリクエストや参加を求めるデバイスはありません。",
+        "loading": "通知を読み込んでいます…",
+        "load_failed": "通知を読み込めませんでした。"
     },
     "accessibility": {
         "title": "アクセシビリティ",

@@ -934,6 +934,8 @@ function helpRequestToNotif(req, readIds) {
         read: readIds.has(String(req.id)),
         created_at: new Date(req.created_at).toISOString(),
         kind: 'help_request',
+        device_id: req.device_id || '',
+        hostname: req.hostname || '',
         status: req.status,
     };
 }
