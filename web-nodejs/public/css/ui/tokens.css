@@ -138,6 +138,9 @@
     --os-apple: #68717a;
     --os-chrome: #c5221f;
 
+    /* Away status dot (.presence.is-away): a yellow that still reaches 3:1 on white */
+    --presence-away: #b88a00;
+
     /* Avatar initials (components.css .avatar.is-c1..6): one colour per name,
        the initials in it on a 16 % tint of it. 4.5:1 on the tint, checked by
        .ui-rework/tools/data-display-contrast.mjs. Kept apart from the status
@@ -177,6 +180,7 @@ html[data-a11y-contrast="yellow-black"] {
     --os-linux: #d9ad3c;
     --os-apple: #9aa4a8;
     --os-chrome: #f28b82;
+    --presence-away: #e3b341;
     --avatar-1: #79b8ff;
     --avatar-2: #f0a070;
     --avatar-3: #4fd1c5;

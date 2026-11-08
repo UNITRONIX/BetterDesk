@@ -164,8 +164,16 @@
             document.querySelectorAll('[data-presence]').forEach((item) => {
                 const on = item.getAttribute('data-presence') === status;
                 item.setAttribute('aria-checked', on ? 'true' : 'false');
-                const mark = item.querySelector('.material-icons');
+                const mark = item.querySelector('.user-menu-check');
                 if (mark) mark.textContent = on ? 'check' : '';
+            });
+            // The dot on my avatar and the status word read with the menu button
+            document.querySelectorAll('[data-presence-dot]').forEach((dot) => {
+                dot.className = 'presence is-' + status;
+            });
+            const chosen = document.querySelector('[data-presence="' + status + '"] span:not(.presence):not(.user-menu-check)');
+            document.querySelectorAll('[data-presence-text]').forEach((text) => {
+                if (chosen) text.textContent = chosen.textContent;
             });
         }
         showPresence(Utils.presence.get());

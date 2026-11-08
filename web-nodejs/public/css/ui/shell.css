@@ -714,6 +714,24 @@
     position: relative;
 }
 
+/* My status: the dot on the avatar is ringed in the surface it sits on */
+.user-menu-btn { --presence-ring: var(--bg-subtle); }
+.user-menu-btn:hover,
+.user-menu-btn[aria-expanded="true"] { --presence-ring: var(--hover); }
+.user-menu { --presence-ring: var(--bg-float); }
+.ux35-user-btn { --presence-ring: var(--bg); }
+
+/* Status items: the dot where menu icons go, a check at the end for the chosen one */
+.user-menu .menu-item[data-presence] .presence {
+    margin-inline: 4px;
+}
+
+.user-menu .user-menu-check {
+    margin-inline-start: auto;
+    color: var(--accent);
+    font-size: 18px;
+}
+
 @media (min-width: 1100px) {
     .user-menu-anchor.is-topbar {
         display: none;

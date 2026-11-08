@@ -45,6 +45,8 @@ const umAvatar = (size) => {
     return '<span class="avatar' + cls + ' is-c' + umColor + '" aria-hidden="true">'
         + (umInitials ? escapeHtml(umInitials) : '<span class="material-icons" aria-hidden="true">person</span>') + '</span>';
 };
+// The avatar with my status on its corner (app.js keeps the dot in step)
+const umWithPresence = (html) => '<span class="avatar-presence">' + html + '<span class="presence is-online" data-presence-dot aria-hidden="true"></span></span>';
 const umStatuses = [
     ['online', umT('chat.presence_online', 'Online')],
     ['away', umT('chat.presence_away', 'Away')],
@@ -54,22 +56,23 @@ const umStatuses = [
 <span class="menu-anchor user-menu-anchor is-<%= umPlace %>">
     <% if (umPlace === 'sidebar') { %>
     <button type="button" class="user-menu-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="<%= umId %>">
-        <%- umAvatar('md') %>
+        <%- umWithPresence(umAvatar('md')) %>
         <span class="user-menu-btn-text">
             <span class="user-menu-name"><%= umName %></span>
             <% if (umRole) { %><span class="user-menu-role"><%= umRole %></span><% } %>
+            <span class="sr-only" data-presence-text><%= umStatuses[0][1] %></span>
         </span>
         <span class="material-icons user-menu-chevron" aria-hidden="true">expand_less</span>
     </button>
     <% } else { %>
     <button type="button" class="ux35-topbar-btn ux35-user-btn" id="user-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
             aria-controls="<%= umId %>" title="<%= umName %>" aria-label="<%= umName %>">
-        <% if (umSrc) { %><%- umAvatar('') %><% } else { %><span class="material-icons" aria-hidden="true">account_circle</span><% } %>
+        <%- umWithPresence(umSrc ? umAvatar('') : '<span class="material-icons" aria-hidden="true">account_circle</span>') %>
     </button>
     <% } %>
     <div class="menu user-menu<%= umPlace === 'sidebar' ? ' menu-up' : ' menu-end' %>" id="<%= umId %>">
         <div class="user-menu-person">
-            <%- umAvatar('md') %>
+            <%- umWithPresence(umAvatar('md')) %>
             <span class="user-menu-btn-text">
                 <span class="user-menu-name"><%= umName %></span>
                 <% if (umRole) { %><span class="user-menu-role"><%= umRole %></span><% } %>
@@ -80,7 +83,7 @@ const umStatuses = [
                 <div class="menu-label" id="<%= umId %>-status"><%= umT('chat.my_presence', 'My status') %></div>
                 <% umStatuses.forEach(function (s) { %>
                 <button type="button" class="menu-item" role="menuitemradio" aria-checked="<%= s[0] === 'online' ? 'true' : 'false' %>" data-presence="<%= s[0] %>">
-                    <span class="material-icons" aria-hidden="true"><%= s[0] === 'online' ? 'check' : '' %></span><span><%= s[1] %></span>
+                    <span class="presence is-<%= s[0] %>" aria-hidden="true"></span><span><%= s[1] %></span><span class="material-icons user-menu-check" aria-hidden="true"><%= s[0] === 'online' ? 'check' : '' %></span>
                 </button>
                 <% }); %>
             </div>
