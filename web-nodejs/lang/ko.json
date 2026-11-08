@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "스크립트",
         "cmd_type_restart_service": "서비스 다시 시작",
-        "cmd_type_reboot": "장치 다시 시작"
+        "cmd_type_reboot": "장치 다시 시작",
+        "legend_open": "확인 안 됨",
+        "legend_acknowledged": "확인됨"
     },
     "file_transfer": {
         "title": "파일 전송",
@@ -2985,7 +2987,12 @@
         "edit_named": "{name} 편집",
         "actions_for": "{name}에 대한 다른 작업",
         "enable": "사용",
-        "disable": "사용 중지"
+        "disable": "사용 중지",
+        "event_total_one": "이벤트 {count}개",
+        "event_total_many": "이벤트 {count}개",
+        "legend_blocked": "차단됨",
+        "legend_logged": "기록됨",
+        "legend_allowed": "허용됨"
     },
     "reports": {
         "title": "Reports",
@@ -4457,7 +4464,13 @@
         "col_time": "시간",
         "col_policy": "정책",
         "col_source": "변경 위치",
-        "audit_failed": "최근 변경 내역을 불러오지 못했습니다."
+        "audit_failed": "최근 변경 내역을 불러오지 못했습니다.",
+        "fact_people": "구성원",
+        "fact_groups_set": "설정된 정책 그룹",
+        "groups_set_value": "{total}개 중 {set}개",
+        "groups_default_hint": "그룹은 이 조직에 대해 저장되면 설정된 것으로 봅니다.",
+        "open_org": "조직 열기",
+        "count_unknown": "사용할 수 없음"
     },
     "attestation": {
         "title": "장치 인증",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "{device}을(를) 확인됨으로 표시할까요?",
         "confirm_verify_message": "장치가 예상한 하드웨어인지 확인한 뒤에 하세요.",
         "confirm_revoke_title": "{device}을(를) 취소할까요?",
-        "confirm_revoke_message": "상태가 취소됨으로 바뀝니다. 나중에 다시 확인됨으로 표시할 수 있습니다."
+        "confirm_revoke_message": "상태가 취소됨으로 바뀝니다. 나중에 다시 확인됨으로 표시할 수 있습니다.",
+        "legend_verified": "확인됨",
+        "legend_pending": "아직 확인 안 됨",
+        "legend_failed": "지문 변경 또는 취소됨"
     },
     "fleet": {
         "title": "플릿 관리",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "사용자당 디스크 공간(GB)",
         "quotas_programs_label": "허용된 프로그램",
         "quotas_programs_hint": "한 줄에 프로그램 하나씩 입력합니다(예: chrome.exe).",
-        "save_quotas": "사용 제한 저장"
+        "save_quotas": "사용 제한 저장",
+        "compliance_empty": "어떤 규칙을 따르는지 보고한 장치가 아직 없습니다.",
+        "legend_all": "모든 규칙 준수",
+        "legend_not": "규칙 위반",
+        "legend_none": "규칙 없음",
+        "by_category": "규칙 유형별"
     },
     "sdk_studio": {
         "title": "SDK Studio",

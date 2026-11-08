@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Genstart tjeneste",
-        "cmd_type_reboot": "Genstart enheden"
+        "cmd_type_reboot": "Genstart enheden",
+        "legend_open": "ikke kvitteret",
+        "legend_acknowledged": "kvitteret"
     },
     "file_transfer": {
         "title": "Filoverførsel",
@@ -2991,7 +2993,12 @@
         "edit_named": "Rediger {name}",
         "actions_for": "Flere handlinger for {name}",
         "enable": "Aktivér",
-        "disable": "Deaktivér"
+        "disable": "Deaktivér",
+        "event_total_one": "{count} hændelse",
+        "event_total_many": "{count} hændelser",
+        "legend_blocked": "blokeret",
+        "legend_logged": "logget",
+        "legend_allowed": "tilladt"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Tid",
         "col_policy": "Politik",
         "col_source": "Ændret fra",
-        "audit_failed": "De seneste ændringer kunne ikke indlæses."
+        "audit_failed": "De seneste ændringer kunne ikke indlæses.",
+        "fact_people": "Personer",
+        "fact_groups_set": "Angivne politikgrupper",
+        "groups_set_value": "{set} af {total}",
+        "groups_default_hint": "En gruppe tæller som angivet, når den er gemt for denne organisation.",
+        "open_org": "Åbn organisationen",
+        "count_unknown": "Ikke tilgængelig"
     },
     "attestation": {
         "title": "Enhedsattest",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Markér {device} som bekræftet?",
         "confirm_verify_message": "Gør det, når du har tjekket, at enheden er den hardware, du forventer.",
         "confirm_revoke_title": "Tilbagekald {device}?",
-        "confirm_revoke_message": "Status ændres til Tilbagekaldt. Du kan markere den som bekræftet igen senere."
+        "confirm_revoke_message": "Status ændres til Tilbagekaldt. Du kan markere den som bekræftet igen senere.",
+        "legend_verified": "bekræftet",
+        "legend_pending": "ikke bekræftet endnu",
+        "legend_failed": "fingeraftryk ændret eller tilbagekaldt"
     },
     "fleet": {
         "title": "Flådestyring",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Diskplads pr. bruger (GB)",
         "quotas_programs_label": "Tilladte programmer",
         "quotas_programs_hint": "Ét program pr. linje, for eksempel chrome.exe.",
-        "save_quotas": "Gem forbrugsgrænser"
+        "save_quotas": "Gem forbrugsgrænser",
+        "compliance_empty": "Ingen enhed har endnu meldt, hvilke regler den overholder.",
+        "legend_all": "overholder alle regler",
+        "legend_not": "bryder en regel",
+        "legend_none": "har ingen regler",
+        "by_category": "Efter type regel"
     },
     "sdk_studio": {
         "title": "SDK Studio",

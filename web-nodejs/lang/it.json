@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Riavvia servizio",
-        "cmd_type_reboot": "Riavvia il dispositivo"
+        "cmd_type_reboot": "Riavvia il dispositivo",
+        "legend_open": "non confermati",
+        "legend_acknowledged": "confermati"
     },
     "file_transfer": {
         "title": "Trasferimento file",
@@ -2985,7 +2987,12 @@
         "edit_named": "Modifica {name}",
         "actions_for": "Altre azioni per {name}",
         "enable": "Attiva",
-        "disable": "Disattiva"
+        "disable": "Disattiva",
+        "event_total_one": "{count} evento",
+        "event_total_many": "{count} eventi",
+        "legend_blocked": "bloccati",
+        "legend_logged": "registrati",
+        "legend_allowed": "consentiti"
     },
     "reports": {
         "title": "Report",
@@ -4457,7 +4464,13 @@
         "col_time": "Ora",
         "col_policy": "Policy",
         "col_source": "Modificato da",
-        "audit_failed": "Impossibile caricare le modifiche recenti."
+        "audit_failed": "Impossibile caricare le modifiche recenti.",
+        "fact_people": "Persone",
+        "fact_groups_set": "Gruppi di criteri impostati",
+        "groups_set_value": "{set} su {total}",
+        "groups_default_hint": "Un gruppo risulta impostato non appena è stato salvato per questa organizzazione.",
+        "open_org": "Apri l'organizzazione",
+        "count_unknown": "Non disponibile"
     },
     "attestation": {
         "title": "Attestazione dispositivi",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "Segnare {device} come verificato?",
         "confirm_verify_message": "Fallo dopo aver verificato che il dispositivo sia l'hardware che ti aspetti.",
         "confirm_revoke_title": "Revocare {device}?",
-        "confirm_revoke_message": "Il suo stato diventa Revocato. Potrai segnarlo di nuovo come verificato più tardi."
+        "confirm_revoke_message": "Il suo stato diventa Revocato. Potrai segnarlo di nuovo come verificato più tardi.",
+        "legend_verified": "verificati",
+        "legend_pending": "non ancora verificati",
+        "legend_failed": "impronta cambiata o revocata"
     },
     "fleet": {
         "title": "Gestione flotta",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "Spazio su disco per utente (GB)",
         "quotas_programs_label": "Programmi consentiti",
         "quotas_programs_hint": "Un programma per riga, per esempio chrome.exe.",
-        "save_quotas": "Salva limiti di utilizzo"
+        "save_quotas": "Salva limiti di utilizzo",
+        "compliance_empty": "Nessun dispositivo ha ancora segnalato quali regole rispetta.",
+        "legend_all": "rispettano tutte le regole",
+        "legend_not": "violano una regola",
+        "legend_none": "non hanno regole",
+        "by_category": "Per tipo di regola"
     },
     "sdk_studio": {
         "title": "SDK Studio",

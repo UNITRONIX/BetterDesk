@@ -2707,7 +2707,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Redémarrer un service",
-        "cmd_type_reboot": "Redémarrer l'appareil"
+        "cmd_type_reboot": "Redémarrer l'appareil",
+        "legend_open": "non acquittées",
+        "legend_acknowledged": "acquittées"
     },
     "file_transfer": {
         "title": "Tableau de bord",
@@ -3007,7 +3009,12 @@
         "edit_named": "Modifier {name}",
         "actions_for": "Autres actions pour {name}",
         "enable": "Activer",
-        "disable": "Désactiver"
+        "disable": "Désactiver",
+        "event_total_one": "{count} événement",
+        "event_total_many": "{count} événements",
+        "legend_blocked": "bloqués",
+        "legend_logged": "journalisés",
+        "legend_allowed": "autorisés"
     },
     "reports": {
         "title": "Tableau de bord",
@@ -4585,7 +4592,13 @@
         "col_time": "Heure",
         "col_policy": "Politique",
         "col_source": "Modifié depuis",
-        "audit_failed": "Impossible de charger les dernières modifications."
+        "audit_failed": "Impossible de charger les dernières modifications.",
+        "fact_people": "Personnes",
+        "fact_groups_set": "Groupes de politiques définis",
+        "groups_set_value": "{set} sur {total}",
+        "groups_default_hint": "Un groupe est considéré comme défini dès qu'il a été enregistré pour cette organisation.",
+        "open_org": "Ouvrir l'organisation",
+        "count_unknown": "Non disponible"
     },
     "attestation": {
         "title": "Tableau de bord",
@@ -4627,7 +4640,10 @@
         "confirm_verify_title": "Marquer {device} comme vérifié ?",
         "confirm_verify_message": "Faites-le après avoir vérifié que l'appareil est bien le matériel attendu.",
         "confirm_revoke_title": "Révoquer {device} ?",
-        "confirm_revoke_message": "Son état passe à Révoqué. Vous pourrez le marquer à nouveau comme vérifié plus tard."
+        "confirm_revoke_message": "Son état passe à Révoqué. Vous pourrez le marquer à nouveau comme vérifié plus tard.",
+        "legend_verified": "vérifiés",
+        "legend_pending": "pas encore vérifiés",
+        "legend_failed": "empreinte modifiée ou révoquée"
     },
     "fleet": {
         "title": "Tableau de bord",
@@ -5558,7 +5574,12 @@
         "quotas_disk_label": "Espace disque par utilisateur (Go)",
         "quotas_programs_label": "Programmes autorisés",
         "quotas_programs_hint": "Un programme par ligne, par exemple chrome.exe.",
-        "save_quotas": "Enregistrer les limites d'utilisation"
+        "save_quotas": "Enregistrer les limites d'utilisation",
+        "compliance_empty": "Aucun appareil n'a encore indiqué quelles règles il respecte.",
+        "legend_all": "respectent toutes les règles",
+        "legend_not": "enfreignent une règle",
+        "legend_none": "n'ont aucune règle",
+        "by_category": "Par type de règle"
     },
     "sdk_studio": {
         "title": "Tableau de bord",

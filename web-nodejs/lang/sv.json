@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Skript",
         "cmd_type_restart_service": "Starta om tjänst",
-        "cmd_type_reboot": "Starta om enheten"
+        "cmd_type_reboot": "Starta om enheten",
+        "legend_open": "inte kvitterade",
+        "legend_acknowledged": "kvitterade"
     },
     "file_transfer": {
         "title": "Filöverföring",
@@ -2991,7 +2993,12 @@
         "edit_named": "Redigera {name}",
         "actions_for": "Fler åtgärder för {name}",
         "enable": "Aktivera",
-        "disable": "Inaktivera"
+        "disable": "Inaktivera",
+        "event_total_one": "{count} händelse",
+        "event_total_many": "{count} händelser",
+        "legend_blocked": "blockerade",
+        "legend_logged": "loggade",
+        "legend_allowed": "tillåtna"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Tid",
         "col_policy": "Policy",
         "col_source": "Ändrad från",
-        "audit_failed": "Det gick inte att läsa in de senaste ändringarna."
+        "audit_failed": "Det gick inte att läsa in de senaste ändringarna.",
+        "fact_people": "Personer",
+        "fact_groups_set": "Angivna policygrupper",
+        "groups_set_value": "{set} av {total}",
+        "groups_default_hint": "En grupp räknas som angiven när den har sparats för den här organisationen.",
+        "open_org": "Öppna organisationen",
+        "count_unknown": "Inte tillgängligt"
     },
     "attestation": {
         "title": "Enhetsbekräftelse",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Markera {device} som verifierad?",
         "confirm_verify_message": "Gör detta när du har kontrollerat att enheten är den hårdvara du förväntar dig.",
         "confirm_revoke_title": "Återkalla {device}?",
-        "confirm_revoke_message": "Statusen blir Återkallad. Du kan markera den som verifierad igen senare."
+        "confirm_revoke_message": "Statusen blir Återkallad. Du kan markera den som verifierad igen senare.",
+        "legend_verified": "verifierade",
+        "legend_pending": "inte verifierade ännu",
+        "legend_failed": "fingeravtryck ändrat eller återkallat"
     },
     "fleet": {
         "title": "Flottstyrning",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Diskutrymme per användare (GB)",
         "quotas_programs_label": "Tillåtna program",
         "quotas_programs_hint": "Ett program per rad, till exempel chrome.exe.",
-        "save_quotas": "Spara användningsgränser"
+        "save_quotas": "Spara användningsgränser",
+        "compliance_empty": "Ingen enhet har rapporterat ännu vilka regler den följer.",
+        "legend_all": "följer alla regler",
+        "legend_not": "bryter mot en regel",
+        "legend_none": "har inga regler",
+        "by_category": "Efter typ av regel"
     },
     "sdk_studio": {
         "title": "SDK Studio",

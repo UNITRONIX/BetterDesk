@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Reiniciar serviço",
-        "cmd_type_reboot": "Reiniciar o dispositivo"
+        "cmd_type_reboot": "Reiniciar o dispositivo",
+        "legend_open": "não confirmados",
+        "legend_acknowledged": "confirmados"
     },
     "file_transfer": {
         "title": "Transferência de ficheiros",
@@ -2985,7 +2987,12 @@
         "edit_named": "Editar {name}",
         "actions_for": "Mais ações para {name}",
         "enable": "Ativar",
-        "disable": "Desativar"
+        "disable": "Desativar",
+        "event_total_one": "{count} evento",
+        "event_total_many": "{count} eventos",
+        "legend_blocked": "bloqueados",
+        "legend_logged": "registados",
+        "legend_allowed": "permitidos"
     },
     "reports": {
         "title": "Relatórios",
@@ -4457,7 +4464,13 @@
         "col_time": "Hora",
         "col_policy": "Política",
         "col_source": "Alterado de",
-        "audit_failed": "Não foi possível carregar as alterações recentes."
+        "audit_failed": "Não foi possível carregar as alterações recentes.",
+        "fact_people": "Pessoas",
+        "fact_groups_set": "Grupos de políticas definidos",
+        "groups_set_value": "{set} de {total}",
+        "groups_default_hint": "Um grupo conta como definido assim que é guardado para esta organização.",
+        "open_org": "Abrir a organização",
+        "count_unknown": "Não disponível"
     },
     "attestation": {
         "title": "Atestação de dispositivos",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "Marcar {device} como verificado?",
         "confirm_verify_message": "Faça isso depois de verificar que o dispositivo é o hardware esperado.",
         "confirm_revoke_title": "Revogar {device}?",
-        "confirm_revoke_message": "O status muda para Revogado. Você pode marcá-lo como verificado novamente depois."
+        "confirm_revoke_message": "O status muda para Revogado. Você pode marcá-lo como verificado novamente depois.",
+        "legend_verified": "verificados",
+        "legend_pending": "ainda não verificados",
+        "legend_failed": "impressão digital alterada ou revogada"
     },
     "fleet": {
         "title": "Gestão de frota",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "Espaço em disco por usuário (GB)",
         "quotas_programs_label": "Programas permitidos",
         "quotas_programs_hint": "Um programa por linha, por exemplo chrome.exe.",
-        "save_quotas": "Salvar limites de uso"
+        "save_quotas": "Salvar limites de uso",
+        "compliance_empty": "Nenhum dispositivo comunicou ainda que regras cumpre.",
+        "legend_all": "cumprem todas as regras",
+        "legend_not": "violam uma regra",
+        "legend_none": "não têm regras",
+        "by_category": "Por tipo de regra"
     },
     "sdk_studio": {
         "title": "SDK Studio",

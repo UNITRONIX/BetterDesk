@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Skrip",
         "cmd_type_restart_service": "Mulai ulang layanan",
-        "cmd_type_reboot": "Mulai ulang perangkat"
+        "cmd_type_reboot": "Mulai ulang perangkat",
+        "legend_open": "belum dikonfirmasi",
+        "legend_acknowledged": "dikonfirmasi"
     },
     "file_transfer": {
         "title": "Pemindahan Berkas",
@@ -2991,7 +2993,12 @@
         "edit_named": "Edit {name}",
         "actions_for": "Tindakan lain untuk {name}",
         "enable": "Aktifkan",
-        "disable": "Nonaktifkan"
+        "disable": "Nonaktifkan",
+        "event_total_one": "{count} peristiwa",
+        "event_total_many": "{count} peristiwa",
+        "legend_blocked": "diblokir",
+        "legend_logged": "dicatat",
+        "legend_allowed": "diizinkan"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Waktu",
         "col_policy": "Kebijakan",
         "col_source": "Diubah dari",
-        "audit_failed": "Perubahan terbaru tidak dapat dimuat."
+        "audit_failed": "Perubahan terbaru tidak dapat dimuat.",
+        "fact_people": "Orang",
+        "fact_groups_set": "Grup kebijakan yang diatur",
+        "groups_set_value": "{set} dari {total}",
+        "groups_default_hint": "Sebuah grup dianggap diatur setelah disimpan untuk organisasi ini.",
+        "open_org": "Buka organisasi",
+        "count_unknown": "Tidak tersedia"
     },
     "attestation": {
         "title": "Pengesahan Perangkat",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Tandai {device} sebagai terverifikasi?",
         "confirm_verify_message": "Lakukan ini setelah Anda memeriksa bahwa perangkat itu adalah perangkat keras yang Anda harapkan.",
         "confirm_revoke_title": "Cabut {device}?",
-        "confirm_revoke_message": "Statusnya berubah menjadi Dicabut. Anda bisa menandainya terverifikasi lagi nanti."
+        "confirm_revoke_message": "Statusnya berubah menjadi Dicabut. Anda bisa menandainya terverifikasi lagi nanti.",
+        "legend_verified": "terverifikasi",
+        "legend_pending": "belum terverifikasi",
+        "legend_failed": "sidik jari berubah atau dicabut"
     },
     "fleet": {
         "title": "Manajemen Armada",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Ruang disk per pengguna (GB)",
         "quotas_programs_label": "Program yang diizinkan",
         "quotas_programs_hint": "Satu program per baris, misalnya chrome.exe.",
-        "save_quotas": "Simpan batas penggunaan"
+        "save_quotas": "Simpan batas penggunaan",
+        "compliance_empty": "Belum ada perangkat yang melaporkan aturan mana yang dipatuhinya.",
+        "legend_all": "mematuhi semua aturan",
+        "legend_not": "melanggar aturan",
+        "legend_none": "tidak punya aturan",
+        "by_category": "Menurut jenis aturan"
     },
     "sdk_studio": {
         "title": "SDK Studio",

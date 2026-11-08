@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Skript",
         "cmd_type_restart_service": "Dienst neu starten",
-        "cmd_type_reboot": "Gerät neu starten"
+        "cmd_type_reboot": "Gerät neu starten",
+        "legend_open": "nicht bestätigt",
+        "legend_acknowledged": "bestätigt"
     },
     "file_transfer": {
         "title": "Dashboard",
@@ -2985,7 +2987,12 @@
         "edit_named": "{name} bearbeiten",
         "actions_for": "Weitere Aktionen für {name}",
         "enable": "Aktivieren",
-        "disable": "Deaktivieren"
+        "disable": "Deaktivieren",
+        "event_total_one": "{count} Ereignis",
+        "event_total_many": "{count} Ereignisse",
+        "legend_blocked": "blockiert",
+        "legend_logged": "protokolliert",
+        "legend_allowed": "erlaubt"
     },
     "reports": {
         "title": "Dashboard",
@@ -4457,7 +4464,13 @@
         "col_time": "Zeit",
         "col_policy": "Richtlinie",
         "col_source": "Geändert von",
-        "audit_failed": "Die letzten Änderungen konnten nicht geladen werden."
+        "audit_failed": "Die letzten Änderungen konnten nicht geladen werden.",
+        "fact_people": "Personen",
+        "fact_groups_set": "Festgelegte Richtliniengruppen",
+        "groups_set_value": "{set} von {total}",
+        "groups_default_hint": "Eine Gruppe gilt als festgelegt, sobald sie für diese Organisation gespeichert wurde.",
+        "open_org": "Organisation öffnen",
+        "count_unknown": "Nicht verfügbar"
     },
     "attestation": {
         "title": "Dashboard",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "{device} als verifiziert markieren?",
         "confirm_verify_message": "Tun Sie das, nachdem Sie geprüft haben, dass es sich um die erwartete Hardware handelt.",
         "confirm_revoke_title": "{device} widerrufen?",
-        "confirm_revoke_message": "Der Status wechselt zu „Widerrufen“. Sie können das Gerät später wieder als verifiziert markieren."
+        "confirm_revoke_message": "Der Status wechselt zu „Widerrufen“. Sie können das Gerät später wieder als verifiziert markieren.",
+        "legend_verified": "verifiziert",
+        "legend_pending": "noch nicht verifiziert",
+        "legend_failed": "Fingerabdruck geändert oder widerrufen"
     },
     "fleet": {
         "title": "Dashboard",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "Speicherplatz pro Benutzer (GB)",
         "quotas_programs_label": "Erlaubte Programme",
         "quotas_programs_hint": "Ein Programm pro Zeile, zum Beispiel chrome.exe.",
-        "save_quotas": "Nutzungsgrenzen speichern"
+        "save_quotas": "Nutzungsgrenzen speichern",
+        "compliance_empty": "Noch kein Gerät hat gemeldet, welche Regeln es einhält.",
+        "legend_all": "halten alle Regeln ein",
+        "legend_not": "verstoßen gegen eine Regel",
+        "legend_none": "haben keine Regeln",
+        "by_category": "Nach Art der Regel"
     },
     "sdk_studio": {
         "title": "Dashboard",

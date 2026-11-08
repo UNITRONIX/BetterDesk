@@ -63,8 +63,13 @@
     text-align: end;
 }
 
-.rc-compliance .facts {
-    max-width: var(--measure);
+/* Side column: rules followed */
+.rc-compliance .state {
+    padding: 0;
+}
+
+.rc-compliance .rc-by-category {
+    margin: var(--space-2) 0 0;
 }
 
 .rc-editor .state {

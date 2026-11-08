@@ -10,7 +10,7 @@
         <div class="page-head">
             <h1>${_('nav.dataguard')}</h1>
             <div class="page-actions">
-                <button type="button" class="btn btn-primary" id="create-policy-btn">${_('dataguard.create_policy')}</button>
+                <button type="button" class="btn btn-primary" id="create-policy-btn"><span class="material-icons" aria-hidden="true">add</span>${_('dataguard.create_policy')}</button>
             </div>
             <p class="page-description">${_('dataguard.page_description')}</p>
         </div>
@@ -63,6 +63,9 @@
                     </div>
                 </div>
                 <p class="count-line" id="dg-event-count" aria-live="polite"></p>
+                <!-- What happened to the reported transfers: one whole split by action -->
+                <div class="share-bar" id="dg-event-bar" aria-hidden="true" hidden></div>
+                <ul class="share-legend" id="dg-event-legend" hidden></ul>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="${_('dataguard.tab_events')}">
                     <table class="data-table dg-table">
                         <thead>

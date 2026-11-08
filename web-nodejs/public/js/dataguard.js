@@ -371,12 +371,36 @@
         return String(e.details);
     }
 
+    // The total in the count line; blocked, logged and allowed as a share bar
+    // with their numbers in the legend
+    const eventBar = document.getElementById('dg-event-bar');
+    const eventLegend = document.getElementById('dg-event-legend');
+
     function renderEventCount() {
         const n = allEvents.length;
+        eventBar.textContent = '';
+        eventLegend.textContent = '';
+        eventBar.hidden = !n;
+        eventLegend.hidden = !n;
         if (!n) { eventCount.textContent = ''; return; }
-        const blocked = allEvents.filter(e => e.action === 'block').length;
-        const logged = allEvents.filter(e => e.action === 'log').length;
-        eventCount.innerHTML = countSentence(n === 1 ? 'event_count_one' : 'event_count_many', { count: n, blocked, logged }, 'count');
+        eventCount.innerHTML = countSentence(n === 1 ? 'event_total_one' : 'event_total_many', { count: n }, 'count');
+        const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+        [
+            { action: 'block', cls: 'is-danger', label: t('legend_blocked') },
+            { action: 'log', cls: 'is-warning', label: t('legend_logged') },
+            { action: 'allow', cls: 'is-muted', label: t('legend_allowed') },
+        ].forEach(part => {
+            const count = allEvents.filter(e => e.action === part.action).length;
+            if (count > 0) {
+                const seg = document.createElement('span');
+                seg.className = part.cls;
+                seg.style.flexGrow = String(count);
+                eventBar.appendChild(seg);
+            }
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="key ${part.cls}" aria-hidden="true"></span><span><strong>${escapeHtml(fmt.format(count))}</strong> ${escapeHtml(part.label)}</span>`;
+            eventLegend.appendChild(li);
+        });
     }
 
     function filterEvents() {

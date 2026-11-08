@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Skript",
         "cmd_type_restart_service": "Start tjeneste på nytt",
-        "cmd_type_reboot": "Start enheten på nytt"
+        "cmd_type_reboot": "Start enheten på nytt",
+        "legend_open": "ikke kvittert",
+        "legend_acknowledged": "kvittert"
     },
     "file_transfer": {
         "title": "Filoverføring",
@@ -2991,7 +2993,12 @@
         "edit_named": "Rediger {name}",
         "actions_for": "Flere handlinger for {name}",
         "enable": "Aktiver",
-        "disable": "Deaktiver"
+        "disable": "Deaktiver",
+        "event_total_one": "{count} hendelse",
+        "event_total_many": "{count} hendelser",
+        "legend_blocked": "blokkert",
+        "legend_logged": "logget",
+        "legend_allowed": "tillatt"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Tid",
         "col_policy": "Retningslinje",
         "col_source": "Endret fra",
-        "audit_failed": "Kunne ikke laste inn de siste endringene."
+        "audit_failed": "Kunne ikke laste inn de siste endringene.",
+        "fact_people": "Personer",
+        "fact_groups_set": "Angitte grupper av retningslinjer",
+        "groups_set_value": "{set} av {total}",
+        "groups_default_hint": "En gruppe regnes som angitt når den er lagret for denne organisasjonen.",
+        "open_org": "Åpne organisasjonen",
+        "count_unknown": "Ikke tilgjengelig"
     },
     "attestation": {
         "title": "Enhetsattest",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Merke {device} som bekreftet?",
         "confirm_verify_message": "Gjør dette etter at du har sjekket at enheten er maskinvaren du venter.",
         "confirm_revoke_title": "Tilbakekalle {device}?",
-        "confirm_revoke_message": "Statusen blir Tilbakekalt. Du kan merke den som bekreftet igjen senere."
+        "confirm_revoke_message": "Statusen blir Tilbakekalt. Du kan merke den som bekreftet igjen senere.",
+        "legend_verified": "bekreftet",
+        "legend_pending": "ikke bekreftet ennå",
+        "legend_failed": "fingeravtrykk endret eller tilbakekalt"
     },
     "fleet": {
         "title": "Flåtestyring",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Diskplass per bruker (GB)",
         "quotas_programs_label": "Tillatte programmer",
         "quotas_programs_hint": "Ett program per linje, for eksempel chrome.exe.",
-        "save_quotas": "Lagre bruksgrenser"
+        "save_quotas": "Lagre bruksgrenser",
+        "compliance_empty": "Ingen enhet har meldt ennå hvilke regler den følger.",
+        "legend_all": "følger alle regler",
+        "legend_not": "bryter en regel",
+        "legend_none": "har ingen regler",
+        "by_category": "Etter type regel"
     },
     "sdk_studio": {
         "title": "SDK Studio",

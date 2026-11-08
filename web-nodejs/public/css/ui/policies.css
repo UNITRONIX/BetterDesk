@@ -47,3 +47,53 @@
         align-content: center;
     }
 }
+
+/* ── Side column: organization summary and contents ── */
+.policy-sections > .page-cols {
+    gap: var(--space-6) var(--space-7);
+}
+
+.policy-org-summary h2 {
+    overflow-wrap: anywhere;
+}
+
+.policy-org-summary p {
+    margin: 0;
+}
+
+/* The contents' state words ("Set for this organization", "Not set") */
+.policy-toc .toc-state {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.policy-toc .toc-state.is-set {
+    color: var(--text);
+}
+
+/* Inline (narrow screens): one row of links; the state is in each heading */
+.policy-toc:not(.is-side) .toc-state {
+    display: none;
+}
+
+/* In the side column: one group per line with its state under the name */
+.policy-toc.is-side .toc {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+}
+
+.policy-toc.is-side .toc li {
+    display: flex;
+    flex-direction: column;
+}
+
+.policy-toc.is-side .toc a {
+    font-weight: 600;
+}
+
+
+/* Contents links land below the top bar */
+.policy-sections h2[id] {
+    scroll-margin-top: calc(var(--topbar-h) + var(--space-4));
+}

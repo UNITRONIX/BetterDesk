@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Skripti",
         "cmd_type_restart_service": "Käynnistä palvelu uudelleen",
-        "cmd_type_reboot": "Käynnistä laite uudelleen"
+        "cmd_type_reboot": "Käynnistä laite uudelleen",
+        "legend_open": "kuittaamatta",
+        "legend_acknowledged": "kuitattu"
     },
     "file_transfer": {
         "title": "Tiedoston siirto",
@@ -2991,7 +2993,12 @@
         "edit_named": "Muokkaa: {name}",
         "actions_for": "Lisää toimintoja: {name}",
         "enable": "Ota käyttöön",
-        "disable": "Poista käytöstä"
+        "disable": "Poista käytöstä",
+        "event_total_one": "{count} tapahtuma",
+        "event_total_many": "{count} tapahtumaa",
+        "legend_blocked": "estetty",
+        "legend_logged": "kirjattu",
+        "legend_allowed": "sallittu"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Aika",
         "col_policy": "Käytäntö",
         "col_source": "Muutettu osoitteesta",
-        "audit_failed": "Viimeisimpien muutosten lataaminen epäonnistui."
+        "audit_failed": "Viimeisimpien muutosten lataaminen epäonnistui.",
+        "fact_people": "Henkilöt",
+        "fact_groups_set": "Asetetut käytäntöryhmät",
+        "groups_set_value": "{set}/{total}",
+        "groups_default_hint": "Ryhmä on asetettu, kun se on tallennettu tälle organisaatiolle.",
+        "open_org": "Avaa organisaatio",
+        "count_unknown": "Ei saatavilla"
     },
     "attestation": {
         "title": "Laitteen todistus",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Merkitäänkö {device} vahvistetuksi?",
         "confirm_verify_message": "Tee tämä, kun olet tarkistanut, että laite on odottamasi laitteisto.",
         "confirm_revoke_title": "Perutaanko {device}?",
-        "confirm_revoke_message": "Tilaksi tulee Peruttu. Voit merkitä sen myöhemmin uudelleen vahvistetuksi."
+        "confirm_revoke_message": "Tilaksi tulee Peruttu. Voit merkitä sen myöhemmin uudelleen vahvistetuksi.",
+        "legend_verified": "vahvistettu",
+        "legend_pending": "ei vielä vahvistettu",
+        "legend_failed": "sormenjälki muuttunut tai peruttu"
     },
     "fleet": {
         "title": "Laivaston hallinta",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Levytila käyttäjää kohden (Gt)",
         "quotas_programs_label": "Sallitut ohjelmat",
         "quotas_programs_hint": "Yksi ohjelma riviä kohden, esimerkiksi chrome.exe.",
-        "save_quotas": "Tallenna käyttörajat"
+        "save_quotas": "Tallenna käyttörajat",
+        "compliance_empty": "Mikään laite ei ole vielä ilmoittanut, mitä sääntöjä se noudattaa.",
+        "legend_all": "noudattavat kaikkia sääntöjä",
+        "legend_not": "rikkovat sääntöä",
+        "legend_none": "ei sääntöjä",
+        "by_category": "Säännön tyypin mukaan"
     },
     "sdk_studio": {
         "title": "SDK Studio",

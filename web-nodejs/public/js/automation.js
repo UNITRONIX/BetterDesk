@@ -81,6 +81,9 @@
         return data || {};
     }
 
+    // Icon for a meaning (Utils.ICONS); decorative, the label carries the meaning
+    const icon = (meaning) => (window.Utils && Utils.icon ? Utils.icon(meaning) : '');
+
     function stateRow(colspan, text, retry) {
         if (retry) {
             return `<tr><td colspan="${colspan}" class="state-cell text-danger">${escapeHtml(text)}
@@ -175,9 +178,9 @@
                             aria-controls="${menuId}" aria-label="${escapeHtml(_('automation.rule_actions', { name: r.name }))}">
                             <span class="material-icons" aria-hidden="true">more_vert</span></button>
                         <span class="menu menu-end${up}" id="${menuId}" role="menu">
-                            <button type="button" class="menu-item toggle-rule-btn" role="menuitem" data-id="${id}" data-enabled="${r.enabled ? '1' : '0'}">${escapeHtml(r.enabled ? _('automation.disable_rule') : _('automation.enable_rule'))}</button>
+                            <button type="button" class="menu-item toggle-rule-btn" role="menuitem" data-id="${id}" data-enabled="${r.enabled ? '1' : '0'}">${icon(r.enabled ? 'disable' : 'enable')}${escapeHtml(r.enabled ? _('automation.disable_rule') : _('automation.enable_rule'))}</button>
                             <span class="menu-divider"></span>
-                            <button type="button" class="menu-item danger del-rule-btn" role="menuitem" data-id="${id}">${escapeHtml(_('automation.delete_rule_menu'))}</button>
+                            <button type="button" class="menu-item danger del-rule-btn" role="menuitem" data-id="${id}">${icon('delete')}${escapeHtml(_('automation.delete_rule_menu'))}</button>
                         </span>
                     </span>` : ''}
                 </td>
@@ -347,6 +350,7 @@
     async function loadAlerts() {
         alertsBody.innerHTML = stateRow(7, _('automation.loading_alerts'));
         if (alertsCount) alertsCount.textContent = '';
+        renderAlertShare([]);
         const params = new URLSearchParams();
         if (severity) params.set('severity', severity);
 
@@ -359,16 +363,43 @@
         }
     }
 
+    // Not acknowledged and acknowledged as a share bar, their numbers in the legend
+    function renderAlertShare(alerts) {
+        const bar = document.getElementById('alerts-share-bar');
+        const legend = document.getElementById('alerts-share-legend');
+        if (!bar || !legend) return;
+        bar.textContent = '';
+        legend.textContent = '';
+        bar.hidden = !alerts.length;
+        legend.hidden = !alerts.length;
+        if (!alerts.length) return;
+        const open = alerts.filter(a => !a.acknowledged_at && !a.acknowledged).length;
+        const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+        [
+            { n: open, cls: 'is-warning', label: _('automation.legend_open') },
+            { n: alerts.length - open, cls: 'is-ok', label: _('automation.legend_acknowledged') },
+        ].forEach(part => {
+            if (part.n > 0) {
+                const seg = document.createElement('span');
+                seg.className = part.cls;
+                seg.style.flexGrow = String(part.n);
+                bar.appendChild(seg);
+            }
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="key ${part.cls}" aria-hidden="true"></span><span><strong>${escapeHtml(fmt.format(part.n))}</strong> ${escapeHtml(part.label)}</span>`;
+            legend.appendChild(li);
+        });
+    }
+
     function renderAlerts(alerts) {
+        renderAlertShare(alerts);
         if (!alerts.length) {
             if (alertsCount) alertsCount.textContent = '';
             alertsBody.innerHTML = stateRow(7, severity ? _('automation.no_alerts_filtered') : _('automation.no_alerts_hint'));
             return;
         }
-        const open = alerts.filter(a => !a.acknowledged_at && !a.acknowledged).length;
         setCountLine(alertsCount, [
             { n: alerts.length, one: 'automation.alerts_count_one', many: 'automation.alerts_count_many' },
-            { n: open, one: 'automation.open_count', many: 'automation.open_count' },
         ]);
         alertsBody.innerHTML = alerts.map(a => {
             const acked = !!(a.acknowledged_at || a.acknowledged);
@@ -383,7 +414,7 @@
                 <td>${acked
                     ? `<span class="status ok">${escapeHtml(a.acknowledged_by ? _('automation.acknowledged_by', { name: a.acknowledged_by }) : _('automation.acknowledged'))}</span>`
                     : `<span class="status warning">${escapeHtml(_('automation.unacknowledged'))}</span>`}</td>
-                <td class="actions">${!acked ? `<button type="button" class="btn btn-sm ack-btn" data-id="${escapeHtml(a.id)}">${escapeHtml(_('automation.acknowledge'))}</button>` : ''}</td>
+                <td class="actions">${!acked ? `<button type="button" class="btn btn-sm ack-btn" data-id="${escapeHtml(a.id)}">${icon('accept')}${escapeHtml(_('automation.acknowledge'))}</button>` : ''}</td>
             </tr>`;
         }).join('');
 

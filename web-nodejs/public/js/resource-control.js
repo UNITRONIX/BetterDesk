@@ -59,7 +59,7 @@
         if (btn) btn.focus();
     }
 
-    // ---- Compliance summary (facts in a disclosure) ----
+    // ---- Compliance summary (side column: share bar, then per kind of rule) ----
     async function loadCompliance() {
         try {
             const resp = await fetch('/api/panel/resource-control/compliance', { credentials: 'same-origin' });
@@ -77,19 +77,54 @@
     }
 
     function renderComplianceCategories(d) {
+        const state = document.getElementById('compliance-state');
+        const bar = document.getElementById('compliance-bar');
+        const legend = document.getElementById('compliance-legend');
+        const catsTitle = document.getElementById('compliance-categories-title');
         const el = document.getElementById('compliance-categories');
-        if (!el) return;
+        if (!el || !state || !bar || !legend) return;
+        const total = d ? Number(d.total_devices) || 0 : 0;
+        const showParts = !!d && total > 0;
+        state.hidden = showParts;
+        state.classList.toggle('is-error', !d);
         if (!d) {
-            el.innerHTML = `<dt>${escHtml(t('resource_control.compliance_title'))}</dt><dd>${escHtml(t('resource_control.compliance_failed'))}</dd>`;
-            return;
+            state.innerHTML = `${escHtml(t('resource_control.compliance_failed'))} <button type="button" class="btn btn-sm" id="rc-compliance-retry">${escHtml(t('resource_control.try_again'))}</button>`;
+            document.getElementById('rc-compliance-retry').addEventListener('click', () => {
+                state.textContent = t('resource_control.loading');
+                state.classList.remove('is-error');
+                loadCompliance();
+            });
+        } else if (!total) {
+            state.textContent = t('resource_control.compliance_empty');
         }
-        const total = Number(d.total_devices) || 0;
-        const rows = [
-            [t('resource_control.compliance_all'), t('resource_control.of_devices', { n: Number(d.compliant) || 0, total })],
-            [t('resource_control.compliance_not'), t('resource_control.of_devices', { n: Number(d.non_compliant ?? d.noncompliant) || 0, total })],
-            [t('resource_control.compliance_none'), t('resource_control.of_devices', { n: Number(d.no_policy) || 0, total })],
-        ];
+        bar.hidden = !showParts;
+        legend.hidden = !showParts;
+        el.hidden = !showParts;
+        if (catsTitle) catsTitle.hidden = !showParts;
+        bar.textContent = '';
+        legend.textContent = '';
+        el.textContent = '';
+        if (!showParts) return;
+
+        const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+        [
+            { n: Number(d.compliant) || 0, cls: 'is-ok', label: t('resource_control.legend_all') },
+            { n: Number(d.non_compliant ?? d.noncompliant) || 0, cls: 'is-danger', label: t('resource_control.legend_not') },
+            { n: Number(d.no_policy) || 0, cls: 'is-muted', label: t('resource_control.legend_none') },
+        ].forEach(part => {
+            if (part.n > 0) {
+                const seg = document.createElement('span');
+                seg.className = part.cls;
+                seg.style.flexGrow = String(part.n);
+                bar.appendChild(seg);
+            }
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="key ${part.cls}" aria-hidden="true"></span><span><strong>${escHtml(fmt.format(part.n))}</strong> ${escHtml(part.label)}</span>`;
+            legend.appendChild(li);
+        });
+
         // The server sends categories as { usb: { enforced, total } }; older builds sent [{ key, pct }]
+        const rows = [];
         const cats = d.categories || {};
         if (Array.isArray(cats)) {
             cats.forEach(c => rows.push([categoryLabel(c.key), `${Number(c.pct) || 0} %`]));
@@ -204,9 +239,11 @@
     function showEditor(on) {
         const list = document.getElementById('rc-list');
         const comp = document.getElementById('rc-compliance');
+        const overview = document.getElementById('rc-overview');
         const editor = document.getElementById('rc-editor');
         if (list) list.hidden = on;
         if (comp) comp.hidden = on;
+        if (overview) overview.hidden = on;
         if (editor) editor.hidden = !on;
     }
 

@@ -40,6 +40,9 @@
     return { group: 'pending', cls: 'pending', label: t('pending') };
   }
 
+  // Icon for a meaning (Utils.ICONS); decorative, the label carries the meaning
+  const icon = (meaning) => (window.Utils && Utils.icon ? Utils.icon(meaning) : '');
+
   function stateRow(html) {
     tbody.innerHTML = `<tr><td colspan="${COLS}" class="state-cell">${html}</td></tr>`;
   }
@@ -62,17 +65,36 @@
     }
   }
 
+  // The total in the count line; the parts as a share bar with their numbers in the legend
   function renderCount(records) {
+    const bar = document.getElementById('att-share-bar');
+    const legend = document.getElementById('att-share-legend');
     countLine.hidden = !records.length;
+    bar.hidden = !records.length;
+    legend.hidden = !records.length;
+    bar.textContent = '';
+    legend.textContent = '';
     if (!records.length) { countLine.textContent = ''; return; }
     const n = { verified: 0, pending: 0, failed: 0 };
     records.forEach(r => { n[statusOf(r.status).group]++; });
-    const total = escapeHtml(t(records.length === 1 ? 'count_one' : 'count_many', { count: '{{n}}' }))
+    countLine.innerHTML = escapeHtml(t(records.length === 1 ? 'count_one' : 'count_many', { count: '{{n}}' }))
       .replace('{{n}}', `<strong>${records.length}</strong>`);
-    const parts = ['verified', 'pending', 'failed']
-      .filter(k => n[k] > 0)
-      .map(k => escapeHtml(t(`count_${k}`, { count: n[k] })));
-    countLine.innerHTML = parts.length ? `${total}: ${parts.join(', ')}` : total;
+    const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+    [
+      { k: 'failed', cls: 'is-danger', label: t('legend_failed') },
+      { k: 'pending', cls: 'is-warning', label: t('legend_pending') },
+      { k: 'verified', cls: 'is-ok', label: t('legend_verified') },
+    ].forEach(part => {
+      if (n[part.k] > 0) {
+        const seg = document.createElement('span');
+        seg.className = part.cls;
+        seg.style.flexGrow = String(n[part.k]);
+        bar.appendChild(seg);
+      }
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="key ${part.cls}" aria-hidden="true"></span><span><strong>${escapeHtml(fmt.format(n[part.k]))}</strong> ${escapeHtml(part.label)}</span>`;
+      legend.appendChild(li);
+    });
   }
 
   function render(records) {
@@ -102,15 +124,15 @@
           <td><span class="status ${st.cls}">${escapeHtml(st.label)}</span></td>
           <td>${escapeHtml(last)}</td>
           <td class="actions">
-            ${canVerify && id ? `<button type="button" class="btn btn-sm" data-att-action="verify" data-id="${escapeHtml(id)}">${escapeHtml(t('mark_verified'))}</button>` : ''}
+            ${canVerify && id ? `<button type="button" class="btn btn-sm" data-att-action="verify" data-id="${escapeHtml(id)}">${icon('approve')}${escapeHtml(t('mark_verified'))}</button>` : ''}
             <span class="menu-anchor">
               <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
                 aria-controls="${menuId}" aria-label="${escapeHtml(t('actions_for', { device: id || r.hostname || '' }))}">
                 <span class="material-icons" aria-hidden="true">more_vert</span></button>
               <span class="menu menu-end${i >= sorted.length - 2 && sorted.length > 3 ? ' menu-up' : ''}" id="${menuId}" role="menu">
-                <button type="button" class="menu-item" role="menuitem" data-att-action="copy" data-fp="${escapeHtml(fp)}"${fp ? '' : ' disabled'}>${escapeHtml(t('copy_fingerprint'))}</button>
+                <button type="button" class="menu-item" role="menuitem" data-att-action="copy" data-fp="${escapeHtml(fp)}"${fp ? '' : ' disabled'}>${icon('copy')}${escapeHtml(t('copy_fingerprint'))}</button>
                 ${canRevoke && id ? `<span class="menu-divider"></span>
-                <button type="button" class="menu-item danger" role="menuitem" data-att-action="revoke" data-id="${escapeHtml(id)}">${escapeHtml(t('revoke'))}</button>` : ''}
+                <button type="button" class="menu-item danger" role="menuitem" data-att-action="revoke" data-id="${escapeHtml(id)}">${icon('revoke')}${escapeHtml(t('revoke'))}</button>` : ''}
               </span>
             </span>
           </td>

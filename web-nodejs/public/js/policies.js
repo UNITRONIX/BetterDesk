@@ -22,6 +22,7 @@
   document.addEventListener('DOMContentLoaded', init);
 
   async function init() {
+    placeToc();
     $('policy-org-select').addEventListener('change', onOrgChange);
     const f = form();
     f.addEventListener('submit', (e) => { e.preventDefault(); saveAll(); });
@@ -122,6 +123,7 @@
       setState('');
       $('policy-sections').hidden = false;
       loadAuditLog();
+      loadOrgSummary(currentOrgId);
     } catch (e) {
       if (seq !== loadSeq) return;
       setState(`<p class="state is-error">${esc(t('policies.load_failed'))} <button type="button" class="btn btn-sm" id="policy-load-retry">${esc(t('actions.retry'))}</button></p>`);
@@ -162,17 +164,105 @@
     setChecked('pol-auto-update', u.auto_update !== false);
     setVal('pol-update-channel', u.channel || 'stable');
 
-    SECTIONS.forEach(sec => setSectionState(sec, policyData[sec] || {}));
+    renderSectionStates();
     dirtySections = new Set();
     if (window.UiForm) UiForm.reset(form());
   }
 
+  function isSet(obj) {
+    return !!(obj && typeof obj === 'object' && Object.keys(obj).length > 0);
+  }
+
+  // "Set for this organization" / "Not set" next to each heading and in the contents,
+  // and how many groups are set in the side column
   function setSectionState(section, obj) {
+    const set = isSet(obj);
+    const text = set ? t('policies.configured') : t('policies.not_configured');
     const el = $(STATUS_IDS[section]);
-    if (!el) return;
-    const set = obj && typeof obj === 'object' && Object.keys(obj).length > 0;
-    el.textContent = set ? t('policies.configured') : t('policies.not_configured');
-    el.classList.toggle('is-set', set);
+    if (el) {
+      el.textContent = text;
+      el.classList.toggle('is-set', set);
+    }
+    const toc = document.querySelector(`[data-toc-state="${section}"]`);
+    if (toc) {
+      toc.textContent = text;
+      toc.classList.toggle('is-set', set);
+    }
+  }
+
+  function renderSectionStates() {
+    SECTIONS.forEach(sec => setSectionState(sec, policyData[sec] || {}));
+    const n = SECTIONS.filter(sec => isSet(policyData[sec])).length;
+    $('policy-org-groups').textContent = t('policies.groups_set_value', { set: n, total: SECTIONS.length });
+  }
+
+  /* ── Side column: the organization ── */
+  async function countOf(url, key) {
+    try {
+      const resp = await fetch(url, { credentials: 'same-origin' });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const list = data[key] || data.data || data;
+      return Array.isArray(list) ? list.length : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function loadOrgSummary(orgId) {
+    const sel = $('policy-org-select');
+    const opt = sel.options[sel.selectedIndex];
+    $('policy-org-name').textContent = opt && opt.value ? opt.textContent : '';
+    $('policy-org-link').href = `/organizations/${encodeURIComponent(orgId)}`;
+    const devices = $('policy-org-devices');
+    const people = $('policy-org-people');
+    devices.textContent = '…';
+    people.textContent = '…';
+    const base = `/api/panel/org/${encodeURIComponent(orgId)}`;
+    const [nDevices, nPeople] = await Promise.all([countOf(base + '/devices', 'devices'), countOf(base + '/users', 'users')]);
+    if (orgId !== currentOrgId) return;
+    const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+    devices.textContent = nDevices === null ? t('policies.count_unknown') : fmt.format(nDevices);
+    // People need the user permissions; leave the line out without them
+    document.querySelectorAll('[data-org-people]').forEach(n => { n.hidden = nPeople === null; });
+    if (nPeople !== null) people.textContent = fmt.format(nPeople);
+  }
+
+  /* ── Contents: inline above the form, in the side column on wide screens ── */
+  function placeToc() {
+    const nav = $('policy-toc');
+    const inline = $('policy-toc-inline');
+    const side = $('policy-toc-side');
+    if (!nav || !inline || !side || !window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 1200px)');
+    const place = () => {
+      const target = mq.matches ? side : inline;
+      if (nav.parentElement !== target) target.appendChild(nav);
+      nav.classList.toggle('is-side', mq.matches);
+      inline.hidden = mq.matches;
+      side.hidden = !mq.matches;
+    };
+    place();
+    if (mq.addEventListener) mq.addEventListener('change', place);
+    else if (mq.addListener) mq.addListener(place);
+
+    // Mark the group in view
+    if (typeof IntersectionObserver !== 'function') return;
+    const links = Array.from(nav.querySelectorAll('a[href^="#"]'));
+    const visible = new Map();
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => visible.set(e.target.id, e.isIntersecting));
+      const first = links.find(a => visible.get(a.getAttribute('href').slice(1)));
+      if (!first) return;
+      links.forEach(a => {
+        if (a === first) a.setAttribute('aria-current', 'true');
+        else a.removeAttribute('aria-current');
+      });
+    }, { rootMargin: '-80px 0px -55% 0px' });
+    links.forEach(a => {
+      const target = document.getElementById(a.getAttribute('href').slice(1));
+      if (target) io.observe(target);
+    });
   }
 
   /* ── Save ── */
@@ -275,7 +365,7 @@
       if (resp.ok) {
         const raw = await resp.json();
         policyData = raw.data || raw || {};
-        SECTIONS.forEach(sec => setSectionState(sec, policyData[sec] || {}));
+        renderSectionStates();
       }
       loadAuditLog();
     } catch (e) {
@@ -314,7 +404,7 @@
         return `<tr>
             <td class="policy-audit-time">${esc(whenText)}</td>
             <td>${esc(sectionName(cat))}${detail ? `<span class="cell-sub">${esc(detail)}</span>` : ''}</td>
-            <td><span class="mono">${esc(who)}</span>${via ? `<span class="cell-sub">${esc(via)}</span>` : ''}</td>
+            <td>${esc(who)}${via ? `<span class="cell-sub">${esc(via)}</span>` : ''}</td>
           </tr>`;
       }).join('');
       container.innerHTML = `

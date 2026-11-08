@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Service opnieuw starten",
-        "cmd_type_reboot": "Apparaat opnieuw opstarten"
+        "cmd_type_reboot": "Apparaat opnieuw opstarten",
+        "legend_open": "niet bevestigd",
+        "legend_acknowledged": "bevestigd"
     },
     "file_transfer": {
         "title": "Bestandsoverdracht",
@@ -2985,7 +2987,12 @@
         "edit_named": "{name} bewerken",
         "actions_for": "Meer acties voor {name}",
         "enable": "Inschakelen",
-        "disable": "Uitschakelen"
+        "disable": "Uitschakelen",
+        "event_total_one": "{count} gebeurtenis",
+        "event_total_many": "{count} gebeurtenissen",
+        "legend_blocked": "geblokkeerd",
+        "legend_logged": "gelogd",
+        "legend_allowed": "toegestaan"
     },
     "reports": {
         "title": "Rapporten",
@@ -4457,7 +4464,13 @@
         "col_time": "Tijd",
         "col_policy": "Beleid",
         "col_source": "Gewijzigd vanaf",
-        "audit_failed": "De recente wijzigingen konden niet worden geladen."
+        "audit_failed": "De recente wijzigingen konden niet worden geladen.",
+        "fact_people": "Personen",
+        "fact_groups_set": "Ingestelde beleidsgroepen",
+        "groups_set_value": "{set} van {total}",
+        "groups_default_hint": "Een groep telt als ingesteld zodra die voor deze organisatie is opgeslagen.",
+        "open_org": "Organisatie openen",
+        "count_unknown": "Niet beschikbaar"
     },
     "attestation": {
         "title": "Apparaatattestatie",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "{device} markeren als geverifieerd?",
         "confirm_verify_message": "Doe dit nadat u hebt gecontroleerd dat het apparaat de hardware is die u verwacht.",
         "confirm_revoke_title": "{device} intrekken?",
-        "confirm_revoke_message": "De status wordt Ingetrokken. U kunt het later weer als geverifieerd markeren."
+        "confirm_revoke_message": "De status wordt Ingetrokken. U kunt het later weer als geverifieerd markeren.",
+        "legend_verified": "geverifieerd",
+        "legend_pending": "nog niet geverifieerd",
+        "legend_failed": "vingerafdruk gewijzigd of ingetrokken"
     },
     "fleet": {
         "title": "Vlootbeheer",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "Schijfruimte per gebruiker (GB)",
         "quotas_programs_label": "Toegestane programma's",
         "quotas_programs_hint": "Eén programma per regel, bijvoorbeeld chrome.exe.",
-        "save_quotas": "Gebruikslimieten opslaan"
+        "save_quotas": "Gebruikslimieten opslaan",
+        "compliance_empty": "Nog geen apparaat heeft gemeld welke regels het naleeft.",
+        "legend_all": "leven alle regels na",
+        "legend_not": "overtreden een regel",
+        "legend_none": "hebben geen regels",
+        "by_category": "Per soort regel"
     },
     "sdk_studio": {
         "title": "SDK Studio",

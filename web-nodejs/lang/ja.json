@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "スクリプト",
         "cmd_type_restart_service": "サービスを再起動",
-        "cmd_type_reboot": "デバイスを再起動"
+        "cmd_type_reboot": "デバイスを再起動",
+        "legend_open": "未確認",
+        "legend_acknowledged": "確認済み"
     },
     "file_transfer": {
         "title": "ファイル転送",
@@ -2985,7 +2987,12 @@
         "edit_named": "{name} を編集",
         "actions_for": "{name} のその他の操作",
         "enable": "有効にする",
-        "disable": "無効にする"
+        "disable": "無効にする",
+        "event_total_one": "{count} 件のイベント",
+        "event_total_many": "{count} 件のイベント",
+        "legend_blocked": "ブロック",
+        "legend_logged": "記録のみ",
+        "legend_allowed": "許可"
     },
     "reports": {
         "title": "Reports",
@@ -4457,7 +4464,13 @@
         "col_time": "日時",
         "col_policy": "ポリシー",
         "col_source": "変更元",
-        "audit_failed": "最近の変更を読み込めませんでした。"
+        "audit_failed": "最近の変更を読み込めませんでした。",
+        "fact_people": "メンバー",
+        "fact_groups_set": "設定済みのポリシーグループ",
+        "groups_set_value": "{total} 件中 {set} 件",
+        "groups_default_hint": "グループは、この組織用に保存されると設定済みになります。",
+        "open_org": "組織を開く",
+        "count_unknown": "取得できません"
     },
     "attestation": {
         "title": "デバイス証明",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "{device} を確認済みにしますか?",
         "confirm_verify_message": "デバイスが想定どおりのハードウェアであることを確認してから行ってください。",
         "confirm_revoke_title": "{device} を取り消しますか?",
-        "confirm_revoke_message": "状態が「取り消し済み」になります。後で再び確認済みにできます。"
+        "confirm_revoke_message": "状態が「取り消し済み」になります。後で再び確認済みにできます。",
+        "legend_verified": "確認済み",
+        "legend_pending": "未確認",
+        "legend_failed": "フィンガープリント変更または取り消し"
     },
     "fleet": {
         "title": "フリート管理",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "ユーザーごとのディスク容量 (GB)",
         "quotas_programs_label": "許可するプログラム",
         "quotas_programs_hint": "1 行に 1 つのプログラム (例: chrome.exe)。",
-        "save_quotas": "使用制限を保存"
+        "save_quotas": "使用制限を保存",
+        "compliance_empty": "どのルールを守っているかを報告したデバイスはまだありません。",
+        "legend_all": "すべてのルールを遵守",
+        "legend_not": "ルール違反あり",
+        "legend_none": "ルールなし",
+        "by_category": "ルールの種類別"
     },
     "sdk_studio": {
         "title": "SDK Studio",

@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Repornește serviciul",
-        "cmd_type_reboot": "Repornește dispozitivul"
+        "cmd_type_reboot": "Repornește dispozitivul",
+        "legend_open": "neconfirmate",
+        "legend_acknowledged": "confirmate"
     },
     "file_transfer": {
         "title": "Transfer de fișiere",
@@ -2991,7 +2993,12 @@
         "edit_named": "Editați {name}",
         "actions_for": "Mai multe acțiuni pentru {name}",
         "enable": "Activați",
-        "disable": "Dezactivați"
+        "disable": "Dezactivați",
+        "event_total_one": "{count} eveniment",
+        "event_total_many": "{count} evenimente",
+        "legend_blocked": "blocate",
+        "legend_logged": "înregistrate",
+        "legend_allowed": "permise"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Ora",
         "col_policy": "Politică",
         "col_source": "Modificat de la",
-        "audit_failed": "Modificările recente nu au putut fi încărcate."
+        "audit_failed": "Modificările recente nu au putut fi încărcate.",
+        "fact_people": "Persoane",
+        "fact_groups_set": "Grupuri de politici setate",
+        "groups_set_value": "{set} din {total}",
+        "groups_default_hint": "Un grup este considerat setat după ce a fost salvat pentru această organizație.",
+        "open_org": "Deschide organizația",
+        "count_unknown": "Indisponibil"
     },
     "attestation": {
         "title": "Atestarea dispozitivului",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Marcați {device} ca verificat?",
         "confirm_verify_message": "Faceți asta după ce ați verificat că dispozitivul este hardware-ul așteptat.",
         "confirm_revoke_title": "Revocați {device}?",
-        "confirm_revoke_message": "Starea devine Revocat. Îl puteți marca din nou ca verificat mai târziu."
+        "confirm_revoke_message": "Starea devine Revocat. Îl puteți marca din nou ca verificat mai târziu.",
+        "legend_verified": "verificate",
+        "legend_pending": "încă neverificate",
+        "legend_failed": "amprentă schimbată sau revocată"
     },
     "fleet": {
         "title": "Managementul flotei",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Spațiu pe disc per utilizator (GB)",
         "quotas_programs_label": "Programe permise",
         "quotas_programs_hint": "Un program pe rând, de exemplu chrome.exe.",
-        "save_quotas": "Salvați limitele de utilizare"
+        "save_quotas": "Salvați limitele de utilizare",
+        "compliance_empty": "Niciun dispozitiv nu a raportat încă ce reguli respectă.",
+        "legend_all": "respectă toate regulile",
+        "legend_not": "încalcă o regulă",
+        "legend_none": "nu au reguli",
+        "by_category": "După tipul regulii"
     },
     "sdk_studio": {
         "title": "SDK Studio",

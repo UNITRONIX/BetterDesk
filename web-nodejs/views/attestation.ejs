@@ -15,6 +15,9 @@
             <section class="section" aria-labelledby="att-list-title">
                 <h2 id="att-list-title" class="sr-only">${_('nav.attestation')}</h2>
                 <p class="count-line" id="att-count-line" aria-live="polite" hidden></p>
+                <!-- Verified, waiting and problem devices: one whole split into parts -->
+                <div class="share-bar" id="att-share-bar" aria-hidden="true" hidden></div>
+                <ul class="share-legend" id="att-share-legend" hidden></ul>
                 <div class="table-scroll">
                     <table class="data-table att-table" id="attestation-table">
                         <thead>

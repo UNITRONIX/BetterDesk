@@ -25,10 +25,10 @@
             <section class="tab-panel section active" id="tab-rules" role="tabpanel" aria-labelledby="tab-btn-rules">
                 <div class="section-head">
                     <p class="section-note automation-note">${_('automation.rules_note')}</p>
-                    ${canEdit ? `<button type="button" class="btn btn-primary" id="create-rule-btn">${_('automation.create_rule')}</button>` : ''}
+                    ${canEdit ? `<button type="button" class="btn btn-primary" id="create-rule-btn"><span class="material-icons" aria-hidden="true">add</span>${_('automation.create_rule')}</button>` : ''}
                 </div>
                 <p class="count-line" id="rules-count" aria-live="polite"></p>
-                <div class="table-scroll">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${_('automation.rules')}">
                     <table class="data-table automation-table">
                         <thead>
                             <tr>
@@ -60,7 +60,10 @@
                     </div>
                 </div>
                 <p class="count-line" id="alerts-count" aria-live="polite"></p>
-                <div class="table-scroll">
+                <!-- Alerts still to handle and alerts already acknowledged: one whole split into parts -->
+                <div class="share-bar" id="alerts-share-bar" aria-hidden="true" hidden></div>
+                <ul class="share-legend" id="alerts-share-legend" hidden></ul>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${_('automation.alerts')}">
                     <table class="data-table automation-table">
                         <thead>
                             <tr>
@@ -87,7 +90,7 @@
                     ${canEdit ? `<button type="button" class="btn btn-primary" id="send-command-btn">${_('automation.send_command')}</button>` : ''}
                 </div>
                 <p class="count-line" id="commands-count" aria-live="polite"></p>
-                <div class="table-scroll">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${_('automation.commands')}">
                     <table class="data-table automation-table">
                         <thead>
                             <tr>

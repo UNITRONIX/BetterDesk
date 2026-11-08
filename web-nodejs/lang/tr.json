@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Betik",
         "cmd_type_restart_service": "Hizmeti yeniden başlat",
-        "cmd_type_reboot": "Cihazı yeniden başlat"
+        "cmd_type_reboot": "Cihazı yeniden başlat",
+        "legend_open": "onaylanmadı",
+        "legend_acknowledged": "onaylandı"
     },
     "file_transfer": {
         "title": "Dosya Aktarımı",
@@ -2991,7 +2993,12 @@
         "edit_named": "{name} düzenle",
         "actions_for": "{name} için diğer işlemler",
         "enable": "Etkinleştir",
-        "disable": "Devre dışı bırak"
+        "disable": "Devre dışı bırak",
+        "event_total_one": "{count} olay",
+        "event_total_many": "{count} olay",
+        "legend_blocked": "engellendi",
+        "legend_logged": "kaydedildi",
+        "legend_allowed": "izin verildi"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Zaman",
         "col_policy": "İlke",
         "col_source": "Değiştiren adres",
-        "audit_failed": "Son değişiklikler yüklenemedi."
+        "audit_failed": "Son değişiklikler yüklenemedi.",
+        "fact_people": "Kişiler",
+        "fact_groups_set": "Ayarlanan politika grupları",
+        "groups_set_value": "{total} gruptan {set}",
+        "groups_default_hint": "Bir grup, bu kuruluş için kaydedildiğinde ayarlanmış sayılır.",
+        "open_org": "Kuruluşu aç",
+        "count_unknown": "Kullanılamıyor"
     },
     "attestation": {
         "title": "Cihaz Onayı",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "{device} doğrulandı olarak işaretlensin mi?",
         "confirm_verify_message": "Bunu, cihazın beklediğiniz donanım olduğunu kontrol ettikten sonra yapın.",
         "confirm_revoke_title": "{device} iptal edilsin mi?",
-        "confirm_revoke_message": "Durumu İptal edildi olur. Daha sonra yeniden doğrulandı olarak işaretleyebilirsiniz."
+        "confirm_revoke_message": "Durumu İptal edildi olur. Daha sonra yeniden doğrulandı olarak işaretleyebilirsiniz.",
+        "legend_verified": "doğrulandı",
+        "legend_pending": "henüz doğrulanmadı",
+        "legend_failed": "parmak izi değişti veya iptal edildi"
     },
     "fleet": {
         "title": "Filo Yönetimi",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Kullanıcı başına disk alanı (GB)",
         "quotas_programs_label": "İzin verilen programlar",
         "quotas_programs_hint": "Her satıra bir program, örneğin chrome.exe.",
-        "save_quotas": "Kullanım sınırlarını kaydet"
+        "save_quotas": "Kullanım sınırlarını kaydet",
+        "compliance_empty": "Henüz hiçbir cihaz hangi kurallara uyduğunu bildirmedi.",
+        "legend_all": "tüm kurallara uyuyor",
+        "legend_not": "bir kuralı ihlal ediyor",
+        "legend_none": "kuralı yok",
+        "by_category": "Kural türüne göre"
     },
     "sdk_studio": {
         "title": "SDK Studio",

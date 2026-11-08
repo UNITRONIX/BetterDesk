@@ -27,8 +27,9 @@
             <p class="page-description">${_('resource_control.page_description')}</p>
         </div>
 
+        <div class="page-cols rc-overview" id="rc-overview">
         <!-- Device list -->
-        <section class="section rc-list" id="rc-list" aria-labelledby="rc-list-title">
+        <section class="section rc-list page-main" id="rc-list" aria-labelledby="rc-list-title">
             <h2 id="rc-list-title" class="sr-only">${_('resource_control.devices_title')}</h2>
             <div class="toolbar">
                 <div class="toolbar-search search-wrapper">
@@ -57,11 +58,19 @@
             </div>
         </section>
 
-        <details class="disclosure section rc-compliance" id="rc-compliance">
-            <summary><h2>${_('resource_control.compliance_title')}</h2></summary>
-            <p class="section-note">${_('resource_control.compliance_note')}</p>
-            <dl class="facts" id="compliance-categories"></dl>
-        </details>
+        <!-- How many devices follow their rules: one whole split into parts, then per kind of rule -->
+        <aside class="page-side" aria-labelledby="rc-compliance-title">
+            <section class="section rc-compliance" id="rc-compliance" aria-labelledby="rc-compliance-title">
+                <h2 id="rc-compliance-title">${_('resource_control.compliance_title')}</h2>
+                <p class="section-note">${_('resource_control.compliance_note')}</p>
+                <p class="state" id="compliance-state" aria-live="polite">${_('resource_control.loading')}</p>
+                <div class="share-bar" id="compliance-bar" aria-hidden="true" hidden></div>
+                <ul class="share-legend rc-legend" id="compliance-legend" hidden></ul>
+                <h3 class="rc-by-category" id="compliance-categories-title" hidden>${_('resource_control.by_category')}</h3>
+                <dl class="facts" id="compliance-categories" hidden></dl>
+            </section>
+        </aside>
+        </div>
 
         <!-- Rules of one device; shown instead of the list after "Edit rules" -->
         <section class="section rc-editor" id="rc-editor" aria-labelledby="rc-editor-title" hidden>

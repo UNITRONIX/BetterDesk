@@ -2692,7 +2692,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "نص برمجي",
         "cmd_type_restart_service": "إعادة تشغيل خدمة",
-        "cmd_type_reboot": "إعادة تشغيل الجهاز"
+        "cmd_type_reboot": "إعادة تشغيل الجهاز",
+        "legend_open": "غير مؤكَّدة",
+        "legend_acknowledged": "مؤكَّدة"
     },
     "file_transfer": {
         "title": "نقل الملفات",
@@ -2992,7 +2994,12 @@
         "edit_named": "تعديل {name}",
         "actions_for": "إجراءات أخرى لـ {name}",
         "enable": "تفعيل",
-        "disable": "تعطيل"
+        "disable": "تعطيل",
+        "event_total_one": "{count} حدث",
+        "event_total_many": "الأحداث: {count}",
+        "legend_blocked": "محظورة",
+        "legend_logged": "مسجّلة",
+        "legend_allowed": "مسموح بها"
     },
     "reports": {
         "title": "Reports",
@@ -4464,7 +4471,13 @@
         "col_time": "الوقت",
         "col_policy": "السياسة",
         "col_source": "تم التغيير من",
-        "audit_failed": "تعذر تحميل التغييرات الأخيرة."
+        "audit_failed": "تعذر تحميل التغييرات الأخيرة.",
+        "fact_people": "الأشخاص",
+        "fact_groups_set": "مجموعات السياسات المحددة",
+        "groups_set_value": "{set} من {total}",
+        "groups_default_hint": "تُعدّ المجموعة محددة بمجرد حفظها لهذه المؤسسة.",
+        "open_org": "فتح المؤسسة",
+        "count_unknown": "غير متاح"
     },
     "attestation": {
         "title": "شهادة الجهاز",
@@ -4506,7 +4519,10 @@
         "confirm_verify_title": "وضع علامة موثّق على {device}؟",
         "confirm_verify_message": "افعل ذلك بعد أن تتحقق من أن الجهاز هو العتاد الذي تتوقعه.",
         "confirm_revoke_title": "إلغاء {device}؟",
-        "confirm_revoke_message": "تتغيّر حالته إلى «ملغى». يمكنك وضع علامة موثّق عليه لاحقًا."
+        "confirm_revoke_message": "تتغيّر حالته إلى «ملغى». يمكنك وضع علامة موثّق عليه لاحقًا.",
+        "legend_verified": "موثّقة",
+        "legend_pending": "لم تُوثَّق بعد",
+        "legend_failed": "تغيّرت البصمة أو أُلغيت"
     },
     "fleet": {
         "title": "إدارة الأسطول",
@@ -5437,7 +5453,12 @@
         "quotas_disk_label": "مساحة القرص لكل مستخدم (غيغابايت)",
         "quotas_programs_label": "البرامج المسموح بها",
         "quotas_programs_hint": "برنامج واحد في كل سطر، مثل chrome.exe.",
-        "save_quotas": "حفظ حدود الاستخدام"
+        "save_quotas": "حفظ حدود الاستخدام",
+        "compliance_empty": "لم يُبلغ أي جهاز بعد عن القواعد التي يتبعها.",
+        "legend_all": "تتبع كل القواعد",
+        "legend_not": "تخالف قاعدة",
+        "legend_none": "بلا قواعد",
+        "by_category": "حسب نوع القاعدة"
     },
     "sdk_studio": {
         "title": "SDK Studio",

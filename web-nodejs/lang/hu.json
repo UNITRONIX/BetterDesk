@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Szkript",
         "cmd_type_restart_service": "Szolgáltatás újraindítása",
-        "cmd_type_reboot": "Eszköz újraindítása"
+        "cmd_type_reboot": "Eszköz újraindítása",
+        "legend_open": "nyugtázatlan",
+        "legend_acknowledged": "nyugtázva"
     },
     "file_transfer": {
         "title": "Fájlátvitel",
@@ -2991,7 +2993,12 @@
         "edit_named": "{name} szerkesztése",
         "actions_for": "További műveletek: {name}",
         "enable": "Bekapcsolás",
-        "disable": "Kikapcsolás"
+        "disable": "Kikapcsolás",
+        "event_total_one": "{count} esemény",
+        "event_total_many": "{count} esemény",
+        "legend_blocked": "letiltva",
+        "legend_logged": "naplózva",
+        "legend_allowed": "engedélyezve"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Idő",
         "col_policy": "Szabályzat",
         "col_source": "Módosítás helye",
-        "audit_failed": "Nem sikerült betölteni a legutóbbi módosításokat."
+        "audit_failed": "Nem sikerült betölteni a legutóbbi módosításokat.",
+        "fact_people": "Személyek",
+        "fact_groups_set": "Beállított irányelvcsoportok",
+        "groups_set_value": "{total}-ből {set}",
+        "groups_default_hint": "Egy csoport akkor számít beállítottnak, ha ehhez a szervezethez mentették.",
+        "open_org": "Szervezet megnyitása",
+        "count_unknown": "Nem érhető el"
     },
     "attestation": {
         "title": "Eszköz tanúsítvány",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Megjelöli ellenőrzöttként: {device}?",
         "confirm_verify_message": "Akkor tegye, ha ellenőrizte, hogy az eszköz a várt hardver.",
         "confirm_revoke_title": "Visszavonja: {device}?",
-        "confirm_revoke_message": "Az állapota Visszavonva lesz. Később újra megjelölheti ellenőrzöttként."
+        "confirm_revoke_message": "Az állapota Visszavonva lesz. Később újra megjelölheti ellenőrzöttként.",
+        "legend_verified": "ellenőrzött",
+        "legend_pending": "még nem ellenőrzött",
+        "legend_failed": "ujjlenyomat megváltozott vagy visszavonva"
     },
     "fleet": {
         "title": "Flottakezelés",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Lemezterület felhasználónként (GB)",
         "quotas_programs_label": "Engedélyezett programok",
         "quotas_programs_hint": "Soronként egy program, például chrome.exe.",
-        "save_quotas": "Használati korlátok mentése"
+        "save_quotas": "Használati korlátok mentése",
+        "compliance_empty": "Még egyik eszköz sem jelentette, mely szabályokat tartja be.",
+        "legend_all": "minden szabályt betart",
+        "legend_not": "megszeg egy szabályt",
+        "legend_none": "nincs szabálya",
+        "by_category": "Szabálytípus szerint"
     },
     "sdk_studio": {
         "title": "SDK Studio",

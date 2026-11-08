@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Скрипт",
         "cmd_type_restart_service": "Перезапустити службу",
-        "cmd_type_reboot": "Перезапустити пристрій"
+        "cmd_type_reboot": "Перезапустити пристрій",
+        "legend_open": "не підтверджено",
+        "legend_acknowledged": "підтверджено"
     },
     "file_transfer": {
         "title": "Передача файлів",
@@ -2991,7 +2993,12 @@
         "edit_named": "Редагувати {name}",
         "actions_for": "Інші дії для {name}",
         "enable": "Увімкнути",
-        "disable": "Вимкнути"
+        "disable": "Вимкнути",
+        "event_total_one": "{count} подія",
+        "event_total_many": "Події: {count}",
+        "legend_blocked": "заблоковано",
+        "legend_logged": "записано",
+        "legend_allowed": "дозволено"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Час",
         "col_policy": "Політика",
         "col_source": "Змінено з",
-        "audit_failed": "Не вдалося завантажити останні зміни."
+        "audit_failed": "Не вдалося завантажити останні зміни.",
+        "fact_people": "Люди",
+        "fact_groups_set": "Задані групи політик",
+        "groups_set_value": "{set} з {total}",
+        "groups_default_hint": "Група вважається заданою, щойно її збережено для цієї організації.",
+        "open_org": "Відкрити організацію",
+        "count_unknown": "Недоступно"
     },
     "attestation": {
         "title": "Атестація пристрою",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Позначити {device} як перевірений?",
         "confirm_verify_message": "Зробіть це, коли перевірите, що пристрій — це очікуване обладнання.",
         "confirm_revoke_title": "Відкликати {device}?",
-        "confirm_revoke_message": "Його стан зміниться на «Відкликано». Пізніше ви зможете знову позначити його як перевірений."
+        "confirm_revoke_message": "Його стан зміниться на «Відкликано». Пізніше ви зможете знову позначити його як перевірений.",
+        "legend_verified": "перевірено",
+        "legend_pending": "ще не перевірено",
+        "legend_failed": "відбиток змінено або відкликано"
     },
     "fleet": {
         "title": "Управління автопарком",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Місце на диску на користувача (ГБ)",
         "quotas_programs_label": "Дозволені програми",
         "quotas_programs_hint": "Одна програма в рядку, наприклад chrome.exe.",
-        "save_quotas": "Зберегти обмеження використання"
+        "save_quotas": "Зберегти обмеження використання",
+        "compliance_empty": "Жоден пристрій ще не повідомив, яких правил він дотримується.",
+        "legend_all": "дотримуються всіх правил",
+        "legend_not": "порушують правило",
+        "legend_none": "не мають правил",
+        "by_category": "За видом правила"
     },
     "sdk_studio": {
         "title": "SDK Studio",

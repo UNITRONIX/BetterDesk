@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "สคริปต์",
         "cmd_type_restart_service": "รีสตาร์ตบริการ",
-        "cmd_type_reboot": "รีสตาร์ตอุปกรณ์"
+        "cmd_type_reboot": "รีสตาร์ตอุปกรณ์",
+        "legend_open": "ยังไม่รับทราบ",
+        "legend_acknowledged": "รับทราบแล้ว"
     },
     "file_transfer": {
         "title": "การถ่ายโอนไฟล์",
@@ -2991,7 +2993,12 @@
         "edit_named": "แก้ไข {name}",
         "actions_for": "การดำเนินการอื่นสำหรับ {name}",
         "enable": "เปิดใช้",
-        "disable": "ปิดใช้"
+        "disable": "ปิดใช้",
+        "event_total_one": "{count} เหตุการณ์",
+        "event_total_many": "{count} เหตุการณ์",
+        "legend_blocked": "ถูกบล็อก",
+        "legend_logged": "บันทึกไว้",
+        "legend_allowed": "อนุญาต"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "เวลา",
         "col_policy": "นโยบาย",
         "col_source": "เปลี่ยนจาก",
-        "audit_failed": "โหลดการเปลี่ยนแปลงล่าสุดไม่ได้"
+        "audit_failed": "โหลดการเปลี่ยนแปลงล่าสุดไม่ได้",
+        "fact_people": "สมาชิก",
+        "fact_groups_set": "กลุ่มนโยบายที่ตั้งค่าแล้ว",
+        "groups_set_value": "{set} จาก {total}",
+        "groups_default_hint": "กลุ่มจะนับว่าตั้งค่าแล้วเมื่อบันทึกไว้สำหรับองค์กรนี้",
+        "open_org": "เปิดองค์กร",
+        "count_unknown": "ไม่พร้อมใช้งาน"
     },
     "attestation": {
         "title": "การรับรองอุปกรณ์",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "ทำเครื่องหมาย {device} ว่ายืนยันแล้วหรือไม่",
         "confirm_verify_message": "ทำสิ่งนี้หลังจากตรวจสอบแล้วว่าอุปกรณ์เป็นฮาร์ดแวร์ที่คุณคาดไว้",
         "confirm_revoke_title": "เพิกถอน {device} หรือไม่",
-        "confirm_revoke_message": "สถานะจะเปลี่ยนเป็นเพิกถอนแล้ว คุณทำเครื่องหมายว่ายืนยันแล้วอีกครั้งได้ภายหลัง"
+        "confirm_revoke_message": "สถานะจะเปลี่ยนเป็นเพิกถอนแล้ว คุณทำเครื่องหมายว่ายืนยันแล้วอีกครั้งได้ภายหลัง",
+        "legend_verified": "ยืนยันแล้ว",
+        "legend_pending": "ยังไม่ได้ยืนยัน",
+        "legend_failed": "ลายนิ้วมือเปลี่ยนหรือถูกเพิกถอน"
     },
     "fleet": {
         "title": "การจัดการยานพาหนะ",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "พื้นที่ดิสก์ต่อผู้ใช้ (GB)",
         "quotas_programs_label": "โปรแกรมที่อนุญาต",
         "quotas_programs_hint": "บรรทัดละหนึ่งโปรแกรม เช่น chrome.exe",
-        "save_quotas": "บันทึกขีดจำกัดการใช้งาน"
+        "save_quotas": "บันทึกขีดจำกัดการใช้งาน",
+        "compliance_empty": "ยังไม่มีอุปกรณ์ใดรายงานว่าปฏิบัติตามกฎข้อใด",
+        "legend_all": "ปฏิบัติตามกฎทั้งหมด",
+        "legend_not": "ละเมิดกฎ",
+        "legend_none": "ไม่มีกฎ",
+        "by_category": "ตามประเภทของกฎ"
     },
     "sdk_studio": {
         "title": "SDK Studio",

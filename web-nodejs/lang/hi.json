@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "स्क्रिप्ट",
         "cmd_type_restart_service": "सेवा फिर से शुरू करें",
-        "cmd_type_reboot": "डिवाइस फिर से शुरू करें"
+        "cmd_type_reboot": "डिवाइस फिर से शुरू करें",
+        "legend_open": "स्वीकार नहीं किए गए",
+        "legend_acknowledged": "स्वीकार किए गए"
     },
     "file_transfer": {
         "title": "दस्तावेज हस्तांतरण",
@@ -2991,7 +2993,12 @@
         "edit_named": "{name} संपादित करें",
         "actions_for": "{name} के लिए और कार्रवाइयाँ",
         "enable": "चालू करें",
-        "disable": "बंद करें"
+        "disable": "बंद करें",
+        "event_total_one": "{count} घटना",
+        "event_total_many": "{count} घटनाएँ",
+        "legend_blocked": "रोके गए",
+        "legend_logged": "लॉग किए गए",
+        "legend_allowed": "अनुमत"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "समय",
         "col_policy": "नीति",
         "col_source": "यहाँ से बदला गया",
-        "audit_failed": "हाल के बदलाव लोड नहीं हो सके।"
+        "audit_failed": "हाल के बदलाव लोड नहीं हो सके।",
+        "fact_people": "लोग",
+        "fact_groups_set": "सेट किए गए नीति समूह",
+        "groups_set_value": "{total} में से {set}",
+        "groups_default_hint": "कोई समूह तब सेट माना जाता है जब उसे इस संगठन के लिए सहेजा गया हो।",
+        "open_org": "संगठन खोलें",
+        "count_unknown": "उपलब्ध नहीं"
     },
     "attestation": {
         "title": "डिवाइस सत्यापन",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "{device} को सत्यापित चिह्नित करें?",
         "confirm_verify_message": "यह तभी करें जब आपने जाँच लिया हो कि डिवाइस वही हार्डवेयर है जिसकी आपको उम्मीद है।",
         "confirm_revoke_title": "{device} रद्द करें?",
-        "confirm_revoke_message": "इसकी स्थिति रद्द हो जाती है। आप बाद में इसे फिर से सत्यापित चिह्नित कर सकते हैं।"
+        "confirm_revoke_message": "इसकी स्थिति रद्द हो जाती है। आप बाद में इसे फिर से सत्यापित चिह्नित कर सकते हैं।",
+        "legend_verified": "सत्यापित",
+        "legend_pending": "अभी सत्यापित नहीं",
+        "legend_failed": "फ़िंगरप्रिंट बदला या रद्द"
     },
     "fleet": {
         "title": "बेड़ा प्रबंधन",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "प्रति उपयोगकर्ता डिस्क स्थान (GB)",
         "quotas_programs_label": "अनुमत प्रोग्राम",
         "quotas_programs_hint": "हर पंक्ति में एक प्रोग्राम, जैसे chrome.exe।",
-        "save_quotas": "उपयोग सीमाएँ सहेजें"
+        "save_quotas": "उपयोग सीमाएँ सहेजें",
+        "compliance_empty": "अभी तक किसी डिवाइस ने नहीं बताया है कि वह कौन से नियम मानता है।",
+        "legend_all": "सभी नियमों का पालन करते हैं",
+        "legend_not": "किसी नियम का उल्लंघन करते हैं",
+        "legend_none": "कोई नियम नहीं",
+        "by_category": "नियम के प्रकार के अनुसार"
     },
     "sdk_studio": {
         "title": "SDK Studio",

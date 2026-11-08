@@ -2764,7 +2764,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Restart service",
-        "cmd_type_reboot": "Restart the device"
+        "cmd_type_reboot": "Restart the device",
+        "legend_open": "not acknowledged",
+        "legend_acknowledged": "acknowledged"
     },
     "file_transfer": {
         "title": "File Transfer",
@@ -3064,7 +3066,12 @@
         "edit_named": "Edit {name}",
         "actions_for": "More actions for {name}",
         "enable": "Enable",
-        "disable": "Disable"
+        "disable": "Disable",
+        "event_total_one": "{count} event",
+        "event_total_many": "{count} events",
+        "legend_blocked": "blocked",
+        "legend_logged": "logged",
+        "legend_allowed": "allowed"
     },
     "reports": {
         "title": "Reports",
@@ -4654,7 +4661,13 @@
         "col_time": "Time",
         "col_policy": "Policy",
         "col_source": "Changed from",
-        "audit_failed": "Could not load the recent changes."
+        "audit_failed": "Could not load the recent changes.",
+        "fact_people": "People",
+        "fact_groups_set": "Policy groups set",
+        "groups_set_value": "{set} of {total}",
+        "groups_default_hint": "A group counts as set once it has been saved for this organization.",
+        "open_org": "Open the organization",
+        "count_unknown": "Not available"
     },
     "attestation": {
         "title": "Device Attestation",
@@ -4696,7 +4709,10 @@
         "confirm_verify_title": "Mark {device} as verified?",
         "confirm_verify_message": "Do this after you have checked that the device is the hardware you expect.",
         "confirm_revoke_title": "Revoke {device}?",
-        "confirm_revoke_message": "Its status changes to Revoked. You can mark it as verified again later."
+        "confirm_revoke_message": "Its status changes to Revoked. You can mark it as verified again later.",
+        "legend_verified": "verified",
+        "legend_pending": "not verified yet",
+        "legend_failed": "fingerprint changed or revoked"
     },
     "fleet": {
         "title": "Fleet Management",
@@ -5627,7 +5643,12 @@
         "quotas_disk_label": "Disk space per user (GB)",
         "quotas_programs_label": "Allowed programs",
         "quotas_programs_hint": "One program per line, for example chrome.exe.",
-        "save_quotas": "Save usage limits"
+        "save_quotas": "Save usage limits",
+        "compliance_empty": "No device has reported which rules it follows yet.",
+        "legend_all": "follow all rules",
+        "legend_not": "break a rule",
+        "legend_none": "have no rules",
+        "by_category": "By kind of rule"
     },
     "sdk_studio": {
         "title": "SDK Studio",

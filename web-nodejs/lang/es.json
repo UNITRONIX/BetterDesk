@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Reiniciar servicio",
-        "cmd_type_reboot": "Reiniciar el dispositivo"
+        "cmd_type_reboot": "Reiniciar el dispositivo",
+        "legend_open": "sin confirmar",
+        "legend_acknowledged": "confirmados"
     },
     "file_transfer": {
         "title": "Panel",
@@ -2985,7 +2987,12 @@
         "edit_named": "Editar {name}",
         "actions_for": "Más acciones para {name}",
         "enable": "Activar",
-        "disable": "Desactivar"
+        "disable": "Desactivar",
+        "event_total_one": "{count} evento",
+        "event_total_many": "{count} eventos",
+        "legend_blocked": "bloqueados",
+        "legend_logged": "registrados",
+        "legend_allowed": "permitidos"
     },
     "reports": {
         "title": "Panel",
@@ -4457,7 +4464,13 @@
         "col_time": "Hora",
         "col_policy": "Política",
         "col_source": "Cambiado desde",
-        "audit_failed": "No se pudieron cargar los cambios recientes."
+        "audit_failed": "No se pudieron cargar los cambios recientes.",
+        "fact_people": "Personas",
+        "fact_groups_set": "Grupos de políticas definidos",
+        "groups_set_value": "{set} de {total}",
+        "groups_default_hint": "Un grupo cuenta como definido en cuanto se ha guardado para esta organización.",
+        "open_org": "Abrir la organización",
+        "count_unknown": "No disponible"
     },
     "attestation": {
         "title": "Panel",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "¿Marcar {device} como verificado?",
         "confirm_verify_message": "Hágalo después de comprobar que el dispositivo es el hardware que espera.",
         "confirm_revoke_title": "¿Revocar {device}?",
-        "confirm_revoke_message": "Su estado cambia a Revocado. Puede volver a marcarlo como verificado más tarde."
+        "confirm_revoke_message": "Su estado cambia a Revocado. Puede volver a marcarlo como verificado más tarde.",
+        "legend_verified": "verificados",
+        "legend_pending": "aún sin verificar",
+        "legend_failed": "huella cambiada o revocada"
     },
     "fleet": {
         "title": "Panel",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "Espacio en disco por usuario (GB)",
         "quotas_programs_label": "Programas permitidos",
         "quotas_programs_hint": "Un programa por línea, por ejemplo chrome.exe.",
-        "save_quotas": "Guardar límites de uso"
+        "save_quotas": "Guardar límites de uso",
+        "compliance_empty": "Ningún dispositivo ha informado todavía de qué reglas cumple.",
+        "legend_all": "cumplen todas las reglas",
+        "legend_not": "incumplen una regla",
+        "legend_none": "no tienen reglas",
+        "by_category": "Por tipo de regla"
     },
     "sdk_studio": {
         "title": "Panel",

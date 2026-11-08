@@ -3,6 +3,8 @@
     // network rules are enforced by the signal server itself.
     const effectDevice = `<p class="field-effect">${_('policies.effect_device')}</p>`;
     const effectServer = `<p class="field-effect">${_('policies.effect_server')}</p>`;
+    const tocItems = [['connection', 'connection_title'], ['features', 'features_title'], ['security', 'security_title'],
+        ['network', 'network_title'], ['update', 'update_title'], ['audit', 'audit_title']];
 %>
 <%- include('layouts/main', {
     title: _('nav.policies'),
@@ -33,16 +35,16 @@
             </div>
 
             <div class="policy-sections" id="policy-sections" hidden>
-                <nav aria-label="${_('policies.on_this_page')}">
+            <div class="page-cols">
+            <div class="page-main">
+                <!-- On wide screens policies.js moves this list into the side column -->
+                <div class="policy-toc-slot" id="policy-toc-inline">
+                <nav class="policy-toc" id="policy-toc" aria-label="${_('policies.on_this_page')}">
                     <ul class="toc">
-                        <li><a href="#pol-connection-title">${_('policies.connection_title')}</a></li>
-                        <li><a href="#pol-features-title">${_('policies.features_title')}</a></li>
-                        <li><a href="#pol-security-title">${_('policies.security_title')}</a></li>
-                        <li><a href="#pol-network-title">${_('policies.network_title')}</a></li>
-                        <li><a href="#pol-update-title">${_('policies.update_title')}</a></li>
-                        <li><a href="#pol-audit-title">${_('policies.audit_title')}</a></li>
+                        ${tocItems.map(([sec, key]) => `<li><a href="#pol-${sec}-title">${_('policies.' + key)}</a>${sec !== 'audit' ? `<span class="toc-state" data-toc-state="${sec}"></span>` : ''}</li>`).join('')}
                     </ul>
                 </nav>
+                </div>
 
                 <form id="policy-form" class="form-column policy-form" autocomplete="off" novalidate data-save-form>
                     <section class="section" data-section="connection" aria-labelledby="pol-connection-title">
@@ -198,6 +200,23 @@
                         <p class="state">${_('policies.audit_loading')}</p>
                     </div>
                 </section>
+            </div>
+
+            <!-- The organization these policies belong to, and the contents with each group's state -->
+            <aside class="page-side is-sticky policy-side" aria-labelledby="policy-org-name">
+                <section class="section policy-org-summary">
+                    <h2 id="policy-org-name"></h2>
+                    <dl class="facts" id="policy-org-facts">
+                        <dt>${_('nav.devices')}</dt><dd id="policy-org-devices">…</dd>
+                        <dt data-org-people>${_('policies.fact_people')}</dt><dd data-org-people id="policy-org-people">…</dd>
+                        <dt>${_('policies.fact_groups_set')}</dt><dd id="policy-org-groups">…</dd>
+                    </dl>
+                    <p class="form-hint">${_('policies.groups_default_hint')}</p>
+                    <p><a href="/organizations" id="policy-org-link">${_('policies.open_org')}</a></p>
+                </section>
+                <div class="policy-toc-slot" id="policy-toc-side"></div>
+            </aside>
+            </div>
             </div>
         </div>
     `

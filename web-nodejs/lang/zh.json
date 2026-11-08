@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "脚本",
         "cmd_type_restart_service": "重启服务",
-        "cmd_type_reboot": "重启设备"
+        "cmd_type_reboot": "重启设备",
+        "legend_open": "未确认",
+        "legend_acknowledged": "已确认"
     },
     "file_transfer": {
         "title": "文件传输",
@@ -2985,7 +2987,12 @@
         "edit_named": "编辑 {name}",
         "actions_for": "{name} 的更多操作",
         "enable": "启用",
-        "disable": "停用"
+        "disable": "停用",
+        "event_total_one": "{count} 个事件",
+        "event_total_many": "{count} 个事件",
+        "legend_blocked": "已阻止",
+        "legend_logged": "已记录",
+        "legend_allowed": "已允许"
     },
     "reports": {
         "title": "报表",
@@ -4563,7 +4570,13 @@
         "col_time": "时间",
         "col_policy": "策略",
         "col_source": "更改来源",
-        "audit_failed": "无法加载最近的更改。"
+        "audit_failed": "无法加载最近的更改。",
+        "fact_people": "成员",
+        "fact_groups_set": "已设置的策略组",
+        "groups_set_value": "{set} / {total}",
+        "groups_default_hint": "为此组织保存后，该组即算作已设置。",
+        "open_org": "打开组织",
+        "count_unknown": "不可用"
     },
     "attestation": {
         "title": "设备认证",
@@ -4605,7 +4618,10 @@
         "confirm_verify_title": "要将 {device} 标记为已验证吗？",
         "confirm_verify_message": "请在确认此设备是您预期的硬件后再执行。",
         "confirm_revoke_title": "要撤销 {device} 吗？",
-        "confirm_revoke_message": "其状态会变为“已撤销”。您之后可以再将其标记为已验证。"
+        "confirm_revoke_message": "其状态会变为“已撤销”。您之后可以再将其标记为已验证。",
+        "legend_verified": "已验证",
+        "legend_pending": "尚未验证",
+        "legend_failed": "指纹已更改或已撤销"
     },
     "fleet": {
         "title": "车队管理",
@@ -5536,7 +5552,12 @@
         "quotas_disk_label": "每个用户的磁盘空间 (GB)",
         "quotas_programs_label": "允许的程序",
         "quotas_programs_hint": "每行一个程序，例如 chrome.exe。",
-        "save_quotas": "保存使用限制"
+        "save_quotas": "保存使用限制",
+        "compliance_empty": "还没有设备报告它遵守哪些规则。",
+        "legend_all": "遵守全部规则",
+        "legend_not": "违反规则",
+        "legend_none": "无规则",
+        "by_category": "按规则类型"
     },
     "sdk_studio": {
         "title": "SDK Studio",

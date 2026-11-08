@@ -2685,7 +2685,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Skript",
         "cmd_type_restart_service": "Restartovat službu",
-        "cmd_type_reboot": "Restartovat zařízení"
+        "cmd_type_reboot": "Restartovat zařízení",
+        "legend_open": "nepotvrzeno",
+        "legend_acknowledged": "potvrzeno"
     },
     "file_transfer": {
         "title": "Přenos souborů",
@@ -2985,7 +2987,12 @@
         "edit_named": "Upravit {name}",
         "actions_for": "Další akce pro {name}",
         "enable": "Zapnout",
-        "disable": "Vypnout"
+        "disable": "Vypnout",
+        "event_total_one": "{count} událost",
+        "event_total_many": "Události: {count}",
+        "legend_blocked": "zablokováno",
+        "legend_logged": "zaznamenáno",
+        "legend_allowed": "povoleno"
     },
     "reports": {
         "title": "Reporty",
@@ -4457,7 +4464,13 @@
         "col_time": "Čas",
         "col_policy": "Zásada",
         "col_source": "Změněno z",
-        "audit_failed": "Poslední změny se nepodařilo načíst."
+        "audit_failed": "Poslední změny se nepodařilo načíst.",
+        "fact_people": "Lidé",
+        "fact_groups_set": "Nastavené skupiny politik",
+        "groups_set_value": "{set} z {total}",
+        "groups_default_hint": "Skupina se počítá jako nastavená, jakmile je pro tuto organizaci uložena.",
+        "open_org": "Otevřít organizaci",
+        "count_unknown": "Není k dispozici"
     },
     "attestation": {
         "title": "Atestace zařízení",
@@ -4499,7 +4512,10 @@
         "confirm_verify_title": "Označit {device} jako ověřené?",
         "confirm_verify_message": "Udělejte to, až ověříte, že jde o hardware, který očekáváte.",
         "confirm_revoke_title": "Odvolat {device}?",
-        "confirm_revoke_message": "Jeho stav se změní na Odvoláno. Později ho můžete znovu označit jako ověřené."
+        "confirm_revoke_message": "Jeho stav se změní na Odvoláno. Později ho můžete znovu označit jako ověřené.",
+        "legend_verified": "ověřeno",
+        "legend_pending": "zatím neověřeno",
+        "legend_failed": "otisk změněn nebo odvolán"
     },
     "fleet": {
         "title": "Správa flotily",
@@ -5430,7 +5446,12 @@
         "quotas_disk_label": "Místo na disku na uživatele (GB)",
         "quotas_programs_label": "Povolené programy",
         "quotas_programs_hint": "Jeden program na řádek, například chrome.exe.",
-        "save_quotas": "Uložit limity využití"
+        "save_quotas": "Uložit limity využití",
+        "compliance_empty": "Zatím žádné zařízení nenahlásilo, která pravidla dodržuje.",
+        "legend_all": "dodržují všechna pravidla",
+        "legend_not": "porušují pravidlo",
+        "legend_none": "nemají pravidla",
+        "by_category": "Podle druhu pravidla"
     },
     "sdk_studio": {
         "title": "SDK Studio",

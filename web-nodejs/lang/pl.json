@@ -2703,7 +2703,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Skrypt",
         "cmd_type_restart_service": "Uruchom ponownie usługę",
-        "cmd_type_reboot": "Uruchom ponownie urządzenie"
+        "cmd_type_reboot": "Uruchom ponownie urządzenie",
+        "legend_open": "niepotwierdzone",
+        "legend_acknowledged": "potwierdzone"
     },
     "file_transfer": {
         "title": "Przesyłanie plików",
@@ -3003,7 +3005,12 @@
         "edit_named": "Edytuj {name}",
         "actions_for": "Więcej działań dla {name}",
         "enable": "Włącz",
-        "disable": "Wyłącz"
+        "disable": "Wyłącz",
+        "event_total_one": "{count} zdarzenie",
+        "event_total_many": "Zdarzenia: {count}",
+        "legend_blocked": "zablokowane",
+        "legend_logged": "zarejestrowane",
+        "legend_allowed": "dozwolone"
     },
     "reports": {
         "title": "Raporty",
@@ -4581,7 +4588,13 @@
         "col_time": "Czas",
         "col_policy": "Zasada",
         "col_source": "Zmieniono z",
-        "audit_failed": "Nie udało się wczytać ostatnich zmian."
+        "audit_failed": "Nie udało się wczytać ostatnich zmian.",
+        "fact_people": "Osoby",
+        "fact_groups_set": "Ustawione grupy polityk",
+        "groups_set_value": "{set} z {total}",
+        "groups_default_hint": "Grupa jest ustawiona, gdy zostanie zapisana dla tej organizacji.",
+        "open_org": "Otwórz organizację",
+        "count_unknown": "Niedostępne"
     },
     "attestation": {
         "title": "Atestacja urządzeń",
@@ -4623,7 +4636,10 @@
         "confirm_verify_title": "Oznaczyć {device} jako zweryfikowane?",
         "confirm_verify_message": "Zrób to po sprawdzeniu, że urządzenie to oczekiwany sprzęt.",
         "confirm_revoke_title": "Odwołać {device}?",
-        "confirm_revoke_message": "Jego stan zmieni się na Odwołane. Później możesz ponownie oznaczyć je jako zweryfikowane."
+        "confirm_revoke_message": "Jego stan zmieni się na Odwołane. Później możesz ponownie oznaczyć je jako zweryfikowane.",
+        "legend_verified": "zweryfikowane",
+        "legend_pending": "jeszcze niezweryfikowane",
+        "legend_failed": "odcisk zmieniony lub odwołany"
     },
     "fleet": {
         "title": "Zarządzanie flotą",
@@ -5554,7 +5570,12 @@
         "quotas_disk_label": "Miejsce na dysku na użytkownika (GB)",
         "quotas_programs_label": "Dozwolone programy",
         "quotas_programs_hint": "Jeden program na wiersz, np. chrome.exe.",
-        "save_quotas": "Zapisz limity użycia"
+        "save_quotas": "Zapisz limity użycia",
+        "compliance_empty": "Żadne urządzenie nie zgłosiło jeszcze, których reguł przestrzega.",
+        "legend_all": "przestrzegają wszystkich reguł",
+        "legend_not": "łamią regułę",
+        "legend_none": "nie mają reguł",
+        "by_category": "Według rodzaju reguły"
     },
     "sdk_studio": {
         "title": "SDK Studio",

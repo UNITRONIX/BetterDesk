@@ -2691,7 +2691,9 @@
         "cmd_type_powershell": "PowerShell",
         "cmd_type_script": "Script",
         "cmd_type_restart_service": "Khởi động lại dịch vụ",
-        "cmd_type_reboot": "Khởi động lại thiết bị"
+        "cmd_type_reboot": "Khởi động lại thiết bị",
+        "legend_open": "chưa xác nhận",
+        "legend_acknowledged": "đã xác nhận"
     },
     "file_transfer": {
         "title": "Truyền tệp",
@@ -2991,7 +2993,12 @@
         "edit_named": "Sửa {name}",
         "actions_for": "Thao tác khác cho {name}",
         "enable": "Bật",
-        "disable": "Tắt"
+        "disable": "Tắt",
+        "event_total_one": "{count} sự kiện",
+        "event_total_many": "{count} sự kiện",
+        "legend_blocked": "đã chặn",
+        "legend_logged": "đã ghi lại",
+        "legend_allowed": "đã cho phép"
     },
     "reports": {
         "title": "Reports",
@@ -4463,7 +4470,13 @@
         "col_time": "Thời gian",
         "col_policy": "Chính sách",
         "col_source": "Thay đổi từ",
-        "audit_failed": "Không tải được các thay đổi gần đây."
+        "audit_failed": "Không tải được các thay đổi gần đây.",
+        "fact_people": "Thành viên",
+        "fact_groups_set": "Nhóm chính sách đã đặt",
+        "groups_set_value": "{set} trên {total}",
+        "groups_default_hint": "Một nhóm được tính là đã đặt khi đã được lưu cho tổ chức này.",
+        "open_org": "Mở tổ chức",
+        "count_unknown": "Không có"
     },
     "attestation": {
         "title": "Chứng thực thiết bị",
@@ -4505,7 +4518,10 @@
         "confirm_verify_title": "Đánh dấu {device} là đã xác minh?",
         "confirm_verify_message": "Hãy làm việc này sau khi bạn đã kiểm tra thiết bị đúng là phần cứng bạn mong đợi.",
         "confirm_revoke_title": "Thu hồi {device}?",
-        "confirm_revoke_message": "Trạng thái sẽ thành Đã thu hồi. Bạn có thể đánh dấu lại là đã xác minh sau."
+        "confirm_revoke_message": "Trạng thái sẽ thành Đã thu hồi. Bạn có thể đánh dấu lại là đã xác minh sau.",
+        "legend_verified": "đã xác minh",
+        "legend_pending": "chưa xác minh",
+        "legend_failed": "dấu vân tay đã đổi hoặc bị thu hồi"
     },
     "fleet": {
         "title": "Quản lý đội tàu",
@@ -5436,7 +5452,12 @@
         "quotas_disk_label": "Dung lượng đĩa mỗi người dùng (GB)",
         "quotas_programs_label": "Chương trình được phép",
         "quotas_programs_hint": "Mỗi dòng một chương trình, ví dụ chrome.exe.",
-        "save_quotas": "Lưu giới hạn sử dụng"
+        "save_quotas": "Lưu giới hạn sử dụng",
+        "compliance_empty": "Chưa có thiết bị nào báo cáo nó tuân thủ những quy tắc nào.",
+        "legend_all": "tuân thủ mọi quy tắc",
+        "legend_not": "vi phạm một quy tắc",
+        "legend_none": "không có quy tắc",
+        "by_category": "Theo loại quy tắc"
     },
     "sdk_studio": {
         "title": "SDK Studio",
