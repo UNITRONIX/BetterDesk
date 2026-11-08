@@ -130,7 +130,7 @@
         "passwords_mismatch": "Hesla se neshodují",
         "or": "nebo",
         "login_sso": "Přihlásit se pomocí SSO",
-        "login_sso_with": "Přihlásit se přes {{provider}}",
+        "login_sso_with": "Přihlásit se přes {provider}",
         "oidc_denied": "Přístup byl zamítnut poskytovatelem identity.",
         "oidc_invalid": "Neplatné zpětné volání OIDC. Zkuste to prosím znovu.",
         "oidc_failed": "Ověření OIDC se nezdařilo. Zkuste to prosím znovu.",

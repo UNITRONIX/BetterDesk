@@ -109,7 +109,7 @@
         "login_failed": "登录失败，请检查您的凭据。",
         "or": "或",
         "login_sso": "通过 SSO 登录",
-        "login_sso_with": "通过 {{provider}} 登录",
+        "login_sso_with": "通过 {provider} 登录",
         "oidc_denied": "身份提供商拒绝了访问。",
         "oidc_invalid": "无效的 OIDC 回调。请重试。",
         "oidc_failed": "OIDC 身份验证失败。请重试。",

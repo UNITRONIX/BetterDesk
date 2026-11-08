@@ -109,7 +109,7 @@
         "login_failed": "Logowanie nie powiodło się. Sprawdź dane logowania.",
         "or": "lub",
         "login_sso": "Zaloguj przez SSO",
-        "login_sso_with": "Zaloguj przez {{provider}}",
+        "login_sso_with": "Zaloguj przez {provider}",
         "oidc_denied": "Dostęp został odrzucony przez dostawcę tożsamości.",
         "oidc_invalid": "Nieprawidłowe wywołanie zwrotne OIDC. Spróbuj ponownie.",
         "oidc_failed": "Uwierzytelnianie OIDC nie powiodło się. Spróbuj ponownie.",

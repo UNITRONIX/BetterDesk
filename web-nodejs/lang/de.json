@@ -130,7 +130,7 @@
         "passwords_mismatch": "Passwörter stimmen nicht überein",
         "or": "oder",
         "login_sso": "Mit SSO anmelden",
-        "login_sso_with": "Mit {{provider}} anmelden",
+        "login_sso_with": "Mit {provider} anmelden",
         "oidc_denied": "Der Zugriff wurde vom Identitätsanbieter verweigert.",
         "oidc_invalid": "Ungültiger OIDC-Rückruf. Bitte versuchen Sie es erneut.",
         "oidc_failed": "OIDC-Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",

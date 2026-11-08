@@ -113,7 +113,7 @@
         "login_failed": "登錄失敗，請檢查您的憑據。",
         "or": "或",
         "login_sso": "通過 SSO 登錄",
-        "login_sso_with": "通過 {{provider}} 登錄",
+        "login_sso_with": "通過 {provider} 登錄",
         "oidc_denied": "身份提供商拒絕了訪問。",
         "oidc_invalid": "無效的 OIDC 回調。請重試。",
         "oidc_failed": "OIDC 身份驗證失敗。請重試。",

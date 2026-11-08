@@ -130,7 +130,7 @@
         "passwords_mismatch": "Wachtwoorden komen niet overeen",
         "or": "of",
         "login_sso": "Aanmelden met SSO",
-        "login_sso_with": "Aanmelden met {{provider}}",
+        "login_sso_with": "Aanmelden met {provider}",
         "oidc_denied": "Toegang is geweigerd door de identiteitsprovider.",
         "oidc_invalid": "Ongeldige OIDC-callback. Probeer het opnieuw.",
         "oidc_failed": "OIDC-authenticatie is mislukt. Probeer het opnieuw.",

@@ -130,7 +130,7 @@
         "passwords_mismatch": "As palavras-passe nao coincidem",
         "or": "ou",
         "login_sso": "Entrar com SSO",
-        "login_sso_with": "Entrar com {{provider}}",
+        "login_sso_with": "Entrar com {provider}",
         "oidc_denied": "O acesso foi negado pelo provedor de identidade.",
         "oidc_invalid": "Callback OIDC inválido. Tente novamente.",
         "oidc_failed": "A autenticação OIDC falhou. Tente novamente.",

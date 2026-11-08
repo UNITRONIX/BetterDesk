@@ -117,7 +117,7 @@
         "login_failed": "Login failed. Please check your credentials.",
         "or": "or",
         "login_sso": "Sign in with SSO",
-        "login_sso_with": "Sign in with {{provider}}",
+        "login_sso_with": "Sign in with {provider}",
         "oidc_denied": "Access was denied by the identity provider.",
         "oidc_invalid": "Invalid OIDC callback. Please try again.",
         "oidc_failed": "OIDC authentication failed. Please try again.",

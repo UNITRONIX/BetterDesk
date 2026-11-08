@@ -42,8 +42,12 @@
 }
 
 .login-title {
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-4);
     font-size: var(--text-lg);
+}
+
+.login-title:has(+ .login-subtitle) {
+    margin-bottom: var(--space-2);
 }
 
 .login-subtitle {
@@ -51,13 +55,14 @@
     color: var(--text-muted);
 }
 
-.login-title + .login-error,
-.login-title + .login-form {
-    margin-top: var(--space-4);
-}
-
 .login-error {
     margin-bottom: var(--space-4);
+}
+
+/* The reveal button fills the field's height, so it is a full touch target */
+.login-page .password-wrapper .password-toggle {
+    top: 0;
+    bottom: 0;
 }
 
 .login-form .remember-me {
@@ -135,6 +140,12 @@
 
 .login-attestation-badge {
     margin-top: var(--space-4);
+}
+
+/* server-attestation.css pins the badge to the bottom left; follow the text direction */
+.login-page .login-attestation-badge {
+    left: auto;
+    inset-inline-start: var(--space-4);
 }
 
 /* ── Optional promo panel ── */

@@ -61,6 +61,7 @@
         passwordToggle?.addEventListener('click', () => {
             const isPassword = passwordInput.type === 'password';
             passwordInput.type = isPassword ? 'text' : 'password';
+            passwordToggle.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
             passwordToggle.querySelector('.material-icons').textContent = 
                 isPassword ? 'visibility_off' : 'visibility';
         });
