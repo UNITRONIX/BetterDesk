@@ -1,24 +1,104 @@
+/**
+ * Translations page (/languages): how complete each language file is, and
+ * every text of one language next to English (opened with #<code>).
+ */
 (function () {
     'use strict';
 
     const _ = window._ || (k => k);
+    const SHOW_LIMIT = 200;
 
     let languages = [];
     let refKeyCount = 0;
 
+    // Open language
+    let detail = null;      // { code, rows: [{ key, en, value, missing }], missingKnown }
+    let detailFilter = 'all';
+    let detailQuery = '';
+    let detailRequest = 0;
+
+    function fmt(n) {
+        return Number(n || 0).toLocaleString(document.documentElement.lang || undefined);
+    }
+
+    function tpl(key, vars) {
+        let s = _(key);
+        Object.keys(vars || {}).forEach((k) => { s = s.split('{' + k + '}').join(vars[k]); });
+        return s;
+    }
+
+    // Language name in the language of the console, e.g. "Deutsch" -> "German" for an English UI
+    let displayNames = null;
+    try { displayNames = new Intl.DisplayNames([document.documentElement.lang || 'en'], { type: 'language' }); } catch (_e) { displayNames = null; }
+    function langName(lang) {
+        try {
+            const n = displayNames && displayNames.of(lang.code);
+            if (n && n !== lang.code) return n.charAt(0).toLocaleUpperCase() + n.slice(1);
+        } catch (_e) { /* fall through */ }
+        return lang.name || lang.code;
+    }
+
+    function escHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    async function getJson(url) {
+        const resp = await fetch(url, { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.json();
+    }
+
+    // ── All languages ──
+
     async function init() {
+        document.getElementById('lang-detail-back')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeDetail();
+        });
+        const search = document.getElementById('lang-detail-search');
+        search?.addEventListener('input', () => {
+            detailQuery = search.value.trim().toLowerCase();
+            renderDetailRows();
+        });
+        document.querySelectorAll('[data-lang-filter]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                detailFilter = btn.getAttribute('data-lang-filter');
+                document.querySelectorAll('[data-lang-filter]').forEach((b) => {
+                    const on = b === btn;
+                    b.classList.toggle('active', on);
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+                renderDetailRows();
+            });
+        });
+        document.getElementById('lang-tbody')?.addEventListener('click', (e) => {
+            const retry = e.target.closest('[data-lang-retry]');
+            if (retry) loadLanguages();
+        });
+        window.addEventListener('hashchange', applyHash);
+
         await loadLanguages();
+        applyHash();
     }
 
     async function loadLanguages() {
+        const tbody = document.getElementById('lang-tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="state-cell">${escHtml(_('languages.loading'))}</td></tr>`;
         try {
-            const resp = await fetch('/api/panel/languages');
-            const data = await resp.json();
+            const data = await getJson('/api/panel/languages');
             languages = data.languages || [];
             refKeyCount = data.refKeyCount || 0;
             render();
         } catch (err) {
             console.error('Failed to load languages:', err);
+            const stats = document.getElementById('lang-stats');
+            if (stats) stats.textContent = '';
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="6" class="state-cell is-error">${escHtml(_('languages.load_error'))}
+                    <button type="button" class="btn btn-sm" data-lang-retry>${escHtml(_('languages.try_again'))}</button></td></tr>`;
+            }
         }
     }
 
@@ -28,144 +108,224 @@
     }
 
     function renderStats() {
-        const container = document.getElementById('lang-stats');
-        if (!container) return;
+        const el = document.getElementById('lang-stats');
+        if (!el) return;
+        if (!languages.length) { el.textContent = ''; return; }
+        const review = languages.filter(l => l.needs_review).length;
+        el.innerHTML = tpl('languages.count_line', {
+            total: `<strong>${fmt(languages.length)}</strong>`,
+            review: `<strong>${fmt(review)}</strong>`,
+            keys: `<strong>${fmt(refKeyCount)}</strong>`
+        });
+    }
 
-        const total = languages.length;
-        const complete = languages.filter(l => l.coverage === 100 && !l.needs_review).length;
-        const reviewCount = languages.filter(l => l.needs_review).length;
-
-        container.innerHTML = `
-            <div class="lang-stat-card stat-ref">
-                <div class="stat-value">${total}</div>
-                <div class="stat-label">${_('languages.total_languages')}</div>
-            </div>
-            <div class="lang-stat-card stat-complete">
-                <div class="stat-value">${complete}</div>
-                <div class="stat-label">${_('languages.fully_translated')}</div>
-            </div>
-            <div class="lang-stat-card stat-review">
-                <div class="stat-value">${reviewCount}</div>
-                <div class="stat-label">${_('languages.needs_review')}</div>
-            </div>
-            <div class="lang-stat-card">
-                <div class="stat-value">${refKeyCount}</div>
-                <div class="stat-label">${_('languages.reference_keys')}</div>
-            </div>
-        `;
+    function statusOf(lang) {
+        if (lang.error) return { cls: 'error', label: _('languages.status_error') };
+        if (lang.is_reference) return { cls: 'active', label: _('languages.status_reference') };
+        if (lang.missing_keys > 0) return { cls: 'warning', label: _('languages.status_incomplete') };
+        if (lang.needs_review) return { cls: 'pending', label: _('languages.status_review') };
+        return { cls: 'active', label: _('languages.status_complete') };
     }
 
     function renderGrid() {
-        const container = document.getElementById('lang-grid');
-        if (!container) return;
+        const tbody = document.getElementById('lang-tbody');
+        if (!tbody) return;
 
         if (languages.length === 0) {
-            container.innerHTML = `<p style="color: var(--text-secondary); text-align: center; grid-column: 1/-1;">${_('languages.no_languages')}</p>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="state-cell">${escHtml(_('languages.no_languages'))}</td></tr>`;
             return;
         }
 
-        container.innerHTML = languages.map(lang => {
-            const covClass = lang.coverage === 100 ? 'cov-100'
-                : lang.coverage >= 90 ? 'cov-high'
-                : lang.coverage >= 50 ? 'cov-medium'
-                : 'cov-low';
-
-            const badges = [];
-            if (lang.is_reference) badges.push(`<span class="lang-badge badge-reference">${_('languages.badge_reference')}</span>`);
-            if (lang.needs_review) badges.push(`<span class="lang-badge badge-review">${_('languages.badge_review')}</span>`);
-            if (lang.rtl) badges.push(`<span class="lang-badge badge-rtl">RTL</span>`);
-            if (lang.coverage === 100 && !lang.needs_review && !lang.is_reference) badges.push(`<span class="lang-badge badge-complete">${_('languages.badge_complete')}</span>`);
-
-            const keyStats = [];
-            if (lang.missing_keys > 0) keyStats.push(`<span class="missing">${lang.missing_keys} ${_('languages.missing')}</span>`);
-            if (lang.extra_keys > 0) keyStats.push(`<span class="extra">${lang.extra_keys} ${_('languages.extra')}</span>`);
-
+        tbody.innerHTML = languages.map((lang) => {
+            const st = statusOf(lang);
+            const cov = Math.max(0, Math.min(100, Number(lang.coverage) || 0));
+            const subStatus = lang.needs_review && st.cls !== 'pending' && !lang.is_reference
+                ? `<span class="cell-sub">${escHtml(_('languages.status_review'))}</span>` : '';
+            const extra = lang.extra_keys > 0
+                ? `<span class="cell-sub">${escHtml(tpl('languages.extra_count', { n: fmt(lang.extra_keys) }))}</span>` : '';
+            const missing = lang.is_reference ? '–' : fmt(lang.missing_keys);
             return `
-                <div class="lang-card ${lang.is_reference ? 'is-reference' : ''}" data-code="${lang.code}">
-                    <div class="lang-card-header">
-                        <span class="lang-flag">${lang.flag || '🏳️'}</span>
-                        <div class="lang-info">
-                            <div class="lang-name">${escHtml(lang.name)}</div>
-                            <div class="lang-native">${escHtml(lang.native)}</div>
+                <tr data-code="${escHtml(lang.code)}">
+                    <td><a class="lang-name" href="#${encodeURIComponent(lang.code)}">${escHtml(langName(lang))}</a><span class="cell-sub mono">${escHtml(lang.code)}</span></td>
+                    <td class="col-native"><span lang="${escHtml(lang.code)}" dir="${lang.rtl ? 'rtl' : 'ltr'}">${escHtml(lang.native)}</span>${lang.rtl ? `<span class="cell-sub">${escHtml(_('languages.rtl'))}</span>` : ''}</td>
+                    <td class="col-coverage">
+                        <div class="meter${cov < 100 ? ' is-high' : ''}">
+                            <span class="meter-bar" aria-hidden="true"><span class="meter-fill" style="width:${cov}%"></span></span>
+                            <span class="meter-value">${cov} %</span>
                         </div>
-                        <span class="lang-code-badge">${lang.code}</span>
-                    </div>
-                    ${badges.length ? `<div class="lang-badges">${badges.join('')}</div>` : ''}
-                    <div class="lang-coverage">
-                        <div class="lang-coverage-bar">
-                            <div class="lang-coverage-fill ${covClass}" style="width: ${lang.coverage}%"></div>
-                        </div>
-                        <div class="lang-coverage-text">
-                            <span>${lang.coverage}% ${_('languages.coverage')}</span>
-                            <span>${lang.total_keys} ${_('languages.keys')}</span>
-                        </div>
-                    </div>
-                    ${keyStats.length ? `<div class="lang-key-stats">${keyStats.join('')}</div>` : ''}
-                    ${!lang.is_reference ? `
-                        <div class="lang-actions">
-                            ${lang.missing_keys > 0 ? `<button data-bd-call="Languages.viewMissing" data-bd-args='["${lang.code}"]' title="${_('languages.view_missing')}">
-                                <span class="material-icons-round">search</span> ${_('languages.view_missing')}
-                            </button>` : ''}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
+                    </td>
+                    <td><span class="status ${st.cls}">${escHtml(st.label)}</span>${subStatus}</td>
+                    <td class="col-num col-missing">${missing}${extra}</td>
+                    <td class="actions">
+                        <a class="btn btn-sm" href="#${encodeURIComponent(lang.code)}"
+                           aria-label="${escHtml(tpl('languages.show_texts_for', { language: langName(lang) }))}">${escHtml(_('languages.show_texts'))}</a>
+                    </td>
+                </tr>`;
         }).join('');
     }
 
-    async function viewMissing(code) {
-        try {
-            const resp = await fetch(`/api/panel/languages/${encodeURIComponent(code)}/missing`);
-            const data = await resp.json();
+    // ── One language ──
 
-            const overlay = document.getElementById('lang-detail-overlay');
-            const panel = document.getElementById('lang-detail-content');
-            if (!overlay || !panel) return;
-
-            const lang = languages.find(l => l.code === code);
-            const title = lang ? `${lang.flag || ''} ${lang.name} (${code})` : code;
-
-            let html = `<h3>${_('languages.missing_keys_for')} ${escHtml(title)}</h3>`;
-
-            if (data.missing && data.missing.length > 0) {
-                html += `<p style="font-size:12px;color:var(--text-secondary)">${data.missing.length} ${_('languages.missing_keys_count')}</p>`;
-                html += '<ul class="lang-key-list">';
-                for (const item of data.missing.slice(0, 100)) {
-                    html += `<li>
-                        <div class="lang-key-name">${escHtml(item.key)}</div>
-                        <div class="lang-key-value">EN: ${escHtml(item.en_value || '')}</div>
-                        <div class="lang-key-value">PL: ${escHtml(item.pl_value || '')}</div>
-                    </li>`;
-                }
-                if (data.missing.length > 100) {
-                    html += `<li style="color:var(--text-secondary);text-align:center;padding:12px;">... ${_('languages.and_more').replace('{n}', data.missing.length - 100)}</li>`;
-                }
-                html += '</ul>';
-            } else {
-                html += `<p style="color:#3fb950;text-align:center;padding:20px;">${_('languages.all_keys_present')}</p>`;
-            }
-
-            panel.innerHTML = html;
-            overlay.classList.add('active');
-        } catch (err) {
-            console.error('Failed to load missing keys:', err);
+    function applyHash() {
+        const code = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+        if (code && /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(code)) {
+            openDetail(code);
+        } else {
+            showList();
         }
     }
 
+    function showList() {
+        const list = document.getElementById('lang-grid');
+        const det = document.getElementById('lang-detail-overlay');
+        const wasOpen = det && !det.hidden;
+        if (det) det.hidden = true;
+        if (list) list.hidden = false;
+        if (wasOpen && detail) {
+            // The button, or on phones (where it is hidden) the language name
+            const row = document.querySelector(`#lang-tbody tr[data-code="${CSS.escape(detail.code)}"]`);
+            const target = [row?.querySelector('.btn'), row?.querySelector('.lang-name')].find(el => el && el.offsetParent !== null);
+            target?.focus();
+        }
+    }
+
+    function flatten(obj, prefix, out) {
+        Object.keys(obj || {}).forEach((k) => {
+            const v = obj[k];
+            const key = prefix ? prefix + '.' + k : k;
+            if (v && typeof v === 'object' && !Array.isArray(v)) flatten(v, key, out);
+            else out.set(key, v == null ? '' : String(v));
+        });
+        return out;
+    }
+
+    async function openDetail(code) {
+        const list = document.getElementById('lang-grid');
+        const det = document.getElementById('lang-detail-overlay');
+        const content = document.getElementById('lang-detail-content');
+        const title = document.getElementById('lang-detail-title');
+        const note = document.getElementById('lang-detail-note');
+        const count = document.getElementById('lang-detail-count');
+        if (!det || !content) return;
+
+        const lang = languages.find(l => l.code === code) || { code, name: code, rtl: false, is_reference: false };
+        // A different language starts with an empty search and all texts
+        if (!detail || detail.code !== code) {
+            detailQuery = '';
+            detailFilter = 'all';
+            const search = document.getElementById('lang-detail-search');
+            if (search) search.value = '';
+            document.querySelectorAll('[data-lang-filter]').forEach((b) => {
+                const on = b.getAttribute('data-lang-filter') === 'all';
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }
+        if (list) list.hidden = true;
+        det.hidden = false;
+        const name = langName(lang);
+        if (title) title.textContent = `${name} (${code})`;
+        if (note) note.textContent = tpl('languages.detail_note', { language: name, file: `lang/${code}.json` });
+        if (count) count.textContent = '';
+        content.innerHTML = `<p class="state">${escHtml(_('languages.detail_loading'))}</p>`;
+        title?.focus();
+
+        const req = ++detailRequest;
+        try {
+            const [en, own, missing] = await Promise.all([
+                getJson('/api/i18n/translations/en'),
+                code === 'en' ? Promise.resolve(null) : getJson('/api/i18n/translations/' + encodeURIComponent(code)),
+                code === 'en' ? Promise.resolve({ missing: [] }) : getJson('/api/panel/languages/' + encodeURIComponent(code) + '/missing').catch(() => null)
+            ]);
+            if (req !== detailRequest) return;
+
+            const enMap = flatten(en.data || {}, '', new Map());
+            const ownMap = own ? flatten(own.data || {}, '', new Map()) : enMap;
+            const missingSet = new Set(((missing && missing.missing) || []).map(m => m.key));
+            const rows = [];
+            enMap.forEach((enValue, key) => {
+                if (key === 'meta' || key.startsWith('meta.') || key.startsWith('_meta')) return;
+                const isMissing = missingSet.has(key);
+                rows.push({ key, en: enValue, value: isMissing ? '' : (ownMap.get(key) ?? ''), missing: isMissing });
+            });
+            (missing && missing.missing || []).forEach((m) => {
+                if (!enMap.has(m.key)) rows.push({ key: m.key, en: m.en_value || '', value: '', missing: true });
+            });
+            detail = { code, lang, rows, missingKnown: !!missing };
+            renderDetailRows();
+        } catch (err) {
+            if (req !== detailRequest) return;
+            console.error('Failed to load texts:', err);
+            detail = null;
+            content.innerHTML = `<p class="state is-error">${escHtml(_('languages.detail_error'))}
+                <button type="button" class="btn btn-sm" id="lang-detail-retry">${escHtml(_('languages.try_again'))}</button></p>`;
+            document.getElementById('lang-detail-retry')?.addEventListener('click', () => openDetail(code));
+        }
+    }
+
+    function renderDetailRows() {
+        const content = document.getElementById('lang-detail-content');
+        const count = document.getElementById('lang-detail-count');
+        if (!content || !detail) return;
+
+        const q = detailQuery;
+        const rows = detail.rows.filter((r) => {
+            if (detailFilter === 'missing' && !r.missing) return false;
+            if (!q) return true;
+            return r.key.toLowerCase().includes(q) || r.en.toLowerCase().includes(q) || r.value.toLowerCase().includes(q);
+        });
+        const shown = rows.slice(0, SHOW_LIMIT);
+
+        let line;
+        if (!q && detailFilter === 'all') line = tpl('languages.detail_total', { n: `<strong>${fmt(rows.length)}</strong>` });
+        else line = tpl('languages.detail_matches', { n: `<strong>${fmt(rows.length)}</strong>` });
+        if (rows.length > SHOW_LIMIT) line += ' ' + escHtml(tpl('languages.detail_limit', { n: fmt(SHOW_LIMIT) }));
+        if (!detail.missingKnown) line += ' ' + escHtml(_('languages.missing_unknown'));
+        if (count) count.innerHTML = line;
+
+        if (!rows.length) {
+            const msg = detailFilter === 'missing' && !q ? _('languages.none_missing') : _('languages.no_match');
+            content.innerHTML = `<p class="state">${escHtml(msg)}</p>`;
+            return;
+        }
+
+        const isEn = detail.code === 'en';
+        const dir = detail.lang.rtl ? 'rtl' : 'ltr';
+        content.innerHTML = `
+            <div class="table-scroll">
+                <table class="data-table lang-texts-table${isEn ? ' is-single' : ''}">
+                    <thead><tr>
+                        <th scope="col" class="col-key">${escHtml(_('languages.col_key'))}</th>
+                        <th scope="col">${escHtml(_('languages.col_english'))}</th>
+                        ${isEn ? '' : `<th scope="col">${escHtml(langName(detail.lang))}</th>`}
+                    </tr></thead>
+                    <tbody>
+                        ${shown.map(r => `
+                            <tr>
+                                <td class="col-key"><code>${escHtml(r.key)}</code></td>
+                                <td lang="en" dir="ltr">${escHtml(r.en)}</td>
+                                ${isEn ? '' : (r.missing
+                                    ? `<td><span class="status warning">${escHtml(_('languages.missing_text'))}</span></td>`
+                                    : `<td lang="${escHtml(detail.code)}" dir="${dir}">${escHtml(r.value)}</td>`)}
+                            </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    }
+
+    // Kept for old callers: open the language view
+    function viewMissing(code) {
+        location.hash = '#' + encodeURIComponent(code);
+    }
+
     function closeDetail() {
-        const overlay = document.getElementById('lang-detail-overlay');
-        if (overlay) overlay.classList.remove('active');
+        if (location.hash) {
+            history.pushState('', document.title, location.pathname + location.search);
+        }
+        showList();
     }
 
-    function escHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    // Public API
     window.Languages = { init, viewMissing, closeDetail };
 
-    // Self-initialize (inline <script> blocked by CSP nonce policy)
     document.addEventListener('DOMContentLoaded', init);
 })();

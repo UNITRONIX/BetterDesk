@@ -1,36 +1,60 @@
 <%- include('layouts/main', {
-    title: typeof title !== 'undefined' ? title : 'Languages',
-    pageStyles: typeof pageStyles !== 'undefined' ? pageStyles : ['languages'],
-    pageScripts: typeof pageScripts !== 'undefined' ? pageScripts : ['languages'],
-    currentPage: typeof currentPage !== 'undefined' ? currentPage : 'languages',
-    breadcrumb: typeof breadcrumb !== 'undefined' ? breadcrumb : [{ label: 'Languages' }],
+    title: _('nav.languages'),
+    uiReworked: true,
+    pageStyles: ['ui/languages'],
+    pageScripts: ['languages'],
+    currentPage: 'languages',
+    breadcrumb: [{ label: _('nav.languages') }],
     body: `
-    <div class="page-content" style="max-width: 1400px; margin: 0 auto;">
-        <div class="lang-header">
-            <h2>${_('languages.title')}</h2>
-        </div>
-
-        <div class="lang-stats-row" id="lang-stats"></div>
-
-        <div class="lang-grid" id="lang-grid">
-            <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-secondary);">
-                <span class="material-icons-round" style="font-size:32px; opacity:0.4;">hourglass_empty</span>
-                <p>${_('common.loading')}</p>
+        <div class="page page-wide languages-page">
+            <div class="page-head">
+                <h1>${_('nav.languages')}</h1>
+                <p class="page-description">${_('languages.page_description')}</p>
             </div>
-        </div>
 
-        <!-- Detail overlay -->
-        <div class="lang-detail-overlay" id="lang-detail-overlay" data-bd-call="Languages.closeDetail" data-bd-self-only="1">
-            <div class="lang-detail-panel">
-                <div class="lang-detail-header">
-                    <span></span>
-                    <button class="lang-detail-close" data-bd-call="Languages.closeDetail">
-                        <span class="material-icons-round">close</span>
-                    </button>
+            <!-- All languages -->
+            <section class="section" id="lang-grid" aria-label="${_('nav.languages')}">
+                <p class="count-line" id="lang-stats" aria-live="polite"></p>
+                <div class="table-scroll">
+                    <table class="data-table languages-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${_('languages.col_language')}</th>
+                                <th scope="col" class="col-native">${_('languages.col_native')}</th>
+                                <th scope="col" class="col-coverage">${_('languages.col_coverage')}</th>
+                                <th scope="col">${_('languages.col_status')}</th>
+                                <th scope="col" class="col-num col-missing">${_('languages.col_missing')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="lang-tbody">
+                            <tr><td colspan="6" class="state-cell">${_('languages.loading')}</td></tr>
+                        </tbody>
+                    </table>
                 </div>
+            </section>
+
+            <!-- One language: every text in English and in that language -->
+            <section class="section lang-detail" id="lang-detail-overlay" aria-labelledby="lang-detail-title" hidden>
+                <p><a href="#" class="lang-back" id="lang-detail-back">${_('languages.back')}</a></p>
+                <div class="section-head"><h2 id="lang-detail-title" tabindex="-1"></h2></div>
+                <p class="section-note" id="lang-detail-note"></p>
+
+                <div class="toolbar">
+                    <div class="toolbar-search search-wrapper">
+                        <span class="material-icons" aria-hidden="true">search</span>
+                        <input type="search" class="form-input" id="lang-detail-search"
+                            aria-label="${_('languages.search_texts')}" placeholder="${_('languages.search_texts')}">
+                    </div>
+                    <div class="toolbar-filters" role="group" aria-label="${_('languages.col_status')}">
+                        <button type="button" class="filter-btn active" aria-pressed="true" data-lang-filter="all">${_('languages.filter_all')}</button>
+                        <button type="button" class="filter-btn" aria-pressed="false" data-lang-filter="missing">${_('languages.filter_missing')}</button>
+                    </div>
+                </div>
+                <p class="count-line" id="lang-detail-count" aria-live="polite"></p>
+
                 <div id="lang-detail-content"></div>
-            </div>
+            </section>
         </div>
-    </div>
     `
 }) %>

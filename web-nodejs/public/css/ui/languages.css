@@ -1,0 +1,104 @@
+/* Translations: the language table and the texts of one language.
+   Only what the components don't cover. */
+
+.languages-table .lang-name {
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.languages-table .lang-name:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.languages-table .col-coverage {
+    width: 220px;
+    min-width: 160px;
+}
+
+.languages-table .col-num {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.lang-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h-sm);
+}
+
+/* Texts of one language: key, English, translation */
+.lang-texts-table td {
+    vertical-align: top;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+    overflow-wrap: anywhere;
+}
+
+.lang-texts-table .col-key {
+    width: 28%;
+    min-width: 180px;
+}
+
+.lang-texts-table .col-key code {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+    /* Phones: language, how much is translated, status. The name opens the texts. */
+    .languages-table .col-native,
+    .languages-table .col-missing,
+    .languages-table .actions,
+    .languages-table .meter-bar {
+        display: none;
+    }
+
+    .languages-table .col-coverage {
+        width: auto;
+        min-width: 0;
+    }
+
+    .languages-table .lang-name {
+        text-decoration: underline;
+        color: var(--accent);
+    }
+
+    /* Key on its own line above the two texts */
+    .lang-texts-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .lang-texts-table th,
+    .lang-texts-table td {
+        height: auto;
+        border-bottom: 0;
+    }
+
+    .lang-texts-table .col-key {
+        grid-column: 1 / -1;
+        width: auto;
+        min-width: 0;
+        padding-bottom: 0;
+    }
+
+    .lang-texts-table thead .col-key {
+        display: none;
+    }
+}
+
+@media (pointer: coarse) {
+    .lang-back {
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 640px) {
+    .lang-texts-table.is-single tr {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

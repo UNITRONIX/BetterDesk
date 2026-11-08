@@ -175,7 +175,7 @@ router.get('/api/panel/languages/:code/missing', fileAccessLimiter, requireAuth,
 
         const extra = [...langKeySet].filter(k => !refKeySet.has(k) && !k.startsWith('_meta') && !k.startsWith('meta.'));
 
-        res.json({ code, missing, extra, total: refKeySet.size });
+        res.json({ code: req.params.code, missing, extra, total: refKeySet.size });
     } catch (err) {
         res.status(500).json({ error: 'Failed to analyze language' });
     }
