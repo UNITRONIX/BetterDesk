@@ -1788,3 +1788,15 @@ input[type="file"]::file-selector-button:hover {
 .share-legend .key.is-muted { background: var(--border); }
 .share-legend .key.is-warning { background: var(--warning); }
 .share-legend .key.is-danger { background: var(--danger); }
+
+/* ===== Language flag (partials/lang-flag.ejs) =====
+   A Twemoji flag before a language name; decorative, the name carries the meaning.
+   The SVG is a 36x36 box with the flag in the middle, so every flag sits on the
+   text's centre line in the same 20px box. */
+.lang-flag {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
