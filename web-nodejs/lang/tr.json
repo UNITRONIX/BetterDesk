@@ -38,7 +38,12 @@
         "edit": "Düzenle",
         "yes": "Evet",
         "no": "Hayır",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Açık",
+        "off": "Kapalı",
+        "none": "Yok",
+        "copy_value": "{value} kopyala",
+        "copy_failed": "Kopyalanamadı. Metni seçip kendiniz kopyalayın."
     },
     "nav": {
         "main": "Main",

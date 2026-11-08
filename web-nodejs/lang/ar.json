@@ -39,7 +39,12 @@
         "edit": "يحرر",
         "yes": "نعم",
         "no": "لا",
-        "not_available": "غير متاح"
+        "not_available": "غير متاح",
+        "on": "مفعّل",
+        "off": "معطّل",
+        "none": "لا يوجد",
+        "copy_value": "نسخ {value}",
+        "copy_failed": "تعذّر النسخ. حدّد النص وانسخه يدويًا."
     },
     "nav": {
         "main": "Main",

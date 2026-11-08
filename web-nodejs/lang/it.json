@@ -32,7 +32,12 @@
         "edit": "Modifica",
         "yes": "Sì",
         "no": "No",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Attivo",
+        "off": "Disattivo",
+        "none": "Nessuno",
+        "copy_value": "Copia {value}",
+        "copy_failed": "Impossibile copiare. Selezioni il testo e lo copi manualmente."
     },
     "nav": {
         "main": "Principale",

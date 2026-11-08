@@ -32,7 +32,12 @@
         "edit": "Bearbeiten",
         "yes": "Ja",
         "no": "Nein",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Ein",
+        "off": "Aus",
+        "none": "Keine Angabe",
+        "copy_value": "{value} kopieren",
+        "copy_failed": "Kopieren nicht möglich. Bitte markieren Sie den Text und kopieren Sie ihn selbst."
     },
     "nav": {
         "main": "Hauptmenü",

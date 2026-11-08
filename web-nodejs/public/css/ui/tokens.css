@@ -34,6 +34,10 @@
        per-browser palette may hand over the solid accent). Text on it is --text. */
     --accent-tint: color-mix(in srgb, var(--accent) 15%, transparent);
     --on-accent: #ffffff;
+    /* Tags and initials (components.css "Data display"): a faint tint of the
+       text colour, so it shows on --bg, --bg-subtle, a hovered row and in
+       dialogs alike. Text on it is --text. */
+    --tag-bg: color-mix(in srgb, var(--text) 9%, transparent);
     --success: var(--accent-green, #1c7a3b);
     --danger: var(--accent-red, #b3261e);
     --danger-hover: var(--accent-red-hover, #8c1d17);
@@ -134,6 +138,17 @@
     --os-apple: #68717a;
     --os-chrome: #c5221f;
 
+    /* Avatar initials (components.css .avatar.is-c1..6): one colour per name,
+       the initials in it on a 16 % tint of it. 4.5:1 on the tint, checked by
+       .ui-rework/tools/data-display-contrast.mjs. Kept apart from the status
+       colours, so an avatar never reads as a state. */
+    --avatar-1: #1858b8;
+    --avatar-2: #974614;
+    --avatar-3: #08655f;
+    --avatar-4: #6a4bb5;
+    --avatar-5: #9a3d6b;
+    --avatar-6: #4a5a62;
+
     /* Layout */
     --sidebar-w: 232px;
     --topbar-h: 48px;
@@ -162,6 +177,12 @@ html[data-a11y-contrast="yellow-black"] {
     --os-linux: #d9ad3c;
     --os-apple: #9aa4a8;
     --os-chrome: #f28b82;
+    --avatar-1: #79b8ff;
+    --avatar-2: #f0a070;
+    --avatar-3: #4fd1c5;
+    --avatar-4: #b9a4f5;
+    --avatar-5: #eb9cc4;
+    --avatar-6: #a9bcc4;
 }
 
 html[data-a11y-contrast="high-light"] {

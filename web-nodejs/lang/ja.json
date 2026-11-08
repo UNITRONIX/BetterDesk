@@ -32,7 +32,12 @@
         "edit": "編集",
         "yes": "はい",
         "no": "いいえ",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "オン",
+        "off": "オフ",
+        "none": "なし",
+        "copy_value": "{value} をコピー",
+        "copy_failed": "コピーできませんでした。テキストを選択して手動でコピーしてください。"
     },
     "nav": {
         "main": "メイン",

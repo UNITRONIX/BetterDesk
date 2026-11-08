@@ -32,7 +32,12 @@
         "edit": "编辑",
         "yes": "是",
         "no": "否",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "开",
+        "off": "关",
+        "none": "无",
+        "copy_value": "复制 {value}",
+        "copy_failed": "无法复制。请选中文本后手动复制。"
     },
     "nav": {
         "main": "主要",

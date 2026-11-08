@@ -38,7 +38,12 @@
         "edit": "Chỉnh sửa",
         "yes": "Có",
         "no": "Không",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Bật",
+        "off": "Tắt",
+        "none": "Không có",
+        "copy_value": "Sao chép {value}",
+        "copy_failed": "Không sao chép được. Hãy chọn văn bản và tự sao chép."
     },
     "nav": {
         "main": "Main",

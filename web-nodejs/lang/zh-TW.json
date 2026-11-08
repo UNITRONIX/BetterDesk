@@ -36,7 +36,12 @@
         "edit": "編輯",
         "yes": "是",
         "no": "否",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "開",
+        "off": "關",
+        "none": "無",
+        "copy_value": "複製 {value}",
+        "copy_failed": "無法複製。請選取文字後自行複製。"
     },
     "nav": {
         "main": "主要",

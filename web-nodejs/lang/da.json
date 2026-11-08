@@ -38,7 +38,12 @@
         "edit": "Rediger",
         "yes": "Ja",
         "no": "Nej",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Til",
+        "off": "Fra",
+        "none": "Ingen",
+        "copy_value": "Kopiér {value}",
+        "copy_failed": "Kunne ikke kopiere. Markér teksten, og kopiér den selv."
     },
     "nav": {
         "main": "Hoved",

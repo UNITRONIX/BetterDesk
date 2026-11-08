@@ -38,7 +38,12 @@
         "edit": "Sunting",
         "yes": "Ya",
         "no": "Tidak",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Aktif",
+        "off": "Nonaktif",
+        "none": "Tidak ada",
+        "copy_value": "Salin {value}",
+        "copy_failed": "Tidak dapat menyalin. Pilih teksnya dan salin sendiri."
     },
     "nav": {
         "main": "Main",

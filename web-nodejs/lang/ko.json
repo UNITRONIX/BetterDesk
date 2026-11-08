@@ -32,7 +32,12 @@
         "edit": "편집",
         "yes": "예",
         "no": "아니요",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "켜짐",
+        "off": "꺼짐",
+        "none": "없음",
+        "copy_value": "{value} 복사",
+        "copy_failed": "복사하지 못했습니다. 텍스트를 선택해 직접 복사하세요."
     },
     "nav": {
         "main": "메인",

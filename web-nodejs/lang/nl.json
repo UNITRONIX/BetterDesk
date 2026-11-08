@@ -32,7 +32,12 @@
         "edit": "Bewerken",
         "yes": "Ja",
         "no": "Nee",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Aan",
+        "off": "Uit",
+        "none": "Geen",
+        "copy_value": "{value} kopiëren",
+        "copy_failed": "Kopiëren is mislukt. Selecteer de tekst en kopieer hem zelf."
     },
     "nav": {
         "main": "Hoofdmenu",

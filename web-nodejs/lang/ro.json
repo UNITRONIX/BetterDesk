@@ -38,7 +38,12 @@
         "edit": "Editați",
         "yes": "Da",
         "no": "Nu",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Pornit",
+        "off": "Oprit",
+        "none": "Niciunul",
+        "copy_value": "Copiază {value}",
+        "copy_failed": "Nu s-a putut copia. Selectați textul și copiați-l manual."
     },
     "nav": {
         "main": "Principal",

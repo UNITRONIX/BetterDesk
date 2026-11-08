@@ -38,7 +38,12 @@
         "edit": "Редагувати",
         "yes": "Так",
         "no": "Ні",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Увімкнено",
+        "off": "Вимкнено",
+        "none": "Немає",
+        "copy_value": "Копіювати {value}",
+        "copy_failed": "Не вдалося скопіювати. Виділіть текст і скопіюйте його вручну."
     },
     "nav": {
         "main": "Головне",

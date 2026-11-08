@@ -38,7 +38,12 @@
         "edit": "Muokkaa",
         "yes": "Kyllä",
         "no": "Ei",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Päällä",
+        "off": "Pois",
+        "none": "Ei mitään",
+        "copy_value": "Kopioi {value}",
+        "copy_failed": "Kopiointi epäonnistui. Valitse teksti ja kopioi se itse."
     },
     "nav": {
         "main": "Pää",

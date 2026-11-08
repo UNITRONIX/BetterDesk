@@ -32,7 +32,12 @@
         "edit": "Editar",
         "yes": "Sim",
         "no": "Não",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Ativado",
+        "off": "Desativado",
+        "none": "Nenhum",
+        "copy_value": "Copiar {value}",
+        "copy_failed": "Não foi possível copiar. Selecione o texto e copie-o manualmente."
     },
     "nav": {
         "main": "Principal",

@@ -489,62 +489,10 @@ th.sortable.sort-desc {
     margin-inline: calc(-1 * var(--row-pad-x));
 }
 
-/* ── Status as text with a small mark ── */
+/* ── Status as text with a small mark: see "Data display" at the end ── */
 
-.status {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    white-space: nowrap;
-}
-
-.status::before {
-    content: "";
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 1.5px solid var(--text-muted);
-    flex-shrink: 0;
-}
-
-.status.online::before,
-.status.is-online::before {
-    background: var(--success);
-    border-color: var(--success);
-}
-
-.status.banned,
-.status.is-banned,
-.status.error {
-    color: var(--danger);
-}
-
-.status.banned::before,
-.status.is-banned::before,
-.status.error::before {
-    border-radius: 1px;
-    border-color: var(--danger);
-    background: var(--danger);
-}
-
-.status.warning,
-.status.no_signal,
-.status.degraded {
-    color: var(--warning);
-}
-
-.status.warning::before,
-.status.no_signal::before,
-.status.degraded::before {
-    border-color: var(--warning);
-}
-
-.status.offline,
-.status.deleted {
-    color: var(--text-muted);
-}
-
-/* Tags as plain text: "office, finance" */
+/* Tags as plain text: "office, finance". Older lists only; new ones use
+   Utils.tagsHtml (see "Data display"). */
 .tag-list {
     color: var(--text-muted);
 }
@@ -1435,23 +1383,6 @@ a.list-row:hover,
     font-family: var(--mono);
 }
 
-/* More status words */
-.status.ok::before,
-.status.success::before,
-.status.active::before {
-    background: var(--success);
-    border-color: var(--success);
-}
-
-.status.ok,
-.status.success {
-    color: var(--success);
-}
-
-.status.pending::before {
-    border-color: var(--warning);
-}
-
 /* ── Loading, empty and error states: one sentence, optional action ── */
 
 .state {
@@ -1921,4 +1852,252 @@ input[type="file"]::file-selector-button:hover {
     width: 20px;
     height: 20px;
     vertical-align: middle;
+}
+
+/* ===== Data display =====
+   One look per kind of value, the same on every page. Helpers in
+   public/js/utils.js build the markup (Utils.statusHtml, tagHtml, tagsHtml,
+   valueHtml, timeHtml, versionHtml, platformHtml, userHtml, emptyHtml,
+   booleanHtml); the table of kinds is in .ui-rework/GUIDE.md "Data display". */
+
+/* Status: a mark and a word. Five tones with fixed meanings, each with its
+   own shape, so colour is never the only cue (and the word is always there):
+     good     filled circle   online, approved, enabled, done, running
+     waiting  hourglass       waits for someone or something: pending, queued
+     neutral  hollow circle   offline, off, stopped, rejected, expired, closed
+     warning  triangle        needs a look: degraded, no signal, nearly full
+     danger   filled square   failed, error, banned, critical
+   The older words (online, ok, pending, offline, banned, ...) map onto the
+   tones, so existing markup keeps working. The word keeps the text colour
+   except for neutral (muted), warning and danger (their colour). */
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    white-space: nowrap;
+}
+
+.status::before {
+    content: "";
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 8px;
+    height: 8px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 50%;
+    forced-color-adjust: none;
+}
+
+.status:is(.is-good, .online, .is-online, .ok, .success, .active, .running)::before {
+    border-color: var(--success);
+    background: var(--success);
+}
+
+.status:is(.is-waiting, .pending)::before {
+    width: 8px;
+    height: 10px;
+    border: 0;
+    border-radius: 0;
+    background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, 62% 50%, 100% 100%, 0 100%, 38% 50%);
+}
+
+.status:is(.is-neutral, .offline, .deleted, .stopped) {
+    color: var(--text-muted);
+}
+
+.status:is(.is-warning, .warning, .no_signal, .degraded) {
+    color: var(--warning);
+}
+
+.status:is(.is-warning, .warning, .no_signal, .degraded)::before {
+    width: 10px;
+    height: 9px;
+    border: 0;
+    border-radius: 0;
+    background: var(--warning);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.status:is(.is-danger, .banned, .is-banned, .error) {
+    color: var(--danger);
+}
+
+.status:is(.is-danger, .banned, .is-banned, .error)::before {
+    border-color: var(--danger);
+    border-radius: 1px;
+    background: var(--danger);
+}
+
+/* Tag: a short label from a fixed set or typed by people (device tags,
+   "came in via", device type, role, event kind). A quiet token: a faint
+   tint of the text colour on any surface, no border, 3 px corners, never a
+   pill. An icon only where it tells values apart at a glance. */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    max-width: 100%;
+    min-height: 22px;
+    padding: 0 6px;
+    border-radius: var(--radius-sm);
+    background: var(--tag-bg);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    line-height: 1.3;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.tag > .material-icons {
+    font-size: 15px;
+    color: var(--text-muted);
+}
+
+.tag-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Several tags: wrap with a small gap; no commas */
+.tag-set {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+@media (forced-colors: active) {
+    .tag { border: 1px solid CanvasText; }
+}
+
+/* A value people copy (ID, address, key) with a copy button that shows on
+   hover or focus of its row, and always on touch. Space for the button is
+   kept, so nothing moves when it appears. Long values are cut with an
+   ellipsis; the full value is in the title and is what gets copied. */
+.value-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+.value-copy > :first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.value-copy > .copy-btn {
+    opacity: 0;
+}
+
+:is(tr, li, dd, .list-row):hover .value-copy > .copy-btn,
+.value-copy:hover > .copy-btn,
+.value-copy > .copy-btn:focus-visible,
+.value-copy > .copy-btn.copied {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .value-copy > .copy-btn {
+        opacity: 1;
+    }
+}
+
+/* Numbers in a table column: right-aligned (end), figures of equal width */
+:is(.data-table, .table) :is(td, th).is-num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.tabular,
+.version,
+time.time {
+    font-variant-numeric: tabular-nums;
+}
+
+time.time {
+    white-space: nowrap;
+}
+
+/* Operating system: the mark and the name on one line */
+.platform {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    white-space: nowrap;
+}
+
+/* A person: the name, with an avatar before it only where people are the
+   subject of the list (users, members, who is signed in). The avatar is one
+   fixed-size box with the control radius (never round): it holds either the
+   profile picture (<img alt="">, cut to fill) or the initials in a colour
+   picked from the name (.is-c1 ... .is-c6, Utils.avatarColor). Sizes:
+   24 px in rows, .is-md 32 px, .is-lg 48 px (a profile). The name next to it
+   carries the meaning, so the avatar is hidden from screen readers. */
+.user {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.avatar {
+    --avatar-size: 24px;
+    --avatar-c: var(--text-muted);
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--avatar-c) 16%, var(--bg));
+    color: var(--avatar-c);
+    font-size: calc(var(--avatar-size) * 0.42);
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: middle;
+    user-select: none;
+}
+
+.avatar.is-md { --avatar-size: 32px; }
+.avatar.is-lg { --avatar-size: 48px; }
+
+.avatar > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* A picture sits on no tint */
+.avatar:has(> img) {
+    background: var(--bg-subtle);
+}
+
+.avatar.is-c1 { --avatar-c: var(--avatar-1); }
+.avatar.is-c2 { --avatar-c: var(--avatar-2); }
+.avatar.is-c3 { --avatar-c: var(--avatar-3); }
+.avatar.is-c4 { --avatar-c: var(--avatar-4); }
+.avatar.is-c5 { --avatar-c: var(--avatar-5); }
+.avatar.is-c6 { --avatar-c: var(--avatar-6); }
+
+@media (forced-colors: active) {
+    .avatar { border: 1px solid CanvasText; }
+}
+
+/* No value: one muted dash (screen readers hear "None"), or a muted word
+   where the word says more ("Never", "Unassigned") */
+.value-empty {
+    color: var(--text-muted);
 }

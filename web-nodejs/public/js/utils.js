@@ -492,8 +492,247 @@ const Utils = {
             if (label && label !== key) return label;
         }
         return fallback || raw;
+    },
+
+    /* ── Data display ──
+     * One look per kind of value on every page (components.css "Data display",
+     * .ui-rework/GUIDE.md "Data display"). Every helper returns an HTML string
+     * and escapes what it is given. */
+
+    /** Escape text for HTML text and attribute values (quotes too) */
+    escapeAttr(text) {
+        return String(text === null || text === undefined ? '' : text)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    },
+
+    /** Translation with an English fallback while a new key is not loaded yet */
+    _t(key, fallback, params) {
+        if (typeof _ === 'function') {
+            const text = _(key, params || {});
+            if (text && text !== key) return text;
+        }
+        return String(fallback).replace(/\{(\w+)\}/g, (m, k) => (params && params[k] !== undefined ? params[k] : m));
+    },
+
+    /**
+     * Status words grouped by tone. Each tone has one colour and one shape:
+     * good (filled circle), waiting (hourglass), neutral (hollow circle),
+     * warning (triangle), danger (square).
+     */
+    STATUS_TONES: {
+        good: ['online', 'ok', 'success', 'active', 'running', 'enabled', 'on', 'approved', 'accepted', 'passed',
+            'done', 'completed', 'connected', 'resolved', 'healthy', 'valid', 'allowed', 'yes'],
+        waiting: ['pending', 'waiting', 'queued', 'checking', 'scheduled', 'in_progress', 'starting', 'sending', 'open'],
+        neutral: ['offline', 'stopped', 'inactive', 'disabled', 'off', 'rejected', 'revoked', 'expired', 'deleted',
+            'closed', 'cancelled', 'canceled', 'skipped', 'paused', 'draft', 'unknown', 'low', 'no', 'none'],
+        warning: ['warning', 'degraded', 'no_signal', 'partial', 'expiring', 'outdated', 'medium'],
+        danger: ['error', 'failed', 'failure', 'banned', 'blocked', 'denied', 'invalid', 'unreachable', 'down',
+            'critical', 'high']
+    },
+
+    /** Tone for a status word ("approved" → "good"); unknown words are neutral */
+    statusTone(word) {
+        const w = String(word || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+        if (Utils.STATUS_TONES[w]) return w;
+        for (const [tone, words] of Object.entries(Utils.STATUS_TONES)) {
+            if (words.includes(w)) return tone;
+        }
+        return 'neutral';
+    },
+
+    /**
+     * Status: a mark and a word. `tone` is a tone (good, waiting, neutral,
+     * warning, danger) or a status word that maps to one ("pending").
+     * options.title: longer explanation on hover.
+     */
+    statusHtml(tone, label, options = {}) {
+        const t = Utils.statusTone(tone);
+        const title = options && options.title ? ` title="${Utils.escapeAttr(options.title)}"` : '';
+        return `<span class="status is-${t}"${title}>${Utils.escapeAttr(label)}</span>`;
+    },
+
+    /** Yes/no setting as a status: "On" (good) or "Off" (neutral); options.on/off change the words */
+    booleanHtml(value, options = {}) {
+        const on = options.on || Utils._t('common.on', 'On');
+        const off = options.off || Utils._t('common.off', 'Off');
+        return Utils.statusHtml(value ? 'good' : 'neutral', value ? on : off);
+    },
+
+    /** Tag token for a category, source, type or a tag people set. options.icon: a Utils.ICONS meaning or icon name */
+    tagHtml(label, options = {}) {
+        const icon = options.icon ? Utils.icon(options.icon) : '';
+        const title = options.title ? ` title="${Utils.escapeAttr(options.title)}"` : '';
+        return `<span class="tag"${title}>${icon}<span class="tag-text">${Utils.escapeAttr(label)}</span></span>`;
+    },
+
+    /** Several tags (array or comma-separated text); none gives the empty dash */
+    tagsHtml(list, options = {}) {
+        const items = (Array.isArray(list) ? list : String(list || '').split(','))
+            .map((s) => String(s === null || s === undefined ? '' : s).trim()).filter(Boolean);
+        if (!items.length) return Utils.emptyHtml(options.empty);
+        return `<span class="tag-set">${items.map((s) => Utils.tagHtml(s, { title: s.length > 24 ? s : '' })).join('')}</span>`;
+    },
+
+    /**
+     * A value people read exactly or copy: ID, IP address, host:port, key.
+     * options.mono (default true), options.copy (adds a copy button that shows
+     * on row hover; the full value is copied), options.label (names the value
+     * in the button's label, default the value itself), options.empty.
+     */
+    valueHtml(text, options = {}) {
+        if (text === null || text === undefined || String(text).trim() === '') return Utils.emptyHtml(options.empty);
+        const value = String(text);
+        const mono = options.mono !== false;
+        const inner = `<span class="${mono ? 'mono' : 'value-text'}"${options.copy ? ` title="${Utils.escapeAttr(value)}"` : ''}>${Utils.escapeAttr(value)}</span>`;
+        if (!options.copy) return inner;
+        const aria = Utils._t('common.copy_value', 'Copy {value}', { value: options.label || value });
+        return `<span class="value-copy">${inner}<button type="button" class="copy-btn" data-copy-value="${Utils.escapeAttr(value)}" aria-label="${Utils.escapeAttr(aria)}" title="${Utils.escapeAttr(aria)}">${Utils.icon('copy')}</button></span>`;
+    },
+
+    /**
+     * A point in time as <time datetime>: "3h ago" with the full date and time
+     * in the tooltip and for screen readers. Older than a week, or with
+     * options.relative = false, the date itself. options.format: Intl options
+     * for the date (e.g. date only). options.empty: word for no date
+     * ("Never"); without it a dash.
+     */
+    timeHtml(value, options = {}) {
+        const date = Utils.parseDate(value);
+        if (!date) return Utils.emptyHtml(options.empty);
+        const full = Utils.formatDate(date);
+        const shown = options.relative === false
+            ? Utils.formatDate(date, options.format || {})
+            : Utils.formatRelativeTime(date);
+        const extra = shown !== full ? `<span class="sr-only"> (${Utils.escapeAttr(full)})</span>` : '';
+        return `<time class="time" datetime="${date.toISOString()}" title="${Utils.escapeAttr(full)}">${Utils.escapeAttr(shown)}${extra}</time>`;
+    },
+
+    /** Version number without a leading "v": "1.4.2" */
+    versionHtml(version, options = {}) {
+        const v = String(version === null || version === undefined ? '' : version).trim().replace(/^v(?=\d)/i, '');
+        if (!v) return Utils.emptyHtml(options.empty);
+        return `<span class="version">${Utils.escapeAttr(v)}</span>`;
+    },
+
+    /** Operating system: its mark and its name ("Windows 11 Pro") */
+    platformHtml(platform, options = {}) {
+        const p = String(platform || '').trim();
+        if (!p) return Utils.emptyHtml(options.empty);
+        return `<span class="platform">${Utils.getPlatformIconHtml(p)}<span>${Utils.escapeAttr(p)}</span></span>`;
+    },
+
+    /** Initials for a name: "Linus Rath" → "LR", "admin" → "A" */
+    initials(name) {
+        const words = String(name || '').trim().split(/[\s._@-]+/).filter(Boolean);
+        const first = (w) => Array.from(w)[0] || '';
+        return (words.length > 1 ? first(words[0]) + first(words[1]) : first(words[0] || '')).toUpperCase();
+    },
+
+    /** Avatar colour for a name, 1..6 (.avatar.is-c1..6): the same name always gets the same colour */
+    avatarColor(name) {
+        let h = 0;
+        for (const ch of String(name || '').trim().toLowerCase()) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+        return (h % 6) + 1;
+    },
+
+    /**
+     * The avatar box (components.css .avatar): the picture when there is one,
+     * otherwise the initials in the name's colour. Decorative: the name is
+     * shown next to it. options.picture: image URL; options.size: 'md' | 'lg'.
+     */
+    avatarBoxHtml(name, options = {}) {
+        const size = options.size === 'md' || options.size === 'lg' ? ` is-${options.size}` : '';
+        if (options.picture) {
+            return `<span class="avatar${size}" aria-hidden="true"><img src="${Utils.escapeAttr(options.picture)}" alt="" loading="lazy"></span>`;
+        }
+        return `<span class="avatar${size} is-c${Utils.avatarColor(name)}" aria-hidden="true">${Utils.escapeAttr(Utils.initials(name))}</span>`;
+    },
+
+    /**
+     * A person's name. options.avatar adds the avatar box before it (only where
+     * people are the subject of the list); options.picture and options.size go
+     * to the box.
+     */
+    userHtml(name, options = {}) {
+        const n = String(name || '').trim();
+        if (!n) return Utils.emptyHtml(options.empty);
+        if (!options.avatar) return `<span class="user-name">${Utils.escapeAttr(n)}</span>`;
+        return `<span class="user">${Utils.avatarBoxHtml(n, options)}<span class="user-name">${Utils.escapeAttr(n)}</span></span>`;
+    },
+
+    /**
+     * No value. Without a word: one muted dash, read as "None". With a word
+     * ("Never", "Unassigned"): that word, muted.
+     */
+    emptyHtml(word) {
+        if (word) return `<span class="value-empty">${Utils.escapeAttr(word)}</span>`;
+        return `<span class="value-empty"><span aria-hidden="true">–</span><span class="sr-only">${Utils.escapeAttr(Utils._t('common.none', 'None'))}</span></span>`;
+    },
+
+    /** Number in the console language: 12 345 */
+    formatNumber(value, options = {}) {
+        const n = Number(value);
+        if (value === null || value === undefined || value === '' || !isFinite(n)) return '';
+        return new Intl.NumberFormat(Utils._dateLocale(), options).format(n);
+    },
+
+    /** Bytes as B, kB, MB, GB, TB with one decimal: "1.5 GB" */
+    formatBytes(bytes) {
+        const n = Number(bytes);
+        if (bytes === null || bytes === undefined || bytes === '' || !isFinite(n) || n < 0) return '';
+        const units = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte', 'petabyte'];
+        let i = 0;
+        let v = n;
+        while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+        return Utils.formatNumber(v, { style: 'unit', unit: units[i], unitDisplay: 'short', maximumFractionDigits: i ? 1 : 0 });
+    },
+
+    /** Seconds as the two largest units: "2d 3h", "5m 40s" (localised short units) */
+    formatDuration(seconds) {
+        let s = Math.round(Number(seconds));
+        if (seconds === null || seconds === undefined || seconds === '' || !isFinite(s) || s < 0) return '';
+        const parts = [['day', 86400], ['hour', 3600], ['minute', 60], ['second', 1]]
+            .map(([unit, size]) => { const n = Math.floor(s / size); s -= n * size; return [unit, n]; });
+        const start = parts.findIndex(([, n]) => n > 0);
+        if (start === -1) return Utils.formatNumber(0, { style: 'unit', unit: 'second', unitDisplay: 'narrow' });
+        return parts.slice(start, start + 2).filter(([, n]) => n > 0)
+            .map(([unit, n]) => Utils.formatNumber(n, { style: 'unit', unit, unitDisplay: 'narrow' })).join(' ');
+    },
+
+    /** Percent of 0..100 (options.fraction: value is 0..1): "62 %" or "62%" as the language writes it */
+    formatPercent(value, options = {}) {
+        const n = Number(value);
+        if (value === null || value === undefined || value === '' || !isFinite(n)) return '';
+        return Utils.formatNumber(options.fraction ? n : n / 100, { style: 'percent', maximumFractionDigits: options.digits === undefined ? 0 : options.digits });
     }
 };
+
+// Copy buttons from Utils.valueHtml: copy the value, show a tick for a moment
+// and confirm with a toast.
+if (typeof document !== 'undefined') {
+    document.addEventListener('click', async (event) => {
+        const btn = event.target && event.target.closest ? event.target.closest('[data-copy-value]') : null;
+        if (!btn) return;
+        event.preventDefault();
+        let ok = false;
+        try { ok = await Utils.copyToClipboard(btn.getAttribute('data-copy-value')); } catch (e) { ok = false; }
+        if (ok) {
+            const icon = btn.querySelector('.material-icons');
+            btn.classList.add('copied');
+            if (icon) icon.textContent = 'check';
+            clearTimeout(btn._copyTimer);
+            btn._copyTimer = setTimeout(() => {
+                btn.classList.remove('copied');
+                if (icon) icon.textContent = Utils.ICONS.copy;
+            }, 1500);
+        }
+        if (window.Notifications) {
+            if (ok) window.Notifications.success(Utils._t('common.copied', 'Copied to clipboard'));
+            else window.Notifications.error(Utils._t('common.copy_failed', 'Could not copy. Select the text and copy it yourself.'));
+        }
+    });
+}
 
 // Export for modules or attach to window
 if (typeof module !== 'undefined' && module.exports) {

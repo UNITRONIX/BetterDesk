@@ -38,7 +38,12 @@
         "edit": "แก้ไข",
         "yes": "ใช่",
         "no": "ไม่",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "เปิด",
+        "off": "ปิด",
+        "none": "ไม่มี",
+        "copy_value": "คัดลอก {value}",
+        "copy_failed": "คัดลอกไม่ได้ เลือกข้อความแล้วคัดลอกด้วยตนเอง"
     },
     "nav": {
         "main": "Main",

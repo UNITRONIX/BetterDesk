@@ -36,7 +36,12 @@
         "edit": "Modifier",
         "yes": "Ja",
         "no": "Nein",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Activé",
+        "off": "Désactivé",
+        "none": "Aucun",
+        "copy_value": "Copier {value}",
+        "copy_failed": "Impossible de copier. Sélectionnez le texte et copiez-le vous-même."
     },
     "nav": {
         "main": "Principal",

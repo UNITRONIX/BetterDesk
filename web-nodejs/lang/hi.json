@@ -38,7 +38,12 @@
         "edit": "संपादन करना",
         "yes": "हाँ",
         "no": "नहीं",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "चालू",
+        "off": "बंद",
+        "none": "कोई नहीं",
+        "copy_value": "{value} कॉपी करें",
+        "copy_failed": "कॉपी नहीं हो सका। टेक्स्ट चुनें और खुद कॉपी करें।"
     },
     "nav": {
         "main": "Main",

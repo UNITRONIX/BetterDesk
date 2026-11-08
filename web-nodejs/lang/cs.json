@@ -32,7 +32,12 @@
         "edit": "Upravit",
         "yes": "Ano",
         "no": "Ne",
-        "not_available": "Not available"
+        "not_available": "Not available",
+        "on": "Zapnuto",
+        "off": "Vypnuto",
+        "none": "Žádné",
+        "copy_value": "Kopírovat {value}",
+        "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně."
     },
     "nav": {
         "main": "Hlavní",
