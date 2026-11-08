@@ -267,7 +267,12 @@
 }
 
 .branding-form-root {
-    max-width: var(--measure);
+    max-width: none;
+}
+
+/* The settings grid inside the Appearance fieldset keeps the section gap */
+.branding-form-root .settings-grid {
+    row-gap: var(--space-6);
 }
 
 .font-source-tabs {
@@ -687,17 +692,101 @@
     }
 }
 
-/* ── Layout: forms in the main column, a side column beside them ──
-   The forms keep their measure; the side column sits right next to
-   them instead of at the far edge of a wide window. Advanced keeps the
-   full width for its file editor. */
+/* ── Settings page layout ──
+   Shared by every settings tab. Forms sit in the main column, what helps
+   with them in the side column beside it.
+   - The page is as wide as two form columns plus the side column, so a
+     wide window is used without stretching fields. Advanced keeps the
+     full width for its file editor.
+   - .settings-grid: independent sections (or separate forms) side by side
+     once the main column has room for two, one under the other before
+     that. Put each column's content in a .settings-stack, or make the
+     sections direct children. One section's fields never split across
+     the two columns.
+   - Page head: on wide screens the settings search sits above the side
+     column, in line with it, instead of alone at the far end.
+   - [data-show-when] (settings.js, initShowWhen): a field or group that is
+     shown only while a switch is on or a choice is picked.
+   - .value-field.is-one-line: a long ID or key on one line, cut off with
+     an ellipsis; the whole value is in its title and Copy copies it.
+   - .form-input.is-host: a host name or URL (about 40 characters). */
 
 .settings-page:not([data-current-tab="advanced"]) {
-    max-width: calc(var(--measure) + var(--side-w) + var(--space-7));
+    max-width: calc(2 * var(--measure) + var(--side-w) + 2 * var(--space-7));
 }
 
 .settings-cols > .page-main {
     gap: var(--space-6);
+    container: settings-main / inline-size;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6) var(--space-7);
+    align-items: start;
+}
+
+.settings-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    min-width: 0;
+}
+
+@container settings-main (min-width: 880px) {
+    .settings-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .settings-page > .page-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, var(--side-w));
+        gap: var(--space-1) var(--space-7);
+        align-items: center;
+    }
+
+    .settings-page > .page-head > h1 {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .settings-page > .page-head > .page-description {
+        grid-column: 1;
+        grid-row: 2;
+        margin-top: 0;
+        padding-inline-end: 0;
+        max-width: var(--measure);
+    }
+
+    .settings-page > .page-head > .settings-search {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+}
+
+.settings-page .form-input.is-host {
+    max-width: 40ch;
+}
+
+.settings-page .value-field.is-one-line {
+    display: flex;
+    width: 100%;
+    max-width: var(--measure);
+}
+
+.settings-page .value-field.is-one-line > code {
+    display: block;
+    flex: 1 1 auto;
+    overflow: hidden;
+    padding-block: calc((var(--control-h-sm) - 1.5em) / 2);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+    line-height: 1.5;
 }
 
 /* Contents: a row of links above the forms, a list in the side column */
@@ -765,6 +854,43 @@
 /* Connection strategy diagram */
 .settings-diagram {
     margin-bottom: var(--space-3);
+}
+
+/* ── General ── */
+
+.settings-page .section-head h3 {
+    margin-inline-end: auto;
+}
+
+/* The whole page is one form: the sections inside keep their spacing */
+#general-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+#general-form > .save-bar {
+    margin-top: 0;
+}
+
+.settings-mesh-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.settings-mesh-body[hidden] {
+    display: none;
+}
+
+/* MeshIDs are long: the column takes what is left and cuts the value */
+.mesh-groups-table .mesh-meshid-cell {
+    width: 50%;
+    max-width: 0;
+}
+
+.mesh-groups-table .value-field.is-one-line {
+    min-width: 12ch;
 }
 
 /* Appearance preview: a small sample of the console in the chosen
@@ -856,4 +982,118 @@
     --logo-square: #58a6ff;
     --logo-circle: #a3e635;
     --logo-overlap: #3fd0c4;
+}
+
+/* ── Settings page layout: one form with a wide side column ──
+   .settings-cols.is-form-side (Email, Time zones): a tab that is one form
+   keeps the form at its measure and gives the rest of the width to the
+   side column. What is in the side column (.settings-side-grid) sits in
+   two columns once that column has room. */
+
+.settings-side-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6) var(--space-7);
+    align-items: start;
+}
+
+@media (min-width: 1200px) {
+    .settings-cols.is-form-side {
+        grid-template-columns: minmax(0, var(--measure)) minmax(280px, 1fr);
+    }
+
+    .settings-cols.is-form-side > .page-side {
+        container: settings-side / inline-size;
+    }
+}
+
+@container settings-side (min-width: 720px) {
+    .settings-side-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ── Backup ── */
+
+/* On wide screens all four sections are in view at once: the contents
+   list is left out of the side column, which keeps the schedule's state
+   and what a backup holds. Below 1200 px it stays above the forms. */
+.settings-page[data-current-tab="backup"] .settings-toc.is-side {
+    display: none;
+}
+
+/* The network share form inside its disclosure: same spacing as a section */
+#scheduled-backup-smb-panel > .section-note {
+    margin-top: 0;
+}
+
+#scheduled-backup-smb-panel > form {
+    margin-top: var(--space-3);
+}
+
+/* Restore: each step appears when the one before it is done */
+#restore-options-hint {
+    margin: 0;
+}
+
+/* ── Updates (layout) ── */
+
+#update-channel-select {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+#update-channel-select .choice-list {
+    margin-inline: calc(-1 * var(--row-pad-x));
+}
+
+/* ── Email ── */
+
+/* (layout only: .is-form-side above) */
+
+/* ── Time zones ── */
+
+#time-billing-timezone {
+    flex: 1 1 260px;
+    max-width: 48ch;
+}
+
+.settings-time-form .disclosure > summary {
+    font-weight: 600;
+}
+
+.settings-time-form .disclosure[open] > .form-group,
+.settings-time-form .disclosure[open] > .settings-subfields {
+    padding-inline-start: var(--space-5);
+}
+
+/* ── Advanced (layout) ── */
+
+/* Files that don't exist on this server: folded under the list */
+.advanced-config-missing {
+    padding: var(--space-2) var(--row-pad-x);
+}
+
+.advanced-config-missing .disclosure > summary {
+    color: var(--text-muted);
+}
+
+.advanced-config-missing-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+}
+
+.advanced-config-missing-list .cell-sub {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.advanced-config-editor-meta .value-field.is-one-line {
+    max-width: none;
 }

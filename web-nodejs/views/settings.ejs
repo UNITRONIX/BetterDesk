@@ -121,96 +121,104 @@
                 <li><a href="#device-scope-settings-panel">${_('settings.device_scope_title')}</a></li>
                 <li><a href="#availability-history-settings-panel">${_('settings.availability_history_title')}</a></li>
                 <li><a href="#mesh-settings-panel">${_('mesh.settings_title')}</a></li>
-                <li><a href="#server-info">${_('settings.server_info')}</a></li>
             </ul>
         </nav>
 
+        <!-- One form, one save: each section is a part that settings.js saves
+             to its own endpoint when it has changes, and reports each result. -->
+        <form id="general-form" data-save-form novalidate>
+        <div class="settings-grid">
+        <div class="settings-stack">
         <section class="section" id="public-endpoints" aria-labelledby="public-endpoints-title">
             <h2 id="public-endpoints-title">${_('settings.public_endpoints_title')}</h2>
             <p class="section-note">${_('settings.public_endpoints_desc')}</p>
-            <form class="form-column" id="public-endpoints-form" data-save-form novalidate>
+            <div class="form-column" id="public-endpoints-form" data-save-part="endpoints">
                 <div class="form-group">
                     <label class="form-label" for="public-server-id">${_('settings.public_endpoints_server_id')}</label>
-                    <input type="text" id="public-server-id" class="form-input mono-input" autocomplete="off" spellcheck="false"
+                    <input type="text" id="public-server-id" class="form-input mono-input is-host" autocomplete="off" spellcheck="false"
                            placeholder="${_('settings.public_endpoints_server_id_placeholder')}">
                     <p class="form-hint">${_('settings.general.endpoint_id_hint')}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="public-relay-server">${_('settings.public_endpoints_relay')}</label>
-                    <input type="text" id="public-relay-server" class="form-input mono-input" autocomplete="off" spellcheck="false"
+                    <input type="text" id="public-relay-server" class="form-input mono-input is-host" autocomplete="off" spellcheck="false"
                            placeholder="${_('settings.public_endpoints_relay_placeholder')}">
                     <p class="form-hint">${_('settings.general.endpoint_relay_hint')}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="public-api-url">${_('settings.public_endpoints_api_url')}</label>
-                    <input type="text" id="public-api-url" class="form-input mono-input" autocomplete="off" spellcheck="false"
+                    <input type="text" id="public-api-url" class="form-input mono-input is-host" autocomplete="off" spellcheck="false"
                            placeholder="${_('settings.public_endpoints_api_url_placeholder')}">
-                    <p class="form-hint">${_('settings.public_endpoints_api_url_hint')}</p>
+                    <p class="form-hint">${_('settings.general.endpoint_api_hint')}</p>
                 </div>
-                <p class="form-hint">${_('settings.public_endpoints_hint')}</p>
+                <p class="form-hint">${_('settings.general.endpoints_when')}</p>
                 <p class="field-effect">${_('settings.general.endpoints_effect')}</p>
-                ${saveBar(_('settings.public_endpoints_save'), '', 'public-endpoints-save')}
-            </form>
+            </div>
         </section>
 
         <section class="section" id="connection-mode-section" aria-labelledby="connection-mode-title">
             <h2 id="connection-mode-title">${_('settings.connection_mode_title')}</h2>
             <p class="section-note">${_('settings.connection_mode_desc')}</p>
-            <form class="form-column" id="connection-mode-form" data-save-form novalidate>
-                <div role="radiogroup" aria-label="${_('settings.connection_mode_label')}"><ul class="choice-list">
-                    <li><label class="choice">
-                        <input type="radio" name="connection-mode" value="p2p_first" id="conn-mode-p2p">
-                        <span class="choice-title">${_('settings.general.conn_p2p')}</span>
-                        <span class="choice-desc">${_('settings.ui.connection_p2p_hint')}</span>
-                    </label></li>
-                    <li><label class="choice">
-                        <input type="radio" name="connection-mode" value="relay_only" id="conn-mode-relay">
-                        <span class="choice-title">${_('settings.general.conn_relay')}</span>
-                        <span class="choice-desc">${_('settings.ui.connection_relay_hint')}</span>
-                    </label></li>
-                </ul></div>
+            <div class="form-column" id="connection-mode-form" data-save-part="connection">
+                <p class="notice" id="connection-mode-source" hidden></p>
+                <fieldset class="settings-fieldset" id="connection-mode-fields">
+                    <legend class="sr-only">${_('settings.connection_mode_title')}</legend>
+                    <div role="radiogroup" aria-label="${_('settings.connection_mode_label')}"><ul class="choice-list">
+                        <li><label class="choice">
+                            <input type="radio" name="connection-mode" value="p2p_first" id="conn-mode-p2p">
+                            <span class="choice-title">${_('settings.general.conn_p2p')}</span>
+                            <span class="choice-desc">${_('settings.general.conn_p2p_desc')}</span>
+                        </label></li>
+                        <li><label class="choice">
+                            <input type="radio" name="connection-mode" value="relay_only" id="conn-mode-relay">
+                            <span class="choice-title">${_('settings.general.conn_relay')}</span>
+                            <span class="choice-desc">${_('settings.general.conn_relay_desc')}</span>
+                        </label></li>
+                    </ul></div>
+                    <details class="disclosure connection-mode-advanced">
+                        <summary>${_('settings.connection_mode_advanced')}</summary>
+                        <div class="disclosure-body">
+                            <div class="form-group">
+                                <label class="form-label" for="conn-p2p-fallback-ms">${_('settings.general.conn_fallback_label')}</label>
+                                <input type="number" id="conn-p2p-fallback-ms" class="form-input is-short" min="0" max="30000" step="100" value="2000">
+                                <p class="form-hint">${_('settings.general.conn_fallback_hint')}</p>
+                            </div>
+                            <label class="check-field">
+                                <input type="checkbox" id="conn-same-nat-relay" checked>
+                                <span class="check-label">${_('settings.general.conn_same_nat')}</span>
+                                <span class="form-hint">${_('settings.general.conn_same_nat_hint')}</span>
+                            </label>
+                            <label class="check-field">
+                                <input type="checkbox" id="conn-allow-shared-nat-initiator">
+                                <span class="check-label">${_('settings.general.conn_shared_nat')}</span>
+                                <span class="form-hint">${_('settings.general.conn_shared_nat_hint')}</span>
+                            </label>
+                            <label class="check-field">
+                                <input type="checkbox" id="conn-logged-in-only-initiator">
+                                <span class="check-label">${_('settings.general.conn_logged_in')}</span>
+                                <span class="form-hint">${_('settings.general.conn_logged_in_hint')}</span>
+                            </label>
+                            <label class="check-field">
+                                <input type="checkbox" id="conn-operator-only-outbound">
+                                <span class="check-label">${_('settings.general.conn_operator_only')}</span>
+                                <span class="form-hint">${_('settings.general.conn_operator_only_hint')}</span>
+                            </label>
+                        </div>
+                    </details>
+                </fieldset>
+                <p class="field-effect" id="connection-mode-effect">${_('settings.general.conn_effect')}</p>
                 <h3 id="connection-diagram-title">${_('diagram.how_title')}</h3>
                 <div class="settings-diagram" id="connection-diagram"></div>
-                <p class="form-hint" id="connection-mode-info">${_('settings.connection_mode_network_hint')}</p>
-                <details class="disclosure connection-mode-advanced">
-                    <summary>${_('settings.connection_mode_advanced')}</summary>
-                    <div class="disclosure-body">
-                        <div class="form-group">
-                            <label class="form-label" for="conn-p2p-fallback-ms">${_('settings.connection_mode_fallback_ms')}</label>
-                            <input type="number" id="conn-p2p-fallback-ms" class="form-input is-short" min="0" max="30000" step="100" value="2000">
-                            <p class="form-hint">${_('settings.general.conn_fallback_hint')}</p>
-                        </div>
-                        <label class="check-field">
-                            <input type="checkbox" id="conn-same-nat-relay" checked>
-                            <span class="check-label">${_('settings.connection_mode_same_nat_relay')}</span>
-                        </label>
-                        <label class="check-field">
-                            <input type="checkbox" id="conn-allow-shared-nat-initiator">
-                            <span class="check-label">${_('settings.connection_mode_allow_shared_nat_initiator')}</span>
-                            <span class="form-hint">${_('settings.connection_mode_allow_shared_nat_initiator_hint')}</span>
-                        </label>
-                        <label class="check-field">
-                            <input type="checkbox" id="conn-logged-in-only-initiator">
-                            <span class="check-label">${_('settings.connection_mode_logged_in_only_initiator')}</span>
-                            <span class="form-hint">${_('settings.connection_mode_logged_in_only_initiator_hint')}</span>
-                        </label>
-                        <label class="check-field">
-                            <input type="checkbox" id="conn-operator-only-outbound">
-                            <span class="check-label">${_('settings.connection_mode_operator_only_outbound')}</span>
-                            <span class="form-hint">${_('settings.connection_mode_operator_only_outbound_hint')}</span>
-                        </label>
-                    </div>
-                </details>
-                <p class="form-hint" id="connection-mode-source"></p>
-                <p class="field-effect is-restart">${_('settings.general.conn_effect')}</p>
-                ${saveBar(_('settings.general.conn_save'), '', 'connection-mode-save')}
-            </form>
+                <p class="form-hint" id="connection-mode-info">${_('settings.general.conn_ports_hint')}</p>
+            </div>
         </section>
+        </div>
 
+        <div class="settings-stack">
         <section class="section" id="device-scope-settings-panel" aria-labelledby="device-scope-title">
             <h2 id="device-scope-title">${_('settings.device_scope_title')}</h2>
-            <p class="section-note">${_('settings.device_scope_desc')}</p>
-            <form class="form-column" id="device-scope-form" data-save-form novalidate>
+            <p class="section-note">${_('settings.general.scope_note')}</p>
+            <div class="form-column" id="device-scope-form" data-save-part="scope">
                 <div role="radiogroup" aria-label="${_('settings.device_scope_title')}"><ul class="choice-list">
                     <li><label class="choice">
                         <input type="radio" name="device_scope_mode" value="open" id="device-scope-open">
@@ -223,89 +231,84 @@
                         <span class="choice-desc">${_('settings.general.scope_restricted_desc')}</span>
                     </label></li>
                 </ul></div>
-                <p class="notice warning" id="device-scope-warning" hidden>${_('settings.device_scope_restricted_warning')}</p>
+                <p class="notice warning" id="device-scope-warning" data-show-when="device_scope_mode:restricted" hidden>${_('settings.general.scope_restricted_warning')}</p>
                 <p class="field-effect">${_('settings.general.scope_effect')}</p>
-                ${saveBar(_('settings.device_scope_save'))}
-            </form>
+            </div>
         </section>
 
         <section class="section" id="availability-history-settings-panel" aria-labelledby="availability-title">
             <h2 id="availability-title">${_('settings.availability_history_title')}</h2>
-            <p class="section-note">${_('settings.availability_history_desc')}</p>
-            <form class="form-column" id="availability-history-form" data-save-form novalidate>
+            <p class="section-note">${_('settings.general.availability_note')}</p>
+            <div class="form-column" id="availability-history-form" data-save-part="availability">
                 <label class="check-field">
                     <input type="checkbox" id="availability-history-enabled">
                     <span class="check-label">${_('settings.availability_history_enable')}</span>
-                    <span class="form-hint">${_('settings.availability_history_enable_hint')}</span>
+                    <span class="form-hint">${_('settings.general.availability_enable_hint')}</span>
                 </label>
-                <div class="form-group">
-                    <label class="form-label" for="availability-history-retention">${_('settings.availability_history_retention')}</label>
+                <div class="form-group" id="availability-retention-group" data-show-when="availability-history-enabled" hidden>
+                    <label class="form-label" for="availability-history-retention">${_('settings.general.retention_label')}</label>
                     <input type="number" id="availability-history-retention" class="form-input is-short" min="1" max="3650" value="30">
-                    <p class="form-hint">${_('settings.availability_history_retention_hint')}</p>
+                    <p class="form-hint">${_('settings.general.retention_hint')}</p>
                 </div>
                 <p class="field-effect">${_('settings.general.availability_effect')}</p>
-                ${saveBar(_('settings.availability_history_save'))}
-            </form>
-        </section>
-
-        <section class="section" id="mesh-settings-panel" aria-labelledby="mesh-title">
-            <h2 id="mesh-title">${_('mesh.settings_title')}</h2>
-            <p class="section-note">${_('settings.general.mesh_note')}</p>
-            <dl class="facts">
-                <dt>${_('settings.general.mesh_status')}</dt><dd id="mesh-status-enabled">-</dd>
-                <dt>${_('mesh.agents_online')}</dt><dd id="mesh-agents-online">-</dd>
-                <dt>${_('mesh.server_id')}</dt>
-                <dd><span class="value-field"><code id="mesh-server-id">-</code><button type="button" id="mesh-copy-server-id"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></span></dd>
-            </dl>
-            <p class="notice warning hidden" id="mesh-cert-banner"></p>
-            <div class="form-column">
-                <div class="form-group">
-                    <label class="form-label" for="mesh-msh-name">${_('mesh.mesh_name')}</label>
-                    <input type="text" id="mesh-msh-name" class="form-input" value="BetterDesk Mesh">
-                    <p class="form-hint">${_('mesh.onboarding_body')}</p>
-                </div>
-                <p><a class="btn" id="mesh-download-msh" href="/api/mesh/download.msh" download="meshagents.msh"><span class="material-icons" aria-hidden="true">download</span>${_('mesh.download_msh')}</a></p>
             </div>
-            <ol class="steps">
-                <li>${_('mesh.onboarding_step_msh')}</li>
-                <li>${_('mesh.onboarding_step_install')}</li>
-                <li>${_('mesh.onboarding_step_verify')}</li>
-            </ol>
-
-            <form class="form-column" id="mesh-groups-form" data-save-form novalidate>
-                <h3>${_('mesh.groups_title')}</h3>
-                <div id="mesh-groups-list" class="mesh-groups-list"></div>
-                <div class="form-group">
-                    <label class="form-label" for="mesh-group-id">${_('mesh.group_id_placeholder')}</label>
-                    <input type="text" id="mesh-group-id" class="form-input is-medium">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="mesh-group-name">${_('mesh.group_name_placeholder')}</label>
-                    <input type="text" id="mesh-group-name" class="form-input">
-                </div>
-                <p><button type="button" class="btn" id="mesh-group-add"><span class="material-icons" aria-hidden="true">add</span>${_('mesh.group_add')}</button></p>
-                <p class="field-effect">${_('settings.general.mesh_groups_effect')}</p>
-                ${saveBar(_('mesh.groups_save'), '', 'mesh-groups-save')}
-            </form>
-
-            <h3>${_('mesh.recordings_title')}</h3>
-            <p class="section-note">${_('mesh.recordings_desc')}</p>
-            <div id="mesh-recordings-table" class="mesh-recordings-table"><p class="state">${_('common.loading')}</p></div>
         </section>
 
-        <section class="section" id="server-info" aria-labelledby="server-info-title">
-            <h2 id="server-info-title">${_('settings.server_info')}</h2>
-            <dl class="facts">
-                <dt>${_('settings.version')}</dt><dd>v${appVersion}</dd>
-                <dt>${_('settings.go_server_version')}</dt><dd id="go-server-version">-</dd>
-                <dt>${_('settings.database')}</dt><dd id="db-path" class="mono-value">-</dd>
-                <dt>${_('settings.uptime')}</dt><dd id="uptime">-</dd>
-            </dl>
+        <!-- Mesh: list actions save right away, so nothing here joins the page's save -->
+        <section class="section" id="mesh-settings-panel" aria-labelledby="mesh-title" data-save-ignore>
+            <h2 id="mesh-title">${_('mesh.settings_title')}</h2>
+            <p class="section-note">${_('settings.general.mesh_note2')}</p>
+            <p class="state" id="mesh-state">${_('common.loading')}</p>
+            <div class="settings-mesh-body" id="mesh-body" hidden>
+                <dl class="facts">
+                    <dt>${_('settings.general.mesh_status')}</dt><dd id="mesh-status-enabled">-</dd>
+                    <dt>${_('settings.general.mesh_agents')}</dt><dd id="mesh-agents-online">-</dd>
+                    <dt>${_('settings.general.mesh_server_id')}</dt>
+                    <dd><span class="value-field is-one-line"><code id="mesh-server-id">-</code><button type="button" id="mesh-copy-server-id" aria-label="${_('mesh.copy_server_id')}"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></span></dd>
+                    <dt>${_('settings.general.mesh_cert')}</dt><dd id="mesh-cert-state">-</dd>
+                </dl>
+                <p class="notice warning" id="mesh-cert-banner" hidden></p>
+
+                <div class="settings-subgroup" id="mesh-groups-form">
+                    <div class="section-head">
+                        <h3 id="mesh-groups-title">${_('mesh.groups_title')}</h3>
+                        <button type="button" class="btn btn-sm" id="mesh-group-add"><span class="material-icons" aria-hidden="true">add</span>${_('mesh.group_add')}</button>
+                    </div>
+                    <p class="form-hint">${_('settings.general.mesh_groups_note')}</p>
+                    <div id="mesh-groups-list" class="mesh-groups-list"></div>
+                    <p class="form-status" id="mesh-groups-status" aria-live="polite"></p>
+                </div>
+
+                <details class="disclosure" id="mesh-install">
+                    <summary>${_('settings.general.mesh_install_title')}</summary>
+                    <div class="disclosure-body">
+                        <ol class="steps">
+                            <li>${_('settings.general.mesh_install_step1')}</li>
+                            <li>${_('settings.general.mesh_install_step2')}</li>
+                            <li>${_('settings.general.mesh_install_step3')}</li>
+                        </ol>
+                        <div class="form-group">
+                            <label class="form-label" for="mesh-msh-name">${_('settings.general.mesh_msh_name')}</label>
+                            <input type="text" id="mesh-msh-name" class="form-input is-host" value="BetterDesk Mesh">
+                            <p class="form-hint">${_('settings.general.mesh_msh_name_hint')}</p>
+                        </div>
+                        <p><a class="btn" id="mesh-download-msh" href="/api/mesh/download.msh" download="meshagents.msh"><span class="material-icons" aria-hidden="true">download</span>${_('mesh.download_msh')}</a></p>
+                    </div>
+                </details>
+
+                <div class="settings-subgroup" id="mesh-recordings">
+                    <h3>${_('settings.general.rec_title')}</h3>
+                    <div id="mesh-recordings-table" class="mesh-recordings-table"><p class="state">${_('common.loading')}</p></div>
+                </div>
+            </div>
         </section>
-        ${canAudit ? `<p class="settings-audit-link">${_('settings.general.audit_moved')} <a href="/security-audit">${_('settings.general.audit_link')}</a></p>` : ''}
+        </div>
+        </div>
+        ${saveBar(_('settings.general.save_all'), '', 'general-save')}
+        </form>
         </div>
 
-        <aside class="page-side is-sticky settings-side" aria-labelledby="general-side-title">
+        <aside class="page-side settings-side" aria-labelledby="general-side-title">
             <section class="section settings-summary" aria-labelledby="general-side-title" data-search-skip>
                 <h2 id="general-side-title">${_('settings.side.general_title')}</h2>
                 <p class="section-note">${_('settings.side.general_note')}</p>
@@ -321,16 +324,26 @@
                 <p class="notice warning" id="general-side-local" hidden>${_('settings.side.local_warning')}</p>
                 <p id="connection-mode-runtime" hidden></p>
             </section>
+            <section class="section" id="server-info" aria-labelledby="server-info-title">
+                <h2 id="server-info-title">${_('settings.server_info')}</h2>
+                <dl class="facts">
+                    <dt>${_('settings.general.console_version')}</dt><dd>v${appVersion}</dd>
+                    <dt>${_('settings.general.server_version')}</dt><dd id="go-server-version">-</dd>
+                    <dt>${_('settings.general.database_file')}</dt><dd id="db-path" class="mono-value">-</dd>
+                    <dt>${_('settings.general.running_for')}</dt><dd id="uptime">-</dd>
+                </dl>
+                ${canAudit ? `<p class="settings-audit-link">${_('settings.general.audit_moved')} <a href="/security-audit">${_('settings.general.audit_link')}</a></p>` : ''}
+            </section>
         </aside>
         </div>
         ` : `
         <section class="section" id="server-info" aria-labelledby="server-info-title">
             <h2 id="server-info-title">${_('settings.server_info')}</h2>
             <dl class="facts">
-                <dt>${_('settings.version')}</dt><dd>v${appVersion}</dd>
-                <dt>${_('settings.go_server_version')}</dt><dd id="go-server-version">-</dd>
-                <dt>${_('settings.database')}</dt><dd id="db-path" class="mono-value">-</dd>
-                <dt>${_('settings.uptime')}</dt><dd id="uptime">-</dd>
+                <dt>${_('settings.general.console_version')}</dt><dd>v${appVersion}</dd>
+                <dt>${_('settings.general.server_version')}</dt><dd id="go-server-version">-</dd>
+                <dt>${_('settings.general.database_file')}</dt><dd id="db-path" class="mono-value">-</dd>
+                <dt>${_('settings.general.running_for')}</dt><dd id="uptime">-</dd>
             </dl>
         </section>
         ${canAudit ? `<p class="settings-audit-link">${_('settings.general.audit_moved')} <a href="/security-audit">${_('settings.general.audit_link')}</a></p>` : ''}
@@ -369,6 +382,8 @@
         <fieldset class="settings-fieldset" ${canBrandingEdit ? '' : 'disabled'}>
             <legend class="sr-only">${_('settings.tab_branding')}</legend>
 
+            <div class="settings-grid">
+            <div class="settings-stack">
             <section class="section form-column" id="branding-theme" aria-labelledby="branding-theme-title">
                 <h2 id="branding-theme-title">${_('theme.title')}</h2>
                 <p class="section-note">${_('settings.appearance.theme_note')}</p>
@@ -548,6 +563,20 @@
                 <p class="count-line font-local-info" id="font-local-info"><strong id="font-local-count">0</strong> ${_('branding.font_downloaded_count')}</p>
             </section>
 
+            <section class="section form-column" id="branding-footer" aria-labelledby="branding-footer-title">
+                <h2 id="branding-footer-title">${_('branding.footer_title')}</h2>
+                <p class="section-note">${_('branding.footer_desc')}</p>
+                <div class="form-group">
+                    <label class="form-label" for="footer-text">${_('branding.footer_text')}</label>
+                    <input type="text" id="footer-text" class="form-input" maxlength="200" placeholder="© 2026 Example Ltd.">
+                    <p class="form-hint">${_('branding.footer_text_hint')}</p>
+                </div>
+                <label class="check-field"><input type="checkbox" id="show-powered" checked>
+                    <span class="check-label">${_('branding.show_powered')}</span>
+                    <span class="form-hint">${_('branding.show_powered_hint')}</span></label>
+            </section>
+            </div>
+            <div class="settings-stack">
             <section class="section form-column" id="branding-background" aria-labelledby="branding-background-title">
                 <h2 id="branding-background-title">${_('settings.appearance.console_background')}</h2>
                 <p class="section-note">${_('branding.background_desc')}</p>
@@ -582,11 +611,11 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group" id="bg-effects-group">
+                <div class="form-group" id="bg-effects-group" data-show-when="bg-type:color,gradient,image" hidden>
                     <label class="form-label" for="bg-blur">${_('branding.bg_blur')}: <span id="bg-blur-value">0</span> px</label>
                     <input type="range" id="bg-blur" class="form-range" min="0" max="30" step="1" value="0">
                 </div>
-                <div class="form-group" id="bg-overlay-group">
+                <div class="form-group" id="bg-overlay-group" data-show-when="bg-type:color,gradient,image" hidden>
                     <label class="form-label" for="bg-overlay">${_('branding.bg_overlay')}: <span id="bg-overlay-value">0</span> %</label>
                     <input type="range" id="bg-overlay" class="form-range" min="0" max="90" step="5" value="0">
                     <p class="form-hint">${_('branding.bg_overlay_hint')}</p>
@@ -596,6 +625,7 @@
                     <p class="form-hint">${_('branding.glass_desc')}</p>
                     <label class="check-field"><input type="checkbox" id="glass-enabled" checked>
                         <span class="check-label">${_('branding.glass_enabled')}</span></label>
+                    <div class="settings-subfields" id="glass-fields" data-show-when="glass-enabled">
                     ${colorInput('glass-color', 'glass-color-picker', '#161b22', _('branding.glass_color'), _('branding.glass_color_hint'), 7)}
                     <div class="form-group">
                         <label class="form-label" for="glass-blur">${_('branding.glass_blur')}: <span id="glass-blur-value">16</span> px</label>
@@ -604,6 +634,7 @@
                     <div class="form-group">
                         <label class="form-label" for="glass-opacity">${_('branding.glass_opacity')}: <span id="glass-opacity-value">55</span> %</label>
                         <input type="range" id="glass-opacity" class="form-range" min="0" max="100" step="5" value="55">
+                    </div>
                     </div>
                 </fieldset>
             </section>
@@ -657,7 +688,7 @@
                             <input type="text" id="login-bg-image-url" class="form-input" placeholder="https://example.com/login-bg.jpg">
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="login-bg-overlay-group" data-show-when="login-bg-type:color,gradient,image" hidden>
                         <label class="form-label" for="login-bg-overlay">${_('branding.bg_overlay')}: <span id="login-bg-overlay-value">0</span> %</label>
                         <input type="range" id="login-bg-overlay" class="form-range" min="0" max="90" step="5" value="0">
                     </div>
@@ -717,40 +748,32 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="rdclient-bg-overlay-group" data-show-when="rdclient-bg-type:color,gradient,image" hidden>
                     <label class="form-label" for="rdclient-bg-overlay">${_('branding.bg_overlay')}: <span id="rdclient-bg-overlay-value">0</span> %</label>
                     <input type="range" id="rdclient-bg-overlay" class="form-range" min="0" max="90" step="5" value="0">
                     <p class="form-hint">${_('branding.bg_overlay_hint')}</p>
                 </div>
             </section>
 
-            <section class="section form-column" id="branding-footer" aria-labelledby="branding-footer-title">
-                <h2 id="branding-footer-title">${_('branding.footer_title')}</h2>
-                <p class="section-note">${_('branding.footer_desc')}</p>
-                <div class="form-group">
-                    <label class="form-label" for="footer-text">${_('branding.footer_text')}</label>
-                    <input type="text" id="footer-text" class="form-input" maxlength="200" placeholder="© 2026 Example Ltd.">
-                    <p class="form-hint">${_('branding.footer_text_hint')}</p>
-                </div>
-                <label class="check-field"><input type="checkbox" id="show-powered" checked>
-                    <span class="check-label">${_('branding.show_powered')}</span>
-                    <span class="form-hint">${_('branding.show_powered_hint')}</span></label>
-            </section>
-
-            <section class="section form-column" id="branding-css" aria-labelledby="branding-css-title">
-                <h2 id="branding-css-title">${_('branding.custom_css_title')}</h2>
+            <details class="disclosure section form-column" id="branding-css">
+                <summary><h2 id="branding-css-title">${_('branding.custom_css_title')}</h2></summary>
+                <div class="disclosure-body">
                 <p class="section-note">${_('branding.custom_css_desc')}</p>
                 <div class="form-group">
                     <label class="form-label" for="custom-css">${_('branding.custom_css_title')}</label>
                     <textarea id="custom-css" class="form-input form-textarea mono-input" rows="10" spellcheck="false" placeholder=".sidebar { … }"></textarea>
                     <p class="form-hint">${_('branding.custom_css_hint')}</p>
                 </div>
-            </section>
+                </div>
+            </details>
+            </div>
+            </div>
         </fieldset>
         ${canBrandingEdit ? saveBar(_('settings.appearance.save'), `<button type="button" class="btn" id="branding-revert-btn">${_('branding.revert_changes')}</button>`, 'branding-save-btn') : ''}
         </form>
 
         ${canBrandingEdit ? `
+        <div class="settings-grid">
         <section class="section form-column" id="branding-profiles" aria-labelledby="branding-profiles-title">
             <h2 id="branding-profiles-title">${_('settings.appearance.profiles')}</h2>
             <p class="section-note">${_('settings.appearance.profiles_note')}</p>
@@ -786,6 +809,7 @@
             </div>
             <p class="form-status" id="branding-ie-status" aria-live="polite"></p>
         </section>
+        </div>
 
         <section class="danger-zone" aria-labelledby="branding-danger-title">
             <h2 id="branding-danger-title">${_('settings.appearance.reset_title')}</h2>
@@ -845,6 +869,7 @@
             <h2 id="your-account-title">${_('settings.signin.your_account')}</h2>
             <p class="section-note">${_('settings.signin.your_account_note').replace('{user}', userName)}</p>
 
+            <div class="settings-grid">
             <form class="form-column settings-subgroup" id="password-form" data-save-form>
                 <h3 id="account-password">${_('settings.change_password')}</h3>
                 <div class="form-group">
@@ -874,10 +899,11 @@
 
             <div class="form-column settings-subgroup" id="auth-panel-totp">
                 <h3>${_('settings.totp_title')}</h3>
-                <p class="form-hint">${_('settings.totp_desc')}</p>
+                <p class="form-hint">${_('settings.signin.totp_note')}</p>
                 <div id="totp-status-container" aria-live="polite">
                     <p class="state">${_('common.loading')}</p>
                 </div>
+            </div>
             </div>
         </section>
 
@@ -886,6 +912,8 @@
             <h2 id="for-everyone-title">${_('settings.signin.for_everyone')}</h2>
             <p class="section-note">${_('settings.signin.for_everyone_note')}</p>
 
+            <div class="settings-grid">
+            <div class="settings-stack">
             <form class="form-column settings-subgroup" id="enrollment-settings-section" data-save-form novalidate>
                 <h3>${_('settings.enrollment_title')}</h3>
                 <p class="form-hint">${_('settings.enrollment_desc')}</p>
@@ -922,7 +950,7 @@
                 <label class="check-field"><input type="checkbox" id="client-sessions-sliding" checked>
                     <span class="check-label">${_('settings.client_sessions_sliding')}</span>
                     <span class="form-hint">${_('settings.client_sessions_sliding_hint')}</span></label>
-                <div class="form-group">
+                <div class="form-group" id="client-sessions-max-group" data-show-when="client-sessions-sliding">
                     <label class="form-label" for="client-sessions-max-days">${_('settings.client_sessions_max_days')}</label>
                     <input type="number" id="client-sessions-max-days" class="form-input is-short" min="1" max="365" value="30">
                     <p class="form-hint">${_('settings.client_sessions_max_days_hint')}</p>
@@ -930,13 +958,15 @@
                 <p class="field-effect">${_('settings.signin.client_sessions_effect')}</p>
                 ${saveBar(_('settings.client_sessions_save'))}
             </form>
+            </div>
 
+            <div class="settings-stack">
             <form class="form-column settings-subgroup" id="ldap-form" data-save-form novalidate>
                 <h3 id="auth-panel-ldap">${_('settings.ldap_title')}</h3>
                 <p class="form-hint">${_('settings.ldap_desc')}</p>
                 <label class="check-field"><input type="checkbox" id="ldap-enabled">
                     <span class="check-label">${_('settings.ldap_enabled')}</span>
-                    <span class="form-hint">${_('settings.ldap_enabled_hint')}</span></label>
+                    <span class="form-hint">${_('settings.signin.ldap_enabled_hint')}</span></label>
                 <div id="ldap-config-fields" class="settings-subfields">
                     <h4>${_('settings.ldap_connection')}</h4>
                     <div class="form-group">
@@ -989,7 +1019,10 @@
                         </div>
                     </div>
 
-                    <h4>${_('settings.ldap_user_attrs')}</h4>
+                    <details class="disclosure" id="ldap-attrs">
+                    <summary>${_('settings.ldap_user_attrs')}</summary>
+                    <div class="disclosure-body">
+                    <p class="form-hint">${_('settings.signin.attrs_note')}</p>
                     <div class="form-group">
                         <label class="form-label" for="ldap-user-attr-id">${_('settings.ldap_attr_id')}</label>
                         <input type="text" id="ldap-user-attr-id" class="form-input is-medium" placeholder="sAMAccountName">
@@ -1002,6 +1035,8 @@
                         <label class="form-label" for="ldap-user-attr-name">${_('settings.ldap_attr_name')}</label>
                         <input type="text" id="ldap-user-attr-name" class="form-input is-medium" placeholder="displayName">
                     </div>
+                    </div>
+                    </details>
 
                     <h4>${_('settings.ldap_group_mapping')}</h4>
                     <div class="form-group">
@@ -1107,7 +1142,10 @@
                         </div>
                     </div>
 
-                    <h4>${_('settings.oidc_claim_mapping')}</h4>
+                    <details class="disclosure" id="oidc-claims">
+                    <summary>${_('settings.oidc_claim_mapping')}</summary>
+                    <div class="disclosure-body">
+                    <p class="form-hint">${_('settings.signin.attrs_note')}</p>
                     <div class="form-group">
                         <label class="form-label" for="oidc-claim-username">${_('settings.oidc_claim_username')}</label>
                         <input type="text" id="oidc-claim-username" class="form-input is-medium" placeholder="preferred_username">
@@ -1124,6 +1162,8 @@
                         <label class="form-label" for="oidc-claim-groups">${_('settings.oidc_claim_groups')}</label>
                         <input type="text" id="oidc-claim-groups" class="form-input is-medium" placeholder="groups">
                     </div>
+                    </div>
+                    </details>
 
                     <h4>${_('settings.oidc_role_mapping')}</h4>
                     <div class="form-group">
@@ -1145,6 +1185,8 @@
                 <p class="field-effect">${_('settings.signin.oidc_effect')}</p>
                 ${saveBar(_('settings.oidc_save'), `<button type="button" class="btn" id="oidc-test-btn">${_('settings.oidc_test_discovery')}</button>`)}
             </form>
+            </div>
+            </div>
         </section>` : ''}
         </div>
 
@@ -1164,6 +1206,9 @@
 
     ${canServerConfig ? `
     <!-- ===================== Backup ===================== -->
+    <!-- Download first; the schedule and its network share beside it on wide
+         screens; restore last, in the danger zone. What a backup holds now
+         and the schedule's state are in the side column. -->
     <div class="settings-tab-content" ${panelAttrs('backup')}>
         <div class="page-cols settings-cols">
         <div class="page-main">
@@ -1172,26 +1217,15 @@
             <ul class="toc">
                 <li><a href="#backup-create">${_('settings.backup_tab.create_title')}</a></li>
                 <li><a href="#scheduled-backup-panel">${_('backup.schedule_title')}</a></li>
-                <li><a href="#scheduled-backup-smb-panel">${_('backup.smb_title')}</a></li>
+                <li><a href="#scheduled-backup-smb-panel">${_('settings.backup_tab.smb_title')}</a></li>
                 <li><a href="#backup-restore">${_('settings.backup_tab.restore_title')}</a></li>
             </ul>
         </nav>
 
+        <div class="settings-grid">
         <section class="section" id="backup-create" aria-labelledby="backup-create-title">
             <h2 id="backup-create-title">${_('settings.backup_tab.create_title')}</h2>
             <p class="section-note">${_('settings.backup_tab.create_note')}</p>
-            <dl class="facts" id="backup-stats">
-                <dt>${_('backup.stat_users')}</dt><dd id="backup-stat-users">-</dd>
-                <dt>${_('backup.stat_settings')}</dt><dd id="backup-stat-settings">-</dd>
-                <dt>${_('backup.stat_folders')}</dt><dd id="backup-stat-folders">-</dd>
-                <dt>${_('backup.stat_groups')}</dt><dd id="backup-stat-groups">-</dd>
-                <dt>${_('backup.stat_strategies')}</dt><dd id="backup-stat-strategies">-</dd>
-                <dt>${_('backup.stat_backend')}</dt><dd id="backup-stat-backend">-</dd>
-                <dt>${_('backup.stat_database')}</dt><dd id="backup-stat-database">-</dd>
-                <dt>${_('backup.stat_keys')}</dt><dd id="backup-stat-keys">-</dd>
-                <dt>${_('backup.stat_env')}</dt><dd id="backup-stat-env">-</dd>
-                <dt>${_('backup.stat_uploads')}</dt><dd id="backup-stat-uploads">-</dd>
-            </dl>
             <p class="notice warning">${_('backup.security_warning')}</p>
             <div class="settings-inline-controls">
                 <button type="button" class="btn btn-primary" id="backup-download-btn"><span class="material-icons" aria-hidden="true">download</span><span class="btn-label">${_('backup.download')}</span></button>
@@ -1199,80 +1233,87 @@
             </div>
         </section>
 
+        <div class="settings-stack">
         <section class="section" id="scheduled-backup-panel" aria-labelledby="scheduled-backup-title">
             <h2 id="scheduled-backup-title">${_('backup.schedule_title')}</h2>
-            <p class="section-note">${_('backup.schedule_desc')}</p>
+            <p class="section-note">${_('settings.backup_tab.schedule_note')}</p>
             <form class="form-column" id="scheduled-backup-form" data-save-form novalidate>
-                <label class="check-field"><input type="checkbox" id="scheduled-backup-enabled">
-                    <span class="check-label">${_('backup.schedule_enabled')}</span></label>
-                <div class="form-group">
-                    <label class="form-label" for="scheduled-backup-interval">${_('backup.schedule_interval')}</label>
-                    <select id="scheduled-backup-interval" class="form-select is-medium">
-                        <option value="1">${_('backup.schedule_interval_1h')}</option>
-                        <option value="6">${_('backup.schedule_interval_6h')}</option>
-                        <option value="12">${_('backup.schedule_interval_12h')}</option>
-                        <option value="24">${_('backup.schedule_interval_24h')}</option>
-                        <option value="168">${_('backup.schedule_interval_weekly')}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="scheduled-backup-retention">${_('backup.schedule_retention')}</label>
-                    <input type="number" id="scheduled-backup-retention" class="form-input is-short" min="1" max="365" value="7">
-                    <p class="form-hint">${_('settings.backup_tab.retention_hint')}</p>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="scheduled-backup-destination-type">${_('backup.schedule_destination')}</label>
-                    <select id="scheduled-backup-destination-type" class="form-select">
-                        <option value="local">${_('backup.schedule_destination_local')}</option>
-                        <option value="path">${_('backup.schedule_destination_path')}</option>
-                    </select>
-                </div>
-                <div class="form-group" id="scheduled-backup-path-group" hidden>
-                    <label class="form-label" for="scheduled-backup-path">${_('backup.schedule_destination_path_label')}</label>
-                    <input type="text" id="scheduled-backup-path" class="form-input mono-input" placeholder="/mnt/backups">
-                    <p class="form-hint">${_('backup.schedule_destination_path_hint')}</p>
+                <label class="check-field"><input type="checkbox" id="scheduled-backup-enabled" aria-expanded="false">
+                    <span class="check-label">${_('backup.schedule_enabled')}</span>
+                    <span class="form-hint">${_('settings.backup_tab.schedule_enabled_hint')}</span></label>
+                <div class="settings-subfields" id="scheduled-backup-details" data-show-when="scheduled-backup-enabled" hidden>
+                    <div class="form-group">
+                        <label class="form-label" for="scheduled-backup-interval">${_('backup.schedule_interval')}</label>
+                        <select id="scheduled-backup-interval" class="form-select is-medium">
+                            <option value="1">${_('backup.schedule_interval_1h')}</option>
+                            <option value="6">${_('backup.schedule_interval_6h')}</option>
+                            <option value="12">${_('backup.schedule_interval_12h')}</option>
+                            <option value="24">${_('backup.schedule_interval_24h')}</option>
+                            <option value="168">${_('backup.schedule_interval_weekly')}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="scheduled-backup-retention">${_('backup.schedule_retention')}</label>
+                        <input type="number" id="scheduled-backup-retention" class="form-input is-short" min="1" max="365" value="7">
+                        <p class="form-hint">${_('settings.backup_tab.retention_hint')}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="scheduled-backup-destination-type">${_('backup.schedule_destination')}</label>
+                        <select id="scheduled-backup-destination-type" class="form-select" aria-controls="scheduled-backup-path-group">
+                            <option value="local">${_('backup.schedule_destination_local')}</option>
+                            <option value="path">${_('backup.schedule_destination_path')}</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="scheduled-backup-path-group" hidden>
+                        <label class="form-label" for="scheduled-backup-path">${_('backup.schedule_destination_path_label')}</label>
+                        <input type="text" id="scheduled-backup-path" class="form-input mono-input is-host" placeholder="/mnt/backups">
+                        <p class="form-hint">${_('backup.schedule_destination_path_hint')}</p>
+                    </div>
                 </div>
                 <p class="form-status" id="scheduled-backup-status" aria-live="polite"></p>
                 <p class="field-effect">${_('settings.backup_tab.schedule_effect')}</p>
-                ${saveBar(_('backup.schedule_save'), `<button type="button" class="btn" id="scheduled-backup-test-btn">${_('backup.schedule_test_destination')}</button><button type="button" class="btn" id="scheduled-backup-run-btn">${_('settings.backup_tab.run_now')}</button>`)}
+                ${saveBar(_('backup.schedule_save'), `<button type="button" class="btn" id="scheduled-backup-test-btn" data-show-when="scheduled-backup-enabled" hidden>${_('backup.schedule_test_destination')}</button><button type="button" class="btn" id="scheduled-backup-run-btn" data-show-when="scheduled-backup-enabled" hidden>${_('settings.backup_tab.run_now')}</button>`)}
             </form>
         </section>
 
-        <section class="section" id="scheduled-backup-smb-panel" aria-labelledby="smb-title">
-            <h2 id="smb-title">${_('backup.smb_title')}</h2>
-            <p class="section-note">${_('backup.smb_desc')}</p>
+        <details class="disclosure section" id="scheduled-backup-smb-panel">
+            <summary><h2 id="smb-title">${_('settings.backup_tab.smb_title')}</h2></summary>
+            <p class="section-note">${_('settings.backup_tab.smb_note')}</p>
             <form class="form-column" id="scheduled-backup-smb-form" data-save-form novalidate>
                 <div class="form-group">
                     <label class="form-label" for="backup-smb-host">${_('backup.smb_host')}</label>
-                    <input type="text" id="backup-smb-host" class="form-input mono-input" autocomplete="off">
+                    <input type="text" id="backup-smb-host" class="form-input mono-input is-host" autocomplete="off" spellcheck="false" placeholder="nas.example.local">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="backup-smb-share">${_('backup.smb_share')}</label>
-                    <input type="text" id="backup-smb-share" class="form-input" autocomplete="off">
+                    <input type="text" id="backup-smb-share" class="form-input is-host" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="backup-smb-domain">${_('backup.smb_domain')}</label>
-                    <input type="text" id="backup-smb-domain" class="form-input" autocomplete="off">
+                    <input type="text" id="backup-smb-domain" class="form-input is-host" autocomplete="off" spellcheck="false">
+                    <p class="form-hint">${_('settings.backup_tab.smb_domain_hint')}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="backup-smb-username">${_('backup.smb_username')}</label>
-                    <input type="text" id="backup-smb-username" class="form-input" autocomplete="off">
+                    <input type="text" id="backup-smb-username" class="form-input is-host" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="backup-smb-password">${_('backup.smb_password')}</label>
-                    <input type="password" id="backup-smb-password" class="form-input" autocomplete="new-password">
+                    <input type="password" id="backup-smb-password" class="form-input is-host" autocomplete="new-password">
                     <p class="form-hint">${_('backup.smb_password_hint')}</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="backup-smb-mount-path">${_('backup.schedule_destination_path_label')}</label>
-                    <input type="text" id="backup-smb-mount-path" class="form-input mono-input" placeholder="/mnt/backups">
-                    <p class="form-hint">${_('backup.schedule_destination_path_hint')}</p>
+                    <label class="form-label" for="backup-smb-mount-path">${_('settings.backup_tab.smb_mount_path')}</label>
+                    <input type="text" id="backup-smb-mount-path" class="form-input mono-input is-host" placeholder="/mnt/backups" spellcheck="false">
+                    <p class="form-hint">${_('settings.backup_tab.smb_mount_path_hint')}</p>
                 </div>
                 <p class="form-status" id="backup-smb-status" aria-live="polite"></p>
                 <p class="field-effect">${_('settings.backup_tab.smb_effect')}</p>
                 ${saveBar(_('backup.smb_save'), `<button type="button" class="btn" id="backup-smb-test-btn">${_('backup.smb_test')}</button>`)}
             </form>
-        </section>
+        </details>
+        </div>
+        </div>
 
         <section class="danger-zone" id="backup-restore" aria-labelledby="backup-restore-title">
             <h2 id="backup-restore-title">${_('settings.backup_tab.restore_title')}</h2>
@@ -1280,12 +1321,12 @@
             <div class="form-column">
                 <div class="form-group">
                     <label class="form-label" for="restore-file-input">${_('settings.backup_tab.restore_file')}</label>
-                    <input type="file" id="restore-file-input" accept=".gz,.tar.gz,.json">
-                    <p class="form-hint">${_('settings.backup_tab.restore_file_hint')}</p>
+                    <input type="file" id="restore-file-input" accept=".gz,.tar.gz,.json" aria-describedby="restore-file-hint" aria-controls="restore-options">
+                    <p class="form-hint" id="restore-file-hint">${_('settings.backup_tab.restore_file_hint')}</p>
                 </div>
-                <fieldset class="settings-subgroup" id="restore-options" disabled>
+                <p class="form-hint" id="restore-options-hint" aria-live="polite">${_('settings.backup_tab.restore_start')}</p>
+                <fieldset class="settings-subgroup" id="restore-options" hidden>
                     <legend class="form-label">${_('settings.backup_tab.restore_what')}</legend>
-                    <p class="form-hint" id="restore-options-hint">${_('settings.backup_tab.restore_pick_first')}</p>
                     <label class="check-field"><input type="checkbox" id="restore-database">
                         <span class="check-label">${_('settings.backup_tab.opt_database')}</span>
                         <span class="form-hint">${_('settings.backup_tab.opt_database_desc')}</span></label>
@@ -1303,7 +1344,7 @@
                         <span class="form-hint">${_('settings.backup_tab.opt_godb_desc')}</span></label>
                 </fieldset>
                 <p class="notice" id="restore-json-note" hidden>${_('settings.backup_tab.restore_json_note')}</p>
-                <div class="settings-inline-controls">
+                <div class="settings-inline-controls" id="restore-actions" hidden>
                     <button type="button" class="btn btn-danger-quiet" id="restore-start-btn" disabled>${_('settings.backup_tab.restore_button')}</button>
                     <span class="form-status" id="restore-status" aria-live="polite"></span>
                 </div>
@@ -1322,23 +1363,43 @@
                 </dl>
                 <p class="state is-error" id="side-backup-error" hidden></p>
             </section>
+            <section class="section settings-summary" aria-labelledby="backup-contents-title">
+                <h2 id="backup-contents-title">${_('settings.backup_tab.contents_title')}</h2>
+                <p class="section-note">${_('settings.backup_tab.contents_note')}</p>
+                <dl class="facts" id="backup-stats">
+                    <dt>${_('backup.stat_users')}</dt><dd id="backup-stat-users">-</dd>
+                    <dt>${_('backup.stat_settings')}</dt><dd id="backup-stat-settings">-</dd>
+                    <dt>${_('backup.stat_folders')}</dt><dd id="backup-stat-folders">-</dd>
+                    <dt>${_('backup.stat_groups')}</dt><dd id="backup-stat-groups">-</dd>
+                    <dt>${_('settings.backup_tab.stat_strategies')}</dt><dd id="backup-stat-strategies">-</dd>
+                    <dt>${_('settings.backup_tab.stat_backend')}</dt><dd id="backup-stat-backend">-</dd>
+                    <dt>${_('backup.stat_database')}</dt><dd id="backup-stat-database">-</dd>
+                    <dt>${_('backup.stat_keys')}</dt><dd id="backup-stat-keys">-</dd>
+                    <dt>${_('backup.stat_env')}</dt><dd id="backup-stat-env">-</dd>
+                    <dt>${_('settings.backup_tab.stat_uploads')}</dt><dd id="backup-stat-uploads">-</dd>
+                </dl>
+            </section>
         </aside>
         </div>
     </div>
 
-    <!-- ===================== Updates ===================== -->
+<!-- ===================== Updates ===================== -->
+    <!-- Check and install on the left; the channel and the backups made
+         before updates beside it on wide screens. Versions in the side column. -->
     <div class="settings-tab-content" ${panelAttrs('updates')}>
         <div class="page-cols settings-cols">
         <div class="page-main">
+        <div class="settings-grid">
+        <div class="settings-stack">
         <section class="section" aria-labelledby="update-status-headline">
             <h2 id="update-status-headline">${_('updates.title')}</h2>
-            <p class="section-note" id="update-status-desc">${_('updates.desc')}</p>
+            <p class="section-note" id="update-status-desc">${_('settings.updates_tab.idle_note')}</p>
             <div class="settings-inline-controls">
                 <button class="btn" id="update-check-btn" type="button"><span class="material-icons" aria-hidden="true">refresh</span><span class="btn-label">${_('updates.check_now')}</span></button>
             </div>
             <div class="update-alerts" id="update-alerts">
                 <div class="update-docker-info" id="update-docker-info" style="display:none;">
-                    <p class="notice"><strong>${_('updates.docker_title')}.</strong> <span id="update-docker-desc">${_('updates.docker_desc')}</span></p>
+                    <p class="notice"><strong>${_('settings.updates_tab.docker_title')}.</strong> <span id="update-docker-desc">${_('settings.updates_tab.docker_desc')}</span></p>
                     <div class="code-block-head"><span class="code-block-title">${_('settings.updates_tab.docker_commands')}</span><button type="button" class="btn btn-sm" data-copy-from="update-docker-commands"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></div>
                     <pre class="code-block" id="update-docker-commands"></pre>
                     <p class="form-hint" id="update-docker-images"></p>
@@ -1364,34 +1425,42 @@
                     <button class="btn btn-primary" id="update-install-btn" type="button" disabled>${_('updates.install')}</button>
                 </div>
                 <p class="form-hint" id="update-install-blocked-hint" hidden>${_('updates.install_blocked_hint')}</p>
-                <p class="form-hint" id="update-docker-install-note" style="display:none;">${_('updates.docker_install_note')}</p>
+                <p class="form-hint" id="update-docker-install-note" style="display:none;">${_('settings.updates_tab.docker_install_note')}</p>
             </div>
             <div class="update-progress" id="update-progress" style="display:none;">
                 <div class="meter"><span class="meter-bar"><span class="meter-fill" id="update-progress-fill"></span></span></div>
                 <p class="form-hint" id="update-progress-text">${_('updates.installing')}</p>
             </div>
         </section>
+        </div>
 
+        <div class="settings-stack">
         <section class="section form-column" id="update-channel-panel" aria-labelledby="update-channel-title">
             <h2 id="update-channel-title">${_('updates.channel_title')}</h2>
-            <p class="section-note">${_('updates.channel_desc')}</p>
-            <div class="form-group">
-                <label class="form-label" for="update-channel-select">${_('updates.channel_pick_label')}</label>
-                <select id="update-channel-select" class="form-select is-medium">
-                    <option value="stable">${_('updates.channel_stable')}</option>
-                    <option value="development">${_('updates.channel_development')}</option>
-                </select>
-                <p class="field-effect">${_('updates.channel_apply_hint')}</p>
+            <p class="section-note">${_('settings.updates_tab.channel_note')}</p>
+            <fieldset class="form-group" id="update-channel-select" aria-describedby="update-channel-effect">
+                <legend class="sr-only">${_('updates.channel_title')}</legend>
+                <ul class="choice-list">
+                    <li><label class="choice"><input type="radio" name="update-channel" value="stable" id="update-channel-stable">
+                        <span class="choice-title">${_('settings.updates_tab.channel_stable')}</span>
+                        <span class="choice-desc">${_('settings.updates_tab.channel_stable_desc')}</span></label></li>
+                    <li><label class="choice"><input type="radio" name="update-channel" value="development" id="update-channel-development">
+                        <span class="choice-title">${_('settings.updates_tab.channel_development')}</span>
+                        <span class="choice-desc">${_('settings.updates_tab.channel_development_desc')}</span></label></li>
+                </ul>
+                <p class="field-effect" id="update-channel-effect">${_('settings.updates_tab.channel_effect')}</p>
                 <p id="update-channel-docker-hint" class="form-hint" style="display:none"></p>
-            </div>
+            </fieldset>
         </section>
 
-        <details class="disclosure section">
+        <details class="disclosure section" id="update-backups-panel">
             <summary><h2>${_('updates.backups_title')}</h2></summary>
-            <p class="section-note">${_('updates.backups_desc')}</p>
+            <p class="section-note">${_('settings.updates_tab.backups_note')}</p>
+            <p class="count-line" id="backup-summary"></p>
+            <div id="update-backups-list"><p class="state">${_('common.loading')}</p></div>
             <div class="form-column">
                 <div class="form-group">
-                    <label class="form-label" for="backup-retention-input">${_('updates.retention_label')}</label>
+                    <label class="form-label" for="backup-retention-input">${_('settings.updates_tab.retention_label')}</label>
                     <div class="settings-inline-controls">
                         <input type="number" id="backup-retention-input" class="form-input is-short" min="0" max="1000" step="1" value="0">
                         <button class="btn" id="backup-retention-save" type="button">${_('settings.updates_tab.retention_save')}</button>
@@ -1400,15 +1469,9 @@
                     <p class="form-hint">${_('updates.retention_hint')}</p>
                 </div>
             </div>
-            <p class="count-line" id="backup-summary"></p>
-            <div id="update-backups-list"><p class="state">${_('common.loading')}</p></div>
         </details>
-
-        <details class="disclosure section">
-            <summary><h2>${_('updates.option_advanced')}</h2></summary>
-            <p class="section-note">${_('updates.option_advanced_desc')}</p>
-            <p>${_('updates.auto_strategy_hint')}</p>
-        </details>
+        </div>
+        </div>
         </div>
 
         <aside class="page-side is-sticky settings-side" aria-labelledby="updates-side-title">
@@ -1417,8 +1480,8 @@
                 <dl class="facts update-version-info">
                     <dt>${_('updates.current_version')}</dt><dd id="update-local-version">v${appVersion}</dd>
                     <dt>${_('updates.channel_title')}</dt>
-                    <dd><span class="settings-side-value"><span id="update-channel-active-badge">-</span><span class="form-hint">${_('updates.channel_branch_label')}: <span class="mono" id="update-channel-branch">-</span></span></span></dd>
-                    <dt>${_('updates.latest_version')}</dt><dd id="update-remote-version"><span class="text-muted">-</span></dd>
+                    <dd><span class="settings-side-value"><span id="update-channel-active-badge">-</span><span class="form-hint" id="update-channel-branch">-</span></span></dd>
+                    <dt>${_('settings.updates_tab.newest_version')}</dt><dd id="update-remote-version">${_('settings.updates_tab.not_checked')}</dd>
                     <div class="facts-row" id="update-status-row" style="display:none;">
                         <dt>${_('updates.status')}</dt><dd id="update-status-badge"></dd>
                     </div>
@@ -1428,17 +1491,20 @@
         </div>
     </div>
 
-    <!-- ===================== Email ===================== -->
+<!-- ===================== Email ===================== -->
+    <!-- One form. Beside it: whether mail works now (with the connection
+         test, which checks the saved settings) and what sends email. The
+         side column takes the rest of the width (.settings-cols.is-form-side). -->
     <div class="settings-tab-content" ${panelAttrs('email')}>
-        <div class="page-cols settings-cols">
+        <div class="page-cols settings-cols is-form-side">
         <div class="page-main">
         <section class="section" aria-labelledby="email-title">
-            <h2 id="email-title">${_('settings.email.title')}</h2>
-            <p class="section-note">${_('settings.email.desc')}</p>
+            <h2 id="email-title">${_('settings.email.server_title')}</h2>
+            <p class="section-note">${_('settings.email.server_note')}</p>
             <form id="email-smtp-form" class="form-column" data-save-form novalidate>
                 <div class="form-group">
-                    <label class="form-label" for="email-smtp-host">${_('settings.email.smtp_host')}</label>
-                    <input type="text" id="email-smtp-host" class="form-input mono-input" placeholder="smtp.example.com">
+                    <label class="form-label" for="email-smtp-host">${_('settings.email.host_label')}</label>
+                    <input type="text" id="email-smtp-host" class="form-input mono-input is-host" placeholder="smtp.example.com" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="email-smtp-port">${_('settings.email.smtp_port')}</label>
@@ -1446,50 +1512,76 @@
                     <p class="form-hint">${_('settings.email.port_hint')}</p>
                 </div>
                 <label class="check-field"><input type="checkbox" id="email-smtp-secure">
-                    <span class="check-label">${_('settings.email.smtp_secure')}</span>
+                    <span class="check-label">${_('settings.email.secure_label')}</span>
                     <span class="form-hint">${_('settings.email.secure_hint')}</span></label>
-                <div class="form-group">
-                    <label class="form-label" for="email-smtp-user">${_('settings.email.smtp_user')}</label>
-                    <input type="text" id="email-smtp-user" class="form-input" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="email-smtp-pass">${_('settings.email.smtp_pass')}</label>
-                    <input type="password" id="email-smtp-pass" class="form-input" autocomplete="new-password">
-                    <p class="form-hint">${_('settings.email.pass_hint')}</p>
+                <label class="check-field"><input type="checkbox" id="email-smtp-auth" aria-expanded="false">
+                    <span class="check-label">${_('settings.email.auth_label')}</span>
+                    <span class="form-hint">${_('settings.email.auth_hint')}</span></label>
+                <div class="settings-subfields" id="email-smtp-auth-fields" data-show-when="email-smtp-auth" hidden>
+                    <div class="form-group">
+                        <label class="form-label" for="email-smtp-user">${_('settings.email.smtp_user')}</label>
+                        <input type="text" id="email-smtp-user" class="form-input is-host" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email-smtp-pass">${_('settings.email.smtp_pass')}</label>
+                        <input type="password" id="email-smtp-pass" class="form-input is-host" autocomplete="new-password">
+                        <p class="form-hint">${_('settings.email.pass_hint')}</p>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="email-smtp-from">${_('settings.email.smtp_from')}</label>
-                    <input type="email" id="email-smtp-from" class="form-input" placeholder="alerts@example.com">
+                    <input type="email" id="email-smtp-from" class="form-input is-host" placeholder="alerts@example.com">
+                    <p class="form-hint">${_('settings.email.from_hint')}</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="email-smtp-alert">${_('settings.email.alert_email')}</label>
-                    <input type="email" id="email-smtp-alert" class="form-input" placeholder="ops@example.com">
+                    <input type="email" id="email-smtp-alert" class="form-input is-host" placeholder="ops@example.com">
                     <p class="form-hint">${_('settings.email.alert_email_hint')}</p>
                 </div>
-                <p class="form-status" id="email-smtp-test-status" aria-live="polite"></p>
-                <p class="field-effect">${_('settings.email.effect')}</p>
-                ${saveBar(_('settings.email.smtp_save'), `<button type="button" class="btn" id="email-smtp-test-btn">${_('settings.email.smtp_test')}</button>`, 'email-smtp-save-btn')}
+                <p class="field-effect">${_('settings.email.save_effect')}</p>
+                ${saveBar(_('settings.email.smtp_save'), '', 'email-smtp-save-btn')}
             </form>
         </section>
         </div>
 
         <aside class="page-side is-sticky settings-side" aria-labelledby="email-side-title">
+            <div class="settings-side-grid">
             <section class="section settings-summary" aria-labelledby="email-side-title" data-search-skip>
                 <h2 id="email-side-title">${_('settings.side.state_title')}</h2>
                 <p id="side-email-state">${_('common.loading')}</p>
                 <dl class="facts" id="side-email-facts" hidden>
-                    <dt>${_('settings.email.smtp_host')}</dt><dd class="mono" id="side-email-server">-</dd>
+                    <dt>${_('settings.email.host_label')}</dt><dd class="mono" id="side-email-server">-</dd>
                     <dt>${_('settings.email.smtp_from')}</dt><dd id="side-email-from">-</dd>
                     <dt>${_('settings.email.alert_email')}</dt><dd id="side-email-alert">-</dd>
                 </dl>
+                <div class="settings-inline-controls" id="email-smtp-test-row" hidden>
+                    <button type="button" class="btn" id="email-smtp-test-btn">${_('settings.email.smtp_test')}</button>
+                    <span class="form-status" id="email-smtp-test-status" aria-live="polite"></span>
+                </div>
+                <p class="form-hint" id="email-smtp-test-hint" hidden>${_('settings.email.test_hint')}</p>
             </section>
+            <section class="section settings-summary" aria-labelledby="email-uses-title" data-search-skip>
+                <h2 id="email-uses-title">${_('settings.email.uses_title')}</h2>
+                <ul class="list">
+                    <li><a class="list-row" href="/automation"><span class="row-main"><span class="row-title">${_('nav.automation')}</span>
+                        <span class="row-sub">${_('settings.email.uses_alerts')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span></a></li>
+                    <li><a class="list-row" href="/commercialization?settings=1#billing-settings-panel"><span class="row-main"><span class="row-title">${_('nav.help_requests')}</span>
+                        <span class="row-sub">${_('settings.email.uses_help')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span></a></li>
+                </ul>
+            </section>
+            </div>
         </aside>
         </div>
     </div>
 
-    <!-- ===================== Time zones ===================== -->
+<!-- ===================== Time zones ===================== -->
+    <!-- One form (one endpoint): the billing time zone, then the clock
+         sync with its expert options in a disclosure. Beside it: the
+         current billing period in the chosen zone and the server clock. -->
     <div class="settings-tab-content" ${panelAttrs('time')}>
-        <div class="page-cols settings-cols">
+        <div class="page-cols settings-cols is-form-side">
         <div class="page-main">
         <form id="time-clock-settings-form" class="settings-time-form" data-save-form novalidate>
             <section class="section form-column" aria-labelledby="time-zone-title">
@@ -1498,44 +1590,63 @@
                 <div class="form-group">
                     <label class="form-label" for="time-billing-timezone">${_('settings.time.billing_timezone')}</label>
                     <div class="settings-inline-controls">
-                        <select id="time-billing-timezone" class="form-select is-medium"></select>
-                        <button type="button" class="btn" id="time-detect-timezone-btn">${_('settings.time.detect_os')}</button>
+                        <select id="time-billing-timezone" class="form-select is-host" aria-describedby="time-zone-now"></select>
+                        <button type="button" class="btn" id="time-detect-timezone-btn">${_('settings.time.use_server_zone')}</button>
                     </div>
-                    <p class="form-hint">${_('settings.time.billing_timezone_hint')}</p>
+                    <p class="form-hint" id="time-zone-now" aria-live="polite"></p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="time-billing-timezone-custom">${_('settings.time.custom_timezone')}</label>
-                    <input type="text" id="time-billing-timezone-custom" class="form-input is-medium" placeholder="Europe/Warsaw" maxlength="64">
-                    <p class="form-hint">${_('settings.time.custom_timezone_hint')}</p>
-                </div>
+                <details class="disclosure" id="time-custom-zone">
+                    <summary>${_('settings.time.custom_zone_toggle')}</summary>
+                    <div class="form-group">
+                        <label class="form-label" for="time-billing-timezone-custom">${_('settings.time.custom_zone_label')}</label>
+                        <input type="text" id="time-billing-timezone-custom" class="form-input is-medium mono-input" placeholder="Europe/Warsaw" maxlength="64" spellcheck="false">
+                        <p class="form-hint">${_('settings.time.custom_timezone_hint')}</p>
+                    </div>
+                </details>
                 <p class="field-effect" id="time-billing-month-hint">${_('settings.time.billing_month_hint')}</p>
             </section>
 
             <section class="section form-column" aria-labelledby="time-ntp-title">
-                <h2 id="time-ntp-title">${_('settings.time.ntp_title')}</h2>
+                <h2 id="time-ntp-title">${_('settings.time.sync_title')}</h2>
                 <p class="section-note">${_('settings.time.ntp_desc')}</p>
                 <div class="form-group">
-                    <label class="form-label" for="time-clock-ntp-servers">${_('commercialization.clock.ntp_servers')}</label>
-                    <textarea id="time-clock-ntp-servers" class="form-input form-textarea mono-input" rows="2" placeholder="pool.ntp.org,time.google.com"></textarea>
-                    <p class="form-hint">${_('commercialization.clock.ntp_servers_hint')}</p>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="time-clock-max-skew">${_('commercialization.clock.max_skew_ms')}</label>
-                    <input type="number" id="time-clock-max-skew" class="form-input is-short" min="100" max="600000" step="100" value="2000">
+                    <label class="form-label" for="time-clock-ntp-servers">${_('settings.time.servers_label')}</label>
+                    <textarea id="time-clock-ntp-servers" class="form-input form-textarea mono-input" rows="2" placeholder="pool.ntp.org,time.google.com" spellcheck="false"></textarea>
+                    <p class="form-hint">${_('settings.time.servers_hint')}</p>
                 </div>
                 <label class="check-field"><input type="checkbox" id="time-clock-require-sync">
-                    <span class="check-label">${_('commercialization.clock.require_sync')}</span></label>
-                <label class="check-field"><input type="checkbox" id="time-clock-trust-os">
-                    <span class="check-label">${_('commercialization.clock.trust_os')}</span>
-                    <span class="form-hint">${_('commercialization.clock.trust_os_hint')}</span></label>
+                    <span class="check-label">${_('commercialization.clock.require_sync')}</span>
+                    <span class="form-hint">${_('settings.time.require_sync_hint')}</span></label>
+                <details class="disclosure" id="time-clock-advanced">
+                    <summary>${_('settings.time.advanced_toggle')}</summary>
+                    <div class="settings-subfields">
+                        <div class="form-group">
+                            <label class="form-label" for="time-clock-max-skew">${_('settings.time.max_skew_label')}</label>
+                            <input type="number" id="time-clock-max-skew" class="form-input is-short" min="100" max="600000" step="100" value="2000">
+                            <p class="form-hint">${_('settings.time.max_skew_hint')}</p>
+                        </div>
+                        <label class="check-field"><input type="checkbox" id="time-clock-trust-os">
+                            <span class="check-label">${_('settings.time.trust_os_label')}</span>
+                            <span class="form-hint">${_('settings.time.trust_os_hint')}</span></label>
+                    </div>
+                </details>
                 <p class="field-effect is-restart">${_('settings.time.ntp_effect')}</p>
-                <p class="form-hint"><a href="/commercialization?tab=packages">${_('settings.time.commercialization_link')}</a></p>
             </section>
             ${saveBar(_('settings.time.save'), '', 'time-save-clock-settings-btn')}
         </form>
         </div>
 
         <aside class="page-side is-sticky settings-side" aria-labelledby="time-side-title">
+            <div class="settings-side-grid">
+            <section class="section settings-summary" aria-labelledby="time-period-title" data-search-skip>
+                <h2 id="time-period-title">${_('settings.time.period_title')}</h2>
+                <dl class="facts">
+                    <dt>${_('settings.time.period_current')}</dt><dd id="time-period-current">-</dd>
+                    <dt>${_('settings.time.period_next')}</dt><dd id="time-period-next">-</dd>
+                </dl>
+                <p class="form-hint">${_('settings.time.period_hint')}</p>
+                <p class="form-hint"><a href="/commercialization?tab=packages">${_('settings.time.commercialization_link')}</a></p>
+            </section>
             <section class="section settings-summary" aria-labelledby="time-side-title">
                 <h2 id="time-side-title">${_('settings.side.clock_title')}</h2>
                 <p id="time-clock-detail" aria-live="polite"></p>
@@ -1550,13 +1661,16 @@
                     <span class="form-status" id="time-check-status" aria-live="polite"></span>
                 </div>
             </section>
+            </div>
         </aside>
         </div>
     </div>
 
-    <!-- ===================== Advanced ===================== -->
+<!-- ===================== Advanced ===================== -->
+    <!-- File list (editable files first, read-only and missing ones after)
+         beside the editor; restarting services is in the danger zone under it. -->
     <div class="settings-tab-content" ${panelAttrs('advanced')}>
-        <section class="danger-zone advanced-config" aria-labelledby="advanced-title">
+        <section class="section advanced-config" aria-labelledby="advanced-title">
             <h2 id="advanced-title">${_('settings.advanced_title')}</h2>
             <p class="section-note">${_('settings.advanced_tab.note')}</p>
             <p class="notice warning">${_('settings.advanced_warning')}</p>
@@ -1570,12 +1684,11 @@
                 <div class="split-detail advanced-config-editor">
                     <div class="advanced-config-editor-toolbar" id="advanced-config-toolbar" hidden>
                         <div class="advanced-config-editor-meta">
-                            <code class="advanced-config-path" id="advanced-config-path"></code>
+                            <span class="value-field is-one-line"><code class="advanced-config-path" id="advanced-config-path"></code><button type="button" class="btn btn-sm" data-copy-target="advanced-config-path">${_('actions.copy')}</button></span>
                             <span class="form-hint" id="advanced-config-meta"></span>
                         </div>
                         <div class="settings-inline-controls">
                             <button type="button" class="btn btn-sm" id="advanced-config-reload"><span class="material-icons" aria-hidden="true">refresh</span><span class="btn-label">${_('settings.advanced_reload')}</span></button>
-                            <button type="button" class="btn btn-sm" id="advanced-config-restart" hidden>${_('settings.advanced_apply_restart')}</button>
                             <button type="button" class="btn btn-sm btn-primary" id="advanced-config-save">${_('settings.advanced_save')}</button>
                         </div>
                     </div>
@@ -1586,7 +1699,17 @@
                 </div>
             </div>
         </section>
+
+        <section class="danger-zone" id="advanced-restart-zone" aria-labelledby="advanced-restart-title" hidden>
+            <h2 id="advanced-restart-title">${_('settings.advanced_tab.restart_title')}</h2>
+            <ul class="list">
+                <li class="list-row"><span class="row-main"><span class="row-title">${_('settings.advanced_tab.restart_row')}</span>
+                    <span class="row-sub" id="advanced-restart-desc">${_('settings.advanced_tab.restart_desc')}</span></span>
+                    <span class="row-end"><button type="button" class="btn btn-danger-quiet" id="advanced-config-restart">${_('settings.advanced_tab.restart_button')}</button></span></li>
+            </ul>
+        </section>
     </div>
+
     ` : ''}
 </div>
 `

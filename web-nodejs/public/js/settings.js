@@ -44,6 +44,7 @@
         if (CAN_SERVER_CONFIG()) initRestartCoordinator();
         initSettingsSearch();
         initSettingsSide();
+        initShowWhen();
         revealHashTarget();
 
         // Only the visible tab loads its data; the other tabs are in the page
@@ -51,6 +52,7 @@
         switch (tab) {
             case 'general':
                 loadServerInfo();
+                initGeneralSave();
                 initPublicEndpointsSection();
                 initConnectionModeSection();
                 initDeviceScopeSection();
@@ -496,17 +498,93 @@
     let _timeClockDockerMode = false;
     let _timeCommonZones = [];
 
+    // UTC offset of a time zone right now, e.g. "UTC+01:00"; '' for an unknown zone
+    function timeZoneOffset(zone, at = new Date()) {
+        try {
+            const part = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'longOffset' })
+                .formatToParts(at).find((p) => p.type === 'timeZoneName');
+            return (part?.value || '').replace(/^GMT/, 'UTC') || 'UTC';
+        } catch (_e) {
+            return '';
+        }
+    }
+
+    // Every time zone the browser knows (plus the server's list and the saved
+    // one), grouped by region, each with its offset now.
     function fillTimezoneSelect(selected, common) {
         const select = document.getElementById('time-billing-timezone');
         if (!select) return;
-        const zones = Array.from(new Set([...(common || []), selected, 'UTC', 'Europe/Warsaw'].filter(Boolean))).sort();
-        select.innerHTML = zones.map((z) =>
-            `<option value="${Utils.escapeHtml(z)}"${z === selected ? ' selected' : ''}>${Utils.escapeHtml(z)}</option>`
-        ).join('');
+        let known = [];
+        try { known = Intl.supportedValuesOf('timeZone'); } catch (_e) { known = []; }
+        const zones = Array.from(new Set([...known, ...(common || []), selected, 'UTC'].filter(Boolean)))
+            .filter((z) => timeZoneOffset(z))
+            .sort();
+        const option = (z) => `<option value="${Utils.escapeHtml(z)}"${z === selected ? ' selected' : ''}>${Utils.escapeHtml(z.replace(/_/g, ' '))} (${timeZoneOffset(z)})</option>`;
+        const groups = new Map();
+        zones.filter((z) => z.includes('/')).forEach((z) => {
+            const region = z.split('/')[0];
+            if (!groups.has(region)) groups.set(region, []);
+            groups.get(region).push(z);
+        });
+        select.innerHTML = zones.filter((z) => !z.includes('/')).map(option).join('') +
+            Array.from(groups.entries()).map(([region, list]) =>
+                `<optgroup label="${Utils.escapeHtml(region)}">${list.map(option).join('')}</optgroup>`).join('');
         const custom = document.getElementById('time-billing-timezone-custom');
         if (custom && selected && !zones.includes(selected)) {
             custom.value = selected;
+            const box = document.getElementById('time-custom-zone');
+            if (box) box.open = true;
         }
+        renderBillingPeriod();
+    }
+
+    // The hint under the picker and the side column: what the chosen zone means now
+    function renderBillingPeriod() {
+        const zone = resolveSelectedTimezone();
+        const nowEl = document.getElementById('time-zone-now');
+        const currentEl = document.getElementById('time-period-current');
+        const nextEl = document.getElementById('time-period-next');
+        const offset = timeZoneOffset(zone);
+        if (!offset) {
+            if (nowEl) nowEl.textContent = _('settings.time.zone_unknown').replace('{zone}', zone);
+            if (currentEl) currentEl.textContent = '-';
+            if (nextEl) nextEl.textContent = '-';
+            return;
+        }
+        const locale = document.documentElement.lang || undefined;
+        const now = new Date();
+        if (nowEl) {
+            const time = new Intl.DateTimeFormat(locale, { timeZone: zone, weekday: 'long', hour: '2-digit', minute: '2-digit' }).format(now);
+            nowEl.textContent = _('settings.time.zone_now').replace('{offset}', offset).replace('{time}', time);
+        }
+        const parts = new Intl.DateTimeFormat('en-US', { timeZone: zone, year: 'numeric', month: 'numeric' }).formatToParts(now);
+        const year = Number(parts.find((p) => p.type === 'year')?.value);
+        const month = Number(parts.find((p) => p.type === 'month')?.value);
+        // Calendar dates in that zone, formatted as plain dates (no shift)
+        const day = (y, m, d) => new Intl.DateTimeFormat(locale, { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })
+            .format(new Date(Date.UTC(y, m - 1, d, 12)));
+        const lastDay = new Date(Date.UTC(year, month, 0, 12)).getUTCDate();
+        if (currentEl) {
+            currentEl.textContent = _('settings.time.period_range')
+                .replace('{start}', day(year, month, 1))
+                .replace('{end}', day(year, month, lastDay));
+        }
+        if (nextEl) {
+            const ny = month === 12 ? year + 1 : year;
+            const nm = month === 12 ? 1 : month + 1;
+            nextEl.textContent = _('settings.time.period_next_value').replace('{date}', day(ny, nm, 1)).replace('{zone}', zone);
+        }
+    }
+
+    // Server error codes in plain words
+    function timeSettingsError(err) {
+        const map = {
+            invalid_billing_timezone: 'settings.time.error_timezone',
+            invalid_ntp_servers: 'settings.time.error_servers',
+            invalid_max_skew: 'settings.time.error_skew'
+        };
+        const key = map[err?.message];
+        return key ? _(key) : (err?.message || _('errors.server_error'));
     }
 
     async function loadTimeSettingsTab() {
@@ -547,14 +625,14 @@
             const synced = !!st.synced;
             if (detail) {
                 detail.textContent = synced
-                    ? (typeof __ === 'function' ? __('commercialization.clock.synced_detail') : 'Clock synchronized for billing')
-                    : (typeof __ === 'function' ? __('commercialization.clock.unsynced') : 'Server clock is not synchronized');
+                    ? _('commercialization.clock.synced_detail')
+                    : _('commercialization.clock.unsynced');
             }
             if (offsetEl) offsetEl.textContent = st.offset_ms != null ? `${st.offset_ms} ms` : '-';
             if (ntpServerEl) ntpServerEl.textContent = st.ntp_server || '-';
             if (osSyncEl) {
-                if (st.os_clock_synced === true) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_yes') : 'Yes';
-                else if (st.os_clock_synced === false) osSyncEl.textContent = typeof __ === 'function' ? __('commercialization.clock.os_no') : 'No';
+                if (st.os_clock_synced === true) osSyncEl.textContent = _('commercialization.clock.os_yes');
+                else if (st.os_clock_synced === false) osSyncEl.textContent = _('commercialization.clock.os_no');
                 else osSyncEl.textContent = '-';
             }
             if (lastErrorEl) lastErrorEl.textContent = st.last_error || '-';
@@ -584,6 +662,7 @@
                 fillTimezoneSelect(tz, data.common || _timeCommonZones);
                 const custom = document.getElementById('time-billing-timezone-custom');
                 if (custom) custom.value = '';
+                renderBillingPeriod();
                 if (form && window.UiForm) UiForm.markDirty(form);
                 setStatus(checkStatus, '');
                 if (form && window.UiForm) {
@@ -601,7 +680,7 @@
             setStatus(checkStatus, '');
             try {
                 await Utils.api('/api/panel/billing/timesync/check', { method: 'POST' });
-                setStatus(checkStatus, typeof __ === 'function' ? __('commercialization.clock.checked') : 'Clock check completed', 'ok');
+                setStatus(checkStatus, _('commercialization.clock.checked'), 'ok');
                 await refreshTimeSyncStatus();
             } catch (e) {
                 setStatus(checkStatus, e.message || _('errors.server_error'), 'error');
@@ -610,14 +689,15 @@
             }
         });
 
+        document.getElementById('time-billing-timezone')?.addEventListener('change', renderBillingPeriod);
+        document.getElementById('time-billing-timezone-custom')?.addEventListener('input', renderBillingPeriod);
+
         form?.addEventListener('submit', async (ev) => {
             ev.preventDefault();
             if (!_timeClockDockerMode) {
                 const ok = await settingsConfirmCritical({
                     title: tSettings('time.save_title', 'Save time settings'),
-                    message: typeof __ === 'function'
-                        ? __('commercialization.clock.save_restart')
-                        : 'Save NTP settings and restart the BetterDesk Go server? Active sessions may disconnect briefly.',
+                    message: _('commercialization.clock.save_restart'),
                     confirmLabel: tSettings('time.save', 'Save'),
                     icon: 'schedule'
                 });
@@ -644,13 +724,13 @@
                 } else {
                     formOk(form,
                         result.dockerMode
-                            ? (typeof __ === 'function' ? __('commercialization.clock.saved_hot_reload') : 'Clock settings saved.')
+                            ? _('commercialization.clock.saved_hot_reload')
                             : tSettings('time.saved', 'Time settings saved.')
                     );
                 }
                 await refreshTimeSyncStatus();
             } catch (e) {
-                formFail(form, e.message || _('errors.server_error'));
+                formFail(form, timeSettingsError(e));
             }
         });
     }
@@ -883,7 +963,7 @@
                 const goVer = data.goServer?.version;
                 goVerEl.textContent = goVer ? `v${goVer}` : '-';
                 if (goVer && goVer === 'dev' && data.app?.version && data.app.version !== 'dev') {
-                    goVerEl.textContent += ' ' + _('settings.go_server_version_dev_hint');
+                    goVerEl.textContent = _('settings.general.dev_build');
                 }
             }
         } catch (error) {
@@ -899,24 +979,133 @@
         const days = Math.floor(seconds / 86400);
         const hours = Math.floor((seconds % 86400) / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
+        // Units in the console language ("2 days 3 hr" / "2 Tage 3 Std.")
+        let locale;
+        try { locale = Utils._dateLocale ? Utils._dateLocale() : undefined; } catch { locale = undefined; }
+        const unit = (n, u) => {
+            try { return new Intl.NumberFormat(locale, { style: 'unit', unit: u, unitDisplay: 'short' }).format(n); }
+            catch { return `${n} ${u}`; }
+        };
         const parts = [];
-        if (days > 0) parts.push(`${days}d`);
-        if (hours > 0) parts.push(`${hours}h`);
-        if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
+        if (days > 0) parts.push(unit(days, 'day'));
+        if (hours > 0) parts.push(unit(hours, 'hour'));
+        if (days === 0 && (minutes > 0 || parts.length === 0)) parts.push(unit(minutes, 'minute'));
         return parts.join(' ');
+    }
+
+    // ==================== Fields shown only when they apply ====================
+    // <div data-show-when="checkbox-id"> is shown while that checkbox is on;
+    // <div data-show-when="radio-name:value1,value2"> while one of those
+    // values is picked. The controls get aria-controls. Call syncShowWhen()
+    // after filling a form from the server (that fires no change events).
+
+    function showWhenControls(spec) {
+        const [ref, values] = String(spec || '').split(':');
+        if (values === undefined) {
+            const el = document.getElementById(ref);
+            return el ? [el] : [];
+        }
+        return Array.from(document.querySelectorAll(`input[name="${CSS.escape(ref)}"]`));
+    }
+
+    function showWhenMatches(spec) {
+        const [ref, values] = String(spec || '').split(':');
+        if (values === undefined) return !!document.getElementById(ref)?.checked;
+        const picked = document.querySelector(`input[name="${CSS.escape(ref)}"]:checked`);
+        return !!picked && values.split(',').includes(picked.value);
+    }
+
+    function syncShowWhen() {
+        document.querySelectorAll('[data-show-when]').forEach((el) => {
+            el.hidden = !showWhenMatches(el.dataset.showWhen);
+        });
+    }
+
+    function initShowWhen() {
+        const groups = Array.from(document.querySelectorAll('[data-show-when]'));
+        if (!groups.length) return;
+        groups.forEach((el) => {
+            if (!el.id) return;
+            showWhenControls(el.dataset.showWhen).forEach((ctl) => {
+                const ids = new Set((ctl.getAttribute('aria-controls') || '').split(/\s+/).filter(Boolean));
+                ids.add(el.id);
+                ctl.setAttribute('aria-controls', Array.from(ids).join(' '));
+            });
+        });
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.matches && e.target.matches('input[type=checkbox], input[type=radio]')) syncShowWhen();
+        });
+        syncShowWhen();
+    }
+
+    // ==================== General: one save for the whole page ====================
+    // Each section is a part with its own endpoint. Save sends only the parts
+    // that changed, one after the other, and says which were saved and which
+    // were not (and why). A part that fails keeps its changes.
+
+    const GENERAL_PARTS = [
+        { key: 'endpoints', title: () => _('settings.public_endpoints_title'), save: () => savePublicEndpoints() },
+        { key: 'connection', title: () => _('settings.connection_mode_title'), save: () => saveConnectionMode() },
+        { key: 'scope', title: () => _('settings.device_scope_title'), save: () => saveDeviceScope() },
+        { key: 'availability', title: () => _('settings.availability_history_title'), save: () => saveAvailabilityHistory() },
+    ];
+
+    function initGeneralSave() {
+        const form = document.getElementById('general-form');
+        if (!form) return;
+        const dirty = new Set();
+        const onChange = (e) => {
+            if (!e.target || e.target.closest('[data-save-ignore]')) return;
+            const part = e.target.closest('[data-save-part]');
+            if (part) dirty.add(part.dataset.savePart);
+        };
+        form.addEventListener('input', onChange);
+        form.addEventListener('change', onChange);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!dirty.size) {
+                formOk(form, _('settings.general.no_changes'));
+                return;
+            }
+            const btn = form.querySelector('[data-save-button]');
+            setBusy(btn, true);
+            const saved = [];
+            const problems = [];
+            let restart = null;
+            for (const part of GENERAL_PARTS) {
+                if (!dirty.has(part.key)) continue;
+                try {
+                    const result = await part.save();
+                    if (result === false) {
+                        problems.push(_('settings.general.part_cancelled').replace('{part}', part.title()));
+                        continue;
+                    }
+                    if (result && result.restartRequired) restart = result.restartRequired;
+                    dirty.delete(part.key);
+                    saved.push(part.title());
+                } catch (err) {
+                    problems.push(_('settings.general.part_failed')
+                        .replace('{part}', part.title())
+                        .replace('{error}', err.message || _('errors.server_error')));
+                }
+            }
+            setBusy(btn, false);
+            const savedLine = saved.length ? _('settings.general.parts_saved').replace('{parts}', saved.join(', ')) : '';
+            if (!problems.length) {
+                formOk(form, savedLine);
+            } else {
+                formFail(form, [savedLine, ...problems].filter(Boolean).join(' '));
+            }
+            if (restart) showRestartPrompt(restart);
+        });
     }
 
     // ==================== Device scope default ====================
 
     function initDeviceScopeSection() {
-        const form = document.getElementById('device-scope-form');
-        if (!form) return;
-        const warningEl = document.getElementById('device-scope-warning');
-
-        function updateWarning() {
-            const restricted = document.getElementById('device-scope-restricted')?.checked;
-            if (warningEl) warningEl.hidden = !restricted;
-        }
+        const part = document.getElementById('device-scope-form');
+        if (!part) return;
 
         async function loadDeviceScopeSetting() {
             try {
@@ -926,37 +1115,27 @@
                 const restrictedEl = document.getElementById('device-scope-restricted');
                 if (openEl) openEl.checked = mode === 'open';
                 if (restrictedEl) restrictedEl.checked = mode === 'restricted';
-                updateWarning();
+                syncShowWhen();
             } catch (err) {
-                formFail(form, err.message || _('errors.server_error'));
+                formFail(document.getElementById('general-form'), err.message || _('errors.server_error'));
             }
         }
 
-        form.querySelectorAll('input[name="device_scope_mode"]').forEach(input => {
-            input.addEventListener('change', updateWarning);
-        });
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const selected = form.querySelector('input[name="device_scope_mode"]:checked');
-            const mode = selected ? selected.value : 'open';
-            try {
-                await Utils.api('/api/settings/device-scope', { method: 'POST', body: { mode } });
-                formOk(form, _('settings.device_scope_saved'));
-                updateWarning();
-            } catch (err) {
-                formFail(form, err.message || _('errors.server_error'));
-            }
-        });
-
         loadDeviceScopeSetting();
+    }
+
+    async function saveDeviceScope() {
+        const selected = document.querySelector('input[name="device_scope_mode"]:checked');
+        const mode = selected ? selected.value : 'open';
+        await Utils.api('/api/settings/device-scope', { method: 'POST', body: { mode } });
+        return true;
     }
 
     // ==================== Availability history (#455) ====================
 
     function initAvailabilityHistorySection() {
-        const form = document.getElementById('availability-history-form');
-        if (!form) return;
+        const part = document.getElementById('availability-history-form');
+        if (!part) return;
         const enabledEl = document.getElementById('availability-history-enabled');
         const retentionEl = document.getElementById('availability-history-retention');
 
@@ -965,90 +1144,140 @@
                 const data = await Utils.api('/api/settings/availability-history');
                 if (enabledEl) enabledEl.checked = !!data.enabled;
                 if (retentionEl) retentionEl.value = data.retention_days || 30;
+                syncShowWhen();
             } catch (err) {
-                formFail(form, err.message || _('errors.server_error'));
+                formFail(document.getElementById('general-form'), err.message || _('errors.server_error'));
             }
         }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const enabled = !!(enabledEl && enabledEl.checked);
-            let retention = parseInt(retentionEl && retentionEl.value, 10);
-            if (!Number.isFinite(retention) || retention < 1) retention = 30;
-            try {
-                await Utils.api('/api/settings/availability-history', {
-                    method: 'POST',
-                    body: { enabled, retention_days: retention }
-                });
-                formOk(form, _('settings.availability_history_saved'));
-            } catch (err) {
-                formFail(form, err.message || _('errors.server_error'));
-            }
-        });
 
         loadAvailabilityHistorySetting();
     }
 
+    async function saveAvailabilityHistory() {
+        const enabled = !!document.getElementById('availability-history-enabled')?.checked;
+        let retention = parseInt(document.getElementById('availability-history-retention')?.value, 10);
+        if (!Number.isFinite(retention) || retention < 1) retention = 30;
+        await Utils.api('/api/settings/availability-history', {
+            method: 'POST',
+            body: { enabled, retention_days: retention }
+        });
+        return true;
+    }
+
     // ==================== MeshCentral compatibility ====================
+    // Status and IDs as facts, mesh groups as a table (add, rename and remove
+    // save right away), how to install the agent in a closed disclosure, and
+    // the recordings the server keeps.
 
     function initMeshSettingsSection() {
         const panel = document.getElementById('mesh-settings-panel');
         if (!panel) return;
 
+        const stateEl = document.getElementById('mesh-state');
+        const bodyEl = document.getElementById('mesh-body');
         const enabledEl = document.getElementById('mesh-status-enabled');
         const agentsEl = document.getElementById('mesh-agents-online');
         const serverIdEl = document.getElementById('mesh-server-id');
+        const certEl = document.getElementById('mesh-cert-state');
         const downloadBtn = document.getElementById('mesh-download-msh');
         const copyBtn = document.getElementById('mesh-copy-server-id');
         const nameInput = document.getElementById('mesh-msh-name');
         const certBanner = document.getElementById('mesh-cert-banner');
         const groupsList = document.getElementById('mesh-groups-list');
-        const groupsForm = document.getElementById('mesh-groups-form');
+        const groupsStatus = document.getElementById('mesh-groups-status');
         const recordingsTable = document.getElementById('mesh-recordings-table');
         let meshGroups = [];
+
+        const esc = (v) => Utils.escapeHtml(v == null ? '' : String(v));
+        const mshHref = (group, name) => {
+            let href = `/api/mesh/download.msh?name=${encodeURIComponent((name || '').trim() || 'BetterDesk Mesh')}`;
+            const meshId = group && group.mesh_id ? String(group.mesh_id).trim() : '';
+            if (meshId) href += `&mesh_id=${encodeURIComponent(meshId)}`;
+            return href;
+        };
 
         function renderMeshGroups() {
             if (!groupsList) return;
             if (!meshGroups.length) {
-                groupsList.innerHTML = `<p class="state">${_('mesh.groups_empty')}</p>`;
+                groupsList.innerHTML = `<p class="state">${_('settings.general.mesh_groups_empty')}</p>`;
                 return;
             }
-            groupsList.innerHTML = '<ul class="list">' + meshGroups.map((g) => {
-                const meshId = g.mesh_id
-                    ? `<span class="row-sub">MeshID <code>${Utils.escapeHtml(g.mesh_id)}</code></span>`
-                    : '';
-                return `<li class="list-row mesh-group-row"><span class="row-main">
-                    <span class="row-title">${Utils.escapeHtml(g.name || '')} <code>${Utils.escapeHtml(g.id || '')}</code></span>${meshId}
-                </span></li>`;
-            }).join('') + '</ul>';
+            groupsList.innerHTML = `<div class="table-scroll"><table class="data-table mesh-groups-table">
+                <thead><tr>
+                    <th scope="col">${_('settings.general.mesh_col_name')}</th>
+                    <th scope="col">${_('settings.general.mesh_col_id')}</th>
+                    <th scope="col">${_('settings.general.mesh_col_meshid')}</th>
+                    <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                </tr></thead><tbody>` + meshGroups.map((g, i) => {
+                    const menuId = `mesh-group-menu-${i}`;
+                    const meshId = g.mesh_id
+                        ? `<span class="value-field is-one-line"><code id="mesh-group-meshid-${i}" title="${esc(g.mesh_id)}">${esc(g.mesh_id)}</code><button type="button" data-mesh-copy="${i}" aria-label="${esc(_('settings.general.mesh_group_copy_id'))}: ${esc(g.name || g.id)}">${iconHtml('copy')}<span class="btn-label">${_('actions.copy')}</span></button></span>`
+                        : '-';
+                    return `<tr>
+                        <td>${esc(g.name || '')}</td>
+                        <td class="mono">${esc(g.id || '')}</td>
+                        <td class="mesh-meshid-cell">${meshId}</td>
+                        <td class="actions"><span class="menu-anchor">
+                            <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"
+                                    aria-label="${esc(_('settings.general.mesh_group_actions').replace('{name}', g.name || g.id || ''))}">
+                                <span class="material-icons" aria-hidden="true">more_vert</span></button>
+                            <span class="menu menu-end${i >= meshGroups.length - 1 && meshGroups.length > 2 ? ' menu-up' : ''}" id="${menuId}" role="menu">
+                                <a class="menu-item" role="menuitem" href="${esc(mshHref(g, g.name))}" download="meshagents.msh">${iconHtml('download')}${_('settings.general.mesh_group_download')}</a>
+                                <button type="button" class="menu-item" role="menuitem" data-mesh-rename="${i}">${iconHtml('rename')}${_('settings.general.mesh_group_rename')}</button>
+                                <span class="menu-divider"></span>
+                                <button type="button" class="menu-item danger" role="menuitem" data-mesh-remove="${i}">${iconHtml('delete')}${_('settings.general.mesh_group_remove')}</button>
+                            </span>
+                        </span></td>
+                    </tr>`;
+                }).join('') + '</tbody></table></div>';
+        }
+
+        async function saveMeshGroups(next, okMessage) {
+            setStatus(groupsStatus, '');
+            await Utils.api('/api/mesh/groups', { method: 'POST', body: { groups: next } });
+            await loadMeshGroups();
+            setStatus(groupsStatus, okMessage, 'ok');
+            if (window.Notifications) Notifications.success(okMessage);
         }
 
         async function loadMeshStatus() {
+            let data = null;
             try {
                 const resp = await Utils.api('/api/mesh/status');
-                const data = resp.data || resp;
-                if (enabledEl) {
-                    enabledEl.innerHTML = data.enabled
-                        ? `<span class="status ok">${Utils.escapeHtml(_('mesh.enabled_label'))}</span>`
-                        : `<span class="status offline">${Utils.escapeHtml(_('mesh.disabled_label'))}</span>`;
-                }
-                if (agentsEl) agentsEl.textContent = String(data.agents_online != null ? data.agents_online : 0);
-                if (serverIdEl && data.server_id) serverIdEl.textContent = data.server_id;
-                if (certBanner) {
-                    if (data.enabled && !data.cert_present) {
-                        certBanner.textContent = _('mesh.cert_missing');
-                        certBanner.classList.remove('hidden');
-                        certBanner.classList.add('warning');
-                    } else if (data.cert_present) {
-                        certBanner.textContent = _('mesh.cert_ok') + (data.cert_modified ? ', ' + data.cert_modified : '');
-                        certBanner.classList.remove('hidden', 'warning');
-                    } else {
-                        certBanner.classList.add('hidden');
-                    }
-                }
+                data = resp.data || resp;
             } catch {
-                if (enabledEl) enabledEl.innerHTML = `<span class="status offline">${Utils.escapeHtml(_('mesh.disabled_label'))}</span>`;
+                data = null;
             }
+            if (!data || !data.enabled) {
+                // Nothing to set up while the layer is off: one line, nothing else
+                if (stateEl) {
+                    stateEl.className = 'state';
+                    stateEl.textContent = _('settings.general.mesh_off');
+                    stateEl.hidden = false;
+                }
+                if (bodyEl) bodyEl.hidden = true;
+                return false;
+            }
+            if (stateEl) stateEl.hidden = true;
+            if (bodyEl) bodyEl.hidden = false;
+            if (enabledEl) enabledEl.innerHTML = `<span class="status ok">${esc(_('mesh.enabled_label'))}</span>`;
+            if (agentsEl) agentsEl.textContent = String(data.agents_online != null ? data.agents_online : 0);
+            if (serverIdEl && data.server_id) {
+                serverIdEl.textContent = data.server_id;
+                serverIdEl.title = data.server_id;
+            }
+            if (certEl) {
+                certEl.textContent = data.cert_present
+                    ? (data.cert_modified
+                        ? _('settings.general.mesh_cert_since').replace('{date}', Utils.formatDate(data.cert_modified))
+                        : _('settings.general.mesh_cert_present'))
+                    : _('settings.general.mesh_cert_none');
+            }
+            if (certBanner) {
+                certBanner.hidden = !!data.cert_present;
+                certBanner.textContent = data.cert_present ? '' : _('settings.general.mesh_cert_missing');
+            }
+            return true;
         }
 
         async function loadMeshGroups() {
@@ -1059,7 +1288,8 @@
                 meshGroups = Array.isArray(data.groups) ? data.groups : [];
                 renderMeshGroups();
             } catch {
-                groupsList.innerHTML = `<p class="state is-error">${_('mesh.groups_load_error')}</p>`;
+                groupsList.innerHTML = `<p class="state is-error">${_('mesh.groups_load_error')} <button type="button" class="btn btn-sm" id="mesh-groups-retry">${_('actions.retry')}</button></p>`;
+                document.getElementById('mesh-groups-retry')?.addEventListener('click', loadMeshGroups);
             }
         }
 
@@ -1070,60 +1300,135 @@
                 const data = resp.data || resp;
                 const rows = Array.isArray(data.recordings) ? data.recordings : [];
                 if (!rows.length) {
-                    recordingsTable.innerHTML = `<p class="state">${_('mesh.recordings_empty')}</p>`;
+                    recordingsTable.innerHTML = `<p class="form-hint">${_('settings.general.rec_empty')}</p>`;
                     return;
                 }
-                recordingsTable.innerHTML = `<div class="table-scroll"><table class="data-table"><thead><tr>
-                    <th>${_('settings.general.rec_transport')}</th><th>${_('settings.general.rec_device')}</th>
-                    <th>${_('settings.general.rec_type')}</th><th>${_('settings.general.rec_size')}</th>
-                    <th class="actions"><span class="sr-only">${_('common.actions')}</span></th></tr></thead><tbody>` +
+                recordingsTable.innerHTML = `<p class="form-hint">${_('settings.general.rec_note')}</p>
+                    <div class="table-scroll"><table class="data-table"><thead><tr>
+                    <th scope="col">${_('settings.general.rec_device')}</th><th scope="col">${_('settings.general.rec_type')}</th>
+                    <th scope="col">${_('settings.general.rec_when')}</th><th scope="col">${_('settings.general.rec_size')}</th>
+                    <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th></tr></thead><tbody>` +
                     rows.map((r) => {
                         const dl = r.transport === 'mesh' && r.id
                             ? `<a class="btn btn-sm" href="/api/mesh/recordings/${encodeURIComponent(r.id)}">${iconHtml('download')}${_('mesh.recording_download')}</a>`
                             : '';
-                        return `<tr><td>${Utils.escapeHtml(r.transport || '')}</td><td class="mono">${Utils.escapeHtml(r.peer_id || '')}</td><td>${Utils.escapeHtml(r.session_type || '')}</td><td>${Utils.escapeHtml(formatBytes(Number(r.size) || 0))}</td><td class="actions">${dl}</td></tr>`;
+                        const via = r.transport && r.transport !== 'mesh' ? `<span class="cell-sub">${esc(r.transport)}</span>` : '';
+                        return `<tr><td class="mono">${esc(r.peer_id || '')}${via}</td><td>${esc(r.session_type || '')}</td>`
+                            + `<td>${esc(r.modified ? Utils.formatDate(r.modified) : '-')}</td>`
+                            + `<td>${esc(formatBytes(Number(r.size) || 0))}</td><td class="actions">${dl}</td></tr>`;
                     }).join('') + '</tbody></table></div>';
             } catch {
-                recordingsTable.innerHTML = `<p class="state is-error">${_('mesh.recordings_load_error')}</p>`;
+                recordingsTable.innerHTML = `<p class="state is-error">${_('mesh.recordings_load_error')} <button type="button" class="btn btn-sm" id="mesh-recordings-retry">${_('actions.retry')}</button></p>`;
+                document.getElementById('mesh-recordings-retry')?.addEventListener('click', loadMeshRecordings);
             }
         }
 
-        document.getElementById('mesh-group-add')?.addEventListener('click', () => {
-            const idInput = document.getElementById('mesh-group-id');
-            const nameInputG = document.getElementById('mesh-group-name');
-            const id = idInput?.value.trim();
-            const name = nameInputG?.value.trim();
-            if (!id || !name) {
-                formFail(groupsForm, _('settings.general.mesh_group_needs_both'));
-                (id ? nameInputG : idInput)?.focus();
+        function openAddGroupDialog() {
+            const opener = document.getElementById('mesh-group-add');
+            Modal.show({
+                title: _('settings.general.mesh_group_add_title'),
+                content: `<form id="mesh-group-add-form" class="form-column" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="mesh-group-name">${_('mesh.group_name_placeholder')}</label>
+                        <input type="text" id="mesh-group-name" class="form-input" maxlength="80" autocomplete="off">
+                        <p class="form-hint">${_('settings.general.mesh_group_name_hint')}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="mesh-group-id">${_('mesh.group_id_placeholder')}</label>
+                        <input type="text" id="mesh-group-id" class="form-input is-medium mono-input" maxlength="64" autocomplete="off" spellcheck="false">
+                        <p class="form-hint">${_('settings.general.mesh_group_id_hint')}</p>
+                    </div>
+                    <p class="form-status" id="mesh-group-add-status" aria-live="polite"></p>
+                    <button type="submit" hidden></button>
+                </form>`,
+                buttons: [
+                    { label: _('actions.cancel'), class: '', onClick: () => Modal.close() },
+                    { label: _('mesh.group_add'), class: 'btn-primary', icon: 'add', onClick: submitAdd },
+                ],
+            });
+            document.getElementById('mesh-group-add-form')?.addEventListener('submit', (e) => { e.preventDefault(); submitAdd(); });
+
+            async function submitAdd() {
+                const idInput = document.getElementById('mesh-group-id');
+                const nameInputG = document.getElementById('mesh-group-name');
+                const status = document.getElementById('mesh-group-add-status');
+                const id = idInput?.value.trim();
+                const name = nameInputG?.value.trim();
+                if (!id || !name) {
+                    setStatus(status, _('settings.general.mesh_group_needs_both'), 'error');
+                    (name ? idInput : nameInputG)?.focus();
+                    return;
+                }
+                if (meshGroups.some((g) => String(g.id) === id)) {
+                    setStatus(status, _('settings.general.mesh_group_exists'), 'error');
+                    idInput?.focus();
+                    return;
+                }
+                try {
+                    setStatus(status, _('branding.status_saving'));
+                    await saveMeshGroups([...meshGroups, { id, name }], _('settings.general.mesh_group_added'));
+                    Modal.close();
+                    opener?.focus();
+                } catch (err) {
+                    setStatus(status, err.message || _('mesh.groups_save_error'), 'error');
+                }
+            }
+        }
+
+        document.getElementById('mesh-group-add')?.addEventListener('click', openAddGroupDialog);
+
+        groupsList?.addEventListener('click', async (e) => {
+            const copy = e.target.closest('[data-mesh-copy]');
+            if (copy) {
+                const g = meshGroups[Number(copy.dataset.meshCopy)];
+                if (g && g.mesh_id) navigator.clipboard?.writeText(g.mesh_id).then(() => flashCopied(copy)).catch(() => {});
                 return;
             }
-            meshGroups.push({ id, name });
-            if (idInput) idInput.value = '';
-            if (nameInputG) nameInputG.value = '';
-            renderMeshGroups();
-            if (groupsForm && window.UiForm) UiForm.markDirty(groupsForm);
-        });
-
-        groupsForm?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await Utils.api('/api/mesh/groups', { method: 'POST', body: { groups: meshGroups } });
-                formOk(groupsForm, _('mesh.groups_saved'));
-                loadMeshGroups();
-            } catch (err) {
-                formFail(groupsForm, err.message || _('mesh.groups_save_error'));
+            const rename = e.target.closest('[data-mesh-rename]');
+            if (rename) {
+                const i = Number(rename.dataset.meshRename);
+                const g = meshGroups[i];
+                if (!g) return;
+                const name = await Modal.prompt({
+                    title: _('settings.general.mesh_group_rename_title'),
+                    label: _('mesh.group_name_placeholder'),
+                    value: g.name || '',
+                    hint: _('settings.general.mesh_group_name_hint'),
+                    confirmLabel: _('settings.general.mesh_group_rename'),
+                });
+                if (name == null || !String(name).trim() || String(name).trim() === g.name) return;
+                const next = meshGroups.map((x, j) => (j === i ? { ...x, name: String(name).trim() } : x));
+                try {
+                    await saveMeshGroups(next, _('settings.general.mesh_group_renamed'));
+                } catch (err) {
+                    setStatus(groupsStatus, err.message || _('mesh.groups_save_error'), 'error');
+                }
+                return;
+            }
+            const remove = e.target.closest('[data-mesh-remove]');
+            if (remove) {
+                const i = Number(remove.dataset.meshRemove);
+                const g = meshGroups[i];
+                if (!g) return;
+                const ok = await Modal.confirm({
+                    title: _('settings.general.mesh_group_remove_title'),
+                    message: _('settings.general.mesh_group_remove_msg').replace('{name}', g.name || g.id),
+                    confirmLabel: _('settings.general.mesh_group_remove'),
+                    danger: true,
+                });
+                if (!ok) return;
+                try {
+                    await saveMeshGroups(meshGroups.filter((_x, j) => j !== i), _('settings.general.mesh_group_removed'));
+                } catch (err) {
+                    setStatus(groupsStatus, err.message || _('mesh.groups_save_error'), 'error');
+                }
             }
         });
 
         if (downloadBtn && nameInput) {
             downloadBtn.addEventListener('click', () => {
-                const name = encodeURIComponent(nameInput.value.trim() || 'BetterDesk Mesh');
                 const group = meshGroups.find((g) => g.id === 'default') || meshGroups[0];
-                const meshId = (group && group.mesh_id) ? String(group.mesh_id).trim() : '';
-                let href = `/api/mesh/download.msh?name=${name}`;
-                if (meshId) href += `&mesh_id=${encodeURIComponent(meshId)}`;
-                downloadBtn.href = href;
+                downloadBtn.href = mshHref(group, nameInput.value);
             });
         }
 
@@ -1133,28 +1438,26 @@
             navigator.clipboard?.writeText(text).then(() => flashCopied(copyBtn)).catch(() => {});
         });
 
-        loadMeshStatus();
-        loadMeshGroups();
-        loadMeshRecordings();
+        loadMeshStatus().then((on) => {
+            if (!on) return;
+            loadMeshGroups();
+            loadMeshRecordings();
+        });
     }
 
     // ==================== Connection Mode (P2P / Relay) ====================
 
     function initConnectionModeSection() {
-        const form = document.getElementById('connection-mode-form');
-        if (!form) return;
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            saveConnectionMode();
-        });
+        if (!document.getElementById('connection-mode-form')) return;
         loadConnectionMode();
     }
 
     async function loadConnectionMode() {
         const sourceEl = document.getElementById('connection-mode-source');
         const runtimeEl = document.getElementById('connection-mode-runtime');
-        const form = document.getElementById('connection-mode-form');
-        if (!form) return;
+        const fields = document.getElementById('connection-mode-fields');
+        const effect = document.getElementById('connection-mode-effect');
+        if (!document.getElementById('connection-mode-form')) return;
         try {
             const resp = await Utils.api('/api/settings/connection-mode');
             const data = resp.data || resp;
@@ -1178,11 +1481,13 @@
             const src = data.source || data.deployment || 'defaults';
             const writable = data.writable !== false && src !== 'defaults';
             _connectionModeWritable = writable;
+            // Read-only: say so once, in a notice, and lock the choices
             if (sourceEl) {
-                sourceEl.textContent = writable
-                    ? _('settings.general.conn_saved_in').replace('{place}', src)
-                    : _('settings.connection_mode_source_defaults');
+                sourceEl.hidden = writable;
+                sourceEl.textContent = writable ? '' : _('settings.general.conn_readonly');
             }
+            if (fields) fields.disabled = !writable;
+            if (effect) effect.hidden = !writable;
 
             if (runtimeEl && data.runtime) {
                 const r = data.runtime;
@@ -1194,14 +1499,15 @@
                 runtimeEl.hidden = true;
             }
 
-            const saveBtn = document.getElementById('connection-mode-save');
-            if (saveBtn) saveBtn.disabled = !writable;
             _connectionModeSnapshot = getConnectionModePayload();
             renderConnectionDiagram();
         } catch (err) {
             _connectionModeWritable = false;
-            if (sourceEl) sourceEl.textContent = err.message || _('errors.server_error');
-            formFail(form, err.message || _('errors.server_error'));
+            if (sourceEl) {
+                sourceEl.hidden = false;
+                sourceEl.textContent = err.message || _('errors.server_error');
+            }
+            if (fields) fields.disabled = true;
         }
     }
 
@@ -1218,41 +1524,26 @@
         };
     }
 
+    /** Saves the strategy; returns { restartRequired } when the server needs a restart. */
     async function saveConnectionMode() {
-        const form = document.getElementById('connection-mode-form');
-        const saveBtn = document.getElementById('connection-mode-save');
-        if (saveBtn) saveBtn.disabled = true;
-        try {
-            const payload = getConnectionModePayload();
-            const resp = await Utils.api('/api/settings/connection-mode', {
-                method: 'PUT',
-                body: JSON.stringify(payload)
-            });
-            await loadConnectionMode();
-            formOk(form, resp.message || _('settings.connection_mode_saved'));
-            const result = resp.data || resp;
-            if (result.restartRequired) showRestartPrompt(result.restartRequired);
-        } catch (err) {
-            formFail(form, err.message || _('errors.server_error'));
-        } finally {
-            if (saveBtn) saveBtn.disabled = !_connectionModeWritable;
-        }
+        if (!_connectionModeWritable) throw new Error(_('settings.general.conn_readonly_short'));
+        const resp = await Utils.api('/api/settings/connection-mode', {
+            method: 'PUT',
+            body: JSON.stringify(getConnectionModePayload())
+        });
+        await loadConnectionMode();
+        const result = resp.data || resp;
+        return { restartRequired: result.restartRequired || null };
     }
 
     // ==================== Public RustDesk client endpoints ====================
 
     function initPublicEndpointsSection() {
-        const form = document.getElementById('public-endpoints-form');
-        if (!form) return;
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            savePublicEndpoints();
-        });
+        if (!document.getElementById('public-endpoints-form')) return;
         loadPublicEndpoints();
     }
 
     async function loadPublicEndpoints() {
-        const form = document.getElementById('public-endpoints-form');
         try {
             const resp = await Utils.api('/api/settings/public-endpoints');
             const data = resp.data || resp;
@@ -1264,7 +1555,7 @@
             if (apiEl) apiEl.value = data.public_api_url || '';
             renderConnectionDiagram();
         } catch (err) {
-            formFail(form, err.message || _('errors.server_error'));
+            formFail(document.getElementById('general-form'), err.message || _('errors.server_error'));
         }
     }
 
@@ -1276,31 +1567,22 @@
         };
     }
 
+    /** Asks first (new client setups use these addresses); false when cancelled. */
     async function savePublicEndpoints() {
-        const form = document.getElementById('public-endpoints-form');
         const confirmed = await settingsConfirmCritical({
             title: tSettings('public_endpoints_save_title', 'Save public client endpoints?'),
             message: tSettings('public_endpoints_save_confirm', 'Update RustDesk client configuration values used on the Dashboard (ID server, relay, API URL)?'),
             confirmLabel: _('settings.public_endpoints_save'),
             danger: false
         });
-        if (!confirmed) return;
-
-        const saveBtn = document.getElementById('public-endpoints-save');
-        if (saveBtn) saveBtn.disabled = true;
-        try {
-            const resp = await Utils.api('/api/settings/public-endpoints', {
-                method: 'PUT',
-                body: JSON.stringify(getPublicEndpointsPayload())
-            });
-            await loadPublicEndpoints();
-            loadClientConfigSummary();
-            formOk(form, resp.message || _('settings.public_endpoints_saved'));
-        } catch (err) {
-            formFail(form, err.message || _('errors.server_error'));
-        } finally {
-            if (saveBtn) saveBtn.disabled = false;
-        }
+        if (!confirmed) return false;
+        await Utils.api('/api/settings/public-endpoints', {
+            method: 'PUT',
+            body: JSON.stringify(getPublicEndpointsPayload())
+        });
+        await loadPublicEndpoints();
+        loadClientConfigSummary();
+        return true;
     }
 
     // ==================== TOTP (2FA) Section ====================
@@ -2063,6 +2345,10 @@
         setVal('footer-text', data.footerText || '');
         setChecked('show-powered', data.showPoweredBy !== 'false');
         setVal('custom-css', data.customCss || '');
+        // Custom CSS is an expert option: open only when there is some
+        const cssBox = document.getElementById('branding-css');
+        if (cssBox && cssBox.tagName === 'DETAILS') cssBox.open = !!String(data.customCss || '').trim();
+        syncShowWhen();
     }
 
     /**
@@ -2969,12 +3255,26 @@
         };
         const selected = () => RESTORE_OPTIONS.filter((o) => document.getElementById(o.id)?.checked);
 
+        // One step at a time: the parts to restore appear once an archive is
+        // chosen, the Restore button once there is a file; the hint says
+        // what is still missing.
+        const actions = document.getElementById('restore-actions');
         const sync = () => {
             const kind = fileKind();
-            if (options) options.disabled = kind !== 'archive';
-            if (optionsHint) optionsHint.hidden = kind === 'archive';
+            const picked = selected().length;
+            if (options) {
+                options.disabled = kind !== 'archive';
+                options.hidden = kind !== 'archive';
+            }
+            if (actions) actions.hidden = !kind;
+            if (optionsHint) {
+                const hint = !kind ? _('settings.backup_tab.restore_start')
+                    : (kind === 'archive' && !picked ? _('settings.backup_tab.restore_pick_parts') : '');
+                optionsHint.textContent = hint;
+                optionsHint.hidden = !hint;
+            }
             if (jsonNote) jsonNote.hidden = kind !== 'json';
-            startBtn.disabled = !(kind === 'json' || (kind === 'archive' && selected().length > 0));
+            startBtn.disabled = !(kind === 'json' || (kind === 'archive' && picked > 0));
             if (kind === 'invalid') setStatus(status, _('backup.invalid_format'), 'error');
             else setStatus(status, '');
         };
@@ -3076,6 +3376,12 @@
         };
         destinationType?.addEventListener('change', syncPathVisibility);
         syncPathVisibility();
+        // Interval, archives and destination show only while the schedule is on
+        const syncEnabled = () => {
+            syncShowWhen();
+            enabled?.setAttribute('aria-expanded', enabled.checked ? 'true' : 'false');
+        };
+        enabled?.addEventListener('change', syncEnabled);
 
         // Last run, next run and destination go to the side column
         let lastStatus = null;
@@ -3102,6 +3408,7 @@
             if (destinationType) destinationType.value = schedule.destinationType || 'local';
             if (destinationPath) destinationPath.value = schedule.destinationPath || '';
             syncPathVisibility();
+            syncEnabled();
             renderStatus(data?.status);
         } catch (err) {
             showStatus(err.message || _('errors.server_error'), false);
@@ -3179,8 +3486,13 @@
                 const field = smbField(id);
                 if (field) field.value = smb?.[key] || '';
             }
+            // A saved network share login is shown open; an unused one stays folded
+            const smbPanel = document.getElementById('scheduled-backup-smb-panel');
+            if (smbPanel && smb?.host) smbPanel.open = true;
         } catch (err) {
             setStatus(smbStatus, err.message || _('errors.server_error'), 'error');
+            const smbPanel = document.getElementById('scheduled-backup-smb-panel');
+            if (smbPanel) smbPanel.open = true;
         }
         smbForm?.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -3219,7 +3531,7 @@
             setVal('backup-stat-folders', data.folders || 0);
             setVal('backup-stat-groups', (data.userGroups || 0) + (data.deviceGroups || 0));
             setVal('backup-stat-strategies', data.strategies || 0);
-            setVal('backup-stat-backend', data.backend === 'betterdesk' ? 'BetterDesk Go' : 'RustDesk');
+            setVal('backup-stat-backend', data.backend === 'betterdesk' ? _('settings.backup_tab.backend_betterdesk') : 'RustDesk');
             const comp = data.components || {};
             setVal('backup-stat-database', (data.dbType === 'postgres' ? 'PostgreSQL' : 'SQLite'));
             setVal('backup-stat-keys', yn(comp.goPrivKey || comp.goApiKey));
@@ -3237,7 +3549,7 @@
         const rows = [];
         if (data.restored?.length) rows.push(`<dt>${_('backup.restored')}</dt><dd>${Utils.escapeHtml(data.restored.join(', '))}</dd>`);
         if (data.skipped?.length) rows.push(`<dt>${_('backup.skipped')}</dt><dd>${Utils.escapeHtml(data.skipped.join(', '))}</dd>`);
-        if (data.backupDate) rows.push(`<dt>${_('backup.backup_date')}</dt><dd>${Utils.escapeHtml(data.backupDate)}</dd>`);
+        if (data.backupDate) rows.push(`<dt>${_('backup.backup_date')}</dt><dd>${Utils.escapeHtml(Utils.formatDate(data.backupDate))}</dd>`);
         let html = rows.length ? `<dl class="facts">${rows.join('')}</dl>` : '';
         if (data.warnings?.length) {
             html += `<p class="notice warning">${data.warnings.map(w => Utils.escapeHtml(w)).join('<br>')}</p>`;
@@ -3260,12 +3572,12 @@
         const desc = document.getElementById('update-status-desc');
         if (!headline) return;
         const messages = {
-            idle:      { h: _('updates.title'), d: _('updates.desc') },
-            checking:  { h: _('updates.checking'), d: _('updates.desc') },
-            uptodate:  { h: _('updates.up_to_date'), d: opts.detail || _('updates.desc') },
-            available: { h: _('updates.update_available'), d: opts.detail || _('updates.desc') },
-            baseline:  { h: _('updates.baseline_set'), d: _('updates.desc') },
-            error:     { h: _('updates.install_failed'), d: opts.detail || _('updates.desc') }
+            idle:      { h: _('updates.title'), d: _('settings.updates_tab.idle_note') },
+            checking:  { h: _('updates.checking'), d: _('settings.updates_tab.desc') },
+            uptodate:  { h: _('updates.up_to_date'), d: opts.detail || _('settings.updates_tab.desc') },
+            available: { h: _('updates.update_available'), d: opts.detail || _('settings.updates_tab.desc') },
+            baseline:  { h: _('updates.baseline_set'), d: _('settings.updates_tab.desc') },
+            error:     { h: _('updates.install_failed'), d: opts.detail || _('settings.updates_tab.desc') }
         };
         const msg = messages[state] || messages.idle;
         headline.textContent = msg.h;
@@ -3295,11 +3607,27 @@
         renderUpdateHeroStatus('idle');
     }
 
+    function updateChannelName(channel) {
+        return channel === 'development'
+            ? _('settings.updates_tab.channel_development')
+            : _('settings.updates_tab.channel_stable');
+    }
+
+    // The channel is a pair of radios in a fieldset (#update-channel-select)
+    function getUpdateChannelChoice() {
+        return document.querySelector('input[name="update-channel"]:checked')?.value || 'stable';
+    }
+
+    function setUpdateChannelChoice(channel) {
+        document.querySelectorAll('input[name="update-channel"]').forEach((r) => {
+            r.checked = r.value === (channel || 'stable');
+        });
+    }
+
     function renderUpdateChannelBadge(data) {
         const badge = document.getElementById('update-channel-active-badge');
         if (!badge || !data?.channel) return;
-        const isDev = data.channel === 'development';
-        badge.textContent = isDev ? _('updates.channel_development') : _('updates.channel_stable');
+        badge.textContent = updateChannelName(data.channel);
     }
 
     async function loadUpdateChannel() {
@@ -3310,20 +3638,18 @@
             const payload = await Utils.api('/api/settings/updates/channel');
             const data = payload?.data ?? payload;
             _updateChannelSaved = data?.channel || 'stable';
-            if (data?.channel) select.value = data.channel;
+            if (data?.channel) setUpdateChannelChoice(data.channel);
             renderUpdateChannelBadge(data);
             if (branchEl) {
                 branchEl.textContent = data?.branch
-                    ? `${data.branch} · ${data.owner || 'UNITRONIX'}/${data.repo || 'BetterDesk'}`
-                    : '-';
+                    ? _('settings.updates_tab.channel_source')
+                        .replace('{repo}', `${data.owner || 'UNITRONIX'}/${data.repo || 'BetterDesk'}`)
+                        .replace('{branch}', data.branch)
+                    : '';
             }
         } catch (_e) {
             if (branchEl) branchEl.textContent = '-';
         }
-    }
-
-    function channelToBranch(channel) {
-        return channel === 'development' ? 'dev' : 'main';
     }
 
     async function onUpdateChannelSelectChange() {
@@ -3331,21 +3657,17 @@
         const select = document.getElementById('update-channel-select');
         if (!select) return;
 
-        const channel = select.value;
+        const channel = getUpdateChannelChoice();
         if (channel === _updateChannelSaved) return;
 
-        const previous = _updateChannelSaved || 'stable';
         const confirmed = await Modal.confirm({
             title: _('updates.channel_save'),
-            message: _('updates.channel_confirm_switch', {
-                from: channelToBranch(previous),
-                to: channelToBranch(channel)
-            }),
+            message: _('settings.updates_tab.channel_confirm').replace('{to}', updateChannelName(channel)),
             confirmLabel: _('updates.channel_save')
         });
 
         if (!confirmed) {
-            select.value = _updateChannelSaved || 'stable';
+            setUpdateChannelChoice(_updateChannelSaved || 'stable');
             return;
         }
 
@@ -3371,12 +3693,12 @@
                 const detailsSection = document.getElementById('update-details-section');
                 if (detailsSection) detailsSection.style.display = 'none';
                 const remoteEl = document.getElementById('update-remote-version');
-                if (remoteEl) remoteEl.textContent = '-';
+                if (remoteEl) remoteEl.textContent = _('settings.updates_tab.not_checked');
                 const statusRow = document.getElementById('update-status-row');
                 if (statusRow) statusRow.style.display = 'none';
             }
         } catch (error) {
-            if (selectEl) selectEl.value = _updateChannelSaved || 'stable';
+            setUpdateChannelChoice(_updateChannelSaved || 'stable');
             Notifications.error(error.message || _('updates.channel_save_failed'));
         } finally {
             _updateChannelBusy = false;
@@ -3603,30 +3925,23 @@
             if (staleWarning) staleWarning.style.display = 'none';
             if (channelSelect) {
                 channelSelect.disabled = true;
-                channelSelect.title = _('updates.channel_docker_blocked');
             }
             if (channelHint) {
                 channelHint.style.display = '';
-                channelHint.textContent = _('updates.channel_docker_note');
+                channelHint.textContent = _('settings.updates_tab.channel_docker_note');
             }
 
             const dockerUpdate = data.dockerUpdate || {};
             const commands = dockerUpdate.commands || ['docker compose pull', 'docker compose up -d'];
-            if (commandsEl) {
-                const tagNote = dockerUpdate.channelNote
-                    ? `${dockerUpdate.channelNote}\n\n${commands.join('\n')}`
-                    : commands.join('\n');
-                commandsEl.textContent = tagNote;
-            }
+            // Only the commands, so Copy gives something that runs; how to pick
+            // the channel with the image tag is said under Update channel.
+            if (commandsEl) commandsEl.textContent = commands.join('\n');
             if (imagesEl && Array.isArray(dockerUpdate.images) && dockerUpdate.images.length) {
                 imagesEl.textContent = `${_('updates.docker_images')}: ${dockerUpdate.images.join(', ')}`;
             }
         } else {
             panel.style.display = 'none';
-            if (channelSelect) {
-                channelSelect.disabled = false;
-                channelSelect.removeAttribute('title');
-            }
+            if (channelSelect) channelSelect.disabled = false;
             if (channelHint) {
                 channelHint.style.display = 'none';
                 channelHint.textContent = '';
@@ -3652,11 +3967,17 @@
             const data = await Utils.api('/api/settings/updates/check');
             const dockerMode = renderDockerUpdatePanel(data);
             
-            // Show commit SHA + message
+            // Newest version: its date, with what changed and the short commit under it
             if (remoteEl) {
-                const sha = data.remoteSHA ? data.remoteSHA.slice(0, 7) : '-';
-                remoteEl.textContent = sha;
-                if (data.latestMessage) remoteEl.title = data.latestMessage;
+                const sha = data.remoteSHA ? data.remoteSHA.slice(0, 7) : '';
+                const when = data.latestDate ? Utils.formatDate(data.latestDate, { hour: undefined, minute: undefined }) : '';
+                if (!sha && !when) {
+                    remoteEl.textContent = '-';
+                } else {
+                    const sub = [data.latestMessage ? Utils.escapeHtml(data.latestMessage) : '', sha ? `<span class="mono">${Utils.escapeHtml(sha)}</span>` : '']
+                        .filter(Boolean).join(', ');
+                    remoteEl.innerHTML = `<span class="settings-side-value"><span>${Utils.escapeHtml(when || sha)}</span>${sub ? `<span class="form-hint">${sub}</span>` : ''}</span>`;
+                }
             }
             if (statusRow) statusRow.style.display = '';
             
@@ -3666,7 +3987,7 @@
                 if (detailsSection) detailsSection.style.display = 'none';
                 if (installBtn) installBtn.disabled = true;
             } else if (data.updateAvailable) {
-                const behind = data.commitsBehind > 0 ? ` (${data.commitsBehind} ${_('updates.commits_behind')})` : '';
+                const behind = data.commitsBehind > 0 ? ` (${_('settings.updates_tab.changes_behind').replace('{n}', String(data.commitsBehind))})` : '';
                 const badgeLabel = dockerMode ? _('updates.docker_update_available') : _('updates.update_available');
                 if (statusBadge) statusBadge.innerHTML = `<span class="status warning">${badgeLabel}${behind}</span>`;
                 const detail = data.latestMessage
@@ -3693,8 +4014,8 @@
                     const label = data.dockerShaUnknown ? _('updates.docker_sha_unknown') : _('updates.up_to_date');
                     statusBadge.innerHTML = `<span class="status ok">${label}</span>`;
                 }
-                const detail = data.latestMessage || (data.remoteSHA ? `SHA ${data.remoteSHA.slice(0, 7)}` : '');
-                renderUpdateHeroStatus('uptodate', { detail: detail || _('updates.desc') });
+                const detail = data.latestMessage || '';
+                renderUpdateHeroStatus('uptodate', { detail: detail || _('settings.updates_tab.desc') });
                 if (detailsSection) detailsSection.style.display = 'none';
                 if (installBtn) installBtn.disabled = true;
             }
@@ -3714,7 +4035,7 @@
             const commits = changesData.commits || [];
             if (commits.length > 0) {
                 changelogEl.innerHTML = '<ul class="list update-commits">' + commits.slice(0, 20).map((c) => {
-                    const d = c.date ? new Date(c.date).toLocaleDateString() : '';
+                    const d = c.date ? Utils.escapeHtml(Utils.formatDate(c.date, { hour: undefined, minute: undefined })) : '';
                     return `<li class="list-row update-commit-item"><span class="row-main">
                         <span class="row-title update-commit-msg">${Utils.escapeHtml(c.message || '')}</span>
                         <span class="row-sub"><span class="mono">${Utils.escapeHtml(c.sha || '')}</span>, ${Utils.escapeHtml(c.author || '')}, ${d}</span>
@@ -4669,7 +4990,7 @@
                     .replace('{size}', Utils.escapeHtml(formatBytes(totalBytes)));
             }
             listEl.innerHTML = '<ul class="list update-backups">' + backups.map((b) => {
-                const date = b.timestamp ? new Date(b.timestamp).toLocaleString() : '';
+                const date = b.timestamp ? Utils.escapeHtml(Utils.formatDate(b.timestamp)) : '';
                 const sha = b.sha ? `, <span class="mono">${Utils.escapeHtml(b.sha)}</span>` : '';
                 const size = formatBytes(b.sizeBytes || 0);
                 return `<li class="list-row update-backup-item">
@@ -4801,6 +5122,7 @@
                 if (expiryInput) expiryInput.value = String(data.expiry_days ?? 7);
                 if (slidingCb) slidingCb.checked = data.sliding !== false;
                 if (maxDaysInput) maxDaysInput.value = String(data.max_days ?? 30);
+                syncShowWhen();
             } catch (err) {
                 formFail(form, err.message || _('errors.server_error'));
             }
@@ -5352,21 +5674,37 @@
                 listEl.innerHTML = '<li class="list-row is-empty"><span class="row-main">' + _('settings.advanced_no_files') + '</span></li>';
                 return;
             }
-            listEl.innerHTML = advancedState.files.map((f) => {
-                const label = _('settings.advanced_file_' + f.id) !== 'settings.advanced_file_' + f.id
-                    ? _('settings.advanced_file_' + f.id)
-                    : f.id;
-                const status = f.exists
-                    ? (f.writable ? '' : _('settings.advanced_readonly'))
-                    : _('settings.advanced_missing');
-                const disabled = !f.exists && !f.canCreate;
+            // Files the console can edit (or create) first, read-only ones after,
+            // and the ones that don't exist on this server folded at the end.
+            const fileLabel = (f) => (_('settings.advanced_file_' + f.id) !== 'settings.advanced_file_' + f.id
+                ? _('settings.advanced_file_' + f.id)
+                : f.id);
+            const editable = advancedState.files.filter((f) => (f.exists && f.writable) || (!f.exists && f.canCreate))
+                .sort((x, y) => Number(!!y.exists) - Number(!!x.exists));
+            const readOnly = advancedState.files.filter((f) => f.exists && !f.writable);
+            const unavailable = advancedState.files.filter((f) => !f.exists && !f.canCreate);
+            const row = (f) => {
+                let status;
+                if (!f.exists) status = _('settings.advanced_tab.status_new');
+                else if (!f.writable) status = _('settings.advanced_tab.status_readonly');
+                else {
+                    status = _('settings.advanced_tab.status_file')
+                        .replace('{size}', formatBytes(Number(f.size) || 0))
+                        .replace('{when}', Utils.formatRelativeTime(f.mtime));
+                }
                 const active = advancedState.activeId === f.id;
                 return '<li><button type="button" class="list-row advanced-config-file-btn' + (active ? ' active' : '') +
                     '" data-id="' + Utils.escapeHtml(f.id) + '"' + (active ? ' aria-current="true"' : '') +
-                    (disabled ? ' disabled' : '') + '><span class="row-main"><span class="row-title">' +
-                    Utils.escapeHtml(label) + '</span>' + (status ? '<span class="row-sub">' + Utils.escapeHtml(status) + '</span>' : '') +
-                    '</span></button></li>';
-            }).join('');
+                    '><span class="row-main"><span class="row-title">' + Utils.escapeHtml(fileLabel(f)) + '</span>' +
+                    '<span class="row-sub">' + Utils.escapeHtml(status) + '</span></span></button></li>';
+            };
+            listEl.innerHTML = editable.concat(readOnly).map(row).join('') + (unavailable.length
+                ? '<li class="advanced-config-missing"><details class="disclosure"><summary>' +
+                    Utils.escapeHtml(_('settings.advanced_tab.missing_title').replace('{n}', String(unavailable.length))) +
+                    '</summary><p class="form-hint">' + Utils.escapeHtml(_('settings.advanced_tab.missing_note')) + '</p><ul class="advanced-config-missing-list">' +
+                    unavailable.map((f) => '<li>' + Utils.escapeHtml(fileLabel(f)) + '<span class="cell-sub mono">' + Utils.escapeHtml(f.path || '') + '</span></li>').join('') +
+                    '</ul></details></li>'
+                : '');
 
             listEl.querySelectorAll('.advanced-config-file-btn').forEach((btn) => {
                 btn.addEventListener('click', async () => {
@@ -5404,6 +5742,10 @@
         const canRestart = catalogOrData && catalogOrData.requiresRestart !== 'none';
         const show = canRestart && (catalogOrData.exists || catalogOrData.canCreate);
         restartBtn.hidden = !show;
+        // The restart lives in the danger zone under the editor, shown only
+        // for files that need one (the hint under the editor says which service).
+        const zone = document.getElementById('advanced-restart-zone');
+        if (zone) zone.hidden = !show;
     }
 
     async function loadAdvancedFile(id, force) {
@@ -5464,8 +5806,9 @@
             }
             if (pathEl) pathEl.textContent = data.path;
             if (meta) {
-                const kb = ((data.size || 0) / 1024).toFixed(1);
-                meta.textContent = kb + ' KB · ' + (data.mtime || '');
+                meta.textContent = _('settings.advanced_tab.status_file')
+                    .replace('{size}', formatBytes(Number(data.size) || 0))
+                    .replace('{when}', Utils.formatDate(data.mtime));
             }
             if (hint) {
                 hint.hidden = false;
@@ -5598,14 +5941,27 @@
 
         loadEmailSmtpConfig();
 
+        // User name and password show only when the mail server needs a sign-in
+        const auth = document.getElementById('email-smtp-auth');
+        auth?.addEventListener('change', syncEmailAuth);
+        // TLS on port 465, STARTTLS on 587: switching one moves the other along
+        const secure = document.getElementById('email-smtp-secure');
+        const port = document.getElementById('email-smtp-port');
+        secure?.addEventListener('change', () => {
+            if (!port) return;
+            if (secure.checked && port.value === '587') port.value = '465';
+            else if (!secure.checked && port.value === '465') port.value = '587';
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const signIn = !!auth?.checked;
             const body = {
                 host: document.getElementById('email-smtp-host')?.value.trim() || '',
                 port: parseInt(document.getElementById('email-smtp-port')?.value, 10) || 587,
                 secure: !!document.getElementById('email-smtp-secure')?.checked,
-                user: document.getElementById('email-smtp-user')?.value.trim() || '',
-                pass: document.getElementById('email-smtp-pass')?.value || '',
+                user: signIn ? (document.getElementById('email-smtp-user')?.value.trim() || '') : '',
+                pass: signIn ? (document.getElementById('email-smtp-pass')?.value || '') : '',
                 from: document.getElementById('email-smtp-from')?.value.trim() || '',
                 alert_email: document.getElementById('email-smtp-alert')?.value.trim() || '',
             };
@@ -5642,10 +5998,19 @@
         });
     }
 
+    function syncEmailAuth() {
+        const auth = document.getElementById('email-smtp-auth');
+        syncShowWhen();
+        auth?.setAttribute('aria-expanded', auth.checked ? 'true' : 'false');
+    }
+
     async function loadEmailSmtpConfig() {
         try {
             const config = await Utils.api('/api/settings/email/smtp');
             renderEmailSide(config);
+            const auth = document.getElementById('email-smtp-auth');
+            if (auth) auth.checked = !!(config.configured && config.user);
+            syncEmailAuth();
             if (!config.configured) {
                 _smtpWasConfigured = false;
                 return;
@@ -5942,7 +6307,9 @@
         const dest = document.getElementById('side-backup-dest');
         const error = document.getElementById('side-backup-error');
         if (!last || !next || !dest) return;
-        last.textContent = st?.lastSuccessAt ? Utils.formatDate(st.lastSuccessAt) : _('settings.side.backup_none');
+        last.textContent = st?.lastSuccessAt
+            ? `${Utils.formatRelativeTime(st.lastSuccessAt)}, ${Utils.formatDate(st.lastSuccessAt)}`
+            : _('settings.side.backup_none');
         if (!schedule) {
             next.textContent = '-';
         } else if (!schedule.enabled) {
@@ -5972,6 +6339,11 @@
         const state = document.getElementById('side-email-state');
         const facts = document.getElementById('side-email-facts');
         if (!state || !facts) return;
+        // The connection test checks the saved mail server, so it shows once one is saved
+        ['email-smtp-test-row', 'email-smtp-test-hint'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.hidden = !config?.configured;
+        });
         if (errorMessage) {
             state.className = 'state is-error';
             state.textContent = errorMessage;
