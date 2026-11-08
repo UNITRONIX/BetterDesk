@@ -47,6 +47,13 @@ Phosphor Icons (https://phosphoricons.com), MIT License, copyright Phosphor
 Icons. The logos are trademarks of their owners and only name the operating
 system a device runs.
 
+Language flags in `web-nodejs/public/img/flags/` are from Twemoji
+(https://github.com/jdecked/twemoji), taken from the `@twemoji/svg` 15.0.0
+package. Graphics licensed under CC-BY 4.0
+(https://creativecommons.org/licenses/by/4.0/), copyright Twitter, Inc and
+other contributors. The files are renamed to the language code they stand
+for; the drawings are unchanged.
+
 ## Compatibility components
 
 Any desktop-client compatibility adapter is subject to

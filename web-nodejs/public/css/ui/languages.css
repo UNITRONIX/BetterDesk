@@ -122,3 +122,14 @@
     min-height: 0;
     padding-top: var(--space-1);
 }
+
+/* Flag before the language name, on the name's line; the code sits under the name */
+.languages-table .lang-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.languages-table .lang-cell .lang-flag {
+    margin-block-start: calc((1lh - 20px) / 2);
+}

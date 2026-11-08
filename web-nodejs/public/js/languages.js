@@ -38,6 +38,14 @@
         return lang.name || lang.code;
     }
 
+    // Languages with a flag in /img/flags (map in views/partials/lang-flag.ejs)
+    const flagCodes = new Set((document.getElementById('lang-table')?.dataset.flagCodes || '').split(',').map(c => c.trim()).filter(Boolean));
+    function flagImg(code) {
+        return flagCodes.has(code)
+            ? `<img class="lang-flag" src="/img/flags/${encodeURIComponent(code)}.svg" alt="" width="20" height="20">`
+            : '<span class="lang-flag" aria-hidden="true"></span>';
+    }
+
     function escHtml(str) {
         const div = document.createElement('div');
         div.textContent = str == null ? '' : String(str);
@@ -150,7 +158,7 @@
             const missing = lang.is_reference ? '–' : fmt(lang.missing_keys);
             return `
                 <tr data-code="${escHtml(lang.code)}">
-                    <td><a class="lang-name" href="#${encodeURIComponent(lang.code)}">${escHtml(langName(lang))}</a><span class="cell-sub">${escHtml(lang.code)}</span></td>
+                    <td><span class="lang-cell">${flagImg(lang.code)}<span><a class="lang-name" href="#${encodeURIComponent(lang.code)}">${escHtml(langName(lang))}</a><span class="cell-sub">${escHtml(lang.code)}</span></span></span></td>
                     <td class="col-native"><span lang="${escHtml(lang.code)}" dir="${lang.rtl ? 'rtl' : 'ltr'}">${escHtml(lang.native)}</span>${lang.rtl ? `<span class="cell-sub">${escHtml(_('languages.rtl'))}</span>` : ''}</td>
                     <td class="col-coverage">
                         <div class="meter${cov < 100 ? ' is-high' : ''}">

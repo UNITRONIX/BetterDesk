@@ -16,7 +16,7 @@
             <section class="section" id="lang-grid" aria-label="${_('nav.languages')}">
                 <p class="count-line" id="lang-stats" aria-live="polite"></p>
                 <div class="table-scroll">
-                    <table class="data-table languages-table">
+                    <table class="data-table languages-table" id="lang-table" data-flag-codes="${include('partials/lang-flag', { flagCodeList: true })}">
                         <thead>
                             <tr>
                                 <th scope="col">${_('languages.col_language')}</th>

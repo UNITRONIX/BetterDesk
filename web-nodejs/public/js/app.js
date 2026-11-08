@@ -97,6 +97,17 @@
         document.addEventListener('click', () => {
             closeAllTopbarPopovers();
         });
+
+        // Escape closes an open language or account menu and returns focus to its button
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const open = document.querySelector('.lang-selector .lang-dropdown.open');
+            if (!open) return;
+            const btn = open.parentElement?.querySelector('button');
+            open.classList.remove('open');
+            btn?.setAttribute('aria-expanded', 'false');
+            btn?.focus();
+        });
     }
     
     /**
