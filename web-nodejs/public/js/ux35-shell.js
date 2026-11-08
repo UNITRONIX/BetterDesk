@@ -8,7 +8,7 @@
     var STORAGE_WIDTH = 'bd_ux35_sidebar_width';
     var WIDTH_MIN = 200;
     var WIDTH_MAX = 320;
-    var WIDTH_DEFAULT = 220;
+    var WIDTH_DEFAULT = 232; // same as --sidebar-w in public/css/ui/tokens.css
     var MQ_DRAWER = window.matchMedia('(max-width: 1099px)');
 
     function t(key, fb) {
@@ -27,15 +27,12 @@
         return w;
     }
 
+    // The saved width is applied before first paint by the inline script in
+    // views/partials/ux35-sidebar.ejs; this only keeps the handle's value in step.
     function restoreSidebarWidth() {
         if (MQ_DRAWER.matches) return;
-        try {
-            var saved = parseInt(localStorage.getItem(STORAGE_WIDTH), 10);
-            if (saved && !isNaN(saved)) applySidebarWidth(saved);
-            else applySidebarWidth(WIDTH_DEFAULT);
-        } catch (e) {
-            applySidebarWidth(WIDTH_DEFAULT);
-        }
+        var handle = document.getElementById('ux35-sidebar-resize');
+        if (handle) handle.setAttribute('aria-valuenow', String(currentSidebarWidth()));
     }
 
     var drawerAnimTimer = null;
@@ -573,18 +570,7 @@
         var nav = document.getElementById('ux35-sidebar-nav');
         if (!nav) return;
         var KEY = 'bd_ux35_sidebar_scroll';
-        try {
-            var saved = sessionStorage.getItem(KEY);
-            if (saved) nav.scrollTop = parseInt(saved, 10) || 0;
-        } catch (e) { /* ignore */ }
-        var active = nav.querySelector('.ux35-sidebar-item.active');
-        if (active) {
-            var rect = active.getBoundingClientRect();
-            var navRect = nav.getBoundingClientRect();
-            if (rect.top < navRect.top || rect.bottom > navRect.bottom) {
-                active.scrollIntoView({ block: 'center' });
-            }
-        }
+        // Restoring happens before first paint (inline script in ux35-sidebar.ejs)
         window.addEventListener('beforeunload', function () {
             try { sessionStorage.setItem(KEY, String(nav.scrollTop)); } catch (e) { /* ignore */ }
         });

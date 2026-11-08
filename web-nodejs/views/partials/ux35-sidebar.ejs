@@ -49,6 +49,37 @@
         </div>
         <% }); %>
     </nav>
+    <script nonce="<%= cspNonce %>">
+    /* Restore the sidebar before first paint, so it doesn't jump on every
+       page load: saved width, sections opened or closed in this tab, and the
+       scroll position (keys shared with public/js/ux35-shell.js). */
+    (function () {
+        try {
+            var nav = document.getElementById('ux35-sidebar-nav');
+            if (!window.matchMedia('(max-width: 1099px)').matches) {
+                var w = parseInt(localStorage.getItem('bd_ux35_sidebar_width'), 10);
+                if (w >= 200 && w <= 320) document.documentElement.style.setProperty('--ux35-sidebar-width', w + 'px');
+            }
+            var closed = JSON.parse(sessionStorage.getItem('bd_nav_sections_collapsed') || '{}') || {};
+            nav.querySelectorAll('.ux35-sidebar-section:not(.is-current)').forEach(function (s) {
+                var p = s.getAttribute('data-panel');
+                if (!p || !Object.prototype.hasOwnProperty.call(closed, p)) return;
+                var open = !closed[p];
+                s.classList.toggle('is-collapsed', !open);
+                var t = s.querySelector('.ux35-sidebar-heading-toggle');
+                if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false');
+                var i = s.querySelector('.ux35-section-chevron');
+                if (i) i.textContent = open ? 'expand_less' : 'expand_more';
+            });
+            var top = parseInt(sessionStorage.getItem('bd_ux35_sidebar_scroll'), 10);
+            if (top > 0) nav.scrollTop = top;
+            var a = nav.querySelector('.ux35-sidebar-item.active');
+            if (a && (a.offsetTop < nav.scrollTop || a.offsetTop + a.offsetHeight > nav.scrollTop + nav.clientHeight)) {
+                nav.scrollTop = Math.max(0, a.offsetTop - nav.clientHeight / 2);
+            }
+        } catch (e) { /* storage blocked: defaults are fine */ }
+    })();
+    </script>
 
     <div class="ux35-sidebar-footer">
         <div class="ux35-sidebar-user" id="user-menu-trigger">
