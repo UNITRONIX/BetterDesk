@@ -24,24 +24,10 @@
     color: var(--text-muted);
 }
 
-/* ── Server status ── */
+/* ── Server status: tones come from components.css "Data display" ── */
 
 .server-status-indicator .status-dot {
     display: none;
-}
-
-.status.running::before {
-    background: var(--success);
-    border-color: var(--success);
-}
-
-.status.stopped {
-    color: var(--danger);
-}
-
-.status.stopped::before {
-    border-color: var(--danger);
-    background: var(--danger);
 }
 
 /* ── Activate agent dialog ── */
@@ -77,32 +63,32 @@
     height: auto;
 }
 
-.client-config-qr-modal p {
+.client-config-qr-modal > * + *,
+.client-config-script-modal > * + * {
     margin-top: var(--space-3);
 }
 
-.client-config-qr-warn {
-    padding: var(--space-2) var(--space-3);
-    border-inline-start: 3px solid var(--warning);
-    background: var(--bg-subtle);
+.client-config-script-modal .code-block-head + .code-block {
+    margin-top: 0;
 }
 
-/* ── Find a device: the first thing on the page ── */
+/* ── Find a device: in the page head, on the title's line on wide screens ── */
 
 .overview-find {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    max-width: var(--measure);
+    flex: 0 1 34rem;
+    flex-wrap: nowrap;
+    min-width: 0;
 }
 
-.overview-find-row {
-    display: flex;
-    gap: var(--space-2);
-}
-
-.overview-find-row .search-wrapper {
+.overview-find .search-wrapper {
     flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 640px) {
+    .overview-find {
+        flex-basis: 100%;
+    }
 }
 
 /* ── Side column: values and status read top to bottom, label above value ── */
@@ -132,4 +118,14 @@
 
 .page-side .server-details .facts {
     grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* Long values (API address, key) stay on one line and end in an ellipsis; Copy takes the whole value */
+.client-config-grid .value-field > code {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+    line-height: var(--control-h-sm);
 }

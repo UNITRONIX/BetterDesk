@@ -92,8 +92,9 @@
             <p class="state" id="feature-empty" hidden>${_('cross_platform.no_feature_data')}</p>
         </section>
         </div>
-        <section class="section" aria-labelledby="schema-title">
-            <h2 id="schema-title">${_('cross_platform.protobuf_schema')}</h2>
+        <!-- For people who write clients or integrations: folded -->
+        <details class="section disclosure" id="schema-details">
+            <summary><h2 id="schema-title">${_('cross_platform.protobuf_schema')}</h2></summary>
             <p class="section-note">${_('cross_platform.schema_note')}</p>
             <pre class="code-block"><code>message ClientCapabilities {
     bool   can_capture_screen  = 1;
@@ -107,7 +108,7 @@
     string client_version      = 9;
     repeated string supported_features = 10;
 }</code></pre>
-        </section>
+        </details>
     </div>
 
     <!-- Known limits per system -->

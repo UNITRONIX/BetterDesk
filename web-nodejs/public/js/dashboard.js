@@ -236,11 +236,8 @@
         const banned = Number(stats.banned) || 0;
         const offline = Math.max(0, (Number(stats.offline) || 0) - banned);
         const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
-        line.textContent = _('dashboard.devices_now_line')
-            .replace('{total}', fmt.format(total))
-            .replace('{online}', fmt.format(online))
-            .replace('{offline}', fmt.format(offline))
-            .replace('{banned}', fmt.format(banned));
+        // The legend below names each part with its number; the line only gives the total
+        line.textContent = _('dashboard.devices_total_line').replace('{total}', fmt.format(total));
         bar.textContent = '';
         legend.textContent = '';
         const parts = [
@@ -354,17 +351,17 @@
         const statusDot = element.querySelector('.status-dot');
         const statusText = element.querySelector('.status-text');
         
-        // Remove existing classes
-        element.classList.remove('running', 'stopped', 'unknown');
+        // Status tones (components.css "Data display"): a stopped ID or relay server is a failure here
+        element.classList.remove('running', 'stopped', 'unknown', 'is-good', 'is-danger', 'is-waiting', 'is-neutral');
         
         if (status?.status === 'running' || status?.online) {
-            element.classList.add('running');
+            element.classList.add('is-good');
             statusText.textContent = _('status.running');
         } else if (status?.status === 'stopped' || status?.online === false) {
-            element.classList.add('stopped');
+            element.classList.add('is-danger');
             statusText.textContent = _('status.stopped');
         } else {
-            element.classList.add('unknown');
+            element.classList.add('is-neutral');
             statusText.textContent = _('status.unknown');
         }
     }
@@ -645,7 +642,8 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             content: `
                 <div class="client-config-script-modal">
                     <p>${escapeHtml(_('dashboard.intune_script_hint'))}</p>
-                    <pre class="client-config-script-block"><code>${escapeHtml(script)}</code></pre>
+                    <div class="code-block-head"><span class="code-block-title">install-rustdesk-config.ps1</span></div>
+                    <pre class="code-block client-config-script-block" tabindex="0" role="region" aria-label="${escapeHtml(_('dashboard.intune_script_title'))}"><code>${escapeHtml(script)}</code></pre>
                 </div>
             `,
             buttons: [
@@ -670,18 +668,18 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         }
 
         const warn = clientConfig.phone_unreachable_host
-            ? `<p class="client-config-qr-warn">${escapeHtml(_('dashboard.client_config_qr_unreachable_host'))}</p>`
+            ? `<p class="notice warning">${escapeHtml(_('dashboard.client_config_qr_unreachable_host'))}</p>`
             : '';
 
         Modal.show({
             title: _('dashboard.client_config_qr_title'),
             content: `
                 <div class="client-config-qr-modal">
+                    ${warn}
                     <div class="client-config-qr-frame">
                         <img src="${escapeHtml(clientConfig.qr)}" alt="${escapeHtml(_('dashboard.client_config_qr_title'))}" width="300" height="300">
                     </div>
                     <p>${escapeHtml(_('dashboard.client_config_qr_hint'))}</p>
-                    ${warn}
                 </div>
             `,
             buttons: [
@@ -955,12 +953,7 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     
     function formatUptime(seconds) {
         if (typeof seconds !== 'number') return String(seconds);
-        const d = Math.floor(seconds / 86400);
-        const h = Math.floor((seconds % 86400) / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        if (d > 0) return `${d}d ${h}h`;
-        if (h > 0) return `${h}h ${m}m`;
-        return `${m}m`;
+        return Utils.formatDuration(seconds);
     }
     
     function escapeHtml(str) {

@@ -170,16 +170,16 @@
                 </div>
             </div>
 
-            <!-- Access control strategies (RustDesk Pro): set up rarely, kept off the list -->
+            <!-- Access rules (RustDesk client settings per user and device group): set up rarely, folded under the list -->
             <details class="section disclosure devices-strategies" id="devices-strategies-card">
-                <summary><h2>${_('devices.strategies_title')}</h2></summary>
-                <p class="section-note">${_('devices.strategies_hint')}</p>
-                <div class="devices-strategies-list" id="devices-strategies-list">
-                    <p class="empty-state-inline">${_('devices.loading_strategies')}</p>
+                <summary><h2>${_('devices.strategies_title')}</h2><span class="summary-meta" id="devices-strategies-count"></span></summary>
+                <div class="section-head devices-strategies-head">
+                    <p class="section-note">${_('devices.strategies_hint')}</p>
+                    ${canEditDevices ? `<button type="button" class="btn btn-sm" id="add-strategy-btn"><span class="material-icons" aria-hidden="true">add</span>${_('devices.create_strategy')}</button>` : ''}
                 </div>
-                ${canEditDevices ? `<div>
-                    <button type="button" class="btn btn-secondary" id="add-strategy-btn"><span class="material-icons" aria-hidden="true">add</span>${_('devices.create_strategy')}</button>
-                </div>` : ''}
+                <div class="devices-strategies-list" id="devices-strategies-list">
+                    <p class="state">${_('devices.loading_strategies')}</p>
+                </div>
             </details>
 
             <!-- Shared context menu (devices, folders, groups) -->

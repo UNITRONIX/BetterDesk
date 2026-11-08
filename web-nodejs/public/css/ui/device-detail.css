@@ -4,51 +4,15 @@
  * delete sits apart at the bottom of the Actions tab.
  */
 
-.device-panel-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 800;
-    background: rgba(0, 0, 0, 0.3);
-    opacity: 0;
-    transition: opacity var(--motion);
-}
-
-.device-panel-overlay.open {
-    opacity: 1;
-}
-
-.device-panel {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    inset-inline-end: 0;
-    display: flex;
-    flex-direction: column;
-    width: min(560px, 100vw);
-    border-inline-start: 1px solid var(--rule);
-    background: var(--bg);
-    box-shadow: var(--shadow-float);
-    color: var(--text);
-    transform: translateX(16px);
-    transition: transform var(--motion);
-}
-
-[dir="rtl"] .device-panel {
-    transform: translateX(-16px);
-}
-
-.device-panel-overlay.open .device-panel {
-    transform: none;
-}
-
-.device-panel:focus {
-    outline: none;
-}
+/* The layer and the panel are the shared sheet (.sheet-layer, .sheet in
+   components.css): end side, 560px, full screen on phones, the dialog layer.
+   Header, tabs, content and footer use the sheet's side padding. */
 
 /* ── Header ── */
 
 .device-panel-header {
-    padding: var(--space-4) var(--space-5) var(--space-3);
+    padding-block: var(--space-4) var(--space-3);
+    padding-inline: var(--sheet-pad-x) var(--space-3);
     border-bottom: 1px solid var(--rule);
 }
 
@@ -112,7 +76,7 @@
     display: flex;
     flex-wrap: wrap;
     column-gap: var(--space-4);
-    padding: 0 var(--space-5);
+    padding: 0 var(--sheet-pad-x);
     border-bottom: 1px solid var(--rule);
 }
 
@@ -151,7 +115,8 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: var(--space-4) var(--space-5) var(--space-6);
+    overscroll-behavior: contain;
+    padding: var(--space-4) var(--sheet-pad-x) var(--space-6);
 }
 
 .device-panel-tab-pane {
@@ -208,11 +173,6 @@
     align-items: center;
     gap: var(--space-1) var(--space-2);
     overflow-wrap: anywhere;
-}
-
-.device-panel-group-badge + .device-panel-group-badge::before {
-    content: ", ";
-    margin-inline-start: calc(-1 * var(--space-2));
 }
 
 .device-panel-ban-alert {
@@ -562,30 +522,13 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-3) var(--sheet-pad-x);
     padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--rule);
 }
 
 .device-panel-footer #dp-close-btn {
     margin-inline-start: auto;
-}
-
-@media (max-width: 640px) {
-    .device-panel {
-        width: 100vw;
-        border-inline-start: 0;
-    }
-
-    .device-panel-header,
-    .device-panel-content,
-    .device-panel-footer {
-        padding-inline: var(--space-4);
-    }
-
-    .device-panel-tabs {
-        padding-inline: var(--space-4);
-    }
 }
 
 @media (max-width: 480px) {
@@ -597,8 +540,8 @@
 
 /* Wide screens: the panel takes more room so the charts in Metrics can be read */
 @media (min-width: 1600px) {
-    .device-panel {
-        width: 720px;
+    .sheet.device-panel {
+        width: min(720px, 100vw);
     }
 }
 
@@ -684,4 +627,125 @@
 .device-panel-action-card[data-action="delete"] > .material-icons,
 .device-panel-action-card[data-action="permanent-delete"] > .material-icons {
     color: var(--danger);
+}
+
+/* Connection mode form (only on clients that can switch): fields stacked, the button at their end */
+.device-panel-conn-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+}
+
+.device-panel-conn-form .form-group {
+    margin: 0;
+}
+
+/* ── Hardware tab: the agent's inventory report (facts, disks, adapters, programs) ── */
+
+.dp-inventory .dp-inv-sub {
+    margin: var(--space-4) 0 var(--space-2);
+    font-size: var(--text-base);
+}
+
+.dp-inventory .dp-inv-facts .meter {
+    flex: 1;
+    max-width: 360px;
+}
+
+.dp-inventory .dp-inv-disk-use {
+    min-width: 180px;
+}
+
+.dp-inventory .dp-inv-apps-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.dp-inventory .dp-inv-apps-head .dp-inv-sub {
+    margin: 0;
+}
+
+.dp-inventory .dp-inv-apps-search {
+    max-width: 320px;
+    margin: var(--space-2) 0 var(--space-3);
+}
+
+.dp-inventory .dp-inv-version {
+    overflow-wrap: anywhere;
+}
+
+.dp-inventory .dp-inv-col-installed {
+    white-space: nowrap;
+}
+
+.dp-inventory .dp-inv-phone-publisher {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .dp-inventory .dp-inv-col-publisher,
+    .dp-inventory .dp-inv-col-installed {
+        display: none;
+    }
+
+    .dp-inventory .dp-inv-disk-use {
+        min-width: 140px;
+    }
+
+    .dp-inventory .dp-inv-phone-publisher {
+        display: block;
+    }
+}
+
+.dp-inventory .dp-inv-ip {
+    display: block;
+}
+
+/* ── Edit mode: name, note, folder and tags as fields at the top of Overview ── */
+
+.device-panel-edit .form-group {
+    margin-bottom: var(--space-4);
+}
+
+.device-panel-edit .form-hint + .list {
+    margin-top: var(--space-2);
+}
+
+.device-panel-edit .device-panel-tag-input-row .form-input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Footer slots (deviceDetail.js _footerHTML): Connect/Save and Edit/Cancel
+   share a slot each, stacked in one grid cell, so the buttons keep their place
+   and size between view and edit mode. The hidden one keeps the slot's width. */
+.dp-footer-slot {
+    display: inline-grid;
+}
+
+.dp-footer-slot > .btn {
+    grid-area: 1 / 1;
+}
+
+.dp-footer-slot > .btn.is-off {
+    visibility: hidden;
+}
+
+/* The save message sits between the slots and Close */
+.device-panel-footer {
+    align-items: center;
+}
+
+.device-panel-footer .device-panel-edit-status {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+}
+
+.device-panel-footer .device-panel-edit-status:empty {
+    flex-basis: 0;
 }

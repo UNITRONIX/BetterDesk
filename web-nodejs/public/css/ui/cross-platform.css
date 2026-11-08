@@ -129,12 +129,6 @@ section.crossplatform-panel {
     min-width: 120px;
 }
 
-.cp-num,
-.data-table th.cp-num {
-    text-align: end;
-    font-variant-numeric: tabular-nums;
-}
-
 /* ── Capability exchange diagram ── */
 
 .cp-diagram {

@@ -17,16 +17,15 @@
 
         <div class="page-cols">
         <section class="section page-main" aria-label="${_('network.targets')}">
-            <div class="toolbar">
+            <div class="toolbar" id="targets-toolbar">
                 <div class="toolbar-search search-wrapper">
                     <span class="material-icons" aria-hidden="true">search</span>
                     <input type="search" class="form-input" id="target-search"
                         aria-label="${_('network.search_label')}"
                         placeholder="${_('network.search_label')}">
                 </div>
-                <div class="toolbar-end">
-                    <button type="button" class="btn" id="refresh-btn"><span class="material-icons" aria-hidden="true">refresh</span>${_('actions.refresh')}</button>
-                </div>
+                <!-- Next to the search, not alone at the far end of the line -->
+                <button type="button" class="btn" id="refresh-btn"><span class="material-icons" aria-hidden="true">refresh</span>${_('actions.refresh')}</button>
             </div>
             <p class="count-line" id="targets-count" aria-live="polite"></p>
 
@@ -37,7 +36,7 @@
                             <th class="col-name">${_('network.col_target')}</th>
                             <th class="col-check">${_('network.col_check')}</th>
                             <th class="col-status">${_('network.status')}</th>
-                            <th class="col-latency">${_('network.col_response')}</th>
+                            <th class="col-latency is-num">${_('network.col_response')}</th>
                             <th class="col-last">${_('network.last_check')}</th>
                             <th class="actions"><span class="sr-only">${_('common.actions')}</span></th>
                         </tr>
@@ -55,7 +54,7 @@
             <section class="section" aria-labelledby="monitor-title">
                 <h2 id="monitor-title">${_('network.monitor_title')}</h2>
                 <div class="monitor-bar" id="monitor-bar">
-                    <span class="status stopped" id="monitor-state">${_('network.monitor_loading')}</span>
+                    <span class="status is-waiting" id="monitor-state">${_('network.monitor_loading')}</span>
                     <button type="button" class="btn btn-sm" id="monitor-toggle-btn" hidden>${_('network.monitor_start')}</button>
                     <span class="form-status" id="monitor-status" aria-live="polite"></span>
                 </div>

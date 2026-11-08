@@ -366,27 +366,32 @@
     font-size: var(--text-sm);
 }
 
-.platform-icon {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.platform-icon .material-icons,
-.platform-icon .os-icon {
-    color: var(--text-muted);
-    font-size: 16px;
-}
-
-/* Tags may wrap, so the table fits its column without sideways scrolling */
+/* Tags take the width that is left (max-width: 0 keeps the cell from growing
+   to its content) and wrap onto more lines; each tag stays whole, and one
+   that is wider than the column ends in an ellipsis (the full name is its title) */
 .devices-table td[data-column="tags"] {
-    min-width: 120px;
+    min-width: 7.5rem;
+    max-width: 0;
     white-space: normal;
 }
 
-.devices-table .tag-list {
-    display: inline-block;
-    vertical-align: middle;
+.devices-table td[data-column="tags"] .tag-set {
+    display: flex;
+}
+
+.devices-table td[data-column="tags"] .tag {
+    min-width: 0;
+}
+
+/* The platform column has a fixed width: short names stay on one line, long
+   ones ("Linux 6.6 (Raspberry Pi)", "Windows Server 2022") wrap, so the
+   table fits at 1440 px with the Type column shown */
+.devices-table :is(th, td)[data-column="platform"] {
+    width: 11rem;
+}
+
+.devices-table td[data-column="platform"] .platform {
+    white-space: normal;
 }
 
 .devices-table tr.deleted-row td {
@@ -561,36 +566,46 @@
     height: 1px;
 }
 
-/* ── Access control strategies ── */
+/* ── Access rules (folded under the list) ── */
 
-.devices-strategies {
-    margin-top: var(--space-4);
+/* The rule count sits next to the heading, not at the far end of the line */
+.devices-strategies > summary .summary-meta {
+    margin-inline-start: var(--space-2);
 }
 
-.strategy-manager-item {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2) var(--space-4);
-    padding: var(--space-3) 0;
-    border-bottom: 1px solid var(--rule);
+.devices-strategies-head {
+    align-items: flex-start;
 }
 
-.strategy-manager-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+.devices-strategies-head .section-note {
+    margin-top: 0;
+    margin-inline-end: auto;
 }
 
-.strategy-manager-actions {
-    display: flex;
-    gap: var(--space-1);
+.strategies-table .strategy-name {
+    font-weight: 600;
 }
 
-.strategy-disabled .strategy-manager-text strong {
+.strategy-disabled .strategy-name {
     color: var(--text-muted);
+}
+
+/* Rule dialog: one row per client setting, label and choice on one line */
+.strategy-perm-grid {
+    border-top: 1px solid var(--rule);
+}
+
+.strategy-perm-fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.strategy-perm-grid .strategy-perm-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(9rem, 14rem);
+    gap: var(--space-3);
+    cursor: default;
 }
 
 /* ── Dialogs opened from this page ── */
@@ -662,7 +677,6 @@
 
 .group-membership-list,
 .strategy-assign-list,
-.strategy-perm-grid,
 .manage-tags-list {
     display: flex;
     flex-direction: column;
@@ -731,16 +745,6 @@
 
 .device-edit-form .form-hint + .list {
     margin-top: var(--space-2);
-}
-
-.device-edit-tag-input-row {
-    display: flex;
-    gap: var(--space-2);
-}
-
-.device-edit-tag-input-row .form-input {
-    flex: 1;
-    min-width: 0;
 }
 
 
@@ -925,7 +929,7 @@
 }
 
 /* Narrower list: type goes first, then tags (they stay in the search and the
-   row's Edit dialog), and then the platform may wrap */
+   device panel), and then the platform may wrap */
 @container devlist (max-width: 860px) {
     .devices-table [data-column="device_type"] {
         display: none;
@@ -988,7 +992,7 @@
     .devices-table td[data-column="id"] { grid-column: 1; grid-row: 2; }
     .devices-table td[data-column="platform"] { grid-column: 1; grid-row: 3; color: var(--text-muted); }
     .devices-table td[data-column="last_online"] { grid-column: 2; grid-row: 2; text-align: end; }
-    .devices-table td[data-column="tags"] { display: block; grid-column: 1; grid-row: 4; }
+    .devices-table td[data-column="tags"] { display: block; grid-column: 1; grid-row: 4; min-width: 0; max-width: none; }
     .devices-table td[data-column="device_type"] { display: none; }
     .devices-table td[data-column="actions"] { grid-column: 2; grid-row: 3 / span 2; align-self: end; width: auto; }
 

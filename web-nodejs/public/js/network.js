@@ -12,8 +12,7 @@
 
     const _ = (key, params) => (typeof window._ === 'function' ? window._(key, params) : key);
     const esc = (value) => Utils.escapeHtml(value == null ? '' : String(value));
-    const DASH = '<span class="text-muted">–</span>';
-
+    
     const canManage = Utils.can('server.config');
     const canCheck = Utils.can('device.connect');
 
@@ -30,6 +29,7 @@
     const monitorBtn = document.getElementById('monitor-toggle-btn');
     const monitorStatus = document.getElementById('monitor-status');
     const toolsNote = document.getElementById('network-tools-note');
+    const toolbar = document.getElementById('targets-toolbar');
     const rttSection = document.getElementById('rtt-section');
     const rttSelect = document.getElementById('rtt-target');
     const rttChart = document.getElementById('rtt-chart');
@@ -70,11 +70,12 @@
         return t.host || '';
     }
 
+    // Status tones (components.css "Data display"): up good, down danger, paused and unchecked neutral
     function statusHtml(t) {
-        if (!Number(t.enabled)) return `<span class="status offline">${esc(_('network.status_paused'))}</span>`;
-        if (t.last_status === 'up') return `<span class="status ok">${esc(_('network.status_up'))}</span>`;
-        if (t.last_status === 'down') return `<span class="status error">${esc(_('network.status_down'))}</span>`;
-        return `<span class="status offline">${esc(_('network.status_unchecked'))}</span>`;
+        if (!Number(t.enabled)) return Utils.statusHtml('neutral', _('network.status_paused'));
+        if (t.last_status === 'up') return Utils.statusHtml('good', _('network.status_up'));
+        if (t.last_status === 'down') return Utils.statusHtml('danger', _('network.status_down'));
+        return Utils.statusHtml('neutral', _('network.status_unchecked'));
     }
 
     function latencyText(ms) {
@@ -83,9 +84,7 @@
     }
 
     function timeHtml(value) {
-        const date = Utils.parseDate(value);
-        if (!date) return DASH;
-        return `<time datetime="${esc(date.toISOString())}" title="${esc(Utils.formatDate(date))}">${esc(Utils.formatRelativeTime(date))}</time>`;
+        return Utils.timeHtml(value);
     }
 
     function errorText(err) {
@@ -144,6 +143,8 @@
             : allTargets;
         renderCount(filtered.length);
 
+        // Search and refresh only once there is something to search
+        if (toolbar) toolbar.hidden = !allTargets.length && !q;
         if (!allTargets.length) {
             targetsBody.innerHTML = `<tr><td colspan="6" class="state-cell">${esc(canManage ? _('network.empty_manage') : _('network.empty'))}</td></tr>`;
             return;
@@ -169,10 +170,10 @@
         return `
             <tr data-id="${id}">
                 <td class="col-name"><span class="target-name">${esc(t.name)}</span>
-                    <span class="cell-sub mono">${esc(address(t))}</span></td>
+                    <span class="cell-sub">${Utils.valueHtml(address(t), { copy: true, label: t.name })}</span></td>
                 <td class="col-check">${esc(checkLabel(t))}<span class="cell-sub">${esc(intervalLabel(intervalSeconds(t)))}</span></td>
                 <td class="col-status">${statusHtml(t)}${t.last_status === 'down' || !latency ? '' : `<span class="cell-sub phone-only">${esc(latency)}</span>`}</td>
-                <td class="col-latency">${latency ? esc(latency) : DASH}</td>
+                <td class="col-latency is-num">${latency ? esc(latency) : Utils.emptyHtml()}</td>
                 <td class="col-last">${timeHtml(t.last_check_at)}</td>
                 <td class="actions">
                     ${canCheck ? `<button type="button" class="btn btn-sm check-btn" data-action="check" data-id="${id}">${Utils.icon('check_now')}${esc(_('network.check_now'))}</button>` : ''}
@@ -377,16 +378,16 @@
             body.innerHTML = `
                 <p class="count-line">${esc(_('network.history_count', { count: entries.length, down }))}</p>
                 <div class="table-scroll"><table class="data-table history-table">
-                    <thead><tr><th>${esc(_('network.history_time'))}</th><th>${esc(_('network.status'))}</th><th>${esc(_('network.col_response'))}</th><th>${esc(_('network.history_detail'))}</th></tr></thead>
+                    <thead><tr><th>${esc(_('network.history_time'))}</th><th>${esc(_('network.status'))}</th><th class="is-num">${esc(_('network.col_response'))}</th><th>${esc(_('network.history_detail'))}</th></tr></thead>
                     <tbody>${entries.map((e) => {
                         const date = Utils.parseDate(e.checked_at);
                         const up = e.status === 'up';
                         const detail = e.error_msg || (e.status_code ? _('network.http_status', { code: e.status_code }) : '');
                         return `<tr>
-                            <td class="history-time">${date ? esc(Utils.formatDate(date, { second: '2-digit' })) : DASH}</td>
-                            <td><span class="status ${up ? 'ok' : 'error'}">${esc(up ? _('network.status_up') : _('network.status_down'))}</span></td>
-                            <td>${up && e.rtt_ms != null ? esc(latencyText(e.rtt_ms)) : DASH}</td>
-                            <td class="history-detail">${detail ? esc(detail) : DASH}</td>
+                            <td class="history-time">${date ? `<time class="time" datetime="${esc(date.toISOString())}">${esc(Utils.formatDate(date, { second: '2-digit' }))}</time>` : Utils.emptyHtml()}</td>
+                            <td>${Utils.statusHtml(up ? 'good' : 'danger', up ? _('network.status_up') : _('network.status_down'))}</td>
+                            <td class="is-num">${up && e.rtt_ms != null ? esc(latencyText(e.rtt_ms)) : Utils.emptyHtml()}</td>
+                            <td class="history-detail">${detail ? esc(detail) : Utils.emptyHtml()}</td>
                         </tr>`;
                     }).join('')}</tbody>
                 </table></div>`;
@@ -503,7 +504,7 @@
 
     function renderMonitor() {
         if (monitorRunning === null) return;
-        monitorState.className = `status ${monitorRunning ? 'ok' : 'offline'}`;
+        monitorState.className = `status ${monitorRunning ? 'is-good' : 'is-neutral'}`;
         monitorState.textContent = monitorRunning ? _('network.monitor_on') : _('network.monitor_off');
         monitorBtn.innerHTML = Utils.icon(monitorRunning ? 'stop' : 'start') + esc(monitorRunning ? _('network.monitor_stop') : _('network.monitor_start'));
         monitorBtn.hidden = !canManage;
@@ -515,7 +516,7 @@
             monitorRunning = !!(data && data.running);
             renderMonitor();
         } catch (err) {
-            monitorState.className = 'status error';
+            monitorState.className = 'status is-danger';
             monitorState.textContent = _('network.monitor_unknown', { reason: errorText(err) });
         }
     }

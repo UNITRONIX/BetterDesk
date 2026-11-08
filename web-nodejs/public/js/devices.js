@@ -62,7 +62,17 @@
             case 'rustdesk': return 'RustDesk';
             case 'rdp': return 'RDP';
             case 'vnc': return 'VNC';
-            default: return type || '-';
+            case 'mobile': return _('devices.type_mobile');
+            case 'desktop': return _('devices.filter_type_desktop');
+            case 'scada': return 'SCADA';
+            case 'iot': return 'IoT';
+            case 'os_agent': return _('devices.filter_type_agent');
+            case 'mesh_agent': return _('devices.type_mesh_agent');
+            default: {
+                // Unknown types: words with a capital first letter, not the raw value
+                const t = String(type || '').replace(/[_-]+/g, ' ').trim();
+                return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-';
+            }
         }
     }
     
@@ -926,13 +936,14 @@
         text.textContent = _('devices.summary', { count: live.length, online });
     }
 
-    /** Tags as plain text, comma separated */
+    /** Tags as tag tokens (Utils.tagsHtml); none: the muted dash */
     function renderTagsCell(device) {
         const tags = normalizeTags(device.tags);
         if (tags.length === 0) {
-            return `<span class="device-tags-empty text-muted">–</span>`;
+            return `<span class="device-tags-empty">${Utils.emptyHtml()}</span>`;
         }
-        return `<span class="device-tags tag-list">${tags.map(tag => Utils.escapeHtml(tag)).join(', ')}</span>`;
+        // Every tag carries its name as title: a tag cut off in a narrow column can still be read
+        return `<span class="device-tags"><span class="tag-set">${tags.map(t => Utils.tagHtml(t, { title: t })).join('')}</span></span>`;
     }
     
     /** Text the search box looks through: ID, names, user, platform, type, tags, note, IP */
@@ -1076,18 +1087,11 @@
                     ${device.soft_deleted ? `<span class="device-deleted-badge">${Utils.escapeHtml(_('devices.deleted_badge'))}</span>` : ''}
                 </td>
                 <td data-column="device_type">
-                    ${Utils.escapeHtml(getDeviceTypeLabel(device.device_type))}
+                    ${device.device_type ? Utils.tagHtml(getDeviceTypeLabel(device.device_type)) : Utils.emptyHtml()}
                     ${device.linked_peer_id ? `<span class="mesh-linked-badge" title="${Utils.escapeHtml(_('mesh.linked_peer') || 'Linked device')}">↔ <span class="mono">${Utils.escapeHtml(device.linked_peer_id)}</span></span>` : ''}
                 </td>
-                <td data-column="platform">
-                    <div class="platform-icon">
-                        ${Utils.getPlatformIconHtml(device.platform || device.os)}
-                        <span>${Utils.escapeHtml(device.platform || device.os || '-')}</span>
-                    </div>
-                </td>
-                <td data-column="last_online">
-                    <span class="last-seen-text" title="${Utils.formatDate(device.last_online, { empty: _('time.never') })}">${Utils.formatRelativeTime(device.last_online, { empty: _('time.never') })}</span>
-                </td>
+                <td data-column="platform">${Utils.platformHtml(device.platform || device.os)}</td>
+                <td data-column="last_online">${Utils.timeHtml(device.last_online, { empty: _('time.never') })}</td>
                 <td data-column="status">
                     <span class="status ${sc}"${statusInfo.title ? ` title="${Utils.escapeHtml(statusInfo.title)}"` : ''}>${statusInfo.label}</span>
                 </td>
@@ -1437,58 +1441,9 @@
         }
     }
 
-    async function submitRemoteTargetForm(deviceId) {
-        const form = document.getElementById('remote-target-form');
-        if (!form) return;
-        const currentDevice = deviceId && devices.find(d => d.id === deviceId);
-        const payload = {
-            name: form.elements.name.value.trim(),
-            protocol: form.elements.protocol.value,
-            platform: form.elements.platform.value.trim(),
-            host: form.elements.host.value.trim(),
-            port: Number(form.elements.port.value),
-            username: form.elements.username.value.trim(),
-            credential_mode: form.elements.credential_mode.value,
-            tls_mode: form.elements.tls_mode.value,
-            cert_fingerprint: form.elements.cert_fingerprint.value.trim(),
-            enabled: form.elements.enabled.checked
-        };
-        const password = form.elements.password.value;
-        if (payload.credential_mode === 'saved' && !password && currentDevice?.credential_mode !== 'saved') {
-            Notifications.error(remoteText('devices.remote_password_required', 'Enter a password to save credentials'));
-            return;
-        }
-        try {
-            const url = deviceId
-                ? `/api/remote-targets/${encodeURIComponent(deviceId)}`
-                : '/api/remote-targets';
-            const savedTarget = await Utils.api(url, {
-                method: deviceId ? 'PATCH' : 'POST',
-                body: payload
-            });
-            const targetId = deviceId || savedTarget?.id;
-            if (payload.credential_mode === 'saved' && password) {
-                await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
-                    method: 'PUT',
-                    body: { username: payload.username, password }
-                });
-            } else if (payload.credential_mode !== 'saved' && currentDevice?.credential_mode === 'saved') {
-                await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
-                    method: 'DELETE'
-                });
-            }
-            Modal.close();
-            Notifications.success(remoteText('devices.remote_saved', 'Remote target saved'));
-            loadDevices();
-        } catch (error) {
-            Notifications.error(error.message || _('errors.save_failed'));
-        }
-    }
-
-    async function testRemoteTargetForm() {
-        const form = document.getElementById('remote-target-form');
-        if (!form) return;
-        const payload = {
+    // RDP/VNC target sheet: the fields the API takes, read from the form
+    function readRemoteTargetForm(form) {
+        return {
             name: form.elements.name.value.trim(),
             protocol: form.elements.protocol.value,
             platform: form.elements.platform.value.trim(),
@@ -1499,102 +1454,221 @@
             tls_mode: form.elements.tls_mode.value,
             cert_fingerprint: form.elements.cert_fingerprint.value.trim()
         };
+    }
+
+    async function submitRemoteTargetForm(deviceId) {
+        const form = document.getElementById('remote-target-form');
+        if (!form || form.dataset.busy === 'true') return;
+        if (!form.reportValidity()) return;
+        // A target created by an earlier attempt (whose password step failed) is updated, not created twice
+        const targetIdBefore = deviceId || form.dataset.createdId || '';
+        const currentDevice = deviceId && devices.find(d => d.id === deviceId);
+        const payload = { ...readRemoteTargetForm(form), enabled: form.elements.enabled.checked };
+        const passwordField = form.elements.password;
+        const password = passwordField.value;
+        passwordField.removeAttribute('aria-invalid');
+        if (payload.credential_mode === 'saved' && !password && currentDevice?.credential_mode !== 'saved') {
+            passwordField.setAttribute('aria-invalid', 'true');
+            passwordField.focus();
+            Modal.setStatus(remoteText('devices.remote_password_required', 'Enter the password to save.'), 'error');
+            return;
+        }
+        form.dataset.busy = 'true';
+        Modal.setStatus(remoteText('devices.remote_saving', 'Saving…'), '');
         try {
-            await Utils.api('/api/remote-targets/test', { method: 'POST', body: payload });
-            Notifications.success(remoteText('devices.remote_test_success', 'Connection test succeeded'));
+            const url = targetIdBefore
+                ? `/api/remote-targets/${encodeURIComponent(targetIdBefore)}`
+                : '/api/remote-targets';
+            const savedTarget = await Utils.api(url, {
+                method: targetIdBefore ? 'PATCH' : 'POST',
+                body: payload
+            });
+            const targetId = targetIdBefore || savedTarget?.id;
+            if (!targetIdBefore && targetId) form.dataset.createdId = targetId;
+            try {
+                if (payload.credential_mode === 'saved' && password) {
+                    await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
+                        method: 'PUT',
+                        body: { username: payload.username, password }
+                    });
+                } else if (payload.credential_mode !== 'saved' && currentDevice?.credential_mode === 'saved') {
+                    await Utils.api(`/api/remote-targets/${encodeURIComponent(targetId)}/credentials`, {
+                        method: 'DELETE'
+                    });
+                }
+            } catch (credentialError) {
+                // The target itself is saved: show it in the list, keep the sheet open to try again
+                loadDevices();
+                Modal.setStatus(fillRemoteText('devices.remote_password_not_saved', 'The target is saved, but the password is not: {error}',
+                    { error: credentialError.message || _('errors.save_failed') }), 'error');
+                return;
+            }
+            Modal.close();
+            Notifications.success(remoteText('devices.remote_saved', 'RDP/VNC target saved.'));
+            loadDevices();
         } catch (error) {
-            Notifications.error(error.message || remoteText('devices.remote_test_failed', 'Connection test failed'));
+            Modal.setStatus(error.message || _('errors.save_failed'), 'error');
+        } finally {
+            delete form.dataset.busy;
         }
     }
 
+    // Asks the server whether it reaches host and port; the answer shows in the sheet
+    async function testRemoteTargetForm() {
+        const form = document.getElementById('remote-target-form');
+        if (!form) return;
+        const host = form.elements.host;
+        const port = form.elements.port;
+        if (!host.reportValidity() || !port.reportValidity()) return;
+        const payload = readRemoteTargetForm(form);
+        // The test needs a name; people may test before they name the target
+        if (!payload.name) payload.name = payload.host;
+        const where = { host: payload.host, port: payload.port };
+        Modal.setStatus(remoteText('devices.remote_testing', 'Testing the connection…'), '');
+        try {
+            await Utils.api('/api/remote-targets/test', { method: 'POST', body: payload });
+            Modal.setStatus(fillRemoteText('devices.remote_test_success', 'Reached {host} on port {port}.', where), 'ok');
+        } catch (error) {
+            const message = String(error.message || '');
+            let text;
+            if (/not allowed/i.test(message)) {
+                text = remoteText('devices.remote_test_not_allowed', 'This server is not allowed to connect to that address.');
+            } else if (!message || /unreachable|timeout/i.test(message)) {
+                text = fillRemoteText('devices.remote_test_failed', 'Could not reach {host} on port {port}.', where);
+            } else {
+                text = message;
+            }
+            Modal.setStatus(text, 'error');
+        }
+    }
+
+    function fillRemoteText(key, fallback, params) {
+        return remoteText(key, fallback).replace(/\{(\w+)\}/g, (m, k) => (params[k] !== undefined ? params[k] : m));
+    }
+
+    // Add or edit an RDP/VNC target: a side sheet (GUIDE.md "Dialogs and sheets")
     function showRemoteTargetModal(deviceId = null) {
         const device = deviceId && devices.find(d => d.id === deviceId);
         const title = device
             ? remoteText('devices.remote_edit_title', 'Edit RDP/VNC target')
             : remoteText('devices.remote_add_title', 'Add RDP/VNC target');
         const escape = (value) => Utils.escapeHtml(String(value ?? ''));
+        const protocol = device?.remote_protocol === 'vnc' ? 'vnc' : 'rdp';
+        const credentialMode = ['saved', 'prompt', 'none'].includes(device?.credential_mode) ? device.credential_mode : 'prompt';
+        const tlsMode = ['required', 'preferred', 'disabled'].includes(device?.tls_mode) ? device.tls_mode : 'required';
+        const hasSavedPassword = device?.credential_mode === 'saved';
+        const option = (value, label, current) => `<option value="${value}"${value === current ? ' selected' : ''}>${escape(label)}</option>`;
         const content = `
-            <form id="remote-target-form" class="remote-target-form">
+            <form id="remote-target-form" class="remote-target-form form-stack" novalidate>
                 <div class="form-group">
-                    <label>${remoteText('devices.remote_name', 'Display name')}</label>
-                    <input class="form-input" name="name" required maxlength="160" value="${escape(device?.name || device?.display_name || '')}">
+                    <label class="form-label" for="rt-name">${escape(remoteText('devices.remote_name', 'Display name'))}</label>
+                    <input class="form-input" id="rt-name" name="name" required maxlength="160" aria-describedby="rt-name-hint" value="${escape(device?.name || device?.display_name || '')}">
+                    <p class="form-hint" id="rt-name-hint">${escape(remoteText('devices.remote_name_hint', 'How it appears in the device list.'))}</p>
                 </div>
-                <div class="form-row">
+                <section class="form-section" aria-labelledby="rt-connection">
+                    <h3 class="form-section-title" id="rt-connection">${escape(remoteText('devices.remote_section_connection', 'Connection'))}</h3>
                     <div class="form-group">
-                        <label>${remoteText('devices.remote_protocol', 'Technology')}</label>
-                        <select class="form-input" name="protocol">
-                            <option value="rdp" ${device?.remote_protocol === 'rdp' ? 'selected' : ''}>RDP</option>
-                            <option value="vnc" ${device?.remote_protocol === 'vnc' ? 'selected' : ''}>VNC</option>
+                        <label class="form-label" for="rt-protocol">${escape(remoteText('devices.remote_protocol', 'Technology'))}</label>
+                        <select class="form-select is-medium" id="rt-protocol" name="protocol" aria-describedby="rt-protocol-hint">
+                            ${option('rdp', 'RDP', protocol)}
+                            ${option('vnc', 'VNC', protocol)}
+                        </select>
+                        <p class="form-hint" id="rt-protocol-hint">${escape(remoteText('devices.remote_protocol_hint', 'RDP for Windows computers, VNC for most Linux and macOS screens.'))}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="rt-host">${escape(remoteText('devices.remote_host', 'Host or IP'))}</label>
+                        <input class="form-input is-host" id="rt-host" name="host" required maxlength="253" autocomplete="off" spellcheck="false" aria-describedby="rt-host-hint" value="${escape(device?.host || '')}">
+                        <p class="form-hint" id="rt-host-hint">${escape(remoteText('devices.remote_host_hint', 'The address this server uses to reach the computer.'))}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="rt-port">${escape(remoteText('devices.remote_port', 'Port'))}</label>
+                        <input class="form-input is-short" id="rt-port" name="port" type="number" inputmode="numeric" min="1" max="65535" required aria-describedby="rt-port-hint" value="${escape(device?.port || (protocol === 'vnc' ? 5900 : 3389))}">
+                        <p class="form-hint" id="rt-port-hint">${escape(remoteText('devices.remote_port_hint', 'RDP usually uses 3389, VNC 5900.'))}</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="rt-platform">${escape(remoteText('devices.remote_platform', 'Operating system'))}</label>
+                        <input class="form-input is-medium" id="rt-platform" name="platform" maxlength="80" aria-describedby="rt-platform-hint" value="${escape(device?.platform || '')}">
+                        <p class="form-hint" id="rt-platform-hint">${escape(remoteText('devices.remote_platform_hint', 'Shown in the device list, for example Windows 11 or Ubuntu.'))}</p>
+                    </div>
+                </section>
+                <section class="form-section" aria-labelledby="rt-signin">
+                    <h3 class="form-section-title" id="rt-signin">${escape(remoteText('devices.remote_section_signin', 'Sign-in'))}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="rt-username">${escape(remoteText('devices.remote_username', 'Username'))}</label>
+                        <input class="form-input is-medium" id="rt-username" name="username" autocomplete="off" spellcheck="false" value="${escape(device?.username || '')}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="rt-credential-mode">${escape(remoteText('devices.remote_credentials', 'Password'))}</label>
+                        <select class="form-select is-host" id="rt-credential-mode" name="credential_mode" aria-controls="rt-password-group">
+                            ${option('prompt', remoteText('devices.remote_prompt_password', 'Ask at every connection'), credentialMode)}
+                            ${option('saved', remoteText('devices.remote_save_password', 'Save on this server'), credentialMode)}
+                            ${option('none', remoteText('devices.remote_no_password', 'No password'), credentialMode)}
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>${remoteText('devices.remote_platform', 'Operating system')}</label>
-                        <input class="form-input" name="platform" maxlength="80" placeholder="Windows / Linux" value="${escape(device?.platform || '')}">
+                    <div class="form-group" id="rt-password-group"${credentialMode === 'saved' ? '' : ' hidden'}>
+                        <label class="form-label" for="rt-password">${escape(remoteText('devices.remote_password', 'Saved password'))}</label>
+                        <input class="form-input is-medium" id="rt-password" name="password" type="password" autocomplete="new-password" aria-describedby="rt-password-hint">
+                        <p class="form-hint" id="rt-password-hint">${escape(remoteText('devices.remote_password_hint', 'Stored encrypted on this server and filled in at each connection.'))}${hasSavedPassword ? ' ' + escape(remoteText('devices.remote_password_keep_hint', 'Leave empty to keep the saved password.')) : ''}</p>
                     </div>
-                </div>
-                <div class="form-row">
+                </section>
+                <section class="form-section" aria-labelledby="rt-security">
+                    <h3 class="form-section-title" id="rt-security">${escape(remoteText('devices.remote_section_security', 'Security'))}</h3>
                     <div class="form-group">
-                        <label>${remoteText('devices.remote_host', 'Host or IP')}</label>
-                        <input class="form-input" name="host" required maxlength="253" value="${escape(device?.host || '')}">
-                    </div>
-                    <div class="form-group">
-                        <label>${remoteText('devices.remote_port', 'Port')}</label>
-                        <input class="form-input" name="port" type="number" min="1" max="65535" required value="${escape(device?.port || (device?.remote_protocol === 'vnc' ? 5900 : 3389))}">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>${remoteText('devices.remote_username', 'Username')}</label>
-                        <input class="form-input" name="username" autocomplete="username" value="${escape(device?.username || '')}">
-                    </div>
-                    <div class="form-group">
-                        <label>${remoteText('devices.remote_credentials', 'Password')}</label>
-                        <select class="form-input" name="credential_mode">
-                            <option value="prompt">${remoteText('devices.remote_prompt_password', 'Ask every session')}</option>
-                            <option value="saved">${remoteText('devices.remote_save_password', 'Save securely')}</option>
-                            <option value="none">${remoteText('devices.remote_no_password', 'No password')}</option>
+                        <label class="form-label" for="rt-tls">${escape(remoteText('devices.remote_tls', 'TLS encryption'))}</label>
+                        <select class="form-select is-host" id="rt-tls" name="tls_mode" aria-controls="rt-fingerprint-group">
+                            ${option('required', remoteText('devices.remote_tls_required', 'Required'), tlsMode)}
+                            ${option('preferred', remoteText('devices.remote_tls_preferred', 'When the computer supports it'), tlsMode)}
+                            ${option('disabled', remoteText('devices.remote_tls_disabled', 'Off'), tlsMode)}
                         </select>
                     </div>
+                    <div class="form-group" id="rt-fingerprint-group"${tlsMode === 'disabled' ? ' hidden' : ''}>
+                        <label class="form-label" for="rt-fingerprint">${escape(remoteText('devices.remote_fingerprint', 'Trusted certificate fingerprint'))}</label>
+                        <input class="form-input" id="rt-fingerprint" name="cert_fingerprint" maxlength="128" autocomplete="off" spellcheck="false" aria-describedby="rt-fingerprint-hint" value="${escape(device?.cert_fingerprint || '')}">
+                        <p class="form-hint" id="rt-fingerprint-hint">${escape(remoteText('devices.remote_fingerprint_hint', 'SHA-256. Leave empty to confirm the certificate at the first connection.'))}</p>
+                    </div>
+                </section>
+                <div class="form-section">
+                    <label class="check-field">
+                        <input type="checkbox" name="enabled"${device?.enabled !== false ? ' checked' : ''}>
+                        <span class="check-label">${escape(remoteText('devices.remote_enabled', 'Enabled'))}</span>
+                        <span class="form-hint">${escape(remoteText('devices.remote_enabled_hint', 'When off, the target stays in the list but nobody can connect to it.'))}</span>
+                    </label>
                 </div>
-                <div class="form-group">
-                    <label>${remoteText('devices.remote_password', 'Password')}</label>
-                    <input class="form-input" name="password" type="password" autocomplete="new-password" placeholder="${remoteText('devices.remote_password_hint', 'Leave empty to keep the saved password')}">
-                </div>
-                <div class="form-group">
-                    <label>${remoteText('devices.remote_tls', 'Certificate policy')}</label>
-                    <select class="form-input" name="tls_mode">
-                        <option value="required">${remoteText('devices.remote_tls_required', 'Require TLS')}</option>
-                        <option value="preferred">${remoteText('devices.remote_tls_preferred', 'Prefer TLS')}</option>
-                        <option value="disabled">${remoteText('devices.remote_tls_disabled', 'Disable TLS')}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>${remoteText('devices.remote_fingerprint', 'Trusted certificate fingerprint')}</label>
-                    <input class="form-input" name="cert_fingerprint" maxlength="128" placeholder="SHA-256 fingerprint" value="${escape(device?.cert_fingerprint || '')}">
-                    <small class="form-help">${remoteText('devices.remote_fingerprint_hint', 'Leave empty to require confirmation on first connection.')}</small>
-                </div>
-                <label class="toggle-row">
-                    <input type="checkbox" name="enabled" ${device?.enabled !== false ? 'checked' : ''}>
-                    <span>${remoteText('devices.remote_enabled', 'Enabled')}</span>
-                </label>
+                <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
             </form>`;
-        Modal.show({
+        Modal.sheet({
             title,
+            subtitle: remoteText('devices.remote_sheet_desc', 'A computer without the BetterDesk client. People connect to it in the browser, through this server.'),
             content,
-            size: 'medium',
+            status: true,
             buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                { label: remoteText('devices.remote_test', 'Test connection'), class: 'btn-secondary', onClick: () => testRemoteTargetForm() },
-                { label: _('actions.save'), class: 'btn-primary', onClick: () => submitRemoteTargetForm(deviceId) }
-            ],
-            onOpen: () => {
-                const form = document.getElementById('remote-target-form');
-                if (!form) return;
-                if (device?.credential_mode) form.elements.credential_mode.value = device.credential_mode;
-                if (device?.tls_mode) form.elements.tls_mode.value = device.tls_mode;
-                form.elements.host.focus();
-            }
+                { label: _('actions.cancel'), class: 'btn-secondary', start: true, onClick: () => Modal.close() },
+                { label: remoteText('devices.remote_test', 'Test connection'), class: 'btn-secondary', id: 'rt-test-btn', onClick: () => testRemoteTargetForm() },
+                { label: _('actions.save'), class: 'btn-primary', id: 'rt-save-btn', onClick: () => submitRemoteTargetForm(deviceId) }
+            ]
         });
+        const form = document.getElementById('remote-target-form');
+        if (!form) return;
+        // Enter in a field saves
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submitRemoteTargetForm(deviceId);
+        });
+        // The password field only when the password is saved here; the fingerprint only with TLS
+        const syncConditional = () => {
+            form.querySelector('#rt-password-group').hidden = form.elements.credential_mode.value !== 'saved';
+            form.querySelector('#rt-fingerprint-group').hidden = form.elements.tls_mode.value === 'disabled';
+        };
+        form.elements.credential_mode.addEventListener('change', syncConditional);
+        form.elements.tls_mode.addEventListener('change', syncConditional);
+        // Switching the technology moves the port along while it is still the other one's default
+        form.elements.protocol.addEventListener('change', () => {
+            const port = form.elements.port;
+            const defaults = { rdp: '3389', vnc: '5900' };
+            if (!port.value || Object.values(defaults).includes(port.value)) port.value = defaults[form.elements.protocol.value];
+        });
+        // A test result or error belongs to the values it was made with
+        form.addEventListener('input', () => Modal.setStatus(''));
     }
     
     /**
@@ -2482,232 +2556,12 @@
     /**
      * Show edit modal. With options.focusTags (row menu > Manage tags) it shows only the tags.
      */
+    // Editing happens in the device panel (deviceDetail.js): name, note, folder and tags
+    // in place, Cancel / Save in its footer. Kept under this name for other callers.
     function showEditModal(deviceId, options = {}) {
-        const device = devices.find(d => d.id === deviceId);
-        if (!device) return;
-        const focusTags = !!(options && options.focusTags);
-
-        const editTags = new Set(normalizeTags(device.tags));
-        const editTagInputId = 'edit-tag-input';
-        const editTagsSelectedId = 'edit-tags-selected';
-        const editTagSuggestionsId = 'edit-tag-suggestions';
-        const editTagStatusId = 'edit-tag-status';
-        const hasTag = (tag) => [...editTags].some(t => t.toLowerCase() === String(tag).toLowerCase());
-        const setTagStatus = (message) => {
-            const el = document.getElementById(editTagStatusId);
-            if (el) el.textContent = message || '';
-        };
-        const renderEditTags = () => {
-            const selectedEl = document.getElementById(editTagsSelectedId);
-            const suggestionsEl = document.getElementById(editTagSuggestionsId);
-            if (!selectedEl) return;
-
-            selectedEl.innerHTML = editTags.size
-                ? [...editTags].map((tag, i) => `
-                    <li class="list-row">
-                        <span class="row-main" id="edit-tag-name-${i}">${Utils.escapeHtml(tag)}</span>
-                        <span class="row-end">
-                            <button type="button" class="btn btn-sm device-edit-tag-remove"
-                                    data-edit-tag-remove="${Utils.escapeHtml(tag)}"
-                                    aria-describedby="edit-tag-name-${i}">${Utils.escapeHtml(_('actions.remove'))}</button>
-                        </span>
-                    </li>`).join('')
-                : `<li class="list-row is-empty">${Utils.escapeHtml(_('device_detail.no_tags'))}</li>`;
-
-            // Suggestions: existing tags this device does not have yet
-            if (suggestionsEl) {
-                suggestionsEl.innerHTML = availableTags
-                    .filter(tag => tag && !hasTag(tag))
-                    .map(tag => `<option value="${Utils.escapeHtml(tag)}"></option>`)
-                    .join('');
-            }
-
-            selectedEl.querySelectorAll('[data-edit-tag-remove]').forEach(button => {
-                button.addEventListener('click', () => {
-                    editTags.delete(button.dataset.editTagRemove);
-                    setTagStatus('');
-                    renderEditTags();
-                    document.getElementById(editTagInputId)?.focus();
-                });
-            });
-        };
-        const addEditTag = () => {
-            const input = document.getElementById(editTagInputId);
-            const tag = input?.value.trim();
-            if (!tag) return;
-            if (hasTag(tag)) {
-                setTagStatus(_('device_detail.tag_exists'));
-                return;
-            }
-            editTags.add(tag);
-            setTagStatus('');
-            if (input) input.value = '';
-            renderEditTags();
-        };
-
-        const tagsField = `
-                    <div class="form-group device-edit-tags-field${focusTags ? ' device-edit-tags-focus' : ''}">
-                        <span class="form-label" id="edit-tags-label">${_('device_detail.tags')}</span>
-                        <p class="form-hint">${Utils.escapeHtml(_('devices.tags_device_hint'))}</p>
-                        <ul id="${editTagsSelectedId}" class="list device-edit-tag-list" aria-labelledby="edit-tags-label"></ul>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="${editTagInputId}">${_('devices.add_tag_label')}</label>
-                        <div class="device-edit-tag-input-row">
-                            <input type="text" id="${editTagInputId}" class="form-input"
-                                   list="${editTagSuggestionsId}" autocomplete="off"
-                                   aria-describedby="edit-tag-input-hint ${editTagStatusId}" maxlength="50">
-                            <datalist id="${editTagSuggestionsId}"></datalist>
-                            <button type="button" class="btn" id="edit-tag-add-btn">${_('device_detail.add_tag')}</button>
-                        </div>
-                        <p class="form-hint" id="edit-tag-input-hint">${Utils.escapeHtml(_('devices.add_tag_hint'))}</p>
-                        <p class="form-status is-error" id="${editTagStatusId}" aria-live="polite"></p>
-                    </div>`;
-
-        const detailFields = `
-                    <div class="form-group">
-                        <label class="form-label" for="edit-display-name">${_('devices.display_name')}</label>
-                        <input type="text" id="edit-display-name" class="form-input"
-                               value="${Utils.escapeHtml(device.display_name || '')}"
-                               aria-describedby="edit-display-name-hint" maxlength="128" />
-                        <p class="form-hint" id="edit-display-name-hint">${Utils.escapeHtml(_('devices.display_name_hint'))}</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="edit-note">${_('devices.note')}</label>
-                        <textarea id="edit-note" class="form-input" rows="3" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
-                    </div>
-                    ${folders.length ? `
-                    <div class="form-group">
-                        <label class="form-label" for="edit-folder">${_('device_detail.folder')}</label>
-                        <select id="edit-folder" class="form-select" aria-describedby="edit-folder-hint">
-                            <option value="">${Utils.escapeHtml(_('folders.unassigned'))}</option>
-                            ${folders.map(f => `<option value="${Utils.escapeHtml(String(f.id))}"${folderIdsEqual(device.folder_id, f.id) ? ' selected' : ''}>${Utils.escapeHtml(f.name)}</option>`).join('')}
-                        </select>
-                        <p class="form-hint" id="edit-folder-hint">${Utils.escapeHtml(_('devices.folder_hint'))}</p>
-                    </div>` : ''}`;
-
-        const moreFacts = `
-                <dl class="facts device-dialog-facts">
-                    <dt>${_('devices.username')}</dt>
-                    <dd>${Utils.escapeHtml(device.username || '-')}</dd>
-                    <dt>${_('devices.platform')}</dt>
-                    <dd>${Utils.escapeHtml(device.platform || '-')}</dd>
-                    <dt>${_('devices.version')}</dt>
-                    <dd>${Utils.escapeHtml(device.version || '-')}</dd>
-                    <dt>${_('devices.first_seen')}</dt>
-                    <dd>${Utils.formatDate(device.created_at)}</dd>
-                    <dt>${_('devices.last_seen')}</dt>
-                    <dd>${Utils.formatDate(device.last_online, { empty: _('time.never') })}</dd>
-                </dl>`;
-
-        let saving = false;
-        const save = async () => {
-            if (saving) return;
-            // A tag typed but not added yet is meant to be saved too
-            const pending = document.getElementById(editTagInputId)?.value.trim();
-            if (pending && !hasTag(pending)) addEditTag();
-
-            const nameInput = document.getElementById('edit-display-name');
-            const noteInput = document.getElementById('edit-note');
-            const displayName = nameInput ? nameInput.value.trim() : (device.display_name || '');
-            const note = noteInput ? noteInput.value.trim() : (device.note || '');
-            const folderSelect = document.getElementById('edit-folder');
-            const tags = [...editTags];
-            const footer = document.querySelector('.modal-overlay.open .modal-footer');
-            const saveBtn = footer?.querySelector('.btn-primary');
-            const cancelBtn = footer?.querySelector('.btn:not(.btn-primary)');
-
-            saving = true;
-            deviceDialogStatus('');
-            if (saveBtn) {
-                saveBtn.disabled = true;
-                saveBtn.textContent = _('devices.saving');
-            }
-            if (cancelBtn) cancelBtn.disabled = true;
-
-            try {
-                if (nameInput || noteInput) {
-                    await Utils.api(`/api/devices/${encodeURIComponent(device.id)}`, {
-                        method: 'PATCH',
-                        body: JSON.stringify({ display_name: displayName, note }),
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                }
-                const tagResult = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/tags`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ tags }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                // Folder: the keyboard and touch way to do what dragging a row onto a folder does
-                if (folderSelect && !folderIdsEqual(folderSelect.value || null, device.folder_id || null)) {
-                    const folderId = folderSelect.value ? Number(folderSelect.value) : null;
-                    await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/folder`, {
-                        method: 'PATCH',
-                        body: { folderId }
-                    });
-                    device.folder_id = folderId;
-                    updateFolderCounts();
-                }
-
-                device.display_name = displayName;
-                device.note = note;
-                device.tags = tagResult?.tags || tags;
-                availableTags = Array.from(new Set(availableTags.concat(device.tags))).sort((a, b) => a.localeCompare(b));
-                applyFilters();
-                document.dispatchEvent(new CustomEvent('devices:updated', {
-                    detail: {
-                        id: device.id,
-                        display_name: displayName,
-                        note: note,
-                        tags: device.tags
-                    }
-                }));
-
-                Notifications.success(_('common.saved'), device.display_name || device.hostname || device.id);
-                Modal.close();
-                loadDevices();
-            } catch (err) {
-                saving = false;
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = _('actions.save');
-                }
-                if (cancelBtn) cancelBtn.disabled = false;
-                deviceDialogStatus(err.message || _('errors.server_error'), true);
-            }
-        };
-
-        Modal.show({
-            title: focusTags ? _('devices.manage_device_tags') : _('devices.edit_title'),
-            content: `
-                <div class="device-edit-form${focusTags ? ' is-tags-only' : ''}">
-                    ${deviceDialogFactsHtml(device)}
-                    ${focusTags ? '' : detailFields}
-                    ${tagsField}
-                    ${focusTags ? '' : moreFacts}
-                </div>
-            `,
-            buttons: [
-                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
-                { label: _('actions.save'), class: 'btn-primary', onClick: save }
-            ],
-            size: 'medium',
-            onOpen: () => {
-                deviceDialogStatus('');
-                renderEditTags();
-                const input = document.getElementById(editTagInputId);
-                const addButton = document.getElementById('edit-tag-add-btn');
-                addButton?.addEventListener('click', addEditTag);
-                input?.addEventListener('keydown', event => {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        addEditTag();
-                    }
-                });
-                input?.addEventListener('input', () => setTagStatus(''));
-                if (focusTags) input?.focus();
-            }
-        });
+        if (typeof DeviceDetail !== 'undefined' && typeof DeviceDetail.edit === 'function') {
+            DeviceDetail.edit(deviceId, { focusTags: !!(options && options.focusTags) });
+        }
     }
 
     window.BetterDeskDevices = window.BetterDeskDevices || {};
@@ -3463,12 +3317,18 @@
     function renderStrategies() {
         const container = document.getElementById('devices-strategies-list');
         if (!container) return;
+        const countEl = document.getElementById('devices-strategies-count');
+        if (countEl) {
+            countEl.textContent = strategiesLoaded && accessStrategies.length
+                ? _('devices.strategies_count', { count: accessStrategies.length })
+                : '';
+        }
         if (!strategiesLoaded) {
-            container.innerHTML = `<div class="empty-state-inline">${_('devices.loading_strategies')}</div>`;
+            container.innerHTML = `<p class="state">${_('devices.loading_strategies')}</p>`;
             return;
         }
         if (!accessStrategies.length) {
-            container.innerHTML = `<div class="empty-state-inline">${_('devices.no_strategies')}</div>`;
+            container.innerHTML = `<p class="state">${_('devices.no_strategies')}</p>`;
             return;
         }
 
@@ -3480,27 +3340,49 @@
             const group = deviceGroups.find(item => item.guid === guid);
             return group ? group.name : (guid || _('devices.strategy_any_device_group'));
         };
+        const esc = Utils.escapeHtml;
+        const canEdit = can('device.edit');
 
-        container.innerHTML = accessStrategies.map(strategy => {
+        // One row per rule: who it is for, how many client settings it sets, where it is applied
+        const rows = accessStrategies.map((strategy, index) => {
             const enabled = strategy.enabled !== false;
             const permCount = Object.keys(strategy.permissions || {}).length;
-            return `<div class="strategy-manager-item ${enabled ? '' : 'strategy-disabled'}" data-guid="${Utils.escapeHtml(strategy.guid)}">
-                <div class="strategy-manager-text">
-                    <strong>${Utils.escapeHtml(strategy.name)}</strong>
-                    <span>${Utils.escapeHtml(userGroupName(strategy.user_group_guid))} → ${Utils.escapeHtml(deviceGroupName(strategy.device_group_guid))}</span>
-                    <span class="text-muted">
-                        <span class="strategy-status-badge ${enabled ? 'enabled' : 'disabled'}">${enabled ? _('devices.strategy_enabled') : _('devices.strategy_disabled')}</span> ·
-                        <span class="strategy-perm-count">${_('devices.strategy_permissions_count', { count: permCount }) || permCount + ' settings'}</span> ·
-                        <span class="strategy-assign-count" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('devices.strategy_assign_none')}</span>
+            const guid = esc(strategy.guid);
+            const menuId = `strategy-menu-${index}`;
+            const nearEnd = accessStrategies.length > 3 && index >= accessStrategies.length - 2;
+            const menu = canEdit ? `<span class="menu-anchor">
+                    <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
+                        aria-controls="${menuId}" aria-label="${esc(_('devices.strategy_actions_for', { name: strategy.name }))}">
+                        <span class="material-icons" aria-hidden="true">more_vert</span>
+                    </button>
+                    <span class="menu menu-end${nearEnd ? ' menu-up' : ''}" id="${menuId}" role="menu">
+                        <button type="button" class="menu-item" role="menuitem" data-action="assign-strategy" data-guid="${guid}">${Utils.icon('link')}${_('devices.strategy_assign')}</button>
+                        <button type="button" class="menu-item" role="menuitem" data-action="edit-strategy" data-guid="${guid}">${Utils.icon('edit')}${_('actions.edit')}</button>
+                        <span class="menu-divider" role="separator"></span>
+                        <button type="button" class="menu-item danger" role="menuitem" data-action="delete-strategy" data-guid="${guid}">${Utils.icon('delete')}${_('actions.delete')}</button>
                     </span>
-                </div>
-                ${can('device.edit') ? `<div class="strategy-manager-actions">
-                    <button type="button" class="btn btn-sm btn-ghost action-btn" data-action="assign-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('devices.strategy_assign')}</button>
-                    <button type="button" class="btn btn-sm btn-ghost action-btn" data-action="edit-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('actions.edit')}</button>
-                    <button type="button" class="btn btn-sm btn-ghost btn-danger-quiet action-btn danger" data-action="delete-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('actions.delete')}</button>
-                </div>` : ''}
-            </div>`;
+                </span>` : '';
+            return `<tr class="${enabled ? '' : 'strategy-disabled'}" data-guid="${guid}">
+                <td class="strategy-name">${esc(strategy.name)}</td>
+                <td>${esc(userGroupName(strategy.user_group_guid))} <span aria-hidden="true">→</span><span class="sr-only">,</span> ${esc(deviceGroupName(strategy.device_group_guid))}</td>
+                <td class="strategy-perm-count">${esc(_('devices.strategy_permissions_count', { count: permCount }))}</td>
+                <td><span class="strategy-assign-count" data-guid="${guid}">${_('devices.strategy_assign_none')}</span></td>
+                <td>${Utils.statusHtml(enabled ? 'good' : 'neutral', enabled ? _('devices.strategy_enabled') : _('devices.strategy_disabled'))}</td>
+                <td class="actions">${menu}</td>
+            </tr>`;
         }).join('');
+
+        container.innerHTML = `<div class="table-scroll"><table class="data-table strategies-table">
+            <thead><tr>
+                <th scope="col">${_('devices.strategy_col_rule')}</th>
+                <th scope="col">${_('devices.strategy_col_scope')}</th>
+                <th scope="col">${_('devices.strategy_permissions')}</th>
+                <th scope="col">${_('devices.strategy_col_assigned')}</th>
+                <th scope="col">${_('devices.strategy_col_status')}</th>
+                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table></div>`;
 
         container.querySelectorAll('[data-action="edit-strategy"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -3573,7 +3455,7 @@
 
         const deviceItems = (devices || []).slice(0, 500).map(d => ({
             key: d.id,
-            label: `${d.id}${d.hostname ? ' — ' + d.hostname : ''}`,
+            label: `${d.id}${d.hostname ? ', ' + d.hostname : ''}`,
         }));
         const userItems = panelUsers.map(u => ({
             key: u.username || u.name || String(u.id),
@@ -3586,18 +3468,18 @@
             content: `
                 <form id="strategy-assign-form" class="device-group-form">
                     <p class="form-hint">${_('devices.strategy_assign_hint')}</p>
-                    <div class="form-group">
-                        <label>${_('devices.strategy_assign_devices')}</label>
+                    <fieldset class="form-group">
+                        <legend class="form-label">${_('devices.strategy_assign_devices')}</legend>
                         <div class="strategy-assign-list">${renderAssignCheckboxList(deviceItems, detail.peer_ids || [], 'strategy-assign-peer', i => i.label)}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>${_('devices.strategy_assign_users')}</label>
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <legend class="form-label">${_('devices.strategy_assign_users')}</legend>
                         <div class="strategy-assign-list">${renderAssignCheckboxList(userItems, detail.user_names || [], 'strategy-assign-user', i => i.label)}</div>
-                    </div>
-                    <div class="form-group">
-                        <label>${_('devices.strategy_assign_groups')}</label>
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <legend class="form-label">${_('devices.strategy_assign_groups')}</legend>
                         <div class="strategy-assign-list">${renderAssignCheckboxList(groupItems, detail.group_guids || [], 'strategy-assign-group', i => i.label)}</div>
-                    </div>
+                    </fieldset>
                 </form>
             `,
             size: 'large',
@@ -3634,14 +3516,15 @@
             const current = permissions[item.key];
             const checked = current === 'Y' || current === true;
             const denied = current === 'N' || current === false;
-            return `<label class="strategy-perm-option">
-                <span>${Utils.escapeHtml(_(item.labelKey))}</span>
-                <select class="form-input strategy-perm-select" data-perm-key="${Utils.escapeHtml(item.key)}">
+            const selectId = `strategy-perm-${item.key}`;
+            return `<div class="strategy-perm-option">
+                <label for="${selectId}">${Utils.escapeHtml(_(item.labelKey))}</label>
+                <select class="form-select strategy-perm-select" id="${selectId}" data-perm-key="${Utils.escapeHtml(item.key)}">
                     <option value="" ${!checked && !denied ? 'selected' : ''}>${_('devices.strategy_perm_default')}</option>
                     <option value="Y" ${checked ? 'selected' : ''}>${_('devices.strategy_perm_allow')}</option>
                     <option value="N" ${denied ? 'selected' : ''}>${_('devices.strategy_perm_deny')}</option>
                 </select>
-            </label>`;
+            </div>`;
         }).join('');
     }
 
@@ -3673,26 +3556,27 @@
             content: `
                 <form id="strategy-form" class="device-group-form">
                     <div class="form-group">
-                        <label for="strategy-name">${_('devices.strategy_name')}</label>
+                        <label class="form-label" for="strategy-name">${_('devices.strategy_name')}</label>
                         <input type="text" id="strategy-name" class="form-input" maxlength="80" required value="${Utils.escapeHtml(strategy?.name || '')}">
                     </div>
                     <div class="form-group">
-                        <label for="strategy-user-group">${_('devices.strategy_user_group')}</label>
-                        <select id="strategy-user-group" class="form-input">${userGroupOptions}</select>
+                        <label class="form-label" for="strategy-user-group">${_('devices.strategy_user_group')}</label>
+                        <select id="strategy-user-group" class="form-select">${userGroupOptions}</select>
                     </div>
                     <div class="form-group">
-                        <label for="strategy-device-group">${_('devices.strategy_device_group')}</label>
-                        <select id="strategy-device-group" class="form-input">${deviceGroupOptions}</select>
+                        <label class="form-label" for="strategy-device-group">${_('devices.strategy_device_group')}</label>
+                        <select id="strategy-device-group" class="form-select">${deviceGroupOptions}</select>
+                        <p class="form-hint">${_('devices.strategy_groups_hint')}</p>
                     </div>
-                    <label class="toggle-row">
+                    <label class="check-field">
                         <input type="checkbox" id="strategy-enabled" ${strategy?.enabled !== false ? 'checked' : ''}>
-                        <span>${_('devices.strategy_enabled_label')}</span>
+                        <span class="check-label">${_('devices.strategy_enabled_label')}</span>
                     </label>
-                    <div class="form-group">
-                        <label>${_('devices.strategy_permissions')}</label>
-                        <div class="strategy-perm-grid">${renderStrategyPermissionOptions(strategy?.permissions || {})}</div>
+                    <fieldset class="form-group strategy-perm-fieldset">
+                        <legend class="form-label">${_('devices.strategy_permissions')}</legend>
                         <p class="form-hint">${_('devices.strategy_permissions_hint')}</p>
-                    </div>
+                        <div class="strategy-perm-grid">${renderStrategyPermissionOptions(strategy?.permissions || {})}</div>
+                    </fieldset>
                 </form>
             `,
             size: 'medium',

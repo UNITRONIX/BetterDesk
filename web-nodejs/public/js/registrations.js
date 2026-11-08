@@ -255,7 +255,7 @@
 
     function statusHtml(row) {
         const label = _(`registrations.status_${row.status}`);
-        const cls = row.status === 'approved' ? 'ok' : (row.status === 'rejected' ? 'offline' : 'pending');
+        const tone = row.status === 'approved' ? 'good' : (row.status === 'rejected' ? 'neutral' : 'waiting');
         let sub = '';
         if (row.status !== 'pending') {
             const when = row.decided_at ? Utils.formatDate(row.decided_at, { empty: '' }) : '';
@@ -265,7 +265,7 @@
             else if (when) sub = when;
             if (row.banned) sub = sub ? `${sub}, ${_('registrations.also_banned')}` : _('registrations.also_banned');
         }
-        return `<span class="status ${cls}">${esc(label)}</span>${sub ? `<span class="cell-sub">${esc(sub)}</span>` : ''}`;
+        return `${Utils.statusHtml(tone, label)}${sub ? `<span class="cell-sub">${esc(sub)}</span>` : ''}`;
     }
 
     function menuHtml(row, menuId, items, nameId) {
@@ -294,7 +294,8 @@
                 <button type="button" class="btn btn-sm btn-danger-quiet desktop-only" ${actionAttrs(row, 'reject')} ${named}>${Utils.icon('reject')}<span>${esc(_('registrations.reject_btn'))}</span></button>`;
             menuItems.push(`<button type="button" class="menu-item danger phone-only" role="menuitem" ${actionAttrs(row, 'reject')}>${Utils.icon('reject')}<span>${esc(_('registrations.reject_btn'))}…</span></button>`);
         } else if (row.status === 'approved') {
-            inline = `<a class="btn btn-sm btn-ghost" href="/devices?search=${encodeURIComponent(row.device_id)}" ${named}>${esc(_('registrations.open_device'))}</a>`;
+            // The same device panel as the device list (deviceDetail.js), in place
+            inline = `<button type="button" class="btn btn-sm btn-ghost" ${actionAttrs(row, 'open')} ${named}>${esc(_('registrations.open_device'))}</button>`;
         } else if (row.status === 'rejected' && row.source === SOURCE_ENROLLMENT && !decided.has(row.key)) {
             inline = `<button type="button" class="btn btn-sm" ${actionAttrs(row, 'clear-rejection')} ${named}>${esc(_('registrations.allow_again'))}</button>`;
         }
@@ -311,18 +312,17 @@
         const name = row.hostname
             ? `<span class="row-name" id="reg-name-${index}">${esc(row.hostname)}</span>`
             : `<span class="row-name is-missing" id="reg-name-${index}">${esc(_('registrations.no_name'))}<span class="sr-only"> ${esc(row.device_id)}</span></span>`;
-        const askedFull = Utils.formatDate(row.asked_at, { empty: '' });
         const age = relative(row.asked_at);
         const platform = row.platform || _('common.not_available');
         const phoneMeta = [platform, age].filter(Boolean).map(esc).join(' · ');
         const upClass = total > 3 && index >= total - 2 ? ' menu-near-end' : '';
         return `<tr data-key="${esc(row.key)}" data-source="${esc(row.source)}" data-id="${esc(row.rowId)}" class="is-${esc(row.status)}${upClass}">
             <td class="col-device">${name}<span class="cell-sub"><span class="mono">${esc(row.device_id)}</span><span class="phone-only"> · ${phoneMeta}</span></span></td>
-            <td class="col-platform"><span class="platform-name">${Utils.getPlatformIconHtml(row.platform)}${esc(platform)}</span>${row.version
-                ? `<span class="cell-sub">${esc(_('registrations.client_version', { version: row.version }))}</span>` : ''}</td>
-            <td class="col-ip"><span class="mono">${esc(row.ip || _('common.not_available'))}</span></td>
-            <td class="col-source">${esc(sourceLabel(row))}</td>
-            <td class="col-requested"${askedFull ? ` title="${esc(askedFull)}"` : ''}>${esc(age)}</td>
+            <td class="col-platform">${Utils.platformHtml(row.platform)}${row.version
+                ? `<span class="cell-sub">${esc(_('registrations.client_version', { version: '{v}' })).replace('{v}', Utils.versionHtml(row.version))}</span>` : ''}</td>
+            <td class="col-ip">${Utils.valueHtml(row.ip, { empty: _('common.not_available') })}</td>
+            <td class="col-source">${Utils.tagHtml(sourceLabel(row))}</td>
+            <td class="col-requested">${Utils.timeHtml(row.asked_at, { empty: _('common.not_available') })}</td>
             <td class="col-status">${statusHtml(row)}</td>
             <td class="actions">${actionsHtml(row, index)}</td>
         </tr>`;
@@ -426,12 +426,13 @@
 
     function factsHtml(row) {
         const facts = [
-            [_('registrations.col_device_id'), `<span class="mono">${esc(row.device_id)}</span>`],
-            [_('registrations.col_hostname'), row.hostname ? esc(row.hostname) : `<span class="text-muted">${esc(_('registrations.no_name'))}</span>`],
-            [_('registrations.col_platform'), esc([row.platform || _('common.not_available'), row.version ? _('registrations.client_version', { version: row.version }) : ''].filter(Boolean).join(', '))],
-            [_('registrations.col_ip'), `<span class="mono">${esc(row.ip || _('common.not_available'))}</span>`],
-            [_('registrations.col_asked'), esc([Utils.formatDate(row.asked_at, { empty: _('common.not_available') }), row.asked_at ? `(${relative(row.asked_at)})` : ''].filter(Boolean).join(' '))],
-            [_('registrations.col_source'), esc(sourceLabel(row))],
+            [_('registrations.col_device_id'), Utils.valueHtml(row.device_id, { copy: true, label: _('registrations.col_device_id') })],
+            [_('registrations.col_hostname'), row.hostname ? esc(row.hostname) : Utils.emptyHtml(_('registrations.no_name'))],
+            [_('registrations.col_platform'), Utils.platformHtml(row.platform, { empty: _('common.not_available') })
+                + (row.version ? `<span class="text-muted">${esc(_('registrations.client_version', { version: '{v}' })).replace('{v}', Utils.versionHtml(row.version))}</span>` : '')],
+            [_('registrations.col_ip'), Utils.valueHtml(row.ip, { empty: _('common.not_available') })],
+            [_('registrations.col_asked'), Utils.timeHtml(row.asked_at, { relative: false, empty: _('common.not_available') }) + (row.asked_at ? ` <span class="text-muted">(${esc(relative(row.asked_at))})</span>` : '')],
+            [_('registrations.col_source'), Utils.tagHtml(sourceLabel(row))],
         ];
         return `<dl class="facts approve-facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
     }
@@ -741,6 +742,10 @@
             case 'clear-rejection': clearRejection(row); break;
             case 'remove': removeRecord(row); break;
             case 'copy': copyId(row); break;
+            case 'open':
+                if (typeof DeviceDetail !== 'undefined') DeviceDetail.open(row.device_id);
+                else window.location.href = '/devices?open=' + encodeURIComponent(row.device_id);
+                break;
         }
     });
 

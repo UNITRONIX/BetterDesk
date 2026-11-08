@@ -1,8 +1,8 @@
 <%- include('layouts/main', {
     title: _('nav.inventory'),
     uiReworked: true,
-    pageStyles: ['ui/inventory'],
-    pageScripts: ['inventory'],
+    pageStyles: ['ui/chart', 'ui/device-detail', 'ui/inventory'],
+    pageScripts: ['ui-chart', 'deviceDetail', 'inventory'],
     currentPage: 'inventory',
     breadcrumb: [{ label: _('nav.inventory') }],
     body: `
@@ -21,9 +21,8 @@
                             aria-label="${_('inventory.search_label')}"
                             placeholder="${_('inventory.search_label')}">
                     </div>
-                    <div class="toolbar-end">
-                        <button type="button" class="btn" id="refresh-btn"><span class="material-icons" aria-hidden="true">refresh</span>${_('actions.refresh')}</button>
-                    </div>
+                    <!-- Next to the search, not alone at the far end of the line -->
+                    <button type="button" class="btn" id="refresh-btn"><span class="material-icons" aria-hidden="true">refresh</span>${_('actions.refresh')}</button>
                 </div>
                 <p class="count-line" id="inventory-count" aria-live="polite"></p>
 
@@ -35,7 +34,7 @@
                                 <th class="col-os">${_('inventory.os')}</th>
                                 <th class="col-cpu">${_('inventory.cpu')}</th>
                                 <th class="col-memory">${_('inventory.memory')}</th>
-                                <th class="col-disks">${_('inventory.disks')}</th>
+                                <th class="col-disks is-num">${_('inventory.disks')}</th>
                                 <th class="col-updated">${_('inventory.col_updated')}</th>
                             </tr>
                         </thead>
@@ -55,7 +54,7 @@
                     <ul class="share-legend" id="inv-os-legend"></ul>
                     <div class="table-scroll">
                         <table class="data-table inv-os-table">
-                            <thead><tr><th scope="col">${_('inventory.os_col_system')}</th><th scope="col" class="num-cell">${_('inventory.os_col_devices')}</th></tr></thead>
+                            <thead><tr><th scope="col">${_('inventory.os_col_system')}</th><th scope="col" class="is-num">${_('inventory.os_col_devices')}</th></tr></thead>
                             <tbody id="inv-os-body"></tbody>
                         </table>
                     </div>

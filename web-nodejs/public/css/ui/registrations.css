@@ -11,13 +11,6 @@
     font-weight: 400;
 }
 
-.registrations-table .platform-name {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    white-space: nowrap;
-}
-
 .registrations-table .col-requested,
 .registrations-table .col-source {
     white-space: nowrap;

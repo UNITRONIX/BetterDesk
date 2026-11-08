@@ -101,12 +101,12 @@
             const pct = total > 0 ? Math.round((value / total) * 100) : 0;
             return `<tr>
                 <th scope="row">${escapeHtml(nameFn ? nameFn(name) : name)}</th>
-                <td class="cp-num">${escapeHtml(String(value))}</td>
-                <td><div class="meter"><span class="meter-bar"><span class="meter-fill" style="width:${pct}%"></span></span><span class="meter-value">${pct} %</span></div></td>
+                <td class="is-num">${escapeHtml(Utils.formatNumber(value))}</td>
+                <td><div class="meter"><span class="meter-bar"><span class="meter-fill" style="width:${pct}%"></span></span><span class="meter-value">${escapeHtml(Utils.formatPercent(pct))}</span></div></td>
             </tr>`;
         }).join('');
         return `<div class="table-scroll"><table class="data-table cp-count-table">
-            <thead><tr><th scope="col">${escapeHtml(colLabel)}</th><th scope="col" class="cp-num">${escapeHtml(_('cross_platform.col_devices'))}</th><th scope="col">${escapeHtml(_('cross_platform.col_share'))}</th></tr></thead>
+            <thead><tr><th scope="col">${escapeHtml(colLabel)}</th><th scope="col" class="is-num">${escapeHtml(_('cross_platform.col_devices'))}</th><th scope="col">${escapeHtml(_('cross_platform.col_share'))}</th></tr></thead>
             <tbody>${body}</tbody></table></div>`;
     }
 
@@ -177,10 +177,33 @@
         }
     }
 
+    // Clients report their system in different ways ("windows", "Ubuntu 22.04", "debian 12");
+    // count them under one name per system so Linux is not split across several rows
+    function platformFamily(key) {
+        const k = String(key || '').toLowerCase().trim();
+        if (!k) return 'unknown';
+        if (k.startsWith('win')) return 'windows';
+        if (/^(mac|darwin|osx|os x)/.test(k)) return 'macos';
+        if (k.startsWith('android')) return 'android';
+        if (/^(ios|ipados|iphone|ipad)/.test(k)) return 'ios';
+        if (/chrome ?os|cros/.test(k)) return 'chromeos';
+        if (/^(linux|ubuntu|debian|fedora|centos|rhel|red hat|rocky|alma|arch|manjaro|mint|opensuse|suse|raspbian|pop|elementary|kali|gentoo|alpine|nixos)/.test(k)) return 'linux';
+        return k;
+    }
+
+    function mergeFamilies(obj) {
+        const out = {};
+        Object.entries(obj || {}).forEach(([k, v]) => {
+            const f = platformFamily(k);
+            out[f] = (out[f] || 0) + (Number(v) || 0);
+        });
+        return out;
+    }
+
     function renderDistribution(data) {
         const total = data.total || 0;
         const sorted = (obj) => Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
-        const plats = sorted(data.platforms);
+        const plats = sorted(mergeFamilies(data.platforms));
         const archs = sorted(data.archs);
         const vers = sorted(data.versions);
 
@@ -202,7 +225,13 @@
         };
         fill('platform-chart', plats, _('cross_platform.col_system'), platformName);
         fill('version-chart', vers, _('cross_platform.col_version'), null, 8);
-        fill('arch-chart', archs, _('cross_platform.col_arch'), (a) => a === 'unknown' ? _('cross_platform.unknown') : a);
+        // No architecture reported at all: one sentence instead of a table with one "Not reported" row
+        if (archs.length && archs.every(([a]) => !a || a === 'unknown')) {
+            const el = document.getElementById('arch-chart');
+            if (el) el.innerHTML = `<p class="state">${escapeHtml(_('cross_platform.arch_none'))}</p>`;
+        } else {
+            fill('arch-chart', archs, _('cross_platform.col_arch'), (a) => a === 'unknown' ? _('cross_platform.unknown') : a);
+        }
     }
 
     // ── Protocols ────────────────────────────────────────────────────
@@ -255,15 +284,16 @@
                 <path d="M0,0 L8,3 L0,6" class="cp-dg-arrow"/>
             </marker></defs>
             ${box(10, 150, _('cross_platform.diagram_client'), _('cross_platform.diagram_client_sub'))}
-            ${arrow(160, 250, 'ClientCapabilities')}
+            ${arrow(160, 250, _('cross_platform.diagram_msg_caps'))}
             ${box(250, 160, _('cross_platform.diagram_server'), _('cross_platform.diagram_server_sub'), true)}
-            ${arrow(410, 500, 'SessionConfig')}
+            ${arrow(410, 500, _('cross_platform.diagram_msg_session'))}
             ${box(500, 150, _('cross_platform.diagram_peer'), _('cross_platform.diagram_peer_sub'))}
         `;
     }
 
     // ── Limitations ──────────────────────────────────────────────────
-    const STATUS_CLASS = { production: 'ok', testing: 'pending', planned: 'offline', limited: 'warning', experimental: 'warning' };
+    // Status tones (GUIDE.md "Data display"): ready good, testing waiting, planned neutral, limited and experimental warning
+    const STATUS_CLASS = { production: 'is-good', testing: 'is-waiting', planned: 'is-neutral', limited: 'is-warning', experimental: 'is-warning' };
 
     function renderLimitations() {
         const grid = document.getElementById('limitations-grid');

@@ -10,27 +10,27 @@
     currentPage: 'dashboard',
     activateAgentNav: typeof activateAgentNav !== 'undefined' && activateAgentNav,
     body: `
-        <div class="page dashboard-page" id="welcome-section">
+        <div class="page page-wide dashboard-page" id="welcome-section">
             <div class="page-head">
                 <h1>${_('nav.dashboard')}</h1>
-            </div>
-
-            ${canSeeDevices ? `
-            <!-- The most common job: someone reads out an ID or a name -->
-            <form class="overview-find" action="/devices" method="get" role="search">
-                <label class="form-label" for="overview-find-input">${_('dashboard.find_device')}</label>
-                <div class="overview-find-row">
+                <p class="page-description">${_('dashboard.page_intro')}</p>
+                ${canSeeDevices ? `
+                <!-- The most common job: someone reads out an ID or a name -->
+                <form class="overview-find page-actions" action="/devices" method="get" role="search" aria-label="${_('dashboard.find_device')}">
+                    <label class="sr-only" for="overview-find-input">${_('dashboard.find_device')}</label>
                     <div class="search-wrapper">
                         <span class="material-icons" aria-hidden="true">search</span>
                         <input type="search" class="form-input" id="overview-find-input" name="search" autocomplete="off" spellcheck="false"
-                               placeholder="${_('dashboard.find_device_placeholder')}">
+                               placeholder="${_('dashboard.find_device_long')}">
                     </div>
                     <button type="submit" class="btn">${_('dashboard.find_device_button')}</button>
-                </div>
-            </form>` : ''}
+                </form>` : ''}
+            </div>
 
             <div class="page-cols">
             <div class="page-main">
+            <!-- Attention and device counts are short: side by side when the main column is wide -->
+            <div class="cols overview-now">
             <!-- Only things someone has to act on; each row shows when its count is above zero -->
             <section class="section attention" aria-labelledby="attention-title">
                 <div class="section-head"><h2 id="attention-title">${_('dashboard.attention_panel')}</h2></div>
@@ -87,6 +87,7 @@
                 <ul class="share-legend" id="devices-now-legend"></ul>
                 <span id="stat-total" hidden></span><span id="stat-online" hidden></span><span id="stat-banned" hidden></span><span id="stat-connections" hidden></span>
             </section>` : ''}
+            </div>
 
             ${typeof hasPermission === 'function' && hasPermission('audit.view') ? `
             <!-- Two weeks of remote sessions and help requests (public/js/reports-trends.js) -->
@@ -164,11 +165,11 @@
                 </div>
                 <dl class="facts">
                     <dt>${_('dashboard.signal_server')}</dt>
-                    <dd><span class="status server-status-indicator" id="hbbs-status"><span class="status-dot"></span><span class="status-text">${_('status.checking')}</span></span></dd>
+                    <dd><span class="status server-status-indicator is-waiting" id="hbbs-status"><span class="status-dot"></span><span class="status-text">${_('status.checking')}</span></span></dd>
                     <dt>${_('dashboard.relay_server_label')}</dt>
-                    <dd><span class="status server-status-indicator" id="hbbr-status"><span class="status-dot"></span><span class="status-text">${_('status.checking')}</span></span></dd>
+                    <dd><span class="status server-status-indicator is-waiting" id="hbbr-status"><span class="status-dot"></span><span class="status-text">${_('status.checking')}</span></span></dd>
                     <dt>${_('dashboard.web_console')}</dt>
-                    <dd><span class="status server-status-indicator running"><span class="status-dot"></span><span class="status-text">${_('status.running')}</span></span></dd>
+                    <dd><span class="status server-status-indicator is-good"><span class="status-dot"></span><span class="status-text">${_('status.running')}</span></span></dd>
                     <dt>${_('dashboard.server_uptime')}</dt>
                     <dd id="stat-uptime">–</dd>
                 </dl>

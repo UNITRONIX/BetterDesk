@@ -31,7 +31,8 @@ const DeviceDetail = (function () {
             device.live_status = detail.live_status || detail.status || device.live_status;
         }
 
-        _render();
+        // While editing, the fields keep what the user typed
+        if (!editMode) _render();
     });
 
     document.addEventListener('devices:live-status', function (event) {
@@ -85,6 +86,16 @@ const DeviceDetail = (function () {
     let availabilityLoading = false;
     let connectionSessionsData = null;
     let connectionSessionsLoading = false;
+    // The agent's inventory report (GET /api/inventory/:id), shown in the hardware tab:
+    // { id, data } when there is one, { id, none: true } when the agent never sent one, { id, error }
+    let inventoryData = null;
+    let inventoryLoading = false;
+    // Edit mode: the overview's name, note, folder and tags become fields; the footer is Cancel / Save
+    let editMode = false;
+    let editState = null;      // { name, note, folder, tags: [], tagInput }
+    let editInitial = '';      // snapshot to tell whether something changed
+    let editSaving = false;
+    let editFolders = null;    // [{ id, name }] when the page has no folder list of its own
 
     // ──────────────────────────────────────────────────────────────────────
     // Public API
@@ -144,9 +155,13 @@ const DeviceDetail = (function () {
         }
     }
 
-    async function open(deviceId) {
+    // options.tab: the tab to show first (the inventory page opens on 'hardware')
+    async function open(deviceId, options) {
         if (!deviceId) return;
-        activeTab = 'overview';
+        activeTab = (options && options.tab) || 'overview';
+        inventoryData = null;
+        editMode = false;
+        editState = null;
         liveView = 'services';
         availabilityDay = _localDayString();
         availabilityData = null;
@@ -178,6 +193,8 @@ const DeviceDetail = (function () {
      */
     function close() {
         _stopRefresh();
+        editMode = false;
+        editState = null;
         document.body.classList.remove('device-detail-open');
         if (overlayEl) {
             if (overlayEl._escHandler) {
@@ -206,8 +223,8 @@ const DeviceDetail = (function () {
         if (overlayEl) overlayEl.remove();
 
         overlayEl = document.createElement('div');
-        overlayEl.className = 'device-panel-overlay';
-        overlayEl.innerHTML = '<div class="device-panel" id="device-panel-inner" role="dialog" aria-modal="true" aria-labelledby="device-panel-title" tabindex="-1"></div>';
+        overlayEl.className = 'sheet-layer device-panel-overlay';
+        overlayEl.innerHTML = '<div class="sheet device-panel" id="device-panel-inner" role="dialog" aria-modal="true" aria-labelledby="device-panel-title" tabindex="-1"></div>';
         overlayEl._opener = document.activeElement;
         overlayEl._focused = false;
 
@@ -234,7 +251,7 @@ const DeviceDetail = (function () {
         overlayEl.addEventListener('click', function (e) {
             if (e.target === overlayEl) {
                 if (document.querySelector('.modal-overlay.open, .modal-container.open')) return;
-                close();
+                _requestClose();
             }
         });
 
@@ -242,6 +259,8 @@ const DeviceDetail = (function () {
         overlayEl._escHandler = function (e) {
             if (e.key === 'Escape') {
                 if (document.querySelector('.modal-overlay.open, .modal-container.open')) return;
+                // In edit mode Escape leaves editing (asking first when something changed)
+                if (editMode) { _cancelEdit(true); return; }
                 close();
             }
         };
@@ -278,11 +297,18 @@ const DeviceDetail = (function () {
             ? (document.activeElement.id || document.activeElement.dataset.tab || document.activeElement.dataset.liveView || document.activeElement.dataset.action || '')
             : '';
 
+        if (editMode) _captureEditForm(inner);
+
+        // The program search in the hardware tab keeps its text across the refresh
+        const appSearch = inner.querySelector('#dp-inv-apps-search');
+        const appQuery = appSearch ? appSearch.value : '';
+
         inner.innerHTML = _headerHTML() + _tabsHTML() + _contentHTML() + _footerHTML();
         // The agent panes were just rebuilt empty: load them again when shown
         Object.keys(_agentTabLoaded).forEach(function (k) { delete _agentTabLoaded[k]; });
 
         _attachEvents();
+        _wireInventory(inner, appQuery);
         _bindAvailabilityControls();
         _switchTab(activeTab);
         _renderUsageChart();
@@ -440,6 +466,7 @@ const DeviceDetail = (function () {
             updated_at: snapshots.metrics?.collected_at
         } : null);
         let html = `<div class="device-panel-tab-pane" data-pane="overview">`;
+        if (editMode) html += _editFormHTML();
 
         // Ban alert
         if (d.banned) {
@@ -475,12 +502,12 @@ const DeviceDetail = (function () {
             <div class="device-panel-section-title"><span class="material-icons">badge</span> ${_('device_detail.section_identity')}</div>
             <div class="device-panel-info-grid">
                 ${_infoRow(_('devices.id'), `<span class="mono">${Utils.escapeHtml(d.id)}</span>`, d.id)}
-                ${_infoRow(_('devices.display_name'), Utils.escapeHtml(d.display_name || '-'))}
-                ${_infoRow(_('devices.hostname'), Utils.escapeHtml(d.hostname || d.note || '-'))}
-                ${_infoRow(_('devices.username'), Utils.escapeHtml(d.username || '-'))}
-                ${d.uuid ? _infoRow('UUID', `<span class="mono">${Utils.escapeHtml(d.uuid)}</span>`) : ''}
-                ${_infoRow(_('devices.platform'), Utils.escapeHtml(d.platform || d.os || (d.sysinfo && d.sysinfo.platform) || '-'))}
-                ${d.sysinfo && d.sysinfo.version ? _infoRow(_('device_detail.version'), Utils.escapeHtml(d.sysinfo.version)) : ''}
+                ${editMode ? '' : _infoRow(_('devices.display_name'), d.display_name ? Utils.escapeHtml(d.display_name) : Utils.emptyHtml())}
+                ${_infoRow(_('devices.hostname'), (d.hostname || d.note) ? Utils.escapeHtml(d.hostname || d.note) : Utils.emptyHtml())}
+                ${_infoRow(_('devices.username'), d.username ? Utils.userHtml(d.username) : Utils.emptyHtml())}
+                ${d.uuid ? _infoRow('UUID', Utils.valueHtml(d.uuid, { copy: true, label: 'UUID' })) : ''}
+                ${_infoRow(_('devices.platform'), Utils.platformHtml(d.platform || d.os || (d.sysinfo && d.sysinfo.platform) || ''))}
+                ${d.sysinfo && d.sysinfo.version ? _infoRow(_('device_detail.version'), Utils.versionHtml(d.sysinfo.version)) : ''}
                 ${identity.product_sku ? _infoRow('SKU', Utils.escapeHtml(identity.product_sku)) : ''}
                 ${identity.conn_mode ? _infoRow(_('device_detail.client_mode'), Utils.escapeHtml(identity.conn_mode)) : ''}
                 ${Array.isArray(identity.capabilities) && identity.capabilities.length
@@ -495,9 +522,9 @@ const DeviceDetail = (function () {
         <div class="device-panel-section">
             <div class="device-panel-section-title"><span class="material-icons">lan</span> ${_('device_detail.section_network')}</div>
             <div class="device-panel-info-grid">
-                ${_infoRow(_('devices.ip_address'), d.ip ? `<span class="mono">${Utils.escapeHtml(d.ip)}</span>` : '-', d.ip)}
+                ${_infoRow(_('devices.ip_address'), d.ip ? `<span class="mono">${Utils.escapeHtml(d.ip)}</span>` : Utils.emptyHtml(), d.ip)}
                 ${_infoRow(_('device_detail.folder'), _folderName(d.folder_id))}
-                ${d.groups && d.groups.length > 0 ? _infoRow(_('device_detail.device_groups'), d.groups.map(g => `<span class="device-panel-group-badge">${Utils.escapeHtml(g.name || g.guid)}</span>`).join(' ')) : ''}
+                ${d.groups && d.groups.length > 0 ? _infoRow(_('device_detail.device_groups'), Utils.tagsHtml(d.groups.map(g => g.name || g.guid))) : ''}
             </div>
         </div>`;
 
@@ -506,7 +533,7 @@ const DeviceDetail = (function () {
         <div class="device-panel-section">
             <div class="device-panel-section-title"><span class="material-icons">schedule</span> ${_('device_detail.section_timestamps')}</div>
             <div class="device-panel-info-grid">
-                ${_infoRow(_('devices.first_seen'), Utils.formatDate(d.created_at))}
+                ${_infoRow(_('devices.first_seen'), Utils.timeHtml(d.created_at, { relative: false }))}
                 ${_infoRow(_('devices.last_seen'), _lastSeenValue(d.last_online))}
                 ${d.status_tier && d.status_tier.toLowerCase() !== 'online' && d.status_tier.toLowerCase() !== 'offline'
                     ? _infoRow(_('device_detail.status_tier'), _statusTierBadge(d.status_tier.toLowerCase()))
@@ -525,8 +552,14 @@ const DeviceDetail = (function () {
         const hardwareSnapshot = d.telemetry?.snapshots?.hardware;
         const s = d.sysinfo || hardwareSnapshot?.data || {};
         let html = `<div class="device-panel-tab-pane" data-pane="hardware">`;
+        const inventoryHtml = _inventoryHTML();
 
         if (!d.sysinfo && !hardwareSnapshot) {
+            // Nothing from the client; the agent's report (if any) is the whole tab
+            if (inventoryHtml) {
+                html += inventoryHtml + `</div>`;
+                return html;
+            }
             html += `
             <div class="device-panel-empty-state">
                 <span class="material-icons">memory</span>
@@ -559,8 +592,9 @@ const DeviceDetail = (function () {
             </div>
         </div>`;
 
-        // CPU section
-        html += `
+        // CPU section, only when the device reported something for it (no heading over nothing)
+        if (s.cpu_name || s.cpu_cores || s.cpu_freq_ghz) {
+            html += `
         <div class="device-panel-section">
             <div class="device-panel-section-title"><span class="material-icons">speed</span> ${_('device_detail.section_cpu')}</div>
             <div class="device-panel-info-grid">
@@ -569,6 +603,7 @@ const DeviceDetail = (function () {
                 ${s.cpu_freq_ghz ? _infoRow(_('device_detail.cpu_freq'), _formatFreq(s.cpu_freq_ghz)) : ''}
             </div>
         </div>`;
+        }
 
         // Memory section
         if (s.memory_gb) {
@@ -617,8 +652,219 @@ const DeviceDetail = (function () {
             </div>`;
         }
 
+        html += inventoryHtml;
         html += `</div>`;
         return html;
+    }
+
+    // ── Inventory report (hardware tab) ──
+    // The BetterDesk agent's own report: hardware facts, disks, network adapters,
+    // system and installed programs. Same data the inventory page lists.
+
+    // Numbers, sizes, times and empty values from the shared helpers (GUIDE.md "Data display")
+    const _invEmpty = () => Utils.emptyHtml();
+    const _invBytes = (bytes) => (bytes > 0 ? Utils.formatBytes(bytes) : '');
+
+    function _invPercent(used, total) {
+        if (!total || total <= 0 || used == null) return null;
+        return Math.max(0, Math.min(100, Math.round((used / total) * 100)));
+    }
+
+    function _invMeter(pct, label) {
+        if (pct == null) return _invEmpty();
+        const level = pct >= 95 ? ' is-full' : pct >= 85 ? ' is-high' : '';
+        return `<div class="meter${level}"><span class="meter-bar" aria-hidden="true"><span class="meter-fill" style="width:${pct}%"></span></span>`
+            + `<span class="meter-value">${Utils.escapeHtml(label || Utils.formatPercent(pct))}</span></div>`;
+    }
+
+    function _invDuration(seconds) {
+        return Number(seconds) > 0 ? Utils.formatDuration(Number(seconds)) : '';
+    }
+
+    // Same rows as the rest of the panel; empty values are left out
+    function _invFact(label, valueHtml) {
+        if (valueHtml === '' || valueHtml == null) return '';
+        return _infoRow(Utils.escapeHtml(label), valueHtml);
+    }
+
+    function _invDiskSizes(disk) {
+        const gb = (v) => (Number(v) || 0) * 1024 ** 3;
+        const total = disk.total_bytes != null ? Number(disk.total_bytes) : gb(disk.total_gb);
+        let used = disk.used_bytes != null ? Number(disk.used_bytes) : (disk.used_gb != null ? gb(disk.used_gb) : null);
+        if (used == null && disk.available_bytes != null && total) used = total - Number(disk.available_bytes);
+        if (used == null && disk.free_bytes != null && total) used = total - Number(disk.free_bytes);
+        return { total, used };
+    }
+
+    async function _loadInventory() {
+        if (!device) return;
+        const id = device.id;
+        inventoryLoading = true;
+        try {
+            const data = await Utils.api('/api/inventory/' + encodeURIComponent(id));
+            inventoryData = { id, data: data || {} };
+        } catch (err) {
+            inventoryData = err && err.status === 404 ? { id, none: true } : { id, error: (err && err.message) || '' };
+        } finally {
+            inventoryLoading = false;
+        }
+        if (device && device.id === id) _render();
+    }
+
+    function _inventoryHTML() {
+        const esc = Utils.escapeHtml;
+        if (!device) return '';
+        if (!inventoryData || inventoryData.id !== device.id) {
+            return `<p class="state dp-inventory-state">${esc(_('inventory.loading_detail'))}</p>`;
+        }
+        if (inventoryData.none) return '';
+        if (inventoryData.error !== undefined) {
+            return `<p class="state is-error dp-inventory-state">${esc(_('inventory.detail_failed'))} ${esc(inventoryData.error)}
+                <button type="button" class="btn btn-sm" data-inventory-retry>${esc(_('actions.retry'))}</button></p>`;
+        }
+        const data = inventoryData.data;
+        const hw = data.hardware && typeof data.hardware === 'object' ? data.hardware : data;
+        const sw = data.software && typeof data.software === 'object' ? data.software : {};
+        const tel = data.telemetry || {};
+        const cpu = hw.cpu && typeof hw.cpu === 'object' ? hw.cpu : { brand: hw.cpu || data.cpu };
+        const mem = hw.memory && typeof hw.memory === 'object' ? hw.memory : {};
+
+        const cpuLoad = typeof tel.cpu_usage_percent === 'number' && tel.received_at ? tel.cpu_usage_percent
+            : (typeof cpu.usage_percent === 'number' ? cpu.usage_percent : null);
+        const memTotal = Number(tel.memory_total_bytes) || Number(mem.total_bytes) || (data.memory_total_mb ? data.memory_total_mb * 1048576 : 0);
+        const memUsed = Number(tel.memory_total_bytes) ? Number(tel.memory_used_bytes) : (Number(mem.used_bytes) || (data.memory_used_mb ? data.memory_used_mb * 1048576 : 0));
+        const memPct = _invPercent(memUsed, memTotal);
+        const cores = cpu.logical_cores || cpu.cores || data.cpu_cores;
+        const physical = cpu.physical_cores;
+        const uptime = tel.uptime_secs || hw.uptime_secs || hw.uptime || data.uptime;
+
+        const cpuLoadHtml = cpuLoad == null ? '' : _invMeter(Math.round(cpuLoad), Utils.formatPercent(cpuLoad, { digits: 1 }));
+        const memHtml = memTotal
+            ? (memPct == null ? esc(_invBytes(memTotal)) : _invMeter(memPct, _('inventory.used_of', { used: _invBytes(memUsed), total: _invBytes(memTotal) })))
+            : '';
+        let coresText = '';
+        if (cores) coresText = physical && physical !== cores
+            ? _('inventory.cores_detail', { logical: cores, physical })
+            : String(cores);
+
+        let html = `<div class="dp-inventory">
+            <div class="device-panel-section">
+                <div class="device-panel-section-title">${esc(_('inventory.group_hardware'))}</div>
+                <div class="device-panel-info-grid dp-inv-facts">
+                    ${_invFact(_('inventory.processor'), cpu.brand ? esc(cpu.brand) : '')}
+                    ${_invFact(_('inventory.cores'), coresText ? esc(coresText) : '')}
+                    ${_invFact(_('inventory.cpu_load'), cpuLoadHtml)}
+                    ${_invFact(_('inventory.memory'), memHtml)}
+                    ${_invFact(_('inventory.architecture'), hw.architecture ? esc(hw.architecture) : '')}
+                </div>`;
+
+        const disks = Array.isArray(hw.disks) ? hw.disks : [];
+        if (disks.length) {
+            html += `<h3 class="dp-inv-sub" id="dp-inv-disks-title">${esc(_('inventory.disks'))}</h3>
+                <div class="table-scroll" tabindex="0" role="region" aria-labelledby="dp-inv-disks-title"><table class="data-table dp-inv-disks">
+                    <thead><tr><th>${esc(_('inventory.drive'))}</th><th>${esc(_('inventory.file_system'))}</th><th>${esc(_('inventory.used'))}</th></tr></thead>
+                    <tbody>${disks.map((disk) => {
+                        const { total, used } = _invDiskSizes(disk);
+                        const pct = _invPercent(used, total);
+                        const label = total ? _('inventory.used_of', { used: _invBytes(used), total: _invBytes(total) }) : '';
+                        const name = disk.mount_point || disk.device || disk.name || '?';
+                        const sub = disk.device && disk.device !== name ? disk.device : '';
+                        return `<tr>
+                            <td>${Utils.valueHtml(name)}${sub ? `<span class="cell-sub">${Utils.valueHtml(sub)}</span>` : ''}${disk.removable ? `<span class="cell-sub">${esc(_('inventory.removable_drive'))}</span>` : ''}</td>
+                            <td>${disk.filesystem || disk.fs_type ? esc(disk.filesystem || disk.fs_type) : _invEmpty()}</td>
+                            <td class="dp-inv-disk-use">${pct == null ? (total ? esc(_invBytes(total)) : _invEmpty()) : _invMeter(pct, label)}</td>
+                        </tr>`;
+                    }).join('')}</tbody>
+                </table></div>`;
+        }
+
+        const nics = Array.isArray(hw.network_interfaces) ? hw.network_interfaces : [];
+        if (nics.length) {
+            html += `<h3 class="dp-inv-sub" id="dp-inv-nics-title">${esc(_('inventory.network_interfaces'))}</h3>
+                <div class="table-scroll" tabindex="0" role="region" aria-labelledby="dp-inv-nics-title"><table class="data-table dp-inv-nics">
+                    <thead><tr><th>${esc(_('inventory.adapter'))}</th><th>${esc(_('inventory.mac_address'))}</th><th>${esc(_('inventory.ip_addresses'))}</th></tr></thead>
+                    <tbody>${nics.map((nic) => `<tr>
+                        <td>${esc(nic.name || '?')}</td>
+                        <td>${Utils.valueHtml(nic.mac, { copy: true, label: _('inventory.mac_address') })}</td>
+                        <td>${(nic.ip_addresses || []).length ? (nic.ip_addresses || []).map((ip) => `<span class="dp-inv-ip">${Utils.valueHtml(ip, { copy: true })}</span>`).join('') : _invEmpty()}</td>
+                    </tr>`).join('')}</tbody>
+                </table></div>`;
+        }
+        html += `</div>`;
+
+        const osName = hw.os_name || data.os || '';
+        const collected = Utils.parseDate(data.collected_at);
+        const received = Utils.parseDate(data.received_at);
+        html += `
+            <div class="device-panel-section">
+                <div class="device-panel-section-title">${esc(_('inventory.group_software'))}</div>
+                <div class="device-panel-info-grid dp-inv-facts">
+                    ${_invFact(_('inventory.os'), osName ? esc(osName) : '')}
+                    ${_invFact(_('inventory.os_version'), hw.os_version ? Utils.versionHtml(hw.os_version) : '')}
+                    ${_invFact(_('inventory.kernel'), hw.kernel ? esc(hw.kernel) : '')}
+                    ${_invFact(_('inventory.uptime'), _invDuration(uptime) ? esc(_invDuration(uptime)) : '')}
+                    ${_invFact(_('inventory.collected_at'), collected ? Utils.timeHtml(collected, { relative: false }) : '')}
+                    ${_invFact(_('inventory.received_at'), received ? Utils.timeHtml(received, { relative: false }) : '')}
+                </div>`;
+
+        const apps = Array.isArray(sw.apps) ? sw.apps.slice() : [];
+        apps.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+        html += `<div class="dp-inv-apps-head">
+                <h3 class="dp-inv-sub" id="dp-inv-apps-title">${esc(_('inventory.installed_programs'))}</h3>
+                <span class="text-muted" id="dp-inv-apps-count">${esc(apps.length === 1 ? _('inventory.programs_one') : _('inventory.programs_many', { count: apps.length }))}</span>
+            </div>`;
+        if (!apps.length) {
+            html += `<p class="state">${esc(_('inventory.no_programs'))}</p>`;
+        } else {
+            html += `<div class="search-wrapper dp-inv-apps-search">
+                    <span class="material-icons" aria-hidden="true">search</span>
+                    <input type="search" class="form-input" id="dp-inv-apps-search" aria-label="${esc(_('inventory.search_programs'))}" placeholder="${esc(_('inventory.search_programs'))}">
+                </div>
+                <div class="table-scroll" tabindex="0" role="region" aria-labelledby="dp-inv-apps-title"><table class="data-table dp-inv-apps">
+                    <thead><tr><th>${esc(_('inventory.program'))}</th><th>${esc(_('inventory.version'))}</th><th class="dp-inv-col-publisher">${esc(_('inventory.publisher'))}</th><th class="dp-inv-col-installed">${esc(_('inventory.installed'))}</th></tr></thead>
+                    <tbody id="dp-inv-apps-body">${apps.map((app) => {
+                        const installed = Utils.parseDate(app.installed_at || app.install_date);
+                        const search = [app.name, app.version, app.publisher].join(' ').toLowerCase();
+                        return `<tr data-search="${esc(search)}">
+                            <td>${esc(app.name || '?')}${app.publisher ? `<span class="cell-sub dp-inv-phone-publisher">${esc(app.publisher)}</span>` : ''}</td>
+                            <td class="dp-inv-version">${Utils.versionHtml(app.version)}</td>
+                            <td class="dp-inv-col-publisher">${app.publisher ? esc(app.publisher) : _invEmpty()}</td>
+                            <td class="dp-inv-col-installed">${installed ? Utils.timeHtml(installed, { relative: false, format: { year: 'numeric', month: 'short', day: 'numeric' } }) : _invEmpty()}</td>
+                        </tr>`;
+                    }).join('')}
+                    <tr class="dp-inv-apps-empty" hidden><td colspan="4" class="state-cell">${esc(_('inventory.no_programs_match'))}</td></tr></tbody>
+                </table></div>`;
+        }
+        html += `</div></div>`;
+        return html;
+    }
+
+    function _wireInventory(root, query) {
+        root.querySelector('[data-inventory-retry]')?.addEventListener('click', function () {
+            inventoryData = null;
+            _loadInventory();
+        });
+        const input = root.querySelector('#dp-inv-apps-search');
+        if (!input) return;
+        const rows = Array.from(root.querySelectorAll('#dp-inv-apps-body tr[data-search]'));
+        const empty = root.querySelector('.dp-inv-apps-empty');
+        const count = root.querySelector('#dp-inv-apps-count');
+        const total = rows.length;
+        const apply = function () {
+            const q = input.value.trim().toLowerCase();
+            let shown = 0;
+            rows.forEach(function (row) {
+                const hit = !q || row.dataset.search.includes(q);
+                row.hidden = !hit;
+                if (hit) shown += 1;
+            });
+            empty.hidden = shown > 0;
+            count.textContent = q
+                ? _('inventory.programs_shown', { shown, count: total })
+                : (total === 1 ? _('inventory.programs_one') : _('inventory.programs_many', { count: total }));
+        };
+        input.addEventListener('input', apply);
+        if (query) { input.value = query; apply(); }
     }
 
     // ── Metrics tab (CPU, memory, disk usage + availability history) ──
@@ -898,7 +1144,7 @@ const DeviceDetail = (function () {
         } else {
             html += _availabilityStrip(day, events);
             html += `
-            <div class="device-panel-table-wrap">
+            <div class="device-panel-table-wrap" tabindex="0" role="region" aria-label="${Utils.escapeHtml(_('device_detail.section_availability_history'))}">
                 <table class="device-panel-availability-table">
                     <thead>
                         <tr>
@@ -1044,7 +1290,7 @@ const DeviceDetail = (function () {
             </div>`;
         } else {
             html += `
-            <div class="device-panel-table-wrap">
+            <div class="device-panel-table-wrap" tabindex="0" role="region" aria-label="${Utils.escapeHtml(_('device_detail.section_connection_sessions'))}">
                 <table class="device-panel-availability-table">
                     <thead>
                         <tr>
@@ -1217,7 +1463,7 @@ const DeviceDetail = (function () {
         // Management actions
         const manage = [];
         if (_can('device.edit')) {
-            manage.push(_actionCard('edit', _('actions.edit'), `${_('devices.display_name')} / ${_('devices.note')}`));
+            manage.push(_actionCard('edit', _('actions.edit'), _('device_detail.action_edit_desc')));
         }
         if (_can('device.change_id')) {
             manage.push(_actionCard('change-id', _('devices.change_id'), _('device_detail.action_change_id_desc')));
@@ -1252,15 +1498,35 @@ const DeviceDetail = (function () {
 
     // ── Footer ──
 
+    // Footer slots stay put between view and edit mode: the first slot holds
+    // Connect or Save (the primary), the second Edit or Cancel, Close keeps the
+    // end. Each slot holds both of its buttons on top of each other and shows
+    // one, so the slot is as wide as the wider label in either mode and
+    // nothing moves when the mode changes.
     function _footerHTML() {
         const isDeleted = device && device.soft_deleted;
         const identity = device?.telemetry?.snapshots?.identity?.data || {};
         const supportAgent = _isSupportAgent(identity);
+        const canConnect = !isDeleted && _can('device.connect');
+        const canEdit = !isDeleted && !supportAgent && _can('device.edit');
+        const off = (shown) => (shown ? '' : ' is-off" aria-hidden="true" tabindex="-1');
+        const connectBtn = `<button type="button" class="btn btn-primary${off(!editMode)}" id="dp-connect-btn">${Utils.icon('connect')}${_('actions.connect')}</button>`;
+        const editBtn = `<button type="button" class="btn btn-secondary${off(!editMode)}" id="dp-edit-btn">${Utils.icon('edit')}${_('actions.edit')}</button>`;
+        const saveBtn = `<button type="button" class="btn btn-primary${off(editMode)}" id="dp-edit-save">${_('actions.save')}</button>`;
+        const cancelBtn = `<button type="button" class="btn${off(editMode)}" id="dp-edit-cancel">${_('actions.cancel')}</button>`;
+        let slots = '';
+        if (canConnect && canEdit) {
+            slots = `<span class="dp-footer-slot">${connectBtn}${saveBtn}</span><span class="dp-footer-slot">${editBtn}${cancelBtn}</span>`;
+        } else if (canEdit) {
+            // Without Connect, Edit takes the first slot and becomes Save
+            slots = `<span class="dp-footer-slot">${editBtn}${saveBtn}</span><span class="dp-footer-slot">${cancelBtn}</span>`;
+        } else if (canConnect) {
+            slots = connectBtn;
+        }
         return `
-        <div class="device-panel-footer">
-            ${isDeleted ? '' : `
-            ${_can('device.connect') ? `<button type="button" class="btn btn-primary" id="dp-connect-btn">${Utils.icon('connect')}${_('actions.connect')}</button>` : ''}
-            ${supportAgent || !_can('device.edit') ? '' : `<button type="button" class="btn btn-secondary" id="dp-edit-btn">${Utils.icon('edit')}${_('actions.edit')}</button>`}`}
+        <div class="device-panel-footer${editMode ? ' is-editing' : ''}">
+            ${slots}
+            <p class="form-status device-panel-edit-status" id="dp-edit-status" aria-live="polite"></p>
             <button type="button" class="btn btn-ghost" id="dp-close-btn">${_('actions.close')}</button>
         </div>`;
     }
@@ -1293,31 +1559,39 @@ const DeviceDetail = (function () {
         const canToggle = !!(policy.controllable && policy.can_change && !d.banned && !d.soft_deleted);
         const selected = desired || effective || 'normal';
 
+        // A client that can't switch modes has nothing to show or do here: leave the section out
+        if (!supportLocked && !policy.controllable) return '';
+        const modeLabel = (m) => {
+            if (m === 'normal') return _('device_detail.connection_mode_normal');
+            if (m === 'incoming-only') return _('device_detail.connection_mode_incoming_only');
+            return m || '–';
+        };
+
         let body = '';
         if (supportLocked) {
             body = `<p class="form-hint">${Utils.escapeHtml(_('device_detail.connection_mode_support_locked'))}</p>`;
-        } else if (!policy.controllable) {
-            body = `<p class="form-hint">${Utils.escapeHtml(_('device_detail.connection_mode_unavailable'))}</p>`;
         } else {
             body = `
                 <div class="device-panel-info-grid">
-                    ${_infoRow(_('device_detail.connection_mode_effective'), Utils.escapeHtml(effective || '-'))}
-                    ${_infoRow(_('device_detail.connection_mode_desired'), Utils.escapeHtml(desired || '-'))}
+                    ${_infoRow(_('device_detail.connection_mode_effective'), Utils.escapeHtml(modeLabel(effective)))}
+                    ${_infoRow(_('device_detail.connection_mode_desired'), Utils.escapeHtml(modeLabel(desired)))}
                     ${_infoRow(_('device_detail.connection_mode_status'), Utils.escapeHtml(_connectionModeStatusLabel(command.status)))}
                     ${command.rejection_code ? _infoRow(_('device_detail.connection_mode_status_rejected'), Utils.escapeHtml(command.rejection_code)) : ''}
                 </div>
                 ${canToggle ? `
-                <div class="device-panel-notes-actions" style="margin-top:12px;flex-direction:column;align-items:stretch;gap:8px;">
-                    <label class="form-hint" for="dp-conn-mode">${Utils.escapeHtml(_('device_detail.connection_mode_title'))}</label>
-                    <select id="dp-conn-mode" class="form-input">
+                <div class="device-panel-conn-form">
+                    <div class="form-group">
+                    <label class="form-label" for="dp-conn-mode">${Utils.escapeHtml(_('device_detail.connection_mode_title'))}</label>
+                    <select id="dp-conn-mode" class="form-select">
                         <option value="normal"${selected === 'normal' ? ' selected' : ''}>${Utils.escapeHtml(_('device_detail.connection_mode_normal'))}</option>
                         <option value="incoming-only"${selected === 'incoming-only' ? ' selected' : ''}>${Utils.escapeHtml(_('device_detail.connection_mode_incoming_only'))}</option>
                     </select>
-                    <label class="form-hint" for="dp-conn-reason">${Utils.escapeHtml(_('device_detail.connection_mode_reason'))}</label>
+                    </div>
+                    <div class="form-group">
+                    <label class="form-label" for="dp-conn-reason">${Utils.escapeHtml(_('device_detail.connection_mode_reason'))}</label>
                     <input id="dp-conn-reason" class="form-input" maxlength="500" placeholder="${Utils.escapeHtml(_('device_detail.connection_mode_reason_placeholder'))}">
-                    <button class="btn btn-primary btn-sm" id="dp-conn-apply" type="button">
-                        <span class="material-icons">sync_alt</span>${Utils.escapeHtml(_('device_detail.connection_mode_apply'))}
-                    </button>
+                    </div>
+                    <div><button class="btn" id="dp-conn-apply" type="button">${Utils.escapeHtml(_('device_detail.connection_mode_apply'))}</button></div>
                 </div>` : ''}
             `;
         }
@@ -1430,10 +1704,9 @@ const DeviceDetail = (function () {
     }
 
     function _lastSeenValue(lastOnline) {
-        if (!Utils.parseDate(lastOnline)) return Utils.escapeHtml(_('time.never'));
-        const abs = Utils.formatDate(lastOnline);
+        if (!Utils.parseDate(lastOnline)) return Utils.emptyHtml(_('time.never'));
         const rel = Utils.formatRelativeTime(lastOnline);
-        return `${abs} <span class="device-panel-relative-time">(${rel})</span>`;
+        return `${Utils.timeHtml(lastOnline, { relative: false })} <span class="device-panel-relative-time">(${Utils.escapeHtml(rel)})</span>`;
     }
 
     /** "Banned on 5 Nov 2026, 18:35 by admin" (without "by" when the console has no record of who) */
@@ -1471,17 +1744,14 @@ const DeviceDetail = (function () {
         const panel = overlayEl.querySelector('#device-panel-inner');
 
         // Close button
-        panel.querySelector('.device-panel-close')?.addEventListener('click', close);
+        panel.querySelector('.device-panel-close')?.addEventListener('click', _requestClose);
 
         // Footer buttons
-        panel.querySelector('#dp-close-btn')?.addEventListener('click', close);
-        panel.querySelector('#dp-edit-btn')?.addEventListener('click', function () {
-            if (window.BetterDeskDevices && typeof window.BetterDeskDevices.showEditModal === 'function' && device) {
-                window.BetterDeskDevices.showEditModal(device.id);
-            } else {
-                Notifications.error(_('errors.server_error'));
-            }
-        });
+        panel.querySelector('#dp-close-btn')?.addEventListener('click', _requestClose);
+        panel.querySelector('#dp-edit-btn')?.addEventListener('click', function () { _startEdit({}); });
+        panel.querySelector('#dp-edit-cancel')?.addEventListener('click', function () { _cancelEdit(false); });
+        panel.querySelector('#dp-edit-save')?.addEventListener('click', _saveEdit);
+        if (editMode) _attachEditEvents(panel);
         panel.querySelector('#dp-connect-btn')?.addEventListener('click', function () {
             // Unified web remote client (/remote/:id); on a phone the list asks first
             _connect('web');
@@ -1565,6 +1835,10 @@ const DeviceDetail = (function () {
         panel.querySelectorAll('.device-panel-tab-pane').forEach(function (p) {
             p.classList.toggle('active', p.dataset.pane === tabId);
         });
+
+        if (tabId === 'hardware' && device && (!inventoryData || inventoryData.id !== device.id) && !inventoryLoading) {
+            _loadInventory();
+        }
 
         if (tabId === 'live') {
             const views = _liveViews();
@@ -1718,7 +1992,7 @@ const DeviceDetail = (function () {
             <tr data-service-name="${Utils.escapeHtml(s.name || '')}">
                 <td>${Utils.escapeHtml(s.name || '')}</td>
                 <td>${Utils.escapeHtml(s.display_name || s.name || '')}</td>
-                <td><span class="status ${s.status === 'running' ? 'running' : 'stopped'}">${Utils.escapeHtml(s.status || '-')}</span></td>
+                <td>${s.status ? Utils.statusHtml(s.status === 'running' ? 'good' : 'neutral', s.status) : Utils.emptyHtml()}</td>
                 <td>${Utils.escapeHtml(s.start_type || '-')}</td>
                 <td class="device-panel-agent-actions">
                     ${_can('device.edit') ? `<button type="button" class="btn btn-sm" data-service-action="start">${_('device_detail.service_start_action')}</button>
@@ -2069,6 +2343,296 @@ const DeviceDetail = (function () {
         }
     }
 
+    // ── Edit mode ──
+    // Display name, note, folder and tags are edited in place in the overview.
+    // Same calls as the device list used in its dialog: PATCH /api/devices/:id
+    // (display_name, note), PUT /api/devices/:id/tags, PATCH /api/devices/:id/folder.
+
+    function _parseTagList(value) {
+        if (Array.isArray(value)) return value.map(String).filter(Boolean);
+        return String(value || '').split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+    }
+
+    function _folderList() {
+        return window._betterdesk_folders || editFolders || [];
+    }
+
+    async function _ensureEditFolders() {
+        if (window._betterdesk_folders || editFolders) return;
+        try {
+            const response = await Utils.api('/api/folders');
+            editFolders = response.folders || [];
+        } catch (e) {
+            editFolders = [];
+        }
+    }
+
+    async function _ensureTagList() {
+        if (availableTagsLoaded) return;
+        try {
+            const response = await Utils.api('/api/tags');
+            availableTags = response.tags || [];
+        } catch (e) {
+            availableTags = [];
+        }
+        availableTagsLoaded = true;
+    }
+
+    function _editSnapshot() {
+        if (!editState) return '';
+        return JSON.stringify([editState.name.trim(), editState.note.trim(), String(editState.folder || ''), editState.tags.slice().sort(), editState.tagInput.trim()]);
+    }
+
+    function _editDirty() {
+        return editMode && editState && _editSnapshot() !== editInitial;
+    }
+
+    async function _startEdit(options) {
+        if (!device || !_can('device.edit') || device.soft_deleted || editMode) return;
+        await Promise.all([_ensureEditFolders(), _ensureTagList()]);
+        if (!device) return;
+        editMode = true;
+        editState = {
+            name: device.display_name || '',
+            note: device.note || '',
+            folder: device.folder_id ? String(device.folder_id) : '',
+            tags: _parseTagList(device.tags),
+            tagInput: '',
+        };
+        editInitial = _editSnapshot();
+        activeTab = 'overview';
+        _render();
+        const panel = overlayEl && overlayEl.querySelector('#device-panel-inner');
+        const target = panel && panel.querySelector(options && options.focusTags ? '#dp-edit-tag-input' : '#dp-edit-name');
+        if (target) target.focus();
+    }
+
+    function _captureEditForm(root) {
+        if (!editState || !root) return;
+        const name = root.querySelector('#dp-edit-name');
+        const note = root.querySelector('#dp-edit-note');
+        const folder = root.querySelector('#dp-edit-folder');
+        const tagInput = root.querySelector('#dp-edit-tag-input');
+        if (name) editState.name = name.value;
+        if (note) editState.note = note.value;
+        if (folder) editState.folder = folder.value;
+        if (tagInput) editState.tagInput = tagInput.value;
+    }
+
+    function _editTagRowsHTML() {
+        const esc = Utils.escapeHtml;
+        if (!editState.tags.length) return `<li class="list-row is-empty">${esc(_('device_detail.no_tags'))}</li>`;
+        return editState.tags.map(function (tag, i) {
+            return `<li class="list-row">
+                <span class="row-main" id="dp-edit-tag-${i}">${esc(tag)}</span>
+                <span class="row-end"><button type="button" class="btn btn-sm" data-edit-tag-remove="${esc(tag)}" aria-describedby="dp-edit-tag-${i}">${esc(_('actions.remove'))}</button></span>
+            </li>`;
+        }).join('');
+    }
+
+    function _editFormHTML() {
+        const esc = Utils.escapeHtml;
+        const folders = _folderList();
+        const has = new Set(editState.tags.map(function (t) { return t.toLowerCase(); }));
+        const suggestions = (availableTags || []).filter(function (t) { return t && !has.has(String(t).toLowerCase()); });
+        const onList = !!(window.BetterDeskDevices && window.BetterDeskDevices.showEditModal);
+        return `
+        <form class="device-panel-section device-panel-edit" id="dp-edit-form" novalidate aria-labelledby="dp-edit-title">
+            <div class="device-panel-section-title" id="dp-edit-title">${esc(_('device_detail.edit_heading'))}</div>
+            <div class="form-group">
+                <label class="form-label" for="dp-edit-name">${esc(_('devices.display_name'))}</label>
+                <input type="text" id="dp-edit-name" class="form-input" maxlength="128" value="${esc(editState.name)}" aria-describedby="dp-edit-name-hint">
+                <p class="form-hint" id="dp-edit-name-hint">${esc(_('devices.display_name_hint'))}</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="dp-edit-note">${esc(_('devices.note'))}</label>
+                <textarea id="dp-edit-note" class="form-input" rows="3" maxlength="512">${esc(editState.note)}</textarea>
+            </div>
+            ${folders.length ? `
+            <div class="form-group">
+                <label class="form-label" for="dp-edit-folder">${esc(_('device_detail.folder'))}</label>
+                <select id="dp-edit-folder" class="form-select"${onList ? ' aria-describedby="dp-edit-folder-hint"' : ''}>
+                    <option value="">${esc(_('folders.unassigned'))}</option>
+                    ${folders.map(function (f) { return `<option value="${esc(String(f.id))}"${String(f.id) === String(editState.folder) ? ' selected' : ''}>${esc(f.name)}</option>`; }).join('')}
+                </select>
+                ${onList ? `<p class="form-hint" id="dp-edit-folder-hint">${esc(_('devices.folder_hint'))}</p>` : ''}
+            </div>` : ''}
+            <div class="form-group">
+                <span class="form-label" id="dp-edit-tags-label">${esc(_('device_detail.tags'))}</span>
+                <p class="form-hint">${esc(_('devices.tags_device_hint'))}</p>
+                <ul class="list device-panel-edit-tags" id="dp-edit-tags" aria-labelledby="dp-edit-tags-label">${_editTagRowsHTML()}</ul>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="dp-edit-tag-input">${esc(_('devices.add_tag_label'))}</label>
+                <div class="device-panel-tag-input-row">
+                    <input type="text" id="dp-edit-tag-input" class="form-input" list="dp-edit-tag-suggestions" autocomplete="off" maxlength="50"
+                           value="${esc(editState.tagInput)}" aria-describedby="dp-edit-tag-hint dp-edit-tag-status">
+                    <datalist id="dp-edit-tag-suggestions">${suggestions.map(function (t) { return `<option value="${esc(t)}"></option>`; }).join('')}</datalist>
+                    <button type="button" class="btn" id="dp-edit-tag-add">${Utils.icon('add')}${esc(_('device_detail.add_tag'))}</button>
+                </div>
+                <p class="form-hint" id="dp-edit-tag-hint">${esc(_('devices.add_tag_hint'))}</p>
+                <p class="form-status is-error" id="dp-edit-tag-status" aria-live="polite"></p>
+            </div>
+        </form>`;
+    }
+
+    function _addEditTag(panel) {
+        const input = panel.querySelector('#dp-edit-tag-input');
+        const status = panel.querySelector('#dp-edit-tag-status');
+        const tag = input ? input.value.trim() : '';
+        if (!tag) return true;
+        if (editState.tags.some(function (t) { return t.toLowerCase() === tag.toLowerCase(); })) {
+            if (status) status.textContent = _('device_detail.tag_exists');
+            return false;
+        }
+        editState.tags.push(tag);
+        editState.tagInput = '';
+        input.value = '';
+        if (status) status.textContent = '';
+        _refreshEditTags(panel);
+        return true;
+    }
+
+    function _refreshEditTags(panel) {
+        const list = panel.querySelector('#dp-edit-tags');
+        if (list) list.innerHTML = _editTagRowsHTML();
+        const datalist = panel.querySelector('#dp-edit-tag-suggestions');
+        if (datalist) {
+            const has = new Set(editState.tags.map(function (t) { return t.toLowerCase(); }));
+            datalist.innerHTML = (availableTags || []).filter(function (t) { return t && !has.has(String(t).toLowerCase()); })
+                .map(function (t) { return `<option value="${Utils.escapeHtml(t)}"></option>`; }).join('');
+        }
+    }
+
+    function _attachEditEvents(panel) {
+        const form = panel.querySelector('#dp-edit-form');
+        if (!form) return;
+        form.addEventListener('submit', function (e) { e.preventDefault(); _saveEdit(); });
+        panel.querySelector('#dp-edit-tag-add')?.addEventListener('click', function () {
+            _addEditTag(panel);
+            panel.querySelector('#dp-edit-tag-input')?.focus();
+        });
+        const input = panel.querySelector('#dp-edit-tag-input');
+        input?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); _addEditTag(panel); }
+        });
+        input?.addEventListener('input', function () {
+            const status = panel.querySelector('#dp-edit-tag-status');
+            if (status) status.textContent = '';
+        });
+        panel.querySelector('#dp-edit-tags')?.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-edit-tag-remove]');
+            if (!btn) return;
+            const tag = btn.dataset.editTagRemove;
+            editState.tags = editState.tags.filter(function (t) { return t !== tag; });
+            _refreshEditTags(panel);
+            panel.querySelector('#dp-edit-tag-input')?.focus();
+        });
+        // Enter in the name field saves, like a form
+        panel.querySelector('#dp-edit-name')?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); _saveEdit(); }
+        });
+    }
+
+    async function _confirmDiscard() {
+        if (!_editDirty()) return true;
+        return Modal.confirm({
+            title: _('device_detail.discard_title'),
+            message: _('device_detail.discard_message'),
+            confirmLabel: _('device_detail.discard_confirm'),
+            danger: true
+        });
+    }
+
+    async function _cancelEdit(ask) {
+        if (!editMode || editSaving) return;
+        const panel = overlayEl && overlayEl.querySelector('#device-panel-inner');
+        if (panel) _captureEditForm(panel);
+        if (ask && !(await _confirmDiscard())) return;
+        editMode = false;
+        editState = null;
+        _render();
+        overlayEl?.querySelector('#dp-edit-btn')?.focus();
+    }
+
+    async function _requestClose() {
+        if (editMode) {
+            const panel = overlayEl && overlayEl.querySelector('#device-panel-inner');
+            if (panel) _captureEditForm(panel);
+            if (!(await _confirmDiscard())) return;
+            editMode = false;
+            editState = null;
+        }
+        close();
+    }
+
+    async function _saveEdit() {
+        if (!editMode || editSaving || !device) return;
+        const panel = overlayEl.querySelector('#device-panel-inner');
+        _captureEditForm(panel);
+        // A tag typed but not added yet is meant to be saved too
+        if (!_addEditTag(panel)) return;
+        const deviceId = device.id;
+        const displayName = editState.name.trim();
+        const note = editState.note.trim();
+        const tags = editState.tags.slice();
+        const folderChanged = String(editState.folder || '') !== String(device.folder_id || '') &&
+            !(Number(editState.folder || 0) === 0 && Number(device.folder_id || 0) === 0);
+        const status = panel.querySelector('#dp-edit-status');
+        const saveBtn = panel.querySelector('#dp-edit-save');
+        const cancelBtn = panel.querySelector('#dp-edit-cancel');
+
+        editSaving = true;
+        if (status) { status.className = 'form-status device-panel-edit-status'; status.textContent = ''; }
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = _('devices.saving'); }
+        if (cancelBtn) cancelBtn.disabled = true;
+        try {
+            await Utils.api('/api/devices/' + encodeURIComponent(deviceId), {
+                method: 'PATCH',
+                body: { display_name: displayName, note: note }
+            });
+            const tagResult = await Utils.api('/api/devices/' + encodeURIComponent(deviceId) + '/tags', {
+                method: 'PUT',
+                body: { tags: tags }
+            });
+            if (folderChanged) {
+                await Utils.api('/api/devices/' + encodeURIComponent(deviceId) + '/folder', {
+                    method: 'PATCH',
+                    body: { folderId: editState.folder ? Number(editState.folder) : null }
+                });
+            }
+            const savedTags = (tagResult && tagResult.tags) || tags;
+            availableTags = Array.from(new Set(availableTags.concat(savedTags))).sort(function (a, b) { return a.localeCompare(b); });
+            editSaving = false;
+            editMode = false;
+            editState = null;
+            device = await Utils.api('/api/devices/' + encodeURIComponent(deviceId));
+            _render();
+            document.dispatchEvent(new CustomEvent('devices:updated', {
+                detail: { id: deviceId, display_name: displayName, note: note, tags: savedTags }
+            }));
+            _notifyChanged();
+            Notifications.success(_('common.saved'), displayName || device.hostname || deviceId);
+            overlayEl?.querySelector('#dp-edit-btn')?.focus();
+        } catch (err) {
+            editSaving = false;
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = _('actions.save'); }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (status) {
+                status.className = 'form-status device-panel-edit-status is-error';
+                status.textContent = (err && err.message) || _('errors.server_error');
+            }
+        }
+    }
+
+    /** Open the panel for a device straight in edit mode (options.focusTags starts in the tag field) */
+    async function edit(deviceId, options) {
+        if (!deviceId) return;
+        if (!device || device.id !== deviceId || !overlayEl) await open(deviceId);
+        if (!device || device.id !== deviceId) return;
+        await _startEdit(options || {});
+    }
+
     // ── Actions ──
 
     async function _handleAction(action) {
@@ -2076,11 +2640,7 @@ const DeviceDetail = (function () {
 
         switch (action) {
             case 'edit':
-                if (window.BetterDeskDevices && typeof window.BetterDeskDevices.showEditModal === 'function') {
-                    window.BetterDeskDevices.showEditModal(device.id);
-                } else {
-                    Notifications.error(_('errors.server_error'));
-                }
+                _startEdit({});
                 break;
 
             case 'connect-desktop':
@@ -2354,7 +2914,7 @@ const DeviceDetail = (function () {
         _stopRefresh();
     });
 
-    return { open: open, close: close };
+    return { open: open, close: close, edit: edit };
 })();
 
 window.DeviceDetail = DeviceDetail;

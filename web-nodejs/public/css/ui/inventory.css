@@ -1,4 +1,4 @@
-/* Inventory: the device table, its phone layout and the detail dialog.
+/* Inventory: the device table and its phone layout (a row opens the device panel).
    Tables, meters, facts and states come from components.css. */
 
 /* The whole row opens the device; the name is the keyboard target */
@@ -29,12 +29,6 @@
     text-underline-offset: 2px;
 }
 
-.inventory-table .os-name {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
 .inventory-table .cpu-name {
     display: block;
     max-width: 28ch;
@@ -50,10 +44,6 @@
 .inventory-table .col-updated {
     color: var(--text-muted);
     white-space: nowrap;
-}
-
-.inventory-table .num-cell {
-    font-variant-numeric: tabular-nums;
 }
 
 .inventory-table td.state-cell.is-error {
@@ -151,82 +141,6 @@
     }
 }
 
-/* Detail dialog */
-.inventory-detail .inv-group {
-    margin: var(--space-5) 0 var(--space-2);
-    font-size: var(--text-md);
-}
-
-.inventory-detail .inv-group:first-child {
-    margin-top: 0;
-}
-
-.inventory-detail .inv-sub {
-    margin: var(--space-4) 0 var(--space-2);
-    font-size: var(--text-base);
-}
-
-.inventory-detail .inv-facts {
-    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
-}
-
-.inventory-detail .inv-facts .meter {
-    flex: 1;
-    max-width: 360px;
-}
-
-.inventory-detail .inv-disk-use {
-    min-width: 200px;
-}
-
-.inventory-detail .inv-apps-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-1) var(--space-3);
-    margin-top: var(--space-4);
-}
-
-.inventory-detail .inv-apps-head .inv-sub {
-    margin: 0;
-}
-
-.inventory-detail .inv-apps-search {
-    max-width: 320px;
-    margin: var(--space-2) 0 var(--space-3);
-}
-
-.inventory-detail .inv-version {
-    overflow-wrap: anywhere;
-}
-
-.inventory-detail .inv-col-installed {
-    white-space: nowrap;
-}
-
-.inventory-detail .inv-phone-publisher {
-    display: none;
-}
-
-@media (max-width: 640px) {
-    .inventory-detail .inv-facts {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .inventory-detail .inv-col-publisher,
-    .inventory-detail .inv-col-installed {
-        display: none;
-    }
-
-    .inventory-detail .inv-phone-publisher {
-        display: block;
-    }
-
-    .inventory-detail .inv-disk-use {
-        min-width: 140px;
-    }
-}
-
 /* ── Side column: systems across devices and devices short of space ── */
 
 /* OS families use the chart series colours (one whole split into parts) */
@@ -241,10 +155,8 @@
     gap: var(--space-3);
 }
 
-.inv-os-table .num-cell {
+.inv-os-table .is-num {
     width: 6rem;
-    text-align: end;
-    font-variant-numeric: tabular-nums;
 }
 
 .inv-os-table .btn-link {
