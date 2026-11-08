@@ -3059,7 +3059,8 @@
         "switch_to_dark": "Vaihda tummaan teemaan",
         "switch_to_light": "Vaihda vaaleaan teemaan",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Konsolin oletus"
     },
     "days": {
         "mon": "Mon",

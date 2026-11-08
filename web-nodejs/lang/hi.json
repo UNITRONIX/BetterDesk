@@ -3059,7 +3059,8 @@
         "switch_to_dark": "डार्क थीम पर स्विच करें",
         "switch_to_light": "लाइट थीम पर स्विच करें",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "कंसोल डिफ़ॉल्ट"
     },
     "days": {
         "mon": "Mon",

@@ -3059,7 +3059,8 @@
         "switch_to_dark": "Chuyển sang giao diện tối",
         "switch_to_light": "Chuyển sang giao diện sáng",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Mặc định của bảng điều khiển"
     },
     "days": {
         "mon": "Mon",

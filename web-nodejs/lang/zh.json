@@ -3125,7 +3125,8 @@
         "switch_to_dark": "切换到深色主题",
         "switch_to_light": "切换到浅色主题",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "控制台默认"
     },
     "days": {
         "mon": "周一",

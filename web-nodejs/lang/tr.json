@@ -3059,7 +3059,8 @@
         "switch_to_dark": "Koyu temaya geç",
         "switch_to_light": "Açık temaya geç",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Konsol varsayılanı"
     },
     "days": {
         "mon": "Mon",

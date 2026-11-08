@@ -3060,7 +3060,8 @@
         "switch_to_dark": "التبديل إلى الوضع الداكن",
         "switch_to_light": "التبديل إلى الوضع الفاتح",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "افتراضي وحدة التحكم"
     },
     "days": {
         "mon": "Mon",

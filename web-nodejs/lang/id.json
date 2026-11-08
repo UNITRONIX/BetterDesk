@@ -3059,7 +3059,8 @@
         "switch_to_dark": "Beralih ke tema gelap",
         "switch_to_light": "Beralih ke tema terang",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Bawaan konsol"
     },
     "days": {
         "mon": "Mon",

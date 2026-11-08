@@ -3053,7 +3053,8 @@
         "switch_to_dark": "다크 테마로 전환",
         "switch_to_light": "라이트 테마로 전환",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "콘솔 기본값"
     },
     "days": {
         "mon": "Mon",

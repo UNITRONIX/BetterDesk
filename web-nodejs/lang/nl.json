@@ -3053,7 +3053,8 @@
         "switch_to_dark": "Overschakelen naar donker thema",
         "switch_to_light": "Overschakelen naar licht thema",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Standaard van de console"
     },
     "days": {
         "mon": "Mon",

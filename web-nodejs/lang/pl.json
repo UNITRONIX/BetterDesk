@@ -3138,7 +3138,8 @@
         "switch_to_dark": "Przełącz na ciemny motyw",
         "switch_to_light": "Przełącz na jasny motyw",
         "quick_theme": "Szybki motyw",
-        "quick_vs_presets": "Szybkie przełączenie jasny/ciemny (także w topbarze). Pełne zestawy kolorów są w galerii powyżej."
+        "quick_vs_presets": "Szybkie przełączenie jasny/ciemny (także w topbarze). Pełne zestawy kolorów są w galerii powyżej.",
+        "console_default": "Domyślny konsoli"
     },
     "days": {
         "mon": "Pon",

@@ -3053,7 +3053,8 @@
         "switch_to_dark": "ダークテーマに切り替え",
         "switch_to_light": "ライトテーマに切り替え",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "コンソールの既定"
     },
     "days": {
         "mon": "Mon",

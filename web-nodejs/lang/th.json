@@ -3059,7 +3059,8 @@
         "switch_to_dark": "สลับเป็นธีมมืด",
         "switch_to_light": "สลับเป็นธีมสว่าง",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "ค่าเริ่มต้นของคอนโซล"
     },
     "days": {
         "mon": "Mon",

@@ -121,21 +121,18 @@
         var icon = document.getElementById('ux35-theme-icon');
         var btn = document.getElementById('ux35-theme-btn');
         if (!icon) return;
-        var mode = document.documentElement.getAttribute('data-theme-mode') || 'dark';
+        // Icon and label show this browser's choice; a click moves to the next one.
+        var choice = readThemeChoice();
         var label;
-        // Icon and label show the current mode; a click moves to the next one.
-        if (mode === 'custom') {
-            icon.textContent = 'palette';
-            label = t('theme.title', 'Theme') + ': ' + t('theme.custom', 'Custom');
-        } else if (mode === 'system') {
-            icon.textContent = 'contrast';
-            label = t('theme.title', 'Theme') + ': ' + t('theme.auto', 'System');
-        } else if (mode === 'light') {
+        if (choice === 'light') {
             icon.textContent = 'light_mode';
             label = t('theme.title', 'Theme') + ': ' + t('theme.light', 'Light');
-        } else {
+        } else if (choice === 'dark') {
             icon.textContent = 'dark_mode';
             label = t('theme.title', 'Theme') + ': ' + t('theme.dark', 'Dark');
+        } else {
+            icon.textContent = 'contrast';
+            label = t('theme.title', 'Theme') + ': ' + t('theme.console_default', 'Console default');
         }
         if (btn) {
             btn.setAttribute('title', label);
@@ -304,42 +301,54 @@
      * Cycle the theme: system → light → dark → system.
      * Applies the palette immediately, then persists and reloads branding.css.
      */
+    /*
+     * The top bar theme button is a per-browser choice: console default
+     * (Settings › Appearance, the same for everyone), light or dark. It never
+     * changes the console-wide setting, so every role can use it.
+     */
+    var THEME_CHOICE_KEY = 'bd-theme-choice';
+
+    function readThemeChoice() {
+        try {
+            var v = localStorage.getItem(THEME_CHOICE_KEY);
+            return v === 'light' || v === 'dark' ? v : 'default';
+        } catch (e) {
+            return 'default';
+        }
+    }
+
+    function consoleDefaultMode() {
+        var root = document.documentElement;
+        return root.getAttribute('data-theme-default')
+            || (window.BetterDesk && window.BetterDesk.branding && window.BetterDesk.branding.themeMode)
+            || 'system';
+    }
+
     function cycleThemePreview() {
-        var mode = document.documentElement.getAttribute('data-theme-mode') || 'dark';
-        if (mode === 'custom') {
-            window.location.href = '/settings#branding';
+        var current = readThemeChoice();
+        var next = current === 'default' ? 'light' : (current === 'light' ? 'dark' : 'default');
+        try {
+            if (next === 'default') localStorage.removeItem(THEME_CHOICE_KEY);
+            else localStorage.setItem(THEME_CHOICE_KEY, next);
+        } catch (e) { /* private mode: the choice lasts until reload */ }
+
+        if (next === 'default') {
+            var mode = consoleDefaultMode();
+            var root = document.documentElement;
+            root.removeAttribute('data-theme-default');
+            clearThemeInlineOverrides();
+            root.setAttribute('data-theme-mode', mode);
+            var shown = mode === 'system' ? (MQ_DARK.matches ? 'dark' : 'light') : (mode === 'custom' ? (root.getAttribute('data-theme') || 'light') : mode);
+            root.setAttribute('data-theme', shown);
+            root.style.colorScheme = '';
+            syncThemeIcon();
             return;
         }
-        var prev = mode;
-        var next = mode === 'system' ? 'light' : (mode === 'light' ? 'dark' : 'system');
-        applyThemeLocally(next);
-
-        if (window.BetterDesk && window.BetterDesk.csrfToken) {
-            fetch('/api/settings/branding', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': window.BetterDesk.csrfToken
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    themeMode: next,
-                    colors: THEME_PALETTES[next === 'system' ? 'light' : next],
-                    glassColor: next === 'light' ? '#ffffff' : '#161b22'
-                })
-            }).then(function (res) {
-                if (res.ok) {
-                    if (window.BetterDesk.branding) {
-                        window.BetterDesk.branding.themeMode = next;
-                    }
-                    reloadBrandingStylesheet(document.documentElement.getAttribute('data-theme'));
-                } else {
-                    applyThemeLocally(prev);
-                }
-            }).catch(function () {
-                applyThemeLocally(prev);
-            });
+        if (!document.documentElement.getAttribute('data-theme-default')) {
+            document.documentElement.setAttribute('data-theme-default', consoleDefaultMode());
         }
+        applyThemeLocally(next);
+        syncThemeIcon();
     }
 
     function currentSidebarWidth() {

@@ -3059,7 +3059,8 @@
         "switch_to_dark": "Byt till mörkt tema",
         "switch_to_light": "Byt till ljust tema",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Konsolens standard"
     },
     "days": {
         "mon": "Mon",

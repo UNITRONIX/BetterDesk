@@ -3053,7 +3053,8 @@
         "switch_to_dark": "Passa al tema scuro",
         "switch_to_light": "Passa al tema chiaro",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Predefinito della console"
     },
     "days": {
         "mon": "Mon",

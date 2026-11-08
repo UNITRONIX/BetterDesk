@@ -3059,7 +3059,8 @@
         "switch_to_dark": "Váltás sötét témára",
         "switch_to_light": "Váltás világos témára",
         "quick_theme": "Quick theme",
-        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above."
+        "quick_vs_presets": "Quick light/dark switch (also in the top bar). Full color presets are in the gallery above.",
+        "console_default": "Konzol alapértelmezése"
     },
     "days": {
         "mon": "Mon",
