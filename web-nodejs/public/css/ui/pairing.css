@@ -1,27 +1,25 @@
-/* Pairing codes (/pairing). Form, table and facts come from components.css. */
-
-.pairing-page {
-    max-width: 880px;
-}
+/* Pairing codes (/pairing): the form and the active codes in the main column,
+   the new code large in the side column. Form, table and facts come from
+   components.css. */
 
 .pairing-result {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    max-width: var(--measure);
-    margin-top: var(--space-3);
 }
 
 /* The code is read out loud or typed from the screen: make it big */
 .pairing-code-field {
     align-self: flex-start;
+    max-width: 100%;
 }
 
 .value-field > code.pairing-code {
-    padding: var(--space-2) var(--space-4);
-    font-size: 2rem;
+    padding: var(--space-3) var(--space-4);
+    font-size: 2.5rem;
     font-weight: 600;
     letter-spacing: 0.15em;
+    line-height: 1.1;
 }
 
 .pairing-code.is-expired {
@@ -29,3 +27,28 @@
     text-decoration: line-through;
 }
 
+/* The side column is narrow: label above value */
+.pairing-meta {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.pairing-meta > dt {
+    min-height: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.pairing-meta > dd {
+    padding-top: var(--space-1);
+}
+
+/* Copy buttons in value fields carry an icon before the label */
+.pairing-page .value-field > button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.pairing-page .value-field > button .material-icons {
+    font-size: 18px;
+}

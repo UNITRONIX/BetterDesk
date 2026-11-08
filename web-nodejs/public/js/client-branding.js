@@ -70,6 +70,58 @@
         }
         if (fallback) fallback.hidden = show;
         if (clear) clear.hidden = !show;
+        renderPreview();
+    }
+
+    /** Relative luminance of a #rrggbb colour (WCAG) */
+    function luminance(hex) {
+        const n = parseInt(hex.slice(1), 16);
+        const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+            const c = v / 255;
+            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    }
+
+    /**
+     * Live preview in the side column, built from the current form values:
+     * name and logo in the header, the contact lines, a button in the accent.
+     */
+    function renderPreview() {
+        const name = ($('cb-company')?.value || '').trim();
+        const nameEl = $('cb-pv-name');
+        if (nameEl) nameEl.textContent = name || 'BetterDesk';
+
+        const line = (id, value) => {
+            const el = $(id);
+            if (!el) return;
+            el.textContent = value;
+            el.hidden = !value;
+        };
+        line('cb-pv-support', ($('cb-support')?.value || '').trim());
+        line('cb-pv-phone', ($('cb-phone')?.value || '').trim());
+        line('cb-pv-email', ($('cb-email')?.value || '').trim());
+        line('cb-pv-website', ($('cb-website')?.value || '').trim());
+
+        const logo = $('cb-pv-logo');
+        if (logo) {
+            const own = !state.clearLogo && state.logo && (state.logo.data_base64
+                ? `data:${state.logo.mime};base64,${state.logo.data_base64}`
+                : state.logo.url);
+            logo.src = own || '/img/betterdesk_icon.png';
+        }
+
+        // Text on the accent is black or white, whichever reads better on it
+        const button = $('cb-pv-button');
+        if (button) {
+            const v = ($('cb-accent')?.value || '').trim();
+            const hex = HEX.test(v) ? expandHex(v.toLowerCase()) : DEFAULT_ACCENT;
+            const l = luminance(hex);
+            const onWhite = 1.05 / (l + 0.05);
+            const onBlack = (l + 0.05) / 0.05;
+            button.style.backgroundColor = hex;
+            button.style.color = onBlack >= onWhite ? '#000000' : '#ffffff';
+        }
     }
 
     function renderRevision() {
@@ -99,6 +151,7 @@
         syncAccentInputs(false);
         renderLogo();
         renderRevision();
+        renderPreview();
     }
 
     function readFileAsLogo(file) {
@@ -154,6 +207,7 @@
     }
 
     function bind() {
+        form()?.addEventListener('input', renderPreview);
         $('cb-accent')?.addEventListener('input', () => syncAccentInputs(false));
         $('cb-accent-picker')?.addEventListener('input', () => syncAccentInputs(true));
         $('cb-logo-file')?.addEventListener('change', async (ev) => {

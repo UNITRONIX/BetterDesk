@@ -1,6 +1,6 @@
 /* Support agents (/agents). Facts, steps and row links come from components.css. */
 
-.agents-page {
+.agents-page .agents-release {
     max-width: 880px;
 }
 
@@ -11,4 +11,3 @@
 .agents-page .steps {
     max-width: var(--measure);
 }
-

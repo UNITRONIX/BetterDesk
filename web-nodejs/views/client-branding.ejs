@@ -12,7 +12,8 @@
                 <p class="page-description">${_('client_branding.page_description')}</p>
             </div>
 
-            <p class="notice client-branding-reach">${_('client_branding.hint')}</p>
+            <div class="page-cols">
+            <div class="page-main">
             <p class="state is-error" id="cb-load-error" hidden></p>
 
             <form id="cb-form" class="form-column client-branding-form" autocomplete="off" data-save-form>
@@ -72,6 +73,32 @@
                     <button type="submit" id="cb-save" class="btn btn-primary" data-save-button>${_('client_branding.save')}</button>
                 </div>
             </form>
+            </div>
+
+            <!-- Live preview built from the form values (client-branding.js renderPreview) -->
+            <aside class="page-side is-sticky" aria-labelledby="cb-preview-title">
+            <section class="section">
+                <div class="section-head"><h2 id="cb-preview-title">${_('client_branding.preview_title')}</h2></div>
+                <p class="section-note">${_('client_branding.preview_note')}</p>
+                <div class="cb-preview" id="cb-preview">
+                    <div class="cb-preview-head">
+                        <img class="cb-pv-logo" id="cb-pv-logo" src="/img/betterdesk_icon.png" alt="" width="32" height="32">
+                        <span class="cb-pv-name" id="cb-pv-name">BetterDesk</span>
+                    </div>
+                    <div class="cb-preview-body">
+                        <p class="cb-pv-support" id="cb-pv-support" hidden></p>
+                        <ul class="cb-pv-contact">
+                            <li id="cb-pv-phone" dir="ltr" hidden></li>
+                            <li id="cb-pv-email" dir="ltr" hidden></li>
+                            <li id="cb-pv-website" dir="ltr" hidden></li>
+                        </ul>
+                        <span class="cb-pv-button" id="cb-pv-button">${_('client_branding.preview_button')}</span>
+                    </div>
+                </div>
+                <p class="cb-preview-reach">${_('client_branding.hint')}</p>
+            </section>
+            </aside>
+            </div>
         </div>
     `
 }) %>

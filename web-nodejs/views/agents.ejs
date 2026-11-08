@@ -17,6 +17,8 @@
                 <p class="page-description">${_('agents.page_description')}</p>
             </div>
 
+            <div class="page-cols">
+            <div class="page-main">
             <!-- The installers this server hands out on its download page -->
             <section class="section" id="agents-sync-card" aria-labelledby="agents-sync-title">
                 <div class="section-head"><h2 id="agents-sync-title">${_('agents.sync_title')}</h2></div>
@@ -32,7 +34,22 @@
                     <span class="form-status" id="agents-release-status" role="status"></span>
                 </div>
                 ${canImport ? '' : `<p class="form-hint">${_('agents.sync_no_permission')}</p>`}
+            </section>
 
+            <section class="section" aria-labelledby="agents-steps-title">
+                <div class="section-head"><h2 id="agents-steps-title">${_('agents.steps_title')}</h2></div>
+                <ol class="steps">
+                    <li>${_('agents.step1')}</li>
+                    <li>${_('agents.step2')}</li>
+                    <li>${_('agents.step3', { page: canActivate ? `<a href="/?activateAgent=1">${_('nav.activate_agent')}</a>` : _('nav.activate_agent') })}</li>
+                    <li>${_('agents.step4', { page: typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? `<a href="/registrations">${_('nav.registrations')}</a>` : _('nav.registrations') })}</li>
+                </ol>
+            </section>
+            </div>
+
+            <aside class="page-side" aria-label="${_('agents.side_label')}">
+            <section class="section" aria-labelledby="agents-links-title">
+                <div class="section-head"><h2 id="agents-links-title">${_('agents.get_title')}</h2></div>
                 <ul class="list agents-links">
                     <li><a href="/portal" class="list-row" target="_blank" rel="noopener noreferrer">
                         <span class="row-main"><span class="row-title">${_('agents.get_portal')}</span><span class="row-sub">${_('agents.portal_hint')}</span></span>
@@ -45,21 +62,13 @@
                 </ul>
             </section>
 
-            <section class="section" aria-labelledby="agents-steps-title">
-                <div class="section-head"><h2 id="agents-steps-title">${_('agents.steps_title')}</h2></div>
-                <ol class="steps">
-                    <li>${_('agents.step1')}</li>
-                    <li>${_('agents.step2')}</li>
-                    <li>${_('agents.step3', { page: canActivate ? `<a href="/?activateAgent=1">${_('nav.activate_agent')}</a>` : _('nav.activate_agent') })}</li>
-                    <li>${_('agents.step4', { page: typeof hasPermission === 'function' && hasPermission('enrollment.approve') ? `<a href="/registrations">${_('nav.registrations')}</a>` : _('nav.registrations') })}</li>
-                </ol>
-            </section>
-
             <section class="section" aria-labelledby="agents-branding-title">
                 <div class="section-head"><h2 id="agents-branding-title">${_('agents.branding_title')}</h2></div>
                 <p class="section-note">${_('agents.branding_body')}</p>
                 ${canBrand ? `<p><a href="/client-branding">${_('nav.client_branding')}</a></p>` : ''}
             </section>
+            </aside>
+            </div>
         </div>
     `
 }); %>

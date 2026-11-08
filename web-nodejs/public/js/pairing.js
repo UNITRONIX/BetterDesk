@@ -52,6 +52,8 @@
         const result = $('pairing-result');
         if (!result) return;
         result.hidden = false;
+        const empty = $('pairing-result-empty');
+        if (empty) empty.hidden = true;
         const code = $('pairing-code');
         code.textContent = payload.code || '';
         code.classList.remove('is-expired');
@@ -72,6 +74,11 @@
         if (countdown) clearInterval(countdown);
         tick();
         countdown = setInterval(tick, 5000);
+
+        // Below 1200 px the side column follows the table: bring the code into view
+        if (window.matchMedia && window.matchMedia('(max-width: 1199px)').matches) {
+            result.scrollIntoView({ block: 'center' });
+        }
     }
 
     async function generate(event) {
@@ -136,9 +143,10 @@
         try {
             await Utils.copyToClipboard(text);
             if (button) {
-                button.textContent = t('pairing.copied_short');
+                const label = button.querySelector('.btn-label') || button;
+                label.textContent = t('pairing.copied_short');
                 button.classList.add('copied');
-                setTimeout(() => { button.textContent = t('actions.copy'); button.classList.remove('copied'); }, 1600);
+                setTimeout(() => { label.textContent = t('actions.copy'); button.classList.remove('copied'); }, 1600);
             }
         } catch (_) {
             Notifications.warning(t('pairing.copy_failed'));

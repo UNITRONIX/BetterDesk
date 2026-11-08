@@ -226,7 +226,7 @@
         if (!list.length) return;
         const rows = list.map((t, i) => `
             <dt>${esc(t.name)}</dt>
-            <dd><span class="value-field"><code id="created-token-${i}">${esc(t.token)}</code><button type="button" data-token-action="copy" data-copy-id="created-token-${i}" aria-label="${esc(_('actions.copy'))} ${esc(t.name)}">${esc(_('actions.copy'))}</button></span></dd>`).join('');
+            <dd><span class="value-field"><code id="created-token-${i}">${esc(t.token)}</code><button type="button" data-token-action="copy" data-copy-id="created-token-${i}" aria-label="${esc(_('actions.copy'))} ${esc(t.name)}">${Utils.icon('copy')}<span class="btn-label">${esc(_('actions.copy'))}</span></button></span></dd>`).join('');
         const buttons = [];
         if (list.length > 1) {
             buttons.push({
@@ -360,10 +360,11 @@
         try {
             await Utils.copyToClipboard(text);
             if (button) {
-                const before = button.textContent;
-                button.textContent = _('tokens.copied');
+                const label = button.querySelector('.btn-label') || button;
+                const before = label.textContent;
+                label.textContent = _('tokens.copied');
                 button.classList.add('copied');
-                setTimeout(() => { button.textContent = before; button.classList.remove('copied'); }, 1600);
+                setTimeout(() => { label.textContent = before; button.classList.remove('copied'); }, 1600);
             } else {
                 Notifications.success(_('common.copied'));
             }

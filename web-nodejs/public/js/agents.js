@@ -101,7 +101,7 @@
                 details.unshift(t('agents.imported_on', 'imported {{date}}')
                     .split('{{date}}').join(Utils.formatDate(latest.imported_at)));
             }
-            renderRelease(`<span class="mono">${escapeText(latest.tag || 'release')}</span>
+            renderRelease(`<span>${escapeText(latest.tag || 'release')}</span>
                 <span class="text-muted">${escapeText(details.join(', '))}</span>`);
         } catch (error) {
             renderRelease(`<span class="state is-error">${escapeText(errorMessage(error))}
