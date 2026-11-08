@@ -1,0 +1,876 @@
+/*
+ * IoT devices (CDAP): the list, the device page frame and the widgets.
+ * Widget markup comes from cdap-widgets.js and the cdap-* widget scripts;
+ * their class names stay, only the look follows the tokens.
+ */
+
+/* ── List ── */
+
+.cdap-gateway {
+    margin-top: calc(-1 * var(--space-3));
+}
+
+.cdap-disabled {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.cdap-disabled .state {
+    padding-bottom: 0;
+}
+
+.cdap-enable-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.cdap-num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.data-table th.cdap-num {
+    text-align: end;
+}
+
+.cdap-device-link {
+    font-weight: 600;
+}
+
+td.state-cell.is-error {
+    color: var(--danger);
+}
+
+td.state-cell .btn {
+    margin-inline-start: var(--space-2);
+}
+
+/* ── Device page frame ── */
+
+.cdap-device-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    min-width: 0;
+}
+
+.cdap-device-body.hidden {
+    display: none;
+}
+
+.cdap-facts {
+    max-width: var(--measure);
+}
+
+.list-row.is-empty.is-error {
+    color: var(--danger);
+}
+
+.cdap-alert-item .row-end {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Command log */
+.cdap-command-log-entries {
+    max-height: 260px;
+    overflow-y: auto;
+    border-top: 1px solid var(--rule);
+}
+
+.cdap-log-entry {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    min-height: var(--row-h);
+    padding: var(--row-pad-y) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+}
+
+.cdap-log-time {
+    min-width: 8ch;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.cdap-log-detail {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.cdap-log-error-msg {
+    flex-basis: 100%;
+    color: var(--danger);
+    font-size: var(--text-sm);
+}
+
+/* ── Widgets: one level of boxes, laid out in a grid ── */
+
+.cdap-widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-3);
+}
+
+.cdap-widget-grid > .state {
+    grid-column: 1 / -1;
+}
+
+.cdap-widget-category {
+    grid-column: 1 / -1;
+    margin-top: var(--space-3);
+}
+
+.cdap-widget-category:first-child {
+    margin-top: 0;
+}
+
+.cdap-widget-category h3 {
+    font-size: var(--text-base);
+}
+
+.cdap-widget {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg);
+}
+
+.cdap-widget-lg,
+.cdap-widget-md {
+    grid-column: span 2;
+}
+
+.cdap-widget-xl {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 767px) {
+    .cdap-widget-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cdap-widget-lg,
+    .cdap-widget-md,
+    .cdap-widget-xl {
+        grid-column: auto;
+    }
+}
+
+.cdap-widget-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.cdap-widget-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+.cdap-widget-unit {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.cdap-widget-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-width: 0;
+}
+
+.cdap-widget-unsupported {
+    color: var(--text-muted);
+}
+
+/* Toggle: a switch drawn on a native checkbox */
+.cdap-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.cdap-toggle-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+}
+
+.cdap-toggle-slider {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-subtle);
+    cursor: pointer;
+    transition: background-color var(--motion), border-color var(--motion);
+}
+
+.cdap-toggle-slider::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: transform var(--motion);
+}
+
+.cdap-toggle-input:checked + .cdap-toggle-slider {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.cdap-toggle-input:checked + .cdap-toggle-slider::before {
+    background: var(--on-accent);
+    transform: translateX(20px);
+}
+
+[dir="rtl"] .cdap-toggle-input:checked + .cdap-toggle-slider::before {
+    transform: translateX(-20px);
+}
+
+.cdap-toggle-input:focus-visible + .cdap-toggle-slider {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.cdap-toggle-input:disabled + .cdap-toggle-slider {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.cdap-toggle-label {
+    margin-inline-start: var(--space-2);
+    font-weight: 600;
+}
+
+/* Gauge */
+.cdap-gauge {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.cdap-gauge-bar,
+.cdap-chart-bar-track,
+.cdap-audio-level-track {
+    height: 6px;
+    border-radius: 1px;
+    background: var(--hover);
+    overflow: hidden;
+}
+
+.cdap-gauge-fill,
+.cdap-chart-bar-fill,
+.cdap-audio-level-fill {
+    height: 100%;
+    background: var(--text-muted);
+    transition: width var(--motion);
+}
+
+.cdap-gauge-fill.cdap-gauge-warning,
+.cdap-audio-level-fill.medium { background: var(--warning); }
+.cdap-gauge-fill.cdap-gauge-danger,
+.cdap-audio-level-fill.high { background: var(--danger); }
+.cdap-audio-level-fill.low { background: var(--success); }
+
+.cdap-gauge-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.cdap-gauge-number {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.cdap-gauge-range {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* Button: the components' .btn does the look */
+.cdap-action-btn {
+    align-self: flex-start;
+}
+
+/* LED: the mark plus the value in text */
+.cdap-led {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.cdap-led-light {
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 50%;
+    background: transparent;
+}
+
+.cdap-led-light.on {
+    border-color: var(--success);
+    background: var(--success);
+}
+
+.cdap-text-value {
+    font-size: var(--text-md);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* Slider */
+.cdap-slider-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.cdap-slider-input {
+    width: 100%;
+    accent-color: var(--accent);
+}
+
+.cdap-slider-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.cdap-slider-labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.cdap-slider-value {
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* Chart: label, bar, value */
+.cdap-chart-bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.cdap-chart-bar-wrap {
+    display: grid;
+    grid-template-columns: minmax(60px, 90px) 1fr minmax(40px, auto);
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.cdap-chart-bar-label {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cdap-chart-bar-value {
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+/* Table widget */
+.cdap-table-toolbar {
+    margin-bottom: var(--space-2);
+}
+
+.cdap-table-search {
+    width: 100%;
+    max-width: 260px;
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+}
+
+.cdap-table-search::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+.cdap-table-wrap {
+    max-height: 400px;
+    overflow: auto;
+}
+
+.cdap-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cdap-table thead th {
+    position: sticky;
+    top: 0;
+    padding: var(--row-pad-y) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-align: start;
+    white-space: nowrap;
+}
+
+.cdap-table-sortable {
+    cursor: pointer;
+}
+
+.cdap-table-sortable.sort-asc::after { content: " ↑"; }
+.cdap-table-sortable.sort-desc::after { content: " ↓"; }
+
+.cdap-table tbody td {
+    padding: var(--space-1) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+}
+
+.cdap-table tbody tr:hover td {
+    background: var(--bg-subtle);
+}
+
+.cdap-table-empty {
+    color: var(--text-muted);
+}
+
+.cdap-table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding-top: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.cdap-pag-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.cdap-pag-btn:hover:not(:disabled) {
+    background: var(--hover);
+}
+
+.cdap-pag-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+[dir="rtl"] .cdap-pag-btn .material-icons {
+    transform: scaleX(-1);
+}
+
+/* Tag-type cells in the table widget are plain text */
+.cdap-badge {
+    color: var(--text);
+}
+
+.cdap-table-action {
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cdap-table-action:hover {
+    background: var(--hover);
+}
+
+.cdap-number {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Terminal: dark in both themes, like .terminal-box */
+.cdap-terminal {
+    position: relative;
+    min-height: 280px;
+    max-height: 480px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #111414;
+    color: #e3e6e6;
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+.cdap-terminal-output {
+    max-height: 278px;
+    padding: var(--space-2) var(--space-3);
+    overflow-y: auto;
+}
+
+.cdap-terminal-line {
+    color: #e3e6e6;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.cdap-terminal .xterm {
+    height: 100%;
+    padding: var(--space-1);
+}
+
+/* Connect buttons under each stream widget: plain buttons, centred */
+.cdap-terminal-connect,
+.cdap-desktop-connect,
+.cdap-video-connect,
+.cdap-file-connect,
+.cdap-audio-connect {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-3);
+}
+
+.cdap-terminal-connect.hidden,
+.cdap-desktop-connect.hidden,
+.cdap-video-connect.hidden,
+.cdap-file-connect.hidden,
+.cdap-audio-connect.hidden {
+    display: none;
+}
+
+.cdap-terminal-connect-btn,
+.cdap-desktop-connect-btn,
+.cdap-video-connect-btn,
+.cdap-file-connect-btn,
+.cdap-audio-connect-btn {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+}
+
+/* Icons inside labelled widget buttons stay hidden: the label says it.
+   Mute and "up one folder" have no text, so they keep theirs. */
+.cdap-widget .btn:not(.cdap-audio-mute-btn):not(.cdap-file-up) .material-icons {
+    display: none;
+}
+
+/* Desktop and video: black stage with a message until connected */
+.cdap-desktop-widget,
+.cdap-video-widget {
+    position: relative;
+}
+
+.cdap-desktop-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 28px;
+    padding: var(--space-1) 0;
+}
+
+.cdap-desktop-clipboard-indicator {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.cdap-desktop-clipboard-indicator.hidden {
+    visibility: hidden;
+}
+
+.cdap-desktop-clipboard-indicator.clip-in { color: var(--success); }
+.cdap-desktop-clipboard-indicator.clip-out { color: var(--accent); }
+
+.cdap-monitor-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-inline-start: auto;
+}
+
+.cdap-monitor-selector .material-icons {
+    display: none;
+}
+
+.cdap-monitor-select {
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--text-sm);
+}
+
+.cdap-desktop-canvas-wrap,
+.cdap-video-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: #000;
+    aspect-ratio: 16 / 9;
+}
+
+.cdap-desktop-canvas,
+.cdap-video-canvas,
+.cdap-video-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.cdap-desktop-canvas {
+    cursor: crosshair;
+}
+
+.cdap-desktop-canvas:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.cdap-video-frame.hidden {
+    display: none;
+}
+
+.cdap-desktop-overlay,
+.cdap-video-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    color: #c9cfcf;
+}
+
+.cdap-desktop-overlay .material-icons,
+.cdap-video-overlay .material-icons {
+    display: none;
+}
+
+.cdap-desktop-overlay.hidden,
+.cdap-video-overlay.hidden {
+    display: none;
+}
+
+/* File browser */
+.cdap-file-browser {
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+.cdap-file-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg-subtle);
+}
+
+.cdap-file-path {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cdap-file-list {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.cdap-file-entry {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-h-sm);
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--rule);
+}
+
+.cdap-file-entry[data-type="dir"],
+.cdap-file-dir {
+    cursor: pointer;
+}
+
+.cdap-file-entry[data-type="dir"]:hover,
+.cdap-file-dir:hover {
+    background: var(--bg-subtle);
+}
+
+.cdap-file-icon {
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+.cdap-file-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cdap-file-size,
+.cdap-file-modified {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+}
+
+.cdap-file-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2px;
+}
+
+.cdap-file-download,
+.cdap-file-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.cdap-file-download:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.cdap-file-delete:hover {
+    background: var(--hover);
+    color: var(--danger);
+}
+
+.cdap-file-empty,
+.cdap-file-loading {
+    padding: var(--space-3);
+    color: var(--text-muted);
+}
+
+.cdap-file-error {
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--rule);
+    color: var(--danger);
+}
+
+.cdap-file-upload-area {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-2);
+    border-top: 1px solid var(--rule);
+}
+
+.cdap-file-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cdap-file-upload-btn:hover {
+    background: var(--hover);
+}
+
+/* Audio */
+.cdap-audio-widget {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.cdap-audio-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.cdap-audio-status {
+    white-space: nowrap;
+}
+
+.cdap-audio-status.streaming { color: var(--success); }
+.cdap-audio-status.connecting { color: var(--warning); }
+.cdap-audio-status.disconnected { color: var(--text-muted); }
+
+.cdap-audio-level {
+    flex: 1;
+    min-width: 80px;
+}
+
+.cdap-audio-buttons {
+    display: flex;
+    gap: var(--space-1);
+}
+
+/* A state sentence in a table that scrolls sideways stays in the visible part */
+td.state-cell .state-text {
+    position: sticky;
+    inset-inline-start: var(--row-pad-x);
+    display: inline-block;
+    max-width: calc(100vw - 2 * var(--page-pad) - 2 * var(--row-pad-x));
+    white-space: normal;
+}

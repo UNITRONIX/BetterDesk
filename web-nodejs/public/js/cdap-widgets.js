@@ -42,25 +42,57 @@
         initLinkButton();
     }
 
+    // Translation with {placeholders}; falls back to the key like t()
+    const tp = (key, params) => (typeof window._ === 'function' ? window._(key, params || {}) : t(key));
+
+    let infoLoaded = false;
+
     async function loadDeviceInfo() {
         try {
             const res = await fetch(`/api/cdap/devices/${encodeURIComponent(deviceId)}`, {
                 headers: { 'X-CSRF-Token': window.BetterDesk?.csrfToken || '' }
             });
-            if (!res.ok) throw new Error(res.statusText);
+            if (!res.ok) throw new Error(res.status === 404 ? '404' : (res.statusText || String(res.status)));
             const data = await res.json();
 
             if (data.success && data.data) {
+                infoLoaded = true;
+                showDeviceError(null);
                 updateDeviceHeader(data.data);
+            } else if (!infoLoaded) {
+                throw new Error(data.error || '');
             }
         } catch (err) {
-            console.error('CDAP device info error:', err);
+            if (!infoLoaded) showDeviceError(err.message || '');
         }
 
         // Schedule periodic info refresh
         if (!infoPollTimer) {
             infoPollTimer = setInterval(loadDeviceInfo, INFO_POLL_INTERVAL);
         }
+    }
+
+    // Unknown device (the gateway answers 404) or a failed request: one sentence instead of the frame
+    function showDeviceError(message) {
+        const errEl = document.getElementById('cdap-device-error');
+        const body = document.getElementById('cdap-device-body');
+        if (!errEl) return;
+        if (message === null) {
+            errEl.classList.add('hidden');
+            if (body) body.classList.remove('hidden');
+            return;
+        }
+        const notFound = /404|not found/i.test(message);
+        errEl.textContent = notFound
+            ? tp('cdap.device_not_found', { id: deviceId })
+            : tp('cdap.device_load_failed', { error: message });
+        const link = document.createElement('a');
+        link.href = '/cdap';
+        link.textContent = tp('cdap.back_to_list');
+        errEl.appendChild(document.createTextNode(' '));
+        errEl.appendChild(link);
+        errEl.classList.remove('hidden');
+        if (body) body.classList.add('hidden');
     }
 
     function updateDeviceHeader(info) {
@@ -75,47 +107,29 @@
         // Device type
         const typeEl = document.getElementById('cdap-device-type');
         if (typeEl && info.manifest?.device?.type) {
-            const iconMap = {
-                scada: 'factory',
-                iot: 'sensors',
-                os_agent: 'computer',
-                network: 'router',
-                camera: 'videocam',
-                desktop: 'desktop_windows',
-                custom: 'memory'
-            };
-            const icon = iconMap[info.manifest.device.type] || 'memory';
-            typeEl.textContent = '';
-            const iconEl = document.createElement('span');
-            iconEl.className = 'material-icons';
-            iconEl.textContent = icon;
-            const labelEl = document.createElement('span');
-            labelEl.textContent = info.manifest.device.type;
-            typeEl.appendChild(iconEl);
-            typeEl.appendChild(labelEl);
+            const type = info.manifest.device.type;
+            const label = tp('cdap.type_' + type);
+            typeEl.textContent = label && label !== 'cdap.type_' + type ? label : type;
         }
 
         // Version
         const verEl = document.getElementById('cdap-device-version');
         if (verEl && info.manifest?.device?.firmware_version) {
-            verEl.innerHTML = `<span class="material-icons">info</span><span>v${escapeHtml(info.manifest.device.firmware_version)}</span>`;
+            verEl.textContent = info.manifest.device.firmware_version;
         }
 
         // Uptime
         const uptimeEl = document.getElementById('cdap-device-uptime');
-        if (uptimeEl && info.connected_at) {
-            const uptime = formatDuration(Date.now() - new Date(info.connected_at).getTime());
-            uptimeEl.innerHTML = `<span class="material-icons">schedule</span><span>${uptime}</span>`;
+        if (uptimeEl) {
+            uptimeEl.textContent = isConnected && info.connected_at
+                ? formatDuration(Date.now() - new Date(info.connected_at).getTime())
+                : '–';
         }
 
-        // Status indicator
+        // Status as text
         const statusEl = document.getElementById('cdap-device-status');
         if (statusEl) {
-            statusEl.className = `cdap-device-status ${isConnected ? 'online' : 'offline'}`;
-            statusEl.innerHTML = `
-                <span class="cdap-status-dot"></span>
-                <span class="cdap-status-text">${isConnected ? t('cdap.connected') : t('cdap.disconnected')}</span>
-            `;
+            statusEl.innerHTML = `<span class="status ${isConnected ? 'online' : 'offline'}">${escapeHtml(isConnected ? t('cdap.connected') : t('cdap.disconnected'))}</span>`;
         }
 
         // Offline banner
@@ -165,7 +179,8 @@
         } catch (err) {
             console.error('CDAP manifest/state error:', err);
             if (loading) {
-                loading.innerHTML = `<p class="cdap-error">${t('cdap.load_error')}</p>`;
+                loading.className = 'state is-error';
+                loading.textContent = t('cdap.load_error');
             }
         }
     }
@@ -281,7 +296,7 @@
         return `
             <div class="cdap-widget ${sizeClass}${readOnlyClass}" data-widget-id="${safeId}" data-widget-type="${escapeHtml(type)}">
                 <div class="cdap-widget-header">
-                    <span class="cdap-widget-label">${safeLabel}</span>
+                    <span class="cdap-widget-label" id="wlabel-${safeId}">${safeLabel}</span>
                     ${unit ? `<span class="cdap-widget-unit">${escapeHtml(unit)}</span>` : ''}
                 </div>
                 <div class="cdap-widget-body">
@@ -315,7 +330,7 @@
         const disabled = widget.read_only ? 'disabled' : '';
         return `
             <label class="cdap-toggle">
-                <input type="checkbox" class="cdap-toggle-input" data-action="set" ${disabled}>
+                <input type="checkbox" class="cdap-toggle-input" data-action="set" aria-labelledby="wlabel-${escapeHtml(widget.id)}" ${disabled}>
                 <span class="cdap-toggle-slider"></span>
             </label>
             <span class="cdap-toggle-label" id="wval-${escapeHtml(widget.id)}">—</span>
@@ -371,7 +386,7 @@
         const disabled = widget.read_only ? 'disabled' : '';
         return `
             <div class="cdap-slider-wrap">
-                <input type="range" class="cdap-slider-input" 
+                <input type="range" class="cdap-slider-input" aria-labelledby="wlabel-${escapeHtml(widget.id)}" 
                     min="${min}" max="${max}" step="${step}" value="${min}"
                     data-action="set" ${disabled}>
                 <div class="cdap-slider-labels">
@@ -393,7 +408,7 @@
             optHtml += `<option value="${escapeHtml(String(val))}">${escapeHtml(String(label))}</option>`;
         }
         return `
-            <select class="form-input cdap-select-input" data-action="set" ${disabled}>
+            <select class="form-input cdap-select-input" data-action="set" aria-labelledby="wlabel-${escapeHtml(widget.id)}" ${disabled}>
                 ${optHtml}
             </select>
         `;
@@ -1182,7 +1197,7 @@
 
         const firing = alerts.filter(a => a.firing);
         panel.classList.toggle('hidden', firing.length === 0);
-        if (count) count.textContent = firing.length;
+        if (count) count.textContent = firing.length ? tp('cdap.alerts_count', { count: firing.length }) : '';
 
         if (firing.length === 0) {
             list.innerHTML = '';
@@ -1190,20 +1205,21 @@
         }
 
         const severityOrder = { critical: 0, warning: 1, info: 2 };
-        firing.sort((a, b) => (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3));
+        firing.sort((a, b) => (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3));
 
+        const sevClass = { critical: 'error', warning: 'warning', info: '' };
         list.innerHTML = firing.map(a => {
-            const icon = a.severity === 'critical' ? 'error' : a.severity === 'warning' ? 'warning' : 'info';
             const time = a.fired_at ? new Date(a.fired_at).toLocaleTimeString() : '';
+            const sev = ['critical', 'warning', 'info'].includes(a.severity) ? a.severity : 'info';
             return `
-                <div class="cdap-alert-item cdap-alert-${escapeHtml(a.severity)}">
-                    <span class="material-icons cdap-alert-icon">${icon}</span>
-                    <div class="cdap-alert-body">
-                        <span class="cdap-alert-label">${escapeHtml(a.label)}</span>
-                        <span class="cdap-alert-msg">${escapeHtml(a.message)}</span>
-                    </div>
-                    <span class="cdap-alert-time">${time}</span>
-                </div>
+                <li class="list-row cdap-alert-item cdap-alert-${escapeHtml(sev)}">
+                    <span class="status ${sevClass[sev]}">${escapeHtml(tp('cdap.severity_' + sev))}</span>
+                    <span class="row-main">
+                        <span class="row-title">${escapeHtml(a.label)}</span>
+                        <span class="row-sub">${escapeHtml(a.message)}</span>
+                    </span>
+                    <span class="row-end">${escapeHtml(time)}</span>
+                </li>
             `;
         }).join('');
     }
@@ -1215,11 +1231,37 @@
             const res = await fetch(`/api/cdap/devices/${encodeURIComponent(deviceId)}/linked`, {
                 headers: { 'X-CSRF-Token': window.BetterDesk?.csrfToken || '' }
             });
-            if (!res.ok) return;
+            if (!res.ok) throw new Error(res.statusText || String(res.status));
             const data = await res.json();
+            if (data && data.success === false) throw new Error(data.error || '');
             renderLinkedDevices(data?.data?.linked || data?.linked || []);
         } catch (err) {
-            console.error('CDAP linked devices error:', err);
+            const empty = document.getElementById('cdap-linked-empty');
+            if (empty) {
+                empty.classList.remove('hidden');
+                empty.textContent = tp('cdap.linked_failed', { error: err.message || '' });
+                empty.classList.add('is-error');
+            }
+        }
+    }
+
+    function notify(type, msg) {
+        if (window.Notifications && Notifications[type]) Notifications[type](msg);
+    }
+
+    async function postLink(peerId, linkedPeerId) {
+        const res = await fetch(`/api/cdap/devices/${encodeURIComponent(peerId)}/link`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.BetterDesk?.csrfToken || ''
+            },
+            body: JSON.stringify({ linked_peer_id: linkedPeerId })
+        });
+        let data = null;
+        try { data = await res.json(); } catch { data = null; }
+        if (!res.ok || (data && data.success === false) || (data && data.error)) {
+            throw new Error((data && data.error) || res.statusText || String(res.status));
         }
     }
 
@@ -1229,7 +1271,11 @@
         const empty = document.getElementById('cdap-linked-empty');
         if (!list) return;
 
-        if (count) count.textContent = linked.length;
+        if (count) count.textContent = linked.length ? tp('cdap.linked_count', { count: linked.length }) : '';
+        if (empty) {
+            empty.classList.remove('is-error');
+            empty.textContent = t('cdap.no_linked_devices');
+        }
 
         if (linked.length === 0) {
             if (empty) empty.classList.remove('hidden');
@@ -1241,21 +1287,19 @@
 
         const html = linked.map(p => {
             const online = p.live_online || p.status === 'online';
-            const statusClass = online ? 'online' : 'offline';
             const name = escapeHtml(p.hostname || p.id);
             const platform = escapeHtml(p.platform || '');
             return `
-                <div class="cdap-linked-item" data-peer-id="${escapeHtml(p.id)}">
-                    <span class="cdap-linked-status ${statusClass}"></span>
-                    <div class="cdap-linked-info">
-                        <span class="cdap-linked-name">${name}</span>
-                        <span class="cdap-linked-id">${escapeHtml(p.id)}</span>
-                    </div>
-                    ${platform ? `<span class="cdap-linked-platform">${platform}</span>` : ''}
-                    <button class="btn-icon cdap-unlink-btn" data-peer-id="${escapeHtml(p.id)}" title="${t('cdap.unlink_device')}">
-                        <span class="material-icons">link_off</span>
-                    </button>
-                </div>
+                <li class="list-row cdap-linked-item" data-peer-id="${escapeHtml(p.id)}">
+                    <span class="row-main">
+                        <span class="row-title">${name}</span>
+                        <span class="row-sub"><span class="mono">${escapeHtml(p.id)}</span>${platform ? ` · ${platform}` : ''}</span>
+                    </span>
+                    <span class="row-end">
+                        <span class="status ${online ? 'online' : 'offline'}">${escapeHtml(online ? tp('cdap.peer_online') : tp('cdap.peer_offline'))}</span>
+                        <button type="button" class="btn btn-sm cdap-unlink-btn" data-peer-id="${escapeHtml(p.id)}" aria-label="${escapeHtml(tp('cdap.unlink_named', { name: p.hostname || p.id }))}">${escapeHtml(t('cdap.unlink_device'))}</button>
+                    </span>
+                </li>
             `;
         }).join('');
 
@@ -1267,19 +1311,19 @@
         list.querySelectorAll('.cdap-unlink-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const peerId = btn.dataset.peerId;
-                if (!confirm(t('cdap.unlink_confirm'))) return;
+                const ok = await Modal.confirm({
+                    title: tp('cdap.unlink_title'),
+                    message: tp('cdap.unlink_confirm'),
+                    confirmLabel: t('cdap.unlink_device'),
+                    danger: true
+                });
+                if (!ok) return;
                 try {
-                    const res = await fetch(`/api/cdap/devices/${encodeURIComponent(peerId)}/link`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': window.BetterDesk?.csrfToken || ''
-                        },
-                        body: JSON.stringify({ linked_peer_id: '' })
-                    });
-                    if (res.ok) loadLinkedDevices();
+                    await postLink(peerId, '');
+                    notify('success', tp('cdap.unlinked', { id: peerId }));
+                    loadLinkedDevices();
                 } catch (err) {
-                    console.error('Unlink error:', err);
+                    notify('error', tp('cdap.link_failed', { error: err.message }));
                 }
             });
         });
@@ -1289,20 +1333,19 @@
         const btn = document.getElementById('cdap-link-btn');
         if (!btn) return;
         btn.addEventListener('click', async () => {
-            const peerId = prompt(t('cdap.link_prompt'));
+            const peerId = await Modal.prompt({
+                title: t('cdap.link_device'),
+                label: t('cdap.link_prompt'),
+                hint: tp('cdap.link_hint'),
+                confirmLabel: t('cdap.link_device')
+            });
             if (!peerId || !peerId.trim()) return;
             try {
-                const res = await fetch(`/api/cdap/devices/${encodeURIComponent(peerId.trim())}/link`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': window.BetterDesk?.csrfToken || ''
-                    },
-                    body: JSON.stringify({ linked_peer_id: deviceId })
-                });
-                if (res.ok) loadLinkedDevices();
+                await postLink(peerId.trim(), deviceId);
+                notify('success', tp('cdap.linked_ok', { id: peerId.trim() }));
+                loadLinkedDevices();
             } catch (err) {
-                console.error('Link error:', err);
+                notify('error', tp('cdap.link_failed', { error: err.message }));
             }
         });
     }

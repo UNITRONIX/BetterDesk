@@ -1,39 +1,32 @@
 /**
  * BetterDesk Console - CDAP Devices List
- * Renders the CDAP device directory with live status, type filters, and search.
+ * Renders the CDAP device table with live status, type filters, and search.
  */
 (function () {
     'use strict';
 
     const REFRESH_INTERVAL = 10000; // 10s
     let _allDevices = [];
-    let _gatewayEnabled = false;
+    let _gateway = null;          // last /api/cdap/status answer, null until known
+    let _devicesState = 'loading'; // loading | ok | error
+    let _devicesError = '';
     let _activeTypeFilter = '';
     let _searchQuery = '';
     let _refreshTimer = null;
 
-    // ── Device type icons ────────────────────────────────────────────────
-
-    const TYPE_ICONS = {
-        scada: 'precision_manufacturing',
-        iot: 'sensors',
-        os_agent: 'computer',
-        network: 'router',
-        camera: 'videocam',
-        desktop: 'desktop_windows',
-        custom: 'developer_board'
-    };
+    const TYPES = ['iot', 'scada', 'os_agent', 'network', 'camera', 'custom'];
 
     // ── Initialization ───────────────────────────────────────────────────
 
     function init() {
         bindEvents();
-        loadGatewayStatus();
-        loadDevices();
-        _refreshTimer = setInterval(function () {
-            loadGatewayStatus();
-            loadDevices();
-        }, REFRESH_INTERVAL);
+        refresh();
+        _refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+    }
+
+    function refresh() {
+        // Status first, so the list knows whether the gateway is off
+        loadGatewayStatus().then(loadDevices);
     }
 
     function bindEvents() {
@@ -48,133 +41,185 @@
         var filterBtns = document.querySelectorAll('#cdap-type-filter .filter-btn');
         filterBtns.forEach(function (btn) {
             btn.addEventListener('click', function () {
-                filterBtns.forEach(function (b) { b.classList.remove('active'); });
+                filterBtns.forEach(function (b) {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
                 btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
                 _activeTypeFilter = btn.dataset.type || '';
                 renderDevices();
             });
         });
 
-        // CDAP enable/disable toggle buttons
         var toggleBtn = document.getElementById('cdap-toggle-btn');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function () {
-                toggleCDAP(false);
+                confirmDisable();
             });
         }
         var enableBtn = document.getElementById('cdap-enable-btn');
         if (enableBtn) {
             enableBtn.addEventListener('click', function () {
-                toggleCDAP(true);
+                toggleCDAP(true, document.getElementById('cdap-enable-status'));
             });
         }
     }
 
-    function toggleCDAP(enable) {
+    function confirmDisable() {
+        var connected = _gateway ? (_gateway.connected || 0) : 0;
+        var ask = (window.Modal && Modal.confirm)
+            ? Modal.confirm({
+                title: _i18n('cdap.disable_confirm_title'),
+                message: _i18n('cdap.disable_confirm_message', { count: connected }),
+                confirmLabel: _i18n('cdap.toggle_disable'),
+                danger: true
+            })
+            : Promise.resolve(false);
+        ask.then(function (ok) {
+            if (ok) toggleCDAP(false, document.getElementById('cdap-toggle-status'));
+        });
+    }
+
+    function toggleCDAP(enable, statusEl) {
         var csrfToken = (window.BetterDesk && window.BetterDesk.csrfToken) || '';
         var headers = { 'Content-Type': 'application/json' };
         if (csrfToken) headers['x-csrf-token'] = csrfToken;
+        setStatus(statusEl, _i18n('cdap.saving'), '');
         fetch('/api/cdap/toggle', {
             method: 'POST',
             credentials: 'same-origin',
             headers: headers,
             body: JSON.stringify({ enabled: enable })
         })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+            return r.json().catch(function () { return { success: false, error: r.statusText || String(r.status) }; });
+        })
         .then(function (data) {
             if (data.success) {
                 var msg = enable ? _i18n('cdap.enabled_restart') : _i18n('cdap.disabled_restart');
                 if (data.restartRequired && window.BetterDeskRestart) {
                     window.BetterDeskRestart.handle(data.restartRequired);
                 }
-                if (window.BetterDesk && window.BetterDesk.notify) {
-                    window.BetterDesk.notify(msg, 'info');
-                } else if (window.parent !== window && window.parent.BetterDesk && window.parent.BetterDesk.notify) {
-                    window.parent.BetterDesk.notify(msg, 'info');
-                } else {
-                    console.log('[CDAP]', msg);
-                }
+                setStatus(statusEl, msg, 'is-ok');
+                notify('success', msg);
             } else {
-                var errMsg = data.error || 'Failed';
-                if (window.BetterDesk && window.BetterDesk.notify) {
-                    window.BetterDesk.notify(errMsg, 'error');
-                }
+                var errMsg = _i18n('cdap.toggle_failed', { error: data.error || '' });
+                setStatus(statusEl, errMsg, 'is-error');
             }
         })
-        .catch(function () {});
+        .catch(function (e) {
+            setStatus(statusEl, _i18n('cdap.toggle_failed', { error: e.message }), 'is-error');
+        });
+    }
+
+    function setStatus(el, text, cls) {
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = 'form-status' + (cls ? ' ' + cls : '');
+    }
+
+    function notify(type, msg) {
+        if (window.Notifications && Notifications[type]) Notifications[type](msg);
+        else if (window.parent !== window && window.parent.Notifications) window.parent.Notifications[type](msg);
     }
 
     // ── Data Loading ─────────────────────────────────────────────────────
 
     function loadGatewayStatus() {
-        fetch('/api/cdap/status', { credentials: 'same-origin' })
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (data) {
-                if (!data) return;
-                _gatewayEnabled = data.enabled;
-                updateGatewayBanner(data);
+        return fetch('/api/cdap/status', { credentials: 'same-origin' })
+            .then(function (r) {
+                if (!r.ok) throw new Error(r.statusText || String(r.status));
+                return r.json();
             })
-            .catch(function () { /* ignore */ });
+            .then(function (data) {
+                _gateway = data || {};
+                updateGatewayBanner(_gateway);
+            })
+            .catch(function (e) {
+                updateGatewayError(e.message);
+            });
     }
 
     function loadDevices() {
-        var loadingEl = document.getElementById('cdap-list-loading');
-        fetch('/api/cdap/devices', { credentials: 'same-origin' })
-            .then(function (r) { return r.ok ? r.json() : null; })
+        return fetch('/api/cdap/devices', { credentials: 'same-origin' })
+            .then(function (r) {
+                if (!r.ok) throw new Error(r.statusText || String(r.status));
+                return r.json();
+            })
             .then(function (data) {
-                if (loadingEl) loadingEl.classList.add('hidden');
-                if (!data) {
-                    _allDevices = [];
-                    renderDevices();
-                    return;
-                }
-                _allDevices = data.devices || [];
+                if (data && data.success === false) throw new Error(data.error || '');
+                _allDevices = (data && data.devices) || [];
+                _devicesState = 'ok';
                 renderDevices();
             })
-            .catch(function () {
-                if (loadingEl) loadingEl.classList.add('hidden');
-                _allDevices = [];
+            .catch(function (e) {
+                _devicesState = 'error';
+                _devicesError = e.message || '';
                 renderDevices();
             });
     }
 
-    // ── Gateway Banner ───────────────────────────────────────────────────
+    // ── Gateway state ────────────────────────────────────────────────────
 
     function updateGatewayBanner(data) {
         var banner = document.getElementById('cdap-gateway-banner');
         var disabledBanner = document.getElementById('cdap-disabled-banner');
+        var listSection = document.getElementById('cdap-list-section');
+        var danger = document.getElementById('cdap-danger-zone');
         var statusEl = document.getElementById('cdap-gw-status');
         var statusText = document.getElementById('cdap-gw-status-text');
-        var connEl = document.getElementById('cdap-stat-connected');
-        var portEl = document.getElementById('cdap-stat-port');
-        var tlsEl = document.getElementById('cdap-stat-tls');
 
         if (!data.enabled) {
             if (banner) banner.classList.add('hidden');
             if (disabledBanner) disabledBanner.classList.remove('hidden');
+            if (listSection) listSection.classList.add('hidden');
+            if (danger) danger.classList.add('hidden');
             return;
         }
 
         if (banner) banner.classList.remove('hidden');
         if (disabledBanner) disabledBanner.classList.add('hidden');
+        if (listSection) listSection.classList.remove('hidden');
+        if (danger) danger.classList.remove('hidden');
 
-        if (statusEl) {
-            statusEl.className = 'cdap-gateway-status online';
-        }
+        if (statusEl) statusEl.className = 'status online';
         if (statusText) {
-            statusText.textContent = _i18n('cdap.gateway_active');
+            statusText.textContent = data.tls
+                ? _i18n('cdap.gateway_running_tls', { port: data.port || '–' })
+                : _i18n('cdap.gateway_running_plain', { port: data.port || '–' });
         }
-        if (connEl) connEl.textContent = data.connected || 0;
-        if (portEl) portEl.textContent = data.port || '—';
-        if (tlsEl) tlsEl.textContent = data.tls ? 'ON' : 'OFF';
+    }
+
+    function updateGatewayError(message) {
+        var statusEl = document.getElementById('cdap-gw-status');
+        var statusText = document.getElementById('cdap-gw-status-text');
+        if (statusEl) statusEl.className = 'status error';
+        if (statusText) statusText.textContent = _i18n('cdap.gateway_status_failed', { error: message || '' });
     }
 
     // ── Rendering ────────────────────────────────────────────────────────
 
+    function stateRow(text, isError) {
+        var retry = isError
+            ? ' <button type="button" class="btn btn-sm" id="cdap-retry">' + escapeHtml(_i18n('cdap.try_again')) + '</button>'
+            : '';
+        return '<tr><td colspan="7" class="state-cell' + (isError ? ' is-error' : '') + '"><span class="state-text">' + escapeHtml(text) + retry + '</span></td></tr>';
+    }
+
     function renderDevices() {
-        var grid = document.getElementById('cdap-device-grid');
-        var emptyEl = document.getElementById('cdap-list-empty');
-        if (!grid) return;
+        var tbody = document.getElementById('cdap-device-grid');
+        var countEl = document.getElementById('cdap-count');
+        if (!tbody) return;
+
+        if (_devicesState === 'loading') return;
+        if (_devicesState === 'error') {
+            if (countEl) countEl.textContent = '';
+            tbody.innerHTML = stateRow(_i18n('cdap.devices_failed', { error: _devicesError }), true);
+            var retry = document.getElementById('cdap-retry');
+            if (retry) retry.addEventListener('click', refresh);
+            return;
+        }
 
         var filtered = _allDevices.filter(function (dev) {
             if (_activeTypeFilter) {
@@ -194,122 +239,78 @@
             return true;
         });
 
-        if (filtered.length === 0 && !_gatewayEnabled) {
-            grid.innerHTML = '';
-            if (emptyEl) emptyEl.classList.add('hidden');
-            return;
+        if (countEl) {
+            var connected = _allDevices.filter(function (d) { return d.connected !== false; }).length;
+            countEl.textContent = !_allDevices.length ? ''
+                : (filtered.length !== _allDevices.length
+                    ? _i18n('cdap.count_filtered', { count: filtered.length, total: _allDevices.length })
+                    : _i18n('cdap.count_devices', { count: _allDevices.length, connected: connected }));
         }
 
         if (filtered.length === 0) {
-            grid.innerHTML = '';
-            if (emptyEl) emptyEl.classList.remove('hidden');
+            tbody.innerHTML = stateRow(_allDevices.length
+                ? _i18n('cdap.no_devices_match')
+                : _i18n('cdap.no_devices_desc'), false);
             return;
         }
 
-        if (emptyEl) emptyEl.classList.add('hidden');
-
-        grid.innerHTML = filtered.map(function (dev) {
-            return renderDeviceCard(dev);
-        }).join('');
-
-        // Bind card clicks
-        grid.querySelectorAll('.cdap-device-card').forEach(function (card) {
-            card.addEventListener('click', function () {
-                var id = card.dataset.id;
-                if (id) window.location.href = '/cdap/devices/' + encodeURIComponent(id);
-            });
-        });
+        tbody.innerHTML = filtered.map(renderDeviceRow).join('');
     }
 
-    function renderDeviceCard(dev) {
-        var id = escapeHtml(dev.id || '');
+    function renderDeviceRow(dev) {
+        var rawId = dev.id || '';
+        var id = escapeHtml(rawId);
         var name = escapeHtml(getDeviceName(dev));
         var type = getDeviceType(dev);
-        var icon = TYPE_ICONS[type] || 'developer_board';
         var connected = dev.connected !== false;
-        var statusClass = connected ? 'online' : 'offline';
         var statusText = connected ? _i18n('cdap.connected') : _i18n('cdap.disconnected');
-        var widgetCount = countWidgets(dev);
-        var uptime = formatUptime(dev.connected_at);
-        var ip = escapeHtml(dev.client_ip || '—');
-        var heartbeats = dev.heartbeat_count || 0;
+        var href = '/cdap/devices/' + encodeURIComponent(rawId);
 
-        return '<div class="cdap-device-card ' + statusClass + '" data-id="' + id + '">' +
-            '<div class="cdap-card-header">' +
-                '<div class="cdap-card-icon"><span class="material-icons">' + icon + '</span></div>' +
-                '<div class="cdap-card-identity">' +
-                    '<div class="cdap-card-name">' + name + '</div>' +
-                    '<div class="cdap-card-id">' + id + '</div>' +
-                '</div>' +
-                '<div class="cdap-card-status ' + statusClass + '">' +
-                    '<span class="cdap-status-dot"></span>' +
-                    '<span>' + statusText + '</span>' +
-                '</div>' +
-            '</div>' +
-            '<div class="cdap-card-meta">' +
-                '<div class="cdap-card-meta-item">' +
-                    '<span class="material-icons">category</span>' +
-                    '<span>' + escapeHtml(type) + '</span>' +
-                '</div>' +
-                '<div class="cdap-card-meta-item">' +
-                    '<span class="material-icons">widgets</span>' +
-                    '<span>' + widgetCount + ' ' + _i18n('cdap.widgets') + '</span>' +
-                '</div>' +
-                (connected ? '<div class="cdap-card-meta-item">' +
-                    '<span class="material-icons">schedule</span>' +
-                    '<span>' + uptime + '</span>' +
-                '</div>' : '') +
-                '<div class="cdap-card-meta-item">' +
-                    '<span class="material-icons">lan</span>' +
-                    '<span>' + ip + '</span>' +
-                '</div>' +
-            '</div>' +
-            (connected ? '<div class="cdap-card-footer">' +
-                '<span class="cdap-card-hb">' +
-                    '<span class="material-icons">favorite</span> ' + heartbeats +
-                '</span>' +
-                '<span class="material-icons cdap-card-arrow">chevron_right</span>' +
-            '</div>' : '<div class="cdap-card-footer">' +
-                '<span class="cdap-card-hb muted">' + _i18n('cdap.disconnected') + '</span>' +
-                '<span class="material-icons cdap-card-arrow">chevron_right</span>' +
-            '</div>') +
-        '</div>';
+        return '<tr data-id="' + id + '">' +
+            '<td><a href="' + escapeHtml(href) + '" class="cdap-device-link">' + name + '</a>' +
+                (name !== id ? '<span class="cell-sub mono">' + id + '</span>' : '') + '</td>' +
+            '<td>' + escapeHtml(typeLabel(type)) + '</td>' +
+            '<td><span class="status ' + (connected ? 'online' : 'offline') + '">' + escapeHtml(statusText) + '</span></td>' +
+            '<td><span class="mono">' + escapeHtml(dev.client_ip || '–') + '</span></td>' +
+            '<td>' + (connected ? escapeHtml(formatUptime(dev.connected_at)) : '–') + '</td>' +
+            '<td class="cdap-num">' + countWidgets(dev) + '</td>' +
+            '<td class="cdap-num">' + (connected ? escapeHtml(String(dev.heartbeat_count || 0)) : '–') + '</td>' +
+        '</tr>';
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
+    function manifestOf(dev) {
+        if (!dev.manifest) return null;
+        try {
+            return typeof dev.manifest === 'string' ? JSON.parse(dev.manifest) : dev.manifest;
+        } catch (e) { return null; }
+    }
+
     function getDeviceName(dev) {
-        if (dev.manifest) {
-            try {
-                var m = typeof dev.manifest === 'string' ? JSON.parse(dev.manifest) : dev.manifest;
-                if (m.device && m.device.name) return m.device.name;
-            } catch (e) { /* ignore */ }
-        }
-        return dev.id || '—';
+        var m = manifestOf(dev);
+        if (m && m.device && m.device.name) return m.device.name;
+        return dev.id || '–';
     }
 
     function getDeviceType(dev) {
-        if (dev.manifest) {
-            try {
-                var m = typeof dev.manifest === 'string' ? JSON.parse(dev.manifest) : dev.manifest;
-                if (m.device && m.device.type) return m.device.type;
-            } catch (e) { /* ignore */ }
-        }
+        var m = manifestOf(dev);
+        if (m && m.device && m.device.type) return m.device.type;
         return 'custom';
     }
 
+    function typeLabel(type) {
+        return TYPES.indexOf(type) >= 0 ? _i18n('cdap.type_' + type) : type;
+    }
+
     function countWidgets(dev) {
-        if (dev.manifest) {
-            try {
-                var m = typeof dev.manifest === 'string' ? JSON.parse(dev.manifest) : dev.manifest;
-                if (m.widgets && Array.isArray(m.widgets)) return m.widgets.length;
-            } catch (e) { /* ignore */ }
-        }
+        var m = manifestOf(dev);
+        if (m && Array.isArray(m.widgets)) return m.widgets.length;
         return 0;
     }
 
     function formatUptime(connectedAt) {
-        if (!connectedAt) return '—';
+        if (!connectedAt) return '–';
         var diff = Math.floor((Date.now() - new Date(connectedAt).getTime()) / 1000);
         if (diff < 60) return diff + 's';
         if (diff < 3600) return Math.floor(diff / 60) + 'm';
@@ -317,27 +318,24 @@
         return Math.floor(diff / 86400) + 'd ' + Math.floor((diff % 86400) / 3600) + 'h';
     }
 
-    function _i18n(key) {
-        if (typeof _ === 'function') return _(key);
-        // Fallback: extract last part of key
+    function _i18n(key, params) {
+        if (typeof window._ === 'function') return window._(key, params || {});
         var parts = key.split('.');
         return parts[parts.length - 1];
     }
 
     function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
     }
 
     // ── Public API ───────────────────────────────────────────────────────
 
     window.CDAPDevices = {
         init: init,
-        refresh: function () {
-            loadGatewayStatus();
-            loadDevices();
-        }
+        refresh: refresh
     };
 
     // Auto-init when DOM is ready

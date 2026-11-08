@@ -1,116 +1,77 @@
 <%- include('layouts/main', {
     title: _('cdap.device_detail'),
-    pageStyles: ['cdap'],
+    uiReworked: true,
+    pageStyles: ['ui/cdap'],
     pageScripts: ['vendor/jmuxer.min', 'rdclient/video', 'cdap-widgets', 'cdap-commands', 'cdap-terminal', 'cdap-desktop', 'cdap-video', 'cdap-filebrowser', 'cdap-audio'],
-    currentPage: 'devices',
+    currentPage: 'cdap',
     breadcrumb: [
-        { label: _('nav.devices'), href: '/devices' },
+        { label: _('nav.cdap'), href: '/cdap' },
         { label: _('cdap.device_detail') }
     ],
     body: `
-        <div class="cdap-device-page" data-device-id="${escapeHtml(deviceId)}">
-            <!-- Device Header -->
-            <div class="cdap-device-header">
-                <div class="cdap-device-title">
-                    <a href="/devices" class="btn-icon cdap-back-btn" title="${_('common.back')}">
-                        <span class="material-icons">arrow_back</span>
-                    </a>
-                    <div class="cdap-device-identity">
-                        <h1 id="cdap-device-name">${escapeHtml(deviceId)}</h1>
-                        <div class="cdap-device-meta" id="cdap-device-meta">
-                            <span class="cdap-meta-item" id="cdap-device-type">
-                                <span class="material-icons">memory</span>
-                                <span>—</span>
-                            </span>
-                            <span class="cdap-meta-item" id="cdap-device-version">
-                                <span class="material-icons">info</span>
-                                <span>—</span>
-                            </span>
-                            <span class="cdap-meta-item" id="cdap-device-uptime">
-                                <span class="material-icons">schedule</span>
-                                <span>—</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="cdap-device-status" id="cdap-device-status">
-                    <span class="cdap-status-dot"></span>
-                    <span class="cdap-status-text">${_('cdap.loading')}</span>
-                </div>
-            </div>
+<div class="page page-wide cdap-device-page" data-device-id="${escapeHtml(deviceId)}">
+    <div class="page-head">
+        <h1 id="cdap-device-name">${escapeHtml(deviceId)}</h1>
+        <p class="page-description">${_('cdap.device_description')}</p>
+    </div>
 
-            <!-- Connection Banner (shown when disconnected) -->
-            <div class="cdap-offline-banner hidden" id="cdap-offline-banner">
-                <span class="material-icons">cloud_off</span>
-                <span>${_('cdap.device_offline_msg')}</span>
-            </div>
+    <!-- Shown when the device answers 404 or the request fails -->
+    <p class="state is-error hidden" id="cdap-device-error"></p>
 
-            <!-- Active Alerts Panel -->
-            <div class="cdap-alerts-panel hidden" id="cdap-alerts-panel">
-                <div class="cdap-alerts-header">
-                    <h3>
-                        <span class="material-icons">warning</span>
-                        ${_('cdap.active_alerts')}
-                        <span class="cdap-alerts-count" id="cdap-alerts-count">0</span>
-                    </h3>
-                </div>
-                <div class="cdap-alerts-list" id="cdap-alerts-list">
-                    <!-- Alert items rendered by cdap-widgets.js -->
-                </div>
-            </div>
+    <div class="cdap-device-body" id="cdap-device-body">
+        <dl class="facts cdap-facts" id="cdap-device-meta">
+            <dt>${_('cdap.col_status')}</dt>
+            <dd id="cdap-device-status"><span class="status">${_('cdap.loading')}</span></dd>
+            <dt>${_('cdap.device_id')}</dt>
+            <dd><span class="mono">${escapeHtml(deviceId)}</span></dd>
+            <dt>${_('cdap.col_type')}</dt>
+            <dd id="cdap-device-type">–</dd>
+            <dt>${_('cdap.firmware')}</dt>
+            <dd id="cdap-device-version">–</dd>
+            <dt>${_('cdap.col_connected_for')}</dt>
+            <dd id="cdap-device-uptime">–</dd>
+        </dl>
 
-            <!-- Linked Devices Panel -->
-            <div class="cdap-linked-panel" id="cdap-linked-panel">
-                <div class="cdap-linked-header">
-                    <h3>
-                        <span class="material-icons">device_hub</span>
-                        ${_('cdap.linked_devices')}
-                        <span class="cdap-linked-count" id="cdap-linked-count">0</span>
-                    </h3>
-                    <button class="btn-sm btn-accent" id="cdap-link-btn" title="${_('cdap.link_device')}">
-                        <span class="material-icons">add_link</span>
-                        <span>${_('cdap.link_device')}</span>
-                    </button>
-                </div>
-                <div class="cdap-linked-list" id="cdap-linked-list">
-                    <div class="cdap-linked-empty" id="cdap-linked-empty">
-                        <span class="material-icons">link_off</span>
-                        <span>${_('cdap.no_linked_devices')}</span>
-                    </div>
-                </div>
-            </div>
+        <p class="notice warning hidden" id="cdap-offline-banner">${_('cdap.device_offline_msg')}</p>
 
-            <!-- Widget Grid -->
+        <!-- Alerts that are firing now -->
+        <section class="section hidden" id="cdap-alerts-panel" aria-labelledby="cdap-alerts-title">
+            <h2 id="cdap-alerts-title">${_('cdap.active_alerts')}</h2>
+            <p class="count-line" id="cdap-alerts-count"></p>
+            <ul class="list" id="cdap-alerts-list"></ul>
+        </section>
+
+        <!-- Values and controls from the device's manifest -->
+        <section class="section" aria-labelledby="cdap-widgets-title">
+            <h2 id="cdap-widgets-title">${_('cdap.widgets_heading')}</h2>
             <div class="cdap-widget-grid" id="cdap-widget-grid">
-                <!-- Widgets rendered by cdap-widgets.js -->
-                <div class="cdap-loading" id="cdap-loading">
-                    <div class="cdap-loading-spinner"></div>
-                    <p>${_('cdap.loading_widgets')}</p>
-                </div>
+                <p class="state" id="cdap-loading">${_('cdap.loading_widgets')}</p>
             </div>
+            <p class="state hidden" id="cdap-empty">${_('cdap.no_widgets_sentence')}</p>
+        </section>
 
-            <!-- Empty State (no manifest) -->
-            <div class="cdap-empty hidden" id="cdap-empty">
-                <span class="material-icons cdap-empty-icon">widgets</span>
-                <h3>${_('cdap.no_widgets')}</h3>
-                <p>${_('cdap.no_widgets_desc')}</p>
+        <!-- Commands sent from this page -->
+        <section class="section hidden" id="cdap-command-log" aria-labelledby="cdap-log-title">
+            <div class="section-head">
+                <h2 id="cdap-log-title">${_('cdap.command_log')}</h2>
+                <button type="button" class="btn btn-sm" id="cdap-clear-log">${_('cdap.clear_log')}</button>
             </div>
+            <div class="cdap-command-log-entries" id="cdap-log-entries"></div>
+        </section>
 
-            <!-- Command Log -->
-            <div class="cdap-command-log hidden" id="cdap-command-log">
-                <div class="cdap-command-log-header">
-                    <h3>
-                        <span class="material-icons">terminal</span>
-                        ${_('cdap.command_log')}
-                    </h3>
-                    <button class="btn-icon" id="cdap-clear-log" title="${_('cdap.clear_log')}">
-                        <span class="material-icons">delete_sweep</span>
-                    </button>
-                </div>
-                <div class="cdap-command-log-entries" id="cdap-log-entries">
-                    <!-- Command log entries appended by cdap-commands.js -->
-                </div>
+        <!-- Remote desktop peers linked to this device -->
+        <section class="section" id="cdap-linked-panel" aria-labelledby="cdap-linked-title">
+            <div class="section-head">
+                <h2 id="cdap-linked-title">${_('cdap.linked_devices')}</h2>
+                <button type="button" class="btn btn-sm" id="cdap-link-btn">${_('cdap.link_device')}</button>
             </div>
-        </div>
-    `
+            <p class="section-note">${_('cdap.linked_note')}</p>
+            <p class="count-line" id="cdap-linked-count"></p>
+            <ul class="list" id="cdap-linked-list">
+                <li class="list-row is-empty" id="cdap-linked-empty">${_('cdap.no_linked_devices')}</li>
+            </ul>
+        </section>
+    </div>
+</div>
+`
 }) %>

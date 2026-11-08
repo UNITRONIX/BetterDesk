@@ -111,11 +111,17 @@
         const container = document.getElementById('cdap-log-entries');
         if (!container) return;
 
+        const tr = (key, fallback) => {
+            const v = typeof window._ === 'function' ? window._(key) : key;
+            return v === key ? fallback : v;
+        };
         let html = '';
         for (const entry of commandLog) {
             const time = entry.time.toLocaleTimeString();
-            const icon = entry.success ? 'check_circle' : 'error';
             const cls = entry.success ? 'cdap-log-success' : 'cdap-log-error';
+            const statusHtml = entry.success
+                ? `<span class="status ok">${escapeHtml(tr('cdap.command_ok', 'Sent'))}</span>`
+                : `<span class="status error">${escapeHtml(tr('cdap.command_error', 'Failed'))}</span>`;
             const valueStr = entry.value !== null && entry.value !== undefined
                 ? ` = ${escapeHtml(String(entry.value))}`
                 : '';
@@ -125,10 +131,10 @@
 
             html += `
                 <div class="cdap-log-entry ${cls}">
-                    <span class="material-icons cdap-log-icon">${icon}</span>
                     <span class="cdap-log-time">${time}</span>
+                    ${statusHtml}
                     <span class="cdap-log-detail">
-                        <strong>${escapeHtml(entry.widgetId)}</strong>
+                        <span class="mono">${escapeHtml(entry.widgetId)}</span>
                         → ${escapeHtml(entry.action)}${valueStr}
                     </span>
                     ${errorStr}
@@ -136,7 +142,7 @@
             `;
         }
 
-        container.innerHTML = html || '<div class="cdap-log-empty">No commands sent yet</div>';
+        container.innerHTML = html || `<p class="state">${escapeHtml(tr('cdap.no_commands', 'No commands sent yet.'))}</p>`;
     }
 
     function clearLog() {
