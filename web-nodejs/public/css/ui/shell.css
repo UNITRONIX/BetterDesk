@@ -657,8 +657,8 @@
     }
 }
 
-/* Closed help panel: no shadow peeking in from off-screen */
+/* Closed help panel takes no space: docked on wide screens, its content
+   height would otherwise stretch every page */
 .bd-help-panel:not(.is-open) {
-    box-shadow: none;
-    visibility: hidden;
+    display: none;
 }
