@@ -1,7 +1,47 @@
 ## [Unreleased]
 
+### Added
+- **Short-code pairing (`host` + 6 characters):** operator mints a one-time code on the new
+  `/pairing` page (Generator → pairing section); the user types only the server address and
+  the code. The client discovers the Client API itself (HTTPS first, then `:21114`, `:5443`),
+  applies signal/relay/API/key atomically, and continues with normal branding and
+  enrollment. Codes are 6 Crockford Base32 characters, valid 10 minutes, single use, stored
+  as sha256 only, and refused with an identical response whether unknown, expired or spent.
+  Endpoints: `POST /api/pairing/redeem`, `POST /api/pairing/config` (public, rate-limited
+  10/min/IP), `POST|GET /api/pairing/codes`, `DELETE /api/pairing/codes/{id}` (operator).
+- **`docs/CONNECTION_PORTS.md`:** single source of truth for ports — table, four firewall
+  profiles (minimal / reverse-proxy+TLS recommended / WSS-only / Docker), client-field map,
+  what pairing actually requires, and a common-mistakes table. Replaces the contradictory
+  guidance previously spread across the wiki, installers and `PORT_SECURITY.md`.
+- **Firewall verification:** `scripts/check-connection-ports.sh` (`a|b|c|d`) and the
+  PowerShell equivalent check real listeners against the chosen profile — a panel bound to
+  `0.0.0.0` or a WAN-exposed `21114` in profile B fails with a non-zero exit.
+- **CI gates:** `scripts/check-port-docs.js` fails when the cheat sheet and the port
+  constants in `constants.go` / `config.js` disagree (and when `21120` reappears as a live
+  port); `scripts/check-pairing-i18n.js` enforces the `pairing` namespace across all 26
+  locales. Both run in the secret-scan workflow.
+
 ### Changed
-- _(none yet)_
+- **Installer firewall output:** `betterdesk.sh` `firewall-notes.txt` now lists **21114**
+  (previously missing) and separates WAN from localhost ports. `betterdesk.ps1` no longer
+  opens `5000`, `5443`, `21115`, `21118` or `21119` by default; it opens the documented
+  minimum (21116 TCP+UDP, 21117, Go API).
+- **Client branding docs:** `docs/README.md` marks `architecture/PORT_SECURITY.md` as
+  historical and points to `CONNECTION_PORTS.md`; `docs/wiki/Installation.md` no longer tells
+  operators to expose the panel to WAN.
+
+### Fixed
+- **Stale port advice:** `docs/architecture/PORT_SECURITY.md` documented an API on
+  `127.0.0.1:21120` that never existed, and `docs/wiki/Installation.md` recommended
+  `API_PORT=21120` — a value the installer never used.
+
+### Notes for operators
+- No database migration. Pairing codes live in `server_config` under `pairing_code_<sha256>`
+  and are pruned automatically.
+- `/api/pairing/*` must be reachable for pairing: in profile B the proxy sends `/api` to
+  `21114`; without a proxy, open `21114` **over TLS**.
+- `21116/tcp+udp` and `21117/tcp` remain required — pairing configures the client but does
+  not carry the session.
 
 ---
 
@@ -10,9 +50,6 @@
 ### Fixed
 - **i18n key parity:** `en.json` was missing `commercialization.packages.select_org` and `commercialization.packages.select_org_placeholder`, which `pl.json` already had. EN now carries both, so parity is clean.
 - **CI i18n gate:** `npm run i18n:check` no longer fails on untranslated strings still falling back to English. Parity breaks, parse errors, missing keys and empty values stay blocking; the remaining translation backlog (~8.1k strings across 26 locales) is reported as a warning instead of turning the gate permanently red and hiding real regressions.
-
-### Changed
-- _(none yet)_
 
 ---
 
