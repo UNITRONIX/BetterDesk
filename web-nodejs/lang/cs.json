@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "graf",
-        "show_table": "Zobrazit čísla"
+        "show_table": "Zobrazit čísla",
+        "table_label": "{label} v tabulce"
     },
     "portal": {
         "title": "Stáhnout agenta podpory",

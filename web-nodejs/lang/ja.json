@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "グラフ",
-        "show_table": "数値を表示"
+        "show_table": "数値を表示",
+        "table_label": "{label}（表）"
     },
     "portal": {
         "title": "サポートエージェントのダウンロード",

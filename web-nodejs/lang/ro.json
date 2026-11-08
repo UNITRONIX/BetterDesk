@@ -6860,7 +6860,8 @@
     },
     "chart": {
         "role": "grafic",
-        "show_table": "Afișează cifrele"
+        "show_table": "Afișează cifrele",
+        "table_label": "{label} sub formă de tabel"
     },
     "portal": {
         "title": "Descărcați agentul de asistență",

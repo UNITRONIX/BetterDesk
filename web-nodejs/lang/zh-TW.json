@@ -6858,7 +6858,8 @@
     },
     "chart": {
         "role": "圖表",
-        "show_table": "顯示數字"
+        "show_table": "顯示數字",
+        "table_label": "{label}（表格）"
     },
     "portal": {
         "title": "下載支援代理程式",

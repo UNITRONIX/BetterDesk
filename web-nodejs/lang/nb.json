@@ -6860,7 +6860,8 @@
     },
     "chart": {
         "role": "diagram",
-        "show_table": "Vis tallene"
+        "show_table": "Vis tallene",
+        "table_label": "{label} som tabell"
     },
     "portal": {
         "title": "Last ned støtteagenten",

@@ -6860,7 +6860,8 @@
     },
     "chart": {
         "role": "kaavio",
-        "show_table": "Näytä luvut"
+        "show_table": "Näytä luvut",
+        "table_label": "{label} taulukkona"
     },
     "portal": {
         "title": "Lataa tukiagentti",

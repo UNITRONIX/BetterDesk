@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "图表",
-        "show_table": "显示数字"
+        "show_table": "显示数字",
+        "table_label": "{label}（表格）"
     },
     "portal": {
         "title": "下载支持代理",

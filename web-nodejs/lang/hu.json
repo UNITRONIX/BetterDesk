@@ -6860,7 +6860,8 @@
     },
     "chart": {
         "role": "diagram",
-        "show_table": "Számok megjelenítése"
+        "show_table": "Számok megjelenítése",
+        "table_label": "{label} táblázatként"
     },
     "portal": {
         "title": "A támogatási ügynök letöltése",

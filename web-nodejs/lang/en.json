@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "chart",
-        "show_table": "Show the numbers"
+        "show_table": "Show the numbers",
+        "table_label": "{label} as a table"
     },
     "portal": {
         "title": "Download the support agent",

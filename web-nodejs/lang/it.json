@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "grafico",
-        "show_table": "Mostra i numeri"
+        "show_table": "Mostra i numeri",
+        "table_label": "{label} in tabella"
     },
     "portal": {
         "title": "Scarica l'agente di assistenza",

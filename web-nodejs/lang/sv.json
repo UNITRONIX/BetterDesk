@@ -6860,7 +6860,8 @@
     },
     "chart": {
         "role": "diagram",
-        "show_table": "Visa siffrorna"
+        "show_table": "Visa siffrorna",
+        "table_label": "{label} som tabell"
     },
     "portal": {
         "title": "Ladda ner supportagenten",

@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "gráfico",
-        "show_table": "Mostrar os números"
+        "show_table": "Mostrar os números",
+        "table_label": "{label} em tabela"
     },
     "portal": {
         "title": "Transferir o agente de suporte",

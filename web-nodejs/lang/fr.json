@@ -6858,7 +6858,8 @@
     },
     "chart": {
         "role": "graphique",
-        "show_table": "Afficher les chiffres"
+        "show_table": "Afficher les chiffres",
+        "table_label": "{label} sous forme de tableau"
     },
     "portal": {
         "title": "Télécharger l'agent d'assistance",

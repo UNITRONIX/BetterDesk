@@ -6860,7 +6860,8 @@
     },
     "chart": {
         "role": "grafik",
-        "show_table": "Tampilkan angka"
+        "show_table": "Tampilkan angka",
+        "table_label": "{label} dalam tabel"
     },
     "portal": {
         "title": "Unduh agen dukungan",

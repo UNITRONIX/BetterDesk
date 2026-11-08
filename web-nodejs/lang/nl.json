@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "grafiek",
-        "show_table": "Toon de cijfers"
+        "show_table": "Toon de cijfers",
+        "table_label": "{label} als tabel"
     },
     "portal": {
         "title": "De ondersteuningsagent downloaden",

@@ -6860,7 +6860,8 @@
     },
     "chart": {
         "role": "biểu đồ",
-        "show_table": "Hiện số liệu"
+        "show_table": "Hiện số liệu",
+        "table_label": "{label} dạng bảng"
     },
     "portal": {
         "title": "Tải tác tử hỗ trợ",

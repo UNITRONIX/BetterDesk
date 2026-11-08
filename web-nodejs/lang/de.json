@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "Diagramm",
-        "show_table": "Zahlen anzeigen"
+        "show_table": "Zahlen anzeigen",
+        "table_label": "{label} als Tabelle"
     },
     "portal": {
         "title": "Support-Agent herunterladen",

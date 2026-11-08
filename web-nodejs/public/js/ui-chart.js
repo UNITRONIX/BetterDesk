@@ -25,12 +25,12 @@
     const H = 200;
     const PAD = { top: 12, right: 12, bottom: 26, left: 44 };
 
-    const t = (key, fallback) => {
+    const t = (key, fallback, params) => {
         if (typeof window._ === 'function') {
-            const v = window._(key);
+            const v = window._(key, params);
             if (v && v !== key) return v;
         }
-        return fallback;
+        return params ? fallback.replace(/\{(\w+)\}/g, (m, k) => (k in params ? params[k] : m)) : fallback;
     };
 
     function el(tag, attrs, parent) {
@@ -90,6 +90,10 @@
         const details = html('details', 'chart-table disclosure', null, fig);
         html('summary', null, t('chart.show_table', 'Show the numbers'), details);
         const wrap = html('div', 'table-scroll', null, details);
+        // A scroll box that may overflow must be reachable by keyboard
+        wrap.tabIndex = 0;
+        wrap.setAttribute('role', 'region');
+        wrap.setAttribute('aria-label', o.label ? t('chart.table_label', '{label} as a table', { label: o.label }) : t('chart.show_table', 'Show the numbers'));
         const table = html('table', 'data-table', null, wrap);
         const hr = html('tr', null, null, html('thead', null, null, table));
         html('th', null, o.xHeading || '', hr).scope = 'col';
@@ -141,11 +145,27 @@
                     break;
                 }
             }
+            const xLabels = [];
             o.labels.forEach((lab, i) => {
                 if (!shown[i]) return;
                 const tx = el('text', { x: xAt(i), y: H - 8, 'text-anchor': 'middle', class: 'chart-tick' }, svg);
                 tx.textContent = lab;
+                xLabels.push(tx);
             });
+            // Keep labels inside the chart: the first and last points sit on the plot's
+            // edges, so a centred label there would be cut off. Shift them inwards, then
+            // drop any label that now overlaps the one after it (the last always stays).
+            let nextLeft = Infinity;
+            for (let j = xLabels.length - 1; j >= 0; j--) {
+                const tx = xLabels[j];
+                let w = 0;
+                try { w = tx.getComputedTextLength(); } catch (e) { w = 0; }
+                if (!w) continue; // not laid out yet (hidden); the next resize redraws
+                const x = Math.min(Math.max(+tx.getAttribute('x'), w / 2), W - w / 2);
+                if (x + w / 2 + 8 > nextLeft) { tx.remove(); continue; }
+                tx.setAttribute('x', x.toFixed(1));
+                nextLeft = x - w / 2;
+            }
 
             if (o.kind === 'columns') {
                 const k = o.series.length;
@@ -184,6 +204,13 @@
                         }
                     }
                     el('path', { class: 'chart-line', d }, g);
+                    // A value with gaps on both sides has no line to draw: mark it with a dot
+                    const has = (i) => i >= 0 && i < n && s.values[i] !== null && s.values[i] !== undefined;
+                    s.values.forEach((v, i) => {
+                        if (has(i) && !has(i - 1) && !has(i + 1)) {
+                            el('circle', { class: 'chart-point', r: 3, cx: xAt(i).toFixed(1), cy: yAt(v).toFixed(1) }, g);
+                        }
+                    });
                 });
             }
             el('line', { class: 'chart-axis', x1: x0, x2: x1, y1: y0 + 0.5, y2: y0 + 0.5 }, svg);

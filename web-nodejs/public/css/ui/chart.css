@@ -71,6 +71,10 @@
 .chart-series-1 .chart-bar { fill: var(--series-1); }
 .chart-series-2 .chart-bar { fill: var(--series-2); }
 .chart-series-3 .chart-bar { fill: var(--series-3); }
+/* A value with no neighbours (gaps on both sides) is drawn as a dot */
+.chart-series-1 .chart-point { fill: var(--series-1); }
+.chart-series-2 .chart-point { fill: var(--series-2); }
+.chart-series-3 .chart-point { fill: var(--series-3); }
 
 /* ui-chart.js parks the crosshair and dots at x = -10 while idle */
 .chart-cross[x1="-10"],
@@ -173,6 +177,7 @@
 @media (forced-colors: active) {
     .chart-line { stroke: CanvasText; }
     .chart-bar,
+    .chart-point,
     .chart-key { fill: CanvasText; background: CanvasText; }
 }
 
@@ -212,6 +217,7 @@
 }
 
 .dg-edge {
+    fill: none;
     stroke: var(--text-muted);
     stroke-width: 1.5;
 }

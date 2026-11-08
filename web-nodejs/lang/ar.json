@@ -6861,7 +6861,8 @@
     },
     "chart": {
         "role": "مخطط",
-        "show_table": "عرض الأرقام"
+        "show_table": "عرض الأرقام",
+        "table_label": "{label} في جدول"
     },
     "portal": {
         "title": "تنزيل وكيل الدعم",

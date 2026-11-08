@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "차트",
-        "show_table": "숫자 보기"
+        "show_table": "숫자 보기",
+        "table_label": "{label}(표)"
     },
     "portal": {
         "title": "지원 에이전트 다운로드",

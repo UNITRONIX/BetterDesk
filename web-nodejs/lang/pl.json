@@ -6854,7 +6854,8 @@
     },
     "chart": {
         "role": "wykres",
-        "show_table": "Pokaż liczby"
+        "show_table": "Pokaż liczby",
+        "table_label": "{label} w tabeli"
     },
     "portal": {
         "title": "Pobierz agenta wsparcia",
