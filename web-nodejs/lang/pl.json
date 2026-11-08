@@ -514,7 +514,14 @@
         "connect_phone_web_action": "Otwórz w przeglądarce",
         "connect_phone_app": "Aplikacja RustDesk",
         "connect_phone_app_desc": "Otwiera aplikację RustDesk w tym telefonie z ID tego urządzenia. Jeśli aplikacja nie jest zainstalowana, nic się nie stanie.",
-        "connect_phone_app_action": "Otwórz w RustDesk"
+        "connect_phone_app_action": "Otwórz w RustDesk",
+        "saving": "Zapisywanie…",
+        "add_tag_label": "Dodaj tag",
+        "add_tag_hint": "Wybierz tag używany przez inne urządzenia albo wpisz nowy.",
+        "display_name_hint": "Wyświetlana na liście zamiast nazwy hosta. Zostaw puste, aby wyświetlać nazwę hosta.",
+        "folder_hint": "Możesz też przeciągnąć urządzenie na folder na liście.",
+        "manual_groups_hint": "Zaznacz grupy, do których należy to urządzenie.",
+        "dynamic_memberships_hint": "Urządzenie jest w tych grupach z powodu swoich tagów. Zmień tagi, aby to zmienić."
     },
     "keys": {
         "title": "Klucze serwera",

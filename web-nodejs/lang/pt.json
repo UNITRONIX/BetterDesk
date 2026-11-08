@@ -396,7 +396,7 @@
         "note_placeholder": "Digite uma nota...",
         "tags": "Tags",
         "filter_by_tags": "Filtrar por tags",
-        "no_tags": "No tags",
+        "no_tags": "Sem etiquetas",
         "all_groups": "Todos os grupos",
         "create_group": "Criar grupo",
         "manage_groups": "Gerenciar grupos",
@@ -404,7 +404,7 @@
         "group_name_placeholder": "ex.: PCs de mídia",
         "dynamic_group": "Grupo dinâmico por tag",
         "dynamic_group_hint": "Dispositivos com esta tag entram automaticamente.",
-        "tag_filter": "Tag filter",
+        "tag_filter": "Filtro de etiqueta",
         "group_allowed_users": "Usuários permitidos",
         "group_allowed_users_hint": "Deixe vazio para manter o grupo visível para todos com permissões de dispositivo.",
         "group_tag_required": "O filtro de tag é obrigatório para grupos dinâmicos",
@@ -514,7 +514,14 @@
         "connect_phone_web_action": "Abrir visualizador web",
         "connect_phone_app": "Aplicação RustDesk",
         "connect_phone_app_desc": "Abre a aplicação RustDesk neste telemóvel com o ID deste dispositivo. Se a aplicação não estiver instalada, nada acontece.",
-        "connect_phone_app_action": "Abrir no RustDesk"
+        "connect_phone_app_action": "Abrir no RustDesk",
+        "saving": "A guardar…",
+        "add_tag_label": "Adicionar uma etiqueta",
+        "add_tag_hint": "Escolha uma etiqueta usada por outros dispositivos ou escreva uma nova.",
+        "display_name_hint": "Mostrado na lista em vez do nome do anfitrião. Deixe vazio para mostrar o nome do anfitrião.",
+        "folder_hint": "Também pode arrastar o dispositivo para uma pasta na lista.",
+        "manual_groups_hint": "Marque os grupos a que este dispositivo pertence.",
+        "dynamic_memberships_hint": "O dispositivo está nestes grupos por causa das suas etiquetas. Altere as etiquetas para os mudar."
     },
     "keys": {
         "title": "Chaves do servidor",

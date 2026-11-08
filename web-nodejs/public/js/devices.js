@@ -1715,28 +1715,36 @@
             const dynamicGroups = groups.filter(group => (group.source_type || 'manual') === 'tag' && selected.has(group.guid));
 
             const manualHtml = manualGroups.length ? manualGroups.map(group => `
-                <label class="group-membership-option">
-                    <input type="checkbox" value="${Utils.escapeHtml(group.guid)}" ${selected.has(group.guid) ? 'checked' : ''}>
-                    <span class="material-icons">hub</span>
-                    <span>${Utils.escapeHtml(group.name)}</span>
-                </label>`).join('') : `<div class="tag-filter-empty">${_('devices.no_groups') || 'No groups yet'}</div>`;
+                    <li class="list-row">
+                        <label class="check-field">
+                            <input type="checkbox" value="${Utils.escapeHtml(group.guid)}" ${selected.has(group.guid) ? 'checked' : ''}>
+                            <span class="check-label">${Utils.escapeHtml(group.name)}</span>
+                        </label>
+                    </li>`).join('')
+                : `<li class="list-row is-empty">${Utils.escapeHtml(_('devices.no_groups'))}</li>`;
 
             const dynamicHtml = dynamicGroups.length ? `
                 <div class="form-group">
-                    <label>${_('devices.dynamic_memberships') || 'Dynamic memberships'}</label>
-                    <div class="device-tags">
-                        ${dynamicGroups.map(group => `<span class="device-tag-pill" title="${Utils.escapeHtml(group.tag_filter || '')}">${Utils.escapeHtml(group.name)}</span>`).join('')}
-                    </div>
+                    <span class="form-label" id="dg-dynamic-label">${_('devices.dynamic_memberships')}</span>
+                    <p class="form-hint">${Utils.escapeHtml(_('devices.dynamic_memberships_hint'))}</p>
+                    <ul class="list" aria-labelledby="dg-dynamic-label">
+                        ${dynamicGroups.map(group => `
+                        <li class="list-row"><span class="row-main">${Utils.escapeHtml(group.name)}${group.tag_filter
+                            ? `<span class="row-sub">${Utils.escapeHtml(_('devices.tag_filter'))}: ${Utils.escapeHtml(group.tag_filter)}</span>` : ''}</span></li>`).join('')}
+                    </ul>
                 </div>` : '';
 
+            let saving = false;
             Modal.show({
-                title: (_('devices.manage_groups') || 'Manage Groups') + ' — ' + deviceId,
+                title: _('devices.manage_groups'),
                 content: `
-                    <div class="device-group-memberships">
-                        <div class="form-group">
-                            <label>${_('devices.manual_groups') || 'Manual groups'}</label>
-                            <div class="group-membership-list">${manualHtml}</div>
-                        </div>
+                    <div class="device-edit-form device-group-memberships">
+                        ${deviceDialogFactsHtml(devices.find(d => d.id === deviceId), deviceId)}
+                        <fieldset class="form-group">
+                            <legend class="form-label">${_('devices.manual_groups')}</legend>
+                            <p class="form-hint">${Utils.escapeHtml(_('devices.manual_groups_hint'))}</p>
+                            <ul class="list group-membership-list">${manualHtml}</ul>
+                        </fieldset>
                         ${dynamicHtml}
                     </div>`,
                 size: 'medium',
@@ -1744,22 +1752,30 @@
                     { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
                     {
                         label: _('actions.save'), class: 'btn-primary', onClick: async () => {
-                            const groupGuids = Array.from(document.querySelectorAll('.group-membership-list input:checked')).map(input => input.value);
+                            if (saving) return;
+                            const groupGuids = Array.from(document.querySelectorAll('.modal-overlay.open .group-membership-list input:checked')).map(input => input.value);
+                            const saveBtn = document.querySelector('.modal-overlay.open .modal-footer .btn-primary');
+                            saving = true;
+                            deviceDialogStatus('');
+                            if (saveBtn) saveBtn.disabled = true;
                             try {
                                 await Utils.api(`/api/devices/${encodeURIComponent(deviceId)}/groups`, {
                                     method: 'PUT',
                                     body: { groupGuids }
                                 });
-                                Notifications.success(_('devices.groups_saved') || 'Groups saved');
+                                Notifications.success(_('devices.groups_saved'));
                                 Modal.close();
                                 loadDevices();
                                 loadDeviceGroups();
                             } catch (err) {
-                                Notifications.error(err.message || _('errors.server_error'));
+                                saving = false;
+                                if (saveBtn) saveBtn.disabled = false;
+                                deviceDialogStatus(err.message || _('errors.server_error'), true);
                             }
                         }
                     }
-                ]
+                ],
+                onOpen: () => deviceDialogStatus('')
             });
         } catch (error) {
             Notifications.error(error.message || _('errors.server_error'));
@@ -2435,8 +2451,38 @@
         }
     }
     
+    /** ID and hostname at the top of a device dialog, so it is clear which device it changes */
+    function deviceDialogFactsHtml(device, deviceId) {
+        const id = device ? device.id : deviceId;
+        return `
+                <dl class="facts device-dialog-facts">
+                    <dt>${_('devices.id')}</dt>
+                    <dd><span class="mono">${Utils.escapeHtml(id)}</span></dd>
+                    ${device ? `<dt>${_('devices.hostname')}</dt>
+                    <dd>${Utils.escapeHtml(device.hostname || '-')}</dd>` : ''}
+                </dl>`;
+    }
+
     /**
-     * Show edit modal
+     * Message line in the open dialog's footer, next to its buttons: says why saving failed.
+     * Created when the dialog opens so screen readers announce later changes.
+     */
+    function deviceDialogStatus(message = '', isError = false) {
+        const footer = document.querySelector('.modal-overlay.open .modal-footer');
+        if (!footer) return;
+        let el = footer.querySelector('.device-dialog-status');
+        if (!el) {
+            el = document.createElement('p');
+            el.className = 'form-status modal-footer-start device-dialog-status';
+            el.setAttribute('aria-live', 'polite');
+            footer.prepend(el);
+        }
+        el.textContent = message;
+        el.classList.toggle('is-error', !!isError);
+    }
+
+    /**
+     * Show edit modal. With options.focusTags (row menu > Manage tags) it shows only the tags.
      */
     function showEditModal(deviceId, options = {}) {
         const device = devices.find(d => d.id === deviceId);
@@ -2446,45 +2492,44 @@
         const editTags = new Set(normalizeTags(device.tags));
         const editTagInputId = 'edit-tag-input';
         const editTagsSelectedId = 'edit-tags-selected';
-        const editTagOptionsId = 'edit-tag-options';
         const editTagSuggestionsId = 'edit-tag-suggestions';
+        const editTagStatusId = 'edit-tag-status';
+        const hasTag = (tag) => [...editTags].some(t => t.toLowerCase() === String(tag).toLowerCase());
+        const setTagStatus = (message) => {
+            const el = document.getElementById(editTagStatusId);
+            if (el) el.textContent = message || '';
+        };
         const renderEditTags = () => {
             const selectedEl = document.getElementById(editTagsSelectedId);
-            const optionsEl = document.getElementById(editTagOptionsId);
-            if (!selectedEl || !optionsEl) return;
+            const suggestionsEl = document.getElementById(editTagSuggestionsId);
+            if (!selectedEl) return;
 
             selectedEl.innerHTML = editTags.size
-                ? [...editTags].map(tag => `
-                    <span class="device-edit-tag-pill">
-                        ${Utils.escapeHtml(tag)}
-                        <button type="button" class="device-edit-tag-remove"
-                                data-edit-tag-remove="${Utils.escapeHtml(tag)}"
-                                title="${Utils.escapeHtml(_('devices.unassign_tag') || _('actions.delete'))}">
-                            <span class="material-icons">close</span>
-                        </button>
-                    </span>
-                `).join('')
-                : `<span class="form-hint">${Utils.escapeHtml(_('device_detail.no_tags'))}</span>`;
+                ? [...editTags].map((tag, i) => `
+                    <li class="list-row">
+                        <span class="row-main" id="edit-tag-name-${i}">${Utils.escapeHtml(tag)}</span>
+                        <span class="row-end">
+                            <button type="button" class="btn btn-sm device-edit-tag-remove"
+                                    data-edit-tag-remove="${Utils.escapeHtml(tag)}"
+                                    aria-describedby="edit-tag-name-${i}">${Utils.escapeHtml(_('actions.remove'))}</button>
+                        </span>
+                    </li>`).join('')
+                : `<li class="list-row is-empty">${Utils.escapeHtml(_('device_detail.no_tags'))}</li>`;
 
-            optionsEl.innerHTML = availableTags
-                .filter(tag => tag && ![...editTags].some(selected => selected.toLowerCase() === tag.toLowerCase()))
-                .map(tag => `
-                    <button type="button" class="device-edit-tag-option"
-                            data-edit-tag-option="${Utils.escapeHtml(tag)}">
-                        <span class="material-icons">add</span>${Utils.escapeHtml(tag)}
-                    </button>
-                `).join('');
+            // Suggestions: existing tags this device does not have yet
+            if (suggestionsEl) {
+                suggestionsEl.innerHTML = availableTags
+                    .filter(tag => tag && !hasTag(tag))
+                    .map(tag => `<option value="${Utils.escapeHtml(tag)}"></option>`)
+                    .join('');
+            }
 
             selectedEl.querySelectorAll('[data-edit-tag-remove]').forEach(button => {
                 button.addEventListener('click', () => {
                     editTags.delete(button.dataset.editTagRemove);
+                    setTagStatus('');
                     renderEditTags();
-                });
-            });
-            optionsEl.querySelectorAll('[data-edit-tag-option]').forEach(button => {
-                button.addEventListener('click', () => {
-                    editTags.add(button.dataset.editTagOption);
-                    renderEditTags();
+                    document.getElementById(editTagInputId)?.focus();
                 });
             });
         };
@@ -2492,161 +2537,165 @@
             const input = document.getElementById(editTagInputId);
             const tag = input?.value.trim();
             if (!tag) return;
-            if ([...editTags].some(existing => existing.toLowerCase() === tag.toLowerCase())) {
-                Notifications.warning(_('device_detail.tag_exists'));
+            if (hasTag(tag)) {
+                setTagStatus(_('device_detail.tag_exists'));
                 return;
             }
             editTags.add(tag);
+            setTagStatus('');
             if (input) input.value = '';
             renderEditTags();
         };
-        
-        Modal.show({
-            title: focusTags
-                ? (_('devices.manage_device_tags') || _('devices.edit_title'))
-                : _('devices.edit_title'),
-            content: `
-                <div class="device-info-grid">
-                    <div class="device-info-item">
-                        <label>${_('devices.id')}</label>
-                        <span>${Utils.escapeHtml(device.id)}</span>
+
+        const tagsField = `
+                    <div class="form-group device-edit-tags-field${focusTags ? ' device-edit-tags-focus' : ''}">
+                        <span class="form-label" id="edit-tags-label">${_('device_detail.tags')}</span>
+                        <p class="form-hint">${Utils.escapeHtml(_('devices.tags_device_hint'))}</p>
+                        <ul id="${editTagsSelectedId}" class="list device-edit-tag-list" aria-labelledby="edit-tags-label"></ul>
                     </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.hostname')}</label>
-                        <span>${Utils.escapeHtml(device.hostname || '-')}</span>
+                    <div class="form-group">
+                        <label class="form-label" for="${editTagInputId}">${_('devices.add_tag_label')}</label>
+                        <div class="device-edit-tag-input-row">
+                            <input type="text" id="${editTagInputId}" class="form-input"
+                                   list="${editTagSuggestionsId}" autocomplete="off"
+                                   aria-describedby="edit-tag-input-hint ${editTagStatusId}" maxlength="50">
+                            <datalist id="${editTagSuggestionsId}"></datalist>
+                            <button type="button" class="btn" id="edit-tag-add-btn">${_('device_detail.add_tag')}</button>
+                        </div>
+                        <p class="form-hint" id="edit-tag-input-hint">${Utils.escapeHtml(_('devices.add_tag_hint'))}</p>
+                        <p class="form-status is-error" id="${editTagStatusId}" aria-live="polite"></p>
+                    </div>`;
+
+        const detailFields = `
+                    <div class="form-group">
+                        <label class="form-label" for="edit-display-name">${_('devices.display_name')}</label>
+                        <input type="text" id="edit-display-name" class="form-input"
+                               value="${Utils.escapeHtml(device.display_name || '')}"
+                               aria-describedby="edit-display-name-hint" maxlength="128" />
+                        <p class="form-hint" id="edit-display-name-hint">${Utils.escapeHtml(_('devices.display_name_hint'))}</p>
                     </div>
-                    <div class="device-info-item full-width">
-                        <label for="edit-display-name">${_('devices.display_name')}</label>
-                        <input type="text" id="edit-display-name" class="form-input" 
-                               value="${Utils.escapeHtml(device.display_name || '')}" 
-                               placeholder="${_('devices.display_name_placeholder')}" maxlength="128" />
-                    </div>
-                    <div class="device-info-item full-width">
-                        <label for="edit-note">${_('devices.note')}</label>
-                        <textarea id="edit-note" class="form-input" rows="2" 
-                                  placeholder="${_('devices.note_placeholder')}" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-note">${_('devices.note')}</label>
+                        <textarea id="edit-note" class="form-input" rows="3" maxlength="512">${Utils.escapeHtml(device.note || '')}</textarea>
                     </div>
                     ${folders.length ? `
-                    <div class="device-info-item full-width">
-                        <label for="edit-folder">${_('device_detail.folder')}</label>
-                        <select id="edit-folder" class="form-select">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-folder">${_('device_detail.folder')}</label>
+                        <select id="edit-folder" class="form-select" aria-describedby="edit-folder-hint">
                             <option value="">${Utils.escapeHtml(_('folders.unassigned'))}</option>
                             ${folders.map(f => `<option value="${Utils.escapeHtml(String(f.id))}"${folderIdsEqual(device.folder_id, f.id) ? ' selected' : ''}>${Utils.escapeHtml(f.name)}</option>`).join('')}
                         </select>
-                    </div>` : ''}
-                    <div class="device-info-item full-width device-edit-tags-field${focusTags ? ' device-edit-tags-focus' : ''}">
-                        <label for="${editTagInputId}">${_('device_detail.tags')}</label>
-                        <p class="form-hint">${Utils.escapeHtml(_('devices.tags_device_hint') || 'Remove a tag here to unassign it from this device only. Use Manage Tags to rename or delete a tag everywhere.')}</p>
-                        <div id="${editTagsSelectedId}" class="device-edit-tags-selected"></div>
-                        <div id="${editTagOptionsId}" class="device-edit-tag-options"></div>
-                        <div class="device-edit-tag-input-row">
-                            <input type="text" id="${editTagInputId}" class="form-input"
-                                   list="${editTagSuggestionsId}"
-                                   placeholder="${_('device_detail.tag_placeholder')}" maxlength="50">
-                            <datalist id="${editTagSuggestionsId}">
-                                ${availableTags.map(tag => `<option value="${Utils.escapeHtml(tag)}"></option>`).join('')}
-                            </datalist>
-                            <button type="button" class="btn btn-secondary btn-sm" id="edit-tag-add-btn">
-                                <span class="material-icons">add</span>${_('device_detail.add_tag')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.username')}</label>
-                        <span>${Utils.escapeHtml(device.username || '-')}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.platform')}</label>
-                        <span>${Utils.escapeHtml(device.platform || '-')}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.version')}</label>
-                        <span>${Utils.escapeHtml(device.version || '-')}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.first_seen')}</label>
-                        <span>${Utils.formatDate(device.created_at)}</span>
-                    </div>
-                    <div class="device-info-item">
-                        <label>${_('devices.last_seen')}</label>
-                        <span>${Utils.formatDate(device.last_online, { empty: _('time.never') })}</span>
-                    </div>
+                        <p class="form-hint" id="edit-folder-hint">${Utils.escapeHtml(_('devices.folder_hint'))}</p>
+                    </div>` : ''}`;
+
+        const moreFacts = `
+                <dl class="facts device-dialog-facts">
+                    <dt>${_('devices.username')}</dt>
+                    <dd>${Utils.escapeHtml(device.username || '-')}</dd>
+                    <dt>${_('devices.platform')}</dt>
+                    <dd>${Utils.escapeHtml(device.platform || '-')}</dd>
+                    <dt>${_('devices.version')}</dt>
+                    <dd>${Utils.escapeHtml(device.version || '-')}</dd>
+                    <dt>${_('devices.first_seen')}</dt>
+                    <dd>${Utils.formatDate(device.created_at)}</dd>
+                    <dt>${_('devices.last_seen')}</dt>
+                    <dd>${Utils.formatDate(device.last_online, { empty: _('time.never') })}</dd>
+                </dl>`;
+
+        let saving = false;
+        const save = async () => {
+            if (saving) return;
+            // A tag typed but not added yet is meant to be saved too
+            const pending = document.getElementById(editTagInputId)?.value.trim();
+            if (pending && !hasTag(pending)) addEditTag();
+
+            const nameInput = document.getElementById('edit-display-name');
+            const noteInput = document.getElementById('edit-note');
+            const displayName = nameInput ? nameInput.value.trim() : (device.display_name || '');
+            const note = noteInput ? noteInput.value.trim() : (device.note || '');
+            const folderSelect = document.getElementById('edit-folder');
+            const tags = [...editTags];
+            const footer = document.querySelector('.modal-overlay.open .modal-footer');
+            const saveBtn = footer?.querySelector('.btn-primary');
+            const cancelBtn = footer?.querySelector('.btn:not(.btn-primary)');
+
+            saving = true;
+            deviceDialogStatus('');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = _('devices.saving');
+            }
+            if (cancelBtn) cancelBtn.disabled = true;
+
+            try {
+                if (nameInput || noteInput) {
+                    await Utils.api(`/api/devices/${encodeURIComponent(device.id)}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ display_name: displayName, note }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                }
+                const tagResult = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/tags`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ tags }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                // Folder: the keyboard and touch way to do what dragging a row onto a folder does
+                if (folderSelect && !folderIdsEqual(folderSelect.value || null, device.folder_id || null)) {
+                    const folderId = folderSelect.value ? Number(folderSelect.value) : null;
+                    await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/folder`, {
+                        method: 'PATCH',
+                        body: { folderId }
+                    });
+                    device.folder_id = folderId;
+                    updateFolderCounts();
+                }
+
+                device.display_name = displayName;
+                device.note = note;
+                device.tags = tagResult?.tags || tags;
+                availableTags = Array.from(new Set(availableTags.concat(device.tags))).sort((a, b) => a.localeCompare(b));
+                applyFilters();
+                document.dispatchEvent(new CustomEvent('devices:updated', {
+                    detail: {
+                        id: device.id,
+                        display_name: displayName,
+                        note: note,
+                        tags: device.tags
+                    }
+                }));
+
+                Notifications.success(_('common.saved'), device.display_name || device.hostname || device.id);
+                Modal.close();
+                loadDevices();
+            } catch (err) {
+                saving = false;
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = _('actions.save');
+                }
+                if (cancelBtn) cancelBtn.disabled = false;
+                deviceDialogStatus(err.message || _('errors.server_error'), true);
+            }
+        };
+
+        Modal.show({
+            title: focusTags ? _('devices.manage_device_tags') : _('devices.edit_title'),
+            content: `
+                <div class="device-edit-form${focusTags ? ' is-tags-only' : ''}">
+                    ${deviceDialogFactsHtml(device)}
+                    ${focusTags ? '' : detailFields}
+                    ${tagsField}
+                    ${focusTags ? '' : moreFacts}
                 </div>
             `,
             buttons: [
-                { label: _('actions.save'), class: 'btn-primary', onClick: async () => {
-                    const displayName = document.getElementById('edit-display-name').value.trim();
-                    const note = document.getElementById('edit-note').value.trim();
-                    const folderSelect = document.getElementById('edit-folder');
-                    const tags = [...editTags];
-                    const saveBtn = document.querySelector('.modal-overlay.open [data-btn-index="0"]');
-                    const closeBtn = document.querySelector('.modal-overlay.open [data-btn-index="1"]');
-                    const restoreButtons = () => {
-                        if (saveBtn) {
-                            saveBtn.disabled = false;
-                            saveBtn.textContent = _('actions.save');
-                        }
-                        if (closeBtn) closeBtn.disabled = false;
-                    };
-
-                    if (saveBtn) {
-                        saveBtn.disabled = true;
-                        saveBtn.textContent = _('common.loading');
-                    }
-                    if (closeBtn) closeBtn.disabled = true;
-
-                    try {
-                        await Utils.api(`/api/devices/${encodeURIComponent(device.id)}`, {
-                            method: 'PATCH',
-                            body: JSON.stringify({ display_name: displayName, note }),
-                            headers: { 'Content-Type': 'application/json' }
-                        });
-                        const tagResult = await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/tags`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ tags }),
-                            headers: { 'Content-Type': 'application/json' }
-                        });
-                        // Folder: the keyboard and touch way to do what dragging a row onto a folder does
-                        if (folderSelect && !folderIdsEqual(folderSelect.value || null, device.folder_id || null)) {
-                            const folderId = folderSelect.value ? Number(folderSelect.value) : null;
-                            await Utils.api(`/api/devices/${encodeURIComponent(device.id)}/folder`, {
-                                method: 'PATCH',
-                                body: { folderId }
-                            });
-                            device.folder_id = folderId;
-                            updateFolderCounts();
-                        }
-
-                        device.display_name = displayName;
-                        device.note = note;
-                        device.tags = tagResult?.tags || tags;
-                        availableTags = Array.from(new Set(availableTags.concat(device.tags))).sort((a, b) => a.localeCompare(b));
-                        applyFilters();
-                        document.dispatchEvent(new CustomEvent('devices:updated', {
-                            detail: {
-                                id: device.id,
-                                display_name: displayName,
-                                note: note,
-                                tags: device.tags
-                            }
-                        }));
-
-                        if (saveBtn) {
-                            saveBtn.textContent = _('common.saved');
-                        }
-
-                        Notifications.success(_('common.saved'), _('devices.display_name'));
-                        setTimeout(() => Modal.close(), 250);
-                        loadDevices();
-                    } catch (err) {
-                        restoreButtons();
-                        Notifications.error(err.message || _('errors.server_error'));
-                    }
-                }},
-                { label: _('actions.close'), class: 'btn-secondary', onClick: () => Modal.close() }
+                { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: _('actions.save'), class: 'btn-primary', onClick: save }
             ],
             size: 'medium',
             onOpen: () => {
+                deviceDialogStatus('');
                 renderEditTags();
                 const input = document.getElementById(editTagInputId);
                 const addButton = document.getElementById('edit-tag-add-btn');
@@ -2657,11 +2706,8 @@
                         addEditTag();
                     }
                 });
-                if (focusTags) {
-                    const field = document.querySelector('.device-edit-tags-field');
-                    field?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                    setTimeout(() => input?.focus(), 100);
-                }
+                input?.addEventListener('input', () => setTagStatus(''));
+                if (focusTags) input?.focus();
             }
         });
     }
@@ -2691,32 +2737,26 @@
     function showManageTagsModal() {
         const renderList = () => {
             if (!availableTags.length) {
-                return `<div class="manage-tags-empty">${Utils.escapeHtml(_('devices.no_tags') || 'No tags')}</div>`;
+                return `<p class="state manage-tags-empty">${Utils.escapeHtml(_('devices.no_tags'))}</p>`;
             }
-            return `<ul class="manage-tags-list">${availableTags.map(tag => {
+            return `<ul class="list manage-tags-list">${availableTags.map((tag, i) => {
                 const deviceCount = countDevicesWithTag(tag);
                 const groupCount = countGroupsWithTag(tag);
                 const metaParts = [
-                    `${deviceCount} ${deviceCount === 1 ? (_('devices.tag_device_one') || 'device') : (_('devices.tag_device_many') || 'devices')}`
+                    `${deviceCount} ${deviceCount === 1 ? _('devices.tag_device_one') : _('devices.tag_device_many')}`
                 ];
                 if (groupCount > 0) {
-                    metaParts.push(`${groupCount} ${groupCount === 1 ? (_('devices.tag_group_one') || 'dynamic group') : (_('devices.tag_group_many') || 'dynamic groups')}`);
+                    metaParts.push(`${groupCount} ${groupCount === 1 ? _('devices.tag_group_one') : _('devices.tag_group_many')}`);
                 }
-                return `<li class="manage-tags-row" data-tag="${Utils.escapeHtml(tag)}">
-                    <div class="manage-tags-info">
-                        <span class="manage-tags-name">${Utils.escapeHtml(tag)}</span>
-                        <span class="manage-tags-meta">${Utils.escapeHtml(metaParts.join(' · '))}</span>
-                    </div>
-                    <div class="manage-tags-actions">
-                        <button type="button" class="btn btn-secondary btn-sm manage-tag-rename" data-tag="${Utils.escapeHtml(tag)}" title="${Utils.escapeHtml(_('devices.rename_tag') || 'Rename')}">
-                            <span class="material-icons">edit</span>
-                            <span>${Utils.escapeHtml(_('devices.rename_tag') || 'Rename')}</span>
-                        </button>
-                        <button type="button" class="btn btn-danger btn-sm manage-tag-delete" data-tag="${Utils.escapeHtml(tag)}" title="${Utils.escapeHtml(_('devices.delete_tag') || 'Delete')}">
-                            <span class="material-icons">delete</span>
-                            <span>${Utils.escapeHtml(_('devices.delete_tag') || 'Delete')}</span>
-                        </button>
-                    </div>
+                return `<li class="list-row manage-tags-row" data-tag="${Utils.escapeHtml(tag)}">
+                    <span class="row-main manage-tags-info">
+                        <span class="row-title manage-tags-name" id="manage-tag-name-${i}">${Utils.escapeHtml(tag)}</span>
+                        <span class="row-sub manage-tags-meta">${Utils.escapeHtml(metaParts.join(', '))}</span>
+                    </span>
+                    <span class="row-end manage-tags-actions">
+                        <button type="button" class="btn btn-sm manage-tag-rename" data-tag="${Utils.escapeHtml(tag)}" aria-describedby="manage-tag-name-${i}">${Utils.escapeHtml(_('devices.rename_tag'))}</button>
+                        <button type="button" class="btn btn-sm btn-danger-quiet manage-tag-delete" data-tag="${Utils.escapeHtml(tag)}" aria-describedby="manage-tag-name-${i}">${Utils.escapeHtml(_('devices.delete_tag'))}</button>
+                    </span>
                 </li>`;
             }).join('')}</ul>`;
         };

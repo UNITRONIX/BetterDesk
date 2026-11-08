@@ -360,7 +360,7 @@
         "revoke": "Révoquer",
         "access_policy": "Access Policy",
         "filter_by_tags": "Nach Tags filtern",
-        "no_tags": "No tags",
+        "no_tags": "Aucune balise",
         "all_groups": "Alle Gruppen",
         "create_group": "Gruppe erstellen",
         "manage_groups": "Gruppen verwalten",
@@ -368,7 +368,7 @@
         "group_name_placeholder": "z. B. Medien-PCs",
         "dynamic_group": "Dynamische Gruppe aus Tag",
         "dynamic_group_hint": "Geräte mit diesem Tag treten automatisch bei.",
-        "tag_filter": "Tag filter",
+        "tag_filter": "Filtre de balise",
         "group_allowed_users": "Zugelassene Benutzer",
         "group_allowed_users_hint": "Leer lassen, damit die Gruppe für alle mit Geräteberechtigungen sichtbar bleibt.",
         "group_allowed_user_groups": "Zugelassene Benutzergruppen",
@@ -518,7 +518,14 @@
         "connect_phone_web_action": "Ouvrir le visualiseur web",
         "connect_phone_app": "Application RustDesk",
         "connect_phone_app_desc": "Ouvre l’application RustDesk sur ce téléphone avec l’ID de cet appareil. Rien ne se passe si l’application n’est pas installée.",
-        "connect_phone_app_action": "Ouvrir dans RustDesk"
+        "connect_phone_app_action": "Ouvrir dans RustDesk",
+        "saving": "Enregistrement…",
+        "add_tag_label": "Ajouter une balise",
+        "add_tag_hint": "Choisissez une balise utilisée par d'autres appareils ou saisissez-en une nouvelle.",
+        "display_name_hint": "Affiché dans la liste à la place du nom d'hôte. Laissez vide pour afficher le nom d'hôte.",
+        "folder_hint": "Vous pouvez aussi faire glisser l'appareil sur un dossier dans la liste.",
+        "manual_groups_hint": "Cochez les groupes auxquels cet appareil appartient.",
+        "dynamic_memberships_hint": "L'appareil est dans ces groupes à cause de ses balises. Modifiez ses balises pour les changer."
     },
     "keys": {
         "title": "Tableau de bord",
@@ -1495,7 +1502,7 @@
         "dismiss": "Ignorer",
         "view_all": "Tout afficher",
         "add": "Add",
-        "remove": "Remove",
+        "remove": "Retirer",
         "retry": "Réessayer",
         "show_value": "Afficher",
         "hide_value": "Masquer"

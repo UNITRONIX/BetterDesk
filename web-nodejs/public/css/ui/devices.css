@@ -632,7 +632,6 @@
 .group-membership-option,
 .strategy-assign-option,
 .strategy-perm-option,
-.device-edit-tag-option,
 .day-checkbox {
     display: flex;
     align-items: center;
@@ -659,55 +658,37 @@
     color: var(--text-muted);
 }
 
-.manage-tags-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    min-height: var(--row-h);
-    border-bottom: 1px solid var(--rule);
+/* Device dialogs (Edit, Manage tags, Manage groups): one column, label
+   above each field, hint under it */
+.device-dialog-facts {
+    margin-bottom: var(--space-5);
 }
 
-.manage-tags-info {
-    flex: 1;
+/* Right under the dialog header a top rule would read as an empty row */
+.device-edit-form > .device-dialog-facts:first-child {
+    margin-top: calc(-1 * var(--row-pad-y));
+    border-top: 0;
+}
+
+.device-edit-form > .device-dialog-facts:last-child {
+    margin-top: var(--space-5);
+    margin-bottom: 0;
+}
+
+.device-edit-form fieldset {
     min-width: 0;
-}
-
-.manage-tags-meta,
-.manage-tags-hint {
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-}
-
-.manage-tags-actions {
-    display: flex;
-    gap: var(--space-1);
-}
-
-/* Tag editor in the edit dialog: tags as text with a remove button */
-.device-edit-tags-selected {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
-    margin-bottom: var(--space-2);
-}
-
-.device-edit-tag-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-}
-
-.device-edit-tag-remove {
-    padding: 0 2px;
+    margin: 0 0 var(--space-4);
+    padding: 0;
     border: 0;
-    background: transparent;
-    color: var(--text-muted);
-    font: inherit;
-    cursor: pointer;
 }
 
-.device-edit-tag-remove:hover {
-    color: var(--danger);
+.device-edit-form legend {
+    margin-bottom: var(--space-1);
+    padding: 0;
+}
+
+.device-edit-form .form-hint + .list {
+    margin-top: var(--space-2);
 }
 
 .device-edit-tag-input-row {
@@ -715,11 +696,32 @@
     gap: var(--space-2);
 }
 
-.device-edit-tag-options {
-    display: flex;
-    flex-direction: column;
-    max-height: 180px;
-    overflow-y: auto;
+.device-edit-tag-input-row .form-input {
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* The whole row of a group checkbox is the target */
+.group-membership-list .list-row {
+    padding-block: 0;
+}
+
+.group-membership-list .check-field {
+    flex: 1;
+    align-self: stretch;
+    align-content: center;
+    padding-block: var(--row-pad-y);
+}
+
+/* Why saving failed, next to the dialog's buttons */
+.device-dialog-status {
+    margin: 0;
+    align-self: center;
+}
+
+.manage-tags-hint {
+    margin-bottom: var(--space-3);
 }
 
 /* Delete confirmation */
@@ -742,8 +744,7 @@
 }
 
 /* Older details dialog (label/value rows) */
-.device-details .detail-row,
-.device-info-grid .device-info-item {
+.device-details .detail-row {
     display: grid;
     grid-template-columns: minmax(120px, max-content) 1fr;
     gap: var(--space-4);

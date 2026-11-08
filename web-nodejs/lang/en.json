@@ -378,7 +378,7 @@
         "tag_rename_identical": "New tag name must be different",
         "tags_backend_unsupported": "Device tags are not supported with the current backend",
         "tags_manage_hint": "Rename or delete tags across all devices you can see. Removing a tag from one device is done in Edit or Device details.",
-        "tags_device_hint": "Remove a tag here to unassign it from this device only. Use Manage Tags to rename or delete a tag everywhere.",
+        "tags_device_hint": "Removing a tag here takes it off this device only. To rename or delete a tag on all devices, use Manage tags in the Tags filter.",
         "unassign_tag": "Remove from this device",
         "tag_device_one": "device",
         "tag_device_many": "devices",
@@ -522,7 +522,14 @@
         "connect_phone_web_action": "Open web viewer",
         "connect_phone_app": "RustDesk app",
         "connect_phone_app_desc": "Opens the RustDesk app on this phone with this device's ID. Nothing happens if the app isn't installed.",
-        "connect_phone_app_action": "Open in RustDesk"
+        "connect_phone_app_action": "Open in RustDesk",
+        "saving": "Saving…",
+        "add_tag_label": "Add a tag",
+        "add_tag_hint": "Pick a tag that other devices use, or type a new one.",
+        "display_name_hint": "Shown in the list instead of the hostname. Leave empty to show the hostname.",
+        "folder_hint": "You can also drag the device onto a folder in the list.",
+        "manual_groups_hint": "Tick the groups this device belongs to.",
+        "dynamic_memberships_hint": "The device is in these groups because of its tags. Change its tags to change them."
     },
     "keys": {
         "title": "Server Keys",

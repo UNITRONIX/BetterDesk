@@ -396,7 +396,7 @@
         "note_placeholder": "Voer een notitie in...",
         "tags": "Tags",
         "filter_by_tags": "Filteren op tags",
-        "no_tags": "No tags",
+        "no_tags": "Geen tags",
         "all_groups": "Alle groepen",
         "create_group": "Groep maken",
         "manage_groups": "Groepen beheren",
@@ -404,7 +404,7 @@
         "group_name_placeholder": "bijv. mediapc’s",
         "dynamic_group": "Dynamische groep op tag",
         "dynamic_group_hint": "Apparaten met deze tag worden automatisch toegevoegd.",
-        "tag_filter": "Tag filter",
+        "tag_filter": "Tagfilter",
         "group_allowed_users": "Toegestane gebruikers",
         "group_allowed_users_hint": "Laat leeg om de groep zichtbaar te houden voor iedereen met apparaatmachtigingen.",
         "group_tag_required": "Tagfilter is verplicht voor dynamische groepen",
@@ -514,7 +514,14 @@
         "connect_phone_web_action": "Webviewer openen",
         "connect_phone_app": "RustDesk-app",
         "connect_phone_app_desc": "Opent de RustDesk-app op deze telefoon met de ID van dit apparaat. Er gebeurt niets als de app niet is geïnstalleerd.",
-        "connect_phone_app_action": "Openen in RustDesk"
+        "connect_phone_app_action": "Openen in RustDesk",
+        "saving": "Opslaan…",
+        "add_tag_label": "Tag toevoegen",
+        "add_tag_hint": "Kies een tag die andere apparaten gebruiken, of typ een nieuwe.",
+        "display_name_hint": "Wordt in de lijst getoond in plaats van de hostnaam. Laat leeg om de hostnaam te tonen.",
+        "folder_hint": "U kunt het apparaat ook in de lijst naar een map slepen.",
+        "manual_groups_hint": "Vink de groepen aan waartoe dit apparaat behoort.",
+        "dynamic_memberships_hint": "Het apparaat zit in deze groepen vanwege zijn tags. Wijzig de tags om dit te veranderen."
     },
     "keys": {
         "title": "Serversleutels",

@@ -360,7 +360,7 @@
         "revoke": "撤銷",
         "access_policy": "訪問策略",
         "filter_by_tags": "按標籤篩選",
-        "no_tags": "No tags",
+        "no_tags": "沒有標籤",
         "all_groups": "所有分組",
         "create_group": "創建分組",
         "manage_groups": "管理分組",
@@ -368,7 +368,7 @@
         "group_name_placeholder": "例如：媒體電腦",
         "dynamic_group": "基於標籤的動態分組",
         "dynamic_group_hint": "帶有此標籤的設備會自動加入。",
-        "tag_filter": "Tag filter",
+        "tag_filter": "標籤篩選",
         "group_allowed_users": "允許的用戶",
         "group_allowed_users_hint": "留空可讓所有擁有設備權限的用戶看到此分組。",
         "group_allowed_user_groups": "允許的用戶組",
@@ -518,7 +518,14 @@
         "connect_phone_web_action": "開啟網頁檢視器",
         "connect_phone_app": "RustDesk 應用程式",
         "connect_phone_app_desc": "以此裝置的 ID 開啟這支手機上的 RustDesk 應用程式。若未安裝應用程式則不會有任何反應。",
-        "connect_phone_app_action": "在 RustDesk 中開啟"
+        "connect_phone_app_action": "在 RustDesk 中開啟",
+        "saving": "正在儲存…",
+        "add_tag_label": "新增標籤",
+        "add_tag_hint": "選擇其他裝置使用的標籤，或輸入新標籤。",
+        "display_name_hint": "在清單中取代主機名稱顯示。留空則顯示主機名稱。",
+        "folder_hint": "也可以在清單中把裝置拖到資料夾上。",
+        "manual_groups_hint": "勾選此裝置所屬的群組。",
+        "dynamic_memberships_hint": "此裝置因其標籤而在這些群組中。要變更，請修改其標籤。"
     },
     "keys": {
         "title": "服務器密鑰",

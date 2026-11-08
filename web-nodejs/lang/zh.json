@@ -396,7 +396,7 @@
         },
         "tags": "Tags",
         "filter_by_tags": "按标签筛选",
-        "no_tags": "No tags",
+        "no_tags": "没有标签",
         "all_groups": "所有分组",
         "create_group": "创建分组",
         "manage_groups": "管理分组",
@@ -404,7 +404,7 @@
         "group_name_placeholder": "例如：媒体电脑",
         "dynamic_group": "基于标签的动态分组",
         "dynamic_group_hint": "带有此标签的设备会自动加入。",
-        "tag_filter": "Tag filter",
+        "tag_filter": "标签筛选",
         "group_allowed_users": "允许的用户",
         "group_allowed_users_hint": "留空可让所有拥有设备权限的用户看到此分组。",
         "group_tag_required": "动态分组必须设置标签筛选",
@@ -514,7 +514,14 @@
         "connect_phone_web_action": "打开网页查看器",
         "connect_phone_app": "RustDesk 应用",
         "connect_phone_app_desc": "用此设备的 ID 打开这部手机上的 RustDesk 应用。如果未安装应用，则不会有任何反应。",
-        "connect_phone_app_action": "在 RustDesk 中打开"
+        "connect_phone_app_action": "在 RustDesk 中打开",
+        "saving": "正在保存…",
+        "add_tag_label": "添加标签",
+        "add_tag_hint": "选择其他设备使用的标签，或输入新标签。",
+        "display_name_hint": "在列表中代替主机名显示。留空则显示主机名。",
+        "folder_hint": "也可以在列表中把设备拖到文件夹上。",
+        "manual_groups_hint": "勾选此设备所属的组。",
+        "dynamic_memberships_hint": "此设备因其标签而在这些组中。要更改，请修改其标签。"
     },
     "keys": {
         "title": "服务器密钥",

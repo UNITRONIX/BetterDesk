@@ -396,7 +396,7 @@
         },
         "tags": "Tags",
         "filter_by_tags": "Filtrar por etiquetas",
-        "no_tags": "No tags",
+        "no_tags": "Sin etiquetas",
         "all_groups": "Todos los grupos",
         "create_group": "Crear grupo",
         "manage_groups": "Administrar grupos",
@@ -404,7 +404,7 @@
         "group_name_placeholder": "p. ej. equipos multimedia",
         "dynamic_group": "Grupo dinámico por etiqueta",
         "dynamic_group_hint": "Los dispositivos con esta etiqueta se unirán automáticamente.",
-        "tag_filter": "Tag filter",
+        "tag_filter": "Filtro de etiqueta",
         "group_allowed_users": "Usuarios permitidos",
         "group_allowed_users_hint": "Déjalo vacío para que el grupo siga visible para todos los usuarios con permisos de dispositivo.",
         "group_tag_required": "El filtro de etiqueta es obligatorio para grupos dinámicos",
@@ -514,7 +514,14 @@
         "connect_phone_web_action": "Abrir visor web",
         "connect_phone_app": "App de RustDesk",
         "connect_phone_app_desc": "Abre la app de RustDesk en este teléfono con el ID de este dispositivo. Si la app no está instalada, no ocurre nada.",
-        "connect_phone_app_action": "Abrir en RustDesk"
+        "connect_phone_app_action": "Abrir en RustDesk",
+        "saving": "Guardando…",
+        "add_tag_label": "Añadir una etiqueta",
+        "add_tag_hint": "Elija una etiqueta que usen otros dispositivos o escriba una nueva.",
+        "display_name_hint": "Se muestra en la lista en lugar del nombre de host. Déjelo vacío para mostrar el nombre de host.",
+        "folder_hint": "También puede arrastrar el dispositivo a una carpeta de la lista.",
+        "manual_groups_hint": "Marque los grupos a los que pertenece este dispositivo.",
+        "dynamic_memberships_hint": "El dispositivo está en estos grupos por sus etiquetas. Cambie sus etiquetas para cambiarlos."
     },
     "keys": {
         "title": "Panel",
@@ -1473,7 +1480,7 @@
         "view_all": "Ver todo",
         "cdap_viewer": "CDAP Snapshot Viewer",
         "add": "Add",
-        "remove": "Remove",
+        "remove": "Quitar",
         "retry": "Reintentar",
         "show_value": "Mostrar",
         "hide_value": "Ocultar"

@@ -396,7 +396,7 @@
         "note_placeholder": "Poznámky k tomuto zařízení",
         "tags": "Tags",
         "filter_by_tags": "Filtrovat podle štítků",
-        "no_tags": "No tags",
+        "no_tags": "Žádné štítky",
         "all_groups": "Všechny skupiny",
         "create_group": "Vytvořit skupinu",
         "manage_groups": "Spravovat skupiny",
@@ -404,7 +404,7 @@
         "group_name_placeholder": "např. Mediální PC",
         "dynamic_group": "Dynamická skupina ze štítku",
         "dynamic_group_hint": "Zařízení s tímto štítkem se připojí automaticky.",
-        "tag_filter": "Tag filter",
+        "tag_filter": "Filtr štítků",
         "group_allowed_users": "Povolení uživatelé",
         "group_allowed_users_hint": "Ponechte prázdné, aby skupina zůstala viditelná pro všechny s oprávněními k zařízením.",
         "group_tag_required": "Filtr štítku je vyžadován pro dynamické skupiny",
@@ -514,7 +514,14 @@
         "connect_phone_web_action": "Otevřít webový prohlížeč",
         "connect_phone_app": "Aplikace RustDesk",
         "connect_phone_app_desc": "Otevře aplikaci RustDesk v tomto telefonu s ID tohoto zařízení. Pokud aplikace není nainstalovaná, nic se nestane.",
-        "connect_phone_app_action": "Otevřít v RustDesku"
+        "connect_phone_app_action": "Otevřít v RustDesku",
+        "saving": "Ukládání…",
+        "add_tag_label": "Přidat štítek",
+        "add_tag_hint": "Vyberte štítek, který používají jiná zařízení, nebo napište nový.",
+        "display_name_hint": "Zobrazí se v seznamu místo názvu hostitele. Ponechte prázdné, aby se zobrazoval název hostitele.",
+        "folder_hint": "Zařízení můžete také přetáhnout na složku v seznamu.",
+        "manual_groups_hint": "Zaškrtněte skupiny, do kterých toto zařízení patří.",
+        "dynamic_memberships_hint": "Zařízení je v těchto skupinách kvůli svým štítkům. Chcete-li to změnit, změňte jeho štítky."
     },
     "keys": {
         "title": "Klíče serveru",
