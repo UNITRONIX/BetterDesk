@@ -1339,9 +1339,11 @@ td.state-cell {
     grid-column: 2;
 }
 
-/* Save bar: sticks to the bottom of the view while a form has changes */
+/* Save bar: at the end of its form; it sticks to the bottom of the view
+   only while the form has unsaved changes, so several forms on one page
+   don't cover each other */
 .save-bar {
-    position: sticky;
+    position: static;
     bottom: 0;
     z-index: 5;
     display: flex;
@@ -1356,6 +1358,10 @@ td.state-cell {
 .save-status {
     margin-inline-end: auto;
     color: var(--text-muted);
+}
+
+.save-bar.is-dirty {
+    position: sticky;
 }
 
 .save-bar.is-dirty .save-status {
