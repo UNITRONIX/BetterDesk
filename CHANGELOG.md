@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.215] — 2026-11-08
+
 ### Added
 - **Short-code pairing (`host` + 6 characters):** operator mints a one-time code on the new
   `/pairing` page (Generator → pairing section); the user types only the server address and
@@ -4574,3 +4581,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.212]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.211...v3.5.212
 [3.5.213]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.212...v3.5.213
 [3.5.214]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.213...v3.5.214
+[3.5.215]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.214...v3.5.215
