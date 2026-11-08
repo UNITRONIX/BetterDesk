@@ -179,6 +179,10 @@ const DeviceDetail = (function () {
             if (overlayEl._escHandler) {
                 document.removeEventListener('keydown', overlayEl._escHandler);
             }
+            const opener = overlayEl._opener;
+            if (opener && document.contains(opener) && typeof opener.focus === 'function') {
+                opener.focus({ preventScroll: true });
+            }
             overlayEl.classList.remove('open');
             setTimeout(() => {
                 if (overlayEl) {
@@ -199,7 +203,28 @@ const DeviceDetail = (function () {
 
         overlayEl = document.createElement('div');
         overlayEl.className = 'device-panel-overlay';
-        overlayEl.innerHTML = '<div class="device-panel" id="device-panel-inner"></div>';
+        overlayEl.innerHTML = '<div class="device-panel" id="device-panel-inner" role="dialog" aria-modal="true" aria-labelledby="device-panel-title" tabindex="-1"></div>';
+        overlayEl._opener = document.activeElement;
+        overlayEl._focused = false;
+
+        // Keep Tab inside the panel while it is open
+        overlayEl.addEventListener('keydown', function (e) {
+            if (e.key !== 'Tab') return;
+            const panel = overlayEl.querySelector('#device-panel-inner');
+            const focusable = Array.from(panel.querySelectorAll(
+                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )).filter(el => el.offsetParent !== null);
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
 
         // Close on overlay click — skip if a modal dialog is open on top
         overlayEl.addEventListener('click', function (e) {
@@ -244,11 +269,26 @@ const DeviceDetail = (function () {
         if (!overlayEl || !device) return;
         const inner = overlayEl.querySelector('#device-panel-inner');
 
+        // Auto-refresh re-renders the panel; keep keyboard focus where it was
+        const focusedAction = document.activeElement && inner.contains(document.activeElement)
+            ? (document.activeElement.id || document.activeElement.dataset.tab || document.activeElement.dataset.action || '')
+            : '';
+
         inner.innerHTML = _headerHTML() + _tabsHTML() + _contentHTML() + _footerHTML();
 
         _attachEvents();
         _bindAvailabilityControls();
         _switchTab(activeTab);
+
+        if (!overlayEl._focused) {
+            overlayEl._focused = true;
+            const closeBtn = inner.querySelector('.device-panel-close');
+            if (closeBtn) closeBtn.focus({ preventScroll: true });
+        } else if (focusedAction) {
+            const again = inner.querySelector('#' + CSS.escape(focusedAction)) ||
+                inner.querySelector(`[data-tab="${CSS.escape(focusedAction)}"], [data-action="${CSS.escape(focusedAction)}"]`);
+            if (again) again.focus({ preventScroll: true });
+        }
     }
 
     // ── Header ──
@@ -290,30 +330,25 @@ const DeviceDetail = (function () {
         <div class="device-panel-header">
             <div class="device-panel-header-top">
                 <div class="device-panel-identity">
+                    <h2 class="device-panel-title" id="device-panel-title">${Utils.escapeHtml(d.display_name || d.hostname || d.note || d.id)}</h2>
                     <div class="device-panel-id-row">
-                        <span class="device-panel-device-id">${Utils.escapeHtml(d.id)}</span>
-                        <button class="device-panel-copy-btn" data-copy="${Utils.escapeHtml(d.id)}" title="${_('actions.copy')}">
-                            <span class="material-icons">content_copy</span>
+                        <span class="device-panel-device-id mono">${Utils.escapeHtml(d.id)}</span>
+                        <button type="button" class="device-panel-copy-btn copy-btn" data-copy="${Utils.escapeHtml(d.id)}" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${Utils.escapeHtml(d.id)}">
+                            <span class="material-icons" aria-hidden="true">content_copy</span>
                         </button>
                     </div>
-                    <div class="device-panel-subtitle">
-                        <span class="material-icons">${platformIcon}</span>
-                        <span>${Utils.escapeHtml(d.display_name || d.hostname || d.note || '-')}</span>
-                        ${d.username ? ` &middot; <span>${Utils.escapeHtml(d.username)}</span>` : ''}
-                    </div>
                 </div>
-                <button class="device-panel-close" title="${_('actions.close')}">
-                    <span class="material-icons">close</span>
+                <button type="button" class="device-panel-close btn-icon" title="${_('actions.close')}" aria-label="${_('actions.close')}">
+                    <span class="material-icons" aria-hidden="true">close</span>
                 </button>
             </div>
             <div class="device-panel-status-bar">
-                <span class="device-panel-status-badge ${statusClass}"${statusTitle ? ` title="${Utils.escapeHtml(statusTitle)}"` : ''}>
-                    <span class="status-dot"></span>${statusLabel}
-                </span>
+                <span class="device-panel-status-badge status ${statusClass}"${statusTitle ? ` title="${Utils.escapeHtml(statusTitle)}"` : ''}>${statusLabel}</span>
                 <span class="device-panel-platform-badge">
-                    <span class="material-icons">${platformIcon}</span>
+                    <span class="material-icons" aria-hidden="true">${platformIcon}</span>
                     ${Utils.escapeHtml(platformLabel)}
                 </span>
+                ${d.username ? `<span class="device-panel-user">${Utils.escapeHtml(d.username)}</span>` : ''}
             </div>
         </div>`;
     }
@@ -335,11 +370,9 @@ const DeviceDetail = (function () {
             { id: 'tags',      icon: 'sell',             label: _('device_detail.tab_tags') },
             { id: 'actions',   icon: 'play_arrow',       label: _('device_detail.tab_actions') }
         ].filter(tab => !supportAgent || !['services', 'processes', 'events', 'activity', 'files'].includes(tab.id));
-        return `<div class="device-panel-tabs">` +
+        return `<div class="device-panel-tabs" role="tablist">` +
             tabs.map(t =>
-                `<button class="device-panel-tab${t.id === activeTab ? ' active' : ''}" data-tab="${t.id}">
-                    <span class="material-icons">${t.icon}</span>${t.label}
-                </button>`
+                `<button type="button" class="device-panel-tab${t.id === activeTab ? ' active' : ''}" data-tab="${t.id}" role="tab" aria-selected="${t.id === activeTab ? 'true' : 'false'}">${t.label}</button>`
             ).join('') +
             `</div>`;
     }
@@ -901,24 +934,14 @@ const DeviceDetail = (function () {
             <div class="device-panel-section">
                 <div class="device-panel-section-title"><span class="material-icons">settings_backup_restore</span> ${_('devices.restore_action')}</div>
                 <div class="device-panel-actions-grid">
-                    <div class="device-panel-action-card" data-action="restore">
-                        <div class="device-panel-action-icon green">
-                            <span class="material-icons">restore</span>
-                        </div>
-                        <div class="device-panel-action-text">
-                            <div class="device-panel-action-title">${_('devices.restore_action')}</div>
-                            <div class="device-panel-action-desc">${_('devices.restore_confirm', { id: d.id })}</div>
-                        </div>
-                    </div>
-                    <div class="device-panel-action-card" data-action="permanent-delete">
-                        <div class="device-panel-action-icon red">
-                            <span class="material-icons">delete_forever</span>
-                        </div>
-                        <div class="device-panel-action-text">
-                            <div class="device-panel-action-title">${_('devices.permanent_delete_title')}</div>
-                            <div class="device-panel-action-desc">${_('devices.permanent_delete_confirm', { id: d.id })}</div>
-                        </div>
-                    </div>
+                    <button type="button" class="device-panel-action-card" data-action="restore">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('devices.restore_action')}</span>
+                            <span class="device-panel-action-desc">${_('devices.restore_confirm', { id: d.id })}</span></span>
+                    </button>
+                    <button type="button" class="device-panel-action-card" data-action="permanent-delete">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('devices.permanent_delete_title')}</span>
+                            <span class="device-panel-action-desc">${_('devices.permanent_delete_confirm', { id: d.id })}</span></span>
+                    </button>
                 </div>
             </div>`;
             html += `</div>`;
@@ -930,24 +953,14 @@ const DeviceDetail = (function () {
         <div class="device-panel-section">
             <div class="device-panel-section-title"><span class="material-icons">link</span> ${_('device_detail.section_connect')}</div>
             <div class="device-panel-actions-grid">
-                <div class="device-panel-action-card" data-action="connect-desktop">
-                    <div class="device-panel-action-icon purple">
-                        <span class="material-icons">computer</span>
-                    </div>
-                    <div class="device-panel-action-text">
-                        <div class="device-panel-action-title">${_('device_detail.action_connect_desktop')}</div>
-                        <div class="device-panel-action-desc">${_('device_detail.action_connect_desktop_desc')}</div>
-                    </div>
-                </div>
-                <div class="device-panel-action-card" data-action="connect-web">
-                    <div class="device-panel-action-icon blue">
-                        <span class="material-icons">screen_share</span>
-                    </div>
-                    <div class="device-panel-action-text">
-                        <div class="device-panel-action-title">${_('device_detail.action_connect_web')}</div>
-                        <div class="device-panel-action-desc">${_('device_detail.action_connect_web_desc')}</div>
-                    </div>
-                </div>
+                <button type="button" class="device-panel-action-card" data-action="connect-desktop">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('device_detail.action_connect_desktop')}</span>
+                        <span class="device-panel-action-desc">${_('device_detail.action_connect_desktop_desc')}</span></span>
+                    </button>
+                <button type="button" class="device-panel-action-card" data-action="connect-web">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('device_detail.action_connect_web')}</span>
+                        <span class="device-panel-action-desc">${_('device_detail.action_connect_web_desc')}</span></span>
+                    </button>
             </div>
         </div>`;
 
@@ -969,33 +982,18 @@ const DeviceDetail = (function () {
         <div class="device-panel-section">
             <div class="device-panel-section-title"><span class="material-icons">settings</span> ${_('device_detail.section_manage')}</div>
             <div class="device-panel-actions-grid">
-                <div class="device-panel-action-card" data-action="edit">
-                    <div class="device-panel-action-icon blue">
-                        <span class="material-icons">edit</span>
-                    </div>
-                    <div class="device-panel-action-text">
-                        <div class="device-panel-action-title">${_('actions.edit')}</div>
-                        <div class="device-panel-action-desc">${_('devices.display_name')} / ${_('devices.note')}</div>
-                    </div>
-                </div>
-                <div class="device-panel-action-card" data-action="change-id">
-                    <div class="device-panel-action-icon blue">
-                        <span class="material-icons">swap_horiz</span>
-                    </div>
-                    <div class="device-panel-action-text">
-                        <div class="device-panel-action-title">${_('devices.change_id')}</div>
-                        <div class="device-panel-action-desc">${_('device_detail.action_change_id_desc')}</div>
-                    </div>
-                </div>
-                <div class="device-panel-action-card" data-action="toggle-ban">
-                    <div class="device-panel-action-icon ${isBanned ? 'green' : 'orange'}">
-                        <span class="material-icons">${isBanned ? 'check_circle' : 'block'}</span>
-                    </div>
-                    <div class="device-panel-action-text">
-                        <div class="device-panel-action-title">${isBanned ? _('actions.unban') : _('actions.ban')}</div>
-                        <div class="device-panel-action-desc">${isBanned ? _('device_detail.action_unban_desc') : _('device_detail.action_ban_desc')}</div>
-                    </div>
-                </div>
+                <button type="button" class="device-panel-action-card" data-action="edit">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('actions.edit')}</span>
+                        <span class="device-panel-action-desc">${_('devices.display_name')} / ${_('devices.note')}</span></span>
+                    </button>
+                <button type="button" class="device-panel-action-card" data-action="change-id">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('devices.change_id')}</span>
+                        <span class="device-panel-action-desc">${_('device_detail.action_change_id_desc')}</span></span>
+                    </button>
+                <button type="button" class="device-panel-action-card" data-action="toggle-ban">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${isBanned ? _('actions.unban') : _('actions.ban')}</span>
+                        <span class="device-panel-action-desc">${isBanned ? _('device_detail.action_unban_desc') : _('device_detail.action_ban_desc')}</span></span>
+                    </button>
             </div>
         </div>`;
 
@@ -1004,15 +1002,10 @@ const DeviceDetail = (function () {
         <div class="device-panel-danger-zone">
             <div class="device-panel-section-title"><span class="material-icons">warning</span> ${_('device_detail.danger_zone')}</div>
             <div class="device-panel-actions-grid">
-                <div class="device-panel-action-card" data-action="delete">
-                    <div class="device-panel-action-icon red">
-                        <span class="material-icons">delete_forever</span>
-                    </div>
-                    <div class="device-panel-action-text">
-                        <div class="device-panel-action-title">${_('actions.delete')}</div>
-                        <div class="device-panel-action-desc">${_('device_detail.action_delete_desc')}</div>
-                    </div>
-                </div>
+                <button type="button" class="device-panel-action-card" data-action="delete">
+                        <span class="device-panel-action-text"><span class="device-panel-action-title">${_('actions.delete')}</span>
+                        <span class="device-panel-action-desc">${_('device_detail.action_delete_desc')}</span></span>
+                    </button>
             </div>
         </div>`;
 
@@ -1029,15 +1022,9 @@ const DeviceDetail = (function () {
         return `
         <div class="device-panel-footer">
             ${isDeleted ? '' : `
-            ${supportAgent ? '' : `<button class="btn btn-secondary" id="dp-edit-btn">
-                <span class="material-icons">edit</span>${_('actions.edit')}
-            </button>`}
-            <button class="btn btn-primary" id="dp-connect-btn">
-                <span class="material-icons">link</span>${_('actions.connect')}
-            </button>`}
-            <button class="btn btn-secondary" id="dp-close-btn">
-                ${_('actions.close')}
-            </button>
+            <button type="button" class="btn btn-primary" id="dp-connect-btn">${_('actions.connect')}</button>
+            ${supportAgent ? '' : `<button type="button" class="btn btn-secondary" id="dp-edit-btn">${_('actions.edit')}</button>`}`}
+            <button type="button" class="btn btn-ghost" id="dp-close-btn">${_('actions.close')}</button>
         </div>`;
     }
 
@@ -1314,6 +1301,7 @@ const DeviceDetail = (function () {
 
         panel.querySelectorAll('.device-panel-tab').forEach(function (t) {
             t.classList.toggle('active', t.dataset.tab === tabId);
+            t.setAttribute('aria-selected', t.dataset.tab === tabId ? 'true' : 'false');
         });
         panel.querySelectorAll('.device-panel-tab-pane').forEach(function (p) {
             p.classList.toggle('active', p.dataset.pane === tabId);
