@@ -232,6 +232,22 @@ textarea.form-input,
     color: var(--text-muted);
 }
 
+/* A field whose value was refused: the border turns red (the message under it says why) */
+.form-input[aria-invalid="true"],
+.form-select[aria-invalid="true"],
+.form-control[aria-invalid="true"],
+.form-textarea[aria-invalid="true"],
+.modal-body :is(input, select, textarea)[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+/* Floating surfaces (dialogs, menus, panels) sit on --bg-float, where --border
+   reaches only about 2.9:1 in dark mode: fields there take a border a step
+   towards the text colour, so the field edge keeps 3:1 with any palette. */
+:is(.modal, .menu, .dropdown-menu, .bd-a11y-modal) :is(.form-input, .form-select, .form-control, .form-textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]), select, textarea):not([aria-invalid="true"]):not(:focus) {
+    border-color: color-mix(in srgb, var(--border) 78%, var(--text));
+}
+
 input[type="checkbox"],
 input[type="radio"] {
     width: 16px;
@@ -522,7 +538,15 @@ th.sortable.sort-desc {
 .dropdown-item:focus-visible {
     background: var(--hover);
     color: var(--text);
-    outline: none;
+}
+
+/* The hover background alone is too faint to show keyboard focus (about 1.1:1):
+   menu items get the focus ring, inside the item so the menu does not clip it */
+.menu-item:focus-visible,
+.kebab-menu-item:focus-visible,
+.dropdown-item:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
 }
 
 /* Menu icons: one per meaning (Utils.ICONS), muted so the label leads;
@@ -1396,8 +1420,16 @@ td.state-cell {
     font-size: var(--text-sm);
 }
 
+/* Selected: a translucent tint and an accent rule on the start side; the text
+   keeps its colours (muted stays above 4.5:1 on the tint in both themes) */
 .choice:has(input:checked) {
     background: var(--accent-tint);
+    box-shadow: inset 3px 0 0 var(--accent);
+    color: var(--text);
+}
+
+[dir="rtl"] .choice:has(input:checked) {
+    box-shadow: inset -3px 0 0 var(--accent);
 }
 
 .choice:has(input:disabled) {

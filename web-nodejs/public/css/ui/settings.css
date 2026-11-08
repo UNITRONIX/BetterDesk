@@ -42,12 +42,25 @@
     border-top: 1px solid var(--rule);
 }
 
-/* A field reached from the search or a link: marked for a moment */
-.is-found {
-    background: var(--accent-tint);
+/* A field reached from the search or a link: outlined for a moment. No
+   background, so text and field borders keep the contrast they have at rest;
+   when the mark goes, only the outline fades (and not with reduced motion). */
+.settings-page :is(.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone) {
+    outline: 2px solid transparent;
+    outline-offset: 4px;
+    transition: outline-color 150ms;
+}
+
+.settings-page .is-found {
     outline: 2px solid var(--accent);
     outline-offset: 4px;
     border-radius: var(--radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .settings-page :is(.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone) {
+        transition: none;
+    }
 }
 
 .settings-audit-link {

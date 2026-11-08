@@ -143,6 +143,28 @@ html {
     text-size-adjust: 100%;
 }
 
+/* Native parts (checkboxes, radios, number spinners, select lists, scrollbars,
+   date pickers) follow the active theme, also when the console theme or the
+   per-browser choice differs from the OS. The per-browser choice also sets
+   color-scheme inline on <html> (theme-head.ejs), which wins over these. */
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+/* The accessibility panel's contrast modes choose their own background */
+:root[data-a11y-contrast="high-light"] {
+    color-scheme: light;
+}
+
+:root[data-a11y-contrast="high-dark"],
+:root[data-a11y-contrast="yellow-black"] {
+    color-scheme: dark;
+}
+
 body {
     margin: 0;
     background: var(--bg);
