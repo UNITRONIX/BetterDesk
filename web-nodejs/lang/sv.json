@@ -4972,7 +4972,10 @@
         "capacity_note": "Gränserna summerar det du angett för varje reläserver. Användningen kommer från reläservrarnas egna rapporter; de skickar inga till konsolen än, så användningen står på 0.",
         "cap_of": "{current} av {max}",
         "cap_planning_note": "Ungefärliga siffror för vanliga uppsättningar. Kolumnen användning jämför dagens antal enheter med varje uppsättning.",
-        "rec_cpu_high_named": "Dessa reläservrar rapporterar CPU över 80 %: {names}."
+        "rec_cpu_high_named": "Dessa reläservrar rapporterar CPU över 80 %: {names}.",
+        "diagram_note": "Ritat med de adresser som den här servern ger klienter just nu.",
+        "diagram_loading": "Läser serverns adresser…",
+        "diagram_error": "Det gick inte att läsa serverns adresser."
     },
     "cross_platform": {
         "title": "Cross-Platform-kompatibilitet",
@@ -5295,7 +5298,17 @@
         "col_english": "Engelska",
         "missing_text": "Saknas",
         "detail_loading": "Läser in texter…",
-        "detail_error": "Det gick inte att läsa in texterna."
+        "detail_error": "Det gick inte att läsa in texterna.",
+        "summary_title": "Täckning",
+        "summary_translated": "{done} av {total} texter",
+        "summary_empty": "Tomma texter",
+        "summary_direction": "Skrivriktning",
+        "ltr": "Vänster till höger",
+        "summary_file": "Fil",
+        "areas_title": "Saknade texter per område",
+        "areas_note": "Första delen av varje nyckel visar var texten syns. Välj ett område för att bara visa dess saknade texter.",
+        "area_count": "{n} saknas",
+        "area_show": "Visa saknade texter i {area}"
     },
     "resource_control": {
         "title": "Resurskontroll",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} klart.",
         "svc_done_exit": "{action}: {name} misslyckades med slutkod {code}.",
         "svc_action_failed_reason": "Åtgärden misslyckades: {error}",
-        "term_keyboard": "I terminalen går Tab till skalet; tryck Esc och sedan Tab för att gå vidare."
+        "term_keyboard": "I terminalen går Tab till skalet; tryck Esc och sedan Tab för att gå vidare.",
+        "server_version": "Serverversion",
+        "console_uptime": "Webbkonsolen har körts i",
+        "files_roots_title": "Mappar du kan öppna",
+        "files_roots_note": "Konsolen öppnar bara de här mapparna och mapparna i dem.",
+        "files_roots_loading": "Läser in mappar…",
+        "files_roots_none": "Konsolen angav inga mappar. Den börjar i /.",
+        "files_roots_error": "Det gick inte att läsa in listan över mappar. Fillistan börjar i /.",
+        "root_writable": "Filer kan ändras här",
+        "root_readonly": "Endast läsning",
+        "files_open_root": "Öppna {path}"
     },
     "download": {
         "title": "Ladda ner BetterDesk Agent",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Knappbeskrivning: {title}",
         "tier_names_hint": "Nivåernas namn. Lämna ett fält tomt för att använda namnet i listan ovan.",
         "badge_effect": "Gäller direkt på inloggningssidan.",
-        "badge_save_failed": "Det gick inte att spara märkesinställningarna: {error}"
+        "badge_save_failed": "Det gick inte att spara märkesinställningarna: {error}",
+        "tier_this_server": "Serverns senaste resultat"
     },
     "commercialization": {
         "title": "Kommersialisering",

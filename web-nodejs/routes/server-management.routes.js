@@ -102,6 +102,7 @@ router.get('/api/server-management/info', auth, async (req, res) => {
         ptyAvailable: isPtyAvailable(),
         terminalSessions: activeSessionCount(),
         fileRoots: sm.getAllowedFileRoots(),
+        mutableFileRoots: sm.getMutableFileRoots(),
         server,
         beta: true
     });

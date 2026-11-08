@@ -5094,7 +5094,10 @@
         "capacity_note": "Les limites additionnent ce que vous avez saisi pour chaque serveur relais. L'usage vient des rapports des serveurs relais ; ils n'en envoient pas encore à la console, l'usage reste donc à 0.",
         "cap_of": "{current} sur {max}",
         "cap_planning_note": "Chiffres approximatifs pour des installations courantes. La colonne usage compare le nombre d'appareils actuel à chaque installation.",
-        "rec_cpu_high_named": "Ces serveurs relais signalent un processeur au-dessus de 80 % : {names}."
+        "rec_cpu_high_named": "Ces serveurs relais signalent un processeur au-dessus de 80 % : {names}.",
+        "diagram_note": "Dessiné avec les adresses que ce serveur donne actuellement aux clients.",
+        "diagram_loading": "Lecture des adresses de ce serveur…",
+        "diagram_error": "Impossible de lire les adresses de ce serveur."
     },
     "cross_platform": {
         "title": "Tableau de bord",
@@ -5417,7 +5420,17 @@
         "col_english": "Anglais",
         "missing_text": "Manquant",
         "detail_loading": "Chargement des textes…",
-        "detail_error": "Impossible de charger les textes."
+        "detail_error": "Impossible de charger les textes.",
+        "summary_title": "Couverture",
+        "summary_translated": "{done} textes sur {total}",
+        "summary_empty": "Textes vides",
+        "summary_direction": "Sens d'écriture",
+        "ltr": "De gauche à droite",
+        "summary_file": "Fichier",
+        "areas_title": "Textes manquants par zone",
+        "areas_note": "La première partie de chaque clé indique où le texte apparaît. Choisissez une zone pour n'afficher que ses textes manquants.",
+        "area_count": "{n} manquants",
+        "area_show": "Afficher les textes manquants dans {area}"
     },
     "resource_control": {
         "title": "Tableau de bord",
@@ -5957,7 +5970,7 @@
         "history": "Utilisation récente du processeur et de la mémoire",
         "host_info": "Détails techniques",
         "cores": "Kerne",
-        "uptime": "Laufzeit",
+        "uptime": "Durée de fonctionnement",
         "no_disks": "La console n'a pas pu lire l'utilisation des disques de cette machine.",
         "info_hostname": "Hostname",
         "info_platform": "Platform",
@@ -6093,7 +6106,17 @@
         "svc_done": "{action} : {name} effectué.",
         "svc_done_exit": "{action} : {name} a échoué avec le code de sortie {code}.",
         "svc_action_failed_reason": "L'action a échoué : {error}",
-        "term_keyboard": "Dans le terminal, Tab va au shell ; appuyez sur Échap puis Tab pour en sortir."
+        "term_keyboard": "Dans le terminal, Tab va au shell ; appuyez sur Échap puis Tab pour en sortir.",
+        "server_version": "Version du serveur",
+        "console_uptime": "Console web active depuis",
+        "files_roots_title": "Dossiers que vous pouvez ouvrir",
+        "files_roots_note": "La console n'ouvre que ces dossiers et les dossiers qu'ils contiennent.",
+        "files_roots_loading": "Chargement des dossiers…",
+        "files_roots_none": "La console n'a indiqué aucun dossier. Elle commence dans /.",
+        "files_roots_error": "Impossible de charger la liste des dossiers. La liste des fichiers commence dans /.",
+        "root_writable": "Les fichiers peuvent être modifiés ici",
+        "root_readonly": "Lecture seule",
+        "files_open_root": "Ouvrir {path}"
     },
     "server_attestation": {
         "title": "Server-Attestierung",
@@ -6166,7 +6189,8 @@
         "badge_hover": "Infobulle : {title}",
         "tier_names_hint": "Noms des niveaux. Laissez un champ vide pour utiliser le nom de la liste ci-dessus.",
         "badge_effect": "S'applique tout de suite à la page de connexion.",
-        "badge_save_failed": "Impossible d'enregistrer les réglages du badge : {error}"
+        "badge_save_failed": "Impossible d'enregistrer les réglages du badge : {error}",
+        "tier_this_server": "Dernier résultat de ce serveur"
     },
     "commercialization": {
         "title": "Kommerzialisierung",

@@ -4966,7 +4966,10 @@
         "capacity_note": "Die Grenzen sind die Summe Ihrer Angaben je Relay-Server. Die Auslastung stammt aus Meldungen der Relay-Server; diese senden noch keine an die Konsole, daher bleibt sie bei 0.",
         "cap_of": "{current} von {max}",
         "cap_planning_note": "Grobe Richtwerte für übliche Aufbauten. Die Spalte Auslastung vergleicht die heutige Gerätezahl mit jedem Aufbau.",
-        "rec_cpu_high_named": "Diese Relay-Server melden über 80 % CPU: {names}."
+        "rec_cpu_high_named": "Diese Relay-Server melden über 80 % CPU: {names}.",
+        "diagram_note": "Gezeichnet mit den Adressen, die dieser Server Clients gerade mitgibt.",
+        "diagram_loading": "Adressen dieses Servers werden gelesen…",
+        "diagram_error": "Die Adressen dieses Servers konnten nicht gelesen werden."
     },
     "cross_platform": {
         "title": "Dashboard",
@@ -5289,7 +5292,17 @@
         "col_english": "Englisch",
         "missing_text": "Fehlt",
         "detail_loading": "Texte werden geladen…",
-        "detail_error": "Die Texte konnten nicht geladen werden."
+        "detail_error": "Die Texte konnten nicht geladen werden.",
+        "summary_title": "Abdeckung",
+        "summary_translated": "{done} von {total} Texten",
+        "summary_empty": "Leere Texte",
+        "summary_direction": "Schreibrichtung",
+        "ltr": "Von links nach rechts",
+        "summary_file": "Datei",
+        "areas_title": "Fehlende Texte nach Bereich",
+        "areas_note": "Der erste Teil jedes Schlüssels sagt, wo der Text erscheint. Wählen Sie einen Bereich, um nur dessen fehlende Texte aufzulisten.",
+        "area_count": "{n} fehlen",
+        "area_show": "Fehlende Texte in {area} anzeigen"
     },
     "resource_control": {
         "title": "Dashboard",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}: {name} erledigt.",
         "svc_done_exit": "{action}: {name} mit Exit-Code {code} fehlgeschlagen.",
         "svc_action_failed_reason": "Die Aktion ist fehlgeschlagen: {error}",
-        "term_keyboard": "Im Terminal geht Tab an die Shell; drücken Sie Esc und dann Tab, um weiterzuspringen."
+        "term_keyboard": "Im Terminal geht Tab an die Shell; drücken Sie Esc und dann Tab, um weiterzuspringen.",
+        "server_version": "Server-Version",
+        "console_uptime": "Web-Konsole läuft seit",
+        "files_roots_title": "Ordner, die Sie öffnen können",
+        "files_roots_note": "Die Konsole öffnet nur diese Ordner und die Ordner darin.",
+        "files_roots_loading": "Ordner werden geladen…",
+        "files_roots_none": "Die Konsole hat keine Ordner gemeldet. Sie beginnt in /.",
+        "files_roots_error": "Die Liste der Ordner konnte nicht geladen werden. Die Dateiliste beginnt in /.",
+        "root_writable": "Dateien können hier geändert werden",
+        "root_readonly": "Nur lesen",
+        "files_open_root": "{path} öffnen"
     },
     "download": {
         "title": "BetterDesk Agent herunterladen",
@@ -6162,7 +6185,8 @@
         "badge_hover": "Tooltip: {title}",
         "tier_names_hint": "Namen der Stufen. Lassen Sie ein Feld leer, um den Namen aus der Liste oben zu verwenden.",
         "badge_effect": "Gilt sofort für die Anmeldeseite.",
-        "badge_save_failed": "Abzeichen-Einstellungen konnten nicht gespeichert werden: {error}"
+        "badge_save_failed": "Abzeichen-Einstellungen konnten nicht gespeichert werden: {error}",
+        "tier_this_server": "Letztes Ergebnis dieses Servers"
     },
     "commercialization": {
         "title": "Kommerzialisierung",

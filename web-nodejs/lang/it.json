@@ -4966,7 +4966,10 @@
         "capacity_note": "I limiti sommano i valori inseriti per ogni server relay. L'uso arriva dai rapporti dei server relay; non ne inviano ancora alla console, quindi l'uso resta a 0.",
         "cap_of": "{current} di {max}",
         "cap_planning_note": "Numeri indicativi per configurazioni comuni. La colonna uso confronta il numero attuale di dispositivi con ogni configurazione.",
-        "rec_cpu_high_named": "Questi server relay segnalano una CPU sopra l'80 %: {names}."
+        "rec_cpu_high_named": "Questi server relay segnalano una CPU sopra l'80 %: {names}.",
+        "diagram_note": "Disegnato con gli indirizzi che questo server fornisce ora ai client.",
+        "diagram_loading": "Lettura degli indirizzi di questo server…",
+        "diagram_error": "Impossibile leggere gli indirizzi di questo server."
     },
     "cross_platform": {
         "title": "Compatibilità multipiattaforma",
@@ -5289,7 +5292,17 @@
         "col_english": "Inglese",
         "missing_text": "Mancante",
         "detail_loading": "Caricamento testi…",
-        "detail_error": "Impossibile caricare i testi."
+        "detail_error": "Impossibile caricare i testi.",
+        "summary_title": "Copertura",
+        "summary_translated": "{done} testi su {total}",
+        "summary_empty": "Testi vuoti",
+        "summary_direction": "Direzione di scrittura",
+        "ltr": "Da sinistra a destra",
+        "summary_file": "File",
+        "areas_title": "Testi mancanti per area",
+        "areas_note": "La prima parte di ogni chiave dice dove compare il testo. Scegli un'area per vedere solo i suoi testi mancanti.",
+        "area_count": "{n} mancanti",
+        "area_show": "Mostra i testi mancanti in {area}"
     },
     "resource_control": {
         "title": "Controllo risorse",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}: {name} completato.",
         "svc_done_exit": "{action}: {name} non riuscito, codice di uscita {code}.",
         "svc_action_failed_reason": "L'azione non è riuscita: {error}",
-        "term_keyboard": "Nel terminale, Tab va alla shell; prema Esc e poi Tab per uscire."
+        "term_keyboard": "Nel terminale, Tab va alla shell; prema Esc e poi Tab per uscire.",
+        "server_version": "Versione del server",
+        "console_uptime": "Console web attiva da",
+        "files_roots_title": "Cartelle che puoi aprire",
+        "files_roots_note": "La console apre solo queste cartelle e le cartelle al loro interno.",
+        "files_roots_loading": "Caricamento delle cartelle…",
+        "files_roots_none": "La console non ha indicato cartelle. Parte da /.",
+        "files_roots_error": "Impossibile caricare l'elenco delle cartelle. L'elenco dei file parte da /.",
+        "root_writable": "Qui i file si possono modificare",
+        "root_readonly": "Sola lettura",
+        "files_open_root": "Apri {path}"
     },
     "download": {
         "title": "Scarica BetterDesk Agent",
@@ -6162,7 +6185,8 @@
         "badge_hover": "Tooltip: {title}",
         "tier_names_hint": "Nomi dei livelli. Lasci vuoto un campo per usare il nome dell'elenco sopra.",
         "badge_effect": "Si applica subito alla pagina di accesso.",
-        "badge_save_failed": "Impossibile salvare le impostazioni del badge: {error}"
+        "badge_save_failed": "Impossibile salvare le impostazioni del badge: {error}",
+        "tier_this_server": "Ultimo risultato di questo server"
     },
     "commercialization": {
         "title": "Commercializzazione",

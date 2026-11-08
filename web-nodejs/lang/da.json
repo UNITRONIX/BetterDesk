@@ -4972,7 +4972,10 @@
         "capacity_note": "Grænserne lægger det sammen, du har angivet for hver relay-server. Forbruget kommer fra relay-servernes egne rapporter; de sender endnu ingen til konsollen, så forbruget står på 0.",
         "cap_of": "{current} af {max}",
         "cap_planning_note": "Omtrentlige tal for almindelige opsætninger. Kolonnen forbrug sammenligner dagens antal enheder med hver opsætning.",
-        "rec_cpu_high_named": "Disse relay-servere melder CPU over 80 %: {names}."
+        "rec_cpu_high_named": "Disse relay-servere melder CPU over 80 %: {names}.",
+        "diagram_note": "Tegnet med de adresser, som denne server giver klienter lige nu.",
+        "diagram_loading": "Læser denne servers adresser…",
+        "diagram_error": "Denne servers adresser kunne ikke læses."
     },
     "cross_platform": {
         "title": "Kompatibilitet på tværs af platforme",
@@ -5295,7 +5298,17 @@
         "col_english": "Engelsk",
         "missing_text": "Mangler",
         "detail_loading": "Indlæser tekster…",
-        "detail_error": "Teksterne kunne ikke indlæses."
+        "detail_error": "Teksterne kunne ikke indlæses.",
+        "summary_title": "Dækning",
+        "summary_translated": "{done} af {total} tekster",
+        "summary_empty": "Tomme tekster",
+        "summary_direction": "Skriveretning",
+        "ltr": "Venstre mod højre",
+        "summary_file": "Fil",
+        "areas_title": "Manglende tekster efter område",
+        "areas_note": "Første del af hver nøgle viser, hvor teksten står. Vælg et område for kun at se dets manglende tekster.",
+        "area_count": "{n} mangler",
+        "area_show": "Vis manglende tekster i {area}"
     },
     "resource_control": {
         "title": "Ressourcekontrol",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} udført.",
         "svc_done_exit": "{action}: {name} fejlede med afslutningskode {code}.",
         "svc_action_failed_reason": "Handlingen mislykkedes: {error}",
-        "term_keyboard": "I terminalen går Tab til shellen; tryk på Esc og derefter Tab for at gå videre."
+        "term_keyboard": "I terminalen går Tab til shellen; tryk på Esc og derefter Tab for at gå videre.",
+        "server_version": "Serverversion",
+        "console_uptime": "Webkonsollen har kørt i",
+        "files_roots_title": "Mapper, du kan åbne",
+        "files_roots_note": "Konsollen åbner kun disse mapper og mapperne i dem.",
+        "files_roots_loading": "Indlæser mapper…",
+        "files_roots_none": "Konsollen har ikke angivet nogen mapper. Den starter i /.",
+        "files_roots_error": "Listen over mapper kunne ikke indlæses. Fillisten starter i /.",
+        "root_writable": "Filer kan ændres her",
+        "root_readonly": "Kun læsning",
+        "files_open_root": "Åbn {path}"
     },
     "download": {
         "title": "Download BetterDesk-agent",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Værktøjstip: {title}",
         "tier_names_hint": "Navne på niveauer. Lad et felt være tomt for at bruge navnet i listen ovenfor.",
         "badge_effect": "Gælder straks på login-siden.",
-        "badge_save_failed": "Kunne ikke gemme mærkeindstillingerne: {error}"
+        "badge_save_failed": "Kunne ikke gemme mærkeindstillingerne: {error}",
+        "tier_this_server": "Denne servers seneste resultat"
     },
     "commercialization": {
         "title": "Kommercialisering",

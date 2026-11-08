@@ -4972,7 +4972,10 @@
         "capacity_note": "Rajat ovat kullekin välityspalvelimelle syöttämiesi arvojen summa. Käyttö tulee välityspalvelinten omista raporteista; ne eivät vielä lähetä niitä konsolille, joten käyttö pysyy nollassa.",
         "cap_of": "{current} / {max}",
         "cap_planning_note": "Suuntaa-antavia lukuja tavallisille kokoonpanoille. Käyttösarake vertaa nykyistä laitemäärää kuhunkin kokoonpanoon.",
-        "rec_cpu_high_named": "Nämä välityspalvelimet raportoivat suorittimen yli 80 %: {names}."
+        "rec_cpu_high_named": "Nämä välityspalvelimet raportoivat suorittimen yli 80 %: {names}.",
+        "diagram_note": "Piirretty osoitteilla, jotka tämä palvelin antaa asiakkaille juuri nyt.",
+        "diagram_loading": "Luetaan tämän palvelimen osoitteita…",
+        "diagram_error": "Tämän palvelimen osoitteita ei voitu lukea."
     },
     "cross_platform": {
         "title": "Eri alustojen yhteensopivuus",
@@ -5295,7 +5298,17 @@
         "col_english": "Englanti",
         "missing_text": "Puuttuu",
         "detail_loading": "Ladataan tekstejä…",
-        "detail_error": "Tekstejä ei voitu ladata."
+        "detail_error": "Tekstejä ei voitu ladata.",
+        "summary_title": "Kattavuus",
+        "summary_translated": "{done}/{total} tekstiä",
+        "summary_empty": "Tyhjät tekstit",
+        "summary_direction": "Kirjoitussuunta",
+        "ltr": "Vasemmalta oikealle",
+        "summary_file": "Tiedosto",
+        "areas_title": "Puuttuvat tekstit alueittain",
+        "areas_note": "Avaimen ensimmäinen osa kertoo, missä teksti näkyy. Valitse alue, niin näet vain sen puuttuvat tekstit.",
+        "area_count": "{n} puuttuu",
+        "area_show": "Näytä puuttuvat tekstit alueella {area}"
     },
     "resource_control": {
         "title": "Resurssien hallinta",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} valmis.",
         "svc_done_exit": "{action}: {name} epäonnistui, poistumiskoodi {code}.",
         "svc_action_failed_reason": "Toiminto epäonnistui: {error}",
-        "term_keyboard": "Päätteessä Tab menee komentotulkille; siirry eteenpäin painamalla Esc ja sitten Tab."
+        "term_keyboard": "Päätteessä Tab menee komentotulkille; siirry eteenpäin painamalla Esc ja sitten Tab.",
+        "server_version": "Palvelimen versio",
+        "console_uptime": "Verkkokonsoli käynnissä",
+        "files_roots_title": "Kansiot, jotka voit avata",
+        "files_roots_note": "Konsoli avaa vain nämä kansiot ja niiden sisällä olevat kansiot.",
+        "files_roots_loading": "Ladataan kansioita…",
+        "files_roots_none": "Konsoli ei ilmoittanut kansioita. Se aloittaa kansiosta /.",
+        "files_roots_error": "Kansioluetteloa ei voitu ladata. Tiedostoluettelo alkaa kansiosta /.",
+        "root_writable": "Tiedostoja voi muuttaa täällä",
+        "root_readonly": "Vain luku",
+        "files_open_root": "Avaa {path}"
     },
     "download": {
         "title": "Lataa BetterDesk Agent",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Työkaluvihje: {title}",
         "tier_names_hint": "Tasojen nimet. Jätä kenttä tyhjäksi käyttääksesi yllä olevan luettelon nimeä.",
         "badge_effect": "Tulee voimaan kirjautumissivulla heti.",
-        "badge_save_failed": "Merkin asetuksia ei voitu tallentaa: {error}"
+        "badge_save_failed": "Merkin asetuksia ei voitu tallentaa: {error}",
+        "tier_this_server": "Tämän palvelimen viimeisin tulos"
     },
     "commercialization": {
         "title": "Kaupallistaminen",

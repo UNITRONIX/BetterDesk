@@ -4966,7 +4966,10 @@
         "capacity_note": "Os limites somam o que indicou para cada servidor relay. A utilização vem dos relatórios dos próprios servidores relay; ainda não enviam nenhum à consola, por isso fica em 0.",
         "cap_of": "{current} de {max}",
         "cap_planning_note": "Números aproximados para configurações comuns. A coluna de utilização compara o número atual de dispositivos com cada configuração.",
-        "rec_cpu_high_named": "Estes servidores relay reportam CPU acima de 80 %: {names}."
+        "rec_cpu_high_named": "Estes servidores relay reportam CPU acima de 80 %: {names}.",
+        "diagram_note": "Desenhado com os endereços que este servidor dá agora aos clientes.",
+        "diagram_loading": "A ler os endereços deste servidor…",
+        "diagram_error": "Não foi possível ler os endereços deste servidor."
     },
     "cross_platform": {
         "title": "Compatibilidade multiplataforma",
@@ -5289,7 +5292,17 @@
         "col_english": "Inglês",
         "missing_text": "Em falta",
         "detail_loading": "A carregar textos…",
-        "detail_error": "Não foi possível carregar os textos."
+        "detail_error": "Não foi possível carregar os textos.",
+        "summary_title": "Cobertura",
+        "summary_translated": "{done} de {total} textos",
+        "summary_empty": "Textos vazios",
+        "summary_direction": "Direção da escrita",
+        "ltr": "Da esquerda para a direita",
+        "summary_file": "Ficheiro",
+        "areas_title": "Textos em falta por área",
+        "areas_note": "A primeira parte de cada chave indica onde o texto aparece. Escolha uma área para ver só os textos em falta dela.",
+        "area_count": "{n} em falta",
+        "area_show": "Mostrar os textos em falta em {area}"
     },
     "resource_control": {
         "title": "Controle de recursos",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}: {name} concluído.",
         "svc_done_exit": "{action}: {name} falhou com o código de saída {code}.",
         "svc_action_failed_reason": "A ação falhou: {error}",
-        "term_keyboard": "Dentro do terminal, Tab vai para a shell; prima Esc e depois Tab para sair."
+        "term_keyboard": "Dentro do terminal, Tab vai para a shell; prima Esc e depois Tab para sair.",
+        "server_version": "Versão do servidor",
+        "console_uptime": "Consola web ativa há",
+        "files_roots_title": "Pastas que pode abrir",
+        "files_roots_note": "A consola abre apenas estas pastas e as pastas dentro delas.",
+        "files_roots_loading": "A carregar pastas…",
+        "files_roots_none": "A consola não indicou nenhuma pasta. Começa em /.",
+        "files_roots_error": "Não foi possível carregar a lista de pastas. A lista de ficheiros começa em /.",
+        "root_writable": "Aqui é possível alterar ficheiros",
+        "root_readonly": "Só de leitura",
+        "files_open_root": "Abrir {path}"
     },
     "download": {
         "title": "Baixar BetterDesk Agent",
@@ -6162,7 +6185,8 @@
         "badge_hover": "Dica: {title}",
         "tier_names_hint": "Nomes dos níveis. Deixe um campo vazio para usar o nome da lista acima.",
         "badge_effect": "Aplica-se de imediato à página de início de sessão.",
-        "badge_save_failed": "Não foi possível guardar as definições do distintivo: {error}"
+        "badge_save_failed": "Não foi possível guardar as definições do distintivo: {error}",
+        "tier_this_server": "Último resultado deste servidor"
     },
     "commercialization": {
         "title": "Comercialização",

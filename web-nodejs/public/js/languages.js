@@ -77,6 +77,10 @@
             const retry = e.target.closest('[data-lang-retry]');
             if (retry) loadLanguages();
         });
+        document.getElementById('lang-areas')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-lang-area]');
+            if (btn) showArea(btn.getAttribute('data-lang-area'));
+        });
         window.addEventListener('hashchange', applyHash);
 
         await loadLanguages();
@@ -146,7 +150,7 @@
             const missing = lang.is_reference ? '–' : fmt(lang.missing_keys);
             return `
                 <tr data-code="${escHtml(lang.code)}">
-                    <td><a class="lang-name" href="#${encodeURIComponent(lang.code)}">${escHtml(langName(lang))}</a><span class="cell-sub mono">${escHtml(lang.code)}</span></td>
+                    <td><a class="lang-name" href="#${encodeURIComponent(lang.code)}">${escHtml(langName(lang))}</a><span class="cell-sub">${escHtml(lang.code)}</span></td>
                     <td class="col-native"><span lang="${escHtml(lang.code)}" dir="${lang.rtl ? 'rtl' : 'ltr'}">${escHtml(lang.native)}</span>${lang.rtl ? `<span class="cell-sub">${escHtml(_('languages.rtl'))}</span>` : ''}</td>
                     <td class="col-coverage">
                         <div class="meter${cov < 100 ? ' is-high' : ''}">
@@ -228,6 +232,8 @@
         if (note) note.textContent = tpl('languages.detail_note', { language: name, file: `lang/${code}.json` });
         if (count) count.textContent = '';
         content.innerHTML = `<p class="state">${escHtml(_('languages.detail_loading'))}</p>`;
+        renderSummary(lang);
+        renderAreas(null);
         title?.focus();
 
         const req = ++detailRequest;
@@ -253,6 +259,7 @@
             });
             detail = { code, lang, rows, missingKnown: !!missing };
             renderDetailRows();
+            renderAreas(detail);
         } catch (err) {
             if (req !== detailRequest) return;
             console.error('Failed to load texts:', err);
@@ -311,6 +318,73 @@
                     </tbody>
                 </table>
             </div>`;
+    }
+
+    // ── Side column: how complete this language is, and where texts are missing ──
+
+    function renderSummary(lang) {
+        const el = document.getElementById('lang-summary');
+        if (!el) return;
+        const st = statusOf(lang);
+        const total = refKeyCount || lang.total_keys || 0;
+        const missingN = Number(lang.missing_keys) || 0;
+        const cov = Math.max(0, Math.min(100, Number(lang.coverage) || 0));
+        const rows = [];
+        rows.push([_('languages.col_status'), `<span class="status ${st.cls}">${escHtml(st.label)}</span>`]);
+        if (!lang.is_reference && lang.coverage != null) {
+            rows.push([_('languages.col_coverage'), `
+                <div class="meter${cov < 100 ? ' is-high' : ''}">
+                    <span class="meter-bar" aria-hidden="true"><span class="meter-fill" style="width:${cov}%"></span></span>
+                    <span class="meter-value">${cov} %</span>
+                </div>
+                <span class="cell-sub">${escHtml(tpl('languages.summary_translated', { done: fmt(Math.max(0, total - missingN)), total: fmt(total) }))}</span>`]);
+            rows.push([_('languages.col_missing'), escHtml(fmt(missingN))
+                + (lang.extra_keys > 0 ? `<span class="cell-sub">${escHtml(tpl('languages.extra_count', { n: fmt(lang.extra_keys) }))}</span>` : '')]);
+            if (lang.empty_keys > 0) rows.push([_('languages.summary_empty'), escHtml(fmt(lang.empty_keys))]);
+        }
+        rows.push([_('languages.summary_direction'), escHtml(lang.rtl ? _('languages.rtl') : _('languages.ltr'))]);
+        rows.push([_('languages.summary_file'), `<code>lang/${escHtml(lang.code)}.json</code>`]);
+        el.innerHTML = rows.map(([k, v]) => `<dt>${escHtml(k)}</dt><dd>${v}</dd>`).join('');
+    }
+
+    // Missing texts grouped by the first part of their key ("settings", "devices", …)
+    function renderAreas(d) {
+        const section = document.getElementById('lang-areas-section');
+        const el = document.getElementById('lang-areas');
+        if (!section || !el) return;
+        const lang = d ? d.lang : null;
+        if (d && (lang.is_reference || d.code === 'en')) { section.hidden = true; return; }
+        section.hidden = false;
+        if (!d) { el.innerHTML = `<p class="state">${escHtml(_('languages.detail_loading'))}</p>`; return; }
+        if (!d.missingKnown) { el.innerHTML = `<p class="state">${escHtml(_('languages.missing_unknown'))}</p>`; return; }
+        const counts = new Map();
+        d.rows.forEach((r) => {
+            if (!r.missing) return;
+            const area = r.key.split('.')[0];
+            counts.set(area, (counts.get(area) || 0) + 1);
+        });
+        if (!counts.size) { el.innerHTML = `<p class="state">${escHtml(_('languages.none_missing'))}</p>`; return; }
+        const areas = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        el.innerHTML = `<ul class="list lang-areas">${areas.map(([area, n]) => `
+            <li class="list-row">
+                <span class="row-main"><span class="row-title">${escHtml(area)}</span>
+                    <span class="row-sub">${escHtml(tpl('languages.area_count', { n: fmt(n) }))}</span></span>
+                <span class="row-end"><button type="button" class="btn btn-sm" data-lang-area="${escHtml(area)}"
+                    aria-label="${escHtml(tpl('languages.area_show', { area }))}">${escHtml(_('languages.show_texts'))}</button></span>
+            </li>`).join('')}</ul>`;
+    }
+
+    function showArea(area) {
+        const search = document.getElementById('lang-detail-search');
+        if (search) search.value = area + '.';
+        detailQuery = (area + '.').toLowerCase();
+        detailFilter = 'missing';
+        document.querySelectorAll('[data-lang-filter]').forEach((b) => {
+            const on = b.getAttribute('data-lang-filter') === 'missing';
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        renderDetailRows();
     }
 
     // Kept for old callers: open the language view

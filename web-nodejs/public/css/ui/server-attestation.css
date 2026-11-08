@@ -69,3 +69,24 @@
 #sa-tier-hint {
     margin-bottom: var(--space-2);
 }
+
+/* Side column: tier name above its description, the reached tier marked in words */
+.page-side .sa-tier-guide {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.page-side .sa-tier-guide > dt {
+    min-height: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.page-side .sa-tier-guide > dd {
+    min-height: 0;
+    padding-top: var(--space-1);
+}
+
+.sa-tier-current {
+    font-size: var(--text-sm);
+    font-weight: 600;
+}

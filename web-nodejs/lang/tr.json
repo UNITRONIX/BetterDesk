@@ -4972,7 +4972,10 @@
         "capacity_note": "Sınırlar her aktarma sunucusu için girdiğiniz değerlerin toplamıdır. Kullanım, aktarma sunucularının kendi bildirimlerinden gelir; henüz konsola bildirim göndermedikleri için kullanım 0 kalır.",
         "cap_of": "{max} içinden {current}",
         "cap_planning_note": "Yaygın kurulumlar için kaba sayılar. Kullanım sütunu bugünkü cihaz sayısını her kurulumla karşılaştırır.",
-        "rec_cpu_high_named": "Bu aktarma sunucuları %80'in üzerinde CPU bildiriyor: {names}."
+        "rec_cpu_high_named": "Bu aktarma sunucuları %80'in üzerinde CPU bildiriyor: {names}.",
+        "diagram_note": "Bu sunucunun şu anda istemcilere verdiği adreslerle çizildi.",
+        "diagram_loading": "Bu sunucunun adresleri okunuyor…",
+        "diagram_error": "Bu sunucunun adresleri okunamadı."
     },
     "cross_platform": {
         "title": "Platformlar Arası Uyumluluk",
@@ -5295,7 +5298,17 @@
         "col_english": "İngilizce",
         "missing_text": "Eksik",
         "detail_loading": "Metinler yükleniyor…",
-        "detail_error": "Metinler yüklenemedi."
+        "detail_error": "Metinler yüklenemedi.",
+        "summary_title": "Kapsam",
+        "summary_translated": "{total} metinden {done}",
+        "summary_empty": "Boş metinler",
+        "summary_direction": "Yazı yönü",
+        "ltr": "Soldan sağa",
+        "summary_file": "Dosya",
+        "areas_title": "Alana göre eksik metinler",
+        "areas_note": "Her anahtarın ilk kısmı metnin nerede göründüğünü belirtir. Yalnızca o alanın eksik metinlerini görmek için bir alan seçin.",
+        "area_count": "{n} eksik",
+        "area_show": "{area} içindeki eksik metinleri göster"
     },
     "resource_control": {
         "title": "Kaynak Kontrolü",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} tamamlandı.",
         "svc_done_exit": "{action}: {name} {code} çıkış koduyla başarısız oldu.",
         "svc_action_failed_reason": "İşlem başarısız oldu: {error}",
-        "term_keyboard": "Terminal içinde Tab kabuğa gider; devam etmek için Esc ve ardından Tab tuşuna basın."
+        "term_keyboard": "Terminal içinde Tab kabuğa gider; devam etmek için Esc ve ardından Tab tuşuna basın.",
+        "server_version": "Sunucu sürümü",
+        "console_uptime": "Web konsolunun çalışma süresi",
+        "files_roots_title": "Açabileceğiniz klasörler",
+        "files_roots_note": "Konsol yalnızca bu klasörleri ve içlerindeki klasörleri açar.",
+        "files_roots_loading": "Klasörler yükleniyor…",
+        "files_roots_none": "Konsol hiçbir klasör bildirmedi. / konumunda başlar.",
+        "files_roots_error": "Klasör listesi yüklenemedi. Dosya listesi / konumunda başlar.",
+        "root_writable": "Burada dosyalar değiştirilebilir",
+        "root_readonly": "Salt okunur",
+        "files_open_root": "{path} aç"
     },
     "download": {
         "title": "BetterDesk Aracısını İndirin",
@@ -6168,7 +6191,8 @@
         "badge_hover": "İpucu: {title}",
         "tier_names_hint": "Seviye adları. Yukarıdaki listedeki adı kullanmak için alanı boş bırakın.",
         "badge_effect": "Oturum açma sayfasına hemen uygulanır.",
-        "badge_save_failed": "Rozet ayarları kaydedilemedi: {error}"
+        "badge_save_failed": "Rozet ayarları kaydedilemedi: {error}",
+        "tier_this_server": "Bu sunucunun son sonucu"
     },
     "commercialization": {
         "title": "Ticarileştirme",

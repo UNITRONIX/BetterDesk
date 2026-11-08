@@ -43,7 +43,7 @@
 .sm-term-status.is-error { color: var(--danger); }
 
 .sm-terminal-host {
-    height: min(520px, 70vh);
+    height: clamp(360px, calc(100vh - 320px), 1200px);
     overflow: hidden;
 }
 
@@ -109,9 +109,35 @@
 }
 
 @media (pointer: coarse) {
-    #sm-files-roots .btn-link,
     .sm-file-open-dir {
         min-height: 44px;
     }
 }
 
+
+/* Side column: label above value, read top to bottom */
+.page-side .sm-side-facts {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.page-side .sm-side-facts > dt {
+    min-height: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: var(--text-sm);
+}
+
+.page-side .sm-side-facts > dd {
+    min-height: 0;
+    padding-top: var(--space-1);
+}
+
+/* Allowed folders: long paths wrap instead of pushing the button out */
+.sm-roots .row-title {
+    overflow-wrap: anywhere;
+}
+
+/* Phones: keep names readable; the table scrolls sideways instead of breaking every few letters */
+.sm-files-table td:first-child {
+    min-width: 14ch;
+}

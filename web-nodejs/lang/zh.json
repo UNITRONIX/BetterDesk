@@ -5072,7 +5072,10 @@
         "capacity_note": "上限是你为每台中继服务器输入的值的总和。使用量来自中继服务器自己的报告；它们尚未向控制台报告，所以使用量保持 0。",
         "cap_of": "{current} / {max}",
         "cap_planning_note": "常见架构的大致数字。使用率列将当前设备数与各架构比较。",
-        "rec_cpu_high_named": "这些中继服务器报告 CPU 超过 80 %：{names}。"
+        "rec_cpu_high_named": "这些中继服务器报告 CPU 超过 80 %：{names}。",
+        "diagram_note": "按此服务器当前提供给客户端的地址绘制。",
+        "diagram_loading": "正在读取此服务器的地址…",
+        "diagram_error": "无法读取此服务器的地址。"
     },
     "cross_platform": {
         "title": "跨平台兼容性",
@@ -5395,7 +5398,17 @@
         "col_english": "英文",
         "missing_text": "缺少",
         "detail_loading": "正在加载文字…",
-        "detail_error": "无法加载文字。"
+        "detail_error": "无法加载文字。",
+        "summary_title": "翻译覆盖率",
+        "summary_translated": "{total} 条文本中的 {done} 条",
+        "summary_empty": "空文本",
+        "summary_direction": "书写方向",
+        "ltr": "从左到右",
+        "summary_file": "文件",
+        "areas_title": "按区域列出缺少的文本",
+        "areas_note": "每个键的第一部分表示文本出现的位置。选择一个区域，只列出其中缺少的文本。",
+        "area_count": "缺少 {n} 条",
+        "area_show": "显示 {area} 中缺少的文本"
     },
     "resource_control": {
         "title": "资源控制",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}：{name} 已完成。",
         "svc_done_exit": "{action}：{name} 失败，退出代码 {code}。",
         "svc_action_failed_reason": "操作失败：{error}",
-        "term_keyboard": "在终端内 Tab 会发送给命令行；要离开请按 Esc 再按 Tab。"
+        "term_keyboard": "在终端内 Tab 会发送给命令行；要离开请按 Esc 再按 Tab。",
+        "server_version": "服务器版本",
+        "console_uptime": "网页控制台已运行",
+        "files_roots_title": "可打开的文件夹",
+        "files_roots_note": "控制台只能打开这些文件夹及其中的文件夹。",
+        "files_roots_loading": "正在加载文件夹…",
+        "files_roots_none": "控制台没有报告任何文件夹，将从 / 开始。",
+        "files_roots_error": "无法加载文件夹列表。文件列表从 / 开始。",
+        "root_writable": "可在此更改文件",
+        "root_readonly": "只读",
+        "files_open_root": "打开 {path}"
     },
     "download": {
         "title": "下载 BetterDesk 代理",
@@ -6162,7 +6185,8 @@
         "badge_hover": "提示文字：{title}",
         "tier_names_hint": "等级名称。字段留空即使用上方列表中的名称。",
         "badge_effect": "立即应用到登录页面。",
-        "badge_save_failed": "无法保存徽章设置：{error}"
+        "badge_save_failed": "无法保存徽章设置：{error}",
+        "tier_this_server": "此服务器的上次结果"
     },
     "commercialization": {
         "title": "商业化",

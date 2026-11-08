@@ -5094,7 +5094,10 @@
         "capacity_note": "上限是你為每台中繼伺服器輸入的值加總。使用量來自中繼伺服器自己的回報；它們尚未向主控台回報，所以使用量維持 0。",
         "cap_of": "{current} / {max}",
         "cap_planning_note": "常見架構的大略數字。使用率欄位將目前的裝置數與各架構比較。",
-        "rec_cpu_high_named": "這些中繼伺服器回報 CPU 超過 80 %：{names}。"
+        "rec_cpu_high_named": "這些中繼伺服器回報 CPU 超過 80 %：{names}。",
+        "diagram_note": "依此伺服器目前提供給用戶端的位址繪製。",
+        "diagram_loading": "正在讀取此伺服器的位址…",
+        "diagram_error": "無法讀取此伺服器的位址。"
     },
     "cross_platform": {
         "title": "跨平臺兼容性",
@@ -5417,7 +5420,17 @@
         "col_english": "英文",
         "missing_text": "缺少",
         "detail_loading": "正在載入文字…",
-        "detail_error": "無法載入文字。"
+        "detail_error": "無法載入文字。",
+        "summary_title": "翻譯涵蓋率",
+        "summary_translated": "{total} 則文字中的 {done} 則",
+        "summary_empty": "空白文字",
+        "summary_direction": "書寫方向",
+        "ltr": "由左至右",
+        "summary_file": "檔案",
+        "areas_title": "依區域列出缺少的文字",
+        "areas_note": "每個鍵的第一部分表示文字出現的位置。選擇一個區域，只列出其中缺少的文字。",
+        "area_count": "缺少 {n} 則",
+        "area_show": "顯示 {area} 中缺少的文字"
     },
     "resource_control": {
         "title": "資源控制",
@@ -6093,7 +6106,17 @@
         "svc_done": "{action}：{name} 已完成。",
         "svc_done_exit": "{action}：{name} 失敗，結束代碼 {code}。",
         "svc_action_failed_reason": "動作失敗：{error}",
-        "term_keyboard": "在終端機內 Tab 會送給命令列；要離開請按 Esc 再按 Tab。"
+        "term_keyboard": "在終端機內 Tab 會送給命令列；要離開請按 Esc 再按 Tab。",
+        "server_version": "伺服器版本",
+        "console_uptime": "網頁主控台已執行",
+        "files_roots_title": "可開啟的資料夾",
+        "files_roots_note": "主控台只會開啟這些資料夾及其中的資料夾。",
+        "files_roots_loading": "正在載入資料夾…",
+        "files_roots_none": "主控台沒有回報任何資料夾，將從 / 開始。",
+        "files_roots_error": "無法載入資料夾清單。檔案清單從 / 開始。",
+        "root_writable": "可在此變更檔案",
+        "root_readonly": "唯讀",
+        "files_open_root": "開啟 {path}"
     },
     "server_attestation": {
         "title": "服務器性能認證",
@@ -6166,7 +6189,8 @@
         "badge_hover": "提示文字：{title}",
         "tier_names_hint": "等級名稱。欄位留空即使用上方清單中的名稱。",
         "badge_effect": "立即套用到登入頁面。",
-        "badge_save_failed": "無法儲存徽章設定：{error}"
+        "badge_save_failed": "無法儲存徽章設定：{error}",
+        "tier_this_server": "此伺服器的上次結果"
     },
     "commercialization": {
         "title": "商業化",

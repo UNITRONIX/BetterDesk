@@ -36,3 +36,20 @@
     min-width: 4.5ch;
     text-align: end;
 }
+
+/* Side column: label above value, read top to bottom */
+.page-side #capacity-tiers {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.page-side #capacity-tiers > dt {
+    min-height: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    font-size: var(--text-sm);
+}
+
+.page-side #capacity-tiers > dd {
+    min-height: 0;
+    padding-top: var(--space-1);
+}

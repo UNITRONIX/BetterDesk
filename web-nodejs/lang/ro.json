@@ -4972,7 +4972,10 @@
         "capacity_note": "Limitele adună valorile introduse pentru fiecare server relay. Utilizarea vine din rapoartele serverelor relay; acestea nu trimit încă rapoarte consolei, deci utilizarea rămâne 0.",
         "cap_of": "{current} din {max}",
         "cap_planning_note": "Cifre aproximative pentru configurații obișnuite. Coloana de utilizare compară numărul actual de dispozitive cu fiecare configurație.",
-        "rec_cpu_high_named": "Aceste servere relay raportează CPU peste 80 %: {names}."
+        "rec_cpu_high_named": "Aceste servere relay raportează CPU peste 80 %: {names}.",
+        "diagram_note": "Desenat cu adresele pe care acest server le dă acum clienților.",
+        "diagram_loading": "Se citesc adresele acestui server…",
+        "diagram_error": "Adresele acestui server nu au putut fi citite."
     },
     "cross_platform": {
         "title": "Compatibilitate între platforme",
@@ -5295,7 +5298,17 @@
         "col_english": "Engleză",
         "missing_text": "Lipsește",
         "detail_loading": "Se încarcă textele…",
-        "detail_error": "Textele nu au putut fi încărcate."
+        "detail_error": "Textele nu au putut fi încărcate.",
+        "summary_title": "Acoperire",
+        "summary_translated": "{done} din {total} texte",
+        "summary_empty": "Texte goale",
+        "summary_direction": "Direcția scrisului",
+        "ltr": "De la stânga la dreapta",
+        "summary_file": "Fișier",
+        "areas_title": "Texte lipsă pe zone",
+        "areas_note": "Prima parte a fiecărei chei arată unde apare textul. Alegeți o zonă pentru a vedea doar textele ei lipsă.",
+        "area_count": "{n} lipsă",
+        "area_show": "Afișează textele lipsă din {area}"
     },
     "resource_control": {
         "title": "Controlul resurselor",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} gata.",
         "svc_done_exit": "{action}: {name} a eșuat cu codul de ieșire {code}.",
         "svc_action_failed_reason": "Acțiunea a eșuat: {error}",
-        "term_keyboard": "În terminal, Tab ajunge la shell; apăsați Esc și apoi Tab pentru a ieși."
+        "term_keyboard": "În terminal, Tab ajunge la shell; apăsați Esc și apoi Tab pentru a ieși.",
+        "server_version": "Versiunea serverului",
+        "console_uptime": "Consola web rulează de",
+        "files_roots_title": "Foldere pe care le puteți deschide",
+        "files_roots_note": "Consola deschide doar aceste foldere și folderele din ele.",
+        "files_roots_loading": "Se încarcă folderele…",
+        "files_roots_none": "Consola nu a raportat niciun folder. Pornește din /.",
+        "files_roots_error": "Lista de foldere nu a putut fi încărcată. Lista de fișiere pornește din /.",
+        "root_writable": "Aici fișierele pot fi modificate",
+        "root_readonly": "Doar citire",
+        "files_open_root": "Deschide {path}"
     },
     "download": {
         "title": "Descărcați agentul BetterDesk",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Indiciu: {title}",
         "tier_names_hint": "Numele nivelurilor. Lăsați un câmp gol pentru a folosi numele din lista de mai sus.",
         "badge_effect": "Se aplică imediat pe pagina de autentificare.",
-        "badge_save_failed": "Setările insignei nu s-au putut salva: {error}"
+        "badge_save_failed": "Setările insignei nu s-au putut salva: {error}",
+        "tier_this_server": "Ultimul rezultat al acestui server"
     },
     "commercialization": {
         "title": "Comercializare",

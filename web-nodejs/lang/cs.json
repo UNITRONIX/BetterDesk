@@ -4966,7 +4966,10 @@
         "capacity_note": "Limity sčítají hodnoty zadané u jednotlivých relay serverů. Využití pochází z hlášení relay serverů; ty zatím konzoli nic neposílají, takže využití zůstává 0.",
         "cap_of": "{current} z {max}",
         "cap_planning_note": "Přibližná čísla pro běžná nasazení. Sloupec využití porovnává dnešní počet zařízení s každým nasazením.",
-        "rec_cpu_high_named": "Tyto relay servery hlásí CPU nad 80 %: {names}."
+        "rec_cpu_high_named": "Tyto relay servery hlásí CPU nad 80 %: {names}.",
+        "diagram_note": "Nakresleno s adresami, které tento server právě dává klientům.",
+        "diagram_loading": "Načítání adres tohoto serveru…",
+        "diagram_error": "Adresy tohoto serveru se nepodařilo načíst."
     },
     "cross_platform": {
         "title": "Meziplatformní kompatibilita",
@@ -5289,7 +5292,17 @@
         "col_english": "Angličtina",
         "missing_text": "Chybí",
         "detail_loading": "Načítání textů…",
-        "detail_error": "Texty se nepodařilo načíst."
+        "detail_error": "Texty se nepodařilo načíst.",
+        "summary_title": "Pokrytí",
+        "summary_translated": "{done} z {total} textů",
+        "summary_empty": "Prázdné texty",
+        "summary_direction": "Směr psaní",
+        "ltr": "Zleva doprava",
+        "summary_file": "Soubor",
+        "areas_title": "Chybějící texty podle oblasti",
+        "areas_note": "První část každého klíče říká, kde se text zobrazuje. Vyberte oblast a zobrazí se jen její chybějící texty.",
+        "area_count": "{n} chybí",
+        "area_show": "Zobrazit chybějící texty v {area}"
     },
     "resource_control": {
         "title": "Řízení prostředků",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}: {name} hotovo.",
         "svc_done_exit": "{action}: {name} selhalo s kódem {code}.",
         "svc_action_failed_reason": "Akce se nezdařila: {error}",
-        "term_keyboard": "V terminálu jde Tab do shellu; pro přesun dál stiskněte Esc a pak Tab."
+        "term_keyboard": "V terminálu jde Tab do shellu; pro přesun dál stiskněte Esc a pak Tab.",
+        "server_version": "Verze serveru",
+        "console_uptime": "Webová konzole běží",
+        "files_roots_title": "Složky, které můžete otevřít",
+        "files_roots_note": "Konzole otevře jen tyto složky a složky v nich.",
+        "files_roots_loading": "Načítání složek…",
+        "files_roots_none": "Konzole neohlásila žádné složky. Začíná v /.",
+        "files_roots_error": "Seznam složek se nepodařilo načíst. Seznam souborů začíná v /.",
+        "root_writable": "Soubory zde lze měnit",
+        "root_readonly": "Jen pro čtení",
+        "files_open_root": "Otevřít {path}"
     },
     "download": {
         "title": "Stáhnout agenta BetterDesk",
@@ -6162,7 +6185,8 @@
         "badge_hover": "Popisek: {title}",
         "tier_names_hint": "Názvy úrovní. Prázdné pole použije název ze seznamu výše.",
         "badge_effect": "Na přihlašovací stránce platí hned.",
-        "badge_save_failed": "Nastavení odznaku se nepodařilo uložit: {error}"
+        "badge_save_failed": "Nastavení odznaku se nepodařilo uložit: {error}",
+        "tier_this_server": "Poslední výsledek tohoto serveru"
     },
     "commercialization": {
         "title": "Komerce",

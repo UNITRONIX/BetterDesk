@@ -5163,7 +5163,10 @@
         "capacity_note": "Limits add up what you entered for each relay server. Usage comes from the relay servers' own reports; they don't send any to the console yet, so usage stays at 0.",
         "cap_of": "{current} of {max}",
         "cap_planning_note": "Rough numbers for common setups. The usage column compares today's device count with each setup.",
-        "rec_cpu_high_named": "These relay servers report CPU above 80 %: {names}."
+        "rec_cpu_high_named": "These relay servers report CPU above 80 %: {names}.",
+        "diagram_note": "Drawn with the addresses this server gives to clients right now.",
+        "diagram_loading": "Reading this server's addresses…",
+        "diagram_error": "Could not read this server's addresses."
     },
     "cross_platform": {
         "title": "Cross-Platform Compatibility",
@@ -5486,7 +5489,17 @@
         "col_english": "English",
         "missing_text": "Missing",
         "detail_loading": "Loading texts…",
-        "detail_error": "Could not load the texts."
+        "detail_error": "Could not load the texts.",
+        "summary_title": "Coverage",
+        "summary_translated": "{done} of {total} texts",
+        "summary_empty": "Empty texts",
+        "summary_direction": "Writing direction",
+        "ltr": "Left to right",
+        "summary_file": "File",
+        "areas_title": "Missing texts by area",
+        "areas_note": "The first part of each key says where the text appears. Select an area to list only its missing texts.",
+        "area_count": "{n} missing",
+        "area_show": "Show missing texts in {area}"
     },
     "resource_control": {
         "title": "Resource Control",
@@ -6162,7 +6175,17 @@
         "svc_done": "{action}: {name} done.",
         "svc_done_exit": "{action}: {name} failed with exit code {code}.",
         "svc_action_failed_reason": "The action failed: {error}",
-        "term_keyboard": "Inside the terminal, Tab goes to the shell; press Esc and then Tab to move on."
+        "term_keyboard": "Inside the terminal, Tab goes to the shell; press Esc and then Tab to move on.",
+        "server_version": "Server version",
+        "console_uptime": "Web console running for",
+        "files_roots_title": "Folders you can open",
+        "files_roots_note": "The console opens only these folders and the folders inside them.",
+        "files_roots_loading": "Loading folders…",
+        "files_roots_none": "The console did not report any folders. It starts in /.",
+        "files_roots_error": "Could not load the list of folders. The file list starts in /.",
+        "root_writable": "Files can be changed here",
+        "root_readonly": "Read only",
+        "files_open_root": "Open {path}"
     },
     "server_attestation": {
         "title": "Server Attestation",
@@ -6235,7 +6258,8 @@
         "badge_hover": "Tooltip: {title}",
         "tier_names_hint": "Tier names. Leave a field empty to use the name in the list above.",
         "badge_effect": "Applies to the sign-in page right away.",
-        "badge_save_failed": "Could not save the badge settings: {error}"
+        "badge_save_failed": "Could not save the badge settings: {error}",
+        "tier_this_server": "This server's last result"
     },
     "commercialization": {
         "title": "Commercialization",

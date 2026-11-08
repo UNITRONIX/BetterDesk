@@ -4973,7 +4973,10 @@
         "capacity_note": "الحدود هي مجموع ما أدخلته لكل خادم ترحيل. يأتي الاستخدام من تقارير خوادم الترحيل نفسها؛ وهي لا ترسل أي تقارير إلى وحدة التحكم بعد، لذا يبقى الاستخدام 0.",
         "cap_of": "{current} من {max}",
         "cap_planning_note": "أرقام تقريبية لإعدادات شائعة. يقارن عمود الاستخدام عدد الأجهزة الحالي بكل إعداد.",
-        "rec_cpu_high_named": "تُبلغ خوادم الترحيل هذه عن معالج أعلى من 80 %: {names}."
+        "rec_cpu_high_named": "تُبلغ خوادم الترحيل هذه عن معالج أعلى من 80 %: {names}.",
+        "diagram_note": "مرسوم بالعناوين التي يعطيها هذا الخادم للعملاء الآن.",
+        "diagram_loading": "جارٍ قراءة عناوين هذا الخادم…",
+        "diagram_error": "تعذّرت قراءة عناوين هذا الخادم."
     },
     "cross_platform": {
         "title": "التوافق عبر الأنظمة الأساسية",
@@ -5296,7 +5299,17 @@
         "col_english": "الإنجليزية",
         "missing_text": "ناقص",
         "detail_loading": "جارٍ تحميل النصوص…",
-        "detail_error": "تعذّر تحميل النصوص."
+        "detail_error": "تعذّر تحميل النصوص.",
+        "summary_title": "التغطية",
+        "summary_translated": "{done} من {total} نصًا",
+        "summary_empty": "نصوص فارغة",
+        "summary_direction": "اتجاه الكتابة",
+        "ltr": "من اليسار إلى اليمين",
+        "summary_file": "الملف",
+        "areas_title": "النصوص الناقصة حسب القسم",
+        "areas_note": "يدل الجزء الأول من كل مفتاح على مكان ظهور النص. اختر قسمًا لعرض نصوصه الناقصة فقط.",
+        "area_count": "{n} ناقصة",
+        "area_show": "عرض النصوص الناقصة في {area}"
     },
     "resource_control": {
         "title": "التحكم في الموارد",
@@ -6078,7 +6091,17 @@
         "svc_done": "{action}: {name} تم.",
         "svc_done_exit": "{action}: فشلت {name} برمز الخروج {code}.",
         "svc_action_failed_reason": "فشل الإجراء: {error}",
-        "term_keyboard": "داخل الطرفية يذهب مفتاح Tab إلى الواجهة؛ اضغط Esc ثم Tab للانتقال."
+        "term_keyboard": "داخل الطرفية يذهب مفتاح Tab إلى الواجهة؛ اضغط Esc ثم Tab للانتقال.",
+        "server_version": "إصدار الخادم",
+        "console_uptime": "وحدة تحكم الويب تعمل منذ",
+        "files_roots_title": "المجلدات التي يمكنك فتحها",
+        "files_roots_note": "تفتح وحدة التحكم هذه المجلدات والمجلدات الموجودة داخلها فقط.",
+        "files_roots_loading": "جارٍ تحميل المجلدات…",
+        "files_roots_none": "لم تُبلغ وحدة التحكم عن أي مجلدات. تبدأ من /.",
+        "files_roots_error": "تعذّر تحميل قائمة المجلدات. تبدأ قائمة الملفات من /.",
+        "root_writable": "يمكن تغيير الملفات هنا",
+        "root_readonly": "للقراءة فقط",
+        "files_open_root": "فتح {path}"
     },
     "download": {
         "title": "تنزيل وكيل BetterDesk",
@@ -6169,7 +6192,8 @@
         "badge_hover": "التلميح: {title}",
         "tier_names_hint": "أسماء الفئات. اترك الحقل فارغًا لاستخدام الاسم في القائمة أعلاه.",
         "badge_effect": "يُطبَّق على صفحة تسجيل الدخول فورًا.",
-        "badge_save_failed": "تعذّر حفظ إعدادات الشارة: {error}"
+        "badge_save_failed": "تعذّر حفظ إعدادات الشارة: {error}",
+        "tier_this_server": "آخر نتيجة لهذا الخادم"
     },
     "commercialization": {
         "title": "التسويق",

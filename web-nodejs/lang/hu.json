@@ -4972,7 +4972,10 @@
         "capacity_note": "A korlátok az egyes relay-szerverekhez megadott értékek összegei. A használat a relay-szerverek saját jelentéseiből jön; ezek még nem küldenek jelentést a konzolnak, ezért a használat 0 marad.",
         "cap_of": "{current} / {max}",
         "cap_planning_note": "Durva számok gyakori felállásokhoz. A használat oszlop a mai eszközszámot veti össze minden felállással.",
-        "rec_cpu_high_named": "Ezek a relay-szerverek 80 % feletti CPU-t jelentenek: {names}."
+        "rec_cpu_high_named": "Ezek a relay-szerverek 80 % feletti CPU-t jelentenek: {names}.",
+        "diagram_note": "Azokkal a címekkel rajzolva, amelyeket ez a szerver most ad a klienseknek.",
+        "diagram_loading": "A szerver címeinek beolvasása…",
+        "diagram_error": "A szerver címei nem olvashatók be."
     },
     "cross_platform": {
         "title": "Platformok közötti kompatibilitás",
@@ -5295,7 +5298,17 @@
         "col_english": "Angol",
         "missing_text": "Hiányzik",
         "detail_loading": "Szövegek betöltése…",
-        "detail_error": "A szövegeket nem sikerült betölteni."
+        "detail_error": "A szövegeket nem sikerült betölteni.",
+        "summary_title": "Lefedettség",
+        "summary_translated": "{total} szövegből {done}",
+        "summary_empty": "Üres szövegek",
+        "summary_direction": "Írásirány",
+        "ltr": "Balról jobbra",
+        "summary_file": "Fájl",
+        "areas_title": "Hiányzó szövegek területenként",
+        "areas_note": "Minden kulcs első része megmutatja, hol jelenik meg a szöveg. Válasszon egy területet, hogy csak annak hiányzó szövegeit lássa.",
+        "area_count": "{n} hiányzik",
+        "area_show": "Hiányzó szövegek megjelenítése itt: {area}"
     },
     "resource_control": {
         "title": "Erőforrás-szabályozás",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} kész.",
         "svc_done_exit": "{action}: {name} sikertelen, kilépési kód: {code}.",
         "svc_action_failed_reason": "A művelet sikertelen: {error}",
-        "term_keyboard": "A terminálban a Tab a shellhez kerül; továbblépéshez nyomja meg az Esc, majd a Tab billentyűt."
+        "term_keyboard": "A terminálban a Tab a shellhez kerül; továbblépéshez nyomja meg az Esc, majd a Tab billentyűt.",
+        "server_version": "Szerver verziója",
+        "console_uptime": "A webes konzol ennyi ideje fut",
+        "files_roots_title": "Megnyitható mappák",
+        "files_roots_note": "A konzol csak ezeket a mappákat és a bennük lévő mappákat nyitja meg.",
+        "files_roots_loading": "Mappák betöltése…",
+        "files_roots_none": "A konzol nem jelzett mappát. A / mappában indul.",
+        "files_roots_error": "A mappák listája nem tölthető be. A fájllista a / mappában indul.",
+        "root_writable": "Itt a fájlok módosíthatók",
+        "root_readonly": "Csak olvasható",
+        "files_open_root": "{path} megnyitása"
     },
     "download": {
         "title": "Töltse le a BetterDesk ügynököt",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Elemleírás: {title}",
         "tier_names_hint": "A szintek nevei. Hagyjon üresen egy mezőt a fenti lista nevének használatához.",
         "badge_effect": "A bejelentkezési oldalon azonnal érvényes.",
-        "badge_save_failed": "Nem sikerült menteni a jelvénybeállításokat: {error}"
+        "badge_save_failed": "Nem sikerült menteni a jelvénybeállításokat: {error}",
+        "tier_this_server": "A szerver legutóbbi eredménye"
     },
     "commercialization": {
         "title": "Kereskedelmi modul",

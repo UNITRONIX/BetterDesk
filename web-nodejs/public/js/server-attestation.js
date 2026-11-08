@@ -159,6 +159,13 @@
         updateBadge(result.tier, result.maxConnections);
         setText('sa-max-conn', result.maxConnections != null ? String(result.maxConnections) : '–');
         setText('sa-tier-value', tierLabel(result.tier));
+        // Point at the reached tier in the tier list beside the result
+        document.querySelectorAll('.sa-tier-guide .bd-attest-tier').forEach((dt) => {
+            dt.classList.toggle('is-current', dt.dataset.tier === result.tier);
+        });
+        document.querySelectorAll('[data-tier-current]').forEach((mark) => {
+            mark.hidden = mark.getAttribute('data-tier-current') !== result.tier;
+        });
 
         if (result.signalConnections != null || result.relaySessions != null) {
             setText('sa-conn-detail', tr('server_attestation.conn_detail', '', {

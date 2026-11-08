@@ -76,6 +76,14 @@
         }
     }
 
+    // Icon for a meaning from Utils.ICONS (decorative; the label carries the meaning)
+    function icon(meaning) {
+        return (window.Utils && typeof window.Utils.icon === 'function') ? window.Utils.icon(meaning) : '';
+    }
+
+    // Service menu items; "reload" has no meaning in Utils.ICONS yet, so it stays without an icon
+    const SVC_ICONS = { enable: 'enable', disable: 'disable' };
+
     function setText(id, text) {
         const el = document.getElementById(id);
         if (el) el.textContent = text;
@@ -161,6 +169,14 @@
                     value.hidden = !show;
                     if (show) value.textContent = formatUptime(secs);
                 }
+                const ver = fresh.server && fresh.server.version;
+                const verLabel = document.getElementById('sm-server-version-label');
+                const verValue = document.getElementById('sm-server-version');
+                if (verLabel) verLabel.hidden = !ver;
+                if (verValue) {
+                    verValue.hidden = !ver;
+                    if (ver) verValue.textContent = ver;
+                }
             } catch (_) { /* keep last */ }
         }
 
@@ -219,7 +235,7 @@
             setText('sm-load-meta', t('server_mgmt.load_meta', { cores: snap.cpuCount || 0 }));
 
             setText('sm-uptime-meta', formatUptime(snap.uptime));
-            setText('sm-console-uptime', t('server_mgmt.running_for', { time: formatUptime(snap.nodeUptime) }));
+            setText('sm-console-uptime', formatUptime(snap.nodeUptime));
 
             // Disks
             const disks = document.getElementById('sm-disks');
@@ -238,9 +254,9 @@
             const rows = [
                 ['hostname', snap.hostname, true],
                 ['platform', `${snap.platform} (${snap.arch})`],
-                ['kernel', snap.release || snap.osVersion, true],
-                ['node', (info && info.nodeVersion) || snap.nodeVersion, true],
-                ['process_id', info ? info.pid : null, true],
+                ['kernel', snap.release || snap.osVersion],
+                ['node', (info && info.nodeVersion) || snap.nodeVersion],
+                ['process_id', info ? info.pid : null],
                 ['pty_available', info ? t(info.ptyAvailable ? 'server_mgmt.pty_yes' : 'server_mgmt.pty_no') : null]
             ];
             hi.innerHTML = rows.map(([k, v, mono]) =>
@@ -366,10 +382,10 @@
                     : `<span class="sm-file-name">${n}</span>${type === 'symlink' ? `<span class="cell-sub">${escapeHtml(t('server_mgmt.files_link'))}</span>` : ''}`;
                 const menuId = `sm-file-menu-${++menuSeq}`;
                 const items = [];
-                if (type === 'file') items.push(`<button type="button" class="menu-item" role="menuitem" data-act="open" data-path="${p}">${escapeHtml(t('server_mgmt.files_open'))}</button>`);
-                items.push(`<button type="button" class="menu-item" role="menuitem" data-act="rename" data-path="${p}" data-name="${n}">${escapeHtml(t('server_mgmt.files_rename'))}…</button>`);
+                if (type === 'file') items.push(`<button type="button" class="menu-item" role="menuitem" data-act="open" data-path="${p}">${icon('open')}${escapeHtml(t('server_mgmt.files_open'))}</button>`);
+                items.push(`<button type="button" class="menu-item" role="menuitem" data-act="rename" data-path="${p}" data-name="${n}">${icon('rename')}${escapeHtml(t('server_mgmt.files_rename'))}…</button>`);
                 items.push('<span class="menu-divider"></span>');
-                items.push(`<button type="button" class="menu-item danger" role="menuitem" data-act="delete" data-path="${p}" data-name="${n}">${escapeHtml(t('actions.delete'))}…</button>`);
+                items.push(`<button type="button" class="menu-item danger" role="menuitem" data-act="delete" data-path="${p}" data-name="${n}">${icon('delete')}${escapeHtml(t('actions.delete'))}…</button>`);
                 return `
                     <tr data-type="${type}" data-path="${p}" data-name="${n}">
                         <td>${nameCell}</td>
@@ -524,21 +540,32 @@
             document.getElementById('sm-file-save').addEventListener('click', saveFile);
             document.getElementById('sm-file-close').addEventListener('click', closeEditor);
 
-            // Start in the first folder the console may open
+            // Start in the first folder the console may open; list them all beside the table
             let start = '/';
+            const rootsList = document.getElementById('sm-files-roots');
+            const rootsState = document.getElementById('sm-files-roots-state');
             try {
                 const info = await api('/api/server-management/info');
                 const roots = Array.isArray(info.fileRoots) ? info.fileRoots : [];
+                const mutable = Array.isArray(info.mutableFileRoots) ? info.mutableFileRoots : null;
                 if (roots.length) {
                     start = roots[0];
-                    const hint = document.getElementById('sm-files-roots');
-                    hint.innerHTML = escapeHtml(t('server_mgmt.files_roots')) + ' ' + roots.map((r) =>
-                        `<button type="button" class="btn-link mono" data-act="cd" data-path="${escapeHtml(r)}">${escapeHtml(r)}</button>`
-                    ).join(', ');
-                    hint.hidden = false;
-                    hint.addEventListener('click', onBodyClick);
+                    rootsList.innerHTML = roots.map((r) => {
+                        const canChange = mutable ? mutable.some((m) => r === m || r.startsWith(m.replace(/\/+$/, '') + '/')) : null;
+                        const sub = canChange === null ? '' : `<span class="row-sub">${escapeHtml(t(canChange ? 'server_mgmt.root_writable' : 'server_mgmt.root_readonly'))}</span>`;
+                        return `<li class="list-row"><span class="row-main"><span class="row-title mono">${escapeHtml(r)}</span>${sub}</span>`
+                            + `<span class="row-end"><button type="button" class="btn btn-sm" data-act="cd" data-path="${escapeHtml(r)}" aria-label="${escapeHtml(t('server_mgmt.files_open_root', { path: r }))}">${icon('files')}${escapeHtml(t('server_mgmt.files_open'))}</button></span></li>`;
+                    }).join('');
+                    rootsList.hidden = false;
+                    rootsState.hidden = true;
+                    rootsList.addEventListener('click', onBodyClick);
+                } else {
+                    rootsState.textContent = t('server_mgmt.files_roots_none');
                 }
-            } catch (_) { /* fall back to / */ }
+            } catch (_) {
+                /* fall back to / */
+                rootsState.textContent = t('server_mgmt.files_roots_error');
+            }
             refresh(start);
         }
 
@@ -618,7 +645,7 @@
                         <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"
                                 aria-label="${escapeHtml(t('server_mgmt.svc_actions_for', { name: s.name }))}"><span class="material-icons" aria-hidden="true">more_vert</span></button>
                         <span class="menu menu-end" id="${menuId}" role="menu">
-                            ${menu.map((a) => `<button type="button" class="menu-item" role="menuitem" data-svc="${name}" data-act="${a}">${escapeHtml(t('server_mgmt.svc_' + a))}</button>`).join('')}
+                            ${menu.map((a) => `<button type="button" class="menu-item" role="menuitem" data-svc="${name}" data-act="${a}">${SVC_ICONS[a] ? icon(SVC_ICONS[a]) : ''}${escapeHtml(t('server_mgmt.svc_' + a))}</button>`).join('')}
                         </span>
                     </span>` : '';
                 return `
@@ -739,7 +766,7 @@
             host.innerHTML = '';
             term = new Terminal({
                 cursorBlink: true,
-                fontFamily: '"Atkinson Hyperlegible Mono", Menlo, Consolas, monospace',
+                fontFamily: '"IBM Plex Mono", Menlo, Consolas, monospace',
                 fontSize: 13,
                 theme: { background: '#111414', foreground: '#e3e6e6', cursor: '#e3e6e6' }
             });

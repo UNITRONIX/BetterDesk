@@ -4966,7 +4966,10 @@
         "capacity_note": "De limieten tellen op wat u per relayserver hebt ingevuld. Het gebruik komt uit meldingen van de relayservers zelf; die sturen nog niets naar de console, dus het gebruik blijft 0.",
         "cap_of": "{current} van {max}",
         "cap_planning_note": "Ruwe getallen voor gangbare opstellingen. De kolom gebruik vergelijkt het huidige aantal apparaten met elke opstelling.",
-        "rec_cpu_high_named": "Deze relayservers melden een CPU boven 80 %: {names}."
+        "rec_cpu_high_named": "Deze relayservers melden een CPU boven 80 %: {names}.",
+        "diagram_note": "Getekend met de adressen die deze server nu aan clients geeft.",
+        "diagram_loading": "Adressen van deze server lezen…",
+        "diagram_error": "De adressen van deze server konden niet worden gelezen."
     },
     "cross_platform": {
         "title": "Platformonafhankelijke compatibiliteit",
@@ -5289,7 +5292,17 @@
         "col_english": "Engels",
         "missing_text": "Ontbreekt",
         "detail_loading": "Teksten laden…",
-        "detail_error": "De teksten konden niet worden geladen."
+        "detail_error": "De teksten konden niet worden geladen.",
+        "summary_title": "Dekking",
+        "summary_translated": "{done} van {total} teksten",
+        "summary_empty": "Lege teksten",
+        "summary_direction": "Schrijfrichting",
+        "ltr": "Van links naar rechts",
+        "summary_file": "Bestand",
+        "areas_title": "Ontbrekende teksten per gebied",
+        "areas_note": "Het eerste deel van elke sleutel zegt waar de tekst staat. Kies een gebied om alleen de ontbrekende teksten daarvan te tonen.",
+        "area_count": "{n} ontbreken",
+        "area_show": "Ontbrekende teksten in {area} tonen"
     },
     "resource_control": {
         "title": "Resourcebeheer",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}: {name} gedaan.",
         "svc_done_exit": "{action}: {name} mislukt met exitcode {code}.",
         "svc_action_failed_reason": "De actie is mislukt: {error}",
-        "term_keyboard": "In de terminal gaat Tab naar de shell; druk op Esc en dan Tab om verder te gaan."
+        "term_keyboard": "In de terminal gaat Tab naar de shell; druk op Esc en dan Tab om verder te gaan.",
+        "server_version": "Serverversie",
+        "console_uptime": "Webconsole draait al",
+        "files_roots_title": "Mappen die u kunt openen",
+        "files_roots_note": "De console opent alleen deze mappen en de mappen daarin.",
+        "files_roots_loading": "Mappen laden…",
+        "files_roots_none": "De console heeft geen mappen doorgegeven. Hij begint in /.",
+        "files_roots_error": "De lijst met mappen kon niet worden geladen. De bestandslijst begint in /.",
+        "root_writable": "Bestanden kunnen hier worden gewijzigd",
+        "root_readonly": "Alleen lezen",
+        "files_open_root": "{path} openen"
     },
     "download": {
         "title": "BetterDesk Agent downloaden",
@@ -6162,7 +6185,8 @@
         "badge_hover": "Tooltip: {title}",
         "tier_names_hint": "Namen van de niveaus. Laat een veld leeg om de naam uit de lijst hierboven te gebruiken.",
         "badge_effect": "Geldt direct voor de aanmeldpagina.",
-        "badge_save_failed": "Kan de badge-instellingen niet opslaan: {error}"
+        "badge_save_failed": "Kan de badge-instellingen niet opslaan: {error}",
+        "tier_this_server": "Laatste resultaat van deze server"
     },
     "commercialization": {
         "title": "Commercialisatie",

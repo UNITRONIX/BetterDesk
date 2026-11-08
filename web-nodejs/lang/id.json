@@ -4972,7 +4972,10 @@
         "capacity_note": "Batas adalah jumlah nilai yang Anda isi untuk setiap server relay. Penggunaan berasal dari laporan server relay sendiri; server belum mengirim laporan ke konsol, jadi penggunaan tetap 0.",
         "cap_of": "{current} dari {max}",
         "cap_planning_note": "Angka kasar untuk penyiapan umum. Kolom penggunaan membandingkan jumlah perangkat saat ini dengan tiap penyiapan.",
-        "rec_cpu_high_named": "Server relay ini melaporkan CPU di atas 80 %: {names}."
+        "rec_cpu_high_named": "Server relay ini melaporkan CPU di atas 80 %: {names}.",
+        "diagram_note": "Digambar dengan alamat yang saat ini diberikan server ini kepada klien.",
+        "diagram_loading": "Membaca alamat server ini…",
+        "diagram_error": "Alamat server ini tidak dapat dibaca."
     },
     "cross_platform": {
         "title": "Kompatibilitas Lintas Platform",
@@ -5295,7 +5298,17 @@
         "col_english": "Bahasa Inggris",
         "missing_text": "Kurang",
         "detail_loading": "Memuat teks…",
-        "detail_error": "Teks tidak dapat dimuat."
+        "detail_error": "Teks tidak dapat dimuat.",
+        "summary_title": "Cakupan",
+        "summary_translated": "{done} dari {total} teks",
+        "summary_empty": "Teks kosong",
+        "summary_direction": "Arah tulisan",
+        "ltr": "Kiri ke kanan",
+        "summary_file": "File",
+        "areas_title": "Teks yang hilang per area",
+        "areas_note": "Bagian pertama setiap kunci menunjukkan tempat teks muncul. Pilih area untuk hanya menampilkan teks yang hilang di area itu.",
+        "area_count": "{n} hilang",
+        "area_show": "Tampilkan teks yang hilang di {area}"
     },
     "resource_control": {
         "title": "Kontrol Sumber Daya",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} selesai.",
         "svc_done_exit": "{action}: {name} gagal dengan kode keluar {code}.",
         "svc_action_failed_reason": "Tindakan gagal: {error}",
-        "term_keyboard": "Di dalam terminal, Tab masuk ke shell; tekan Esc lalu Tab untuk keluar."
+        "term_keyboard": "Di dalam terminal, Tab masuk ke shell; tekan Esc lalu Tab untuk keluar.",
+        "server_version": "Versi server",
+        "console_uptime": "Konsol web berjalan selama",
+        "files_roots_title": "Folder yang dapat Anda buka",
+        "files_roots_note": "Konsol hanya membuka folder ini dan folder di dalamnya.",
+        "files_roots_loading": "Memuat folder…",
+        "files_roots_none": "Konsol tidak melaporkan folder apa pun. Konsol mulai di /.",
+        "files_roots_error": "Daftar folder tidak dapat dimuat. Daftar file mulai di /.",
+        "root_writable": "File dapat diubah di sini",
+        "root_readonly": "Hanya baca",
+        "files_open_root": "Buka {path}"
     },
     "download": {
         "title": "Unduh Agen BetterDesk",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Tooltip: {title}",
         "tier_names_hint": "Nama tingkat. Biarkan kolom kosong untuk memakai nama di daftar atas.",
         "badge_effect": "Langsung berlaku di halaman masuk.",
-        "badge_save_failed": "Tidak dapat menyimpan pengaturan lencana: {error}"
+        "badge_save_failed": "Tidak dapat menyimpan pengaturan lencana: {error}",
+        "tier_this_server": "Hasil terakhir server ini"
     },
     "commercialization": {
         "title": "Komersialisasi",

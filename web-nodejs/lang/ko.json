@@ -4966,7 +4966,10 @@
         "capacity_note": "한도는 릴레이 서버마다 입력한 값을 더한 것입니다. 사용량은 릴레이 서버의 보고에서 오는데, 아직 콘솔로 보고를 보내지 않아 0으로 남습니다.",
         "cap_of": "{max} 중 {current}",
         "cap_planning_note": "일반 구성의 대략적인 수치입니다. 사용량 열은 현재 기기 수를 각 구성과 비교합니다.",
-        "rec_cpu_high_named": "CPU가 80 %를 넘었다고 보고한 릴레이 서버: {names}"
+        "rec_cpu_high_named": "CPU가 80 %를 넘었다고 보고한 릴레이 서버: {names}",
+        "diagram_note": "이 서버가 지금 클라이언트에 주는 주소로 그렸습니다.",
+        "diagram_loading": "이 서버의 주소를 읽는 중…",
+        "diagram_error": "이 서버의 주소를 읽지 못했습니다."
     },
     "cross_platform": {
         "title": "크로스 플랫폼 호환성",
@@ -5289,7 +5292,17 @@
         "col_english": "영어",
         "missing_text": "누락",
         "detail_loading": "텍스트를 불러오는 중…",
-        "detail_error": "텍스트를 불러오지 못했습니다."
+        "detail_error": "텍스트를 불러오지 못했습니다.",
+        "summary_title": "번역 현황",
+        "summary_translated": "텍스트 {total}개 중 {done}개",
+        "summary_empty": "빈 텍스트",
+        "summary_direction": "쓰기 방향",
+        "ltr": "왼쪽에서 오른쪽",
+        "summary_file": "파일",
+        "areas_title": "영역별 누락된 텍스트",
+        "areas_note": "각 키의 첫 부분은 텍스트가 나타나는 위치를 나타냅니다. 영역을 선택하면 그 영역의 누락된 텍스트만 표시합니다.",
+        "area_count": "{n}개 누락",
+        "area_show": "{area}의 누락된 텍스트 표시"
     },
     "resource_control": {
         "title": "자원 제어",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}: {name} 완료.",
         "svc_done_exit": "{action}: {name} 실패, 종료 코드 {code}.",
         "svc_action_failed_reason": "작업이 실패했습니다: {error}",
-        "term_keyboard": "터미널 안에서는 Tab이 셸로 갑니다. 밖으로 이동하려면 Esc를 누른 뒤 Tab을 누르세요."
+        "term_keyboard": "터미널 안에서는 Tab이 셸로 갑니다. 밖으로 이동하려면 Esc를 누른 뒤 Tab을 누르세요.",
+        "server_version": "서버 버전",
+        "console_uptime": "웹 콘솔 실행 시간",
+        "files_roots_title": "열 수 있는 폴더",
+        "files_roots_note": "콘솔은 이 폴더와 그 안의 폴더만 엽니다.",
+        "files_roots_loading": "폴더를 불러오는 중…",
+        "files_roots_none": "콘솔이 알려준 폴더가 없습니다. / 에서 시작합니다.",
+        "files_roots_error": "폴더 목록을 불러오지 못했습니다. 파일 목록은 / 에서 시작합니다.",
+        "root_writable": "여기서 파일을 변경할 수 있습니다",
+        "root_readonly": "읽기 전용",
+        "files_open_root": "{path} 열기"
     },
     "download": {
         "title": "BetterDesk 에이전트 다운로드",
@@ -6162,7 +6185,8 @@
         "badge_hover": "도구 설명: {title}",
         "tier_names_hint": "등급 이름. 비워 두면 위 목록의 이름을 사용합니다.",
         "badge_effect": "로그인 페이지에 바로 적용됩니다.",
-        "badge_save_failed": "배지 설정을 저장하지 못했습니다: {error}"
+        "badge_save_failed": "배지 설정을 저장하지 못했습니다: {error}",
+        "tier_this_server": "이 서버의 마지막 결과"
     },
     "commercialization": {
         "title": "상용화",

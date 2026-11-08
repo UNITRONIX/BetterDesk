@@ -4966,7 +4966,10 @@
         "capacity_note": "上限は各リレーサーバーに入力した値の合計です。使用量はリレーサーバー自身の報告から得ますが、まだコンソールに報告を送らないため 0 のままです。",
         "cap_of": "{max} 中 {current}",
         "cap_planning_note": "一般的な構成のおおよその数字です。使用率の列は現在のデバイス数を各構成と比べます。",
-        "rec_cpu_high_named": "CPU が 80 % を超えていると報告しているリレーサーバー: {names}"
+        "rec_cpu_high_named": "CPU が 80 % を超えていると報告しているリレーサーバー: {names}",
+        "diagram_note": "このサーバーが現在クライアントに渡しているアドレスで描いています。",
+        "diagram_loading": "このサーバーのアドレスを読み込んでいます…",
+        "diagram_error": "このサーバーのアドレスを読み込めませんでした。"
     },
     "cross_platform": {
         "title": "クロスプラットフォーム互換性",
@@ -5289,7 +5292,17 @@
         "col_english": "英語",
         "missing_text": "不足",
         "detail_loading": "テキストを読み込み中…",
-        "detail_error": "テキストを読み込めませんでした。"
+        "detail_error": "テキストを読み込めませんでした。",
+        "summary_title": "翻訳の状況",
+        "summary_translated": "{total} 件中 {done} 件のテキスト",
+        "summary_empty": "空のテキスト",
+        "summary_direction": "書字方向",
+        "ltr": "左から右",
+        "summary_file": "ファイル",
+        "areas_title": "領域ごとの未翻訳テキスト",
+        "areas_note": "キーの最初の部分は、テキストが表示される場所を示します。領域を選ぶと、その未翻訳テキストだけを表示します。",
+        "area_count": "{n} 件未翻訳",
+        "area_show": "{area} の未翻訳テキストを表示"
     },
     "resource_control": {
         "title": "リソース制御",
@@ -6071,7 +6084,17 @@
         "svc_done": "{action}: {name} 完了。",
         "svc_done_exit": "{action}: {name} は終了コード {code} で失敗しました。",
         "svc_action_failed_reason": "操作に失敗しました: {error}",
-        "term_keyboard": "ターミナル内では Tab はシェルに送られます。外に移動するには Esc を押してから Tab を押します。"
+        "term_keyboard": "ターミナル内では Tab はシェルに送られます。外に移動するには Esc を押してから Tab を押します。",
+        "server_version": "サーバーのバージョン",
+        "console_uptime": "Web コンソールの稼働時間",
+        "files_roots_title": "開けるフォルダー",
+        "files_roots_note": "コンソールが開けるのは、これらのフォルダーとその中のフォルダーだけです。",
+        "files_roots_loading": "フォルダーを読み込んでいます…",
+        "files_roots_none": "コンソールからフォルダーが報告されていません。/ から始まります。",
+        "files_roots_error": "フォルダーの一覧を読み込めませんでした。ファイル一覧は / から始まります。",
+        "root_writable": "ここではファイルを変更できます",
+        "root_readonly": "読み取り専用",
+        "files_open_root": "{path} を開く"
     },
     "download": {
         "title": "BetterDesk エージェントをダウンロード",
@@ -6162,7 +6185,8 @@
         "badge_hover": "ツールチップ: {title}",
         "tier_names_hint": "ランク名。空欄のままにすると上の一覧の名前を使います。",
         "badge_effect": "サインインページにすぐ反映されます。",
-        "badge_save_failed": "バッジの設定を保存できませんでした: {error}"
+        "badge_save_failed": "バッジの設定を保存できませんでした: {error}",
+        "tier_this_server": "このサーバーの前回の結果"
     },
     "commercialization": {
         "title": "商用化",

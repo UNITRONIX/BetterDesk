@@ -4972,7 +4972,10 @@
         "capacity_note": "Giới hạn là tổng các giá trị bạn nhập cho từng máy chủ chuyển tiếp. Mức dùng lấy từ báo cáo của chính các máy chủ đó; chúng chưa gửi báo cáo nào về bảng điều khiển nên mức dùng vẫn là 0.",
         "cap_of": "{current} trên {max}",
         "cap_planning_note": "Số liệu ước chừng cho các cấu hình thường gặp. Cột mức dùng so sánh số thiết bị hiện tại với từng cấu hình.",
-        "rec_cpu_high_named": "Các máy chủ chuyển tiếp này báo CPU trên 80 %: {names}."
+        "rec_cpu_high_named": "Các máy chủ chuyển tiếp này báo CPU trên 80 %: {names}.",
+        "diagram_note": "Vẽ bằng các địa chỉ máy chủ này đang cấp cho máy khách.",
+        "diagram_loading": "Đang đọc địa chỉ của máy chủ này…",
+        "diagram_error": "Không đọc được địa chỉ của máy chủ này."
     },
     "cross_platform": {
         "title": "Khả năng tương thích đa nền tảng",
@@ -5295,7 +5298,17 @@
         "col_english": "Tiếng Anh",
         "missing_text": "Còn thiếu",
         "detail_loading": "Đang tải văn bản…",
-        "detail_error": "Không tải được văn bản."
+        "detail_error": "Không tải được văn bản.",
+        "summary_title": "Mức độ dịch",
+        "summary_translated": "{done} trên {total} văn bản",
+        "summary_empty": "Văn bản trống",
+        "summary_direction": "Hướng viết",
+        "ltr": "Trái sang phải",
+        "summary_file": "Tệp",
+        "areas_title": "Văn bản còn thiếu theo khu vực",
+        "areas_note": "Phần đầu của mỗi khóa cho biết văn bản xuất hiện ở đâu. Chọn một khu vực để chỉ xem các văn bản còn thiếu của nó.",
+        "area_count": "Thiếu {n}",
+        "area_show": "Hiện văn bản còn thiếu trong {area}"
     },
     "resource_control": {
         "title": "Kiểm soát tài nguyên",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} xong.",
         "svc_done_exit": "{action}: {name} lỗi với mã thoát {code}.",
         "svc_action_failed_reason": "Thao tác thất bại: {error}",
-        "term_keyboard": "Trong terminal, phím Tab được gửi tới shell; nhấn Esc rồi Tab để ra ngoài."
+        "term_keyboard": "Trong terminal, phím Tab được gửi tới shell; nhấn Esc rồi Tab để ra ngoài.",
+        "server_version": "Phiên bản máy chủ",
+        "console_uptime": "Bảng điều khiển web đã chạy",
+        "files_roots_title": "Thư mục bạn có thể mở",
+        "files_roots_note": "Bảng điều khiển chỉ mở các thư mục này và các thư mục bên trong.",
+        "files_roots_loading": "Đang tải thư mục…",
+        "files_roots_none": "Bảng điều khiển không báo thư mục nào. Bắt đầu ở /.",
+        "files_roots_error": "Không tải được danh sách thư mục. Danh sách tệp bắt đầu ở /.",
+        "root_writable": "Có thể thay đổi tệp ở đây",
+        "root_readonly": "Chỉ đọc",
+        "files_open_root": "Mở {path}"
     },
     "download": {
         "title": "Tải xuống Đại lý BetterDesk",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Chú thích: {title}",
         "tier_names_hint": "Tên các hạng. Để trống một ô để dùng tên trong danh sách ở trên.",
         "badge_effect": "Áp dụng ngay cho trang đăng nhập.",
-        "badge_save_failed": "Không lưu được cài đặt huy hiệu: {error}"
+        "badge_save_failed": "Không lưu được cài đặt huy hiệu: {error}",
+        "tier_this_server": "Kết quả gần nhất của máy chủ này"
     },
     "commercialization": {
         "title": "Thương mại hóa",

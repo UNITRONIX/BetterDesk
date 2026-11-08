@@ -4972,7 +4972,10 @@
         "capacity_note": "Grensene summerer det du har angitt for hver relay-server. Bruken kommer fra relay-servernes egne rapporter; de sender ingen til konsollen ennå, så bruken står på 0.",
         "cap_of": "{current} av {max}",
         "cap_planning_note": "Omtrentlige tall for vanlige oppsett. Kolonnen bruk sammenligner dagens antall enheter med hvert oppsett.",
-        "rec_cpu_high_named": "Disse relay-serverne melder CPU over 80 %: {names}."
+        "rec_cpu_high_named": "Disse relay-serverne melder CPU over 80 %: {names}.",
+        "diagram_note": "Tegnet med adressene denne serveren gir klienter akkurat nå.",
+        "diagram_loading": "Leser adressene til denne serveren…",
+        "diagram_error": "Kunne ikke lese adressene til denne serveren."
     },
     "cross_platform": {
         "title": "Kompatibilitet på tvers av plattformer",
@@ -5295,7 +5298,17 @@
         "col_english": "Engelsk",
         "missing_text": "Mangler",
         "detail_loading": "Laster inn tekster…",
-        "detail_error": "Kunne ikke laste inn tekstene."
+        "detail_error": "Kunne ikke laste inn tekstene.",
+        "summary_title": "Dekning",
+        "summary_translated": "{done} av {total} tekster",
+        "summary_empty": "Tomme tekster",
+        "summary_direction": "Skriveretning",
+        "ltr": "Venstre mot høyre",
+        "summary_file": "Fil",
+        "areas_title": "Manglende tekster etter område",
+        "areas_note": "Første del av hver nøkkel viser hvor teksten står. Velg et område for å bare se de manglende tekstene der.",
+        "area_count": "{n} mangler",
+        "area_show": "Vis manglende tekster i {area}"
     },
     "resource_control": {
         "title": "Ressurskontroll",
@@ -6077,7 +6090,17 @@
         "svc_done": "{action}: {name} utført.",
         "svc_done_exit": "{action}: {name} feilet med avslutningskode {code}.",
         "svc_action_failed_reason": "Handlingen mislyktes: {error}",
-        "term_keyboard": "I terminalen går Tab til skallet; trykk Esc og deretter Tab for å gå videre."
+        "term_keyboard": "I terminalen går Tab til skallet; trykk Esc og deretter Tab for å gå videre.",
+        "server_version": "Serverversjon",
+        "console_uptime": "Nettkonsollen har kjørt i",
+        "files_roots_title": "Mapper du kan åpne",
+        "files_roots_note": "Konsollen åpner bare disse mappene og mappene i dem.",
+        "files_roots_loading": "Laster inn mapper…",
+        "files_roots_none": "Konsollen oppga ingen mapper. Den starter i /.",
+        "files_roots_error": "Kunne ikke laste inn listen over mapper. Fillisten starter i /.",
+        "root_writable": "Filer kan endres her",
+        "root_readonly": "Kun lesing",
+        "files_open_root": "Åpne {path}"
     },
     "download": {
         "title": "Last ned BetterDesk Agent",
@@ -6168,7 +6191,8 @@
         "badge_hover": "Verktøytips: {title}",
         "tier_names_hint": "Navn på nivåer. La et felt stå tomt for å bruke navnet i listen over.",
         "badge_effect": "Gjelder påloggingssiden med en gang.",
-        "badge_save_failed": "Kunne ikke lagre merkeinnstillingene: {error}"
+        "badge_save_failed": "Kunne ikke lagre merkeinnstillingene: {error}",
+        "tier_this_server": "Siste resultat for denne serveren"
     },
     "commercialization": {
         "title": "Kommersialisering",

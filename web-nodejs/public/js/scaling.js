@@ -33,6 +33,7 @@
     // -----------------------------------------------------------------------
     async function init() {
         document.getElementById('relay-search')?.addEventListener('input', filterRelays);
+        loadDiagram();
         await Promise.all([loadRelays(), loadRules()]);
         loadCapacity();
         // Old links used ?tab=relays|rules|capacity; jump to that section
@@ -101,7 +102,7 @@
         const tbody = document.getElementById('relays-tbody');
         if (!tbody) return;
         if (_relays.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="state-cell">${escHtml(_('scaling.no_relays'))} <button type="button" class="btn btn-sm" data-bd-call="Scaling.showAddRelay">${escHtml(_('scaling.relay_add'))}</button></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="state-cell">${escHtml(_('scaling.no_relays'))} <button type="button" class="btn btn-sm" data-bd-call="Scaling.showAddRelay">${window.Utils && Utils.icon ? Utils.icon('add') : ''}${escHtml(_('scaling.relay_add'))}</button></td></tr>`;
             return;
         }
         tbody.innerHTML = _relays.map(r => `
@@ -501,6 +502,47 @@
                 <td class="num-col">${t.maxSess.toLocaleString()}</td>
                 <td>${meter(t.maxDev > 0 ? (tot.devices / t.maxDev) * 100 : 0)}</td>
             </tr>`).join('');
+    }
+
+    // -----------------------------------------------------------------------
+    // How a connection works: the addresses clients get right now
+    // -----------------------------------------------------------------------
+    // "host:port" -> { host, port }; bare IPv6 addresses keep their colons
+    function splitHostPort(value, fallbackPort) {
+        const v = String(value || '').trim();
+        const m = v.match(/^\[?([^\]]+?)\]?:(\d{1,5})$/);
+        if (m && (v.startsWith('[') || v.indexOf(':') === v.lastIndexOf(':'))) return { host: m[1], port: Number(m[2]) };
+        return { host: v, port: fallbackPort };
+    }
+
+    async function loadDiagram() {
+        const el = document.getElementById('scaling-diagram');
+        if (!el || !window.UiDiagram) return;
+        try {
+            const [cfg, mode] = await Promise.all([
+                getJson('/api/dashboard/client-config'),
+                getJson('/api/settings/connection-mode').catch(() => null),
+            ]);
+            const c = cfg.data || cfg;
+            const m = mode ? (mode.data || mode) : {};
+            const runtime = m.runtime || {};
+            // The ID server hands out RELAY_SERVERS when it is set; otherwise clients use their own relay setting
+            const relayRaw = String(runtime.relay_servers || '').split(',').map(x => x.trim()).filter(Boolean)[0] || c.relay_server;
+            const id = splitHostPort(c.server_id, 21116);
+            const relay = splitHostPort(relayRaw || c.server_id, 21117);
+            const relayOnly = m.mode === 'relay_only' || runtime.always_use_relay === true;
+            window.UiDiagram.connection(el, {
+                idServer: id.host, idPort: id.port,
+                relay: relay.host, relayPort: relay.port,
+                mode: relayOnly ? 'relay-only' : 'direct-first',
+            });
+        } catch (err) {
+            el.innerHTML = `<p class="state is-error">${escHtml(_('scaling.diagram_error'))} <button type="button" class="btn btn-sm" id="scaling-diagram-retry">${escHtml(_('actions.retry'))}</button></p>`;
+            document.getElementById('scaling-diagram-retry')?.addEventListener('click', () => {
+                el.innerHTML = `<p class="state">${escHtml(_('scaling.diagram_loading'))}</p>`;
+                loadDiagram();
+            });
+        }
     }
 
     // -----------------------------------------------------------------------

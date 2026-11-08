@@ -5090,7 +5090,10 @@
         "capacity_note": "Limity sumują wartości wpisane dla każdego serwera. Użycie pochodzi z raportów samych serwerów przekaźnikowych; nie wysyłają ich jeszcze do konsoli, więc użycie wynosi 0.",
         "cap_of": "{current} z {max}",
         "cap_planning_note": "Przybliżone liczby dla typowych układów. Kolumna użycia porównuje dzisiejszą liczbę urządzeń z każdym układem.",
-        "rec_cpu_high_named": "Te serwery zgłaszają CPU powyżej 80 %: {names}."
+        "rec_cpu_high_named": "Te serwery zgłaszają CPU powyżej 80 %: {names}.",
+        "diagram_note": "Narysowano z adresami, które ten serwer teraz przekazuje klientom.",
+        "diagram_loading": "Odczytywanie adresów tego serwera…",
+        "diagram_error": "Nie udało się odczytać adresów tego serwera."
     },
     "cross_platform": {
         "title": "Kompatybilność wieloplatformowa",
@@ -5413,7 +5416,17 @@
         "col_english": "Angielski",
         "missing_text": "Brak",
         "detail_loading": "Wczytywanie tekstów…",
-        "detail_error": "Nie udało się wczytać tekstów."
+        "detail_error": "Nie udało się wczytać tekstów.",
+        "summary_title": "Pokrycie",
+        "summary_translated": "{done} z {total} tekstów",
+        "summary_empty": "Puste teksty",
+        "summary_direction": "Kierunek pisma",
+        "ltr": "Od lewej do prawej",
+        "summary_file": "Plik",
+        "areas_title": "Brakujące teksty według obszaru",
+        "areas_note": "Pierwsza część każdego klucza mówi, gdzie pojawia się tekst. Wybierz obszar, aby wyświetlić tylko jego brakujące teksty.",
+        "area_count": "Brakuje: {n}",
+        "area_show": "Pokaż brakujące teksty w {area}"
     },
     "resource_control": {
         "title": "Kontrola zasobów",
@@ -6089,7 +6102,17 @@
         "svc_done": "{action}: {name} gotowe.",
         "svc_done_exit": "{action}: {name} nie powiodło się, kod wyjścia {code}.",
         "svc_action_failed_reason": "Działanie nie powiodło się: {error}",
-        "term_keyboard": "W terminalu Tab trafia do powłoki; naciśnij Esc, a potem Tab, aby przejść dalej."
+        "term_keyboard": "W terminalu Tab trafia do powłoki; naciśnij Esc, a potem Tab, aby przejść dalej.",
+        "server_version": "Wersja serwera",
+        "console_uptime": "Konsola webowa działa od",
+        "files_roots_title": "Foldery, które możesz otworzyć",
+        "files_roots_note": "Konsola otwiera tylko te foldery i foldery w nich.",
+        "files_roots_loading": "Wczytywanie folderów…",
+        "files_roots_none": "Konsola nie zgłosiła żadnych folderów. Zaczyna w /.",
+        "files_roots_error": "Nie udało się wczytać listy folderów. Lista plików zaczyna się w /.",
+        "root_writable": "Tutaj można zmieniać pliki",
+        "root_readonly": "Tylko do odczytu",
+        "files_open_root": "Otwórz {path}"
     },
     "server_attestation": {
         "title": "Atest serwera",
@@ -6162,7 +6185,8 @@
         "badge_hover": "Podpowiedź: {title}",
         "tier_names_hint": "Nazwy poziomów. Zostaw pole puste, aby użyć nazwy z listy powyżej.",
         "badge_effect": "Działa od razu na stronie logowania.",
-        "badge_save_failed": "Nie udało się zapisać ustawień odznaki: {error}"
+        "badge_save_failed": "Nie udało się zapisać ustawień odznaki: {error}",
+        "tier_this_server": "Ostatni wynik tego serwera"
     },
     "commercialization": {
         "title": "Komercjalizacja",

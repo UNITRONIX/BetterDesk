@@ -1,20 +1,22 @@
 <%- include('layouts/main', {
     title: _('nav.scaling'),
     uiReworked: true,
-    pageStyles: ['ui/scaling'],
-    pageScripts: ['scaling'],
+    pageStyles: ['ui/chart', 'ui/scaling'],
+    pageScripts: ['ui-diagram', 'scaling'],
     currentPage: 'scaling',
     breadcrumb: [{ label: _('nav.scaling') }],
     body: `
-<div class="page page-wide scaling-page" id="scaling-page" data-initial-section="${typeof activeTab !== 'undefined' ? activeTab : 'overview'}">
+<div class="page scaling-page" id="scaling-page" data-initial-section="${typeof activeTab !== 'undefined' ? activeTab : 'overview'}">
     <div class="page-head">
         <h1>${_('nav.scaling')}</h1>
         <p class="page-description">${_('scaling.page_description', { link: '<a href="/settings?tab=general#public-endpoints">' + _('nav.settings') + ' › ' + _('settings.tab_general') + ' › ' + _('settings.public_endpoints_title') + '</a>' })}</p>
         <div class="page-actions">
-            <button type="button" class="btn btn-primary" data-bd-call="Scaling.showAddRelay">${_('scaling.relay_add')}</button>
+            <button type="button" class="btn btn-primary" data-bd-call="Scaling.showAddRelay"><span class="material-icons" aria-hidden="true">add</span>${_('scaling.relay_add')}</button>
         </div>
     </div>
 
+    <div class="page-cols">
+    <div class="page-main">
     <section class="section" id="panel-relays" aria-labelledby="relays-title">
         <div class="section-head"><h2 id="relays-title">${_('scaling.relays_title')}</h2></div>
         <p class="section-note">${_('scaling.relays_info_banner')}</p>
@@ -46,7 +48,7 @@
     <section class="section" id="panel-rules" aria-labelledby="rules-title">
         <div class="section-head">
             <h2 id="rules-title">${_('scaling.tab_rules')}</h2>
-            <button type="button" class="btn btn-sm" id="rule-add-btn" data-bd-call="Scaling.showAddRule">${_('scaling.rule_add')}</button>
+            <button type="button" class="btn btn-sm" id="rule-add-btn" data-bd-call="Scaling.showAddRule"><span class="material-icons" aria-hidden="true">add</span>${_('scaling.rule_add')}</button>
         </div>
         <p class="section-note">${_('scaling.rules_hint')}</p>
         <div class="table-scroll" tabindex="0" role="region" aria-labelledby="rules-title">
@@ -69,30 +71,41 @@
         </div>
     </section>
 
-    <section class="section" id="panel-capacity" aria-labelledby="capacity-title">
-        <div class="section-head"><h2 id="capacity-title">${_('scaling.tab_capacity')}</h2></div>
-        <p class="section-note">${_('scaling.capacity_note')}</p>
-        <dl class="facts" id="capacity-tiers">
-            <dt>${_('scaling.cap_tier_devices')}</dt><dd>–</dd>
-        </dl>
-        <p id="capacity-recommendations" class="scaling-recommendation"></p>
-        <details class="disclosure">
-            <summary><h3>${_('scaling.cap_planning')}</h3></summary>
-            <p class="section-note scaling-planning-note">${_('scaling.cap_planning_note')}</p>
-            <div class="table-scroll" tabindex="0" role="region" aria-label="${_('scaling.cap_planning')}">
-                <table class="data-table" id="capacity-table">
-                    <thead>
-                        <tr>
-                            <th scope="col">${_('scaling.cap_config')}</th>
-                            <th scope="col" class="num-col">${_('scaling.cap_max_devices')}</th>
-                            <th scope="col" class="num-col">${_('scaling.cap_max_sessions')}</th>
-                            <th scope="col">${_('scaling.cap_utilization')}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="capacity-tbody"></tbody>
-                </table>
-            </div>
-        </details>
+    <section class="section" id="panel-diagram" aria-labelledby="diagram-title">
+        <div class="section-head"><h2 id="diagram-title">${_('diagram.how_title')}</h2></div>
+        <p class="section-note">${_('scaling.diagram_note')}</p>
+        <div id="scaling-diagram"><p class="state">${_('scaling.diagram_loading')}</p></div>
     </section>
+
+    <details class="disclosure section" id="panel-sizing">
+        <summary><h2 id="sizing-title">${_('scaling.cap_planning')}</h2></summary>
+        <p class="section-note scaling-planning-note">${_('scaling.cap_planning_note')}</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="${_('scaling.cap_planning')}">
+            <table class="data-table" id="capacity-table">
+                <thead>
+                    <tr>
+                        <th scope="col">${_('scaling.cap_config')}</th>
+                        <th scope="col" class="num-col">${_('scaling.cap_max_devices')}</th>
+                        <th scope="col" class="num-col">${_('scaling.cap_max_sessions')}</th>
+                        <th scope="col">${_('scaling.cap_utilization')}</th>
+                    </tr>
+                </thead>
+                <tbody id="capacity-tbody"></tbody>
+            </table>
+        </div>
+    </details>
+    </div>
+
+    <aside class="page-side" aria-labelledby="capacity-title">
+        <section class="section" id="panel-capacity" aria-labelledby="capacity-title">
+            <div class="section-head"><h2 id="capacity-title">${_('scaling.tab_capacity')}</h2></div>
+            <p class="section-note">${_('scaling.capacity_note')}</p>
+            <dl class="facts" id="capacity-tiers">
+                <dt>${_('scaling.cap_tier_devices')}</dt><dd>–</dd>
+            </dl>
+            <p id="capacity-recommendations" class="scaling-recommendation"></p>
+        </section>
+    </aside>
+    </div>
 </div>
 ` }) %>
