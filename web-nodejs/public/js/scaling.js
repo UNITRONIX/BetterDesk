@@ -1,10 +1,12 @@
-/* scaling.js — Scaling & Relay Node Management */
+/* scaling.js: Relay servers page (relay list, assignment rules, capacity) */
 'use strict';
 (function () {
-    const _ = window._ || (k => k);
+    const _ = (key, vars) => (typeof window._ === 'function' ? window._(key, vars || {}) : key);
     let _relays = [];
     let _rules = [];
     let _capacity = null;
+    let _relaysLoaded = false;
+    let _rulesLoaded = false;
 
     function csrfHeaders(extra) {
         const h = Object.assign({}, extra || {});
@@ -17,206 +19,176 @@
         if (!message) return;
         if (window.Notifications && typeof window.Notifications[level] === 'function') {
             window.Notifications[level](message);
-            return;
         }
-        if (window.Toast && typeof window.Toast[level] === 'function') {
-            window.Toast[level]('', message);
-            return;
-        }
-        if (level === 'error' || level === 'warning') {
-            try { alert(message); } catch (_e) { /* ignore */ }
-        }
+    }
+
+    async function getJson(url) {
+        const resp = await fetch(url, { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.json();
     }
 
     // -----------------------------------------------------------------------
     // Init
     // -----------------------------------------------------------------------
     async function init() {
-        const activeTab = document.querySelector('.scaling-tab.active')?.dataset.tab || 'overview';
-        if (activeTab === 'overview') loadOverview();
-        if (activeTab === 'relays') loadRelays();
-        if (activeTab === 'rules') loadRules();
-        if (activeTab === 'capacity') loadCapacity();
+        document.getElementById('relay-search')?.addEventListener('input', filterRelays);
+        await Promise.all([loadRelays(), loadRules()]);
+        loadCapacity();
+        // Old links used ?tab=relays|rules|capacity; jump to that section
+        const section = document.getElementById('scaling-page')?.dataset.initialSection;
+        if (section && section !== 'overview') {
+            document.getElementById('panel-' + section)?.scrollIntoView({ block: 'start' });
+        }
     }
 
     function switchTab(tab) {
-        document.querySelectorAll('.scaling-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-        document.querySelectorAll('.scaling-panel').forEach(p => p.style.display = 'none');
-        const panel = document.getElementById('panel-' + tab);
-        if (panel) panel.style.display = 'block';
-        if (tab === 'overview') loadOverview();
-        if (tab === 'relays') loadRelays();
-        if (tab === 'rules') loadRules();
-        if (tab === 'capacity') loadCapacity();
-        const url = new URL(window.location); url.searchParams.set('tab', tab);
-        window.history.replaceState({}, '', url);
+        document.getElementById('panel-' + tab)?.scrollIntoView({ block: 'start' });
     }
 
-    // -----------------------------------------------------------------------
-    // Overview
-    // -----------------------------------------------------------------------
-    async function loadOverview() {
-        await loadRelays();
-        renderArchDiagram();
-        renderSummaryCards();
-        renderRelayHealthGrid();
+    function loadOverview() {
+        return loadRelays();
     }
 
-    function renderSummaryCards() {
-        const totalRelays = _relays.length;
-        const totalDevices = _relays.reduce((s, r) => s + (r.connected_devices || 0), 0);
-        const activeSessions = _relays.reduce((s, r) => s + (r.active_sessions || 0), 0);
-        const bandwidth = _relays.reduce((s, r) => s + (r.bandwidth_mbps || 0), 0);
-
-        setText('stat-total-relays', totalRelays);
-        setText('stat-total-devices', totalRelays > 0 ? totalDevices : '—');
-        setText('stat-active-sessions', totalRelays > 0 ? activeSessions : '—');
-        setText('stat-bandwidth', totalRelays > 0 ? bandwidth.toFixed(1) + ' Mbps' : '—');
-    }
-
-    function renderArchDiagram() {
-        const container = document.getElementById('arch-diagram');
-        if (!container) return;
-        if (_relays.length === 0) {
-            container.innerHTML = `<div class="arch-empty">${_('scaling.no_relays')}</div>`;
-            return;
-        }
-        // SVG topology: master in center, relay nodes around it
-        const w = 700, h = 260, cx = w / 2, cy = 50;
-        const relayY = 160;
-        const relaySpacing = Math.min(160, (w - 120) / Math.max(_relays.length, 1));
-        const startX = cx - ((_relays.length - 1) * relaySpacing) / 2;
-
-        let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="max-width:${w}px">`;
-        // Master node
-        svg += `<rect x="${cx - 70}" y="${cy - 20}" width="140" height="40" rx="8" fill="rgba(88,166,255,.15)" stroke="#58a6ff" stroke-width="1.5"/>`;
-        svg += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="600">Master Server</text>`;
-
-        _relays.forEach((relay, i) => {
-            const rx = startX + i * relaySpacing;
-            const color = relay.status === 'online' ? '#3fb950' : relay.status === 'degraded' ? '#d29922' : '#f85149';
-            // Connection line
-            svg += `<line x1="${cx}" y1="${cy + 20}" x2="${rx}" y2="${relayY - 20}" stroke="${color}" stroke-width="1" stroke-dasharray="4,3" opacity=".5"/>`;
-            // Relay box
-            svg += `<rect x="${rx - 60}" y="${relayY - 20}" width="120" height="36" rx="6" fill="rgba(${relay.status === 'online' ? '63,185,80' : relay.status === 'degraded' ? '210,153,34' : '248,81,73'},.1)" stroke="${color}" stroke-width="1"/>`;
-            svg += `<circle cx="${rx - 44}" cy="${relayY}" r="4" fill="${color}"/>`;
-            svg += `<text x="${rx - 34}" y="${relayY + 4}" fill="#e6edf3" font-size="10" font-weight="500">${escHtml(relay.name || 'Relay ' + (i + 1))}</text>`;
-            // Device count below
-            const devCount = relay.connected_devices || 0;
-            svg += `<text x="${rx}" y="${relayY + 30}" text-anchor="middle" fill="#8b949e" font-size="9">${devCount} ${_('scaling.stat_total_devices').toLowerCase()}</text>`;
+    function renderCount() {
+        const el = document.getElementById('relays-count');
+        if (!el) return;
+        if (!_relaysLoaded || !_relays.length) { el.textContent = ''; return; }
+        const reporting = _relays.filter(r => r.status && r.status !== 'unknown').length;
+        el.innerHTML = _('scaling.count_line', {
+            relays: `<strong>${_relays.length}</strong>`,
+            rules: `<strong>${_rules.length}</strong>`,
+            reporting: `<strong>${reporting}</strong>`
         });
-
-        svg += '</svg>';
-        container.innerHTML = svg;
-    }
-
-    function renderRelayHealthGrid() {
-        const grid = document.getElementById('relay-health-grid');
-        if (!grid) return;
-        if (_relays.length === 0) {
-            grid.innerHTML = `<div class="scaling-empty">${_('scaling.no_relays')}</div>`;
-            return;
-        }
-        grid.innerHTML = _relays.map(r => {
-            const status = r.status || 'offline';
-            const cpuPct = r.cpu || 0;
-            const memPct = r.memory || 0;
-            const bwPct = r.max_bandwidth_mbps ? Math.round((r.bandwidth_mbps || 0) / r.max_bandwidth_mbps * 100) : 0;
-            const sessPct = r.max_sessions ? Math.round((r.active_sessions || 0) / r.max_sessions * 100) : 0;
-            return `
-                <div class="relay-health-card">
-                    <div class="relay-health-header">
-                        <div class="relay-health-name">
-                            <span class="relay-health-dot ${status}"></span>
-                            ${escHtml(r.name || r.id)}
-                        </div>
-                        <div class="relay-health-location">${escHtml(r.location || '')}</div>
-                    </div>
-                    <div class="relay-health-metrics">
-                        ${metricBar('CPU', cpuPct)}
-                        ${metricBar(_('scaling.col_bandwidth'), bwPct)}
-                        ${metricBar('RAM', memPct)}
-                        ${metricBar(_('scaling.col_sessions'), sessPct)}
-                    </div>
-                </div>`;
-        }).join('');
-    }
-
-    function metricBar(label, pct) {
-        const cls = pct > 85 ? 'high' : pct > 60 ? 'med' : 'low';
-        return `<div class="relay-metric">
-            <div class="relay-metric-label">${escHtml(label)}</div>
-            <div class="relay-metric-bar"><div class="relay-metric-fill ${cls}" style="width:${pct}%"></div></div>
-            <div class="relay-metric-value">${pct}%</div>
-        </div>`;
     }
 
     // -----------------------------------------------------------------------
-    // Relays CRUD
+    // Relays
     // -----------------------------------------------------------------------
     async function loadRelays() {
+        const tbody = document.getElementById('relays-tbody');
         try {
-            const resp = await fetch('/api/panel/scaling/relays');
-            const data = await resp.json();
+            const data = await getJson('/api/panel/scaling/relays');
             _relays = Array.isArray(data) ? data : (data.data || data.relays || []);
-        } catch { _relays = []; }
-        renderRelaysTable();
+            _relaysLoaded = true;
+            renderRelaysTable();
+        } catch {
+            _relays = [];
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="5" class="state-cell"><span class="text-danger">${escHtml(_('scaling.relays_error'))}</span> <button type="button" class="btn btn-sm" data-bd-call="Scaling.loadRelays">${escHtml(_('actions.retry'))}</button></td></tr>`;
+            }
+        }
+        renderCount();
+    }
+
+    function relayStatusCell(r) {
+        const status = r.status || 'unknown';
+        if (status === 'unknown') {
+            return `<span class="status offline">${escHtml(_('scaling.status_unknown'))}</span>`;
+        }
+        const cls = status === 'online' ? 'online' : status === 'degraded' ? 'degraded' : 'offline';
+        const usage = _('scaling.relay_usage', {
+            devices: r.connected_devices || 0,
+            sessions: r.active_sessions || 0,
+            bandwidth: (r.bandwidth_mbps || 0).toFixed(1),
+            cpu: r.cpu || 0,
+            memory: r.memory || 0
+        });
+        return `<span class="status ${cls}">${escHtml(_('scaling.status_' + status))}</span><span class="cell-sub">${escHtml(usage)}</span>`;
     }
 
     function renderRelaysTable() {
         const tbody = document.getElementById('relays-tbody');
         if (!tbody) return;
         if (_relays.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="scaling-empty">${_('scaling.no_relays')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="state-cell">${escHtml(_('scaling.no_relays'))} <button type="button" class="btn btn-sm" data-bd-call="Scaling.showAddRelay">${escHtml(_('scaling.relay_add'))}</button></td></tr>`;
             return;
         }
         tbody.innerHTML = _relays.map(r => `
             <tr data-id="${escAttr(r.id)}">
-                <td><strong>${escHtml(r.name || r.id)}</strong></td>
-                <td><code>${escHtml(r.address || '—')}</code></td>
-                <td>${escHtml(r.location || '—')}</td>
-                <td>${r.connected_devices || 0}</td>
-                <td>${r.active_sessions || 0}${r.max_sessions ? ' / ' + r.max_sessions : ''}</td>
-                <td>${(r.bandwidth_mbps || 0).toFixed(1)} Mbps</td>
-                <td><span class="scaling-status ${r.status || 'offline'}">${_('scaling.status_' + (r.status || 'offline'))}</span></td>
-                <td>
-                    <button class="btn-icon" data-bd-call="Scaling.editRelay" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.edit')}"><span class="material-icons">edit</span></button>
-                    <button class="btn-icon" data-bd-call="Scaling.deleteRelay" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.delete')}"><span class="material-icons">delete</span></button>
+                <td><strong>${escHtml(r.name || r.id)}</strong>${r.location ? `<span class="cell-sub">${escHtml(r.location)}</span>` : ''}</td>
+                <td class="mono">${escHtml(r.address || '–')}</td>
+                <td>${escHtml(_('scaling.relay_limits', { sessions: r.max_sessions || 0, bandwidth: r.max_bandwidth_mbps || 0 }))}</td>
+                <td>${relayStatusCell(r)}</td>
+                <td class="actions">
+                    <button type="button" class="btn btn-sm" data-bd-call="Scaling.editRelay" data-bd-args='["${escAttr(r.id)}"]' aria-label="${escAttr(_('scaling.edit_named', { name: r.name || r.id }))}">${escHtml(_('scaling.edit'))}</button>
+                    <button type="button" class="btn btn-sm btn-danger-quiet" data-bd-call="Scaling.deleteRelay" data-bd-args='["${escAttr(r.id)}"]' aria-label="${escAttr(_('scaling.delete_named', { name: r.name || r.id }))}">${escHtml(_('scaling.delete'))}…</button>
                 </td>
             </tr>
         `).join('');
+        filterRelays();
     }
 
     function filterRelays() {
         const q = (document.getElementById('relay-search')?.value || '').toLowerCase();
         const rows = document.querySelectorAll('#relays-tbody tr[data-id]');
+        let shown = 0;
         rows.forEach(row => {
-            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+            const match = row.textContent.toLowerCase().includes(q);
+            row.hidden = !match;
+            if (match) shown++;
         });
+        let none = document.getElementById('relays-no-match');
+        if (rows.length && !shown) {
+            if (!none) {
+                none = document.createElement('tr');
+                none.id = 'relays-no-match';
+                none.innerHTML = `<td colspan="5" class="state-cell">${escHtml(_('scaling.relays_no_match'))}</td>`;
+                document.getElementById('relays-tbody').appendChild(none);
+            }
+        } else if (none) {
+            none.remove();
+        }
     }
 
-    function showAddRelay() {
-        document.getElementById('relay-edit-id').value = '';
-        document.getElementById('relay-name').value = '';
-        document.getElementById('relay-address').value = '';
-        document.getElementById('relay-location').value = '';
-        document.getElementById('relay-max-sessions').value = '50';
-        document.getElementById('relay-max-bw').value = '100';
-        document.getElementById('relay-modal-title').textContent = _('scaling.relay_add');
-        document.getElementById('relay-modal').style.display = '';
+    function field(id, labelKey, input, hintKey) {
+        return `<div class="form-group">
+            <label class="form-label" for="${id}">${escHtml(_(labelKey))}</label>
+            ${input}
+            ${hintKey ? `<p class="form-hint">${escHtml(_(hintKey))}</p>` : ''}
+        </div>`;
     }
+
+    function relayForm(r) {
+        return `<form id="relay-form" class="scaling-dialog-form" novalidate>
+            <input type="hidden" id="relay-edit-id" value="${escAttr(r ? r.id : '')}">
+            ${field('relay-name', 'scaling.col_name', `<input type="text" id="relay-name" class="form-input" maxlength="80" value="${escAttr(r ? r.name || '' : '')}" autocomplete="off">`, 'scaling.relay_name_hint')}
+            ${field('relay-address', 'scaling.col_address', `<input type="text" id="relay-address" class="form-input mono" value="${escAttr(r ? r.address || '' : '')}" autocomplete="off" spellcheck="false" placeholder="relay.example.com:21117">`, 'scaling.relay_address_hint')}
+            ${field('relay-location', 'scaling.col_location', `<input type="text" id="relay-location" class="form-input" maxlength="80" value="${escAttr(r ? r.location || '' : '')}" autocomplete="off">`, 'scaling.relay_location_hint')}
+            ${field('relay-max-sessions', 'scaling.relay_max_sessions', `<input type="number" id="relay-max-sessions" class="form-input is-short" min="1" value="${escAttr(r ? r.max_sessions || 50 : 50)}">`)}
+            ${field('relay-max-bw', 'scaling.relay_max_bandwidth', `<input type="number" id="relay-max-bw" class="form-input is-short" min="1" value="${escAttr(r ? r.max_bandwidth_mbps || 100 : 100)}">`, 'scaling.relay_limits_hint')}
+            <p class="form-status" id="relay-form-status" aria-live="polite"></p>
+            <button type="submit" hidden></button>
+        </form>`;
+    }
+
+    function openRelayDialog(r) {
+        Modal.show({
+            title: r ? _('scaling.relay_edit') : _('scaling.relay_add'),
+            content: relayForm(r),
+            buttons: [
+                { label: _('scaling.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: r ? _('scaling.save') : _('scaling.relay_add'), class: 'btn-primary', onClick: saveRelay }
+            ]
+        });
+        document.getElementById('relay-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveRelay(); });
+    }
+
+    function showAddRelay() { openRelayDialog(null); }
 
     function editRelay(id) {
         const r = _relays.find(x => x.id === id);
-        if (!r) return;
-        document.getElementById('relay-edit-id').value = r.id;
-        document.getElementById('relay-name').value = r.name || '';
-        document.getElementById('relay-address').value = r.address || '';
-        document.getElementById('relay-location').value = r.location || '';
-        document.getElementById('relay-max-sessions').value = r.max_sessions || 50;
-        document.getElementById('relay-max-bw').value = r.max_bandwidth_mbps || 100;
-        document.getElementById('relay-modal-title').textContent = _('scaling.edit');
-        document.getElementById('relay-modal').style.display = '';
+        if (r) openRelayDialog(r);
+    }
+
+    function formError(id, message) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = message;
+            el.classList.add('is-error');
+        } else {
+            notify('error', message);
+        }
     }
 
     async function saveRelay() {
@@ -229,7 +201,7 @@
             max_bandwidth_mbps: parseInt(document.getElementById('relay-max-bw').value) || 100,
         };
         if (!body.name || !body.address) {
-            notify('warning', _('scaling.relay_name_address_required') || 'Name and address are required.');
+            formError('relay-form-status', _('scaling.relay_name_address_required'));
             return;
         }
         const method = id ? 'PUT' : 'POST';
@@ -237,127 +209,168 @@
         try {
             const resp = await fetch(url, {
                 method,
+                credentials: 'same-origin',
                 headers: csrfHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(body),
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                notify('error', err.error || (_('scaling.relay_save_failed') || 'Failed to save relay node.'));
+                formError('relay-form-status', _('scaling.relay_save_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
                 return;
             }
-            notify('success', _('scaling.relay_saved') || 'Relay node saved.');
         } catch (err) {
-            notify('error', (err && err.message) || (_('scaling.relay_save_failed') || 'Failed to save relay node.'));
+            formError('relay-form-status', _('scaling.relay_save_failed_reason', { error: (err && err.message) || '' }));
             return;
         }
-        closeRelayModal();
-        loadRelays();
+        Modal.close();
+        notify('success', _('scaling.relay_saved_named', { name: body.name }));
+        await loadRelays();
+        loadCapacity();
     }
 
     async function deleteRelay(id) {
-        if (!confirm(_('scaling.confirm_delete_relay'))) return;
+        const r = _relays.find(x => x.id === id);
+        const name = r ? (r.name || r.id) : id;
+        const ok = await Modal.confirm({
+            title: _('scaling.delete_relay_title', { name }),
+            message: _('scaling.confirm_delete_relay'),
+            confirmLabel: _('scaling.delete'),
+            danger: true
+        });
+        if (!ok) return;
         try {
             const resp = await fetch(`/api/panel/scaling/relays/${encodeURIComponent(id)}`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: csrfHeaders(),
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                notify('error', err.error || (_('scaling.relay_delete_failed') || 'Failed to delete relay node.'));
+                notify('error', _('scaling.relay_delete_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
                 return;
             }
-            notify('success', _('scaling.relay_deleted') || 'Relay node deleted.');
+            notify('success', _('scaling.relay_deleted_named', { name }));
         } catch (err) {
-            notify('error', (err && err.message) || (_('scaling.relay_delete_failed') || 'Failed to delete relay node.'));
+            notify('error', _('scaling.relay_delete_failed_reason', { error: (err && err.message) || '' }));
         }
-        loadRelays();
+        await loadRelays();
+        loadCapacity();
     }
 
-    function closeRelayModal() {
-        document.getElementById('relay-modal').style.display = 'none';
-    }
+    function closeRelayModal() { Modal.close(); }
 
     // -----------------------------------------------------------------------
-    // Assignment Rules
+    // Assignment rules
     // -----------------------------------------------------------------------
     async function loadRules() {
+        const tbody = document.getElementById('rules-tbody');
         try {
-            const resp = await fetch('/api/panel/scaling/rules');
-            const data = await resp.json();
+            const data = await getJson('/api/panel/scaling/rules');
             _rules = Array.isArray(data) ? data : (data.data || data.rules || []);
-        } catch { _rules = []; }
-        renderRulesTable();
+            _rulesLoaded = true;
+            renderRulesTable();
+        } catch {
+            _rules = [];
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="7" class="state-cell"><span class="text-danger">${escHtml(_('scaling.rules_error'))}</span> <button type="button" class="btn btn-sm" data-bd-call="Scaling.loadRules">${escHtml(_('actions.retry'))}</button></td></tr>`;
+            }
+        }
+        renderCount();
+    }
+
+    function matchTypeLabel(type) {
+        const key = 'scaling.match_' + type;
+        const v = _(key);
+        return v === key ? type : v;
+    }
+
+    function relayName(id) {
+        const r = _relays.find(x => x.id === id);
+        return r ? (r.name || r.id) : (id || '–');
     }
 
     function renderRulesTable() {
         const tbody = document.getElementById('rules-tbody');
         if (!tbody) return;
         if (_rules.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="scaling-empty">${_('scaling.no_rules')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="state-cell">${escHtml(_('scaling.no_rules'))}</td></tr>`;
             return;
         }
         tbody.innerHTML = _rules.sort((a, b) => (a.priority || 0) - (b.priority || 0)).map(r => `
             <tr data-id="${escAttr(r.id)}">
-                <td>${r.priority || 0}</td>
+                <td class="num-col">${r.priority || 0}</td>
                 <td><strong>${escHtml(r.name || r.id)}</strong></td>
-                <td><code>${escHtml(r.match_type || '')}:${escHtml(r.match_value || '')}</code></td>
-                <td>${escHtml(r.target_relay_name || r.target_relay || '—')}</td>
-                <td>${escHtml(r.fallback || 'master')}</td>
-                <td><span class="scaling-status ${r.enabled !== false ? 'enabled' : 'disabled'}">${r.enabled !== false ? _('scaling.status_enabled') : _('scaling.status_disabled')}</span></td>
-                <td>
-                    <button class="btn-icon" data-bd-call="Scaling.editRule" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.edit')}"><span class="material-icons">edit</span></button>
-                    <button class="btn-icon" data-bd-call="Scaling.deleteRule" data-bd-args='["${escAttr(r.id)}"]' title="${_('scaling.delete')}"><span class="material-icons">delete</span></button>
+                <td>${escHtml(matchTypeLabel(r.match_type || ''))}: <span class="mono">${escHtml(r.match_value || '')}</span></td>
+                <td>${escHtml(r.target_relay_name || relayName(r.target_relay))}</td>
+                <td>${escHtml(_('scaling.fallback_' + (r.fallback || 'master')))}</td>
+                <td><span class="status ${r.enabled !== false ? 'ok' : 'offline'}">${r.enabled !== false ? escHtml(_('scaling.status_enabled')) : escHtml(_('scaling.status_disabled'))}</span></td>
+                <td class="actions">
+                    <button type="button" class="btn btn-sm" data-bd-call="Scaling.editRule" data-bd-args='["${escAttr(r.id)}"]' aria-label="${escAttr(_('scaling.edit_named', { name: r.name || r.id }))}">${escHtml(_('scaling.edit'))}</button>
+                    <button type="button" class="btn btn-sm btn-danger-quiet" data-bd-call="Scaling.deleteRule" data-bd-args='["${escAttr(r.id)}"]' aria-label="${escAttr(_('scaling.delete_named', { name: r.name || r.id }))}">${escHtml(_('scaling.delete'))}…</button>
                 </td>
             </tr>
         `).join('');
     }
 
-    function showAddRule() {
-        document.getElementById('rule-edit-id').value = '';
-        document.getElementById('rule-name').value = '';
-        document.getElementById('rule-match-type').value = 'subnet';
-        document.getElementById('rule-match-value').value = '';
-        document.getElementById('rule-fallback').value = 'master';
-        document.getElementById('rule-priority').value = '10';
-        document.getElementById('rule-modal-title').textContent = _('scaling.rule_add');
-        populateRelaySelect('rule-target-relay');
-        document.getElementById('rule-modal').style.display = '';
+    function ruleForm(r) {
+        const types = ['subnet', 'group', 'tag', 'country', 'device_id'];
+        const cur = r ? r.match_type || 'subnet' : 'subnet';
+        const fallback = r ? r.fallback || 'master' : 'master';
+        const relayOptions = _relays.map(x =>
+            `<option value="${escAttr(x.id)}" ${r && x.id === r.target_relay ? 'selected' : ''}>${escHtml(x.name || x.id)}</option>`
+        ).join('');
+        return `<form id="rule-form" class="scaling-dialog-form" novalidate>
+            <input type="hidden" id="rule-edit-id" value="${escAttr(r ? r.id : '')}">
+            ${field('rule-name', 'scaling.col_rule_name', `<input type="text" id="rule-name" class="form-input" maxlength="80" value="${escAttr(r ? r.name || '' : '')}" autocomplete="off">`)}
+            ${field('rule-match-type', 'scaling.rule_match_type', `<select id="rule-match-type" class="form-select">${types.map(tp => `<option value="${tp}" ${tp === cur ? 'selected' : ''}>${escHtml(matchTypeLabel(tp))}</option>`).join('')}</select>`)}
+            ${field('rule-match-value', 'scaling.rule_match_value', `<input type="text" id="rule-match-value" class="form-input mono" maxlength="200" value="${escAttr(r ? r.match_value || '' : '')}" autocomplete="off" spellcheck="false">`, 'scaling.rule_match_value_hint')}
+            ${field('rule-target-relay', 'scaling.col_target_relay', `<select id="rule-target-relay" class="form-select">${relayOptions}</select>`)}
+            ${field('rule-fallback', 'scaling.col_fallback', `<select id="rule-fallback" class="form-select">
+                <option value="master" ${fallback === 'master' ? 'selected' : ''}>${escHtml(_('scaling.fallback_master'))}</option>
+                <option value="nearest" ${fallback === 'nearest' ? 'selected' : ''}>${escHtml(_('scaling.fallback_nearest'))}</option>
+            </select>`, 'scaling.rule_fallback_hint')}
+            ${field('rule-priority', 'scaling.col_priority', `<input type="number" id="rule-priority" class="form-input is-short" min="0" max="1000" value="${escAttr(r ? r.priority ?? 10 : 10)}">`, 'scaling.rule_priority_hint')}
+            <p class="form-status" id="rule-form-status" aria-live="polite"></p>
+            <button type="submit" hidden></button>
+        </form>`;
     }
+
+    function openRuleDialog(r) {
+        if (!_relays.length) {
+            notify('warning', _('scaling.rule_needs_relay'));
+            return;
+        }
+        Modal.show({
+            title: r ? _('scaling.rule_edit') : _('scaling.rule_add'),
+            content: ruleForm(r),
+            buttons: [
+                { label: _('scaling.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: r ? _('scaling.save') : _('scaling.rule_add'), class: 'btn-primary', onClick: saveRule }
+            ]
+        });
+        document.getElementById('rule-form')?.addEventListener('submit', (e) => { e.preventDefault(); saveRule(); });
+    }
+
+    function showAddRule() { openRuleDialog(null); }
 
     function editRule(id) {
         const r = _rules.find(x => x.id === id);
-        if (!r) return;
-        document.getElementById('rule-edit-id').value = r.id;
-        document.getElementById('rule-name').value = r.name || '';
-        document.getElementById('rule-match-type').value = r.match_type || 'subnet';
-        document.getElementById('rule-match-value').value = r.match_value || '';
-        document.getElementById('rule-fallback').value = r.fallback || 'master';
-        document.getElementById('rule-priority').value = r.priority || 10;
-        document.getElementById('rule-modal-title').textContent = _('scaling.edit');
-        populateRelaySelect('rule-target-relay', r.target_relay);
-        document.getElementById('rule-modal').style.display = '';
-    }
-
-    function populateRelaySelect(selectId, selectedValue) {
-        const sel = document.getElementById(selectId);
-        if (!sel) return;
-        sel.innerHTML = _relays.map(r =>
-            `<option value="${escAttr(r.id)}" ${r.id === selectedValue ? 'selected' : ''}>${escHtml(r.name || r.id)}</option>`
-        ).join('');
+        if (r) openRuleDialog(r);
     }
 
     async function saveRule() {
         const id = document.getElementById('rule-edit-id').value;
+        const prio = parseInt(document.getElementById('rule-priority').value, 10);
         const body = {
             name: document.getElementById('rule-name').value.trim(),
             match_type: document.getElementById('rule-match-type').value,
             match_value: document.getElementById('rule-match-value').value.trim(),
             target_relay: document.getElementById('rule-target-relay').value,
             fallback: document.getElementById('rule-fallback').value,
-            priority: parseInt(document.getElementById('rule-priority').value) || 10,
+            priority: Number.isFinite(prio) ? prio : 10,
         };
         if (!body.name || !body.match_value) {
-            notify('warning', _('scaling.rule_name_value_required') || 'Rule name and match value are required.');
+            formError('rule-form-status', _('scaling.rule_name_value_required'));
             return;
         }
         const method = id ? 'PUT' : 'POST';
@@ -365,158 +378,137 @@
         try {
             const resp = await fetch(url, {
                 method,
+                credentials: 'same-origin',
                 headers: csrfHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(body),
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                notify('error', err.error || (_('scaling.rule_save_failed') || 'Failed to save rule.'));
+                formError('rule-form-status', _('scaling.rule_save_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
                 return;
             }
-            notify('success', _('scaling.rule_saved') || 'Rule saved.');
         } catch (err) {
-            notify('error', (err && err.message) || (_('scaling.rule_save_failed') || 'Failed to save rule.'));
+            formError('rule-form-status', _('scaling.rule_save_failed_reason', { error: (err && err.message) || '' }));
             return;
         }
-        closeRuleModal();
+        Modal.close();
+        notify('success', _('scaling.rule_saved_named', { name: body.name }));
         loadRules();
     }
 
     async function deleteRule(id) {
-        if (!confirm(_('scaling.confirm_delete_rule'))) return;
+        const r = _rules.find(x => x.id === id);
+        const name = r ? (r.name || r.id) : id;
+        const ok = await Modal.confirm({
+            title: _('scaling.delete_rule_title', { name }),
+            message: _('scaling.confirm_delete_rule'),
+            confirmLabel: _('scaling.delete'),
+            danger: true
+        });
+        if (!ok) return;
         try {
             const resp = await fetch(`/api/panel/scaling/rules/${encodeURIComponent(id)}`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: csrfHeaders(),
             });
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                notify('error', err.error || (_('scaling.rule_delete_failed') || 'Failed to delete rule.'));
+                notify('error', _('scaling.rule_delete_failed_reason', { error: err.error || ('HTTP ' + resp.status) }));
                 return;
             }
-            notify('success', _('scaling.rule_deleted') || 'Rule deleted.');
+            notify('success', _('scaling.rule_deleted_named', { name }));
         } catch (err) {
-            notify('error', (err && err.message) || (_('scaling.rule_delete_failed') || 'Failed to delete rule.'));
+            notify('error', _('scaling.rule_delete_failed_reason', { error: (err && err.message) || '' }));
         }
         loadRules();
     }
 
-    function closeRuleModal() {
-        document.getElementById('rule-modal').style.display = 'none';
-    }
+    function closeRuleModal() { Modal.close(); }
 
     // -----------------------------------------------------------------------
     // Capacity
     // -----------------------------------------------------------------------
     async function loadCapacity() {
         try {
-            const resp = await fetch('/api/panel/scaling/capacity');
-            const data = await resp.json();
+            const data = await getJson('/api/panel/scaling/capacity');
             _capacity = data.data || data;
         } catch { _capacity = null; }
-        if (!_relays.length) await loadRelays();
         renderCapacityTiers();
         renderCapacityRecommendations();
         renderCapacityTable();
     }
 
+    function meter(p) {
+        const v = Math.max(0, Math.min(100, Math.round(p)));
+        const cls = v >= 95 ? ' is-full' : (v >= 80 ? ' is-high' : '');
+        return `<div class="meter scaling-meter${cls}"><span class="meter-bar"><span class="meter-fill" style="width:${v}%"></span></span><span class="meter-value">${v} %</span></div>`;
+    }
+
+    function totals() {
+        return {
+            devices: _relays.reduce((s, r) => s + (r.connected_devices || 0), 0),
+            sessions: _relays.reduce((s, r) => s + (r.active_sessions || 0), 0),
+            bandwidth: _relays.reduce((s, r) => s + (r.bandwidth_mbps || 0), 0),
+        };
+    }
+
     function renderCapacityTiers() {
         const container = document.getElementById('capacity-tiers');
         if (!container) return;
-
+        const tot = totals();
         const tiers = [
-            { name: _('scaling.cap_tier_devices'), current: _relays.reduce((s, r) => s + (r.connected_devices || 0), 0), max: _capacity?.max_devices || 500 },
-            { name: _('scaling.cap_tier_sessions'), current: _relays.reduce((s, r) => s + (r.active_sessions || 0), 0), max: _capacity?.max_sessions || 50 },
-            { name: _('scaling.cap_tier_bandwidth'), current: _relays.reduce((s, r) => s + (r.bandwidth_mbps || 0), 0), max: _capacity?.max_bandwidth_mbps || 100 },
+            { key: 'scaling.cap_tier_devices', current: tot.devices, max: _capacity?.max_devices || 500, unit: '' },
+            { key: 'scaling.cap_tier_sessions', current: tot.sessions, max: _capacity?.max_sessions || 50, unit: '' },
+            { key: 'scaling.cap_tier_bandwidth', current: Math.round(tot.bandwidth * 10) / 10, max: _capacity?.max_bandwidth_mbps || 100, unit: ' Mbps' },
         ];
-
         container.innerHTML = tiers.map(t => {
-            const pct = t.max > 0 ? Math.round(t.current / t.max * 100) : 0;
-            const cls = pct > 85 ? 'crit' : pct > 60 ? 'warn' : 'ok';
-            return `<div class="capacity-tier">
-                <div class="capacity-tier-header">
-                    <span class="capacity-tier-name">${escHtml(t.name)}</span>
-                    <span class="capacity-tier-pct">${t.current} / ${t.max} (${pct}%)</span>
-                </div>
-                <div class="capacity-tier-bar"><div class="capacity-tier-fill ${cls}" style="width:${Math.min(pct, 100)}%"></div></div>
-            </div>`;
+            const p = t.max > 0 ? (t.current / t.max) * 100 : 0;
+            return `<dt>${escHtml(_(t.key))}</dt>
+                <dd>${meter(p)}<span class="cell-sub">${escHtml(_('scaling.cap_of', { current: t.current + t.unit, max: t.max + t.unit }))}</span></dd>`;
         }).join('');
     }
 
     function renderCapacityRecommendations() {
         const container = document.getElementById('capacity-recommendations');
         if (!container) return;
-
-        const recs = [];
-        const totalDevices = _relays.reduce((s, r) => s + (r.connected_devices || 0), 0);
-        const totalSessions = _relays.reduce((s, r) => s + (r.active_sessions || 0), 0);
+        const tot = totals();
         const maxDevices = _capacity?.max_devices || 500;
         const maxSessions = _capacity?.max_sessions || 50;
-
-        if (_relays.length === 0) {
-            recs.push({ type: 'info', icon: 'info', text: _('scaling.rec_no_relays') });
-        }
-        if (totalDevices / maxDevices > 0.8) {
-            recs.push({ type: 'warn', icon: 'warning', text: _('scaling.rec_devices_high') });
-        }
-        if (totalSessions / maxSessions > 0.8) {
-            recs.push({ type: 'crit', icon: 'error', text: _('scaling.rec_sessions_high') });
-        }
-        _relays.forEach(r => {
-            if ((r.cpu || 0) > 80) {
-                recs.push({ type: 'warn', icon: 'warning', text: `${escHtml(r.name)}: ${_('scaling.rec_cpu_high')}` });
-            }
-        });
-        if (recs.length === 0) {
-            recs.push({ type: 'info', icon: 'check_circle', text: _('scaling.rec_all_good') });
-        }
-
-        container.innerHTML = recs.map(r =>
-            `<div class="capacity-rec ${r.type}"><span class="material-icons">${r.icon}</span> ${r.text}</div>`
-        ).join('');
+        const recs = [];
+        if (_relays.length === 0) recs.push(_('scaling.rec_no_relays'));
+        if (tot.devices / maxDevices > 0.8) recs.push(_('scaling.rec_devices_high'));
+        if (tot.sessions / maxSessions > 0.8) recs.push(_('scaling.rec_sessions_high'));
+        const hot = _relays.filter(r => (r.cpu || 0) > 80).map(r => r.name || r.id);
+        if (hot.length) recs.push(_('scaling.rec_cpu_high_named', { names: hot.join(', ') }));
+        container.textContent = recs.join(' ');
+        container.hidden = recs.length === 0;
     }
 
     function renderCapacityTable() {
         const tbody = document.getElementById('capacity-tbody');
         if (!tbody) return;
-
-        const totalDevices = _relays.reduce((s, r) => s + (r.connected_devices || 0), 0);
-        const totalSessions = _relays.reduce((s, r) => s + (r.active_sessions || 0), 0);
+        const tot = totals();
         const tiers = [
             { config: _('scaling.cap_single_sqlite'), maxDev: 200, maxSess: 30 },
             { config: _('scaling.cap_single_pg'), maxDev: 1000, maxSess: 50 },
             { config: _('scaling.cap_master_3'), maxDev: 5000, maxSess: 150 },
             { config: _('scaling.cap_master_10'), maxDev: 20000, maxSess: 500 },
         ];
-
-        tbody.innerHTML = tiers.map(t => {
-            const devPct = t.maxDev > 0 ? Math.round(totalDevices / t.maxDev * 100) : 0;
-            const cls = devPct > 85 ? 'crit' : devPct > 60 ? 'warn' : 'ok';
-            return `<tr>
-                <td><strong>${escHtml(t.config)}</strong></td>
-                <td>${t.maxDev.toLocaleString()}</td>
-                <td>~${t.maxSess}</td>
-                <td>${totalDevices} / ${totalSessions}</td>
-                <td>
-                    <div class="capacity-tier-bar" style="width:120px;display:inline-block;vertical-align:middle;">
-                        <div class="capacity-tier-fill ${cls}" style="width:${Math.min(devPct, 100)}%"></div>
-                    </div>
-                    <span style="font-size:11px;margin-left:6px">${devPct}%</span>
-                </td>
-            </tr>`;
-        }).join('');
+        tbody.innerHTML = tiers.map(t => `<tr>
+                <td>${escHtml(t.config)}</td>
+                <td class="num-col">${t.maxDev.toLocaleString()}</td>
+                <td class="num-col">${t.maxSess.toLocaleString()}</td>
+                <td>${meter(t.maxDev > 0 ? (tot.devices / t.maxDev) * 100 : 0)}</td>
+            </tr>`).join('');
     }
 
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
-    function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-    function escAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-    function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+    function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;'); }
 
-    // -----------------------------------------------------------------------
-    // Public API
-    // -----------------------------------------------------------------------
     window.Scaling = {
         init, switchTab, loadOverview, loadRelays, loadRules, loadCapacity,
         filterRelays, showAddRelay, editRelay, saveRelay, deleteRelay, closeRelayModal,

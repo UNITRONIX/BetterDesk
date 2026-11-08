@@ -1,0 +1,38 @@
+/* Relay servers (views/scaling.ejs) */
+
+.scaling-page .num-col {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Capacity facts: meter with the numbers under it */
+#capacity-tiers > dd {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+}
+
+#capacity-tiers .cell-sub {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.scaling-meter {
+    width: min(100%, 280px);
+}
+
+.scaling-recommendation {
+    max-width: var(--measure);
+}
+
+.scaling-planning-note {
+    margin-top: 0;
+    margin-bottom: var(--space-2);
+}
+
+.scaling-meter .meter-value {
+    min-width: 4.5ch;
+    text-align: end;
+}

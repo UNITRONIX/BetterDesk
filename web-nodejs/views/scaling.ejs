@@ -1,277 +1,98 @@
 <%- include('layouts/main', {
-    title: title,
-    pageStyles: pageStyles,
-    pageScripts: pageScripts,
-    currentPage: currentPage,
-    breadcrumb: breadcrumb,
+    title: _('nav.scaling'),
+    uiReworked: true,
+    pageStyles: ['ui/scaling'],
+    pageScripts: ['scaling'],
+    currentPage: 'scaling',
+    breadcrumb: [{ label: _('nav.scaling') }],
     body: `
-
-<div class="scaling-page">
-
-    <!-- Tab navigation -->
-    <div class="scaling-tabs">
-        <button class="scaling-tab ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" data-bd-call="Scaling.switchTab" data-bd-args='["overview"]'>
-            <span class="material-icons">dashboard</span>
-            <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_overview') : 'Overview' }</span>
-        </button>
-        <button class="scaling-tab ${activeTab === 'relays' ? 'active' : ''}" data-tab="relays" data-bd-call="Scaling.switchTab" data-bd-args='["relays"]'>
-            <span class="material-icons">cell_tower</span>
-            <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_relays') : 'Relay Nodes' }</span>
-        </button>
-        <button class="scaling-tab ${activeTab === 'rules' ? 'active' : ''}" data-tab="rules" data-bd-call="Scaling.switchTab" data-bd-args='["rules"]'>
-            <span class="material-icons">route</span>
-            <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_rules') : 'Assignment Rules' }</span>
-        </button>
-        <button class="scaling-tab ${activeTab === 'capacity' ? 'active' : ''}" data-tab="capacity" data-bd-call="Scaling.switchTab" data-bd-args='["capacity"]'>
-            <span class="material-icons">speed</span>
-            <span>${ typeof req !== 'undefined' ? req.t('scaling.tab_capacity') : 'Capacity' }</span>
-        </button>
-    </div>
-
-    <!-- ======= OVERVIEW TAB ======= -->
-    <div class="scaling-panel" id="panel-overview" style="display: ${activeTab === 'overview' ? 'block' : 'none'};">
-        <!-- Architecture diagram -->
-        <div class="scaling-architecture">
-            <h3><span class="material-icons">account_tree</span> ${ typeof req !== 'undefined' ? req.t('scaling.arch_title') : 'Cluster Architecture' }</h3>
-            <div class="arch-diagram" id="arch-diagram">
-                <!-- Rendered by JS -->
-                <div class="arch-empty">${ typeof req !== 'undefined' ? req.t('scaling.arch_loading') : 'Loading topology…' }</div>
-            </div>
-        </div>
-
-        <!-- Summary cards -->
-        <div class="scaling-summary-grid">
-            <div class="scaling-card" id="card-total-relays">
-                <div class="scaling-card-icon"><span class="material-icons">cell_tower</span></div>
-                <div class="scaling-card-body">
-                    <div class="scaling-card-value" id="stat-total-relays">—</div>
-                    <div class="scaling-card-label">${ typeof req !== 'undefined' ? req.t('scaling.stat_relay_nodes') : 'Relay Nodes' }</div>
-                </div>
-            </div>
-            <div class="scaling-card" id="card-total-devices">
-                <div class="scaling-card-icon"><span class="material-icons">devices</span></div>
-                <div class="scaling-card-body">
-                    <div class="scaling-card-value" id="stat-total-devices">—</div>
-                    <div class="scaling-card-label">${ typeof req !== 'undefined' ? req.t('scaling.stat_total_devices') : 'Total Devices' }</div>
-                </div>
-            </div>
-            <div class="scaling-card" id="card-active-sessions">
-                <div class="scaling-card-icon"><span class="material-icons">swap_horiz</span></div>
-                <div class="scaling-card-body">
-                    <div class="scaling-card-value" id="stat-active-sessions">—</div>
-                    <div class="scaling-card-label">${ typeof req !== 'undefined' ? req.t('scaling.stat_active_sessions') : 'Active Sessions' }</div>
-                </div>
-            </div>
-            <div class="scaling-card" id="card-bandwidth">
-                <div class="scaling-card-icon"><span class="material-icons">network_check</span></div>
-                <div class="scaling-card-body">
-                    <div class="scaling-card-value" id="stat-bandwidth">—</div>
-                    <div class="scaling-card-label">${ typeof req !== 'undefined' ? req.t('scaling.stat_bandwidth') : 'Total Bandwidth' }</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Per-relay mini cards -->
-        <h3 class="scaling-section-title"><span class="material-icons">monitor_heart</span> ${ typeof req !== 'undefined' ? req.t('scaling.relay_health') : 'Relay Health' }</h3>
-        <div class="scaling-relay-grid" id="relay-health-grid">
-            <div class="scaling-empty">${ typeof req !== 'undefined' ? req.t('scaling.no_relays') : 'No relay nodes registered.' }</div>
+<div class="page page-wide scaling-page" id="scaling-page" data-initial-section="${typeof activeTab !== 'undefined' ? activeTab : 'overview'}">
+    <div class="page-head">
+        <h1>${_('nav.scaling')}</h1>
+        <p class="page-description">${_('scaling.page_description', { link: '<a href="/settings?tab=general#public-endpoints">' + _('nav.settings') + ' › ' + _('settings.tab_general') + ' › ' + _('settings.public_endpoints_title') + '</a>' })}</p>
+        <div class="page-actions">
+            <button type="button" class="btn btn-primary" data-bd-call="Scaling.showAddRelay">${_('scaling.relay_add')}</button>
         </div>
     </div>
 
-    <!-- ======= RELAY NODES TAB ======= -->
-    <div class="scaling-panel" id="panel-relays" style="display: ${activeTab === 'relays' ? 'block' : 'none'};">
-        <div class="scaling-info-banner">
-            <span class="material-icons">info</span>
-            <span>${ typeof req !== 'undefined' ? req.t('scaling.relays_info_banner') : 'This list is informational. The relay servers actually used by clients are configured via the RELAY_SERVERS environment variable on the BetterDesk server.' }</span>
-        </div>
-        <div class="scaling-toolbar">
-            <div class="scaling-toolbar-left">
-                <input type="text" id="relay-search" class="scaling-input" placeholder="${ typeof req !== 'undefined' ? req.t('scaling.relay_search') : 'Search relays…' }" oninput="Scaling.filterRelays()">
-            </div>
-            <div class="scaling-toolbar-right">
-                <button class="btn btn-sm btn-primary" data-bd-call="Scaling.showAddRelay">
-                    <span class="material-icons">add</span> ${ typeof req !== 'undefined' ? req.t('scaling.relay_add') : 'Add Relay' }
-                </button>
+    <section class="section" id="panel-relays" aria-labelledby="relays-title">
+        <div class="section-head"><h2 id="relays-title">${_('scaling.relays_title')}</h2></div>
+        <p class="section-note">${_('scaling.relays_info_banner')}</p>
+        <div class="toolbar">
+            <div class="toolbar-search search-wrapper">
+                <span class="material-icons" aria-hidden="true">search</span>
+                <input type="search" id="relay-search" class="form-input" aria-label="${_('scaling.relay_search')}" placeholder="${_('scaling.relay_search')}">
             </div>
         </div>
-
-        <div class="scaling-table-wrap">
-            <table class="scaling-table" id="relays-table">
+        <p class="count-line" id="relays-count" aria-live="polite"></p>
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="relays-title">
+            <table class="data-table" id="relays-table">
                 <thead>
                     <tr>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_name') : 'Name' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_address') : 'Address' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_location') : 'Location' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_devices') : 'Devices' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_sessions') : 'Sessions' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_bandwidth') : 'Bandwidth' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_status') : 'Status' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_actions') : 'Actions' }</th>
+                        <th scope="col">${_('scaling.col_name')}</th>
+                        <th scope="col">${_('scaling.col_address')}</th>
+                        <th scope="col">${_('scaling.col_limits')}</th>
+                        <th scope="col">${_('scaling.col_status')}</th>
+                        <th scope="col" class="actions"><span class="sr-only">${_('scaling.col_actions')}</span></th>
                     </tr>
                 </thead>
                 <tbody id="relays-tbody">
-                    <tr><td colspan="8" class="scaling-empty">${ typeof req !== 'undefined' ? req.t('scaling.no_relays') : 'No relay nodes registered.' }</td></tr>
+                    <tr><td colspan="5" class="state-cell">${_('scaling.relays_loading')}</td></tr>
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
-    <!-- ======= ASSIGNMENT RULES TAB ======= -->
-    <div class="scaling-panel" id="panel-rules" style="display: ${activeTab === 'rules' ? 'block' : 'none'};">
-        <div class="scaling-toolbar">
-            <div class="scaling-toolbar-left">
-                <p class="scaling-hint">${ typeof req !== 'undefined' ? req.t('scaling.rules_hint') : 'Rules determine which relay node a device is assigned to based on location, group, or network.' }</p>
-            </div>
-            <div class="scaling-toolbar-right">
-                <button class="btn btn-sm btn-primary" data-bd-call="Scaling.showAddRule">
-                    <span class="material-icons">add</span> ${ typeof req !== 'undefined' ? req.t('scaling.rule_add') : 'Add Rule' }
-                </button>
-            </div>
+    <section class="section" id="panel-rules" aria-labelledby="rules-title">
+        <div class="section-head">
+            <h2 id="rules-title">${_('scaling.tab_rules')}</h2>
+            <button type="button" class="btn btn-sm" id="rule-add-btn" data-bd-call="Scaling.showAddRule">${_('scaling.rule_add')}</button>
         </div>
-
-        <div class="scaling-table-wrap">
-            <table class="scaling-table" id="rules-table">
+        <p class="section-note">${_('scaling.rules_hint')}</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="rules-title">
+            <table class="data-table" id="rules-table">
                 <thead>
                     <tr>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_priority') : 'Priority' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_rule_name') : 'Rule Name' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_match') : 'Match' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_target_relay') : 'Target Relay' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_fallback') : 'Fallback' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_status') : 'Status' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.col_actions') : 'Actions' }</th>
+                        <th scope="col" class="num-col">${_('scaling.col_priority')}</th>
+                        <th scope="col">${_('scaling.col_rule_name')}</th>
+                        <th scope="col">${_('scaling.col_match')}</th>
+                        <th scope="col">${_('scaling.col_target_relay')}</th>
+                        <th scope="col">${_('scaling.col_fallback')}</th>
+                        <th scope="col">${_('scaling.col_status')}</th>
+                        <th scope="col" class="actions"><span class="sr-only">${_('scaling.col_actions')}</span></th>
                     </tr>
                 </thead>
                 <tbody id="rules-tbody">
-                    <tr><td colspan="7" class="scaling-empty">${ typeof req !== 'undefined' ? req.t('scaling.no_rules') : 'No assignment rules.' }</td></tr>
+                    <tr><td colspan="7" class="state-cell">${_('scaling.rules_loading')}</td></tr>
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
-    <!-- ======= CAPACITY TAB ======= -->
-    <div class="scaling-panel" id="panel-capacity" style="display: ${activeTab === 'capacity' ? 'block' : 'none'};">
-        <div class="scaling-capacity-grid">
-            <!-- Per-tier capacity bars -->
-            <div class="capacity-section">
-                <h3><span class="material-icons">storage</span> ${ typeof req !== 'undefined' ? req.t('scaling.cap_tiers') : 'Capacity Tiers' }</h3>
-                <div class="capacity-tiers" id="capacity-tiers">
-                    <div class="scaling-empty">${ typeof req !== 'undefined' ? req.t('scaling.cap_loading') : 'Loading capacity data…' }</div>
-                </div>
+    <section class="section" id="panel-capacity" aria-labelledby="capacity-title">
+        <div class="section-head"><h2 id="capacity-title">${_('scaling.tab_capacity')}</h2></div>
+        <p class="section-note">${_('scaling.capacity_note')}</p>
+        <dl class="facts" id="capacity-tiers">
+            <dt>${_('scaling.cap_tier_devices')}</dt><dd>–</dd>
+        </dl>
+        <p id="capacity-recommendations" class="scaling-recommendation"></p>
+        <details class="disclosure">
+            <summary><h3>${_('scaling.cap_planning')}</h3></summary>
+            <p class="section-note scaling-planning-note">${_('scaling.cap_planning_note')}</p>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="${_('scaling.cap_planning')}">
+                <table class="data-table" id="capacity-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">${_('scaling.cap_config')}</th>
+                            <th scope="col" class="num-col">${_('scaling.cap_max_devices')}</th>
+                            <th scope="col" class="num-col">${_('scaling.cap_max_sessions')}</th>
+                            <th scope="col">${_('scaling.cap_utilization')}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="capacity-tbody"></tbody>
+                </table>
             </div>
-            <!-- Recommendations -->
-            <div class="capacity-section">
-                <h3><span class="material-icons">tips_and_updates</span> ${ typeof req !== 'undefined' ? req.t('scaling.cap_recommendations') : 'Recommendations' }</h3>
-                <div id="capacity-recommendations" class="capacity-recs">
-                    <div class="scaling-empty">${ typeof req !== 'undefined' ? req.t('scaling.cap_no_recs') : 'No recommendations at this time.' }</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Capacity planning table -->
-        <h3 class="scaling-section-title"><span class="material-icons">table_chart</span> ${ typeof req !== 'undefined' ? req.t('scaling.cap_planning') : 'Capacity Planning' }</h3>
-        <div class="scaling-table-wrap">
-            <table class="scaling-table" id="capacity-table">
-                <thead>
-                    <tr>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.cap_config') : 'Configuration' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.cap_max_devices') : 'Max Devices' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.cap_max_sessions') : 'Max Sessions' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.cap_current') : 'Current' }</th>
-                        <th>${ typeof req !== 'undefined' ? req.t('scaling.cap_utilization') : 'Utilization' }</th>
-                    </tr>
-                </thead>
-                <tbody id="capacity-tbody"></tbody>
-            </table>
-        </div>
-    </div>
-
+        </details>
+    </section>
 </div>
-
-<!-- ====== ADD / EDIT RELAY MODAL ====== -->
-<div class="modal-overlay" id="relay-modal" style="display:none;">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 id="relay-modal-title">${ typeof req !== 'undefined' ? req.t('scaling.relay_add') : 'Add Relay' }</h3>
-            <button class="modal-close" data-bd-call="Scaling.closeRelayModal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="relay-edit-id">
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.col_name') : 'Name' }</label>
-                <input type="text" id="relay-name" class="scaling-input" placeholder="Building-A-Relay">
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.col_address') : 'Address' }</label>
-                <input type="text" id="relay-address" class="scaling-input" placeholder="192.168.1.100:21117">
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.col_location') : 'Location' }</label>
-                <input type="text" id="relay-location" class="scaling-input" placeholder="Building A, Floor 2">
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.relay_max_sessions') : 'Max Sessions' }</label>
-                <input type="number" id="relay-max-sessions" class="scaling-input" value="50" min="1">
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.relay_max_bandwidth') : 'Max Bandwidth (Mbps)' }</label>
-                <input type="number" id="relay-max-bw" class="scaling-input" value="100" min="1">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-sm btn-secondary" data-bd-call="Scaling.closeRelayModal">${ typeof req !== 'undefined' ? req.t('scaling.cancel') : 'Cancel' }</button>
-            <button class="btn btn-sm btn-primary" data-bd-call="Scaling.saveRelay">${ typeof req !== 'undefined' ? req.t('scaling.save') : 'Save' }</button>
-        </div>
-    </div>
-</div>
-
-<!-- ====== ADD / EDIT RULE MODAL ====== -->
-<div class="modal-overlay" id="rule-modal" style="display:none;">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 id="rule-modal-title">${ typeof req !== 'undefined' ? req.t('scaling.rule_add') : 'Add Rule' }</h3>
-            <button class="modal-close" data-bd-call="Scaling.closeRuleModal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="rule-edit-id">
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.col_rule_name') : 'Rule Name' }</label>
-                <input type="text" id="rule-name" class="scaling-input" placeholder="Building A devices">
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.rule_match_type') : 'Match Type' }</label>
-                <select id="rule-match-type" class="scaling-select">
-                    <option value="subnet">${ typeof req !== 'undefined' ? req.t('scaling.match_subnet') : 'Subnet (CIDR)' }</option>
-                    <option value="group">${ typeof req !== 'undefined' ? req.t('scaling.match_group') : 'Device Group' }</option>
-                    <option value="tag">${ typeof req !== 'undefined' ? req.t('scaling.match_tag') : 'Device Tag' }</option>
-                    <option value="location">${ typeof req !== 'undefined' ? req.t('scaling.match_location') : 'Location' }</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.rule_match_value') : 'Match Value' }</label>
-                <input type="text" id="rule-match-value" class="scaling-input" placeholder="192.168.1.0/24">
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.col_target_relay') : 'Target Relay' }</label>
-                <select id="rule-target-relay" class="scaling-select"></select>
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.col_fallback') : 'Fallback' }</label>
-                <select id="rule-fallback" class="scaling-select">
-                    <option value="master">${ typeof req !== 'undefined' ? req.t('scaling.fallback_master') : 'Master Server' }</option>
-                    <option value="nearest">${ typeof req !== 'undefined' ? req.t('scaling.fallback_nearest') : 'Nearest Relay' }</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>${ typeof req !== 'undefined' ? req.t('scaling.col_priority') : 'Priority' }</label>
-                <input type="number" id="rule-priority" class="scaling-input" value="10" min="1" max="999">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-sm btn-secondary" data-bd-call="Scaling.closeRuleModal">${ typeof req !== 'undefined' ? req.t('scaling.cancel') : 'Cancel' }</button>
-            <button class="btn btn-sm btn-primary" data-bd-call="Scaling.saveRule">${ typeof req !== 'undefined' ? req.t('scaling.save') : 'Save' }</button>
-        </div>
-    </div>
-</div>
-
 ` }) %>
