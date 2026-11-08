@@ -4,6 +4,16 @@
  * public/js picks up these styles without changes.
  */
 
+/* ── Controls ──
+   One set for the whole console (tokens: --control-*, --focus-*, --check-*).
+   Buttons: .btn (secondary, outlined), .btn-primary (one per view),
+   .btn-ghost (plain, for inline actions such as "New folder"), .btn-danger
+   (a dialog's answer) and .btn-danger-quiet (a destructive action on the
+   page). Sizes: default and .btn-sm for dense rows. Fields, selects, search
+   fields, menu buttons and segmented filters in a row share --control-h.
+   .btn-link is a link inside running text, not a button variant.
+   The living reference is .ui-rework/ui-kit.html. */
+
 /* ── Buttons ── */
 
 .btn {
@@ -12,14 +22,14 @@
     justify-content: center;
     gap: var(--space-2);
     min-height: var(--control-h);
-    padding: 0 14px;
+    padding: 0 var(--control-pad-x);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--control-radius);
     background: var(--bg);
     color: var(--text);
     font: inherit;
-    font-weight: 600;
-    line-height: 1.2;
+    font-weight: var(--control-weight);
+    line-height: var(--control-leading);
     text-decoration: none;
     white-space: nowrap;
     vertical-align: middle;
@@ -67,7 +77,8 @@
 }
 
 /* A destructive action that is not the dialog's answer: red text only */
-.btn-danger-quiet {
+.btn-danger-quiet,
+.btn-danger-quiet:hover {
     color: var(--danger);
 }
 
@@ -78,10 +89,13 @@
     background: transparent;
 }
 
+/* A link inside running text or a table cell that runs an action */
 .btn-link {
     color: var(--accent);
     padding: 0;
     min-height: 0;
+    font: inherit;
+    cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -93,20 +107,35 @@
 
 .btn-sm {
     min-height: var(--control-h-sm);
-    padding: 0 var(--space-2);
+    padding: 0 var(--control-pad-x-sm);
     font-size: var(--text-sm);
+}
+
+/* Ghost buttons sit on the text's edge: no border to make room for */
+.btn-ghost.btn-sm {
+    gap: var(--space-1);
+}
+
+.btn-ghost .material-icons {
+    color: var(--text-muted);
+}
+
+.btn-ghost:hover .material-icons {
+    color: var(--text);
 }
 
 .btn-block {
     width: 100%;
 }
 
-/* Square icon button: close, row menu, toolbar toggles */
+/* Square icon button: close, row menu, copy. Default size (close, toolbar
+   toggles) or small (.btn-sm, row menu, copy next to a value). */
 .btn-icon,
 .icon-btn,
 .modal-close,
 .toast-close,
-.kebab-btn {
+.kebab-btn,
+.copy-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -114,7 +143,7 @@
     height: var(--control-h);
     padding: 0;
     border: 1px solid transparent;
-    border-radius: var(--radius);
+    border-radius: var(--control-radius);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
@@ -122,8 +151,10 @@
     transition: background-color var(--motion);
 }
 
-/* The row menu sits next to small row buttons: same height as they are */
-.kebab-btn {
+/* The row menu and copy buttons sit next to small row buttons: same height */
+.kebab-btn,
+.copy-btn,
+.btn-icon.btn-sm {
     width: var(--control-h-sm);
     height: var(--control-h-sm);
 }
@@ -188,20 +219,26 @@
 .modal-body textarea {
     width: 100%;
     min-height: var(--control-h);
-    padding: 0 var(--space-2);
+    padding: 0 var(--control-pad-x-sm);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--control-radius);
     background: var(--bg);
     color: var(--text);
     font: inherit;
-    line-height: 1.3;
+    line-height: var(--control-leading);
+}
+
+/* Small field (a select or search in a dense row, next to .btn-sm) */
+:is(.form-input, .form-select, .form-control).is-small {
+    min-height: var(--control-h-sm);
+    font-size: var(--text-sm);
 }
 
 textarea.form-input,
 .form-textarea,
 .modal-body textarea {
     min-height: 80px;
-    padding: var(--space-2);
+    padding: var(--space-2) var(--control-pad-x-sm);
     resize: vertical;
 }
 
@@ -212,7 +249,9 @@ textarea.form-input,
     opacity: 1;
 }
 
-/* :focus-within keeps the ring while focus is in a date field's day, month or year part */
+/* The same focus ring as buttons and links (base.css :focus-visible), shown on
+   any focus because people type here. :focus-within keeps the ring while focus
+   is in a date field's day, month or year part. */
 .form-input:focus,
 .form-input:focus-within,
 .form-select:focus,
@@ -221,9 +260,8 @@ textarea.form-input,
 .modal-body input:focus,
 .modal-body select:focus,
 .modal-body textarea:focus {
-    outline: 2px solid var(--focus);
-    outline-offset: -1px;
-    border-color: var(--focus);
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
 }
 
 .form-input:disabled,
@@ -241,21 +279,15 @@ textarea.form-input,
     border-color: var(--danger);
 }
 
+/* Checkboxes and radios: native, in the accent colour, 16px (20px on touch) */
 input[type="checkbox"],
 input[type="radio"] {
-    width: 16px;
-    height: 16px;
+    flex-shrink: 0;
+    width: var(--check-size);
+    height: var(--check-size);
     margin: 0;
     accent-color: var(--accent);
     cursor: pointer;
-}
-
-@media (pointer: coarse) {
-    input[type="checkbox"],
-    input[type="radio"] {
-        width: 20px;
-        height: 20px;
-    }
 }
 
 /* A checkbox (or radio) with its label on one line */
@@ -263,9 +295,27 @@ input[type="radio"] {
 .toggle-row {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--check-gap);
     min-height: var(--control-h);
     cursor: pointer;
+}
+
+/* In a toolbar the checkbox is one of the row's controls: same weight as the
+   buttons beside it, and inline so it sits in the row like them */
+:is(.toolbar, .toolbar-end, .devices-toolbar) > .checkbox-row {
+    display: inline-flex;
+    font-weight: var(--control-weight);
+    white-space: nowrap;
+}
+
+/* A checkbox in a menu (a filter, a column choice): a menu item's size and inset */
+:is(.menu, .dropdown-menu) .checkbox-row {
+    min-height: var(--control-h);
+    padding: var(--space-1) var(--space-3);
+}
+
+:is(.menu, .dropdown-menu) .checkbox-row:hover {
+    background: var(--hover);
 }
 
 /* Switches render as plain checkboxes */
@@ -349,12 +399,18 @@ input.toggle-switch {
     padding: var(--row-pad-y) var(--row-pad-x);
     border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
-    background: var(--bg-subtle);
+    /* No band: the header is muted text between two rules, like the top rule
+       of a row list. The background only covers rows scrolling under it. */
+    background: var(--bg);
     color: var(--text-muted);
     font-size: var(--text-sm);
     font-weight: 600;
     text-align: start;
     white-space: nowrap;
+}
+
+:is(.modal, .menu) :is(.data-table, .table) thead th {
+    background: var(--bg-float);
 }
 
 .data-table td,
@@ -782,6 +838,7 @@ th.sortable.sort-desc {
     background: transparent;
     color: var(--text-muted);
     font: inherit;
+    font-weight: var(--control-weight);
     white-space: nowrap;
     cursor: pointer;
     text-decoration: none;
@@ -797,7 +854,6 @@ th.sortable.sort-desc {
 .tab[aria-selected="true"] {
     border-bottom-color: var(--accent);
     color: var(--text);
-    font-weight: 600;
 }
 
 .tab .material-icons,
@@ -848,39 +904,16 @@ th.sortable.sort-desc {
     height: 0.9em;
 }
 
-/* Copy button next to an ID or key */
-.copy-btn,
-.device-panel-copy-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-}
-
+/* Copy button next to an ID or key: a small icon button (see "Square icon button") */
 .copy-btn .material-icons,
 .device-panel-copy-btn .material-icons {
     font-size: 16px;
 }
 
 .copy-btn:hover,
-.device-panel-copy-btn:hover,
 .copy-btn.copied {
     color: var(--text);
     background: var(--hover);
-}
-
-@media (pointer: coarse) {
-    .copy-btn {
-        width: 44px;
-        height: 44px;
-    }
 }
 
 /* Pagination */
@@ -891,15 +924,22 @@ th.sortable.sort-desc {
     gap: var(--space-1);
 }
 
+/* Page numbers: small plain buttons; the current page looks like a selected segment */
 .pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: var(--control-h-sm);
     min-height: var(--control-h-sm);
-    padding: 0 var(--space-2);
+    padding: 0 var(--control-pad-x-sm);
     border: 1px solid transparent;
-    border-radius: var(--radius);
+    border-radius: var(--control-radius);
     background: transparent;
     color: var(--text);
     font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--control-weight);
+    line-height: var(--control-leading);
     cursor: pointer;
 }
 
@@ -907,9 +947,10 @@ th.sortable.sort-desc {
     background: var(--hover);
 }
 
-.pagination-btn.active {
-    border-color: var(--border);
-    font-weight: 600;
+.pagination-btn.active,
+.pagination-btn[aria-current="page"] {
+    border-color: var(--accent);
+    background: var(--accent-tint);
 }
 
 .pagination-btn:disabled {
@@ -1211,34 +1252,87 @@ a.list-row:hover,
     width: auto;
 }
 
-/* Status filters: plain text buttons, the active one underlined */
-.toolbar-filters {
-    display: flex;
+/* Segmented control: the one component for view filters (status filters
+   above a list, list/grid switches, date presets). Same height, border and
+   weight as the buttons beside it; the selected segment is tinted, outlined
+   in the accent and has the full text colour, so colour is never the only cue.
+   Page tabs (.tabs) switch between parts of one thing and keep the underline. */
+.toolbar-filters,
+.view-switch,
+.segmented {
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
+    max-width: 100%;
+    vertical-align: middle;
 }
 
-.filter-btn {
+.filter-btn,
+.view-switch > button,
+.segmented > button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
     min-height: var(--control-h);
-    padding: 0;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: transparent;
+    padding: 0 var(--control-pad-x);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--bg);
     color: var(--text-muted);
     font: inherit;
+    font-weight: var(--control-weight);
+    line-height: var(--control-leading);
     white-space: nowrap;
     cursor: pointer;
+    transition: background-color var(--motion), border-color var(--motion);
 }
 
-.filter-btn:hover {
+/* Neighbours share one border line */
+:is(.toolbar-filters, .view-switch, .segmented) > * + * {
+    margin-inline-start: -1px;
+}
+
+:is(.toolbar-filters, .view-switch, .segmented) > :first-child {
+    border-start-start-radius: var(--control-radius);
+    border-end-start-radius: var(--control-radius);
+}
+
+:is(.toolbar-filters, .view-switch, .segmented) > :last-child {
+    border-start-end-radius: var(--control-radius);
+    border-end-end-radius: var(--control-radius);
+}
+
+.filter-btn:hover,
+.view-switch > button:hover,
+.segmented > button:hover {
+    background: var(--hover);
     color: var(--text);
 }
 
 .filter-btn.active,
-.filter-btn[aria-pressed="true"] {
-    border-bottom-color: var(--accent);
+.filter-btn[aria-pressed="true"],
+.view-switch > button[aria-pressed="true"],
+.view-switch > button.active,
+.segmented > button[aria-pressed="true"],
+.segmented > button.active {
+    z-index: 1;
+    border-color: var(--accent);
+    background: var(--accent-tint);
     color: var(--text);
-    font-weight: 600;
+}
+
+.filter-btn:focus-visible,
+.view-switch > button:focus-visible,
+.segmented > button:focus-visible {
+    z-index: 2;
+}
+
+.filter-btn:disabled,
+.view-switch > button:disabled,
+.segmented > button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .toolbar-end {
@@ -1388,7 +1482,7 @@ td.state-cell {
 .choice {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 2px var(--space-3);
+    gap: 2px var(--check-gap);
     align-items: start;
     padding: var(--space-3) var(--row-pad-x);
     border-bottom: 1px solid var(--rule);
@@ -1434,7 +1528,7 @@ td.state-cell {
 .check-field {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 2px var(--space-2);
+    gap: 2px var(--check-gap);
     align-items: start;
     cursor: pointer;
 }
@@ -1729,34 +1823,8 @@ input[type="file"]::file-selector-button:hover {
     }
 }
 
-/* ── Two or three views of the same list (list / grid) ── */
-
-.view-switch {
-    display: inline-flex;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-}
-
-.view-switch > button {
-    min-height: var(--control-h-sm);
-    padding: 0 var(--space-3);
-    border: 0;
-    background: transparent;
-    color: var(--text-muted);
-    font: inherit;
-    cursor: pointer;
-}
-
-.view-switch > button + button {
-    border-inline-start: 1px solid var(--border);
-}
-
-.view-switch > button[aria-pressed="true"],
-.view-switch > button.active {
-    background: var(--hover);
-    color: var(--text);
-    font-weight: 600;
-}
+/* Two or three views of the same list (list / grid): .view-switch is a
+   segmented control, see "Segmented control" */
 
 /* ── Share bar: one whole split into its parts, e.g. devices online /
    offline / banned. The legend names every part with its number, so the

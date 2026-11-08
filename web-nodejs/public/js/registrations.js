@@ -294,7 +294,7 @@
                 <button type="button" class="btn btn-sm btn-danger-quiet desktop-only" ${actionAttrs(row, 'reject')} ${named}>${Utils.icon('reject')}<span>${esc(_('registrations.reject_btn'))}</span></button>`;
             menuItems.push(`<button type="button" class="menu-item danger phone-only" role="menuitem" ${actionAttrs(row, 'reject')}>${Utils.icon('reject')}<span>${esc(_('registrations.reject_btn'))}…</span></button>`);
         } else if (row.status === 'approved') {
-            inline = `<a class="btn-link" href="/devices?search=${encodeURIComponent(row.device_id)}" ${named}>${esc(_('registrations.open_device'))}</a>`;
+            inline = `<a class="btn btn-sm btn-ghost" href="/devices?search=${encodeURIComponent(row.device_id)}" ${named}>${esc(_('registrations.open_device'))}</a>`;
         } else if (row.status === 'rejected' && row.source === SOURCE_ENROLLMENT && !decided.has(row.key)) {
             inline = `<button type="button" class="btn btn-sm" ${actionAttrs(row, 'clear-rejection')} ${named}>${esc(_('registrations.allow_again'))}</button>`;
         }

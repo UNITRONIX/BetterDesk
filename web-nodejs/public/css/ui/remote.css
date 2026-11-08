@@ -102,15 +102,10 @@
 .rd-desk-quick-input {
     flex: 0 1 22ch;
     min-width: 14ch;
-    font-size: var(--text-md);
 }
 
 .rd-desk-quick-status.is-error {
     color: var(--danger);
-}
-
-.rd-desk-quick-input[aria-invalid="true"] {
-    border-color: var(--danger);
 }
 
 /* ── Filters beside the list (same pattern as the devices page) ── */
@@ -159,7 +154,7 @@
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
-    min-height: 30px;
+    min-height: var(--control-h);
     padding: var(--space-1) var(--space-2);
     border: 0;
     border-inline-start: 2px solid transparent;
@@ -385,10 +380,6 @@
 }
 
 @media (pointer: coarse) {
-    .rd-desk-sidebar .filter-option {
-        min-height: 44px;
-    }
-
     .rd-desk-console-link {
         min-height: 44px;
     }

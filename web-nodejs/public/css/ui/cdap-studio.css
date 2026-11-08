@@ -153,10 +153,6 @@ body.studio-body {
     margin: var(--space-2) var(--space-3) 0;
 }
 
-.studio-palette-search {
-    min-height: var(--control-h-sm);
-}
-
 .studio-palette-hint {
     padding: var(--space-2) var(--space-3);
     color: var(--text-muted);

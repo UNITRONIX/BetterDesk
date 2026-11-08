@@ -116,9 +116,10 @@
     border-bottom: 1px solid var(--rule);
 }
 
+/* The look of .tab (components.css): same height, weight and underline */
 .device-panel-tab {
     flex-shrink: 0;
-    min-height: 40px;
+    min-height: var(--control-h);
     padding: 0;
     border: 0;
     border-bottom: 2px solid transparent;
@@ -126,6 +127,7 @@
     background: transparent;
     color: var(--text-muted);
     font: inherit;
+    font-weight: var(--control-weight);
     cursor: pointer;
 }
 
@@ -136,7 +138,6 @@
 .device-panel-tab.active {
     border-bottom-color: var(--accent);
     color: var(--text);
-    font-weight: 600;
 }
 
 .device-panel-tab .material-icons {
@@ -503,10 +504,6 @@
     margin-inline-start: var(--space-2);
 }
 
-.device-panel-id-row .device-panel-copy-btn {
-    width: 24px;
-    height: 24px;
-}
 
 /* ── Actions tab: a list of actions, delete apart at the end ── */
 
@@ -612,7 +609,6 @@
 
 /* Touch: every control in the panel gets a 44px hit area */
 @media (pointer: coarse) {
-    .device-panel-tab,
     .device-panel-tag-remove {
         min-height: 44px;
     }
@@ -621,10 +617,6 @@
         min-width: 44px;
     }
 
-    .device-panel-id-row .device-panel-copy-btn {
-        width: 44px;
-        height: 44px;
-    }
 }
 
 /* Wide screens: the panel takes more room so the charts in Metrics can be read */

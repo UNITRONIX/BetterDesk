@@ -75,7 +75,6 @@
     /* Motion: state changes only */
     --motion: 120ms;
 
-    /* Control sizes: compact with a mouse, 44px on touch */
     /* Layers (z-index), lowest to highest. Each applies among elements
        that share a stacking context; dialogs and sheets hang off <body>. */
     --layer-sticky: 1;       /* sticky table headers */
@@ -85,8 +84,23 @@
     --layer-search: 1050;
     --layer-toast: 1100;
     --layer-reading: 1200;   /* reading guide and mask from the accessibility panel */
+
+    /* Controls: one set for buttons, fields, selects, search fields, menu
+       buttons and segmented filters. Two sizes: default, and small for dense
+       rows (row actions, pagination). Compact with a mouse, 44px on touch. */
     --control-h: 36px;
     --control-h-sm: 30px;
+    --control-pad-x: 12px;      /* buttons */
+    --control-pad-x-sm: 8px;    /* small buttons, and the text inset of every field */
+    --control-weight: 500;      /* label of every button, menu button, segment and tab */
+    --control-radius: var(--radius);
+    --control-leading: 1.25;
+    /* One focus ring, outside the control */
+    --focus-ring: 2px solid var(--focus);
+    --focus-offset: 2px;
+    /* Checkboxes and radios: sized to the 14px text, one gap to the label */
+    --check-size: 16px;
+    --check-gap: var(--space-2);
     --row-h: 44px;
     /* Every row (nav, lists, facts, tables, menus) uses the same inset */
     --row-pad-x: var(--space-3);
@@ -158,6 +172,7 @@ html[data-a11y-contrast="high-light"] {
     :root {
         --control-h: 44px;
         --control-h-sm: 44px;
+        --check-size: 20px;
         --row-h: 48px;
     }
 }

@@ -226,8 +226,8 @@ hr {
 }
 
 :focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 2px;
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
 }
 
 html[data-a11y-strong-focus="true"] :focus-visible {

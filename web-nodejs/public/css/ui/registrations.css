@@ -31,10 +31,6 @@
     color: var(--danger);
 }
 
-.registrations-table td.actions .btn-link {
-    font-weight: 600;
-}
-
 .registrations-page .phone-only {
     display: none;
 }

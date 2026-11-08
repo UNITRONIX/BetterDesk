@@ -24,7 +24,7 @@
                     <div class="filter-block folders-bar" id="folders-bar">
                         <div class="filter-head">
                             <h2>${_('folders.title')}</h2>
-                            ${canEditDevices ? `<button type="button" class="btn-link filter-add" id="add-folder-btn">${_('folders.create')}</button>` : ''}
+                            ${canEditDevices ? `<button type="button" class="btn btn-sm btn-ghost filter-add" id="add-folder-btn"><span class="material-icons" aria-hidden="true">add</span>${_('folders.create')}</button>` : ''}
                         </div>
                         <ul class="filter-list folders-chips" id="folders-chips">
                             <li class="filter-item">
@@ -46,7 +46,7 @@
                     <div class="filter-block groups-bar" id="groups-bar">
                         <div class="filter-head">
                             <h2>${_('device_detail.device_groups')}</h2>
-                            ${canEditDevices ? `<button type="button" class="btn-link filter-add" id="add-device-group-btn">${_('devices.create_group')}</button>` : ''}
+                            ${canEditDevices ? `<button type="button" class="btn btn-sm btn-ghost filter-add" id="add-device-group-btn"><span class="material-icons" aria-hidden="true">add</span>${_('devices.create_group')}</button>` : ''}
                         </div>
                         <ul class="filter-list groups-chips" id="groups-chips">
                             <li class="filter-item filter-item-all-groups">
@@ -69,11 +69,11 @@
                                 placeholder="${_('devices.search_placeholder')}">
                         </div>
                         <div class="toolbar-filters" role="group" aria-label="${_('devices.status')}">
-                            <button type="button" class="filter-btn active" data-filter="all">${_('devices.filter_all')}</button>
-                            <button type="button" class="filter-btn" data-filter="online">${_('devices.filter_online')}</button>
-                            <button type="button" class="filter-btn" data-filter="offline">${_('devices.filter_offline')}</button>
-                            <button type="button" class="filter-btn" data-filter="mesh_agent">${_('mesh.filter_mesh')}</button>
-                            <button type="button" class="filter-btn" data-filter="banned">${_('devices.filter_banned')}</button>
+                            <button type="button" class="filter-btn active" aria-pressed="true" data-filter="all">${_('devices.filter_all')}</button>
+                            <button type="button" class="filter-btn" aria-pressed="false" data-filter="online">${_('devices.filter_online')}</button>
+                            <button type="button" class="filter-btn" aria-pressed="false" data-filter="offline">${_('devices.filter_offline')}</button>
+                            <button type="button" class="filter-btn" aria-pressed="false" data-filter="mesh_agent">${_('mesh.filter_mesh')}</button>
+                            <button type="button" class="filter-btn" aria-pressed="false" data-filter="banned">${_('devices.filter_banned')}</button>
                         </div>
                         <div class="toolbar-end">
                             <label class="checkbox-row show-deleted-toggle" for="show-deleted-input">
@@ -81,7 +81,7 @@
                                 <span>${_('devices.show_deleted')}</span>
                             </label>
                             <div class="tag-filter-dropdown">
-                                <button type="button" class="btn btn-sm toolbar-menu-btn" id="tags-filter-btn" aria-haspopup="true" aria-expanded="false" aria-controls="tags-filter-menu">
+                                <button type="button" class="btn toolbar-menu-btn" id="tags-filter-btn" aria-haspopup="true" aria-expanded="false" aria-controls="tags-filter-menu">
                                     <span class="toolbar-menu-label">${_('devices.tags')}</span><span class="tag-filter-summary" id="tags-filter-summary"></span>
                                     <span class="material-icons" aria-hidden="true">expand_more</span>
                                 </button>
@@ -95,7 +95,7 @@
                                 </div>
                             </div>
                             <div class="column-visibility-dropdown">
-                                <button type="button" class="btn btn-sm toolbar-menu-btn" id="columns-btn" aria-haspopup="true" aria-expanded="false" aria-controls="columns-menu">
+                                <button type="button" class="btn toolbar-menu-btn" id="columns-btn" aria-haspopup="true" aria-expanded="false" aria-controls="columns-menu">
                                     <span class="toolbar-menu-label">${_('devices.columns')}</span>
                                     <span class="material-icons" aria-hidden="true">expand_more</span>
                                 </button>
@@ -152,7 +152,7 @@
                             <span class="pagination-info" id="pagination-info">${_('devices.showing')} 0-0 ${_('devices.of')} 0</span>
                             <label class="pagination-per-page" for="per-page-select">
                                 <span>${_('devices.per_page')}</span>
-                                <select id="per-page-select" class="form-select pagination-per-page-select">
+                                <select id="per-page-select" class="form-select is-small pagination-per-page-select">
                                     <option value="10">10</option>
                                     <option value="20" selected>20</option>
                                     <option value="50">50</option>

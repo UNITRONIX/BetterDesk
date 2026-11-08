@@ -3,20 +3,63 @@
  * The table is the page; everything else stays small.
  */
 
+/* The count sits right after the title; the page's buttons stay at the end */
+.devices-page .page-head h1 {
+    margin-inline-end: 0;
+}
+
+.devices-page .page-head .page-meta {
+    margin-inline-end: auto;
+}
+
 .devices-layout {
     display: grid;
-    grid-template-columns: 200px minmax(0, 1fr);
-    gap: var(--space-6);
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 0 var(--space-6);
     align-items: start;
+}
+
+.devices-main {
+    min-width: 0;
+}
+
+/* Wide: the toolbar sits over the table only, and the folder column starts on
+   the table's header line, so "Folders" lines up with the column headings and
+   "All devices" with the first device. .devices-main only groups its children
+   for the grid; their order in the page (folders, toolbar, table), and with it
+   the keyboard order, stays the same. */
+@media (min-width: 900px) {
+    .devices-main {
+        display: contents;
+    }
+
+    .devices-toolbar {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .devices-filters {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .devices-table-container,
+    .devices-empty {
+        grid-column: 2;
+        grid-row: 2;
+        min-width: 0;
+    }
 }
 
 /* ── Folders and groups ── */
 
+/* Rows hang their padding outside the column, as table and list rows do */
 .devices-filters {
     position: sticky;
     top: calc(var(--topbar-h) + var(--space-4));
     max-height: calc(100vh - var(--topbar-h) - var(--space-6));
     overflow-y: auto;
+    margin-inline-start: calc(-1 * var(--row-pad-x));
     padding-bottom: var(--space-2);
 }
 
@@ -24,20 +67,20 @@
     margin-top: var(--space-5);
 }
 
+/* Heading row: the height, rules and type of the table's header row */
 .filter-head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
-    margin-bottom: var(--space-1);
-    padding-inline: var(--space-2);
+    min-height: 40px;
+    padding-inline-start: var(--row-pad-x);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
 }
 
 .filter-head h2 {
-    font-size: var(--text-base);
-}
-
-.filter-add {
+    color: var(--text-muted);
     font-size: var(--text-sm);
 }
 
@@ -47,9 +90,11 @@
     list-style: none;
 }
 
+/* Name and count, then a column for the "…" menu, so every count ends on the same line */
 .filter-item {
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--control-h-sm);
     align-items: center;
 }
 
@@ -63,8 +108,8 @@
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
-    min-height: 30px;
-    padding: var(--space-1) var(--space-2);
+    min-height: var(--control-h);
+    padding: var(--space-1) var(--space-2) var(--space-1) calc(var(--row-pad-x) - 2px);
     border-inline-start: 2px solid transparent;
     border-radius: 0 var(--radius) var(--radius) 0;
     color: var(--text);
@@ -116,9 +161,8 @@
 
 /* The "…" menu shows on hover or keyboard focus; always on touch */
 .chip-menu-btn {
-    width: 28px;
-    height: 28px;
-    margin-inline-start: 2px;
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
     opacity: 0;
 }
 
@@ -130,13 +174,7 @@
 
 @media (pointer: coarse) {
     .chip-menu-btn {
-        width: 44px;
-        height: 44px;
         opacity: 1;
-    }
-
-    .filter-option {
-        min-height: 44px;
     }
 }
 
@@ -146,10 +184,13 @@
     margin-bottom: var(--space-3);
 }
 
-.show-deleted-toggle {
-    margin-inline-end: var(--space-2);
-    color: var(--text-muted);
-    white-space: nowrap;
+/* The search gives way first, so the filters and menus stay on one line down to about 1400px */
+.devices-toolbar {
+    column-gap: var(--space-3);
+}
+
+.devices-toolbar .toolbar-search {
+    flex-basis: 200px;
 }
 
 .tag-filter-dropdown,
@@ -160,11 +201,6 @@
 /* "Tags" and "Columns": labelled menu buttons */
 .toolbar-menu-btn {
     gap: var(--space-1);
-    white-space: nowrap;
-}
-
-.toolbar-menu-btn .material-icons {
-    font-size: 18px;
 }
 
 #tags-filter-btn.tag-filter-active {
@@ -231,13 +267,14 @@
     display: block;
 }
 
+/* Checkbox rows in the two menus: the size and inset of a menu item */
 .tag-filter-option,
 .column-toggle {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--check-gap);
     min-height: var(--control-h);
-    padding: 0 var(--space-3);
+    padding: var(--space-1) var(--space-3);
     cursor: pointer;
 }
 
@@ -268,9 +305,20 @@
     }
 }
 
+/* Column widths: every column fits its content (ID and status narrow, the
+   name as long as it is, platform and last seen on one line) and tags take
+   what is left, so the row actions end at the table's edge. Without the tags
+   column the name takes the rest. */
+.devices-table :is(th, td):is([data-column="id"], [data-column="hostname"], [data-column="device_type"], [data-column="platform"], [data-column="last_online"], [data-column="status"], [data-column="actions"]) {
+    width: 1%;
+}
+
+.devices-table:has(th[data-column="tags"].column-hidden) [data-column="hostname"] {
+    width: auto;
+}
+
 .devices-table th.col-actions,
 .devices-table td[data-column="actions"] {
-    width: 44px;
     text-align: end;
 }
 
@@ -337,20 +385,14 @@
     font-size: 16px;
 }
 
-/* Tags and platform may wrap, so the table fits its column without sideways scrolling */
+/* Tags may wrap, so the table fits its column without sideways scrolling */
 .devices-table td[data-column="tags"] {
     min-width: 120px;
     white-space: normal;
 }
 
-.devices-table td[data-column="platform"] {
-    min-width: 110px;
-    white-space: normal;
-}
-
 .devices-table .tag-list {
     display: inline-block;
-    max-width: 220px;
     vertical-align: middle;
 }
 
@@ -492,7 +534,6 @@
 
 .pagination-per-page .form-select {
     width: auto;
-    min-height: var(--control-h-sm);
 }
 
 .devices-pagination .pagination-controls {
@@ -790,10 +831,16 @@
         scrollbar-width: none;
     }
 
+    .devices-filters {
+        margin-inline-start: 0;
+    }
+
     .filter-head {
         flex-shrink: 0;
+        min-height: 0;
         margin: 0;
         padding: 0;
+        border: 0;
     }
 
     .filter-head h2 {
@@ -803,6 +850,10 @@
 
     .filter-head .filter-add {
         order: 2;
+    }
+
+    .filter-item {
+        display: flex;
     }
 
     .filter-list {
@@ -856,9 +907,8 @@
     }
 }
 
-/* Touch: the small text controls get a 44px hit area */
+/* Touch: the device name gets a 44px hit area */
 @media (pointer: coarse) {
-    .filter-add,
     .device-open {
         display: inline-flex;
         align-items: center;
@@ -868,20 +918,28 @@
 
 /* ── The table adapts to the width of the list column, not the window ── */
 
-.devices-main {
+.devices-table-container {
     container: devlist / inline-size;
     min-width: 0;
 }
 
+/* Narrower list: type goes first, then tags (they stay in the search and the
+   row's Edit dialog), and then the platform may wrap */
 @container devlist (max-width: 860px) {
     .devices-table [data-column="device_type"] {
         display: none;
     }
 }
 
-@container devlist (max-width: 720px) {
+@container devlist (max-width: 780px) {
     .devices-table [data-column="tags"] {
         display: none;
+    }
+
+    /* the platform takes the room the tags leave */
+    .devices-table :is(th, td):is([data-column="platform"]) {
+        width: auto;
+        white-space: normal;
     }
 }
 
@@ -905,12 +963,15 @@
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 2px var(--space-3);
-        padding: var(--space-3) 0;
+        /* the scroll box hangs past the column; the text keeps the page edge */
+        padding: var(--space-3) var(--row-pad-x);
         border-bottom: 1px solid var(--rule);
     }
 
-    .devices-table td {
+    .devices-table td,
+    .devices-table td[data-column] {
         display: block;
+        width: auto;
         height: auto;
         padding: 0;
         border: 0;
