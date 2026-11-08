@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.214] — 2026-11-08
+
 ### Fixed
 - **i18n key parity:** `en.json` was missing `commercialization.packages.select_org` and `commercialization.packages.select_org_placeholder`, which `pl.json` already had. EN now carries both, so parity is clean.
 - **CI i18n gate:** `npm run i18n:check` no longer fails on untranslated strings still falling back to English. Parity breaks, parse errors, missing keys and empty values stay blocking; the remaining translation backlog (~8.1k strings across 26 locales) is reported as a warning instead of turning the gate permanently red and hiding real regressions.
@@ -4529,3 +4536,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.211]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.210...v3.5.211
 [3.5.212]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.211...v3.5.212
 [3.5.213]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.212...v3.5.213
+[3.5.214]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.213...v3.5.214
