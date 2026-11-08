@@ -1028,7 +1028,9 @@
             "on_this_page": "Auf dieser Seite",
             "search_label": "Alle Einstellungen durchsuchen",
             "search_none": "Keine Einstellung passt zu „{query}“.",
-            "search_count": "{count} Einstellungen gefunden"
+            "search_count": "{count} Einstellungen gefunden",
+            "shown_when_on": "Wird angezeigt, wenn \"{switch}\" eingeschaltet ist.",
+            "shown_when_only": "Nur angezeigt bei: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Hostname oder IP-Adresse des ID-Servers, so wie Clients im Internet ihn erreichen.",
@@ -1287,7 +1289,14 @@
             "newest_version": "Neueste Version",
             "not_checked": "Noch nicht geprüft",
             "changes_behind": "{n} Änderungen neuer als Ihre Version",
-            "idle_note": "Die Prüfung fragt GitHub nach der neuesten Version. Installiert wird erst, wenn Sie auf Installieren klicken."
+            "idle_note": "Die Prüfung fragt GitHub nach der neuesten Version. Installiert wird erst, wenn Sie auf Installieren klicken.",
+            "tools_ready": "Kann hier gebaut werden",
+            "fact_binary": "Serverprogramm",
+            "fact_source": "Quellcode auf diesem Server",
+            "fact_tools": "Build-Werkzeuge (Go)",
+            "tools_system": "Auf dem Server installiert",
+            "tools_console": "Von der Konsole heruntergeladen",
+            "tools_missing": "Nicht installiert"
         },
         "advanced_tab": {
             "note": "Wählen Sie eine Datei, um sie anzusehen und zu bearbeiten. Jedes Speichern behält eine Kopie der vorherigen Version.",
@@ -5859,13 +5868,13 @@
         "removed": "Removed",
         "auto": "Auto",
         "manual": "Manual",
-        "component_console": "Web Console",
-        "component_server": "Go-Server",
+        "component_console": "Webkonsole",
+        "component_server": "BetterDesk-Server",
         "component_agent": "Agent",
         "component_scripts": "Skripte und Docker",
         "component_other": "Other",
         "server_rebuild_warning": "Go Server source changed — binary rebuild required. Use the ALL-IN-ONE script or compile manually.",
-        "include_server": "Include Go Server (compile & deploy binary)",
+        "include_server": "Der BetterDesk-Server wird mit aktualisiert",
         "checking_go": "Go wird geprüft...",
         "go_not_found": "Go ist nicht installiert",
         "go_check_failed": "Go-Verfügbarkeit konnte nicht geprüft werden",

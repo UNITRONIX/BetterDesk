@@ -1028,7 +1028,9 @@
             "on_this_page": "Na této stránce",
             "search_label": "Hledat ve všech nastaveních",
             "search_none": "Výrazu „{query}“ neodpovídá žádné nastavení.",
-            "search_count": "Nalezená nastavení: {count}"
+            "search_count": "Nalezená nastavení: {count}",
+            "shown_when_on": "Zobrazí se, když je zapnuto \"{switch}\".",
+            "shown_when_only": "Zobrazí se jen pro: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Název hostitele nebo IP adresa ID serveru, jak ji vidí klienti z internetu.",
@@ -1287,7 +1289,14 @@
             "newest_version": "Nejnovější verze",
             "not_checked": "Zatím nekontrolováno",
             "changes_behind": "{n} změn novějších než vaše verze",
-            "idle_note": "Kontrola se zeptá GitHubu na nejnovější verzi. Nic se nenainstaluje, dokud neklepnete na Instalovat."
+            "idle_note": "Kontrola se zeptá GitHubu na nejnovější verzi. Nic se nenainstaluje, dokud neklepnete na Instalovat.",
+            "tools_ready": "Lze sestavit zde",
+            "fact_binary": "Program serveru",
+            "fact_source": "Zdrojový kód na tomto serveru",
+            "fact_tools": "Nástroje pro sestavení (Go)",
+            "tools_system": "Nainstalováno na serveru",
+            "tools_console": "Staženo konzolí",
+            "tools_missing": "Nenainstalováno"
         },
         "advanced_tab": {
             "note": "Vyberte soubor, který chcete zobrazit a upravit. Při každém uložení se zachová kopie předchozí verze.",

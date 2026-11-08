@@ -132,11 +132,12 @@
     }
 
     function statusOf(lang) {
-        if (lang.error) return { cls: 'error', label: _('languages.status_error') };
-        if (lang.is_reference) return { cls: 'active', label: _('languages.status_reference') };
-        if (lang.missing_keys > 0) return { cls: 'warning', label: _('languages.status_incomplete') };
-        if (lang.needs_review) return { cls: 'pending', label: _('languages.status_review') };
-        return { cls: 'active', label: _('languages.status_complete') };
+        // Tones: complete and reference good, waiting for review, missing texts warning, unreadable danger
+        if (lang.error) return { tone: 'danger', label: _('languages.status_error') };
+        if (lang.is_reference) return { tone: 'good', label: _('languages.status_reference') };
+        if (lang.missing_keys > 0) return { tone: 'warning', label: _('languages.status_incomplete') };
+        if (lang.needs_review) return { tone: 'waiting', label: _('languages.status_review') };
+        return { tone: 'good', label: _('languages.status_complete') };
     }
 
     function renderGrid() {
@@ -151,11 +152,11 @@
         tbody.innerHTML = languages.map((lang) => {
             const st = statusOf(lang);
             const cov = Math.max(0, Math.min(100, Number(lang.coverage) || 0));
-            const subStatus = lang.needs_review && st.cls !== 'pending' && !lang.is_reference
+            const subStatus = lang.needs_review && st.tone !== 'waiting' && !lang.is_reference
                 ? `<span class="cell-sub">${escHtml(_('languages.status_review'))}</span>` : '';
             const extra = lang.extra_keys > 0
                 ? `<span class="cell-sub">${escHtml(tpl('languages.extra_count', { n: fmt(lang.extra_keys) }))}</span>` : '';
-            const missing = lang.is_reference ? '–' : fmt(lang.missing_keys);
+            const missing = lang.is_reference ? Utils.emptyHtml() : escHtml(fmt(lang.missing_keys));
             return `
                 <tr data-code="${escHtml(lang.code)}">
                     <td><span class="lang-cell">${flagImg(lang.code)}<span><a class="lang-name" href="#${encodeURIComponent(lang.code)}">${escHtml(langName(lang))}</a><span class="cell-sub">${escHtml(lang.code)}</span></span></span></td>
@@ -166,8 +167,8 @@
                             <span class="meter-value">${cov} %</span>
                         </div>
                     </td>
-                    <td><span class="status ${st.cls}">${escHtml(st.label)}</span>${subStatus}</td>
-                    <td class="col-num col-missing">${missing}${extra}</td>
+                    <td>${Utils.statusHtml(st.tone, st.label)}${subStatus}</td>
+                    <td class="col-num col-missing is-num">${missing}${extra}</td>
                     <td class="actions">
                         <a class="btn btn-sm" href="#${encodeURIComponent(lang.code)}"
                            aria-label="${escHtml(tpl('languages.show_texts_for', { language: langName(lang) }))}">${escHtml(_('languages.show_texts'))}</a>
@@ -320,7 +321,7 @@
                                 <td class="col-key"><code>${escHtml(r.key)}</code></td>
                                 <td lang="en" dir="ltr">${escHtml(r.en)}</td>
                                 ${isEn ? '' : (r.missing
-                                    ? `<td><span class="status warning">${escHtml(_('languages.missing_text'))}</span></td>`
+                                    ? `<td>${Utils.statusHtml('warning', _('languages.missing_text'))}</td>`
                                     : `<td lang="${escHtml(detail.code)}" dir="${dir}">${escHtml(r.value)}</td>`)}
                             </tr>`).join('')}
                     </tbody>
@@ -338,7 +339,7 @@
         const missingN = Number(lang.missing_keys) || 0;
         const cov = Math.max(0, Math.min(100, Number(lang.coverage) || 0));
         const rows = [];
-        rows.push([_('languages.col_status'), `<span class="status ${st.cls}">${escHtml(st.label)}</span>`]);
+        rows.push([_('languages.col_status'), Utils.statusHtml(st.tone, st.label)]);
         if (!lang.is_reference && lang.coverage != null) {
             rows.push([_('languages.col_coverage'), `
                 <div class="meter${cov < 100 ? ' is-high' : ''}">
@@ -351,7 +352,7 @@
             if (lang.empty_keys > 0) rows.push([_('languages.summary_empty'), escHtml(fmt(lang.empty_keys))]);
         }
         rows.push([_('languages.summary_direction'), escHtml(lang.rtl ? _('languages.rtl') : _('languages.ltr'))]);
-        rows.push([_('languages.summary_file'), `<code>lang/${escHtml(lang.code)}.json</code>`]);
+        rows.push([_('languages.summary_file'), Utils.valueHtml(`lang/${lang.code}.json`)]);
         el.innerHTML = rows.map(([k, v]) => `<dt>${escHtml(k)}</dt><dd>${v}</dd>`).join('');
     }
 

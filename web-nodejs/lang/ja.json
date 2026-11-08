@@ -1028,7 +1028,9 @@
             "on_this_page": "このページの内容",
             "search_label": "すべての設定を検索",
             "search_none": "「{query}」に一致する設定はありません。",
-            "search_count": "{count} 件の設定が見つかりました"
+            "search_count": "{count} 件の設定が見つかりました",
+            "shown_when_on": "\"{switch}\" がオンのときに表示されます。",
+            "shown_when_only": "次の場合のみ表示: {choices}。"
         },
         "general": {
             "endpoint_id_hint": "インターネット上のクライアントが接続する ID サーバーのホスト名または IP アドレスです。",
@@ -1287,7 +1289,14 @@
             "newest_version": "最新バージョン",
             "not_checked": "まだ確認していません",
             "changes_behind": "現在より新しい変更 {n} 件",
-            "idle_note": "確認では GitHub に最新バージョンを問い合わせます。「インストール」をクリックするまで何もインストールされません。"
+            "idle_note": "確認では GitHub に最新バージョンを問い合わせます。「インストール」をクリックするまで何もインストールされません。",
+            "tools_ready": "ここでビルドできます",
+            "fact_binary": "サーバープログラム",
+            "fact_source": "このサーバー上のソースコード",
+            "fact_tools": "ビルドツール (Go)",
+            "tools_system": "サーバーにインストール済み",
+            "tools_console": "コンソールがダウンロード",
+            "tools_missing": "未インストール"
         },
         "advanced_tab": {
             "note": "ファイルを選択すると表示・編集できます。保存するたびに前のバージョンのコピーが残ります。",

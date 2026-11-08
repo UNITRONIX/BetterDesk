@@ -1028,7 +1028,9 @@
             "on_this_page": "In questa pagina",
             "search_label": "Cerca in tutte le impostazioni",
             "search_none": "Nessuna impostazione corrisponde a «{query}».",
-            "search_count": "{count} impostazioni trovate"
+            "search_count": "{count} impostazioni trovate",
+            "shown_when_on": "Visibile quando \"{switch}\" è attivo.",
+            "shown_when_only": "Visibile solo per: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Nome host o indirizzo IP del server ID, come lo raggiungono i client da internet.",
@@ -1287,7 +1289,14 @@
             "newest_version": "Versione più recente",
             "not_checked": "Non ancora controllato",
             "changes_behind": "{n} modifiche più recenti della tua versione",
-            "idle_note": "Il controllo chiede a GitHub la versione più recente. Non viene installato nulla finché non fai clic su Installa."
+            "idle_note": "Il controllo chiede a GitHub la versione più recente. Non viene installato nulla finché non fai clic su Installa.",
+            "tools_ready": "Si può compilare qui",
+            "fact_binary": "Programma del server",
+            "fact_source": "Codice sorgente su questo server",
+            "fact_tools": "Strumenti di compilazione (Go)",
+            "tools_system": "Installati sul server",
+            "tools_console": "Scaricati dalla console",
+            "tools_missing": "Non installati"
         },
         "advanced_tab": {
             "note": "Scegliere un file per visualizzarlo e modificarlo. Ogni salvataggio conserva una copia della versione precedente.",

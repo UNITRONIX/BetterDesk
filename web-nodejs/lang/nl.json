@@ -1028,7 +1028,9 @@
             "on_this_page": "Op deze pagina",
             "search_label": "Alle instellingen doorzoeken",
             "search_none": "Geen instelling komt overeen met ‘{query}’.",
-            "search_count": "{count} instellingen gevonden"
+            "search_count": "{count} instellingen gevonden",
+            "shown_when_on": "Zichtbaar als \"{switch}\" aan staat.",
+            "shown_when_only": "Alleen zichtbaar bij: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Hostnaam of IP-adres van de ID-server, zoals clients op internet die bereiken.",
@@ -1287,7 +1289,14 @@
             "newest_version": "Nieuwste versie",
             "not_checked": "Nog niet gecontroleerd",
             "changes_behind": "{n} wijzigingen nieuwer dan uw versie",
-            "idle_note": "De controle vraagt GitHub naar de nieuwste versie. Er wordt niets geïnstalleerd tot u op Installeren klikt."
+            "idle_note": "De controle vraagt GitHub naar de nieuwste versie. Er wordt niets geïnstalleerd tot u op Installeren klikt.",
+            "tools_ready": "Kan hier worden gebouwd",
+            "fact_binary": "Serverprogramma",
+            "fact_source": "Broncode op deze server",
+            "fact_tools": "Buildtools (Go)",
+            "tools_system": "Geïnstalleerd op de server",
+            "tools_console": "Gedownload door de console",
+            "tools_missing": "Niet geïnstalleerd"
         },
         "advanced_tab": {
             "note": "Kies een bestand om het te bekijken en te bewerken. Bij elke keer opslaan wordt een kopie van de vorige versie bewaard.",

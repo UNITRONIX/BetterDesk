@@ -39,6 +39,8 @@
     // is in use now.
     const tocTitle = `<p class="settings-toc-title">${_('settings.page.on_this_page')}</p>`;
     const userName = (typeof user !== 'undefined' && user && user.username) ? user.username : '';
+    // No value yet (filled in by settings.js): the muted dash of Utils.emptyHtml()
+    const emptyMark = `<span class="value-empty"><span aria-hidden="true">–</span><span class="sr-only">${_('common.none')}</span></span>`;
 
     // Appearance helpers: background type radios, colour fields, image uploads
     const bgTypeLabels = {
@@ -261,11 +263,11 @@
             <p class="state" id="mesh-state">${_('common.loading')}</p>
             <div class="settings-mesh-body" id="mesh-body" hidden>
                 <dl class="facts">
-                    <dt>${_('settings.general.mesh_status')}</dt><dd id="mesh-status-enabled">-</dd>
-                    <dt>${_('settings.general.mesh_agents')}</dt><dd id="mesh-agents-online">-</dd>
+                    <dt>${_('settings.general.mesh_status')}</dt><dd id="mesh-status-enabled">${emptyMark}</dd>
+                    <dt>${_('settings.general.mesh_agents')}</dt><dd id="mesh-agents-online">${emptyMark}</dd>
                     <dt>${_('settings.general.mesh_server_id')}</dt>
                     <dd><span class="value-field is-one-line"><code id="mesh-server-id">-</code><button type="button" id="mesh-copy-server-id" aria-label="${_('mesh.copy_server_id')}"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></span></dd>
-                    <dt>${_('settings.general.mesh_cert')}</dt><dd id="mesh-cert-state">-</dd>
+                    <dt>${_('settings.general.mesh_cert')}</dt><dd id="mesh-cert-state">${emptyMark}</dd>
                 </dl>
                 <p class="notice warning" id="mesh-cert-banner" hidden></p>
 
@@ -315,11 +317,11 @@
                 <p class="state" id="general-side-state">${_('common.loading')}</p>
                 <dl class="facts" id="general-side-facts" hidden>
                     <dt>${_('dashboard.config_server_id')}</dt>
-                    <dd><span class="settings-side-value"><span class="mono" id="side-id-server">-</span><span class="form-hint" id="side-id-source"></span></span></dd>
+                    <dd><span class="settings-side-value"><span id="side-id-server">${emptyMark}</span><span id="side-id-source"></span></span></dd>
                     <dt>${_('dashboard.config_relay_server')}</dt>
-                    <dd><span class="settings-side-value"><span class="mono" id="side-relay-server">-</span><span class="form-hint" id="side-relay-source"></span></span></dd>
+                    <dd><span class="settings-side-value"><span id="side-relay-server">${emptyMark}</span><span id="side-relay-source"></span></span></dd>
                     <dt>${_('dashboard.config_api_server')}</dt>
-                    <dd><span class="settings-side-value"><span class="mono" id="side-api-url">-</span><span class="form-hint" id="side-api-source"></span></span></dd>
+                    <dd><span class="settings-side-value"><span id="side-api-url">${emptyMark}</span><span id="side-api-source"></span></span></dd>
                 </dl>
                 <p class="notice warning" id="general-side-local" hidden>${_('settings.side.local_warning')}</p>
                 <p id="connection-mode-runtime" hidden></p>
@@ -327,10 +329,10 @@
             <section class="section" id="server-info" aria-labelledby="server-info-title">
                 <h2 id="server-info-title">${_('settings.server_info')}</h2>
                 <dl class="facts">
-                    <dt>${_('settings.general.console_version')}</dt><dd>v${appVersion}</dd>
-                    <dt>${_('settings.general.server_version')}</dt><dd id="go-server-version">-</dd>
-                    <dt>${_('settings.general.database_file')}</dt><dd id="db-path" class="mono-value">-</dd>
-                    <dt>${_('settings.general.running_for')}</dt><dd id="uptime">-</dd>
+                    <dt>${_('settings.general.console_version')}</dt><dd><span class="version">${String(appVersion).replace(/^v(?=[0-9])/i, '')}</span></dd>
+                    <dt>${_('settings.general.server_version')}</dt><dd id="go-server-version">${emptyMark}</dd>
+                    <dt>${_('settings.general.database_file')}</dt><dd id="db-path">${emptyMark}</dd>
+                    <dt>${_('settings.general.running_for')}</dt><dd id="uptime">${emptyMark}</dd>
                 </dl>
                 ${canAudit ? `<p class="settings-audit-link">${_('settings.general.audit_moved')} <a href="/security-audit">${_('settings.general.audit_link')}</a></p>` : ''}
             </section>
@@ -340,10 +342,10 @@
         <section class="section" id="server-info" aria-labelledby="server-info-title">
             <h2 id="server-info-title">${_('settings.server_info')}</h2>
             <dl class="facts">
-                <dt>${_('settings.general.console_version')}</dt><dd>v${appVersion}</dd>
-                <dt>${_('settings.general.server_version')}</dt><dd id="go-server-version">-</dd>
-                <dt>${_('settings.general.database_file')}</dt><dd id="db-path" class="mono-value">-</dd>
-                <dt>${_('settings.general.running_for')}</dt><dd id="uptime">-</dd>
+                <dt>${_('settings.general.console_version')}</dt><dd><span class="version">${String(appVersion).replace(/^v(?=[0-9])/i, '')}</span></dd>
+                <dt>${_('settings.general.server_version')}</dt><dd id="go-server-version">${emptyMark}</dd>
+                <dt>${_('settings.general.database_file')}</dt><dd id="db-path">${emptyMark}</dd>
+                <dt>${_('settings.general.running_for')}</dt><dd id="uptime">${emptyMark}</dd>
             </dl>
         </section>
         ${canAudit ? `<p class="settings-audit-link">${_('settings.general.audit_moved')} <a href="/security-audit">${_('settings.general.audit_link')}</a></p>` : ''}
@@ -967,7 +969,7 @@
                 <label class="check-field"><input type="checkbox" id="ldap-enabled">
                     <span class="check-label">${_('settings.ldap_enabled')}</span>
                     <span class="form-hint">${_('settings.signin.ldap_enabled_hint')}</span></label>
-                <div id="ldap-config-fields" class="settings-subfields">
+                <div id="ldap-config-fields" class="settings-subfields" data-show-when="ldap-enabled" hidden>
                     <h4>${_('settings.ldap_connection')}</h4>
                     <div class="form-group">
                         <label class="form-label" for="ldap-host">${_('settings.ldap_host')}</label>
@@ -1079,7 +1081,7 @@
                 <label class="check-field"><input type="checkbox" id="oidc-enabled">
                     <span class="check-label">${_('settings.oidc_enabled')}</span>
                     <span class="form-hint">${_('settings.oidc_enabled_hint')}</span></label>
-                <div id="oidc-config-fields" class="settings-subfields">
+                <div id="oidc-config-fields" class="settings-subfields" data-show-when="oidc-enabled" hidden>
                     <h4>${_('settings.oidc_provider')}</h4>
                     <div class="form-group">
                         <label class="form-label" for="oidc-display-name">${_('settings.oidc_display_name')}</label>
@@ -1194,10 +1196,10 @@
             <section class="section settings-summary" aria-labelledby="auth-side-title" data-search-skip>
                 <h2 id="auth-side-title">${_('settings.side.state_title')}</h2>
                 <dl class="facts">
-                    <dt>${_('settings.side.your_2fa')}</dt><dd id="side-totp">-</dd>
+                    <dt>${_('settings.side.your_2fa')}</dt><dd id="side-totp">${emptyMark}</dd>
                     ${canServerConfig ? `
-                    <dt>${_('settings.ldap_title')}</dt><dd id="side-ldap">-</dd>
-                    <dt>${_('settings.oidc_title')}</dt><dd id="side-oidc">-</dd>` : ''}
+                    <dt>${_('settings.ldap_title')}</dt><dd id="side-ldap">${emptyMark}</dd>
+                    <dt>${_('settings.oidc_title')}</dt><dd id="side-oidc">${emptyMark}</dd>` : ''}
                 </dl>
             </section>
         </aside>
@@ -1228,7 +1230,7 @@
             <p class="section-note">${_('settings.backup_tab.create_note')}</p>
             <p class="notice warning">${_('backup.security_warning')}</p>
             <div class="settings-inline-controls">
-                <button type="button" class="btn btn-primary" id="backup-download-btn"><span class="material-icons" aria-hidden="true">download</span><span class="btn-label">${_('backup.download')}</span></button>
+                <button type="button" class="btn btn-primary" id="backup-download-btn" data-primary-unless-dirty><span class="material-icons" aria-hidden="true">download</span><span class="btn-label">${_('backup.download')}</span></button>
                 <span class="form-status" id="backup-download-status" aria-live="polite"></span>
             </div>
         </section>
@@ -1478,13 +1480,11 @@
             <section class="section settings-summary" aria-labelledby="updates-side-title">
                 <h2 id="updates-side-title">${_('settings.side.state_title')}</h2>
                 <dl class="facts update-version-info">
-                    <dt>${_('updates.current_version')}</dt><dd id="update-local-version">v${appVersion}</dd>
+                    <dt>${_('updates.current_version')}</dt><dd id="update-local-version"><span class="version">${appVersion}</span></dd>
                     <dt>${_('updates.channel_title')}</dt>
                     <dd><span class="settings-side-value"><span id="update-channel-active-badge">-</span><span class="form-hint" id="update-channel-branch">-</span></span></dd>
-                    <dt>${_('settings.updates_tab.newest_version')}</dt><dd id="update-remote-version">${_('settings.updates_tab.not_checked')}</dd>
-                    <div class="facts-row" id="update-status-row" style="display:none;">
-                        <dt>${_('updates.status')}</dt><dd id="update-status-badge"></dd>
-                    </div>
+                    <dt>${_('settings.updates_tab.newest_version')}</dt><dd id="update-remote-version"><span class="value-empty">${_('settings.updates_tab.not_checked')}</span></dd>
+                    <dt id="update-status-row" hidden>${_('updates.status')}</dt><dd id="update-status-badge" hidden></dd>
                 </dl>
             </section>
         </aside>
@@ -1550,7 +1550,7 @@
                 <h2 id="email-side-title">${_('settings.side.state_title')}</h2>
                 <p id="side-email-state">${_('common.loading')}</p>
                 <dl class="facts" id="side-email-facts" hidden>
-                    <dt>${_('settings.email.host_label')}</dt><dd class="mono" id="side-email-server">-</dd>
+                    <dt>${_('settings.email.host_label')}</dt><dd id="side-email-server">-</dd>
                     <dt>${_('settings.email.smtp_from')}</dt><dd id="side-email-from">-</dd>
                     <dt>${_('settings.email.alert_email')}</dt><dd id="side-email-alert">-</dd>
                 </dl>

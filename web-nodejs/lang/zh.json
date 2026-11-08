@@ -1028,7 +1028,9 @@
             "on_this_page": "本页内容",
             "search_label": "搜索所有设置",
             "search_none": "没有与“{query}”匹配的设置。",
-            "search_count": "找到 {count} 项设置"
+            "search_count": "找到 {count} 项设置",
+            "shown_when_on": "开启“{switch}”时显示。",
+            "shown_when_only": "仅在以下情况显示：{choices}。"
         },
         "general": {
             "endpoint_id_hint": "ID 服务器的主机名或 IP 地址，即互联网上的客户端访问时使用的地址。",
@@ -1287,7 +1289,14 @@
             "newest_version": "最新版本",
             "not_checked": "尚未检查",
             "changes_behind": "比您的版本新 {n} 项变更",
-            "idle_note": "检查会向 GitHub 查询最新版本。在您点击“安装”之前不会安装任何内容。"
+            "idle_note": "检查会向 GitHub 查询最新版本。在您点击“安装”之前不会安装任何内容。",
+            "tools_ready": "可在此构建",
+            "fact_binary": "服务器程序",
+            "fact_source": "此服务器上的源代码",
+            "fact_tools": "构建工具 (Go)",
+            "tools_system": "已安装在服务器上",
+            "tools_console": "由控制台下载",
+            "tools_missing": "未安装"
         },
         "advanced_tab": {
             "note": "选择文件即可查看和编辑。每次保存都会保留上一版本的副本。",

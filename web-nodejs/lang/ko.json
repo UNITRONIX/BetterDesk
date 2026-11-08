@@ -1028,7 +1028,9 @@
             "on_this_page": "이 페이지에서",
             "search_label": "모든 설정 검색",
             "search_none": "‘{query}’와(과) 일치하는 설정이 없습니다.",
-            "search_count": "설정 {count}개를 찾았습니다"
+            "search_count": "설정 {count}개를 찾았습니다",
+            "shown_when_on": "\"{switch}\"이(가) 켜져 있을 때 표시됩니다.",
+            "shown_when_only": "다음 경우에만 표시: {choices}."
         },
         "general": {
             "endpoint_id_hint": "인터넷의 클라이언트가 접속하는 ID 서버의 호스트 이름 또는 IP 주소입니다.",
@@ -1287,7 +1289,14 @@
             "newest_version": "최신 버전",
             "not_checked": "아직 확인하지 않음",
             "changes_behind": "현재 버전보다 새로운 변경 {n}개",
-            "idle_note": "확인하면 GitHub에 최신 버전을 묻습니다. 설치를 누르기 전까지는 아무것도 설치되지 않습니다."
+            "idle_note": "확인하면 GitHub에 최신 버전을 묻습니다. 설치를 누르기 전까지는 아무것도 설치되지 않습니다.",
+            "tools_ready": "여기에서 빌드 가능",
+            "fact_binary": "서버 프로그램",
+            "fact_source": "이 서버의 소스 코드",
+            "fact_tools": "빌드 도구 (Go)",
+            "tools_system": "서버에 설치됨",
+            "tools_console": "콘솔이 내려받음",
+            "tools_missing": "설치되지 않음"
         },
         "advanced_tab": {
             "note": "파일을 선택하면 보고 편집할 수 있습니다. 저장할 때마다 이전 버전의 사본이 보관됩니다.",

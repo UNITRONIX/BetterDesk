@@ -474,12 +474,19 @@
     }
 
     function highlightTarget(target) {
+        // Open disclosures; a field behind a switch that is off is shown with a
+        // note, and focus goes to that switch (the setting itself is not changed)
+        const control = revealForTarget(target);
         const block = target.closest('.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone') || target;
-        const details = target.closest('details');
-        if (details) details.open = true;
         block.scrollIntoView({ block: 'center' });
         block.classList.add('is-found');
         setTimeout(() => block.classList.remove('is-found'), 2400);
+        if (control) {
+            control.focus({ preventScroll: true });
+            const r = control.getBoundingClientRect();
+            if (r.top < 64 || r.bottom > window.innerHeight) (control.closest('label') || control).scrollIntoView({ block: 'nearest' });
+            return;
+        }
         const field = target.matches('input, select, textarea') ? target
             : block.querySelector('input:not([type=hidden]), select, textarea');
         if (field && !field.disabled && field.offsetParent !== null) field.focus({ preventScroll: true });
@@ -624,21 +631,22 @@
             const lastErrorEl = document.getElementById('time-clock-last-error');
             const synced = !!st.synced;
             if (detail) {
-                detail.textContent = synced
-                    ? _('commercialization.clock.synced_detail')
-                    : _('commercialization.clock.unsynced');
+                detail.innerHTML = synced
+                    ? Utils.statusHtml('good', _('commercialization.clock.synced_detail'))
+                    : Utils.statusHtml('warning', _('commercialization.clock.unsynced'));
             }
-            if (offsetEl) offsetEl.textContent = st.offset_ms != null ? `${st.offset_ms} ms` : '-';
-            if (ntpServerEl) ntpServerEl.textContent = st.ntp_server || '-';
+            if (offsetEl) {
+                offsetEl.innerHTML = st.offset_ms != null
+                    ? Utils.escapeHtml(Utils.formatNumber(st.offset_ms, { style: 'unit', unit: 'millisecond', unitDisplay: 'short' }))
+                    : Utils.emptyHtml();
+            }
+            if (ntpServerEl) ntpServerEl.innerHTML = Utils.valueHtml(st.ntp_server);
             if (osSyncEl) {
-                if (st.os_clock_synced === true) osSyncEl.textContent = _('commercialization.clock.os_yes');
-                else if (st.os_clock_synced === false) osSyncEl.textContent = _('commercialization.clock.os_no');
-                else osSyncEl.textContent = '-';
+                osSyncEl.innerHTML = typeof st.os_clock_synced === 'boolean'
+                    ? Utils.booleanHtml(st.os_clock_synced, { on: _('commercialization.clock.os_yes'), off: _('commercialization.clock.os_no') })
+                    : Utils.emptyHtml();
             }
-            if (lastErrorEl) lastErrorEl.textContent = st.last_error || '-';
-            if (detail) {
-                detail.innerHTML = `<span class="status ${synced ? 'ok' : 'warning'}">${Utils.escapeHtml(detail.textContent)}</span>`;
-            }
+            if (lastErrorEl) lastErrorEl.innerHTML = st.last_error ? Utils.statusHtml('danger', st.last_error) : Utils.emptyHtml();
         } catch (e) {
             console.warn('[settings] timesync status', e);
         }
@@ -956,41 +964,19 @@
         const uptimeEl = document.getElementById('uptime');
         try {
             const data = await Utils.api('/api/settings/info');
-            if (dbEl) dbEl.textContent = data.paths?.database || '-';
-            if (uptimeEl) uptimeEl.textContent = formatUptime(data.server?.uptime);
+            if (dbEl) dbEl.innerHTML = Utils.valueHtml(data.paths?.database, { copy: true, label: _('settings.general.database_file') });
+            const up = Number(data.server?.uptime);
+            if (uptimeEl) uptimeEl.innerHTML = up > 0 ? Utils.escapeHtml(Utils.formatDuration(up)) : Utils.emptyHtml();
             const goVerEl = document.getElementById('go-server-version');
             if (goVerEl) {
                 const goVer = data.goServer?.version;
-                goVerEl.textContent = goVer ? `v${goVer}` : '-';
-                if (goVer && goVer === 'dev' && data.app?.version && data.app.version !== 'dev') {
-                    goVerEl.textContent = _('settings.general.dev_build');
-                }
+                goVerEl.innerHTML = goVer && goVer === 'dev' && data.app?.version && data.app.version !== 'dev'
+                    ? Utils.escapeHtml(_('settings.general.dev_build'))
+                    : (goVer ? Utils.versionHtml(goVer) : Utils.emptyHtml());
             }
         } catch (error) {
-            if (uptimeEl) uptimeEl.textContent = error.message || _('errors.server_error');
+            if (uptimeEl) uptimeEl.innerHTML = `<span class="text-danger">${Utils.escapeHtml(error.message || _('errors.server_error'))}</span>`;
         }
-    }
-
-    /**
-     * Format uptime in human-readable format
-     */
-    function formatUptime(seconds) {
-        if (!seconds || seconds < 0) return '-';
-        const days = Math.floor(seconds / 86400);
-        const hours = Math.floor((seconds % 86400) / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        // Units in the console language ("2 days 3 hr" / "2 Tage 3 Std.")
-        let locale;
-        try { locale = Utils._dateLocale ? Utils._dateLocale() : undefined; } catch { locale = undefined; }
-        const unit = (n, u) => {
-            try { return new Intl.NumberFormat(locale, { style: 'unit', unit: u, unitDisplay: 'short' }).format(n); }
-            catch { return `${n} ${u}`; }
-        };
-        const parts = [];
-        if (days > 0) parts.push(unit(days, 'day'));
-        if (hours > 0) parts.push(unit(hours, 'hour'));
-        if (days === 0 && (minutes > 0 || parts.length === 0)) parts.push(unit(minutes, 'minute'));
-        return parts.join(' ');
     }
 
     // ==================== Fields shown only when they apply ====================
@@ -1015,10 +1001,78 @@
         return !!picked && values.split(',').includes(picked.value);
     }
 
+    // A group shown because a search or link pointed into it (data-revealed)
+    // stays visible with a note until its switch changes or turns it on.
     function syncShowWhen() {
         document.querySelectorAll('[data-show-when]').forEach((el) => {
-            el.hidden = !showWhenMatches(el.dataset.showWhen);
+            const on = showWhenMatches(el.dataset.showWhen);
+            if (on) clearShowWhenReveal(el);
+            el.hidden = !on && el.dataset.revealed !== 'true';
         });
+    }
+
+    function setToken(el, attr, token, add) {
+        const list = new Set((el.getAttribute(attr) || '').split(/\s+/).filter(Boolean));
+        if (add) list.add(token); else list.delete(token);
+        if (list.size) el.setAttribute(attr, Array.from(list).join(' '));
+        else el.removeAttribute(attr);
+    }
+
+    function clearShowWhenReveal(el) {
+        if (el.dataset.revealed !== 'true') return;
+        delete el.dataset.revealed;
+        const note = el.querySelector(':scope > .settings-reveal-note');
+        if (!note) return;
+        showWhenControls(el.dataset.showWhen).forEach((ctl) => setToken(ctl, 'aria-describedby', note.id, false));
+        note.remove();
+    }
+
+    /** "Shown when "Enable scheduled backups" is on." / "Shown only for: Colour, Gradient." */
+    function showWhenNote(spec) {
+        const [ref, values] = String(spec || '').split(':');
+        const labelOf = (input) => {
+            const label = input.closest('label') || (input.id && document.querySelector(`label[for="${CSS.escape(input.id)}"]`));
+            const text = label?.querySelector('.check-label, .choice-title')?.textContent || label?.textContent || '';
+            return text.replace(/\s+/g, ' ').trim();
+        };
+        if (values === undefined) {
+            const el = document.getElementById(ref);
+            return _('settings.page.shown_when_on').replace('{switch}', el ? labelOf(el) : ref);
+        }
+        const wanted = values.split(',');
+        const names = showWhenControls(spec).filter((i) => wanted.includes(i.value)).map(labelOf).filter(Boolean);
+        return _('settings.page.shown_when_only').replace('{choices}', names.join(', '));
+    }
+
+    /**
+     * Make a search or link target visible without changing any setting: open
+     * the disclosures around it, and show a data-show-when group that is off
+     * with a note naming the switch it depends on. Returns that switch (or the
+     * first choice that turns the group on), for focus.
+     */
+    function revealForTarget(target) {
+        for (let d = target.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+        let control = null;
+        for (let g = target.closest('[data-show-when]'); g; g = g.parentElement && g.parentElement.closest('[data-show-when]')) {
+            if (!g.hidden) continue;
+            g.hidden = false;
+            g.dataset.revealed = 'true';
+            const spec = g.dataset.showWhen;
+            const [, values] = String(spec).split(':');
+            const controls = showWhenControls(spec).filter((c) => values === undefined || values.split(',').includes(c.value));
+            let note = g.querySelector(':scope > .settings-reveal-note');
+            if (!note) {
+                note = document.createElement('p');
+                note.className = 'notice settings-reveal-note';
+                note.id = `${g.id || 'show-when-' + Math.random().toString(36).slice(2, 8)}-note`;
+                g.prepend(note);
+            }
+            note.textContent = showWhenNote(spec);
+            controls.forEach((c) => setToken(c, 'aria-describedby', note.id, true));
+            // The outermost hidden group's switch is the one to turn on first
+            control = controls.find((c) => !c.disabled) || control;
+        }
+        return control;
     }
 
     function initShowWhen() {
@@ -1033,7 +1087,13 @@
             });
         });
         document.addEventListener('change', (e) => {
-            if (e.target && e.target.matches && e.target.matches('input[type=checkbox], input[type=radio]')) syncShowWhen();
+            const t = e.target;
+            if (!t || !t.matches || !t.matches('input[type=checkbox], input[type=radio]')) return;
+            // Changing a group's own switch ends the "shown for the search" state
+            document.querySelectorAll('[data-show-when][data-revealed="true"]').forEach((el) => {
+                if (showWhenControls(el.dataset.showWhen).includes(t)) clearShowWhenReveal(el);
+            });
+            syncShowWhen();
         });
         syncShowWhen();
     }
@@ -1212,10 +1272,10 @@
                     const menuId = `mesh-group-menu-${i}`;
                     const meshId = g.mesh_id
                         ? `<span class="value-field is-one-line"><code id="mesh-group-meshid-${i}" title="${esc(g.mesh_id)}">${esc(g.mesh_id)}</code><button type="button" data-mesh-copy="${i}" aria-label="${esc(_('settings.general.mesh_group_copy_id'))}: ${esc(g.name || g.id)}">${iconHtml('copy')}<span class="btn-label">${_('actions.copy')}</span></button></span>`
-                        : '-';
+                        : Utils.emptyHtml();
                     return `<tr>
                         <td>${esc(g.name || '')}</td>
-                        <td class="mono">${esc(g.id || '')}</td>
+                        <td>${Utils.valueHtml(g.id)}</td>
                         <td class="mesh-meshid-cell">${meshId}</td>
                         <td class="actions"><span class="menu-anchor">
                             <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"
@@ -1260,18 +1320,20 @@
             }
             if (stateEl) stateEl.hidden = true;
             if (bodyEl) bodyEl.hidden = false;
-            if (enabledEl) enabledEl.innerHTML = `<span class="status ok">${esc(_('mesh.enabled_label'))}</span>`;
-            if (agentsEl) agentsEl.textContent = String(data.agents_online != null ? data.agents_online : 0);
+            if (enabledEl) enabledEl.innerHTML = Utils.statusHtml('good', _('mesh.enabled_label'));
+            if (agentsEl) agentsEl.textContent = Utils.formatNumber(data.agents_online != null ? data.agents_online : 0);
             if (serverIdEl && data.server_id) {
                 serverIdEl.textContent = data.server_id;
                 serverIdEl.title = data.server_id;
             }
             if (certEl) {
-                certEl.textContent = data.cert_present
+                // "Present since <time>": the date with the full time in its tooltip
+                const since = _('settings.general.mesh_cert_since').split('{date}');
+                certEl.innerHTML = data.cert_present
                     ? (data.cert_modified
-                        ? _('settings.general.mesh_cert_since').replace('{date}', Utils.formatDate(data.cert_modified))
-                        : _('settings.general.mesh_cert_present'))
-                    : _('settings.general.mesh_cert_none');
+                        ? esc(since[0]) + Utils.timeHtml(data.cert_modified, { relative: false, format: { year: 'numeric', month: 'short', day: 'numeric' } }) + esc(since[1] || '')
+                        : esc(_('settings.general.mesh_cert_present')))
+                    : Utils.statusHtml('warning', _('settings.general.mesh_cert_none'));
             }
             if (certBanner) {
                 certBanner.hidden = !!data.cert_present;
@@ -1306,16 +1368,16 @@
                 recordingsTable.innerHTML = `<p class="form-hint">${_('settings.general.rec_note')}</p>
                     <div class="table-scroll"><table class="data-table"><thead><tr>
                     <th scope="col">${_('settings.general.rec_device')}</th><th scope="col">${_('settings.general.rec_type')}</th>
-                    <th scope="col">${_('settings.general.rec_when')}</th><th scope="col">${_('settings.general.rec_size')}</th>
+                    <th scope="col">${_('settings.general.rec_when')}</th><th scope="col" class="is-num">${_('settings.general.rec_size')}</th>
                     <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th></tr></thead><tbody>` +
                     rows.map((r) => {
                         const dl = r.transport === 'mesh' && r.id
                             ? `<a class="btn btn-sm" href="/api/mesh/recordings/${encodeURIComponent(r.id)}">${iconHtml('download')}${_('mesh.recording_download')}</a>`
                             : '';
                         const via = r.transport && r.transport !== 'mesh' ? `<span class="cell-sub">${esc(r.transport)}</span>` : '';
-                        return `<tr><td class="mono">${esc(r.peer_id || '')}${via}</td><td>${esc(r.session_type || '')}</td>`
-                            + `<td>${esc(r.modified ? Utils.formatDate(r.modified) : '-')}</td>`
-                            + `<td>${esc(formatBytes(Number(r.size) || 0))}</td><td class="actions">${dl}</td></tr>`;
+                        return `<tr><td>${Utils.valueHtml(r.peer_id)}${via}</td><td>${r.session_type ? esc(r.session_type) : Utils.emptyHtml()}</td>`
+                            + `<td>${Utils.timeHtml(r.modified)}</td>`
+                            + `<td class="is-num">${esc(Utils.formatBytes(Number(r.size) || 0))}</td><td class="actions">${dl}</td></tr>`;
                     }).join('') + '</tbody></table></div>';
             } catch {
                 recordingsTable.innerHTML = `<p class="state is-error">${_('mesh.recordings_load_error')} <button type="button" class="btn btn-sm" id="mesh-recordings-retry">${_('actions.retry')}</button></p>`;
@@ -1603,7 +1665,7 @@
 
     function renderTotpEnabled(container) {
         container.innerHTML = `
-            <p><span class="status ok">${_('settings.signin.totp_on')}</span></p>
+            <p>${Utils.statusHtml('good', _('settings.signin.totp_on'))}</p>
             <p class="form-hint">${_('settings.totp_enabled_desc')}</p>
             <p><button type="button" class="btn btn-danger-quiet" id="totp-disable-btn">${_('settings.signin.totp_turn_off')}</button></p>`;
         document.getElementById('totp-disable-btn')?.addEventListener('click', handleDisableTotp);
@@ -1612,7 +1674,7 @@
 
     function renderTotpDisabled(container) {
         container.innerHTML = `
-            <p><span class="status offline">${_('settings.signin.totp_off')}</span></p>
+            <p>${Utils.statusHtml('neutral', _('settings.signin.totp_off'))}</p>
             <p class="form-hint">${_('settings.totp_disabled_desc')}</p>
             <p><button type="button" class="btn" id="totp-setup-btn">${_('settings.signin.totp_set_up')}</button></p>
             <p class="field-effect">${_('settings.signin.totp_effect')}</p>`;
@@ -1681,7 +1743,7 @@
     function showRecoveryCodes(container, codes) {
         const list = Array.isArray(codes) ? codes : [];
         container.innerHTML = `
-            <p><span class="status ok">${_('settings.totp_enabled_success')}</span></p>
+            <p>${Utils.statusHtml('good', _('settings.totp_enabled_success'))}</p>
             <p class="notice warning">${_('settings.totp_recovery_warning')}</p>
             <div class="code-block-head"><span class="code-block-title">${_('settings.signin.recovery_codes')}</span>
                 <button type="button" class="btn btn-sm" id="copy-recovery-btn">${iconHtml('copy')}<span class="btn-label">${_('actions.copy')}</span></button></div>
@@ -3525,21 +3587,26 @@
                 const el = document.getElementById(id);
                 if (el) el.textContent = val;
             };
-            const yn = (b) => b ? _('common.yes') : _('common.no');
-            setVal('backup-stat-users', data.users || 0);
-            setVal('backup-stat-settings', data.settings || 0);
-            setVal('backup-stat-folders', data.folders || 0);
-            setVal('backup-stat-groups', (data.userGroups || 0) + (data.deviceGroups || 0));
-            setVal('backup-stat-strategies', data.strategies || 0);
+            const setHtml = (id, html) => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = html;
+            };
+            const num = (n) => Utils.formatNumber(n || 0);
+            const yn = (b) => Utils.booleanHtml(b, { on: _('common.yes'), off: _('common.no') });
+            setVal('backup-stat-users', num(data.users));
+            setVal('backup-stat-settings', num(data.settings));
+            setVal('backup-stat-folders', num(data.folders));
+            setVal('backup-stat-groups', num((data.userGroups || 0) + (data.deviceGroups || 0)));
+            setVal('backup-stat-strategies', num(data.strategies));
             setVal('backup-stat-backend', data.backend === 'betterdesk' ? _('settings.backup_tab.backend_betterdesk') : 'RustDesk');
             const comp = data.components || {};
             setVal('backup-stat-database', (data.dbType === 'postgres' ? 'PostgreSQL' : 'SQLite'));
-            setVal('backup-stat-keys', yn(comp.goPrivKey || comp.goApiKey));
-            setVal('backup-stat-env', yn(comp.env));
-            setVal('backup-stat-uploads', comp.uploads || 0);
+            setHtml('backup-stat-keys', yn(comp.goPrivKey || comp.goApiKey));
+            setHtml('backup-stat-env', yn(comp.env));
+            setVal('backup-stat-uploads', num(comp.uploads));
         } catch (err) {
             const dd = document.getElementById('backup-stat-users');
-            if (dd) dd.textContent = err.message || _('errors.server_error');
+            if (dd) dd.innerHTML = Utils.statusHtml('danger', err.message || _('errors.server_error'));
         }
     }
 
@@ -3549,7 +3616,7 @@
         const rows = [];
         if (data.restored?.length) rows.push(`<dt>${_('backup.restored')}</dt><dd>${Utils.escapeHtml(data.restored.join(', '))}</dd>`);
         if (data.skipped?.length) rows.push(`<dt>${_('backup.skipped')}</dt><dd>${Utils.escapeHtml(data.skipped.join(', '))}</dd>`);
-        if (data.backupDate) rows.push(`<dt>${_('backup.backup_date')}</dt><dd>${Utils.escapeHtml(Utils.formatDate(data.backupDate))}</dd>`);
+        if (data.backupDate) rows.push(`<dt>${_('backup.backup_date')}</dt><dd>${Utils.timeHtml(data.backupDate, { relative: false })}</dd>`);
         let html = rows.length ? `<dl class="facts">${rows.join('')}</dl>` : '';
         if (data.warnings?.length) {
             html += `<p class="notice warning">${data.warnings.map(w => Utils.escapeHtml(w)).join('<br>')}</p>`;
@@ -3693,9 +3760,11 @@
                 const detailsSection = document.getElementById('update-details-section');
                 if (detailsSection) detailsSection.style.display = 'none';
                 const remoteEl = document.getElementById('update-remote-version');
-                if (remoteEl) remoteEl.textContent = _('settings.updates_tab.not_checked');
-                const statusRow = document.getElementById('update-status-row');
-                if (statusRow) statusRow.style.display = 'none';
+                if (remoteEl) remoteEl.innerHTML = Utils.emptyHtml(_('settings.updates_tab.not_checked'));
+                ['update-status-row', 'update-status-badge'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.hidden = true;
+                });
             }
         } catch (error) {
             setUpdateChannelChoice(_updateChannelSaved || 'stable');
@@ -3724,7 +3793,7 @@
                 host.appendChild(banner);
             }
             const lines = [];
-            lines.push(`<p><strong>${Utils.escapeHtml(_('updates.complete_with_errors'))}</strong> <span class="mono">${Utils.escapeHtml(String(record.sha || '').slice(0, 7))}</span>, ${Utils.escapeHtml(record.savedAt || '')}</p>`);
+            lines.push(`<p><strong>${Utils.escapeHtml(_('updates.complete_with_errors'))}</strong> ${Utils.valueHtml(String(record.sha || '').slice(0, 7))}, ${Utils.timeHtml(record.savedAt)}</p>`);
             const items = [];
             for (const fl of (record.failed || [])) items.push(`${Utils.escapeHtml(fl.file)}: ${Utils.escapeHtml(fl.error || '')}`);
             for (const sv of (record.servicesFailed || [])) items.push(`${Utils.escapeHtml(sv.service)}: ${Utils.escapeHtml(sv.error || '')}`);
@@ -3970,26 +4039,33 @@
             // Newest version: its date, with what changed and the short commit under it
             if (remoteEl) {
                 const sha = data.remoteSHA ? data.remoteSHA.slice(0, 7) : '';
-                const when = data.latestDate ? Utils.formatDate(data.latestDate, { hour: undefined, minute: undefined }) : '';
-                if (!sha && !when) {
-                    remoteEl.textContent = '-';
+                if (!sha && !data.latestDate) {
+                    remoteEl.innerHTML = Utils.emptyHtml();
                 } else {
-                    const sub = [data.latestMessage ? Utils.escapeHtml(data.latestMessage) : '', sha ? `<span class="mono">${Utils.escapeHtml(sha)}</span>` : '']
+                    const sub = [data.latestMessage ? Utils.escapeHtml(data.latestMessage) : '', sha ? Utils.valueHtml(sha) : '']
                         .filter(Boolean).join(', ');
-                    remoteEl.innerHTML = `<span class="settings-side-value"><span>${Utils.escapeHtml(when || sha)}</span>${sub ? `<span class="form-hint">${sub}</span>` : ''}</span>`;
+                    const when = data.latestDate
+                        ? Utils.timeHtml(data.latestDate, { relative: false, format: { hour: undefined, minute: undefined } })
+                        : Utils.valueHtml(sha);
+                    remoteEl.innerHTML = `<span class="settings-side-value"><span>${when}</span>${sub ? `<span class="form-hint">${sub}</span>` : ''}</span>`;
                 }
             }
-            if (statusRow) statusRow.style.display = '';
+            // The status label and value are shown together (a dt and its dd)
+            [statusRow, statusBadge].forEach((el) => { if (el) el.hidden = false; });
             
             if (data.baselineEstablished) {
-                if (statusBadge) statusBadge.innerHTML = `<span class="status ok">${_('updates.baseline_set')}</span>`;
+                if (statusBadge) statusBadge.innerHTML = Utils.statusHtml('good', _('updates.baseline_set'));
                 renderUpdateHeroStatus('baseline');
                 if (detailsSection) detailsSection.style.display = 'none';
                 if (installBtn) installBtn.disabled = true;
             } else if (data.updateAvailable) {
                 const behind = data.commitsBehind > 0 ? ` (${_('settings.updates_tab.changes_behind').replace('{n}', String(data.commitsBehind))})` : '';
                 const badgeLabel = dockerMode ? _('updates.docker_update_available') : _('updates.update_available');
-                if (statusBadge) statusBadge.innerHTML = `<span class="status warning">${badgeLabel}${behind}</span>`;
+                // A status stays on one line: how far behind goes under it
+                if (statusBadge) {
+                    statusBadge.innerHTML = `<span class="settings-side-value">${Utils.statusHtml('warning', badgeLabel)}${data.commitsBehind > 0
+                        ? `<span class="form-hint">${Utils.escapeHtml(_('settings.updates_tab.changes_behind').replace('{n}', Utils.formatNumber(data.commitsBehind)))}</span>` : ''}</span>`;
+                }
                 const detail = data.latestMessage
                     ? `${data.latestMessage}${behind}`
                     : `${badgeLabel}${behind}`.trim();
@@ -4012,7 +4088,7 @@
             } else {
                 if (statusBadge) {
                     const label = data.dockerShaUnknown ? _('updates.docker_sha_unknown') : _('updates.up_to_date');
-                    statusBadge.innerHTML = `<span class="status ok">${label}</span>`;
+                    statusBadge.innerHTML = Utils.statusHtml('good', label);
                 }
                 const detail = data.latestMessage || '';
                 renderUpdateHeroStatus('uptodate', { detail: detail || _('settings.updates_tab.desc') });
@@ -4035,10 +4111,10 @@
             const commits = changesData.commits || [];
             if (commits.length > 0) {
                 changelogEl.innerHTML = '<ul class="list update-commits">' + commits.slice(0, 20).map((c) => {
-                    const d = c.date ? Utils.escapeHtml(Utils.formatDate(c.date, { hour: undefined, minute: undefined })) : '';
+                    const d = Utils.timeHtml(c.date);
                     return `<li class="list-row update-commit-item"><span class="row-main">
                         <span class="row-title update-commit-msg">${Utils.escapeHtml(c.message || '')}</span>
-                        <span class="row-sub"><span class="mono">${Utils.escapeHtml(c.sha || '')}</span>, ${Utils.escapeHtml(c.author || '')}, ${d}</span>
+                        <span class="row-sub">${Utils.valueHtml(c.sha)}, ${Utils.userHtml(c.author || '')}, ${d}</span>
                     </span></li>`;
                 }).join('') + '</ul>';
             } else {
@@ -4059,17 +4135,17 @@
                 .filter(([, files]) => files && files.length)
                 .map(([comp, files]) => {
                     const m = meta[comp] || meta.other;
-                    return `<tr><td>${m.label}</td><td class="num">${files.length}</td><td>${m.auto ? _('updates.auto') : _('updates.manual')}</td></tr>`;
+                    return `<tr><td>${m.label}</td><td class="is-num">${Utils.formatNumber(files.length)}</td><td>${m.auto ? _('updates.auto') : _('updates.manual')}</td></tr>`;
                 }).join('');
             let html = `<div class="table-scroll"><table class="data-table update-components"><thead><tr>
-                <th>${_('settings.updates_tab.component')}</th><th>${_('settings.updates_tab.files')}</th><th>${_('settings.updates_tab.how')}</th>
+                <th>${_('settings.updates_tab.component')}</th><th class="is-num">${_('settings.updates_tab.files')}</th><th>${_('settings.updates_tab.how')}</th>
                 </tr></thead><tbody>${rows}</tbody></table></div>`;
-            html += `<p class="count-line">${_('updates.total_files')}: <strong>${changesData.totalFiles || 0}</strong></p>`;
+            html += `<p class="count-line">${_('updates.total_files')}: <strong>${Utils.formatNumber(changesData.totalFiles || 0)}</strong></p>`;
             if (grouped.server?.length > 0) {
                 html += `<div class="update-server-section">
-                    <p><strong>${_('updates.include_server')}</strong> <span id="update-server-status" class="status pending">${_('updates.checking_go')}</span></p>
+                    <p><strong>${_('updates.include_server')}</strong> <span id="update-server-status">${Utils.statusHtml('waiting', _('updates.checking_go'))}</span></p>
                     <p class="form-hint">${_('updates.auto_strategy_hint')}</p>
-                    <p class="form-hint" id="update-server-info"></p>
+                    <div id="update-server-info"></div>
                 </div>`;
             }
             summaryEl.innerHTML = html;
@@ -4089,31 +4165,34 @@
             const canInstallGo = !!info.canInstallGo;
             const vendoredReady = !!info.vendoredGoInstalled;
 
-            // Status badge
+            // Can the server part be built here?
             if (hasGo) {
-                statusEl.className = 'status ok';
-                statusEl.textContent = info.goVersion ? info.goVersion.replace('go version ', '') : 'Go';
+                statusEl.innerHTML = Utils.statusHtml('good', _('settings.updates_tab.tools_ready'));
             } else if (goNeedsUpgrade || canInstallGo) {
-                statusEl.className = 'status pending';
-                statusEl.textContent = vendoredReady ? _('updates.toolchain_ready') : _('updates.auto_available');
+                statusEl.innerHTML = Utils.statusHtml('waiting', vendoredReady ? _('updates.toolchain_ready') : _('updates.auto_available'));
             } else {
-                statusEl.className = 'status warning';
-                statusEl.textContent = _('updates.no_method');
+                statusEl.innerHTML = Utils.statusHtml('warning', _('updates.no_method'));
             }
 
-            // Info line
+            // What the console builds with, as facts
             if (infoEl) {
-                const parts = [];
-                if (info.binaryPath) parts.push(`Binary: ${info.binaryPath}`);
-                if (info.sourcePresent) parts.push('Source: present');
-                if (info.goSource && info.goSource !== 'path') parts.push(`Go: ${info.goSource}`);
-                if (goNeedsUpgrade) parts.push(_('updates.toolchain_will_install'));
-                if (!hasGo && canInstallGo) parts.push(_('updates.toolchain_will_install'));
-                infoEl.textContent = parts.join(' · ');
+                const goVersion = String(info.goVersion || '').replace(/^go version\s+/, '').split(/\s+/)[0].replace(/^go/, '');
+                const sources = {
+                    path: _('settings.updates_tab.tools_system'),
+                    system: _('settings.updates_tab.tools_system'),
+                    vendored: _('settings.updates_tab.tools_console')
+                };
+                const tools = info.goAvailable
+                    ? `${Utils.versionHtml(goVersion)}${info.goSource ? ` ${Utils.tagHtml(sources[info.goSource] || info.goSource)}` : ''}`
+                    : Utils.emptyHtml(_('settings.updates_tab.tools_missing'));
+                infoEl.innerHTML = `<dl class="facts update-server-facts">
+                    <dt>${_('settings.updates_tab.fact_binary')}</dt><dd>${Utils.valueHtml(info.binaryPath)}</dd>
+                    <dt>${_('settings.updates_tab.fact_source')}</dt><dd>${Utils.booleanHtml(!!info.sourcePresent, { on: _('common.yes'), off: _('common.no') })}</dd>
+                    <dt>${_('settings.updates_tab.fact_tools')}</dt><dd>${tools}</dd>
+                </dl>${goNeedsUpgrade || (!hasGo && canInstallGo) ? `<p class="form-hint">${Utils.escapeHtml(_('updates.toolchain_will_install'))}</p>` : ''}`;
             }
         } catch (_e) {
-            statusEl.className = 'status warning';
-            statusEl.textContent = _('updates.go_check_failed');
+            statusEl.innerHTML = Utils.statusHtml('warning', _('updates.go_check_failed'));
         }
     }
 
@@ -4886,12 +4965,7 @@
     }
     
     function formatBytes(n) {
-        if (!Number.isFinite(n) || n <= 0) return '0 B';
-        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        let i = 0;
-        let v = n;
-        while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
-        return `${v.toFixed(v >= 100 || i === 0 ? 0 : 1)} ${units[i]}`;
+        return Utils.formatBytes(Number(n) > 0 ? n : 0);
     }
 
     async function loadBackupRetention() {
@@ -4990,8 +5064,8 @@
                     .replace('{size}', Utils.escapeHtml(formatBytes(totalBytes)));
             }
             listEl.innerHTML = '<ul class="list update-backups">' + backups.map((b) => {
-                const date = b.timestamp ? Utils.escapeHtml(Utils.formatDate(b.timestamp)) : '';
-                const sha = b.sha ? `, <span class="mono">${Utils.escapeHtml(b.sha)}</span>` : '';
+                const date = Utils.timeHtml(b.timestamp);
+                const sha = b.sha ? `, ${Utils.valueHtml(b.sha)}` : '';
                 const size = formatBytes(b.sizeBytes || 0);
                 return `<li class="list-row update-backup-item">
                     <span class="row-main">
@@ -5169,11 +5243,10 @@
                     });
                     if (!ok) {
                         enabledCb.checked = false;
-                        configFields.style.display = 'none';
+                        syncShowWhen();
                         return;
                     }
                 }
-                configFields.style.display = enabledCb.checked ? '' : 'none';
             });
         }
 
@@ -5277,8 +5350,7 @@
         setVal('ldap-conn-timeout', data.conn_timeout_sec || 10);
 
         // Update visibility
-        const configFields = document.getElementById('ldap-config-fields');
-        if (configFields) configFields.style.display = data.enabled ? '' : 'none';
+        syncShowWhen();
 
         const bindSearchFields = document.getElementById('ldap-bind-search-fields');
         const directBindFields = document.getElementById('ldap-direct-bind-fields');
@@ -5421,12 +5493,11 @@
                     });
                     if (!ok) {
                         enabledCb.checked = false;
-                        configFields.style.display = 'none';
+                        syncShowWhen();
                         updateOidcRedirectWarning();
                         return;
                     }
                 }
-                configFields.style.display = enabledCb.checked ? '' : 'none';
                 // Prefill Redirect URL with panel callback when enabling and field is empty
                 if (enabledCb.checked) {
                     const redirectInput = document.getElementById('oidc-redirect-url');
@@ -5530,8 +5601,7 @@
         setVal('oidc-group-role-map', data.group_role_map);
 
         // Update visibility
-        const configFields = document.getElementById('oidc-config-fields');
-        if (configFields) configFields.style.display = data.enabled ? '' : 'none';
+        syncShowWhen();
         const manualEndpoints = document.getElementById('oidc-manual-endpoints');
         if (manualEndpoints) manualEndpoints.style.display = (data.auto_discovery !== false) ? 'none' : '';
         updateOidcRedirectWarning();
@@ -5685,24 +5755,24 @@
             const unavailable = advancedState.files.filter((f) => !f.exists && !f.canCreate);
             const row = (f) => {
                 let status;
-                if (!f.exists) status = _('settings.advanced_tab.status_new');
-                else if (!f.writable) status = _('settings.advanced_tab.status_readonly');
+                if (!f.exists) status = Utils.escapeHtml(_('settings.advanced_tab.status_new'));
+                else if (!f.writable) status = Utils.escapeHtml(_('settings.advanced_tab.status_readonly'));
                 else {
-                    status = _('settings.advanced_tab.status_file')
-                        .replace('{size}', formatBytes(Number(f.size) || 0))
-                        .replace('{when}', Utils.formatRelativeTime(f.mtime));
+                    status = Utils.escapeHtml(_('settings.advanced_tab.status_file'))
+                        .replace('{size}', Utils.escapeHtml(formatBytes(f.size)))
+                        .replace('{when}', Utils.timeHtml(f.mtime));
                 }
                 const active = advancedState.activeId === f.id;
                 return '<li><button type="button" class="list-row advanced-config-file-btn' + (active ? ' active' : '') +
                     '" data-id="' + Utils.escapeHtml(f.id) + '"' + (active ? ' aria-current="true"' : '') +
                     '><span class="row-main"><span class="row-title">' + Utils.escapeHtml(fileLabel(f)) + '</span>' +
-                    '<span class="row-sub">' + Utils.escapeHtml(status) + '</span></span></button></li>';
+                    '<span class="row-sub">' + status + '</span></span></button></li>';
             };
             listEl.innerHTML = editable.concat(readOnly).map(row).join('') + (unavailable.length
                 ? '<li class="advanced-config-missing"><details class="disclosure"><summary>' +
                     Utils.escapeHtml(_('settings.advanced_tab.missing_title').replace('{n}', String(unavailable.length))) +
                     '</summary><p class="form-hint">' + Utils.escapeHtml(_('settings.advanced_tab.missing_note')) + '</p><ul class="advanced-config-missing-list">' +
-                    unavailable.map((f) => '<li>' + Utils.escapeHtml(fileLabel(f)) + '<span class="cell-sub mono">' + Utils.escapeHtml(f.path || '') + '</span></li>').join('') +
+                    unavailable.map((f) => '<li>' + Utils.escapeHtml(fileLabel(f)) + '<span class="cell-sub">' + Utils.valueHtml(f.path) + '</span></li>').join('') +
                     '</ul></details></li>'
                 : '');
 
@@ -5806,9 +5876,9 @@
             }
             if (pathEl) pathEl.textContent = data.path;
             if (meta) {
-                meta.textContent = _('settings.advanced_tab.status_file')
-                    .replace('{size}', formatBytes(Number(data.size) || 0))
-                    .replace('{when}', Utils.formatDate(data.mtime));
+                meta.innerHTML = Utils.escapeHtml(_('settings.advanced_tab.status_file'))
+                    .replace('{size}', Utils.escapeHtml(formatBytes(data.size)))
+                    .replace('{when}', Utils.timeHtml(data.mtime));
             }
             if (hint) {
                 hint.hidden = false;
@@ -5988,10 +6058,11 @@
             setStatus(testStatus, '');
             try {
                 const data = await Utils.api('/api/settings/email/smtp/test', { method: 'POST', body: {} });
-                if (data.success) setStatus(testStatus, _('settings.email.smtp_test_success'), 'ok');
-                else setStatus(testStatus, data.error || _('settings.email.smtp_test_failed'), 'error');
+                testStatus.innerHTML = data.success
+                    ? Utils.statusHtml('good', _('settings.email.smtp_test_success'))
+                    : Utils.statusHtml('danger', data.error || _('settings.email.smtp_test_failed'));
             } catch (err) {
-                setStatus(testStatus, err.message || _('settings.email.smtp_test_failed'), 'error');
+                testStatus.innerHTML = Utils.statusHtml('danger', err.message || _('settings.email.smtp_test_failed'));
             } finally {
                 setBusy(testBtn, false);
             }
@@ -6084,7 +6155,7 @@
     function setSideOnOff(id, on) {
         const el = document.getElementById(id);
         if (!el) return;
-        el.innerHTML = `<span class="status ${on ? 'ok' : 'offline'}">${on ? _('settings.side.on') : _('settings.side.off')}</span>`;
+        el.innerHTML = Utils.booleanHtml(on, { on: _('settings.side.on'), off: _('settings.side.off') });
     }
 
     // General: the addresses clients get now, and how a connection travels
@@ -6109,13 +6180,14 @@
             const d = resp.data || resp;
             _clientConfig = d;
             const src = d.endpoint_sources || {};
-            const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || '-'; };
-            set('side-id-server', d.server_id);
-            set('side-id-source', endpointSourceLabel(src.host));
-            set('side-relay-server', d.relay_server);
-            set('side-relay-source', endpointSourceLabel(src.relay));
-            set('side-api-url', d.api_url);
-            set('side-api-source', endpointSourceLabel(src.api));
+            // The address people copy, and where it comes from as a tag
+            const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+            set('side-id-server', Utils.valueHtml(d.server_id, { copy: true, label: _('dashboard.config_server_id') }));
+            set('side-id-source', Utils.tagHtml(endpointSourceLabel(src.host)));
+            set('side-relay-server', Utils.valueHtml(d.relay_server, { copy: true, label: _('dashboard.config_relay_server') }));
+            set('side-relay-source', Utils.tagHtml(endpointSourceLabel(src.relay)));
+            set('side-api-url', Utils.valueHtml(d.api_url, { copy: true, label: _('dashboard.config_api_server') }));
+            set('side-api-source', Utils.tagHtml(endpointSourceLabel(src.api)));
             const local = document.getElementById('general-side-local');
             if (local) local.hidden = !d.phone_unreachable_host;
             facts.hidden = false;
@@ -6307,26 +6379,23 @@
         const dest = document.getElementById('side-backup-dest');
         const error = document.getElementById('side-backup-error');
         if (!last || !next || !dest) return;
-        last.textContent = st?.lastSuccessAt
-            ? `${Utils.formatRelativeTime(st.lastSuccessAt)}, ${Utils.formatDate(st.lastSuccessAt)}`
-            : _('settings.side.backup_none');
+        last.innerHTML = Utils.timeHtml(st?.lastSuccessAt, { empty: _('settings.side.backup_none') });
         if (!schedule) {
-            next.textContent = '-';
+            next.innerHTML = Utils.emptyHtml();
         } else if (!schedule.enabled) {
-            next.textContent = _('settings.side.backup_off');
+            next.innerHTML = Utils.statusHtml('neutral', _('settings.side.backup_off'));
         } else {
             const lastAttempt = Date.parse(st?.lastAttemptAt || '');
             const due = Number.isFinite(lastAttempt)
                 ? lastAttempt + (Number(schedule.intervalHours) || 24) * 3600 * 1000
                 : Date.now();
             // The server checks once a minute whether a backup is due
-            next.textContent = due <= Date.now() + 60 * 1000
-                ? _('settings.side.backup_soon')
-                : Utils.formatDate(new Date(due));
+            next.innerHTML = due <= Date.now() + 60 * 1000
+                ? Utils.statusHtml('waiting', _('settings.side.backup_soon'))
+                : Utils.timeHtml(new Date(due), { relative: false });
         }
         const isPath = schedule?.destinationType === 'path' && schedule.destinationPath;
-        dest.textContent = isPath ? schedule.destinationPath : _('backup.schedule_destination_local');
-        dest.classList.toggle('mono', !!isPath);
+        dest.innerHTML = isPath ? Utils.valueHtml(schedule.destinationPath) : Utils.escapeHtml(_('backup.schedule_destination_local'));
         if (error) {
             error.hidden = !st?.lastError;
             error.textContent = st?.lastError ? _('settings.side.backup_failed').replace('{error}', st.lastError) : '';
@@ -6352,15 +6421,15 @@
         }
         state.className = '';
         if (!config?.configured) {
-            state.innerHTML = `<span class="status offline">${_('settings.side.email_off')}</span>`;
+            state.innerHTML = Utils.statusHtml('neutral', _('settings.side.email_off'));
             facts.hidden = true;
             return;
         }
-        state.innerHTML = `<span class="status ok">${_('settings.side.email_on')}</span>`;
-        const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || '-'; };
-        set('side-email-server', config.host ? `${config.host}:${config.port || 587}` : '');
-        set('side-email-from', config.from);
-        set('side-email-alert', config.alert_email);
+        state.innerHTML = Utils.statusHtml('good', _('settings.side.email_on'));
+        const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+        set('side-email-server', Utils.valueHtml(config.host ? `${config.host}:${config.port || 587}` : ''));
+        set('side-email-from', Utils.valueHtml(config.from, { mono: false }));
+        set('side-email-alert', Utils.valueHtml(config.alert_email, { mono: false }));
         facts.hidden = false;
     }
 

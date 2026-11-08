@@ -1034,7 +1034,9 @@
             "on_this_page": "På denne side",
             "search_label": "Søg i alle indstillinger",
             "search_none": "Ingen indstilling matcher »{query}«.",
-            "search_count": "{count} indstillinger fundet"
+            "search_count": "{count} indstillinger fundet",
+            "shown_when_on": "Vises, når \"{switch}\" er slået til.",
+            "shown_when_only": "Vises kun for: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Værtsnavn eller IP-adresse på ID-serveren, som klienter på internettet når den.",
@@ -1293,7 +1295,14 @@
             "newest_version": "Nyeste version",
             "not_checked": "Ikke tjekket endnu",
             "changes_behind": "{n} ændringer nyere end din",
-            "idle_note": "Tjekket spørger GitHub om den nyeste version. Intet installeres, før du klikker på Installer."
+            "idle_note": "Tjekket spørger GitHub om den nyeste version. Intet installeres, før du klikker på Installer.",
+            "tools_ready": "Kan bygges her",
+            "fact_binary": "Serverprogram",
+            "fact_source": "Kildekode på denne server",
+            "fact_tools": "Byggeværktøjer (Go)",
+            "tools_system": "Installeret på serveren",
+            "tools_console": "Hentet af konsollen",
+            "tools_missing": "Ikke installeret"
         },
         "advanced_tab": {
             "note": "Vælg en fil for at se og redigere den. Hver gang du gemmer, beholdes en kopi af den forrige version.",

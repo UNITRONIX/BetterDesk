@@ -1048,6 +1048,21 @@
     margin-inline: calc(-1 * var(--row-pad-x));
 }
 
+/* Changed files: the table, the total, then what happens to the server part */
+.update-files-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.update-server-section > p {
+    margin: 0;
+}
+
+.update-server-facts {
+    margin-top: var(--space-1);
+}
+
 /* ── Email ── */
 
 /* (layout only: .is-form-side above) */

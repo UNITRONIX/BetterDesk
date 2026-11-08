@@ -1028,7 +1028,9 @@
             "on_this_page": "Na tej stronie",
             "search_label": "Szukaj we wszystkich ustawieniach",
             "search_none": "Brak ustawień pasujących do „{query}”.",
-            "search_count": "Znalezione ustawienia: {count}"
+            "search_count": "Znalezione ustawienia: {count}",
+            "shown_when_on": "Widoczne, gdy \"{switch}\" jest włączone.",
+            "shown_when_only": "Widoczne tylko dla: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Nazwa hosta lub adres IP serwera ID, pod którym klienci łączą się z internetu.",
@@ -1287,7 +1289,14 @@
             "newest_version": "Najnowsza wersja",
             "not_checked": "Jeszcze nie sprawdzono",
             "changes_behind": "{n} zmian nowszych niż Twoja wersja",
-            "idle_note": "Sprawdzenie pyta GitHub o najnowszą wersję. Nic nie zostanie zainstalowane, dopóki nie klikniesz Zainstaluj."
+            "idle_note": "Sprawdzenie pyta GitHub o najnowszą wersję. Nic nie zostanie zainstalowane, dopóki nie klikniesz Zainstaluj.",
+            "tools_ready": "Można zbudować tutaj",
+            "fact_binary": "Program serwera",
+            "fact_source": "Kod źródłowy na tym serwerze",
+            "fact_tools": "Narzędzia kompilacji (Go)",
+            "tools_system": "Zainstalowane na serwerze",
+            "tools_console": "Pobrane przez konsolę",
+            "tools_missing": "Nie zainstalowano"
         },
         "advanced_tab": {
             "note": "Wybierz plik, aby go wyświetlić i edytować. Każde zapisanie zachowuje kopię poprzedniej wersji.",

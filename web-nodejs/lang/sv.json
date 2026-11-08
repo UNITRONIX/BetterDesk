@@ -1034,7 +1034,9 @@
             "on_this_page": "På den här sidan",
             "search_label": "Sök i alla inställningar",
             "search_none": "Ingen inställning matchar ”{query}”.",
-            "search_count": "{count} inställningar hittades"
+            "search_count": "{count} inställningar hittades",
+            "shown_when_on": "Visas när \"{switch}\" är på.",
+            "shown_when_only": "Visas bara för: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Värdnamn eller IP-adress för ID-servern, så som klienter på internet når den.",
@@ -1293,7 +1295,14 @@
             "newest_version": "Senaste version",
             "not_checked": "Inte kontrollerad än",
             "changes_behind": "{n} ändringar nyare än din",
-            "idle_note": "Kontrollen frågar GitHub efter den senaste versionen. Inget installeras förrän du klickar på Installera."
+            "idle_note": "Kontrollen frågar GitHub efter den senaste versionen. Inget installeras förrän du klickar på Installera.",
+            "tools_ready": "Kan byggas här",
+            "fact_binary": "Serverprogram",
+            "fact_source": "Källkod på den här servern",
+            "fact_tools": "Byggverktyg (Go)",
+            "tools_system": "Installerade på servern",
+            "tools_console": "Hämtade av konsolen",
+            "tools_missing": "Inte installerade"
         },
         "advanced_tab": {
             "note": "Välj en fil för att visa och redigera den. Varje gång du sparar behålls en kopia av föregående version.",

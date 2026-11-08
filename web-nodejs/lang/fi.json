@@ -1034,7 +1034,9 @@
             "on_this_page": "Tällä sivulla",
             "search_label": "Hae kaikista asetuksista",
             "search_none": "Mikään asetus ei vastaa hakua ”{query}”.",
-            "search_count": "{count} asetusta löytyi"
+            "search_count": "{count} asetusta löytyi",
+            "shown_when_on": "Näkyy, kun \"{switch}\" on päällä.",
+            "shown_when_only": "Näkyy vain valinnoilla: {choices}."
         },
         "general": {
             "endpoint_id_hint": "ID-palvelimen isäntänimi tai IP-osoite siinä muodossa, jolla asiakkaat tavoittavat sen internetistä.",
@@ -1293,7 +1295,14 @@
             "newest_version": "Uusin versio",
             "not_checked": "Ei vielä tarkistettu",
             "changes_behind": "{n} muutosta omaasi uudempia",
-            "idle_note": "Tarkistus kysyy GitHubista uusimman version. Mitään ei asenneta, ennen kuin valitset Asenna."
+            "idle_note": "Tarkistus kysyy GitHubista uusimman version. Mitään ei asenneta, ennen kuin valitset Asenna.",
+            "tools_ready": "Voidaan koota täällä",
+            "fact_binary": "Palvelinohjelma",
+            "fact_source": "Lähdekoodi tällä palvelimella",
+            "fact_tools": "Kokoamistyökalut (Go)",
+            "tools_system": "Asennettu palvelimelle",
+            "tools_console": "Konsolin lataamat",
+            "tools_missing": "Ei asennettu"
         },
         "advanced_tab": {
             "note": "Valitse tiedosto, jota haluat tarkastella ja muokata. Jokainen tallennus säilyttää kopion edellisestä versiosta.",

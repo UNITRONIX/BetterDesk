@@ -1036,7 +1036,9 @@
             "on_this_page": "On this page",
             "search_label": "Search all settings",
             "search_none": "No setting matches “{query}”.",
-            "search_count": "{count} settings found"
+            "search_count": "{count} settings found",
+            "shown_when_on": "Shown when \"{switch}\" is on.",
+            "shown_when_only": "Shown only for: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Host name or IP address of the ID server, as clients on the internet reach it.",
@@ -1295,7 +1297,14 @@
             "newest_version": "Newest version",
             "not_checked": "Not checked yet",
             "changes_behind": "{n} changes newer than yours",
-            "idle_note": "Checking asks GitHub for the newest version. Nothing is installed until you click Install."
+            "idle_note": "Checking asks GitHub for the newest version. Nothing is installed until you click Install.",
+            "tools_ready": "Can be built here",
+            "fact_binary": "Server program",
+            "fact_source": "Source code on this server",
+            "fact_tools": "Build tools (Go)",
+            "tools_system": "Installed on the server",
+            "tools_console": "Downloaded by the console",
+            "tools_missing": "Not installed"
         },
         "advanced_tab": {
             "note": "Pick a file to see and edit it. Each save keeps a copy of the previous version.",
@@ -6080,13 +6089,13 @@
         "removed": "Removed",
         "auto": "Auto",
         "manual": "Manual",
-        "component_console": "Web Console",
-        "component_server": "Go Server",
+        "component_console": "Web console",
+        "component_server": "BetterDesk server",
         "component_agent": "Agent",
         "component_scripts": "Scripts & Docker",
         "component_other": "Other",
         "server_rebuild_warning": "Go Server source changed — the server binary will be updated automatically.",
-        "include_server": "Go Server will be updated automatically",
+        "include_server": "The BetterDesk server is updated too",
         "checking_go": "Checking Go…",
         "go_not_found": "Go not installed",
         "go_check_failed": "Could not check Go availability",

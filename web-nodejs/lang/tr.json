@@ -1034,7 +1034,9 @@
             "on_this_page": "Bu sayfada",
             "search_label": "Tüm ayarlarda ara",
             "search_none": "“{query}” ile eşleşen ayar yok.",
-            "search_count": "{count} ayar bulundu"
+            "search_count": "{count} ayar bulundu",
+            "shown_when_on": "\"{switch}\" açıkken gösterilir.",
+            "shown_when_only": "Yalnızca şunlar için gösterilir: {choices}."
         },
         "general": {
             "endpoint_id_hint": "İnternetteki istemcilerin ulaştığı şekliyle ID sunucusunun ana bilgisayar adı veya IP adresi.",
@@ -1293,7 +1295,14 @@
             "newest_version": "En yeni sürüm",
             "not_checked": "Henüz denetlenmedi",
             "changes_behind": "Sizinkinden yeni {n} değişiklik",
-            "idle_note": "Denetim, GitHub'a en yeni sürümü sorar. Yükle'ye tıklayana kadar hiçbir şey kurulmaz."
+            "idle_note": "Denetim, GitHub'a en yeni sürümü sorar. Yükle'ye tıklayana kadar hiçbir şey kurulmaz.",
+            "tools_ready": "Burada derlenebilir",
+            "fact_binary": "Sunucu programı",
+            "fact_source": "Bu sunucudaki kaynak kod",
+            "fact_tools": "Derleme araçları (Go)",
+            "tools_system": "Sunucuda kurulu",
+            "tools_console": "Konsol tarafından indirildi",
+            "tools_missing": "Kurulu değil"
         },
         "advanced_tab": {
             "note": "Görüntülemek ve düzenlemek için bir dosya seçin. Her kaydetme önceki sürümün bir kopyasını saklar.",

@@ -1028,7 +1028,9 @@
             "on_this_page": "Nesta página",
             "search_label": "Pesquisar em todas as definições",
             "search_none": "Nenhuma definição corresponde a «{query}».",
-            "search_count": "{count} definições encontradas"
+            "search_count": "{count} definições encontradas",
+            "shown_when_on": "Mostrado quando \"{switch}\" está ativado.",
+            "shown_when_only": "Mostrado apenas para: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Nome do anfitrião ou endereço IP do servidor de ID, tal como os clientes na Internet o alcançam.",
@@ -1287,7 +1289,14 @@
             "newest_version": "Versão mais recente",
             "not_checked": "Ainda não verificado",
             "changes_behind": "{n} alterações mais recentes do que a sua",
-            "idle_note": "A verificação pergunta ao GitHub pela versão mais recente. Nada é instalado até clicar em Instalar."
+            "idle_note": "A verificação pergunta ao GitHub pela versão mais recente. Nada é instalado até clicar em Instalar.",
+            "tools_ready": "Pode ser compilado aqui",
+            "fact_binary": "Programa do servidor",
+            "fact_source": "Código-fonte neste servidor",
+            "fact_tools": "Ferramentas de compilação (Go)",
+            "tools_system": "Instaladas no servidor",
+            "tools_console": "Transferidas pela consola",
+            "tools_missing": "Não instaladas"
         },
         "advanced_tab": {
             "note": "Escolha um ficheiro para o ver e editar. Cada gravação guarda uma cópia da versão anterior.",

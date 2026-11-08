@@ -1034,7 +1034,9 @@
             "on_this_page": "Pe această pagină",
             "search_label": "Căutați în toate setările",
             "search_none": "Nicio setare nu corespunde cu „{query}”.",
-            "search_count": "Setări găsite: {count}"
+            "search_count": "Setări găsite: {count}",
+            "shown_when_on": "Afișat când \"{switch}\" este activat.",
+            "shown_when_only": "Afișat doar pentru: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Numele gazdei sau adresa IP a serverului ID, așa cum îl accesează clienții de pe internet.",
@@ -1293,7 +1295,14 @@
             "newest_version": "Cea mai nouă versiune",
             "not_checked": "Încă neverificat",
             "changes_behind": "{n} modificări mai noi decât versiunea dvs.",
-            "idle_note": "Verificarea întreabă GitHub de cea mai nouă versiune. Nu se instalează nimic până nu dați clic pe Instalează."
+            "idle_note": "Verificarea întreabă GitHub de cea mai nouă versiune. Nu se instalează nimic până nu dați clic pe Instalează.",
+            "tools_ready": "Poate fi compilat aici",
+            "fact_binary": "Programul serverului",
+            "fact_source": "Cod sursă pe acest server",
+            "fact_tools": "Instrumente de compilare (Go)",
+            "tools_system": "Instalate pe server",
+            "tools_console": "Descărcate de consolă",
+            "tools_missing": "Neinstalate"
         },
         "advanced_tab": {
             "note": "Alegeți un fișier pentru a-l vedea și edita. Fiecare salvare păstrează o copie a versiunii anterioare.",

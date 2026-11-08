@@ -44,10 +44,22 @@
         });
     }
 
+    // A page's standing primary action (a button with data-primary-unless-dirty,
+    // e.g. "Download backup") steps back to a plain button while any form on the
+    // page has unsaved changes, so that form's save is the one primary button.
+    function syncStandingPrimary() {
+        const anyDirty = Array.from(forms).some((f) => f.dataset.dirty === 'true' && document.body.contains(f));
+        document.querySelectorAll('[data-primary-unless-dirty]').forEach((b) => {
+            b.classList.toggle('btn-primary', !anyDirty);
+        });
+    }
+
     function setStatus(form, text, kind) {
         const { bar, status } = parts(form);
         if (bar) bar.classList.toggle('is-dirty', kind === 'dirty');
-        setPrimary(form, kind === 'dirty');
+        // A failed save still has unsaved changes: its button stays primary
+        setPrimary(form, kind === 'dirty' || (kind === 'error' && form.dataset.dirty === 'true'));
+        syncStandingPrimary();
         if (!status) return;
         status.textContent = text || '';
         status.classList.toggle('is-ok', kind === 'ok');

@@ -1032,7 +1032,9 @@
             "on_this_page": "Sur cette page",
             "search_label": "Rechercher dans tous les paramètres",
             "search_none": "Aucun paramètre ne correspond à « {query} ».",
-            "search_count": "{count} paramètres trouvés"
+            "search_count": "{count} paramètres trouvés",
+            "shown_when_on": "Affiché quand \"{switch}\" est activé.",
+            "shown_when_only": "Affiché seulement pour : {choices}."
         },
         "general": {
             "endpoint_id_hint": "Nom d'hôte ou adresse IP du serveur d'ID, tel que les clients le joignent depuis internet.",
@@ -1291,7 +1293,14 @@
             "newest_version": "Version la plus récente",
             "not_checked": "Pas encore vérifié",
             "changes_behind": "{n} changements plus récents que votre version",
-            "idle_note": "La vérification demande à GitHub la version la plus récente. Rien n'est installé tant que vous ne cliquez pas sur Installer."
+            "idle_note": "La vérification demande à GitHub la version la plus récente. Rien n'est installé tant que vous ne cliquez pas sur Installer.",
+            "tools_ready": "Peut être compilé ici",
+            "fact_binary": "Programme du serveur",
+            "fact_source": "Code source sur ce serveur",
+            "fact_tools": "Outils de compilation (Go)",
+            "tools_system": "Installés sur le serveur",
+            "tools_console": "Téléchargés par la console",
+            "tools_missing": "Non installés"
         },
         "advanced_tab": {
             "note": "Choisissez un fichier pour l'afficher et le modifier. Chaque enregistrement conserve une copie de la version précédente.",

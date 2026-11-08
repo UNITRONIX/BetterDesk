@@ -1034,7 +1034,9 @@
             "on_this_page": "Ezen az oldalon",
             "search_label": "Keresés az összes beállításban",
             "search_none": "Egyetlen beállítás sem felel meg ennek: „{query}”.",
-            "search_count": "{count} beállítás található"
+            "search_count": "{count} beállítás található",
+            "shown_when_on": "Akkor látható, ha a(z) \"{switch}\" be van kapcsolva.",
+            "shown_when_only": "Csak ezeknél látható: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Az ID-szerver gépneve vagy IP-címe, ahogyan az interneten lévő kliensek elérik.",
@@ -1293,7 +1295,14 @@
             "newest_version": "Legújabb verzió",
             "not_checked": "Még nincs ellenőrizve",
             "changes_behind": "{n} változás újabb, mint az Öné",
-            "idle_note": "Az ellenőrzés a GitHubtól kérdezi le a legújabb verziót. Semmi sem települ, amíg nem kattint a Telepítés gombra."
+            "idle_note": "Az ellenőrzés a GitHubtól kérdezi le a legújabb verziót. Semmi sem települ, amíg nem kattint a Telepítés gombra.",
+            "tools_ready": "Itt lefordítható",
+            "fact_binary": "Szerverprogram",
+            "fact_source": "Forráskód ezen a szerveren",
+            "fact_tools": "Fordítóeszközök (Go)",
+            "tools_system": "A szerverre telepítve",
+            "tools_console": "A konzol töltötte le",
+            "tools_missing": "Nincs telepítve"
         },
         "advanced_tab": {
             "note": "Válasszon egy fájlt a megtekintéséhez és szerkesztéséhez. Minden mentés megőrzi az előző verzió másolatát.",

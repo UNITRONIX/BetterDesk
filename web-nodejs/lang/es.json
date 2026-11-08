@@ -1028,7 +1028,9 @@
             "on_this_page": "En esta página",
             "search_label": "Buscar en todos los ajustes",
             "search_none": "Ningún ajuste coincide con «{query}».",
-            "search_count": "{count} ajustes encontrados"
+            "search_count": "{count} ajustes encontrados",
+            "shown_when_on": "Se muestra cuando \"{switch}\" está activado.",
+            "shown_when_only": "Solo se muestra con: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Nombre de host o dirección IP del servidor de ID, tal como lo alcanzan los clientes desde internet.",
@@ -1287,7 +1289,14 @@
             "newest_version": "Versión más reciente",
             "not_checked": "Aún no comprobado",
             "changes_behind": "{n} cambios más recientes que su versión",
-            "idle_note": "La comprobación pregunta a GitHub por la versión más reciente. No se instala nada hasta que pulse Instalar."
+            "idle_note": "La comprobación pregunta a GitHub por la versión más reciente. No se instala nada hasta que pulse Instalar.",
+            "tools_ready": "Se puede compilar aquí",
+            "fact_binary": "Programa del servidor",
+            "fact_source": "Código fuente en este servidor",
+            "fact_tools": "Herramientas de compilación (Go)",
+            "tools_system": "Instaladas en el servidor",
+            "tools_console": "Descargadas por la consola",
+            "tools_missing": "No instaladas"
         },
         "advanced_tab": {
             "note": "Elija un archivo para verlo y editarlo. Cada vez que guarde se conserva una copia de la versión anterior.",

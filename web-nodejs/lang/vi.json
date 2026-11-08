@@ -1034,7 +1034,9 @@
             "on_this_page": "Trên trang này",
             "search_label": "Tìm trong tất cả cài đặt",
             "search_none": "Không có cài đặt nào khớp với “{query}”.",
-            "search_count": "Đã tìm thấy {count} cài đặt"
+            "search_count": "Đã tìm thấy {count} cài đặt",
+            "shown_when_on": "Hiển thị khi \"{switch}\" được bật.",
+            "shown_when_only": "Chỉ hiển thị khi chọn: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Tên máy chủ hoặc địa chỉ IP của máy chủ ID, theo cách máy khách trên internet truy cập.",
@@ -1293,7 +1295,14 @@
             "newest_version": "Phiên bản mới nhất",
             "not_checked": "Chưa kiểm tra",
             "changes_behind": "{n} thay đổi mới hơn bản của bạn",
-            "idle_note": "Kiểm tra sẽ hỏi GitHub phiên bản mới nhất. Không có gì được cài cho đến khi bạn nhấn Cài đặt."
+            "idle_note": "Kiểm tra sẽ hỏi GitHub phiên bản mới nhất. Không có gì được cài cho đến khi bạn nhấn Cài đặt.",
+            "tools_ready": "Có thể build tại đây",
+            "fact_binary": "Chương trình máy chủ",
+            "fact_source": "Mã nguồn trên máy chủ này",
+            "fact_tools": "Công cụ build (Go)",
+            "tools_system": "Đã cài trên máy chủ",
+            "tools_console": "Do bảng điều khiển tải về",
+            "tools_missing": "Chưa cài"
         },
         "advanced_tab": {
             "note": "Chọn một tệp để xem và chỉnh sửa. Mỗi lần lưu sẽ giữ một bản sao của phiên bản trước.",

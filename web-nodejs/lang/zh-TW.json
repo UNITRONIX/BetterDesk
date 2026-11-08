@@ -1032,7 +1032,9 @@
             "on_this_page": "本頁內容",
             "search_label": "搜尋所有設定",
             "search_none": "沒有符合「{query}」的設定。",
-            "search_count": "找到 {count} 項設定"
+            "search_count": "找到 {count} 項設定",
+            "shown_when_on": "開啟「{switch}」時顯示。",
+            "shown_when_only": "僅在以下情況顯示：{choices}。"
         },
         "general": {
             "endpoint_id_hint": "ID 伺服器的主機名稱或 IP 位址，也就是網際網路上的用戶端連線所用的位址。",
@@ -1291,7 +1293,14 @@
             "newest_version": "最新版本",
             "not_checked": "尚未檢查",
             "changes_behind": "比您的版本新 {n} 項變更",
-            "idle_note": "檢查會向 GitHub 查詢最新版本。在您按下「安裝」之前不會安裝任何東西。"
+            "idle_note": "檢查會向 GitHub 查詢最新版本。在您按下「安裝」之前不會安裝任何東西。",
+            "tools_ready": "可在此建置",
+            "fact_binary": "伺服器程式",
+            "fact_source": "此伺服器上的原始碼",
+            "fact_tools": "建置工具 (Go)",
+            "tools_system": "已安裝在伺服器上",
+            "tools_console": "由主控台下載",
+            "tools_missing": "未安裝"
         },
         "advanced_tab": {
             "note": "選擇檔案即可檢視和編輯。每次儲存都會保留上一版的副本。",

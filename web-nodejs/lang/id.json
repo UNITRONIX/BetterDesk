@@ -1034,7 +1034,9 @@
             "on_this_page": "Di halaman ini",
             "search_label": "Cari di semua pengaturan",
             "search_none": "Tidak ada pengaturan yang cocok dengan “{query}”.",
-            "search_count": "{count} pengaturan ditemukan"
+            "search_count": "{count} pengaturan ditemukan",
+            "shown_when_on": "Ditampilkan saat \"{switch}\" aktif.",
+            "shown_when_only": "Hanya ditampilkan untuk: {choices}."
         },
         "general": {
             "endpoint_id_hint": "Nama host atau alamat IP server ID, sebagaimana klien di internet menjangkaunya.",
@@ -1293,7 +1295,14 @@
             "newest_version": "Versi terbaru",
             "not_checked": "Belum diperiksa",
             "changes_behind": "{n} perubahan lebih baru dari versi Anda",
-            "idle_note": "Pemeriksaan menanyakan versi terbaru ke GitHub. Tidak ada yang dipasang sampai Anda mengklik Pasang."
+            "idle_note": "Pemeriksaan menanyakan versi terbaru ke GitHub. Tidak ada yang dipasang sampai Anda mengklik Pasang.",
+            "tools_ready": "Bisa dibangun di sini",
+            "fact_binary": "Program server",
+            "fact_source": "Kode sumber di server ini",
+            "fact_tools": "Alat build (Go)",
+            "tools_system": "Terpasang di server",
+            "tools_console": "Diunduh oleh konsol",
+            "tools_missing": "Tidak terpasang"
         },
         "advanced_tab": {
             "note": "Pilih file untuk melihat dan mengeditnya. Setiap penyimpanan menyimpan salinan versi sebelumnya.",
