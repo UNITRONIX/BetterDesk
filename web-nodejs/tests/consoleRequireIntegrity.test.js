@@ -69,25 +69,22 @@ describe('console require integrity', () => {
         expect(unresolved).toEqual([]);
     });
 
-    test('lazily loaded route modules can be required without throwing', () => {
-        const routesDir = path.join(CONSOLE_ROOT, 'routes');
-        const failures = [];
+    // lazyRoute('./x') takes the module path as a string, so the require() scan
+    // above cannot see it, and the module is only loaded on the first request —
+    // never during boot. Verify those paths resolve on disk.
+    test('every lazily mounted route module exists', () => {
+        const indexPath = path.join(CONSOLE_ROOT, 'routes', 'index.js');
+        const source = fs.readFileSync(indexPath, 'utf8');
+        const missing = [];
 
-        for (const entry of fs.readdirSync(routesDir, { withFileTypes: true })) {
-            if (!entry.isFile() || !entry.name.endsWith('.js')) continue;
-            if (entry.name === 'index.js') continue;
-            const modulePath = path.join(routesDir, entry.name);
-            try {
-                require(modulePath);
-            } catch (err) {
-                if (err && err.code === 'MODULE_NOT_FOUND') {
-                    failures.push(`${entry.name}: ${err.message.split('\n')[0]}`);
-                }
-                // Other errors (missing env, DB handle) come from module bodies,
-                // not from the dependency graph, and are out of scope here.
+        for (const match of source.matchAll(/lazyRoute\s*\(\s*['"](\.[^'"]+)['"]\s*\)/g)) {
+            const request = match[1];
+            const resolved = graph.resolveConsoleRequire('routes/index.js', request);
+            if (!resolved || !fs.existsSync(path.join(CONSOLE_ROOT, resolved))) {
+                missing.push(`${request} -> ${resolved || '(unresolved)'}`);
             }
         }
 
-        expect(failures).toEqual([]);
+        expect(missing).toEqual([]);
     });
 });
