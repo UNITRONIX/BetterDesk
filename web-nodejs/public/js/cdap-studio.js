@@ -57,7 +57,7 @@
         'script':    { cat: 'processing', icon: 'code',       label: 'Script', desc: 'Custom JavaScript code', ports: { in: 1, out: 1 }, config: { code: '// msg.payload\nreturn msg;' } },
 
         // Outputs
-        'widget-update': { cat: 'outputs', icon: 'dashboard',     label: 'Widget Update', desc: 'Update CDAP widget', ports: { in: 1, out: 0 }, config: { widgetId: '', valueField: 'value' } },
+        'widget-update': { cat: 'outputs', icon: 'dashboard',     label: 'Widget Update', desc: 'Update a dashboard widget', ports: { in: 1, out: 0 }, config: { widgetId: '', valueField: 'value' } },
         'alert':         { cat: 'outputs', icon: 'notifications', label: 'Alert', desc: 'Trigger alert/notification', ports: { in: 1, out: 0 }, config: { severity: 'warning', message: 'Alert: ${value}' } },
         'command':       { cat: 'outputs', icon: 'send',          label: 'Command', desc: 'Send command to device', ports: { in: 1, out: 0 }, config: { deviceId: '', commandType: '', payload: '{}' } },
         'log':           { cat: 'outputs', icon: 'list_alt',      label: 'Log', desc: 'Write to audit log', ports: { in: 1, out: 0 }, config: { level: 'info', message: '${JSON.stringify(data)}' } },
@@ -75,6 +75,27 @@
         const key = 'sdk_studio.' + (NODE_LABEL_KEYS[type] || 'node_' + type.replace(/-/g, '_'));
         const v = _(key);
         return v && v !== key ? v : (def.label || type);
+    }
+
+    // What kind of step a node is, in words ("Source", "Processing step", "Output")
+    function nodeKind(type) {
+        const cat = (NODE_DEFS[type] || {}).cat;
+        return _(cat === 'processing' ? 'sdk_studio.kind_processing' : cat === 'outputs' ? 'sdk_studio.kind_output' : 'sdk_studio.kind_source');
+    }
+
+    // The line under a node's name: what it is, when the name doesn't say it already
+    function nodeSubtitle(node) {
+        const kindName = nodeLabel(node.type);
+        return node.label && node.label !== kindName ? kindName : nodeKind(node.type);
+    }
+
+    // Settings keys ("unitId", "jmesPath") as labels: "Unit ID", "JMES path"; times are in milliseconds
+    const LABEL_WORDS = { id: 'ID', url: 'URL', oids: 'OIDs', dsn: 'DSN', qos: 'QoS', tls: 'TLS', jmes: 'JMES' };
+    const MS_KEYS = ['interval', 'duration', 'cooldown'];
+    function configLabel(key) {
+        const words = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim().toLowerCase().split(/\s+/);
+        const text = words.map((w, i) => LABEL_WORDS[w] || (i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w)).join(' ');
+        return MS_KEYS.includes(key) ? text + ' (ms)' : text;
     }
 
     // ─── State ──────────────────────────────────────────────────────
@@ -113,10 +134,23 @@
 
     // ─── Helpers ────────────────────────────────────────────────────
 
-    function esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
+    const esc = (str) => Utils.escapeHtml(str);
+
+    // A translated sentence with values that are already HTML (statuses, times)
+    function fmtHtml(key, vars) {
+        let text = esc(_(key));
+        for (const [k, v] of Object.entries(vars || {})) {
+            text = text.split('{' + k + '}').join(v);
+        }
+        return text;
+    }
+
+    // Deploy state in the status bar: Not deployed (neutral), Deployed (good), failed (danger)
+    function setDeployState(tone, label) {
+        const el = document.getElementById('status-state-text');
+        if (!el) return;
+        el.className = 'status is-' + Utils.statusTone(tone) + ' studio-status-dot';
+        el.textContent = label;
     }
 
     function genId() {
@@ -137,6 +171,45 @@
         line.innerHTML = `<span class="studio-console-time">${timeStr()}</span><span class="studio-console-msg">${esc(msg)}</span>`;
         consoleBody.appendChild(line);
         consoleBody.scrollTop = consoleBody.scrollHeight;
+        const last = document.getElementById('studio-console-last');
+        if (last) {
+            last.textContent = msg;
+            last.className = 'studio-console-last studio-console-last-' + level;
+        }
+    }
+
+    // The log is folded to one line (its latest message) unless opened
+    function setConsoleOpen(open, remember) {
+        const btn = document.getElementById('btn-toggle-console');
+        if (!btn) return;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        consoleBody.hidden = !open;
+        const box = document.getElementById('studio-console');
+        if (box) box.classList.toggle('is-open', open);
+        if (open) consoleBody.scrollTop = consoleBody.scrollHeight;
+        if (remember) store('bd.studio.log', open ? '1' : '0');
+    }
+
+    // Side panels fold to a narrow strip so the canvas gets the room
+    function setPanelOpen(btn, open, remember) {
+        const panel = btn.closest('.studio-panel');
+        const body = document.getElementById(btn.getAttribute('aria-controls'));
+        const label = open ? btn.dataset.labelHide : btn.dataset.labelShow;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.setAttribute('aria-label', label);
+        btn.title = label;
+        if (body) body.hidden = !open;
+        if (panel) panel.classList.toggle('is-collapsed', !open);
+        if (remember) store('bd.studio.' + btn.id, open ? '1' : '0');
+    }
+
+    // Per-viewer layout memory; the page works the same without storage
+    function store(key, value) {
+        try {
+            if (value === undefined) return window.localStorage.getItem(key);
+            window.localStorage.setItem(key, value);
+        } catch (_) { /* private window or blocked storage */ }
+        return null;
     }
 
     function pushUndo() {
@@ -413,7 +486,7 @@
             typeTxt.setAttribute('class', 'studio-node-type');
             typeTxt.setAttribute('x', 16);
             typeTxt.setAttribute('y', 38);
-            typeTxt.textContent = node.type;
+            typeTxt.textContent = nodeSubtitle(node).slice(0, 26);
             g.appendChild(typeTxt);
 
             // Input ports
@@ -539,8 +612,8 @@
         const sw = $('#status-wires');
         const sf = $('#status-flow-label');
         const fn = $('#studio-flow-name');
-        if (sn) sn.textContent = String(flow.nodes.length);
-        if (sw) sw.textContent = flow.wires.length;
+        if (sn) sn.textContent = Utils.formatNumber(flow.nodes.length);
+        if (sw) sw.textContent = Utils.formatNumber(flow.wires.length);
         if (sf) sf.textContent = flowMeta.name;
         if (fn) fn.textContent = flowMeta.name;
     }
@@ -560,7 +633,7 @@
         const fid = () => 'studio-field-' + (++fieldNo);
 
         // Node header
-        html += `<h3 class="studio-inspector-title">${esc(node.label || nodeLabel(node.type))} <span class="studio-inspector-type">${esc(node.type)}</span></h3>`;
+        html += `<h3 class="studio-inspector-title">${esc(node.label || nodeLabel(node.type))} <span class="studio-inspector-type">${Utils.tagHtml(nodeSubtitle(node))}</span></h3>`;
 
         // Label field
         const labelId = fid();
@@ -575,21 +648,28 @@
         const cfg = node.config || {};
         for (const [key, defaultVal] of Object.entries(def.config || {})) {
             const val = cfg[key] !== undefined ? cfg[key] : defaultVal;
-            const fieldLabel = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ');
+            const fieldLabel = configLabel(key);
             const id = fid();
 
             if (typeof defaultVal === 'boolean') {
                 html += `<div class="studio-field">
                     <label for="${id}">${esc(fieldLabel)}</label>
                     <select id="${id}" class="form-select" data-config="${esc(key)}">
-                        <option value="true" ${val ? 'selected' : ''}>true</option>
-                        <option value="false" ${!val ? 'selected' : ''}>false</option>
+                        <option value="true" ${val ? 'selected' : ''}>${_('common.yes')}</option>
+                        <option value="false" ${!val ? 'selected' : ''}>${_('common.no')}</option>
                     </select>
                 </div>`;
             } else if (typeof defaultVal === 'number') {
                 html += `<div class="studio-field">
                     <label for="${id}">${esc(fieldLabel)}</label>
                     <input type="number" id="${id}" class="form-input" data-config="${esc(key)}" value="${val}">
+                </div>`;
+            } else if (defaultVal && typeof defaultVal === 'object') {
+                // Lists and objects (switch conditions) are edited as JSON
+                html += `<div class="studio-field">
+                    <label for="${id}">${esc(fieldLabel)}</label>
+                    <textarea id="${id}" class="form-input" data-config="${esc(key)}" data-json="1" rows="4" aria-describedby="${id}-hint">${esc(JSON.stringify(val, null, 2))}</textarea>
+                    <p class="form-hint" id="${id}-hint">${_('sdk_studio.json_hint')}</p>
                 </div>`;
             } else if (key === 'code' || key === 'expression') {
                 html += `<div class="studio-field">
@@ -663,7 +743,7 @@
         const inWires = flow.wires.filter(w => w.to === nodeId);
         const outWires = flow.wires.filter(w => w.from === nodeId);
         html += `<h3 class="studio-inspector-section">${_('sdk_studio.connections')}</h3>`;
-        html += `<p class="studio-inspector-connections">${esc(fmt('sdk_studio.connections_line', { in: inWires.length, out: outWires.length }))}</p>`;
+        html += `<p class="studio-inspector-connections">${esc(fmt('sdk_studio.connections_line', { in: Utils.formatNumber(inWires.length), out: Utils.formatNumber(outWires.length) }))}</p>`;
 
         // Delete button
         html += `<button type="button" class="btn btn-sm btn-danger-quiet studio-delete-node-btn" id="btn-delete-selected-node">${_('sdk_studio.delete_node')}</button>`;
@@ -685,10 +765,20 @@
             input.addEventListener('change', () => {
                 const node = getNode(selectedNodeId);
                 if (!node) return;
-                pushUndo();
                 let val = input.value;
+                if (input.dataset.json) {
+                    try {
+                        val = JSON.parse(val);
+                        input.removeAttribute('aria-invalid');
+                    } catch (_) {
+                        input.setAttribute('aria-invalid', 'true');
+                        logConsole(fmt('sdk_studio.log_json_invalid', { field: configLabel(input.dataset.config) }), 'error');
+                        return;
+                    }
+                }
                 if (input.type === 'number') val = Number(val);
                 if (input.tagName === 'SELECT' && (val === 'true' || val === 'false')) val = val === 'true';
+                pushUndo();
                 node.config[input.dataset.config] = val;
             });
         }
@@ -703,6 +793,13 @@
     function clearInspector() {
         inspectorBody.innerHTML = `<div class="studio-inspector-empty">
             <p>${_('sdk_studio.select_node')}</p>
+            <h3 class="studio-inspector-section">${_('sdk_studio.howto_title')}</h3>
+            <ol class="steps studio-howto">
+                <li>${_('sdk_studio.howto_add')}</li>
+                <li>${_('sdk_studio.howto_connect')}</li>
+                <li>${_('sdk_studio.howto_save')}</li>
+            </ol>
+            <p class="form-hint">${_('sdk_studio.howto_keys')}</p>
         </div>`;
     }
 
@@ -717,12 +814,13 @@
         g.style.transformOrigin = '0 0';
         gw.style.transformOrigin = '0 0';
 
-        const gridRect = $('#studio-grid-rect');
-        if (gridRect) {
-            gridRect.setAttribute('transform', `translate(${panX}, ${panY}) scale(${zoomLevel})`);
+        // The dots move with the canvas; the rect itself always fills the view
+        const gridPattern = $('#studio-grid');
+        if (gridPattern) {
+            gridPattern.setAttribute('patternTransform', `translate(${panX}, ${panY}) scale(${zoomLevel})`);
         }
 
-        $('#studio-zoom-label').textContent = Math.round(zoomLevel * 100) + '%';
+        $('#studio-zoom-label').textContent = Utils.formatPercent(zoomLevel, { fraction: true });
     }
 
     function zoomTo(newZoom, cx, cy) {
@@ -988,6 +1086,8 @@
             undoStack = [];
             redoStack = [];
 
+            setDeployState(data.flow.status === 'deployed' ? 'good' : 'neutral',
+                _(data.flow.status === 'deployed' ? 'sdk_studio.status_deployed' : 'sdk_studio.status_ready'));
             renderAll();
             clearInspector();
             zoomFit();
@@ -998,23 +1098,44 @@
         }
     }
 
-    async function saveFlow() {
+    // What to do after the next successful save (a test run or deploy that needed it)
+    let afterSave = null;
+
+    // Save: a flow that was saved before saves right away; a new one asks for a name first
+    function saveFlow() {
+        if (flowMeta.id) {
+            doSaveFlow();
+            return;
+        }
+        openSaveDialog(null);
+    }
+
+    // The name and description dialog; note says why it opened (e.g. before a test run)
+    function openSaveDialog(note) {
         const nameInput = $('#save-flow-name');
         const descInput = $('#save-flow-desc');
         if (nameInput) nameInput.value = flowMeta.name || '';
         if (descInput) descInput.value = flowMeta.description || '';
         const st = $('#save-flow-status');
         if (st) { st.textContent = ''; st.className = 'form-status'; }
+        const noteEl = $('#save-flow-note');
+        if (noteEl) {
+            noteEl.textContent = note || '';
+            noteEl.hidden = !note;
+        }
+        if (!note) afterSave = null;
 
         showModal('modal-save-flow');
     }
 
     async function doSaveFlow() {
-        const name = ($('#save-flow-name') || {}).value || _('sdk_studio.untitled');
-        const desc = ($('#save-flow-desc') || {}).value || '';
-
-        flowMeta.name = name.trim();
-        flowMeta.description = desc.trim();
+        const dialogOpen = document.getElementById('modal-save-flow').classList.contains('open');
+        if (dialogOpen) {
+            const name = ($('#save-flow-name') || {}).value || _('sdk_studio.untitled');
+            const desc = ($('#save-flow-desc') || {}).value || '';
+            flowMeta.name = name.trim() || _('sdk_studio.untitled');
+            flowMeta.description = desc.trim();
+        }
 
         try {
             const body = {
@@ -1048,18 +1169,26 @@
             updateStatus();
             logConsole(fmt('sdk_studio.log_saved', { name: flowMeta.name }), 'success');
             toast('success', fmt('sdk_studio.log_saved', { name: flowMeta.name }));
+            const next = afterSave;
+            afterSave = null;
+            if (next) next();
         } catch (err) {
             const msg = fmt('sdk_studio.log_save_failed', { error: err.message });
             logConsole(msg, 'error');
             const st = $('#save-flow-status');
-            if (st) { st.textContent = msg; st.className = 'form-status is-error'; }
+            if (st && document.getElementById('modal-save-flow').classList.contains('open')) {
+                st.textContent = msg;
+                st.className = 'form-status is-error';
+            } else {
+                toast('error', msg);
+            }
         }
     }
 
     async function deployFlow() {
         if (!flowMeta.id) {
-            logConsole(_('sdk_studio.log_save_first_deploy'), 'warn');
-            toast('warning', _('sdk_studio.log_save_first_deploy'));
+            afterSave = deployFlow;
+            openSaveDialog(_('sdk_studio.save_first_deploy_note'));
             return;
         }
 
@@ -1074,14 +1203,9 @@
             logConsole(fmt('sdk_studio.log_deployed', { name: flowMeta.name }), 'success');
             toast('success', fmt('sdk_studio.log_deployed', { name: flowMeta.name }));
 
-            // Update status dot
-            const dot = $('.studio-status-dot');
-            if (dot) {
-                dot.className = 'status ok studio-status-dot studio-status-running';
-            }
-            const txt = $('#status-state-text');
-            if (txt) txt.textContent = _('sdk_studio.status_deployed');
+            setDeployState('good', _('sdk_studio.status_deployed'));
         } catch (err) {
+            setDeployState('danger', _('sdk_studio.status_deploy_failed'));
             logConsole(fmt('sdk_studio.log_deploy_failed', { error: err.message }), 'error');
             toast('error', fmt('sdk_studio.log_deploy_failed', { error: err.message }));
         }
@@ -1089,11 +1213,12 @@
 
     async function testFlow() {
         if (!flowMeta.id) {
-            logConsole(_('sdk_studio.log_save_first_test'), 'warn');
-            toast('warning', _('sdk_studio.log_save_first_test'));
+            afterSave = testFlow;
+            openSaveDialog(_('sdk_studio.save_first_test_note'));
             return;
         }
 
+        setConsoleOpen(true, false);
         logConsole(_('sdk_studio.log_test_started'), 'info');
 
         try {
@@ -1115,14 +1240,28 @@
         }
     }
 
-    async function exportFlow() {
-        if (!flowMeta.id) {
-            logConsole(_('sdk_studio.log_save_first_export'), 'warn');
-            toast('warning', _('sdk_studio.log_save_first_export'));
-            return;
-        }
-
-        window.open(`/api/cdap-studio/flows/${encodeURIComponent(flowMeta.id)}/export`);
+    // Download the flow on the canvas as a .bdflow file (same format as the
+    // server's export), whether or not it has been saved
+    function exportFlow() {
+        const user = (window.BetterDesk && window.BetterDesk.user) || {};
+        const data = {
+            version: '1.0',
+            format: 'bdflow',
+            name: flowMeta.name,
+            description: flowMeta.description || '',
+            flow,
+            exportedAt: new Date().toISOString(),
+            exportedBy: user.username || ''
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = String(flowMeta.name || 'flow').replace(/[^a-zA-Z0-9_-]/g, '_') + '.bdflow';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         logConsole(_('sdk_studio.log_exported'), 'success');
     }
 
@@ -1237,6 +1376,26 @@
 
     // ─── Open Flow Modal ────────────────────────────────────────────
 
+    // One saved flow's facts: deploy state, version, who changed it when, its ID
+    function flowMetaHtml(f) {
+        const deployed = f.status === 'deployed';
+        const parts = [
+            Utils.statusHtml(deployed ? 'good' : 'neutral', _(deployed ? 'sdk_studio.status_deployed' : 'sdk_studio.status_ready')),
+            esc(fmt('sdk_studio.flow_version', { version: Utils.formatNumber(f.version || 1) })),
+            Utils.valueHtml(f.id, { copy: true })
+        ];
+        // "Changed 3h ago by anna"; without a time or a name, only what is known
+        const when = f.updated_at || f.created_at;
+        if (when && f.created_by) {
+            parts.splice(2, 0, fmtHtml('sdk_studio.flow_changed', { time: Utils.timeHtml(when), user: Utils.userHtml(f.created_by) }));
+        } else if (when) {
+            parts.splice(2, 0, fmtHtml('sdk_studio.flow_changed_at', { time: Utils.timeHtml(when) }));
+        } else if (f.created_by) {
+            parts.splice(2, 0, Utils.userHtml(f.created_by));
+        }
+        return parts.join('<span class="studio-meta-sep" aria-hidden="true"> · </span>');
+    }
+
     async function showOpenFlowModal() {
         const container = $('#flow-list-container');
         if (!container) return;
@@ -1260,10 +1419,10 @@
                 <span class="row-main studio-flow-item-info">
                     <button type="button" class="btn-link studio-flow-item-name flow-action-open" data-id="${esc(f.id)}">${esc(f.name)}</button>
                     ${f.description ? `<span class="row-sub studio-flow-item-desc">${esc(f.description)}</span>` : ''}
-                    <span class="row-sub studio-flow-item-meta">${esc(fmt('sdk_studio.flow_meta', { version: f.version || 1, status: f.status || 'draft', user: f.created_by || '' }))}</span>
+                    <span class="row-sub studio-flow-item-meta">${flowMetaHtml(f)}</span>
                 </span>
                 <span class="row-end studio-flow-item-actions">
-                    <button type="button" class="btn btn-sm flow-action-export" data-id="${esc(f.id)}">${_('sdk_studio.export_flow')}</button>
+                    <button type="button" class="btn btn-sm flow-action-export" data-id="${esc(f.id)}">${Utils.icon('export')}${_('sdk_studio.export_flow')}</button>
                     <button type="button" class="btn btn-sm btn-danger-quiet flow-action-delete" data-id="${esc(f.id)}" data-name="${esc(f.name)}">${_('sdk_studio.delete_flow')}</button>
                 </span>
             </li>
@@ -1409,6 +1568,7 @@
         panY = 0;
         zoomLevel = 1;
         applyTransform();
+        setDeployState('neutral', _('sdk_studio.status_ready'));
         renderAll();
         clearInspector();
         logConsole(_('sdk_studio.log_new_flow'), 'info');
@@ -1435,7 +1595,23 @@
         bind('btn-zoom-in', () => zoomTo(zoomLevel * 1.2));
         bind('btn-zoom-out', () => zoomTo(zoomLevel * 0.8));
         bind('btn-zoom-fit', zoomFit);
-        bind('btn-clear-console', () => { consoleBody.innerHTML = ''; });
+        bind('btn-clear-console', () => {
+            consoleBody.innerHTML = '';
+            const last = document.getElementById('studio-console-last');
+            if (last) last.textContent = '';
+        });
+        bind('btn-rename-flow', () => openSaveDialog(null));
+        bind('btn-toggle-console', () => {
+            const btn = document.getElementById('btn-toggle-console');
+            setConsoleOpen(btn.getAttribute('aria-expanded') !== 'true', true);
+        });
+        for (const id of ['btn-toggle-palette', 'btn-toggle-inspector']) {
+            const btn = document.getElementById(id);
+            if (!btn) continue;
+            btn.addEventListener('click', () => setPanelOpen(btn, btn.getAttribute('aria-expanded') !== 'true', true));
+            if (store('bd.studio.' + id) === '0') setPanelOpen(btn, false, false);
+        }
+        setConsoleOpen(store('bd.studio.log') === '1', false);
         bind('btn-empty-template', showTemplatesModal);
         bind('btn-empty-template-menu', showTemplatesModal);
 
@@ -1450,6 +1626,7 @@
 
         // Show the flow as JSON in the console
         bind('btn-toggle-code', () => {
+            setConsoleOpen(true, false);
             const json = JSON.stringify(flow, null, 2);
             logConsole(_('sdk_studio.log_json_heading'), 'info');
             // Output lines (max 20)
@@ -1477,7 +1654,21 @@
         if (importInput) importInput.addEventListener('change', handleImportFile);
 
         updateUndoButtons();
+        clearInspector();
         logConsole(_('sdk_studio.console_ready'), 'info');
+        checkStore();
+    }
+
+    async function checkStore() {
+        const notice = document.getElementById('studio-store-notice');
+        if (!notice) return;
+        try {
+            const resp = await fetch('/api/cdap-studio/flows', { headers: { ...getCsrf() } });
+            await resp.text();
+            notice.hidden = resp.ok;
+        } catch (_) {
+            notice.hidden = false;
+        }
     }
 
     // Wait for DOM

@@ -1,8 +1,10 @@
 /*
  * Flow builder (SDK): a full-window node editor. Palette on the start
- * side, the canvas in the middle, inspector and console on the end side.
- * The canvas follows the theme; the console is dark in both themes like
- * a terminal.
+ * side, the canvas in the middle, node settings and the log on the end
+ * side. The canvas gets the room: the title is one line, both side panels
+ * are narrow and fold to a strip, and the log folds to its latest line.
+ * The canvas follows the theme; the log is dark in both themes like a
+ * terminal.
  */
 
 html,
@@ -32,15 +34,16 @@ body.studio-body {
 
 /* ── Title and toolbar ── */
 
+/* One line on wide screens: back link, title, the sentence about the page */
 .studio-head {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    padding: var(--space-3) var(--space-4) var(--space-2);
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+    padding: var(--space-2) var(--space-4);
 }
 
 .studio-back-btn {
-    align-self: flex-start;
     font-size: var(--text-sm);
 }
 
@@ -49,8 +52,20 @@ body.studio-body {
 }
 
 .studio-description {
-    max-width: 80ch;
+    flex: 1 1 40ch;
+    min-width: 0;
+    max-width: 120ch;
     color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.studio-store-notice {
+    margin: 0;
+    font-size: var(--text-sm);
+}
+
+.studio-store-notice[hidden] {
+    display: none;
 }
 
 .studio-toolbar {
@@ -121,10 +136,11 @@ body.studio-body {
 
 .studio-panel-header {
     display: flex;
+    flex: none;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1);
     min-height: 40px;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
     border-bottom: 1px solid var(--rule);
 }
 
@@ -133,15 +149,69 @@ body.studio-body {
     font-size: var(--text-base);
 }
 
+/* The end panel's toggle sits on its start edge, next to the canvas */
+.studio-right-panel > .studio-panel-header {
+    padding-inline: var(--space-1) var(--space-3);
+}
+
+/* A side panel's fold button: the chevron points where the panel goes */
+.studio-panel-toggle[aria-expanded="true"]:not(:hover) {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.studio-panel-toggle .material-icons {
+    transition: transform var(--motion);
+}
+
+.studio-panel.is-collapsed .studio-panel-toggle .material-icons,
+[dir="rtl"] .studio-panel-toggle .material-icons {
+    transform: scaleX(-1);
+}
+
+[dir="rtl"] .studio-panel.is-collapsed .studio-panel-toggle .material-icons {
+    transform: none;
+}
+
+/* Folded: a strip with the button; the heading stays for screen readers */
+.studio-panel.is-collapsed {
+    width: 44px;
+    overflow: hidden;
+}
+
+.studio-panel.is-collapsed > .studio-panel-header {
+    justify-content: center;
+    padding-inline: 0;
+    border-bottom: 0;
+}
+
+.studio-panel.is-collapsed > .studio-panel-header h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.studio-panel-body[hidden] {
+    display: none;
+}
+
 /* ── Palette ── */
 
 .studio-palette {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    width: 230px;
-    overflow-y: auto;
+    width: clamp(184px, 12vw, 224px);
     border-inline-end: 1px solid var(--rule);
+}
+
+.studio-palette > .studio-panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .studio-palette-search-wrap {
@@ -149,9 +219,9 @@ body.studio-body {
 }
 
 .studio-palette-hint {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-1) var(--space-3) var(--space-2);
     color: var(--text-muted);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
 }
 
 .studio-palette-category {
@@ -205,9 +275,10 @@ body.studio-body {
     align-items: center;
     gap: var(--space-2);
     width: 100%;
-    min-height: 32px;
-    padding: var(--space-1) var(--space-3);
+    min-height: 30px;
+    padding: 2px var(--space-3);
     padding-inline-start: calc(var(--space-2) + 20px + var(--space-1));
+    font-size: var(--text-sm);
     border: 0;
     background: transparent;
     color: var(--text);
@@ -234,7 +305,10 @@ body.studio-body {
     background: var(--bg-subtle);
 }
 
+/* The drawing runs left to right in every language (outputs on the right
+   edge, inputs on the left), so node text starts at the node's left edge */
 .studio-canvas-svg {
+    direction: ltr;
     display: block;
     width: 100%;
     height: 100%;
@@ -392,28 +466,40 @@ body.studio-body {
     pointer-events: auto;
 }
 
-/* ── Inspector and console ── */
+/* ── Node settings and log ── */
 
 .studio-right-panel {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    width: 300px;
+    width: clamp(256px, 17vw, 320px);
     min-height: 0;
     border-inline-start: 1px solid var(--rule);
 }
 
-.studio-inspector {
+.studio-right-body {
     display: flex;
     flex: 1;
     flex-direction: column;
     min-height: 0;
 }
 
-.studio-inspector-body {
+.studio-inspector {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+}
+
+.studio-inspector-body {
     padding: var(--space-3);
+}
+
+.studio-howto {
+    font-size: var(--text-sm);
+}
+
+.studio-inspector-empty .form-hint {
+    margin-top: var(--space-3);
 }
 
 .studio-inspector-empty {
@@ -426,11 +512,24 @@ body.studio-body {
     overflow-wrap: anywhere;
 }
 
+/* The node's kind under its name, as a tag (a value from a set) */
 .studio-inspector-type {
     display: block;
-    color: var(--text-muted);
+    margin-top: var(--space-1);
     font-size: var(--text-sm);
     font-weight: 400;
+}
+
+/* Facts of a saved flow in the Open dialog: status · version · changed · ID */
+.studio-flow-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-1);
+}
+
+.studio-meta-sep {
+    color: var(--text-muted);
 }
 
 .studio-inspector-section {
@@ -471,17 +570,92 @@ body.studio-body {
     margin-top: var(--space-4);
 }
 
+/* Folded, the log is one line with its latest message; open, it takes a
+   third of the panel */
 .studio-console {
     display: flex;
+    flex: none;
     flex-direction: column;
-    height: 200px;
-    min-height: 120px;
     border-top: 1px solid var(--rule);
 }
 
+.studio-console.is-open {
+    height: clamp(160px, 33%, 320px);
+}
+
 .studio-console-header {
-    min-height: 36px;
-    padding-block: var(--space-1);
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-1);
+    padding-inline-end: var(--space-2);
+}
+
+.studio-console-heading {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--text-base);
+}
+
+.studio-console-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    width: 100%;
+    min-height: 40px;
+    padding: 0 var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-align: start;
+    cursor: pointer;
+}
+
+.studio-console-toggle:hover {
+    background: var(--hover);
+}
+
+.studio-console-chevron {
+    flex: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    transform: rotate(-90deg);
+    transition: transform var(--motion);
+}
+
+[dir="rtl"] .studio-console-chevron {
+    transform: rotate(90deg);
+}
+
+.studio-console.is-open .studio-console-chevron {
+    transform: none;
+}
+
+.studio-console-last {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    margin-inline-start: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.studio-console-last-error {
+    color: var(--danger);
+}
+
+.studio-console.is-open .studio-console-last {
+    display: none;
+}
+
+.studio-console-body[hidden] {
+    display: none;
 }
 
 /* Dark in both themes, like a terminal; every colour passes AA on #111414 */
@@ -572,7 +746,8 @@ body.studio-body {
 
 @media (pointer: coarse) {
     .studio-palette-node,
-    .studio-palette-cat-btn {
+    .studio-palette-cat-btn,
+    .studio-console-toggle {
         min-height: 44px;
     }
 
@@ -617,6 +792,57 @@ body.studio-body {
         border-bottom: 1px solid var(--rule);
     }
 
+    .studio-panel.is-collapsed {
+        width: auto;
+    }
+
+    .studio-panel.is-collapsed > .studio-panel-header {
+        justify-content: flex-start;
+        padding-inline: var(--space-3) var(--space-2);
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .studio-panel.is-collapsed > .studio-panel-header h2 {
+        position: static;
+        width: auto;
+        height: auto;
+        clip: auto;
+    }
+
+    /* Open panels show a chevron pointing up (fold), folded ones down */
+    .studio-panel-toggle .material-icons,
+    [dir="rtl"] .studio-panel-toggle .material-icons {
+        transform: rotate(90deg);
+    }
+
+    #btn-toggle-inspector .material-icons,
+    [dir="rtl"] #btn-toggle-inspector .material-icons {
+        transform: rotate(-90deg);
+    }
+
+    .studio-panel.is-collapsed .studio-panel-toggle .material-icons,
+    [dir="rtl"] .studio-panel.is-collapsed .studio-panel-toggle .material-icons {
+        transform: rotate(-90deg);
+    }
+
+    .studio-panel.is-collapsed #btn-toggle-inspector .material-icons,
+    [dir="rtl"] .studio-panel.is-collapsed #btn-toggle-inspector .material-icons {
+        transform: rotate(90deg);
+    }
+
+    /* Stacked, both fold buttons sit at the end of their heading row */
+    .studio-right-panel > .studio-panel-header {
+        padding-inline: var(--space-3) var(--space-2);
+    }
+
+    .studio-right-panel > .studio-panel-header .studio-panel-toggle {
+        order: 1;
+    }
+
+    .studio-store-notice {
+        margin: var(--space-3) var(--space-4) 0;
+    }
+
     .studio-canvas-wrap {
         flex: none;
         height: 60vh;
@@ -628,7 +854,7 @@ body.studio-body {
         border-top: 1px solid var(--rule);
     }
 
-    .studio-inspector-body {
+    .studio-inspector {
         overflow: visible;
     }
 
