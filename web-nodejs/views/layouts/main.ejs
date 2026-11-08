@@ -88,6 +88,8 @@
             // What this user may do, so scripts can hide actions that would fail.
             // The server still checks every request.
             permissions: <%- JSON.stringify(typeof hasPermission === 'function' ? ['server.config','device.edit','device.view','device.connect','device.ban','device.delete','device.connection_mode','device.change_id','org.manage_devices','org.manage_users','org.create','org.edit','org.delete','branding.edit','enrollment.approve','enrollment.manage','billing.view','billing.manage','billing.reports','billing.export','audit.view','user.view','user.create','user.edit','user.delete','metrics.view','remote_target.view','remote_target.edit','remote_target.delete','remote_target.connect','remote_target.test','guest.create','chat.access','cdap.view','cdap.command','mesh.terminal','mesh.power','mesh.files'].filter(function (p) { return hasPermission(p); }) : []) %>,
+            // Pages this user may open, for the global search (public/js/ui-search.js)
+            searchPages: <%- (typeof consoleNav === 'function' ? JSON.stringify(consoleNav({}).sections.reduce(function (all, s) { return all.concat(s.pages.map(function (p) { return { text: p.text, href: p.href, section: s.text, group: p.groupText || '', keywords: p.keywords || '', external: !!p.external }; })); }, [])) : '[]').replace(/</g, '\\u003c') %>,
             sessionPolicy: <%- JSON.stringify(typeof sessionPolicy !== 'undefined' ? sessionPolicy : null) %>,
             branding: <%- JSON.stringify(branding || {}) %>,
             themePalettes: <%- JSON.stringify(typeof themePalettes !== 'undefined' ? themePalettes : {}) %>,
@@ -111,6 +113,7 @@
     <script defer src="/js/app.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/menu-button.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/ui-form.js?v=<%= cacheVersion %>"></script>
+    <% if (!embed) { %><script defer src="/js/ui-search.js?v=<%= cacheVersion %>"></script><% } %>
     <script defer src="/js/ui-shell.js?v=<%= cacheVersion %>"></script>
     <% if (!embed) { %>
     <script defer src="/js/ux35-shell.js?v=<%= cacheVersion %>"></script>
