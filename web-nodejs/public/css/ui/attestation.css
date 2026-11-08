@@ -19,3 +19,15 @@
 .att-empty-how {
     color: var(--text-muted);
 }
+
+/* A fingerprint stays on one line, cut off with an ellipsis; Copy takes the whole value */
+.att-fp .value-copy {
+    max-width: 28ch;
+}
+
+.att-fp .value-copy .mono {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

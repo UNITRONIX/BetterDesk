@@ -138,6 +138,37 @@
         return 'status offline';
     }
 
+    // Data display (GUIDE section 10): status tones, tags, values, times
+    const U = () => window.Utils;
+    function sevHtml(sev) {
+        // critical and high: danger; warning and medium: warning; info and low: neutral
+        const s = safeSeverity(sev);
+        const tone = (s === 'critical' || s === 'high') ? 'danger' : ((s === 'warning' || s === 'medium') ? 'warning' : 'neutral');
+        return U() ? U().statusHtml(tone, severityText(sev)) : `<span class="${severityClass(sev)}">${escapeHtml(severityText(sev))}</span>`;
+    }
+    function tagHtml(label) {
+        return U() ? U().tagHtml(label) : escapeHtml(label);
+    }
+    function emptyHtml() {
+        return U() ? U().emptyHtml() : '—';
+    }
+    function idHtml(id, fallback) {
+        if (!id) return fallback !== undefined ? fallback : emptyHtml();
+        return U() ? U().valueHtml(id) : `<span class="mono">${escapeHtml(id)}</span>`;
+    }
+    function timeHtml(value, opts) {
+        return U() && U().timeHtml ? U().timeHtml(value, opts) : escapeHtml(formatTimeAgo(value));
+    }
+    function cmdStatusHtml(status) {
+        const label = statusText(status);
+        if (!U()) return `<span class="${statusClass(status)}">${escapeHtml(label)}</span>`;
+        const s = safeStatus(status);
+        const tone = (s === 'failed' || s === 'error') ? 'danger'
+            : (s === 'completed' || s === 'success' || s === 'running') ? 'good'
+            : s === 'cancelled' ? 'neutral' : 'waiting';
+        return U().statusHtml(tone, label);
+    }
+
     function labelFor(prefix, value) {
         const key = `automation.${prefix}_${value}`;
         const v = _(key);
@@ -164,13 +195,12 @@
             return `
             <tr data-id="${id}">
                 <td><span class="rule-name">${escapeHtml(r.name)}</span>${r.description ? `<span class="cell-sub">${escapeHtml(r.description)}</span>` : ''}</td>
-                <td>${escapeHtml(labelFor('type', r.condition_type))}<span class="cell-sub">${escapeHtml(labelFor('op', r.condition_op))}</span></td>
-                <td>${escapeHtml(r.condition_value)}</td>
-                <td><span class="${severityClass(r.severity)}">${escapeHtml(severityText(r.severity))}</span></td>
-                <td>${r.scope_device_id ? `<span class="mono">${escapeHtml(r.scope_device_id)}</span>` : escapeHtml(_('automation.scope_all'))}</td>
-                <td>${r.enabled
-                    ? `<span class="status ok">${escapeHtml(_('automation.enabled'))}</span>`
-                    : `<span class="status offline">${escapeHtml(_('automation.disabled'))}</span>`}</td>
+                <td>${tagHtml(labelFor('type', r.condition_type))}${r.condition_type === 'custom' ? '' : `<span class="cell-sub">${escapeHtml(labelFor('op', r.condition_op))}</span>`}</td>
+                <td class="is-num">${r.condition_type === 'custom' ? emptyHtml() : escapeHtml(U() ? U().formatNumber(r.condition_value) : r.condition_value)}</td>
+                <td>${sevHtml(r.severity)}</td>
+                <td>${idHtml(r.scope_device_id, escapeHtml(_('automation.scope_all')))}</td>
+                <td>${U() ? U().booleanHtml(!!r.enabled, { on: _('automation.enabled'), off: _('automation.disabled') })
+                    : escapeHtml(r.enabled ? _('automation.enabled') : _('automation.disabled'))}</td>
                 <td class="actions">${canEdit ? `
                     <button type="button" class="btn btn-sm edit-rule-btn" data-id="${id}">${escapeHtml(_('actions.edit'))}</button>
                     <span class="menu-anchor">
@@ -433,14 +463,15 @@
             const details = a.message || (a.measured_value != null ? a.measured_value : '');
             return `
             <tr>
-                <td class="time-cell" title="${escapeHtml(formatDate(a.triggered_at))}">${escapeHtml(formatTimeAgo(a.triggered_at))}</td>
-                <td>${escapeHtml(a.rule_name || '—')}</td>
-                <td>${a.device_id ? `<span class="mono">${escapeHtml(a.device_id)}</span>` : '—'}</td>
-                <td class="alert-details">${details !== '' ? escapeHtml(details) : '—'}</td>
-                <td><span class="${severityClass(a.severity)}">${escapeHtml(severityText(a.severity))}</span></td>
+                <td class="time-cell">${timeHtml(a.triggered_at)}</td>
+                <td>${a.rule_name ? escapeHtml(a.rule_name) : emptyHtml()}</td>
+                <td>${idHtml(a.device_id)}</td>
+                <td class="alert-details">${details !== '' ? escapeHtml(details) : emptyHtml()}</td>
+                <td>${sevHtml(a.severity)}</td>
                 <td>${acked
-                    ? `<span class="status ok">${escapeHtml(a.acknowledged_by ? _('automation.acknowledged_by', { name: a.acknowledged_by }) : _('automation.acknowledged'))}</span>`
-                    : `<span class="status warning">${escapeHtml(_('automation.unacknowledged'))}</span>`}</td>
+                    ? (U() ? U().statusHtml('good', a.acknowledged_by ? _('automation.acknowledged_by', { name: a.acknowledged_by }) : _('automation.acknowledged'))
+                        : escapeHtml(_('automation.acknowledged')))
+                    : (U() ? U().statusHtml('waiting', _('automation.unacknowledged')) : escapeHtml(_('automation.unacknowledged')))}</td>
                 <td class="actions">${!acked ? `<button type="button" class="btn btn-sm ack-btn" data-id="${escapeHtml(a.id)}">${icon('accept')}${escapeHtml(_('automation.acknowledge'))}</button>` : ''}</td>
             </tr>`;
         }).join('');
@@ -519,11 +550,11 @@
         ]);
         commandsBody.innerHTML = cmds.map(c => `
             <tr>
-                <td class="time-cell" title="${escapeHtml(formatDate(c.created_at))}">${escapeHtml(formatTimeAgo(c.created_at))}${c.created_by ? `<span class="cell-sub">${escapeHtml(_('automation.sent_by', { name: c.created_by }))}</span>` : ''}</td>
-                <td><span class="mono">${escapeHtml(c.device_id)}</span></td>
-                <td>${escapeHtml(labelFor('cmd_type', c.command_type))}</td>
+                <td class="time-cell">${timeHtml(c.created_at)}${c.created_by ? `<span class="cell-sub">${escapeHtml(_('automation.sent_by', { name: c.created_by }))}</span>` : ''}</td>
+                <td>${idHtml(c.device_id)}</td>
+                <td>${tagHtml(labelFor('cmd_type', c.command_type))}</td>
                 <td class="cmd-payload" title="${escapeHtml(c.payload)}"><span class="mono">${escapeHtml(truncate(c.payload, 40))}</span></td>
-                <td><span class="${statusClass(c.status)}">${escapeHtml(statusText(c.status))}</span></td>
+                <td>${cmdStatusHtml(c.status)}</td>
                 <td class="actions"><button type="button" class="btn btn-sm result-btn" data-id="${escapeHtml(c.id)}">${escapeHtml(c.result ? _('automation.view_result') : _('actions.details'))}</button></td>
             </tr>
         `).join('');
@@ -546,11 +577,11 @@
             size: 'large',
             content: `
                 <dl class="facts automation-facts">
-                    <dt>${escapeHtml(_('automation.device'))}</dt><dd><span class="mono">${escapeHtml(cmd.device_id)}</span></dd>
-                    <dt>${escapeHtml(_('automation.command_type'))}</dt><dd>${escapeHtml(labelFor('cmd_type', cmd.command_type))}</dd>
-                    <dt>${escapeHtml(_('automation.command_status'))}</dt><dd><span class="${statusClass(cmd.status)}">${escapeHtml(statusText(cmd.status))}</span></dd>
-                    <dt>${escapeHtml(_('automation.sent_at'))}</dt><dd>${escapeHtml(formatDate(cmd.created_at))}${cmd.created_by ? ` (${escapeHtml(cmd.created_by)})` : ''}</dd>
-                    ${cmd.completed_at ? `<dt>${escapeHtml(_('automation.completed_at'))}</dt><dd>${escapeHtml(formatDate(cmd.completed_at))}</dd>` : ''}
+                    <dt>${escapeHtml(_('automation.device'))}</dt><dd>${U() ? U().valueHtml(cmd.device_id, { copy: true }) : escapeHtml(cmd.device_id)}</dd>
+                    <dt>${escapeHtml(_('automation.command_type'))}</dt><dd>${tagHtml(labelFor('cmd_type', cmd.command_type))}</dd>
+                    <dt>${escapeHtml(_('automation.command_status'))}</dt><dd>${cmdStatusHtml(cmd.status)}</dd>
+                    <dt>${escapeHtml(_('automation.sent_at'))}</dt><dd>${timeHtml(cmd.created_at, { relative: false })}${cmd.created_by ? `&nbsp;(${escapeHtml(cmd.created_by)})` : ''}</dd>
+                    ${cmd.completed_at ? `<dt>${escapeHtml(_('automation.completed_at'))}</dt><dd>${timeHtml(cmd.completed_at, { relative: false })}</dd>` : ''}
                 </dl>
                 <div class="code-block-head automation-block-head"><span class="code-block-title">${escapeHtml(_('automation.command_payload'))}</span></div>
                 <pre class="code-block">${escapeHtml(cmd.payload)}</pre>

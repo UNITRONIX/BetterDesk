@@ -59,6 +59,14 @@
         return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
     }
 
+    // Data display (GUIDE section 10)
+    const U = () => window.Utils;
+    const emptyHtml = () => (U() ? U().emptyHtml() : '—');
+    const tagHtml = (label) => (U() ? U().tagHtml(label) : escapeHtml(label));
+    const idHtml = (id) => (!id ? emptyHtml() : (U() ? U().valueHtml(id) : `<span class="mono">${escapeHtml(id)}</span>`));
+    const timeHtml = (v) => (U() && U().timeHtml ? U().timeHtml(v)
+        : `<time datetime="${escapeHtml(v || '')}" title="${escapeHtml(formatFull(v))}">${escapeHtml(formatTimeAgo(v))}</time>`);
+
     const ACTIONS = ['block', 'log', 'allow'];
     const TYPES = ['usb', 'file_type', 'clipboard', 'screen_share', 'file_transfer'];
 
@@ -193,11 +201,11 @@
                     <span class="dg-name">${escapeHtml(p.name)}</span>
                     ${p.description ? `<span class="cell-sub">${escapeHtml(p.description)}</span>` : ''}
                 </td>
-                <td>${escapeHtml(typeLabel(p.policy_type || p.type))}</td>
-                <td>${escapeHtml(actionLabel(p.action))}</td>
-                <td class="dg-scope">${p.scope ? `<span class="mono">${escapeHtml(p.scope)}</span>` : escapeHtml(t('scope_all'))}</td>
-                <td><span class="status ${on ? 'active' : 'offline'}">${escapeHtml(on ? t('enabled') : t('disabled'))}</span></td>
-                <td class="num-col">${count === null ? '<span class="text-muted">—</span>' : escapeHtml(count)}</td>
+                <td>${tagHtml(typeLabel(p.policy_type || p.type))}</td>
+                <td>${tagHtml(actionLabel(p.action))}</td>
+                <td class="dg-scope">${p.scope ? idHtml(p.scope) : escapeHtml(t('scope_all'))}</td>
+                <td>${U() ? U().booleanHtml(on, { on: t('enabled'), off: t('disabled') }) : escapeHtml(on ? t('enabled') : t('disabled'))}</td>
+                <td class="is-num">${count === null ? emptyHtml() : escapeHtml(U() ? U().formatNumber(count) : count)}</td>
                 <td class="actions">
                     <button type="button" class="btn btn-sm edit-btn" data-id="${id}"
                         aria-label="${escapeHtml(t('edit_named', { name: p.name }))}">${escapeHtml(tr('common.edit'))}</button>
@@ -428,11 +436,11 @@
             const detail = detailText(e);
             return `
             <tr>
-                <td class="dg-time"><time datetime="${escapeHtml(e.created_at || '')}" title="${escapeHtml(formatFull(e.created_at))}">${escapeHtml(formatTimeAgo(e.created_at))}</time></td>
-                <td>${e.device_id ? `<span class="mono">${escapeHtml(e.device_id)}</span>` : '—'}</td>
-                <td>${escapeHtml(e.policy_name || '—')}</td>
-                <td>${escapeHtml(actionLabel(e.action))}</td>
-                <td class="dg-detail">${detail ? escapeHtml(detail) : '—'}</td>
+                <td class="dg-time">${timeHtml(e.created_at)}</td>
+                <td>${idHtml(e.device_id)}</td>
+                <td>${e.policy_name ? escapeHtml(e.policy_name) : emptyHtml()}</td>
+                <td>${e.action ? tagHtml(actionLabel(e.action)) : emptyHtml()}</td>
+                <td class="dg-detail">${detail ? escapeHtml(detail) : emptyHtml()}</td>
             </tr>`;
         }).join('');
     }

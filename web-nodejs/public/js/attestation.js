@@ -30,15 +30,18 @@
     if (typeof Notifications !== 'undefined' && Notifications[type]) Notifications[type](msg);
   }
 
-  // verified / pending / failed, plus the word shown in the table
+  // verified / pending / failed, the status tone (GUIDE section 10) and the word shown in the table
   function statusOf(raw) {
     const s = String(raw || 'pending').toLowerCase();
-    if (s === 'verified' || s === 'trusted') return { group: 'verified', cls: 'ok', label: t('verified') };
-    if (s === 'mismatch') return { group: 'failed', cls: 'error', label: t('status_mismatch') };
-    if (s === 'revoked') return { group: 'failed', cls: 'error', label: t('status_revoked') };
-    if (s === 'failed') return { group: 'failed', cls: 'error', label: t('failed') };
-    return { group: 'pending', cls: 'pending', label: t('pending') };
+    if (s === 'verified' || s === 'trusted') return { group: 'verified', tone: 'good', label: t('verified') };
+    if (s === 'mismatch') return { group: 'failed', tone: 'danger', label: t('status_mismatch') };
+    if (s === 'revoked') return { group: 'failed', tone: 'neutral', label: t('status_revoked') };
+    if (s === 'failed') return { group: 'failed', tone: 'danger', label: t('failed') };
+    return { group: 'pending', tone: 'waiting', label: t('pending') };
   }
+
+  const U = () => window.Utils;
+  const emptyHtml = () => (U() ? U().emptyHtml() : '—');
 
   // Icon for a meaning (Utils.ICONS); decorative, the label carries the meaning
   const icon = (meaning) => (window.Utils && Utils.icon ? Utils.icon(meaning) : '');
@@ -128,17 +131,16 @@
       const st = statusOf(r.status);
       const id = r.device_id || '';
       const fp = r.fingerprint || r.device_fingerprint || '';
-      const short = fp.length > 16 ? fp.slice(0, 8) + '…' + fp.slice(-8) : fp;
       const menuId = `att-menu-${i}`;
-      const last = r.last_check ? formatDate(r.last_check) : '—';
+      const last = U() && U().timeHtml ? U().timeHtml(r.last_check) : escapeHtml(r.last_check ? formatDate(r.last_check) : '—');
       const canVerify = st.group !== 'verified';
       const canRevoke = String(r.status || '').toLowerCase() !== 'revoked';
       return `
         <tr data-device="${escapeHtml(id)}">
-          <td><span class="mono">${escapeHtml(id || '—')}</span>${r.hostname ? `<span class="cell-sub">${escapeHtml(r.hostname)}</span>` : ''}</td>
-          <td>${fp ? `<span class="mono" title="${escapeHtml(fp)}">${escapeHtml(short)}</span>` : '—'}</td>
-          <td><span class="status ${st.cls}">${escapeHtml(st.label)}</span></td>
-          <td>${escapeHtml(last)}</td>
+          <td>${id ? (U() ? U().valueHtml(id) : `<span class="mono">${escapeHtml(id)}</span>`) : emptyHtml()}${r.hostname ? `<span class="cell-sub">${escapeHtml(r.hostname)}</span>` : ''}</td>
+          <td class="att-fp">${fp ? (U() ? U().valueHtml(fp, { copy: true, label: t('col_fingerprint') }) : `<span class="mono">${escapeHtml(fp)}</span>`) : emptyHtml()}</td>
+          <td>${U() ? U().statusHtml(st.tone, st.label) : escapeHtml(st.label)}</td>
+          <td>${last}</td>
           <td class="actions">
             ${canVerify && id ? `<button type="button" class="btn btn-sm" data-att-action="verify" data-id="${escapeHtml(id)}">${icon('approve')}${escapeHtml(t('mark_verified'))}</button>` : ''}
             <span class="menu-anchor">

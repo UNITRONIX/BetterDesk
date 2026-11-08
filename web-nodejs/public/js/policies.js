@@ -436,17 +436,19 @@
         container.innerHTML = `<p class="state">${esc(t('policies.no_audit'))}</p>`;
         return;
       }
+      const U = window.Utils;
       const rows = entries.map(e => {
-        const when = new Date(e.timestamp || e.created_at);
-        const whenText = isNaN(when) ? '' : (window.Utils && Utils.formatDate ? Utils.formatDate(when) : when.toLocaleString());
+        const whenRaw = e.timestamp || e.created_at;
+        const when = new Date(whenRaw);
+        const whenHtml = U && U.timeHtml ? U.timeHtml(whenRaw) : esc(isNaN(when) ? '' : when.toLocaleString());
         const cat = (e.details && e.details.category) || e.section || e.category || '';
         const who = e.actor || e.user || '';
         const via = e.target || '';
         const detail = e.detail || e.description || '';
         return `<tr>
-            <td class="policy-audit-time">${esc(whenText)}</td>
-            <td>${esc(sectionName(cat))}${detail ? `<span class="cell-sub">${esc(detail)}</span>` : ''}</td>
-            <td>${esc(who)}${via ? `<span class="cell-sub">${esc(via)}</span>` : ''}</td>
+            <td class="policy-audit-time">${whenHtml}</td>
+            <td>${cat ? (U ? U.tagHtml(sectionName(cat)) : esc(sectionName(cat))) : (U ? U.emptyHtml() : '')}${detail ? `<span class="cell-sub">${esc(detail)}</span>` : ''}</td>
+            <td>${who ? (U ? U.userHtml(who) : esc(who)) : (U ? U.emptyHtml() : '')}${via ? `<span class="cell-sub">${esc(via)}</span>` : ''}</td>
           </tr>`;
       }).join('');
       container.innerHTML = `

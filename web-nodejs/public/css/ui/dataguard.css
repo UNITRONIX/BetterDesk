@@ -7,11 +7,6 @@
     gap: var(--space-5);
 }
 
-.dg-table .num-col {
-    text-align: end;
-    font-variant-numeric: tabular-nums;
-}
-
 .dg-table .dg-name {
     font-weight: 600;
 }

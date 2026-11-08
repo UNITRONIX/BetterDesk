@@ -227,12 +227,12 @@
         if (table) table.classList.toggle('rc-no-rules', !devices.some(d => d.resources && typeof d.resources === 'object'));
         tbody.innerHTML = list.map(d => {
             const name = d.hostname || d.id;
-            const online = isOnline(d);
+            const idSub = U() ? U().valueHtml(d.id) : `<span class="mono">${escHtml(d.id)}</span>`;
             return `
                 <tr>
-                    <td><span class="rc-device-name">${escHtml(name)}</span>${d.hostname ? `<span class="cell-sub mono">${escHtml(d.id)}</span>` : ''}${d.platform ? `<span class="cell-sub rc-platform-sub">${escHtml(d.platform)}</span>` : ''}</td>
-                    <td class="rc-platform-col">${escHtml(d.platform || '—')}</td>
-                    <td><span class="status ${online ? 'online' : 'offline'}">${escHtml(t(online ? 'status.online' : 'status.offline'))}</span></td>
+                    <td><span class="rc-device-name">${escHtml(name)}</span>${d.hostname ? `<span class="cell-sub">${idSub}</span>` : ''}${d.platform ? `<span class="cell-sub rc-platform-sub">${escHtml(d.platform)}</span>` : ''}</td>
+                    <td class="rc-platform-col">${platformHtml(d.platform)}</td>
+                    <td>${onlineHtml(d)}</td>
                     <td class="rc-rules-cell rc-rules-col">${escHtml(rulesText(d.resources))}</td>
                     <td class="actions"><button type="button" class="btn btn-sm" data-rc-configure="${escHtml(d.id)}"
                         aria-label="${escHtml(t('resource_control.edit_rules_for', { name }))}">${escHtml(t('resource_control.edit_rules'))}</button></td>
@@ -334,15 +334,26 @@
         }
     }
 
+    // Data display (GUIDE section 10)
+    const U = () => window.Utils;
+    function onlineHtml(d) {
+        const online = isOnline(d);
+        const label = t(online ? 'status.online' : 'status.offline');
+        return U() ? U().statusHtml(online ? 'good' : 'neutral', label) : `<span class="status ${online ? 'online' : 'offline'}">${escHtml(label)}</span>`;
+    }
+    function platformHtml(p) {
+        if (U() && U().platformHtml) return U().platformHtml(p);
+        return p ? escHtml(p) : '—';
+    }
+
     function renderDeviceFacts(d) {
         const el = document.getElementById('rc-device-facts');
         if (!el) return;
-        const online = isOnline(d);
         const rows = [
             [t('resource_control.col_device'), escHtml(d.hostname || d.id)],
-            [t('resource_control.fact_id'), `<span class="mono">${escHtml(d.id)}</span>`],
-            [t('resource_control.col_platform'), escHtml(d.platform || '—')],
-            [t('resource_control.col_status'), `<span class="status ${online ? 'online' : 'offline'}">${escHtml(t(online ? 'status.online' : 'status.offline'))}</span>`],
+            [t('resource_control.fact_id'), U() ? U().valueHtml(d.id, { copy: true }) : `<span class="mono">${escHtml(d.id)}</span>`],
+            [t('resource_control.col_platform'), platformHtml(d.platform)],
+            [t('resource_control.col_status'), onlineHtml(d)],
         ];
         el.innerHTML = rows.map(([k, v]) => `<dt>${escHtml(k)}</dt><dd>${v}</dd>`).join('');
     }
