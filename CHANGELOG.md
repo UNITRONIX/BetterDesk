@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **Stable releases without binaries or images (#488):** `version-bump-main.yml` created the tag and GitHub Release with `GITHUB_TOKEN`, and `GITHUB_TOKEN`-produced events never trigger other workflows — so `release-server.yml` and `docker-publish.yml` never ran. 3.5.171 and 3.5.200 shipped a Release with zero assets, and GHCR never received the `3.5.200`/`latest` tags. The release job now dispatches both publishers explicitly on the tag ref, and a verification step fails the release when the Release still has no downloadable assets. `docker-publish` also accepts `latest` from a release tag, which it previously refused.
+
 ### Changed
 - _(none yet)_
 
