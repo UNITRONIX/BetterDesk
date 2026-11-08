@@ -29,7 +29,7 @@
 
     <a href="/" class="ux35-topbar-logo" title="<%= appName %>">
         <% if (branding.logoType === 'default') { %>
-        <%- include('brand-logo', { bdLogoName: appName, bdLogoHeight: 20, bdLogoMarkHeight: 24, bdLogoCompact: true }) %>
+        <%- include('brand-logo', { bdLogoName: appName, bdLogoHeight: 22, bdLogoMarkHeight: 24, bdLogoCompact: true }) %>
         <% } else if (branding.logoType === 'text' && branding.logoText) { %>
         <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
         <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>

@@ -79,7 +79,7 @@
     color: var(--accent);
 }
 
-/* BetterDesk logo (partials/brand-logo.ejs): 20px high, the mark alone on phones */
+/* BetterDesk logo (partials/brand-logo.ejs): 22px high, the mark alone on phones */
 .ux35-topbar-logo .brand-logo {
     display: block;
     flex: none;
