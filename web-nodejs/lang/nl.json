@@ -1703,7 +1703,7 @@
         "authenticating": "Authenticeren...",
         "streaming": "Verbonden",
         "disconnected": "Verbinding verbroken",
-        "error": "Fout",
+        "error": "Kan geen verbinding maken.",
         "status_idle": "Inactief",
         "password_required": "Wachtwoord vereist",
         "enter_password_for": "Voer het wachtwoord in voor apparaat",
@@ -5913,5 +5913,21 @@
         "incomplete": "De agent is geïmporteerd, maar sommige bestanden ontbreken. Vraag uw beheerder om de nieuwste versie opnieuw te importeren.",
         "load_failed": "De installatieprogramma's konden niet worden geladen.",
         "footer": "Na de installatie legt uw beheerder uit hoe u de agent met deze server verbindt."
+    },
+    "remote_viewer": {
+        "controls": "Bediening",
+        "mute": "Geluid dempen",
+        "unmute": "Geluid aan",
+        "stop_recording": "Opname stoppen",
+        "exit_fullscreen": "Volledig scherm sluiten",
+        "connect_failed": "Kan geen verbinding maken: {reason}",
+        "frame_rate": "Framerate",
+        "fps_adaptive": "Adaptief",
+        "phone_title": "De webviewer heeft een groter scherm nodig",
+        "phone_body": "Open dit apparaat op een telefoon in de RustDesk-app. De app moet op de telefoon geïnstalleerd zijn.",
+        "open_in_app": "Openen in de RustDesk-app",
+        "back_to_list": "Terug naar de apparatenlijst",
+        "fewer_displays": "Virtueel scherm verwijderen",
+        "more_displays": "Virtueel scherm toevoegen"
     }
 }

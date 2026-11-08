@@ -1709,7 +1709,7 @@
         "authenticating": "Se autentifică...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Nu s-a putut conecta.",
         "status_idle": "Idle",
         "password_required": "Parola obligatorie",
         "enter_password_for": "Introduceți parola pentru dispozitiv",
@@ -5919,5 +5919,21 @@
         "incomplete": "Agentul a fost importat, dar lipsesc unele dintre fișierele lui. Cereți administratorului să importe din nou ultima versiune.",
         "load_failed": "Nu s-au putut încărca programele de instalare.",
         "footer": "După instalare, administratorul vă explică cum să conectați agentul la acest server."
+    },
+    "remote_viewer": {
+        "controls": "Comenzi",
+        "mute": "Oprește sunetul",
+        "unmute": "Pornește sunetul",
+        "stop_recording": "Oprește înregistrarea",
+        "exit_fullscreen": "Ieși din ecran complet",
+        "connect_failed": "Nu s-a putut conecta: {reason}",
+        "frame_rate": "Rată de cadre",
+        "fps_adaptive": "Adaptivă",
+        "phone_title": "Vizualizatorul web are nevoie de un ecran mai mare",
+        "phone_body": "Pe telefon, deschideți acest dispozitiv în aplicația RustDesk. Aplicația trebuie să fie instalată pe telefon.",
+        "open_in_app": "Deschide în aplicația RustDesk",
+        "back_to_list": "Înapoi la lista de dispozitive",
+        "fewer_displays": "Elimină un ecran virtual",
+        "more_displays": "Adaugă un ecran virtual"
     }
 }

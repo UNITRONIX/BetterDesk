@@ -1721,7 +1721,7 @@
         "authenticating": "Uwierzytelnianie...",
         "streaming": "Połączono",
         "disconnected": "Rozłączono",
-        "error": "Błąd",
+        "error": "Nie można połączyć.",
         "status_idle": "Bezczynny",
         "password_required": "Wymagane Hasło",
         "enter_password_for": "Wprowadź hasło dla urządzenia",
@@ -5913,5 +5913,21 @@
         "incomplete": "Agent został zaimportowany, ale brakuje niektórych jego plików. Poproś administratora o ponowne zaimportowanie najnowszej wersji.",
         "load_failed": "Nie udało się wczytać instalatorów.",
         "footer": "Po instalacji administrator wyjaśni ci, jak połączyć agenta z tym serwerem."
+    },
+    "remote_viewer": {
+        "controls": "Sterowanie",
+        "mute": "Wycisz dźwięk",
+        "unmute": "Włącz dźwięk",
+        "stop_recording": "Zatrzymaj nagrywanie",
+        "exit_fullscreen": "Zamknij pełny ekran",
+        "connect_failed": "Nie można połączyć: {reason}",
+        "frame_rate": "Liczba klatek",
+        "fps_adaptive": "Adaptacyjna",
+        "phone_title": "Podgląd w przeglądarce wymaga większego ekranu",
+        "phone_body": "Na telefonie otwórz to urządzenie w aplikacji RustDesk. Aplikacja musi być zainstalowana na telefonie.",
+        "open_in_app": "Otwórz w aplikacji RustDesk",
+        "back_to_list": "Wróć do listy urządzeń",
+        "fewer_displays": "Usuń wirtualny ekran",
+        "more_displays": "Dodaj wirtualny ekran"
     }
 }

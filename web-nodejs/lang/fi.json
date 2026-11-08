@@ -1709,7 +1709,7 @@
         "authenticating": "Todennetaan...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Yhteyttä ei voitu muodostaa.",
         "status_idle": "Idle",
         "password_required": "Salasana vaaditaan",
         "enter_password_for": "Anna laitteen salasana",
@@ -5919,5 +5919,21 @@
         "incomplete": "Agentti on tuotu, mutta osa sen tiedostoista puuttuu. Pyydä järjestelmänvalvojaa tuomaan uusin versio uudelleen.",
         "load_failed": "Asennusohjelmia ei voitu ladata.",
         "footer": "Asennuksen jälkeen järjestelmänvalvoja kertoo, miten yhdistät agentin tähän palvelimeen."
+    },
+    "remote_viewer": {
+        "controls": "Ohjaimet",
+        "mute": "Mykistä ääni",
+        "unmute": "Ota ääni käyttöön",
+        "stop_recording": "Lopeta tallennus",
+        "exit_fullscreen": "Poistu koko näytöstä",
+        "connect_failed": "Yhteyttä ei voitu muodostaa: {reason}",
+        "frame_rate": "Kuvataajuus",
+        "fps_adaptive": "Mukautuva",
+        "phone_title": "Verkkokatselu vaatii suuremman näytön",
+        "phone_body": "Avaa laite puhelimessa RustDesk-sovelluksella. Sovelluksen on oltava asennettuna puhelimeen.",
+        "open_in_app": "Avaa RustDesk-sovelluksessa",
+        "back_to_list": "Takaisin laiteluetteloon",
+        "fewer_displays": "Poista virtuaalinäyttö",
+        "more_displays": "Lisää virtuaalinäyttö"
     }
 }

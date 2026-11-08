@@ -1709,7 +1709,7 @@
         "authenticating": "Kimlik doğrulanıyor...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Bağlanılamadı.",
         "status_idle": "Idle",
         "password_required": "Şifre Gerekli",
         "enter_password_for": "Cihaz için şifreyi girin",
@@ -5919,5 +5919,21 @@
         "incomplete": "Aracı içe aktarıldı ancak bazı dosyaları eksik. Yöneticinizden en son sürümü yeniden içe aktarmasını isteyin.",
         "load_failed": "Yükleyiciler yüklenemedi.",
         "footer": "Kurulumdan sonra yöneticiniz aracıyı bu sunucuya nasıl bağlayacağınızı size anlatır."
+    },
+    "remote_viewer": {
+        "controls": "Denetimler",
+        "mute": "Sesi kapat",
+        "unmute": "Sesi aç",
+        "stop_recording": "Kaydı durdur",
+        "exit_fullscreen": "Tam ekrandan çık",
+        "connect_failed": "Bağlanılamadı: {reason}",
+        "frame_rate": "Kare hızı",
+        "fps_adaptive": "Uyarlanabilir",
+        "phone_title": "Web görüntüleyici daha büyük bir ekran gerektirir",
+        "phone_body": "Telefonda bu cihazı RustDesk uygulamasında açın. Uygulamanın telefonda yüklü olması gerekir.",
+        "open_in_app": "RustDesk uygulamasında aç",
+        "back_to_list": "Cihaz listesine dön",
+        "fewer_displays": "Bir sanal ekranı kaldır",
+        "more_displays": "Bir sanal ekran ekle"
     }
 }

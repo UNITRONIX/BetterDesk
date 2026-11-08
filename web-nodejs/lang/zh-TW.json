@@ -1725,7 +1725,7 @@
         "authenticating": "正在認證...",
         "streaming": "已連接",
         "disconnected": "已斷開",
-        "error": "錯誤",
+        "error": "無法連線。",
         "status_idle": "空閒",
         "password_required": "需要密碼",
         "enter_password_for": "請輸入設備密碼",
@@ -5917,5 +5917,21 @@
         "incomplete": "代理程式已匯入，但缺少部分檔案。請管理員重新匯入最新版本。",
         "load_failed": "無法載入安裝程式。",
         "footer": "安裝完成後，管理員會告訴您如何將代理程式連線到此伺服器。"
+    },
+    "remote_viewer": {
+        "controls": "控制項",
+        "mute": "靜音",
+        "unmute": "開啟聲音",
+        "stop_recording": "停止錄製",
+        "exit_fullscreen": "結束全螢幕",
+        "connect_failed": "無法連線：{reason}",
+        "frame_rate": "影格率",
+        "fps_adaptive": "自動調整",
+        "phone_title": "網頁檢視器需要較大的螢幕",
+        "phone_body": "在手機上，請用 RustDesk 應用程式開啟此裝置。手機上必須已安裝該應用程式。",
+        "open_in_app": "在 RustDesk 應用程式中開啟",
+        "back_to_list": "返回裝置清單",
+        "fewer_displays": "移除一個虛擬顯示器",
+        "more_displays": "新增一個虛擬顯示器"
     }
 }

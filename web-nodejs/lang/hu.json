@@ -1709,7 +1709,7 @@
         "authenticating": "Hitelesítés...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Nem sikerült csatlakozni.",
         "status_idle": "Idle",
         "password_required": "Jelszó szükséges",
         "enter_password_for": "Adja meg az eszköz jelszavát",
@@ -5919,5 +5919,21 @@
         "incomplete": "Az ügynök importálva lett, de néhány fájlja hiányzik. Kérje meg a rendszergazdát, hogy importálja újra a legújabb verziót.",
         "load_failed": "Nem sikerült betölteni a telepítőket.",
         "footer": "A telepítés után a rendszergazda elmondja, hogyan csatlakoztassa az ügynököt ehhez a szerverhez."
+    },
+    "remote_viewer": {
+        "controls": "Vezérlők",
+        "mute": "Hang némítása",
+        "unmute": "Hang bekapcsolása",
+        "stop_recording": "Felvétel leállítása",
+        "exit_fullscreen": "Kilépés a teljes képernyőből",
+        "connect_failed": "Nem sikerült csatlakozni: {reason}",
+        "frame_rate": "Képkockasebesség",
+        "fps_adaptive": "Alkalmazkodó",
+        "phone_title": "A webes megjelenítőhöz nagyobb képernyő kell",
+        "phone_body": "Telefonon nyissa meg az eszközt a RustDesk alkalmazásban. Az alkalmazásnak telepítve kell lennie a telefonon.",
+        "open_in_app": "Megnyitás a RustDesk alkalmazásban",
+        "back_to_list": "Vissza az eszközlistához",
+        "fewer_displays": "Virtuális kijelző eltávolítása",
+        "more_displays": "Virtuális kijelző hozzáadása"
     }
 }

@@ -1709,7 +1709,7 @@
         "authenticating": "กำลังตรวจสอบสิทธิ์...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "เชื่อมต่อไม่ได้",
         "status_idle": "Idle",
         "password_required": "ต้องใช้รหัสผ่าน",
         "enter_password_for": "ป้อนรหัสผ่านสำหรับอุปกรณ์",
@@ -5919,5 +5919,21 @@
         "incomplete": "นำเข้าเอเจนต์แล้ว แต่ไฟล์บางส่วนหายไป ขอให้ผู้ดูแลระบบนำเข้ารุ่นล่าสุดอีกครั้ง",
         "load_failed": "โหลดตัวติดตั้งไม่ได้",
         "footer": "หลังติดตั้ง ผู้ดูแลระบบจะบอกวิธีเชื่อมต่อเอเจนต์กับเซิร์ฟเวอร์นี้"
+    },
+    "remote_viewer": {
+        "controls": "การควบคุม",
+        "mute": "ปิดเสียง",
+        "unmute": "เปิดเสียง",
+        "stop_recording": "หยุดบันทึก",
+        "exit_fullscreen": "ออกจากเต็มหน้าจอ",
+        "connect_failed": "เชื่อมต่อไม่ได้: {reason}",
+        "frame_rate": "อัตราเฟรม",
+        "fps_adaptive": "ปรับอัตโนมัติ",
+        "phone_title": "ตัวแสดงผลบนเว็บต้องใช้หน้าจอที่ใหญ่กว่านี้",
+        "phone_body": "บนโทรศัพท์ ให้เปิดอุปกรณ์นี้ในแอป RustDesk ต้องติดตั้งแอปไว้ในโทรศัพท์ก่อน",
+        "open_in_app": "เปิดในแอป RustDesk",
+        "back_to_list": "กลับไปที่รายการอุปกรณ์",
+        "fewer_displays": "นำจอเสมือนออกหนึ่งจอ",
+        "more_displays": "เพิ่มจอเสมือนหนึ่งจอ"
     }
 }

@@ -1709,7 +1709,7 @@
         "authenticating": "Godkender...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Kunne ikke forbinde.",
         "status_idle": "Idle",
         "password_required": "Adgangskode påkrævet",
         "enter_password_for": "Indtast adgangskode til enheden",
@@ -5919,5 +5919,21 @@
         "incomplete": "Agenten er importeret, men nogle af dens filer mangler. Bed din administrator om at importere den seneste version igen.",
         "load_failed": "Kunne ikke indlæse installationsprogrammerne.",
         "footer": "Efter installationen forklarer din administrator, hvordan du forbinder agenten til denne server."
+    },
+    "remote_viewer": {
+        "controls": "Betjening",
+        "mute": "Slå lyden fra",
+        "unmute": "Slå lyden til",
+        "stop_recording": "Stop optagelse",
+        "exit_fullscreen": "Afslut fuld skærm",
+        "connect_failed": "Kunne ikke forbinde: {reason}",
+        "frame_rate": "Billedhastighed",
+        "fps_adaptive": "Adaptiv",
+        "phone_title": "Webvisningen kræver en større skærm",
+        "phone_body": "På en telefon åbner du enheden i RustDesk-appen. Appen skal være installeret på telefonen.",
+        "open_in_app": "Åbn i RustDesk-appen",
+        "back_to_list": "Tilbage til enhedslisten",
+        "fewer_displays": "Fjern en virtuel skærm",
+        "more_displays": "Tilføj en virtuel skærm"
     }
 }

@@ -1703,7 +1703,7 @@
         "authenticating": "Autenticazione...",
         "streaming": "Connesso",
         "disconnected": "Disconnesso",
-        "error": "Errore",
+        "error": "Impossibile connettersi.",
         "status_idle": "Inattivo",
         "password_required": "Password richiesta",
         "enter_password_for": "Inserisci la password per il dispositivo",
@@ -5913,5 +5913,21 @@
         "incomplete": "L'agente è stato importato, ma mancano alcuni dei suoi file. Chiedi al tuo amministratore di importare di nuovo l'ultima versione.",
         "load_failed": "Impossibile caricare i programmi di installazione.",
         "footer": "Dopo l'installazione, il tuo amministratore ti spiega come collegare l'agente a questo server."
+    },
+    "remote_viewer": {
+        "controls": "Controlli",
+        "mute": "Disattiva audio",
+        "unmute": "Attiva audio",
+        "stop_recording": "Interrompi registrazione",
+        "exit_fullscreen": "Esci da schermo intero",
+        "connect_failed": "Impossibile connettersi: {reason}",
+        "frame_rate": "Frequenza fotogrammi",
+        "fps_adaptive": "Adattiva",
+        "phone_title": "Il visualizzatore web richiede uno schermo più grande",
+        "phone_body": "Su un telefono, apri questo dispositivo nell'app RustDesk. L'app deve essere installata sul telefono.",
+        "open_in_app": "Apri nell'app RustDesk",
+        "back_to_list": "Torna all'elenco dei dispositivi",
+        "fewer_displays": "Rimuovi uno schermo virtuale",
+        "more_displays": "Aggiungi uno schermo virtuale"
     }
 }

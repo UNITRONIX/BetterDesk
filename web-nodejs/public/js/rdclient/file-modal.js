@@ -61,26 +61,24 @@
         el.id = 'file-transfer-modal';
         el.style.display = 'none';
         el.innerHTML =
-            '<div class="file-transfer-modal" role="dialog" aria-modal="true">' +
+            '<div class="file-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="ft-modal-title">' +
                 '<div class="ft-modal-header">' +
-                    '<span class="material-icons">folder_open</span>' +
-                    '<span class="ft-modal-title"></span>' +
-                    '<button type="button" class="ft-modal-close"><span class="material-icons">close</span></button>' +
+                    '<h2 class="ft-modal-title" id="ft-modal-title"></h2>' +
+                    '<button type="button" class="ft-modal-close modal-close"><span class="material-icons" aria-hidden="true">close</span></button>' +
                 '</div>' +
                 '<div class="ft-modal-body">' +
                     '<div class="ft-pane ft-pane-local">' +
-                        '<div class="ft-pane-head"><span class="material-icons">computer</span><span class="ft-pane-label"></span></div>' +
+                        '<div class="ft-pane-head"><span class="ft-pane-label"></span></div>' +
                         '<div class="ft-pane-toolbar">' +
-                            '<button type="button" class="ft-btn ft-local-pick" title=""><span class="material-icons">folder_open</span></button>' +
-                            '<button type="button" class="ft-btn ft-local-up"><span class="material-icons">arrow_upward</span></button>' +
-                            '<button type="button" class="ft-btn ft-local-home"><span class="material-icons">home</span></button>' +
+                            '<button type="button" class="ft-btn ft-local-pick"></button>' +
+                            '<button type="button" class="ft-btn ft-local-up"></button>' +
+                            '<button type="button" class="ft-btn ft-local-home"></button>' +
                             '<span class="ft-path ft-local-path"></span>' +
                             '<button type="button" class="ft-btn ft-btn-action ft-local-send"></button>' +
                         '</div>' +
                         '<div class="ft-local-body">' +
                             '<div class="ft-local-dropzone ft-dropzone-disabled" tabindex="0" role="button">' +
-                                '<span class="material-icons ft-dropzone-icon">upload_file</span>' +
-                                '<span class="ft-dropzone-title"></span>' +
+                                    '<span class="ft-dropzone-title"></span>' +
                                 '<span class="ft-dropzone-subtitle"></span>' +
                                 '<span class="ft-dropzone-multiple"></span>' +
                                 '<span class="ft-dropzone-target"></span>' +
@@ -90,25 +88,24 @@
                         '<input type="file" class="ft-local-file-input" multiple hidden />' +
                     '</div>' +
                     '<div class="ft-pane ft-pane-remote">' +
-                        '<div class="ft-pane-head"><span class="material-icons">desktop_windows</span><span class="ft-pane-label"></span></div>' +
+                        '<div class="ft-pane-head"><span class="ft-pane-label"></span></div>' +
                         '<div class="ft-pane-toolbar">' +
-                            '<button type="button" class="ft-btn ft-remote-new-folder" title=""><span class="material-icons">create_new_folder</span></button>' +
-                            '<button type="button" class="ft-btn ft-remote-hidden" title=""><span class="material-icons">visibility_off</span></button>' +
-                            '<button type="button" class="ft-btn ft-remote-up"><span class="material-icons">arrow_upward</span></button>' +
-                            '<button type="button" class="ft-btn ft-remote-home"><span class="material-icons">home</span></button>' +
+                            '<button type="button" class="ft-btn ft-remote-up"></button>' +
+                            '<button type="button" class="ft-btn ft-remote-home"></button>' +
+                            '<button type="button" class="ft-btn ft-remote-new-folder"></button>' +
+                            '<button type="button" class="ft-btn ft-remote-hidden"></button>' +
                             '<span class="ft-path ft-remote-path"></span>' +
                             '<button type="button" class="ft-btn ft-btn-action ft-remote-download"></button>' +
                         '</div>' +
                         '<div class="ft-list ft-remote-list"></div>' +
                         '<div class="ft-drop-overlay" hidden>' +
-                            '<span class="material-icons">cloud_upload</span>' +
                             '<span class="ft-drop-overlay-text"></span>' +
                         '</div>' +
                     '</div>' +
                     '<div class="ft-pane ft-pane-queue">' +
-                        '<div class="ft-pane-head"><span class="material-icons">swap_vert</span><span class="ft-pane-label"></span></div>' +
+                        '<div class="ft-pane-head"><span class="ft-pane-label"></span></div>' +
                         '<div class="ft-queue-list"></div>' +
-                        '<div class="ft-queue-empty"><span class="material-icons">sync_alt</span><span></span></div>' +
+                        '<div class="ft-queue-empty"><span></span></div>' +
                     '</div>' +
                 '</div>' +
                 '<div class="ft-overwrite-dialog" hidden role="alertdialog" aria-modal="true">' +
@@ -116,10 +113,10 @@
                         '<div class="ft-overwrite-title"></div>' +
                         '<div class="ft-overwrite-message"></div>' +
                         '<div class="ft-overwrite-actions">' +
-                            '<button type="button" class="btn btn-sm btn-secondary ft-overwrite-skip"></button>' +
-                            '<button type="button" class="btn btn-sm btn-secondary ft-overwrite-skip-all"></button>' +
+                            '<button type="button" class="btn btn-sm ft-overwrite-skip"></button>' +
+                            '<button type="button" class="btn btn-sm ft-overwrite-skip-all"></button>' +
+                            '<button type="button" class="btn btn-sm ft-overwrite-all"></button>' +
                             '<button type="button" class="btn btn-sm btn-primary ft-overwrite-confirm"></button>' +
-                            '<button type="button" class="btn btn-sm btn-primary ft-overwrite-all"></button>' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
@@ -129,12 +126,18 @@
         el.querySelector('.ft-pane-local .ft-pane-label').textContent = t('remote.file_local', 'Local computer');
         el.querySelector('.ft-pane-remote .ft-pane-label').textContent = t('remote.file_remote', 'Remote computer');
         el.querySelector('.ft-pane-queue .ft-pane-label').textContent = t('remote.file_transfers', 'Transfers');
-        el.querySelector('.ft-local-send').innerHTML = t('remote.file_send', 'Send') + ' <span class="material-icons">chevron_right</span>';
-        el.querySelector('.ft-remote-download').innerHTML = '<span class="material-icons">chevron_left</span> ' + t('remote.file_download', 'Download');
+        el.querySelector('.ft-local-send').textContent = t('remote.file_send', 'Send');
+        el.querySelector('.ft-remote-download').textContent = t('remote.file_download', 'Download');
         el.querySelector('.ft-queue-empty span:last-child').textContent = t('remote.file_queue_empty', 'No transfers in progress');
-        el.querySelector('.ft-local-pick').title = t('remote.file_pick_folder', 'Choose folder');
-        el.querySelector('.ft-remote-new-folder').title = t('remote.file_new_folder', 'New Folder');
-        el.querySelector('.ft-remote-hidden').title = t('remote.file_show_hidden', 'Show hidden files');
+        el.querySelector('.ft-modal-close').setAttribute('aria-label', t('actions.close', 'Close'));
+        // Text labels: "up" was read as "upload" when it was an arrow icon
+        el.querySelector('.ft-local-pick').textContent = t('remote.file_pick_folder', 'Choose folder');
+        el.querySelector('.ft-local-up').textContent = t('remote.file_parent', 'Parent folder');
+        el.querySelector('.ft-local-home').textContent = t('remote.file_home', 'Home folder');
+        el.querySelector('.ft-remote-up').textContent = t('remote.file_parent', 'Parent folder');
+        el.querySelector('.ft-remote-home').textContent = t('remote.file_home', 'Home folder');
+        el.querySelector('.ft-remote-new-folder').textContent = t('remote.file_new_folder', 'New folder');
+        el.querySelector('.ft-remote-hidden').textContent = t('remote.file_show_hidden', 'Show hidden files');
 
         this._initDropzoneLabels();
         this._initOverwriteDialogLabels();
@@ -230,7 +233,6 @@
         dz.querySelector('.ft-dropzone-title').textContent = t('remote.file_dropzone_title', 'Drop files or folders here');
         dz.querySelector('.ft-dropzone-subtitle').textContent = t('remote.file_dropzone_subtitle', 'or click to choose files');
         dz.querySelector('.ft-dropzone-multiple').textContent = t('remote.file_dropzone_multiple', 'Files and folders supported');
-        dz.setAttribute('aria-label', t('remote.file_dropzone_title', 'Drop files or folders here'));
     };
 
     FileTransferModal.prototype._initOverwriteDialogLabels = function () {
@@ -327,13 +329,13 @@
         var homeBtn = this._el.querySelector('.ft-local-home');
         var sendBtn = this._el.querySelector('.ft-local-send');
         if (upBtn) {
-            if (!upBtn.dataset.defaultTitle) upBtn.title = t('remote.file_up', 'Up');
+            if (!upBtn.dataset.defaultTitle) upBtn.title = '';
             upBtn.dataset.defaultTitle = upBtn.title;
             upBtn.disabled = !hasRoot;
             upBtn.title = hasRoot ? upBtn.dataset.defaultTitle : noTreeTitle;
         }
         if (homeBtn) {
-            if (!homeBtn.dataset.defaultTitle) homeBtn.title = t('remote.file_home', 'Home');
+            if (!homeBtn.dataset.defaultTitle) homeBtn.title = '';
             homeBtn.dataset.defaultTitle = homeBtn.title;
             homeBtn.disabled = !hasRoot;
             homeBtn.title = hasRoot ? homeBtn.dataset.defaultTitle : noTreeTitle;
@@ -346,14 +348,11 @@
         var btn = this._el && this._el.querySelector('.ft-remote-hidden');
         var ft = this._session && this._session.client && this._session.client.fileTransfer;
         if (!btn || !ft) return;
-        var icon = btn.querySelector('.material-icons');
         if (ft.showHidden) {
-            icon.textContent = 'visibility';
-            btn.title = t('remote.file_hide_hidden', 'Hide hidden files');
+            btn.textContent = t('remote.file_hide_hidden', 'Hide hidden files');
             btn.classList.add('active');
         } else {
-            icon.textContent = 'visibility_off';
-            btn.title = t('remote.file_show_hidden', 'Show hidden files');
+            btn.textContent = t('remote.file_show_hidden', 'Show hidden files');
             btn.classList.remove('active');
         }
     };
@@ -562,14 +561,14 @@
 
     FileTransferModal.prototype._renderRemoteLoading = function (msg) {
         this._el.querySelector('.ft-remote-list').innerHTML =
-            '<div class="ft-empty"><span class="material-icons spinning">sync</span> ' +
+            '<div class="ft-empty">' +
             escapeHtml(msg || t('remote.file_loading', 'Loading…')) + '</div>';
     };
 
     FileTransferModal.prototype._renderRemoteError = function (msg) {
         this._el.querySelector('.ft-remote-list').innerHTML =
-            '<div class="ft-empty ft-error"><span class="material-icons">warning</span> ' + escapeHtml(msg) +
-            '<br><button type="button" class="btn btn-sm btn-primary ft-retry">' +
+            '<div class="ft-empty ft-error"><span>' + escapeHtml(msg) + '</span>' +
+            '<button type="button" class="btn btn-sm ft-retry">' +
             escapeHtml(t('actions.retry', 'Retry')) + '</button></div>';
         var self = this;
         this._el.querySelector('.ft-retry')?.addEventListener('click', function () {
@@ -1001,10 +1000,10 @@
             '<div class="ft-transfer-bar"><div class="' + fillClass + '"' + fillStyle + '></div></div>' +
             '<div class="ft-transfer-status">' + escapeHtml(this._transferStatusText(meta)) + '</div>' +
             '</div>' +
-            (canResume ? '<button type="button" class="ft-transfer-resume" title="' + escapeHtml(t('remote.file_resume', 'Resume')) + '">' +
-                '<span class="material-icons">replay</span></button>' : '') +
-            (canCancel ? '<button type="button" class="ft-transfer-cancel" title="' + escapeHtml(t('common.cancel', 'Cancel')) + '">' +
-                '<span class="material-icons">close</span></button>' : '') +
+            (canResume ? '<button type="button" class="btn btn-sm ft-transfer-resume">' +
+                escapeHtml(t('remote.file_resume', 'Resume')) + '</button>' : '') +
+            (canCancel ? '<button type="button" class="btn btn-sm ft-transfer-cancel">' +
+                escapeHtml(t('common.cancel', 'Cancel')) + '</button>' : '') +
             '</div>';
     };
 

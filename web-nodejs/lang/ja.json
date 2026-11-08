@@ -1703,7 +1703,7 @@
         "authenticating": "認証中...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "接続できませんでした。",
         "status_idle": "Idle",
         "password_required": "パスワードが必要です",
         "enter_password_for": "デバイスのパスワードを入力してください",
@@ -5913,5 +5913,21 @@
         "incomplete": "エージェントはインポートされましたが、一部のファイルが足りません。最新バージョンをもう一度インポートするよう管理者に依頼してください。",
         "load_failed": "インストーラーを読み込めませんでした。",
         "footer": "インストール後、エージェントをこのサーバーに接続する方法は管理者が案内します。"
+    },
+    "remote_viewer": {
+        "controls": "操作",
+        "mute": "消音",
+        "unmute": "音声をオン",
+        "stop_recording": "録画を停止",
+        "exit_fullscreen": "全画面を終了",
+        "connect_failed": "接続できませんでした: {reason}",
+        "frame_rate": "フレームレート",
+        "fps_adaptive": "自動調整",
+        "phone_title": "Web ビューアーには大きな画面が必要です",
+        "phone_body": "スマートフォンでは、このデバイスを RustDesk アプリで開いてください。アプリがスマートフォンにインストールされている必要があります。",
+        "open_in_app": "RustDesk アプリで開く",
+        "back_to_list": "デバイス一覧に戻る",
+        "fewer_displays": "仮想ディスプレイを1つ削除",
+        "more_displays": "仮想ディスプレイを1つ追加"
     }
 }

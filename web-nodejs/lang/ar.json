@@ -1710,7 +1710,7 @@
         "authenticating": "جارٍ المصادقة...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "تعذر الاتصال.",
         "status_idle": "Idle",
         "password_required": "كلمة المرور مطلوبة",
         "enter_password_for": "أدخل كلمة المرور للجهاز",
@@ -5920,5 +5920,21 @@
         "incomplete": "تم استيراد الوكيل لكن بعض ملفاته مفقودة. اطلب من المسؤول استيراد أحدث إصدار مرة أخرى.",
         "load_failed": "تعذّر تحميل برامج التثبيت.",
         "footer": "بعد التثبيت، سيخبرك المسؤول بكيفية ربط الوكيل بهذا الخادم."
+    },
+    "remote_viewer": {
+        "controls": "عناصر التحكم",
+        "mute": "كتم الصوت",
+        "unmute": "تشغيل الصوت",
+        "stop_recording": "إيقاف التسجيل",
+        "exit_fullscreen": "الخروج من ملء الشاشة",
+        "connect_failed": "تعذر الاتصال: {reason}",
+        "frame_rate": "معدل الإطارات",
+        "fps_adaptive": "تكيفي",
+        "phone_title": "يحتاج العارض على الويب إلى شاشة أكبر",
+        "phone_body": "على الهاتف، افتح هذا الجهاز في تطبيق RustDesk. يجب تثبيت التطبيق على الهاتف.",
+        "open_in_app": "فتح في تطبيق RustDesk",
+        "back_to_list": "العودة إلى قائمة الأجهزة",
+        "fewer_displays": "إزالة شاشة افتراضية",
+        "more_displays": "إضافة شاشة افتراضية"
     }
 }

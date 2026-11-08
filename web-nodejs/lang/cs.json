@@ -1703,7 +1703,7 @@
         "authenticating": "Ověřování...",
         "streaming": "Připojeno",
         "disconnected": "Odpojeno",
-        "error": "Chyba",
+        "error": "Nelze se připojit.",
         "status_idle": "Nečinné",
         "password_required": "Vyžadováno heslo",
         "enter_password_for": "Zadejte heslo pro zařízení",
@@ -5913,5 +5913,21 @@
         "incomplete": "Agent byl importován, ale některé jeho soubory chybí. Požádejte administrátora, aby nejnovější verzi importoval znovu.",
         "load_failed": "Instalátory se nepodařilo načíst.",
         "footer": "Po instalaci vám administrátor vysvětlí, jak agenta připojit k tomuto serveru."
+    },
+    "remote_viewer": {
+        "controls": "Ovládání",
+        "mute": "Vypnout zvuk",
+        "unmute": "Zapnout zvuk",
+        "stop_recording": "Zastavit nahrávání",
+        "exit_fullscreen": "Ukončit celou obrazovku",
+        "connect_failed": "Nelze se připojit: {reason}",
+        "frame_rate": "Snímková frekvence",
+        "fps_adaptive": "Přizpůsobivá",
+        "phone_title": "Webové zobrazení potřebuje větší obrazovku",
+        "phone_body": "Na telefonu otevřete toto zařízení v aplikaci RustDesk. Aplikace musí být v telefonu nainstalovaná.",
+        "open_in_app": "Otevřít v aplikaci RustDesk",
+        "back_to_list": "Zpět na seznam zařízení",
+        "fewer_displays": "Odebrat virtuální displej",
+        "more_displays": "Přidat virtuální displej"
     }
 }

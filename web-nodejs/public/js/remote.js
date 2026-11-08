@@ -72,6 +72,7 @@
         const back = document.getElementById('btn-back-devices');
         if (back) {
             back.title = t('guest_access.back_to_list', 'Back to guest devices');
+            back.textContent = t('guest_access.back_to_list', 'Back to guest devices');
             back.onclick = function (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -258,8 +259,9 @@
     let drawerPullTimer = null;
 
     function syncToolbarHandleAria(expanded) {
-        if (!toolbarHandle) return;
-        toolbarHandle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        const exp = document.getElementById('btn-toolbar-expand');
+        if (!exp) return;
+        exp.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     }
 
     function setDrawerPulling(active) {
@@ -566,28 +568,32 @@
         const inner = document.createElement('div');
         inner.className = 'session-tab-card-inner';
 
-        const osIcon = document.createElement('span');
-        osIcon.className = 'session-tab-os material-icons';
-        const iconName = (window.RemoteAddressBook && window.RemoteAddressBook.platformIcon)
-            ? window.RemoteAddressBook.platformIcon(platform || '')
-            : 'devices';
-        osIcon.textContent = iconName;
-        inner.appendChild(osIcon);
+        const select = document.createElement('button');
+        select.type = 'button';
+        select.className = 'session-tab-select';
+
+        const dot = document.createElement('span');
+        dot.className = 'session-tab-dot dot-offline';
+        dot.setAttribute('aria-hidden', 'true');
+        select.appendChild(dot);
 
         const label = document.createElement('span');
         label.className = 'session-tab-label';
         label.textContent = deviceName || deviceId;
         label.title = deviceId;
-        inner.appendChild(label);
+        select.appendChild(label);
 
-        const dot = document.createElement('span');
-        dot.className = 'session-tab-dot dot-offline';
-        inner.appendChild(dot);
+        const stateText = document.createElement('span');
+        stateText.className = 'session-tab-state sr-only';
+        stateText.textContent = t('remote.connecting', 'Connecting');
+        select.appendChild(stateText);
+        inner.appendChild(select);
 
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.className = 'session-tab-close';
-        closeBtn.innerHTML = '<span class="material-icons" style="font-size:14px">close</span>';
+        closeBtn.innerHTML = '<span class="material-icons" aria-hidden="true">close</span>';
+        closeBtn.setAttribute('aria-label', t('actions.close', 'Close') + ' ' + (deviceName || deviceId));
         closeBtn.title = t('actions.close', 'Close');
         closeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -596,11 +602,6 @@
         inner.appendChild(closeBtn);
 
         tab.appendChild(inner);
-
-        const glow = document.createElement('div');
-        glow.className = 'session-tab-glow';
-        glow.setAttribute('aria-hidden', 'true');
-        tab.appendChild(glow);
 
         tab.addEventListener('click', (e) => {
             if (e.target.closest('.session-tab-close')) return;
@@ -620,6 +621,17 @@
         if (!tab) return;
         tab.classList.remove('status-online', 'status-connecting', 'status-error', 'status-offline');
         tab.classList.add(tabStatusClass(state));
+        const stateText = tab.querySelector('.session-tab-state');
+        if (stateText) {
+            const labels = {
+                streaming: t('remote.streaming', 'Connected'),
+                connecting: t('remote.connecting', 'Connecting'),
+                authenticating: t('remote.authenticating', 'Authenticating'),
+                waiting_password: t('remote.waiting_password', 'Waiting for password'),
+                error: t('remote.error', 'Could not connect'),
+            };
+            stateText.textContent = labels[state] || t('remote.disconnected', 'Disconnected');
+        }
         const dot = tab.querySelector('.session-tab-dot');
         if (!dot) return;
         dot.className = 'session-tab-dot';
@@ -634,9 +646,15 @@
     }
 
     function setActiveTab(deviceId) {
-        tabBar.querySelectorAll('.session-tab').forEach((t) => t.classList.remove('active'));
+        tabBar.querySelectorAll('.session-tab').forEach((t) => {
+            t.classList.remove('active');
+            t.querySelector('.session-tab-select')?.removeAttribute('aria-current');
+        });
         const tab = findTab(deviceId);
-        if (tab) tab.classList.add('active');
+        if (tab) {
+            tab.classList.add('active');
+            tab.querySelector('.session-tab-select')?.setAttribute('aria-current', 'true');
+        }
     }
 
     function findTab(deviceId) {
@@ -707,7 +725,8 @@
 
         session.client.renderer.resize();
         session.client.connect().catch(err => {
-            setSessionStatus(session, 'error', err.message);
+            session.lastError = err && err.message ? err.message : '';
+            setSessionStatus(session, 'error', connectFailedText(session.lastError));
             showSessionActions(session);
         });
     }
@@ -823,7 +842,8 @@
         wireNewClient(session);
         session.client.renderer.resize();
         session.client.connect().catch(err => {
-            setSessionStatus(session, 'error', err.message);
+            session.lastError = err && err.message ? err.message : '';
+            setSessionStatus(session, 'error', connectFailedText(session.lastError));
             showSessionActions(session);
         });
     }
@@ -854,7 +874,8 @@
         });
 
         c.on('error', (msg, meta) => {
-            setSessionStatus(session, 'error', msg);
+            session.lastError = msg || '';
+            setSessionStatus(session, 'error', connectFailedText(session.lastError));
             showSessionActions(session);
             if (meta && meta.cdapFallback) showCdapFallback(session);
             if (isActive(session)) setToolbarChromeVisible(false);
@@ -1066,10 +1087,10 @@
         if (!banner) {
             banner = document.createElement('div');
             banner.className = 'security-warning-banner security-' + level;
-            banner.innerHTML = '<span class="material-icons">'
-                + (level === 'error' ? 'lock_open' : 'warning')
-                + '</span> <span class="security-warning-text"></span>'
-                + '<button class="security-warning-dismiss" title="Dismiss">&times;</button>';
+            banner.setAttribute('role', 'alert');
+            banner.innerHTML = '<span class="security-warning-text"></span>'
+                + '<button type="button" class="security-warning-dismiss" aria-label="' + escapeHtml(t('actions.dismiss', 'Dismiss')) + '">'
+                + '<span class="material-icons" aria-hidden="true">close</span></button>';
             banner.querySelector('.security-warning-dismiss').addEventListener('click', () => banner.remove());
             session.panel.appendChild(banner);
         }
@@ -1176,11 +1197,18 @@
             session.panel.classList.remove('streaming');
             session.connectionOverlay.style.display = 'flex';
             setSessionStatus(session, state === 'error' ? 'error' : 'info',
-                state === 'error' ? _('remote.error') : _('remote.disconnected'));
+                state === 'error' ? connectFailedText(session.lastError) : _('remote.disconnected'));
             showSessionActions(session);
             if (isActive(session)) setToolbarChromeVisible(false);
             break;
         }
+    }
+
+    // "Could not connect: Device offline". The reason comes from the transport.
+    function connectFailedText(reason) {
+        const clean = String(reason || '').replace(/^(Error:\s*)?(Connection refused:\s*)?/i, '').trim();
+        if (!clean) return t('remote.error', 'Could not connect.');
+        return t('remote_viewer.connect_failed', 'Could not connect: {reason}').replace('{reason}', clean);
     }
 
     function setSessionStatus(session, type, text) {
@@ -1211,10 +1239,7 @@
 
         // Audio icon
         const audioBtn = document.getElementById('btn-audio');
-        if (audioBtn) {
-            audioBtn.querySelector('.material-icons').textContent =
-                session.audioMuted ? 'volume_off' : 'volume_up';
-        }
+        if (audioBtn) audioBtn.classList.toggle('is-muted', !!session.audioMuted);
 
         // Recording icon
         const recBtn = document.getElementById('btn-record');
@@ -1253,13 +1278,9 @@
             overlay.className = 'viewer-overlay autoplay-overlay';
             overlay.innerHTML = `
                 <div class="overlay-card autoplay-card">
-                    <div class="overlay-icon"><span class="material-icons">play_circle</span></div>
                     <h2 class="overlay-title">${_('remote.click_to_start') || 'Click to Start'}</h2>
                     <p class="overlay-hint">${_('remote.autoplay_blocked') || 'Browser requires user interaction to start video and audio playback.'}</p>
-                    <button class="btn btn-primary btn-full autoplay-start-btn">
-                        <span class="material-icons">play_arrow</span>
-                        ${_('remote.start_playback') || 'Start Playback'}
-                    </button>
+                    <button type="button" class="btn btn-primary btn-block autoplay-start-btn">${_('remote.start_playback') || 'Start Playback'}</button>
                 </div>`;
             session.panel.appendChild(overlay);
         }
@@ -1351,8 +1372,7 @@
         if (!session) return;
         session.audioMuted = !session.audioMuted;
         if (session.client) session.client.setAudioMuted(session.audioMuted);
-        this.querySelector('.material-icons').textContent =
-            session.audioMuted ? 'volume_off' : 'volume_up';
+        this.classList.toggle('is-muted', !!session.audioMuted);
     });
 
     // Ctrl+Alt+Del
@@ -1468,6 +1488,7 @@
             e.preventDefault();
             e.stopPropagation();
             closeAllDropdowns();
+            document.getElementById('btn-type-text')?.focus();
             return;
         }
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -1760,8 +1781,10 @@
                 row.className = 'virtual-display-counter';
 
                 const minus = document.createElement('button');
+                minus.type = 'button';
                 minus.className = 'vd-count-btn';
-                minus.innerHTML = '<span class="material-icons">remove</span>';
+                minus.setAttribute('aria-label', t('remote_viewer.fewer_displays', 'Remove a virtual display'));
+                minus.innerHTML = '<span class="material-icons" aria-hidden="true">remove</span>';
                 minus.disabled = count <= 0;
                 minus.addEventListener('click', (ev) => {
                     ev.stopPropagation();
@@ -1773,8 +1796,10 @@
                 num.textContent = String(count);
 
                 const plus = document.createElement('button');
+                plus.type = 'button';
                 plus.className = 'vd-count-btn';
-                plus.innerHTML = '<span class="material-icons">add</span>';
+                plus.setAttribute('aria-label', t('remote_viewer.more_displays', 'Add a virtual display'));
+                plus.innerHTML = '<span class="material-icons" aria-hidden="true">add</span>';
                 plus.disabled = count >= 4;
                 plus.addEventListener('click', (ev) => {
                     ev.stopPropagation();
@@ -1901,10 +1926,23 @@
         returnToDevices();
     });
 
+    function syncDropdownAria() {
+        document.querySelectorAll('.toolbar-dropdown').forEach((dd) => {
+            const btn = dd.querySelector(':scope > button');
+            const menu = dd.querySelector('.toolbar-dropdown-menu');
+            if (btn && menu) btn.setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false');
+        });
+    }
+
+    document.querySelectorAll('.toolbar-dropdown > button').forEach((btn) => {
+        btn.addEventListener('click', () => setTimeout(syncDropdownAria, 0));
+    });
+
     function closeAllDropdowns(exceptId) {
         document.querySelectorAll('.toolbar-dropdown-menu.open').forEach(m => {
             if (m.id !== exceptId) m.classList.remove('open');
         });
+        setTimeout(syncDropdownAria, 0);
         const typeBtn = document.getElementById('btn-type-text');
         const typeMenu = document.getElementById('type-text-menu');
         if (typeBtn && typeMenu && !typeMenu.classList.contains('open')) {
@@ -1935,9 +1973,12 @@
 
     // Fullscreen handler
     document.addEventListener('fullscreenchange', () => {
-        const fsIcon = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
-        const handleIcon = document.getElementById('btn-handle-fullscreen')?.querySelector('.material-icons');
-        if (handleIcon) handleIcon.textContent = fsIcon;
+        const fsLabel = document.getElementById('btn-handle-fullscreen')?.querySelector('.fullscreen-label');
+        if (fsLabel) {
+            fsLabel.textContent = document.fullscreenElement
+                ? t('remote_viewer.exit_fullscreen', 'Exit full screen')
+                : t('remote.fullscreen', 'Full screen');
+        }
         setTimeout(() => {
             const session = getActiveSession();
             if (session && session.client && session.client.renderer) session.client.renderer.resize();
@@ -1951,8 +1992,47 @@
             toggleViewerShellFullscreen();
             return;
         }
+        if (e.key === 'Escape') {
+            const open = document.querySelector('.toolbar-dropdown-menu.open');
+            if (open) {
+                const owner = open.closest('.toolbar-dropdown')?.querySelector(':scope > button');
+                closeAllDropdowns();
+                owner?.focus();
+                return;
+            }
+        }
         if (e.key === 'Escape' && !document.fullscreenElement) showToolbar();
     });
+
+    // Toggle buttons in the toolbar keep aria-pressed in step with their visual state
+    (function syncPressedState() {
+        const toggles = ['btn-chat', 'btn-viewonly', 'btn-pin', 'btn-record', 'btn-audio'];
+        const apply = (btn) => {
+            const on = btn.classList.contains('active') || btn.classList.contains('recording')
+                || btn.classList.contains('is-muted');
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        };
+        const applyItem = (item) => {
+            const on = item.dataset.active === 'true' || item.classList.contains('active');
+            item.setAttribute('aria-pressed', on ? 'true' : 'false');
+        };
+        const observer = new MutationObserver((records) => {
+            records.forEach((r) => {
+                if (r.target.classList.contains('dropdown-item')) applyItem(r.target);
+                else apply(r.target);
+            });
+        });
+        toggles.forEach((id) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            apply(btn);
+            observer.observe(btn, { attributes: true, attributeFilter: ['class'] });
+        });
+        document.querySelectorAll('.toolbar-dropdown-menu .toggle-item, .quality-item, .fps-mode-item, .codec-item, .keyboard-mode-item, .scale-item').forEach((item) => {
+            applyItem(item);
+            observer.observe(item, { attributes: true, attributeFilter: ['class', 'data-active'] });
+        });
+    })();
 
     // Window resize
     window.addEventListener('resize', () => {
@@ -2082,9 +2162,10 @@
         httpWarningShown = true;
         const banner = document.createElement('div');
         banner.className = 'http-warning-banner';
-        banner.innerHTML = '<span class="material-icons">warning</span> ' +
-            '<span>' + (_('remote.http_warning') || 'HTTP mode: limited to H.264 software decode (~15 FPS). Use HTTPS for full performance (WebCodecs, VP9, 60 FPS).') + '</span>' +
-            '<button class="http-warning-dismiss" title="Dismiss">&times;</button>';
+        banner.setAttribute('role', 'status');
+        banner.innerHTML = '<span>' + (_('remote.http_warning') || 'HTTP mode: limited to H.264 software decode (~15 FPS). Use HTTPS for full performance (WebCodecs, VP9, 60 FPS).') + '</span>' +
+            '<button type="button" class="http-warning-dismiss" aria-label="' + escapeHtml(t('actions.dismiss', 'Dismiss')) + '">' +
+            '<span class="material-icons" aria-hidden="true">close</span></button>';
         document.body.appendChild(banner);
         banner.querySelector('.http-warning-dismiss').addEventListener('click', () => banner.remove());
     }

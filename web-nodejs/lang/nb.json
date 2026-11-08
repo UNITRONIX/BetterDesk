@@ -1709,7 +1709,7 @@
         "authenticating": "Autentiserer...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Kunne ikke koble til.",
         "status_idle": "Idle",
         "password_required": "Passord kreves",
         "enter_password_for": "Skriv inn passord for enheten",
@@ -5919,5 +5919,21 @@
         "incomplete": "Agenten ble importert, men noen av filene mangler. Be administratoren din om å importere den nyeste versjonen på nytt.",
         "load_failed": "Kunne ikke laste inn installasjonsprogrammene.",
         "footer": "Etter installasjonen forklarer administratoren din hvordan du kobler agenten til denne serveren."
+    },
+    "remote_viewer": {
+        "controls": "Kontroller",
+        "mute": "Slå av lyd",
+        "unmute": "Slå på lyd",
+        "stop_recording": "Stopp opptak",
+        "exit_fullscreen": "Avslutt fullskjerm",
+        "connect_failed": "Kunne ikke koble til: {reason}",
+        "frame_rate": "Bildefrekvens",
+        "fps_adaptive": "Adaptiv",
+        "phone_title": "Nettvisningen trenger en større skjerm",
+        "phone_body": "På en telefon åpner du enheten i RustDesk-appen. Appen må være installert på telefonen.",
+        "open_in_app": "Åpne i RustDesk-appen",
+        "back_to_list": "Tilbake til enhetslisten",
+        "fewer_displays": "Fjern en virtuell skjerm",
+        "more_displays": "Legg til en virtuell skjerm"
     }
 }

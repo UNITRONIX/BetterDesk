@@ -1709,7 +1709,7 @@
         "authenticating": "Mengautentikasi...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Tidak dapat terhubung.",
         "status_idle": "Idle",
         "password_required": "Kata Sandi Diperlukan",
         "enter_password_for": "Masukkan kata sandi untuk perangkat",
@@ -5919,5 +5919,21 @@
         "incomplete": "Agen sudah diimpor, tetapi beberapa filenya hilang. Minta administrator Anda mengimpor versi terbaru sekali lagi.",
         "load_failed": "Tidak bisa memuat penginstal.",
         "footer": "Setelah instalasi, administrator Anda akan menjelaskan cara menghubungkan agen ke server ini."
+    },
+    "remote_viewer": {
+        "controls": "Kontrol",
+        "mute": "Bisukan suara",
+        "unmute": "Nyalakan suara",
+        "stop_recording": "Hentikan rekaman",
+        "exit_fullscreen": "Keluar dari layar penuh",
+        "connect_failed": "Tidak dapat terhubung: {reason}",
+        "frame_rate": "Laju bingkai",
+        "fps_adaptive": "Adaptif",
+        "phone_title": "Penampil web memerlukan layar yang lebih besar",
+        "phone_body": "Di ponsel, buka perangkat ini di aplikasi RustDesk. Aplikasi harus terpasang di ponsel.",
+        "open_in_app": "Buka di aplikasi RustDesk",
+        "back_to_list": "Kembali ke daftar perangkat",
+        "fewer_displays": "Hapus satu layar virtual",
+        "more_displays": "Tambah satu layar virtual"
     }
 }

@@ -1703,7 +1703,7 @@
         "authenticating": "正在认证...",
         "streaming": "已连接",
         "disconnected": "已断开",
-        "error": "错误",
+        "error": "无法连接。",
         "status_idle": "空闲",
         "password_required": "需要密码",
         "enter_password_for": "请输入设备密码",
@@ -5913,5 +5913,21 @@
         "incomplete": "代理已导入，但缺少部分文件。请让管理员重新导入最新版本。",
         "load_failed": "无法加载安装程序。",
         "footer": "安装完成后，管理员会告诉您如何把代理连接到此服务器。"
+    },
+    "remote_viewer": {
+        "controls": "控制",
+        "mute": "静音",
+        "unmute": "开启声音",
+        "stop_recording": "停止录制",
+        "exit_fullscreen": "退出全屏",
+        "connect_failed": "无法连接：{reason}",
+        "frame_rate": "帧率",
+        "fps_adaptive": "自适应",
+        "phone_title": "网页查看器需要更大的屏幕",
+        "phone_body": "在手机上，请用 RustDesk 应用打开此设备。手机上必须已安装该应用。",
+        "open_in_app": "在 RustDesk 应用中打开",
+        "back_to_list": "返回设备列表",
+        "fewer_displays": "移除一个虚拟显示器",
+        "more_displays": "添加一个虚拟显示器"
     }
 }

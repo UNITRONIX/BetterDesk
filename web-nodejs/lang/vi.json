@@ -1709,7 +1709,7 @@
         "authenticating": "Đang xác thực...",
         "streaming": "Connected",
         "disconnected": "Disconnected",
-        "error": "Error",
+        "error": "Không thể kết nối.",
         "status_idle": "Idle",
         "password_required": "Yêu cầu mật khẩu",
         "enter_password_for": "Nhập mật khẩu cho thiết bị",
@@ -5919,5 +5919,21 @@
         "incomplete": "Tác tử đã được nhập nhưng thiếu một số tệp. Hãy nhờ quản trị viên nhập lại bản phát hành mới nhất.",
         "load_failed": "Không tải được danh sách bộ cài đặt.",
         "footer": "Sau khi cài đặt, quản trị viên sẽ hướng dẫn bạn cách kết nối tác tử với máy chủ này."
+    },
+    "remote_viewer": {
+        "controls": "Điều khiển",
+        "mute": "Tắt tiếng",
+        "unmute": "Bật tiếng",
+        "stop_recording": "Dừng ghi",
+        "exit_fullscreen": "Thoát toàn màn hình",
+        "connect_failed": "Không thể kết nối: {reason}",
+        "frame_rate": "Tốc độ khung hình",
+        "fps_adaptive": "Thích ứng",
+        "phone_title": "Trình xem trên web cần màn hình lớn hơn",
+        "phone_body": "Trên điện thoại, hãy mở thiết bị này trong ứng dụng RustDesk. Ứng dụng phải được cài đặt trên điện thoại.",
+        "open_in_app": "Mở trong ứng dụng RustDesk",
+        "back_to_list": "Quay lại danh sách thiết bị",
+        "fewer_displays": "Gỡ một màn hình ảo",
+        "more_displays": "Thêm một màn hình ảo"
     }
 }
