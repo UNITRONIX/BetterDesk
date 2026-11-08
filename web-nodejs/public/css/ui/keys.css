@@ -1,0 +1,29 @@
+/* Client setup (/keys): facts with copy fields, downloads, the QR code.
+   Everything else comes from components.css. */
+
+.keys-page {
+    max-width: 880px;
+}
+
+.keys-page .public-key-text.is-masked {
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+}
+
+.keys-fact-hint {
+    flex-basis: 100%;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* The QR code keeps a white quiet zone in dark mode too, or phones can't read it */
+.keys-qr img {
+    display: block;
+    width: 220px;
+    height: 220px;
+    padding: var(--space-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #ffffff;
+}
+

@@ -1,100 +1,63 @@
 <%- include('layouts/main', {
     title: _('nav.keys'),
-    pageStyles: ['pages'],
+    uiReworked: true,
+    pageStyles: ['ui/keys'],
     pageScripts: ['keys'],
     currentPage: 'keys',
     breadcrumb: [{ label: _('nav.keys') }],
     body: `
-        <div class="page-header">
-            <h1 class="page-title">${_('keys.title')}</h1>
-            <p class="page-subtitle">${_('keys.subtitle')}</p>
-        </div>
-        
-        <div class="keys-grid">
-            <!-- Public Key Card -->
-            <div class="key-card">
-                <div class="key-card-header">
-                    <span class="material-icons">vpn_key</span>
-                    <span class="key-card-title">${_('keys.public_key')}</span>
-                </div>
-                <div class="key-card-body">
-                    <div class="public-key-display">
-                        <code class="public-key-text is-masked" id="public-key-text">
-                            <span class="skeleton skeleton-text" style="width: 100%;"></span>
-                        </code>
-                        <button type="button" class="public-key-reveal" id="reveal-key-btn" title="${_('actions.show_value')}" aria-label="${_('actions.show_value')} ${_('keys.public_key')}" aria-pressed="false">
-                            <span class="material-icons">visibility</span>
-                        </button>
-                        <button type="button" class="public-key-copy" id="copy-key-btn" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${_('keys.public_key')}">
-                            <span class="material-icons">content_copy</span>
-                        </button>
-                    </div>
-                    
-                    <div class="key-actions">
-                        <button class="btn btn-secondary" id="download-key-btn">
-                            <span class="material-icons">download</span>
-                            ${_('keys.download')}
-                        </button>
-                        <button class="btn btn-secondary" id="show-qr-btn">
-                            <span class="material-icons">qr_code</span>
-                            ${_('keys.show_qr')}
-                        </button>
-                    </div>
-                </div>
+        <div class="page keys-page">
+            <div class="page-head">
+                <h1>${_('nav.keys')}</h1>
+                <p class="page-description">${_('keys.page_description')}</p>
             </div>
-            
-            <!-- QR Code Card -->
-            <div class="key-card">
-                <div class="key-card-header">
-                    <span class="material-icons">qr_code_2</span>
-                    <span class="key-card-title">${_('keys.qr_code')}</span>
+
+            <!-- Values to type into RustDesk: same rows and copy fields as the overview -->
+            <section class="section" aria-labelledby="keys-values-title">
+                <div class="section-head"><h2 id="keys-values-title">${_('keys.values_title')}</h2></div>
+                <p class="section-note">${_('dashboard.client_config_hint')}</p>
+                <p class="notice warning" id="keys-local-warning" hidden>
+                    ${_('keys.local_warning')}
+                    <a href="/settings#public-endpoints">${_('dashboard.client_host_settings_link')}</a>
+                </p>
+
+                <dl class="facts keys-facts">
+                    <dt>${_('dashboard.config_server_id')}</dt>
+                    <dd><span class="value-field"><code id="server-ip">…</code><button type="button" data-copy-target="server-ip" aria-label="${_('actions.copy')} ${_('dashboard.config_server_id')}">${_('actions.copy')}</button></span></dd>
+                    <dt>${_('dashboard.config_relay_server')}</dt>
+                    <dd><span class="value-field"><code id="relay-ip">…</code><button type="button" data-copy-target="relay-ip" aria-label="${_('actions.copy')} ${_('dashboard.config_relay_server')}">${_('actions.copy')}</button></span></dd>
+                    <dt>${_('dashboard.config_api_server')}</dt>
+                    <dd><span class="value-field"><code id="api-url">…</code><button type="button" data-copy-target="api-url" aria-label="${_('actions.copy')} ${_('dashboard.config_api_server')}">${_('actions.copy')}</button></span></dd>
+                    <dt>${_('dashboard.config_key')}</dt>
+                    <dd><span class="value-field"><code class="public-key-text is-masked" id="public-key-text">…</code><button type="button" id="reveal-key-btn" aria-label="${_('actions.show_value')} ${_('dashboard.config_key')}" aria-pressed="false"><span class="btn-label">${_('actions.show_value')}</span></button><button type="button" id="copy-key-btn" aria-label="${_('actions.copy')} ${_('dashboard.config_key')}">${_('actions.copy')}</button></span></dd>
+                    <dt>${_('keys.server_api_key')}</dt>
+                    <dd><span class="mono" id="api-key">…</span><span class="keys-fact-hint">${_('keys.server_api_key_hint')}</span></dd>
+                </dl>
+
+                <ul class="list keys-downloads">
+                    <li class="list-row">
+                        <span class="row-main">
+                            <span class="row-title">${_('keys.download_title')}</span>
+                            <span class="row-sub">${_('keys.download_hint')}</span>
+                        </span>
+                        <span class="row-end"><button type="button" class="btn" id="download-key-btn">${_('keys.download')}</button></span>
+                    </li>
+                    <li><a href="https://github.com/rustdesk/rustdesk/releases/latest" class="list-row" target="_blank" rel="noopener noreferrer">
+                        <span class="row-main"><span class="row-title">${_('dashboard.get_rustdesk')}</span><span class="row-sub">${_('dashboard.get_rustdesk_hint')}</span></span>
+                        <span class="material-icons row-chevron" aria-hidden="true">open_in_new</span>
+                    </a></li>
+                </ul>
+            </section>
+
+            <!-- The same values as a code the RustDesk phone app can scan -->
+            <section class="section" aria-labelledby="keys-qr-title">
+                <div class="section-head"><h2 id="keys-qr-title">${_('keys.qr_title')}</h2></div>
+                <p class="section-note">${_('keys.qr_hint')}</p>
+                <p class="notice warning" id="keys-qr-warning" hidden>${_('keys.qr_unreachable_host')}</p>
+                <div class="keys-qr" id="qr-wrapper" aria-live="polite">
+                    <p class="state">${_('keys.qr_loading')}</p>
                 </div>
-                <div class="key-card-body">
-                    <div class="qr-code-container">
-                        <div class="qr-code-wrapper" id="qr-wrapper">
-                            <div class="skeleton" style="width: 200px; height: 200px;"></div>
-                        </div>
-                        <p class="qr-code-hint">${_('keys.qr_hint')}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Server Info Card -->
-            <div class="key-card">
-                <div class="key-card-header">
-                    <span class="material-icons">dns</span>
-                    <span class="key-card-title">${_('keys.server_info')}</span>
-                </div>
-                <div class="key-card-body">
-                    <div class="server-info-grid">
-                        <div class="server-info-item">
-                            <span class="server-info-label">
-                                <span class="material-icons">router</span>
-                                ${_('server.id_server')}
-                            </span>
-                            <span class="server-info-value" id="server-ip">
-                                <span class="skeleton skeleton-text"></span>
-                            </span>
-                        </div>
-                        <div class="server-info-item">
-                            <span class="server-info-label">
-                                <span class="material-icons">swap_horiz</span>
-                                ${_('server.relay_server')}
-                            </span>
-                            <span class="server-info-value" id="relay-ip">
-                                <span class="skeleton skeleton-text"></span>
-                            </span>
-                        </div>
-                        <div class="server-info-item">
-                            <span class="server-info-label">
-                                <span class="material-icons">key</span>
-                                ${_('server.api_key')}
-                            </span>
-                            <span class="server-info-value api-key-masked" id="api-key">••••••••</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
     `
 }) %>
