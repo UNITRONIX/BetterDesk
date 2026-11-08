@@ -4484,7 +4484,8 @@
         "groups_set_value": "{total}-ből {set}",
         "groups_default_hint": "Egy csoport akkor számít beállítottnak, ha ehhez a szervezethez mentették.",
         "open_org": "Szervezet megnyitása",
-        "count_unknown": "Nem érhető el"
+        "count_unknown": "Nem érhető el",
+        "save_failed_groups": "Nincs mentve: {groups}."
     },
     "attestation": {
         "title": "Eszköz tanúsítvány",

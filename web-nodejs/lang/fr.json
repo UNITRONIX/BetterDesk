@@ -4611,7 +4611,8 @@
         "groups_set_value": "{set} sur {total}",
         "groups_default_hint": "Un groupe est considéré comme défini dès qu'il a été enregistré pour cette organisation.",
         "open_org": "Ouvrir l'organisation",
-        "count_unknown": "Non disponible"
+        "count_unknown": "Non disponible",
+        "save_failed_groups": "Non enregistré : {groups}."
     },
     "attestation": {
         "title": "Tableau de bord",

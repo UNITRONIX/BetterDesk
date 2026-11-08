@@ -4542,7 +4542,7 @@
         "wallpaper_policy": "會話期間壁紙",
         "wallpaper_show": "顯示",
         "wallpaper_hide_session": "會話期間隱藏",
-        "wallpaper_hide_always": "始終隱藏",
+        "wallpaper_hide_always": "一律隱藏",
         "features_title": "功能策略",
         "features_desc": "爲設備啓用或禁用特定功能",
         "allow_file_transfer": "允許文件傳輸",
@@ -4611,7 +4611,8 @@
         "groups_set_value": "{set} / {total}",
         "groups_default_hint": "為此組織儲存後，該群組即算作已設定。",
         "open_org": "開啟組織",
-        "count_unknown": "無法使用"
+        "count_unknown": "無法使用",
+        "save_failed_groups": "未儲存：{groups}。"
     },
     "attestation": {
         "title": "設備認證",

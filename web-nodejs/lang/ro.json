@@ -4413,9 +4413,9 @@
         "max_session": "Durata maximă a sesiunii (minute)",
         "idle_lock": "Timp de blocare inactiv (minute)",
         "wallpaper_policy": "Imagine de fundal în timpul sesiunii",
-        "wallpaper_show": "Afișare",
+        "wallpaper_show": "Afișează",
         "wallpaper_hide_session": "Ascundeți-vă în timpul sesiunii",
-        "wallpaper_hide_always": "Ascundere întotdeauna",
+        "wallpaper_hide_always": "Ascunde mereu",
         "features_title": "Politica caracteristicilor",
         "features_desc": "Activați sau dezactivați funcții specifice pentru dispozitive",
         "allow_file_transfer": "Permite transferul de fișiere",
@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} din {total}",
         "groups_default_hint": "Un grup este considerat setat după ce a fost salvat pentru această organizație.",
         "open_org": "Deschide organizația",
-        "count_unknown": "Indisponibil"
+        "count_unknown": "Indisponibil",
+        "save_failed_groups": "Nesalvat: {groups}."
     },
     "attestation": {
         "title": "Atestarea dispozitivului",

@@ -4478,7 +4478,8 @@
         "groups_set_value": "{total}개 중 {set}개",
         "groups_default_hint": "그룹은 이 조직에 대해 저장되면 설정된 것으로 봅니다.",
         "open_org": "조직 열기",
-        "count_unknown": "사용할 수 없음"
+        "count_unknown": "사용할 수 없음",
+        "save_failed_groups": "저장되지 않음: {groups}."
     },
     "attestation": {
         "title": "장치 인증",

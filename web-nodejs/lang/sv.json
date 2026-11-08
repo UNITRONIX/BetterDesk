@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} av {total}",
         "groups_default_hint": "En grupp räknas som angiven när den har sparats för den här organisationen.",
         "open_org": "Öppna organisationen",
-        "count_unknown": "Inte tillgängligt"
+        "count_unknown": "Inte tillgängligt",
+        "save_failed_groups": "Inte sparat: {groups}."
     },
     "attestation": {
         "title": "Enhetsbekräftelse",

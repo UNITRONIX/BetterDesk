@@ -4413,9 +4413,9 @@
         "max_session": "ระยะเวลาเซส��ันสูงสุด (นาที)",
         "idle_lock": "หมดเวลาล็อครอบเดินเบา (นาที)",
         "wallpaper_policy": "ภาพพื้นหลังระหว่างเซสชัน",
-        "wallpaper_show": "Show",
+        "wallpaper_show": "แสดง",
         "wallpaper_hide_session": "ซ่อนระหว่างเซสชั่น",
-        "wallpaper_hide_always": "Always hide",
+        "wallpaper_hide_always": "ซ่อนเสมอ",
         "features_title": "นโยบาย��ุณลักษณะ",
         "features_desc": "เปิดหรือปิดคุณสมบัติเฉพาะสำหรับอุปกรณ์",
         "allow_file_transfer": "อนุญาตให้ถ่ายโอนไฟล์",
@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} จาก {total}",
         "groups_default_hint": "กลุ่มจะนับว่าตั้งค่าแล้วเมื่อบันทึกไว้สำหรับองค์กรนี้",
         "open_org": "เปิดองค์กร",
-        "count_unknown": "ไม่พร้อมใช้งาน"
+        "count_unknown": "ไม่พร้อมใช้งาน",
+        "save_failed_groups": "ยังไม่ได้บันทึก: {groups}"
     },
     "attestation": {
         "title": "การรับรองอุปกรณ์",

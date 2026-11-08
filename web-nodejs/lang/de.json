@@ -4478,7 +4478,8 @@
         "groups_set_value": "{set} von {total}",
         "groups_default_hint": "Eine Gruppe gilt als festgelegt, sobald sie für diese Organisation gespeichert wurde.",
         "open_org": "Organisation öffnen",
-        "count_unknown": "Nicht verfügbar"
+        "count_unknown": "Nicht verfügbar",
+        "save_failed_groups": "Nicht gespeichert: {groups}."
     },
     "attestation": {
         "title": "Dashboard",

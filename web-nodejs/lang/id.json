@@ -4413,9 +4413,9 @@
         "max_session": "Durasi Sesi Maks (menit)",
         "idle_lock": "Batas Waktu Penguncian Idle (menit)",
         "wallpaper_policy": "Wallpaper Selama Sesi",
-        "wallpaper_show": "Show",
+        "wallpaper_show": "Tampilkan",
         "wallpaper_hide_session": "Sembunyikan selama sesi",
-        "wallpaper_hide_always": "Always hide",
+        "wallpaper_hide_always": "Selalu sembunyikan",
         "features_title": "Kebijakan Fitur",
         "features_desc": "Mengaktifkan atau menonaktifkan fitur tertentu untuk perangkat",
         "allow_file_transfer": "Izinkan Transfer File",
@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} dari {total}",
         "groups_default_hint": "Sebuah grup dianggap diatur setelah disimpan untuk organisasi ini.",
         "open_org": "Buka organisasi",
-        "count_unknown": "Tidak tersedia"
+        "count_unknown": "Tidak tersedia",
+        "save_failed_groups": "Tidak tersimpan: {groups}."
     },
     "attestation": {
         "title": "Pengesahan Perangkat",

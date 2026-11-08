@@ -18,6 +18,35 @@
     margin-top: var(--space-6);
 }
 
+/* Wide screens: the groups sit side by side (two or three columns), each
+   group whole in one column, read top to bottom then across. The form
+   gives up its single-column measure; each group keeps it. */
+@media (min-width: 1600px) {
+    .policy-form.form-column {
+        max-width: none;
+    }
+
+    .policy-groups {
+        columns: 440px 3;
+        column-gap: var(--space-7);
+    }
+
+    .policy-groups > .section {
+        break-inside: avoid;
+        max-width: var(--measure);
+        padding-bottom: var(--space-6);
+    }
+
+    .policy-form .policy-groups > .section + .section {
+        margin-top: 0;
+    }
+}
+
+/* Organization list before one is chosen */
+.policy-org-list {
+    max-width: var(--measure);
+}
+
 /* "Set for this organization" / "Not set" next to the section heading */
 .policy-state {
     color: var(--text-muted);

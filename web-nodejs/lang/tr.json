@@ -4413,9 +4413,9 @@
         "max_session": "Maksimum Oturum Süresi (dakika)",
         "idle_lock": "Boşta Kilitleme Zaman Aşımı (dakika)",
         "wallpaper_policy": "Oturum Sırasında Duvar Kağıdı",
-        "wallpaper_show": "Show",
+        "wallpaper_show": "Göster",
         "wallpaper_hide_session": "Oturum sırasında gizle",
-        "wallpaper_hide_always": "Always hide",
+        "wallpaper_hide_always": "Her zaman gizle",
         "features_title": "Özellik Politikası",
         "features_desc": "Cihazlar için belirli özellikleri etkinleştirme veya devre dışı bırakma",
         "allow_file_transfer": "Dosya Aktarımına İzin Ver",
@@ -4484,7 +4484,8 @@
         "groups_set_value": "{total} gruptan {set}",
         "groups_default_hint": "Bir grup, bu kuruluş için kaydedildiğinde ayarlanmış sayılır.",
         "open_org": "Kuruluşu aç",
-        "count_unknown": "Kullanılamıyor"
+        "count_unknown": "Kullanılamıyor",
+        "save_failed_groups": "Kaydedilmedi: {groups}."
     },
     "attestation": {
         "title": "Cihaz Onayı",

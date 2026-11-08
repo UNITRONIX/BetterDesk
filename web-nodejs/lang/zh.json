@@ -4589,7 +4589,8 @@
         "groups_set_value": "{set} / {total}",
         "groups_default_hint": "为此组织保存后，该组即算作已设置。",
         "open_org": "打开组织",
-        "count_unknown": "不可用"
+        "count_unknown": "不可用",
+        "save_failed_groups": "未保存：{groups}。"
     },
     "attestation": {
         "title": "设备认证",

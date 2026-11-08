@@ -4478,7 +4478,8 @@
         "groups_set_value": "{set} de {total}",
         "groups_default_hint": "Um grupo conta como definido assim que é guardado para esta organização.",
         "open_org": "Abrir a organização",
-        "count_unknown": "Não disponível"
+        "count_unknown": "Não disponível",
+        "save_failed_groups": "Não guardado: {groups}."
     },
     "attestation": {
         "title": "Atestação de dispositivos",

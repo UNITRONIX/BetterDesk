@@ -4478,7 +4478,8 @@
         "groups_set_value": "{set} su {total}",
         "groups_default_hint": "Un gruppo risulta impostato non appena è stato salvato per questa organizzazione.",
         "open_org": "Apri l'organizzazione",
-        "count_unknown": "Non disponibile"
+        "count_unknown": "Non disponibile",
+        "save_failed_groups": "Non salvato: {groups}."
     },
     "attestation": {
         "title": "Attestazione dispositivi",

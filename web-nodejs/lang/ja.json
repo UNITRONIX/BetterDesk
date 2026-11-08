@@ -4407,7 +4407,7 @@
         "max_session": "最大セッション時間（分）",
         "idle_lock": "アイドルロック（分）",
         "wallpaper_policy": "セッション中の壁紙",
-        "wallpaper_show": "表示",
+        "wallpaper_show": "表示する",
         "wallpaper_hide_session": "セッション中非表示",
         "wallpaper_hide_always": "常に非表示",
         "features_title": "機能ポリシー",
@@ -4478,7 +4478,8 @@
         "groups_set_value": "{total} 件中 {set} 件",
         "groups_default_hint": "グループは、この組織用に保存されると設定済みになります。",
         "open_org": "組織を開く",
-        "count_unknown": "取得できません"
+        "count_unknown": "取得できません",
+        "save_failed_groups": "保存されていません: {groups}。"
     },
     "attestation": {
         "title": "デバイス証明",

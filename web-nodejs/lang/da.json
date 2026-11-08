@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} af {total}",
         "groups_default_hint": "En gruppe tæller som angivet, når den er gemt for denne organisation.",
         "open_org": "Åbn organisationen",
-        "count_unknown": "Ikke tilgængelig"
+        "count_unknown": "Ikke tilgængelig",
+        "save_failed_groups": "Ikke gemt: {groups}."
     },
     "attestation": {
         "title": "Enhedsattest",

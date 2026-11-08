@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set}/{total}",
         "groups_default_hint": "Ryhmä on asetettu, kun se on tallennettu tälle organisaatiolle.",
         "open_org": "Avaa organisaatio",
-        "count_unknown": "Ei saatavilla"
+        "count_unknown": "Ei saatavilla",
+        "save_failed_groups": "Ei tallennettu: {groups}."
     },
     "attestation": {
         "title": "Laitteen todistus",

@@ -4478,7 +4478,8 @@
         "groups_set_value": "{set} van {total}",
         "groups_default_hint": "Een groep telt als ingesteld zodra die voor deze organisatie is opgeslagen.",
         "open_org": "Organisatie openen",
-        "count_unknown": "Niet beschikbaar"
+        "count_unknown": "Niet beschikbaar",
+        "save_failed_groups": "Niet opgeslagen: {groups}."
     },
     "attestation": {
         "title": "Apparaatattestatie",

@@ -4409,7 +4409,7 @@
         "wallpaper_policy": "Tapeta během relace",
         "wallpaper_show": "Zobrazit",
         "wallpaper_hide_session": "Skrýt během relace",
-        "wallpaper_hide_always": "Vždy skrývat",
+        "wallpaper_hide_always": "Vždy skrýt",
         "features_title": "Zásady funkcí",
         "features_desc": "Povolení nebo zakázání specifických funkcí pro zařízení",
         "allow_file_transfer": "Povolit přenos souborů",
@@ -4478,7 +4478,8 @@
         "groups_set_value": "{set} z {total}",
         "groups_default_hint": "Skupina se počítá jako nastavená, jakmile je pro tuto organizaci uložena.",
         "open_org": "Otevřít organizaci",
-        "count_unknown": "Není k dispozici"
+        "count_unknown": "Není k dispozici",
+        "save_failed_groups": "Neuloženo: {groups}."
     },
     "attestation": {
         "title": "Atestace zařízení",

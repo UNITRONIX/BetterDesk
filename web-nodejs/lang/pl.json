@@ -4607,7 +4607,8 @@
         "groups_set_value": "{set} z {total}",
         "groups_default_hint": "Grupa jest ustawiona, gdy zostanie zapisana dla tej organizacji.",
         "open_org": "Otwórz organizację",
-        "count_unknown": "Niedostępne"
+        "count_unknown": "Niedostępne",
+        "save_failed_groups": "Nie zapisano: {groups}."
     },
     "attestation": {
         "title": "Atestacja urządzeń",

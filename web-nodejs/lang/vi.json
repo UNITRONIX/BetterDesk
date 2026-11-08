@@ -4413,9 +4413,9 @@
         "max_session": "Thời lượng phiên tối đa (phút)",
         "idle_lock": "Thời gian chờ khóa nhàn rỗi (phút)",
         "wallpaper_policy": "Hình nền trong phiên",
-        "wallpaper_show": "Show",
+        "wallpaper_show": "Hiển thị",
         "wallpaper_hide_session": "Ẩn trong phiên",
-        "wallpaper_hide_always": "Always hide",
+        "wallpaper_hide_always": "Luôn ẩn",
         "features_title": "Chính sách tính năng",
         "features_desc": "Bật hoặc tắt các tính năng cụ thể cho thiết bị",
         "allow_file_transfer": "Cho phép truyền tệp",
@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} trên {total}",
         "groups_default_hint": "Một nhóm được tính là đã đặt khi đã được lưu cho tổ chức này.",
         "open_org": "Mở tổ chức",
-        "count_unknown": "Không có"
+        "count_unknown": "Không có",
+        "save_failed_groups": "Chưa lưu: {groups}."
     },
     "attestation": {
         "title": "Chứng thực thiết bị",

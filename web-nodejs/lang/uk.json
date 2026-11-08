@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} з {total}",
         "groups_default_hint": "Група вважається заданою, щойно її збережено для цієї організації.",
         "open_org": "Відкрити організацію",
-        "count_unknown": "Недоступно"
+        "count_unknown": "Недоступно",
+        "save_failed_groups": "Не збережено: {groups}."
     },
     "attestation": {
         "title": "Атестація пристрою",

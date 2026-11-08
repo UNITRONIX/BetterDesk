@@ -34,7 +34,9 @@
     f.addEventListener('change', markSection);
 
     await loadOrganizations();
-    const fromUrl = orgIdFromPath();
+    // With one organization there is nothing to choose
+    const fromUrl = orgIdFromPath() || (orgIds.size === 1 ? [...orgIds][0] : null);
+    if (!fromUrl) showOrgPick(true);
     if (fromUrl) {
       if (orgIds.has(fromUrl)) {
         $('policy-org-select').value = fromUrl;
@@ -73,12 +75,36 @@
         sel.appendChild(opt);
         orgIds.add(String(o.id));
       });
+      renderOrgList(Array.isArray(orgs) ? orgs : []);
       if (!orgIds.size) setState(`<p class="state">${esc(t('policies.no_orgs'))}</p>`);
     } catch (e) {
       sel.dataset.failed = '1';
       setState(`<p class="state is-error">${esc(t('policies.orgs_failed'))} <button type="button" class="btn btn-sm" id="policy-orgs-retry">${esc(t('actions.retry'))}</button></p>`);
       $('policy-orgs-retry').addEventListener('click', () => window.location.reload());
     }
+  }
+
+  // Every organization as a row; opening one is the same as choosing it in the select
+  function renderOrgList(orgs) {
+    const list = $('policy-org-list');
+    list.innerHTML = orgs.map(o => `
+      <li><a class="list-row" href="/policies/${encodeURIComponent(o.id)}" data-org-id="${esc(o.id)}">
+        <span class="row-main"><span class="row-title">${esc(o.name || o.id)}</span></span>
+        <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span></a></li>`).join('');
+    list.addEventListener('click', (e) => {
+      const a = e.target.closest('a[data-org-id]');
+      if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      $('policy-org-select').value = a.dataset.orgId;
+      onOrgChange().then(() => {
+        const h = $('pol-connection-title');
+        if (h && !$('policy-sections').hidden) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+      });
+    });
+  }
+
+  function showOrgPick(on) {
+    $('policy-org-pick').hidden = !(on && orgIds.size);
   }
 
   async function onOrgChange() {
@@ -101,6 +127,7 @@
   async function selectOrg(orgId) {
     currentOrgId = orgId || null;
     $('policy-sections').hidden = true;
+    showOrgPick(!currentOrgId);
     if (!currentOrgId) {
       setState(`<p class="state">${esc(t('policies.pick_org_state'))}</p>`);
       return;
@@ -357,19 +384,34 @@
       if (e.field && $(e.field)) $(e.field).focus();
       return;
     }
+    // Each group goes to its own endpoint: save every changed one and say
+    // which ones did not make it, so nothing is silently half saved
+    const failed = [];
+    let savedAny = false;
     try {
-      for (const s of sections) await saveSection(s);
-      if (window.UiForm) UiForm.saved(f, t('policies.save_success'));
-      // Refresh the section states and the change list
-      const resp = await fetch(`/api/panel/policies/${encodeURIComponent(currentOrgId)}`, { credentials: 'same-origin' });
-      if (resp.ok) {
-        const raw = await resp.json();
-        policyData = raw.data || raw || {};
-        renderSectionStates();
+      for (const s of sections) {
+        try {
+          await saveSection(s);
+          savedAny = true;
+        } catch (e) {
+          failed.push(`${sectionName(s)} (${e.message || ''})`);
+        }
       }
-      loadAuditLog();
-    } catch (e) {
-      if (window.UiForm) UiForm.failed(f, `${t('ui_form.save_failed')} ${e.message || ''}`.trim());
+      if (!failed.length) {
+        if (window.UiForm) UiForm.saved(f, t('policies.save_success'));
+      } else if (window.UiForm) {
+        UiForm.failed(f, `${t('ui_form.save_failed')} ${t('policies.save_failed_groups', { groups: failed.join(', ') })}`);
+      }
+      if (savedAny) {
+        // Refresh the section states and the change list
+        const resp = await fetch(`/api/panel/policies/${encodeURIComponent(currentOrgId)}`, { credentials: 'same-origin' });
+        if (resp.ok) {
+          const raw = await resp.json();
+          policyData = raw.data || raw || {};
+          renderSectionStates();
+        }
+        loadAuditLog();
+      }
     } finally {
       btn.disabled = false;
     }
@@ -396,7 +438,7 @@
       }
       const rows = entries.map(e => {
         const when = new Date(e.timestamp || e.created_at);
-        const whenText = isNaN(when) ? '' : when.toLocaleString();
+        const whenText = isNaN(when) ? '' : (window.Utils && Utils.formatDate ? Utils.formatDate(when) : when.toLocaleString());
         const cat = (e.details && e.details.category) || e.section || e.category || '';
         const who = e.actor || e.user || '';
         const via = e.target || '';

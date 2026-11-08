@@ -4413,9 +4413,9 @@
         "max_session": "अधिकतम सत्र अवधि (मिनट)",
         "idle_lock": "निष्क्रिय लॉक टाइमआउट (मिनट)",
         "wallpaper_policy": "सत्र के दौरान वॉलपेपर",
-        "wallpaper_show": "Show",
+        "wallpaper_show": "दिखाएँ",
         "wallpaper_hide_session": "सत्र के दौरान छुपें",
-        "wallpaper_hide_always": "Always hide",
+        "wallpaper_hide_always": "हमेशा छिपाएँ",
         "features_title": "फ़ीचर नीति",
         "features_desc": "उपकरणों के लिए विशिष्ट सुविधाओं को सक्षम या अक्षम करें",
         "allow_file_transfer": "फ़ाइल स्थानांतरण की अनुमति दें",
@@ -4484,7 +4484,8 @@
         "groups_set_value": "{total} में से {set}",
         "groups_default_hint": "कोई समूह तब सेट माना जाता है जब उसे इस संगठन के लिए सहेजा गया हो।",
         "open_org": "संगठन खोलें",
-        "count_unknown": "उपलब्ध नहीं"
+        "count_unknown": "उपलब्ध नहीं",
+        "save_failed_groups": "सहेजा नहीं गया: {groups}।"
     },
     "attestation": {
         "title": "डिवाइस सत्यापन",

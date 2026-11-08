@@ -4478,7 +4478,8 @@
         "groups_set_value": "{set} de {total}",
         "groups_default_hint": "Un grupo cuenta como definido en cuanto se ha guardado para esta organización.",
         "open_org": "Abrir la organización",
-        "count_unknown": "No disponible"
+        "count_unknown": "No disponible",
+        "save_failed_groups": "No guardado: {groups}."
     },
     "attestation": {
         "title": "Panel",

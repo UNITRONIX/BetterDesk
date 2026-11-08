@@ -4484,7 +4484,8 @@
         "groups_set_value": "{set} av {total}",
         "groups_default_hint": "En gruppe regnes som angitt når den er lagret for denne organisasjonen.",
         "open_org": "Åpne organisasjonen",
-        "count_unknown": "Ikke tilgjengelig"
+        "count_unknown": "Ikke tilgjengelig",
+        "save_failed_groups": "Ikke lagret: {groups}."
     },
     "attestation": {
         "title": "Enhetsattest",
