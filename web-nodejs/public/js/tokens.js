@@ -78,6 +78,7 @@
             currentMode = (res.data && res.data.mode) || 'open';
             const radio = document.querySelector(`input[name="enrollment_mode"][value="${currentMode}"]`);
             if (radio) radio.checked = true;
+            syncModeNotes();
             if (status) { status.textContent = ''; status.className = 'form-status'; }
         } catch (err) {
             if (status) {
@@ -85,6 +86,23 @@
                 status.className = 'form-status is-error';
             }
         }
+    }
+
+    /**
+     * What tokens do under the current mode: a notice above the list in Open
+     * mode (tokens aren't checked) and Locked mode (every new device needs one),
+     * and the link to waiting devices only in Managed mode.
+     */
+    function syncModeNotes() {
+        const notice = document.getElementById('tokens-mode-notice');
+        if (notice) {
+            const text = currentMode === 'open' ? _('tokens.mode_notice_open')
+                : currentMode === 'locked' ? _('tokens.mode_notice_locked') : '';
+            notice.textContent = text;
+            notice.hidden = !text;
+        }
+        const requests = document.getElementById('enrollment-mode-requests');
+        if (requests) requests.hidden = currentMode !== 'managed';
     }
 
     // ── Rendering ────────────────────────────────────────────────────────
@@ -239,7 +257,8 @@
         Modal.show({
             title: list.length > 1 ? _('tokens.tokens_generated') : _('tokens.token_created'),
             content: `<p class="notice warning">${esc(_('tokens.copy_warning'))}</p>
-                <dl class="facts tokens-created" id="created-tokens-list">${rows}</dl>`,
+                <dl class="facts tokens-created" id="created-tokens-list">${rows}</dl>
+                <p class="tokens-created-next">${esc(_('tokens.created_next')).replace('{page}', `<a href="/keys">${esc(_('nav.keys'))}</a>`)}</p>`,
             buttons,
             size: 'large',
         });
@@ -339,6 +358,7 @@
                 body: JSON.stringify({ mode }),
             });
             currentMode = mode;
+            syncModeNotes();
             if (status) {
                 status.textContent = _('tokens.mode_saved', { mode: _('tokens.mode_' + mode) });
                 status.className = 'form-status is-ok';

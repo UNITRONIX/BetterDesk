@@ -24,3 +24,12 @@
 .tokens-page #enrollment-mode-status {
     max-width: var(--measure);
 }
+
+.tokens-page #tokens-mode-notice {
+    max-width: var(--measure);
+}
+
+.tokens-created-next {
+    margin-top: var(--space-4);
+    max-width: var(--measure);
+}

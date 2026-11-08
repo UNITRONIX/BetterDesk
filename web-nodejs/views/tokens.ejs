@@ -1,3 +1,6 @@
+<%
+    const canApprove = typeof hasPermission === 'function' && hasPermission('enrollment.approve');
+%>
 <%- include('layouts/main', {
     title: _('nav.tokens'),
     uiReworked: true,
@@ -6,7 +9,7 @@
     currentPage: 'tokens',
     breadcrumb: [{ label: _('nav.tokens') }],
     body: `
-        <div class="page tokens-page">
+        <div class="page page-wide tokens-page">
             <div class="page-head">
                 <h1>${_('nav.tokens')}</h1>
                 <p class="page-description">${_('tokens.page_description')}</p>
@@ -20,6 +23,8 @@
             <div class="page-main">
             <section class="section" aria-labelledby="tokens-list-title">
                 <div class="section-head"><h2 id="tokens-list-title">${_('tokens.list_title')}</h2></div>
+                <!-- Only in Open and Locked mode: what tokens do under the current mode (tokens.js) -->
+                <p class="notice" id="tokens-mode-notice" hidden></p>
                 <div class="toolbar">
                     <div class="toolbar-search search-wrapper">
                         <span class="material-icons" aria-hidden="true">search</span>
@@ -78,6 +83,7 @@
                     </label></li>
                 </ul></div>
                 <p class="form-status" id="enrollment-mode-status" aria-live="polite"></p>
+                ${canApprove ? `<p class="tokens-mode-next" id="enrollment-mode-requests" hidden><a href="/registrations">${_('nav.registrations')}</a>: ${_('keys.next_requests_sub')}</p>` : ''}
             </section>
 
             <section class="section" aria-labelledby="tokens-how-title">
