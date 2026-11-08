@@ -12,12 +12,9 @@
                 <p class="page-description">${_('registrations.page_description')}</p>
             </div>
 
+            <div class="page-cols">
+            <div class="page-main">
             <section class="section" aria-label="${_('nav.registrations')}">
-                <p class="notice warning" id="enrollment-mode-banner" hidden>
-                    <span id="enrollment-mode-banner-text"></span>
-                    <a href="/settings#auth" id="enrollment-mode-link" hidden>${_('registrations.mode_link')}</a>
-                </p>
-
                 <div class="toolbar">
                     <div class="toolbar-search search-wrapper">
                         <span class="material-icons" aria-hidden="true">search</span>
@@ -51,6 +48,34 @@
                     </tbody>
                 </table>
             </section>
+            </div>
+
+            <aside class="page-side" aria-label="${_('registrations.side_label')}">
+                <!-- What the current mode means for the requests in the list -->
+                <section class="section reg-mode" id="reg-mode" aria-labelledby="reg-mode-title" hidden>
+                    <div class="section-head"><h2 id="reg-mode-title">${_('tokens.enrollment_mode')}</h2></div>
+                    <p class="reg-mode-current" id="reg-mode-current"></p>
+                    <p id="enrollment-mode-banner" hidden><span id="enrollment-mode-banner-text"></span></p>
+                    <p><a href="/settings#auth" id="enrollment-mode-link" hidden>${_('registrations.mode_link')}</a></p>
+                </section>
+
+                <!-- Waiting requests by the way they came in; the mode only applies to RustDesk clients -->
+                <section class="section" id="reg-sources" aria-labelledby="reg-sources-title" hidden>
+                    <div class="section-head"><h2 id="reg-sources-title">${_('registrations.sources_title')}</h2></div>
+                    <dl class="facts reg-sources" id="reg-sources-list"></dl>
+                </section>
+
+                <section class="section" aria-labelledby="reg-steps-title">
+                    <div class="section-head"><h2 id="reg-steps-title">${_('registrations.steps_title')}</h2></div>
+                    <ol class="steps">
+                        <li>${_('registrations.step_check')}</li>
+                        <li>${_('registrations.step_approve')}</li>
+                        <li>${_('registrations.step_after')}</li>
+                        <li>${_('registrations.step_reject')}</li>
+                    </ol>
+                </section>
+            </aside>
+            </div>
         </div>
     `
 }) %>

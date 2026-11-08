@@ -3261,7 +3261,14 @@
         "delete_failed": "Der Eintrag konnte nicht gelöscht werden. Versuchen Sie es erneut.",
         "id_copied": "{id} kopiert.",
         "copy_failed": "Die ID konnte nicht kopiert werden.",
-        "filter_all": "Alle"
+        "filter_all": "Alle",
+        "side_label": "Zur Aufnahme von Geräten",
+        "sources_title": "Wartende Anfragen nach Herkunft",
+        "steps_title": "So funktioniert das Genehmigen",
+        "step_check": "Prüfen Sie, ob Sie das Gerät erwarten: Name, ID und Adresse.",
+        "step_approve": "Wählen Sie Genehmigen und geben Sie dem Gerät einen Namen. Ordner, Gruppen und Tags sind optional.",
+        "step_after": "Das Gerät erhält die Genehmigung, wenn es sich das nächste Mal beim Server meldet.",
+        "step_reject": "Lehnen Sie ein Gerät ab, das Sie nicht kennen. Einen RustDesk-Client können Sie dabei gleich sperren, damit er nicht erneut anfragt."
     },
     "backup": {
         "title": "Dashboard",

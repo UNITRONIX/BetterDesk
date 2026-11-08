@@ -3261,7 +3261,14 @@
         "delete_failed": "기록을 삭제하지 못했습니다. 다시 시도하세요.",
         "id_copied": "{id}을(를) 복사했습니다.",
         "copy_failed": "ID를 복사하지 못했습니다.",
-        "filter_all": "전체"
+        "filter_all": "전체",
+        "side_label": "등록 정보",
+        "sources_title": "출처별 대기 중인 요청",
+        "steps_title": "승인 방법",
+        "step_check": "예상한 기기인지 이름, ID, 주소를 확인합니다.",
+        "step_approve": "승인을 선택하고 기기 이름을 지정합니다. 폴더, 그룹, 태그는 선택 사항입니다.",
+        "step_after": "기기는 다음에 서버에 연결할 때 승인을 받습니다.",
+        "step_reject": "모르는 기기는 거부합니다. RustDesk 클라이언트는 동시에 차단할 수 있어 다시 요청할 수 없습니다."
     },
     "backup": {
         "title": "Backup",

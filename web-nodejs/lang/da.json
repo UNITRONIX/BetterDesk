@@ -3267,7 +3267,14 @@
         "delete_failed": "Posten kunne ikke slettes. Prøv igen.",
         "id_copied": "{id} kopieret.",
         "copy_failed": "ID'et kunne ikke kopieres.",
-        "filter_all": "Alle"
+        "filter_all": "Alle",
+        "side_label": "Om tilmelding",
+        "sources_title": "Ventende anmodninger efter kilde",
+        "steps_title": "Sådan fungerer godkendelse",
+        "step_check": "Tjek, at du forventer enheden: navn, ID og adresse.",
+        "step_approve": "Vælg Godkend og giv enheden et navn. Mappe, grupper og tags er valgfrie.",
+        "step_after": "Enheden får godkendelsen, næste gang den kontakter serveren.",
+        "step_reject": "Afvis en enhed, du ikke kender. En RustDesk-klient kan spærres samtidig, så den ikke kan spørge igen."
     },
     "backup": {
         "title": "Sikkerhedskopi",

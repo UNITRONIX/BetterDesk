@@ -3279,7 +3279,14 @@
         "delete_failed": "Nie udało się usunąć wpisu. Spróbuj ponownie.",
         "id_copied": "Skopiowano {id}.",
         "copy_failed": "Nie udało się skopiować ID.",
-        "filter_all": "Wszystkie"
+        "filter_all": "Wszystkie",
+        "side_label": "O rejestracji",
+        "sources_title": "Oczekujące prośby według źródła",
+        "steps_title": "Jak działa zatwierdzanie",
+        "step_check": "Sprawdź, czy spodziewasz się tego urządzenia: nazwa, ID i adres.",
+        "step_approve": "Wybierz Zatwierdź i nadaj urządzeniu nazwę. Folder, grupy i tagi są opcjonalne.",
+        "step_after": "Urządzenie otrzyma zatwierdzenie przy następnym połączeniu z serwerem.",
+        "step_reject": "Odrzuć urządzenie, którego nie rozpoznajesz. Klienta RustDesk można przy tym zablokować, aby nie prosił ponownie."
     },
     "backup": {
         "title": "Kopia zapasowa",

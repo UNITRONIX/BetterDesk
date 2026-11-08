@@ -3261,7 +3261,14 @@
         "delete_failed": "No se pudo eliminar el registro. Inténtelo de nuevo.",
         "id_copied": "{id} copiado.",
         "copy_failed": "No se pudo copiar el ID.",
-        "filter_all": "Todas"
+        "filter_all": "Todas",
+        "side_label": "Acerca de la inscripción",
+        "sources_title": "Solicitudes en espera por origen",
+        "steps_title": "Cómo funciona la aprobación",
+        "step_check": "Compruebe que espera el dispositivo: su nombre, ID y dirección.",
+        "step_approve": "Elija Aprobar y dé un nombre al dispositivo. La carpeta, los grupos y las etiquetas son opcionales.",
+        "step_after": "El dispositivo recibe la aprobación la próxima vez que contacta con el servidor.",
+        "step_reject": "Rechace un dispositivo que no reconozca. Un cliente RustDesk se puede bloquear a la vez para que no vuelva a pedirlo."
     },
     "backup": {
         "title": "Panel",

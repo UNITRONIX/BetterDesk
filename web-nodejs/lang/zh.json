@@ -3261,7 +3261,14 @@
         "delete_failed": "无法删除该记录。请重试。",
         "id_copied": "已复制 {id}。",
         "copy_failed": "无法复制 ID。",
-        "filter_all": "全部"
+        "filter_all": "全部",
+        "side_label": "关于注册",
+        "sources_title": "按来源统计的等待中请求",
+        "steps_title": "批准流程",
+        "step_check": "确认这是您预期的设备：名称、ID 和地址。",
+        "step_approve": "选择“批准”并为设备命名。文件夹、组和标签可选。",
+        "step_after": "设备下次连接服务器时会收到批准。",
+        "step_reject": "拒绝您不认识的设备。RustDesk 客户端可同时封禁，使其无法再次申请。"
     },
     "backup": {
         "title": "备份",

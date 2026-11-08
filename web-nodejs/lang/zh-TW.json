@@ -3283,7 +3283,14 @@
         "delete_failed": "無法刪除此記錄。請再試一次。",
         "id_copied": "已複製 {id}。",
         "copy_failed": "無法複製 ID。",
-        "filter_all": "全部"
+        "filter_all": "全部",
+        "side_label": "關於註冊",
+        "sources_title": "依來源統計的等待中請求",
+        "steps_title": "核准流程",
+        "step_check": "確認這是您預期的裝置：名稱、ID 和位址。",
+        "step_approve": "選擇「核准」並為裝置命名。資料夾、群組和標籤可選。",
+        "step_after": "裝置下次連線伺服器時會收到核准。",
+        "step_reject": "拒絕您不認識的裝置。RustDesk 用戶端可同時封鎖，使其無法再次申請。"
     },
     "backup": {
         "title": "備份",

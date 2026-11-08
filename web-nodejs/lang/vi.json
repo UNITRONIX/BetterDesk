@@ -3267,7 +3267,14 @@
         "delete_failed": "Không thể xóa bản ghi. Hãy thử lại.",
         "id_copied": "Đã sao chép {id}.",
         "copy_failed": "Không thể sao chép ID.",
-        "filter_all": "Tất cả"
+        "filter_all": "Tất cả",
+        "side_label": "Về việc đăng ký",
+        "sources_title": "Yêu cầu đang chờ theo nguồn",
+        "steps_title": "Cách phê duyệt",
+        "step_check": "Kiểm tra đây là thiết bị bạn đang chờ: tên, ID và địa chỉ.",
+        "step_approve": "Chọn Phê duyệt và đặt tên cho thiết bị. Thư mục, nhóm và thẻ là tùy chọn.",
+        "step_after": "Thiết bị nhận được phê duyệt vào lần kết nối máy chủ tiếp theo.",
+        "step_reject": "Từ chối thiết bị bạn không nhận ra. Có thể cấm máy khách RustDesk cùng lúc để nó không thể yêu cầu lại."
     },
     "backup": {
         "title": "Backup",

@@ -3267,7 +3267,14 @@
         "delete_failed": "Catatan tidak dapat dihapus. Coba lagi.",
         "id_copied": "{id} disalin.",
         "copy_failed": "ID tidak dapat disalin.",
-        "filter_all": "Semua"
+        "filter_all": "Semua",
+        "side_label": "Tentang pendaftaran",
+        "sources_title": "Permintaan menunggu menurut sumber",
+        "steps_title": "Cara kerja persetujuan",
+        "step_check": "Pastikan Anda memang menunggu perangkat ini: nama, ID, dan alamatnya.",
+        "step_approve": "Pilih Setujui dan beri nama perangkat. Folder, grup, dan tag bersifat opsional.",
+        "step_after": "Perangkat menerima persetujuan saat berikutnya menghubungi server.",
+        "step_reject": "Tolak perangkat yang tidak Anda kenali. Klien RustDesk dapat diblokir sekaligus agar tidak meminta lagi."
     },
     "backup": {
         "title": "Backup",

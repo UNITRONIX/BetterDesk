@@ -33,6 +33,7 @@
     const decided = new Map();
 
     let enrollmentUi = { mode: 'managed', rich_approve: true, tag_picker: true };
+    let modeKnown = false;
     let folders = null;
     let groups = null;
     let tags = null;
@@ -45,6 +46,10 @@
     const modeNotice = document.getElementById('enrollment-mode-banner');
     const modeNoticeText = document.getElementById('enrollment-mode-banner-text');
     const modeLink = document.getElementById('enrollment-mode-link');
+    const modeSection = document.getElementById('reg-mode');
+    const modeCurrent = document.getElementById('reg-mode-current');
+    const sourcesSection = document.getElementById('reg-sources');
+    const sourcesList = document.getElementById('reg-sources-list');
 
     // ---- API ----
 
@@ -186,7 +191,11 @@
 
     async function loadEnrollmentUiSettings() {
         const result = await apiFetch('/api/registrations/enrollment-ui');
-        if (result.success && result.data) enrollmentUi = { ...enrollmentUi, ...result.data };
+        if (result.success && result.data) {
+            enrollmentUi = { ...enrollmentUi, ...result.data };
+            modeKnown = true;
+        }
+        updateModeNotice();
     }
 
     // Keep the sidebar count in step after a decision (app.js polls it too)
@@ -281,19 +290,19 @@
         const named = `aria-describedby="${nameId}"`;
 
         if (row.status === 'pending' && !decided.has(row.key)) {
-            inline = `<button type="button" class="btn btn-sm" ${actionAttrs(row, 'approve')} ${named}>${esc(_('registrations.approve_btn'))}</button>
-                <button type="button" class="btn btn-sm btn-danger-quiet desktop-only" ${actionAttrs(row, 'reject')} ${named}>${esc(_('registrations.reject_btn'))}</button>`;
-            menuItems.push(`<button type="button" class="menu-item danger phone-only" role="menuitem" ${actionAttrs(row, 'reject')}>${esc(_('registrations.reject_btn'))}…</button>`);
+            inline = `<button type="button" class="btn btn-sm" ${actionAttrs(row, 'approve')} ${named}>${Utils.icon('approve')}<span>${esc(_('registrations.approve_btn'))}</span></button>
+                <button type="button" class="btn btn-sm btn-danger-quiet desktop-only" ${actionAttrs(row, 'reject')} ${named}>${Utils.icon('reject')}<span>${esc(_('registrations.reject_btn'))}</span></button>`;
+            menuItems.push(`<button type="button" class="menu-item danger phone-only" role="menuitem" ${actionAttrs(row, 'reject')}>${Utils.icon('reject')}<span>${esc(_('registrations.reject_btn'))}…</span></button>`);
         } else if (row.status === 'approved') {
             inline = `<a class="btn-link" href="/devices?search=${encodeURIComponent(row.device_id)}" ${named}>${esc(_('registrations.open_device'))}</a>`;
         } else if (row.status === 'rejected' && row.source === SOURCE_ENROLLMENT && !decided.has(row.key)) {
             inline = `<button type="button" class="btn btn-sm" ${actionAttrs(row, 'clear-rejection')} ${named}>${esc(_('registrations.allow_again'))}</button>`;
         }
 
-        menuItems.push(`<button type="button" class="menu-item" role="menuitem" ${actionAttrs(row, 'copy')}>${esc(_('registrations.copy_id'))}</button>`);
+        menuItems.push(`<button type="button" class="menu-item" role="menuitem" ${actionAttrs(row, 'copy')}>${Utils.icon('copy')}<span>${esc(_('registrations.copy_id'))}</span></button>`);
         if (isLan && row.status !== 'pending' && can('enrollment.manage')) {
             menuItems.push('<span class="menu-divider" role="separator"></span>');
-            menuItems.push(`<button type="button" class="menu-item danger" role="menuitem" ${actionAttrs(row, 'remove')}>${esc(_('registrations.delete_record'))}</button>`);
+            menuItems.push(`<button type="button" class="menu-item danger" role="menuitem" ${actionAttrs(row, 'remove')}>${Utils.icon('delete')}<span>${esc(_('registrations.delete_record'))}</span></button>`);
         }
         return `${inline}${menuHtml(row, `reg-menu-${index}`, menuItems, nameId)}`;
     }
@@ -357,22 +366,60 @@
             text += ' ' + _('registrations.count_shown', { count: shown });
         }
         countLine.textContent = text;
+        renderSources();
     }
 
+    // Side column: the current enrollment mode in words, and what it means
+    // for the RustDesk requests in the list
     function updateModeNotice() {
         if (!modeNotice) return;
-        const mode = enrollmentUi.mode || 'managed';
+        const mode = ['open', 'managed', 'locked'].includes(enrollmentUi.mode) ? enrollmentUi.mode : 'managed';
+        const canChange = can('server.config');
+        if (modeSection && modeCurrent && modeKnown) {
+            modeCurrent.textContent = '';
+            const name = document.createElement('strong');
+            name.textContent = _(`tokens.mode_${mode}`);
+            modeCurrent.appendChild(name);
+            modeCurrent.appendChild(document.createTextNode('. ' + _(`tokens.mode_${mode}_desc`)));
+            modeSection.hidden = false;
+        }
+        if (modeLink) modeLink.hidden = !canChange;
         if (mode === 'managed' || goPendingCount === 0) {
             modeNotice.hidden = true;
             return;
         }
         const key = mode === 'locked' ? 'registrations.mode_locked_pending' : 'registrations.mode_open_pending';
         let text = _(key, { count: goPendingCount });
-        const canChange = can('server.config');
         if (!canChange) text += ' ' + _('registrations.mode_admin_only');
-        modeNoticeText.textContent = text + (canChange ? ' ' : '');
-        if (modeLink) modeLink.hidden = !canChange;
+        modeNoticeText.textContent = text;
         modeNotice.hidden = false;
+    }
+
+    // Side column: waiting requests by the way they came in. The enrollment
+    // mode applies to RustDesk clients only, so the split helps to read it.
+    function renderSources() {
+        if (!sourcesSection || !sourcesList) return;
+        const waiting = rows.filter(r => r.status === 'pending' && !decided.has(r.key));
+        if (loadFailed || !waiting.length) {
+            sourcesSection.hidden = true;
+            return;
+        }
+        const fmt = new Intl.NumberFormat((window.BetterDesk && window.BetterDesk.lang) || undefined);
+        const parts = [
+            { label: _('registrations.source_rustdesk'), n: waiting.filter(r => r.source === SOURCE_ENROLLMENT).length },
+            { label: _('registrations.source_lan'), n: waiting.filter(r => r.source === SOURCE_REGISTRATION).length },
+        ];
+        sourcesList.textContent = '';
+        parts.forEach((p) => {
+            const dt = document.createElement('dt');
+            dt.textContent = p.label;
+            const dd = document.createElement('dd');
+            dd.className = 'num';
+            dd.textContent = fmt.format(p.n);
+            sourcesList.appendChild(dt);
+            sourcesList.appendChild(dd);
+        });
+        sourcesSection.hidden = false;
     }
 
     // ---- Approve dialog ----
@@ -402,7 +449,7 @@
                     <div id="approve-tags-picker" class="approve-check-grid">${tagCheckboxes([])}</div>
                     <div class="input-with-button approve-tag-new">
                         <input type="text" id="approve-tag-new" class="form-input" aria-label="${esc(_('registrations.field_tag_add_placeholder'))}" placeholder="${esc(_('registrations.field_tag_add_placeholder'))}">
-                        <button type="button" class="btn" id="approve-tag-add-btn">${esc(_('registrations.field_tag_add_btn'))}</button>
+                        <button type="button" class="btn" id="approve-tag-add-btn">${Utils.icon('add')}<span>${esc(_('registrations.field_tag_add_btn'))}</span></button>
                     </div>
                </fieldset>`
             : `<div class="form-group">

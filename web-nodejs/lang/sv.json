@@ -3267,7 +3267,14 @@
         "delete_failed": "Det gick inte att ta bort posten. Försök igen.",
         "id_copied": "{id} kopierat.",
         "copy_failed": "Det gick inte att kopiera ID:t.",
-        "filter_all": "Alla"
+        "filter_all": "Alla",
+        "side_label": "Om registrering",
+        "sources_title": "Väntande förfrågningar per källa",
+        "steps_title": "Så fungerar godkännande",
+        "step_check": "Kontrollera att du väntar dig enheten: namn, ID och adress.",
+        "step_approve": "Välj Godkänn och ge enheten ett namn. Mapp, grupper och taggar är valfria.",
+        "step_after": "Enheten får godkännandet nästa gång den kontaktar servern.",
+        "step_reject": "Avvisa en enhet du inte känner igen. En RustDesk-klient kan spärras samtidigt så att den inte kan fråga igen."
     },
     "backup": {
         "title": "Säkerhetskopia",

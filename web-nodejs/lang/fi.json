@@ -3267,7 +3267,14 @@
         "delete_failed": "Merkintää ei voitu poistaa. Yritä uudelleen.",
         "id_copied": "{id} kopioitu.",
         "copy_failed": "ID:tä ei voitu kopioida.",
-        "filter_all": "Kaikki"
+        "filter_all": "Kaikki",
+        "side_label": "Tietoa rekisteröinnistä",
+        "sources_title": "Odottavat pyynnöt lähteen mukaan",
+        "steps_title": "Näin hyväksyminen toimii",
+        "step_check": "Tarkista, että odotat laitetta: nimi, tunnus ja osoite.",
+        "step_approve": "Valitse Hyväksy ja anna laitteelle nimi. Kansio, ryhmät ja tunnisteet ovat valinnaisia.",
+        "step_after": "Laite saa hyväksynnän, kun se seuraavan kerran ottaa yhteyttä palvelimeen.",
+        "step_reject": "Hylkää laite, jota et tunnista. RustDesk-asiakkaan voi samalla estää, jotta se ei voi pyytää uudelleen."
     },
     "backup": {
         "title": "Varmuuskopio",

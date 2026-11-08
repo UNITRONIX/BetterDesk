@@ -3267,7 +3267,14 @@
         "delete_failed": "Nem sikerült törölni a bejegyzést. Próbálja újra.",
         "id_copied": "{id} kimásolva.",
         "copy_failed": "Nem sikerült kimásolni az azonosítót.",
-        "filter_all": "Összes"
+        "filter_all": "Összes",
+        "side_label": "A regisztrációról",
+        "sources_title": "Várakozó kérések forrás szerint",
+        "steps_title": "Így működik a jóváhagyás",
+        "step_check": "Ellenőrizze, hogy várja-e az eszközt: név, azonosító és cím.",
+        "step_approve": "Válassza a Jóváhagyás lehetőséget, és adjon nevet az eszköznek. A mappa, a csoportok és a címkék nem kötelezők.",
+        "step_after": "Az eszköz a következő alkalommal kapja meg a jóváhagyást, amikor kapcsolódik a szerverhez.",
+        "step_reject": "Utasítsa el az ismeretlen eszközt. Egy RustDesk-klienst egyúttal le is tilthat, így nem kérhet újra."
     },
     "backup": {
         "title": "Biztonsági mentés",

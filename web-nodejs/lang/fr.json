@@ -3283,7 +3283,14 @@
         "delete_failed": "Impossible de supprimer l'entrée. Réessayez.",
         "id_copied": "{id} copié.",
         "copy_failed": "Impossible de copier l'ID.",
-        "filter_all": "Toutes"
+        "filter_all": "Toutes",
+        "side_label": "À propos de l'inscription",
+        "sources_title": "Demandes en attente par origine",
+        "steps_title": "Comment fonctionne l'approbation",
+        "step_check": "Vérifiez que vous attendez cet appareil : son nom, son ID et son adresse.",
+        "step_approve": "Choisissez Approuver et donnez un nom à l'appareil. Le dossier, les groupes et les étiquettes sont facultatifs.",
+        "step_after": "L'appareil reçoit l'approbation la prochaine fois qu'il contacte le serveur.",
+        "step_reject": "Refusez un appareil que vous ne reconnaissez pas. Un client RustDesk peut être banni en même temps pour qu'il ne redemande pas."
     },
     "backup": {
         "title": "Tableau de bord",

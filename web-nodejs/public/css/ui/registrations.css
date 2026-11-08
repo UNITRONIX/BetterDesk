@@ -48,6 +48,25 @@
     display: none;
 }
 
+/* With the side column beside the table the address and the queue name
+   leave the row (both are in the approve dialog, and the side column
+   counts the queues) */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .registrations-table .col-ip,
+    .registrations-table .col-source {
+        display: none;
+    }
+}
+
+/* Side column: waiting requests per source, the number at the end */
+.reg-sources {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.reg-sources > dd {
+    justify-content: flex-end;
+}
+
 /* Medium widths: the address and the queue name move into the dialog */
 @media (max-width: 1100px) {
     .registrations-table .col-ip,
@@ -184,4 +203,22 @@
     .approve-facts {
         grid-template-columns: minmax(0, 1fr);
     }
+}
+
+/* Short label and number: keep them on one row on a phone too */
+@media (max-width: 640px) {
+    .reg-sources > dt {
+        min-height: var(--row-h);
+        padding-bottom: var(--row-pad-y);
+        border-bottom: 1px solid var(--rule);
+        font-size: inherit;
+    }
+
+    .reg-sources > dd {
+        padding-top: var(--row-pad-y);
+    }
+}
+
+.reg-mode p {
+    max-width: var(--measure);
 }

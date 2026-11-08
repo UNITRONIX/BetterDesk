@@ -3340,7 +3340,14 @@
         "delete_failed": "Could not delete the record. Try again.",
         "id_copied": "Copied {id}.",
         "copy_failed": "Could not copy the ID.",
-        "filter_all": "All"
+        "filter_all": "All",
+        "side_label": "About enrollment",
+        "sources_title": "Waiting requests by source",
+        "steps_title": "How approving works",
+        "step_check": "Check that you expect the device: its name, ID and address.",
+        "step_approve": "Choose Approve and give the device a name. A folder, groups and tags are optional.",
+        "step_after": "The device gets the approval the next time it contacts the server.",
+        "step_reject": "Reject a device you don't recognise. A RustDesk client can be banned at the same time, so it cannot ask again."
     },
     "backup": {
         "title": "Backup",

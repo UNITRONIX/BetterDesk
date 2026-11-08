@@ -3261,7 +3261,14 @@
         "delete_failed": "記録を削除できませんでした。もう一度お試しください。",
         "id_copied": "{id} をコピーしました。",
         "copy_failed": "ID をコピーできませんでした。",
-        "filter_all": "すべて"
+        "filter_all": "すべて",
+        "side_label": "登録について",
+        "sources_title": "送信元別の待機中のリクエスト",
+        "steps_title": "承認の流れ",
+        "step_check": "想定しているデバイスか、名前・ID・アドレスを確認します。",
+        "step_approve": "「承認」を選び、デバイスに名前を付けます。フォルダー、グループ、タグは任意です。",
+        "step_after": "デバイスは次にサーバーに接続したときに承認を受け取ります。",
+        "step_reject": "心当たりのないデバイスは拒否します。RustDesk クライアントは同時に禁止でき、再申請できなくなります。"
     },
     "backup": {
         "title": "Backup",

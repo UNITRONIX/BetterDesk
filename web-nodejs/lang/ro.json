@@ -3267,7 +3267,14 @@
         "delete_failed": "Înregistrarea nu a putut fi ștearsă. Încercați din nou.",
         "id_copied": "{id} a fost copiat.",
         "copy_failed": "ID-ul nu a putut fi copiat.",
-        "filter_all": "Toate"
+        "filter_all": "Toate",
+        "side_label": "Despre înscriere",
+        "sources_title": "Cereri în așteptare după sursă",
+        "steps_title": "Cum funcționează aprobarea",
+        "step_check": "Verificați că așteptați dispozitivul: numele, ID-ul și adresa.",
+        "step_approve": "Alegeți Aprobă și dați un nume dispozitivului. Dosarul, grupurile și etichetele sunt opționale.",
+        "step_after": "Dispozitivul primește aprobarea data viitoare când contactează serverul.",
+        "step_reject": "Respingeți un dispozitiv pe care nu îl recunoașteți. Un client RustDesk poate fi blocat în același timp, ca să nu mai ceară."
     },
     "backup": {
         "title": "Copie de rezervă",

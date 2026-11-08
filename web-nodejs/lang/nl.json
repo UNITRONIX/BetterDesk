@@ -3261,7 +3261,14 @@
         "delete_failed": "Het item kon niet worden verwijderd. Probeer het opnieuw.",
         "id_copied": "{id} gekopieerd.",
         "copy_failed": "De ID kon niet worden gekopieerd.",
-        "filter_all": "Alle"
+        "filter_all": "Alle",
+        "side_label": "Over aanmelden",
+        "sources_title": "Wachtende aanvragen per bron",
+        "steps_title": "Zo werkt goedkeuren",
+        "step_check": "Controleer of u het apparaat verwacht: naam, ID en adres.",
+        "step_approve": "Kies Goedkeuren en geef het apparaat een naam. Map, groepen en tags zijn optioneel.",
+        "step_after": "Het apparaat krijgt de goedkeuring zodra het weer contact maakt met de server.",
+        "step_reject": "Wijs een apparaat af dat u niet herkent. Een RustDesk-client kunt u tegelijk blokkeren, zodat hij niet opnieuw kan vragen."
     },
     "backup": {
         "title": "Back-up",

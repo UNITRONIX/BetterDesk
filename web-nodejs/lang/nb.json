@@ -3267,7 +3267,14 @@
         "delete_failed": "Kunne ikke slette oppføringen. Prøv igjen.",
         "id_copied": "{id} kopiert.",
         "copy_failed": "Kunne ikke kopiere ID-en.",
-        "filter_all": "Alle"
+        "filter_all": "Alle",
+        "side_label": "Om innrullering",
+        "sources_title": "Ventende forespørsler etter kilde",
+        "steps_title": "Slik fungerer godkjenning",
+        "step_check": "Sjekk at du venter enheten: navn, ID og adresse.",
+        "step_approve": "Velg Godkjenn og gi enheten et navn. Mappe, grupper og tagger er valgfrie.",
+        "step_after": "Enheten får godkjenningen neste gang den kontakter serveren.",
+        "step_reject": "Avvis en enhet du ikke kjenner igjen. En RustDesk-klient kan sperres samtidig, så den ikke kan spørre igjen."
     },
     "backup": {
         "title": "Sikkerhetskopi",

@@ -3261,7 +3261,14 @@
         "delete_failed": "Záznam se nepodařilo smazat. Zkuste to znovu.",
         "id_copied": "{id} zkopírováno.",
         "copy_failed": "ID se nepodařilo zkopírovat.",
-        "filter_all": "Vše"
+        "filter_all": "Vše",
+        "side_label": "O registraci",
+        "sources_title": "Čekající žádosti podle zdroje",
+        "steps_title": "Jak funguje schválení",
+        "step_check": "Ověřte, že zařízení očekáváte: jeho název, ID a adresu.",
+        "step_approve": "Zvolte Schválit a pojmenujte zařízení. Složka, skupiny a štítky jsou volitelné.",
+        "step_after": "Zařízení dostane schválení, až se příště spojí se serverem.",
+        "step_reject": "Zamítněte zařízení, které neznáte. Klienta RustDesk lze zároveň zablokovat, aby nemohl žádat znovu."
     },
     "backup": {
         "title": "Záloha",

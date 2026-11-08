@@ -3267,7 +3267,14 @@
         "delete_failed": "Kayıt silinemedi. Tekrar deneyin.",
         "id_copied": "{id} kopyalandı.",
         "copy_failed": "Kimlik kopyalanamadı.",
-        "filter_all": "Tümü"
+        "filter_all": "Tümü",
+        "side_label": "Kayıt hakkında",
+        "sources_title": "Kaynağa göre bekleyen istekler",
+        "steps_title": "Onaylama nasıl işler",
+        "step_check": "Cihazı beklediğinizden emin olun: adı, kimliği ve adresi.",
+        "step_approve": "Onayla'yı seçin ve cihaza bir ad verin. Klasör, gruplar ve etiketler isteğe bağlıdır.",
+        "step_after": "Cihaz, sunucuya bir sonraki bağlanışında onayı alır.",
+        "step_reject": "Tanımadığınız bir cihazı reddedin. RustDesk istemcisi aynı anda yasaklanabilir, böylece tekrar isteyemez."
     },
     "backup": {
         "title": "Backup",
