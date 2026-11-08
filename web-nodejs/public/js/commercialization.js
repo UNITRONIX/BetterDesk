@@ -883,9 +883,10 @@
         });
     }
 
-    // The billing service can fail to read a session that is still running
-    // (it has no end time yet). Ended sessions can still be read by status,
-    // so the table shows those and says that running ones are missing.
+    // Older Go servers fail to read a session that is still running (it has no
+    // end time yet), so the full list answers 500. Ended sessions can still be
+    // read by status: only then does the table show those and say that running
+    // ones are missing. A server that lists everything never reaches this.
     async function loadEndedSessions(params) {
         const lists = await Promise.all(['pending_report', 'closed'].map((status) => {
             const q = new URLSearchParams(params);
