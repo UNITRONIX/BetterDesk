@@ -4806,5 +4806,14 @@
         "revoke_failed": "Không thể thu hồi mã",
         "created": "Đã tạo mã ghép nối",
         "create_failed": "Không thể tạo mã ghép nối"
+    },
+    "ui_form": {
+        "unsaved": "Thay đổi chưa lưu",
+        "saved": "Đã lưu",
+        "save_failed": "Không lưu được. Thay đổi của bạn vẫn còn đây."
+    },
+    "chart": {
+        "role": "biểu đồ",
+        "show_table": "Hiện số liệu"
     }
 }

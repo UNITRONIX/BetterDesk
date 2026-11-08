@@ -1,0 +1,171 @@
+/*
+ * Charts drawn by public/js/ui-chart.js. Thin marks on a quiet grid; text in
+ * the text colours, never in the series colour. Series colours are tokens
+ * (--series-1..3) so light and dark each use their own validated step.
+ */
+
+.chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    min-width: 0;
+}
+
+.chart-summary {
+    max-width: var(--measure);
+}
+
+.chart-plot {
+    position: relative;
+    direction: ltr; /* time runs left to right in every language */
+    min-width: 0;
+    border-radius: var(--radius-sm);
+}
+
+.chart-plot svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.chart-plot:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 4px;
+}
+
+.chart-grid line {
+    stroke: var(--rule);
+    stroke-width: 1;
+}
+
+.chart-axis {
+    stroke: var(--border);
+    stroke-width: 1;
+}
+
+.chart-tick {
+    fill: var(--text-muted);
+    font-family: var(--font);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.chart-area {
+    stroke: none;
+    opacity: 0.1;
+}
+
+.chart-series-1 .chart-line { stroke: var(--series-1); }
+.chart-series-2 .chart-line { stroke: var(--series-2); }
+.chart-series-3 .chart-line { stroke: var(--series-3); }
+.chart-series-1 .chart-area,
+.chart-series-1 .chart-bar { fill: var(--series-1); }
+.chart-series-2 .chart-bar { fill: var(--series-2); }
+.chart-series-3 .chart-bar { fill: var(--series-3); }
+
+.chart-cross {
+    stroke: var(--border);
+    stroke-width: 1;
+    pointer-events: none;
+}
+
+.chart-dot {
+    stroke: var(--bg);
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.chart-dot-1 { fill: var(--series-1); }
+.chart-dot-2 { fill: var(--series-2); }
+.chart-dot-3 { fill: var(--series-3); }
+
+.chart-tip {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+    min-width: 96px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-float);
+    box-shadow: var(--shadow-float);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.chart-tip-x {
+    margin-bottom: 2px;
+}
+
+.chart-tip-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.chart-tip-row strong {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Legend: a short line (or block for columns) of the series colour, then the name */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.chart-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.chart-key {
+    display: inline-block;
+    width: 14px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--series-1);
+}
+
+.chart-key.is-block {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.chart-key-2 { background: var(--series-2); }
+.chart-key-3 { background: var(--series-3); }
+
+.chart-table > summary {
+    min-height: var(--control-h);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.chart-table .data-table td.num-cell {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (forced-colors: active) {
+    .chart-line { stroke: CanvasText; }
+    .chart-bar,
+    .chart-key { fill: CanvasText; background: CanvasText; }
+}

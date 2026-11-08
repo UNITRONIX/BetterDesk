@@ -76,6 +76,12 @@
     --row-pad-x: var(--space-3);
     --row-pad-y: var(--space-2);
 
+    /* Chart series (validated together for colour-blind separation and 3:1 on the surface;
+       petrol is a stronger step of the accent, which itself reads too grey as a mark) */
+    --series-1: #008aa0;
+    --series-2: #c85a1e;
+    --series-3: #6250d6;
+
     /* Layout */
     --sidebar-w: 232px;
     --topbar-h: 48px;
@@ -86,6 +92,9 @@
 
 :root[data-theme="dark"] {
     --on-accent: #0c1b1e;
+    --series-1: #21a3b5;
+    --series-2: #d06a2c;
+    --series-3: #9085e9;
     --shadow-float: 0 8px 28px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 

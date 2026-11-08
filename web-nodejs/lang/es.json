@@ -4800,5 +4800,14 @@
         "revoke_failed": "No se pudo revocar el código",
         "created": "Código de emparejamiento creado",
         "create_failed": "No se pudo crear un código de emparejamiento"
+    },
+    "ui_form": {
+        "unsaved": "Cambios sin guardar",
+        "saved": "Guardado",
+        "save_failed": "No se pudo guardar. Sus cambios siguen aquí."
+    },
+    "chart": {
+        "role": "gráfico",
+        "show_table": "Mostrar los números"
     }
 }

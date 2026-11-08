@@ -4806,5 +4806,14 @@
         "revoke_failed": "Kod iptal edilemedi",
         "created": "Eşleştirme kodu oluşturuldu",
         "create_failed": "Eşleştirme kodu oluşturulamadı"
+    },
+    "ui_form": {
+        "unsaved": "Kaydedilmemiş değişiklikler",
+        "saved": "Kaydedildi",
+        "save_failed": "Kaydedilemedi. Değişiklikleriniz duruyor."
+    },
+    "chart": {
+        "role": "grafik",
+        "show_table": "Sayıları göster"
     }
 }

@@ -4800,5 +4800,14 @@
         "revoke_failed": "Code konnte nicht widerrufen werden",
         "created": "Kopplungscode erstellt",
         "create_failed": "Kopplungscode konnte nicht erstellt werden"
+    },
+    "ui_form": {
+        "unsaved": "Ungespeicherte Änderungen",
+        "saved": "Gespeichert",
+        "save_failed": "Speichern fehlgeschlagen. Ihre Änderungen sind noch da."
+    },
+    "chart": {
+        "role": "Diagramm",
+        "show_table": "Zahlen anzeigen"
     }
 }

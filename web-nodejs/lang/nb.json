@@ -4806,5 +4806,14 @@
         "revoke_failed": "Kunne ikke tilbakekalle koden",
         "created": "Sammenkoblingskode opprettet",
         "create_failed": "Kunne ikke opprette en sammenkoblingskode"
+    },
+    "ui_form": {
+        "unsaved": "Endringer er ikke lagret",
+        "saved": "Lagret",
+        "save_failed": "Kunne ikke lagre. Endringene dine er fortsatt her."
+    },
+    "chart": {
+        "role": "diagram",
+        "show_table": "Vis tallene"
     }
 }

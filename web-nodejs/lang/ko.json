@@ -4800,5 +4800,14 @@
         "revoke_failed": "코드를 취소할 수 없습니다",
         "created": "페어링 코드가 생성되었습니다",
         "create_failed": "페어링 코드를 만들 수 없습니다"
+    },
+    "ui_form": {
+        "unsaved": "저장되지 않은 변경 사항",
+        "saved": "저장됨",
+        "save_failed": "저장하지 못했습니다. 변경 사항은 그대로 있습니다."
+    },
+    "chart": {
+        "role": "차트",
+        "show_table": "숫자 보기"
     }
 }

@@ -4804,5 +4804,14 @@
         "revoke_failed": "無法撤銷代碼",
         "created": "配對碼已建立",
         "create_failed": "無法建立配對碼"
+    },
+    "ui_form": {
+        "unsaved": "有未儲存的變更",
+        "saved": "已儲存",
+        "save_failed": "無法儲存。您的變更仍保留著。"
+    },
+    "chart": {
+        "role": "圖表",
+        "show_table": "顯示數字"
     }
 }

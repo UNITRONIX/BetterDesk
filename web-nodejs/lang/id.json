@@ -4806,5 +4806,14 @@
         "revoke_failed": "Tidak dapat mencabut kode",
         "created": "Kode pemasangan dibuat",
         "create_failed": "Tidak dapat membuat kode pemasangan"
+    },
+    "ui_form": {
+        "unsaved": "Perubahan belum disimpan",
+        "saved": "Tersimpan",
+        "save_failed": "Gagal menyimpan. Perubahan Anda masih ada."
+    },
+    "chart": {
+        "role": "grafik",
+        "show_table": "Tampilkan angka"
     }
 }

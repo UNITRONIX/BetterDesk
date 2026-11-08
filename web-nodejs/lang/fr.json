@@ -4804,5 +4804,14 @@
         "revoke_failed": "Impossible de révoquer le code",
         "created": "Code d'appairage créé",
         "create_failed": "Impossible de créer un code d'appairage"
+    },
+    "ui_form": {
+        "unsaved": "Modifications non enregistrées",
+        "saved": "Enregistré",
+        "save_failed": "Échec de l'enregistrement. Vos modifications sont conservées."
+    },
+    "chart": {
+        "role": "graphique",
+        "show_table": "Afficher les chiffres"
     }
 }

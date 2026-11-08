@@ -1,9 +1,10 @@
 <%
     const shell = 'ux35';
-    // Pages already moved to the new stylesheets (public/css/ui). The rest
-    // still load the old page CSS stack until they are reworked.
+    // Pages already moved to the new stylesheets (public/css/ui). A page
+    // opts in with uiReworked: true; the rest still load the old CSS stack.
     const REWORKED_PAGES = ['devices', 'dashboard'];
-    const reworked = typeof currentPage !== 'undefined' && REWORKED_PAGES.includes(currentPage);
+    const reworked = (typeof uiReworked !== 'undefined' && uiReworked)
+        || (typeof currentPage !== 'undefined' && REWORKED_PAGES.includes(currentPage));
     const themeMode = (branding && branding.themeMode) || 'system';
     const dataTheme = themeMode === 'light' || themeMode === 'system' ? 'light' : 'dark';
     const textDir = reworked && typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr';
@@ -84,6 +85,9 @@
             cacheVersion: '<%= cacheVersion %>',
             csrfToken: '<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>',
             user: <%- JSON.stringify(user || null) %>,
+            // What this user may do, so scripts can hide actions that would fail.
+            // The server still checks every request.
+            permissions: <%- JSON.stringify(typeof hasPermission === 'function' ? ['server.config','device.edit','device.view','device.connect','device.ban','device.delete','device.connection_mode','device.change_id','org.manage_devices','org.manage_users','org.create','org.edit','org.delete','branding.edit','enrollment.approve','enrollment.manage','billing.view','billing.manage','billing.reports','billing.export','audit.view','user.view','user.create','user.edit','user.delete','metrics.view','remote_target.view','remote_target.edit','remote_target.delete','remote_target.connect','remote_target.test','guest.create','chat.access','cdap.view','cdap.command','mesh.terminal','mesh.power','mesh.files'].filter(function (p) { return hasPermission(p); }) : []) %>,
             sessionPolicy: <%- JSON.stringify(typeof sessionPolicy !== 'undefined' ? sessionPolicy : null) %>,
             branding: <%- JSON.stringify(branding || {}) %>,
             themePalettes: <%- JSON.stringify(typeof themePalettes !== 'undefined' ? themePalettes : {}) %>,
@@ -106,6 +110,7 @@
     <script defer src="/js/accessibility.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/app.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/menu-button.js?v=<%= cacheVersion %>"></script>
+    <script defer src="/js/ui-form.js?v=<%= cacheVersion %>"></script>
     <script defer src="/js/ui-shell.js?v=<%= cacheVersion %>"></script>
     <% if (!embed) { %>
     <script defer src="/js/ux35-shell.js?v=<%= cacheVersion %>"></script>

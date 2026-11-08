@@ -4800,5 +4800,14 @@
         "revoke_failed": "Não foi possível revogar o código",
         "created": "Código de emparelhamento criado",
         "create_failed": "Não foi possível criar um código de emparelhamento"
+    },
+    "ui_form": {
+        "unsaved": "Alterações por guardar",
+        "saved": "Guardado",
+        "save_failed": "Não foi possível guardar. As suas alterações continuam aqui."
+    },
+    "chart": {
+        "role": "gráfico",
+        "show_table": "Mostrar os números"
     }
 }

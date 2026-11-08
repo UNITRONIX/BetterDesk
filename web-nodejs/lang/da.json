@@ -4806,5 +4806,14 @@
         "revoke_failed": "Kunne ikke tilbagekalde koden",
         "created": "Parringskode oprettet",
         "create_failed": "Kunne ikke oprette en parringskode"
+    },
+    "ui_form": {
+        "unsaved": "Ændringer er ikke gemt",
+        "saved": "Gemt",
+        "save_failed": "Kunne ikke gemme. Dine ændringer er der stadig."
+    },
+    "chart": {
+        "role": "diagram",
+        "show_table": "Vis tallene"
     }
 }

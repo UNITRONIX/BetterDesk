@@ -4806,5 +4806,14 @@
         "revoke_failed": "Koodin peruuttaminen epäonnistui",
         "created": "Pariliitoskoodi luotu",
         "create_failed": "Pariliitoskoodin luominen epäonnistui"
+    },
+    "ui_form": {
+        "unsaved": "Tallentamattomia muutoksia",
+        "saved": "Tallennettu",
+        "save_failed": "Tallennus epäonnistui. Muutoksesi ovat yhä tallessa."
+    },
+    "chart": {
+        "role": "kaavio",
+        "show_table": "Näytä luvut"
     }
 }

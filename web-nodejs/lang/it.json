@@ -4800,5 +4800,14 @@
         "revoke_failed": "Impossibile revocare il codice",
         "created": "Codice di abbinamento creato",
         "create_failed": "Impossibile creare un codice di abbinamento"
+    },
+    "ui_form": {
+        "unsaved": "Modifiche non salvate",
+        "saved": "Salvato",
+        "save_failed": "Impossibile salvare. Le modifiche sono ancora qui."
+    },
+    "chart": {
+        "role": "grafico",
+        "show_table": "Mostra i numeri"
     }
 }

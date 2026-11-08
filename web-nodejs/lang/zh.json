@@ -4800,5 +4800,14 @@
         "revoke_failed": "无法撤销代码",
         "created": "配对码已创建",
         "create_failed": "无法创建配对码"
+    },
+    "ui_form": {
+        "unsaved": "有未保存的更改",
+        "saved": "已保存",
+        "save_failed": "无法保存。您的更改仍保留着。"
+    },
+    "chart": {
+        "role": "图表",
+        "show_table": "显示数字"
     }
 }

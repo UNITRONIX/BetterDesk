@@ -4806,5 +4806,14 @@
         "revoke_failed": "Codul nu a putut fi revocat",
         "created": "Cod de asociere creat",
         "create_failed": "Codul de asociere nu a putut fi creat"
+    },
+    "ui_form": {
+        "unsaved": "Modificări nesalvate",
+        "saved": "Salvat",
+        "save_failed": "Nu s-a putut salva. Modificările sunt încă aici."
+    },
+    "chart": {
+        "role": "grafic",
+        "show_table": "Afișează cifrele"
     }
 }

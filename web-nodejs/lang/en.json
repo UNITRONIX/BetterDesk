@@ -4800,5 +4800,14 @@
         "revoke_failed": "Could not revoke the code",
         "created": "Pairing code created",
         "create_failed": "Could not create a pairing code"
+    },
+    "ui_form": {
+        "unsaved": "Unsaved changes",
+        "saved": "Saved",
+        "save_failed": "Could not save. Your changes are still here."
+    },
+    "chart": {
+        "role": "chart",
+        "show_table": "Show the numbers"
     }
 }

@@ -4800,5 +4800,14 @@
         "revoke_failed": "Nie udało się unieważnić kodu",
         "created": "Kod parowania utworzony",
         "create_failed": "Nie udało się utworzyć kodu parowania"
+    },
+    "ui_form": {
+        "unsaved": "Niezapisane zmiany",
+        "saved": "Zapisano",
+        "save_failed": "Nie udało się zapisać. Zmiany nadal tu są."
+    },
+    "chart": {
+        "role": "wykres",
+        "show_table": "Pokaż liczby"
     }
 }

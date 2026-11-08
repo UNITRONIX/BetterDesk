@@ -4806,5 +4806,14 @@
         "revoke_failed": "Kunde inte återkalla koden",
         "created": "Parkopplingskod skapad",
         "create_failed": "Kunde inte skapa en parkopplingskod"
+    },
+    "ui_form": {
+        "unsaved": "Osparade ändringar",
+        "saved": "Sparat",
+        "save_failed": "Det gick inte att spara. Dina ändringar finns kvar."
+    },
+    "chart": {
+        "role": "diagram",
+        "show_table": "Visa siffrorna"
     }
 }

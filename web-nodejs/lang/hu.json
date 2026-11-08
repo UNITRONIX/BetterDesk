@@ -4806,5 +4806,14 @@
         "revoke_failed": "Nem sikerült visszavonni a kódot",
         "created": "Párosítási kód létrehozva",
         "create_failed": "Nem sikerült párosítási kódot létrehozni"
+    },
+    "ui_form": {
+        "unsaved": "Nem mentett módosítások",
+        "saved": "Mentve",
+        "save_failed": "A mentés nem sikerült. A módosítások megmaradtak."
+    },
+    "chart": {
+        "role": "diagram",
+        "show_table": "Számok megjelenítése"
     }
 }

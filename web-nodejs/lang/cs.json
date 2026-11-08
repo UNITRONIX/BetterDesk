@@ -4800,5 +4800,14 @@
         "revoke_failed": "Kód se nepodařilo zrušit",
         "created": "Párovací kód vytvořen",
         "create_failed": "Párovací kód se nepodařilo vytvořit"
+    },
+    "ui_form": {
+        "unsaved": "Neuložené změny",
+        "saved": "Uloženo",
+        "save_failed": "Uložení se nezdařilo. Vaše změny zůstaly zachovány."
+    },
+    "chart": {
+        "role": "graf",
+        "show_table": "Zobrazit čísla"
     }
 }

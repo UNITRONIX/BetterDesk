@@ -1085,7 +1085,539 @@ a.list-row:hover,
     display: block;
 }
 
+/* Row menus open towards the start of the row; near the bottom, upwards */
+.menu-anchor > .menu.menu-end {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+}
+
+.menu-anchor > .menu.menu-up {
+    top: auto;
+    bottom: calc(100% + var(--space-1));
+}
+
 .btn .btn-caret {
     margin-inline-end: -4px;
     font-size: 18px;
+}
+
+/* ── Toolbar above a list: search, filters, actions at the end ── */
+
+.toolbar,
+.devices-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+}
+
+.toolbar-search {
+    flex: 1 1 240px;
+    max-width: 380px;
+}
+
+.toolbar > .form-select,
+.toolbar-end > .form-select {
+    width: auto;
+}
+
+/* Status filters: plain text buttons, the active one underlined */
+.toolbar-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+}
+
+.filter-btn {
+    min-height: var(--control-h);
+    padding: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    color: var(--text);
+}
+
+.filter-btn.active,
+.filter-btn[aria-pressed="true"] {
+    border-bottom-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+}
+
+.toolbar-end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-inline-start: auto;
+}
+
+@media (max-width: 640px) {
+    .toolbar-search {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .toolbar-end {
+        margin-inline-start: 0;
+    }
+}
+
+/* A count in a sentence: "6 devices, 3 online" */
+.count-line {
+    color: var(--text-muted);
+}
+
+.count-line strong,
+.num {
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Cell that holds row actions */
+.data-table td.actions,
+.data-table th.actions,
+.table td.actions {
+    text-align: end;
+    white-space: nowrap;
+}
+
+.data-table td.actions .btn + .btn {
+    margin-inline-start: var(--space-1);
+}
+
+.data-table .cell-sub {
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.data-table td.mono,
+.data-table td .mono {
+    font-family: var(--mono);
+}
+
+/* More status words */
+.status.ok::before,
+.status.success::before,
+.status.active::before {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.status.ok,
+.status.success {
+    color: var(--success);
+}
+
+.status.pending::before {
+    border-color: var(--warning);
+}
+
+/* ── Loading, empty and error states: one sentence, optional action ── */
+
+.state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-4) 0;
+    color: var(--text-muted);
+}
+
+.state.is-error {
+    color: var(--danger);
+}
+
+td.state-cell {
+    padding: var(--space-4) var(--row-pad-x);
+    color: var(--text-muted);
+}
+
+/* ── Forms that change settings ──
+   One column, labels above, a hint under the field, then what happens
+   after a change. Groups have a plain heading and one sentence. */
+
+.form-column {
+    max-width: var(--measure);
+}
+
+.field-effect {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.field-effect.is-restart,
+.field-effect.is-logout {
+    color: var(--warning);
+}
+
+/* Short fields (ports, numbers) do not need the full column */
+.form-input.is-short {
+    max-width: 12ch;
+}
+
+.form-input.is-medium {
+    max-width: 28ch;
+}
+
+/* Radios or checkboxes with a title and a sentence each, on rules */
+.choice-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--rule);
+}
+
+.choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px var(--space-3);
+    align-items: start;
+    padding: var(--space-3) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+}
+
+.choice:hover {
+    background: var(--bg-subtle);
+}
+
+.choice > input {
+    margin-top: 2px;
+}
+
+.choice-title {
+    font-weight: 600;
+}
+
+.choice-desc {
+    grid-column: 2;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.choice:has(input:checked) {
+    background: var(--accent-tint);
+}
+
+.choice:has(input:disabled) {
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
+/* A checkbox with a sentence under its label */
+.check-field {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px var(--space-2);
+    align-items: start;
+    cursor: pointer;
+}
+
+.check-field > input {
+    margin-top: 2px;
+}
+
+.check-field .check-label {
+    font-weight: 600;
+}
+
+.check-field .form-hint,
+.check-field .field-effect {
+    grid-column: 2;
+}
+
+/* Save bar: sticks to the bottom of the view while a form has changes */
+.save-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--rule);
+    background: var(--bg);
+}
+
+.save-status {
+    margin-inline-end: auto;
+    color: var(--text-muted);
+}
+
+.save-bar.is-dirty .save-status {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.save-status.is-ok { color: var(--success); }
+.save-status.is-error { color: var(--danger); font-weight: 600; }
+
+@media (max-width: 767px) {
+    .save-bar {
+        bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* Message next to the button that was pressed */
+.form-status {
+    color: var(--text-muted);
+}
+
+.form-status.is-ok { color: var(--success); }
+.form-status.is-error { color: var(--danger); }
+
+/* Dangerous actions sit apart at the end of the page */
+.danger-zone {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
+}
+
+.danger-zone > h2,
+.danger-zone .section-head h2 {
+    color: var(--danger);
+}
+
+.danger-zone .list-row .btn {
+    flex-shrink: 0;
+}
+
+/* Local table of contents for a long page */
+.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.toc a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h-sm);
+    color: var(--text-muted);
+}
+
+.toc a:hover,
+.toc a[aria-current="true"] {
+    color: var(--text);
+}
+
+/* Colour: the swatch and the hex value side by side */
+.color-field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.color-field input[type="color"] {
+    width: var(--control-h);
+    height: var(--control-h);
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    cursor: pointer;
+}
+
+.color-field .form-input {
+    max-width: 12ch;
+    font-family: var(--mono);
+}
+
+/* File picker: the native control with a plain button */
+input[type="file"] {
+    max-width: 100%;
+    color: var(--text-muted);
+    font: inherit;
+}
+
+input[type="file"]::file-selector-button {
+    min-height: var(--control-h);
+    margin-inline-end: var(--space-3);
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: var(--hover);
+}
+
+/* ── Meter: how full or how far, always with the number in text ── */
+
+.meter {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.meter-bar {
+    flex: 1;
+    min-width: 60px;
+    height: 6px;
+    border-radius: 1px;
+    background: var(--hover);
+    overflow: hidden;
+}
+
+.meter-fill {
+    display: block;
+    height: 100%;
+    background: var(--text-muted);
+}
+
+.meter.is-high .meter-fill { background: var(--warning); }
+.meter.is-full .meter-fill { background: var(--danger); }
+
+.meter-value {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── Code block: text people copy (scripts, configs) ── */
+
+.code-block {
+    margin: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-x: auto;
+    max-height: 420px;
+}
+
+.code-block-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.code-block-head .code-block-title {
+    margin-inline-end: auto;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* Terminal: dark in both themes, like a real terminal */
+.terminal-box {
+    min-height: 360px;
+    padding: var(--space-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: #111414;
+    color: #e3e6e6;
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+}
+
+/* ── Steps: a real sequence, numbered by the list ── */
+
+.steps {
+    margin: 0;
+    padding-inline-start: 1.5em;
+}
+
+.steps > li {
+    padding: var(--space-1) 0;
+}
+
+.steps > li::marker {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Split view: a list on the start side, the open item beside it ── */
+
+.split {
+    display: grid;
+    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+    min-height: 480px;
+    border-top: 1px solid var(--rule);
+}
+
+.split-list {
+    border-inline-end: 1px solid var(--rule);
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.split-detail {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+@media (max-width: 767px) {
+    .split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .split-list {
+        border-inline-end: 0;
+    }
+
+    .split.is-detail-open .split-list,
+    .split:not(.is-detail-open) .split-detail {
+        display: none;
+    }
+}
+
+/* ── Two or three views of the same list (list / grid) ── */
+
+.view-switch {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.view-switch > button {
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-3);
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.view-switch > button + button {
+    border-inline-start: 1px solid var(--border);
+}
+
+.view-switch > button[aria-pressed="true"],
+.view-switch > button.active {
+    background: var(--hover);
+    color: var(--text);
+    font-weight: 600;
 }
