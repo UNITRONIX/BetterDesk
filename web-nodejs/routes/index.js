@@ -131,6 +131,7 @@ router.use('/api/bd', fileTransferRoutes);       // device-facing: /api/bd/file-
 router.use('/api/network', networkRoutes);       // admin-facing: /api/network/*
 router.use('/api/dataguard', dataguardRoutes);   // admin-facing: /api/dataguard/*
 router.use('/api/bd', dataguardRoutes);          // device-facing: /api/bd/dlp-policies, /api/bd/dlp-events
+router.use('/', lazyRoute('./trends.routes'));   // admin-facing: /api/reports/trends (before the reports router)
 router.use('/api/reports', reportsRoutes);       // admin-facing: /api/reports/*
 router.use('/api/tenants', tenantsRoutes);       // admin-facing: /api/tenants/*
 router.use('/', registrationRoutes);               // admin-facing: /registrations, /api/registrations/*
