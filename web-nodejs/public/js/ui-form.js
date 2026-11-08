@@ -34,9 +34,20 @@
         };
     }
 
+    // Only a form with unsaved changes gets the primary save button, so a page
+    // with several forms still shows one primary action at a time.
+    function setPrimary(form, on) {
+        // A page with one form keeps its save button primary
+        if (document.querySelectorAll('[data-save-form]').length < 2) return;
+        form.querySelectorAll('[data-save-button]').forEach((b) => {
+            b.classList.toggle('btn-primary', on);
+        });
+    }
+
     function setStatus(form, text, kind) {
         const { bar, status } = parts(form);
         if (bar) bar.classList.toggle('is-dirty', kind === 'dirty');
+        setPrimary(form, kind === 'dirty');
         if (!status) return;
         status.textContent = text || '';
         status.classList.toggle('is-ok', kind === 'ok');
@@ -70,6 +81,9 @@
         if (forms.has(form)) return;
         forms.add(form);
         form.dataset.dirty = 'false';
+        if (forms.size > 1 || document.querySelectorAll('[data-save-form]').length > 1) {
+            document.querySelectorAll('[data-save-form]').forEach((f) => { if (f.dataset.dirty !== 'true') setPrimary(f, false); });
+        }
         const onChange = (e) => {
             if (e.target && e.target.closest('[data-save-ignore]')) return;
             markDirty(form);
