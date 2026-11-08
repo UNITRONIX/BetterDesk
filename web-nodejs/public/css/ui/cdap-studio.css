@@ -304,7 +304,6 @@ body.studio-body {
 
 .studio-node-type {
     fill: var(--text-muted);
-    font-family: var(--mono);
     font-size: 11px;
     pointer-events: none;
 }
@@ -439,7 +438,6 @@ body.studio-body {
 .studio-inspector-type {
     display: block;
     color: var(--text-muted);
-    font-family: var(--mono);
     font-size: var(--text-sm);
     font-weight: 400;
 }

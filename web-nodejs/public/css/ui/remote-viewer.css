@@ -470,7 +470,6 @@
 
 .type-text-input {
     min-height: 72px;
-    font-family: var(--mono);
 }
 
 .type-text-send {
