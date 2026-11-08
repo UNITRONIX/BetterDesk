@@ -74,6 +74,9 @@ type Server struct {
 	// branding endpoints to deter device-ID enumeration and config probing.
 	enrollmentLimiter *ratelimit.IPLimiter
 	brandingLimiter   *ratelimit.IPLimiter
+	// Short-code pairing: redeem is public and guessable, so it gets its own budget
+	// separate from enrollment (a paired device must not consume the enrollment budget).
+	pairingLimiter *ratelimit.IPLimiter
 	keyPair           *crypto.KeyPair // Ed25519 keypair for signing
 	telemetryPrivate  [32]byte        // X25519 private key for telemetry envelopes
 	telemetryPublic   [32]byte        // X25519 public key for telemetry envelopes
@@ -117,6 +120,9 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		heartbeatLimiter:  ratelimit.NewIPLimiter(20, 60*time.Second, 5*time.Minute), // BD-2026-001: 20 req/min per IP
 		enrollmentLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),  // M-07: 20/min per IP, 5-min block
 		brandingLimiter:   ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M-07: 60/min per IP
+		// 10/min per IP: a person redeems once; a script brute-forcing 30 bits would
+		// need ~10^7 minutes at this rate.
+		pairingLimiter: ratelimit.NewIPLimiter(10, 1*time.Minute, 5*time.Minute),
 		clientTFASessions: newTFASessionStore(),
 		secureClientKeys:  make(map[string][32]byte),
 	}
@@ -571,6 +577,15 @@ func (s *Server) Start(ctx context.Context) error {
 	// Branding (GET is public for desktop clients, POST is admin)
 	mux.HandleFunc("GET /api/branding", s.rateLimitPublic(s.brandingLimiter, s.handleGetBranding))
 	mux.HandleFunc("POST /api/branding", s.requireRole(auth.RoleAdmin, s.handleSaveBranding))
+
+	// Short-code pairing (host + 6 characters).
+	// Redeem/preview are public because the client has no credentials yet; they are
+	// rate-limited and a valid code is required. Minting and revoking require an operator.
+	mux.HandleFunc("POST /api/pairing/redeem", s.rateLimitPublic(s.pairingLimiter, s.handlePairingRedeem))
+	mux.HandleFunc("POST /api/pairing/config", s.rateLimitPublic(s.pairingLimiter, s.handlePairingConfigPreview))
+	mux.HandleFunc("POST /api/pairing/codes", s.requireRole(auth.RoleOperator, s.handleCreatePairingCode))
+	mux.HandleFunc("GET /api/pairing/codes", s.requireRole(auth.RoleOperator, s.handleListPairingCodes))
+	mux.HandleFunc("DELETE /api/pairing/codes/{id}", s.requireRole(auth.RoleOperator, s.handleDeletePairingCode))
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.handleCDAPStatus)
