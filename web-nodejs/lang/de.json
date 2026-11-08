@@ -94,7 +94,9 @@
         "group_billing": "Abrechnung",
         "group_developer": "Entwicklerwerkzeuge",
         "server_status": "Serverstatus",
-        "account_2fa": "Zwei-Faktor-Anmeldung"
+        "account_2fa": "Zwei-Faktor-Anmeldung",
+        "more": "Mehr",
+        "fewer": "Weniger"
     },
     "auth": {
         "login": "Anmelden",
@@ -6693,5 +6695,18 @@
         "step_relay": "Sonst läuft die Sitzung über den Relay-Server ({relay}).",
         "step_relay_always": "Jede Sitzung läuft über den Relay-Server ({relay}).",
         "how_title": "So entsteht eine Verbindung"
+    },
+    "search": {
+        "open": "Suchen (Strg+K)",
+        "title": "Suchen",
+        "placeholder": "Seiten, Geräte und Personen suchen",
+        "results": "Ergebnisse",
+        "hint": "Geben Sie eine Seite, eine Geräte-ID oder einen Gerätenamen oder eine Person ein.",
+        "no_results": "Nichts gefunden. Versuchen Sie weniger oder andere Wörter.",
+        "count": "Ergebnisse: {count}",
+        "keys": "Pfeiltasten zum Bewegen, Enter zum Öffnen, Esc zum Schließen.",
+        "group_pages": "Seiten",
+        "group_devices": "Geräte",
+        "group_people": "Personen"
     }
 }

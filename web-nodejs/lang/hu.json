@@ -100,7 +100,9 @@
         "group_billing": "Számlázás",
         "group_developer": "Fejlesztői eszközök",
         "server_status": "Szerver állapota",
-        "account_2fa": "Kétlépcsős bejelentkezés"
+        "account_2fa": "Kétlépcsős bejelentkezés",
+        "more": "Továbbiak",
+        "fewer": "Kevesebb"
     },
     "auth": {
         "login": "Bejelentkezés",
@@ -6699,5 +6701,18 @@
         "step_relay": "Egyébként a munkamenet a továbbító szerveren ({relay}) át fut.",
         "step_relay_always": "Minden munkamenet a továbbító szerveren ({relay}) át fut.",
         "how_title": "Így jön létre a kapcsolat"
+    },
+    "search": {
+        "open": "Keresés (Ctrl+K)",
+        "title": "Keresés",
+        "placeholder": "Oldalak, eszközök és személyek keresése",
+        "results": "Találatok",
+        "hint": "Írjon be egy oldalt, egy eszköz azonosítóját vagy nevét, vagy egy személyt.",
+        "no_results": "Nincs találat. Próbáljon kevesebb vagy más szót.",
+        "count": "Találatok: {count}",
+        "keys": "Nyilak a mozgáshoz, Enter a megnyitáshoz, Esc a bezáráshoz.",
+        "group_pages": "Oldalak",
+        "group_devices": "Eszközök",
+        "group_people": "Személyek"
     }
 }

@@ -94,7 +94,9 @@
         "group_billing": "Fatturazione",
         "group_developer": "Strumenti per sviluppatori",
         "server_status": "Stato del server",
-        "account_2fa": "Accesso in due passaggi"
+        "account_2fa": "Accesso in due passaggi",
+        "more": "Altro",
+        "fewer": "Meno"
     },
     "auth": {
         "login": "Accedi",
@@ -6693,5 +6695,18 @@
         "step_relay": "Altrimenti la sessione passa per il server di inoltro ({relay}).",
         "step_relay_always": "Ogni sessione passa per il server di inoltro ({relay}).",
         "how_title": "Come funziona una connessione"
+    },
+    "search": {
+        "open": "Cerca (Ctrl+K)",
+        "title": "Cerca",
+        "placeholder": "Cerca pagine, dispositivi e persone",
+        "results": "Risultati",
+        "hint": "Scriva una pagina, l'ID o il nome di un dispositivo, o una persona.",
+        "no_results": "Nessun risultato. Provi con meno parole o altre.",
+        "count": "Risultati: {count}",
+        "keys": "Frecce per spostarsi, Invio per aprire, Esc per chiudere.",
+        "group_pages": "Pagine",
+        "group_devices": "Dispositivi",
+        "group_people": "Persone"
     }
 }

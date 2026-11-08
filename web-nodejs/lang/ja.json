@@ -94,7 +94,9 @@
         "group_billing": "請求",
         "group_developer": "開発者ツール",
         "server_status": "サーバーの状態",
-        "account_2fa": "2 段階サインイン"
+        "account_2fa": "2 段階サインイン",
+        "more": "その他",
+        "fewer": "閉じる"
     },
     "auth": {
         "login": "サインイン",
@@ -6693,5 +6695,18 @@
         "step_relay": "それ以外の場合、セッションはリレーサーバー ({relay}) を経由します。",
         "step_relay_always": "すべてのセッションがリレーサーバー ({relay}) を経由します。",
         "how_title": "接続のしくみ"
+    },
+    "search": {
+        "open": "検索 (Ctrl+K)",
+        "title": "検索",
+        "placeholder": "ページ、デバイス、ユーザーを検索",
+        "results": "結果",
+        "hint": "ページ名、デバイスの ID や名前、ユーザー名を入力してください。",
+        "no_results": "見つかりませんでした。語を減らすか変えてください。",
+        "count": "結果: {count}",
+        "keys": "矢印キーで移動、Enter で開く、Esc で閉じる。",
+        "group_pages": "ページ",
+        "group_devices": "デバイス",
+        "group_people": "ユーザー"
     }
 }

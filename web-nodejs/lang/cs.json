@@ -94,7 +94,9 @@
         "group_billing": "Fakturace",
         "group_developer": "Nástroje pro vývojáře",
         "server_status": "Stav serveru",
-        "account_2fa": "Dvoufázové přihlášení"
+        "account_2fa": "Dvoufázové přihlášení",
+        "more": "Další",
+        "fewer": "Méně"
     },
     "auth": {
         "login": "Přihlášení",
@@ -6693,5 +6695,18 @@
         "step_relay": "Jinak relace vede přes přenosový server ({relay}).",
         "step_relay_always": "Každá relace vede přes přenosový server ({relay}).",
         "how_title": "Jak spojení funguje"
+    },
+    "search": {
+        "open": "Hledat (Ctrl+K)",
+        "title": "Hledat",
+        "placeholder": "Hledat stránky, zařízení a lidi",
+        "results": "Výsledky",
+        "hint": "Zadejte stránku, ID nebo název zařízení, nebo osobu.",
+        "no_results": "Nic nenalezeno. Zkuste méně nebo jiná slova.",
+        "count": "Výsledků: {count}",
+        "keys": "Šipky pro pohyb, Enter pro otevření, Esc pro zavření.",
+        "group_pages": "Stránky",
+        "group_devices": "Zařízení",
+        "group_people": "Lidé"
     }
 }

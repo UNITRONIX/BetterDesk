@@ -100,7 +100,9 @@
         "group_billing": "Facturare",
         "group_developer": "Instrumente pentru dezvoltatori",
         "server_status": "Starea serverului",
-        "account_2fa": "Autentificare în doi pași"
+        "account_2fa": "Autentificare în doi pași",
+        "more": "Mai multe",
+        "fewer": "Mai puține"
     },
     "auth": {
         "login": "Conectare",
@@ -6699,5 +6701,18 @@
         "step_relay": "Altfel, sesiunea trece prin serverul de releu ({relay}).",
         "step_relay_always": "Fiecare sesiune trece prin serverul de releu ({relay}).",
         "how_title": "Cum funcționează o conexiune"
+    },
+    "search": {
+        "open": "Caută (Ctrl+K)",
+        "title": "Caută",
+        "placeholder": "Caută pagini, dispozitive și persoane",
+        "results": "Rezultate",
+        "hint": "Scrieți o pagină, ID-ul sau numele unui dispozitiv sau o persoană.",
+        "no_results": "Nimic găsit. Încercați mai puține cuvinte sau altele.",
+        "count": "Rezultate: {count}",
+        "keys": "Săgeți pentru deplasare, Enter pentru deschidere, Esc pentru închidere.",
+        "group_pages": "Pagini",
+        "group_devices": "Dispozitive",
+        "group_people": "Persoane"
     }
 }

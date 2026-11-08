@@ -98,7 +98,9 @@
         "group_billing": "計費",
         "group_developer": "開發人員工具",
         "server_status": "伺服器狀態",
-        "account_2fa": "兩步驟登入"
+        "account_2fa": "兩步驟登入",
+        "more": "更多",
+        "fewer": "收起"
     },
     "auth": {
         "login": "登錄",
@@ -6697,5 +6699,18 @@
         "step_relay": "否則工作階段會經過中繼伺服器 ({relay})。",
         "step_relay_always": "每個工作階段都會經過中繼伺服器 ({relay})。",
         "how_title": "連線如何運作"
+    },
+    "search": {
+        "open": "搜尋 (Ctrl+K)",
+        "title": "搜尋",
+        "placeholder": "搜尋頁面、裝置和人員",
+        "results": "結果",
+        "hint": "輸入頁面、裝置 ID 或名稱，或人員。",
+        "no_results": "找不到結果。請減少或改用其他字詞。",
+        "count": "結果：{count}",
+        "keys": "方向鍵移動，Enter 開啟，Esc 關閉。",
+        "group_pages": "頁面",
+        "group_devices": "裝置",
+        "group_people": "人員"
     }
 }

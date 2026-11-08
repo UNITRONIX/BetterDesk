@@ -613,8 +613,33 @@
         });
     }
 
+    // "More" rows in the sidebar: open and close the rarely used pages of a
+    // section; the choice is kept for next time (restored before paint)
+    function initNavMore() {
+        var nav = document.getElementById('ux35-sidebar-nav');
+        if (!nav) return;
+        var KEY = 'bd_nav_more_open';
+        nav.addEventListener('click', function (e) {
+            var btn = e.target.closest('.nav-more-toggle');
+            if (!btn) return;
+            var li = btn.closest('.nav-more');
+            var list = li.querySelector('.nav-more-list');
+            var open = list.hidden;
+            list.hidden = !open;
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            btn.querySelector('.nav-label').textContent = open ? t('nav.fewer', 'Fewer') : t('nav.more', 'More');
+            btn.querySelector('.nav-more-chevron').textContent = open ? 'expand_less' : 'expand_more';
+            try {
+                var state = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+                state[li.getAttribute('data-more')] = open;
+                localStorage.setItem(KEY, JSON.stringify(state));
+            } catch (err) { /* storage blocked: still works for this page */ }
+        });
+    }
+
     function init() {
         if (window.BetterDesk && window.BetterDesk.embed) return;
+        initNavMore();
         restoreSidebarWidth();
         initDrawer();
         initResize();

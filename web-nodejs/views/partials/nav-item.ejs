@@ -1,0 +1,12 @@
+<li>
+    <a href="<%= item.href %>"
+       class="ux35-sidebar-item<%= item.active ? ' active' : '' %><%= item.sub ? ' is-sub' : '' %>"
+       <% if (item.id) { %>id="<%= item.id %>"<% } %>
+       <% if (item.active) { %>aria-current="page"<% } %>
+       <% if (item.external) { %>target="_blank" rel="noopener noreferrer" title="<%= t('nav.remote_open_tab') %>"<% } %>>
+        <span class="nav-label"><%= item.text %></span>
+        <% if (item.beta) { %><span class="nav-note"><%= t('ux35.beta_badge') %></span><% } %>
+        <% if (item.external) { %><span class="nav-note" aria-hidden="true">↗</span><% } %>
+        <% if (item.countId) { %><span class="nav-count" id="<%= item.countId %>" style="display: none;">0</span><% } %>
+    </a>
+</li>

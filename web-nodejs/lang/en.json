@@ -94,7 +94,9 @@
         "group_billing": "Billing",
         "group_developer": "Developer tools",
         "server_status": "Server status",
-        "account_2fa": "Two-factor sign-in"
+        "account_2fa": "Two-factor sign-in",
+        "more": "More",
+        "fewer": "Fewer"
     },
     "mobile_nav": {
         "label": "Main navigation",
@@ -6693,5 +6695,18 @@
         "step_relay": "Otherwise the session goes through the relay server ({relay}).",
         "step_relay_always": "Every session goes through the relay server ({relay}).",
         "how_title": "How a connection works"
+    },
+    "search": {
+        "open": "Search (Ctrl+K)",
+        "title": "Search",
+        "placeholder": "Search pages, devices and people",
+        "results": "Results",
+        "hint": "Type a page, a device ID or name, or a person.",
+        "no_results": "Nothing found. Try fewer or other words.",
+        "count": "Results: {count}",
+        "keys": "Arrow keys to move, Enter to open, Esc to close.",
+        "group_pages": "Pages",
+        "group_devices": "Devices",
+        "group_people": "People"
     }
 }

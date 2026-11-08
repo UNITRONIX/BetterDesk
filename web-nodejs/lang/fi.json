@@ -100,7 +100,9 @@
         "group_billing": "Laskutus",
         "group_developer": "Kehittäjätyökalut",
         "server_status": "Palvelimen tila",
-        "account_2fa": "Kaksivaiheinen kirjautuminen"
+        "account_2fa": "Kaksivaiheinen kirjautuminen",
+        "more": "Lisää",
+        "fewer": "Vähemmän"
     },
     "auth": {
         "login": "Kirjaudu sisään",
@@ -6699,5 +6701,18 @@
         "step_relay": "Muuten istunto kulkee välityspalvelimen ({relay}) kautta.",
         "step_relay_always": "Jokainen istunto kulkee välityspalvelimen ({relay}) kautta.",
         "how_title": "Näin yhteys muodostuu"
+    },
+    "search": {
+        "open": "Hae (Ctrl+K)",
+        "title": "Hae",
+        "placeholder": "Hae sivuja, laitteita ja henkilöitä",
+        "results": "Tulokset",
+        "hint": "Kirjoita sivu, laitteen tunnus tai nimi tai henkilö.",
+        "no_results": "Ei tuloksia. Kokeile vähemmän tai eri sanoja.",
+        "count": "Tuloksia: {count}",
+        "keys": "Nuolinäppäimillä liikutaan, Enter avaa, Esc sulkee.",
+        "group_pages": "Sivut",
+        "group_devices": "Laitteet",
+        "group_people": "Henkilöt"
     }
 }

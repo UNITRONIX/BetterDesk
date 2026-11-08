@@ -27,24 +27,37 @@
                 <span class="nav-section-label"><%= section.text %></span>
                 <span class="material-icons ux35-section-chevron" aria-hidden="true"><%= section.active ? 'expand_less' : 'expand_more' %></span>
             </button>
+            <%
+                // Pages used every day stay visible; the rest sit under "More".
+                // A section with no core page, or only one extra, shows everything.
+                var corePages = section.pages.filter(function (p) { return p.core; });
+                var morePages = section.pages.filter(function (p) { return !p.core; });
+                if (!corePages.length || morePages.length <= 1) { corePages = section.pages; morePages = []; }
+                var moreOpen = morePages.some(function (p) { return p.active; });
+            %>
             <ul class="nav-list" id="nav-section-<%= section.id %>">
-                <% var lastGroup = ''; section.pages.forEach(function(item) { %>
-                <% if (item.groupText && item.groupText !== lastGroup) { lastGroup = item.groupText; %>
-                <li class="nav-group"><span class="nav-group-label"><%= item.groupText %></span></li>
-                <% } %>
-                <li>
-                    <a href="<%= item.href %>"
-                       class="ux35-sidebar-item<%= item.active ? ' active' : '' %><%= item.sub ? ' is-sub' : '' %>"
-                       <% if (item.id) { %>id="<%= item.id %>"<% } %>
-                       <% if (item.active) { %>aria-current="page"<% } %>
-                       <% if (item.external) { %>target="_blank" rel="noopener noreferrer" title="<%= _('nav.remote_open_tab') %>"<% } %>>
-                        <span class="nav-label"><%= item.text %></span>
-                        <% if (item.beta) { %><span class="nav-note"><%= _('ux35.beta_badge') %></span><% } %>
-                        <% if (item.external) { %><span class="nav-note" aria-hidden="true">↗</span><% } %>
-                        <% if (item.countId) { %><span class="nav-count" id="<%= item.countId %>" style="display: none;">0</span><% } %>
-                    </a>
-                </li>
+                <% corePages.forEach(function(item) { %>
+                <%- include('nav-item', { item: item, t: _ }) %>
                 <% }); %>
+                <% if (morePages.length) { %>
+                <li class="nav-more<%= moreOpen ? ' is-current' : '' %>" data-more="<%= section.id %>">
+                    <button type="button" class="ux35-sidebar-item nav-more-toggle"
+                            aria-expanded="<%= moreOpen ? 'true' : 'false' %>"
+                            aria-controls="nav-more-<%= section.id %>">
+                        <span class="nav-label"><%= moreOpen ? _('nav.fewer') : _('nav.more') %></span>
+                        <span class="nav-note"><%= morePages.length %></span>
+                        <span class="material-icons nav-more-chevron" aria-hidden="true"><%= moreOpen ? 'expand_less' : 'expand_more' %></span>
+                    </button>
+                    <ul class="nav-list nav-more-list" id="nav-more-<%= section.id %>"<%= moreOpen ? '' : ' hidden' %>>
+                        <% var lastGroup = ''; morePages.forEach(function(item) { %>
+                        <% if (item.groupText && item.groupText !== lastGroup) { lastGroup = item.groupText; %>
+                        <li class="nav-group"><span class="nav-group-label"><%= item.groupText %></span></li>
+                        <% } %>
+                        <%- include('nav-item', { item: item, t: _ }) %>
+                        <% }); %>
+                    </ul>
+                </li>
+                <% } %>
             </ul>
         </div>
         <% }); %>
@@ -70,6 +83,15 @@
                 if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false');
                 var i = s.querySelector('.ux35-section-chevron');
                 if (i) i.textContent = open ? 'expand_less' : 'expand_more';
+            });
+            var more = JSON.parse(localStorage.getItem('bd_nav_more_open') || '{}') || {};
+            nav.querySelectorAll('.nav-more:not(.is-current)').forEach(function (li) {
+                if (!more[li.getAttribute('data-more')]) return;
+                var b = li.querySelector('.nav-more-toggle');
+                li.querySelector('.nav-more-list').hidden = false;
+                b.setAttribute('aria-expanded', 'true');
+                b.querySelector('.nav-label').textContent = <%- JSON.stringify(_('nav.fewer')) %>;
+                b.querySelector('.nav-more-chevron').textContent = 'expand_less';
             });
             var top = parseInt(sessionStorage.getItem('bd_ux35_sidebar_scroll'), 10);
             if (top > 0) nav.scrollTop = top;

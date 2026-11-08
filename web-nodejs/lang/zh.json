@@ -94,7 +94,9 @@
         "group_billing": "计费",
         "group_developer": "开发者工具",
         "server_status": "服务器状态",
-        "account_2fa": "两步登录"
+        "account_2fa": "两步登录",
+        "more": "更多",
+        "fewer": "收起"
     },
     "auth": {
         "login": "登录",
@@ -6693,5 +6695,18 @@
         "step_relay": "否则会话会经过中继服务器 ({relay})。",
         "step_relay_always": "每个会话都会经过中继服务器 ({relay})。",
         "how_title": "连接如何工作"
+    },
+    "search": {
+        "open": "搜索 (Ctrl+K)",
+        "title": "搜索",
+        "placeholder": "搜索页面、设备和人员",
+        "results": "结果",
+        "hint": "输入页面、设备 ID 或名称，或人员。",
+        "no_results": "未找到结果。请减少或换用其他词。",
+        "count": "结果：{count}",
+        "keys": "方向键移动，Enter 打开，Esc 关闭。",
+        "group_pages": "页面",
+        "group_devices": "设备",
+        "group_people": "人员"
     }
 }

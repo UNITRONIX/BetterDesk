@@ -100,7 +100,9 @@
         "group_billing": "Thanh toán",
         "group_developer": "Công cụ nhà phát triển",
         "server_status": "Trạng thái máy chủ",
-        "account_2fa": "Đăng nhập hai bước"
+        "account_2fa": "Đăng nhập hai bước",
+        "more": "Thêm",
+        "fewer": "Bớt"
     },
     "auth": {
         "login": "Đăng nhập",
@@ -6699,5 +6701,18 @@
         "step_relay": "Nếu không, phiên sẽ đi qua máy chủ chuyển tiếp ({relay}).",
         "step_relay_always": "Mọi phiên đều đi qua máy chủ chuyển tiếp ({relay}).",
         "how_title": "Cách kết nối hoạt động"
+    },
+    "search": {
+        "open": "Tìm kiếm (Ctrl+K)",
+        "title": "Tìm kiếm",
+        "placeholder": "Tìm trang, thiết bị và người",
+        "results": "Kết quả",
+        "hint": "Nhập tên trang, ID hoặc tên thiết bị, hoặc một người.",
+        "no_results": "Không tìm thấy. Thử ít từ hơn hoặc từ khác.",
+        "count": "Kết quả: {count}",
+        "keys": "Phím mũi tên để di chuyển, Enter để mở, Esc để đóng.",
+        "group_pages": "Trang",
+        "group_devices": "Thiết bị",
+        "group_people": "Mọi người"
     }
 }

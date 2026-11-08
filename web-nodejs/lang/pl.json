@@ -94,7 +94,9 @@
         "group_billing": "Rozliczenia",
         "group_developer": "Narzędzia deweloperskie",
         "server_status": "Stan serwera",
-        "account_2fa": "Logowanie dwuskładnikowe"
+        "account_2fa": "Logowanie dwuskładnikowe",
+        "more": "Więcej",
+        "fewer": "Mniej"
     },
     "auth": {
         "login": "Zaloguj",
@@ -6693,5 +6695,18 @@
         "step_relay": "W przeciwnym razie sesja idzie przez serwer przekaźnikowy ({relay}).",
         "step_relay_always": "Każda sesja idzie przez serwer przekaźnikowy ({relay}).",
         "how_title": "Jak działa połączenie"
+    },
+    "search": {
+        "open": "Szukaj (Ctrl+K)",
+        "title": "Szukaj",
+        "placeholder": "Szukaj stron, urządzeń i osób",
+        "results": "Wyniki",
+        "hint": "Wpisz stronę, ID lub nazwę urządzenia albo osobę.",
+        "no_results": "Nic nie znaleziono. Spróbuj mniej lub innych słów.",
+        "count": "Wyniki: {count}",
+        "keys": "Strzałki, aby się przesuwać, Enter, aby otworzyć, Esc, aby zamknąć.",
+        "group_pages": "Strony",
+        "group_devices": "Urządzenia",
+        "group_people": "Osoby"
     }
 }

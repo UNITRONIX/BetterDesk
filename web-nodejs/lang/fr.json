@@ -98,7 +98,9 @@
         "group_billing": "Facturation",
         "group_developer": "Outils de développement",
         "server_status": "État du serveur",
-        "account_2fa": "Connexion à deux facteurs"
+        "account_2fa": "Connexion à deux facteurs",
+        "more": "Plus",
+        "fewer": "Moins"
     },
     "auth": {
         "login": "Connexion",
@@ -6697,5 +6699,18 @@
         "step_relay": "Sinon, la session passe par le serveur relais ({relay}).",
         "step_relay_always": "Chaque session passe par le serveur relais ({relay}).",
         "how_title": "Comment fonctionne une connexion"
+    },
+    "search": {
+        "open": "Rechercher (Ctrl+K)",
+        "title": "Rechercher",
+        "placeholder": "Rechercher pages, appareils et personnes",
+        "results": "Résultats",
+        "hint": "Saisissez une page, l'ID ou le nom d'un appareil, ou une personne.",
+        "no_results": "Aucun résultat. Essayez moins de mots ou d'autres mots.",
+        "count": "Résultats : {count}",
+        "keys": "Flèches pour se déplacer, Entrée pour ouvrir, Échap pour fermer.",
+        "group_pages": "Pages",
+        "group_devices": "Appareils",
+        "group_people": "Personnes"
     }
 }

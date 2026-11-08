@@ -100,7 +100,9 @@
         "group_billing": "Penagihan",
         "group_developer": "Alat pengembang",
         "server_status": "Status server",
-        "account_2fa": "Masuk dua langkah"
+        "account_2fa": "Masuk dua langkah",
+        "more": "Lainnya",
+        "fewer": "Lebih sedikit"
     },
     "auth": {
         "login": "Masuk",
@@ -6699,5 +6701,18 @@
         "step_relay": "Jika tidak, sesi melewati server relai ({relay}).",
         "step_relay_always": "Setiap sesi melewati server relai ({relay}).",
         "how_title": "Cara koneksi bekerja"
+    },
+    "search": {
+        "open": "Cari (Ctrl+K)",
+        "title": "Cari",
+        "placeholder": "Cari halaman, perangkat, dan orang",
+        "results": "Hasil",
+        "hint": "Ketik halaman, ID atau nama perangkat, atau orang.",
+        "no_results": "Tidak ada hasil. Coba lebih sedikit atau kata lain.",
+        "count": "Hasil: {count}",
+        "keys": "Tombol panah untuk berpindah, Enter untuk membuka, Esc untuk menutup.",
+        "group_pages": "Halaman",
+        "group_devices": "Perangkat",
+        "group_people": "Orang"
     }
 }

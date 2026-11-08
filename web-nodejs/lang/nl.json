@@ -94,7 +94,9 @@
         "group_billing": "Facturering",
         "group_developer": "Ontwikkelaarstools",
         "server_status": "Serverstatus",
-        "account_2fa": "Aanmelden in twee stappen"
+        "account_2fa": "Aanmelden in twee stappen",
+        "more": "Meer",
+        "fewer": "Minder"
     },
     "auth": {
         "login": "Inloggen",
@@ -6693,5 +6695,18 @@
         "step_relay": "Anders loopt de sessie via de relayserver ({relay}).",
         "step_relay_always": "Elke sessie loopt via de relayserver ({relay}).",
         "how_title": "Zo werkt een verbinding"
+    },
+    "search": {
+        "open": "Zoeken (Ctrl+K)",
+        "title": "Zoeken",
+        "placeholder": "Zoek pagina's, apparaten en mensen",
+        "results": "Resultaten",
+        "hint": "Typ een pagina, een apparaat-ID of -naam, of een persoon.",
+        "no_results": "Niets gevonden. Probeer minder of andere woorden.",
+        "count": "Resultaten: {count}",
+        "keys": "Pijltjes om te bewegen, Enter om te openen, Esc om te sluiten.",
+        "group_pages": "Pagina's",
+        "group_devices": "Apparaten",
+        "group_people": "Mensen"
     }
 }

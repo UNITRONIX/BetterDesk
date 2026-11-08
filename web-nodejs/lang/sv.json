@@ -100,7 +100,9 @@
         "group_billing": "Fakturering",
         "group_developer": "Utvecklarverktyg",
         "server_status": "Serverstatus",
-        "account_2fa": "Tvåstegsinloggning"
+        "account_2fa": "Tvåstegsinloggning",
+        "more": "Fler",
+        "fewer": "Färre"
     },
     "auth": {
         "login": "Logga in",
@@ -6699,5 +6701,18 @@
         "step_relay": "Annars går sessionen via reläservern ({relay}).",
         "step_relay_always": "Varje session går via reläservern ({relay}).",
         "how_title": "Så fungerar en anslutning"
+    },
+    "search": {
+        "open": "Sök (Ctrl+K)",
+        "title": "Sök",
+        "placeholder": "Sök sidor, enheter och personer",
+        "results": "Resultat",
+        "hint": "Skriv en sida, ett enhets-ID eller namn, eller en person.",
+        "no_results": "Inget hittades. Prova färre eller andra ord.",
+        "count": "Resultat: {count}",
+        "keys": "Piltangenter för att flytta, Enter för att öppna, Esc för att stänga.",
+        "group_pages": "Sidor",
+        "group_devices": "Enheter",
+        "group_people": "Personer"
     }
 }

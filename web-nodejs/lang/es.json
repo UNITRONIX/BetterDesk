@@ -94,7 +94,9 @@
         "group_billing": "Facturación",
         "group_developer": "Herramientas para desarrolladores",
         "server_status": "Estado del servidor",
-        "account_2fa": "Inicio de sesión en dos pasos"
+        "account_2fa": "Inicio de sesión en dos pasos",
+        "more": "Más",
+        "fewer": "Menos"
     },
     "auth": {
         "login": "Iniciar sesión",
@@ -6693,5 +6695,18 @@
         "step_relay": "Si no, la sesión pasa por el servidor de retransmisión ({relay}).",
         "step_relay_always": "Todas las sesiones pasan por el servidor de retransmisión ({relay}).",
         "how_title": "Cómo funciona una conexión"
+    },
+    "search": {
+        "open": "Buscar (Ctrl+K)",
+        "title": "Buscar",
+        "placeholder": "Buscar páginas, dispositivos y personas",
+        "results": "Resultados",
+        "hint": "Escriba una página, el ID o nombre de un dispositivo, o una persona.",
+        "no_results": "No se encontró nada. Pruebe con menos palabras u otras.",
+        "count": "Resultados: {count}",
+        "keys": "Flechas para moverse, Intro para abrir, Esc para cerrar.",
+        "group_pages": "Páginas",
+        "group_devices": "Dispositivos",
+        "group_people": "Personas"
     }
 }

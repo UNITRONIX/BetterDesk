@@ -100,7 +100,9 @@
         "group_billing": "Fakturering",
         "group_developer": "Utviklerverktøy",
         "server_status": "Serverstatus",
-        "account_2fa": "Totrinnspålogging"
+        "account_2fa": "Totrinnspålogging",
+        "more": "Flere",
+        "fewer": "Færre"
     },
     "auth": {
         "login": "Logg på",
@@ -6699,5 +6701,18 @@
         "step_relay": "Ellers går økten gjennom reléserveren ({relay}).",
         "step_relay_always": "Alle økter går gjennom reléserveren ({relay}).",
         "how_title": "Slik fungerer en tilkobling"
+    },
+    "search": {
+        "open": "Søk (Ctrl+K)",
+        "title": "Søk",
+        "placeholder": "Søk i sider, enheter og personer",
+        "results": "Resultater",
+        "hint": "Skriv en side, en enhets-ID eller -navn eller en person.",
+        "no_results": "Ingenting funnet. Prøv færre eller andre ord.",
+        "count": "Resultater: {count}",
+        "keys": "Piltaster for å flytte, Enter for å åpne, Esc for å lukke.",
+        "group_pages": "Sider",
+        "group_devices": "Enheter",
+        "group_people": "Personer"
     }
 }

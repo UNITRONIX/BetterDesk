@@ -100,7 +100,9 @@
         "group_billing": "Fakturering",
         "group_developer": "Udviklerværktøjer",
         "server_status": "Serverstatus",
-        "account_2fa": "Totrinslogin"
+        "account_2fa": "Totrinslogin",
+        "more": "Flere",
+        "fewer": "Færre"
     },
     "auth": {
         "login": "Log ind",
@@ -6699,5 +6701,18 @@
         "step_relay": "Ellers går sessionen gennem relæserveren ({relay}).",
         "step_relay_always": "Alle sessioner går gennem relæserveren ({relay}).",
         "how_title": "Sådan forbinder klienter"
+    },
+    "search": {
+        "open": "Søg (Ctrl+K)",
+        "title": "Søg",
+        "placeholder": "Søg i sider, enheder og personer",
+        "results": "Resultater",
+        "hint": "Skriv en side, et enheds-ID eller -navn eller en person.",
+        "no_results": "Intet fundet. Prøv færre eller andre ord.",
+        "count": "Resultater: {count}",
+        "keys": "Piletaster for at flytte, Enter for at åbne, Esc for at lukke.",
+        "group_pages": "Sider",
+        "group_devices": "Enheder",
+        "group_people": "Personer"
     }
 }

@@ -100,7 +100,9 @@
         "group_billing": "Faturalandırma",
         "group_developer": "Geliştirici araçları",
         "server_status": "Sunucu durumu",
-        "account_2fa": "İki adımlı oturum açma"
+        "account_2fa": "İki adımlı oturum açma",
+        "more": "Daha fazla",
+        "fewer": "Daha az"
     },
     "auth": {
         "login": "Oturum aç",
@@ -6699,5 +6701,18 @@
         "step_relay": "Aksi halde oturum aktarma sunucusu ({relay}) üzerinden gider.",
         "step_relay_always": "Her oturum aktarma sunucusu ({relay}) üzerinden gider.",
         "how_title": "Bağlantı nasıl kurulur"
+    },
+    "search": {
+        "open": "Ara (Ctrl+K)",
+        "title": "Ara",
+        "placeholder": "Sayfa, cihaz ve kişi ara",
+        "results": "Sonuçlar",
+        "hint": "Bir sayfa, cihaz kimliği veya adı ya da bir kişi yazın.",
+        "no_results": "Hiçbir şey bulunamadı. Daha az veya başka kelimeler deneyin.",
+        "count": "Sonuçlar: {count}",
+        "keys": "Gezinmek için ok tuşları, açmak için Enter, kapatmak için Esc.",
+        "group_pages": "Sayfalar",
+        "group_devices": "Cihazlar",
+        "group_people": "Kişiler"
     }
 }
