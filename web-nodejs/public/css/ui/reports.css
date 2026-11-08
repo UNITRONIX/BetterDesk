@@ -1,0 +1,121 @@
+/* Reports: only what the components don't cover */
+
+/* Period: "From [date]  To [date]" with a hint */
+.reports-period {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.reports-period-legend {
+    float: inline-start;
+    width: 100%;
+    margin-bottom: var(--space-1);
+    padding: 0;
+    font-weight: 600;
+}
+
+.reports-date {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.reports-date > span {
+    color: var(--text-muted);
+}
+
+.reports-date .form-input {
+    width: auto;
+}
+
+.reports-period .form-hint {
+    flex-basis: 100%;
+}
+
+.report-preview:focus {
+    outline: none;
+}
+
+.report-output {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+}
+
+.report-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.report-lead {
+    font-size: var(--text-md);
+}
+
+.data-table .report-num {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-raw .code-block {
+    max-height: 320px;
+}
+
+.data-table td.actions > .btn,
+.data-table td.actions > .menu-anchor {
+    vertical-align: middle;
+}
+
+/* Phones: each saved report becomes a short block with the column names as labels */
+@media (max-width: 640px) {
+    .reports-stack thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .reports-stack,
+    .reports-stack tbody,
+    .reports-stack tr,
+    .reports-stack td {
+        display: block;
+        width: 100%;
+    }
+
+    .reports-stack tr {
+        padding: var(--space-2) 0;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .reports-stack tbody tr:hover td {
+        background: transparent;
+    }
+
+    .reports-stack td,
+    .reports-stack td.actions {
+        height: auto;
+        padding: 2px var(--row-pad-x);
+        border-bottom: 0;
+        text-align: start;
+    }
+
+    .reports-stack td[data-label]::before {
+        content: attr(data-label) ": ";
+        color: var(--text-muted);
+    }
+
+    .reports-stack td.actions {
+        padding-top: var(--space-2);
+    }
+}

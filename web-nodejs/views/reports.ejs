@@ -1,115 +1,81 @@
+<%
+    const reportTypes = ['devices', 'activity', 'security', 'tickets', 'network', 'inventory', 'alerts'];
+%>
 <%- include('layouts/main', {
-    title: typeof title !== 'undefined' ? title : 'Reports',
-    pageStyles: ['reports'],
-    pageScripts: ['reports'],
+    title: typeof title !== 'undefined' ? title : _('reports.title'),
+    uiReworked: true,
+    pageStyles: ['ui/chart', 'ui/reports'],
+    pageScripts: ['reports', 'ui-chart', 'reports-trends'],
     currentPage: 'reports',
-    breadcrumb: [{ label: _('nav.tools') }, { label: _('reports.title') }],
+    breadcrumb: [{ label: _('nav.activity') }, { label: _('reports.title') }],
     body: `
-    <div class="page-header">
-        <h1>${_('reports.title')}</h1>
-    </div>
-
-    <!-- Tab bar -->
-    <div class="tab-bar">
-        <button class="tab-btn active" data-tab="generate">${_('reports.tab_generate')}</button>
-        <button class="tab-btn" data-tab="saved">${_('reports.tab_saved')}</button>
-    </div>
-
-    <!-- Generate panel -->
-    <div class="tab-panel active" id="tab-generate">
-        <div class="report-type-grid">
-            <div class="report-type-card" data-type="devices">
-                <span class="material-icons">devices</span>
-                <h3>${_('reports.type_devices')}</h3>
-                <p>${_('reports.type_devices_desc')}</p>
-            </div>
-            <div class="report-type-card" data-type="activity">
-                <span class="material-icons">timeline</span>
-                <h3>${_('reports.type_activity')}</h3>
-                <p>${_('reports.type_activity_desc')}</p>
-            </div>
-            <div class="report-type-card" data-type="security">
-                <span class="material-icons">security</span>
-                <h3>${_('reports.type_security')}</h3>
-                <p>${_('reports.type_security_desc')}</p>
-            </div>
-            <div class="report-type-card" data-type="tickets">
-                <span class="material-icons">confirmation_number</span>
-                <h3>${_('reports.type_tickets')}</h3>
-                <p>${_('reports.type_tickets_desc')}</p>
-            </div>
-            <div class="report-type-card" data-type="network">
-                <span class="material-icons">lan</span>
-                <h3>${_('reports.type_network')}</h3>
-                <p>${_('reports.type_network_desc')}</p>
-            </div>
-            <div class="report-type-card" data-type="inventory">
-                <span class="material-icons">inventory_2</span>
-                <h3>${_('reports.type_inventory')}</h3>
-                <p>${_('reports.type_inventory_desc')}</p>
-            </div>
-            <div class="report-type-card" data-type="alerts">
-                <span class="material-icons">notifications</span>
-                <h3>${_('reports.type_alerts')}</h3>
-                <p>${_('reports.type_alerts_desc')}</p>
-            </div>
+    <div class="page reports-page">
+        <div class="page-head">
+            <h1>${_('reports.title')}</h1>
+            <p class="page-description">${_('reports.page_description')}</p>
         </div>
+        <section class="section" id="reports-trends" hidden></section>
 
-        <!-- Report options -->
-        <div class="report-options" id="report-options" style="display:none">
-            <h3 id="report-options-title"></h3>
-            <div class="form-row">
-                <label for="report-from">${_('reports.date_from')}</label>
-                <input type="date" id="report-from" />
-            </div>
-            <div class="form-row">
-                <label for="report-to">${_('reports.date_to')}</label>
-                <input type="date" id="report-to" />
-            </div>
-            <div class="form-row">
-                <label for="report-format">${_('reports.format')}</label>
-                <select id="report-format">
-                    <option value="json">JSON</option>
-                    <option value="csv">CSV</option>
-                </select>
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-primary" id="generate-btn">
-                    <span class="material-icons">play_arrow</span> ${_('reports.generate')}
-                </button>
-                <button class="btn btn-secondary" id="save-report-btn">
-                    <span class="material-icons">save</span> ${_('reports.save')}
-                </button>
-            </div>
-        </div>
+        <section class="section" aria-labelledby="report-types-title">
+            <div class="section-head"><h2 id="report-types-title">${_('reports.new_report')}</h2></div>
+            <p class="section-note">${_('reports.new_report_note')}</p>
+            <fieldset class="reports-period">
+                <legend class="reports-period-legend">${_('reports.period')}</legend>
+                <label class="reports-date"><span>${_('reports.date_from')}</span><input type="date" class="form-input" id="report-from"></label>
+                <label class="reports-date"><span>${_('reports.date_to')}</span><input type="date" class="form-input" id="report-to"></label>
+                <span class="form-hint">${_('reports.period_hint')}</span>
+            </fieldset>
+            <ul class="list report-type-list">
+                ${reportTypes.map(type => `
+                <li class="list-row report-type-card" data-type="${type}">
+                    <span class="row-main">
+                        <span class="row-title" id="report-type-${type}">${_('reports.type_' + type)}</span>
+                        <span class="row-sub">${_('reports.type_' + type + '_desc')}</span>
+                    </span>
+                    <span class="row-end">
+                        <button type="button" class="btn btn-sm report-generate-btn" data-type="${type}" aria-describedby="report-type-${type}">${_('reports.generate')}</button>
+                    </span>
+                </li>`).join('')}
+            </ul>
+        </section>
 
-        <!-- Preview -->
-        <div class="report-preview" id="report-preview" style="display:none">
-            <div class="report-preview-header">
-                <h3>${_('reports.preview')}</h3>
-                <button class="btn btn-sm btn-secondary" id="download-btn">
-                    <span class="material-icons" style="font-size:16px">download</span> ${_('reports.download')}
-                </button>
+        <section class="section report-preview" id="report-preview" aria-labelledby="report-preview-title" hidden tabindex="-1">
+            <div class="section-head">
+                <h2 id="report-preview-title"></h2>
+                <button type="button" class="btn btn-sm" id="save-report-btn" hidden>${_('reports.save')}</button>
+                <span class="menu-anchor">
+                    <button type="button" class="btn btn-sm" id="download-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="download-menu">
+                        ${_('reports.download')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
+                    </button>
+                    <span class="menu menu-end" id="download-menu" role="menu">
+                        <button type="button" class="menu-item" role="menuitem" data-download="json">${_('reports.download_json')}</button>
+                        <button type="button" class="menu-item" role="menuitem" data-download="csv" id="download-csv-item">${_('reports.download_csv')}</button>
+                    </span>
+                </span>
             </div>
+            <p class="section-note" id="report-preview-meta"></p>
+            <p class="form-status" id="report-status" aria-live="polite"></p>
             <div id="preview-content" class="report-output"></div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Saved panel -->
-    <div class="tab-panel" id="tab-saved">
-        <div class="table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>${_('reports.report_name')}</th>
-                        <th>${_('reports.report_type')}</th>
-                        <th>${_('reports.created_at')}</th>
-                        <th>${_('common.actions')}</th>
-                    </tr>
-                </thead>
-                <tbody id="saved-body"></tbody>
-            </table>
-        </div>
+        <section class="section" aria-labelledby="saved-title">
+            <div class="section-head"><h2 id="saved-title">${_('reports.saved')}</h2></div>
+            <p class="section-note">${_('reports.saved_note')}</p>
+            <div class="table-scroll">
+                <table class="data-table reports-stack">
+                    <thead>
+                        <tr>
+                            <th scope="col">${_('reports.report_name')}</th>
+                            <th scope="col">${_('reports.report_type')}</th>
+                            <th scope="col">${_('reports.created_by')}</th>
+                            <th scope="col">${_('reports.created_at')}</th>
+                            <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="saved-body"><tr><td colspan="5" class="state-cell">${_('reports.loading')}</td></tr></tbody>
+                </table>
+            </div>
+        </section>
     </div>
     `
 }) %>
