@@ -3022,7 +3022,8 @@
         "event_total_many": "Zdarzenia: {count}",
         "legend_blocked": "zablokowane",
         "legend_logged": "zarejestrowane",
-        "legend_allowed": "dozwolone"
+        "legend_allowed": "dozwolone",
+        "advanced": "Opcje zaawansowane"
     },
     "reports": {
         "title": "Raporty",

@@ -3004,7 +3004,8 @@
         "event_total_many": "{count} eventos",
         "legend_blocked": "bloqueados",
         "legend_logged": "registados",
-        "legend_allowed": "permitidos"
+        "legend_allowed": "permitidos",
+        "advanced": "Opções avançadas"
     },
     "reports": {
         "title": "Relatórios",

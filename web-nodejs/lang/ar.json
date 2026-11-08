@@ -3011,7 +3011,8 @@
         "event_total_many": "الأحداث: {count}",
         "legend_blocked": "محظورة",
         "legend_logged": "مسجّلة",
-        "legend_allowed": "مسموح بها"
+        "legend_allowed": "مسموح بها",
+        "advanced": "خيارات متقدمة"
     },
     "reports": {
         "title": "Reports",

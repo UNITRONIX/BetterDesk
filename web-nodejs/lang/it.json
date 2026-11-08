@@ -3004,7 +3004,8 @@
         "event_total_many": "{count} eventi",
         "legend_blocked": "bloccati",
         "legend_logged": "registrati",
-        "legend_allowed": "consentiti"
+        "legend_allowed": "consentiti",
+        "advanced": "Opzioni avanzate"
     },
     "reports": {
         "title": "Report",

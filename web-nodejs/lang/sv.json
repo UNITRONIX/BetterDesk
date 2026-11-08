@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} händelser",
         "legend_blocked": "blockerade",
         "legend_logged": "loggade",
-        "legend_allowed": "tillåtna"
+        "legend_allowed": "tillåtna",
+        "advanced": "Avancerade alternativ"
     },
     "reports": {
         "title": "Reports",

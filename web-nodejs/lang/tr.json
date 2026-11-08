@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} olay",
         "legend_blocked": "engellendi",
         "legend_logged": "kaydedildi",
-        "legend_allowed": "izin verildi"
+        "legend_allowed": "izin verildi",
+        "advanced": "Gelişmiş seçenekler"
     },
     "reports": {
         "title": "Reports",

@@ -6,12 +6,9 @@
     currentPage: 'dataguard',
     breadcrumb: [{ label: _('nav.dataguard') }],
     body: `
-    <div class="page dg-page">
+    <div class="page page-wide dg-page">
         <div class="page-head">
             <h1>${_('nav.dataguard')}</h1>
-            <div class="page-actions">
-                <button type="button" class="btn btn-primary" id="create-policy-btn"><span class="material-icons" aria-hidden="true">add</span>${_('dataguard.create_policy')}</button>
-            </div>
             <p class="page-description">${_('dataguard.page_description')}</p>
         </div>
 
@@ -27,6 +24,8 @@
                         <span class="material-icons" aria-hidden="true">search</span>
                         <input type="search" id="policy-search" class="form-input" aria-label="${_('dataguard.search_policies')}" placeholder="${_('dataguard.search_policies')}">
                     </div>
+                    <!-- Right after the search, not alone at the far end of a wide page -->
+                    <button type="button" class="btn btn-primary" id="create-policy-btn"><span class="material-icons" aria-hidden="true">add</span>${_('dataguard.create_policy')}</button>
                 </div>
                 <p class="count-line" id="dg-policy-count" aria-live="polite"></p>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="${_('dataguard.tab_policies')}">
@@ -124,11 +123,15 @@
                     <input type="text" id="policy-scope" class="form-input" autocomplete="off" aria-describedby="policy-scope-hint">
                     <p class="form-hint" id="policy-scope-hint">${_('dataguard.scope_help')}</p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="policy-rules">${_('dataguard.rules')}</label>
-                    <textarea id="policy-rules" class="form-input dg-rules" rows="4" spellcheck="false" aria-describedby="policy-rules-hint"></textarea>
-                    <p class="form-hint" id="policy-rules-hint">${_('dataguard.rules_hint')}</p>
-                </div>
+                <!-- Matching rules are rarely needed: closed unless the policy has some -->
+                <details class="disclosure dg-advanced" id="policy-advanced">
+                    <summary>${_('dataguard.advanced')}</summary>
+                    <div class="form-group">
+                        <label class="form-label" for="policy-rules">${_('dataguard.rules')}</label>
+                        <textarea id="policy-rules" class="form-input dg-rules" rows="4" spellcheck="false" dir="ltr" aria-describedby="policy-rules-hint"></textarea>
+                        <p class="form-hint" id="policy-rules-hint">${_('dataguard.rules_hint')}</p>
+                    </div>
+                </details>
                 <label class="check-field">
                     <input type="checkbox" id="policy-enabled" checked>
                     <span class="check-label">${_('dataguard.enabled')}</span>

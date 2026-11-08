@@ -3026,7 +3026,8 @@
         "event_total_many": "{count} événements",
         "legend_blocked": "bloqués",
         "legend_logged": "journalisés",
-        "legend_allowed": "autorisés"
+        "legend_allowed": "autorisés",
+        "advanced": "Options avancées"
     },
     "reports": {
         "title": "Tableau de bord",

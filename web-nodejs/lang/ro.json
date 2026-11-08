@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} evenimente",
         "legend_blocked": "blocate",
         "legend_logged": "înregistrate",
-        "legend_allowed": "permise"
+        "legend_allowed": "permise",
+        "advanced": "Opțiuni avansate"
     },
     "reports": {
         "title": "Reports",

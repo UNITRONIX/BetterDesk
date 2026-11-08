@@ -3004,7 +3004,8 @@
         "event_total_many": "{count} Ereignisse",
         "legend_blocked": "blockiert",
         "legend_logged": "protokolliert",
-        "legend_allowed": "erlaubt"
+        "legend_allowed": "erlaubt",
+        "advanced": "Erweiterte Optionen"
     },
     "reports": {
         "title": "Dashboard",

@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} esemény",
         "legend_blocked": "letiltva",
         "legend_logged": "naplózva",
-        "legend_allowed": "engedélyezve"
+        "legend_allowed": "engedélyezve",
+        "advanced": "Speciális beállítások"
     },
     "reports": {
         "title": "Reports",

@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} เหตุการณ์",
         "legend_blocked": "ถูกบล็อก",
         "legend_logged": "บันทึกไว้",
-        "legend_allowed": "อนุญาต"
+        "legend_allowed": "อนุญาต",
+        "advanced": "ตัวเลือกขั้นสูง"
     },
     "reports": {
         "title": "Reports",

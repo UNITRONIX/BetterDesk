@@ -42,6 +42,7 @@
 
     function formatTimeAgo(dateStr) {
         if (!dateStr) return '—';
+        if (window.Utils && Utils.formatRelativeTime) return Utils.formatRelativeTime(dateStr, { empty: '—' });
         const d = new Date(dateStr);
         if (Number.isNaN(d.getTime())) return '—';
         const diff = Math.max(0, Math.floor((Date.now() - d) / 1000));
@@ -53,6 +54,7 @@
     }
 
     function formatFull(dateStr) {
+        if (window.Utils && Utils.formatDate) return Utils.formatDate(dateStr, { empty: '' });
         const d = new Date(dateStr);
         return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
     }
@@ -237,6 +239,7 @@
         if (radio) radio.checked = true;
         document.getElementById('policy-scope').value = p ? p.scope || '' : '';
         document.getElementById('policy-rules').value = rulesText(p);
+        document.getElementById('policy-advanced').open = !!rulesText(p);
         document.getElementById('policy-enabled').checked = p ? isEnabled(p) : true;
         document.getElementById('policy-form').addEventListener('submit', (e) => { e.preventDefault(); savePolicy(); });
         document.getElementById('policy-name').focus();
@@ -277,6 +280,7 @@
             rules = raw ? JSON.parse(raw) : [];
             if (!Array.isArray(rules)) throw new Error('not an array');
         } catch (_e) {
+            document.getElementById('policy-advanced').open = true;
             formError(t('invalid_rules'), rulesEl);
             return;
         }

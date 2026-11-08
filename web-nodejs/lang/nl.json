@@ -3004,7 +3004,8 @@
         "event_total_many": "{count} gebeurtenissen",
         "legend_blocked": "geblokkeerd",
         "legend_logged": "gelogd",
-        "legend_allowed": "toegestaan"
+        "legend_allowed": "toegestaan",
+        "advanced": "Geavanceerde opties"
     },
     "reports": {
         "title": "Rapporten",

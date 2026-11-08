@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} peristiwa",
         "legend_blocked": "diblokir",
         "legend_logged": "dicatat",
-        "legend_allowed": "diizinkan"
+        "legend_allowed": "diizinkan",
+        "advanced": "Opsi lanjutan"
     },
     "reports": {
         "title": "Reports",

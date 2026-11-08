@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} hændelser",
         "legend_blocked": "blokeret",
         "legend_logged": "logget",
-        "legend_allowed": "tilladt"
+        "legend_allowed": "tilladt",
+        "advanced": "Avancerede indstillinger"
     },
     "reports": {
         "title": "Reports",

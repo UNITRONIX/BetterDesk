@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} घटनाएँ",
         "legend_blocked": "रोके गए",
         "legend_logged": "लॉग किए गए",
-        "legend_allowed": "अनुमत"
+        "legend_allowed": "अनुमत",
+        "advanced": "उन्नत विकल्प"
     },
     "reports": {
         "title": "Reports",

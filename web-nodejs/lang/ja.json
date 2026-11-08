@@ -3004,7 +3004,8 @@
         "event_total_many": "{count} 件のイベント",
         "legend_blocked": "ブロック",
         "legend_logged": "記録のみ",
-        "legend_allowed": "許可"
+        "legend_allowed": "許可",
+        "advanced": "詳細オプション"
     },
     "reports": {
         "title": "Reports",

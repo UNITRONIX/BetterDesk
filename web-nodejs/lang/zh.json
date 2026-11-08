@@ -3004,7 +3004,8 @@
         "event_total_many": "{count} 个事件",
         "legend_blocked": "已阻止",
         "legend_logged": "已记录",
-        "legend_allowed": "已允许"
+        "legend_allowed": "已允许",
+        "advanced": "高级选项"
     },
     "reports": {
         "title": "报表",

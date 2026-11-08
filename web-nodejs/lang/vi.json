@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} sự kiện",
         "legend_blocked": "đã chặn",
         "legend_logged": "đã ghi lại",
-        "legend_allowed": "đã cho phép"
+        "legend_allowed": "đã cho phép",
+        "advanced": "Tùy chọn nâng cao"
     },
     "reports": {
         "title": "Reports",

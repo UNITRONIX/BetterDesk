@@ -3010,7 +3010,8 @@
         "event_total_many": "Події: {count}",
         "legend_blocked": "заблоковано",
         "legend_logged": "записано",
-        "legend_allowed": "дозволено"
+        "legend_allowed": "дозволено",
+        "advanced": "Додаткові параметри"
     },
     "reports": {
         "title": "Reports",

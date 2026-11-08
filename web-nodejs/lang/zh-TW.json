@@ -3026,7 +3026,8 @@
         "event_total_many": "{count} 個事件",
         "legend_blocked": "已阻止",
         "legend_logged": "已記錄",
-        "legend_allowed": "已允許"
+        "legend_allowed": "已允許",
+        "advanced": "進階選項"
     },
     "reports": {
         "title": "報表",

@@ -3010,7 +3010,8 @@
         "event_total_many": "{count} tapahtumaa",
         "legend_blocked": "estetty",
         "legend_logged": "kirjattu",
-        "legend_allowed": "sallittu"
+        "legend_allowed": "sallittu",
+        "advanced": "Lisäasetukset"
     },
     "reports": {
         "title": "Reports",

@@ -3083,7 +3083,8 @@
         "event_total_many": "{count} events",
         "legend_blocked": "blocked",
         "legend_logged": "logged",
-        "legend_allowed": "allowed"
+        "legend_allowed": "allowed",
+        "advanced": "Advanced options"
     },
     "reports": {
         "title": "Reports",
