@@ -26,7 +26,8 @@
     let conversations = new Map(); // conv_id → { messages: [], unread: 0 }
     let activeConvId = null;
     let activeConvType = 'contact'; // 'contact' | 'group'
-    let myPresence = 'online';
+    // My status, shared with the account menu (Utils.presence)
+    let myPresence = Utils.presence.get();
     let typingTimers = new Map(); // conv_id → timeout
     let lastTypingSent = 0;
     let pendingFile = null;
@@ -41,6 +42,9 @@
         '/deploy': { icon: 'cloud_upload', label: 'Deploy script', action: 'deploy', hasArg: true },
         '/info': { icon: 'info', label: 'Device info', action: 'info' },
     };
+
+    // Quick reactions in each message's action bar; the rest are in the grid
+    const QUICK_REACTIONS = ['👍', '✅', '❤️'];
 
     // Common emoji set (lightweight)
     const EMOJI_SET = ['👍', '👎', '❤️', '😂', '😮', '😢', '🔥', '🎉', '✅', '❌',
@@ -59,6 +63,7 @@
         dom.conversation = $('#chat-conversation');
         dom.convName = $('#chat-conv-name');
         dom.convStatus = $('#chat-conv-status');
+        dom.deviceBtn = $('#chat-device-btn');
         dom.convAvatar = $('#chat-conv-avatar');
         dom.messagesInner = $('#chat-messages-inner');
         dom.messagesWrap = $('#chat-messages');
@@ -72,7 +77,8 @@
         dom.filePreview = $('#chat-file-preview');
         dom.fileName = $('#chat-file-name');
         dom.fileSize = $('#chat-file-size');
-        dom.searchBar = $('#chat-search-bar');
+        dom.searchHint = $('#chat-search-hint');
+        dom.searchResultsBody = $('#chat-search-results-body');
         dom.searchInput = $('#chat-search-input');
         dom.searchResults = $('#chat-search-results');
         dom.emojiPicker = $('#chat-emoji-picker');
@@ -81,7 +87,6 @@
         dom.split = $('#chat-split');
         dom.connection = $('#chat-connection');
         dom.sendStatus = $('#chat-send-status');
-        dom.searchToggle = $('#chat-search-toggle');
         dom.emojiBtn = $('#chat-emoji-btn');
     }
 
@@ -115,8 +120,16 @@
         return fill(_('chat.unread_count'), { count: count > 99 ? '99+' : count });
     }
 
+    let contactsShown = false;
+
     function setConnected(connected) {
         if (dom.connection) dom.connection.hidden = !!connected;
+        // Contacts come over the chat connection: until they have arrived once,
+        // say what the list waits for instead of loading forever
+        if (!contactsShown && dom.contactsList) {
+            const text = connected ? _('chat.loading_contacts') : _('chat.contacts_wait_connection');
+            dom.contactsList.innerHTML = `<li class="list-row is-empty chat-list-empty">${Utils.escapeHtml(text)}</li>`;
+        }
     }
 
     // ==================== WebSocket ====================
@@ -343,6 +356,7 @@
     // ==================== Contacts & Groups ====================
     function renderContacts() {
         if (!dom.contactsList) return;
+        contactsShown = true;
         if (contacts.length === 0) {
             dom.contactsList.innerHTML = `<li class="list-row is-empty chat-list-empty">${Utils.escapeHtml(_('chat.no_contacts'))}</li>`;
             return;
@@ -359,34 +373,53 @@
             const conv = conversations.get(c.id);
             const unread = conv ? conv.unread : 0;
             const presenceKey = c.online ? (c.status || 'online') : 'offline';
-            const sub = [roleLabel(c.role), _(`chat.presence_${presenceKey}`)].filter(Boolean).join(', ');
+            // Who or what it is as a tag, then the presence word. People show the
+            // presence dot on their avatar; devices next to the word.
+            const role = roleLabel(c.role);
+            const person = c.role === 'operator';
+            const dot = person ? '' : presenceDot(presenceKey) + ' ';
+            const sub = `${role ? Utils.tagHtml(role) + ' ' : ''}${dot}${Utils.escapeHtml(_(`chat.presence_${presenceKey}`))}`;
             const lastMsg = conv && conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : null;
             return listRowHtml({
                 id: c.id,
                 type: 'contact',
                 name: c.name || c.id,
+                person,
                 sub,
                 presence: presenceKey,
                 lastMsg,
                 unread,
             });
         }).join('');
+        applyListFilter();
+    }
+
+    // Shared presence dot (components.css .presence): online, away, busy, offline ring
+    function presenceDot(key) {
+        const k = ['online', 'away', 'busy'].includes(key) ? key : 'offline';
+        return `<span class="presence is-${k}" aria-hidden="true"></span>`;
+    }
+
+    // A person: avatar with the presence dot on its corner, then the name
+    function personHtml(name, presence) {
+        const dot = presence ? presenceDot(presence) : '';
+        return `<span class="user"><span class="avatar-presence">${Utils.avatarBoxHtml(name)}${dot}</span><span class="user-name">${Utils.escapeHtml(name)}</span></span>`;
     }
 
     // One conversation row: name, who or what it is, the last message, unread count as text
-    function listRowHtml({ id, type, name, sub, presence, lastMsg, unread }) {
+    function listRowHtml({ id, type, name, person, sub, presence, lastMsg, unread }) {
         const active = activeConvId === id;
         const preview = lastMsg ? (lastMsg.text || (lastMsg.file ? lastMsg.file.name : '')) : '';
         return `
             <li>
                 <button type="button" class="list-row chat-list-item${active ? ' active' : ''}" data-id="${Utils.escapeHtml(id)}" data-type="${type}"${active ? ' aria-current="true"' : ''}>
                     <span class="row-main">
-                        <span class="row-title chat-list-name">${presence ? `<span class="chat-presence-mark presence-${Utils.escapeHtml(presence)}" aria-hidden="true"></span>` : ''}${Utils.escapeHtml(name)}</span>
-                        <span class="row-sub chat-list-meta">${Utils.escapeHtml(sub)}</span>
+                        <span class="row-title chat-list-name">${person ? personHtml(name, presence) : Utils.escapeHtml(name)}</span>
+                        <span class="row-sub chat-list-meta">${sub}</span>
                         ${preview ? `<span class="row-sub chat-list-preview">${Utils.escapeHtml(preview)}</span>` : ''}
                     </span>
                     <span class="row-end">
-                        ${lastMsg ? `<span class="chat-list-time">${formatTime(lastMsg.timestamp)}</span>` : ''}
+                        ${lastMsg ? `<span class="chat-list-time">${Utils.timeHtml(lastMsg.timestamp)}</span>` : ''}
                         ${unread > 0 ? `<span class="chat-unread-badge">${Utils.escapeHtml(unreadText(unread))}</span>` : ''}
                     </span>
                 </button>
@@ -408,12 +441,13 @@
                 id: convId,
                 type: 'group',
                 name: g.name,
-                sub: fill(_('chat.member_count'), { count: memberCount(g) }),
+                sub: Utils.escapeHtml(fill(_('chat.member_count'), { count: memberCount(g) })),
                 presence: '',
                 lastMsg,
                 unread: conv ? conv.unread : 0,
             });
         }).join('');
+        applyListFilter();
     }
 
     // ==================== Conversation ====================
@@ -462,6 +496,7 @@
 
     function updateConvHeader() {
         if (!activeConvId) return;
+        updateDeviceButton();
 
         if (activeConvType === 'group') {
             const g = groups.find(g => groupConvId(g) === activeConvId);
@@ -483,6 +518,14 @@
                 dom.convStatus.textContent = '';
             }
         }
+    }
+
+    // A device conversation offers the device panel when this role may view devices
+    function updateDeviceButton() {
+        if (!dom.deviceBtn) return;
+        const c = activeConvType === 'group' ? null : contacts.find(x => x.id === activeConvId);
+        const canView = !(window.Utils && typeof Utils.can === 'function') || Utils.can('device.view');
+        dom.deviceBtn.hidden = !(c && c.role === 'device' && window.DeviceDetail && canView);
     }
 
     // ==================== Messages ====================
@@ -535,15 +578,17 @@
         }
 
         const isMe = msg.from === 'operator' || msg.from === 'panel';
-        const name = Utils.escapeHtml(msg.from_name || msg.from);
-        const time = formatTime(msg.timestamp);
+        // People get their avatar; devices and the desktop app write under their name only
+        const person = isMe || String(msg.from || '').startsWith('operator');
+        const name = person ? Utils.userHtml(msg.from_name || msg.from, { avatar: true }) : Utils.escapeHtml(msg.from_name || msg.from);
+        const time = Utils.timeHtml(msg.timestamp, { relative: false, format: { year: undefined, month: undefined, day: undefined, hour: '2-digit', minute: '2-digit' } });
         const readText = msg.read_by && msg.read_by.length > 0 ? _('chat.read_receipt') : _('chat.delivered');
 
         let content = '';
         if (msg.file) {
             content = `<p class="chat-file-msg">
                 <a href="${Utils.escapeHtml(msg.file.url)}" target="_blank" rel="noopener">${Utils.escapeHtml(msg.file.name)}</a>
-                <span class="chat-file-size-label">${formatFileSize(msg.file.size)}</span>
+                <span class="chat-file-size-label">${msg.file.size ? Utils.escapeHtml(Utils.formatBytes(msg.file.size)) : ''}</span>
             </p>`;
         }
         content += msg.text ? `<div class="chat-msg-text">${linkify(Utils.escapeHtml(msg.text))}</div>` : '';
@@ -567,7 +612,16 @@
                     <span class="chat-msg-meta">
                         <span class="chat-msg-time">${time}</span>${isMe ? `, <span class="chat-msg-read">${Utils.escapeHtml(readText)}</span>` : ''}
                     </span>
-                    <button type="button" class="btn-link chat-msg-react-btn">${Utils.escapeHtml(_('chat.react'))}</button>
+                    <span class="chat-msg-actions" role="group" aria-label="${Utils.escapeHtml(_('chat.react'))}">
+                        ${QUICK_REACTIONS.map(e => {
+                            const label = Utils.escapeHtml(fill(_('chat.react_with'), { emoji: e }));
+                            return `<button type="button" class="chat-quick-react" data-emoji="${e}" aria-label="${label}" title="${label}">${e}</button>`;
+                        }).join('')}
+                        <button type="button" class="btn-icon chat-msg-react-btn" aria-haspopup="menu" aria-expanded="false"
+                            aria-label="${Utils.escapeHtml(_('chat.more_reactions'))}" title="${Utils.escapeHtml(_('chat.more_reactions'))}">
+                            <span class="chat-react-face" aria-hidden="true">🙂</span>
+                        </button>
+                    </span>
                 </div>
                 <div class="chat-msg-bubble">${content}</div>
                 ${reactionsHtml}
@@ -601,6 +655,9 @@
                 showReactionPicker(el, e.currentTarget);
             });
         }
+        el.querySelectorAll('.chat-quick-react').forEach(btn => {
+            btn.addEventListener('click', () => toggleReaction(el.dataset.id, btn.dataset.emoji));
+        });
         el.querySelectorAll('.chat-reaction').forEach(badge => {
             badge.addEventListener('click', () => {
                 const emoji = badge.dataset.emoji;
@@ -912,56 +969,127 @@
     }
 
     // ==================== Search ====================
+    // One field above the list. Any text filters people, devices and groups by
+    // name; from 2 characters it also lists matching messages from every
+    // conversation (loaded here, plus what the server finds), ignoring case.
     let searchDebounce = null;
+    let searchSeq = 0;
+
+    function searchQuery() {
+        return dom.searchInput ? dom.searchInput.value.trim() : '';
+    }
+
+    function applyListFilter() {
+        const q = searchQuery().toLowerCase();
+        [dom.contactsList, dom.groupsList].forEach(list => {
+            if (!list) return;
+            let shown = 0;
+            list.querySelectorAll('.chat-list-item').forEach(item => {
+                const li = item.closest('li');
+                if (!li) return;
+                const name = (item.querySelector('.chat-list-name')?.textContent || '').toLowerCase();
+                li.hidden = !!q && !name.includes(q);
+                if (!li.hidden) shown++;
+            });
+            // Say so when the search hides every row of the list
+            const none = list.querySelector('.chat-filter-empty');
+            const hasRows = !!list.querySelector('.chat-list-item');
+            if (q && hasRows && !shown) {
+                if (!none) {
+                    const row = document.createElement('li');
+                    row.className = 'list-row is-empty chat-list-empty chat-filter-empty';
+                    row.textContent = _('chat.no_contacts_match');
+                    list.appendChild(row);
+                }
+            } else if (none) {
+                none.hidden = true;
+                list.removeChild(none);
+            }
+        });
+    }
+
+    function localMatches(q) {
+        const out = [];
+        conversations.forEach((conv, convId) => {
+            (conv.messages || []).forEach(m => {
+                if (m.text && String(m.text).toLowerCase().includes(q)) {
+                    out.push({ id: m.id, conversation_id: convId, from_name: m.from_name || m.from, text: m.text, timestamp: m.timestamp });
+                }
+            });
+        });
+        return out;
+    }
 
     async function searchMessages(query) {
-        if (!query || query.length < 2) {
-            dom.searchResults.style.display = 'none';
+        const q = String(query || '').trim();
+        applyListFilter();
+        const seq = ++searchSeq;
+        if (dom.searchHint) dom.searchHint.hidden = q.length !== 1;
+        if (q.length < 2) {
+            dom.searchResults.hidden = true;
+            dom.searchResultsBody.innerHTML = '';
             return;
         }
-        dom.searchResults.style.display = 'block';
-        dom.searchResults.innerHTML = `<p class="state">${Utils.escapeHtml(_('chat.searching'))}</p>`;
-        try {
-            const resp = await fetch(`/api/chat/search?q=${encodeURIComponent(query)}&conversation_id=${encodeURIComponent(activeConvId || '')}`);
-            if (!resp.ok) throw new Error(resp.statusText || String(resp.status));
-            const data = await resp.json();
-            const msgs = data.messages || [];
+        dom.searchResults.hidden = false;
+        const lower = q.toLowerCase();
+        const msgs = localMatches(lower);
 
-            if (msgs.length === 0) {
-                dom.searchResults.innerHTML = `<p class="state chat-search-no-results">${Utils.escapeHtml(_('chat.no_results'))}</p>`;
+        const render = (list, pending) => {
+            if (seq !== searchSeq) return;
+            if (!list.length) {
+                dom.searchResultsBody.innerHTML = `<p class="state chat-search-no-results">${Utils.escapeHtml(pending ? _('chat.searching') : _('chat.no_results'))}</p>`;
                 return;
             }
-
-            dom.searchResults.innerHTML = `<ul class="list">${msgs.map(m => `
+            const when = (m) => Utils.parseDate(m.created_at || m.timestamp) || 0;
+            const sorted = [...list].sort((x, y) => when(y) - when(x)).slice(0, 30);
+            dom.searchResultsBody.innerHTML = `<ul class="list">${sorted.map(m => `
                 <li><button type="button" class="list-row chat-search-result" data-conv="${Utils.escapeHtml(m.conversation_id)}" data-id="${Utils.escapeHtml(String(m.id ?? ''))}">
                     <span class="row-main">
-                        <span class="row-title chat-search-from">${Utils.escapeHtml(m.from_name || m.from_id)}</span>
+                        <span class="row-title chat-search-from">${Utils.escapeHtml(m.from_name || m.from_id || '')}</span>
                         <span class="row-sub chat-search-text">${Utils.escapeHtml((m.text || '').slice(0, 120))}</span>
                     </span>
-                    <span class="row-end chat-search-time">${formatTime(m.created_at || m.timestamp)}</span>
+                    <span class="row-end chat-search-time">${Utils.timeHtml(m.created_at || m.timestamp)}</span>
                 </button></li>
             `).join('')}</ul>`;
-
-            dom.searchResults.querySelectorAll('.chat-search-result').forEach(el => {
+            dom.searchResultsBody.querySelectorAll('.chat-search-result').forEach(el => {
                 el.addEventListener('click', () => {
                     const conv = el.dataset.conv;
                     openConversation(conv, conv.startsWith('group') ? 'group' : 'contact');
-                    closeSearch();
+                    showFoundMessage(el.dataset.id);
                 });
             });
+        };
+
+        render(msgs, true);
+        try {
+            const resp = await fetch(`/api/chat/search?q=${encodeURIComponent(q)}`);
+            if (!resp.ok) throw new Error(resp.statusText || String(resp.status));
+            const data = await resp.json();
+            if (seq !== searchSeq) return;
+            const seen = new Set(msgs.map(m => `${m.conversation_id}|${m.id}`));
+            (data.messages || []).forEach(m => {
+                if (!String(m.text || '').toLowerCase().includes(lower)) return;
+                const key = `${m.conversation_id}|${m.id}`;
+                if (!seen.has(key)) { seen.add(key); msgs.push(m); }
+            });
+            render(msgs, false);
         } catch (e) {
-            dom.searchResults.innerHTML = `<p class="state is-error">${Utils.escapeHtml(_('chat.search_failed'))}
+            if (seq !== searchSeq) return;
+            if (msgs.length) { render(msgs, false); return; }
+            dom.searchResultsBody.innerHTML = `<p class="state is-error">${Utils.escapeHtml(_('chat.search_failed'))}
                 <button type="button" class="btn btn-sm" data-search-retry>${Utils.escapeHtml(_('actions.retry'))}</button></p>`;
-            const retry = dom.searchResults.querySelector('[data-search-retry]');
-            if (retry) retry.addEventListener('click', () => searchMessages(dom.searchInput.value));
+            dom.searchResultsBody.querySelector('[data-search-retry]')?.addEventListener('click', () => searchMessages(dom.searchInput.value));
         }
     }
 
-    function closeSearch() {
-        dom.searchBar.style.display = 'none';
-        dom.searchResults.style.display = 'none';
-        dom.searchInput.value = '';
-        if (dom.searchToggle) dom.searchToggle.setAttribute('aria-expanded', 'false');
+    // Scroll to a found message and mark it for a moment
+    function showFoundMessage(id) {
+        if (!id || !dom.messagesInner) return;
+        const target = dom.messagesInner.querySelector(`.chat-msg[data-id="${CSS.escape(id)}"]`);
+        if (!target) return;
+        target.classList.add('is-found');
+        target.scrollIntoView({ block: 'center' });
+        setTimeout(() => target.classList.remove('is-found'), 2000);
     }
 
     // ==================== Push Notifications ====================
@@ -998,7 +1126,7 @@
         myPresence = status;
         send({ type: 'presence_update', online: status !== 'offline', status: status });
         if (dom.presenceDot) {
-            dom.presenceDot.className = `chat-presence-dot presence-${status}`;
+            dom.presenceDot.className = `presence is-${status}`;
         }
     }
 
@@ -1075,12 +1203,6 @@
     }
 
     // ==================== Helpers ====================
-    function formatTime(ts) {
-        if (!ts) return '';
-        const d = new Date(typeof ts === 'number' ? ts : Date.parse(ts));
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
     function formatDate(ts) {
         if (!ts) return '';
         const d = new Date(typeof ts === 'number' ? ts : Date.parse(ts));
@@ -1089,14 +1211,7 @@
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
         if (d.toDateString() === yesterday.toDateString()) return _('chat.yesterday') || 'Yesterday';
-        return d.toLocaleDateString();
-    }
-
-    function formatFileSize(bytes) {
-        if (!bytes) return '';
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        return Utils.formatDate(d, { hour: undefined, minute: undefined });
     }
 
     function linkify(text) {
@@ -1178,6 +1293,10 @@
             });
         });
 
+        dom.deviceBtn?.addEventListener('click', () => {
+            if (activeConvId && window.DeviceDetail) DeviceDetail.open(activeConvId);
+        });
+
         // Back to the list (shown on narrow screens, where only one pane fits)
         $('#chat-back-btn').addEventListener('click', () => {
             const wasActive = activeConvId;
@@ -1193,31 +1312,11 @@
             if (row) row.focus();
         });
 
-        // Search toggle
-        $('#chat-search-toggle').addEventListener('click', () => {
-            const visible = dom.searchBar.style.display !== 'none';
-            if (visible) {
-                closeSearch();
-                return;
-            }
-            dom.searchBar.style.display = '';
-            dom.searchResults.style.display = 'none';
-            dom.searchToggle.setAttribute('aria-expanded', 'true');
-            dom.searchInput.focus();
-        });
-        $('#chat-search-close').addEventListener('click', () => {
-            closeSearch();
-            dom.searchToggle.focus();
-        });
-        dom.searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeSearch();
-                dom.searchToggle.focus();
-            }
-        });
+        // Search: typing filters the list and finds messages; clearing the field ends it
         dom.searchInput.addEventListener('input', () => {
+            applyListFilter();
             clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(() => searchMessages(dom.searchInput.value), 300);
+            searchDebounce = setTimeout(() => searchMessages(dom.searchInput.value), 250);
         });
 
         // File attach
@@ -1231,7 +1330,7 @@
             }
             pendingFile = file;
             dom.fileName.textContent = file.name;
-            dom.fileSize.textContent = formatFileSize(file.size);
+            dom.fileSize.textContent = Utils.formatBytes(file.size);
             dom.filePreview.style.display = 'flex';
         });
         $('#chat-file-remove').addEventListener('click', () => {
@@ -1254,8 +1353,15 @@
         });
 
         // Presence selector
+        // My status: the account menu changes it too (Utils.presence)
+        dom.presenceSelect.value = myPresence;
+        if (dom.presenceDot) dom.presenceDot.className = `presence is-${myPresence}`;
         dom.presenceSelect.addEventListener('change', () => {
-            sendPresence(dom.presenceSelect.value);
+            Utils.presence.set(dom.presenceSelect.value);
+        });
+        Utils.presence.onChange((status) => {
+            dom.presenceSelect.value = status;
+            sendPresence(status);
         });
 
         // New group
@@ -1272,6 +1378,12 @@
         initDom();
         bindEvents();
         connect();
+        // Profile pictures of console users: render people again once known
+        Utils.loadAvatars().then((dir) => {
+            if (!dir || !dir.byId.size) return;
+            if (contacts.length) renderContacts();
+            if (activeConvId && conversations.has(activeConvId)) renderMessages();
+        });
     }
 
     if (document.readyState === 'loading') {

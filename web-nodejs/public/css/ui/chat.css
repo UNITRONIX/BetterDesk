@@ -113,29 +113,17 @@
     font-weight: 700;
 }
 
-/* Presence mark before a name, and next to one's own status */
-.chat-presence-mark,
-.chat-presence-dot {
-    width: 8px;
-    height: 8px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    border: 1.5px solid var(--text-muted);
+/* The presence dot on an avatar takes the row's background as its ring */
+.chat-list-item {
+    --presence-ring: var(--bg);
 }
 
-:is(.chat-presence-mark, .chat-presence-dot).presence-online {
-    border-color: var(--success);
-    background: var(--success);
+.chat-list-item:hover {
+    --presence-ring: var(--bg-subtle);
 }
 
-:is(.chat-presence-mark, .chat-presence-dot).presence-away {
-    border-color: var(--warning);
-    background: var(--warning);
-}
-
-:is(.chat-presence-mark, .chat-presence-dot).presence-busy {
-    border-color: var(--danger);
-    background: var(--danger);
+.chat-list-item.active {
+    --presence-ring: var(--accent-tint);
 }
 
 .chat-presence-bar {
@@ -242,7 +230,7 @@
 .chat-msg-head {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 0 var(--space-2);
 }
 
@@ -259,24 +247,51 @@
     font-size: var(--text-sm);
 }
 
-.chat-msg-react-btn {
+/* Reactions: a small bar on the message under the pointer or with focus:
+   three quick reactions and the button for the full grid */
+.chat-msg-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
     margin-inline-start: auto;
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    font-weight: 400;
-    text-decoration: none;
 }
 
+.chat-quick-react {
+    min-width: var(--control-h-sm);
+    min-height: var(--control-h-sm);
+    padding: 0 var(--space-1);
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.chat-quick-react:hover,
 .chat-msg-react-btn:hover {
-    color: var(--text);
-    text-decoration: underline;
+    background: var(--hover);
 }
 
-/* With a mouse the React link shows on the message under the pointer or with focus */
+.chat-msg-react-btn {
+    color: var(--text-muted);
+}
+
 @media (hover: hover) {
-    .chat-msg:not(:hover):not(:focus-within) .chat-msg-react-btn {
+    .chat-msg:not(:hover):not(:focus-within) .chat-msg-actions {
         opacity: 0;
     }
+}
+
+/* Touch: no hover, so the grid button stays visible and the quick ones are in the grid */
+@media (hover: none) {
+    .chat-quick-react {
+        display: none;
+    }
+}
+
+/* A message opened from search is marked for a moment */
+.chat-msg.is-found {
+    background: var(--accent-tint);
 }
 
 .chat-msg-bubble {
@@ -412,23 +427,31 @@
     }
 }
 
-/* ── Message search ── */
+/* ── Search above the list: filters names, lists matching messages ── */
 
-.chat-search {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+.chat-find {
+    padding: var(--space-3) var(--space-3) var(--space-2);
 }
 
-.chat-search-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
+.chat-find .form-hint {
+    margin-top: var(--space-1);
 }
 
 .chat-search-results {
-    max-height: 320px;
+    max-height: 40vh;
     overflow-y: auto;
+    border-bottom: 1px solid var(--rule);
+}
+
+.chat-search-title {
+    padding: var(--space-2) var(--space-3) var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+.chat-search-results .state {
+    padding: 0 var(--space-3) var(--space-2);
 }
 
 .chat-search-results .list-row .row-end {
@@ -497,4 +520,15 @@
     .chat-empty-state {
         padding-inline: 0;
     }
+}
+
+/* "Device details" at the end of a device conversation's header */
+.chat-device-btn {
+    margin-inline-start: auto;
+}
+
+/* The grid button: a smiley (the icon font subset has no add-reaction glyph yet) */
+.chat-msg-react-btn .chat-react-face {
+    font-size: var(--text-base);
+    line-height: 1;
 }

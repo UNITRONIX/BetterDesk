@@ -1,8 +1,9 @@
 <%- include('layouts/main', {
     title: typeof title !== 'undefined' ? title : _('nav.chat'),
     uiReworked: true,
-    pageStyles: ['ui/chat'],
-    pageScripts: typeof pageScripts !== 'undefined' ? pageScripts : ['chatCrypto', 'chat'],
+    pageStyles: ['ui/chart', 'ui/device-detail', 'ui/chat'],
+    // The device panel (deviceDetail.js) opens from a device conversation
+    pageScripts: ['ui-chart', 'deviceDetail'].concat(typeof pageScripts !== 'undefined' ? pageScripts : ['chatCrypto', 'chat']),
     currentPage: typeof currentPage !== 'undefined' ? currentPage : 'chat',
     breadcrumb: typeof breadcrumb !== 'undefined' ? breadcrumb : [{ label: _('nav.chat') }],
     body: `
@@ -11,32 +12,30 @@
             <h1>${_('nav.chat')}</h1>
             <p class="page-description">${_('chat.page_description')}</p>
             <div class="page-actions">
-                <button type="button" class="btn" id="chat-search-toggle" aria-expanded="false" aria-controls="chat-search-bar">${_('chat.search_messages')}</button>
                 <button type="button" class="btn" id="chat-new-group-btn"><span class="material-icons" aria-hidden="true">add</span><span>${_('chat.new_group')}</span></button>
             </div>
         </div>
 
         <p class="notice warning chat-connection" id="chat-connection" role="status" hidden>${_('chat.not_connected')}</p>
 
-        <!-- Message search (opened with the Search messages button) -->
-        <div class="chat-search" id="chat-search-bar" style="display:none">
-            <div class="chat-search-bar">
-                <div class="toolbar-search search-wrapper">
-                    <span class="material-icons" aria-hidden="true">search</span>
-                    <input type="search" class="form-input chat-search-input" id="chat-search-input"
-                        aria-label="${_('chat.search_messages')}" placeholder="${_('chat.search_messages')}">
-                </div>
-                <button type="button" class="btn-icon chat-search-close" id="chat-search-close" aria-label="${_('chat.close_search')}">
-                    <span class="material-icons" aria-hidden="true">close</span>
-                </button>
-            </div>
-            <p class="form-hint">${_('chat.search_hint')}</p>
-            <div class="chat-search-results" id="chat-search-results" style="display:none" aria-live="polite"></div>
-        </div>
-
         <div class="split chat-split" id="chat-split">
             <!-- Conversations: people, devices and groups -->
             <div class="split-list chat-sidebar" id="chat-sidebar">
+                <!-- One search for the list: names filter people, devices and groups;
+                     from 2 characters it also finds messages in every conversation -->
+                <div class="chat-find" role="search">
+                    <div class="search-wrapper">
+                        <span class="material-icons" aria-hidden="true">search</span>
+                        <input type="search" class="form-input chat-search-input" id="chat-search-input" autocomplete="off"
+                            aria-label="${_('chat.search_placeholder')}" placeholder="${_('chat.search_placeholder')}"
+                            aria-describedby="chat-search-hint">
+                    </div>
+                    <p class="form-hint" id="chat-search-hint" hidden>${_('chat.search_min')}</p>
+                </div>
+                <section class="chat-search-results" id="chat-search-results" aria-labelledby="chat-search-results-title" hidden>
+                    <h2 class="chat-search-title" id="chat-search-results-title">${_('chat.messages')}</h2>
+                    <div id="chat-search-results-body" aria-live="polite"></div>
+                </section>
                 <div class="tabs chat-tabs" role="tablist" aria-label="${_('nav.chat')}">
                     <button type="button" class="tab chat-tab active" role="tab" aria-selected="true" aria-controls="chat-contacts-panel" id="chat-tab-contacts" data-tab="contacts">${_('chat.contacts')}</button>
                     <button type="button" class="tab chat-tab" role="tab" aria-selected="false" aria-controls="chat-groups-panel" id="chat-tab-groups" data-tab="groups" tabindex="-1">${_('chat.groups')}</button>
@@ -58,7 +57,7 @@
                 <!-- Own presence -->
                 <div class="chat-presence-bar" id="chat-presence-bar">
                     <label class="chat-presence-label" for="chat-presence-select">${_('chat.my_presence')}</label>
-                    <span class="chat-presence-dot" id="chat-my-presence-dot" aria-hidden="true"></span>
+                    <span class="presence is-online" id="chat-my-presence-dot" aria-hidden="true"></span>
                     <select class="form-select chat-presence-select" id="chat-presence-select">
                         <option value="online">${_('chat.presence_online')}</option>
                         <option value="away">${_('chat.presence_away')}</option>
@@ -80,6 +79,8 @@
                             <h2 class="chat-conv-name" id="chat-conv-name"></h2>
                             <span class="chat-conv-status" id="chat-conv-status"></span>
                         </div>
+                        <!-- Device conversations: the shared device panel (deviceDetail.js) -->
+                        <button type="button" class="btn btn-sm chat-device-btn" id="chat-device-btn" hidden>${_('devices.details')}</button>
                     </div>
 
                     <p class="notice chat-e2e-banner" id="chat-e2e-banner" style="display:none" role="status">
@@ -106,8 +107,8 @@
                         <textarea class="form-input chat-input" id="chat-input" rows="2" maxlength="4096"
                             placeholder="${_('chat.message_placeholder')}"></textarea>
                         <div class="chat-input-row">
-                            <button type="button" class="btn btn-sm" id="chat-attach-btn">${_('chat.attach_file')}</button>
-                            <button type="button" class="btn btn-sm" id="chat-emoji-btn" aria-haspopup="true" aria-expanded="false">${_('chat.emoji')}</button>
+                            <button type="button" class="btn" id="chat-attach-btn">${_('chat.attach_file')}</button>
+                            <button type="button" class="btn" id="chat-emoji-btn" aria-haspopup="true" aria-expanded="false">${_('chat.emoji')}</button>
                             <span class="form-status chat-send-status" id="chat-send-status" aria-live="polite"></span>
                             <button type="button" class="btn btn-primary chat-send-btn" id="chat-send-btn"><span class="material-icons" aria-hidden="true">send</span><span>${_('chat.send')}</span></button>
                         </div>
