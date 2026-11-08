@@ -465,7 +465,8 @@
         "tag_device_one": "enhet",
         "tag_device_many": "enheter",
         "tag_group_one": "dynamisk gruppe",
-        "tag_group_many": "dynamiske grupper"
+        "tag_group_many": "dynamiske grupper",
+        "summary": "{count} enheter, {online} tilkoblet"
     },
     "keys": {
         "title": "Servernøkler",

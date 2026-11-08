@@ -459,7 +459,8 @@
         "tag_device_one": "デバイス",
         "tag_device_many": "デバイス",
         "tag_group_one": "動的グループ",
-        "tag_group_many": "動的グループ"
+        "tag_group_many": "動的グループ",
+        "summary": "デバイス {count} 台、オンライン {online} 台"
     },
     "keys": {
         "title": "サーバーキー",

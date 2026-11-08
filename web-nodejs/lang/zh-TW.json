@@ -463,7 +463,8 @@
         "tag_device_one": "台裝置",
         "tag_device_many": "台裝置",
         "tag_group_one": "個動態群組",
-        "tag_group_many": "個動態群組"
+        "tag_group_many": "個動態群組",
+        "summary": "{count} 台裝置，{online} 台上線"
     },
     "keys": {
         "title": "服務器密鑰",

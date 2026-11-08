@@ -1,0 +1,899 @@
+/*
+ * Devices page: folder/group filter list beside the device table.
+ * The table is the page; everything else stays small.
+ */
+
+.devices-layout {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+}
+
+/* ── Folders and groups ── */
+
+.devices-filters {
+    position: sticky;
+    top: calc(var(--topbar-h) + var(--space-4));
+    max-height: calc(100vh - var(--topbar-h) - var(--space-6));
+    overflow-y: auto;
+    padding-bottom: var(--space-2);
+}
+
+.filter-block + .filter-block {
+    margin-top: var(--space-5);
+}
+
+.filter-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+    padding-inline: var(--space-2);
+}
+
+.filter-head h2 {
+    font-size: var(--text-base);
+}
+
+.filter-add {
+    font-size: var(--text-sm);
+}
+
+.filter-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.filter-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-item-all-groups {
+    display: none;
+}
+
+.filter-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    min-height: 30px;
+    padding: var(--space-1) var(--space-2);
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+    cursor: pointer;
+}
+
+[dir="rtl"] .filter-option {
+    border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.filter-option:hover {
+    background: var(--hover);
+}
+
+.filter-option.active {
+    border-inline-start-color: var(--accent);
+    background: var(--bg-subtle);
+    font-weight: 600;
+}
+
+.filter-option.drag-over {
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
+}
+
+.filter-option .chip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.filter-option .chip-count {
+    margin-inline-start: auto;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.folder-mark {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 1px;
+    background: var(--folder-color, var(--text-muted));
+}
+
+/* The "…" menu shows on hover or keyboard focus; always on touch */
+.chip-menu-btn {
+    width: 28px;
+    height: 28px;
+    margin-inline-start: 2px;
+    opacity: 0;
+}
+
+.filter-item:hover .chip-menu-btn,
+.chip-menu-btn:focus-visible,
+.chip-menu-btn[aria-expanded="true"] {
+    opacity: 1;
+}
+
+@media (pointer: coarse) {
+    .chip-menu-btn {
+        width: 44px;
+        height: 44px;
+        opacity: 1;
+    }
+
+    .filter-option {
+        min-height: 44px;
+    }
+}
+
+/* ── Toolbar ── */
+
+.devices-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-3);
+}
+
+.toolbar-search {
+    flex: 1 1 240px;
+    max-width: 380px;
+}
+
+.toolbar-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.filter-btn {
+    min-height: var(--control-h);
+    padding: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    color: var(--text);
+}
+
+.filter-btn.active {
+    border-bottom-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+}
+
+.toolbar-end {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-inline-start: auto;
+}
+
+.show-deleted-toggle {
+    margin-inline-end: var(--space-2);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.tag-filter-dropdown,
+.column-visibility-dropdown {
+    position: relative;
+}
+
+#tags-filter-btn.tag-filter-active {
+    border-color: var(--border);
+    color: var(--accent);
+}
+
+.tag-filter-menu,
+.column-visibility-menu {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    inset-inline-end: 0;
+    display: none;
+    min-width: 200px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: var(--space-1) 0;
+}
+
+.tag-filter-menu.show,
+.column-visibility-menu.show {
+    display: block;
+}
+
+.tag-filter-option,
+.column-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    padding: 0 var(--space-3);
+    cursor: pointer;
+}
+
+.tag-filter-option:hover,
+.column-toggle:hover {
+    background: var(--hover);
+}
+
+.tag-filter-empty {
+    padding: var(--space-2) var(--space-3);
+    color: var(--text-muted);
+}
+
+/* ── Table ── */
+
+.devices-table th .sort-btn {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.devices-table th.col-actions,
+.devices-table td[data-column="actions"] {
+    width: 44px;
+    text-align: end;
+}
+
+.devices-table td {
+    white-space: nowrap;
+}
+
+.devices-table .column-hidden {
+    display: none;
+}
+
+.devices-table .loading-row td {
+    color: var(--text-muted);
+}
+
+.device-id {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.device-id .copy-btn {
+    opacity: 0;
+}
+
+.devices-table tr:hover .copy-btn,
+.devices-table .copy-btn:focus-visible,
+.devices-table .copy-btn.copied {
+    opacity: 1;
+}
+
+@media (pointer: coarse) {
+    .device-id .copy-btn {
+        opacity: 1;
+    }
+}
+
+.device-open {
+    max-width: 280px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    text-align: start;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.device-open:hover {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.device-deleted-badge,
+.mesh-linked-badge {
+    margin-inline-start: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.platform-icon {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.platform-icon .material-icons {
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+.devices-table .tag-list {
+    display: inline-block;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.devices-table tr.deleted-row td {
+    color: var(--text-muted);
+}
+
+.devices-table tr.dragging {
+    opacity: 0.5;
+}
+
+.devices-table td[data-column="last_online"],
+.devices-table td[data-column="device_type"] {
+    color: var(--text-muted);
+}
+
+/* ── Row menu ── */
+
+.kebab-wrapper {
+    display: inline-block;
+}
+
+.kebab-menu {
+    position: fixed;
+    display: none;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.kebab-menu.open {
+    display: block;
+}
+
+.devices-context-menu {
+    position: fixed;
+}
+
+.devices-context-menu[hidden] {
+    display: none;
+}
+
+.kebab-overlay {
+    display: none;
+}
+
+/* Phone: the row menu opens as a sheet from the bottom */
+@media (max-width: 600px) {
+    .kebab-menu.open {
+        top: auto;
+        bottom: 0;
+        inset-inline: 0;
+        max-height: 70vh;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        border-radius: var(--radius) var(--radius) 0 0;
+        z-index: 1001;
+    }
+
+    .kebab-overlay.open {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: block;
+        background: rgba(0, 0, 0, 0.35);
+    }
+
+    .kebab-menu .kebab-menu-item {
+        min-height: 48px;
+    }
+}
+
+/* ── Pagination ── */
+
+.devices-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-5);
+    padding: var(--space-3) 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.pagination-per-page {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.pagination-per-page .form-select {
+    width: auto;
+    min-height: var(--control-h-sm);
+}
+
+.devices-pagination .pagination-controls {
+    margin-inline-start: auto;
+}
+
+/* Floating horizontal scrollbar for a wide table */
+.devices-hscroll-float {
+    position: fixed;
+    bottom: 0;
+    z-index: 30;
+    display: none;
+    height: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: var(--bg);
+}
+
+.devices-hscroll-float.visible {
+    display: block;
+}
+
+.devices-hscroll-spacer {
+    height: 1px;
+}
+
+/* ── Access control strategies ── */
+
+.devices-strategies {
+    margin-top: var(--space-4);
+}
+
+.devices-strategies > summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.devices-strategies > summary::-webkit-details-marker {
+    display: none;
+}
+
+.devices-strategies > summary h2::before {
+    content: "▸";
+    display: inline-block;
+    width: 1.2em;
+    color: var(--text-muted);
+}
+
+.devices-strategies[open] > summary h2::before {
+    content: "▾";
+}
+
+.strategy-manager-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.strategy-manager-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.strategy-manager-actions {
+    display: flex;
+    gap: var(--space-1);
+}
+
+.strategy-disabled .strategy-manager-text strong {
+    color: var(--text-muted);
+}
+
+/* ── Dialogs opened from this page ── */
+
+.form-section + .form-section {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+}
+
+.form-row-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+.form-error {
+    color: var(--danger);
+    font-size: var(--text-sm);
+}
+
+.form-help,
+.form-meta {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.form-label-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    cursor: pointer;
+}
+
+.color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.color-option {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.color-option.active {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+    .color-option {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+.group-membership-list,
+.strategy-assign-list,
+.strategy-perm-grid,
+.manage-tags-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 260px;
+    overflow-y: auto;
+    border-top: 1px solid var(--rule);
+}
+
+.group-membership-option,
+.strategy-assign-option,
+.strategy-perm-option,
+.device-edit-tag-option,
+.day-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    padding: 0 var(--space-1);
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+}
+
+.day-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-4);
+}
+
+.day-checkboxes .day-checkbox {
+    border-bottom: 0;
+}
+
+.user-group-empty,
+.manage-tags-empty {
+    padding: var(--space-3) 0;
+    color: var(--text-muted);
+}
+
+.manage-tags-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--row-h);
+    border-bottom: 1px solid var(--rule);
+}
+
+.manage-tags-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.manage-tags-meta,
+.manage-tags-hint {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.manage-tags-actions {
+    display: flex;
+    gap: var(--space-1);
+}
+
+/* Tag editor in the edit dialog: tags as text with a remove button */
+.device-edit-tags-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.device-edit-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.device-edit-tag-remove {
+    padding: 0 2px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.device-edit-tag-remove:hover {
+    color: var(--danger);
+}
+
+.device-edit-tag-input-row {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.device-edit-tag-options {
+    display: flex;
+    flex-direction: column;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+/* Delete confirmation */
+.delete-warning {
+    padding: var(--space-2) var(--space-3);
+    border-inline-start: 3px solid var(--danger);
+    background: var(--bg-subtle);
+}
+
+.delete-info,
+.revoke-hint {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.revoke-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+/* Older details dialog (label/value rows) */
+.device-details .detail-row,
+.device-info-grid .device-info-item {
+    display: grid;
+    grid-template-columns: minmax(120px, max-content) 1fr;
+    gap: var(--space-4);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--rule);
+}
+
+.detail-label {
+    color: var(--text-muted);
+}
+
+.detail-value {
+    overflow-wrap: anywhere;
+}
+
+/* ── Narrow screens ── */
+
+@media (max-width: 899px) {
+    .devices-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-4);
+    }
+
+    /* Folders and groups become two scrolling rows of text */
+    .devices-filters {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .filter-block + .filter-block {
+        margin-top: 0;
+    }
+
+    .filter-block {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .filter-head {
+        flex-shrink: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .filter-head h2 {
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .filter-head .filter-add {
+        order: 2;
+    }
+
+    .filter-list {
+        display: flex;
+        flex-shrink: 0;
+    }
+
+    .filter-option {
+        flex: none;
+        border-inline-start: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        white-space: nowrap;
+    }
+
+    .filter-option.active {
+        border-bottom-color: var(--accent);
+        background: transparent;
+    }
+
+    .chip-menu-btn {
+        display: none;
+    }
+
+    .toolbar-search {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .toolbar-end {
+        margin-inline-start: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .page-head .page-actions {
+        width: 100%;
+    }
+
+    .page-head .page-actions .btn {
+        flex: 1;
+    }
+
+    .devices-pagination .pagination-controls {
+        margin-inline-start: 0;
+    }
+}
+
+/* Touch: the small text controls get a 44px hit area */
+@media (pointer: coarse) {
+    .filter-add,
+    .device-open {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}
+
+/* ── The table adapts to the width of the list column, not the window ── */
+
+.devices-main {
+    container: devlist / inline-size;
+    min-width: 0;
+}
+
+@container devlist (max-width: 860px) {
+    .devices-table [data-column="device_type"] {
+        display: none;
+    }
+}
+
+@container devlist (max-width: 720px) {
+    .devices-table [data-column="tags"] {
+        display: none;
+    }
+}
+
+@container devlist (max-width: 600px) {
+    /* Narrow: each device is a short block instead of a wide row */
+    .devices-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .devices-table,
+    .devices-table tbody {
+        display: block;
+    }
+
+    .devices-table tr {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 2px var(--space-3);
+        padding: var(--space-3) 0;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .devices-table td {
+        display: block;
+        height: auto;
+        padding: 0;
+        border: 0;
+        white-space: normal;
+    }
+
+    .devices-table tbody tr:hover td {
+        background: transparent;
+    }
+
+    .devices-table td[data-column="hostname"] { grid-column: 1; grid-row: 1; }
+    .devices-table td[data-column="status"] { grid-column: 2; grid-row: 1; text-align: end; }
+    .devices-table td[data-column="id"] { grid-column: 1; grid-row: 2; }
+    .devices-table td[data-column="platform"] { grid-column: 1; grid-row: 3; color: var(--text-muted); }
+    .devices-table td[data-column="last_online"] { grid-column: 2; grid-row: 2; text-align: end; }
+    .devices-table td[data-column="tags"] { display: block; grid-column: 1; grid-row: 4; }
+    .devices-table td[data-column="device_type"] { display: none; }
+    .devices-table td[data-column="actions"] { grid-column: 2; grid-row: 3 / span 2; align-self: end; width: auto; }
+
+    .devices-table td[data-column="tags"] .device-tags-empty {
+        display: none;
+    }
+
+    .devices-table .loading-row,
+    .devices-table .loading-row td {
+        display: block;
+    }
+
+    .device-open {
+        max-width: 100%;
+        white-space: normal;
+    }
+}
+
+/* A column the user switched off stays off at every width */
+.devices-table tr > .column-hidden {
+    display: none;
+}

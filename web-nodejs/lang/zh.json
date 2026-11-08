@@ -459,7 +459,8 @@
         "tag_device_one": "台设备",
         "tag_device_many": "台设备",
         "tag_group_one": "个动态组",
-        "tag_group_many": "个动态组"
+        "tag_group_many": "个动态组",
+        "summary": "{count} 台设备，{online} 台在线"
     },
     "keys": {
         "title": "服务器密钥",

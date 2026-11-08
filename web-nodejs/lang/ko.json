@@ -459,7 +459,8 @@
         "tag_device_one": "장치",
         "tag_device_many": "장치",
         "tag_group_one": "동적 그룹",
-        "tag_group_many": "동적 그룹"
+        "tag_group_many": "동적 그룹",
+        "summary": "기기 {count}대, 온라인 {online}대"
     },
     "keys": {
         "title": "서버 키",

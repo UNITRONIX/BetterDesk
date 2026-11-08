@@ -463,7 +463,8 @@
         "tag_device_one": "appareil",
         "tag_device_many": "appareils",
         "tag_group_one": "groupe dynamique",
-        "tag_group_many": "groupes dynamiques"
+        "tag_group_many": "groupes dynamiques",
+        "summary": "{count} appareils, {online} en ligne"
     },
     "keys": {
         "title": "Tableau de bord",

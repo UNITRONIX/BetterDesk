@@ -459,7 +459,8 @@
         "tag_device_one": "zařízení",
         "tag_device_many": "zařízení",
         "tag_group_one": "dynamická skupina",
-        "tag_group_many": "dynamických skupin"
+        "tag_group_many": "dynamických skupin",
+        "summary": "Zařízení: {count}, online: {online}"
     },
     "keys": {
         "title": "Klíče serveru",

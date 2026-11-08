@@ -56,16 +56,18 @@ const Modal = (function() {
             large: 'max-width: 700px;'
         };
         
+        const opener = document.activeElement;
         const overlay = document.createElement('div');
         overlay.id = id;
         overlay.className = 'modal-overlay';
+        const closeLabel = (typeof _ === 'function' && _('actions.close')) || 'Close';
         overlay.innerHTML = `
-            <div class="modal" style="${sizeStyles[size] || sizeStyles.medium}">
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="${id}-title" style="${sizeStyles[size] || sizeStyles.medium}">
                 <div class="modal-header">
-                    <h3 class="modal-title">${Utils.escapeHtml(title)}</h3>
+                    <h2 class="modal-title" id="${id}-title">${Utils.escapeHtml(title)}</h2>
                     ${closable ? `
-                        <button class="modal-close" aria-label="Close">
-                            <span class="material-icons">close</span>
+                        <button type="button" class="modal-close" aria-label="${Utils.escapeHtml(closeLabel)}">
+                            <span class="material-icons" aria-hidden="true">close</span>
                         </button>
                     ` : ''}
                 </div>
@@ -75,10 +77,7 @@ const Modal = (function() {
                 ${buttons.length > 0 ? `
                     <div class="modal-footer">
                         ${buttons.map((btn, idx) => `
-                            <button class="btn ${btn.class || 'btn-secondary'}" data-btn-index="${idx}">
-                                ${btn.icon ? `<span class="material-icons">${btn.icon}</span>` : ''}
-                                ${Utils.escapeHtml(btn.label)}
-                            </button>
+                            <button type="button" class="btn ${btn.class || 'btn-secondary'}" data-btn-index="${idx}">${Utils.escapeHtml(btn.label)}</button>
                         `).join('')}
                     </div>
                 ` : ''}
@@ -117,28 +116,48 @@ const Modal = (function() {
             
             // Call onOpen callback after animation frame
             if (onOpen) {
-                setTimeout(() => onOpen(), 50);
+                // Skip if the dialog was closed again within those 50 ms
+                setTimeout(() => {
+                    if (activeModal && activeModal.id === id) onOpen();
+                }, 50);
             }
         });
         
-        // Trap focus
+        // Focus the first field (or the first button) and keep Tab inside the dialog
         const modal = overlay.querySelector('.modal');
-        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusableElements.length > 0) {
-            focusableElements[0].focus();
-        }
-        
+        const focusables = () => Array.from(modal.querySelectorAll(
+            'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(el => el.offsetParent !== null || el === document.activeElement);
+        const firstField = modal.querySelector('.modal-body input:not([type="hidden"]):not([disabled]), .modal-body select, .modal-body textarea');
+        const initial = firstField || modal.querySelector('.modal-footer .btn') || focusables()[0];
+        if (initial) initial.focus();
+        modal.addEventListener('keydown', (e) => {
+            if (e.key !== 'Tab') return;
+            const list = focusables();
+            if (!list.length) return;
+            const first = list[0];
+            const last = list[list.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
+
         // Escape key handler
         const escHandler = (e) => {
             if (e.key === 'Escape' && closable) {
+                e.stopPropagation();
                 close();
                 if (onClose) onClose();
                 document.removeEventListener('keydown', escHandler);
             }
         };
         document.addEventListener('keydown', escHandler);
-        
-        activeModal = { id, escHandler, onClose };
+
+        activeModal = { id, escHandler, onClose, opener };
         
         return id;
     }
@@ -154,9 +173,15 @@ const Modal = (function() {
             overlay.classList.remove('open');
             setTimeout(() => overlay.remove(), 200);
         }
-        
+
         document.removeEventListener('keydown', activeModal.escHandler);
+        // Return focus to whatever opened the dialog
+        const opener = activeModal.opener;
         activeModal = null;
+        if (opener && document.contains(opener) && typeof opener.focus === 'function'
+            && (overlay ? !overlay.contains(opener) : true)) {
+            opener.focus({ preventScroll: true });
+        }
     }
     
     /**

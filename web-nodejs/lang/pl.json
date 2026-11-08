@@ -459,7 +459,8 @@
         "tag_device_one": "urządzenie",
         "tag_device_many": "urządzeń",
         "tag_group_one": "grupa dynamiczna",
-        "tag_group_many": "grup dynamicznych"
+        "tag_group_many": "grup dynamicznych",
+        "summary": "Urządzenia: {count}, online: {online}"
     },
     "keys": {
         "title": "Klucze serwera",

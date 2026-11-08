@@ -459,7 +459,8 @@
         "tag_device_one": "dispositivo",
         "tag_device_many": "dispositivi",
         "tag_group_one": "gruppo dinamico",
-        "tag_group_many": "gruppi dinamici"
+        "tag_group_many": "gruppi dinamici",
+        "summary": "{count} dispositivi, {online} online"
     },
     "keys": {
         "title": "Chiavi del server",

@@ -290,10 +290,10 @@
             dot.title = statusLabel;
         }
 
-        const badge = row.querySelector('[data-column="status"] .status-badge');
+        const badge = row.querySelector('[data-column="status"] .status');
         if (badge) {
-            badge.className = `status-badge ${statusClassName}`;
-            badge.innerHTML = `<span class="status-dot"></span>${statusLabel}`;
+            badge.className = `status ${statusClassName}`;
+            badge.textContent = statusLabel;
         }
 
         // Also update the device in our local state
@@ -304,6 +304,7 @@
             dev.live_online = statusClassName === 'online';
             dev.online = statusClassName === 'online';
             dev.no_signal = statusClassName === 'no_signal';
+            renderDevicesSummary();
         }
     }
 
@@ -322,8 +323,11 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                const opener = menuOpener;
+                const hadMenu = !!document.querySelector('.kebab-menu.open') || (contextMenuEl && !contextMenuEl.hidden);
                 closeAllKebabMenus();
                 closeContextMenu();
+                if (hadMenu && opener && document.contains(opener)) opener.focus();
             }
         });
 
@@ -353,8 +357,43 @@
             m.style.top = '';
             m.style.left = '';
         });
+        document.querySelectorAll('.kebab-btn[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
         const overlay = document.getElementById('kebab-overlay');
         if (overlay) overlay.classList.remove('open');
+    }
+
+    // Button that opened the current menu; Escape returns focus to it
+    let menuOpener = null;
+
+    /**
+     * Keyboard support for an open menu: focus the first item, move with
+     * the arrow keys, Home and End.
+     */
+    function focusMenu(menu, opener) {
+        menuOpener = opener || null;
+        const items = () => Array.from(menu.querySelectorAll('button:not([disabled]), [role="menuitem"], a[href]'));
+        const first = items()[0];
+        if (first) first.focus({ preventScroll: true });
+        if (menu.dataset.keysBound) return;
+        menu.dataset.keysBound = '1';
+        menu.addEventListener('keydown', (e) => {
+            const list = items();
+            const i = list.indexOf(document.activeElement);
+            let next = null;
+            if (e.key === 'ArrowDown') next = list[(i + 1) % list.length];
+            else if (e.key === 'ArrowUp') next = list[(i - 1 + list.length) % list.length];
+            else if (e.key === 'Home') next = list[0];
+            else if (e.key === 'End') next = list[list.length - 1];
+            else if (e.key === 'Tab') {
+                closeAllKebabMenus();
+                closeContextMenu();
+                return;
+            }
+            if (next) {
+                e.preventDefault();
+                next.focus();
+            }
+        });
     }
 
     /** Phone bottom-sheet overlay CSS only applies at ≤600px */
@@ -547,6 +586,7 @@
             e.stopPropagation();
             const action = btn.dataset.action;
             const state = contextMenuState;
+            if (menuOpener && document.contains(menuOpener)) menuOpener.focus({ preventScroll: true });
             closeContextMenu();
 
             if (state.type === 'device') {
@@ -559,13 +599,18 @@
                 if (!group) return;
                 if (action === 'edit') showDeviceGroupModal(group);
                 else if (action === 'delete') deleteDeviceGroup(group);
+                else if (action === 'commercialization') openGroupCommercializationModal(group);
             }
         });
 
     }
 
     function buildChipContextMenuHtml(type) {
-        return `
+        const billing = type === 'group' ? `
+            <button type="button" class="kebab-menu-item" data-action="commercialization">
+                <span>${_('devices.group_commercialization') || 'Commercialization'}</span>
+            </button>` : '';
+        return `${billing}
             <button type="button" class="kebab-menu-item" data-action="edit">
                 <span class="material-icons">edit</span>
                 <span>${_('actions.edit')}</span>
@@ -591,7 +636,7 @@
         contextMenuEl.style.top = top + 'px';
     }
 
-    function openContextMenu(clientX, clientY, html, state) {
+    function openContextMenu(clientX, clientY, html, state, opener) {
         if (!contextMenuEl) return;
         closeAllKebabMenus();
         contextMenuState = state;
@@ -599,6 +644,8 @@
         contextMenuEl.hidden = false;
         contextMenuEl.classList.add('open');
         positionContextMenu(clientX, clientY);
+        menuOpener = opener || null;
+        if (opener) focusMenu(contextMenuEl, opener);
     }
 
     function closeContextMenu() {
@@ -629,6 +676,17 @@
                 });
             });
         });
+    }
+
+    /** Folder or group "…" button: same menu as right-click, placed under the button */
+    function openChipMenuFromButton(e, btn, state) {
+        e.preventDefault();
+        e.stopPropagation();
+        const open = contextMenuEl && !contextMenuEl.hidden && menuOpener === btn;
+        closeContextMenu();
+        if (open) return;
+        const rect = btn.getBoundingClientRect();
+        openContextMenu(rect.left, rect.bottom + 4, buildChipContextMenuHtml(state.type), state, btn);
     }
 
     function attachChipContextMenu(el, state) {
@@ -800,6 +858,7 @@
             
             // Update count
             document.getElementById('devices-count').textContent = devices.length;
+            renderDevicesSummary();
             
             // Update folder counts now that devices are loaded
             updateFolderCounts();
@@ -901,19 +960,28 @@
         return folders.find(f => Number(f.id) === target) || null;
     }
 
+    /** "30 devices, 14 online" next to the page title (deleted devices not counted) */
+    function renderDevicesSummary() {
+        const el = document.getElementById('devices-summary');
+        if (!el) return;
+        const live = devices.filter(d => !d.soft_deleted);
+        const online = live.filter(d => d.online).length;
+        let text = el.querySelector('.devices-summary-text');
+        if (!text) {
+            text = document.createElement('span');
+            text.className = 'devices-summary-text';
+            el.appendChild(text);
+        }
+        text.textContent = _('devices.summary', { count: live.length, online });
+    }
+
+    /** Tags as plain text, comma separated */
     function renderTagsCell(device) {
         const tags = normalizeTags(device.tags);
         if (tags.length === 0) {
-            return `<span class="device-tags-empty">-</span>`;
+            return `<span class="device-tags-empty text-muted">–</span>`;
         }
-
-        const visible = tags.slice(0, 2);
-        const rest = tags.length - visible.length;
-        return `
-            <div class="device-tags" title="${Utils.escapeHtml(tags.join(', '))}">
-                ${visible.map(tag => `<span class="device-tag-pill">${Utils.escapeHtml(tag)}</span>`).join('')}
-                ${rest > 0 ? `<span class="device-tag-more">+${rest}</span>` : ''}
-            </div>`;
+        return `<span class="device-tags tag-list">${tags.map(tag => Utils.escapeHtml(tag)).join(', ')}</span>`;
     }
     
     /**
@@ -967,7 +1035,13 @@
         
         // Sort
         sortDevices();
-        
+        document.querySelectorAll('.devices-table th.sortable').forEach(th => {
+            const sorted = th.dataset.sort === currentSort.field;
+            th.classList.toggle('sort-asc', sorted && currentSort.order === 'asc');
+            th.classList.toggle('sort-desc', sorted && currentSort.order === 'desc');
+            th.setAttribute('aria-sort', sorted ? (currentSort.order === 'asc' ? 'ascending' : 'descending') : 'none');
+        });
+
         // Render
         renderDevices();
         renderPagination();
@@ -1030,25 +1104,23 @@
             <tr data-id="${eid}" class="${device.banned ? 'banned-row' : ''}${device.soft_deleted ? ' deleted-row' : ''}" draggable="${rowDraggable}">
                 <td data-column="id">
                     <div class="device-id">
-                        <span class="device-status-dot ${sc}"></span>
-                        <span class="device-id-text">${eid}</span>
-                        ${device.soft_deleted ? `<span class="device-deleted-badge">${Utils.escapeHtml(_('devices.deleted_badge'))}</span>` : ''}
-                        <button class="copy-btn" title="${_('actions.copy')}" data-copy="${eid}">
-                            <span class="material-icons">content_copy</span>
+                        <span class="device-id-text mono">${eid}</span>
+                        <button type="button" class="copy-btn" title="${_('actions.copy')}" aria-label="${_('actions.copy')} ${eid}" data-copy="${eid}">
+                            <span class="material-icons" aria-hidden="true">content_copy</span>
                         </button>
                     </div>
                 </td>
-                <td data-column="hostname">${Utils.escapeHtml(device.display_name || device.hostname || device.note || '-')}</td>
+                <td data-column="hostname">
+                    <button type="button" class="device-open" data-open-detail="${eid}">${Utils.escapeHtml(device.display_name || device.hostname || device.note || '-')}</button>
+                    ${device.soft_deleted ? `<span class="device-deleted-badge">${Utils.escapeHtml(_('devices.deleted_badge'))}</span>` : ''}
+                </td>
                 <td data-column="device_type">
-                    <div class="platform-icon">
-                        <span class="material-icons">${getDeviceTypeIcon(device.device_type)}</span>
-                        <span>${Utils.escapeHtml(getDeviceTypeLabel(device.device_type))}</span>
-                        ${device.linked_peer_id ? `<span class="mesh-linked-badge" title="${Utils.escapeHtml(_('mesh.linked_peer') || 'Linked device')}">↔ ${Utils.escapeHtml(device.linked_peer_id)}</span>` : ''}
-                    </div>
+                    ${Utils.escapeHtml(getDeviceTypeLabel(device.device_type))}
+                    ${device.linked_peer_id ? `<span class="mesh-linked-badge" title="${Utils.escapeHtml(_('mesh.linked_peer') || 'Linked device')}">↔ <span class="mono">${Utils.escapeHtml(device.linked_peer_id)}</span></span>` : ''}
                 </td>
                 <td data-column="platform">
                     <div class="platform-icon">
-                        <span class="material-icons">${Utils.getPlatformIcon(device.platform || device.os)}</span>
+                        <span class="material-icons" aria-hidden="true">${Utils.getPlatformIcon(device.platform || device.os)}</span>
                         <span>${Utils.escapeHtml(device.platform || device.os || '-')}</span>
                     </div>
                 </td>
@@ -1056,15 +1128,15 @@
                     <span class="last-seen-text" title="${Utils.formatDate(device.last_online)}">${Utils.formatRelativeTime(device.last_online)}</span>
                 </td>
                 <td data-column="status">
-                    <span class="status-badge ${sc}"${statusInfo.title ? ` title="${Utils.escapeHtml(statusInfo.title)}"` : ''}><span class="status-dot"></span>${statusInfo.label}</span>
+                    <span class="status ${sc}"${statusInfo.title ? ` title="${Utils.escapeHtml(statusInfo.title)}"` : ''}>${statusInfo.label}</span>
                 </td>
                 <td data-column="tags">${renderTagsCell(device)}</td>
                 <td data-column="actions">
                     <div class="kebab-wrapper">
-                        <button class="kebab-btn" title="${_('devices.actions')}">
-                            <span class="material-icons">more_vert</span>
+                        <button type="button" class="kebab-btn" title="${_('devices.actions')}" aria-label="${_('devices.actions')}: ${Utils.escapeHtml(device.display_name || device.hostname || device.id)}" aria-haspopup="menu" aria-expanded="false">
+                            <span class="material-icons" aria-hidden="true">more_vert</span>
                         </button>
-                        <div class="kebab-menu">${buildDeviceMenuItemsHtml(device)}</div>
+                        <div class="kebab-menu" role="menu">${buildDeviceMenuItemsHtml(device)}</div>
                     </div>
                 </td>
             </tr>`;
@@ -1104,12 +1176,14 @@
                 closeAllKebabMenus();
                 if (!wasOpen) {
                     menu.classList.add('open');
+                    btn.setAttribute('aria-expanded', 'true');
                     positionKebabMenu(btn, menu);
                     // Overlay styles only exist at ≤600px — do not leave a ghost .open class wider
                     if (useKebabOverlay()) {
                         const overlay = document.getElementById('kebab-overlay');
                         if (overlay) overlay.classList.add('open');
                     }
+                    focusMenu(menu, btn);
                 }
             });
         });
@@ -1118,6 +1192,10 @@
         tableBody.querySelectorAll('.kebab-menu-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // Move focus back to the row's menu button before a dialog opens,
+                // so closing the dialog returns there.
+                const opener = btn.closest('.kebab-wrapper')?.querySelector('.kebab-btn');
+                if (opener) opener.focus({ preventScroll: true });
                 closeAllKebabMenus();
                 const row = btn.closest('tr[data-id]');
                 const deviceId = btn.dataset.id || row && row.dataset.id;
@@ -1128,12 +1206,20 @@
         });
 
         function openRowDetail(e, row) {
-            if (e.target.closest('.kebab-wrapper') || e.target.closest('.copy-btn')) return;
+            if (e.target.closest('.kebab-wrapper') || e.target.closest('.copy-btn') || e.target.closest('.device-open')) return;
             const deviceId = row.dataset.id;
             if (deviceId && typeof DeviceDetail !== 'undefined') {
                 DeviceDetail.open(deviceId);
             }
         }
+
+        // The name opens the detail panel (keyboard and single click)
+        tableBody.querySelectorAll('.device-open[data-open-detail]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (typeof DeviceDetail !== 'undefined') DeviceDetail.open(btn.dataset.openDetail);
+            });
+        });
 
         // Touch / mobile: single tap opens detail; desktop keeps double-click
         tableBody.querySelectorAll('tr[data-id]').forEach(row => {
@@ -2149,40 +2235,30 @@
 
         return new Promise((resolve) => {
             const modalHtml = `
-                <div class="modal-overlay delete-confirm-modal" id="delete-modal-${deviceId}">
-                    <div class="modal-container modal-danger">
+                <div class="modal-overlay delete-confirm-modal open" id="delete-modal-${deviceId}">
+                    <div class="modal modal-container modal-danger" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title-${deviceId}">
                         <div class="modal-header">
-                            <h3 class="modal-title">
-                                <span class="material-icons" style="color: var(--accent-red);">warning</span>
-                                ${_('devices.delete_title')}
-                            </h3>
+                            <h2 class="modal-title" id="delete-modal-title-${deviceId}">${_('devices.delete_title')}</h2>
                         </div>
                         <div class="modal-body">
                             <p class="delete-warning">${_('devices.delete_confirm', { id: Utils.escapeHtml(deviceId) })}</p>
                             <p class="delete-info form-hint">${_('devices.delete_reserved_hint')}</p>
-                            <div class="revoke-options" style="margin-top: 12px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
-                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 6px;">
+                            <div class="revoke-options">
+                                <label class="checkbox-label">
                                     <input type="checkbox" id="hard-delete-check-${deviceId}" />
-                                    <span class="material-icons" style="font-size: 18px; color: var(--accent-red);">delete_forever</span>
                                     <span>${_('devices.delete_hard_option')}</span>
                                 </label>
-                                <p class="revoke-hint" style="font-size: 0.8rem; opacity: 0.7; margin: 0 0 12px 30px;">
-                                    ${_('devices.delete_hard_hint')}
-                                </p>
-                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 6px;">
+                                <p class="revoke-hint">${_('devices.delete_hard_hint')}</p>
+                                <label class="checkbox-label">
                                     <input type="checkbox" id="revoke-check-${deviceId}" />
-                                    <span class="material-icons" style="font-size: 18px; color: var(--accent-red);">block</span>
                                     <span>${_('devices.revoke_option')}</span>
                                 </label>
-                                <p class="revoke-hint" style="font-size: 0.8rem; opacity: 0.7; margin: 0 0 0 30px;">
-                                    ${_('devices.revoke_hint')}
-                                </p>
+                                <p class="revoke-hint">${_('devices.revoke_hint')}</p>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-secondary cancel-btn">${_('actions.cancel')}</button>
-                            <button class="btn btn-danger confirm-delete-btn" disabled>
-                                <span class="material-icons">delete</span>
+                            <button type="button" class="btn btn-secondary cancel-btn">${_('actions.cancel')}</button>
+                            <button type="button" class="btn btn-danger confirm-delete-btn" disabled>
                                 <span class="btn-text">${_('actions.delete')} (<span class="countdown">3</span>)</span>
                             </button>
                         </div>
@@ -2213,9 +2289,21 @@
                 }
             }, 1000);
             
+            const opener = document.activeElement;
+            const onKey = (e) => {
+                if (e.key !== 'Escape') return;
+                e.stopPropagation();
+                closeModal();
+                resolve(false);
+            };
+            document.addEventListener('keydown', onKey);
+            cancelBtn.focus();
+
             const closeModal = () => {
                 clearInterval(timer);
+                document.removeEventListener('keydown', onKey);
                 modal.remove();
+                if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
             };
             
             cancelBtn.addEventListener('click', () => {
@@ -2931,6 +3019,16 @@
         if (btn) btn.classList.toggle('tag-filter-active', selectedTags.size > 0);
     }
 
+    /** Escape closes a toolbar dropdown and puts focus back on its button */
+    function closeOnEscape(btn, menu) {
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape' || !menu.classList.contains('show')) return;
+            menu.classList.remove('show');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.focus();
+        });
+    }
+
     function initTagFilter() {
         const btn = document.getElementById('tags-filter-btn');
         const menu = document.getElementById('tags-filter-menu');
@@ -2938,12 +3036,16 @@
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            menu.classList.toggle('show');
+            btn.setAttribute('aria-expanded', String(menu.classList.toggle('show')));
         });
         menu.addEventListener('click', (e) => e.stopPropagation());
         document.addEventListener('click', (e) => {
-            if (!btn.contains(e.target) && !menu.contains(e.target)) menu.classList.remove('show');
+            if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.remove('show');
+                btn.setAttribute('aria-expanded', 'false');
+            }
         });
+        closeOnEscape(btn, menu);
     }
 
     async function loadDeviceGroups() {
@@ -2963,22 +3065,18 @@
         if (!container) return;
         container.innerHTML = deviceGroups.map(group => {
             const isDynamic = (group.source_type || 'manual') === 'tag';
-            return `<span class="group-chip ${currentGroup === group.guid ? 'active' : ''} ${isDynamic ? 'dynamic' : ''}" data-group="${Utils.escapeHtml(group.guid)}" role="button" tabindex="0" title="${Utils.escapeHtml(isDynamic ? (_('devices.dynamic_group_hint') || 'Dynamic tag group') + ': ' + group.tag_filter : group.name)}">
-                <span class="material-icons chip-icon">${isDynamic ? 'sell' : 'hub'}</span>
-                <span class="chip-label">${Utils.escapeHtml(group.name)}</span>
-                <span class="chip-count">${group.member_count || 0}</span>
-                <span class="chip-actions">
-                    <button type="button" class="chip-action group-chip-action" data-action="commercialization" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.group_commercialization') || 'Commercialization'}">
-                        <span class="material-icons">payments</span>
-                    </button>
-                    <button type="button" class="chip-action group-chip-action" data-action="edit" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.edit_group') || 'Edit group'}">
-                        <span class="material-icons">edit</span>
-                    </button>
-                    <button type="button" class="chip-action group-chip-action group-delete" data-action="delete" data-group="${Utils.escapeHtml(group.guid)}" title="${_('devices.delete_group') || 'Delete group'}">
-                        <span class="material-icons">delete</span>
-                    </button>
+            const guid = Utils.escapeHtml(group.guid);
+            const name = Utils.escapeHtml(group.name);
+            return `<li class="filter-item">
+                <span class="group-chip filter-option ${currentGroup === group.guid ? 'active' : ''} ${isDynamic ? 'dynamic' : ''}" data-group="${guid}" role="button" tabindex="0" title="${Utils.escapeHtml(isDynamic ? (_('devices.dynamic_group_hint') || 'Dynamic tag group') + ': ' + group.tag_filter : group.name)}">
+                    <span class="chip-label">${name}</span>
+                    <span class="chip-count">${group.member_count || 0}</span>
                 </span>
-            </span>`;
+                <button type="button" class="chip-menu-btn btn-icon" data-type="group" data-group="${guid}"
+                        aria-label="${_('devices.actions')}: ${name}" aria-haspopup="menu">
+                    <span class="material-icons" aria-hidden="true">more_vert</span>
+                </button>
+            </li>`;
         }).join('');
 
         container.querySelectorAll('.group-chip').forEach(el => {
@@ -2994,20 +3092,8 @@
             attachChipContextMenu(el, { type: 'group', guid: el.dataset.group });
         });
 
-        container.querySelectorAll('.group-chip-action').forEach(btn => {
-            btn.addEventListener('click', async (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const group = deviceGroups.find(item => item.guid === btn.dataset.group);
-                if (!group) return;
-                if (btn.dataset.action === 'edit') {
-                    await showDeviceGroupModal(group);
-                } else if (btn.dataset.action === 'delete') {
-                    await deleteDeviceGroup(group);
-                } else if (btn.dataset.action === 'commercialization') {
-                    await openGroupCommercializationModal(group);
-                }
-            });
+        container.querySelectorAll('.chip-menu-btn').forEach(btn => {
+            btn.addEventListener('click', (event) => openChipMenuFromButton(event, btn, { type: 'group', guid: btn.dataset.group }));
         });
 
         attachGroupDropEvents();
@@ -3190,8 +3276,9 @@
         document.querySelectorAll('.group-chip').forEach(el => {
             el.classList.toggle('active', el.dataset.group === currentGroup);
         });
+        // With a group chosen, no folder entry is marked; "All devices" clears both.
         document.querySelectorAll('.folder-chip').forEach(el => {
-            el.classList.toggle('active', el.dataset.folder === 'all');
+            el.classList.toggle('active', currentGroup === 'all' && el.dataset.folder === 'all');
         });
         applyFilters();
     }
@@ -3251,26 +3338,19 @@
             const enabled = strategy.enabled !== false;
             const permCount = Object.keys(strategy.permissions || {}).length;
             return `<div class="strategy-manager-item ${enabled ? '' : 'strategy-disabled'}" data-guid="${Utils.escapeHtml(strategy.guid)}">
-                <div class="strategy-manager-main">
-                    <span class="material-icons">policy</span>
-                    <div class="strategy-manager-text">
-                        <strong>${Utils.escapeHtml(strategy.name)}</strong>
-                        <span>${Utils.escapeHtml(userGroupName(strategy.user_group_guid))} → ${Utils.escapeHtml(deviceGroupName(strategy.device_group_guid))}</span>
-                        <span class="strategy-perm-count">${_('devices.strategy_permissions_count', { count: permCount }) || permCount + ' settings'}</span>
+                <div class="strategy-manager-text">
+                    <strong>${Utils.escapeHtml(strategy.name)}</strong>
+                    <span>${Utils.escapeHtml(userGroupName(strategy.user_group_guid))} → ${Utils.escapeHtml(deviceGroupName(strategy.device_group_guid))}</span>
+                    <span class="text-muted">
+                        <span class="strategy-status-badge ${enabled ? 'enabled' : 'disabled'}">${enabled ? _('devices.strategy_enabled') : _('devices.strategy_disabled')}</span> ·
+                        <span class="strategy-perm-count">${_('devices.strategy_permissions_count', { count: permCount }) || permCount + ' settings'}</span> ·
                         <span class="strategy-assign-count" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('devices.strategy_assign_none')}</span>
-                    </div>
+                    </span>
                 </div>
-                <span class="strategy-status-badge ${enabled ? 'enabled' : 'disabled'}">${enabled ? _('devices.strategy_enabled') : _('devices.strategy_disabled')}</span>
                 <div class="strategy-manager-actions">
-                    <button type="button" class="action-btn" data-action="assign-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}" title="${_('devices.strategy_assign')}">
-                        <span class="material-icons">link</span>
-                    </button>
-                    <button type="button" class="action-btn" data-action="edit-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}" title="${_('devices.edit_strategy')}">
-                        <span class="material-icons">edit</span>
-                    </button>
-                    <button type="button" class="action-btn danger" data-action="delete-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}" title="${_('devices.delete_strategy')}">
-                        <span class="material-icons">delete</span>
-                    </button>
+                    <button type="button" class="btn btn-sm btn-ghost action-btn" data-action="assign-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('devices.strategy_assign')}</button>
+                    <button type="button" class="btn btn-sm btn-ghost action-btn" data-action="edit-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('actions.edit')}</button>
+                    <button type="button" class="btn btn-sm btn-ghost btn-danger-quiet action-btn danger" data-action="delete-strategy" data-guid="${Utils.escapeHtml(strategy.guid)}">${_('actions.delete')}</button>
                 </div>
             </div>`;
         }).join('');
@@ -3559,24 +3639,23 @@
         
         container.innerHTML = folders.map(folder => {
             const safeColor = (Utils.sanitizeColor || _sanitizeColorFallback)(folder.color);
+            const name = Utils.escapeHtml(folder.name);
             return `
-            <span class="folder-chip ${currentFolder == folder.id ? 'active' : ''}"
-                 data-folder="${folder.id}" 
-                 role="button"
-                 tabindex="0"
-                 style="--folder-color: ${safeColor}">
-                <span class="material-icons chip-icon" style="color: ${safeColor}">folder</span>
-                <span class="chip-label">${Utils.escapeHtml(folder.name)}</span>
-                <span class="chip-count">${folder.device_count || 0}</span>
-                <span class="chip-actions">
-                    <button type="button" class="chip-action folder-edit" data-id="${folder.id}" title="${_('actions.edit')}">
-                        <span class="material-icons">edit</span>
-                    </button>
-                    <button type="button" class="chip-action folder-delete" data-id="${folder.id}" title="${_('actions.delete')}">
-                        <span class="material-icons">delete</span>
-                    </button>
+            <li class="filter-item">
+                <span class="folder-chip filter-option ${currentFolder == folder.id ? 'active' : ''}"
+                     data-folder="${folder.id}"
+                     role="button"
+                     tabindex="0"
+                     style="--folder-color: ${safeColor}">
+                    <span class="folder-mark" aria-hidden="true"></span>
+                    <span class="chip-label">${name}</span>
+                    <span class="chip-count">${folder.device_count || 0}</span>
                 </span>
-            </span>
+                <button type="button" class="chip-menu-btn btn-icon" data-type="folder" data-id="${folder.id}"
+                        aria-label="${_('devices.actions')}: ${name}" aria-haspopup="menu">
+                    <span class="material-icons" aria-hidden="true">more_vert</span>
+                </button>
+            </li>
         `}).join('');
         
         // Attach folder click listeners
@@ -3595,22 +3674,10 @@
             attachChipContextMenu(el, { type: 'folder', id: el.dataset.folder });
         });
         
-        container.querySelectorAll('.folder-edit').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                editFolder(btn.dataset.id);
-            });
+        container.querySelectorAll('.chip-menu-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => openChipMenuFromButton(e, btn, { type: 'folder', id: btn.dataset.id }));
         });
-        
-        container.querySelectorAll('.folder-delete').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                deleteFolder(btn.dataset.id);
-            });
-        });
-        
+
         // Attach drag & drop events for all folder chips
         attachFolderDropEvents();
     }
@@ -3729,15 +3796,17 @@
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            menu.classList.toggle('show');
+            btn.setAttribute('aria-expanded', String(menu.classList.toggle('show')));
         });
 
         // Close on outside click — use contains() to handle child elements
         document.addEventListener('click', (e) => {
             if (!btn.contains(e.target) && !menu.contains(e.target)) {
                 menu.classList.remove('show');
+                btn.setAttribute('aria-expanded', 'false');
             }
         });
+        closeOnEscape(btn, menu);
 
         // Checkbox change — stop propagation so click doesn't bubble to document
         menu.querySelectorAll('input[data-column]').forEach(cb => {

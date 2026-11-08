@@ -465,7 +465,8 @@
         "tag_device_one": "उपकरण",
         "tag_device_many": "उपकरण",
         "tag_group_one": "गतिशील समूह",
-        "tag_group_many": "गतिशील समूह"
+        "tag_group_many": "गतिशील समूह",
+        "summary": "{count} डिवाइस, {online} ऑनलाइन"
     },
     "keys": {
         "title": "सर्वर कुंजी",

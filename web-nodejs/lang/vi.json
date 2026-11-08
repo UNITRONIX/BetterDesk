@@ -465,7 +465,8 @@
         "tag_device_one": "thiết bị",
         "tag_device_many": "thiết bị",
         "tag_group_one": "nhóm động",
-        "tag_group_many": "nhóm động"
+        "tag_group_many": "nhóm động",
+        "summary": "{count} thiết bị, {online} trực tuyến"
     },
     "keys": {
         "title": "Khóa máy chủ",

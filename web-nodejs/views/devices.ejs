@@ -1,201 +1,188 @@
 <%- include('layouts/main', {
     title: _('nav.devices'),
-    pageStyles: ['devices', 'device-detail'],
+    pageStyles: ['ui/devices', 'device-detail'],
     pageScripts: ['devices', 'deviceDetail', 'rdclient/mesh-terminal', 'rdclient/mesh-port-forward'],
     currentPage: 'devices',
-    breadcrumb: [{ label: _('nav.devices') }],
+    breadcrumb: [{ label: _('folders.all_devices') }],
     body: `
-        <div class="devices-page devices-layout">
-            <!-- Header -->
-            <div class="devices-header">
-                <div class="devices-title">
-                    <h1>${_('devices.title')}</h1>
-                    <span class="devices-count" id="devices-count">0</span>
-                </div>
-                <div class="devices-actions">
-                    <button class="btn btn-primary btn-sm" id="add-remote-target-btn">
-                        <span class="material-icons">desktop_windows</span>
-                        <span class="btn-label">${_('devices.add_remote_target')}</span>
-                    </button>
-                    <button class="btn btn-secondary btn-sm" id="sync-btn">
-                        <span class="material-icons">sync</span>
-                        <span class="btn-label">${_('devices.sync_status')}</span>
-                    </button>
+        <div class="page devices-page">
+            <div class="page-head">
+                <h1>${_('devices.title')}</h1>
+                <p class="page-meta" id="devices-summary" aria-live="polite"><span id="devices-count" hidden>0</span></p>
+                <div class="page-actions">
+                    <button type="button" class="btn btn-secondary" id="sync-btn">${_('devices.sync_status')}</button>
+                    <button type="button" class="btn btn-primary" id="add-remote-target-btn">${_('devices.add_remote_target')}</button>
                 </div>
             </div>
 
-            <!-- Folder & group tiles (chip bars sticky on tablet; strategies scroll away) -->
-            <div class="devices-tile-bars">
-                <div class="devices-chip-bars">
-                <div class="folders-bar" id="folders-bar">
-                <div class="folders-chips mobile-tabs-scroll" id="folders-chips">
-                    <button class="folder-chip active" data-folder="all">
-                        <span class="material-icons chip-icon">devices</span>
-                        <span class="chip-label">${_('folders.all_devices')}</span>
-                        <span class="chip-count" id="folder-count-all">0</span>
-                    </button>
-                    <button class="folder-chip" data-folder="unassigned">
-                        <span class="material-icons chip-icon">folder_off</span>
-                        <span class="chip-label">${_('folders.unassigned')}</span>
-                        <span class="chip-count" id="folder-count-unassigned">0</span>
-                    </button>
-                    <span id="custom-folders"></span>
-                    <button class="folder-chip chip-add" id="add-folder-btn" title="${_('folders.create')}">
-                        <span class="material-icons">add</span>
-                        <span class="chip-label">${_('folders.create')}</span>
-                    </button>
-                </div>
-                </div>
-
-                <!-- Device Group Tiles -->
-                <div class="groups-bar" id="groups-bar">
-                <div class="groups-chips" id="groups-chips">
-                    <button class="group-chip active" data-group="all">
-                        <span class="material-icons chip-icon">hub</span>
-                        <span class="chip-label">${_('devices.all_groups')}</span>
-                        <span class="chip-count" id="group-count-all">0</span>
-                    </button>
-                    <span id="custom-device-groups"></span>
-                    <button class="group-chip chip-add" id="add-device-group-btn" title="${_('devices.create_group')}">
-                        <span class="material-icons">add</span>
-                        <span class="chip-label">${_('devices.create_group')}</span>
-                    </button>
-                </div>
-                </div>
-                </div>
-
-                <!-- Access control strategies (RustDesk Pro) — outside sticky chip bars -->
-                <div class="devices-strategies-card" id="devices-strategies-card">
-                    <div class="devices-strategies-header">
-                        <div>
-                            <h3>${_('devices.strategies_title')}</h3>
-                            <p>${_('devices.strategies_hint')}</p>
+            <div class="devices-layout">
+                <!-- Folders and groups filter the list -->
+                <aside class="devices-filters" aria-label="${_('folders.title')}">
+                    <div class="filter-block folders-bar" id="folders-bar">
+                        <div class="filter-head">
+                            <h2>${_('folders.title')}</h2>
+                            <button type="button" class="btn-link filter-add" id="add-folder-btn">${_('folders.create')}</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" id="add-strategy-btn">
-                            <span class="material-icons">policy</span>
-                            ${_('devices.create_strategy')}
-                        </button>
+                        <ul class="filter-list folders-chips" id="folders-chips">
+                            <li class="filter-item">
+                                <span class="folder-chip filter-option active" data-folder="all" role="button" tabindex="0">
+                                    <span class="chip-label">${_('folders.all_devices')}</span>
+                                    <span class="chip-count" id="folder-count-all">0</span>
+                                </span>
+                            </li>
+                            <li class="filter-item">
+                                <span class="folder-chip filter-option" data-folder="unassigned" role="button" tabindex="0">
+                                    <span class="chip-label">${_('folders.unassigned')}</span>
+                                    <span class="chip-count" id="folder-count-unassigned">0</span>
+                                </span>
+                            </li>
+                        </ul>
+                        <ul class="filter-list" id="custom-folders"></ul>
                     </div>
-                    <div class="devices-strategies-list" id="devices-strategies-list">
-                        <div class="empty-state-inline">${_('devices.loading_strategies')}</div>
+
+                    <div class="filter-block groups-bar" id="groups-bar">
+                        <div class="filter-head">
+                            <h2>${_('device_detail.device_groups')}</h2>
+                            <button type="button" class="btn-link filter-add" id="add-device-group-btn">${_('devices.create_group')}</button>
+                        </div>
+                        <ul class="filter-list groups-chips" id="groups-chips">
+                            <li class="filter-item filter-item-all-groups">
+                                <span class="group-chip filter-option active" data-group="all" role="button" tabindex="0">
+                                    <span class="chip-label">${_('devices.all_groups')}</span>
+                                    <span class="chip-count" id="group-count-all">0</span>
+                                </span>
+                            </li>
+                        </ul>
+                        <ul class="filter-list" id="custom-device-groups"></ul>
+                    </div>
+                </aside>
+
+                <div class="devices-main">
+                    <div class="devices-toolbar">
+                        <div class="toolbar-search search-wrapper">
+                            <span class="material-icons" aria-hidden="true">search</span>
+                            <input type="search" class="form-input" id="search-input"
+                                aria-label="${_('devices.search_placeholder')}"
+                                placeholder="${_('devices.search_placeholder')}">
+                        </div>
+                        <div class="toolbar-filters" role="group" aria-label="${_('devices.status')}">
+                            <button type="button" class="filter-btn active" data-filter="all">${_('devices.filter_all')}</button>
+                            <button type="button" class="filter-btn" data-filter="online">${_('devices.filter_online')}</button>
+                            <button type="button" class="filter-btn" data-filter="offline">${_('devices.filter_offline')}</button>
+                            <button type="button" class="filter-btn" data-filter="mesh_agent">${_('mesh.filter_mesh')}</button>
+                            <button type="button" class="filter-btn" data-filter="banned">${_('devices.filter_banned')}</button>
+                        </div>
+                        <div class="toolbar-end">
+                            <label class="checkbox-row show-deleted-toggle" for="show-deleted-input">
+                                <input type="checkbox" id="show-deleted-input">
+                                <span>${_('devices.show_deleted')}</span>
+                            </label>
+                            <div class="tag-filter-dropdown">
+                                <button type="button" class="btn-icon" id="tags-filter-btn" title="${_('devices.filter_by_tags')}" aria-label="${_('devices.filter_by_tags')}" aria-haspopup="true" aria-expanded="false" aria-controls="tags-filter-menu">
+                                    <span class="material-icons" aria-hidden="true">sell</span>
+                                </button>
+                                <div class="tag-filter-menu menu" id="tags-filter-menu">
+                                    <div class="tag-filter-empty">${_('devices.no_tags')}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-icon" id="manage-tags-btn" title="${_('devices.manage_tags')}" aria-label="${_('devices.manage_tags')}">
+                                <span class="material-icons" aria-hidden="true">label</span>
+                            </button>
+                            <div class="column-visibility-dropdown">
+                                <button type="button" class="btn-icon" id="columns-btn" title="${_('devices.toggle_columns')}" aria-label="${_('devices.toggle_columns')}" aria-haspopup="true" aria-expanded="false" aria-controls="columns-menu">
+                                    <span class="material-icons" aria-hidden="true">view_column</span>
+                                </button>
+                                <div class="column-visibility-menu menu" id="columns-menu">
+                                    <label class="column-toggle checkbox-row">
+                                        <input type="checkbox" data-column="device_type" checked>
+                                        <span>${_('devices.device_type')}</span>
+                                    </label>
+                                    <label class="column-toggle checkbox-row">
+                                        <input type="checkbox" data-column="platform" checked>
+                                        <span>${_('devices.platform')}</span>
+                                    </label>
+                                    <label class="column-toggle checkbox-row">
+                                        <input type="checkbox" data-column="last_online" checked>
+                                        <span>${_('devices.last_seen')}</span>
+                                    </label>
+                                    <label class="column-toggle checkbox-row">
+                                        <input type="checkbox" data-column="status" checked>
+                                        <span>${_('devices.status')}</span>
+                                    </label>
+                                    <label class="column-toggle checkbox-row">
+                                        <input type="checkbox" data-column="tags" checked>
+                                        <span>${_('devices.tags')}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="devices-table-container">
+                        <div class="devices-table-scroll table-scroll" id="devices-table-scroll">
+                            <table class="data-table devices-table" id="devices-table">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" data-sort="id" data-column="id" aria-sort="none"><button type="button" class="sort-btn">${_('devices.id')}</button></th>
+                                        <th class="sortable" data-sort="hostname" data-column="hostname" aria-sort="none"><button type="button" class="sort-btn">${_('devices.hostname')}</button></th>
+                                        <th class="sortable" data-sort="device_type" data-column="device_type" aria-sort="none"><button type="button" class="sort-btn">${_('devices.device_type')}</button></th>
+                                        <th class="sortable" data-sort="platform" data-column="platform" aria-sort="none"><button type="button" class="sort-btn">${_('devices.platform')}</button></th>
+                                        <th class="sortable" data-sort="last_online" data-column="last_online" aria-sort="none"><button type="button" class="sort-btn">${_('devices.last_seen')}</button></th>
+                                        <th data-column="status">${_('devices.status')}</th>
+                                        <th data-column="tags">${_('devices.tags')}</th>
+                                        <th class="col-actions" data-column="actions"><span class="sr-only">${_('devices.actions')}</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="devices-tbody">
+                                    <tr class="loading-row">
+                                        <td colspan="8">${_('common.loading')}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="devices-pagination" id="pagination">
+                            <span class="pagination-info" id="pagination-info">${_('devices.showing')} 0-0 ${_('devices.of')} 0</span>
+                            <label class="pagination-per-page" for="per-page-select">
+                                <span>${_('devices.per_page')}</span>
+                                <select id="per-page-select" class="form-select pagination-per-page-select">
+                                    <option value="10">10</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </label>
+                            <div class="pagination pagination-controls" id="pagination-controls"></div>
+                        </div>
+                    </div>
+
+                    <div class="devices-empty empty-state hidden" id="devices-empty">
+                        <h3 class="devices-empty-title">${_('devices.empty_title')}</h3>
+                        <p class="devices-empty-text">${_('devices.empty_text')}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Toolbar -->
-            <div class="devices-toolbar mobile-sticky-toolbar">
-                <div class="toolbar-search search-wrapper">
-                    <span class="material-icons">search</span>
-                    <input type="text" class="form-input" id="search-input"
-                        placeholder="${_('devices.search_placeholder')}">
+            <!-- Access control strategies (RustDesk Pro): set up rarely, kept off the list -->
+            <details class="section devices-strategies" id="devices-strategies-card">
+                <summary class="section-head">
+                    <h2>${_('devices.strategies_title')}</h2>
+                </summary>
+                <p class="section-note">${_('devices.strategies_hint')}</p>
+                <div class="devices-strategies-list" id="devices-strategies-list">
+                    <p class="empty-state-inline">${_('devices.loading_strategies')}</p>
                 </div>
-                <div class="toolbar-filters">
-                    <button class="filter-btn active" data-filter="all">${_('devices.filter_all')}</button>
-                    <button class="filter-btn" data-filter="online">${_('devices.filter_online')}</button>
-                    <button class="filter-btn" data-filter="offline">${_('devices.filter_offline')}</button>
-                    <button class="filter-btn" data-filter="mesh_agent">${_('mesh.filter_mesh')}</button>
-                    <button class="filter-btn" data-filter="banned">${_('devices.filter_banned')}</button>
+                <div>
+                    <button type="button" class="btn btn-secondary" id="add-strategy-btn">${_('devices.create_strategy')}</button>
                 </div>
-                <label class="show-deleted-toggle toolbar-toggle" for="show-deleted-input" title="${_('devices.show_deleted')}">
-                    <input type="checkbox" id="show-deleted-input">
-                    <span>${_('devices.show_deleted')}</span>
-                </label>
-                <div class="tag-filter-dropdown">
-                    <button class="btn-icon toolbar-icon" id="tags-filter-btn" title="${_('devices.filter_by_tags')}">
-                        <span class="material-icons">sell</span>
-                    </button>
-                    <div class="tag-filter-menu" id="tags-filter-menu">
-                        <div class="tag-filter-empty">${_('devices.no_tags')}</div>
-                    </div>
-                </div>
-                <button class="btn-icon toolbar-icon" id="manage-tags-btn" title="${_('devices.manage_tags')}">
-                    <span class="material-icons">label</span>
-                </button>
-                <div class="column-visibility-dropdown">
-                    <button class="btn-icon toolbar-icon" id="columns-btn" title="${_('devices.toggle_columns')}">
-                        <span class="material-icons">view_column</span>
-                    </button>
-                    <div class="column-visibility-menu" id="columns-menu">
-                        <label class="column-toggle">
-                            <input type="checkbox" data-column="device_type" checked>
-                            <span>${_('devices.device_type')}</span>
-                        </label>
-                        <label class="column-toggle">
-                            <input type="checkbox" data-column="platform" checked>
-                            <span>${_('devices.platform')}</span>
-                        </label>
-                        <label class="column-toggle">
-                            <input type="checkbox" data-column="last_online" checked>
-                            <span>${_('devices.last_seen')}</span>
-                        </label>
-                        <label class="column-toggle">
-                            <input type="checkbox" data-column="status" checked>
-                            <span>${_('devices.status')}</span>
-                        </label>
-                        <label class="column-toggle">
-                            <input type="checkbox" data-column="tags" checked>
-                            <span>${_('devices.tags')}</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="devices-table-container mobile-card-list">
-                <div class="devices-table-scroll" id="devices-table-scroll">
-                    <table class="devices-table" id="devices-table">
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="id" data-column="id">${_('devices.id')}</th>
-                                <th class="sortable" data-sort="hostname" data-column="hostname">${_('devices.hostname')}</th>
-                                <th class="sortable" data-sort="device_type" data-column="device_type">${_('devices.device_type')}</th>
-                                <th class="sortable" data-sort="platform" data-column="platform">${_('devices.platform')}</th>
-                                <th class="sortable" data-sort="last_online" data-column="last_online">${_('devices.last_seen')}</th>
-                                <th data-column="status">${_('devices.status')}</th>
-                                <th data-column="tags">${_('devices.tags')}</th>
-                                <th class="col-actions" data-column="actions"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="devices-tbody">
-                            <tr class="loading-row">
-                                <td colspan=\"8\" style=\"text-align: center; padding: 40px;\">
-                                    <span class="skeleton skeleton-text" style="width: 200px;"></span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="devices-pagination" id="pagination">
-                    <div class="pagination-info">
-                        <span id="pagination-info">${_('devices.showing')} 0-0 ${_('devices.of')} 0</span>
-                    </div>
-                    <div class="pagination-per-page">
-                        <label for="per-page-select">${_('devices.per_page')}</label>
-                        <select id="per-page-select" class="pagination-per-page-select" aria-label="${_('devices.per_page')}">
-                            <option value="10">10</option>
-                            <option value="20" selected>20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div class="pagination-controls" id="pagination-controls"></div>
-                </div>
-            </div>
+            </details>
 
             <!-- Shared context menu (devices, folders, groups) -->
-            <div class="devices-context-menu" id="devices-context-menu" role="menu" hidden>            </div>
+            <div class="devices-context-menu menu" id="devices-context-menu" role="menu" hidden></div>
 
             <!-- Floating horizontal scrollbar (fixed to visible content area) -->
             <div class="devices-hscroll-float" id="devices-hscroll-float" aria-hidden="true">
                 <div class="devices-hscroll-spacer" id="devices-hscroll-spacer"></div>
-            </div>
-
-            <!-- Empty state -->
-            <div class="devices-empty hidden" id="devices-empty">
-                <span class="material-icons devices-empty-icon">devices_other</span>
-                <h3 class="devices-empty-title">${_('devices.empty_title')}</h3>
-                <p class="devices-empty-text">${_('devices.empty_text')}</p>
             </div>
 
             <!-- Kebab overlay for mobile bottom sheet -->
@@ -208,19 +195,19 @@
                 <div class="form-group">
                     <label for="folder-name">${_('folders.name')}</label>
                     <input type="text" id="folder-name" name="name" class="form-input"
-                        maxlength="50" required placeholder="${_('folders.name_placeholder')}">
+                        maxlength="50" required>
                 </div>
                 <div class="form-group">
-                    <label>${_('folders.color')}</label>
-                    <div class="color-picker" id="folder-color-picker">
-                        <button type="button" class="color-option active" data-color="#6366f1" style="background:#6366f1"></button>
-                        <button type="button" class="color-option" data-color="#22c55e" style="background:#22c55e"></button>
-                        <button type="button" class="color-option" data-color="#f59e0b" style="background:#f59e0b"></button>
-                        <button type="button" class="color-option" data-color="#ef4444" style="background:#ef4444"></button>
-                        <button type="button" class="color-option" data-color="#8b5cf6" style="background:#8b5cf6"></button>
-                        <button type="button" class="color-option" data-color="#06b6d4" style="background:#06b6d4"></button>
-                        <button type="button" class="color-option" data-color="#ec4899" style="background:#ec4899"></button>
-                        <button type="button" class="color-option" data-color="#64748b" style="background:#64748b"></button>
+                    <span class="form-label" id="folder-color-label">${_('folders.color')}</span>
+                    <div class="color-picker" id="folder-color-picker" role="radiogroup" aria-labelledby="folder-color-label">
+                        <button type="button" class="color-option active" data-color="#6366f1" style="background:#6366f1" aria-label="#6366f1"></button>
+                        <button type="button" class="color-option" data-color="#22c55e" style="background:#22c55e" aria-label="#22c55e"></button>
+                        <button type="button" class="color-option" data-color="#f59e0b" style="background:#f59e0b" aria-label="#f59e0b"></button>
+                        <button type="button" class="color-option" data-color="#ef4444" style="background:#ef4444" aria-label="#ef4444"></button>
+                        <button type="button" class="color-option" data-color="#8b5cf6" style="background:#8b5cf6" aria-label="#8b5cf6"></button>
+                        <button type="button" class="color-option" data-color="#06b6d4" style="background:#06b6d4" aria-label="#06b6d4"></button>
+                        <button type="button" class="color-option" data-color="#ec4899" style="background:#ec4899" aria-label="#ec4899"></button>
+                        <button type="button" class="color-option" data-color="#64748b" style="background:#64748b" aria-label="#64748b"></button>
                     </div>
                     <input type="hidden" id="folder-color" name="color" value="#6366f1">
                 </div>
@@ -231,7 +218,7 @@
                     <p class="form-hint">${_('devices.group_allowed_users_hint')}</p>
                 </div>
                 <div class="form-group">
-                    <label>${_('devices.group_allowed_user_groups')}</label>
+                    <span class="form-label">${_('devices.group_allowed_user_groups')}</span>
                     <div class="group-membership-list compact" id="folder-user-groups-list"></div>
                     <p class="form-hint">${_('devices.group_allowed_user_groups_hint')}</p>
                 </div>

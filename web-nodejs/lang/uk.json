@@ -465,7 +465,8 @@
         "tag_device_one": "пристрій",
         "tag_device_many": "пристроїв",
         "tag_group_one": "динамічна група",
-        "tag_group_many": "динамічних груп"
+        "tag_group_many": "динамічних груп",
+        "summary": "Пристроїв: {count}, онлайн: {online}"
     },
     "keys": {
         "title": "Ключі сервера",

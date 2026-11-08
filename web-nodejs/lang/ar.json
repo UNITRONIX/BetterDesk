@@ -466,7 +466,8 @@
         "tag_device_one": "جهاز",
         "tag_device_many": "أجهزة",
         "tag_group_one": "مجموعة ديناميكية",
-        "tag_group_many": "مجموعات ديناميكية"
+        "tag_group_many": "مجموعات ديناميكية",
+        "summary": "{count} أجهزة، {online} متصل"
     },
     "keys": {
         "title": "مفاتيح الخادم",

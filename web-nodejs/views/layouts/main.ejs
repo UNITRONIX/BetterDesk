@@ -2,7 +2,7 @@
     const shell = 'ux35';
     // Pages already moved to the new stylesheets (public/css/ui). The rest
     // still load the old page CSS stack until they are reworked.
-    const REWORKED_PAGES = [];
+    const REWORKED_PAGES = ['devices'];
     const reworked = typeof currentPage !== 'undefined' && REWORKED_PAGES.includes(currentPage);
     const themeMode = (branding && branding.themeMode) || 'system';
     const dataTheme = themeMode === 'light' || themeMode === 'system' ? 'light' : 'dark';

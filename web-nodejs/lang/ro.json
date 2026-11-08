@@ -465,7 +465,8 @@
         "tag_device_one": "dispozitiv",
         "tag_device_many": "dispozitive",
         "tag_group_one": "grup dinamic",
-        "tag_group_many": "grupuri dinamice"
+        "tag_group_many": "grupuri dinamice",
+        "summary": "{count} dispozitive, {online} online"
     },
     "keys": {
         "title": "Cheile serverului",

@@ -465,7 +465,8 @@
         "tag_device_one": "อุปกรณ์",
         "tag_device_many": "อุปกรณ์",
         "tag_group_one": "กลุ่มไดนามิก",
-        "tag_group_many": "กลุ่มไดนามิก"
+        "tag_group_many": "กลุ่มไดนามิก",
+        "summary": "อุปกรณ์ {count} เครื่อง ออนไลน์ {online}"
     },
     "keys": {
         "title": "คีย์เซิร์ฟเวอร์",
