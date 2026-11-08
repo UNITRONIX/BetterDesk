@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.5.217] — 2026-11-08
+
 ### Fixed
 - **Console update rolled back on every instance (3.5.215/3.5.216):** `routes/pairing.routes.js`
   shipped `require('../db')`, a module that has never existed in the repository. The update
@@ -4614,3 +4621,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.214]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.213...v3.5.214
 [3.5.215]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.214...v3.5.215
 [3.5.216]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.215...v3.5.216
+[3.5.217]: https://github.com/UNITRONIX/BetterDesk/compare/v3.5.216...v3.5.217
