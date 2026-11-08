@@ -2216,7 +2216,19 @@
         "support_scope_label": "利用できる機能",
         "support_scope": "基本統計とリモートデスクトップ",
         "support_limits_label": "利用できない機能",
-        "support_limits": "管理機能"
+        "support_limits": "管理機能",
+        "metric_cpu": "CPU",
+        "usage_note": "デバイスが送るハートビートから取得しています。線が途切れている所は、しばらく値が届かなかった時間で、たいていはデバイスの電源が切れていました。",
+        "usage_chart_label": "CPU・メモリ・ディスクの使用率（%）",
+        "usage_summary": "{start}から{end}までの{count}件の値。CPUは{cpu_min}～{cpu_max}、メモリは{memory_min}～{memory_max}、ディスクは{disk_min}～{disk_max}。",
+        "usage_one": "値はまだ1件です（{time}）：CPU {cpu}、メモリ {memory}、ディスク {disk}。",
+        "usage_empty": "まだ値がありません。デバイスのクライアントがCPU・メモリ・ディスクの使用率を含むハートビートを送ると表示されます。",
+        "availability_error": "稼働履歴を読み込めませんでした。",
+        "availability_until_now": "現在（{time}）までの記録です。",
+        "duration_h_min": "{h}時間{m}分",
+        "duration_h": "{h}時間",
+        "duration_min": "{m}分",
+        "duration_under_min": "1分未満"
     },
     "inventory": {
         "title": "Inventory",

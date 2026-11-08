@@ -649,9 +649,9 @@ router.get('/api/devices/:id', requireAuth, requirePermission('device.view'), as
             // metrics table may not exist yet — silently skip
         }
 
-        // Enrich with recent metrics history (last 20 data-points for charts)
+        // Enrich with recent metrics history for the usage chart (48 samples: a day at one per 30 minutes)
         try {
-            const metricsHistory = await db.getPeerMetrics(req.params.id, 20);
+            const metricsHistory = await db.getPeerMetrics(req.params.id, 48);
             if (metricsHistory && metricsHistory.length > 0) {
                 device.metrics_history = metricsHistory.map(m => ({
                     cpu: m.cpu_usage,

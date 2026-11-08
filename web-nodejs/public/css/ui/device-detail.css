@@ -517,7 +517,9 @@
 }
 
 .device-panel-action-card {
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
     width: 100%;
     padding: var(--space-2) 0;
     border: 0;
@@ -623,4 +625,95 @@
         width: 44px;
         height: 44px;
     }
+}
+
+/* Wide screens: the panel takes more room so the charts in Metrics can be read */
+@media (min-width: 1600px) {
+    .device-panel {
+        width: 720px;
+    }
+}
+
+/* ── Metrics: usage chart (ui-chart.js) and the availability strip ── */
+
+#dp-usage-section .section-note {
+    margin: 0 0 var(--space-3);
+}
+
+.device-panel-availability-day {
+    min-width: 0;
+}
+
+/* One day as a band; time runs left to right in every language */
+.dp-strip-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 var(--space-4);
+}
+
+.dp-strip {
+    display: block;
+    direction: ltr;
+    overflow: visible;
+}
+
+/* The part of the day without data (still to come) is an empty outline */
+.dp-strip-bg {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.dp-strip-span.is-ok { fill: var(--success); }
+.dp-strip-span.is-warning { fill: var(--warning); }
+.dp-strip-span.is-danger { fill: var(--danger); }
+.dp-strip-span.is-muted { fill: var(--border); }
+
+.dp-strip-tick {
+    stroke: var(--border);
+    stroke-width: 1;
+}
+
+.dp-strip-now {
+    stroke: var(--text);
+    stroke-width: 2;
+}
+
+.dp-strip-label {
+    fill: var(--text-muted);
+    font-family: var(--font);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dp-strip-legend {
+    font-size: var(--text-sm);
+}
+
+@media (max-width: 480px) {
+    .dp-strip-label.is-minor {
+        display: none;
+    }
+}
+
+@media (forced-colors: active) {
+    .dp-strip-span { fill: CanvasText; }
+    .dp-strip-span.is-ok { fill: Highlight; }
+}
+
+/* Action list icons: muted, the size of the menu icons */
+.device-panel-action-card > .material-icons,
+.device-panel-action-glyph-space {
+    flex: none;
+    width: 20px;
+    margin-top: 1px;
+    color: var(--text-muted);
+    font-size: 20px;
+}
+
+.device-panel-action-card[data-action="delete"] > .material-icons,
+.device-panel-action-card[data-action="permanent-delete"] > .material-icons {
+    color: var(--danger);
 }

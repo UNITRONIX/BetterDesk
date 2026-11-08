@@ -3,8 +3,8 @@
     const canEditDevices = can('device.edit');
 %><%- include('layouts/main', {
     title: _('nav.devices'),
-    pageStyles: ['ui/devices', 'ui/device-detail'],
-    pageScripts: ['devices', 'deviceDetail', 'rdclient/mesh-terminal', 'rdclient/mesh-port-forward'],
+    pageStyles: ['ui/chart', 'ui/devices', 'ui/device-detail'],
+    pageScripts: ['ui-chart', 'devices', 'deviceDetail', 'rdclient/mesh-terminal', 'rdclient/mesh-port-forward'],
     currentPage: 'devices',
     breadcrumb: [{ label: _('folders.all_devices') }],
     body: `
@@ -13,8 +13,8 @@
                 <h1>${_('devices.title')}</h1>
                 <p class="page-meta" id="devices-summary" aria-live="polite"><span id="devices-count" hidden>0</span></p>
                 <div class="page-actions">
-                    <button type="button" class="btn btn-secondary" id="sync-btn">${_('devices.sync_status')}</button>
-                    ${can('remote_target.edit') ? `<button type="button" class="btn btn-primary" id="add-remote-target-btn">${_('devices.add_remote_target')}</button>` : ''}
+                    <button type="button" class="btn btn-secondary" id="sync-btn"><span class="material-icons" aria-hidden="true">refresh</span>${_('devices.sync_status')}</button>
+                    ${can('remote_target.edit') ? `<button type="button" class="btn btn-primary" id="add-remote-target-btn"><span class="material-icons" aria-hidden="true">add</span>${_('devices.add_remote_target')}</button>` : ''}
                 </div>
             </div>
 
@@ -91,7 +91,7 @@
                                         <div class="tag-filter-empty">${_('devices.no_tags')}</div>
                                     </div>
                                     ${canEditDevices ? `<div class="menu-divider"></div>
-                                    <button type="button" class="menu-item" id="manage-tags-btn">${_('devices.manage_tags')}</button>` : ''}
+                                    <button type="button" class="menu-item" id="manage-tags-btn"><span class="material-icons" aria-hidden="true">sell</span>${_('devices.manage_tags')}</button>` : ''}
                                 </div>
                             </div>
                             <div class="column-visibility-dropdown">
@@ -178,7 +178,7 @@
                     <p class="empty-state-inline">${_('devices.loading_strategies')}</p>
                 </div>
                 ${canEditDevices ? `<div>
-                    <button type="button" class="btn btn-secondary" id="add-strategy-btn">${_('devices.create_strategy')}</button>
+                    <button type="button" class="btn btn-secondary" id="add-strategy-btn"><span class="material-icons" aria-hidden="true">add</span>${_('devices.create_strategy')}</button>
                 </div>` : ''}
             </details>
 

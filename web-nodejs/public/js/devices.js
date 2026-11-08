@@ -2893,6 +2893,13 @@
             searchQuery = urlSearch.trim();
             searchInput.value = searchQuery;
         }
+        // ?open=<id> (from the global search) opens that device's details
+        const openId = new URLSearchParams(window.location.search).get('open');
+        if (openId) {
+            window.addEventListener('load', () => {
+                if (typeof DeviceDetail !== 'undefined') DeviceDetail.open(openId);
+            });
+        }
         
         searchInput.addEventListener('input', Utils.debounce((e) => {
             searchQuery = e.target.value.trim();

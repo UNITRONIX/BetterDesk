@@ -2216,7 +2216,19 @@
         "support_scope_label": "Verfügbar",
         "support_scope": "Grundlegende Statistiken und Fernsteuerung",
         "support_limits_label": "Nicht verfügbar",
-        "support_limits": "Verwaltungsfunktionen"
+        "support_limits": "Verwaltungsfunktionen",
+        "metric_cpu": "CPU",
+        "usage_note": "Aus den Heartbeats, die das Gerät sendet. Eine Lücke in den Linien bedeutet, dass eine Zeit lang keine Werte kamen, meist weil das Gerät aus war.",
+        "usage_chart_label": "CPU-, Arbeitsspeicher- und Festplattenauslastung in Prozent",
+        "usage_summary": "{count} Messwerte von {start} bis {end}. CPU zwischen {cpu_min} und {cpu_max}, Arbeitsspeicher zwischen {memory_min} und {memory_max}, Festplatte zwischen {disk_min} und {disk_max}.",
+        "usage_one": "Bisher ein Messwert, von {time}: CPU {cpu}, Arbeitsspeicher {memory}, Festplatte {disk}.",
+        "usage_empty": "Noch keine Messwerte. Sie erscheinen, sobald der Client des Geräts Heartbeats mit CPU-, Arbeitsspeicher- und Festplattenauslastung sendet.",
+        "availability_error": "Der Verfügbarkeitsverlauf konnte nicht geladen werden.",
+        "availability_until_now": "Aufgezeichnet bis jetzt, {time}.",
+        "duration_h_min": "{h} Std. {m} Min.",
+        "duration_h": "{h} Std.",
+        "duration_min": "{m} Min.",
+        "duration_under_min": "unter 1 Min."
     },
     "inventory": {
         "title": "Dashboard",

@@ -2216,7 +2216,19 @@
         "support_scope_label": "K dispozici",
         "support_scope": "Základní statistiky a vzdálená plocha",
         "support_limits_label": "Není k dispozici",
-        "support_limits": "Funkce správy"
+        "support_limits": "Funkce správy",
+        "metric_cpu": "CPU",
+        "usage_note": "Z heartbeatů, které zařízení posílá. Přerušení čar znamená, že nějakou dobu nepřišla žádná měření, obvykle protože bylo zařízení vypnuté.",
+        "usage_chart_label": "Využití CPU, paměti a disku v procentech",
+        "usage_summary": "{count} měření od {start} do {end}. CPU mezi {cpu_min} a {cpu_max}, paměť mezi {memory_min} a {memory_max}, disk mezi {disk_min} a {disk_max}.",
+        "usage_one": "Zatím jedno měření, z {time}: CPU {cpu}, paměť {memory}, disk {disk}.",
+        "usage_empty": "Zatím žádná měření. Objeví se, jakmile klient zařízení začne posílat heartbeaty s využitím CPU, paměti a disku.",
+        "availability_error": "Historii dostupnosti se nepodařilo načíst.",
+        "availability_until_now": "Zaznamenáno do teď, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "méně než 1 min"
     },
     "inventory": {
         "title": "Inventář",

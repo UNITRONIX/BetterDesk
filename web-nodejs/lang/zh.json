@@ -2216,7 +2216,19 @@
         "support_scope_label": "可用",
         "support_scope": "基本统计和远程桌面",
         "support_limits_label": "不可用",
-        "support_limits": "管理功能"
+        "support_limits": "管理功能",
+        "metric_cpu": "CPU",
+        "usage_note": "来自设备发送的心跳。线条中断表示有一段时间没有收到数据，通常是因为设备已关机。",
+        "usage_chart_label": "CPU、内存和磁盘使用率（百分比）",
+        "usage_summary": "从 {start} 到 {end} 共 {count} 个数据点。CPU 在 {cpu_min} 到 {cpu_max} 之间，内存在 {memory_min} 到 {memory_max} 之间，磁盘在 {disk_min} 到 {disk_max} 之间。",
+        "usage_one": "目前只有一个数据点（{time}）：CPU {cpu}，内存 {memory}，磁盘 {disk}。",
+        "usage_empty": "还没有数据。设备客户端发送带有 CPU、内存和磁盘使用率的心跳后，数据会显示在这里。",
+        "availability_error": "无法加载可用性历史。",
+        "availability_until_now": "记录到现在（{time}）。",
+        "duration_h_min": "{h} 小时 {m} 分钟",
+        "duration_h": "{h} 小时",
+        "duration_min": "{m} 分钟",
+        "duration_under_min": "不到 1 分钟"
     },
     "inventory": {
         "title": "资产清单",

@@ -2234,7 +2234,19 @@
         "support_scope_label": "Dostępne",
         "support_scope": "Podstawowe statystyki i pulpit zdalny",
         "support_limits_label": "Niedostępne",
-        "support_limits": "Funkcje administracyjne"
+        "support_limits": "Funkcje administracyjne",
+        "metric_cpu": "CPU",
+        "usage_note": "Na podstawie sygnałów heartbeat wysyłanych przez urządzenie. Przerwa w liniach oznacza, że przez pewien czas nie przychodziły pomiary, zwykle dlatego, że urządzenie było wyłączone.",
+        "usage_chart_label": "Użycie procesora, pamięci i dysku w procentach",
+        "usage_summary": "{count} pomiarów od {start} do {end}. Procesor od {cpu_min} do {cpu_max}, pamięć od {memory_min} do {memory_max}, dysk od {disk_min} do {disk_max}.",
+        "usage_one": "Na razie jeden pomiar, z {time}: procesor {cpu}, pamięć {memory}, dysk {disk}.",
+        "usage_empty": "Brak pomiarów. Pojawią się, gdy klient urządzenia zacznie wysyłać sygnały heartbeat z użyciem procesora, pamięci i dysku.",
+        "availability_error": "Nie udało się wczytać historii dostępności.",
+        "availability_until_now": "Zapisano do teraz, {time}.",
+        "duration_h_min": "{h} godz. {m} min",
+        "duration_h": "{h} godz.",
+        "duration_min": "{m} min",
+        "duration_under_min": "poniżej 1 min"
     },
     "inventory": {
         "title": "Inwentaryzacja",

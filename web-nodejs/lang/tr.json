@@ -2222,7 +2222,19 @@
         "support_scope_label": "Kullanılabilir",
         "support_scope": "Temel istatistikler ve uzak masaüstü",
         "support_limits_label": "Kullanılamaz",
-        "support_limits": "Yönetim işlevleri"
+        "support_limits": "Yönetim işlevleri",
+        "metric_cpu": "CPU",
+        "usage_note": "Cihazın gönderdiği heartbeat sinyallerinden. Çizgilerdeki bir kopukluk, bir süre ölçüm gelmediği anlamına gelir; genellikle cihaz kapalı olduğu içindir.",
+        "usage_chart_label": "Yüzde olarak CPU, bellek ve disk kullanımı",
+        "usage_summary": "{start} ile {end} arasında {count} ölçüm. CPU {cpu_min} ile {cpu_max}, bellek {memory_min} ile {memory_max}, disk {disk_min} ile {disk_max} arasında.",
+        "usage_one": "Şimdilik bir ölçüm var, {time}: CPU {cpu}, bellek {memory}, disk {disk}.",
+        "usage_empty": "Henüz ölçüm yok. Cihazın istemcisi CPU, bellek ve disk kullanımıyla heartbeat gönderdiğinde görünür.",
+        "availability_error": "Erişilebilirlik geçmişi yüklenemedi.",
+        "availability_until_now": "Şu ana kadar kaydedildi, {time}.",
+        "duration_h_min": "{h} sa {m} dk",
+        "duration_h": "{h} sa",
+        "duration_min": "{m} dk",
+        "duration_under_min": "1 dk'dan az"
     },
     "inventory": {
         "title": "Inventory",

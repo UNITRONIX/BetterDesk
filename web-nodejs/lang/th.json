@@ -2222,7 +2222,19 @@
         "support_scope_label": "ใช้ได้",
         "support_scope": "สถิติพื้นฐานและเดสก์ท็อประยะไกล",
         "support_limits_label": "ใช้ไม่ได้",
-        "support_limits": "ฟังก์ชันการดูแลระบบ"
+        "support_limits": "ฟังก์ชันการดูแลระบบ",
+        "metric_cpu": "CPU",
+        "usage_note": "จากสัญญาณ heartbeat ที่อุปกรณ์ส่งมา ช่วงที่เส้นขาดหมายถึงไม่มีค่าที่วัดได้เข้ามาสักพัก ส่วนใหญ่เพราะอุปกรณ์ปิดอยู่",
+        "usage_chart_label": "การใช้ CPU หน่วยความจำ และดิสก์เป็นเปอร์เซ็นต์",
+        "usage_summary": "ค่าที่วัดได้ {count} ค่า ตั้งแต่ {start} ถึง {end} CPU อยู่ระหว่าง {cpu_min} ถึง {cpu_max} หน่วยความจำ {memory_min} ถึง {memory_max} ดิสก์ {disk_min} ถึง {disk_max}",
+        "usage_one": "ตอนนี้มีค่าที่วัดได้หนึ่งค่า จาก {time}: CPU {cpu} หน่วยความจำ {memory} ดิสก์ {disk}",
+        "usage_empty": "ยังไม่มีค่าที่วัดได้ จะแสดงเมื่อไคลเอนต์ของอุปกรณ์ส่ง heartbeat ที่มีการใช้ CPU หน่วยความจำ และดิสก์",
+        "availability_error": "โหลดประวัติความพร้อมใช้งานไม่ได้",
+        "availability_until_now": "บันทึกถึงตอนนี้ {time}",
+        "duration_h_min": "{h} ชม. {m} นาที",
+        "duration_h": "{h} ชม.",
+        "duration_min": "{m} นาที",
+        "duration_under_min": "ไม่ถึง 1 นาที"
     },
     "inventory": {
         "title": "Inventory",

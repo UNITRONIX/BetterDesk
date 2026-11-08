@@ -2222,7 +2222,19 @@
         "support_scope_label": "Доступно",
         "support_scope": "Базова статистика та віддалений робочий стіл",
         "support_limits_label": "Недоступно",
-        "support_limits": "Функції адміністрування"
+        "support_limits": "Функції адміністрування",
+        "metric_cpu": "Процесор",
+        "usage_note": "З heartbeat-сигналів, які надсилає пристрій. Розрив у лініях означає, що деякий час вимірювання не надходили, зазвичай тому, що пристрій був вимкнений.",
+        "usage_chart_label": "Використання процесора, пам'яті та диска у відсотках",
+        "usage_summary": "{count} вимірювань з {start} до {end}. Процесор від {cpu_min} до {cpu_max}, пам'ять від {memory_min} до {memory_max}, диск від {disk_min} до {disk_max}.",
+        "usage_one": "Поки що одне вимірювання, від {time}: процесор {cpu}, пам'ять {memory}, диск {disk}.",
+        "usage_empty": "Вимірювань поки немає. Вони з'являться, коли клієнт пристрою надсилатиме heartbeat-сигнали з використанням процесора, пам'яті та диска.",
+        "availability_error": "Не вдалося завантажити історію доступності.",
+        "availability_until_now": "Записано до цього моменту, {time}.",
+        "duration_h_min": "{h} год {m} хв",
+        "duration_h": "{h} год",
+        "duration_min": "{m} хв",
+        "duration_under_min": "менше 1 хв"
     },
     "inventory": {
         "title": "Inventory",

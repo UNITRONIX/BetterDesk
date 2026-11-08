@@ -2222,7 +2222,19 @@
         "support_scope_label": "Tilgjengelig",
         "support_scope": "Grunnleggende statistikk og fjernskrivebord",
         "support_limits_label": "Ikke tilgjengelig",
-        "support_limits": "Administrasjonsfunksjoner"
+        "support_limits": "Administrasjonsfunksjoner",
+        "metric_cpu": "CPU",
+        "usage_note": "Fra heartbeatene enheten sender. Et brudd i linjene betyr at det ikke kom målinger på en stund, som regel fordi enheten var slått av.",
+        "usage_chart_label": "Bruk av CPU, minne og disk i prosent",
+        "usage_summary": "{count} målinger fra {start} til {end}. CPU mellom {cpu_min} og {cpu_max}, minne mellom {memory_min} og {memory_max}, disk mellom {disk_min} og {disk_max}.",
+        "usage_one": "Så langt én måling, fra {time}: CPU {cpu}, minne {memory}, disk {disk}.",
+        "usage_empty": "Ingen målinger ennå. De vises når enhetens klient sender heartbeats med bruk av CPU, minne og disk.",
+        "availability_error": "Kunne ikke laste inn tilgjengelighetshistorikken.",
+        "availability_until_now": "Registrert frem til nå, {time}.",
+        "duration_h_min": "{h} t {m} min",
+        "duration_h": "{h} t",
+        "duration_min": "{m} min",
+        "duration_under_min": "under 1 min"
     },
     "inventory": {
         "title": "Inventory",

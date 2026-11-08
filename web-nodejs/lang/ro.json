@@ -2222,7 +2222,19 @@
         "support_scope_label": "Disponibil",
         "support_scope": "Statistici de bază și desktop la distanță",
         "support_limits_label": "Indisponibil",
-        "support_limits": "Funcții de administrare"
+        "support_limits": "Funcții de administrare",
+        "metric_cpu": "CPU",
+        "usage_note": "Din semnalele heartbeat trimise de dispozitiv. O întrerupere în linii înseamnă că o vreme nu au sosit măsurători, de obicei pentru că dispozitivul era oprit.",
+        "usage_chart_label": "Utilizarea CPU, memoriei și discului în procente",
+        "usage_summary": "{count} măsurători între {start} și {end}. CPU între {cpu_min} și {cpu_max}, memorie între {memory_min} și {memory_max}, disc între {disk_min} și {disk_max}.",
+        "usage_one": "Deocamdată o singură măsurătoare, din {time}: CPU {cpu}, memorie {memory}, disc {disk}.",
+        "usage_empty": "Încă nu există măsurători. Apar când clientul dispozitivului trimite semnale heartbeat cu utilizarea CPU, memoriei și discului.",
+        "availability_error": "Istoricul de disponibilitate nu a putut fi încărcat.",
+        "availability_until_now": "Înregistrat până acum, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "sub 1 min"
     },
     "inventory": {
         "title": "Inventory",

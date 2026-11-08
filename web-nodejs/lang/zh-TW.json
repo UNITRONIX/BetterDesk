@@ -2238,7 +2238,19 @@
         "support_scope_label": "可用",
         "support_scope": "基本統計與遠端桌面",
         "support_limits_label": "不可用",
-        "support_limits": "管理功能"
+        "support_limits": "管理功能",
+        "metric_cpu": "CPU",
+        "usage_note": "來自裝置傳送的心跳訊號。線條中斷表示有一段時間沒有收到資料，通常是因為裝置已關機。",
+        "usage_chart_label": "CPU、記憶體和磁碟使用率（百分比）",
+        "usage_summary": "從 {start} 到 {end} 共 {count} 筆資料。CPU 介於 {cpu_min} 到 {cpu_max}，記憶體介於 {memory_min} 到 {memory_max}，磁碟介於 {disk_min} 到 {disk_max}。",
+        "usage_one": "目前只有一筆資料（{time}）：CPU {cpu}，記憶體 {memory}，磁碟 {disk}。",
+        "usage_empty": "還沒有資料。裝置用戶端傳送含 CPU、記憶體和磁碟使用率的心跳訊號後，資料會顯示在這裡。",
+        "availability_error": "無法載入可用性歷史。",
+        "availability_until_now": "記錄到現在（{time}）。",
+        "duration_h_min": "{h} 小時 {m} 分鐘",
+        "duration_h": "{h} 小時",
+        "duration_min": "{m} 分鐘",
+        "duration_under_min": "不到 1 分鐘"
     },
     "inventory": {
         "title": "資產清單",

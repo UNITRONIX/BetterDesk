@@ -2238,7 +2238,19 @@
         "support_scope_label": "Disponible",
         "support_scope": "Statistiques de base et bureau à distance",
         "support_limits_label": "Non disponible",
-        "support_limits": "Fonctions d’administration"
+        "support_limits": "Fonctions d’administration",
+        "metric_cpu": "Processeur",
+        "usage_note": "D'après les signaux de vie envoyés par l'appareil. Une coupure dans les lignes signifie qu'aucune mesure n'est arrivée pendant un moment, en général parce que l'appareil était éteint.",
+        "usage_chart_label": "Utilisation du processeur, de la mémoire et du disque en pourcentage",
+        "usage_summary": "{count} mesures du {start} au {end}. Processeur entre {cpu_min} et {cpu_max}, mémoire entre {memory_min} et {memory_max}, disque entre {disk_min} et {disk_max}.",
+        "usage_one": "Une seule mesure pour l'instant, du {time} : processeur {cpu}, mémoire {memory}, disque {disk}.",
+        "usage_empty": "Pas encore de mesures. Elles apparaissent dès que le client de l'appareil envoie des signaux de vie avec l'utilisation du processeur, de la mémoire et du disque.",
+        "availability_error": "Impossible de charger l'historique de disponibilité.",
+        "availability_until_now": "Enregistré jusqu'à maintenant, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "moins d'1 min"
     },
     "inventory": {
         "title": "Tableau de bord",

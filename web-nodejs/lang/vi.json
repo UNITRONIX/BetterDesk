@@ -2222,7 +2222,19 @@
         "support_scope_label": "Có sẵn",
         "support_scope": "Thống kê cơ bản và màn hình từ xa",
         "support_limits_label": "Không có sẵn",
-        "support_limits": "Chức năng quản trị"
+        "support_limits": "Chức năng quản trị",
+        "metric_cpu": "CPU",
+        "usage_note": "Lấy từ các tín hiệu heartbeat mà thiết bị gửi. Chỗ đường bị ngắt nghĩa là một lúc không có số liệu, thường do thiết bị đã tắt.",
+        "usage_chart_label": "Mức dùng CPU, bộ nhớ và ổ đĩa theo phần trăm",
+        "usage_summary": "{count} số liệu từ {start} đến {end}. CPU từ {cpu_min} đến {cpu_max}, bộ nhớ từ {memory_min} đến {memory_max}, ổ đĩa từ {disk_min} đến {disk_max}.",
+        "usage_one": "Hiện mới có một số liệu, lúc {time}: CPU {cpu}, bộ nhớ {memory}, ổ đĩa {disk}.",
+        "usage_empty": "Chưa có số liệu. Số liệu sẽ hiện khi ứng dụng khách của thiết bị gửi heartbeat kèm mức dùng CPU, bộ nhớ và ổ đĩa.",
+        "availability_error": "Không tải được lịch sử khả dụng.",
+        "availability_until_now": "Ghi nhận đến bây giờ, {time}.",
+        "duration_h_min": "{h} giờ {m} phút",
+        "duration_h": "{h} giờ",
+        "duration_min": "{m} phút",
+        "duration_under_min": "dưới 1 phút"
     },
     "inventory": {
         "title": "Inventory",

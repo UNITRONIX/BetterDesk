@@ -2222,7 +2222,19 @@
         "support_scope_label": "Elérhető",
         "support_scope": "Alapstatisztikák és távoli asztal",
         "support_limits_label": "Nem elérhető",
-        "support_limits": "Felügyeleti funkciók"
+        "support_limits": "Felügyeleti funkciók",
+        "metric_cpu": "CPU",
+        "usage_note": "Az eszköz által küldött heartbeat-üzenetekből. A vonalak megszakadása azt jelenti, hogy egy ideig nem érkezett mérés, általában mert az eszköz ki volt kapcsolva.",
+        "usage_chart_label": "CPU-, memória- és lemezhasználat százalékban",
+        "usage_summary": "{count} mérés {start} és {end} között. CPU {cpu_min} és {cpu_max} között, memória {memory_min} és {memory_max} között, lemez {disk_min} és {disk_max} között.",
+        "usage_one": "Eddig egy mérés, ekkor: {time}. CPU {cpu}, memória {memory}, lemez {disk}.",
+        "usage_empty": "Még nincs mérés. Akkor jelennek meg, amikor az eszköz kliense CPU-, memória- és lemezhasználatot tartalmazó heartbeat-üzeneteket küld.",
+        "availability_error": "Nem sikerült betölteni az elérhetőségi előzményeket.",
+        "availability_until_now": "Rögzítve mostanáig, {time}.",
+        "duration_h_min": "{h} óra {m} perc",
+        "duration_h": "{h} óra",
+        "duration_min": "{m} perc",
+        "duration_under_min": "1 percnél kevesebb"
     },
     "inventory": {
         "title": "Inventory",

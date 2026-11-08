@@ -2223,7 +2223,19 @@
         "support_scope_label": "متاح",
         "support_scope": "إحصاءات أساسية وسطح المكتب البعيد",
         "support_limits_label": "غير متاح",
-        "support_limits": "وظائف الإدارة"
+        "support_limits": "وظائف الإدارة",
+        "metric_cpu": "المعالج",
+        "usage_note": "من نبضات الحياة التي يرسلها الجهاز. الانقطاع في الخطوط يعني أنه لم تصل قياسات لفترة، غالبًا لأن الجهاز كان مطفأً.",
+        "usage_chart_label": "استخدام المعالج والذاكرة والقرص بالنسبة المئوية",
+        "usage_summary": "{count} قياسًا من {start} إلى {end}. المعالج بين {cpu_min} و{cpu_max}، والذاكرة بين {memory_min} و{memory_max}، والقرص بين {disk_min} و{disk_max}.",
+        "usage_one": "قياس واحد حتى الآن، من {time}: المعالج {cpu}، الذاكرة {memory}، القرص {disk}.",
+        "usage_empty": "لا توجد قياسات بعد. تظهر عندما يرسل عميل الجهاز نبضات حياة تتضمن استخدام المعالج والذاكرة والقرص.",
+        "availability_error": "تعذر تحميل سجل التوفر.",
+        "availability_until_now": "مسجّل حتى الآن، {time}.",
+        "duration_h_min": "{h} س {m} د",
+        "duration_h": "{h} س",
+        "duration_min": "{m} د",
+        "duration_under_min": "أقل من دقيقة"
     },
     "inventory": {
         "title": "Inventory",

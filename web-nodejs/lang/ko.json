@@ -2216,7 +2216,19 @@
         "support_scope_label": "사용 가능",
         "support_scope": "기본 통계와 원격 데스크톱",
         "support_limits_label": "사용 불가",
-        "support_limits": "관리 기능"
+        "support_limits": "관리 기능",
+        "metric_cpu": "CPU",
+        "usage_note": "기기가 보내는 하트비트에서 가져옵니다. 선이 끊긴 곳은 한동안 측정값이 들어오지 않은 시간이며, 보통 기기가 꺼져 있었기 때문입니다.",
+        "usage_chart_label": "CPU, 메모리, 디스크 사용률(%)",
+        "usage_summary": "{start}부터 {end}까지 측정값 {count}개. CPU {cpu_min}~{cpu_max}, 메모리 {memory_min}~{memory_max}, 디스크 {disk_min}~{disk_max}.",
+        "usage_one": "지금까지 측정값 1개({time}): CPU {cpu}, 메모리 {memory}, 디스크 {disk}.",
+        "usage_empty": "아직 측정값이 없습니다. 기기의 클라이언트가 CPU, 메모리, 디스크 사용률이 담긴 하트비트를 보내면 표시됩니다.",
+        "availability_error": "가용성 기록을 불러오지 못했습니다.",
+        "availability_until_now": "지금({time})까지 기록되었습니다.",
+        "duration_h_min": "{h}시간 {m}분",
+        "duration_h": "{h}시간",
+        "duration_min": "{m}분",
+        "duration_under_min": "1분 미만"
     },
     "inventory": {
         "title": "Inventory",

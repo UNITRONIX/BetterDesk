@@ -2216,7 +2216,19 @@
         "support_scope_label": "Disponibile",
         "support_scope": "Statistiche di base e desktop remoto",
         "support_limits_label": "Non disponibile",
-        "support_limits": "Funzioni di amministrazione"
+        "support_limits": "Funzioni di amministrazione",
+        "metric_cpu": "CPU",
+        "usage_note": "Dagli heartbeat che il dispositivo invia. Un'interruzione nelle linee significa che per un po' non sono arrivati campioni, di solito perché il dispositivo era spento.",
+        "usage_chart_label": "Uso di CPU, memoria e disco in percentuale",
+        "usage_summary": "{count} campioni da {start} a {end}. CPU tra {cpu_min} e {cpu_max}, memoria tra {memory_min} e {memory_max}, disco tra {disk_min} e {disk_max}.",
+        "usage_one": "Finora un solo campione, delle {time}: CPU {cpu}, memoria {memory}, disco {disk}.",
+        "usage_empty": "Ancora nessun campione. Compaiono quando il client del dispositivo invia heartbeat con l'uso di CPU, memoria e disco.",
+        "availability_error": "Impossibile caricare la cronologia di disponibilità.",
+        "availability_until_now": "Registrato fino ad ora, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "meno di 1 min"
     },
     "inventory": {
         "title": "Inventario",

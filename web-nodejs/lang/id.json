@@ -2222,7 +2222,19 @@
         "support_scope_label": "Tersedia",
         "support_scope": "Statistik dasar dan desktop jarak jauh",
         "support_limits_label": "Tidak tersedia",
-        "support_limits": "Fungsi administrasi"
+        "support_limits": "Fungsi administrasi",
+        "metric_cpu": "CPU",
+        "usage_note": "Dari heartbeat yang dikirim perangkat. Celah pada garis berarti tidak ada sampel yang masuk untuk sementara, biasanya karena perangkat mati.",
+        "usage_chart_label": "Penggunaan CPU, memori, dan disk dalam persen",
+        "usage_summary": "{count} sampel dari {start} sampai {end}. CPU antara {cpu_min} dan {cpu_max}, memori antara {memory_min} dan {memory_max}, disk antara {disk_min} dan {disk_max}.",
+        "usage_one": "Baru satu sampel, dari {time}: CPU {cpu}, memori {memory}, disk {disk}.",
+        "usage_empty": "Belum ada sampel. Sampel muncul setelah klien perangkat mengirim heartbeat berisi penggunaan CPU, memori, dan disk.",
+        "availability_error": "Riwayat ketersediaan tidak dapat dimuat.",
+        "availability_until_now": "Tercatat sampai sekarang, {time}.",
+        "duration_h_min": "{h} j {m} mnt",
+        "duration_h": "{h} j",
+        "duration_min": "{m} mnt",
+        "duration_under_min": "kurang dari 1 mnt"
     },
     "inventory": {
         "title": "Inventory",

@@ -2216,7 +2216,19 @@
         "support_scope_label": "Disponível",
         "support_scope": "Estatísticas básicas e ambiente de trabalho remoto",
         "support_limits_label": "Não disponível",
-        "support_limits": "Funções de administração"
+        "support_limits": "Funções de administração",
+        "metric_cpu": "CPU",
+        "usage_note": "A partir dos heartbeats que o dispositivo envia. Uma interrupção nas linhas significa que durante algum tempo não chegaram amostras, normalmente porque o dispositivo estava desligado.",
+        "usage_chart_label": "Uso de CPU, memória e disco em percentagem",
+        "usage_summary": "{count} amostras de {start} a {end}. CPU entre {cpu_min} e {cpu_max}, memória entre {memory_min} e {memory_max}, disco entre {disk_min} e {disk_max}.",
+        "usage_one": "Até agora uma amostra, de {time}: CPU {cpu}, memória {memory}, disco {disk}.",
+        "usage_empty": "Ainda não há amostras. Aparecem quando o cliente do dispositivo envia heartbeats com o uso de CPU, memória e disco.",
+        "availability_error": "Não foi possível carregar o histórico de disponibilidade.",
+        "availability_until_now": "Registado até agora, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "menos de 1 min"
     },
     "inventory": {
         "title": "Inventário",

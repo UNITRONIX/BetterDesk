@@ -2222,7 +2222,19 @@
         "support_scope_label": "Käytettävissä",
         "support_scope": "Perustilastot ja etätyöpöytä",
         "support_limits_label": "Ei käytettävissä",
-        "support_limits": "Hallintatoiminnot"
+        "support_limits": "Hallintatoiminnot",
+        "metric_cpu": "Suoritin",
+        "usage_note": "Laitteen lähettämistä heartbeat-viesteistä. Katko viivoissa tarkoittaa, ettei näytteitä tullut hetkeen, yleensä koska laite oli pois päältä.",
+        "usage_chart_label": "Suorittimen, muistin ja levyn käyttö prosentteina",
+        "usage_summary": "{count} näytettä ajalta {start}–{end}. Suoritin {cpu_min}–{cpu_max}, muisti {memory_min}–{memory_max}, levy {disk_min}–{disk_max}.",
+        "usage_one": "Toistaiseksi yksi näyte, ajalta {time}: suoritin {cpu}, muisti {memory}, levy {disk}.",
+        "usage_empty": "Ei vielä näytteitä. Ne näkyvät, kun laitteen asiakasohjelma lähettää heartbeat-viestejä suorittimen, muistin ja levyn käytöstä.",
+        "availability_error": "Saatavuushistoriaa ei voitu ladata.",
+        "availability_until_now": "Tallennettu tähän hetkeen asti, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "alle 1 min"
     },
     "inventory": {
         "title": "Inventory",

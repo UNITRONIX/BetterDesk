@@ -285,6 +285,7 @@ const DeviceDetail = (function () {
         _attachEvents();
         _bindAvailabilityControls();
         _switchTab(activeTab);
+        _renderUsageChart();
 
         if (!overlayEl._focused) {
             overlayEl._focused = true;
@@ -541,7 +542,7 @@ const DeviceDetail = (function () {
         <div class="device-panel-section">
             <div class="device-panel-section-title">
                 <span class="material-icons">computer</span> ${_('device_detail.section_system')}
-                ${_can('device.edit') ? `<button type="button" class="btn btn-sm device-panel-inline-action" data-refresh-hardware>${_('device_detail.read_again')}</button>` : ''}
+                ${_can('device.edit') ? `<button type="button" class="btn btn-sm device-panel-inline-action" data-refresh-hardware>${Utils.icon('refresh')}${_('device_detail.read_again')}</button>` : ''}
             </div>
             <div class="device-panel-info-grid">
                 ${s.hostname ? _infoRow(_('devices.hostname'), Utils.escapeHtml(s.hostname)) : ''}
@@ -647,6 +648,211 @@ const DeviceDetail = (function () {
         return translated !== key ? translated : (s || '—');
     }
 
+    function _formatDayLabel(dayStr) {
+        const p = String(dayStr || '').split('-').map(Number);
+        const d = new Date(p[0], (p[1] || 1) - 1, p[2] || 1);
+        if (Number.isNaN(d.getTime())) return String(dayStr || '');
+        try {
+            return d.toLocaleDateString(Utils._dateLocale(), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        } catch (_) {
+            return String(dayStr);
+        }
+    }
+
+    function _formatSpan(ms) {
+        const min = Math.round(ms / 60000);
+        if (min < 1) return _('device_detail.duration_under_min');
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        if (!h) return _('device_detail.duration_min').replace('{m}', m);
+        if (!m) return _('device_detail.duration_h').replace('{h}', h);
+        return _('device_detail.duration_h_min').replace('{h}', h).replace('{m}', m);
+    }
+
+    // Status groups of the availability strip, in legend order, with the
+    // share-legend key class and the strip fill class (device-detail.css)
+    const AVAIL_GROUPS = [
+        { status: 'ONLINE', cls: 'is-ok' },
+        { status: 'DEGRADED', cls: 'is-warning' },
+        { status: 'CRITICAL', cls: 'is-danger' },
+        { status: 'OFFLINE', cls: 'is-muted' },
+    ];
+
+    /**
+     * One day as a horizontal band: who was online, degraded, critical or
+     * offline when, from the recorded status changes. The state before the
+     * first change is that change's "from" status; with no change today the
+     * device's current state has held since midnight. The band is decorative
+     * (aria-hidden): the legend under it gives the totals and the table below
+     * lists every change.
+     */
+    function _availabilityStrip(dayStr, events) {
+        const p = String(dayStr || '').split('-').map(Number);
+        const start = new Date(p[0], (p[1] || 1) - 1, p[2] || 1).getTime();
+        const end = new Date(p[0], (p[1] || 1) - 1, (p[2] || 1) + 1).getTime();
+        const now = Date.now();
+        const until = Math.min(end, now);
+        if (!(until > start)) return '';
+
+        const changes = (events || []).map(function (ev) {
+            const at = Utils.parseDate(ev.created_at);
+            return at ? { t: at.getTime(), from: String(ev.from_status || '').toUpperCase(), to: String(ev.to_status || '').toUpperCase() } : null;
+        }).filter(Boolean).sort(function (a, b) { return a.t - b.t; });
+
+        let state = changes.length
+            ? changes[0].from
+            : (device && device.online ? String(device.status_tier || 'ONLINE').toUpperCase() : 'OFFLINE');
+        const spans = [];
+        let t = start;
+        changes.forEach(function (c) {
+            const at = Math.min(Math.max(c.t, start), until);
+            if (at > t) spans.push({ from: t, to: at, status: state });
+            t = Math.max(t, at);
+            state = c.to;
+        });
+        if (until > t) spans.push({ from: t, to: until, status: state });
+
+        const known = {};
+        AVAIL_GROUPS.forEach(function (g) { known[g.status] = g; });
+        const totals = {};
+        spans.forEach(function (s) {
+            if (!known[s.status]) return;
+            totals[s.status] = (totals[s.status] || 0) + (s.to - s.from);
+        });
+
+        const total = end - start;
+        const pct = function (v) { return (((v - start) / total) * 100).toFixed(3) + '%'; };
+        const width = function (a, b) { return (((b - a) / total) * 100).toFixed(3) + '%'; };
+        const locale = Utils._dateLocale();
+        const clock = function (ms) {
+            return new Date(ms).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+        };
+
+        let svg = `<svg class="dp-strip" width="100%" height="44" aria-hidden="true" focusable="false">
+            <rect class="dp-strip-bg" x="0" y="0" width="100%" height="20"></rect>`;
+        spans.forEach(function (s) {
+            const g = known[s.status];
+            if (!g) return;
+            svg += `<rect class="dp-strip-span ${g.cls}" x="${pct(s.from)}" y="0" width="${width(s.from, s.to)}" height="20"><title>${Utils.escapeHtml(_availabilityStatusLabel(s.status) + ', ' + clock(s.from) + '–' + clock(s.to))}</title></rect>`;
+        });
+        // Ticks every 3 hours, labels every 6 (start and end anchored inside the band)
+        for (let h = 0; h <= 24; h += 3) {
+            const at = new Date(p[0], (p[1] || 1) - 1, p[2] || 1, h).getTime();
+            const x = h === 24 ? '100%' : pct(at);
+            svg += `<line class="dp-strip-tick" x1="${x}" x2="${x}" y1="20" y2="${h % 6 ? 23 : 26}"></line>`;
+            if (h % 6 === 0) {
+                const anchor = h === 0 ? 'start' : (h === 24 ? 'end' : 'middle');
+                svg += `<text class="dp-strip-label${h % 12 ? ' is-minor' : ''}" x="${x}" y="40" text-anchor="${anchor}">${Utils.escapeHtml(clock(h === 24 ? end : at))}</text>`;
+            }
+        }
+        if (now < end) {
+            svg += `<line class="dp-strip-now" x1="${pct(now)}" x2="${pct(now)}" y1="-3" y2="23"></line>`;
+        }
+        svg += `</svg>`;
+
+        const legend = AVAIL_GROUPS.filter(function (g) { return totals[g.status] > 0; }).map(function (g) {
+            return `<li><span class="key ${g.cls}" aria-hidden="true"></span>${Utils.escapeHtml(_availabilityStatusLabel(g.status))} <strong>${Utils.escapeHtml(_formatSpan(totals[g.status]))}</strong></li>`;
+        }).join('');
+
+        return `
+        <div class="dp-strip-wrap">
+            ${svg}
+            <ul class="share-legend dp-strip-legend">${legend}</ul>
+            ${now < end ? `<p class="device-panel-empty-hint">${Utils.escapeHtml(_('device_detail.availability_until_now').replace('{time}', clock(now)))}</p>` : ''}
+        </div>`;
+    }
+
+    // ── Usage chart: CPU, memory and disk (%) from the heartbeat samples ──
+
+    function _usageSection() {
+        return `
+        <div class="device-panel-section" id="dp-usage-section">
+            <div class="device-panel-section-title">${_('device_detail.section_usage_history')}</div>
+            <p class="section-note">${_('device_detail.usage_note')}</p>
+            <div class="dp-usage-chart" id="dp-usage-chart"></div>
+        </div>`;
+    }
+
+    function _renderUsageChart() {
+        const host = overlayEl && overlayEl.querySelector('#dp-usage-chart');
+        if (!host || !device) return;
+        const num = function (v) { const n = Number(v); return v === null || v === undefined || Number.isNaN(n) ? null : n; };
+        const samples = (Array.isArray(device.metrics_history) ? device.metrics_history : []).map(function (s) {
+            const at = Utils.parseDate(s.time);
+            return at ? { t: at.getTime(), cpu: num(s.cpu), memory: num(s.memory), disk: num(s.disk) } : null;
+        }).filter(Boolean).sort(function (a, b) { return a.t - b.t; });
+
+        const pctText = function (v) { return v === null ? '–' : Math.round(v) + ' %'; };
+        if (!samples.length) {
+            host.innerHTML = `<p class="device-panel-empty-hint">${_('device_detail.usage_empty')}</p>`;
+            return;
+        }
+        if (samples.length < 2 || typeof UiChart === 'undefined') {
+            const s = samples[samples.length - 1];
+            host.innerHTML = `<p>${Utils.escapeHtml(_('device_detail.usage_one')
+                .replace('{time}', Utils.formatDate(s.t))
+                .replace('{cpu}', pctText(s.cpu)).replace('{memory}', pctText(s.memory)).replace('{disk}', pctText(s.disk)))}</p>`;
+            return;
+        }
+
+        // A sample that comes much later than the usual interval starts a new
+        // line: one empty position between them breaks the line there
+        const diffs = [];
+        for (let i = 1; i < samples.length; i++) diffs.push(samples[i].t - samples[i - 1].t);
+        const sortedDiffs = diffs.slice().sort(function (a, b) { return a - b; });
+        const usual = sortedDiffs[Math.floor(sortedDiffs.length / 2)] || 0;
+        const first = samples[0].t;
+        const last = samples[samples.length - 1].t;
+        const locale = Utils._dateLocale();
+        const crossesDay = new Date(first).toDateString() !== new Date(last).toDateString();
+        const fmt = new Intl.DateTimeFormat(locale, crossesDay
+            ? { weekday: 'short', hour: '2-digit', minute: '2-digit' }
+            : { hour: '2-digit', minute: '2-digit' });
+
+        const labels = [];
+        const cpu = [];
+        const memory = [];
+        const disk = [];
+        samples.forEach(function (s, i) {
+            if (i > 0 && usual > 0 && diffs[i - 1] > usual * 3) {
+                labels.push('…');
+                cpu.push(null); memory.push(null); disk.push(null);
+            }
+            labels.push(fmt.format(new Date(s.t)));
+            cpu.push(s.cpu); memory.push(s.memory); disk.push(s.disk);
+        });
+
+        const range = function (arr) {
+            const v = arr.filter(function (x) { return x !== null; });
+            return v.length ? [Math.min.apply(null, v), Math.max.apply(null, v)] : [null, null];
+        };
+        const rc = range(cpu);
+        const rm = range(memory);
+        const rd = range(disk);
+        const summary = _('device_detail.usage_summary')
+            .replace('{count}', samples.length)
+            .replace('{start}', Utils.formatDate(first))
+            .replace('{end}', Utils.formatDate(last))
+            .replace('{cpu_min}', pctText(rc[0])).replace('{cpu_max}', pctText(rc[1]))
+            .replace('{memory_min}', pctText(rm[0])).replace('{memory_max}', pctText(rm[1]))
+            .replace('{disk_min}', pctText(rd[0])).replace('{disk_max}', pctText(rd[1]));
+
+        UiChart.render(host, {
+            kind: 'line',
+            label: _('device_detail.usage_chart_label'),
+            summary: summary,
+            labels: labels,
+            series: [
+                { name: _('device_detail.metric_cpu'), values: cpu },
+                { name: _('device_detail.metric_memory'), values: memory },
+                { name: _('device_detail.metric_disk'), values: disk },
+            ],
+            yMax: 100,
+            format: function (v) { return Math.round(v) + ' %'; },
+            xHeading: _('device_detail.availability_col_time'),
+        });
+    }
+
     function _availabilitySection() {
         const day = availabilityDay || _localDayString();
         const enabled = !!(availabilityData && availabilityData.enabled);
@@ -659,17 +865,20 @@ const DeviceDetail = (function () {
                 <span class="material-icons">timeline</span> ${_('device_detail.section_availability_history')}
             </div>
             <div class="device-panel-availability-toolbar">
-                <button type="button" class="btn btn-secondary btn-sm" id="dp-avail-prev" title="${_('device_detail.availability_prev_day')}">
-                    <span class="material-icons">chevron_left</span>
+                <button type="button" class="btn btn-secondary btn-sm dp-day-step" id="dp-avail-prev">
+                    <span class="material-icons" aria-hidden="true">chevron_left</span>${_('device_detail.availability_prev_day')}
                 </button>
-                <span class="device-panel-availability-day" id="dp-avail-day">${Utils.escapeHtml(day)}</span>
-                <button type="button" class="btn btn-secondary btn-sm" id="dp-avail-next" title="${_('device_detail.availability_next_day')}" ${isToday ? 'disabled' : ''}>
-                    <span class="material-icons">chevron_right</span>
+                <span class="device-panel-availability-day" id="dp-avail-day" aria-live="polite">${Utils.escapeHtml(_formatDayLabel(day))}</span>
+                <button type="button" class="btn btn-secondary btn-sm dp-day-step" id="dp-avail-next" ${isToday ? 'disabled' : ''}>
+                    ${_('device_detail.availability_next_day')}<span class="material-icons" aria-hidden="true">chevron_right</span>
                 </button>
             </div>`;
 
         if (availabilityLoading) {
             html += `<p class="device-panel-empty-hint">${_('device_detail.availability_loading')}</p>`;
+        } else if (availabilityData && availabilityData.error) {
+            html += `<p class="state is-error">${_('device_detail.availability_error')}
+                <button type="button" class="btn btn-sm" id="dp-avail-retry">${Utils.icon('refresh')}${_('errors.try_again')}</button></p>`;
         } else if (!enabled) {
             html += `
             <div class="device-panel-empty-state device-panel-empty-compact">
@@ -678,6 +887,8 @@ const DeviceDetail = (function () {
                 <p class="device-panel-empty-hint">${_('device_detail.availability_disabled_hint')}</p>
             </div>`;
         } else if (!events.length) {
+            // No change today means the current state has held since midnight
+            if (isToday) html += _availabilityStrip(day, []);
             html += `
             <div class="device-panel-empty-state device-panel-empty-compact">
                 <span class="material-icons">event_note</span>
@@ -685,6 +896,7 @@ const DeviceDetail = (function () {
                 <p class="device-panel-empty-hint">${_('device_detail.availability_empty_hint')}</p>
             </div>`;
         } else {
+            html += _availabilityStrip(day, events);
             html += `
             <div class="device-panel-table-wrap">
                 <table class="device-panel-availability-table">
@@ -714,6 +926,14 @@ const DeviceDetail = (function () {
     }
 
     function _bindAvailabilityControls() {
+        const retry = overlayEl?.querySelector('#dp-avail-retry');
+        if (retry) {
+            retry.onclick = async () => {
+                await _loadAvailability(availabilityDay);
+                _render();
+                _switchTab('metrics');
+            };
+        }
         const prev = overlayEl?.querySelector('#dp-avail-prev');
         const next = overlayEl?.querySelector('#dp-avail-next');
         if (prev) {
@@ -778,9 +998,7 @@ const DeviceDetail = (function () {
         const sessCount = (connectionSessionsData && Array.isArray(connectionSessionsData.sessions))
             ? connectionSessionsData.sessions.length
             : 0;
-        const statusLabel = d.no_signal
-            ? _('status.no_signal')
-            : (d.status_tier || d.status || '—');
+        const statusLabel = _resolveDeviceStatus(d).label;
 
         return `
         <div class="device-panel-section device-panel-metrics-summary">
@@ -841,7 +1059,7 @@ const DeviceDetail = (function () {
                         ${sessions.map(s => {
                             const who = s.username || s.peer_name || s.peer_id || '—';
                             const whoExtra = (s.username && s.peer_name)
-                                ? `<div class="device-panel-session-sub mono">${Utils.escapeHtml(s.peer_name)} · ${Utils.escapeHtml(s.peer_id || '')}</div>`
+                                ? `<div class="device-panel-session-sub">${Utils.escapeHtml(s.peer_name)}${s.peer_id ? ` · <span class="mono">${Utils.escapeHtml(s.peer_id)}</span>` : ''}</div>`
                                 : (s.peer_id && who !== s.peer_id
                                     ? `<div class="device-panel-session-sub mono">${Utils.escapeHtml(s.peer_id)}</div>`
                                     : '');
@@ -866,6 +1084,7 @@ const DeviceDetail = (function () {
     function _metricsPane() {
         let html = `<div class="device-panel-tab-pane" data-pane="metrics">`;
         html += _metricsSummarySection();
+        html += _usageSection();
         html += _availabilitySection();
         html += _connectionSessionsSection();
         html += `</div>`;
@@ -905,7 +1124,7 @@ const DeviceDetail = (function () {
                 <datalist id="dp-tag-suggestions">
                     ${_tagSuggestionOptions(tags)}
                 </datalist>
-                <button type="button" class="btn device-panel-tag-add-btn" id="dp-tag-add-btn">${_('device_detail.add_tag')}</button>
+                <button type="button" class="btn device-panel-tag-add-btn" id="dp-tag-add-btn">${Utils.icon('add')}${_('device_detail.add_tag')}</button>
             </div>` : ''}
         </div>`;
 
@@ -926,9 +1145,17 @@ const DeviceDetail = (function () {
 
     // ── Actions tab ──
 
-    function _actionCard(action, title, desc) {
+    // Icon per action card, from the shared meanings in Utils.ICONS
+    const ACTION_CARD_ICONS = {
+        'connect-desktop': 'connect_app', 'connect-web': 'connect', edit: 'edit', 'change-id': 'rename',
+        delete: 'delete', 'permanent-delete': 'delete_forever',
+    };
+
+    function _actionCard(action, title, desc, iconMeaning) {
+        const meaning = iconMeaning || ACTION_CARD_ICONS[action];
         return `
                 <button type="button" class="device-panel-action-card" data-action="${action}">
+                    ${meaning ? Utils.icon(meaning) : '<span class="device-panel-action-glyph-space" aria-hidden="true"></span>'}
                     <span class="device-panel-action-text"><span class="device-panel-action-title">${title}</span>
                     <span class="device-panel-action-desc">${desc}</span></span>
                 </button>`;
@@ -997,7 +1224,7 @@ const DeviceDetail = (function () {
         }
         if (_can('device.ban')) {
             manage.push(_actionCard('toggle-ban', isBanned ? _('actions.unban') : _('actions.ban'),
-                isBanned ? _('device_detail.action_unban_desc') : _('device_detail.action_ban_desc')));
+                isBanned ? _('device_detail.action_unban_desc') : _('device_detail.action_ban_desc'), isBanned ? 'unban' : 'ban'));
         }
         if (manage.length) {
             html += `
@@ -1032,8 +1259,8 @@ const DeviceDetail = (function () {
         return `
         <div class="device-panel-footer">
             ${isDeleted ? '' : `
-            ${_can('device.connect') ? `<button type="button" class="btn btn-primary" id="dp-connect-btn">${_('actions.connect')}</button>` : ''}
-            ${supportAgent || !_can('device.edit') ? '' : `<button type="button" class="btn btn-secondary" id="dp-edit-btn">${_('actions.edit')}</button>`}`}
+            ${_can('device.connect') ? `<button type="button" class="btn btn-primary" id="dp-connect-btn">${Utils.icon('connect')}${_('actions.connect')}</button>` : ''}
+            ${supportAgent || !_can('device.edit') ? '' : `<button type="button" class="btn btn-secondary" id="dp-edit-btn">${Utils.icon('edit')}${_('actions.edit')}</button>`}`}
             <button type="button" class="btn btn-ghost" id="dp-close-btn">${_('actions.close')}</button>
         </div>`;
     }
@@ -1440,7 +1667,7 @@ const DeviceDetail = (function () {
             <div class="device-panel-agent-error-title">${title}</div>
             <div class="device-panel-agent-error-hint">${Utils.escapeHtml(msg)}</div>
             <button class="btn btn-secondary btn-sm" data-retry-tab="${tabId}">
-                <span class="material-icons">refresh</span>${_('actions.retry') || 'Retry'}
+                ${Utils.icon('refresh')}${_('actions.retry') || 'Retry'}
             </button>
         </div>`;
     }
@@ -1451,7 +1678,7 @@ const DeviceDetail = (function () {
                 <div class="device-panel-agent-empty">
                     <div>${_('device_detail.agent_pending')}</div>
                     <div class="device-panel-agent-hint">${_('device_detail.agent_pending_hint')}</div>
-                    <button type="button" class="btn btn-sm" data-retry-tab="${tabId}">${_('actions.refresh')}</button>
+                    <button type="button" class="btn btn-sm" data-retry-tab="${tabId}">${Utils.icon('refresh')}${_('actions.refresh')}</button>
                 </div>`;
             pane.querySelector('[data-retry-tab]')?.addEventListener('click', function () {
                 _agentTabLoaded[tabId] = false;
@@ -1648,7 +1875,7 @@ const DeviceDetail = (function () {
                 <span class="material-icons">${icon}</span>
                 <div class="device-panel-file-name">${Utils.escapeHtml(e.name || '')}</div>
                 <div class="device-panel-file-size">${size}</div>
-                ${e.is_dir ? '' : `<button type="button" class="btn btn-sm device-panel-file-download">${_('device_detail.file_download')}</button>`}
+                ${e.is_dir ? '' : `<button type="button" class="btn btn-sm device-panel-file-download">${Utils.icon('download')}${_('device_detail.file_download')}</button>`}
             </div>`;
         }).join('');
         return `<div class="device-panel-file-browser">

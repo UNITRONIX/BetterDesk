@@ -2295,7 +2295,19 @@
         "support_scope_label": "Available",
         "support_scope": "Basic statistics and remote desktop",
         "support_limits_label": "Not available",
-        "support_limits": "Administration functions"
+        "support_limits": "Administration functions",
+        "metric_cpu": "CPU",
+        "usage_note": "From the heartbeats the device sends. A break in the lines means no samples came in for a while, usually because the device was off.",
+        "usage_chart_label": "CPU, memory and disk use in percent",
+        "usage_summary": "{count} samples from {start} to {end}. CPU between {cpu_min} and {cpu_max}, memory between {memory_min} and {memory_max}, disk between {disk_min} and {disk_max}.",
+        "usage_one": "One sample so far, from {time}: CPU {cpu}, memory {memory}, disk {disk}.",
+        "usage_empty": "No usage samples yet. They appear once the device's client sends heartbeats with CPU, memory and disk use.",
+        "availability_error": "Could not load the availability history.",
+        "availability_until_now": "Recorded up to now, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "under 1 min"
     },
     "inventory": {
         "title": "Inventory",

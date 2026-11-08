@@ -2222,7 +2222,19 @@
         "support_scope_label": "उपलब्ध",
         "support_scope": "बुनियादी आँकड़े और रिमोट डेस्कटॉप",
         "support_limits_label": "उपलब्ध नहीं",
-        "support_limits": "प्रशासन कार्य"
+        "support_limits": "प्रशासन कार्य",
+        "metric_cpu": "CPU",
+        "usage_note": "डिवाइस द्वारा भेजे गए हार्टबीट से। रेखाओं में खाली जगह का मतलब है कि कुछ समय तक कोई माप नहीं आया, आमतौर पर इसलिए कि डिवाइस बंद था।",
+        "usage_chart_label": "CPU, मेमोरी और डिस्क का उपयोग प्रतिशत में",
+        "usage_summary": "{start} से {end} तक {count} माप। CPU {cpu_min} से {cpu_max} के बीच, मेमोरी {memory_min} से {memory_max} के बीच, डिस्क {disk_min} से {disk_max} के बीच।",
+        "usage_one": "अब तक एक माप, {time} का: CPU {cpu}, मेमोरी {memory}, डिस्क {disk}।",
+        "usage_empty": "अभी कोई माप नहीं। ये तब दिखेंगे जब डिवाइस का क्लाइंट CPU, मेमोरी और डिस्क उपयोग के साथ हार्टबीट भेजेगा।",
+        "availability_error": "उपलब्धता इतिहास लोड नहीं हो सका।",
+        "availability_until_now": "अभी तक दर्ज, {time}।",
+        "duration_h_min": "{h} घं {m} मि",
+        "duration_h": "{h} घं",
+        "duration_min": "{m} मि",
+        "duration_under_min": "1 मि से कम"
     },
     "inventory": {
         "title": "Inventory",

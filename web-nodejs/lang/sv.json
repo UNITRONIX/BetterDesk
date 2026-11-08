@@ -2222,7 +2222,19 @@
         "support_scope_label": "Tillgängligt",
         "support_scope": "Grundläggande statistik och fjärrskrivbord",
         "support_limits_label": "Inte tillgängligt",
-        "support_limits": "Administrationsfunktioner"
+        "support_limits": "Administrationsfunktioner",
+        "metric_cpu": "CPU",
+        "usage_note": "Från de heartbeats som enheten skickar. Ett avbrott i linjerna betyder att inga mätvärden kom in under en tid, oftast för att enheten var avstängd.",
+        "usage_chart_label": "Användning av CPU, minne och disk i procent",
+        "usage_summary": "{count} mätvärden från {start} till {end}. CPU mellan {cpu_min} och {cpu_max}, minne mellan {memory_min} och {memory_max}, disk mellan {disk_min} och {disk_max}.",
+        "usage_one": "Hittills ett mätvärde, från {time}: CPU {cpu}, minne {memory}, disk {disk}.",
+        "usage_empty": "Inga mätvärden än. De visas när enhetens klient skickar heartbeats med användning av CPU, minne och disk.",
+        "availability_error": "Det gick inte att läsa in tillgänglighetshistoriken.",
+        "availability_until_now": "Registrerat fram till nu, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "under 1 min"
     },
     "inventory": {
         "title": "Inventory",

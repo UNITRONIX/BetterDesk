@@ -2216,7 +2216,19 @@
         "support_scope_label": "Disponible",
         "support_scope": "Estadísticas básicas y escritorio remoto",
         "support_limits_label": "No disponible",
-        "support_limits": "Funciones de administración"
+        "support_limits": "Funciones de administración",
+        "metric_cpu": "CPU",
+        "usage_note": "Según los latidos que envía el dispositivo. Un corte en las líneas significa que durante un tiempo no llegaron muestras, normalmente porque el dispositivo estaba apagado.",
+        "usage_chart_label": "Uso de CPU, memoria y disco en porcentaje",
+        "usage_summary": "{count} muestras desde {start} hasta {end}. CPU entre {cpu_min} y {cpu_max}, memoria entre {memory_min} y {memory_max}, disco entre {disk_min} y {disk_max}.",
+        "usage_one": "Por ahora una muestra, de {time}: CPU {cpu}, memoria {memory}, disco {disk}.",
+        "usage_empty": "Aún no hay muestras. Aparecen cuando el cliente del dispositivo envía latidos con el uso de CPU, memoria y disco.",
+        "availability_error": "No se pudo cargar el historial de disponibilidad.",
+        "availability_until_now": "Registrado hasta ahora, {time}.",
+        "duration_h_min": "{h} h {m} min",
+        "duration_h": "{h} h",
+        "duration_min": "{m} min",
+        "duration_under_min": "menos de 1 min"
     },
     "inventory": {
         "title": "Panel",

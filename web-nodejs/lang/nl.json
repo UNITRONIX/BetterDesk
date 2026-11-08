@@ -2216,7 +2216,19 @@
         "support_scope_label": "Beschikbaar",
         "support_scope": "Basisstatistieken en extern bureaublad",
         "support_limits_label": "Niet beschikbaar",
-        "support_limits": "Beheerfuncties"
+        "support_limits": "Beheerfuncties",
+        "metric_cpu": "CPU",
+        "usage_note": "Uit de heartbeats die het apparaat stuurt. Een onderbreking in de lijnen betekent dat er een tijd geen metingen binnenkwamen, meestal omdat het apparaat uit stond.",
+        "usage_chart_label": "Gebruik van CPU, geheugen en schijf in procent",
+        "usage_summary": "{count} metingen van {start} tot {end}. CPU tussen {cpu_min} en {cpu_max}, geheugen tussen {memory_min} en {memory_max}, schijf tussen {disk_min} en {disk_max}.",
+        "usage_one": "Tot nu toe één meting, van {time}: CPU {cpu}, geheugen {memory}, schijf {disk}.",
+        "usage_empty": "Nog geen metingen. Ze verschijnen zodra de client van het apparaat heartbeats met CPU-, geheugen- en schijfgebruik stuurt.",
+        "availability_error": "De beschikbaarheidsgeschiedenis kon niet worden geladen.",
+        "availability_until_now": "Vastgelegd tot nu, {time}.",
+        "duration_h_min": "{h} u {m} min",
+        "duration_h": "{h} u",
+        "duration_min": "{m} min",
+        "duration_under_min": "minder dan 1 min"
     },
     "inventory": {
         "title": "Inventaris",
