@@ -127,15 +127,15 @@
 
                 <div class="page-actions client-config-actions">
                     ${canApprove ? `<button type="button" class="btn btn-primary" id="activate-agent-qr-btn">${_('dashboard.activate_agent_qr')}</button>` : ''}
-                    <button type="button" class="btn btn-secondary" id="copy-client-config-btn">${_('dashboard.copy_all_config')}</button>
-                    <button type="button" class="btn btn-secondary" id="show-client-qr-btn">${_('dashboard.show_config_qr')}</button>
+                    <button type="button" class="btn btn-secondary" id="copy-client-config-btn"><span class="material-icons" aria-hidden="true">content_copy</span>${_('dashboard.copy_all_config')}</button>
+                    <button type="button" class="btn btn-secondary" id="show-client-qr-btn"><span class="material-icons" aria-hidden="true">qr_code_2</span>${_('dashboard.show_config_qr')}</button>
                     <span class="menu-anchor">
                         <button type="button" class="btn btn-secondary" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="client-config-more">
                             ${_('mobile_nav.more')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span>
                         </button>
                         <span class="menu" id="client-config-more" role="menu">
-                            <button type="button" class="menu-item" role="menuitem" id="copy-deploy-string-btn">${_('dashboard.copy_deploy_string')}</button>
-                            <button type="button" class="menu-item" role="menuitem" id="show-intune-script-btn">${_('dashboard.show_intune_script')}</button>
+                            <button type="button" class="menu-item" role="menuitem" id="copy-deploy-string-btn"><span class="material-icons" aria-hidden="true">content_copy</span>${_('dashboard.copy_deploy_string')}</button>
+                            <button type="button" class="menu-item" role="menuitem" id="show-intune-script-btn"><span class="material-icons" aria-hidden="true">terminal</span>${_('dashboard.show_intune_script')}</button>
                         </span>
                     </span>
                 </div>
