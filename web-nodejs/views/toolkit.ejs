@@ -1,546 +1,135 @@
-<%- include('layouts/main', {
-    title: typeof title !== 'undefined' ? title : 'Toolkit',
-    pageStyles: ['toolkit'],
+<%
+// One tool: a disclosure with its title and one sentence, a one-column form and a result area.
+const tool = (o) => `
+            <details class="disclosure tool" id="tool-${o.id}"${o.requires ? ` data-requires="${o.requires}"` : ''}>
+                <summary><span class="tool-summary"><h2 class="tool-title">${o.title}</h2><span class="tool-desc">${o.desc}</span></span></summary>
+                <div class="tool-body">
+                    <form class="tool-form" id="${o.id}-form" novalidate>
+                        ${o.fields || ''}
+                        <div class="tool-actions">
+                            ${o.actions}
+                            <span class="form-status" id="${o.id}-status" aria-live="polite"></span>
+                        </div>
+                    </form>
+                    <div class="tool-result" id="${o.result}" aria-live="polite"></div>
+                </div>
+            </details>`;
+const field = (id, label, input, hint) => `
+                        <div class="form-group">
+                            <label class="form-label" for="${id}">${label}</label>
+                            ${input}
+                            ${hint ? `<p class="form-hint">${hint}</p>` : ''}
+                        </div>`;
+const text = (id, attrs) => `<input type="text" id="${id}" class="form-input is-medium" autocapitalize="off" autocomplete="off" spellcheck="false" ${attrs || ''}>`;
+const port = (id, value) => `<input type="number" id="${id}" class="form-input is-short" min="1" max="65535" inputmode="numeric" ${value ? `value="${value}"` : ''}>`;
+const area = (id) => `<textarea id="${id}" class="form-input" rows="3" spellcheck="false"></textarea>`;
+const run = (id, label) => `<button type="submit" class="btn" id="${id}">${label}</button>`;
+%><%- include('layouts/main', {
+    title: _('nav.toolkit'),
+    uiReworked: true,
+    pageStyles: ['ui/toolkit'],
     pageScripts: ['toolkit'],
     currentPage: 'toolkit',
-    breadcrumb: [{ label: _('nav.tools') }, { label: _('toolkit.title') }],
+    breadcrumb: [{ label: _('nav.toolkit') }],
     body: `
-    <div class="page-header">
-        <h1 class="page-title">
-            <span class="material-icons">handyman</span>
-            ${_('toolkit.title')}
-        </h1>
-        <p class="page-subtitle">${_('toolkit.subtitle')}</p>
-    </div>
-
-    <!-- Tool category tabs -->
-    <div class="tab-bar">
-        <button class="tab-btn active" data-tab="network">
-            <span class="material-icons">language</span> ${_('toolkit.cat_network')}
-        </button>
-        <button class="tab-btn" data-tab="crypto">
-            <span class="material-icons">enhanced_encryption</span> ${_('toolkit.cat_crypto')}
-        </button>
-        <button class="tab-btn" data-tab="encoding">
-            <span class="material-icons">code</span> ${_('toolkit.cat_encoding')}
-        </button>
-        <button class="tab-btn" data-tab="system">
-            <span class="material-icons">terminal</span> ${_('toolkit.cat_system')}
-        </button>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- NETWORK TOOLS -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <div class="tab-panel active" id="tab-network">
-        <div class="tool-grid">
-
-            <!-- Ping -->
-            <div class="tool-card" id="tool-ping">
-                <div class="tool-card-header" data-toggle="tool-ping-body">
-                    <span class="material-icons tool-icon">cell_tower</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.ping_title')}</h3>
-                        <p>${_('toolkit.ping_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-ping-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label class="form-label">${_('toolkit.host')}</label>
-                                <input type="text" id="ping-host" class="form-input" placeholder="example.com" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="ping-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.run')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="ping-result"></div>
-                </div>
-            </div>
-
-            <!-- TCP Port Check -->
-            <div class="tool-card" id="tool-tcp">
-                <div class="tool-card-header" data-toggle="tool-tcp-body">
-                    <span class="material-icons tool-icon">electrical_services</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.tcp_title')}</h3>
-                        <p>${_('toolkit.tcp_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-tcp-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label class="form-label">${_('toolkit.host')}</label>
-                                <input type="text" id="tcp-host" class="form-input" placeholder="example.com" />
-                            </div>
-                            <div class="form-group" style="width:120px">
-                                <label class="form-label">${_('toolkit.port')}</label>
-                                <input type="number" id="tcp-port" class="form-input" placeholder="443" min="1" max="65535" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="tcp-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.run')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="tcp-result"></div>
-                </div>
-            </div>
-
-            <!-- SSL Certificate Inspector -->
-            <div class="tool-card" id="tool-ssl">
-                <div class="tool-card-header" data-toggle="tool-ssl-body">
-                    <span class="material-icons tool-icon">verified_user</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.ssl_title')}</h3>
-                        <p>${_('toolkit.ssl_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-ssl-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label class="form-label">${_('toolkit.host')}</label>
-                                <input type="text" id="ssl-host" class="form-input" placeholder="example.com" />
-                            </div>
-                            <div class="form-group" style="width:120px">
-                                <label class="form-label">${_('toolkit.port')}</label>
-                                <input type="number" id="ssl-port" class="form-input" placeholder="443" value="443" min="1" max="65535" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="ssl-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.run')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="ssl-result"></div>
-                </div>
-            </div>
-
-            <!-- HTTP Health Check -->
-            <div class="tool-card" id="tool-http">
-                <div class="tool-card-header" data-toggle="tool-http-body">
-                    <span class="material-icons tool-icon">http</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.http_title')}</h3>
-                        <p>${_('toolkit.http_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-http-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label class="form-label">URL</label>
-                                <input type="text" id="http-url" class="form-input" placeholder="https://example.com" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="http-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.run')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="http-result"></div>
-                </div>
-            </div>
-
-            <!-- DNS Lookup -->
-            <div class="tool-card" id="tool-dns">
-                <div class="tool-card-header" data-toggle="tool-dns-body">
-                    <span class="material-icons tool-icon">dns</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.dns_title')}</h3>
-                        <p>${_('toolkit.dns_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-dns-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label class="form-label">${_('toolkit.domain')}</label>
-                                <input type="text" id="dns-domain" class="form-input" placeholder="example.com" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="dns-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.run')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="dns-result"></div>
-                </div>
-            </div>
-
-            <!-- Whois / DNS Records -->
-            <div class="tool-card" id="tool-whois">
-                <div class="tool-card-header" data-toggle="tool-whois-body">
-                    <span class="material-icons tool-icon">travel_explore</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.whois_title')}</h3>
-                        <p>${_('toolkit.whois_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-whois-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label class="form-label">${_('toolkit.domain')}</label>
-                                <input type="text" id="whois-domain" class="form-input" placeholder="example.com" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="whois-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.run')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="whois-result"></div>
-                </div>
-            </div>
-
-            <!-- Speed Test -->
-            <div class="tool-card" id="tool-speed">
-                <div class="tool-card-header" data-toggle="tool-speed-body">
-                    <span class="material-icons tool-icon">speed</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.speed_title')}</h3>
-                        <p>${_('toolkit.speed_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-speed-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <button class="btn btn-primary tool-run-btn" id="speed-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.run_speed_test')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="speed-result"></div>
-                </div>
-            </div>
-
-            <!-- Wake-on-LAN -->
-            <div class="tool-card" id="tool-wol">
-                <div class="tool-card-header" data-toggle="tool-wol-body">
-                    <span class="material-icons tool-icon">power_settings_new</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.wol_title')}</h3>
-                        <p>${_('toolkit.wol_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-wol-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label class="form-label">${_('toolkit.mac_address')}</label>
-                                <input type="text" id="wol-mac" class="form-input" placeholder="AA:BB:CC:DD:EE:FF" />
-                            </div>
-                            <div class="form-group" style="width:180px">
-                                <label class="form-label">${_('toolkit.broadcast')}</label>
-                                <input type="text" id="wol-broadcast" class="form-input" placeholder="255.255.255.255" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="wol-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.send')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="wol-result"></div>
-                </div>
-            </div>
-
+    <div class="page toolkit-page">
+        <div class="page-head">
+            <h1>${_('nav.toolkit')}</h1>
+            <p class="page-description">${_('toolkit.page_description')}</p>
         </div>
-    </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- CRYPTO TOOLS -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <div class="tab-panel" id="tab-crypto">
-        <div class="tool-grid">
-
-            <!-- Hash Generator -->
-            <div class="tool-card" id="tool-hash">
-                <div class="tool-card-header" data-toggle="tool-hash-body">
-                    <span class="material-icons tool-icon">fingerprint</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.hash_title')}</h3>
-                        <p>${_('toolkit.hash_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-hash-body">
-                    <div class="tool-form">
-                        <div class="form-group">
-                            <label class="form-label">${_('toolkit.algorithm')}</label>
-                            <div class="chip-group">
-                                <button class="chip active" data-algo="md5">MD5</button>
-                                <button class="chip" data-algo="sha1">SHA-1</button>
-                                <button class="chip" data-algo="sha256">SHA-256</button>
-                                <button class="chip" data-algo="sha512">SHA-512</button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">${_('toolkit.input_text')}</label>
-                            <textarea id="hash-input" class="form-input" rows="3" placeholder="${_('toolkit.enter_text')}"></textarea>
-                        </div>
-                        <button class="btn btn-primary tool-run-btn" id="hash-run">
-                            <span class="material-icons">play_arrow</span> ${_('toolkit.generate')}
-                        </button>
-                    </div>
-                    <div class="tool-result" id="hash-result"></div>
-                </div>
+        <div class="toolkit-groups">
+            <div class="tabs" role="tablist" aria-label="${_('toolkit.groups_label')}">
+                <button type="button" class="tab tab-btn active" role="tab" id="tab-btn-network" data-tab="network" aria-selected="true" aria-controls="tab-network">${_('toolkit.cat_network')}</button>
+                <button type="button" class="tab tab-btn" role="tab" id="tab-btn-crypto" data-tab="crypto" aria-selected="false" aria-controls="tab-crypto" tabindex="-1">${_('toolkit.cat_crypto')}</button>
+                <button type="button" class="tab tab-btn" role="tab" id="tab-btn-encoding" data-tab="encoding" aria-selected="false" aria-controls="tab-encoding" tabindex="-1">${_('toolkit.cat_encoding')}</button>
+                <button type="button" class="tab tab-btn" role="tab" id="tab-btn-system" data-tab="system" aria-selected="false" aria-controls="tab-system" tabindex="-1">${_('toolkit.cat_system')}</button>
             </div>
 
-            <!-- Password Generator -->
-            <div class="tool-card" id="tool-password">
-                <div class="tool-card-header" data-toggle="tool-password-body">
-                    <span class="material-icons tool-icon">password</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.password_title')}</h3>
-                        <p>${_('toolkit.password_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-password-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group" style="width:120px">
-                                <label class="form-label">${_('toolkit.length')}</label>
-                                <input type="number" id="pwd-length" class="form-input" value="20" min="4" max="128" />
-                            </div>
-                            <div class="form-group flex-1">
-                                <label class="form-label">${_('toolkit.options')}</label>
-                                <div class="check-row">
-                                    <label class="check-label"><input type="checkbox" id="pwd-upper" checked /> A-Z</label>
-                                    <label class="check-label"><input type="checkbox" id="pwd-lower" checked /> a-z</label>
-                                    <label class="check-label"><input type="checkbox" id="pwd-digits" checked /> 0-9</label>
-                                    <label class="check-label"><input type="checkbox" id="pwd-symbols" /> !@#$</label>
-                                </div>
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="pwd-run">
-                                <span class="material-icons">play_arrow</span> ${_('toolkit.generate')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="pwd-result"></div>
-                </div>
+            <div class="tab-panel tool-list" role="tabpanel" id="tab-network" aria-labelledby="tab-btn-network">
+                ${tool({ id: 'ping', result: 'ping-result', requires: 'device.connect', title: _('toolkit.ping_title'), desc: _('toolkit.ping_desc'),
+                    fields: field('ping-host', _('toolkit.host'), text('ping-host', 'placeholder="example.com"'), _('toolkit.host_hint')),
+                    actions: run('ping-run', _('toolkit.ping_run')) })}
+                ${tool({ id: 'tcp', result: 'tcp-result', requires: 'device.connect', title: _('toolkit.tcp_title'), desc: _('toolkit.tcp_desc'),
+                    fields: field('tcp-host', _('toolkit.host'), text('tcp-host', 'placeholder="example.com"'), _('toolkit.host_hint'))
+                        + field('tcp-port', _('toolkit.port'), port('tcp-port', '443')),
+                    actions: run('tcp-run', _('toolkit.tcp_run')) })}
+                ${tool({ id: 'ssl', result: 'ssl-result', title: _('toolkit.ssl_title'), desc: _('toolkit.ssl_desc'),
+                    fields: field('ssl-host', _('toolkit.host'), text('ssl-host', 'placeholder="example.com"'))
+                        + field('ssl-port', _('toolkit.port'), port('ssl-port', '443')),
+                    actions: run('ssl-run', _('toolkit.ssl_run')) })}
+                ${tool({ id: 'http', result: 'http-result', requires: 'device.connect', title: _('toolkit.http_title'), desc: _('toolkit.http_desc'),
+                    fields: field('http-url', _('toolkit.url'), text('http-url', 'placeholder="https://example.com" inputmode="url"'), _('toolkit.url_hint')),
+                    actions: run('http-run', _('toolkit.http_run')) })}
+                ${tool({ id: 'dns', result: 'dns-result', requires: 'device.connect', title: _('toolkit.dns_title'), desc: _('toolkit.dns_desc'),
+                    fields: field('dns-domain', _('toolkit.domain'), text('dns-domain', 'placeholder="example.com"')),
+                    actions: run('dns-run', _('toolkit.dns_run')) })}
+                ${tool({ id: 'whois', result: 'whois-result', title: _('toolkit.whois_title'), desc: _('toolkit.whois_desc'),
+                    fields: field('whois-domain', _('toolkit.domain'), text('whois-domain', 'placeholder="example.com"')),
+                    actions: run('whois-run', _('toolkit.whois_run')) })}
+                ${tool({ id: 'speed', result: 'speed-result', requires: 'metrics.view', title: _('toolkit.speed_title'), desc: _('toolkit.speed_desc'),
+                    actions: run('speed-run', _('toolkit.run_speed_test')) })}
+                ${tool({ id: 'wol', result: 'wol-result', requires: 'device.connect', title: _('toolkit.wol_title'), desc: _('toolkit.wol_desc'),
+                    fields: field('wol-mac', _('toolkit.mac_address'), text('wol-mac', 'placeholder="AA:BB:CC:DD:EE:FF"'))
+                        + field('wol-broadcast', _('toolkit.broadcast'), text('wol-broadcast', 'placeholder="255.255.255.255"'), _('toolkit.broadcast_hint')),
+                    actions: run('wol-run', _('toolkit.wol_run')) })}
             </div>
 
-            <!-- JWT Decoder -->
-            <div class="tool-card" id="tool-jwt">
-                <div class="tool-card-header" data-toggle="tool-jwt-body">
-                    <span class="material-icons tool-icon">token</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.jwt_title')}</h3>
-                        <p>${_('toolkit.jwt_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-jwt-body">
-                    <div class="tool-form">
-                        <div class="form-group">
-                            <label class="form-label">${_('toolkit.jwt_token')}</label>
-                            <textarea id="jwt-input" class="form-input" rows="3" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
-                        </div>
-                        <button class="btn btn-primary tool-run-btn" id="jwt-run">
-                            <span class="material-icons">play_arrow</span> ${_('toolkit.decode')}
-                        </button>
-                    </div>
-                    <div class="tool-result" id="jwt-result"></div>
-                </div>
+            <div class="tab-panel tool-list" role="tabpanel" id="tab-crypto" aria-labelledby="tab-btn-crypto" hidden>
+                ${tool({ id: 'hash', result: 'hash-result', title: _('toolkit.hash_title'), desc: _('toolkit.hash_desc'),
+                    fields: field('hash-algo', _('toolkit.algorithm'), `<select id="hash-algo" class="form-select is-medium">
+                                <option value="md5">MD5</option>
+                                <option value="sha1">SHA-1</option>
+                                <option value="sha256" selected>SHA-256</option>
+                                <option value="sha512">SHA-512</option>
+                            </select>`)
+                        + field('hash-input', _('toolkit.input_text'), area('hash-input')),
+                    actions: run('hash-run', _('toolkit.hash_run')) })}
+                ${tool({ id: 'password', result: 'pwd-result', title: _('toolkit.password_title'), desc: _('toolkit.password_desc'),
+                    fields: field('pwd-length', _('toolkit.length'), '<input type="number" id="pwd-length" class="form-input is-short" value="20" min="4" max="128" inputmode="numeric">', _('toolkit.length_hint'))
+                        + `<fieldset class="tool-checks">
+                            <legend class="form-label">${_('toolkit.characters')}</legend>
+                            <label class="checkbox-row"><input type="checkbox" id="pwd-upper" checked> ${_('toolkit.chars_upper')}</label>
+                            <label class="checkbox-row"><input type="checkbox" id="pwd-lower" checked> ${_('toolkit.chars_lower')}</label>
+                            <label class="checkbox-row"><input type="checkbox" id="pwd-digits" checked> ${_('toolkit.chars_digits')}</label>
+                            <label class="checkbox-row"><input type="checkbox" id="pwd-symbols"> ${_('toolkit.chars_symbols')}</label>
+                        </fieldset>`,
+                    actions: run('pwd-run', _('toolkit.password_run')) })}
+                ${tool({ id: 'jwt', result: 'jwt-result', title: _('toolkit.jwt_title'), desc: _('toolkit.jwt_desc'),
+                    fields: field('jwt-input', _('toolkit.jwt_token'), area('jwt-input'), _('toolkit.jwt_hint')),
+                    actions: run('jwt-run', _('toolkit.decode')) })}
             </div>
 
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- ENCODING TOOLS -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <div class="tab-panel" id="tab-encoding">
-        <div class="tool-grid">
-
-            <!-- Base64 -->
-            <div class="tool-card" id="tool-base64">
-                <div class="tool-card-header" data-toggle="tool-base64-body">
-                    <span class="material-icons tool-icon">swap_horiz</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.base64_title')}</h3>
-                        <p>${_('toolkit.base64_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-base64-body">
-                    <div class="tool-form">
-                        <div class="form-group">
-                            <label class="form-label">${_('toolkit.input_text')}</label>
-                            <textarea id="b64-input" class="form-input" rows="3" placeholder="${_('toolkit.enter_text')}"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <button class="btn btn-primary tool-run-btn" id="b64-encode">
-                                <span class="material-icons">arrow_downward</span> ${_('toolkit.encode')}
-                            </button>
-                            <button class="btn btn-secondary tool-run-btn" id="b64-decode">
-                                <span class="material-icons">arrow_upward</span> ${_('toolkit.decode')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="b64-result"></div>
-                </div>
+            <div class="tab-panel tool-list" role="tabpanel" id="tab-encoding" aria-labelledby="tab-btn-encoding" hidden>
+                ${tool({ id: 'base64', result: 'b64-result', title: _('toolkit.base64_title'), desc: _('toolkit.base64_desc'),
+                    fields: field('b64-input', _('toolkit.input_text'), area('b64-input')),
+                    actions: `<button type="button" class="btn" id="b64-encode">${_('toolkit.encode')}</button>
+                            <button type="button" class="btn" id="b64-decode">${_('toolkit.decode')}</button>` })}
+                ${tool({ id: 'urlencode', result: 'url-result', title: _('toolkit.url_title'), desc: _('toolkit.url_desc'),
+                    fields: field('url-input', _('toolkit.input_text'), area('url-input')),
+                    actions: `<button type="button" class="btn" id="url-encode">${_('toolkit.encode')}</button>
+                            <button type="button" class="btn" id="url-decode">${_('toolkit.decode')}</button>` })}
             </div>
 
-            <!-- URL Encoder -->
-            <div class="tool-card" id="tool-urlencode">
-                <div class="tool-card-header" data-toggle="tool-urlencode-body">
-                    <span class="material-icons tool-icon">link</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.url_title')}</h3>
-                        <p>${_('toolkit.url_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-urlencode-body">
-                    <div class="tool-form">
-                        <div class="form-group">
-                            <label class="form-label">${_('toolkit.input_text')}</label>
-                            <textarea id="url-input" class="form-input" rows="3" placeholder="${_('toolkit.enter_text')}"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <button class="btn btn-primary tool-run-btn" id="url-encode">
-                                <span class="material-icons">arrow_downward</span> ${_('toolkit.encode')}
-                            </button>
-                            <button class="btn btn-secondary tool-run-btn" id="url-decode">
-                                <span class="material-icons">arrow_upward</span> ${_('toolkit.decode')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="url-result"></div>
-                </div>
+            <div class="tab-panel tool-list" role="tabpanel" id="tab-system" aria-labelledby="tab-btn-system" hidden>
+                ${tool({ id: 'processes', result: 'proc-result', requires: 'metrics.view', title: _('toolkit.processes_title'), desc: _('toolkit.processes_desc'),
+                    actions: run('proc-run', _('toolkit.show_processes')) })}
+                ${tool({ id: 'disk', result: 'disk-result', requires: 'metrics.view', title: _('toolkit.disk_title'), desc: _('toolkit.disk_desc'),
+                    actions: run('disk-run', _('toolkit.show_disks')) })}
+                ${tool({ id: 'db', result: 'db-result', requires: 'metrics.view', title: _('toolkit.db_title'), desc: _('toolkit.db_desc'),
+                    actions: run('db-run', _('toolkit.show_db')) })}
+                ${tool({ id: 'docker', result: 'docker-result', requires: 'metrics.view', title: _('toolkit.docker_title'), desc: _('toolkit.docker_desc'),
+                    actions: run('docker-run', _('toolkit.show_containers')) })}
+                ${tool({ id: 'logs', result: 'log-result', requires: 'metrics.view', title: _('toolkit.logs_title'), desc: _('toolkit.logs_desc'),
+                    fields: field('log-source', _('toolkit.source'), `<select id="log-source" class="form-select is-medium">
+                                <option value="console">${_('toolkit.log_console')}</option>
+                                <option value="go">${_('toolkit.log_go')}</option>
+                            </select>`)
+                        + field('log-lines', _('toolkit.lines'), '<input type="number" id="log-lines" class="form-input is-short" value="50" min="10" max="200" inputmode="numeric">', _('toolkit.lines_hint')),
+                    actions: run('log-run', _('toolkit.show_logs')) })}
             </div>
 
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- SYSTEM TOOLS -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <div class="tab-panel" id="tab-system">
-        <div class="tool-grid">
-
-            <!-- Process List -->
-            <div class="tool-card" id="tool-processes">
-                <div class="tool-card-header" data-toggle="tool-processes-body">
-                    <span class="material-icons tool-icon">memory</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.processes_title')}</h3>
-                        <p>${_('toolkit.processes_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-processes-body">
-                    <div class="tool-form">
-                        <button class="btn btn-primary tool-run-btn" id="proc-run">
-                            <span class="material-icons">refresh</span> ${_('toolkit.refresh')}
-                        </button>
-                    </div>
-                    <div class="tool-result" id="proc-result"></div>
-                </div>
-            </div>
-
-            <!-- Disk Usage -->
-            <div class="tool-card" id="tool-disk">
-                <div class="tool-card-header" data-toggle="tool-disk-body">
-                    <span class="material-icons tool-icon">storage</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.disk_title')}</h3>
-                        <p>${_('toolkit.disk_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-disk-body">
-                    <div class="tool-form">
-                        <button class="btn btn-primary tool-run-btn" id="disk-run">
-                            <span class="material-icons">refresh</span> ${_('toolkit.refresh')}
-                        </button>
-                    </div>
-                    <div class="tool-result" id="disk-result"></div>
-                </div>
-            </div>
-
-            <!-- Database Stats -->
-            <div class="tool-card" id="tool-db">
-                <div class="tool-card-header" data-toggle="tool-db-body">
-                    <span class="material-icons tool-icon">dataset</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.db_title')}</h3>
-                        <p>${_('toolkit.db_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-db-body">
-                    <div class="tool-form">
-                        <button class="btn btn-primary tool-run-btn" id="db-run">
-                            <span class="material-icons">refresh</span> ${_('toolkit.refresh')}
-                        </button>
-                    </div>
-                    <div class="tool-result" id="db-result"></div>
-                </div>
-            </div>
-
-            <!-- Docker Containers -->
-            <div class="tool-card" id="tool-docker">
-                <div class="tool-card-header" data-toggle="tool-docker-body">
-                    <span class="material-icons tool-icon">view_in_ar</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.docker_title')}</h3>
-                        <p>${_('toolkit.docker_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-docker-body">
-                    <div class="tool-form">
-                        <button class="btn btn-primary tool-run-btn" id="docker-run">
-                            <span class="material-icons">refresh</span> ${_('toolkit.refresh')}
-                        </button>
-                    </div>
-                    <div class="tool-result" id="docker-result"></div>
-                </div>
-            </div>
-
-            <!-- Log Viewer -->
-            <div class="tool-card" id="tool-logs">
-                <div class="tool-card-header" data-toggle="tool-logs-body">
-                    <span class="material-icons tool-icon">article</span>
-                    <div class="tool-meta">
-                        <h3>${_('toolkit.logs_title')}</h3>
-                        <p>${_('toolkit.logs_desc')}</p>
-                    </div>
-                    <span class="material-icons expand-icon">expand_more</span>
-                </div>
-                <div class="tool-card-body" id="tool-logs-body">
-                    <div class="tool-form">
-                        <div class="form-row">
-                            <div class="form-group" style="width:160px">
-                                <label class="form-label">${_('toolkit.source')}</label>
-                                <select id="log-source" class="form-input">
-                                    <option value="console">${_('toolkit.log_console')}</option>
-                                    <option value="go">${_('toolkit.log_go')}</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="width:120px">
-                                <label class="form-label">${_('toolkit.lines')}</label>
-                                <input type="number" id="log-lines" class="form-input" value="50" min="10" max="500" />
-                            </div>
-                            <button class="btn btn-primary tool-run-btn" id="log-run">
-                                <span class="material-icons">refresh</span> ${_('toolkit.refresh')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tool-result" id="log-result"></div>
-                </div>
-            </div>
-
+            <p class="state" id="toolkit-none" hidden>${_('toolkit.none_allowed')}</p>
         </div>
     </div>
 ` }) %>

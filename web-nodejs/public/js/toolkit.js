@@ -1,590 +1,475 @@
 /**
- * BetterDesk Console — Toolkit
+ * BetterDesk Console - Network tools
  *
- * Client-side logic for all toolkit tools.
- * Network tools call /api/network/* (existing endpoints).
- * Crypto/encoding/system tools call /api/toolkit/* or /api/system/*.
- *
- * @module toolkit
+ * Every tool runs on the server: network checks call /api/network/* and
+ * /api/toolkit/*, server information comes from /api/system/*, /api/logs/*,
+ * /api/database/* and /api/docker/*. Each tool shows its result in its own
+ * result area, with a loading line next to the button and a plain error
+ * when it fails. Tools the user's role may not run are hidden.
  */
 
-/* global BetterDesk, _ */
 'use strict';
 
 (function () {
-    // ── Helpers ─────────────────────────────────────────────────────────
+    const _ = (key, params) => (typeof window._ === 'function' ? window._(key, params) : key);
+    const esc = (value) => Utils.escapeHtml(value == null ? '' : String(value));
+    const $ = (id) => document.getElementById(id);
 
-    function getCsrfToken() {
-        return window.BetterDesk?.csrfToken || '';
-    }
+    const locale = () => (window.BetterDesk && window.BetterDesk.lang) || undefined;
 
-    function t(key, fallback) {
-        if (typeof _ === 'function') {
-            var r = _(key);
-            return r !== key ? r : (fallback || key);
-        }
-        return fallback || key;
-    }
-
-    function api(url, opts) {
-        opts = opts || {};
-        var headers = { 'Content-Type': 'application/json' };
-        var token = getCsrfToken();
-        if (token) headers['X-CSRF-Token'] = token;
-        return fetch(url, {
-            method: opts.method || 'POST',
-            headers: headers,
-            body: opts.body ? JSON.stringify(opts.body) : undefined,
-            credentials: 'same-origin',
-        }).then(function (r) { return r.json(); });
-    }
-
-    function apiGet(url) {
-        return fetch(url, { credentials: 'same-origin' }).then(function (r) { return r.json(); });
-    }
-
-    function esc(s) {
-        if (typeof s !== 'string') s = String(s);
-        var d = document.createElement('div');
-        d.textContent = s;
-        return d.innerHTML;
-    }
-
-    function showSpinner(el) {
-        el.innerHTML = '<div class="tool-spinner"><span class="material-icons">autorenew</span> ' + t('common.loading', 'Loading…') + '</div>';
-    }
-
-    function showError(el, msg) {
-        el.innerHTML = '<div class="tool-result-box"><span class="result-status error"><span class="material-icons" style="font-size:16px">error</span> ' + esc(msg) + '</span></div>';
-    }
-
-    function copyText(text) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text);
+    function formatNumber(value, digits) {
+        try {
+            return new Intl.NumberFormat(locale(), { maximumFractionDigits: digits }).format(value);
+        } catch (e) {
+            return String(value);
         }
     }
 
-    function escapeJsString(text) {
-        return String(text)
-            .replace(/\\/g, '\\\\')
-            .replace(/'/g, "\\'");
+    function formatBytes(bytes) {
+        bytes = Number(bytes) || 0;
+        if (bytes <= 0) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        let i = 0;
+        while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+        return `${formatNumber(bytes, i > 2 ? 1 : 0)} ${units[i]}`;
     }
 
-    function copyBtn(text) {
-        return '<button class="result-copy-btn" type="button" data-bd-copy="' + escapeAttr(text) + '"><span class="material-icons">content_copy</span> ' + t('common.copy', 'Copy') + '</button>';
+    function ms(value) {
+        return _('toolkit.ms', { value: formatNumber(Math.round(Number(value) || 0), 0) });
     }
 
-    function escapeAttr(text) {
-        return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+    // ---- Result helpers ----
+
+    function facts(rows) {
+        return `<dl class="facts tool-facts">${rows.filter(Boolean).map(([label, value]) =>
+            `<dt>${esc(label)}</dt><dd>${value}</dd>`).join('')}</dl>`;
     }
 
-    // ── Tab switching ───────────────────────────────────────────────────
+    let copyId = 0;
+    function codeBlock(title, value) {
+        const id = `tool-copy-${++copyId}`;
+        return `<div class="code-block-head"><span class="code-block-title">${esc(title)}</span>
+                <button type="button" class="btn btn-sm" data-copy="${id}">${esc(_('actions.copy'))}</button></div>
+            <pre class="code-block" id="${id}">${esc(value)}</pre>`;
+    }
 
-    document.querySelectorAll('.tab-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-            document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
-            btn.classList.add('active');
-            var panel = document.getElementById('tab-' + btn.getAttribute('data-tab'));
-            if (panel) panel.classList.add('active');
+    function statusText(kind, text) {
+        return `<span class="status ${kind}">${esc(text)}</span>`;
+    }
+
+    /**
+     * Run one tool: disable its buttons, say it is running, then show the
+     * result or a plain error with the reason.
+     */
+    async function run(tool, resultId, work) {
+        const form = $(`${tool}-form`);
+        const status = $(`${tool}-status`);
+        const result = $(resultId);
+        const buttons = form ? Array.from(form.querySelectorAll('button')) : [];
+        buttons.forEach((b) => { b.disabled = true; });
+        status.className = 'form-status';
+        status.textContent = _('toolkit.running');
+        result.setAttribute('aria-busy', 'true');
+        try {
+            result.innerHTML = await work();
+            status.textContent = '';
+        } catch (err) {
+            status.textContent = '';
+            result.innerHTML = `<p class="state is-error">${esc(err && err.message ? err.message : _('toolkit.failed'))}</p>`;
+        } finally {
+            result.removeAttribute('aria-busy');
+            buttons.forEach((b) => { b.disabled = false; });
+        }
+    }
+
+    /** Ask for a value: show the reason next to the button and focus the field. */
+    function need(tool, inputId, messageKey) {
+        const status = $(`${tool}-status`);
+        status.className = 'form-status is-error';
+        status.textContent = _(messageKey);
+        $(inputId).focus();
+    }
+
+    async function post(url, body) {
+        const res = await Utils.api(url, { method: 'POST', body });
+        if (res && res.success === false && res.error) throw new Error(res.error);
+        return res;
+    }
+
+    function onSubmit(tool, handler) {
+        const form = $(`${tool}-form`);
+        if (!form) return;
+        form.addEventListener('submit', (e) => { e.preventDefault(); handler(); });
+    }
+
+    // ---- Tabs ----
+
+    const tabs = Array.from(document.querySelectorAll('.toolkit-page [role="tab"]'));
+
+    function selectTab(tab, focus, remember = true) {
+        tabs.forEach((t) => {
+            const on = t === tab;
+            t.classList.toggle('active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            t.tabIndex = on ? 0 : -1;
+            const panel = $(t.getAttribute('aria-controls'));
+            if (panel) panel.hidden = !on;
+        });
+        if (focus) tab.focus();
+        if (remember) {
+            try { history.replaceState(null, '', `#${tab.dataset.tab}`); } catch (e) { /* ignore */ }
+        }
+    }
+
+    tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => selectTab(tab, false));
+        tab.addEventListener('keydown', (e) => {
+            const visible = tabs.filter((t) => !t.hidden);
+            const at = visible.indexOf(tab);
+            let next = null;
+            const rtl = document.documentElement.dir === 'rtl';
+            if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight')) next = visible[(at + 1) % visible.length];
+            else if (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) next = visible[(at - 1 + visible.length) % visible.length];
+            else if (e.key === 'Home') next = visible[0];
+            else if (e.key === 'End') next = visible[visible.length - 1];
+            if (next) { e.preventDefault(); selectTab(next, true); }
         });
     });
 
-    // ── Card expand/collapse ────────────────────────────────────────────
+    // Hide tools this role may not run, then tabs with nothing left
+    document.querySelectorAll('.toolkit-page details[data-requires]').forEach((d) => {
+        if (!Utils.can(d.dataset.requires)) d.remove();
+    });
+    tabs.forEach((tab) => {
+        const panel = $(tab.getAttribute('aria-controls'));
+        if (panel && !panel.querySelector('details')) { tab.hidden = true; panel.hidden = true; }
+    });
+    const visibleTabs = tabs.filter((t) => !t.hidden);
+    if (!visibleTabs.length) {
+        $('toolkit-none').hidden = false;
+        document.querySelector('.toolkit-page .tabs').hidden = true;
+    } else {
+        const wanted = visibleTabs.find((t) => `#${t.dataset.tab}` === location.hash);
+        const current = visibleTabs.find((t) => t.classList.contains('active'));
+        selectTab(wanted || current || visibleTabs[0], false, false);
+    }
 
-    document.querySelectorAll('.tool-card-header').forEach(function (hdr) {
-        hdr.addEventListener('click', function () {
-            var card = hdr.closest('.tool-card');
-            card.classList.toggle('expanded');
+    // Copy buttons in results
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.toolkit-page [data-copy]');
+        if (!btn) return;
+        const el = $(btn.dataset.copy);
+        if (!el) return;
+        const value = el.dataset.value != null ? el.dataset.value : el.textContent;
+        try {
+            await Utils.copyToClipboard(value);
+            btn.textContent = _('toolkit.copied');
+            setTimeout(() => { btn.textContent = _('actions.copy'); }, 1500);
+        } catch (err) {
+            Notifications.error(_('toolkit.copy_failed'));
+        }
+    });
+
+    // ==== Network ====
+
+    onSubmit('ping', () => {
+        const host = $('ping-host').value.trim();
+        if (!host) return need('ping', 'ping-host', 'toolkit.need_host');
+        run('ping', 'ping-result', async () => {
+            const d = await Utils.api('/api/network/ping', { method: 'POST', body: { host } });
+            const ok = !!d.success;
+            return facts([
+                [_('toolkit.host'), `<span class="mono">${esc(d.host || host)}</span>`],
+                [_('toolkit.result'), ok ? statusText('ok', _('toolkit.ping_answered')) : statusText('error', _('toolkit.ping_no_answer'))],
+                ok && d.rtt_ms != null ? [_('toolkit.response_time'), esc(ms(d.rtt_ms))] : null,
+                !ok && d.error ? [_('toolkit.reason'), esc(d.error)] : null,
+            ]);
         });
     });
 
-    // ── Chip groups ─────────────────────────────────────────────────────
-
-    document.querySelectorAll('.chip-group').forEach(function (group) {
-        group.querySelectorAll('.chip').forEach(function (chip) {
-            chip.addEventListener('click', function () {
-                group.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
-                chip.classList.add('active');
-            });
+    onSubmit('tcp', () => {
+        const host = $('tcp-host').value.trim();
+        const port = parseInt($('tcp-port').value, 10);
+        if (!host) return need('tcp', 'tcp-host', 'toolkit.need_host');
+        if (!(port >= 1 && port <= 65535)) return need('tcp', 'tcp-port', 'toolkit.need_port');
+        run('tcp', 'tcp-result', async () => {
+            const d = await Utils.api('/api/network/tcp', { method: 'POST', body: { host, port } });
+            const open = !!(d.success || d.open || d.connected);
+            return facts([
+                [_('toolkit.address'), `<span class="mono">${esc(host)}:${esc(port)}</span>`],
+                [_('toolkit.result'), open ? statusText('ok', _('toolkit.port_open')) : statusText('error', _('toolkit.port_closed'))],
+                open && d.rtt_ms != null ? [_('toolkit.connect_time'), esc(ms(d.rtt_ms))] : null,
+                !open && d.error ? [_('toolkit.reason'), esc(d.error)] : null,
+            ]);
         });
     });
 
-    // ── Enter key runs tool ─────────────────────────────────────────────
-
-    document.querySelectorAll('.tool-card-body input[type="text"], .tool-card-body input[type="number"]').forEach(function (input) {
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                var card = input.closest('.tool-card-body');
-                var btn = card.querySelector('.tool-run-btn');
-                if (btn) btn.click();
-            }
-        });
-    });
-
-    // ═══════════════════════════════════════════════════════════════════
-    // NETWORK TOOLS
-    // ═══════════════════════════════════════════════════════════════════
-
-    // ── Ping ────────────────────────────────────────────────────────────
-
-    document.getElementById('ping-run').addEventListener('click', function () {
-        var host = document.getElementById('ping-host').value.trim();
-        if (!host) return;
-        var el = document.getElementById('ping-result');
-        showSpinner(el);
-
-        api('/api/network/ping', { body: { host: host } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data || res;
-            el.innerHTML = '<div class="tool-result-box">' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.host', 'Host') + '</span><span class="result-value">' + esc(d.host || host) + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.ip_address', 'IP') + '</span><span class="result-value">' + esc(d.ip || d.numeric_host || '—') + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.latency', 'Latency') + '</span><span class="result-value">' + esc(d.time || d.avg || '—') + ' ms</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.ttl', 'TTL') + '</span><span class="result-value">' + esc(d.ttl || '—') + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.status', 'Status') + '</span><span class="result-status ' + (d.alive ? 'success' : 'error') + '">' + (d.alive ? '✓ Reachable' : '✗ Unreachable') + '</span></div>' +
-                '</div>';
-        }).catch(function (e) { showError(el, e.message); });
-    });
-
-    // ── TCP Port Check ──────────────────────────────────────────────────
-
-    document.getElementById('tcp-run').addEventListener('click', function () {
-        var host = document.getElementById('tcp-host').value.trim();
-        var port = parseInt(document.getElementById('tcp-port').value, 10);
-        if (!host || !port) return;
-        var el = document.getElementById('tcp-result');
-        showSpinner(el);
-
-        api('/api/network/tcp', { body: { host: host, port: port } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data || res;
-            var open = d.open || d.connected;
-            el.innerHTML = '<div class="tool-result-box">' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.host', 'Host') + '</span><span class="result-value">' + esc(host) + ':' + esc(port) + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.status', 'Status') + '</span><span class="result-status ' + (open ? 'success' : 'error') + '">' + (open ? '✓ Open' : '✗ Closed') + '</span></div>' +
-                (d.latency ? '<div class="result-row"><span class="result-label">' + t('toolkit.latency', 'Latency') + '</span><span class="result-value">' + esc(d.latency) + ' ms</span></div>' : '') +
-                (d.banner ? '<div class="result-row"><span class="result-label">Banner</span><span class="result-value">' + esc(d.banner) + '</span></div>' : '') +
-                '</div>';
-        }).catch(function (e) { showError(el, e.message); });
-    });
-
-    // ── SSL Certificate ─────────────────────────────────────────────────
-
-    document.getElementById('ssl-run').addEventListener('click', function () {
-        var host = document.getElementById('ssl-host').value.trim();
-        var port = parseInt(document.getElementById('ssl-port').value, 10) || 443;
-        if (!host) return;
-        var el = document.getElementById('ssl-result');
-        showSpinner(el);
-
-        api('/api/toolkit/ssl', { body: { host: host, port: port } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data;
-            var status = d.daysLeft > 30 ? 'success' : (d.daysLeft > 7 ? 'warning' : 'error');
-            var html = '<div class="tool-result-box">' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.subject', 'Subject') + '</span><span class="result-value">' + esc(d.subject) + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.issuer', 'Issuer') + '</span><span class="result-value">' + esc(d.issuer) + (d.organization ? ' (' + esc(d.organization) + ')' : '') + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.valid_from', 'Valid From') + '</span><span class="result-value">' + new Date(d.validFrom).toLocaleDateString() + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.valid_to', 'Valid To') + '</span><span class="result-value">' + new Date(d.validTo).toLocaleDateString() + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.days_left', 'Days Left') + '</span><span class="result-status ' + status + '">' + esc(d.daysLeft) + ' ' + t('toolkit.days', 'days') + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.protocol', 'Protocol') + '</span><span class="result-value">' + esc(d.protocol || '—') + '</span></div>';
-
-            if (d.cipher) {
-                html += '<div class="result-row"><span class="result-label">' + t('toolkit.cipher', 'Cipher') + '</span><span class="result-value">' + esc(d.cipher.name || '—') + '</span></div>';
-            }
-            if (d.altNames && d.altNames.length) {
-                html += '<div class="result-row"><span class="result-label">' + t('toolkit.alt_names', 'SANs') + '</span><span class="result-value">' + d.altNames.map(esc).join(', ') + '</span></div>';
-            }
-            if (d.fingerprint) {
-                html += '<div class="result-row"><span class="result-label">SHA-256</span><span class="result-value" style="font-size:11px">' + esc(d.fingerprint) + '</span></div>';
-            }
+    onSubmit('ssl', () => {
+        const host = $('ssl-host').value.trim();
+        const port = parseInt($('ssl-port').value, 10) || 443;
+        if (!host) return need('ssl', 'ssl-host', 'toolkit.need_host');
+        run('ssl', 'ssl-result', async () => {
+            const d = await post('/api/toolkit/ssl', { host, port });
+            const days = Number(d.daysLeft);
+            const daysKind = days < 0 ? 'error' : days <= 7 ? 'error' : days <= 30 ? 'warning' : 'ok';
+            const daysText = days < 0 ? _('toolkit.cert_expired_ago', { count: Math.abs(days) }) : _('toolkit.days_left_count', { count: days });
+            let html = facts([
+                [_('toolkit.subject'), esc(d.subject || '')],
+                [_('toolkit.issuer'), esc(d.issuer || '') + (d.organization && d.organization !== d.issuer ? ` (${esc(d.organization)})` : '')],
+                [_('toolkit.valid_from'), esc(Utils.formatDate(d.validFrom))],
+                [_('toolkit.valid_to'), esc(Utils.formatDate(d.validTo))],
+                [_('toolkit.days_left'), statusText(daysKind, daysText)],
+                [_('toolkit.trusted'), d.authorized ? esc(_('common.yes')) : esc(_('toolkit.not_trusted'))],
+                d.protocol ? [_('toolkit.protocol'), esc(d.protocol)] : null,
+                d.cipher && d.cipher.name ? [_('toolkit.cipher'), `<span class="mono">${esc(d.cipher.name)}</span>`] : null,
+                d.altNames && d.altNames.length ? [_('toolkit.alt_names'), `<span class="mono">${d.altNames.map(esc).join('<br>')}</span>`] : null,
+                d.serial ? [_('toolkit.serial'), `<span class="mono">${esc(d.serial)}</span>`] : null,
+                d.fingerprint ? [_('toolkit.fingerprint'), `<span class="mono">${esc(d.fingerprint)}</span>`] : null,
+            ]);
             if (d.chain && d.chain.length > 1) {
-                html += '<div class="result-row"><span class="result-label">' + t('toolkit.chain', 'Chain') + '</span></div>';
-                html += '<ul class="ssl-chain">';
-                d.chain.forEach(function (c) {
-                    html += '<li>' + esc(c.subject) + ' <span style="color:var(--text-secondary)">(' + esc(c.issuer) + ')</span></li>';
-                });
-                html += '</ul>';
+                html += `<h3 class="tool-sub">${esc(_('toolkit.chain'))}</h3>
+                    <ol class="steps tool-chain">${d.chain.map((c) =>
+                        `<li>${esc(c.subject)} <span class="text-muted">${esc(_('toolkit.issued_by', { issuer: c.issuer }))}</span></li>`).join('')}</ol>`;
             }
-
-            html += '</div>';
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+            return html;
+        });
     });
 
-    // ── HTTP Health Check ───────────────────────────────────────────────
-
-    document.getElementById('http-run').addEventListener('click', function () {
-        var url = document.getElementById('http-url').value.trim();
-        if (!url) return;
-        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-        var el = document.getElementById('http-result');
-        showSpinner(el);
-
-        api('/api/network/http', { body: { url: url } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data || res;
-            var ok = d.status_code >= 200 && d.status_code < 400;
-            el.innerHTML = '<div class="tool-result-box">' +
-                '<div class="result-row"><span class="result-label">URL</span><span class="result-value">' + esc(url) + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.status', 'Status') + '</span><span class="result-status ' + (ok ? 'success' : 'error') + '">' + esc(d.status_code) + ' ' + esc(d.status_text || '') + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.latency', 'Latency') + '</span><span class="result-value">' + esc(d.latency || d.response_time || '—') + ' ms</span></div>' +
-                (d.content_type ? '<div class="result-row"><span class="result-label">Content-Type</span><span class="result-value">' + esc(d.content_type) + '</span></div>' : '') +
-                (d.server ? '<div class="result-row"><span class="result-label">Server</span><span class="result-value">' + esc(d.server) + '</span></div>' : '') +
-                '</div>';
-        }).catch(function (e) { showError(el, e.message); });
+    onSubmit('http', () => {
+        let url = $('http-url').value.trim();
+        if (!url) return need('http', 'http-url', 'toolkit.need_url');
+        if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+        run('http', 'http-result', async () => {
+            const d = await Utils.api('/api/network/http', { method: 'POST', body: { url } });
+            const code = d.status_code;
+            const ok = code >= 200 && code < 400;
+            return facts([
+                [_('toolkit.url'), `<span class="mono">${esc(url)}</span>`],
+                [_('toolkit.result'), code ? statusText(ok ? 'ok' : 'error', _('toolkit.http_answered', { code })) : statusText('error', _('toolkit.http_no_answer'))],
+                d.rtt_ms != null ? [_('toolkit.response_time'), esc(ms(d.rtt_ms))] : null,
+                d.error ? [_('toolkit.reason'), esc(d.error)] : null,
+            ]);
+        });
     });
 
-    // ── DNS Lookup ──────────────────────────────────────────────────────
-
-    document.getElementById('dns-run').addEventListener('click', function () {
-        var domain = document.getElementById('dns-domain').value.trim();
-        if (!domain) return;
-        var el = document.getElementById('dns-result');
-        showSpinner(el);
-
-        api('/api/network/resolve', { body: { host: domain } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data || res;
-            var addrs = d.addresses || d.address || [];
+    onSubmit('dns', () => {
+        const host = $('dns-domain').value.trim();
+        if (!host) return need('dns', 'dns-domain', 'toolkit.need_domain');
+        run('dns', 'dns-result', async () => {
+            const d = await Utils.api('/api/network/resolve', { method: 'POST', body: { host } });
+            let addrs = d.addresses || d.address || d.ip || [];
             if (!Array.isArray(addrs)) addrs = [addrs];
-            el.innerHTML = '<div class="tool-result-box">' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.domain', 'Domain') + '</span><span class="result-value">' + esc(domain) + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.resolved', 'Resolved') + '</span><span class="result-value">' + addrs.map(esc).join(', ') + '</span></div>' +
-                '</div>';
-        }).catch(function (e) { showError(el, e.message); });
+            return facts([
+                [_('toolkit.domain'), `<span class="mono">${esc(d.host || host)}</span>`],
+                [_('toolkit.resolved'), addrs.length ? `<span class="mono">${addrs.map(esc).join('<br>')}</span>` : esc(_('toolkit.no_address'))],
+            ]);
+        });
     });
 
-    // ── Whois / DNS Records ─────────────────────────────────────────────
-
-    document.getElementById('whois-run').addEventListener('click', function () {
-        var domain = document.getElementById('whois-domain').value.trim();
-        if (!domain) return;
-        var el = document.getElementById('whois-result');
-        showSpinner(el);
-
-        api('/api/toolkit/whois', { body: { domain: domain } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data;
-            var dns = d.dns || {};
-            var html = '<div class="tool-result-box">' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.domain', 'Domain') + '</span><span class="result-value">' + esc(d.domain) + '</span></div>';
-
-            // DNS records table
-            html += '<table class="dns-records"><thead><tr><th>' + t('toolkit.record_type', 'Type') + '</th><th>' + t('toolkit.record_value', 'Value') + '</th></tr></thead><tbody>';
-            if (dns.A && dns.A.length) dns.A.forEach(function (a) { html += '<tr><td>A</td><td>' + esc(a) + '</td></tr>'; });
-            if (dns.AAAA && dns.AAAA.length) dns.AAAA.forEach(function (a) { html += '<tr><td>AAAA</td><td>' + esc(a) + '</td></tr>'; });
-            if (dns.NS && dns.NS.length) dns.NS.forEach(function (a) { html += '<tr><td>NS</td><td>' + esc(a) + '</td></tr>'; });
-            if (dns.MX && dns.MX.length) dns.MX.forEach(function (m) { html += '<tr><td>MX</td><td>' + esc(m.exchange) + ' (priority: ' + esc(m.priority) + ')</td></tr>'; });
-            if (dns.TXT && dns.TXT.length) dns.TXT.forEach(function (t) { html += '<tr><td>TXT</td><td style="word-break:break-all">' + esc(t) + '</td></tr>'; });
-            html += '</tbody></table></div>';
-
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+    onSubmit('whois', () => {
+        const domain = $('whois-domain').value.trim();
+        if (!domain) return need('whois', 'whois-domain', 'toolkit.need_domain');
+        run('whois', 'whois-result', async () => {
+            const d = await post('/api/toolkit/whois', { domain });
+            const dns = d.dns || {};
+            const rows = [];
+            (dns.A || []).forEach((v) => rows.push(['A', v]));
+            (dns.AAAA || []).forEach((v) => rows.push(['AAAA', v]));
+            (dns.NS || []).forEach((v) => rows.push(['NS', v]));
+            (dns.MX || []).forEach((m) => rows.push(['MX', m.exchange ? _('toolkit.mx_value', { host: m.exchange, priority: m.priority }) : _('toolkit.mx_null')]));
+            (dns.TXT || []).forEach((v) => rows.push(['TXT', v]));
+            if (!rows.length) return `<p class="state">${esc(_('toolkit.no_records', { domain: d.domain || domain }))}</p>`;
+            return `<p class="count-line">${esc(_('toolkit.records_count', { count: rows.length, domain: d.domain || domain }))}</p>
+                <div class="table-scroll"><table class="data-table tool-table">
+                    <thead><tr><th>${esc(_('toolkit.record_type'))}</th><th>${esc(_('toolkit.record_value'))}</th></tr></thead>
+                    <tbody>${rows.map(([type, value]) => `<tr><td>${esc(type)}</td><td class="mono tool-wrap">${esc(value)}</td></tr>`).join('')}</tbody>
+                </table></div>`;
+        });
     });
 
-    // ── Speed Test ──────────────────────────────────────────────────────
-
-    document.getElementById('speed-run').addEventListener('click', function () {
-        var el = document.getElementById('speed-result');
-        showSpinner(el);
-
-        var start = performance.now();
-        fetch('/api/speed-test', { credentials: 'same-origin' }).then(function (r) {
-            var bytes = parseInt(r.headers.get('content-length') || '0', 10);
-            return r.arrayBuffer().then(function (buf) {
-                var elapsed = (performance.now() - start) / 1000; // seconds
-                var size = buf.byteLength || bytes;
-                var mbps = ((size * 8) / elapsed / 1000000).toFixed(2);
-                var latency = Math.round(performance.now() - start);
-
-                el.innerHTML = '<div class="tool-result-box">' +
-                    '<div class="speed-gauge">' +
-                    '<div class="speed-value">' + esc(mbps) + '<span class="speed-unit">Mbps</span></div>' +
-                    '<div class="speed-latency">' + esc(latency) + ' ms · ' + (size / 1024 / 1024).toFixed(2) + ' MB</div>' +
-                    '</div></div>';
-            });
-        }).catch(function (e) { showError(el, e.message); });
-    });
-
-    // ── Wake-on-LAN ─────────────────────────────────────────────────────
-
-    document.getElementById('wol-run').addEventListener('click', function () {
-        var mac = document.getElementById('wol-mac').value.trim();
-        var broadcast = document.getElementById('wol-broadcast').value.trim() || '255.255.255.255';
-        if (!mac) return;
-        var el = document.getElementById('wol-result');
-        showSpinner(el);
-
-        api('/api/toolkit/wol', { body: { mac: mac, broadcast: broadcast } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data;
-            el.innerHTML = '<div class="tool-result-box">' +
-                '<span class="result-status success"><span class="material-icons" style="font-size:16px">check_circle</span> ' +
-                t('toolkit.wol_sent', 'Magic packet sent') + '</span>' +
-                '<div class="result-row" style="margin-top:8px"><span class="result-label">MAC</span><span class="result-value">' + esc(d.mac) + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.broadcast', 'Broadcast') + '</span><span class="result-value">' + esc(d.broadcast) + '</span></div>' +
-                '</div>';
-        }).catch(function (e) { showError(el, e.message); });
-    });
-
-    // ═══════════════════════════════════════════════════════════════════
-    // CRYPTO TOOLS
-    // ═══════════════════════════════════════════════════════════════════
-
-    // ── Hash Generator ──────────────────────────────────────────────────
-
-    document.getElementById('hash-run').addEventListener('click', function () {
-        var text = document.getElementById('hash-input').value;
-        if (!text) return;
-        var algoChip = document.querySelector('#tool-hash .chip.active');
-        var algo = algoChip ? algoChip.getAttribute('data-algo') : 'sha256';
-        var el = document.getElementById('hash-result');
-        showSpinner(el);
-
-        api('/api/toolkit/hash', { body: { text: text, algorithm: algo } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data;
-            el.innerHTML = '<div class="tool-result-box">' +
-                copyBtn(d.hash) +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.algorithm', 'Algorithm') + '</span><span class="result-value">' + esc(d.algorithm).toUpperCase() + '</span></div>' +
-                '<div class="result-row"><span class="result-label">' + t('toolkit.hash_value', 'Hash') + '</span><span class="result-value" style="word-break:break-all">' + esc(d.hash) + '</span></div>' +
-                '</div>';
-        }).catch(function (e) { showError(el, e.message); });
-    });
-
-    // ── Password Generator ──────────────────────────────────────────────
-
-    document.getElementById('pwd-run').addEventListener('click', function () {
-        var length = parseInt(document.getElementById('pwd-length').value, 10) || 20;
-        var el = document.getElementById('pwd-result');
-        showSpinner(el);
-
-        api('/api/toolkit/password', {
-            body: {
-                length: length,
-                uppercase: document.getElementById('pwd-upper').checked,
-                lowercase: document.getElementById('pwd-lower').checked,
-                digits: document.getElementById('pwd-digits').checked,
-                symbols: document.getElementById('pwd-symbols').checked,
+    onSubmit('speed', () => {
+        run('speed', 'speed-result', async () => {
+            const start = performance.now();
+            const res = await fetch('/api/speed-test', { credentials: 'same-origin', cache: 'no-store' });
+            if (!res.ok) {
+                let message = '';
+                try { const j = await res.json(); message = j.error || ''; } catch (e) { /* not JSON */ }
+                throw new Error(res.status === 403 ? Utils.permissionDeniedMessage() : (message || _('toolkit.failed')));
             }
-        }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data;
-            var strength = d.entropy >= 128 ? 'success' : (d.entropy >= 60 ? 'warning' : 'error');
-            var strengthLabel = d.entropy >= 128 ? t('toolkit.very_strong', 'Very Strong') : (d.entropy >= 60 ? t('toolkit.strong', 'Strong') : t('toolkit.weak', 'Weak'));
-            var pct = Math.min(100, Math.round((d.entropy / 128) * 100));
-            var color = d.entropy >= 128 ? '#3fb950' : (d.entropy >= 60 ? '#d29922' : '#f85149');
-
-            el.innerHTML = '<div class="password-display">' +
-                '<span class="password-value">' + esc(d.password) + '</span>' +
-                '<button class="result-copy-btn" type="button" data-bd-copy><span class="material-icons">content_copy</span></button>' +
-                '</div>' +
-                '<div class="entropy-bar"><div class="entropy-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
-                '<div class="password-meta">' +
-                '<span>' + t('toolkit.entropy', 'Entropy') + ': ' + d.entropy + ' bits</span>' +
-                '<span class="result-status ' + strength + '">' + strengthLabel + '</span>' +
-                '</div>';
-        }).catch(function (e) { showError(el, e.message); });
+            const buf = await res.arrayBuffer();
+            const seconds = (performance.now() - start) / 1000;
+            const size = buf.byteLength;
+            const mbit = (size * 8) / seconds / 1e6;
+            return facts([
+                [_('toolkit.download_speed'), `<strong>${esc(_('toolkit.mbit', { value: formatNumber(mbit, 1) }))}</strong>`],
+                [_('toolkit.transferred'), esc(formatBytes(size))],
+                [_('toolkit.duration'), esc(ms(seconds * 1000))],
+            ]);
+        });
     });
 
-    // ── JWT Decoder ─────────────────────────────────────────────────────
+    onSubmit('wol', () => {
+        const mac = $('wol-mac').value.trim();
+        const broadcast = $('wol-broadcast').value.trim() || '255.255.255.255';
+        if (!mac) return need('wol', 'wol-mac', 'toolkit.need_mac');
+        run('wol', 'wol-result', async () => {
+            const d = await post('/api/toolkit/wol', { mac, broadcast });
+            return `<p class="notice success">${esc(_('toolkit.wol_sent_to', { mac: d.mac, broadcast: d.broadcast }))}</p>`;
+        });
+    });
 
-    document.getElementById('jwt-run').addEventListener('click', function () {
-        var token = document.getElementById('jwt-input').value.trim();
-        if (!token) return;
-        var el = document.getElementById('jwt-result');
-        showSpinner(el);
+    // ==== Crypto ====
 
-        api('/api/toolkit/jwt-decode', { body: { token: token } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            var d = res.data;
-            var html = '<div class="tool-result-box">';
-            html += '<div class="result-row"><span class="result-label">Header</span></div>';
-            html += '<pre style="margin:0 0 10px;padding:8px;background:var(--bg-tertiary,#161b22);border-radius:6px;font-size:12px;overflow-x:auto">' + esc(JSON.stringify(d.header, null, 2)) + '</pre>';
-            html += '<div class="result-row"><span class="result-label">Payload</span></div>';
-            html += '<pre style="margin:0 0 10px;padding:8px;background:var(--bg-tertiary,#161b22);border-radius:6px;font-size:12px;overflow-x:auto">' + esc(JSON.stringify(d.payload, null, 2)) + '</pre>';
+    onSubmit('hash', () => {
+        const text = $('hash-input').value;
+        if (!text) return need('hash', 'hash-input', 'toolkit.need_text');
+        const algorithm = $('hash-algo').value;
+        run('hash', 'hash-result', async () => {
+            const d = await post('/api/toolkit/hash', { text, algorithm });
+            const label = $('hash-algo').selectedOptions[0] ? $('hash-algo').selectedOptions[0].textContent : String(d.algorithm).toUpperCase();
+            return codeBlock(label, d.hash);
+        });
+    });
 
+    onSubmit('password', () => {
+        const length = parseInt($('pwd-length').value, 10);
+        if (!(length >= 4 && length <= 128)) return need('password', 'pwd-length', 'toolkit.need_length');
+        run('password', 'pwd-result', async () => {
+            const d = await post('/api/toolkit/password', {
+                length,
+                uppercase: $('pwd-upper').checked,
+                lowercase: $('pwd-lower').checked,
+                digits: $('pwd-digits').checked,
+                symbols: $('pwd-symbols').checked,
+            });
+            const strength = d.entropy >= 128 ? _('toolkit.very_strong') : d.entropy >= 60 ? _('toolkit.strong') : _('toolkit.weak');
+            const kind = d.entropy >= 60 ? 'ok' : 'error';
+            const id = `tool-copy-${++copyId}`;
+            return `<span class="value-field tool-password"><code id="${id}">${esc(d.password)}</code>
+                    <button type="button" data-copy="${id}">${esc(_('actions.copy'))}</button></span>
+                <p class="tool-strength">${statusText(kind, strength)} <span class="text-muted">${esc(_('toolkit.entropy_bits', { bits: d.entropy }))}</span></p>`;
+        });
+    });
+
+    onSubmit('jwt', () => {
+        const token = $('jwt-input').value.trim();
+        if (!token) return need('jwt', 'jwt-input', 'toolkit.need_token');
+        run('jwt', 'jwt-result', async () => {
+            const d = await post('/api/toolkit/jwt-decode', { token });
+            let html = '';
             if (d.expiry) {
-                var status = d.expiry.expired ? 'error' : 'success';
-                html += '<div class="result-row"><span class="result-label">' + t('toolkit.expiry', 'Expiry') + '</span><span class="result-status ' + status + '">' +
-                    (d.expiry.expired ? t('toolkit.expired', 'Expired') : t('toolkit.valid', 'Valid')) +
-                    ' · ' + new Date(d.expiry.date).toLocaleString() + '</span></div>';
+                const expired = d.expiry.expired;
+                html += facts([[_('toolkit.expiry'), statusText(expired ? 'error' : 'ok', expired ? _('toolkit.expired_on', { date: Utils.formatDate(d.expiry.date) }) : _('toolkit.valid_until', { date: Utils.formatDate(d.expiry.date) }))]]);
             }
-            html += '</div>';
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+            html += codeBlock(_('toolkit.jwt_header'), JSON.stringify(d.header, null, 2));
+            html += codeBlock(_('toolkit.jwt_payload'), JSON.stringify(d.payload, null, 2));
+            return html;
+        });
     });
 
-    // ═══════════════════════════════════════════════════════════════════
-    // ENCODING TOOLS
-    // ═══════════════════════════════════════════════════════════════════
+    // ==== Encoding ====
 
-    // ── Base64 ──────────────────────────────────────────────────────────
-
-    function runBase64(mode) {
-        var text = document.getElementById('b64-input').value;
-        if (!text) return;
-        var el = document.getElementById('b64-result');
-        showSpinner(el);
-
-        api('/api/toolkit/base64', { body: { text: text, mode: mode } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            el.innerHTML = '<div class="tool-result-box">' + copyBtn(res.data.result) +
-                '<div style="word-break:break-all">' + esc(res.data.result) + '</div></div>';
-        }).catch(function (e) { showError(el, e.message); });
+    function encoder(tool, inputId, resultId, url, mode) {
+        const text = $(inputId).value;
+        if (!text) return need(tool, inputId, 'toolkit.need_text');
+        run(tool, resultId, async () => {
+            const d = await post(url, { text, mode });
+            return codeBlock(mode === 'decode' ? _('toolkit.decoded') : _('toolkit.encoded'), d.result);
+        });
     }
-    document.getElementById('b64-encode').addEventListener('click', function () { runBase64('encode'); });
-    document.getElementById('b64-decode').addEventListener('click', function () { runBase64('decode'); });
 
-    // ── URL Encode/Decode ───────────────────────────────────────────────
-
-    function runUrlEncode(mode) {
-        var text = document.getElementById('url-input').value;
-        if (!text) return;
-        var el = document.getElementById('url-result');
-        showSpinner(el);
-
-        api('/api/toolkit/urlencode', { body: { text: text, mode: mode } }).then(function (res) {
-            if (!res.success) return showError(el, res.error || 'Failed');
-            el.innerHTML = '<div class="tool-result-box">' + copyBtn(res.data.result) +
-                '<div style="word-break:break-all">' + esc(res.data.result) + '</div></div>';
-        }).catch(function (e) { showError(el, e.message); });
-    }
-    document.getElementById('url-encode').addEventListener('click', function () { runUrlEncode('encode'); });
-    document.getElementById('url-decode').addEventListener('click', function () { runUrlEncode('decode'); });
-
-    // ═══════════════════════════════════════════════════════════════════
-    // SYSTEM TOOLS
-    // ═══════════════════════════════════════════════════════════════════
-
-    // ── Process List ────────────────────────────────────────────────────
-
-    document.getElementById('proc-run').addEventListener('click', function () {
-        var el = document.getElementById('proc-result');
-        showSpinner(el);
-
-        apiGet('/api/system/info').then(function (res) {
-            var procs = (res.data && res.data.processes) || res.processes || [];
-            if (!procs.length) return showError(el, t('toolkit.no_data', 'No data available'));
-
-            var html = '<div class="tool-result-box" style="overflow-x:auto"><table class="proc-table"><thead><tr>' +
-                '<th>PID</th><th>' + t('toolkit.process_name', 'Name') + '</th><th>CPU %</th><th>MEM %</th></tr></thead><tbody>';
-            procs.forEach(function (p) {
-                var cpuColor = p.cpu > 80 ? '#f85149' : (p.cpu > 50 ? '#d29922' : 'inherit');
-                html += '<tr><td>' + esc(p.pid) + '</td><td>' + esc(p.name || p.command || '') + '</td>' +
-                    '<td style="color:' + cpuColor + '">' + esc(typeof p.cpu !== 'undefined' ? p.cpu.toFixed(1) : '—') + '</td>' +
-                    '<td>' + esc(typeof p.mem !== 'undefined' ? p.mem.toFixed(1) : '—') + '</td></tr>';
-            });
-            html += '</tbody></table></div>';
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+    $('b64-encode').addEventListener('click', () => encoder('base64', 'b64-input', 'b64-result', '/api/toolkit/base64', 'encode'));
+    $('b64-decode').addEventListener('click', () => encoder('base64', 'b64-input', 'b64-result', '/api/toolkit/base64', 'decode'));
+    $('url-encode').addEventListener('click', () => encoder('urlencode', 'url-input', 'url-result', '/api/toolkit/urlencode', 'encode'));
+    $('url-decode').addEventListener('click', () => encoder('urlencode', 'url-input', 'url-result', '/api/toolkit/urlencode', 'decode'));
+    ['base64-form', 'urlencode-form'].forEach((id) => {
+        $(id).addEventListener('submit', (e) => e.preventDefault());
     });
 
-    // ── Disk Usage ──────────────────────────────────────────────────────
+    // ==== Server ====
 
-    document.getElementById('disk-run').addEventListener('click', function () {
-        var el = document.getElementById('disk-result');
-        showSpinner(el);
-
-        apiGet('/api/system/info').then(function (res) {
-            var disks = (res.data && res.data.disks) || res.disks || [];
-            if (!disks.length) return showError(el, t('toolkit.no_data', 'No data available'));
-
-            var html = '<div class="tool-result-box">';
-            disks.forEach(function (d) {
-                var pct = d.use_percent || d.percent || 0;
-                var color = pct > 90 ? '#f85149' : (pct > 75 ? '#d29922' : '#3fb950');
-                html += '<div class="disk-bar-wrapper">' +
-                    '<div class="disk-bar-label"><span class="disk-bar-name">' + esc(d.filesystem || d.mount || d.name || '') + '</span>' +
-                    '<span class="disk-bar-size">' + esc(d.used || '') + ' / ' + esc(d.size || d.total || '') + ' (' + esc(pct) + '%)</span></div>' +
-                    '<div class="disk-bar"><div class="disk-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div></div>';
-            });
-            html += '</div>';
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+    onSubmit('processes', () => {
+        run('processes', 'proc-result', async () => {
+            const res = await Utils.api('/api/system/info');
+            const procs = (res && res.processes) || [];
+            if (!procs.length) return `<p class="state">${esc(_('toolkit.no_processes'))}</p>`;
+            return `<div class="table-scroll"><table class="data-table tool-table">
+                <thead><tr><th>${esc(_('toolkit.process_name'))}</th><th class="num">${esc(_('toolkit.cpu_percent'))}</th><th class="num">${esc(_('toolkit.memory_mb'))}</th></tr></thead>
+                <tbody>${procs.map((p) => `<tr>
+                    <td class="mono tool-wrap">${esc(p.name || p.command || '')}</td>
+                    <td class="num">${esc(formatNumber(Number(p.cpu) || 0, 1))}</td>
+                    <td class="num">${esc(formatNumber(Number(p.mem) || 0, 0))}</td>
+                </tr>`).join('')}</tbody></table></div>`;
+        });
     });
 
-    // ── Database Stats ──────────────────────────────────────────────────
+    onSubmit('disk', () => {
+        run('disk', 'disk-result', async () => {
+            const res = await Utils.api('/api/system/info');
+            const disks = (res && res.disks) || [];
+            if (!disks.length) return `<p class="state">${esc(_('toolkit.no_disks'))}</p>`;
+            return `<div class="table-scroll"><table class="data-table tool-table">
+                <thead><tr><th>${esc(_('toolkit.mount'))}</th><th>${esc(_('toolkit.used'))}</th></tr></thead>
+                <tbody>${disks.map((d) => {
+                    const total = Number(d.total) || 0;
+                    const used = Number(d.used) || 0;
+                    const pct = total ? Math.round((used / total) * 100) : 0;
+                    const level = pct >= 95 ? ' is-full' : pct >= 85 ? ' is-high' : '';
+                    return `<tr><td class="mono">${esc(d.mount || d.name || '')}</td>
+                        <td class="tool-meter"><div class="meter${level}"><span class="meter-bar" aria-hidden="true"><span class="meter-fill" style="width:${pct}%"></span></span>
+                        <span class="meter-value">${esc(_('toolkit.used_of', { used: formatBytes(used), total: formatBytes(total), percent: pct }))}</span></div></td></tr>`;
+                }).join('')}</tbody></table></div>`;
+        });
+    });
 
-    document.getElementById('db-run').addEventListener('click', function () {
-        var el = document.getElementById('db-result');
-        showSpinner(el);
-
-        apiGet('/api/database/stats').then(function (res) {
-            var d = (res.data) || res;
-            var tables = d.tables || {};
-            var html = '<div class="tool-result-box">';
-            if (d.type) html += '<div class="result-row"><span class="result-label">' + t('toolkit.db_type', 'Type') + '</span><span class="result-value">' + esc(d.type) + '</span></div>';
-            if (d.size) html += '<div class="result-row"><span class="result-label">' + t('toolkit.db_size', 'Size') + '</span><span class="result-value">' + esc(d.size) + '</span></div>';
-
-            var keys = Object.keys(tables);
-            if (keys.length) {
-                html += '<table class="proc-table" style="margin-top:10px"><thead><tr><th>' + t('toolkit.table_name', 'Table') + '</th><th>' + t('toolkit.row_count', 'Rows') + '</th></tr></thead><tbody>';
-                keys.forEach(function (k) {
-                    html += '<tr><td>' + esc(k) + '</td><td>' + esc(tables[k]) + '</td></tr>';
-                });
-                html += '</tbody></table>';
+    onSubmit('db', () => {
+        run('db', 'db-result', async () => {
+            const d = await Utils.api('/api/database/stats');
+            const tables = Array.isArray(d.tables) ? d.tables
+                : Object.entries(d.tables || {}).map(([name, count]) => ({ name, count }));
+            let html = facts([
+                d.type ? [_('toolkit.db_type'), esc(d.type)] : null,
+                d.size ? [_('toolkit.db_size'), esc(d.size)] : null,
+                [_('toolkit.last_backup'), d.last_backup ? esc(Utils.formatDate(d.last_backup)) : esc(_('toolkit.no_backup'))],
+            ]);
+            if (tables.length) {
+                html += `<div class="table-scroll"><table class="data-table tool-table">
+                    <thead><tr><th>${esc(_('toolkit.table_name'))}</th><th class="num">${esc(_('toolkit.row_count'))}</th></tr></thead>
+                    <tbody>${tables.map((t) => `<tr><td class="mono">${esc(t.name)}</td><td class="num">${esc(formatNumber(Number(t.count) || 0, 0))}</td></tr>`).join('')}</tbody>
+                </table></div>`;
             }
-            html += '</div>';
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+            return html;
+        });
     });
 
-    // ── Docker Containers ───────────────────────────────────────────────
-
-    document.getElementById('docker-run').addEventListener('click', function () {
-        var el = document.getElementById('docker-result');
-        showSpinner(el);
-
-        apiGet('/api/docker/containers').then(function (res) {
-            var containers = (res.data && res.data.containers) || res.containers || [];
-            if (!containers.length) return showError(el, t('toolkit.no_docker', 'No Docker containers found or Docker not available'));
-
-            var html = '<div class="tool-result-box">';
-            containers.forEach(function (c) {
-                var running = (c.state || c.status || '').toLowerCase().indexOf('up') >= 0 || c.state === 'running';
-                html += '<div class="docker-container">' +
-                    '<span class="docker-status-dot ' + (running ? 'running' : 'stopped') + '"></span>' +
-                    '<span class="docker-name">' + esc(c.name || c.names || '') + '</span>' +
-                    '<span class="docker-image">' + esc(c.image || '') + '</span>' +
-                    '<span class="docker-ports">' + esc(c.ports || '') + '</span>' +
-                    '</div>';
-            });
-            html += '</div>';
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+    onSubmit('docker', () => {
+        run('docker', 'docker-result', async () => {
+            const res = await Utils.api('/api/docker/containers');
+            const containers = (res && res.containers) || [];
+            if (!containers.length) {
+                return `<p class="state">${esc(res && res.available === false ? _('toolkit.docker_unavailable') : _('toolkit.no_containers'))}</p>`;
+            }
+            return `<div class="table-scroll"><table class="data-table tool-table">
+                <thead><tr><th>${esc(_('toolkit.container'))}</th><th>${esc(_('toolkit.status'))}</th><th>${esc(_('toolkit.ports'))}</th></tr></thead>
+                <tbody>${containers.map((c) => {
+                    const running = c.state === 'running' || /^up\b/i.test(c.status || '');
+                    return `<tr><td><span class="mono">${esc(c.name || c.names || '')}</span><span class="cell-sub mono">${esc(c.image || '')}</span></td>
+                        <td>${statusText(running ? 'ok' : 'offline', c.status || c.state || '')}</td>
+                        <td class="mono tool-wrap">${c.ports ? esc(c.ports) : '<span class="text-muted">–</span>'}</td></tr>`;
+                }).join('')}</tbody></table></div>`;
+        });
     });
 
-    // ── Log Viewer ──────────────────────────────────────────────────────
-
-    document.getElementById('log-run').addEventListener('click', function () {
-        var source = document.getElementById('log-source').value;
-        var lines = parseInt(document.getElementById('log-lines').value, 10) || 50;
-        var el = document.getElementById('log-result');
-        showSpinner(el);
-
-        apiGet('/api/logs/recent?source=' + encodeURIComponent(source) + '&lines=' + lines).then(function (res) {
-            var logLines = (res.data && res.data.lines) || res.lines || [];
-            if (!logLines.length) return showError(el, t('toolkit.no_logs', 'No log lines available'));
-
-            var html = '<div class="tool-result-box"><div class="log-output">';
-            logLines.forEach(function (line) {
-                var cls = '';
-                var lower = (typeof line === 'string' ? line : '').toLowerCase();
-                if (lower.indexOf('error') >= 0 || lower.indexOf('fatal') >= 0) cls = 'log-line-error';
-                else if (lower.indexOf('warn') >= 0) cls = 'log-line-warning';
-                else if (lower.indexOf('info') >= 0) cls = 'log-line-info';
-                html += '<div class="' + cls + '">' + esc(line) + '</div>';
-            });
-            html += '</div></div>';
-            el.innerHTML = html;
-        }).catch(function (e) { showError(el, e.message); });
+    onSubmit('logs', () => {
+        const source = $('log-source').value;
+        const limit = parseInt($('log-lines').value, 10);
+        if (!(limit >= 10 && limit <= 200)) return need('logs', 'log-lines', 'toolkit.need_lines');
+        run('logs', 'log-result', async () => {
+            const res = await Utils.api(`/api/logs/recent?source=${encodeURIComponent(source)}&limit=${limit}`);
+            const lines = (res && res.lines) || [];
+            if (!lines.length) return `<p class="state">${esc(_('toolkit.no_log_lines'))}</p>`;
+            const title = source === 'go' ? _('toolkit.log_go') : _('toolkit.log_console');
+            return codeBlock(_('toolkit.log_title', { source: title, count: lines.length }), lines.join('\n'));
+        });
     });
-
 })();
