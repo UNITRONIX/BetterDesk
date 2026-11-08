@@ -14,7 +14,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const betterdeskApi = require('../services/betterdeskApi');
-const db = require('../db');
+const db = require('../services/database');
 
 const jsonBody = express.json({ limit: '4kb' });
 

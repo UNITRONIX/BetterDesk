@@ -1,7 +1,23 @@
 ## [Unreleased]
 
-### Changed
-- _(none yet)_
+### Fixed
+- **Console update rolled back on every instance (3.5.215/3.5.216):** `routes/pairing.routes.js`
+  shipped `require('../db')`, a module that has never existed in the repository. The update
+  itself applied cleanly, but the post-update integrity scan resolved that broken require to
+  `db.js`, requested `web-nodejs/db.js` from GitHub, received a **404** and classified it as a
+  **critical** failure — so the whole console update was rolled back to the previous SHA and
+  every panel stayed stranded below the new release. The import is now
+  `require('../services/database')`, matching every other route module.
+
+  No manual repair is needed: panels stuck on 3.5.214–3.5.216 pick the fix up with the next
+  panel update (Settings → Updates).
+
+### Added
+- **CI guard for console module integrity:** `web-nodejs/tests/consoleRequireIntegrity.test.js`
+  statically resolves every relative `require()` in the deployable console tree and fails when a
+  target file does not exist, plus smoke-requires every lazily loaded `routes/*.js`. `node --check`
+  only parses, and lazy route modules are not loaded during boot, so this was invisible to every
+  existing gate before it reached production.
 
 ---
 
