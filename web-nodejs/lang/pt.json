@@ -5561,8 +5561,8 @@
         "nav_tags": "Etiquetas",
         "quick_connect": "Controlar ambiente de trabalho remoto",
         "quick_connect_placeholder": "Introduza ID remoto…",
-        "view_grid": "Vista em grelha",
-        "view_list": "Vista em lista",
+        "view_grid": "Grade",
+        "view_list": "Lista",
         "sync_now": "Atualizar",
         "last_sync": "Atualizado",
         "status_ready": "Pronto",
@@ -5572,7 +5572,22 @@
         "no_tags": "Sem etiquetas",
         "collapse_devices": "Recolher lista de dispositivos",
         "expand_devices": "Expandir lista de dispositivos",
-        "open_settings": "Definições"
+        "open_settings": "Definições",
+        "page_description": "Conecte-se a um dispositivo pelo ID ou encontre-o na lista. A sessão abre em uma nova aba.",
+        "phone_note": "O visualizador web precisa de uma tela maior. Neste telefone, abra os dispositivos no app RustDesk.",
+        "quick_connect_title": "Conectar por ID",
+        "quick_connect_hint": "O ID mostrado no app RustDesk do outro dispositivo.",
+        "quick_connect_invalid": "Digite um ID de dispositivo: de 3 a 64 letras, dígitos, - ou _.",
+        "connect_to": "Conectar a {name}",
+        "col_name": "Dispositivo",
+        "filters_label": "Filtrar dispositivos",
+        "all_devices": "Todos os dispositivos",
+        "view_label": "Visualização",
+        "devices_count_online": "{count} dispositivos, {online} online.",
+        "updated_at": "Atualizado às {time}.",
+        "sync_failed_since": "Não foi possível atualizar. A lista é das {time}.",
+        "connect_failed": "Não foi possível abrir a sessão remota.",
+        "popup_blocked": "O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente."
     },
     "rdclient_login": {
         "title": "Cliente de ambiente de trabalho remoto",
@@ -5712,7 +5727,11 @@
         "device_denied": "Esta ligação é inválida, expirou ou não permite este dispositivo.",
         "empty": "Nenhum dispositivo nesta ligação.",
         "expires": "Expira",
-        "back_to_list": "Voltar à lista de convidado"
+        "back_to_list": "Voltar à lista de convidado",
+        "fact_link": "Link",
+        "fact_access": "Acesso",
+        "access_view_only": "Somente visualização: você vê a tela, mas não pode controlá-la.",
+        "access_full": "Você pode ver e controlar a tela."
     },
     "ux35": {
         "resize_sidebar": "Redimensionar barra lateral",

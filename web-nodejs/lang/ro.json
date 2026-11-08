@@ -5567,8 +5567,8 @@
         "nav_tags": "Etichete",
         "quick_connect": "Controlează desktop la distanță",
         "quick_connect_placeholder": "Introduceți ID-ul…",
-        "view_grid": "Vizualizare grilă",
-        "view_list": "Vizualizare listă",
+        "view_grid": "Grilă",
+        "view_list": "Listă",
         "sync_now": "Reîmprospătează",
         "last_sync": "Actualizat",
         "status_ready": "Pregătit",
@@ -5578,7 +5578,22 @@
         "no_tags": "Fără etichete",
         "collapse_devices": "Restrânge lista de dispozitive",
         "expand_devices": "Extinde lista de dispozitive",
-        "open_settings": "Setări"
+        "open_settings": "Setări",
+        "page_description": "Conectați-vă la un dispozitiv după ID sau găsiți-l în listă. Sesiunea se deschide într-o filă nouă.",
+        "phone_note": "Vizualizatorul web are nevoie de un ecran mai mare. Pe acest telefon, deschideți dispozitivele în aplicația RustDesk.",
+        "quick_connect_title": "Conectare după ID",
+        "quick_connect_hint": "ID-ul afișat în aplicația RustDesk de pe celălalt dispozitiv.",
+        "quick_connect_invalid": "Introduceți un ID de dispozitiv: 3–64 litere, cifre, - sau _.",
+        "connect_to": "Conectare la {name}",
+        "col_name": "Dispozitiv",
+        "filters_label": "Filtrare dispozitive",
+        "all_devices": "Toate dispozitivele",
+        "view_label": "Vizualizare",
+        "devices_count_online": "{count} dispozitive, {online} online.",
+        "updated_at": "Actualizat la {time}.",
+        "sync_failed_since": "Nu s-a putut reîmprospăta. Lista este de la {time}.",
+        "connect_failed": "Sesiunea la distanță nu a putut fi deschisă.",
+        "popup_blocked": "Browserul a blocat fila nouă. Permiteți ferestrele pop-up pentru acest site și încercați din nou."
     },
     "rdclient_login": {
         "title": "Client desktop la distanță",
@@ -5718,7 +5733,11 @@
         "device_denied": "Linkul este invalid, a expirat sau nu permite acest dispozitiv.",
         "empty": "Niciun dispozitiv pe acest link.",
         "expires": "Expiră",
-        "back_to_list": "Înapoi la lista oaspete"
+        "back_to_list": "Înapoi la lista oaspete",
+        "fact_link": "Link",
+        "fact_access": "Acces",
+        "access_view_only": "Doar vizualizare: vedeți ecranul, dar nu îl puteți controla.",
+        "access_full": "Puteți vedea și controla ecranul."
     },
     "ux35": {
         "resize_sidebar": "Redimensionați bara laterală",

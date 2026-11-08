@@ -5567,8 +5567,8 @@
         "nav_tags": "Tagit",
         "quick_connect": "Hallitse etätyöpöytää",
         "quick_connect_placeholder": "Syötä etä-ID…",
-        "view_grid": "Ruudukkonäkymä",
-        "view_list": "Listanäkymä",
+        "view_grid": "Ruudukko",
+        "view_list": "Luettelo",
         "sync_now": "Päivitä",
         "last_sync": "Päivitetty",
         "status_ready": "Valmis",
@@ -5578,7 +5578,22 @@
         "no_tags": "Ei tageja",
         "collapse_devices": "Tiivistä laiteluettelo",
         "expand_devices": "Laajenna laiteluettelo",
-        "open_settings": "Asetukset"
+        "open_settings": "Asetukset",
+        "page_description": "Yhdistä laitteeseen sen tunnuksella tai etsi se luettelosta. Istunto avautuu uuteen välilehteen.",
+        "phone_note": "Verkkokatselin tarvitsee suuremman näytön. Avaa laitteet tässä puhelimessa RustDesk-sovelluksessa.",
+        "quick_connect_title": "Yhdistä tunnuksella",
+        "quick_connect_hint": "Toisen laitteen RustDesk-sovelluksessa näkyvä tunnus.",
+        "quick_connect_invalid": "Anna laitteen tunnus: 3–64 kirjainta, numeroa, - tai _.",
+        "connect_to": "Yhdistä laitteeseen {name}",
+        "col_name": "Laite",
+        "filters_label": "Suodata laitteita",
+        "all_devices": "Kaikki laitteet",
+        "view_label": "Näkymä",
+        "devices_count_online": "{count} laitetta, {online} verkossa.",
+        "updated_at": "Päivitetty klo {time}.",
+        "sync_failed_since": "Päivitys epäonnistui. Luettelo on ajalta {time}.",
+        "connect_failed": "Etäistuntoa ei voitu avata.",
+        "popup_blocked": "Selain esti uuden välilehden. Salli ponnahdusikkunat tälle sivustolle ja yritä uudelleen."
     },
     "rdclient_login": {
         "title": "Etätyöpöytäasiakas",
@@ -5718,7 +5733,11 @@
         "device_denied": "Linkki on virheellinen, vanhentunut tai ei salli tätä laitetta.",
         "empty": "Tällä vieraslinkillä ei ole laitteita.",
         "expires": "Vanhenee",
-        "back_to_list": "Takaisin vieraslistaan"
+        "back_to_list": "Takaisin vieraslistaan",
+        "fact_link": "Linkki",
+        "fact_access": "Käyttöoikeus",
+        "access_view_only": "Vain katselu: näet näytön, mutta et voi ohjata sitä.",
+        "access_full": "Näet näytön ja voit ohjata sitä."
     },
     "ux35": {
         "resize_sidebar": "Muuta sivupalkin leveyttä",

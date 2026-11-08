@@ -5567,8 +5567,8 @@
         "nav_tags": "Tags",
         "quick_connect": "Styr fjernskrivebord",
         "quick_connect_placeholder": "Indtast fjern-ID…",
-        "view_grid": "Gittervisning",
-        "view_list": "Listevisning",
+        "view_grid": "Gitter",
+        "view_list": "Liste",
         "sync_now": "Opdater",
         "last_sync": "Opdateret",
         "status_ready": "Klar",
@@ -5578,7 +5578,22 @@
         "no_tags": "Ingen tags",
         "collapse_devices": "Fold enhedsliste sammen",
         "expand_devices": "Udvid enhedsliste",
-        "open_settings": "Indstillinger"
+        "open_settings": "Indstillinger",
+        "page_description": "Opret forbindelse til en enhed med dens id, eller find den på listen. Sessionen åbner i en ny fane.",
+        "phone_note": "Webfremviseren kræver en større skærm. På denne telefon skal du åbne enheder i RustDesk-appen i stedet.",
+        "quick_connect_title": "Opret forbindelse med id",
+        "quick_connect_hint": "Det id, der vises i RustDesk-appen på den anden enhed.",
+        "quick_connect_invalid": "Indtast et enheds-id: 3 til 64 bogstaver, tal, - eller _.",
+        "connect_to": "Opret forbindelse til {name}",
+        "col_name": "Enhed",
+        "filters_label": "Filtrer enheder",
+        "all_devices": "Alle enheder",
+        "view_label": "Visning",
+        "devices_count_online": "{count} enheder, {online} online.",
+        "updated_at": "Opdateret {time}.",
+        "sync_failed_since": "Kunne ikke opdatere. Listen er fra {time}.",
+        "connect_failed": "Fjernsessionen kunne ikke åbnes.",
+        "popup_blocked": "Browseren blokerede den nye fane. Tillad pop op-vinduer for dette websted, og prøv igen."
     },
     "rdclient_login": {
         "title": "Remote Desktop-klient",
@@ -5718,7 +5733,11 @@
         "device_denied": "Linket er ugyldigt, udløbet eller tillader ikke denne enhed.",
         "empty": "Ingen enheder på dette gæstelink.",
         "expires": "Udløber",
-        "back_to_list": "Tilbage til gæstelisten"
+        "back_to_list": "Tilbage til gæstelisten",
+        "fact_link": "Link",
+        "fact_access": "Adgang",
+        "access_view_only": "Kun visning: du kan se skærmen, men ikke styre den.",
+        "access_full": "Du kan se og styre skærmen."
     },
     "ux35": {
         "resize_sidebar": "Tilpas sidepanelbredde",

@@ -1,0 +1,401 @@
+/*
+ * Remote desktop in browser (/remote, layouts/remote-desk.ejs): a small top
+ * bar, quick connect by ID, then the device list with folder, group and tag
+ * filters beside it, like the devices page. Also the guest access page.
+ */
+
+.rd-desk-app {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* ── Top bar ── */
+
+.rd-desk-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    min-height: var(--topbar-h);
+    padding: var(--space-1) var(--page-pad);
+    border-bottom: 1px solid var(--rule);
+    background: var(--bg);
+}
+
+.rd-desk-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-inline-end: auto;
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.rd-desk-brand:hover {
+    color: var(--text);
+}
+
+.rd-desk-logo {
+    display: inline-flex;
+    align-items: center;
+}
+
+.rd-desk-logo img,
+.rd-desk-logo svg {
+    width: auto;
+    height: 24px;
+    display: block;
+}
+
+.rd-desk-logo .material-icons {
+    font-size: 22px;
+    color: var(--text-muted);
+}
+
+.rd-desk-brand .brand-text-accent {
+    color: var(--accent);
+}
+
+.rd-desk-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+}
+
+.rd-desk-user {
+    color: var(--text-muted);
+}
+
+.rd-desk-lang .form-select {
+    width: auto;
+    min-height: var(--control-h-sm);
+    font-size: var(--text-sm);
+}
+
+.rd-desk-console-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h-sm);
+}
+
+/* ── Page ── */
+
+.rd-desk-page {
+    padding: var(--space-5) var(--page-pad) var(--space-7);
+}
+
+/* Quick connect: the first thing on the page */
+.rd-desk-quick-connect {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.rd-desk-quick-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.rd-desk-quick-input {
+    flex: 0 1 22ch;
+    min-width: 14ch;
+    font-size: var(--text-md);
+}
+
+.rd-desk-quick-status.is-error {
+    color: var(--danger);
+}
+
+.rd-desk-quick-input[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+/* ── Filters beside the list (same pattern as the devices page) ── */
+
+.rd-desk-workspace {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+}
+
+.rd-desk-sidebar {
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100vh - var(--space-6));
+    overflow-y: auto;
+    padding-bottom: var(--space-2);
+}
+
+.rd-desk-sidebar .filter-block + .filter-block {
+    margin-top: var(--space-5);
+}
+
+.rd-desk-sidebar .filter-head {
+    margin-bottom: var(--space-1);
+    padding-inline: var(--space-2);
+}
+
+.rd-desk-sidebar .filter-head h2 {
+    font-size: var(--text-base);
+}
+
+.rd-desk-sidebar .filter-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rd-desk-sidebar .filter-item {
+    display: flex;
+}
+
+.rd-desk-sidebar .filter-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    min-height: 30px;
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+[dir="rtl"] .rd-desk-sidebar .filter-option {
+    border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.rd-desk-sidebar .filter-option:hover {
+    background: var(--hover);
+}
+
+.rd-desk-sidebar .filter-option.active {
+    border-inline-start-color: var(--accent);
+    background: var(--bg-subtle);
+    font-weight: 600;
+}
+
+.rd-desk-sidebar .chip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rd-desk-sidebar .chip-count {
+    margin-inline-start: auto;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.rd-desk-sidebar .filter-empty {
+    padding: var(--space-1) var(--space-2);
+    color: var(--text-muted);
+}
+
+/* ── The list ── */
+
+.rd-desk-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    container: rdlist / inline-size;
+}
+
+.rd-desk-sync {
+    margin-inline-start: var(--space-1);
+}
+
+.rd-desk-sync.is-error {
+    color: var(--danger);
+}
+
+.rd-desk-platform-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.rd-desk-hostname {
+    font-weight: 600;
+}
+
+/* Grid: plain tiles, same rules and type as the table */
+.rd-desk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-3);
+}
+
+.rd-desk-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+}
+
+.rd-desk-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.rd-desk-card-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rd-desk-card-meta,
+.rd-desk-card-tags {
+    font-size: var(--text-sm);
+}
+
+.rd-desk-card-footer {
+    margin-top: auto;
+}
+
+.rd-desk-connected-label {
+    color: var(--text-muted);
+}
+
+/* The ID under the name only shows when the ID column is hidden */
+.rd-desk-table .rd-desk-row-id {
+    display: none;
+}
+
+@container rdlist (max-width: 560px) {
+    .rd-desk-table th:nth-child(2),
+    .rd-desk-table td:nth-child(2) {
+        display: none;
+    }
+
+    .rd-desk-table .rd-desk-row-id {
+        display: block;
+    }
+}
+
+@container rdlist (max-width: 700px) {
+    .rd-desk-table .rd-desk-col-last,
+    .rd-desk-table .rd-desk-last {
+        display: none;
+    }
+}
+
+@container rdlist (max-width: 520px) {
+    .rd-desk-table .rd-desk-col-platform,
+    .rd-desk-table .rd-desk-platform {
+        display: none;
+    }
+}
+
+/* ── Narrow screens: filters become rows of text above the list ── */
+
+@media (max-width: 899px) {
+    .rd-desk-workspace {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-4);
+    }
+
+    .rd-desk-sidebar {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .rd-desk-sidebar .filter-block + .filter-block {
+        margin-top: 0;
+    }
+
+    .rd-desk-sidebar .filter-block {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .rd-desk-sidebar .filter-head {
+        flex-shrink: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .rd-desk-sidebar .filter-head h2 {
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .rd-desk-sidebar .filter-list {
+        display: flex;
+        flex-shrink: 0;
+    }
+
+    .rd-desk-sidebar .filter-option {
+        flex: none;
+        border-inline-start: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        white-space: nowrap;
+    }
+
+    .rd-desk-sidebar .filter-option.active {
+        border-bottom-color: var(--accent);
+        background: transparent;
+    }
+
+    .rd-desk-sidebar .filter-empty {
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 640px) {
+    .rd-desk-header-actions {
+        width: 100%;
+    }
+
+    .rd-desk-quick-input {
+        flex: 1 1 100%;
+    }
+
+    .rd-desk-quick-row .btn {
+        flex: 1;
+    }
+}
+
+@media (pointer: coarse) {
+    .rd-desk-sidebar .filter-option {
+        min-height: 44px;
+    }
+
+    .rd-desk-console-link {
+        min-height: 44px;
+    }
+}
+
+/* ── Guest access page ── */
+
+.rd-guest-facts {
+    max-width: var(--measure);
+}

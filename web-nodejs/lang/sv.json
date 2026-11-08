@@ -5567,8 +5567,8 @@
         "nav_tags": "Taggar",
         "quick_connect": "Styr fjärrskrivbord",
         "quick_connect_placeholder": "Ange fjärr-ID…",
-        "view_grid": "Rutnätsvy",
-        "view_list": "Listvy",
+        "view_grid": "Rutnät",
+        "view_list": "Lista",
         "sync_now": "Uppdatera",
         "last_sync": "Uppdaterad",
         "status_ready": "Klar",
@@ -5578,7 +5578,22 @@
         "no_tags": "Inga taggar",
         "collapse_devices": "Fäll ihop enhetslista",
         "expand_devices": "Expandera enhetslista",
-        "open_settings": "Inställningar"
+        "open_settings": "Inställningar",
+        "page_description": "Anslut till en enhet med dess ID eller hitta den i listan. Sessionen öppnas i en ny flik.",
+        "phone_note": "Webbvisaren behöver en större skärm. Öppna enheter i RustDesk-appen på den här telefonen i stället.",
+        "quick_connect_title": "Anslut med ID",
+        "quick_connect_hint": "ID:t som visas i RustDesk-appen på den andra enheten.",
+        "quick_connect_invalid": "Ange ett enhets-ID: 3 till 64 bokstäver, siffror, - eller _.",
+        "connect_to": "Anslut till {name}",
+        "col_name": "Enhet",
+        "filters_label": "Filtrera enheter",
+        "all_devices": "Alla enheter",
+        "view_label": "Vy",
+        "devices_count_online": "{count} enheter, {online} online.",
+        "updated_at": "Uppdaterad {time}.",
+        "sync_failed_since": "Kunde inte uppdatera. Listan är från {time}.",
+        "connect_failed": "Det gick inte att öppna fjärrsessionen.",
+        "popup_blocked": "Webbläsaren blockerade den nya fliken. Tillåt popup-fönster för den här webbplatsen och försök igen."
     },
     "rdclient_login": {
         "title": "Remote Desktop-klient",
@@ -5718,7 +5733,11 @@
         "device_denied": "Länken är ogiltig, har gått ut eller tillåter inte denna enhet.",
         "empty": "Inga enheter på denna gästlänk.",
         "expires": "Går ut",
-        "back_to_list": "Tillbaka till gästlistan"
+        "back_to_list": "Tillbaka till gästlistan",
+        "fact_link": "Länk",
+        "fact_access": "Åtkomst",
+        "access_view_only": "Endast visning: du ser skärmen men kan inte styra den.",
+        "access_full": "Du kan se och styra skärmen."
     },
     "ux35": {
         "resize_sidebar": "Ändra sidopanelens bredd",

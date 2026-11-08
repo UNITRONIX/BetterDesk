@@ -5561,8 +5561,8 @@
         "nav_tags": "标签",
         "quick_connect": "控制远程桌面",
         "quick_connect_placeholder": "输入远程 ID…",
-        "view_grid": "网格视图",
-        "view_list": "列表视图",
+        "view_grid": "网格",
+        "view_list": "列表",
         "sync_now": "刷新",
         "last_sync": "已更新",
         "status_ready": "就绪",
@@ -5572,7 +5572,22 @@
         "no_tags": "无标签",
         "collapse_devices": "折叠设备列表",
         "expand_devices": "展开设备列表",
-        "open_settings": "设置"
+        "open_settings": "设置",
+        "page_description": "通过 ID 连接设备，或在列表中查找。会话将在新标签页中打开。",
+        "phone_note": "网页查看器需要更大的屏幕。在这部手机上，请改用 RustDesk 应用打开设备。",
+        "quick_connect_title": "通过 ID 连接",
+        "quick_connect_hint": "另一台设备上 RustDesk 应用显示的 ID。",
+        "quick_connect_invalid": "请输入设备 ID：3 到 64 个字母、数字、- 或 _。",
+        "connect_to": "连接到 {name}",
+        "col_name": "设备",
+        "filters_label": "筛选设备",
+        "all_devices": "所有设备",
+        "view_label": "视图",
+        "devices_count_online": "{count} 台设备，{online} 台在线。",
+        "updated_at": "更新于 {time}。",
+        "sync_failed_since": "无法刷新。列表为 {time} 的数据。",
+        "connect_failed": "无法打开远程会话。",
+        "popup_blocked": "浏览器拦截了新标签页。请允许此网站的弹出窗口，然后重试。"
     },
     "rdclient_login": {
         "title": "远程桌面客户端",
@@ -5712,7 +5727,11 @@
         "device_denied": "此链接无效、已过期或不允许此设备。",
         "empty": "此访客链接上没有设备。",
         "expires": "过期时间",
-        "back_to_list": "返回访客列表"
+        "back_to_list": "返回访客列表",
+        "fact_link": "链接",
+        "fact_access": "访问权限",
+        "access_view_only": "仅查看：您可以看到屏幕，但无法控制。",
+        "access_full": "您可以看到并控制屏幕。"
     },
     "ux35": {
         "resize_sidebar": "调整侧边栏宽度",

@@ -5565,8 +5565,8 @@
         "nav_tags": "標籤",
         "quick_connect": "控制遠端桌面",
         "quick_connect_placeholder": "輸入遠端 ID…",
-        "view_grid": "格狀檢視",
-        "view_list": "清單檢視",
+        "view_grid": "格狀",
+        "view_list": "清單",
         "sync_now": "重新整理",
         "last_sync": "已更新",
         "status_ready": "就緒",
@@ -5576,7 +5576,22 @@
         "no_tags": "無標籤",
         "collapse_devices": "摺疊裝置清單",
         "expand_devices": "展開裝置清單",
-        "open_settings": "設定"
+        "open_settings": "設定",
+        "page_description": "以 ID 連線到裝置，或在清單中尋找。工作階段會在新分頁中開啟。",
+        "phone_note": "網頁檢視器需要較大的螢幕。在這支手機上，請改用 RustDesk App 開啟裝置。",
+        "quick_connect_title": "以 ID 連線",
+        "quick_connect_hint": "另一台裝置的 RustDesk App 上顯示的 ID。",
+        "quick_connect_invalid": "請輸入裝置 ID：3 到 64 個字母、數字、- 或 _。",
+        "connect_to": "連線到 {name}",
+        "col_name": "裝置",
+        "filters_label": "篩選裝置",
+        "all_devices": "所有裝置",
+        "view_label": "檢視",
+        "devices_count_online": "{count} 台裝置，{online} 台在線。",
+        "updated_at": "更新於 {time}。",
+        "sync_failed_since": "無法重新整理。清單為 {time} 的資料。",
+        "connect_failed": "無法開啟遠端工作階段。",
+        "popup_blocked": "瀏覽器封鎖了新分頁。請允許此網站的彈出式視窗，然後再試一次。"
     },
     "rdclient_login": {
         "title": "遠端桌面用戶端",
@@ -5716,7 +5731,11 @@
         "device_denied": "此連結無效、已過期或不允許此裝置。",
         "empty": "此訪客連結上沒有裝置。",
         "expires": "到期",
-        "back_to_list": "返回訪客清單"
+        "back_to_list": "返回訪客清單",
+        "fact_link": "連結",
+        "fact_access": "存取權",
+        "access_view_only": "僅檢視：您可以看到畫面，但無法操作。",
+        "access_full": "您可以看到並操作畫面。"
     },
     "ux35": {
         "resize_sidebar": "調整側邊欄寬度",

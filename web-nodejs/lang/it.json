@@ -5561,8 +5561,8 @@
         "nav_tags": "Tag",
         "quick_connect": "Controlla desktop remoto",
         "quick_connect_placeholder": "Inserisci ID remoto…",
-        "view_grid": "Vista griglia",
-        "view_list": "Vista elenco",
+        "view_grid": "Griglia",
+        "view_list": "Elenco",
         "sync_now": "Aggiorna",
         "last_sync": "Aggiornato",
         "status_ready": "Pronto",
@@ -5572,7 +5572,22 @@
         "no_tags": "Nessun tag",
         "collapse_devices": "Comprimi elenco dispositivi",
         "expand_devices": "Espandi elenco dispositivi",
-        "open_settings": "Impostazioni"
+        "open_settings": "Impostazioni",
+        "page_description": "Connettiti a un dispositivo tramite il suo ID o trovalo nell'elenco. La sessione si apre in una nuova scheda.",
+        "phone_note": "Il visualizzatore web richiede uno schermo più grande. Su questo telefono apri i dispositivi nell'app RustDesk.",
+        "quick_connect_title": "Connetti tramite ID",
+        "quick_connect_hint": "L'ID mostrato nell'app RustDesk sull'altro dispositivo.",
+        "quick_connect_invalid": "Inserisci un ID dispositivo: da 3 a 64 lettere, cifre, - o _.",
+        "connect_to": "Connetti a {name}",
+        "col_name": "Dispositivo",
+        "filters_label": "Filtra dispositivi",
+        "all_devices": "Tutti i dispositivi",
+        "view_label": "Vista",
+        "devices_count_online": "{count} dispositivi, {online} online.",
+        "updated_at": "Aggiornato alle {time}.",
+        "sync_failed_since": "Impossibile aggiornare. L'elenco è delle {time}.",
+        "connect_failed": "Impossibile aprire la sessione remota.",
+        "popup_blocked": "Il browser ha bloccato la nuova scheda. Consenti i pop-up per questo sito e riprova."
     },
     "rdclient_login": {
         "title": "Client desktop remoto",
@@ -5712,7 +5727,11 @@
         "device_denied": "Questo link non è valido, è scaduto o non consente questo dispositivo.",
         "empty": "Nessun dispositivo su questo link.",
         "expires": "Scade",
-        "back_to_list": "Torna all'elenco ospite"
+        "back_to_list": "Torna all'elenco ospite",
+        "fact_link": "Link",
+        "fact_access": "Accesso",
+        "access_view_only": "Solo visualizzazione: vedi lo schermo ma non puoi controllarlo.",
+        "access_full": "Puoi vedere e controllare lo schermo."
     },
     "ux35": {
         "resize_sidebar": "Ridimensiona barra laterale",

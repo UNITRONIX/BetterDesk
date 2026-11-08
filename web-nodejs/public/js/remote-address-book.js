@@ -128,7 +128,9 @@
         var selectedTag = null;
         var currentFilter = 'all';
         var searchQuery = '';
-        var viewMode = 'grid';
+        var viewMode = options.defaultView === 'list' ? 'list' : 'grid';
+        // On phones the web viewer cannot run: rows offer the RustDesk app instead
+        var isPhone = typeof options.isPhone === 'function' ? options.isPhone : function () { return false; };
         var syncing = false;
 
         function el(id) {
@@ -161,7 +163,9 @@
             var sidebar = el(ids.sidebar);
             if (!sidebar) return;
             sidebar.querySelectorAll('.' + c('-nav-item') + '[data-nav="' + navType + '"]').forEach(function (node) {
-                node.classList.toggle('active', activeId !== null && node.getAttribute('data-id') === String(activeId));
+                var on = activeId !== null && node.getAttribute('data-id') === String(activeId);
+                node.classList.toggle('active', on);
+                node.setAttribute('aria-pressed', on ? 'true' : 'false');
             });
         }
 
@@ -193,7 +197,7 @@
                 titleEl.textContent = f ? f.name : t('remote_dashboard.nav_folders', 'Folders');
                 return;
             }
-            titleEl.textContent = t('remote_dashboard.nav_address_book', 'Address book');
+            titleEl.textContent = t('remote_dashboard.all_devices', 'All devices');
         }
 
         function applyFilters() {
@@ -265,24 +269,26 @@
 
             var countEl = el(ids.deviceCount);
             if (countEl) {
-                var tpl = t('remote_dashboard.devices_count', '{count} devices');
-                countEl.textContent = tpl.replace('{count}', String(filtered.length));
+                var online = filtered.filter(function (d) { return d.online; }).length;
+                var tpl = t('remote_dashboard.devices_count_online', '{count} devices, {online} online.');
+                countEl.textContent = tpl.replace('{count}', String(filtered.length)).replace('{online}', String(online));
             }
+        }
+
+        function navItemHtml(navType, id, label, count, active, extraClass) {
+            return '<li class="filter-item"><button type="button" class="' + c('-nav-item') + ' filter-option' +
+                (extraClass ? ' ' + extraClass : '') + (active ? ' active' : '') + '" aria-pressed="' + (active ? 'true' : 'false') +
+                '" data-nav="' + navType + '" data-id="' + esc(id) + '">' +
+                '<span class="' + c('-nav-label') + ' chip-label">' + esc(label) + '</span>' +
+                '<span class="' + c('-nav-count') + ' chip-count">' + esc(count) + '</span>' +
+                '</button></li>';
         }
 
         function renderFolders() {
             var container = el(ids.foldersCustom);
             if (!container) return;
             container.innerHTML = folders.map(function (folder) {
-                var color = (global.Utils && global.Utils.sanitizeColor
-                    ? global.Utils.sanitizeColor(folder.color)
-                    : (folder.color || '#58a6ff'));
-                var active = folderIdsEqual(currentFolder, folder.id) ? ' active' : '';
-                return '<li><button type="button" class="' + c('-nav-item') + active + '" data-nav="folder" data-id="' + esc(folder.id) + '">' +
-                    '<span class="material-icons" style="color:' + esc(color) + '">folder</span>' +
-                    '<span class="' + c('-nav-label') + '">' + esc(folder.name) + '</span>' +
-                    '<span class="' + c('-nav-count') + '">' + (folder.device_count || 0) + '</span>' +
-                    '</button></li>';
+                return navItemHtml('folder', folder.id, folder.name, folder.device_count || 0, folderIdsEqual(currentFolder, folder.id));
             }).join('');
         }
 
@@ -292,13 +298,7 @@
             if (!container) return;
 
             var items = deviceGroups.map(function (group) {
-                var isDynamic = (group.source_type || 'manual') === 'tag';
-                var active = currentGroup === group.guid ? ' active' : '';
-                return '<li><button type="button" class="' + c('-nav-item') + active + '" data-nav="group" data-id="' + esc(group.guid) + '">' +
-                    '<span class="material-icons">' + (isDynamic ? 'sell' : 'hub') + '</span>' +
-                    '<span class="' + c('-nav-label') + '">' + esc(group.name) + '</span>' +
-                    '<span class="' + c('-nav-count') + '">' + (group.member_count || 0) + '</span>' +
-                    '</button></li>';
+                return navItemHtml('group', group.guid, group.name, group.member_count || 0, currentGroup === group.guid);
             }).join('');
 
             if (emptyEl) emptyEl.classList.toggle('hidden', deviceGroups.length > 0);
@@ -312,12 +312,7 @@
             if (!container) return;
 
             var items = availableTags.map(function (tag) {
-                var active = selectedTag === tag ? ' active' : '';
-                return '<li><button type="button" class="' + c('-nav-item') + ' ' + c('-tag-item') + active + '" data-nav="tag" data-id="' + esc(tag) + '">' +
-                    '<span class="' + c('-tag-dot') + '"></span>' +
-                    '<span class="' + c('-nav-label') + '">' + esc(tag) + '</span>' +
-                    '<span class="' + c('-nav-count') + '">' + tagDeviceCount(tag) + '</span>' +
-                    '</button></li>';
+                return navItemHtml('tag', tag, tag, tagDeviceCount(tag), selectedTag === tag, c('-tag-item'));
             }).join('');
 
             if (emptyEl) emptyEl.classList.toggle('hidden', availableTags.length > 0);
@@ -325,16 +320,35 @@
             container.insertAdjacentHTML('beforeend', items);
         }
 
-        function connectButtonHtml(d, name, canConnect) {
-            var connected = isConnected(d.id);
-            if (connected) {
-                return '<span class="' + c('-connected-badge') + '" title="' + esc(t('remote.session_picker.already_connected', 'Already connected')) + '">' +
-                    '<span class="material-icons">link</span></span>';
+        function platformHtml(platform) {
+            if (!platform) return '<span class="text-muted">—</span>';
+            var icon = global.Utils && typeof global.Utils.getPlatformIconHtml === 'function'
+                ? global.Utils.getPlatformIconHtml(platform) : '';
+            return '<span class="' + c('-platform-cell') + '">' + icon + '<span>' + esc(platform) + '</span></span>';
+        }
+
+        // The row or tile action: Connect in the browser, or on phones the RustDesk app
+        function actionHtml(d, name) {
+            if (isConnected(d.id)) {
+                return '<span class="' + c('-connected-label') + '">' + esc(t('remote.session_picker.already_connected', 'Already connected')) + '</span>';
             }
-            if (!canConnect) return '';
-            return '<button type="button" class="' + c('-card-connect') + '" data-id="' + esc(d.id) + '" data-name="' + esc(name) + '" title="' +
-                esc(t('remote_dashboard.connect', 'Connect')) + '">' +
-                '<span class="material-icons">play_arrow</span></button>';
+            // Banned devices cannot be reached; the status column says why
+            if (d.banned) return '';
+            if (isPhone()) {
+                return '<a class="btn btn-sm ' + c('-app-link') + '" href="rustdesk://' + encodeURIComponent(d.id) + '">' +
+                    esc(t('remote_viewer.open_in_app', 'Open in RustDesk app')) + '</a>';
+            }
+            return '<button type="button" class="btn btn-sm ' + c('-connect') + '" data-id="' + esc(d.id) + '" data-name="' + esc(name) + '"' +
+                ' aria-label="' + esc(t('remote_dashboard.connect_to', 'Connect to {name}').replace('{name}', name)) + '">' +
+                esc(t('remote_dashboard.connect', 'Connect')) + '</button>';
+        }
+
+        function lastSeenText(d) {
+            if (d.online) return t('status.online', 'Online');
+            if (!d.last_online) return '—';
+            return global.Utils && global.Utils.formatRelativeTime
+                ? global.Utils.formatRelativeTime(d.last_online)
+                : String(d.last_online);
         }
 
         function renderGrid() {
@@ -346,31 +360,22 @@
                 var st = deviceStatusInfo(d);
                 var name = displayName(d);
                 var platform = d.platform || d.os || '';
-                var canConnect = !d.banned && !isConnected(d.id);
-                var isOffline = !d.online;
                 var tags = normalizeTags(d.tags);
-                var bg = cardColorForId(d.id);
                 var connected = isConnected(d.id);
 
                 return '<article class="' + cardClass +
-                    (isOffline ? ' ' + c('-card-offline') : '') +
-                    (canConnect && !connected ? '' : ' ' + c('-card-disabled')) +
+                    (!d.online ? ' ' + c('-card-offline') : '') +
+                    (d.banned ? ' ' + c('-card-disabled') : '') +
                     (connected ? ' ' + c('-card-connected') : '') +
-                    '" style="--rd-card-bg:' + bg + '" data-id="' + esc(d.id) + '">' +
-                    '<div class="' + c('-card-top') + '">' +
-                    '<span class="material-icons ' + c('-card-os') + '">' + platformIcon(platform) + '</span>' +
-                    '</div>' +
+                    '" data-id="' + esc(d.id) + '">' +
                     '<div class="' + c('-card-body') + '">' +
-                    '<div class="' + c('-card-name') + '" title="' + esc(name) + '">' + esc(name) + '</div>' +
-                    (tags.length ? '<div class="' + c('-card-tags') + '">' + tags.slice(0, 2).map(function (tag) {
-                        return '<span class="' + c('-card-tag') + '">' + esc(tag) + '</span>';
-                    }).join('') + '</div>' : '') +
+                    '<span class="' + c('-card-name') + '" title="' + esc(name) + '">' + esc(name) + '</span>' +
+                    '<span class="' + c('-card-id') + ' mono">' + esc(d.id) + '</span>' +
+                    '<span class="' + c('-card-meta') + '"><span class="status ' + st.className + '">' + esc(st.label) + '</span></span>' +
+                    (platform ? '<span class="' + c('-card-meta') + '">' + platformHtml(platform) + '</span>' : '') +
+                    (tags.length ? '<span class="' + c('-card-tags') + ' tag-list">' + esc(tags.join(', ')) + '</span>' : '') +
                     '</div>' +
-                    '<div class="' + c('-card-footer') + '">' +
-                    '<span class="' + c('-status-dot') + ' ' + st.className + '" title="' + esc(st.label) + '"></span>' +
-                    '<span class="' + c('-card-id') + '">' + esc(d.id) + '</span>' +
-                    connectButtonHtml(d, name, !d.banned) +
-                    '</div>' +
+                    '<div class="' + c('-card-footer') + '">' + actionHtml(d, name) + '</div>' +
                     '</article>';
             }).join('');
         }
@@ -381,38 +386,20 @@
 
             tbody.innerHTML = filtered.map(function (d) {
                 var st = deviceStatusInfo(d);
-                var hostname = displayName(d);
-                var platform = d.platform || d.os || '—';
-                var last = d.online
-                    ? t('status.online', 'Online')
-                    : (global.Utils && global.Utils.formatRelativeTime
-                        ? global.Utils.formatRelativeTime(d.last_online)
-                        : (d.last_online || '—'));
-                var canConnect = !d.banned && !isConnected(d.id);
-                var isOffline = !d.online;
-                var connected = isConnected(d.id);
+                var name = displayName(d);
+                var platform = d.platform || d.os || '';
+                var tags = normalizeTags(d.tags);
 
-                return '<tr data-id="' + esc(d.id) + '"' + (isOffline ? ' class="' + c('-row-offline') + '"' : '') + '>' +
-                    '<td><span class="' + c('-status') + '">' +
-                    '<span class="' + c('-status-dot') + ' ' + st.className + '"></span>' +
-                    esc(st.label) + '</span></td>' +
-                    '<td><span class="' + c('-device-id') + '">' + esc(d.id) + '</span></td>' +
-                    '<td><div class="' + c('-host-cell') + '">' +
-                    '<span class="material-icons">' + deviceTypeIcon(d.device_type) + '</span>' +
-                    '<span class="' + c('-hostname') + '" title="' + esc(hostname) + '">' + esc(hostname) + '</span>' +
-                    '</div></td>' +
-                    '<td class="' + c('-platform') + '">' + esc(platform) + '</td>' +
-                    '<td class="' + c('-last') + '">' + esc(last) + '</td>' +
-                    '<td>' +
-                    (connected
-                        ? '<span class="' + c('-connected-label') + '">' + esc(t('remote.session_picker.already_connected', 'Already connected')) + '</span>'
-                        : (canConnect
-                            ? '<button type="button" class="' + c('-btn') + ' ' + c('-btn-sm') + ' ' + c('-connect') + '" data-id="' + esc(d.id) + '" data-name="' + esc(hostname) + '">' +
-                              '<span class="material-icons">play_arrow</span>' + esc(t('remote_dashboard.connect', 'Connect')) +
-                              '</button>'
-                            : '<button type="button" class="' + c('-btn') + ' ' + c('-btn-sm') + ' ' + c('-btn-ghost') + '" disabled>' +
-                              esc(t('remote_dashboard.connect', 'Connect')) + '</button>')) +
-                    '</td></tr>';
+                return '<tr data-id="' + esc(d.id) + '"' + (!d.online ? ' class="' + c('-row-offline') + '"' : '') + '>' +
+                    '<td><span class="' + c('-hostname') + '">' + esc(name) + '</span>' +
+                    '<span class="cell-sub mono ' + c('-row-id') + '">' + esc(d.id) + '</span>' +
+                    (tags.length ? '<span class="cell-sub tag-list">' + esc(tags.join(', ')) + '</span>' : '') + '</td>' +
+                    '<td><span class="' + c('-device-id') + ' mono">' + esc(d.id) + '</span></td>' +
+                    '<td><span class="status ' + st.className + '">' + esc(st.label) + '</span></td>' +
+                    '<td class="' + c('-platform') + '">' + platformHtml(platform) + '</td>' +
+                    '<td class="' + c('-last') + '">' + esc(lastSeenText(d)) + '</td>' +
+                    '<td class="actions">' + actionHtml(d, name) + '</td>' +
+                    '</tr>';
             }).join('');
         }
 
@@ -521,8 +508,12 @@
 
             root.querySelectorAll('.' + c('-filter')).forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    root.querySelectorAll('.' + c('-filter')).forEach(function (b) { b.classList.remove('active'); });
+                    root.querySelectorAll('.' + c('-filter')).forEach(function (b) {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
                     btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
                     currentFilter = btn.getAttribute('data-filter') || 'all';
                     renderDevices();
                 });
@@ -556,31 +547,54 @@
             var gridBtn = el(ids.viewGrid);
             var listBtn = el(ids.viewList);
             if (gridBtn && listBtn) {
-                gridBtn.addEventListener('click', function () {
-                    viewMode = 'grid';
-                    gridBtn.classList.add('active');
-                    listBtn.classList.remove('active');
+                var setView = function (mode) {
+                    viewMode = mode;
+                    gridBtn.classList.toggle('active', mode === 'grid');
+                    listBtn.classList.toggle('active', mode === 'list');
+                    gridBtn.setAttribute('aria-pressed', mode === 'grid' ? 'true' : 'false');
+                    listBtn.setAttribute('aria-pressed', mode === 'list' ? 'true' : 'false');
+                    if (typeof options.onViewChange === 'function') options.onViewChange(mode);
                     renderDevices();
-                });
-                listBtn.addEventListener('click', function () {
-                    viewMode = 'list';
-                    listBtn.classList.add('active');
-                    gridBtn.classList.remove('active');
-                    renderDevices();
-                });
+                };
+                gridBtn.setAttribute('aria-pressed', viewMode === 'grid' ? 'true' : 'false');
+                listBtn.setAttribute('aria-pressed', viewMode === 'list' ? 'true' : 'false');
+                gridBtn.classList.toggle('active', viewMode === 'grid');
+                listBtn.classList.toggle('active', viewMode === 'list');
+                gridBtn.addEventListener('click', function () { setView('grid'); });
+                listBtn.addEventListener('click', function () { setView('list'); });
+            }
+        }
+
+        // The ID typed into a quick-connect field, or '' when it is not a valid device ID
+        function readQuickId(inputId) {
+            var input = el(inputId || ids.quickId);
+            if (!input) return '';
+            var id = (input.value || '').trim().replace(/\s/g, '');
+            return /^[A-Za-z0-9_-]{3,64}$/.test(id) ? id : '';
+        }
+
+        function setQuickError(input, message) {
+            var status = el(ids.quickStatus);
+            input.setAttribute('aria-invalid', message ? 'true' : 'false');
+            input.classList.toggle(c('-input-error'), !!message);
+            if (status) {
+                // The status line doubles as the field's hint; put the hint back once the ID is fine
+                if (status.dataset.hint == null) status.dataset.hint = status.textContent;
+                status.textContent = message || status.dataset.hint;
+                status.classList.toggle('is-error', !!message);
             }
         }
 
         function quickConnect(inputId) {
             var input = el(inputId || ids.quickId);
             if (!input) return false;
-            var id = (input.value || '').trim().replace(/\s/g, '');
-            if (!id || !/^[A-Za-z0-9_-]{3,64}$/.test(id)) {
+            var id = readQuickId(inputId);
+            if (!id) {
                 input.focus();
-                input.classList.add(c('-input-error'));
-                setTimeout(function () { input.classList.remove(c('-input-error')); }, 1200);
+                setQuickError(input, t('remote_dashboard.quick_connect_invalid', 'Enter a device ID: 3 to 64 letters, digits, - or _.'));
                 return false;
             }
+            setQuickError(input, '');
             onConnect(id, id);
             return true;
         }
@@ -590,6 +604,7 @@
             renderDevices: renderDevices,
             bindUi: bindUi,
             quickConnect: quickConnect,
+            readQuickId: readQuickId,
             getDevices: function () { return devices.slice(); },
             getFiltered: function () { return filtered.slice(); }
         };

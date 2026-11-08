@@ -5567,8 +5567,8 @@
         "nav_tags": "Thẻ",
         "quick_connect": "Điều khiển desktop từ xa",
         "quick_connect_placeholder": "Nhập ID từ xa…",
-        "view_grid": "Xem lưới",
-        "view_list": "Xem danh sách",
+        "view_grid": "Lưới",
+        "view_list": "Danh sách",
         "sync_now": "Làm mới",
         "last_sync": "Đã cập nhật",
         "status_ready": "Sẵn sàng",
@@ -5578,7 +5578,22 @@
         "no_tags": "Không có thẻ",
         "collapse_devices": "Thu gọn danh sách thiết bị",
         "expand_devices": "Mở rộng danh sách thiết bị",
-        "open_settings": "Cài đặt"
+        "open_settings": "Cài đặt",
+        "page_description": "Kết nối với thiết bị bằng ID hoặc tìm trong danh sách. Phiên mở trong tab mới.",
+        "phone_note": "Trình xem web cần màn hình lớn hơn. Trên điện thoại này, hãy mở thiết bị trong ứng dụng RustDesk.",
+        "quick_connect_title": "Kết nối bằng ID",
+        "quick_connect_hint": "ID hiển thị trong ứng dụng RustDesk trên thiết bị kia.",
+        "quick_connect_invalid": "Nhập ID thiết bị: 3 đến 64 chữ cái, chữ số, - hoặc _.",
+        "connect_to": "Kết nối với {name}",
+        "col_name": "Thiết bị",
+        "filters_label": "Lọc thiết bị",
+        "all_devices": "Tất cả thiết bị",
+        "view_label": "Chế độ xem",
+        "devices_count_online": "{count} thiết bị, {online} trực tuyến.",
+        "updated_at": "Cập nhật lúc {time}.",
+        "sync_failed_since": "Không thể làm mới. Danh sách từ lúc {time}.",
+        "connect_failed": "Không thể mở phiên từ xa.",
+        "popup_blocked": "Trình duyệt đã chặn tab mới. Hãy cho phép cửa sổ bật lên cho trang này và thử lại."
     },
     "rdclient_login": {
         "title": "Máy khách Desktop từ xa",
@@ -5718,7 +5733,11 @@
         "device_denied": "Liên kết không hợp lệ, hết hạn hoặc không cho phép thiết bị này.",
         "empty": "Không có thiết bị trên liên kết này.",
         "expires": "Hết hạn",
-        "back_to_list": "Quay lại danh sách khách"
+        "back_to_list": "Quay lại danh sách khách",
+        "fact_link": "Liên kết",
+        "fact_access": "Quyền truy cập",
+        "access_view_only": "Chỉ xem: bạn thấy màn hình nhưng không điều khiển được.",
+        "access_full": "Bạn có thể xem và điều khiển màn hình."
     },
     "ux35": {
         "resize_sidebar": "Đổi độ rộng thanh bên",

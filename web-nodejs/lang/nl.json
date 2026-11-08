@@ -5561,8 +5561,8 @@
         "nav_tags": "Tags",
         "quick_connect": "Extern bureaublad bedienen",
         "quick_connect_placeholder": "Voer extern ID in…",
-        "view_grid": "Rasterweergave",
-        "view_list": "Lijstweergave",
+        "view_grid": "Raster",
+        "view_list": "Lijst",
         "sync_now": "Vernieuwen",
         "last_sync": "Bijgewerkt",
         "status_ready": "Gereed",
@@ -5572,7 +5572,22 @@
         "no_tags": "Geen tags",
         "collapse_devices": "Apparaatlijst inklappen",
         "expand_devices": "Apparaatlijst uitklappen",
-        "open_settings": "Instellingen"
+        "open_settings": "Instellingen",
+        "page_description": "Maak verbinding met een apparaat via de ID of zoek het op in de lijst. De sessie opent in een nieuw tabblad.",
+        "phone_note": "De webviewer heeft een groter scherm nodig. Open apparaten op deze telefoon in de RustDesk-app.",
+        "quick_connect_title": "Verbinden via ID",
+        "quick_connect_hint": "De ID die de RustDesk-app op het andere apparaat toont.",
+        "quick_connect_invalid": "Voer een apparaat-ID in: 3 tot 64 letters, cijfers, - of _.",
+        "connect_to": "Verbinden met {name}",
+        "col_name": "Apparaat",
+        "filters_label": "Apparaten filteren",
+        "all_devices": "Alle apparaten",
+        "view_label": "Weergave",
+        "devices_count_online": "{count} apparaten, {online} online.",
+        "updated_at": "Bijgewerkt om {time}.",
+        "sync_failed_since": "Vernieuwen mislukt. De lijst is van {time}.",
+        "connect_failed": "De externe sessie kon niet worden geopend.",
+        "popup_blocked": "De browser heeft het nieuwe tabblad geblokkeerd. Sta pop-ups toe voor deze site en probeer het opnieuw."
     },
     "rdclient_login": {
         "title": "Remote Desktop-client",
@@ -5712,7 +5727,11 @@
         "device_denied": "Deze gastlink is ongeldig, verlopen of staat dit apparaat niet toe.",
         "empty": "Geen apparaten op deze gastlink.",
         "expires": "Verloopt",
-        "back_to_list": "Terug naar gastenlijst"
+        "back_to_list": "Terug naar gastenlijst",
+        "fact_link": "Link",
+        "fact_access": "Toegang",
+        "access_view_only": "Alleen bekijken: u ziet het scherm maar kunt het niet bedienen.",
+        "access_full": "U kunt het scherm zien en bedienen."
     },
     "ux35": {
         "resize_sidebar": "Zijbalkbreedte aanpassen",

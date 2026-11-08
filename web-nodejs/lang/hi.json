@@ -5567,8 +5567,8 @@
         "nav_tags": "टैग",
         "quick_connect": "रिमोट डेस्कटॉप नियंत्रित करें",
         "quick_connect_placeholder": "रिमोट ID दर्ज करें…",
-        "view_grid": "ग्रिड दृश्य",
-        "view_list": "सूची दृश्य",
+        "view_grid": "ग्रिड",
+        "view_list": "सूची",
         "sync_now": "रीफ़्रेश",
         "last_sync": "अपडेट किया गया",
         "status_ready": "तैयार",
@@ -5578,7 +5578,22 @@
         "no_tags": "कोई टैग नहीं",
         "collapse_devices": "डिवाइस सूची संक्षिप्त करें",
         "expand_devices": "डिवाइस सूची विस्तृत करें",
-        "open_settings": "सेटिंग्स"
+        "open_settings": "सेटिंग्स",
+        "page_description": "किसी डिवाइस से उसकी ID से कनेक्ट करें, या उसे सूची में खोजें। सत्र नए टैब में खुलता है।",
+        "phone_note": "वेब व्यूअर को बड़ी स्क्रीन चाहिए। इस फ़ोन पर डिवाइस RustDesk ऐप में खोलें।",
+        "quick_connect_title": "ID से कनेक्ट करें",
+        "quick_connect_hint": "दूसरे डिवाइस पर RustDesk ऐप में दिखाई गई ID।",
+        "quick_connect_invalid": "डिवाइस ID दर्ज करें: 3 से 64 अक्षर, अंक, - या _।",
+        "connect_to": "{name} से कनेक्ट करें",
+        "col_name": "डिवाइस",
+        "filters_label": "डिवाइस फ़िल्टर करें",
+        "all_devices": "सभी डिवाइस",
+        "view_label": "दृश्य",
+        "devices_count_online": "{count} डिवाइस, {online} ऑनलाइन।",
+        "updated_at": "{time} पर अपडेट किया गया।",
+        "sync_failed_since": "रीफ़्रेश नहीं हो सका। सूची {time} की है।",
+        "connect_failed": "रिमोट सत्र नहीं खुल सका।",
+        "popup_blocked": "ब्राउज़र ने नया टैब रोक दिया। इस साइट के लिए पॉप-अप की अनुमति दें और फिर से कोशिश करें।"
     },
     "rdclient_login": {
         "title": "रिमोट डेस्कटॉप क्लाइंट",
@@ -5718,7 +5733,11 @@
         "device_denied": "यह लिंक अमान्य/समाप्त है या इस डिवाइस की अनुमति नहीं देता।",
         "empty": "इस गेस्ट लिंक पर कोई डिवाइस नहीं।",
         "expires": "समाप्ति",
-        "back_to_list": "गेस्ट सूची पर वापस"
+        "back_to_list": "गेस्ट सूची पर वापस",
+        "fact_link": "लिंक",
+        "fact_access": "पहुँच",
+        "access_view_only": "केवल देखें: आप स्क्रीन देख सकते हैं, लेकिन नियंत्रित नहीं कर सकते।",
+        "access_full": "आप स्क्रीन देख और नियंत्रित कर सकते हैं।"
     },
     "ux35": {
         "resize_sidebar": "साइडबार की चौड़ाई बदलें",

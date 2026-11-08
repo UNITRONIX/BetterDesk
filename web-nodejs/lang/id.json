@@ -5567,8 +5567,8 @@
         "nav_tags": "Tag",
         "quick_connect": "Kendalikan desktop jarak jauh",
         "quick_connect_placeholder": "Masukkan ID jarak jauh…",
-        "view_grid": "Tampilan grid",
-        "view_list": "Tampilan daftar",
+        "view_grid": "Kisi",
+        "view_list": "Daftar",
         "sync_now": "Segarkan",
         "last_sync": "Diperbarui",
         "status_ready": "Siap",
@@ -5578,7 +5578,22 @@
         "no_tags": "Tidak ada tag",
         "collapse_devices": "Ciutkan daftar perangkat",
         "expand_devices": "Perluas daftar perangkat",
-        "open_settings": "Pengaturan"
+        "open_settings": "Pengaturan",
+        "page_description": "Hubungkan ke perangkat dengan ID-nya, atau cari di daftar. Sesi terbuka di tab baru.",
+        "phone_note": "Penampil web memerlukan layar yang lebih besar. Di ponsel ini, buka perangkat di aplikasi RustDesk.",
+        "quick_connect_title": "Hubungkan dengan ID",
+        "quick_connect_hint": "ID yang ditampilkan di aplikasi RustDesk pada perangkat lain.",
+        "quick_connect_invalid": "Masukkan ID perangkat: 3 sampai 64 huruf, angka, - atau _.",
+        "connect_to": "Hubungkan ke {name}",
+        "col_name": "Perangkat",
+        "filters_label": "Filter perangkat",
+        "all_devices": "Semua perangkat",
+        "view_label": "Tampilan",
+        "devices_count_online": "{count} perangkat, {online} online.",
+        "updated_at": "Diperbarui {time}.",
+        "sync_failed_since": "Tidak dapat memuat ulang. Daftar dari {time}.",
+        "connect_failed": "Tidak dapat membuka sesi jarak jauh.",
+        "popup_blocked": "Browser memblokir tab baru. Izinkan pop-up untuk situs ini lalu coba lagi."
     },
     "rdclient_login": {
         "title": "Klien Desktop Jarak Jauh",
@@ -5718,7 +5733,11 @@
         "device_denied": "Tautan tidak valid, kedaluwarsa, atau tidak mengizinkan perangkat ini.",
         "empty": "Tidak ada perangkat pada tautan ini.",
         "expires": "Kedaluwarsa",
-        "back_to_list": "Kembali ke daftar tamu"
+        "back_to_list": "Kembali ke daftar tamu",
+        "fact_link": "Tautan",
+        "fact_access": "Akses",
+        "access_view_only": "Hanya lihat: Anda dapat melihat layar tetapi tidak dapat mengendalikannya.",
+        "access_full": "Anda dapat melihat dan mengendalikan layar."
     },
     "ux35": {
         "resize_sidebar": "Ubah lebar bilah samping",

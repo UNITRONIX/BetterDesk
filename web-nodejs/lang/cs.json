@@ -5561,8 +5561,8 @@
         "nav_tags": "Štítky",
         "quick_connect": "Ovládat vzdálenou plochu",
         "quick_connect_placeholder": "Zadejte vzdálené ID…",
-        "view_grid": "Zobrazení mřížky",
-        "view_list": "Zobrazení seznamu",
+        "view_grid": "Mřížka",
+        "view_list": "Seznam",
         "sync_now": "Obnovit",
         "last_sync": "Aktualizováno",
         "status_ready": "Připraveno",
@@ -5572,7 +5572,22 @@
         "no_tags": "Žádné štítky",
         "collapse_devices": "Sbalit seznam zařízení",
         "expand_devices": "Rozbalit seznam zařízení",
-        "open_settings": "Nastavení"
+        "open_settings": "Nastavení",
+        "page_description": "Připojte se k zařízení podle jeho ID nebo ho najděte v seznamu. Relace se otevře na nové kartě.",
+        "phone_note": "Webový prohlížeč potřebuje větší obrazovku. Na tomto telefonu otevírejte zařízení v aplikaci RustDesk.",
+        "quick_connect_title": "Připojit podle ID",
+        "quick_connect_hint": "ID zobrazené v aplikaci RustDesk na druhém zařízení.",
+        "quick_connect_invalid": "Zadejte ID zařízení: 3 až 64 písmen, číslic, - nebo _.",
+        "connect_to": "Připojit k {name}",
+        "col_name": "Zařízení",
+        "filters_label": "Filtrovat zařízení",
+        "all_devices": "Všechna zařízení",
+        "view_label": "Zobrazení",
+        "devices_count_online": "Zařízení: {count}, online: {online}.",
+        "updated_at": "Aktualizováno v {time}.",
+        "sync_failed_since": "Obnovení se nezdařilo. Seznam je z {time}.",
+        "connect_failed": "Vzdálenou relaci se nepodařilo otevřít.",
+        "popup_blocked": "Prohlížeč zablokoval novou kartu. Povolte pro tento web vyskakovací okna a zkuste to znovu."
     },
     "rdclient_login": {
         "title": "Klient vzdálené plochy",
@@ -5712,7 +5727,11 @@
         "device_denied": "Odkaz je neplatný, vypršel nebo nepovoluje toto zařízení.",
         "empty": "Na tomto odkazu nejsou žádná zařízení.",
         "expires": "Vyprší",
-        "back_to_list": "Zpět na seznam hosta"
+        "back_to_list": "Zpět na seznam hosta",
+        "fact_link": "Odkaz",
+        "fact_access": "Přístup",
+        "access_view_only": "Jen zobrazení: obrazovku vidíte, ale nemůžete ji ovládat.",
+        "access_full": "Obrazovku vidíte a můžete ji ovládat."
     },
     "ux35": {
         "resize_sidebar": "Změnit šířku postranního panelu",

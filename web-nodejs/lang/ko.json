@@ -5561,8 +5561,8 @@
         "nav_tags": "태그",
         "quick_connect": "원격 데스크톱 제어",
         "quick_connect_placeholder": "원격 ID 입력…",
-        "view_grid": "그리드 보기",
-        "view_list": "목록 보기",
+        "view_grid": "격자",
+        "view_list": "목록",
         "sync_now": "새로고침",
         "last_sync": "업데이트됨",
         "status_ready": "준비됨",
@@ -5572,7 +5572,22 @@
         "no_tags": "태그 없음",
         "collapse_devices": "장치 목록 접기",
         "expand_devices": "장치 목록 펼치기",
-        "open_settings": "설정"
+        "open_settings": "설정",
+        "page_description": "ID로 장치에 연결하거나 목록에서 찾으세요. 세션은 새 탭에서 열립니다.",
+        "phone_note": "웹 뷰어는 더 큰 화면이 필요합니다. 이 휴대폰에서는 RustDesk 앱으로 장치를 여세요.",
+        "quick_connect_title": "ID로 연결",
+        "quick_connect_hint": "다른 장치의 RustDesk 앱에 표시된 ID입니다.",
+        "quick_connect_invalid": "장치 ID를 입력하세요: 문자, 숫자, - 또는 _ 3~64자.",
+        "connect_to": "{name}에 연결",
+        "col_name": "장치",
+        "filters_label": "장치 필터",
+        "all_devices": "모든 장치",
+        "view_label": "보기",
+        "devices_count_online": "장치 {count}대, 온라인 {online}대.",
+        "updated_at": "{time}에 업데이트됨.",
+        "sync_failed_since": "새로 고치지 못했습니다. 목록은 {time} 기준입니다.",
+        "connect_failed": "원격 세션을 열 수 없습니다.",
+        "popup_blocked": "브라우저가 새 탭을 차단했습니다. 이 사이트의 팝업을 허용하고 다시 시도하세요."
     },
     "rdclient_login": {
         "title": "원격 데스크톱 클라이언트",
@@ -5712,7 +5727,11 @@
         "device_denied": "이 링크가 잘못되었거나 만료되었거나 이 장치를 허용하지 않습니다.",
         "empty": "이 게스트 링크에 장치가 없습니다.",
         "expires": "만료",
-        "back_to_list": "게스트 목록으로"
+        "back_to_list": "게스트 목록으로",
+        "fact_link": "링크",
+        "fact_access": "접근 권한",
+        "access_view_only": "보기 전용: 화면은 볼 수 있지만 제어할 수 없습니다.",
+        "access_full": "화면을 보고 제어할 수 있습니다."
     },
     "ux35": {
         "resize_sidebar": "사이드바 너비 조절",

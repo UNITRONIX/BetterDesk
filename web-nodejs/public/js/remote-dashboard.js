@@ -1,14 +1,19 @@
 /**
  * BetterDesk — RdClient operator dashboard (/remote)
- * Address book with folders, groups, tags — synced from server.
+ * Quick connect by ID, then the device list with folder, group and tag filters,
+ * synced from the server. On phones the web viewer cannot run, so the page says
+ * so up front and offers the RustDesk app (rustdesk://<id>) instead.
  */
 
 (function () {
     'use strict';
 
     var REFRESH_MS = 30000;
+    var VIEW_KEY = 'rd-desk-view';
     var refreshTimer = null;
     var addressBook = null;
+    var lastSync = null;
+    var phoneMode = null;
 
     function t(key, fallback) {
         if (typeof _ === 'function') {
@@ -29,12 +34,6 @@
         var el = document.getElementById('rd-desk-logo');
         if (!el) return;
         var b = (window.BetterDesk && window.BetterDesk.branding) || {};
-        if (b.logoType === 'text' && b.logoText) {
-            el.innerHTML = '<span class="brand-text-logo">' + esc(b.logoText) +
-                (b.logoTextAccent ? '<span class="brand-text-accent">' + esc(b.logoTextAccent) + '</span>' : '') +
-                '</span>';
-            return;
-        }
         if (b.logoType === 'svg' && b.logoSvg) {
             el.innerHTML = b.logoSvg;
             return;
@@ -43,7 +42,14 @@
             el.innerHTML = '<img src="' + esc(b.logoUrl) + '" alt="">';
             return;
         }
-        el.innerHTML = '<span class="material-icons">' + esc(b.logoIcon || 'connected_tv') + '</span>';
+        if (b.logoType === 'text' && b.logoText) {
+            var name = document.querySelector('.rd-desk-brand-name');
+            if (name) {
+                name.innerHTML = esc(b.logoText) +
+                    (b.logoTextAccent ? '<span class="brand-text-accent">' + esc(b.logoTextAccent) + '</span>' : '');
+            }
+        }
+        el.hidden = true;
     }
 
     function renderUser() {
@@ -57,112 +63,45 @@
         return !!(window.__TAURI__ && window.__TAURI__.core && typeof window.__TAURI__.core.invoke === 'function');
     }
 
-    function syncDesktopViewport() {
-        var h = window.innerHeight;
-        if (h < 1) return;
-        document.documentElement.style.setProperty('--rd-desk-vh', h + 'px');
-    }
-
-    function ensureSidebarScroll() {
-        var sidebar = document.getElementById('rd-desk-sidebar');
-        if (!sidebar || document.getElementById('rd-desk-sidebar-scroll')) return;
-        var scroll = document.createElement('div');
-        scroll.className = 'rd-desk-sidebar-scroll';
-        scroll.id = 'rd-desk-sidebar-scroll';
-        while (sidebar.firstChild) {
-            scroll.appendChild(sidebar.firstChild);
-        }
-        sidebar.appendChild(scroll);
+    // A wide table can widen the layout viewport on a phone, so the screen width counts too
+    function isPhone() {
+        if (window.DeviceCapabilities && window.DeviceCapabilities.isPhone()) return true;
+        var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        return !fine && window.screen && window.screen.width > 0 && window.screen.width <= 767;
     }
 
     function markDesktopLayout() {
-        syncDesktopViewport();
-        ensureSidebarScroll();
         if (!isRdClientDesktop()) return;
         document.documentElement.classList.add('rd-desk-desktop');
         document.body.classList.add('rd-desk-desktop');
         var app = document.getElementById('rd-desk-app');
         if (app) app.classList.add('rd-desk-desktop');
-        if (!window.__rdDeskViewportBound) {
-            window.__rdDeskViewportBound = true;
-            window.addEventListener('resize', syncDesktopViewport);
-        }
-    }
-
-    function setDevicesPanelCollapsed(collapsed) {
-        var panel = document.getElementById('rd-desk-devices-panel');
-        var toggle = document.getElementById('rd-desk-devices-toggle');
-        if (!panel || !toggle) return;
-        panel.classList.toggle('is-collapsed', collapsed);
-        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        toggle.title = collapsed
-            ? t('remote_dashboard.expand_devices', 'Expand device list')
-            : t('remote_dashboard.collapse_devices', 'Collapse device list');
-    }
-
-    function setNavSectionCollapsed(section, collapsed) {
-        if (!section) return;
-        section.classList.toggle('is-collapsed', collapsed);
-        var btn = section.querySelector('.rd-desk-nav-heading-btn');
-        if (btn) btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    }
-
-    function bindCollapseUi() {
-        var devicesToggle = document.getElementById('rd-desk-devices-toggle');
-        if (devicesToggle) {
-            devicesToggle.addEventListener('click', function () {
-                var panel = document.getElementById('rd-desk-devices-panel');
-                var collapsed = panel && !panel.classList.contains('is-collapsed');
-                setDevicesPanelCollapsed(collapsed);
-                try {
-                    sessionStorage.setItem('rd-desk-devices-collapsed', collapsed ? '1' : '0');
-                } catch (_) { /* ignore */ }
-            });
-        }
-
-        document.querySelectorAll('.rd-desk-nav-section[data-collapsible]').forEach(function (section) {
-            var btn = section.querySelector('.rd-desk-nav-heading-btn');
-            if (!btn) return;
-            btn.addEventListener('click', function () {
-                var collapsed = !section.classList.contains('is-collapsed');
-                setNavSectionCollapsed(section, collapsed);
-                try {
-                    var key = 'rd-desk-nav-' + (section.getAttribute('data-collapsible') || 'section') + '-collapsed';
-                    sessionStorage.setItem(key, collapsed ? '1' : '0');
-                } catch (_) { /* ignore */ }
-            });
-        });
-
-        try {
-            if (sessionStorage.getItem('rd-desk-devices-collapsed') === '1') {
-                setDevicesPanelCollapsed(true);
-            }
-            document.querySelectorAll('.rd-desk-nav-section[data-collapsible]').forEach(function (section) {
-                var id = section.getAttribute('data-collapsible') || 'section';
-                if (sessionStorage.getItem('rd-desk-nav-' + id + '-collapsed') === '1') {
-                    setNavSectionCollapsed(section, true);
-                }
-            });
-        } catch (_) { /* ignore */ }
     }
 
     function showConnectError(message) {
-        var text = message || t('remote_dashboard.connect_failed', 'Could not open remote session');
-        if (typeof window.showToast === 'function') {
-            window.showToast(text, 'error');
+        var text = message || t('remote_dashboard.connect_failed', 'Could not open the remote session.');
+        if (window.Notifications && typeof window.Notifications.error === 'function') {
+            window.Notifications.error(text);
             return;
         }
-        window.alert(text);
+        var status = document.getElementById('rd-desk-quick-status');
+        if (status) {
+            status.textContent = text;
+            status.classList.add('is-error');
+        }
+    }
+
+    function openInApp(deviceId) {
+        if (!deviceId) return;
+        window.location.href = 'rustdesk://' + encodeURIComponent(deviceId);
     }
 
     function openRemoteSession(deviceId, deviceName) {
-        if (window.DeviceCapabilities && window.DeviceCapabilities.isPhone()) {
-            if (window.RdClientMobile && window.RdClientMobile.showPhoneUnsupportedToast) {
-                window.RdClientMobile.showPhoneUnsupportedToast();
-            }
+        if (!deviceId) return;
+        if (isPhone()) {
+            openInApp(deviceId);
             return;
         }
-        if (!deviceId) return;
 
         if (isRdClientDesktop()) {
             window.__TAURI__.core.invoke('open_session', {
@@ -175,8 +114,9 @@
             return;
         }
 
+        // A viewer tab that is already open adds the session as a tab; otherwise open a new one
         if (typeof BroadcastChannel === 'undefined') {
-            window.open('/remote/' + encodeURIComponent(deviceId), '_blank');
+            openViewerTab(deviceId);
             return;
         }
 
@@ -198,28 +138,38 @@
         setTimeout(function () {
             if (!handled) {
                 bc.close();
-                window.open('/remote/' + encodeURIComponent(deviceId), '_blank');
+                openViewerTab(deviceId);
             }
         }, 300);
     }
 
+    function openViewerTab(deviceId) {
+        var win = window.open('/remote/' + encodeURIComponent(deviceId), '_blank');
+        if (!win) {
+            showConnectError(t('remote_dashboard.popup_blocked', 'The browser blocked the new tab. Allow pop-ups for this site and try again.'));
+        }
+    }
+
+    function formatTime(date) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
     function updateSyncStatus(ok) {
-        var timeEl = document.getElementById('rd-desk-sync-time');
         var statusEl = document.getElementById('rd-desk-status-text');
-        var dotEl = document.getElementById('rd-desk-status-dot');
-        if (timeEl) {
-            timeEl.textContent = t('remote_dashboard.last_sync', 'Updated') + ' ' +
-                new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if (ok) lastSync = new Date();
+        if (!statusEl) return;
+        statusEl.classList.toggle('is-error', !ok);
+        if (ok) {
+            statusEl.textContent = t('remote_dashboard.updated_at', 'Updated {time}.').replace('{time}', formatTime(lastSync));
+        } else if (lastSync) {
+            statusEl.textContent = t('remote_dashboard.sync_failed_since', 'Could not refresh. The list is from {time}.').replace('{time}', formatTime(lastSync));
+        } else {
+            statusEl.textContent = '';
         }
-        if (statusEl) {
-            statusEl.textContent = ok
-                ? t('remote_dashboard.status_ready', 'Ready')
-                : t('remote_dashboard.sync_error', 'Sync error');
-        }
-        if (dotEl) {
-            dotEl.classList.toggle('online', ok);
-            dotEl.classList.toggle('offline', !ok);
-        }
+    }
+
+    function readStoredView() {
+        try { return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'; } catch (_) { return 'list'; }
     }
 
     function initAddressBook() {
@@ -227,6 +177,11 @@
 
         return window.RemoteAddressBook.create({
             classPrefix: 'rd-desk',
+            defaultView: readStoredView(),
+            isPhone: isPhone,
+            onViewChange: function (mode) {
+                try { localStorage.setItem(VIEW_KEY, mode); } catch (_) { /* ignore */ }
+            },
             ids: {
                 sidebar: 'rd-desk-sidebar',
                 contentRoot: 'rd-desk-app',
@@ -251,7 +206,8 @@
                 viewList: 'rd-view-list',
                 refreshBtn: 'rd-desk-refresh',
                 retry: 'rd-desk-retry',
-                quickId: 'rd-desk-quick-id'
+                quickId: 'rd-desk-quick-id',
+                quickStatus: 'rd-desk-quick-status'
             },
             onConnect: openRemoteSession
         });
@@ -261,7 +217,6 @@
         if (!addressBook) return;
         var ok = await addressBook.loadAll(silent);
         updateSyncStatus(ok);
-        syncDesktopViewport();
     }
 
     function populateLanguageSelect() {
@@ -281,19 +236,51 @@
         if (!isRdClientDesktop()) return;
         var btn = document.getElementById('rd-desk-settings');
         if (!btn) return;
-        btn.style.display = '';
+        btn.hidden = false;
         btn.addEventListener('click', function () {
             var invoke = window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke;
             if (invoke) invoke('open_settings').catch(function () { /* ignore */ });
         });
     }
 
+    // Phones: say up front that the web viewer needs a larger screen and make the
+    // RustDesk app the one action. Larger screens: Connect is the primary action.
+    function applyPhoneMode() {
+        var phone = isPhone();
+        if (phone === phoneMode) return;
+        phoneMode = phone;
+        var note = document.getElementById('rd-phone-gate');
+        var connect = document.getElementById('rd-desk-quick-btn');
+        var app = document.getElementById('rd-desk-quick-app');
+        if (note) note.hidden = !phone;
+        if (connect) connect.hidden = phone;
+        if (app) {
+            app.hidden = isRdClientDesktop();
+            app.classList.toggle('btn-primary', phone);
+        }
+        if (addressBook && addressBook.getDevices().length) addressBook.renderDevices();
+    }
+
     function bindQuickConnect() {
+        var input = document.getElementById('rd-desk-quick-id');
         document.getElementById('rd-desk-quick-btn')?.addEventListener('click', function () {
             addressBook?.quickConnect('rd-desk-quick-id');
         });
-        document.getElementById('rd-desk-quick-id')?.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); addressBook?.quickConnect('rd-desk-quick-id'); }
+        document.getElementById('rd-desk-quick-app')?.addEventListener('click', function () {
+            if (!addressBook) return;
+            var id = addressBook.readQuickId('rd-desk-quick-id');
+            if (!id) {
+                // Shows the same "enter a device ID" message as Connect
+                addressBook.quickConnect('rd-desk-quick-id');
+                return;
+            }
+            openInApp(id);
+        });
+        input?.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (isPhone()) document.getElementById('rd-desk-quick-app')?.click();
+            else addressBook?.quickConnect('rd-desk-quick-id');
         });
     }
 
@@ -302,11 +289,7 @@
         refreshTimer = setInterval(function () { loadAll(true); }, REFRESH_MS);
     }
 
-    var dashboardInitialized = false;
-
-    function startDashboardInit() {
-        if (dashboardInitialized) return;
-        dashboardInitialized = true;
+    document.addEventListener('DOMContentLoaded', function () {
         markDesktopLayout();
         populateLanguageSelect();
         bindDesktopSettings();
@@ -316,18 +299,13 @@
         if (addressBook) {
             addressBook.bindUi(document.getElementById('rd-desk-app'));
         }
+        applyPhoneMode();
         bindQuickConnect();
-        bindCollapseUi();
         loadAll(false);
         startAutoRefresh();
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.RdClientMobile && window.RdClientMobile.watchPhoneGate) {
-            window.RdClientMobile.watchPhoneGate(startDashboardInit);
-        } else {
-            startDashboardInit();
-        }
+        window.addEventListener('resize', applyPhoneMode, { passive: true });
+        window.addEventListener('load', applyPhoneMode);
+        window.addEventListener('betterdesk:posture-change', applyPhoneMode);
     });
 
     document.addEventListener('visibilitychange', function () {

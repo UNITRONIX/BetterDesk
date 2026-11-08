@@ -5561,8 +5561,8 @@
         "nav_tags": "タグ",
         "quick_connect": "リモートデスクトップを操作",
         "quick_connect_placeholder": "リモートIDを入力…",
-        "view_grid": "グリッド表示",
-        "view_list": "リスト表示",
+        "view_grid": "グリッド",
+        "view_list": "リスト",
         "sync_now": "更新",
         "last_sync": "更新済み",
         "status_ready": "準備完了",
@@ -5572,7 +5572,22 @@
         "no_tags": "タグなし",
         "collapse_devices": "デバイス一覧を折りたたむ",
         "expand_devices": "デバイス一覧を展開",
-        "open_settings": "設定"
+        "open_settings": "設定",
+        "page_description": "ID でデバイスに接続するか、一覧から探します。セッションは新しいタブで開きます。",
+        "phone_note": "Web ビューアーにはより大きな画面が必要です。このスマートフォンでは RustDesk アプリでデバイスを開いてください。",
+        "quick_connect_title": "ID で接続",
+        "quick_connect_hint": "相手のデバイスの RustDesk アプリに表示される ID です。",
+        "quick_connect_invalid": "デバイス ID を入力してください (英数字、-、_ を 3～64 文字)。",
+        "connect_to": "{name} に接続",
+        "col_name": "デバイス",
+        "filters_label": "デバイスを絞り込む",
+        "all_devices": "すべてのデバイス",
+        "view_label": "表示",
+        "devices_count_online": "{count} 台、うちオンライン {online} 台。",
+        "updated_at": "{time} に更新。",
+        "sync_failed_since": "更新できませんでした。一覧は {time} 時点のものです。",
+        "connect_failed": "リモートセッションを開けませんでした。",
+        "popup_blocked": "ブラウザーが新しいタブをブロックしました。このサイトのポップアップを許可して、もう一度お試しください。"
     },
     "rdclient_login": {
         "title": "リモートデスクトップクライアント",
@@ -5712,7 +5727,11 @@
         "device_denied": "このリンクは無効・期限切れ、またはこの端末を許可していません。",
         "empty": "このゲストリンクに端末がありません。",
         "expires": "期限",
-        "back_to_list": "ゲスト一覧に戻る"
+        "back_to_list": "ゲスト一覧に戻る",
+        "fact_link": "リンク",
+        "fact_access": "アクセス",
+        "access_view_only": "表示のみ: 画面は見られますが、操作はできません。",
+        "access_full": "画面の表示と操作ができます。"
     },
     "ux35": {
         "resize_sidebar": "サイドバーの幅を変更",

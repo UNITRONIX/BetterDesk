@@ -5567,8 +5567,8 @@
         "nav_tags": "Tagger",
         "quick_connect": "Styr eksternt skrivebord",
         "quick_connect_placeholder": "Skriv inn eksternt ID…",
-        "view_grid": "Rutenettvisning",
-        "view_list": "Listevisning",
+        "view_grid": "Rutenett",
+        "view_list": "Liste",
         "sync_now": "Oppdater",
         "last_sync": "Oppdatert",
         "status_ready": "Klar",
@@ -5578,7 +5578,22 @@
         "no_tags": "Ingen tagger",
         "collapse_devices": "Skjul enhetsliste",
         "expand_devices": "Vis enhetsliste",
-        "open_settings": "Innstillinger"
+        "open_settings": "Innstillinger",
+        "page_description": "Koble til en enhet med ID-en, eller finn den i listen. Økten åpnes i en ny fane.",
+        "phone_note": "Nettviseren trenger en større skjerm. På denne telefonen åpner du enheter i RustDesk-appen i stedet.",
+        "quick_connect_title": "Koble til med ID",
+        "quick_connect_hint": "ID-en som vises i RustDesk-appen på den andre enheten.",
+        "quick_connect_invalid": "Skriv inn en enhets-ID: 3 til 64 bokstaver, sifre, - eller _.",
+        "connect_to": "Koble til {name}",
+        "col_name": "Enhet",
+        "filters_label": "Filtrer enheter",
+        "all_devices": "Alle enheter",
+        "view_label": "Visning",
+        "devices_count_online": "{count} enheter, {online} på nett.",
+        "updated_at": "Oppdatert {time}.",
+        "sync_failed_since": "Kunne ikke oppdatere. Listen er fra {time}.",
+        "connect_failed": "Kunne ikke åpne fjernøkten.",
+        "popup_blocked": "Nettleseren blokkerte den nye fanen. Tillat popup-vinduer for dette nettstedet og prøv igjen."
     },
     "rdclient_login": {
         "title": "Remote Desktop-klient",
@@ -5718,7 +5733,11 @@
         "device_denied": "Lenken er ugyldig, utløpt eller tillater ikke denne enheten.",
         "empty": "Ingen enheter på denne gjestelenken.",
         "expires": "Utløper",
-        "back_to_list": "Tilbake til gjestelisten"
+        "back_to_list": "Tilbake til gjestelisten",
+        "fact_link": "Lenke",
+        "fact_access": "Tilgang",
+        "access_view_only": "Bare visning: du ser skjermen, men kan ikke styre den.",
+        "access_full": "Du kan se og styre skjermen."
     },
     "ux35": {
         "resize_sidebar": "Endre sidepanelbredde",

@@ -5561,8 +5561,8 @@
         "nav_tags": "Etiquetas",
         "quick_connect": "Controlar escritorio remoto",
         "quick_connect_placeholder": "Introduzca ID remoto…",
-        "view_grid": "Vista cuadrícula",
-        "view_list": "Vista lista",
+        "view_grid": "Cuadrícula",
+        "view_list": "Lista",
         "sync_now": "Actualizar",
         "last_sync": "Actualizado",
         "status_ready": "Listo",
@@ -5572,7 +5572,22 @@
         "no_tags": "Sin etiquetas",
         "collapse_devices": "Contraer lista de dispositivos",
         "expand_devices": "Expandir lista de dispositivos",
-        "open_settings": "Ajustes"
+        "open_settings": "Ajustes",
+        "page_description": "Conéctese a un dispositivo por su ID o búsquelo en la lista. La sesión se abre en una pestaña nueva.",
+        "phone_note": "El visor web necesita una pantalla más grande. En este teléfono, abra los dispositivos en la app de RustDesk.",
+        "quick_connect_title": "Conectar por ID",
+        "quick_connect_hint": "El ID que muestra la app de RustDesk en el otro dispositivo.",
+        "quick_connect_invalid": "Introduzca un ID de dispositivo: de 3 a 64 letras, dígitos, - o _.",
+        "connect_to": "Conectar con {name}",
+        "col_name": "Dispositivo",
+        "filters_label": "Filtrar dispositivos",
+        "all_devices": "Todos los dispositivos",
+        "view_label": "Vista",
+        "devices_count_online": "{count} dispositivos, {online} en línea.",
+        "updated_at": "Actualizado a las {time}.",
+        "sync_failed_since": "No se pudo actualizar. La lista es de las {time}.",
+        "connect_failed": "No se pudo abrir la sesión remota.",
+        "popup_blocked": "El navegador bloqueó la pestaña nueva. Permita las ventanas emergentes para este sitio e inténtelo de nuevo."
     },
     "rdclient_login": {
         "title": "Cliente de escritorio remoto",
@@ -5712,7 +5727,11 @@
         "device_denied": "Este enlace no es válido, ha caducado o no permite este dispositivo.",
         "empty": "No hay dispositivos en este enlace.",
         "expires": "Caduca",
-        "back_to_list": "Volver a la lista de invitado"
+        "back_to_list": "Volver a la lista de invitado",
+        "fact_link": "Enlace",
+        "fact_access": "Acceso",
+        "access_view_only": "Solo ver: puede ver la pantalla, pero no controlarla.",
+        "access_full": "Puede ver y controlar la pantalla."
     },
     "ux35": {
         "resize_sidebar": "Cambiar ancho de la barra lateral",

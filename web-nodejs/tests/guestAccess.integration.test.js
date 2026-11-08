@@ -83,6 +83,22 @@ describe('Guest Access Link page integration', () => {
         );
     });
 
+    test('renders the guest page for a visitor without a console session', async () => {
+        betterdeskApi.apiClient.get.mockResolvedValueOnce({
+            status: 200,
+            data: { valid: true, view_only: false, expires_at: '', devices: [{ id: 'TARGET01', online: false }] },
+        });
+        const app = buildApp();
+        // Guests have no session, so the app sets no "user" local at all
+        delete app.locals.user;
+
+        const response = await request(app).get('/remote/guest?t=guest-token');
+
+        expect(response.status).toBe(200);
+        expect(response.text).toContain('id="rd-guest-tbody"');
+        expect(response.text).toContain('<script nonce="test-nonce">\n    window.__guestAccess =');
+    });
+
     test('returns 403 for an expired or invalid token instead of a 500 page', async () => {
         betterdeskApi.apiClient.get.mockResolvedValueOnce({
             status: 403,
@@ -92,8 +108,10 @@ describe('Guest Access Link page integration', () => {
         const response = await request(buildApp()).get('/remote/guest?t=expired-token');
 
         expect(response.status).toBe(403);
-        expect(response.text).toContain('403 - Forbidden');
-        expect(response.text).not.toContain('500 - Server Error');
+        // The shared error page (views/errors/_page.ejs) with the route's reason, not the 500 page
+        expect(response.text).toContain('error-page');
+        expect(response.text).toContain('guest link expired');
+        expect(response.text).not.toContain('errors.server_error_title');
     });
 
     test('creates an allowlisted link and reaches the guest page with its token', async () => {

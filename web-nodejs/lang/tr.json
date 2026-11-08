@@ -5567,8 +5567,8 @@
         "nav_tags": "Etiketler",
         "quick_connect": "Uzak masaüstünü kontrol et",
         "quick_connect_placeholder": "Uzak ID girin…",
-        "view_grid": "Izgara görünümü",
-        "view_list": "Liste görünümü",
+        "view_grid": "Izgara",
+        "view_list": "Liste",
         "sync_now": "Yenile",
         "last_sync": "Güncellendi",
         "status_ready": "Hazır",
@@ -5578,7 +5578,22 @@
         "no_tags": "Etiket yok",
         "collapse_devices": "Cihaz listesini daralt",
         "expand_devices": "Cihaz listesini genişlet",
-        "open_settings": "Ayarlar"
+        "open_settings": "Ayarlar",
+        "page_description": "Bir cihaza kimliğiyle bağlanın veya listede bulun. Oturum yeni bir sekmede açılır.",
+        "phone_note": "Web görüntüleyici daha büyük bir ekran gerektirir. Bu telefonda cihazları RustDesk uygulamasında açın.",
+        "quick_connect_title": "Kimlikle bağlan",
+        "quick_connect_hint": "Diğer cihazdaki RustDesk uygulamasında gösterilen kimlik.",
+        "quick_connect_invalid": "Bir cihaz kimliği girin: 3 ile 64 arası harf, rakam, - veya _.",
+        "connect_to": "{name} cihazına bağlan",
+        "col_name": "Cihaz",
+        "filters_label": "Cihazları filtrele",
+        "all_devices": "Tüm cihazlar",
+        "view_label": "Görünüm",
+        "devices_count_online": "{count} cihaz, {online} çevrimiçi.",
+        "updated_at": "{time} itibarıyla güncellendi.",
+        "sync_failed_since": "Yenilenemedi. Liste {time} tarihli.",
+        "connect_failed": "Uzak oturum açılamadı.",
+        "popup_blocked": "Tarayıcı yeni sekmeyi engelledi. Bu site için açılır pencerelere izin verin ve tekrar deneyin."
     },
     "rdclient_login": {
         "title": "Uzak Masaüstü İstemcisi",
@@ -5718,7 +5733,11 @@
         "device_denied": "Bu bağlantı geçersiz, süresi dolmuş veya bu cihaza izin vermiyor.",
         "empty": "Bu misafir bağlantısında cihaz yok.",
         "expires": "Bitiş",
-        "back_to_list": "Misafir listesine dön"
+        "back_to_list": "Misafir listesine dön",
+        "fact_link": "Bağlantı",
+        "fact_access": "Erişim",
+        "access_view_only": "Yalnızca görüntüleme: ekranı görebilirsiniz ancak kontrol edemezsiniz.",
+        "access_full": "Ekranı görebilir ve kontrol edebilirsiniz."
     },
     "ux35": {
         "resize_sidebar": "Kenar çubuğu genişliğini ayarla",

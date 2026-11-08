@@ -5561,8 +5561,8 @@
         "nav_tags": "Tagi",
         "quick_connect": "Steruj pulpitem zdalnym",
         "quick_connect_placeholder": "Wpisz ID zdalnego urządzenia…",
-        "view_grid": "Widok siatki",
-        "view_list": "Widok listy",
+        "view_grid": "Siatka",
+        "view_list": "Lista",
         "sync_now": "Odśwież",
         "last_sync": "Zaktualizowano",
         "status_ready": "Gotowe",
@@ -5572,7 +5572,22 @@
         "no_tags": "Brak tagów",
         "collapse_devices": "Zwiń listę urządzeń",
         "expand_devices": "Rozwiń listę urządzeń",
-        "open_settings": "Ustawienia"
+        "open_settings": "Ustawienia",
+        "page_description": "Połącz się z urządzeniem za pomocą jego ID lub znajdź je na liście. Sesja otworzy się w nowej karcie.",
+        "phone_note": "Przeglądarka internetowa wymaga większego ekranu. Na tym telefonie otwieraj urządzenia w aplikacji RustDesk.",
+        "quick_connect_title": "Połącz przez ID",
+        "quick_connect_hint": "ID wyświetlane w aplikacji RustDesk na drugim urządzeniu.",
+        "quick_connect_invalid": "Wpisz ID urządzenia: od 3 do 64 liter, cyfr, - lub _.",
+        "connect_to": "Połącz z {name}",
+        "col_name": "Urządzenie",
+        "filters_label": "Filtruj urządzenia",
+        "all_devices": "Wszystkie urządzenia",
+        "view_label": "Widok",
+        "devices_count_online": "Urządzenia: {count}, online: {online}.",
+        "updated_at": "Zaktualizowano o {time}.",
+        "sync_failed_since": "Nie udało się odświeżyć. Lista pochodzi z {time}.",
+        "connect_failed": "Nie udało się otworzyć sesji zdalnej.",
+        "popup_blocked": "Przeglądarka zablokowała nową kartę. Zezwól na wyskakujące okna dla tej witryny i spróbuj ponownie."
     },
     "rdclient_login": {
         "title": "Klient pulpitu zdalnego",
@@ -5712,7 +5727,11 @@
         "device_denied": "Link nie zezwala na to urządzenie albo wygasł.",
         "empty": "Brak urządzeń na tym linku.",
         "expires": "Wygasa",
-        "back_to_list": "Wróć do listy gościa"
+        "back_to_list": "Wróć do listy gościa",
+        "fact_link": "Link",
+        "fact_access": "Dostęp",
+        "access_view_only": "Tylko podgląd: widzisz ekran, ale nie możesz nim sterować.",
+        "access_full": "Widzisz ekran i możesz nim sterować."
     },
     "ux35": {
         "resize_sidebar": "Zmień szerokość paska bocznego",

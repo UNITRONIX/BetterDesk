@@ -5565,8 +5565,8 @@
         "nav_tags": "Tags",
         "quick_connect": "Contrôler le bureau à distance",
         "quick_connect_placeholder": "Saisir l'ID distant…",
-        "view_grid": "Vue grille",
-        "view_list": "Vue liste",
+        "view_grid": "Grille",
+        "view_list": "Liste",
         "sync_now": "Actualiser",
         "last_sync": "Mis à jour",
         "status_ready": "Prêt",
@@ -5576,7 +5576,22 @@
         "no_tags": "Aucun tag",
         "collapse_devices": "Réduire la liste des appareils",
         "expand_devices": "Développer la liste des appareils",
-        "open_settings": "Paramètres"
+        "open_settings": "Paramètres",
+        "page_description": "Connectez-vous à un appareil par son ID ou trouvez-le dans la liste. La session s'ouvre dans un nouvel onglet.",
+        "phone_note": "La visionneuse web demande un écran plus grand. Sur ce téléphone, ouvrez les appareils dans l'application RustDesk.",
+        "quick_connect_title": "Se connecter par ID",
+        "quick_connect_hint": "L'ID affiché dans l'application RustDesk sur l'autre appareil.",
+        "quick_connect_invalid": "Saisissez un ID d'appareil : 3 à 64 lettres, chiffres, - ou _.",
+        "connect_to": "Se connecter à {name}",
+        "col_name": "Appareil",
+        "filters_label": "Filtrer les appareils",
+        "all_devices": "Tous les appareils",
+        "view_label": "Affichage",
+        "devices_count_online": "{count} appareils, {online} en ligne.",
+        "updated_at": "Mis à jour à {time}.",
+        "sync_failed_since": "Impossible d'actualiser. La liste date de {time}.",
+        "connect_failed": "Impossible d'ouvrir la session à distance.",
+        "popup_blocked": "Le navigateur a bloqué le nouvel onglet. Autorisez les fenêtres pop-up pour ce site et réessayez."
     },
     "rdclient_login": {
         "title": "Client Bureau à distance",
@@ -5716,7 +5731,11 @@
         "device_denied": "Ce lien invité est invalide, expiré ou n’autorise pas cet appareil.",
         "empty": "Aucun appareil sur ce lien invité.",
         "expires": "Expire",
-        "back_to_list": "Retour à la liste invitée"
+        "back_to_list": "Retour à la liste invitée",
+        "fact_link": "Lien",
+        "fact_access": "Accès",
+        "access_view_only": "Lecture seule : vous voyez l'écran mais ne pouvez pas le contrôler.",
+        "access_full": "Vous pouvez voir et contrôler l'écran."
     },
     "ux35": {
         "resize_sidebar": "Redimensionner la barre latérale",
