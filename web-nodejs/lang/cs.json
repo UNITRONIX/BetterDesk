@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "Vyberte soubor, který chcete zobrazit a upravit. Při každém uložení se zachová kopie předchozí verze.",
             "editor_label": "Obsah souboru"
+        },
+        "side": {
+            "general_title": "Co teď klienti dostávají",
+            "general_note": "Adresy, které klienti RustDesk teď dostávají od tohoto serveru: v nastavení klienta, QR kódech a instalačních příkazech.",
+            "src_page": "Nastaveno na této stránce",
+            "src_overview": "Nastaveno v nastavení klienta v přehledu",
+            "src_auto": "Zjištěno automaticky",
+            "local_warning": "Tyto adresy fungují jen na tomto počítači. Jiné počítače a telefony se k nim nedostanou. Zadejte adresu serveru v části Veřejné koncové body klientů.",
+            "preview_title": "Náhled",
+            "preview_note": "Konzole s volbami z této stránky. Uložením je použijete.",
+            "preview_device": "Počítač na recepci",
+            "preview_caption": "Motiv: {theme}. Barva zvýraznění: {accent}.",
+            "state_title": "Aktuální stav",
+            "your_2fa": "Vaše dvoufázové přihlášení",
+            "on": "Zapnuto",
+            "off": "Vypnuto",
+            "next_backup": "Další plánovaná záloha",
+            "backup_kept": "Ukládá se do",
+            "backup_none": "Zatím žádná",
+            "backup_off": "Plánované zálohy jsou vypnuté",
+            "backup_soon": "Do minuty",
+            "backup_failed": "Poslední plánovaná záloha selhala: {error}",
+            "email_on": "Nastaveno",
+            "email_off": "Nenastaveno. Konzole neposílá žádné e-maily.",
+            "clock_title": "Hodiny serveru"
         }
     },
     "audit": {

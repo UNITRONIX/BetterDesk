@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "Elija un archivo para verlo y editarlo. Cada vez que guarde se conserva una copia de la versión anterior.",
             "editor_label": "Contenido del archivo"
+        },
+        "side": {
+            "general_title": "Lo que reciben ahora los clientes",
+            "general_note": "Las direcciones que los clientes de RustDesk reciben ahora de este servidor: en la configuración del cliente, los códigos QR y los comandos de instalación.",
+            "src_page": "Definido en esta página",
+            "src_overview": "Definido en la configuración del cliente del resumen",
+            "src_auto": "Detectado automáticamente",
+            "local_warning": "Estas direcciones solo funcionan en este equipo. Otros equipos y teléfonos no pueden llegar a ellas. Introduzca la dirección del servidor en «Endpoints públicos del cliente».",
+            "preview_title": "Vista previa",
+            "preview_note": "La consola con las opciones de esta página. Guarde para aplicarlas.",
+            "preview_device": "PC de recepción",
+            "preview_caption": "Tema: {theme}. Color de acento: {accent}.",
+            "state_title": "Estado actual",
+            "your_2fa": "Su inicio de sesión en dos pasos",
+            "on": "Activado",
+            "off": "Desactivado",
+            "next_backup": "Próxima copia programada",
+            "backup_kept": "Se guardan en",
+            "backup_none": "Ninguna todavía",
+            "backup_off": "Las copias programadas están desactivadas",
+            "backup_soon": "En menos de un minuto",
+            "backup_failed": "La última copia programada falló: {error}",
+            "email_on": "Configurado",
+            "email_off": "Sin configurar. La consola no envía correos.",
+            "clock_title": "Reloj del servidor"
         }
     },
     "audit": {

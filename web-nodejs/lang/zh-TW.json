@@ -1123,6 +1123,31 @@
         "advanced_tab": {
             "note": "選擇檔案即可檢視和編輯。每次儲存都會保留上一版的副本。",
             "editor_label": "檔案內容"
+        },
+        "side": {
+            "general_title": "用戶端目前取得的值",
+            "general_note": "RustDesk 用戶端目前從本伺服器取得的位址：用於用戶端設定、QR 碼和安裝指令。",
+            "src_page": "在本頁設定",
+            "src_overview": "在總覽的用戶端設定中設定",
+            "src_auto": "自動偵測",
+            "local_warning": "這些位址只在本機有效，其他電腦和手機無法連線。請在「公共用戶端端點」中填寫伺服器位址。",
+            "preview_title": "預覽",
+            "preview_note": "依本頁選項顯示的主控台。儲存後生效。",
+            "preview_device": "櫃台電腦",
+            "preview_caption": "主題：{theme}。強調色：{accent}。",
+            "state_title": "目前狀態",
+            "your_2fa": "你的雙重驗證登入",
+            "on": "已開啟",
+            "off": "已關閉",
+            "next_backup": "下次排程備份",
+            "backup_kept": "儲存到",
+            "backup_none": "尚無",
+            "backup_off": "排程備份已關閉",
+            "backup_soon": "一分鐘內",
+            "backup_failed": "上次排程備份失敗：{error}",
+            "email_on": "已設定",
+            "email_off": "未設定。主控台不會寄送郵件。",
+            "clock_title": "伺服器時鐘"
         }
     },
     "audit": {

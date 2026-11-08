@@ -1127,6 +1127,31 @@
         "advanced_tab": {
             "note": "Pick a file to see and edit it. Each save keeps a copy of the previous version.",
             "editor_label": "File contents"
+        },
+        "side": {
+            "general_title": "What clients get now",
+            "general_note": "The addresses RustDesk clients get from this server right now: in the client setup, QR codes and install commands.",
+            "src_page": "Set on this page",
+            "src_overview": "Set in the client setup on the overview",
+            "src_auto": "Found automatically",
+            "local_warning": "These addresses only work on this computer. Other computers and phones can't reach them. Enter the server's address under Public client endpoints.",
+            "preview_title": "Preview",
+            "preview_note": "The console with the choices on this page. Save to apply them.",
+            "preview_device": "Reception PC",
+            "preview_caption": "Theme: {theme}. Accent colour: {accent}.",
+            "state_title": "Current state",
+            "your_2fa": "Your two-factor sign-in",
+            "on": "On",
+            "off": "Off",
+            "next_backup": "Next scheduled backup",
+            "backup_kept": "Saved to",
+            "backup_none": "None yet",
+            "backup_off": "Scheduled backups are off",
+            "backup_soon": "Within a minute",
+            "backup_failed": "The last scheduled backup failed: {error}",
+            "email_on": "Set up",
+            "email_off": "Not set up. The console sends no email.",
+            "clock_title": "Server clock"
         }
     },
     "audit": {

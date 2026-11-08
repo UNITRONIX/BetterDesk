@@ -673,3 +673,176 @@
         height: var(--control-h);
     }
 }
+
+/* ── Layout: forms in the main column, a side column beside them ──
+   The forms keep their measure; the side column sits right next to
+   them instead of at the far edge of a wide window. Advanced keeps the
+   full width for its file editor. */
+
+.settings-page:not([data-current-tab="advanced"]) {
+    max-width: calc(var(--measure) + var(--side-w) + var(--space-7));
+}
+
+.settings-cols > .page-main {
+    gap: var(--space-6);
+}
+
+/* Contents: a row of links above the forms, a list in the side column */
+.settings-toc-title {
+    display: none;
+    margin: 0 0 var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.settings-toc.is-side .settings-toc-title {
+    display: block;
+}
+
+.settings-toc.is-side .toc {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0;
+}
+
+.settings-toc.is-side .toc a {
+    width: 100%;
+    padding-inline-start: var(--space-3);
+    border-inline-start: 2px solid var(--rule);
+}
+
+.settings-toc.is-side .toc a[aria-current="true"] {
+    border-inline-start-color: var(--accent);
+    font-weight: 600;
+}
+
+.settings-page :is(section, form, h3, .settings-subgroup)[id] {
+    scroll-margin-top: calc(var(--topbar-h) + var(--space-4));
+}
+
+/* Value with where it comes from under it */
+.settings-side-value {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+/* The side column is narrow: labels take what they need, values the rest */
+@media (min-width: 641px) {
+    .settings-side .facts {
+        grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    }
+
+    .settings-side .facts > dt {
+        max-width: 160px;
+    }
+}
+
+.settings-side #connection-mode-runtime,
+.settings-side #time-clock-detail {
+    margin: 0;
+}
+
+.settings-side #connection-mode-runtime:empty,
+.settings-side #time-clock-detail:empty {
+    display: none;
+}
+
+/* Connection strategy diagram */
+.settings-diagram {
+    margin-bottom: var(--space-3);
+}
+
+/* Appearance preview: a small sample of the console in the chosen
+   colours. The colours are the form's values (set by settings.js);
+   the fallbacks are the console's own tokens. */
+.theme-preview {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--pv-rule, var(--rule));
+    border-radius: var(--radius);
+    background: var(--pv-bg, var(--bg));
+    color: var(--pv-text, var(--text));
+}
+
+.theme-preview-bar {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--pv-rule, var(--rule));
+    background: var(--pv-bar, var(--bg-subtle));
+}
+
+.theme-preview-name {
+    font-weight: 600;
+}
+
+.theme-preview-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3);
+}
+
+.theme-preview-heading {
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.theme-preview-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
+    padding-block: var(--space-2);
+    border-block: 1px solid var(--pv-rule, var(--rule));
+}
+
+.theme-preview-status {
+    color: var(--pv-ok, var(--success));
+}
+
+.theme-preview-muted {
+    color: var(--pv-muted, var(--text-muted));
+    font-size: var(--text-sm);
+}
+
+.theme-preview-btn {
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius);
+    background: var(--pv-accent, var(--accent));
+    color: var(--pv-on-accent, var(--on-accent));
+    font-weight: 600;
+}
+
+.theme-preview-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.theme-preview-logo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* Copy buttons next to a value carry an icon */
+.settings-page .value-field > button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.settings-page .value-field > button .material-icons {
+    font-size: 18px;
+}
+
+/* Touch: a one-line checkbox label is still a 44 px target */
+@media (pointer: coarse) {
+    .settings-page .check-field {
+        min-height: 44px;
+        align-content: center;
+    }
+}

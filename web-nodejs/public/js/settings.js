@@ -43,6 +43,7 @@
         const tab = CURRENT_TAB();
         if (CAN_SERVER_CONFIG()) initRestartCoordinator();
         initSettingsSearch();
+        initSettingsSide();
         revealHashTarget();
 
         // Only the visible tab loads its data; the other tabs are in the page
@@ -55,6 +56,7 @@
                 initDeviceScopeSection();
                 initAvailabilityHistorySection();
                 initMeshSettingsSection();
+                initConnectionDiagram();
                 break;
             case 'branding':
                 initBrandingSection();
@@ -95,10 +97,7 @@
             btn.addEventListener('click', () => {
                 const text = document.getElementById(btn.dataset.copyFrom)?.textContent || '';
                 if (!text) return;
-                navigator.clipboard?.writeText(text).then(() => {
-                    btn.textContent = _('common.copied');
-                    setTimeout(() => { btn.textContent = _('actions.copy'); }, 1500);
-                }).catch(() => {});
+                navigator.clipboard?.writeText(text).then(() => flashCopied(btn)).catch(() => {});
             });
         });
     }
@@ -123,15 +122,38 @@
 
     function setBusy(btn, busy, busyText) {
         if (!btn) return;
+        // Buttons with an icon keep it; only the label (.btn-label) changes
         if (busy) {
-            btn.dataset.idleLabel = btn.dataset.idleLabel || btn.textContent.trim();
+            if (btn.dataset.idleHtml === undefined) btn.dataset.idleHtml = btn.innerHTML;
             btn.disabled = true;
-            if (busyText) btn.textContent = busyText;
+            if (busyText) setButtonLabel(btn, busyText);
         } else {
             btn.disabled = false;
-            if (btn.dataset.idleLabel) btn.textContent = btn.dataset.idleLabel;
+            if (btn.dataset.idleHtml !== undefined) {
+                btn.innerHTML = btn.dataset.idleHtml;
+                delete btn.dataset.idleHtml;
+            }
         }
     }
+
+    function setButtonLabel(btn, text) {
+        const label = btn.querySelector('.btn-label');
+        if (label) label.textContent = text;
+        else btn.textContent = text;
+    }
+
+    /** "Copied" on a copy button for a moment, keeping its icon */
+    function flashCopied(btn) {
+        setButtonLabel(btn, _('common.copied'));
+        btn.classList.add('copied');
+        clearTimeout(btn._copiedTimer);
+        btn._copiedTimer = setTimeout(() => {
+            setButtonLabel(btn, _('actions.copy'));
+            btn.classList.remove('copied');
+        }, 1500);
+    }
+
+    const iconHtml = (meaning) => (window.Utils && typeof Utils.icon === 'function' ? Utils.icon(meaning) : '');
 
     // ==================== Settings UI helpers ====================
 
@@ -647,6 +669,7 @@
             const tabTitle = panel.dataset.tabTitle || tab;
             const nodes = panel.querySelectorAll('.form-group, .check-field, .choice, section[id], .settings-subgroup, .facts > dt');
             nodes.forEach((node) => {
+                if (node.closest('[data-search-skip]')) return;
                 let label = '';
                 let targetId = '';
                 if (node.matches('section[id], .settings-subgroup')) {
@@ -1056,7 +1079,7 @@
                     <th class="actions"><span class="sr-only">${_('common.actions')}</span></th></tr></thead><tbody>` +
                     rows.map((r) => {
                         const dl = r.transport === 'mesh' && r.id
-                            ? `<a class="btn btn-sm" href="/api/mesh/recordings/${encodeURIComponent(r.id)}">${_('mesh.recording_download')}</a>`
+                            ? `<a class="btn btn-sm" href="/api/mesh/recordings/${encodeURIComponent(r.id)}">${iconHtml('download')}${_('mesh.recording_download')}</a>`
                             : '';
                         return `<tr><td>${Utils.escapeHtml(r.transport || '')}</td><td class="mono">${Utils.escapeHtml(r.peer_id || '')}</td><td>${Utils.escapeHtml(r.session_type || '')}</td><td>${Utils.escapeHtml(formatBytes(Number(r.size) || 0))}</td><td class="actions">${dl}</td></tr>`;
                     }).join('') + '</tbody></table></div>';
@@ -1107,14 +1130,7 @@
         copyBtn?.addEventListener('click', () => {
             const text = serverIdEl?.textContent || '';
             if (!text || text === '-') return;
-            navigator.clipboard?.writeText(text).then(() => {
-                copyBtn.textContent = _('common.copied');
-                copyBtn.classList.add('copied');
-                setTimeout(() => {
-                    copyBtn.textContent = _('actions.copy');
-                    copyBtn.classList.remove('copied');
-                }, 1500);
-            }).catch(() => {});
+            navigator.clipboard?.writeText(text).then(() => flashCopied(copyBtn)).catch(() => {});
         });
 
         loadMeshStatus();
@@ -1181,6 +1197,7 @@
             const saveBtn = document.getElementById('connection-mode-save');
             if (saveBtn) saveBtn.disabled = !writable;
             _connectionModeSnapshot = getConnectionModePayload();
+            renderConnectionDiagram();
         } catch (err) {
             _connectionModeWritable = false;
             if (sourceEl) sourceEl.textContent = err.message || _('errors.server_error');
@@ -1245,6 +1262,7 @@
             if (serverIdEl) serverIdEl.value = data.public_server_id || '';
             if (relayEl) relayEl.value = data.public_relay_server || '';
             if (apiEl) apiEl.value = data.public_api_url || '';
+            renderConnectionDiagram();
         } catch (err) {
             formFail(form, err.message || _('errors.server_error'));
         }
@@ -1276,6 +1294,7 @@
                 body: JSON.stringify(getPublicEndpointsPayload())
             });
             await loadPublicEndpoints();
+            loadClientConfigSummary();
             formOk(form, resp.message || _('settings.public_endpoints_saved'));
         } catch (err) {
             formFail(form, err.message || _('errors.server_error'));
@@ -1306,6 +1325,7 @@
             <p class="form-hint">${_('settings.totp_enabled_desc')}</p>
             <p><button type="button" class="btn btn-danger-quiet" id="totp-disable-btn">${_('settings.signin.totp_turn_off')}</button></p>`;
         document.getElementById('totp-disable-btn')?.addEventListener('click', handleDisableTotp);
+        setSideOnOff('side-totp', true);
     }
 
     function renderTotpDisabled(container) {
@@ -1315,6 +1335,7 @@
             <p><button type="button" class="btn" id="totp-setup-btn">${_('settings.signin.totp_set_up')}</button></p>
             <p class="field-effect">${_('settings.signin.totp_effect')}</p>`;
         document.getElementById('totp-setup-btn')?.addEventListener('click', handleSetupTotp);
+        setSideOnOff('side-totp', false);
     }
 
     async function handleSetupTotp() {
@@ -1330,7 +1351,7 @@
                 <img src="${Utils.escapeHtml(data.qrCode)}" alt="${_('settings.signin.totp_qr_alt')}" class="totp-qr-image" width="200" height="200">
                 <div class="form-group">
                     <span class="form-label">${_('settings.totp_manual_key')}</span>
-                    <span class="value-field"><code id="totp-secret-code">${Utils.escapeHtml(data.secret)}</code><button type="button" id="totp-copy-secret-btn">${_('actions.copy')}</button></span>
+                    <span class="value-field"><code id="totp-secret-code">${Utils.escapeHtml(data.secret)}</code><button type="button" id="totp-copy-secret-btn">${iconHtml('copy')}<span class="btn-label">${_('actions.copy')}</span></button></span>
                 </div>
                 <form class="totp-verify-form" id="totp-verify-form" novalidate>
                     <div class="form-group">
@@ -1368,10 +1389,7 @@
             document.getElementById('totp-cancel-btn')?.addEventListener('click', initTotpSection);
             const copyBtn = document.getElementById('totp-copy-secret-btn');
             copyBtn?.addEventListener('click', () => {
-                navigator.clipboard?.writeText(data.secret).then(() => {
-                    copyBtn.textContent = _('common.copied');
-                    setTimeout(() => { copyBtn.textContent = _('actions.copy'); }, 1500);
-                }).catch(() => {});
+                navigator.clipboard?.writeText(data.secret).then(() => flashCopied(copyBtn)).catch(() => {});
             });
         } catch (error) {
             container.insertAdjacentHTML('beforeend', `<p class="form-status is-error">${Utils.escapeHtml(error.message || _('errors.server_error'))}</p>`);
@@ -1384,14 +1402,12 @@
             <p><span class="status ok">${_('settings.totp_enabled_success')}</span></p>
             <p class="notice warning">${_('settings.totp_recovery_warning')}</p>
             <div class="code-block-head"><span class="code-block-title">${_('settings.signin.recovery_codes')}</span>
-                <button type="button" class="btn btn-sm" id="copy-recovery-btn">${_('actions.copy')}</button></div>
+                <button type="button" class="btn btn-sm" id="copy-recovery-btn">${iconHtml('copy')}<span class="btn-label">${_('actions.copy')}</span></button></div>
             <pre class="code-block totp-recovery-codes">${list.map((c) => Utils.escapeHtml(c)).join('\n')}</pre>
             <p><button type="button" class="btn btn-primary" id="totp-done-btn">${_('settings.signin.recovery_saved')}</button></p>`;
         const copyBtn = document.getElementById('copy-recovery-btn');
         copyBtn?.addEventListener('click', () => {
-            navigator.clipboard?.writeText(list.join('\n')).then(() => {
-                copyBtn.textContent = _('common.copied');
-            }).catch(() => {});
+            navigator.clipboard?.writeText(list.join('\n')).then(() => flashCopied(copyBtn)).catch(() => {});
         });
         document.getElementById('totp-done-btn')?.addEventListener('click', initTotpSection);
     }
@@ -1486,6 +1502,7 @@
             const form = brandingForm();
             form?.insertAdjacentHTML('beforebegin', `<p class="state is-error">${Utils.escapeHtml(error.message || _('errors.server_error'))}</p>`);
         }
+        initThemePreview();
     }
 
     /** Appearance save bar: saved / dirty / saving / error. */
@@ -2098,7 +2115,7 @@
                     <label class="form-label" for="${p}-file">${esc(_('branding.login_slide_image'))}</label>
                     <input type="file" id="${p}-file" class="login-slide-file" accept="image/png,image/jpeg,image/webp,image/gif" data-index="${idx}" data-save-ignore>
                     <label class="sr-only" for="${p}-url">${esc(_('branding.bg_image_url'))}</label>
-                    <input type="text" id="${p}-url" class="form-input mono-input login-slide-image-url" value="${esc(slide.imageUrl || '')}" placeholder="/img/login-slides/free.jpg">
+                    <input type="text" id="${p}-url" class="form-input login-slide-image-url" value="${esc(slide.imageUrl || '')}" placeholder="/img/login-slides/free.jpg">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="${p}-title">${esc(_('branding.login_slide_title'))}</label>
@@ -3052,17 +3069,25 @@
         destinationType?.addEventListener('change', syncPathVisibility);
         syncPathVisibility();
 
+        // Last run, next run and destination go to the side column
+        let lastStatus = null;
+        let savedSchedule = null;
         const renderStatus = (st) => {
-            if (!st?.lastAttemptAt) return;
-            const label = st.lastError
-                ? `${_('backup.schedule_last_run')}: ${st.lastError}`
-                : `${_('backup.schedule_last_run')}: ${Utils.formatDate ? Utils.formatDate(st.lastSuccessAt || st.lastAttemptAt) : (st.lastSuccessAt || st.lastAttemptAt)}`;
-            setStatus(statusEl, label, st.lastError ? 'error' : '');
+            lastStatus = st || lastStatus;
+            renderBackupSide(savedSchedule, lastStatus);
+        };
+        const refreshStatus = async () => {
+            try {
+                const fresh = await Utils.api('/api/settings/backup/schedule');
+                savedSchedule = fresh?.schedule || savedSchedule;
+                renderStatus(fresh?.status);
+            } catch (_e) { /* the side keeps the last known state */ }
         };
 
         try {
             const data = await Utils.api('/api/settings/backup/schedule');
             const schedule = data?.schedule || {};
+            savedSchedule = schedule;
             if (enabled) enabled.checked = !!schedule.enabled;
             if (interval) interval.value = String(schedule.intervalHours || 24);
             if (retention) retention.value = String(schedule.retentionCount || 7);
@@ -3089,6 +3114,7 @@
                 });
                 if (destinationType) destinationType.value = saved?.destinationType || destinationType.value;
                 formOk(form, _('backup.schedule_saved'));
+                refreshStatus();
             } catch (err) {
                 formFail(form, err.message || _('errors.server_error'));
             }
@@ -3123,6 +3149,7 @@
                 showStatus(err.message || _('errors.server_error'), false);
             } finally {
                 setBusy(button, false);
+                refreshStatus();
             }
         });
 
@@ -4640,7 +4667,7 @@
                 const size = formatBytes(b.sizeBytes || 0);
                 return `<li class="list-row update-backup-item">
                     <span class="row-main">
-                        <span class="row-title mono">${Utils.escapeHtml(b.name)}</span>
+                        <span class="row-title">${Utils.escapeHtml(b.name)}</span>
                         <span class="row-sub">${date}${sha}, ${b.fileCount || b.filesBackedUp || 0} ${_('updates.files')}, ${size}</span>
                     </span>
                     <span class="row-end">
@@ -4876,6 +4903,7 @@
         try {
             const data = await Utils.api('/api/settings/ldap');
             populateLdapForm(data);
+            setSideOnOff('side-ldap', !!document.getElementById('ldap-enabled')?.checked);
         } catch (error) {
             console.error('Failed to load LDAP config:', error);
         }
@@ -4976,6 +5004,7 @@
             const data = collectLdapData();
             await Utils.api('/api/settings/ldap', { method: 'PUT', body: data });
             _ldapWasEnabled = data.enabled;
+            setSideOnOff('side-ldap', !!data.enabled);
             formOk(form, _('settings.ldap_saved'));
         } catch (error) {
             formFail(form, error.message || _('errors.server_error'));
@@ -5129,6 +5158,7 @@
         try {
             const data = await Utils.api('/api/settings/oidc');
             populateOidcForm(data);
+            setSideOnOff('side-oidc', !!document.getElementById('oidc-enabled')?.checked);
         } catch (error) {
             console.error('Failed to load OIDC config:', error);
         }
@@ -5220,6 +5250,7 @@
             const data = collectOidcData();
             await Utils.api('/api/settings/oidc', { method: 'PUT', body: data });
             _oidcWasEnabled = data.enabled;
+            setSideOnOff('side-oidc', !!data.enabled);
             formOk(form, _('settings.oidc_saved'));
         } catch (error) {
             formFail(form, error.message || _('errors.server_error'));
@@ -5607,6 +5638,7 @@
     async function loadEmailSmtpConfig() {
         try {
             const config = await Utils.api('/api/settings/email/smtp');
+            renderEmailSide(config);
             if (!config.configured) {
                 _smtpWasConfigured = false;
                 return;
@@ -5621,8 +5653,325 @@
             set('email-smtp-from', config.from || '');
             set('email-smtp-alert', config.alert_email || '');
         } catch (err) {
+            renderEmailSide(null, err.message || _('errors.server_error'));
             formFail(document.getElementById('email-smtp-form'), err.message || _('errors.server_error'));
         }
     }
-    
+
+    // ==================== Side column ====================
+    // Each tab has a side column with its contents and what is in use now.
+    // On screens of 1200 px and wider the contents move into it; below that
+    // they stay above the forms, because the side column follows the main one.
+
+    const SIDE_MIN_WIDTH = '(min-width: 1200px)';
+
+    function initSettingsSide() {
+        const panel = document.querySelector('.settings-tab-content:not([hidden])');
+        const nav = panel?.querySelector('.settings-toc');
+        const side = panel?.querySelector('.settings-side');
+        if (!nav || !side) return;
+
+        const anchor = document.createComment('settings-toc');
+        nav.before(anchor);
+        const mq = window.matchMedia(SIDE_MIN_WIDTH);
+        const place = () => {
+            if (mq.matches) {
+                if (nav.parentElement !== side) side.prepend(nav);
+            } else if (anchor.nextSibling !== nav) {
+                anchor.after(nav);
+            }
+            nav.classList.toggle('is-side', mq.matches);
+        };
+        place();
+        if (mq.addEventListener) mq.addEventListener('change', place);
+        else if (mq.addListener) mq.addListener(place);
+
+        // Mark the part of the page that is in view
+        if (!('IntersectionObserver' in window)) return;
+        const links = Array.from(nav.querySelectorAll('a[href^="#"]'));
+        const blocks = links.map((a) => {
+            const target = document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
+            if (!target) return null;
+            const block = target.matches('section, form, .danger-zone, .settings-subgroup')
+                ? target
+                : (target.closest('.settings-subgroup, form, section') || target);
+            return { link: a, block };
+        }).filter(Boolean);
+        const inView = new Map();
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach((e) => inView.set(e.target, e.isIntersecting));
+            const current = blocks.find((b) => inView.get(b.block));
+            blocks.forEach((b) => {
+                if (current && b.link === current.link) b.link.setAttribute('aria-current', 'true');
+                else b.link.removeAttribute('aria-current');
+            });
+        }, { rootMargin: '-64px 0px -55% 0px' });
+        blocks.forEach((b) => io.observe(b.block));
+    }
+
+    function setSideOnOff(id, on) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = `<span class="status ${on ? 'ok' : 'offline'}">${on ? _('settings.side.on') : _('settings.side.off')}</span>`;
+    }
+
+    // General: the addresses clients get now, and how a connection travels
+
+    let _clientConfig = null;
+
+    function endpointSourceLabel(source) {
+        if (source === 'env') return _('settings.side.src_page');
+        if (source === 'panel_host') return _('settings.side.src_overview');
+        return _('settings.side.src_auto');
+    }
+
+    async function loadClientConfigSummary() {
+        const state = document.getElementById('general-side-state');
+        const facts = document.getElementById('general-side-facts');
+        if (!state || !facts) return;
+        state.className = 'state';
+        state.textContent = _('common.loading');
+        state.hidden = false;
+        try {
+            const resp = await Utils.api('/api/dashboard/client-config');
+            const d = resp.data || resp;
+            _clientConfig = d;
+            const src = d.endpoint_sources || {};
+            const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || '-'; };
+            set('side-id-server', d.server_id);
+            set('side-id-source', endpointSourceLabel(src.host));
+            set('side-relay-server', d.relay_server);
+            set('side-relay-source', endpointSourceLabel(src.relay));
+            set('side-api-url', d.api_url);
+            set('side-api-source', endpointSourceLabel(src.api));
+            const local = document.getElementById('general-side-local');
+            if (local) local.hidden = !d.phone_unreachable_host;
+            facts.hidden = false;
+            state.hidden = true;
+        } catch (err) {
+            facts.hidden = true;
+            state.className = 'state is-error';
+            state.innerHTML = `${Utils.escapeHtml(err.message || _('errors.server_error'))}
+                <button type="button" class="btn btn-sm" id="general-side-retry">${_('actions.retry')}</button>`;
+            document.getElementById('general-side-retry')?.addEventListener('click', loadClientConfigSummary);
+        }
+        renderConnectionDiagram();
+    }
+
+    /** "host:port", "[v6]:port" or a URL to { host, port } */
+    function splitHostPort(value, fallbackPort) {
+        const v = String(value || '').trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/\/.*$/, '');
+        if (!v) return { host: '', port: fallbackPort };
+        const v6 = v.match(/^\[([^\]]+)\](?::(\d+))?$/);
+        if (v6) return { host: v6[1], port: v6[2] ? Number(v6[2]) : fallbackPort };
+        const parts = v.split(':');
+        if (parts.length === 2 && /^\d+$/.test(parts[1])) return { host: parts[0], port: Number(parts[1]) };
+        return { host: v, port: fallbackPort };
+    }
+
+    /** The diagram under Connection strategy: the addresses typed above (or the ones clients get now) and the chosen strategy. */
+    function renderConnectionDiagram() {
+        const el = document.getElementById('connection-diagram');
+        if (!el || !window.UiDiagram) return;
+        const typedId = document.getElementById('public-server-id')?.value.trim() || '';
+        const typedRelay = document.getElementById('public-relay-server')?.value.trim() || '';
+        const id = splitHostPort(typedId || _clientConfig?.server_id, 21116);
+        const relay = splitHostPort(typedRelay || typedId || _clientConfig?.relay_server, 21117);
+        const relayOnly = document.querySelector('input[name="connection-mode"]:checked')?.value === 'relay_only';
+        const opts = {
+            idServer: id.host || '?',
+            relay: relay.host || id.host || '?',
+            idPort: id.port,
+            relayPort: relay.port,
+            mode: relayOnly ? 'relay-only' : 'direct-first',
+        };
+        const key = JSON.stringify(opts);
+        if (el.dataset.drawn === key) return;
+        el.dataset.drawn = key;
+        UiDiagram.connection(el, opts);
+    }
+
+    function initConnectionDiagram() {
+        if (!document.getElementById('connection-diagram')) return;
+        const redraw = Utils.debounce ? Utils.debounce(renderConnectionDiagram, 250) : renderConnectionDiagram;
+        document.querySelectorAll('input[name="connection-mode"]').forEach((r) => r.addEventListener('change', renderConnectionDiagram));
+        ['public-server-id', 'public-relay-server'].forEach((id) => {
+            document.getElementById(id)?.addEventListener('input', redraw);
+        });
+        renderConnectionDiagram();
+        loadClientConfigSummary();
+    }
+
+    // Appearance: a small sample of the console in the chosen theme
+
+    function hexToRgb(hex) {
+        const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+        if (!m) return null;
+        const n = parseInt(m[1], 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+
+    function luminance(hex) {
+        const rgb = hexToRgb(hex);
+        if (!rgb) return null;
+        const [r, g, b] = rgb.map((c) => {
+            const v = c / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    /** Black or white, whichever reads better on the colour */
+    function textOn(hex) {
+        const l = luminance(hex);
+        if (l === null) return '';
+        return (l + 0.05) / 0.05 >= 1.05 / (l + 0.05) ? '#000000' : '#ffffff';
+    }
+
+    function previewPalette(mode) {
+        if (mode !== 'custom') return currentLookPalette(mode);
+        const base = currentLookPalette('light');
+        const out = { ...base };
+        document.querySelectorAll('.color-hex[data-color]').forEach((input) => {
+            if (hexToRgb(input.value)) out[input.dataset.color] = input.value.trim();
+        });
+        return out;
+    }
+
+    let _previewLogoUrl = '';
+
+    function renderThemePreview() {
+        const box = document.getElementById('theme-preview');
+        if (!box) return;
+        const mode = document.querySelector('input[name="theme-mode"]:checked')?.value || 'system';
+        const p = previewPalette(mode);
+        const vars = {
+            '--pv-bg': p.bgPrimary,
+            '--pv-bar': p.bgSecondary,
+            '--pv-text': p.textPrimary,
+            '--pv-muted': p.textSecondary,
+            '--pv-accent': p.accentBlue,
+            '--pv-on-accent': textOn(p.accentBlue),
+            '--pv-ok': p.accentGreen,
+            '--pv-rule': p.borderSecondary,
+        };
+        Object.entries(vars).forEach(([k, v]) => {
+            if (v) box.style.setProperty(k, v);
+            else box.style.removeProperty(k);
+        });
+
+        // Logo: an image when one is chosen (a picked file shows before it is uploaded)
+        const logo = document.getElementById('theme-preview-logo');
+        if (logo) {
+            const type = document.querySelector('input[name="logo-type"]:checked')?.value;
+            const file = document.getElementById('logo-image-file')?.files?.[0];
+            if (_previewLogoUrl) { URL.revokeObjectURL(_previewLogoUrl); _previewLogoUrl = ''; }
+            let src = '';
+            if (type === 'image') {
+                if (file && file.type.startsWith('image/')) src = _previewLogoUrl = URL.createObjectURL(file);
+                else src = document.getElementById('logo-image-url')?.value.trim() || '';
+            }
+            if (src && /^(\/|https?:|blob:)/i.test(src)) {
+                if (logo.getAttribute('src') !== src) logo.src = src;
+                logo.hidden = false;
+            } else {
+                logo.hidden = true;
+                logo.removeAttribute('src');
+            }
+        }
+
+        const name = document.getElementById('brand-name')?.value.trim() || 'BetterDesk';
+        const nameEl = document.getElementById('theme-preview-name');
+        if (nameEl) nameEl.textContent = name;
+        const descEl = document.getElementById('theme-preview-desc');
+        if (descEl) {
+            descEl.textContent = document.getElementById('brand-description')?.value.trim() || '';
+            descEl.hidden = !descEl.textContent;
+        }
+        const heading = document.getElementById('font-heading-value')?.value;
+        const body = document.getElementById('font-body-value')?.value;
+        box.style.fontFamily = body ? `"${body.replace(/"/g, '')}", var(--font)` : '';
+        if (nameEl) nameEl.style.fontFamily = heading ? `"${heading.replace(/"/g, '')}", var(--font)` : '';
+
+        const themeNames = { system: _('theme.auto'), light: _('theme.light'), dark: _('theme.dark'), custom: _('theme.custom') };
+        const caption = document.getElementById('theme-preview-caption');
+        if (caption) {
+            caption.textContent = _('settings.side.preview_caption')
+                .replace('{theme}', themeNames[mode] || mode)
+                .replace('{accent}', p.accentBlue || '-');
+        }
+    }
+
+    function initThemePreview() {
+        const box = document.getElementById('theme-preview');
+        if (!box) return;
+        const form = brandingForm();
+        form?.addEventListener('input', renderThemePreview);
+        form?.addEventListener('change', renderThemePreview);
+        // "Start from light/dark" fill the colour fields without an input event
+        document.querySelectorAll('[data-palette-start]').forEach((btn) => {
+            btn.addEventListener('click', () => setTimeout(renderThemePreview));
+        });
+        window.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', renderThemePreview);
+        renderThemePreview();
+    }
+
+    // Backup: last run, next run, where backups go
+
+    function renderBackupSide(schedule, st) {
+        const last = document.getElementById('side-backup-last');
+        const next = document.getElementById('side-backup-next');
+        const dest = document.getElementById('side-backup-dest');
+        const error = document.getElementById('side-backup-error');
+        if (!last || !next || !dest) return;
+        last.textContent = st?.lastSuccessAt ? Utils.formatDate(st.lastSuccessAt) : _('settings.side.backup_none');
+        if (!schedule) {
+            next.textContent = '-';
+        } else if (!schedule.enabled) {
+            next.textContent = _('settings.side.backup_off');
+        } else {
+            const lastAttempt = Date.parse(st?.lastAttemptAt || '');
+            const due = Number.isFinite(lastAttempt)
+                ? lastAttempt + (Number(schedule.intervalHours) || 24) * 3600 * 1000
+                : Date.now();
+            // The server checks once a minute whether a backup is due
+            next.textContent = due <= Date.now() + 60 * 1000
+                ? _('settings.side.backup_soon')
+                : Utils.formatDate(new Date(due));
+        }
+        const isPath = schedule?.destinationType === 'path' && schedule.destinationPath;
+        dest.textContent = isPath ? schedule.destinationPath : _('backup.schedule_destination_local');
+        dest.classList.toggle('mono', !!isPath);
+        if (error) {
+            error.hidden = !st?.lastError;
+            error.textContent = st?.lastError ? _('settings.side.backup_failed').replace('{error}', st.lastError) : '';
+        }
+    }
+
+    // Email: whether the console can send mail
+
+    function renderEmailSide(config, errorMessage) {
+        const state = document.getElementById('side-email-state');
+        const facts = document.getElementById('side-email-facts');
+        if (!state || !facts) return;
+        if (errorMessage) {
+            state.className = 'state is-error';
+            state.textContent = errorMessage;
+            facts.hidden = true;
+            return;
+        }
+        state.className = '';
+        if (!config?.configured) {
+            state.innerHTML = `<span class="status offline">${_('settings.side.email_off')}</span>`;
+            facts.hidden = true;
+            return;
+        }
+        state.innerHTML = `<span class="status ok">${_('settings.side.email_on')}</span>`;
+        const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || '-'; };
+        set('side-email-server', config.host ? `${config.host}:${config.port || 587}` : '');
+        set('side-email-from', config.from);
+        set('side-email-alert', config.alert_email);
+        facts.hidden = false;
+    }
+
 })();

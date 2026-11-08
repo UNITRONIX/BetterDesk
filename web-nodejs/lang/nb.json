@@ -1125,6 +1125,31 @@
         "advanced_tab": {
             "note": "Velg en fil for å se og redigere den. Hver lagring tar vare på en kopi av forrige versjon.",
             "editor_label": "Filinnhold"
+        },
+        "side": {
+            "general_title": "Hva klientene får nå",
+            "general_note": "Adressene RustDesk-klienter får fra denne serveren nå: i klientoppsettet, QR-koder og installasjonskommandoer.",
+            "src_page": "Angitt på denne siden",
+            "src_overview": "Angitt i klientoppsettet på oversikten",
+            "src_auto": "Funnet automatisk",
+            "local_warning": "Disse adressene virker bare på denne datamaskinen. Andre datamaskiner og telefoner når dem ikke. Skriv inn serverens adresse under Offentlige klient-endepunkter.",
+            "preview_title": "Forhåndsvisning",
+            "preview_note": "Konsollen med valgene på denne siden. Lagre for å ta dem i bruk.",
+            "preview_device": "Resepsjons-PC",
+            "preview_caption": "Tema: {theme}. Aksentfarge: {accent}.",
+            "state_title": "Nåværende status",
+            "your_2fa": "Din tofaktorpålogging",
+            "on": "På",
+            "off": "Av",
+            "next_backup": "Neste planlagte sikkerhetskopi",
+            "backup_kept": "Lagres i",
+            "backup_none": "Ingen ennå",
+            "backup_off": "Planlagte sikkerhetskopier er slått av",
+            "backup_soon": "Innen ett minutt",
+            "backup_failed": "Den siste planlagte sikkerhetskopien mislyktes: {error}",
+            "email_on": "Satt opp",
+            "email_off": "Ikke satt opp. Konsollen sender ingen e-post.",
+            "clock_title": "Serverklokke"
         }
     },
     "audit": {

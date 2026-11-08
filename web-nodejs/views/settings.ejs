@@ -34,6 +34,10 @@
                     ${extra}
                     <button type="submit" class="btn btn-primary" data-save-button${id ? ` id="${id}"` : ''}>${label}</button>
                 </div>`;
+    // Each tab: the forms in the main column; beside them a sticky side column
+    // with the contents (settings.js moves it there on wide screens) and what
+    // is in use now.
+    const tocTitle = `<p class="settings-toc-title">${_('settings.page.on_this_page')}</p>`;
     const userName = (typeof user !== 'undefined' && user && user.username) ? user.username : '';
 
     // Appearance helpers: background type radios, colour fields, image uploads
@@ -76,8 +80,8 @@
 <%- include('layouts/main', {
     title: tabTitles[tab] + ' - ' + _('nav.settings'),
     uiReworked: true,
-    pageStyles: ['ui/settings'],
-    pageScripts: ['settings'],
+    pageStyles: ['ui/chart', 'ui/settings'],
+    pageScripts: ['ui-diagram', 'settings'],
     currentPage: 'settings',
     currentTab: tab,
     breadcrumb: [{ label: _('nav.settings'), href: '/settings' }, { label: tabTitles[tab] }],
@@ -107,7 +111,10 @@
     <!-- ===================== General ===================== -->
     <div class="settings-tab-content" ${panelAttrs('general')}>
         ${canServerConfig ? `
-        <nav aria-label="${_('settings.page.on_this_page')}">
+        <div class="page-cols settings-cols">
+        <div class="page-main">
+        <nav class="settings-toc" aria-label="${_('settings.page.on_this_page')}">
+            ${tocTitle}
             <ul class="toc">
                 <li><a href="#public-endpoints">${_('settings.public_endpoints_title')}</a></li>
                 <li><a href="#connection-mode-section">${_('settings.connection_mode_title')}</a></li>
@@ -162,6 +169,8 @@
                         <span class="choice-desc">${_('settings.ui.connection_relay_hint')}</span>
                     </label></li>
                 </ul></div>
+                <h3 id="connection-diagram-title">${_('diagram.how_title')}</h3>
+                <div class="settings-diagram" id="connection-diagram"></div>
                 <p class="form-hint" id="connection-mode-info">${_('settings.connection_mode_network_hint')}</p>
                 <details class="disclosure connection-mode-advanced">
                     <summary>${_('settings.connection_mode_advanced')}</summary>
@@ -192,7 +201,6 @@
                         </label>
                     </div>
                 </details>
-                <p class="form-hint" id="connection-mode-runtime" hidden></p>
                 <p class="form-hint" id="connection-mode-source"></p>
                 <p class="field-effect is-restart">${_('settings.general.conn_effect')}</p>
                 ${saveBar(_('settings.general.conn_save'), '', 'connection-mode-save')}
@@ -247,7 +255,7 @@
                 <dt>${_('settings.general.mesh_status')}</dt><dd id="mesh-status-enabled">-</dd>
                 <dt>${_('mesh.agents_online')}</dt><dd id="mesh-agents-online">-</dd>
                 <dt>${_('mesh.server_id')}</dt>
-                <dd><span class="value-field"><code id="mesh-server-id">-</code><button type="button" id="mesh-copy-server-id">${_('actions.copy')}</button></span></dd>
+                <dd><span class="value-field"><code id="mesh-server-id">-</code><button type="button" id="mesh-copy-server-id"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></span></dd>
             </dl>
             <p class="notice warning hidden" id="mesh-cert-banner"></p>
             <div class="form-column">
@@ -256,7 +264,7 @@
                     <input type="text" id="mesh-msh-name" class="form-input" value="BetterDesk Mesh">
                     <p class="form-hint">${_('mesh.onboarding_body')}</p>
                 </div>
-                <p><a class="btn" id="mesh-download-msh" href="/api/mesh/download.msh" download="meshagents.msh">${_('mesh.download_msh')}</a></p>
+                <p><a class="btn" id="mesh-download-msh" href="/api/mesh/download.msh" download="meshagents.msh"><span class="material-icons" aria-hidden="true">download</span>${_('mesh.download_msh')}</a></p>
             </div>
             <ol class="steps">
                 <li>${_('mesh.onboarding_step_msh')}</li>
@@ -275,7 +283,7 @@
                     <label class="form-label" for="mesh-group-name">${_('mesh.group_name_placeholder')}</label>
                     <input type="text" id="mesh-group-name" class="form-input">
                 </div>
-                <p><button type="button" class="btn" id="mesh-group-add">${_('mesh.group_add')}</button></p>
+                <p><button type="button" class="btn" id="mesh-group-add"><span class="material-icons" aria-hidden="true">add</span>${_('mesh.group_add')}</button></p>
                 <p class="field-effect">${_('settings.general.mesh_groups_effect')}</p>
                 ${saveBar(_('mesh.groups_save'), '', 'mesh-groups-save')}
             </form>
@@ -284,7 +292,6 @@
             <p class="section-note">${_('mesh.recordings_desc')}</p>
             <div id="mesh-recordings-table" class="mesh-recordings-table"><p class="state">${_('common.loading')}</p></div>
         </section>
-        ` : ''}
 
         <section class="section" id="server-info" aria-labelledby="server-info-title">
             <h2 id="server-info-title">${_('settings.server_info')}</h2>
@@ -295,14 +302,48 @@
                 <dt>${_('settings.uptime')}</dt><dd id="uptime">-</dd>
             </dl>
         </section>
-
         ${canAudit ? `<p class="settings-audit-link">${_('settings.general.audit_moved')} <a href="/security-audit">${_('settings.general.audit_link')}</a></p>` : ''}
+        </div>
+
+        <aside class="page-side is-sticky settings-side" aria-labelledby="general-side-title">
+            <section class="section settings-summary" aria-labelledby="general-side-title" data-search-skip>
+                <h2 id="general-side-title">${_('settings.side.general_title')}</h2>
+                <p class="section-note">${_('settings.side.general_note')}</p>
+                <p class="state" id="general-side-state">${_('common.loading')}</p>
+                <dl class="facts" id="general-side-facts" hidden>
+                    <dt>${_('dashboard.config_server_id')}</dt>
+                    <dd><span class="settings-side-value"><span class="mono" id="side-id-server">-</span><span class="form-hint" id="side-id-source"></span></span></dd>
+                    <dt>${_('dashboard.config_relay_server')}</dt>
+                    <dd><span class="settings-side-value"><span class="mono" id="side-relay-server">-</span><span class="form-hint" id="side-relay-source"></span></span></dd>
+                    <dt>${_('dashboard.config_api_server')}</dt>
+                    <dd><span class="settings-side-value"><span class="mono" id="side-api-url">-</span><span class="form-hint" id="side-api-source"></span></span></dd>
+                </dl>
+                <p class="notice warning" id="general-side-local" hidden>${_('settings.side.local_warning')}</p>
+                <p id="connection-mode-runtime" hidden></p>
+            </section>
+        </aside>
+        </div>
+        ` : `
+        <section class="section" id="server-info" aria-labelledby="server-info-title">
+            <h2 id="server-info-title">${_('settings.server_info')}</h2>
+            <dl class="facts">
+                <dt>${_('settings.version')}</dt><dd>v${appVersion}</dd>
+                <dt>${_('settings.go_server_version')}</dt><dd id="go-server-version">-</dd>
+                <dt>${_('settings.database')}</dt><dd id="db-path" class="mono-value">-</dd>
+                <dt>${_('settings.uptime')}</dt><dd id="uptime">-</dd>
+            </dl>
+        </section>
+        ${canAudit ? `<p class="settings-audit-link">${_('settings.general.audit_moved')} <a href="/security-audit">${_('settings.general.audit_link')}</a></p>` : ''}
+        `}
     </div>
 
     <!-- ===================== Appearance ===================== -->
     <div class="settings-tab-content" ${panelAttrs('branding')} data-can-branding-edit="${canBrandingEdit ? '1' : '0'}">
+        <div class="page-cols settings-cols">
+        <div class="page-main">
         ${!canBrandingEdit ? `<p class="notice">${_('settings.appearance.read_only')}</p>` : ''}
-        <nav aria-label="${_('settings.page.on_this_page')}">
+        <nav class="settings-toc" aria-label="${_('settings.page.on_this_page')}">
+            ${tocTitle}
             <ul class="toc" id="branding-toc">
                 <li><a href="#branding-theme">${_('theme.title')}</a></li>
                 <li data-toc-custom hidden><a href="#branding-custom-colors">${_('settings.appearance.custom_colors')}</a></li>
@@ -450,7 +491,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="logo-image-url">${_('branding.logo_image_url')}</label>
-                        <input type="text" id="logo-image-url" class="form-input mono-input" placeholder="https://example.com/logo.png">
+                        <input type="text" id="logo-image-url" class="form-input" placeholder="https://example.com/logo.png">
                         <p class="form-hint">${_('branding.logo_image_url_hint')}</p>
                     </div>
                 </div>
@@ -529,7 +570,7 @@
                     ${uploadField('bg-image-file', 'bg-image-url', 'bg-upload-status', _('branding.bg_image_upload'))}
                     <div class="form-group">
                         <label class="form-label" for="bg-image-url">${_('branding.bg_image_url')}</label>
-                        <input type="text" id="bg-image-url" class="form-input mono-input" placeholder="https://example.com/wallpaper.jpg">
+                        <input type="text" id="bg-image-url" class="form-input" placeholder="https://example.com/wallpaper.jpg">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="bg-size">${_('branding.bg_size')}</label>
@@ -591,7 +632,7 @@
                     <p class="form-hint">${_('branding.login_slides_desc')}</p>
                     <ol id="login-slides-list" class="login-slides-list"></ol>
                     <div class="settings-inline-controls">
-                        <button type="button" class="btn" id="login-slides-add">${_('branding.login_slides_add')}</button>
+                        <button type="button" class="btn" id="login-slides-add"><span class="material-icons" aria-hidden="true">add</span>${_('branding.login_slides_add')}</button>
                         <button type="button" class="btn" id="login-slides-restore">${_('branding.login_slides_restore')}</button>
                     </div>
                     <p class="form-hint" id="login-slides-max-hint" hidden>${_('branding.login_slides_max')}</p>
@@ -612,7 +653,7 @@
                         ${uploadField('login-bg-image-file', 'login-bg-image-url', 'login-bg-upload-status', _('branding.bg_image_upload'), 'login-bg-file-name')}
                         <div class="form-group">
                             <label class="form-label" for="login-bg-image-url">${_('branding.bg_image_url')}</label>
-                            <input type="text" id="login-bg-image-url" class="form-input mono-input" placeholder="https://example.com/login-bg.jpg">
+                            <input type="text" id="login-bg-image-url" class="form-input" placeholder="https://example.com/login-bg.jpg">
                         </div>
                     </div>
                     <div class="form-group">
@@ -639,7 +680,7 @@
                     ${uploadField('agent-bg-image-file', 'agent-bg-image-url', 'agent-bg-upload-status', _('branding.bg_image_upload'), 'agent-bg-file-name')}
                     <div class="form-group">
                         <label class="form-label" for="agent-bg-image-url">${_('branding.bg_image_url')}</label>
-                        <input type="text" id="agent-bg-image-url" class="form-input mono-input" placeholder="https://example.com/agent-bg.jpg">
+                        <input type="text" id="agent-bg-image-url" class="form-input" placeholder="https://example.com/agent-bg.jpg">
                     </div>
                 </div>
                 <label class="check-field"><input type="checkbox" id="agent-show-powered" checked>
@@ -664,7 +705,7 @@
                     ${uploadField('rdclient-bg-image-file', 'rdclient-bg-image-url', 'rdclient-bg-upload-status', _('branding.bg_image_upload'), 'rdclient-bg-file-name')}
                     <div class="form-group">
                         <label class="form-label" for="rdclient-bg-image-url">${_('branding.bg_image_url')}</label>
-                        <input type="text" id="rdclient-bg-image-url" class="form-input mono-input" placeholder="https://example.com/rdclient-bg.jpg">
+                        <input type="text" id="rdclient-bg-image-url" class="form-input" placeholder="https://example.com/rdclient-bg.jpg">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="rdclient-bg-size">${_('branding.bg_size')}</label>
@@ -720,11 +761,11 @@
                     <span class="menu-anchor">
                         <button type="button" class="btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="branding-profile-menu">${_('settings.appearance.profile_more')}<span class="material-icons btn-caret" aria-hidden="true">expand_more</span></button>
                         <span class="menu" id="branding-profile-menu" role="menu">
-                            <button type="button" class="menu-item" role="menuitem" id="branding-profile-new-btn">${_('branding.profile_new')}</button>
+                            <button type="button" class="menu-item" role="menuitem" id="branding-profile-new-btn"><span class="material-icons" aria-hidden="true">add</span>${_('branding.profile_new')}</button>
                             <button type="button" class="menu-item" role="menuitem" id="branding-profile-save-btn">${_('branding.profile_save')}</button>
-                            <button type="button" class="menu-item" role="menuitem" id="branding-profile-duplicate-btn">${_('branding.profile_duplicate')}</button>
+                            <button type="button" class="menu-item" role="menuitem" id="branding-profile-duplicate-btn"><span class="material-icons" aria-hidden="true">content_copy</span>${_('branding.profile_duplicate')}</button>
                             <span class="menu-divider"></span>
-                            <button type="button" class="menu-item danger" role="menuitem" id="branding-profile-delete-btn">${_('branding.profile_delete')}</button>
+                            <button type="button" class="menu-item danger" role="menuitem" id="branding-profile-delete-btn"><span class="material-icons" aria-hidden="true">delete</span>${_('branding.profile_delete')}</button>
                         </span>
                     </span>
                 </div>
@@ -736,7 +777,7 @@
         <section class="section form-column" id="branding-import-export" aria-labelledby="branding-ie-title">
             <h2 id="branding-ie-title">${_('branding.import_export_title')}</h2>
             <p class="section-note">${_('branding.import_export_desc')}</p>
-            <p><button type="button" class="btn" id="branding-export-btn">${_('branding.export_theme')}</button></p>
+            <p><button type="button" class="btn" id="branding-export-btn"><span class="material-icons" aria-hidden="true">download</span><span class="btn-label">${_('branding.export_theme')}</span></button></p>
             <div class="form-group">
                 <label class="form-label" for="branding-import-input">${_('branding.import_theme')}</label>
                 <input type="file" id="branding-import-input" accept=".json">
@@ -758,12 +799,37 @@
             </ul>
         </section>
         ` : ''}
+        </div>
+
+        <aside class="page-side is-sticky settings-side" aria-labelledby="branding-preview-title">
+            <section class="section settings-summary" aria-labelledby="branding-preview-title" data-search-skip>
+                <h2 id="branding-preview-title">${_('settings.side.preview_title')}</h2>
+                <p class="section-note">${_('settings.side.preview_note')}</p>
+                <div class="theme-preview" id="theme-preview" aria-hidden="true">
+                    <div class="theme-preview-bar"><img class="theme-preview-logo" id="theme-preview-logo" alt="" hidden><span class="theme-preview-name" id="theme-preview-name">BetterDesk</span></div>
+                    <div class="theme-preview-body">
+                        <span class="theme-preview-heading">${_('nav.devices')}</span>
+                        <span class="theme-preview-row">
+                            <span class="theme-preview-device">${_('settings.side.preview_device')}</span>
+                            <span class="theme-preview-status">${_('status.online')}</span>
+                        </span>
+                        <span class="theme-preview-muted" id="theme-preview-desc"></span>
+                        <span class="theme-preview-btn">${_('actions.connect')}</span>
+                    </div>
+                </div>
+                <p class="form-hint" id="theme-preview-caption"></p>
+            </section>
+        </aside>
+        </div>
     </div>
 
     <!-- ===================== Sign-in ===================== -->
     <div class="settings-tab-content" ${panelAttrs('auth')}>
+        <div class="page-cols settings-cols">
+        <div class="page-main">
         ${canServerConfig ? `
-        <nav aria-label="${_('settings.page.on_this_page')}">
+        <nav class="settings-toc" aria-label="${_('settings.page.on_this_page')}">
+            ${tocTitle}
             <ul class="toc">
                 <li><a href="#account-password">${_('settings.change_password')}</a></li>
                 <li><a href="#auth-panel-totp">${_('settings.totp_title')}</a></li>
@@ -925,15 +991,15 @@
                     <h4>${_('settings.ldap_user_attrs')}</h4>
                     <div class="form-group">
                         <label class="form-label" for="ldap-user-attr-id">${_('settings.ldap_attr_id')}</label>
-                        <input type="text" id="ldap-user-attr-id" class="form-input mono-input is-medium" placeholder="sAMAccountName">
+                        <input type="text" id="ldap-user-attr-id" class="form-input is-medium" placeholder="sAMAccountName">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="ldap-user-attr-email">${_('settings.ldap_attr_email')}</label>
-                        <input type="text" id="ldap-user-attr-email" class="form-input mono-input is-medium" placeholder="mail">
+                        <input type="text" id="ldap-user-attr-email" class="form-input is-medium" placeholder="mail">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="ldap-user-attr-name">${_('settings.ldap_attr_name')}</label>
-                        <input type="text" id="ldap-user-attr-name" class="form-input mono-input is-medium" placeholder="displayName">
+                        <input type="text" id="ldap-user-attr-name" class="form-input is-medium" placeholder="displayName">
                     </div>
 
                     <h4>${_('settings.ldap_group_mapping')}</h4>
@@ -948,7 +1014,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="ldap-group-attr-name">${_('settings.ldap_group_attr_name')}</label>
-                        <input type="text" id="ldap-group-attr-name" class="form-input mono-input is-medium" placeholder="cn">
+                        <input type="text" id="ldap-group-attr-name" class="form-input is-medium" placeholder="cn">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="ldap-default-role">${_('settings.ldap_default_role')}</label>
@@ -1015,7 +1081,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="oidc-scopes">${_('settings.oidc_scopes')}</label>
-                        <input type="text" id="oidc-scopes" class="form-input mono-input" placeholder="openid profile email">
+                        <input type="text" id="oidc-scopes" class="form-input" placeholder="openid profile email">
                     </div>
                     <label class="check-field"><input type="checkbox" id="oidc-use-pkce"><span class="check-label">${_('settings.oidc_use_pkce')}</span></label>
                     <label class="check-field"><input type="checkbox" id="oidc-auto-discovery" checked><span class="check-label">${_('settings.oidc_auto_discovery')}</span></label>
@@ -1043,19 +1109,19 @@
                     <h4>${_('settings.oidc_claim_mapping')}</h4>
                     <div class="form-group">
                         <label class="form-label" for="oidc-claim-username">${_('settings.oidc_claim_username')}</label>
-                        <input type="text" id="oidc-claim-username" class="form-input mono-input is-medium" placeholder="preferred_username">
+                        <input type="text" id="oidc-claim-username" class="form-input is-medium" placeholder="preferred_username">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="oidc-claim-email">${_('settings.oidc_claim_email')}</label>
-                        <input type="text" id="oidc-claim-email" class="form-input mono-input is-medium" placeholder="email">
+                        <input type="text" id="oidc-claim-email" class="form-input is-medium" placeholder="email">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="oidc-claim-name">${_('settings.oidc_claim_name')}</label>
-                        <input type="text" id="oidc-claim-name" class="form-input mono-input is-medium" placeholder="name">
+                        <input type="text" id="oidc-claim-name" class="form-input is-medium" placeholder="name">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="oidc-claim-groups">${_('settings.oidc_claim_groups')}</label>
-                        <input type="text" id="oidc-claim-groups" class="form-input mono-input is-medium" placeholder="groups">
+                        <input type="text" id="oidc-claim-groups" class="form-input is-medium" placeholder="groups">
                     </div>
 
                     <h4>${_('settings.oidc_role_mapping')}</h4>
@@ -1079,12 +1145,29 @@
                 ${saveBar(_('settings.oidc_save'), `<button type="button" class="btn" id="oidc-test-btn">${_('settings.oidc_test_discovery')}</button>`)}
             </form>
         </section>` : ''}
+        </div>
+
+        <aside class="page-side is-sticky settings-side" aria-labelledby="auth-side-title">
+            <section class="section settings-summary" aria-labelledby="auth-side-title" data-search-skip>
+                <h2 id="auth-side-title">${_('settings.side.state_title')}</h2>
+                <dl class="facts">
+                    <dt>${_('settings.side.your_2fa')}</dt><dd id="side-totp">-</dd>
+                    ${canServerConfig ? `
+                    <dt>${_('settings.ldap_title')}</dt><dd id="side-ldap">-</dd>
+                    <dt>${_('settings.oidc_title')}</dt><dd id="side-oidc">-</dd>` : ''}
+                </dl>
+            </section>
+        </aside>
+        </div>
     </div>
 
     ${canServerConfig ? `
     <!-- ===================== Backup ===================== -->
     <div class="settings-tab-content" ${panelAttrs('backup')}>
-        <nav aria-label="${_('settings.page.on_this_page')}">
+        <div class="page-cols settings-cols">
+        <div class="page-main">
+        <nav class="settings-toc" aria-label="${_('settings.page.on_this_page')}">
+            ${tocTitle}
             <ul class="toc">
                 <li><a href="#backup-create">${_('settings.backup_tab.create_title')}</a></li>
                 <li><a href="#scheduled-backup-panel">${_('backup.schedule_title')}</a></li>
@@ -1110,7 +1193,7 @@
             </dl>
             <p class="notice warning">${_('backup.security_warning')}</p>
             <div class="settings-inline-controls">
-                <button type="button" class="btn btn-primary" id="backup-download-btn">${_('backup.download')}</button>
+                <button type="button" class="btn btn-primary" id="backup-download-btn"><span class="material-icons" aria-hidden="true">download</span><span class="btn-label">${_('backup.download')}</span></button>
                 <span class="form-status" id="backup-download-status" aria-live="polite"></span>
             </div>
         </section>
@@ -1226,27 +1309,36 @@
                 <div class="restore-result" id="restore-result" style="display:none;"></div>
             </div>
         </section>
+        </div>
+
+        <aside class="page-side is-sticky settings-side" aria-labelledby="backup-side-title">
+            <section class="section settings-summary" aria-labelledby="backup-side-title" data-search-skip>
+                <h2 id="backup-side-title">${_('settings.side.state_title')}</h2>
+                <dl class="facts">
+                    <dt>${_('backup.schedule_last_run')}</dt><dd id="side-backup-last">-</dd>
+                    <dt>${_('settings.side.next_backup')}</dt><dd id="side-backup-next">-</dd>
+                    <dt>${_('settings.side.backup_kept')}</dt><dd id="side-backup-dest">-</dd>
+                </dl>
+                <p class="state is-error" id="side-backup-error" hidden></p>
+            </section>
+        </aside>
+        </div>
     </div>
 
     <!-- ===================== Updates ===================== -->
     <div class="settings-tab-content" ${panelAttrs('updates')}>
+        <div class="page-cols settings-cols">
+        <div class="page-main">
         <section class="section" aria-labelledby="update-status-headline">
             <h2 id="update-status-headline">${_('updates.title')}</h2>
             <p class="section-note" id="update-status-desc">${_('updates.desc')}</p>
-            <dl class="facts update-version-info">
-                <dt>${_('updates.current_version')}</dt><dd id="update-local-version">v${appVersion}</dd>
-                <dt>${_('updates.latest_version')}</dt><dd id="update-remote-version"><span class="text-muted">-</span></dd>
-                <div class="facts-row" id="update-status-row" style="display:none;">
-                    <dt>${_('updates.status')}</dt><dd id="update-status-badge"></dd>
-                </div>
-            </dl>
             <div class="settings-inline-controls">
-                <button class="btn" id="update-check-btn" type="button">${_('updates.check_now')}</button>
+                <button class="btn" id="update-check-btn" type="button"><span class="material-icons" aria-hidden="true">refresh</span><span class="btn-label">${_('updates.check_now')}</span></button>
             </div>
             <div class="update-alerts" id="update-alerts">
                 <div class="update-docker-info" id="update-docker-info" style="display:none;">
                     <p class="notice"><strong>${_('updates.docker_title')}.</strong> <span id="update-docker-desc">${_('updates.docker_desc')}</span></p>
-                    <div class="code-block-head"><span class="code-block-title">${_('settings.updates_tab.docker_commands')}</span><button type="button" class="btn btn-sm" data-copy-from="update-docker-commands">${_('actions.copy')}</button></div>
+                    <div class="code-block-head"><span class="code-block-title">${_('settings.updates_tab.docker_commands')}</span><button type="button" class="btn btn-sm" data-copy-from="update-docker-commands"><span class="material-icons" aria-hidden="true">content_copy</span><span class="btn-label">${_('actions.copy')}</span></button></div>
                     <pre class="code-block" id="update-docker-commands"></pre>
                     <p class="form-hint" id="update-docker-images"></p>
                 </div>
@@ -1288,7 +1380,6 @@
                     <option value="stable">${_('updates.channel_stable')}</option>
                     <option value="development">${_('updates.channel_development')}</option>
                 </select>
-                <p class="form-hint">${_('settings.updates_tab.channel_active')} <span id="update-channel-active-badge">-</span>, ${_('updates.channel_branch_label')} <span id="update-channel-branch" class="mono-value">-</span></p>
                 <p class="field-effect">${_('updates.channel_apply_hint')}</p>
                 <p id="update-channel-docker-hint" class="form-hint" style="display:none"></p>
             </div>
@@ -1317,10 +1408,29 @@
             <p class="section-note">${_('updates.option_advanced_desc')}</p>
             <p>${_('updates.auto_strategy_hint')}</p>
         </details>
+        </div>
+
+        <aside class="page-side is-sticky settings-side" aria-labelledby="updates-side-title">
+            <section class="section settings-summary" aria-labelledby="updates-side-title">
+                <h2 id="updates-side-title">${_('settings.side.state_title')}</h2>
+                <dl class="facts update-version-info">
+                    <dt>${_('updates.current_version')}</dt><dd id="update-local-version">v${appVersion}</dd>
+                    <dt>${_('updates.channel_title')}</dt>
+                    <dd><span class="settings-side-value"><span id="update-channel-active-badge">-</span><span class="form-hint">${_('updates.channel_branch_label')}: <span class="mono" id="update-channel-branch">-</span></span></span></dd>
+                    <dt>${_('updates.latest_version')}</dt><dd id="update-remote-version"><span class="text-muted">-</span></dd>
+                    <div class="facts-row" id="update-status-row" style="display:none;">
+                        <dt>${_('updates.status')}</dt><dd id="update-status-badge"></dd>
+                    </div>
+                </dl>
+            </section>
+        </aside>
+        </div>
     </div>
 
     <!-- ===================== Email ===================== -->
     <div class="settings-tab-content" ${panelAttrs('email')}>
+        <div class="page-cols settings-cols">
+        <div class="page-main">
         <section class="section" aria-labelledby="email-title">
             <h2 id="email-title">${_('settings.email.title')}</h2>
             <p class="section-note">${_('settings.email.desc')}</p>
@@ -1360,10 +1470,26 @@
                 ${saveBar(_('settings.email.smtp_save'), `<button type="button" class="btn" id="email-smtp-test-btn">${_('settings.email.smtp_test')}</button>`, 'email-smtp-save-btn')}
             </form>
         </section>
+        </div>
+
+        <aside class="page-side is-sticky settings-side" aria-labelledby="email-side-title">
+            <section class="section settings-summary" aria-labelledby="email-side-title" data-search-skip>
+                <h2 id="email-side-title">${_('settings.side.state_title')}</h2>
+                <p id="side-email-state">${_('common.loading')}</p>
+                <dl class="facts" id="side-email-facts" hidden>
+                    <dt>${_('settings.email.smtp_host')}</dt><dd class="mono" id="side-email-server">-</dd>
+                    <dt>${_('settings.email.smtp_from')}</dt><dd id="side-email-from">-</dd>
+                    <dt>${_('settings.email.alert_email')}</dt><dd id="side-email-alert">-</dd>
+                </dl>
+            </section>
+        </aside>
+        </div>
     </div>
 
     <!-- ===================== Time zones ===================== -->
     <div class="settings-tab-content" ${panelAttrs('time')}>
+        <div class="page-cols settings-cols">
+        <div class="page-main">
         <form id="time-clock-settings-form" class="settings-time-form" data-save-form novalidate>
             <section class="section form-column" aria-labelledby="time-zone-title">
                 <h2 id="time-zone-title">${_('settings.time.timezone_title')}</h2>
@@ -1378,7 +1504,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="time-billing-timezone-custom">${_('settings.time.custom_timezone')}</label>
-                    <input type="text" id="time-billing-timezone-custom" class="form-input is-medium mono-input" placeholder="Europe/Warsaw" maxlength="64">
+                    <input type="text" id="time-billing-timezone-custom" class="form-input is-medium" placeholder="Europe/Warsaw" maxlength="64">
                     <p class="form-hint">${_('settings.time.custom_timezone_hint')}</p>
                 </div>
                 <p class="field-effect" id="time-billing-month-hint">${_('settings.time.billing_month_hint')}</p>
@@ -1387,17 +1513,6 @@
             <section class="section form-column" aria-labelledby="time-ntp-title">
                 <h2 id="time-ntp-title">${_('settings.time.ntp_title')}</h2>
                 <p class="section-note">${_('settings.time.ntp_desc')}</p>
-                <p id="time-clock-detail" aria-live="polite"></p>
-                <dl class="facts settings-time-status-grid">
-                    <dt>${_('commercialization.clock.status_offset')}</dt><dd id="time-clock-offset">-</dd>
-                    <dt>${_('commercialization.clock.status_server')}</dt><dd id="time-clock-ntp-server">-</dd>
-                    <dt>${_('commercialization.clock.status_os')}</dt><dd id="time-clock-os-sync">-</dd>
-                    <dt>${_('commercialization.clock.status_error')}</dt><dd id="time-clock-last-error">-</dd>
-                </dl>
-                <div class="settings-inline-controls">
-                    <button type="button" class="btn" id="time-timesync-check-btn">${_('commercialization.clock.check_now')}</button>
-                    <span class="form-status" id="time-check-status" aria-live="polite"></span>
-                </div>
                 <div class="form-group">
                     <label class="form-label" for="time-clock-ntp-servers">${_('commercialization.clock.ntp_servers')}</label>
                     <textarea id="time-clock-ntp-servers" class="form-input form-textarea mono-input" rows="2" placeholder="pool.ntp.org,time.google.com"></textarea>
@@ -1417,6 +1532,25 @@
             </section>
             ${saveBar(_('settings.time.save'), '', 'time-save-clock-settings-btn')}
         </form>
+        </div>
+
+        <aside class="page-side is-sticky settings-side" aria-labelledby="time-side-title">
+            <section class="section settings-summary" aria-labelledby="time-side-title">
+                <h2 id="time-side-title">${_('settings.side.clock_title')}</h2>
+                <p id="time-clock-detail" aria-live="polite"></p>
+                <dl class="facts settings-time-status-grid">
+                    <dt>${_('commercialization.clock.status_offset')}</dt><dd id="time-clock-offset">-</dd>
+                    <dt>${_('commercialization.clock.status_server')}</dt><dd id="time-clock-ntp-server">-</dd>
+                    <dt>${_('commercialization.clock.status_os')}</dt><dd id="time-clock-os-sync">-</dd>
+                    <dt>${_('commercialization.clock.status_error')}</dt><dd id="time-clock-last-error">-</dd>
+                </dl>
+                <div class="settings-inline-controls">
+                    <button type="button" class="btn" id="time-timesync-check-btn"><span class="material-icons" aria-hidden="true">refresh</span><span class="btn-label">${_('commercialization.clock.check_now')}</span></button>
+                    <span class="form-status" id="time-check-status" aria-live="polite"></span>
+                </div>
+            </section>
+        </aside>
+        </div>
     </div>
 
     <!-- ===================== Advanced ===================== -->
@@ -1439,7 +1573,7 @@
                             <span class="form-hint" id="advanced-config-meta"></span>
                         </div>
                         <div class="settings-inline-controls">
-                            <button type="button" class="btn btn-sm" id="advanced-config-reload">${_('settings.advanced_reload')}</button>
+                            <button type="button" class="btn btn-sm" id="advanced-config-reload"><span class="material-icons" aria-hidden="true">refresh</span><span class="btn-label">${_('settings.advanced_reload')}</span></button>
                             <button type="button" class="btn btn-sm" id="advanced-config-restart" hidden>${_('settings.advanced_apply_restart')}</button>
                             <button type="button" class="btn btn-sm btn-primary" id="advanced-config-save">${_('settings.advanced_save')}</button>
                         </div>

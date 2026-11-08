@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "选择文件即可查看和编辑。每次保存都会保留上一版本的副本。",
             "editor_label": "文件内容"
+        },
+        "side": {
+            "general_title": "客户端当前获得的值",
+            "general_note": "RustDesk 客户端当前从本服务器获得的地址：用于客户端设置、二维码和安装命令。",
+            "src_page": "在本页设置",
+            "src_overview": "在概览的客户端设置中设置",
+            "src_auto": "自动检测",
+            "local_warning": "这些地址只在本机有效，其他电脑和手机无法访问。请在“公共客户端端点”中填写服务器地址。",
+            "preview_title": "预览",
+            "preview_note": "按本页选项显示的控制台。保存后生效。",
+            "preview_device": "前台电脑",
+            "preview_caption": "主题：{theme}。强调色：{accent}。",
+            "state_title": "当前状态",
+            "your_2fa": "你的双重验证登录",
+            "on": "已开启",
+            "off": "已关闭",
+            "next_backup": "下次计划备份",
+            "backup_kept": "保存到",
+            "backup_none": "暂无",
+            "backup_off": "计划备份已关闭",
+            "backup_soon": "一分钟内",
+            "backup_failed": "上次计划备份失败：{error}",
+            "email_on": "已设置",
+            "email_off": "未设置。控制台不会发送邮件。",
+            "clock_title": "服务器时钟"
         }
     },
     "audit": {

@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "ファイルを選択すると表示・編集できます。保存するたびに前のバージョンのコピーが残ります。",
             "editor_label": "ファイルの内容"
+        },
+        "side": {
+            "general_title": "クライアントに今渡している値",
+            "general_note": "RustDesk クライアントが今このサーバーから受け取るアドレスです。クライアント設定、QR コード、インストールコマンドで使われます。",
+            "src_page": "このページで設定",
+            "src_overview": "概要のクライアント設定で設定",
+            "src_auto": "自動で検出",
+            "local_warning": "これらのアドレスはこのコンピューターでしか使えません。ほかのコンピューターやスマートフォンからは届きません。「公開クライアントエンドポイント」にサーバーのアドレスを入力してください。",
+            "preview_title": "プレビュー",
+            "preview_note": "このページの設定を反映したコンソールです。保存すると適用されます。",
+            "preview_device": "受付の PC",
+            "preview_caption": "テーマ: {theme}。アクセントカラー: {accent}。",
+            "state_title": "現在の状態",
+            "your_2fa": "あなたの 2 段階サインイン",
+            "on": "オン",
+            "off": "オフ",
+            "next_backup": "次の定期バックアップ",
+            "backup_kept": "保存先",
+            "backup_none": "まだありません",
+            "backup_off": "定期バックアップはオフです",
+            "backup_soon": "1 分以内",
+            "backup_failed": "前回の定期バックアップは失敗しました: {error}",
+            "email_on": "設定済み",
+            "email_off": "未設定です。コンソールはメールを送信しません。",
+            "clock_title": "サーバーの時計"
         }
     },
     "audit": {

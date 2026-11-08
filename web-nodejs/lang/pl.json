@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "Wybierz plik, aby go wyświetlić i edytować. Każde zapisanie zachowuje kopię poprzedniej wersji.",
             "editor_label": "Zawartość pliku"
+        },
+        "side": {
+            "general_title": "Co teraz dostają klienci",
+            "general_note": "Adresy, które klienci RustDesk dostają teraz z tego serwera: w konfiguracji klienta, kodach QR i poleceniach instalacji.",
+            "src_page": "Ustawione na tej stronie",
+            "src_overview": "Ustawione w konfiguracji klienta na przeglądzie",
+            "src_auto": "Wykryte automatycznie",
+            "local_warning": "Te adresy działają tylko na tym komputerze. Inne komputery i telefony ich nie osiągną. Wpisz adres serwera w sekcji Publiczne endpointy klienta.",
+            "preview_title": "Podgląd",
+            "preview_note": "Konsola z wyborami z tej strony. Zapisz, aby je zastosować.",
+            "preview_device": "Komputer w recepcji",
+            "preview_caption": "Motyw: {theme}. Kolor akcentu: {accent}.",
+            "state_title": "Stan obecny",
+            "your_2fa": "Twoje logowanie dwuskładnikowe",
+            "on": "Włączone",
+            "off": "Wyłączone",
+            "next_backup": "Następna zaplanowana kopia",
+            "backup_kept": "Zapisywane w",
+            "backup_none": "Jeszcze żadnej",
+            "backup_off": "Zaplanowane kopie są wyłączone",
+            "backup_soon": "W ciągu minuty",
+            "backup_failed": "Ostatnia zaplanowana kopia nie powiodła się: {error}",
+            "email_on": "Skonfigurowane",
+            "email_off": "Nieskonfigurowane. Konsola nie wysyła e-maili.",
+            "clock_title": "Zegar serwera"
         }
     },
     "audit": {

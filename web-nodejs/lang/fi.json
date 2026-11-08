@@ -1125,6 +1125,31 @@
         "advanced_tab": {
             "note": "Valitse tiedosto, jota haluat tarkastella ja muokata. Jokainen tallennus säilyttää kopion edellisestä versiosta.",
             "editor_label": "Tiedoston sisältö"
+        },
+        "side": {
+            "general_title": "Mitä asiakkaat saavat nyt",
+            "general_note": "Osoitteet, jotka RustDesk-asiakkaat saavat nyt tältä palvelimelta: asiakkaan asetuksissa, QR-koodeissa ja asennuskomennoissa.",
+            "src_page": "Asetettu tällä sivulla",
+            "src_overview": "Asetettu yleiskatsauksen asiakasasetuksissa",
+            "src_auto": "Tunnistettu automaattisesti",
+            "local_warning": "Nämä osoitteet toimivat vain tällä tietokoneella. Muut tietokoneet ja puhelimet eivät tavoita niitä. Anna palvelimen osoite kohdassa Julkiset asiakaspäätepisteet.",
+            "preview_title": "Esikatselu",
+            "preview_note": "Konsoli tämän sivun valinnoilla. Ota ne käyttöön tallentamalla.",
+            "preview_device": "Vastaanoton tietokone",
+            "preview_caption": "Teema: {theme}. Korostusväri: {accent}.",
+            "state_title": "Nykytila",
+            "your_2fa": "Kaksivaiheinen kirjautumisesi",
+            "on": "Käytössä",
+            "off": "Pois käytöstä",
+            "next_backup": "Seuraava ajastettu varmuuskopio",
+            "backup_kept": "Tallennuspaikka",
+            "backup_none": "Ei vielä yhtään",
+            "backup_off": "Ajastetut varmuuskopiot ovat pois käytöstä",
+            "backup_soon": "Minuutin sisällä",
+            "backup_failed": "Viimeisin ajastettu varmuuskopio epäonnistui: {error}",
+            "email_on": "Määritetty",
+            "email_off": "Ei määritetty. Konsoli ei lähetä sähköpostia.",
+            "clock_title": "Palvelimen kello"
         }
     },
     "audit": {

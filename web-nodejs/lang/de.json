@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "Wählen Sie eine Datei, um sie anzusehen und zu bearbeiten. Jedes Speichern behält eine Kopie der vorherigen Version.",
             "editor_label": "Dateiinhalt"
+        },
+        "side": {
+            "general_title": "Was Clients jetzt erhalten",
+            "general_note": "Die Adressen, die RustDesk-Clients jetzt von diesem Server erhalten: in der Client-Einrichtung, in QR-Codes und Installationsbefehlen.",
+            "src_page": "Auf dieser Seite festgelegt",
+            "src_overview": "In der Client-Einrichtung auf der Übersicht festgelegt",
+            "src_auto": "Automatisch ermittelt",
+            "local_warning": "Diese Adressen funktionieren nur auf diesem Computer. Andere Computer und Telefone erreichen sie nicht. Geben Sie die Adresse des Servers unter „Öffentliche Client-Endpunkte“ ein.",
+            "preview_title": "Vorschau",
+            "preview_note": "Die Konsole mit den Einstellungen auf dieser Seite. Speichern Sie, um sie zu übernehmen.",
+            "preview_device": "Empfangs-PC",
+            "preview_caption": "Design: {theme}. Akzentfarbe: {accent}.",
+            "state_title": "Aktueller Stand",
+            "your_2fa": "Ihre Zwei-Faktor-Anmeldung",
+            "on": "Ein",
+            "off": "Aus",
+            "next_backup": "Nächste geplante Sicherung",
+            "backup_kept": "Gespeichert in",
+            "backup_none": "Noch keine",
+            "backup_off": "Geplante Sicherungen sind aus",
+            "backup_soon": "Innerhalb einer Minute",
+            "backup_failed": "Die letzte geplante Sicherung ist fehlgeschlagen: {error}",
+            "email_on": "Eingerichtet",
+            "email_off": "Nicht eingerichtet. Die Konsole versendet keine E-Mails.",
+            "clock_title": "Serveruhr"
         }
     },
     "audit": {

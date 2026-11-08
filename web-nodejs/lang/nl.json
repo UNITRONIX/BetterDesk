@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "Kies een bestand om het te bekijken en te bewerken. Bij elke keer opslaan wordt een kopie van de vorige versie bewaard.",
             "editor_label": "Bestandsinhoud"
+        },
+        "side": {
+            "general_title": "Wat clients nu krijgen",
+            "general_note": "De adressen die RustDesk-clients nu van deze server krijgen: in de clientinstelling, QR-codes en installatieopdrachten.",
+            "src_page": "Ingesteld op deze pagina",
+            "src_overview": "Ingesteld in de clientinstelling op het overzicht",
+            "src_auto": "Automatisch gevonden",
+            "local_warning": "Deze adressen werken alleen op deze computer. Andere computers en telefoons kunnen ze niet bereiken. Vul het adres van de server in onder Openbare client-eindpunten.",
+            "preview_title": "Voorbeeld",
+            "preview_note": "De console met de keuzes op deze pagina. Sla op om ze toe te passen.",
+            "preview_device": "Receptie-pc",
+            "preview_caption": "Thema: {theme}. Accentkleur: {accent}.",
+            "state_title": "Huidige stand",
+            "your_2fa": "Uw tweestapsaanmelding",
+            "on": "Aan",
+            "off": "Uit",
+            "next_backup": "Volgende geplande back-up",
+            "backup_kept": "Opgeslagen in",
+            "backup_none": "Nog geen",
+            "backup_off": "Geplande back-ups staan uit",
+            "backup_soon": "Binnen een minuut",
+            "backup_failed": "De laatste geplande back-up is mislukt: {error}",
+            "email_on": "Ingesteld",
+            "email_off": "Niet ingesteld. De console verstuurt geen e-mail.",
+            "clock_title": "Serverklok"
         }
     },
     "audit": {

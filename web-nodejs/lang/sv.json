@@ -1125,6 +1125,31 @@
         "advanced_tab": {
             "note": "Välj en fil för att visa och redigera den. Varje gång du sparar behålls en kopia av föregående version.",
             "editor_label": "Filinnehåll"
+        },
+        "side": {
+            "general_title": "Vad klienterna får nu",
+            "general_note": "Adresserna som RustDesk-klienter får från den här servern nu: i klientinställningen, QR-koder och installationskommandon.",
+            "src_page": "Angivet på den här sidan",
+            "src_overview": "Angivet i klientinställningen på översikten",
+            "src_auto": "Hittat automatiskt",
+            "local_warning": "De här adresserna fungerar bara på den här datorn. Andra datorer och telefoner når dem inte. Ange serverns adress under Offentliga klientändpunkter.",
+            "preview_title": "Förhandsvisning",
+            "preview_note": "Konsolen med valen på den här sidan. Spara för att använda dem.",
+            "preview_device": "Receptionens dator",
+            "preview_caption": "Tema: {theme}. Accentfärg: {accent}.",
+            "state_title": "Nuvarande läge",
+            "your_2fa": "Din tvåstegsinloggning",
+            "on": "På",
+            "off": "Av",
+            "next_backup": "Nästa schemalagda säkerhetskopia",
+            "backup_kept": "Sparas i",
+            "backup_none": "Ingen ännu",
+            "backup_off": "Schemalagda säkerhetskopior är avstängda",
+            "backup_soon": "Inom en minut",
+            "backup_failed": "Den senaste schemalagda säkerhetskopian misslyckades: {error}",
+            "email_on": "Konfigurerat",
+            "email_off": "Inte konfigurerat. Konsolen skickar ingen e-post.",
+            "clock_title": "Serverns klocka"
         }
     },
     "audit": {

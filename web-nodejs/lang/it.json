@@ -1119,6 +1119,31 @@
         "advanced_tab": {
             "note": "Scegliere un file per visualizzarlo e modificarlo. Ogni salvataggio conserva una copia della versione precedente.",
             "editor_label": "Contenuto del file"
+        },
+        "side": {
+            "general_title": "Cosa ricevono ora i client",
+            "general_note": "Gli indirizzi che i client RustDesk ricevono ora da questo server: nella configurazione client, nei codici QR e nei comandi di installazione.",
+            "src_page": "Impostato in questa pagina",
+            "src_overview": "Impostato nella configurazione client della panoramica",
+            "src_auto": "Rilevato automaticamente",
+            "local_warning": "Questi indirizzi funzionano solo su questo computer. Altri computer e telefoni non li raggiungono. Inserisca l'indirizzo del server in «Endpoint client pubblici».",
+            "preview_title": "Anteprima",
+            "preview_note": "La console con le scelte di questa pagina. Salvi per applicarle.",
+            "preview_device": "PC della reception",
+            "preview_caption": "Tema: {theme}. Colore di accento: {accent}.",
+            "state_title": "Stato attuale",
+            "your_2fa": "Il suo accesso a due fattori",
+            "on": "Attivo",
+            "off": "Disattivo",
+            "next_backup": "Prossimo backup pianificato",
+            "backup_kept": "Salvati in",
+            "backup_none": "Nessuno finora",
+            "backup_off": "I backup pianificati sono disattivati",
+            "backup_soon": "Entro un minuto",
+            "backup_failed": "L'ultimo backup pianificato non è riuscito: {error}",
+            "email_on": "Configurato",
+            "email_off": "Non configurato. La console non invia email.",
+            "clock_title": "Orologio del server"
         }
     },
     "audit": {

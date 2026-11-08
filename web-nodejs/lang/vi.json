@@ -1125,6 +1125,31 @@
         "advanced_tab": {
             "note": "Chọn một tệp để xem và chỉnh sửa. Mỗi lần lưu sẽ giữ một bản sao của phiên bản trước.",
             "editor_label": "Nội dung tệp"
+        },
+        "side": {
+            "general_title": "Những gì máy khách nhận lúc này",
+            "general_note": "Các địa chỉ máy khách RustDesk đang nhận từ máy chủ này: trong thiết lập máy khách, mã QR và lệnh cài đặt.",
+            "src_page": "Đặt trên trang này",
+            "src_overview": "Đặt trong thiết lập máy khách ở trang tổng quan",
+            "src_auto": "Tự động phát hiện",
+            "local_warning": "Các địa chỉ này chỉ dùng được trên máy tính này. Máy tính và điện thoại khác không truy cập được. Hãy nhập địa chỉ máy chủ trong phần Điểm cuối client công khai.",
+            "preview_title": "Xem trước",
+            "preview_note": "Bảng điều khiển với các lựa chọn trên trang này. Lưu để áp dụng.",
+            "preview_device": "Máy tính lễ tân",
+            "preview_caption": "Giao diện: {theme}. Màu nhấn: {accent}.",
+            "state_title": "Trạng thái hiện tại",
+            "your_2fa": "Đăng nhập hai bước của bạn",
+            "on": "Bật",
+            "off": "Tắt",
+            "next_backup": "Bản sao lưu theo lịch tiếp theo",
+            "backup_kept": "Lưu vào",
+            "backup_none": "Chưa có",
+            "backup_off": "Sao lưu theo lịch đang tắt",
+            "backup_soon": "Trong vòng một phút",
+            "backup_failed": "Lần sao lưu theo lịch gần nhất thất bại: {error}",
+            "email_on": "Đã thiết lập",
+            "email_off": "Chưa thiết lập. Bảng điều khiển không gửi email.",
+            "clock_title": "Đồng hồ máy chủ"
         }
     },
     "audit": {

@@ -1125,6 +1125,31 @@
         "advanced_tab": {
             "note": "Pilih file untuk melihat dan mengeditnya. Setiap penyimpanan menyimpan salinan versi sebelumnya.",
             "editor_label": "Isi file"
+        },
+        "side": {
+            "general_title": "Yang diterima klien sekarang",
+            "general_note": "Alamat yang diterima klien RustDesk dari server ini sekarang: di pengaturan klien, kode QR, dan perintah instalasi.",
+            "src_page": "Diatur di halaman ini",
+            "src_overview": "Diatur di pengaturan klien pada ringkasan",
+            "src_auto": "Ditemukan otomatis",
+            "local_warning": "Alamat ini hanya berfungsi di komputer ini. Komputer dan ponsel lain tidak dapat menjangkaunya. Masukkan alamat server di Endpoint klien publik.",
+            "preview_title": "Pratinjau",
+            "preview_note": "Konsol dengan pilihan di halaman ini. Simpan untuk menerapkannya.",
+            "preview_device": "PC resepsionis",
+            "preview_caption": "Tema: {theme}. Warna aksen: {accent}.",
+            "state_title": "Keadaan saat ini",
+            "your_2fa": "Masuk dua langkah Anda",
+            "on": "Aktif",
+            "off": "Nonaktif",
+            "next_backup": "Cadangan terjadwal berikutnya",
+            "backup_kept": "Disimpan di",
+            "backup_none": "Belum ada",
+            "backup_off": "Pencadangan terjadwal nonaktif",
+            "backup_soon": "Dalam satu menit",
+            "backup_failed": "Pencadangan terjadwal terakhir gagal: {error}",
+            "email_on": "Sudah diatur",
+            "email_off": "Belum diatur. Konsol tidak mengirim email.",
+            "clock_title": "Jam server"
         }
     },
     "audit": {

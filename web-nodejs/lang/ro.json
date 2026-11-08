@@ -1125,6 +1125,31 @@
         "advanced_tab": {
             "note": "Alegeți un fișier pentru a-l vedea și edita. Fiecare salvare păstrează o copie a versiunii anterioare.",
             "editor_label": "Conținutul fișierului"
+        },
+        "side": {
+            "general_title": "Ce primesc acum clienții",
+            "general_note": "Adresele pe care clienții RustDesk le primesc acum de la acest server: în configurarea clientului, codurile QR și comenzile de instalare.",
+            "src_page": "Setat pe această pagină",
+            "src_overview": "Setat în configurarea clientului din prezentare generală",
+            "src_auto": "Detectat automat",
+            "local_warning": "Aceste adrese funcționează doar pe acest computer. Alte computere și telefoane nu le pot accesa. Introduceți adresa serverului la Endpoint-uri publice client.",
+            "preview_title": "Previzualizare",
+            "preview_note": "Consola cu alegerile de pe această pagină. Salvați pentru a le aplica.",
+            "preview_device": "PC recepție",
+            "preview_caption": "Temă: {theme}. Culoare de accent: {accent}.",
+            "state_title": "Starea actuală",
+            "your_2fa": "Autentificarea dvs. în doi pași",
+            "on": "Activat",
+            "off": "Dezactivat",
+            "next_backup": "Următoarea copie programată",
+            "backup_kept": "Salvate în",
+            "backup_none": "Niciuna încă",
+            "backup_off": "Copiile programate sunt oprite",
+            "backup_soon": "În cel mult un minut",
+            "backup_failed": "Ultima copie programată a eșuat: {error}",
+            "email_on": "Configurat",
+            "email_off": "Neconfigurat. Consola nu trimite e-mailuri.",
+            "clock_title": "Ceasul serverului"
         }
     },
     "audit": {

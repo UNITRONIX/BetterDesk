@@ -1125,6 +1125,31 @@
         "advanced_tab": {
             "note": "Görüntülemek ve düzenlemek için bir dosya seçin. Her kaydetme önceki sürümün bir kopyasını saklar.",
             "editor_label": "Dosya içeriği"
+        },
+        "side": {
+            "general_title": "İstemcilerin şu an aldıkları",
+            "general_note": "RustDesk istemcilerinin şu an bu sunucudan aldığı adresler: istemci kurulumunda, QR kodlarında ve kurulum komutlarında.",
+            "src_page": "Bu sayfada ayarlandı",
+            "src_overview": "Genel bakıştaki istemci kurulumunda ayarlandı",
+            "src_auto": "Otomatik bulundu",
+            "local_warning": "Bu adresler yalnızca bu bilgisayarda çalışır. Diğer bilgisayarlar ve telefonlar onlara ulaşamaz. Sunucunun adresini Genel istemci uç noktaları bölümüne girin.",
+            "preview_title": "Önizleme",
+            "preview_note": "Bu sayfadaki seçimlerle konsol. Uygulamak için kaydedin.",
+            "preview_device": "Resepsiyon bilgisayarı",
+            "preview_caption": "Tema: {theme}. Vurgu rengi: {accent}.",
+            "state_title": "Şu anki durum",
+            "your_2fa": "İki adımlı oturum açmanız",
+            "on": "Açık",
+            "off": "Kapalı",
+            "next_backup": "Sonraki zamanlanmış yedek",
+            "backup_kept": "Kaydedildiği yer",
+            "backup_none": "Henüz yok",
+            "backup_off": "Zamanlanmış yedekler kapalı",
+            "backup_soon": "Bir dakika içinde",
+            "backup_failed": "Son zamanlanmış yedekleme başarısız oldu: {error}",
+            "email_on": "Kuruldu",
+            "email_off": "Kurulmadı. Konsol e-posta göndermiyor.",
+            "clock_title": "Sunucu saati"
         }
     },
     "audit": {

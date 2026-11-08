@@ -1123,6 +1123,31 @@
         "advanced_tab": {
             "note": "Choisissez un fichier pour l'afficher et le modifier. Chaque enregistrement conserve une copie de la version précédente.",
             "editor_label": "Contenu du fichier"
+        },
+        "side": {
+            "general_title": "Ce que reçoivent les clients",
+            "general_note": "Les adresses que les clients RustDesk reçoivent actuellement de ce serveur : dans la configuration client, les QR codes et les commandes d'installation.",
+            "src_page": "Défini sur cette page",
+            "src_overview": "Défini dans la configuration client de la vue d'ensemble",
+            "src_auto": "Détecté automatiquement",
+            "local_warning": "Ces adresses ne fonctionnent que sur cet ordinateur. Les autres ordinateurs et téléphones ne peuvent pas les joindre. Saisissez l'adresse du serveur sous « Points de terminaison clients publics ».",
+            "preview_title": "Aperçu",
+            "preview_note": "La console avec les choix de cette page. Enregistrez pour les appliquer.",
+            "preview_device": "PC de l'accueil",
+            "preview_caption": "Thème : {theme}. Couleur d'accent : {accent}.",
+            "state_title": "État actuel",
+            "your_2fa": "Votre connexion à deux facteurs",
+            "on": "Activé",
+            "off": "Désactivé",
+            "next_backup": "Prochaine sauvegarde planifiée",
+            "backup_kept": "Enregistrées dans",
+            "backup_none": "Aucune pour l'instant",
+            "backup_off": "Les sauvegardes planifiées sont désactivées",
+            "backup_soon": "D'ici une minute",
+            "backup_failed": "La dernière sauvegarde planifiée a échoué : {error}",
+            "email_on": "Configuré",
+            "email_off": "Non configuré. La console n'envoie aucun e-mail.",
+            "clock_title": "Horloge du serveur"
         }
     },
     "audit": {
