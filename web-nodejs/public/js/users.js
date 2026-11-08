@@ -17,11 +17,15 @@
     let strategies = [];
     let strategiesLoaded = false;
     let editingUserId = null;
+    let accessCatalog = null;
+    let accessPolicyState = null;
     // Cache: userId -> [{ id, org_id, name, org_name, role }]
     const userOrgsCache = new Map();
     
     // Elements
     let tableBody, emptyState, userGroupsManager;
+    let contextMenuEl = null;
+    let contextMenuState = null;
     
     function init() {
         tableBody = document.getElementById('users-tbody');
@@ -33,6 +37,7 @@
         loadStrategies();
         loadUsers();
         initEventListeners();
+        initContextMenu();
         focusUserGroupsFromHash();
         
         window.addEventListener('app:refresh', loadUsers);
@@ -50,6 +55,114 @@
         // Add user button
         document.getElementById('add-user-btn')?.addEventListener('click', showAddUserModal);
         document.getElementById('add-user-group-btn')?.addEventListener('click', () => showUserGroupModal());
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#users-context-menu')) closeContextMenu();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeContextMenu();
+        });
+        window.addEventListener('resize', closeContextMenu);
+        window.addEventListener('scroll', closeContextMenu, true);
+    }
+
+    function initContextMenu() {
+        contextMenuEl = document.getElementById('users-context-menu');
+        if (!contextMenuEl) return;
+        contextMenuEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn || !contextMenuState) return;
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const state = contextMenuState;
+            closeContextMenu();
+            handleAction(action, state.id, state);
+        });
+    }
+
+    function buildUserMenuHtml(user) {
+        const provider = (user.auth_provider || 'local').toLowerCase();
+        const isLocal = provider === 'local';
+        return `
+            <button type="button" class="users-context-item" data-action="organizations" role="menuitem">
+                <span class="material-icons">business</span>
+                <span>${Utils.escapeHtml(_('users.organizations'))}</span>
+            </button>
+            ${isLocal ? `<button type="button" class="users-context-item" data-action="reset-password" role="menuitem">
+                <span class="material-icons">lock_reset</span>
+                <span>${Utils.escapeHtml(_('users.reset_password'))}</span>
+            </button>` : ''}
+            <button type="button" class="users-context-item" data-action="edit" role="menuitem">
+                <span class="material-icons">edit</span>
+                <span>${Utils.escapeHtml(_('users.edit'))}</span>
+            </button>
+            <div class="users-context-divider" role="separator"></div>
+            <button type="button" class="users-context-item danger" data-action="delete" role="menuitem">
+                <span class="material-icons">delete</span>
+                <span>${Utils.escapeHtml(_('actions.delete'))}</span>
+            </button>`;
+    }
+
+    function buildUserGroupMenuHtml() {
+        return `
+            <button type="button" class="users-context-item" data-action="edit-user-group" role="menuitem">
+                <span class="material-icons">edit</span>
+                <span>${Utils.escapeHtml(_('users.edit_user_group') || 'Edit group')}</span>
+            </button>
+            <div class="users-context-divider" role="separator"></div>
+            <button type="button" class="users-context-item danger" data-action="delete-user-group" role="menuitem">
+                <span class="material-icons">delete</span>
+                <span>${Utils.escapeHtml(_('users.delete_user_group') || 'Delete group')}</span>
+            </button>`;
+    }
+
+    function positionContextMenu(clientX, clientY) {
+        if (!contextMenuEl) return;
+        const menuWidth = contextMenuEl.offsetWidth || 200;
+        const menuHeight = contextMenuEl.offsetHeight || 160;
+        let left = clientX;
+        let top = clientY;
+        if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
+        if (top + menuHeight > window.innerHeight - 8) top = window.innerHeight - menuHeight - 8;
+        if (left < 8) left = 8;
+        if (top < 8) top = 8;
+        contextMenuEl.style.left = left + 'px';
+        contextMenuEl.style.top = top + 'px';
+    }
+
+    function openContextMenu(clientX, clientY, html, state) {
+        if (!contextMenuEl) return;
+        contextMenuState = state;
+        contextMenuEl.innerHTML = html;
+        contextMenuEl.hidden = false;
+        contextMenuEl.classList.add('open');
+        positionContextMenu(clientX, clientY);
+    }
+
+    function closeContextMenu() {
+        if (!contextMenuEl) return;
+        contextMenuEl.classList.remove('open');
+        contextMenuEl.hidden = true;
+        contextMenuEl.innerHTML = '';
+        contextMenuEl.style.left = '';
+        contextMenuEl.style.top = '';
+        contextMenuState = null;
+    }
+
+    function attachUserRowContextMenu() {
+        if (!tableBody) return;
+        tableBody.querySelectorAll('tr[data-id]').forEach(row => {
+            row.addEventListener('contextmenu', (e) => {
+                if (e.target.closest('.user-orgs-cell')) return;
+                e.preventDefault();
+                const userId = row.dataset.id;
+                const user = users.find(u => String(u.id) === String(userId));
+                if (!user) return;
+                openContextMenu(e.clientX, e.clientY, buildUserMenuHtml(user), {
+                    id: user.id,
+                    username: user.username
+                });
+            });
+        });
     }
     
     /**
@@ -146,6 +259,129 @@
             strategies = [];
             strategiesLoaded = true;
         }
+    }
+
+    async function loadAccessCatalog() {
+        if (accessCatalog) return accessCatalog;
+        const response = await Utils.api('/api/panel/access/catalog');
+        accessCatalog = response;
+        return accessCatalog;
+    }
+
+    function renderAccessPolicyEditor(data = {}) {
+        const container = document.getElementById('user-access-policy-editor');
+        if (!container || !accessCatalog?.sections) return;
+        const directSections = new Map((data.sections || []).map(row => [row.resource_key, row.access_level]));
+        const effectiveSections = data.effective?.sections || {};
+        const directFeatures = new Map((data.features || []).map(row => [row.feature_key, !!row.enabled]));
+        const effectiveFeatures = data.effective?.features || {};
+        const groups = accessCatalog.groups || [];
+        const sections = accessCatalog.sections || [];
+        const localized = (key, fallback) => {
+            const value = _(key);
+            return value && value !== key ? value : fallback;
+        };
+        const levels = accessCatalog.levels || ['none', 'read', 'write'];
+        const levelLabels = {
+            none: localized('users.access_none', 'None'),
+            read: localized('users.access_read', 'Read'),
+            write: localized('users.access_write', 'Full'),
+        };
+        const renderChoices = (resourceType, resourceKey, selected, inherited) => `
+            <input type="hidden" data-policy-${resourceType}="${Utils.escapeHtml(resourceKey)}" value="${inherited ? 'inherit' : Utils.escapeHtml(selected)}">
+            <div class="access-policy-choices" role="group" aria-label="${Utils.escapeHtml(localized('users.access_policy_title', 'Access level'))}">
+                ${levels.map(level => `<button type="button"
+                    class="access-policy-choice ${selected === level ? 'is-selected' : ''} ${selected === level && inherited ? 'is-inherited' : ''}"
+                    data-policy-level="${level}" aria-pressed="${selected === level ? 'true' : 'false'}"
+                    title="${Utils.escapeHtml(levelLabels[level] || level)}">
+                    <span class="material-icons">${level === 'none' ? 'block' : level === 'read' ? 'visibility' : 'edit'}</span>
+                </button>`).join('')}
+            </div>`;
+        container.innerHTML = `
+            <div class="access-policy-matrix" data-access-policy-matrix>
+                <div class="access-policy-header">
+                    <strong>${Utils.escapeHtml(localized('users.access_policy_section', 'Section'))}</strong>
+                    ${levels.map(level => `<strong class="access-policy-level-${level}">${Utils.escapeHtml(levelLabels[level] || level)}</strong>`).join('')}
+                </div>
+                ${groups.map(group => {
+                    const entries = sections.filter(section => section.group === group.key);
+                    if (!entries.length) return '';
+                    const groupKey = `group:${group.key}`;
+                    const groupSelected = directSections.get(groupKey) || 'inherit';
+                    return `<div class="access-policy-group">
+                        <div class="access-policy-row access-policy-group-row">
+                            <strong>${Utils.escapeHtml(localized('users.access_group_' + group.key, group.label || group.key))}</strong>
+                            ${renderChoices('group', group.key, groupSelected, groupSelected === 'inherit')}
+                        </div>
+                        ${entries.map(section => {
+                            const inherited = !directSections.has(section.key);
+                            const selected = inherited
+                                ? (effectiveSections[section.key]?.access || 'inherit')
+                                : directSections.get(section.key);
+                            return `<div class="access-policy-row">
+                                <span>${Utils.escapeHtml(localized('users.access_section_' + section.key, section.label || section.key))}</span>
+                                ${renderChoices('section', section.key, selected, inherited)}
+                            </div>`;
+                        }).join('')}
+                    </div>`;
+                }).join('')}
+            </div>
+            <div class="access-policy-features">
+                <strong>${Utils.escapeHtml(localized('users.client_features', 'Client features'))}</strong>
+                ${(accessCatalog.features || []).map(feature => {
+                    const checked = directFeatures.has(feature.key)
+                        ? directFeatures.get(feature.key)
+                        : (effectiveFeatures[feature.key]?.enabled ?? true);
+                    return `<label class="access-policy-toggle">
+                        <input type="checkbox" data-policy-feature="${Utils.escapeHtml(feature.key)}" ${checked ? 'checked' : ''} ${feature.hardLock ? 'disabled' : ''}>
+                        <span>${Utils.escapeHtml(localized('users.access_feature_' + feature.key, feature.label || feature.key))}</span>
+                    </label>`;
+                }).join('')}
+            </div>`;
+        container.querySelectorAll('.access-policy-choice').forEach(button => {
+            button.addEventListener('click', () => {
+                const row = button.closest('.access-policy-row');
+                const choices = row?.querySelector('.access-policy-choices');
+                const input = row?.querySelector('input[type="hidden"]');
+                if (!row || !choices || !input) return;
+                input.value = button.dataset.policyLevel;
+                choices.querySelectorAll('.access-policy-choice').forEach(choice => {
+                    const selected = choice === button;
+                    choice.classList.toggle('is-selected', selected);
+                    choice.classList.remove('is-inherited');
+                    choice.setAttribute('aria-pressed', selected ? 'true' : 'false');
+                });
+            });
+        });
+    }
+
+    async function loadAccessPolicyEditor(subjectType, subjectId) {
+        try {
+            await loadAccessCatalog();
+            if (!subjectId) {
+                renderAccessPolicyEditor();
+                return;
+            }
+            const response = await Utils.api(`/api/panel/access/${subjectType}s/${encodeURIComponent(subjectId)}`);
+            accessPolicyState = { subjectType, subjectId, data: response };
+            renderAccessPolicyEditor(response);
+        } catch (error) {
+            const container = document.getElementById('user-access-policy-editor');
+            if (container) container.innerHTML = `<div class="empty-state-inline">${Utils.escapeHtml(error.message || _('errors.server_error'))}</div>`;
+        }
+    }
+
+    function collectAccessPolicy() {
+        const sections = Array.from(document.querySelectorAll('[data-policy-section]'))
+            .map(input => ({ resource_key: input.dataset.policySection, access_level: input.value }))
+            .filter(row => row.access_level && row.access_level !== 'inherit');
+        const groups = Array.from(document.querySelectorAll('[data-policy-group]'))
+            .map(input => ({ resource_key: `group:${input.dataset.policyGroup}`, access_level: input.value }))
+            .filter(row => row.access_level && row.access_level !== 'inherit');
+        const features = Array.from(document.querySelectorAll('[data-policy-feature]'))
+            .filter(input => !input.disabled)
+            .map(input => ({ feature_key: input.dataset.policyFeature, enabled: input.checked }));
+        return { sections: sections.concat(groups), features };
     }
 
     async function ensureFoldersLoaded() {
@@ -267,6 +503,17 @@
                 if (group) deleteUserGroup(group);
             });
         });
+        userGroupsManager.querySelectorAll('.user-group-manager-item[data-guid]').forEach(item => {
+            item.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                const group = userGroups.find(entry => entry.guid === item.dataset.guid);
+                if (!group) return;
+                openContextMenu(event.clientX, event.clientY, buildUserGroupMenuHtml(), {
+                    type: 'group',
+                    guid: group.guid,
+                });
+            });
+        });
     }
 
     function showUserGroupModal(group = null) {
@@ -283,14 +530,23 @@
                         <label for="user-group-note">${_('users.group_note') || 'Note'}</label>
                         <textarea id="user-group-note" class="form-input" maxlength="500" rows="3" placeholder="${_('users.group_note_placeholder') || 'Optional note'}">${Utils.escapeHtml(group?.note || '')}</textarea>
                     </div>
+                    <div class="form-group user-access-policy-group">
+                        <label>${_('users.access_policy_title') || 'Panel access and client features'}</label>
+                        <div id="user-access-policy-editor" class="user-access-policy-editor">
+                            <div class="empty-state-inline">${_('users.loading_access_policy') || 'Loading access policy...'}</div>
+                        </div>
+                    </div>
                 </form>
             `,
-            size: 'medium',
+            size: 'large',
             buttons: [
                 { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
                 { label: _('actions.save'), class: 'btn-primary', onClick: () => saveUserGroup(group) }
             ],
-            onOpen: () => document.getElementById('user-group-name')?.focus()
+            onOpen: () => {
+                loadAccessPolicyEditor('group', group?.guid || null);
+                document.getElementById('user-group-name')?.focus();
+            }
         });
     }
 
@@ -304,10 +560,17 @@
 
         try {
             const url = group ? `/api/panel/user-groups/${encodeURIComponent(group.guid)}` : '/api/panel/user-groups';
-            await Utils.api(url, {
+            const response = await Utils.api(url, {
                 method: group ? 'PATCH' : 'POST',
                 body: { name, note }
             });
+            const guid = group?.guid || response?.group?.guid;
+            if (guid) {
+                await Utils.api(`/api/panel/access/groups/${encodeURIComponent(guid)}`, {
+                    method: 'PUT',
+                    body: collectAccessPolicy()
+                });
+            }
             Notifications.success(group ? (_('users.user_group_updated') || 'User group updated') : (_('users.user_group_created') || 'User group created'));
             Modal.close();
             userGroupsLoaded = false;
@@ -426,9 +689,8 @@
             const roleLabelKey = 'users.role_' + user.role;
             const provider = (user.auth_provider || 'local').toLowerCase();
             const providerLabel = _('users.provider_' + provider) || provider;
-            const isLocal = provider === 'local';
             return `
-            <tr data-id="${user.id}">
+            <tr data-id="${user.id}" class="user-row">
                 <td>
                     <div class="user-info">
                         <div class="user-avatar">
@@ -461,30 +723,11 @@
                 </td>
                 <td>${Utils.formatDate(user.created_at)}</td>
                 <td>${user.last_login ? Utils.formatDate(user.last_login) : '<span class="text-muted">' + _('users.never') + '</span>'}</td>
-                <td>
-                    <div class="user-actions">
-                        <button class="action-btn" title="${_('users.organizations')}" data-action="organizations" data-id="${user.id}" data-username="${Utils.escapeHtml(user.username)}">
-                            <span class="material-icons">business</span>
-                        </button>
-                        ${isLocal ? `<button class="action-btn" title="${_('users.reset_password')}" data-action="reset-password" data-id="${user.id}">
-                            <span class="material-icons">lock_reset</span>
-                        </button>` : ''}
-                        <button class="action-btn" title="${_('users.edit')}" data-action="edit" data-id="${user.id}">
-                            <span class="material-icons">edit</span>
-                        </button>
-                        <button class="action-btn danger" title="${_('actions.delete')}" data-action="delete" data-id="${user.id}" data-username="${Utils.escapeHtml(user.username)}">
-                            <span class="material-icons">delete</span>
-                        </button>
-                    </div>
-                </td>
             </tr>
-        `}).join('');        
-        
-        // Attach event listeners
-        tableBody.querySelectorAll('.action-btn').forEach(btn => {
-            btn.addEventListener('click', () => handleAction(btn.dataset.action, btn.dataset.id, btn.dataset));
-        });
-        // Clicking the inline orgs cell opens the same Organizations modal as the action button
+        `}).join('');
+
+        attachUserRowContextMenu();
+        // Clicking the inline orgs cell opens the Organizations modal
         tableBody.querySelectorAll('.user-orgs-cell').forEach(cell => {
             cell.addEventListener('click', () => {
                 const id = cell.dataset.userId;
@@ -512,6 +755,16 @@
             case 'organizations':
                 await showOrganizationsModal(userId, data.username);
                 break;
+            case 'edit-user-group': {
+                const group = userGroups.find(item => item.guid === data.guid);
+                if (group) showUserGroupModal(group);
+                break;
+            }
+            case 'delete-user-group': {
+                const group = userGroups.find(item => item.guid === data.guid);
+                if (group) await deleteUserGroup(group);
+                break;
+            }
         }
     }
     
@@ -529,7 +782,7 @@
         Modal.show({
             title: _('users.add_user'),
             content: formHtml,
-            size: 'medium',
+            size: 'large',
             buttons: [
                 { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
                 { label: _('users.create'), class: 'btn-primary', onClick: () => submitUserForm() }
@@ -541,6 +794,7 @@
                 renderStrategyOptions('');
                 updateRoleDescription();
                 document.getElementById('user-direct-devices').value = '';
+                loadAccessPolicyEditor('user', null);
                 document.getElementById('user-username')?.focus();
             }
         });
@@ -563,7 +817,7 @@
         Modal.show({
             title: _('users.edit_user'),
             content: formHtml,
-            size: 'medium',
+            size: 'large',
             buttons: [
                 { label: _('actions.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
                 { label: _('actions.save'), class: 'btn-primary', onClick: () => submitUserForm() }
@@ -620,6 +874,7 @@
                 if (directDevices) {
                     directDevices.value = Array.isArray(user.peer_grants) ? user.peer_grants.join(', ') : '';
                 }
+                loadAccessPolicyEditor('user', user.id);
             }
         });
     }
@@ -744,13 +999,23 @@
                     method: 'PATCH',
                     body: data
                 });
+                await Utils.api(`/api/panel/access/users/${editingUserId}`, {
+                    method: 'PUT',
+                    body: collectAccessPolicy()
+                });
                 Notifications.success(_('users.user_updated'));
             } else {
                 // Create new user
-                await Utils.api('/api/users', {
+                const created = await Utils.api('/api/users', {
                     method: 'POST',
                     body: { username, password, role, email, groupGuids, folderIds, peerIds, strategyGuid }
                 });
+                if (created?.id) {
+                    await Utils.api(`/api/panel/access/users/${created.id}`, {
+                        method: 'PUT',
+                        body: collectAccessPolicy()
+                    });
+                }
                 Notifications.success(_('users.user_created'));
             }
             

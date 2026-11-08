@@ -1,7 +1,30 @@
 ## [Unreleased]
 
+### Fixed
+- **Console icons chosen in JavaScript no longer render as giant raw labels.**
+  The self-hosted Material Symbols subset was built by scanning view markup only, so
+  icons picked from a lookup table — the Pro role avatar (`roleIcons.pro = 'star'` in
+  `users.js` and `permissions.js`) most visibly — were never baked into the woff2. A
+  missing ligature makes the browser paint the icon name as ordinary text, which is the
+  oversized “STAR” overlapping the username in the users table. `shield_person` and
+  `engineering` had the same problem.
+  `scripts/update-material-symbols.mjs` now also collects names from icon lookup tables,
+  `icon = …` assignments and inline ternaries; the subset grew 341 → 357 icons
+  (`star`, `shield_person`, `engineering`, `audiotrack`, `picture_as_pdf`, `folder_zip`,
+  `drive_folder_upload`, `check_box`, `check_box_outline_blank`, `delete_outline`,
+  `remove_circle_outline`, `format_align_left`, `drag_handle`, `gps_fixed`, `factory`,
+  `pending`). `users.css` also clips the avatar so a stray ligature can never spill again,
+  and `tests/material-symbols-subset.test.js` now guards JS icon tables too.
+
 ### Changed
-- _(none yet)_
+- **Users page is now a two-column layout.** The security best-practices card is gone.
+  User groups (with create) sit in a sticky left rail at 25% width; the users table
+  fills the remaining 75%. Below 1200px the columns stack. Covered by
+  `tests/usersLayout.test.js`.
+- **Users table actions moved to a right-click context menu.** The Actions column
+  (organizations / reset password / edit / delete icon row) is removed; right-click
+  a user row to open the same actions. Local-auth users still see Reset password;
+  LDAP/OIDC users do not. Clicking the Organizations cell still opens that modal.
 
 ---
 

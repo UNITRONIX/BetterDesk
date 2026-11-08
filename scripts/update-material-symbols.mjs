@@ -64,9 +64,16 @@ const ICON_PROPERTY = /\bicon\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 const ICON_RETURN = /\breturn\s+['"]([a-z][a-z0-9_]{1,48})['"]/g;
 const PLATFORM_ICON_MAP =
     /\b(?:windows|linux|mac|macos|android|ios)\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
-const ICON_HELPER_LINE = /\b(?:createWindowCtrlBtn|createMaterialIconSpan)\b[^;\n]*/g;
+const ICON_HELPER_LINE =
+    /\b(?:createWindowCtrlBtn|createMaterialIconSpan|addItem|toggleButton)\b[^;\n]*/g;
 const TEXT_CONTENT_LINE = /\btextContent\s*=[^;\n]*/g;
 const QUOTED_ICON_NAME = /['"]([a-z][a-z0-9_]{1,48})['"]/g;
+/* Lookup tables (`roleIcons = { pro: 'star' }`) pick a glyph by data value. */
+const ICON_MAP_BLOCK = /\b\w*[Ii]cons?\w*\s*=\s*\{[^}]*\}/g;
+/* Assignments picked from a ternary (`icon = on ? 'check_box' : '...'`). */
+const ICON_ASSIGN_LINE = /\b\w*[Ii]con\w*\s*=[^;\n]*/g;
+const ICON_TERNARY_PAIR =
+    /\?\s*['"]([a-z][a-z0-9_]{1,48})['"]\s*:\s*['"]([a-z][a-z0-9_]{1,48})['"]/g;
 
 function walkFiles(dir, out = []) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -125,7 +132,7 @@ function collectCandidateIcons() {
 
         // Desktop controls and a few widgets assign icon ligatures through
         // textContent or helper calls instead of literal <span> markup.
-        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE]) {
+        for (const pattern of [ICON_HELPER_LINE, TEXT_CONTENT_LINE, ICON_ASSIGN_LINE]) {
             pattern.lastIndex = 0;
             let line;
             while ((line = pattern.exec(text)) !== null) {
@@ -136,6 +143,32 @@ function collectCandidateIcons() {
                 }
             }
         }
+
+        // Icons chosen from a lookup table keyed by role/state/type: the name
+        // never sits next to `icon:`, so scan the whole map literal.
+        ICON_MAP_BLOCK.lastIndex = 0;
+        let block;
+        while ((block = ICON_MAP_BLOCK.exec(text)) !== null) {
+            QUOTED_ICON_NAME.lastIndex = 0;
+            let match;
+            while ((match = QUOTED_ICON_NAME.exec(block[0])) !== null) {
+                icons.add(match[1]);
+            }
+        }
+
+        // Icons picked inline inside markup:
+        // `(on ? 'check_box' : 'check_box_outline_blank')` next to an icon span.
+        const lines = text.split(/\r?\n/);
+        lines.forEach((line, idx) => {
+            if (!/material-(?:icons|symbols)/.test(line)) return;
+            const window = lines.slice(Math.max(0, idx - 3), idx + 4).join('\n');
+            ICON_TERNARY_PAIR.lastIndex = 0;
+            let pair;
+            while ((pair = ICON_TERNARY_PAIR.exec(window)) !== null) {
+                icons.add(pair[1]);
+                icons.add(pair[2]);
+            }
+        });
     }
     return icons;
 }

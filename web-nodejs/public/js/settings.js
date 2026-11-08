@@ -241,6 +241,10 @@
 
     async function completeRestartAndLogin() {
         const pending = _restartPending;
+        if (typeof window.BetterDeskRestart?.completeAndLogin === 'function') {
+            await window.BetterDeskRestart.completeAndLogin(pending?.id);
+            return;
+        }
         try {
             if (pending?.id) {
                 await Utils.api('/api/settings/restart/complete', {

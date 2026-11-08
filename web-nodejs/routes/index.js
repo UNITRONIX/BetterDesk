@@ -14,6 +14,7 @@ const settingsRoutes = require('./settings.routes');
 const generatorRoutes = require('./generator.routes');
 const i18nRoutes = require('./i18n.routes');
 const usersRoutes = require('./users.routes');
+const panelAccessRoutes = require('./panel-access.routes');
 const foldersRoutes = require('./folders.routes');
 const remoteRoutes = require('./remote.routes');
 // bdApiRoutes mounted in server.js (before CSRF) for desktop client access
@@ -113,6 +114,7 @@ router.use('/', settingsRoutes);
 router.use('/', generatorRoutes);
 router.use('/', require('./client-branding.routes'));
 router.use('/', usersRoutes);
+router.use('/', panelAccessRoutes);
 router.use('/', foldersRoutes);
 router.use('/', remoteRoutes);
 router.use('/', require('./guest.routes'));

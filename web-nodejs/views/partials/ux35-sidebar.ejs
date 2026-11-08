@@ -23,13 +23,13 @@
                 <span class="material-icons" aria-hidden="true">dashboard</span>
                 <span><%= _('nav.dashboard') %></span>
             </a>
-            <% if (hasPermission('device.view')) { %>
+            <% if (hasSectionAccess('devices')) { %>
             <a href="/devices" class="ux35-sidebar-item <%= currentPage === 'devices' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">devices</span>
                 <span><%= _('nav.devices') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('enrollment.approve')) { %>
+            <% if (hasSectionAccess('registrations')) { %>
             <a href="/?activateAgent=1" class="ux35-sidebar-item <%= typeof activateAgentNav !== 'undefined' && activateAgentNav ? 'active' : '' %>" id="nav-activate-agent">
                 <span class="material-icons" aria-hidden="true">pin</span>
                 <span><%= _('nav.pair_agent') %></span>
@@ -40,7 +40,7 @@
                 <span class="ux35-sidebar-item-badge" id="reg-sidebar-badge" style="display: none;">0</span>
             </a>
             <% } %>
-            <% if (hasPermission('branding.edit')) { %>
+            <% if (hasSectionAccess('settings')) { %>
             <a href="/client-branding" class="ux35-sidebar-item <%= currentPage === 'client-branding' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">branding_watermark</span>
                 <span><%= _('nav.client_branding') %></span>
@@ -49,6 +49,7 @@
         </div>
 
         <!-- Management -->
+        <% if (hasSectionAccess('devices') || hasSectionAccess('tickets') || hasSectionAccess('automation') || hasSectionAccess('network') || hasSectionAccess('activity') || hasSectionAccess('cdap') || hasSectionAccess('fleet') || hasSectionAccess('scaling') || hasSectionAccess('cross-platform') || hasSectionAccess('chat')) { %>
         <div class="ux35-sidebar-section" data-panel="management">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle" aria-expanded="true"><span><%= _('nav.management') || 'Management' %></span><span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span></button>
             <% if (hasPermission('device.view')) { %>
@@ -65,43 +66,43 @@
                 <span><%= _('nav.help_requests') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('server.config')) { %>
+            <% if (hasSectionAccess('automation')) { %>
             <a href="/automation" class="ux35-sidebar-item <%= currentPage === 'automation' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">smart_toy</span>
                 <span><%= _('nav.automation') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('device.view')) { %>
+            <% if (hasSectionAccess('network')) { %>
             <a href="/network" class="ux35-sidebar-item <%= currentPage === 'network' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">lan</span>
                 <span><%= _('nav.network') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('audit.view')) { %>
+            <% if (hasSectionAccess('activity')) { %>
             <a href="/activity" class="ux35-sidebar-item <%= currentPage === 'activity' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">timeline</span>
                 <span><%= _('nav.activity') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('cdap.view')) { %>
+            <% if (hasSectionAccess('cdap')) { %>
             <a href="/cdap" class="ux35-sidebar-item <%= currentPage === 'cdap' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">developer_board</span>
                 <span><%= _('nav.cdap') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('org.manage_devices')) { %>
+            <% if (hasSectionAccess('fleet')) { %>
             <a href="/fleet" class="ux35-sidebar-item <%= currentPage === 'fleet' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">hub</span>
                 <span><%= _('nav.fleet') || 'Fleet' %></span>
             </a>
             <% } %>
-            <% if (hasPermission('server.config')) { %>
+            <% if (hasSectionAccess('scaling')) { %>
             <a href="/scaling" class="ux35-sidebar-item <%= currentPage === 'scaling' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">cell_tower</span>
                 <span><%= _('nav.scaling') || 'Scaling' %></span>
             </a>
             <% } %>
-            <% if (hasPermission('device.view')) { %>
+            <% if (hasSectionAccess('cross-platform')) { %>
             <a href="/cross-platform" class="ux35-sidebar-item <%= currentPage === 'cross-platform' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">devices</span>
                 <span><%= _('nav.cross_platform') || 'Cross-Platform' %></span>
@@ -112,11 +113,13 @@
                 <span><%= _('nav.chat') %></span>
             </a>
         </div>
+        <% } %>
 
         <!-- Tools -->
+        <% if (hasSectionAccess('reports') || hasSectionAccess('settings') || hasSectionAccess('remote') || hasSectionAccess('toolkit') || hasSectionAccess('cdap')) { %>
         <div class="ux35-sidebar-section" data-panel="tools">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle" aria-expanded="true"><span><%= _('nav.tools') %></span><span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span></button>
-            <% if (hasPermission('audit.view')) { %>
+            <% if (hasSectionAccess('reports')) { %>
             <a href="/reports" class="ux35-sidebar-item <%= currentPage === 'reports' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">assessment</span>
                 <span><%= _('nav.reports') %></span>
@@ -132,7 +135,7 @@
                 <span><%= _('nav.agents') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('device.connect')) { %>
+            <% if (hasSectionAccess('remote')) { %>
             <a href="/remote" class="ux35-sidebar-item <%= currentPage === 'remote' ? 'active' : '' %>" target="_blank" rel="noopener noreferrer" title="<%= _('nav.remote_open_tab') || _('nav.remote') %>">
                 <span class="material-icons" aria-hidden="true">connected_tv</span>
                 <span><%= _('nav.remote') || 'Remote Desktop' %></span>
@@ -143,77 +146,84 @@
                 <span><%= _('nav.toolkit') || 'Toolkit' %></span>
             </a>
             <% } %>
-            <% if (hasPermission('cdap.view')) { %>
+            <% if (hasSectionAccess('cdap')) { %>
             <a href="/cdap-studio" class="ux35-sidebar-item <%= currentPage === 'cdap-studio' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">account_tree</span>
                 <span><%= _('nav.sdk_studio') || 'SDK Studio' %></span>
             </a>
             <% } %>
         </div>
+        <% } %>
 
         <!-- System -->
-        <% if (isSuperAdmin || hasPermission('server.config') || hasPermission('user.view') || hasPermission('enrollment.manage') || hasPermission('enrollment.approve') || hasPermission('audit.view') || hasPermission('org.create') || hasPermission('org.edit') || hasPermission('org.manage_users')) { %>
+        <% if (hasSectionAccess('users') || hasSectionAccess('organizations') || hasSectionAccess('activity') || hasSectionAccess('settings')) { %>
         <div class="ux35-sidebar-section" data-panel="system">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle" aria-expanded="true"><span><%= _('nav.system') %></span><span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span></button>
-            <% if (hasPermission('enrollment.manage')) { %>
+            <% if (hasSectionAccess('settings')) { %>
             <a href="/tokens" class="ux35-sidebar-item <%= currentPage === 'tokens' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">token</span>
                 <span><%= _('nav.tokens') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('org.create') || hasPermission('org.edit') || hasPermission('org.manage_users')) { %>
+            <% if (hasSectionAccess('organizations')) { %>
             <a href="/organizations" class="ux35-sidebar-item <%= currentPage === 'organizations' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">corporate_fare</span>
                 <span><%= _('nav.organizations') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('server.config')) { %>
+            <% if (hasSectionAccess('settings')) { %>
             <a href="/policies" class="ux35-sidebar-item <%= currentPage === 'policies' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">policy</span>
                 <span><%= _('nav.policies') || 'Policies' %></span>
             </a>
+            <% if (hasSectionAccess('server-attestation')) { %>
             <a href="/attestation" class="ux35-sidebar-item <%= currentPage === 'attestation' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">fingerprint</span>
                 <span><%= _('nav.attestation') || 'Attestation' %></span>
             </a>
+            <% } %>
+            <% if (hasSectionAccess('dataguard')) { %>
             <a href="/dataguard" class="ux35-sidebar-item <%= currentPage === 'dataguard' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">shield</span>
                 <span><%= _('nav.dataguard') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('user.view')) { %>
+            <% } %>
+            <% if (hasSectionAccess('users')) { %>
             <a href="/users" class="ux35-sidebar-item <%= currentPage === 'users' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">group</span>
                 <span><%= _('nav.users') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('audit.view')) { %>
+            <% if (hasSectionAccess('security-audit')) { %>
             <a href="/security-audit" class="ux35-sidebar-item <%= currentPage === 'security-audit' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">security</span>
                 <span><%= _('nav.security_audit') %></span>
             </a>
             <% } %>
-            <% if (isSuperAdmin) { %>
+            <% if (hasSectionAccess('permissions')) { %>
             <a href="/permissions" class="ux35-sidebar-item <%= currentPage === 'permissions' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">admin_panel_settings</span>
                 <span><%= _('nav.permissions') %></span>
             </a>
             <% } %>
-            <% if (hasPermission('server.config')) { %>
+            <% if (hasSectionAccess('languages')) { %>
             <a href="/languages" class="ux35-sidebar-item <%= currentPage === 'languages' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">translate</span>
                 <span><%= _('nav.languages') %></span>
             </a>
+            <% if (hasSectionAccess('resource-control')) { %>
             <a href="/resource-control" class="ux35-sidebar-item <%= currentPage === 'resource-control' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">tune</span>
                 <span><%= _('nav.resource_control') %></span>
             </a>
             <% } %>
+            <% } %>
         </div>
         <% } %>
 
         <!-- Server Management -->
-        <% if (hasPermission('server.config')) { %>
+        <% if (hasSectionAccess('settings')) { %>
         <div class="ux35-sidebar-section" data-panel="server-mgmt">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle" aria-expanded="true"><span><%= _('nav.server_management') || 'Server Management' %></span><span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span></button>
             <a href="/server-management?tab=overview" class="ux35-sidebar-item <%= currentPage === 'server-management' && ux35ServerTab === 'overview' ? 'active' : '' %>">
@@ -237,7 +247,7 @@
         <% } %>
 
         <!-- Commercialization -->
-        <% if (hasPermission('billing.view')) { %>
+        <% if (hasSectionAccess('commercialization')) { %>
         <div class="ux35-sidebar-section" data-panel="commercialization">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle" aria-expanded="true"><span><%= _('nav.commercialization') || 'Commercialization' %></span><span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span></button>
             <a href="/commercialization?tab=packages" class="ux35-sidebar-item <%= currentPage === 'commercialization' && (ux35CommercialTab === 'packages' || ux35CommercialTab === 'overview' || ux35CommercialTab === 'settings') ? 'active' : '' %>">
@@ -252,9 +262,10 @@
         <% } %>
 
         <!-- Settings & attestation -->
+        <% if (hasSectionAccess('settings') || hasSectionAccess('server-attestation')) { %>
         <div class="ux35-sidebar-section" data-panel="settings">
             <button type="button" class="ux35-sidebar-heading ux35-sidebar-heading-toggle" aria-expanded="true"><span><%= _('nav.settings') %></span><span class="material-icons ux35-section-chevron" aria-hidden="true">expand_less</span></button>
-            <% if (hasPermission('server.attestation')) { %>
+            <% if (hasSectionAccess('server-attestation')) { %>
             <a href="/server-attestation" class="ux35-sidebar-item <%= currentPage === 'server-attestation' ? 'active' : '' %>">
                 <span class="material-icons" aria-hidden="true">verified</span>
                 <span><%= _('nav.server_attestation') || 'Server Attestation' %></span>
@@ -269,6 +280,7 @@
                 <span><%= _('nav.help') || 'Help' %></span>
             </button>
         </div>
+        <% } %>
     </nav>
 
     <div class="ux35-sidebar-footer">
