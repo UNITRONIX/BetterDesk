@@ -397,16 +397,19 @@
     opacity: 0.5;
 }
 
-/* Drag image for a device row (built in devices.js on dragstart, removed on
-   dragend). It must be rendered for setDragImage, so it waits off-screen.
-   The transparent padding leaves room for the shadow and keeps the pointer
-   off the OS mark. */
+/* Drag preview for a device row (built in devices.js on dragstart, removed on
+   dragend). It follows the pointer through a transform set on dragover; the
+   browser's own drag image is a transparent pixel. */
 .device-drag-image {
     position: fixed;
-    top: -1000px;
-    inset-inline-start: 0;
-    padding: var(--space-4);
+    top: 0;
+    left: 0;
+    z-index: var(--layer-menu);
     pointer-events: none;
+}
+
+.device-drag-image[hidden] {
+    display: none;
 }
 
 .device-drag-box {

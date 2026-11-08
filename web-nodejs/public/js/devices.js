@@ -4217,13 +4217,27 @@
     function onDocumentDragOver(e) {
         if (!draggedDeviceId) return;
         lastDragClientY = e.clientY;
+        positionDragImage(e.clientX, e.clientY);
     }
-    
+
+    // The browser's own drag image is faded and, on scaled Windows displays,
+    // drawn away from the pointer. It is replaced by a transparent pixel and
+    // the preview below follows the pointer instead.
+    const blankDragImage = new Image();
+    blankDragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+    /** Put the preview just below and after the pointer (before it in RTL) */
+    function positionDragImage(x, y) {
+        if (!dragImageEl || (x === 0 && y === 0)) return;
+        const gap = 12;
+        const left = dragImageEl.dataset.rtl === 'true' ? x - dragImageEl.offsetWidth - gap : x + gap;
+        dragImageEl.style.transform = `translate(${Math.round(left)}px, ${Math.round(y + gap)}px)`;
+        dragImageEl.hidden = false;
+    }
+
     /**
-     * Drag image: the device's OS mark, its name and its ID, instead of the
-     * browser's faded copy of the whole row. The element has to be in the
-     * document and rendered when setDragImage runs, so it sits off-screen
-     * (see .device-drag-image) until dragend removes it.
+     * Drag preview: the device's OS mark, its name and its ID, shown next to
+     * the pointer while a row is dragged and removed on dragend.
      */
     function removeDragImage() {
         if (dragImageEl) {
@@ -4239,6 +4253,7 @@
         const el = document.createElement('div');
         el.className = 'device-drag-image';
         el.setAttribute('aria-hidden', 'true');
+        el.hidden = true;
         el.innerHTML = `
             <span class="device-drag-box">
                 ${Utils.getPlatformIconHtml(device && (device.platform || device.os))}
@@ -4248,6 +4263,7 @@
                 </span>
             </span>`;
         document.body.appendChild(el);
+        el.dataset.rtl = String(getComputedStyle(el).direction === 'rtl');
         dragImageEl = el;
         return el;
     }
@@ -4312,13 +4328,9 @@
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', draggedDeviceId);
             if (typeof e.dataTransfer.setDragImage === 'function') {
-                const image = buildDragImage(draggedDeviceId);
-                // Pointer just outside the box's top start corner, so the
-                // cursor does not cover the OS mark (the wrapper's padding
-                // is transparent).
-                const rtl = getComputedStyle(image).direction === 'rtl';
-                const inset = 6;
-                e.dataTransfer.setDragImage(image, rtl ? image.offsetWidth - inset : inset, inset);
+                buildDragImage(draggedDeviceId);
+                e.dataTransfer.setDragImage(blankDragImage, 0, 0);
+                positionDragImage(e.clientX, e.clientY);
             }
             lastDragClientY = e.clientY;
             startDragAutoScroll();
