@@ -18,8 +18,9 @@
 <%- include('layouts/main', {
     title: _('nav.fleet'),
     uiReworked: true,
-    pageStyles: ['ui/fleet'],
-    pageScripts: pageScripts,
+    pageStyles: ['ui/chart', 'ui/device-detail', 'ui/fleet'],
+    // The device panel (deviceDetail.js) opens from device IDs in the lists
+    pageScripts: ['ui-chart', 'deviceDetail'].concat(typeof pageScripts !== 'undefined' && pageScripts ? pageScripts : ['fleet', 'fleet-builder']),
     currentPage: currentPage,
     breadcrumb: [{ label: _('nav.fleet') }],
     body: `
@@ -28,6 +29,9 @@
         <h1>${_('nav.fleet')}</h1>
         <p class="page-description">${_('fleet.page_description')}</p>
     </div>
+
+    <!-- Shown when the server answers "not found" for the fleet functions (fleet.js markUnavailable) -->
+    <p class="notice warning fleet-unavailable" id="fleet-unavailable" role="status" hidden>${_('fleet.unavailable_notice')}</p>
 
     <div class="fleet-body">
     <div class="tabs" role="tablist" aria-label="${_('nav.fleet')}">
@@ -60,7 +64,7 @@
             </div>
         </div>
         <p class="count-line" id="res-count" aria-live="polite"></p>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="tab-resources">
             <table class="data-table fleet-table">
                 <thead>
                     <tr>
@@ -96,11 +100,11 @@
                 </select>
             </label>
             <div class="toolbar-end">
-                <button type="button" class="btn btn-primary" data-bd-call="Fleet.showTaskModal"><span class="material-icons" aria-hidden="true">add</span>${_('fleet.create_task')}</button>
+                <button type="button" class="btn btn-primary" id="task-add-btn" data-bd-call="Fleet.showTaskModal"><span class="material-icons" aria-hidden="true">add</span>${_('fleet.create_task')}</button>
             </div>
         </div>
         <p class="count-line" id="task-count" aria-live="polite"></p>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="tab-tasks">
             <table class="data-table fleet-table">
                 <thead>
                     <tr>
@@ -133,16 +137,16 @@
         <div class="toolbar">
             <label class="fleet-filter">
                 <span class="fleet-filter-label">${_('fleet.workflow_label')}</span>
-                <select id="workflow-select" class="form-select" data-bd-call="Fleet.loadWorkflow" data-bd-on="change">
+                <select id="workflow-select" class="form-select" data-needs-server data-bd-call="Fleet.loadWorkflow" data-bd-on="change">
                     <option value="">${_('fleet.select_workflow')}</option>
                 </select>
             </label>
             <button type="button" class="btn" data-bd-call="Fleet.newWorkflow"><span class="material-icons" aria-hidden="true">add</span>${_('fleet.new_workflow')}</button>
             <div class="toolbar-end">
                 <button type="button" class="btn" data-bd-call="Fleet.exportWorkflow"><span class="material-icons" aria-hidden="true">download</span>${_('fleet.export')}</button>
-                <button type="button" class="btn" data-bd-call="Fleet.executeWorkflow" data-bd-args='[true]'><span class="material-icons" aria-hidden="true">play_arrow</span>${_('fleet.dry_run')}</button>
-                <button type="button" class="btn" data-bd-call="Fleet.executeWorkflow" data-bd-args='[false]'><span class="material-icons" aria-hidden="true">play_arrow</span>${_('fleet.execute')}</button>
-                <button type="button" class="btn btn-primary" data-bd-call="Fleet.saveWorkflow">${_('fleet.save')}</button>
+                <button type="button" class="btn" data-needs-server data-bd-call="Fleet.executeWorkflow" data-bd-args='[true]'><span class="material-icons" aria-hidden="true">play_arrow</span>${_('fleet.dry_run')}</button>
+                <button type="button" class="btn" data-needs-server data-bd-call="Fleet.executeWorkflow" data-bd-args='[false]'><span class="material-icons" aria-hidden="true">play_arrow</span>${_('fleet.execute')}</button>
+                <button type="button" class="btn btn-primary" data-needs-server data-bd-call="Fleet.saveWorkflow">${_('fleet.save')}</button>
             </div>
         </div>
         <p class="form-status" id="workflow-status" aria-live="polite"></p>
@@ -189,18 +193,18 @@
             </label>
             <div class="toolbar-end">
                 <span class="form-status" id="comp-scan-status" aria-live="polite"></span>
-                <button type="button" class="btn btn-primary" id="comp-scan-all" data-bd-call="Fleet.scanAll">${_('fleet.scan_all')}</button>
+                <button type="button" class="btn btn-primary" id="comp-scan-all" data-needs-server data-bd-call="Fleet.scanAll">${_('fleet.scan_all')}</button>
             </div>
         </div>
         <p class="count-line" id="compliance-stats" aria-live="polite"></p>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="tab-compliance">
             <table class="data-table fleet-table">
                 <thead>
                     <tr>
                         <th scope="col">${_('fleet.col_device')}</th>
                         <th scope="col">${_('fleet.col_os')}</th>
                         <th scope="col">${_('fleet.col_score')}</th>
-                        <th scope="col">${_('fleet.col_issues')}</th>
+                        <th scope="col" class="is-num">${_('fleet.col_issues')}</th>
                         <th scope="col">${_('fleet.col_last_scan')}</th>
                         <th scope="col" class="actions"><span class="sr-only">${_('fleet.col_actions')}</span></th>
                     </tr>

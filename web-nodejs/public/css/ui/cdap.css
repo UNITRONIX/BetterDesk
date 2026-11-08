@@ -42,15 +42,6 @@
     gap: var(--space-3);
 }
 
-.cdap-num {
-    text-align: end;
-    font-variant-numeric: tabular-nums;
-}
-
-.data-table th.cdap-num {
-    text-align: end;
-}
-
 .cdap-device-link {
     font-weight: 600;
 }
@@ -887,4 +878,10 @@ td.state-cell .state-text {
     display: inline-block;
     max-width: calc(100vw - 2 * var(--page-pad) - 2 * var(--row-pad-x));
     white-space: normal;
+}
+
+/* The gateway state is a sentence: let it wrap in the side column */
+#cdap-gw-status {
+    white-space: normal;
+    align-items: baseline;
 }

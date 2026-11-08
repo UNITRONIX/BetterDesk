@@ -298,3 +298,8 @@ td.state-cell .state-text {
     max-width: calc(100vw - 2 * var(--page-pad) - 2 * var(--row-pad-x));
     white-space: normal;
 }
+
+/* "Can't save" note at the top of the resource and task dialogs */
+.fleet-dialog-note {
+    margin-bottom: var(--space-4);
+}

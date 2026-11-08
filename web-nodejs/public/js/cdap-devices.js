@@ -195,7 +195,7 @@
         if (listSection) listSection.classList.remove('hidden');
         if (danger) danger.classList.remove('hidden');
 
-        if (statusEl) statusEl.className = 'status online';
+        if (statusEl) statusEl.className = 'status is-good';
         if (statusText) {
             statusText.textContent = data.tls
                 ? _i18n('cdap.gateway_running_tls', { port: data.port || '–' })
@@ -206,7 +206,7 @@
     function updateGatewayError(message) {
         var statusEl = document.getElementById('cdap-gw-status');
         var statusText = document.getElementById('cdap-gw-status-text');
-        if (statusEl) statusEl.className = 'status error';
+        if (statusEl) statusEl.className = 'status is-danger';
         if (statusText) statusText.textContent = _i18n('cdap.gateway_status_failed', { error: message || '' });
     }
 
@@ -278,15 +278,18 @@
         var statusText = connected ? _i18n('cdap.connected') : _i18n('cdap.disconnected');
         var href = '/cdap/devices/' + encodeURIComponent(rawId);
 
+        // Shared data display (utils.js): status tone, type tag, address, numbers
+        var uptime = connected && dev.connected_at
+            ? Utils.formatDuration((Date.now() - Utils.parseDate(dev.connected_at).getTime()) / 1000) : '';
         return '<tr data-id="' + id + '">' +
             '<td><a href="' + escapeHtml(href) + '" class="cdap-device-link">' + name + '</a>' +
-                (name !== id ? '<span class="cell-sub mono">' + id + '</span>' : '') + '</td>' +
-            '<td>' + escapeHtml(typeLabel(type)) + '</td>' +
-            '<td><span class="status ' + (connected ? 'online' : 'offline') + '">' + escapeHtml(statusText) + '</span></td>' +
-            '<td><span class="mono">' + escapeHtml(dev.client_ip || '–') + '</span></td>' +
-            '<td>' + (connected ? escapeHtml(formatUptime(dev.connected_at)) : '–') + '</td>' +
-            '<td class="cdap-num">' + countWidgets(dev) + '</td>' +
-            '<td class="cdap-num">' + (connected ? escapeHtml(String(dev.heartbeat_count || 0)) : '–') + '</td>' +
+                (name !== id ? '<span class="cell-sub">' + Utils.valueHtml(rawId) + '</span>' : '') + '</td>' +
+            '<td>' + Utils.tagHtml(typeLabel(type)) + '</td>' +
+            '<td>' + Utils.statusHtml(connected ? 'good' : 'neutral', statusText) + '</td>' +
+            '<td>' + Utils.valueHtml(dev.client_ip) + '</td>' +
+            '<td>' + (uptime ? escapeHtml(uptime) : Utils.emptyHtml()) + '</td>' +
+            '<td class="is-num">' + escapeHtml(Utils.formatNumber(countWidgets(dev))) + '</td>' +
+            '<td class="is-num">' + (connected ? escapeHtml(Utils.formatNumber(dev.heartbeat_count || 0)) : Utils.emptyHtml()) + '</td>' +
         '</tr>';
     }
 
@@ -319,15 +322,6 @@
         var m = manifestOf(dev);
         if (m && Array.isArray(m.widgets)) return m.widgets.length;
         return 0;
-    }
-
-    function formatUptime(connectedAt) {
-        if (!connectedAt) return '–';
-        var diff = Math.floor((Date.now() - new Date(connectedAt).getTime()) / 1000);
-        if (diff < 60) return diff + 's';
-        if (diff < 3600) return Math.floor(diff / 60) + 'm';
-        if (diff < 86400) return Math.floor(diff / 3600) + 'h ' + Math.floor((diff % 3600) / 60) + 'm';
-        return Math.floor(diff / 86400) + 'd ' + Math.floor((diff % 86400) / 3600) + 'h';
     }
 
     function _i18n(key, params) {

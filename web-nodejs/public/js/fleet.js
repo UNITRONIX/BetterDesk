@@ -11,6 +11,8 @@
     let _tasksLoaded = false;
     let _complianceData = [];
     let _menuSeq = 0;
+    // True once a fleet list answers 404: the server has no fleet functions
+    let _unavailable = false;
 
     // -----------------------------------------------------------------------
     // Requests: JSON with the CSRF header; a failed answer throws with the server's message
@@ -26,11 +28,55 @@
         });
         let data = null;
         try { data = await resp.json(); } catch { data = null; }
+        if (resp.status === 404 && (opts.method || 'GET') === 'GET' && url.startsWith('/api/panel/fleet/')) {
+            markUnavailable();
+            const err = new Error(_('fleet.unavailable_short'));
+            err.unavailable = true;
+            throw err;
+        }
         if (!resp.ok || (data && data.success === false)) {
             const msg = (data && (data.error || data.message)) || resp.statusText || String(resp.status);
             throw new Error(msg);
         }
         return data;
+    }
+
+    // The server has no fleet functions: say so once at the top, keep every
+    // control visible, and turn off the ones that need the server.
+    function markUnavailable() {
+        if (_unavailable) return;
+        _unavailable = true;
+        const notice = document.getElementById('fleet-unavailable');
+        if (notice) notice.hidden = false;
+        document.querySelectorAll('[data-needs-server]').forEach(el => {
+            el.disabled = true;
+            el.setAttribute('aria-describedby', 'fleet-unavailable');
+        });
+        workflowStatus('');
+    }
+
+    // Dialogs stay open to look at what can be set; without the server they can't save
+    function unavailableNote() {
+        return _unavailable ? `<p class="notice warning fleet-dialog-note">${esc(_('fleet.unavailable_dialog'))}</p>` : '';
+    }
+
+    function disableDialogSave() {
+        if (!_unavailable) return;
+        const btns = document.querySelectorAll('.modal-overlay .modal-footer .btn-primary');
+        const btn = btns[btns.length - 1];
+        if (btn) btn.disabled = true;
+    }
+
+    // A device ID opens the shared device panel when this role may view devices
+    function deviceHtml(id) {
+        const canOpen = window.DeviceDetail && (!(window.Utils && typeof Utils.can === 'function') || Utils.can('device.view'));
+        return canOpen
+            ? `<button type="button" class="btn-link mono" data-bd-call="DeviceDetail.open" data-bd-args="${esc(JSON.stringify([String(id)]))}">${esc(id)}</button>`
+            : `<span class="mono">${esc(id)}</span>`;
+    }
+
+    function unavailableRow(tbody, cols) {
+        tbody.innerHTML = `<tr><td colspan="${cols}" class="state-cell">${esc(_('fleet.unavailable_table'))}</td></tr>`;
     }
 
     function listFrom(data, key) {
@@ -149,10 +195,9 @@
         if (el) el.textContent = text || '';
     }
 
+    // Times, statuses, kinds and values use the shared data display (utils.js)
     function fmtDate(v) {
-        if (!v) return '–';
-        const d = new Date(v);
-        return isNaN(d) ? esc(v) : esc(d.toLocaleString());
+        return Utils.timeHtml(v);
     }
 
     function notify(type, msg) {
@@ -188,7 +233,8 @@
         } catch (e) {
             _resources = [];
             setCount('res-count', '');
-            stateRow(tbody, 6, _('fleet.resources_failed', { error: e.message }), 'Fleet.loadResources');
+            if (e.unavailable) unavailableRow(tbody, 6);
+            else stateRow(tbody, 6, _('fleet.resources_failed', { error: e.message }), 'Fleet.loadResources');
             return;
         }
         const typeFilter = document.getElementById('res-type-filter')?.value;
@@ -212,10 +258,10 @@
             return `
             <tr>
                 <td>${esc(r.name)}</td>
-                <td>${esc(typeLabel(r.type))}</td>
-                <td><span class="mono">${esc(r.address || r.value || '–')}</span></td>
+                <td>${Utils.tagHtml(typeLabel(r.type))}</td>
+                <td>${Utils.valueHtml(r.address || r.value)}</td>
                 <td>${esc(scopeLabel(r.scope))}${r.scope_value ? `<span class="cell-sub">${esc(r.scope_value)}</span>` : ''}</td>
-                <td><span class="status ${active ? 'active' : 'stopped'}">${esc(active ? _('fleet.active') : _('fleet.inactive'))}</span></td>
+                <td>${Utils.statusHtml(active ? 'good' : 'neutral', active ? _('fleet.active') : _('fleet.inactive'))}</td>
                 <td class="actions">
                     <button type="button" class="btn btn-sm" data-bd-call="Fleet.editResource" data-bd-args="${id}">${esc(_('fleet.edit'))}</button>
                     ${rowMenu(_('fleet.actions_for', { name: r.name || r.id }),
@@ -268,12 +314,13 @@
         }
         Modal.show({
             title: resource ? _('fleet.edit_resource') : _('fleet.add_resource'),
-            content: resourceForm(),
+            content: unavailableNote() + resourceForm(),
             buttons: [
                 { label: _('fleet.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
                 { label: resource ? _('fleet.save') : _('fleet.add_resource'), class: 'btn-primary', onClick: saveResource }
             ]
         });
+        disableDialogSave();
         document.getElementById('res-edit-id').value = resource?.id || '';
         document.getElementById('res-name').value = resource?.name || '';
         document.getElementById('res-type').value = resource?.type || 'printer';
@@ -386,7 +433,8 @@
         } catch (e) {
             _tasks = [];
             setCount('task-count', '');
-            stateRow(tbody, 7, _('fleet.tasks_failed', { error: e.message }), 'Fleet.loadTasks');
+            if (e.unavailable) unavailableRow(tbody, 7);
+            else stateRow(tbody, 7, _('fleet.tasks_failed', { error: e.message }), 'Fleet.loadTasks');
             return;
         }
         filterTasks();
@@ -411,10 +459,10 @@
             return `
             <tr>
                 <td>${esc(t.name)}</td>
-                <td>${esc(taskTypeLabel(t.type || t.task_type))}</td>
-                <td><span class="mono">${esc(t.targets || t.device_id || '–')}</span></td>
+                <td>${Utils.tagHtml(taskTypeLabel(t.type || t.task_type))}</td>
+                <td>${Utils.valueHtml(t.targets || t.device_id)}</td>
                 <td>${esc(formatSchedule(t))}</td>
-                <td><span class="status ${STATUS_CLASS[st] || ''}">${esc(stLabel)}</span></td>
+                <td>${Utils.statusHtml(STATUS_CLASS[st] || st, stLabel)}</td>
                 <td>${fmtDate(t.last_run)}</td>
                 <td class="actions">
                     <button type="button" class="btn btn-sm" data-bd-call="Fleet.showOutput" data-bd-args="${id}">${esc(_('fleet.show_output'))}</button>
@@ -496,13 +544,14 @@
         if (!task || typeof task !== 'object' || task instanceof Event) task = null;
         Modal.show({
             title: task ? _('fleet.edit_task') : _('fleet.create_task'),
-            content: taskForm(),
+            content: unavailableNote() + taskForm(),
             size: 'large',
             buttons: [
                 { label: _('fleet.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
                 { label: task ? _('fleet.save') : _('fleet.create_task'), class: 'btn-primary', onClick: saveTask }
             ]
         });
+        disableDialogSave();
         document.getElementById('task-edit-id').value = task?.id || '';
         document.getElementById('task-name').value = task?.name || '';
         document.getElementById('task-type').value = task?.type || task?.task_type || 'script';
@@ -643,7 +692,8 @@
         } catch (e) {
             _complianceData = [];
             setCount('compliance-stats', '');
-            stateRow(tbody, 6, _('fleet.compliance_failed', { error: e.message }), 'Fleet.loadCompliance');
+            if (e.unavailable) unavailableRow(tbody, 6);
+            else stateRow(tbody, 6, _('fleet.compliance_failed', { error: e.message }), 'Fleet.loadCompliance');
             return;
         }
         renderCompliance(_complianceData);
@@ -672,10 +722,10 @@
             const id = esc(JSON.stringify([devId]));
             return `
             <tr>
-                <td><span class="mono">${esc(devId)}</span>${d.hostname ? `<span class="cell-sub">${esc(d.hostname)}</span>` : ''}</td>
+                <td>${deviceHtml(devId)}${d.hostname ? `<span class="cell-sub">${esc(d.hostname)}</span>` : ''}</td>
                 <td>${esc(d.os || d.platform || '–')}</td>
                 <td><div class="meter fleet-score${level}"><span class="meter-bar"><span class="meter-fill" style="width:${score}%"></span></span><span class="meter-value">${score} %</span></div></td>
-                <td>${esc(String(d.issues ?? 0))}</td>
+                <td class="is-num">${esc(Utils.formatNumber(d.issues ?? 0))}</td>
                 <td>${fmtDate(d.last_scan)}</td>
                 <td class="actions">
                     <button type="button" class="btn btn-sm" data-bd-call="Fleet.scanDevice" data-bd-args="${id}">${Utils.icon('compliance_scan')}${esc(_('fleet.comp_scan'))}</button>
@@ -750,7 +800,7 @@
             });
             if (val) sel.value = val;
         } catch (e) {
-            workflowStatus(_('fleet.workflows_failed', { error: e.message }), 'is-error');
+            if (!e.unavailable) workflowStatus(_('fleet.workflows_failed', { error: e.message }), 'is-error');
         }
     }
 
