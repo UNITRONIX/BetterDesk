@@ -6679,5 +6679,19 @@
         "back_to_list": "Torna all'elenco dei dispositivi",
         "fewer_displays": "Rimuovi uno schermo virtuale",
         "more_displays": "Aggiungi uno schermo virtuale"
+    },
+    "diagram": {
+        "your_computer": "Il suo computer",
+        "remote_device": "Dispositivo remoto",
+        "with_rustdesk": "con RustDesk",
+        "id_server": "Server ID",
+        "relay_server": "Server di inoltro",
+        "off": "(disattivato)",
+        "step_find": "I due computer restano in contatto con il server ID ({id}). Quando si connette, dice a ciascuno dove si trova l'altro.",
+        "step_direct": "Se le reti lo consentono, i due computer comunicano poi direttamente.",
+        "step_direct_off": "La connessione diretta è disattivata su questo server.",
+        "step_relay": "Altrimenti la sessione passa per il server di inoltro ({relay}).",
+        "step_relay_always": "Ogni sessione passa per il server di inoltro ({relay}).",
+        "how_title": "Come funziona una connessione"
     }
 }

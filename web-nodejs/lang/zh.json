@@ -6679,5 +6679,19 @@
         "back_to_list": "返回设备列表",
         "fewer_displays": "移除一个虚拟显示器",
         "more_displays": "添加一个虚拟显示器"
+    },
+    "diagram": {
+        "your_computer": "您的电脑",
+        "remote_device": "远程设备",
+        "with_rustdesk": "使用 RustDesk",
+        "id_server": "ID 服务器",
+        "relay_server": "中继服务器",
+        "off": "（关闭）",
+        "step_find": "两台电脑都与 ID 服务器 ({id}) 保持联系。连接时，它会告诉双方彼此的位置。",
+        "step_direct": "如果网络允许，两台电脑随后直接通信。",
+        "step_direct_off": "此服务器已关闭直接连接。",
+        "step_relay": "否则会话会经过中继服务器 ({relay})。",
+        "step_relay_always": "每个会话都会经过中继服务器 ({relay})。",
+        "how_title": "连接如何工作"
     }
 }

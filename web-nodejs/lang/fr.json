@@ -6683,5 +6683,19 @@
         "back_to_list": "Retour à la liste des appareils",
         "fewer_displays": "Retirer un écran virtuel",
         "more_displays": "Ajouter un écran virtuel"
+    },
+    "diagram": {
+        "your_computer": "Votre ordinateur",
+        "remote_device": "Appareil distant",
+        "with_rustdesk": "avec RustDesk",
+        "id_server": "Serveur d'ID",
+        "relay_server": "Serveur relais",
+        "off": "(désactivé)",
+        "step_find": "Les deux ordinateurs restent en contact avec le serveur d'ID ({id}). Quand vous vous connectez, il indique à chacun où se trouve l'autre.",
+        "step_direct": "Si les réseaux le permettent, les deux ordinateurs communiquent ensuite directement.",
+        "step_direct_off": "La connexion directe est désactivée sur ce serveur.",
+        "step_relay": "Sinon, la session passe par le serveur relais ({relay}).",
+        "step_relay_always": "Chaque session passe par le serveur relais ({relay}).",
+        "how_title": "Comment fonctionne une connexion"
     }
 }

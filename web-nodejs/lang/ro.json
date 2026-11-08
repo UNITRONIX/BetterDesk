@@ -6685,5 +6685,19 @@
         "back_to_list": "Înapoi la lista de dispozitive",
         "fewer_displays": "Elimină un ecran virtual",
         "more_displays": "Adaugă un ecran virtual"
+    },
+    "diagram": {
+        "your_computer": "Computerul dvs.",
+        "remote_device": "Dispozitiv la distanță",
+        "with_rustdesk": "cu RustDesk",
+        "id_server": "Server de ID",
+        "relay_server": "Server de releu",
+        "off": "(oprit)",
+        "step_find": "Ambele computere țin legătura cu serverul de ID ({id}). La conectare, el spune fiecărei părți unde este cealaltă.",
+        "step_direct": "Dacă rețelele permit, cele două computere comunică apoi direct.",
+        "step_direct_off": "Conexiunea directă este oprită pe acest server.",
+        "step_relay": "Altfel, sesiunea trece prin serverul de releu ({relay}).",
+        "step_relay_always": "Fiecare sesiune trece prin serverul de releu ({relay}).",
+        "how_title": "Cum funcționează o conexiune"
     }
 }

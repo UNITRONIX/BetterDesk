@@ -6685,5 +6685,19 @@
         "back_to_list": "Tillbaka till enhetslistan",
         "fewer_displays": "Ta bort en virtuell skärm",
         "more_displays": "Lägg till en virtuell skärm"
+    },
+    "diagram": {
+        "your_computer": "Din dator",
+        "remote_device": "Fjärrenhet",
+        "with_rustdesk": "med RustDesk",
+        "id_server": "ID-server",
+        "relay_server": "Reläserver",
+        "off": "(av)",
+        "step_find": "Båda datorerna håller kontakt med ID-servern ({id}). När du ansluter berättar den för varje sida var den andra är.",
+        "step_direct": "Om näten tillåter det pratar de två datorerna sedan direkt med varandra.",
+        "step_direct_off": "Direkt anslutning är avstängd på den här servern.",
+        "step_relay": "Annars går sessionen via reläservern ({relay}).",
+        "step_relay_always": "Varje session går via reläservern ({relay}).",
+        "how_title": "Så fungerar en anslutning"
     }
 }

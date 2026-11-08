@@ -6679,5 +6679,19 @@
         "back_to_list": "Terug naar de apparatenlijst",
         "fewer_displays": "Virtueel scherm verwijderen",
         "more_displays": "Virtueel scherm toevoegen"
+    },
+    "diagram": {
+        "your_computer": "Uw computer",
+        "remote_device": "Extern apparaat",
+        "with_rustdesk": "met RustDesk",
+        "id_server": "ID-server",
+        "relay_server": "Relayserver",
+        "off": "(uit)",
+        "step_find": "Beide computers houden contact met de ID-server ({id}). Als u verbindt, vertelt die elke kant waar de andere is.",
+        "step_direct": "Als de netwerken het toelaten, praten de twee computers daarna rechtstreeks met elkaar.",
+        "step_direct_off": "Een directe verbinding staat op deze server uit.",
+        "step_relay": "Anders loopt de sessie via de relayserver ({relay}).",
+        "step_relay_always": "Elke sessie loopt via de relayserver ({relay}).",
+        "how_title": "Zo werkt een verbinding"
     }
 }

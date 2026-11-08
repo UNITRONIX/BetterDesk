@@ -6679,5 +6679,19 @@
         "back_to_list": "Zurück zur Geräteliste",
         "fewer_displays": "Virtuellen Bildschirm entfernen",
         "more_displays": "Virtuellen Bildschirm hinzufügen"
+    },
+    "diagram": {
+        "your_computer": "Ihr Computer",
+        "remote_device": "Entferntes Gerät",
+        "with_rustdesk": "mit RustDesk",
+        "id_server": "ID-Server",
+        "relay_server": "Relay-Server",
+        "off": "(aus)",
+        "step_find": "Beide Computer halten Kontakt zum ID-Server ({id}). Wenn Sie sich verbinden, sagt er jeder Seite, wo die andere ist.",
+        "step_direct": "Wenn die Netzwerke es zulassen, sprechen die beiden Computer dann direkt miteinander.",
+        "step_direct_off": "Direkte Verbindungen sind auf diesem Server ausgeschaltet.",
+        "step_relay": "Sonst läuft die Sitzung über den Relay-Server ({relay}).",
+        "step_relay_always": "Jede Sitzung läuft über den Relay-Server ({relay}).",
+        "how_title": "So entsteht eine Verbindung"
     }
 }

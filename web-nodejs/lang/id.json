@@ -6685,5 +6685,19 @@
         "back_to_list": "Kembali ke daftar perangkat",
         "fewer_displays": "Hapus satu layar virtual",
         "more_displays": "Tambah satu layar virtual"
+    },
+    "diagram": {
+        "your_computer": "Komputer Anda",
+        "remote_device": "Perangkat jarak jauh",
+        "with_rustdesk": "dengan RustDesk",
+        "id_server": "Server ID",
+        "relay_server": "Server relai",
+        "off": "(mati)",
+        "step_find": "Kedua komputer tetap terhubung ke server ID ({id}). Saat Anda menyambung, server memberi tahu tiap sisi di mana sisi lainnya.",
+        "step_direct": "Jika jaringan mengizinkan, kedua komputer lalu berbicara langsung.",
+        "step_direct_off": "Koneksi langsung dimatikan di server ini.",
+        "step_relay": "Jika tidak, sesi melewati server relai ({relay}).",
+        "step_relay_always": "Setiap sesi melewati server relai ({relay}).",
+        "how_title": "Cara koneksi bekerja"
     }
 }

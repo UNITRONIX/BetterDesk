@@ -6685,5 +6685,19 @@
         "back_to_list": "Vissza az eszközlistához",
         "fewer_displays": "Virtuális kijelző eltávolítása",
         "more_displays": "Virtuális kijelző hozzáadása"
+    },
+    "diagram": {
+        "your_computer": "Az Ön gépe",
+        "remote_device": "Távoli eszköz",
+        "with_rustdesk": "RustDeskkel",
+        "id_server": "ID-szerver",
+        "relay_server": "Továbbító szerver",
+        "off": "(kikapcsolva)",
+        "step_find": "Mindkét gép kapcsolatban marad az ID-szerverrel ({id}). Csatlakozáskor megmondja mindkét félnek, hol a másik.",
+        "step_direct": "Ha a hálózatok engedik, a két gép ezután közvetlenül kommunikál.",
+        "step_direct_off": "A közvetlen kapcsolat ezen a szerveren ki van kapcsolva.",
+        "step_relay": "Egyébként a munkamenet a továbbító szerveren ({relay}) át fut.",
+        "step_relay_always": "Minden munkamenet a továbbító szerveren ({relay}) át fut.",
+        "how_title": "Így jön létre a kapcsolat"
     }
 }

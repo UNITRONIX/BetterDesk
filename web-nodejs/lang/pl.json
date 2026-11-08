@@ -6679,5 +6679,19 @@
         "back_to_list": "Wróć do listy urządzeń",
         "fewer_displays": "Usuń wirtualny ekran",
         "more_displays": "Dodaj wirtualny ekran"
+    },
+    "diagram": {
+        "your_computer": "Twój komputer",
+        "remote_device": "Urządzenie zdalne",
+        "with_rustdesk": "z RustDesk",
+        "id_server": "Serwer ID",
+        "relay_server": "Serwer przekaźnikowy",
+        "off": "(wyłączone)",
+        "step_find": "Oba komputery utrzymują kontakt z serwerem ID ({id}). Przy łączeniu podaje on każdej stronie, gdzie jest druga.",
+        "step_direct": "Jeśli sieci na to pozwalają, komputery komunikują się potem bezpośrednio.",
+        "step_direct_off": "Połączenie bezpośrednie jest na tym serwerze wyłączone.",
+        "step_relay": "W przeciwnym razie sesja idzie przez serwer przekaźnikowy ({relay}).",
+        "step_relay_always": "Każda sesja idzie przez serwer przekaźnikowy ({relay}).",
+        "how_title": "Jak działa połączenie"
     }
 }

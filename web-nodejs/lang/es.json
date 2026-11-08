@@ -6679,5 +6679,19 @@
         "back_to_list": "Volver a la lista de dispositivos",
         "fewer_displays": "Quitar una pantalla virtual",
         "more_displays": "Añadir una pantalla virtual"
+    },
+    "diagram": {
+        "your_computer": "Su equipo",
+        "remote_device": "Dispositivo remoto",
+        "with_rustdesk": "con RustDesk",
+        "id_server": "Servidor de ID",
+        "relay_server": "Servidor de retransmisión",
+        "off": "(desactivado)",
+        "step_find": "Los dos equipos mantienen contacto con el servidor de ID ({id}). Al conectar, indica a cada lado dónde está el otro.",
+        "step_direct": "Si las redes lo permiten, los dos equipos se comunican después directamente.",
+        "step_direct_off": "La conexión directa está desactivada en este servidor.",
+        "step_relay": "Si no, la sesión pasa por el servidor de retransmisión ({relay}).",
+        "step_relay_always": "Todas las sesiones pasan por el servidor de retransmisión ({relay}).",
+        "how_title": "Cómo funciona una conexión"
     }
 }

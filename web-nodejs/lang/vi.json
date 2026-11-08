@@ -6685,5 +6685,19 @@
         "back_to_list": "Quay lại danh sách thiết bị",
         "fewer_displays": "Gỡ một màn hình ảo",
         "more_displays": "Thêm một màn hình ảo"
+    },
+    "diagram": {
+        "your_computer": "Máy tính của bạn",
+        "remote_device": "Thiết bị từ xa",
+        "with_rustdesk": "có RustDesk",
+        "id_server": "Máy chủ ID",
+        "relay_server": "Máy chủ chuyển tiếp",
+        "off": "(tắt)",
+        "step_find": "Cả hai máy luôn giữ liên lạc với máy chủ ID ({id}). Khi bạn kết nối, nó cho mỗi bên biết bên kia ở đâu.",
+        "step_direct": "Nếu mạng cho phép, hai máy sau đó nói chuyện trực tiếp với nhau.",
+        "step_direct_off": "Kết nối trực tiếp đang tắt trên máy chủ này.",
+        "step_relay": "Nếu không, phiên sẽ đi qua máy chủ chuyển tiếp ({relay}).",
+        "step_relay_always": "Mọi phiên đều đi qua máy chủ chuyển tiếp ({relay}).",
+        "how_title": "Cách kết nối hoạt động"
     }
 }

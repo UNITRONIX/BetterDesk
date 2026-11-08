@@ -6685,5 +6685,19 @@
         "back_to_list": "Tilbake til enhetslisten",
         "fewer_displays": "Fjern en virtuell skjerm",
         "more_displays": "Legg til en virtuell skjerm"
+    },
+    "diagram": {
+        "your_computer": "Din datamaskin",
+        "remote_device": "Ekstern enhet",
+        "with_rustdesk": "med RustDesk",
+        "id_server": "ID-server",
+        "relay_server": "Reléserver",
+        "off": "(av)",
+        "step_find": "Begge datamaskinene holder kontakt med ID-serveren ({id}). Når du kobler til, forteller den hver side hvor den andre er.",
+        "step_direct": "Hvis nettverkene tillater det, snakker de to datamaskinene deretter direkte sammen.",
+        "step_direct_off": "Direkte tilkobling er slått av på denne serveren.",
+        "step_relay": "Ellers går økten gjennom reléserveren ({relay}).",
+        "step_relay_always": "Alle økter går gjennom reléserveren ({relay}).",
+        "how_title": "Slik fungerer en tilkobling"
     }
 }

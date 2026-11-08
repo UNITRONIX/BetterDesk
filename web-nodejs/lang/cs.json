@@ -6679,5 +6679,19 @@
         "back_to_list": "Zpět na seznam zařízení",
         "fewer_displays": "Odebrat virtuální displej",
         "more_displays": "Přidat virtuální displej"
+    },
+    "diagram": {
+        "your_computer": "Váš počítač",
+        "remote_device": "Vzdálené zařízení",
+        "with_rustdesk": "s RustDesk",
+        "id_server": "Server ID",
+        "relay_server": "Přenosový server",
+        "off": "(vypnuto)",
+        "step_find": "Oba počítače jsou ve spojení se serverem ID ({id}). Když se připojujete, sdělí každé straně, kde je ta druhá.",
+        "step_direct": "Pokud to sítě dovolí, počítače pak komunikují přímo.",
+        "step_direct_off": "Přímé spojení je na tomto serveru vypnuté.",
+        "step_relay": "Jinak relace vede přes přenosový server ({relay}).",
+        "step_relay_always": "Každá relace vede přes přenosový server ({relay}).",
+        "how_title": "Jak spojení funguje"
     }
 }

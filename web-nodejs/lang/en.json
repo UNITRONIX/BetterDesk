@@ -6679,5 +6679,19 @@
         "back_to_list": "Back to device list",
         "fewer_displays": "Remove a virtual display",
         "more_displays": "Add a virtual display"
+    },
+    "diagram": {
+        "your_computer": "Your computer",
+        "remote_device": "Remote device",
+        "with_rustdesk": "with RustDesk",
+        "id_server": "ID server",
+        "relay_server": "Relay server",
+        "off": "(off)",
+        "step_find": "Both computers keep in touch with the ID server ({id}). When you connect, it tells each side where the other is.",
+        "step_direct": "If the networks allow it, the two computers then talk to each other directly.",
+        "step_direct_off": "A direct connection is switched off on this server.",
+        "step_relay": "Otherwise the session goes through the relay server ({relay}).",
+        "step_relay_always": "Every session goes through the relay server ({relay}).",
+        "how_title": "How a connection works"
     }
 }

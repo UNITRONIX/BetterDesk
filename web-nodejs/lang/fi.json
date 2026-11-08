@@ -6685,5 +6685,19 @@
         "back_to_list": "Takaisin laiteluetteloon",
         "fewer_displays": "Poista virtuaalinäyttö",
         "more_displays": "Lisää virtuaalinäyttö"
+    },
+    "diagram": {
+        "your_computer": "Tietokoneesi",
+        "remote_device": "Etälaite",
+        "with_rustdesk": "RustDeskillä",
+        "id_server": "ID-palvelin",
+        "relay_server": "Välityspalvelin",
+        "off": "(pois)",
+        "step_find": "Molemmat tietokoneet pitävät yhteyttä ID-palvelimeen ({id}). Kun yhdistät, se kertoo kummallekin, missä toinen on.",
+        "step_direct": "Jos verkot sallivat, tietokoneet keskustelevat sitten suoraan.",
+        "step_direct_off": "Suora yhteys on pois päältä tällä palvelimella.",
+        "step_relay": "Muuten istunto kulkee välityspalvelimen ({relay}) kautta.",
+        "step_relay_always": "Jokainen istunto kulkee välityspalvelimen ({relay}) kautta.",
+        "how_title": "Näin yhteys muodostuu"
     }
 }

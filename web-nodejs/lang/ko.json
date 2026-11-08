@@ -6679,5 +6679,19 @@
         "back_to_list": "기기 목록으로 돌아가기",
         "fewer_displays": "가상 디스플레이 제거",
         "more_displays": "가상 디스플레이 추가"
+    },
+    "diagram": {
+        "your_computer": "내 컴퓨터",
+        "remote_device": "원격 장치",
+        "with_rustdesk": "RustDesk 사용",
+        "id_server": "ID 서버",
+        "relay_server": "릴레이 서버",
+        "off": "(꺼짐)",
+        "step_find": "두 컴퓨터는 ID 서버({id})와 계속 연결되어 있습니다. 연결하면 서로의 위치를 알려 줍니다.",
+        "step_direct": "네트워크가 허용하면 두 컴퓨터가 직접 통신합니다.",
+        "step_direct_off": "이 서버에서는 직접 연결이 꺼져 있습니다.",
+        "step_relay": "그렇지 않으면 세션은 릴레이 서버({relay})를 거칩니다.",
+        "step_relay_always": "모든 세션이 릴레이 서버({relay})를 거칩니다.",
+        "how_title": "연결 방식"
     }
 }

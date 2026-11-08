@@ -6685,5 +6685,19 @@
         "back_to_list": "Tilbage til enhedslisten",
         "fewer_displays": "Fjern en virtuel skærm",
         "more_displays": "Tilføj en virtuel skærm"
+    },
+    "diagram": {
+        "your_computer": "Din computer",
+        "remote_device": "Fjernenhed",
+        "with_rustdesk": "med RustDesk",
+        "id_server": "ID-server",
+        "relay_server": "Relæserver",
+        "off": "(slået fra)",
+        "step_find": "Begge computere holder kontakt med ID-serveren ({id}). Når du forbinder, fortæller den hver side, hvor den anden er.",
+        "step_direct": "Hvis netværkene tillader det, taler de to computere derefter direkte sammen.",
+        "step_direct_off": "Direkte forbindelse er slået fra på denne server.",
+        "step_relay": "Ellers går sessionen gennem relæserveren ({relay}).",
+        "step_relay_always": "Alle sessioner går gennem relæserveren ({relay}).",
+        "how_title": "Sådan forbinder klienter"
     }
 }

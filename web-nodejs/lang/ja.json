@@ -6679,5 +6679,19 @@
         "back_to_list": "デバイス一覧に戻る",
         "fewer_displays": "仮想ディスプレイを1つ削除",
         "more_displays": "仮想ディスプレイを1つ追加"
+    },
+    "diagram": {
+        "your_computer": "あなたのコンピューター",
+        "remote_device": "リモートデバイス",
+        "with_rustdesk": "RustDesk 使用",
+        "id_server": "ID サーバー",
+        "relay_server": "リレーサーバー",
+        "off": "(オフ)",
+        "step_find": "両方のコンピューターは ID サーバー ({id}) と常に通信しています。接続すると、互いの場所を双方に伝えます。",
+        "step_direct": "ネットワークが許せば、2 台は直接通信します。",
+        "step_direct_off": "このサーバーでは直接接続がオフです。",
+        "step_relay": "それ以外の場合、セッションはリレーサーバー ({relay}) を経由します。",
+        "step_relay_always": "すべてのセッションがリレーサーバー ({relay}) を経由します。",
+        "how_title": "接続のしくみ"
     }
 }
