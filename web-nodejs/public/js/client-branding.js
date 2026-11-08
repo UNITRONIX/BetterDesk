@@ -1,21 +1,14 @@
-/* BetterDesk Console — Client Branding page */
+/* BetterDesk Console — Client app branding (/client-branding) */
 
 (function () {
     'use strict';
 
-    const t = (k, def) => {
-        const tr = window.t ? window.t(k) : k;
-        return (tr && tr !== k) ? tr : (def != null ? def : k);
-    };
-    const notify = window.Notifications || {
-        success: console.log,
-        error: console.error,
-        warning: console.warn,
-        info: console.info,
-    };
+    const t = (k, vars) => (typeof window._ === 'function' ? window._(k, vars) : k);
     const csrf = () => (window.BetterDesk && window.BetterDesk.csrfToken) || '';
 
     const MAX_LOGO = 512 * 1024;
+    const DEFAULT_ACCENT = '#4f6ef7';
+    const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
     const state = {
         logo: null,
         clearLogo: false,
@@ -33,6 +26,7 @@
         const res = await fetch(url, opts);
         const ct = res.headers.get('content-type') || '';
         const data = ct.includes('application/json') ? await res.json() : null;
+        if (res.status === 403) throw new Error(Utils.permissionDeniedMessage());
         if (!res.ok || (data && data.success === false)) {
             throw new Error((data && data.error) || `HTTP ${res.status}`);
         }
@@ -43,12 +37,13 @@
         return document.getElementById(id);
     }
 
-    function normalizeColor(raw) {
-        const v = String(raw || '').trim();
-        if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v;
-        return '#4f6ef7';
+    const form = () => $('cb-form');
+
+    function expandHex(c) {
+        return c.length === 4 ? '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3] : c;
     }
 
+    /** Picker → text always; text → picker only once it is a valid hex value */
     function syncAccentInputs(fromPicker) {
         const picker = $('cb-accent-picker');
         const text = $('cb-accent');
@@ -56,68 +51,35 @@
         if (fromPicker) {
             text.value = picker.value;
         } else {
-            const c = normalizeColor(text.value);
-            text.value = c;
-            picker.value = c.length === 4
-                ? '#' + c[1] + c[1] + c[2] + c[2] + c[3] + c[3]
-                : c;
+            const v = text.value.trim();
+            if (HEX.test(v)) picker.value = expandHex(v.toLowerCase());
         }
-        updatePreview();
     }
 
-    function contactLines() {
-        const parts = [];
-        const phone = ($('cb-phone')?.value || '').trim();
-        const email = ($('cb-email')?.value || '').trim();
-        const website = ($('cb-website')?.value || '').trim();
-        const support = ($('cb-support')?.value || '').trim();
-        if (phone) parts.push(phone);
-        if (email) parts.push(email);
-        if (website) parts.push(website);
-        if (support) parts.push(support);
-        return parts;
-    }
-
-    function updatePreview() {
-        const company = ($('cb-company')?.value || '').trim() || 'BetterDesk';
-        const accent = normalizeColor($('cb-accent')?.value);
-        const companyEl = $('cb-preview-company');
-        const contactEl = $('cb-preview-contact');
-        const pane = $('cb-preview-bd');
-        if (companyEl) companyEl.textContent = company;
-        if (contactEl) contactEl.textContent = contactLines().join(' · ');
-        if (pane) pane.style.setProperty('--cb-accent', accent);
-
-        const logoImg = $('cb-preview-logo');
+    function renderLogo() {
+        const img = $('cb-preview-logo');
         const fallback = $('cb-preview-logo-fallback');
+        const clear = $('cb-clear-logo');
         const src = state.logo && state.logo.data_base64
             ? `data:${state.logo.mime};base64,${state.logo.data_base64}`
             : (state.logo && state.logo.url ? state.logo.url : '');
-        if (logoImg && fallback) {
-            if (src && !state.clearLogo) {
-                logoImg.src = src;
-                logoImg.hidden = false;
-                fallback.hidden = true;
-            } else {
-                logoImg.removeAttribute('src');
-                logoImg.hidden = true;
-                fallback.hidden = false;
-            }
+        const show = Boolean(src) && !state.clearLogo;
+        if (img) {
+            if (show) img.src = src; else img.removeAttribute('src');
+            img.hidden = !show;
         }
+        if (fallback) fallback.hidden = show;
+        if (clear) clear.hidden = !show;
+    }
 
-        const rd = {};
-        if (company && company.toLowerCase() !== 'betterdesk') {
-            rd['display-name'] = company;
-        }
-        const rdEl = $('cb-preview-rd');
-        if (rdEl) {
-            rdEl.textContent = JSON.stringify({ config_options: rd }, null, 2);
-        }
-        const rev = $('cb-revision');
-        if (rev) {
-            rev.textContent = state.revision
-                ? `${t('client_branding.revision', 'Revision')}: ${state.revision}`
-                : '';
+    function renderRevision() {
+        const el = $('cb-revision');
+        if (!el) return;
+        const ms = Number(state.revision);
+        if (Number.isFinite(ms) && ms > 1e12) {
+            el.textContent = t('client_branding.last_saved', { date: Utils.formatDate(new Date(ms)) });
+        } else {
+            el.textContent = t('client_branding.never_saved');
         }
     }
 
@@ -128,23 +90,26 @@
         $('cb-email').value = data.email || '';
         $('cb-website').value = data.website || '';
         $('cb-support').value = data.support_contact || '';
-        $('cb-accent').value = data.accent_color || '#4f6ef7';
+        $('cb-accent').value = data.accent_color || DEFAULT_ACCENT;
+        const file = $('cb-logo-file');
+        if (file) file.value = '';
         state.revision = data.revision || '';
         state.clearLogo = false;
         state.logo = data.logo || null;
         syncAccentInputs(false);
-        updatePreview();
+        renderLogo();
+        renderRevision();
     }
 
     function readFileAsLogo(file) {
         return new Promise((resolve, reject) => {
             if (!file) return resolve(null);
             if (file.size <= 0 || file.size > MAX_LOGO) {
-                return reject(new Error(t('client_branding.logo_too_large', 'Logo must be at most 512 KiB')));
+                return reject(new Error(t('client_branding.logo_too_large')));
             }
             const mime = (file.type || '').toLowerCase();
             if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(mime)) {
-                return reject(new Error(t('client_branding.logo_invalid', 'Invalid logo format')));
+                return reject(new Error(t('client_branding.logo_invalid')));
             }
             const reader = new FileReader();
             reader.onload = () => {
@@ -153,7 +118,7 @@
                 const dataBase64 = comma >= 0 ? result.slice(comma + 1) : result;
                 resolve({ mime: mime === 'image/jpg' ? 'image/jpeg' : mime, data_base64: dataBase64 });
             };
-            reader.onerror = () => reject(new Error(t('client_branding.logo_invalid', 'Invalid logo format')));
+            reader.onerror = () => reject(new Error(t('client_branding.logo_invalid')));
             reader.readAsDataURL(file);
         });
     }
@@ -161,16 +126,21 @@
     async function load() {
         const result = await api('GET', '/api/client-branding');
         fillForm(result.data || {});
+        if (window.UiForm) UiForm.reset(form());
     }
 
     async function save() {
+        const accent = ($('cb-accent')?.value || '').trim();
+        if (!HEX.test(accent)) {
+            throw new Error(t('client_branding.accent_invalid'));
+        }
         const payload = {
             company_name: ($('cb-company')?.value || '').trim(),
             phone: ($('cb-phone')?.value || '').trim(),
             email: ($('cb-email')?.value || '').trim(),
             website: ($('cb-website')?.value || '').trim(),
             support_contact: ($('cb-support')?.value || '').trim(),
-            accent_color: normalizeColor($('cb-accent')?.value),
+            accent_color: accent,
         };
         if (state.clearLogo) payload.clear_logo = true;
         else if (state.logo && (state.logo.data_base64 || state.logo.url)) {
@@ -181,13 +151,9 @@
         if (result.revision) branding.revision = result.revision;
         if (result.data && result.data.revision) branding.revision = result.data.revision;
         fillForm(branding);
-        notify.success(t('client_branding.saved', 'Client branding saved'));
     }
 
     function bind() {
-        ['cb-company', 'cb-phone', 'cb-email', 'cb-website', 'cb-support'].forEach((id) => {
-            $(id)?.addEventListener('input', updatePreview);
-        });
         $('cb-accent')?.addEventListener('input', () => syncAccentInputs(false));
         $('cb-accent-picker')?.addEventListener('input', () => syncAccentInputs(true));
         $('cb-logo-file')?.addEventListener('change', async (ev) => {
@@ -197,11 +163,11 @@
                 if (logo) {
                     state.logo = logo;
                     state.clearLogo = false;
-                    updatePreview();
+                    renderLogo();
                 }
             } catch (err) {
-                notify.error(err.message);
                 ev.target.value = '';
+                if (window.UiForm) UiForm.failed(form(), err.message);
             }
         });
         $('cb-clear-logo')?.addEventListener('click', () => {
@@ -209,13 +175,21 @@
             state.clearLogo = true;
             const input = $('cb-logo-file');
             if (input) input.value = '';
-            updatePreview();
+            renderLogo();
+            if (window.UiForm) UiForm.markDirty(form());
         });
-        $('cb-save')?.addEventListener('click', async () => {
+        form()?.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const button = $('cb-save');
+            if (button) button.disabled = true;
             try {
                 await save();
+                if (window.UiForm) UiForm.saved(form(), t('client_branding.saved'));
             } catch (err) {
-                notify.error(err.message || t('client_branding.save_failed', 'Save failed'));
+                const msg = `${t('client_branding.save_failed')} ${err.message || ''}`.trim();
+                if (window.UiForm) UiForm.failed(form(), msg);
+            } finally {
+                if (button) button.disabled = false;
             }
         });
     }
@@ -225,8 +199,18 @@
         try {
             await load();
         } catch (err) {
-            notify.error(err.message || t('client_branding.load_failed', 'Failed to load branding'));
-            updatePreview();
+            const box = $('cb-load-error');
+            if (box) {
+                box.textContent = `${t('client_branding.load_failed')} ${err.message || ''}`.trim();
+                const retry = document.createElement('button');
+                retry.type = 'button';
+                retry.className = 'btn btn-sm';
+                retry.textContent = t('actions.retry');
+                retry.addEventListener('click', () => window.location.reload());
+                box.appendChild(retry);
+                box.hidden = false;
+            }
+            renderLogo();
         }
     });
 })();

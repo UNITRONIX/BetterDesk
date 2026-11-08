@@ -1,0 +1,36 @@
+/* Client app branding (/client-branding). Form, colour field and save bar come from components.css. */
+
+.client-branding-page .notice,
+.client-branding-page .state {
+    max-width: var(--measure);
+}
+
+.client-branding-form .section + .section {
+    margin-top: var(--space-6);
+}
+
+/* Current logo above the file picker */
+.cb-logo-current {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.cb-logo-current img {
+    display: block;
+    max-width: 160px;
+    max-height: 64px;
+    padding: var(--space-1);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--bg-subtle);
+    object-fit: contain;
+}
+
+.cb-revision {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
