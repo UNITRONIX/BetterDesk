@@ -1,237 +1,139 @@
 <%- include('layouts/main', {
-    title: _('tokens.title'),
-    pageStyles: ['tokens'],
+    title: _('nav.tokens'),
+    uiReworked: true,
+    pageStyles: ['ui/device-tokens'],
     pageScripts: ['tokens'],
     currentPage: 'tokens',
-    breadcrumb: [{ label: _('tokens.title') }],
+    breadcrumb: [{ label: _('nav.tokens') }],
     body: `
-        <div class="tokens-page">
-            <!-- Header -->
-            <div class="page-header">
-                <div class="page-title">
-                    <h1>${_('tokens.title')}</h1>
+        <div class="page tokens-page">
+            <div class="page-head">
+                <h1>${_('nav.tokens')}</h1>
+                <p class="page-description">${_('tokens.page_description')}</p>
+                <div class="page-actions">
+                    <button type="button" class="btn" data-token-action="show-bulk-modal">${_('tokens.bulk_generate')}</button>
+                    <button type="button" class="btn btn-primary" data-token-action="show-create-modal">${_('tokens.create')}</button>
                 </div>
-                <p class="page-subtitle">${_('tokens.subtitle')}</p>
             </div>
 
-            <!-- Enrollment Mode -->
-            <div class="enrollment-mode-card" id="enrollment-mode-card">
-                <div class="enrollment-mode-header">
-                    <span class="material-icons">security</span>
-                    <h3>${_('tokens.enrollment_mode')}</h3>
-                </div>
-                <div class="enrollment-mode-options">
-                    <label class="enrollment-option">
+            <!-- Enrollment mode: saved as soon as a choice is picked -->
+            <section class="section" id="enrollment-mode-card" aria-labelledby="enrollment-mode-title">
+                <div class="section-head"><h2 id="enrollment-mode-title">${_('tokens.enrollment_mode')}</h2></div>
+                <p class="section-note">${_('tokens.enrollment_mode_note')}</p>
+                <div role="radiogroup" aria-labelledby="enrollment-mode-title"><ul class="choice-list">
+                    <li><label class="choice">
                         <input type="radio" name="enrollment_mode" value="open">
-                        <span class="option-label">${_('tokens.mode_open')}</span>
-                        <span class="option-desc">${_('tokens.mode_open_desc')}</span>
-                    </label>
-                    <label class="enrollment-option">
+                        <span class="choice-title">${_('tokens.mode_open')}</span>
+                        <span class="choice-desc">${_('tokens.mode_open_desc')}</span>
+                    </label></li>
+                    <li><label class="choice">
                         <input type="radio" name="enrollment_mode" value="managed">
-                        <span class="option-label">${_('tokens.mode_managed')}</span>
-                        <span class="option-desc">${_('tokens.mode_managed_desc')}</span>
-                    </label>
-                    <label class="enrollment-option">
+                        <span class="choice-title">${_('tokens.mode_managed')}</span>
+                        <span class="choice-desc">${_('tokens.mode_managed_desc')}</span>
+                    </label></li>
+                    <li><label class="choice">
                         <input type="radio" name="enrollment_mode" value="locked">
-                        <span class="option-label">${_('tokens.mode_locked')}</span>
-                        <span class="option-desc">${_('tokens.mode_locked_desc')}</span>
-                    </label>
-                </div>
-            </div>
+                        <span class="choice-title">${_('tokens.mode_locked')}</span>
+                        <span class="choice-desc">${_('tokens.mode_locked_desc')}</span>
+                    </label></li>
+                </ul></div>
+                <p class="form-status" id="enrollment-mode-status" aria-live="polite"></p>
+            </section>
 
-            <!-- Stats Cards -->
-            <div class="tokens-stats" id="tokens-stats">
-                <div class="stat-card">
-                    <span class="material-icons stat-icon">vpn_key</span>
-                    <div class="stat-info">
-                        <div class="stat-value" id="stat-total">0</div>
-                        <div class="stat-label">${_('tokens.total')}</div>
+            <section class="section" aria-labelledby="tokens-list-title">
+                <div class="section-head"><h2 id="tokens-list-title">${_('tokens.list_title')}</h2></div>
+                <div class="toolbar">
+                    <div class="toolbar-search search-wrapper">
+                        <span class="material-icons" aria-hidden="true">search</span>
+                        <input type="search" class="form-input" id="token-search" aria-label="${_('tokens.search_placeholder')}" placeholder="${_('tokens.search_placeholder')}">
+                    </div>
+                    <div class="toolbar-filters" role="group" aria-label="${_('tokens.status')}">
+                        <button type="button" class="filter-btn active" data-filter="all" aria-pressed="true">${_('common.all')}</button>
+                        <button type="button" class="filter-btn" data-filter="pending" aria-pressed="false">${_('tokens.status_pending')}</button>
+                        <button type="button" class="filter-btn" data-filter="active" aria-pressed="false">${_('tokens.status_used')}</button>
+                        <button type="button" class="filter-btn" data-filter="revoked" aria-pressed="false">${_('tokens.status_revoked')}</button>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <span class="material-icons stat-icon primary">check_circle</span>
-                    <div class="stat-info">
-                        <div class="stat-value" id="stat-active">0</div>
-                        <div class="stat-label">${_('tokens.active')}</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <span class="material-icons stat-icon warning">link</span>
-                    <div class="stat-info">
-                        <div class="stat-value" id="stat-used">0</div>
-                        <div class="stat-label">${_('tokens.used')}</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <span class="material-icons stat-icon offline">block</span>
-                    <div class="stat-info">
-                        <div class="stat-value" id="stat-revoked">0</div>
-                        <div class="stat-label">${_('tokens.revoked')}</div>
-                    </div>
-                </div>
-            </div>
+                <p class="count-line" id="tokens-count" aria-live="polite"></p>
 
-            <!-- Toolbar -->
-            <div class="tokens-toolbar">
-                <div class="toolbar-left">
-                    <div class="search-wrapper">
-                        <span class="material-icons">search</span>
-                        <input type="text" id="token-search" placeholder="${_('tokens.search_placeholder')}">
-                    </div>
-                    <div class="filter-pills">
-                        <button class="filter-pill active" data-filter="all">${_('common.all')}</button>
-                        <button class="filter-pill" data-filter="pending">${_('tokens.status_pending')}</button>
-                        <button class="filter-pill" data-filter="used">${_('tokens.status_used')}</button>
-                        <button class="filter-pill" data-filter="revoked">${_('tokens.status_revoked')}</button>
-                    </div>
+                <div class="table-scroll" tabindex="0" role="region" aria-labelledby="tokens-list-title">
+                    <table class="data-table" id="tokens-table">
+                        <thead>
+                            <tr>
+                                <th>${_('tokens.name')}</th>
+                                <th>${_('tokens.status')}</th>
+                                <th>${_('tokens.uses')}</th>
+                                <th>${_('tokens.bound_peer')}</th>
+                                <th>${_('tokens.expires')}</th>
+                                <th>${_('tokens.created')}</th>
+                                <th class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokens-body">
+                            <tr><td colspan="7" class="state-cell">${_('tokens.loading')}</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="toolbar-right">
-                    <button class="btn btn-secondary" data-token-action="show-bulk-modal">
-                        <span class="material-icons">playlist_add</span>
-                        ${_('tokens.bulk_generate')}
-                    </button>
-                    <button class="btn btn-primary" data-token-action="show-create-modal">
-                        <span class="material-icons">add</span>
-                        ${_('tokens.create')}
-                    </button>
-                </div>
-            </div>
+            </section>
 
-            <!-- Tokens Table -->
-            <div class="tokens-table-wrapper">
-                <table class="data-table" id="tokens-table">
-                    <thead>
-                        <tr>
-                            <th>${_('tokens.token')}</th>
-                            <th>${_('tokens.name')}</th>
-                            <th>${_('tokens.status')}</th>
-                            <th>${_('tokens.uses')}</th>
-                            <th>${_('tokens.bound_peer')}</th>
-                            <th>${_('tokens.expires')}</th>
-                            <th>${_('tokens.created')}</th>
-                            <th>${_('common.actions')}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tokens-body">
-                        <tr><td colspan="8" class="empty-row">${_('common.loading')}</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Create/Edit Token Modal -->
-            <div class="modal-overlay" id="token-modal" style="display:none">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h3 id="token-modal-title">${_('tokens.create')}</h3>
-                        <button class="modal-close" data-token-action="close-modal">
-                            <span class="material-icons">close</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="token-id">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>${_('tokens.name')}</label>
-                                <input type="text" id="token-name" placeholder="${_('tokens.name_placeholder')}">
-                            </div>
-                            <div class="form-group">
-                                <label>${_('tokens.max_uses')}</label>
-                                <input type="number" id="token-max-uses" value="1" min="0">
-                                <small>${_('tokens.max_uses_hint')}</small>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>${_('tokens.expires_in')}</label>
-                                <select id="token-expires">
-                                    <option value="0">${_('tokens.no_expiration')}</option>
-                                    <option value="3600">${_('tokens.expires_1h')}</option>
-                                    <option value="86400">${_('tokens.expires_24h')}</option>
-                                    <option value="604800">${_('tokens.expires_7d')}</option>
-                                    <option value="2592000">${_('tokens.expires_30d')}</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>${_('tokens.note')}</label>
-                                <input type="text" id="token-note" placeholder="${_('tokens.note_placeholder')}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" data-token-action="close-modal">${_('common.cancel')}</button>
-                        <button class="btn btn-primary" data-token-action="save-token">${_('common.save')}</button>
-                    </div>
+            <!-- Dialog contents; tokens.js puts them into Modal.show() -->
+            <template id="token-form-template">
+                <input type="hidden" id="token-id">
+                <div class="form-group">
+                    <label class="form-label" for="token-name">${_('tokens.name')}</label>
+                    <input type="text" class="form-input" id="token-name" maxlength="128" placeholder="${_('tokens.name_placeholder')}">
+                    <p class="form-hint">${_('tokens.name_hint')}</p>
                 </div>
-            </div>
-
-            <!-- Bulk Generate Modal -->
-            <div class="modal-overlay" id="bulk-modal" style="display:none">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h3>${_('tokens.bulk_generate')}</h3>
-                        <button class="modal-close" data-token-action="close-bulk-modal">
-                            <span class="material-icons">close</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>${_('tokens.count')}</label>
-                                <input type="number" id="bulk-count" value="5" min="1" max="100">
-                            </div>
-                            <div class="form-group">
-                                <label>${_('tokens.name_prefix')}</label>
-                                <input type="text" id="bulk-prefix" value="Device" placeholder="Device">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>${_('tokens.max_uses')}</label>
-                                <input type="number" id="bulk-max-uses" value="1" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label>${_('tokens.expires_in')}</label>
-                                <select id="bulk-expires">
-                                    <option value="0">${_('tokens.no_expiration')}</option>
-                                    <option value="3600">${_('tokens.expires_1h')}</option>
-                                    <option value="86400">${_('tokens.expires_24h')}</option>
-                                    <option value="604800" selected>${_('tokens.expires_7d')}</option>
-                                    <option value="2592000">${_('tokens.expires_30d')}</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" data-token-action="close-bulk-modal">${_('common.cancel')}</button>
-                        <button class="btn btn-primary" data-token-action="generate-bulk">
-                            <span class="material-icons">playlist_add</span>
-                            ${_('tokens.generate')}
-                        </button>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label" for="token-max-uses">${_('tokens.max_uses')}</label>
+                    <input type="number" class="form-input is-short" id="token-max-uses" value="1" min="0" inputmode="numeric">
+                    <p class="form-hint" id="token-max-uses-hint">${_('tokens.max_uses_hint')}</p>
                 </div>
-            </div>
-
-            <!-- Token Created Success Modal -->
-            <div class="modal-overlay" id="token-created-modal" style="display:none">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h3>${_('tokens.token_created')}</h3>
-                        <button class="modal-close" data-token-action="close-created-modal">
-                            <span class="material-icons">close</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="token-created-warning">
-                            <span class="material-icons">warning</span>
-                            <p>${_('tokens.copy_warning')}</p>
-                        </div>
-                        <div class="token-display" id="created-tokens-list"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-primary" data-token-action="close-created-modal">${_('common.close')}</button>
-                    </div>
+                <div class="form-group" id="token-expires-group">
+                    <label class="form-label" for="token-expires">${_('tokens.expires_in')}</label>
+                    <select class="form-select" id="token-expires">
+                        <option value="0">${_('tokens.no_expiration')}</option>
+                        <option value="3600">${_('tokens.expires_1h')}</option>
+                        <option value="86400">${_('tokens.expires_24h')}</option>
+                        <option value="604800">${_('tokens.expires_7d')}</option>
+                        <option value="2592000">${_('tokens.expires_30d')}</option>
+                    </select>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label class="form-label" for="token-note">${_('tokens.note')}</label>
+                    <input type="text" class="form-input" id="token-note" maxlength="512">
+                    <p class="form-hint">${_('tokens.note_hint')}</p>
+                </div>
+                <p class="form-status" id="token-form-status" aria-live="polite"></p>
+            </template>
+
+            <template id="bulk-form-template">
+                <div class="form-group">
+                    <label class="form-label" for="bulk-count">${_('tokens.count')}</label>
+                    <input type="number" class="form-input is-short" id="bulk-count" value="5" min="1" max="100" inputmode="numeric">
+                    <p class="form-hint">${_('tokens.count_range')}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bulk-prefix">${_('tokens.name_prefix')}</label>
+                    <input type="text" class="form-input" id="bulk-prefix" value="Device" maxlength="100">
+                    <p class="form-hint">${_('tokens.name_prefix_hint')}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bulk-max-uses">${_('tokens.max_uses')}</label>
+                    <input type="number" class="form-input is-short" id="bulk-max-uses" value="1" min="1" inputmode="numeric">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bulk-expires">${_('tokens.expires_in')}</label>
+                    <select class="form-select" id="bulk-expires">
+                        <option value="0">${_('tokens.no_expiration')}</option>
+                        <option value="3600">${_('tokens.expires_1h')}</option>
+                        <option value="86400">${_('tokens.expires_24h')}</option>
+                        <option value="604800" selected>${_('tokens.expires_7d')}</option>
+                        <option value="2592000">${_('tokens.expires_30d')}</option>
+                    </select>
+                </div>
+                <p class="form-status" id="bulk-form-status" aria-live="polite"></p>
+            </template>
         </div>
     `
 }) %>

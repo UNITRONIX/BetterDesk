@@ -1,0 +1,27 @@
+/* Device tokens (/tokens). Table, choices, toolbar and dialogs come from components.css. */
+
+.tokens-page .token-name {
+    font-weight: 600;
+}
+
+/* Token values shown once after creating: name above its value */
+.tokens-created {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: var(--space-4);
+}
+
+.tokens-created > dt {
+    min-height: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.tokens-created > dd {
+    padding-top: var(--space-1);
+}
+
+.tokens-page .choice-list,
+.tokens-page #enrollment-mode-status {
+    max-width: var(--measure);
+}
+

@@ -1,111 +1,131 @@
 /**
- * BetterDesk Console - Device Tokens Management
- * Client-side logic for device enrollment token management.
+ * BetterDesk Console - Device tokens (/tokens)
+ *
+ * Enrollment mode (saved on change), the token list with search and status
+ * filter, and the create / bulk / edit / revoke dialogs. A new token's value
+ * is shown once, in a dialog with copy fields.
  */
 (function () {
     'use strict';
 
-    const _ = window.BetterDesk?.translations
-        ? (key) => key.split('.').reduce((o, k) => (o && o[k]) || key, window.BetterDesk.translations)
-        : (key) => key;
+    const _ = (key, vars) => (typeof window._ === 'function' ? window._(key, vars) : key);
 
     let allTokens = [];
     let currentFilter = 'all';
+    let loadError = null;
+    let currentMode = '';
     const csrfToken = window.BetterDesk?.csrfToken || '';
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    function formatTimeAgo(dateStr) {
-        if (!dateStr) return '—';
-        const d = new Date(dateStr);
-        const diff = Math.floor((Date.now() - d) / 1000);
-        if (diff < 60) return _('time.seconds_ago').replace('{count}', diff);
-        if (diff < 3600) return _('time.minutes_ago').replace('{count}', Math.floor(diff / 60));
-        if (diff < 86400) return _('time.hours_ago').replace('{count}', Math.floor(diff / 3600));
-        if (diff < 2592000) return _('time.days_ago').replace('{count}', Math.floor(diff / 86400));
-        return d.toLocaleDateString();
+    const esc = (str) => Utils.escapeHtml(str == null ? '' : String(str));
+
+    function relative(dateStr) {
+        return Utils.formatRelativeTime(dateStr, { empty: '–' });
     }
 
-    function showToast(message, type) {
-        if (window.BetterDesk?.notify) { window.BetterDesk.notify(message, type); return; }
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type || 'info'}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+    /** "in 3 days" / "3 days ago": expiry can be in the future */
+    function expiryText(dateStr) {
+        if (!dateStr) return _('tokens.never');
+        const date = new Date(dateStr);
+        if (Number.isNaN(date.getTime())) return '–';
+        return Utils.formatDate(date);
     }
 
     async function apiFetch(url, opts = {}) {
         const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
         if (csrfToken) headers['x-csrf-token'] = csrfToken;
         const res = await fetch(url, { ...opts, headers, credentials: 'same-origin' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+        let data = null;
+        try { data = await res.json(); } catch (_e) { data = null; }
+        if (res.status === 403) throw new Error(Utils.permissionDeniedMessage());
+        if (!res.ok || (data && data.success === false)) {
+            throw new Error((data && (data.error || data.message)) || `HTTP ${res.status}`);
+        }
+        return data || {};
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+    function isExpired(t) {
+        return t.status === 'pending' && t.expires_at && new Date(t.expires_at) < new Date();
     }
 
-    // ── Data Fetching ────────────────────────────────────────────────────
+    /** One status word per token: not used yet, used, expired, revoked */
+    function statusOf(t) {
+        if (t.status === 'revoked') return { key: 'revoked', cls: 'offline', label: _('tokens.status_revoked') };
+        if (t.status === 'expired' || isExpired(t)) return { key: 'expired', cls: 'warning', label: _('tokens.status_expired') };
+        if (t.status === 'active') return { key: 'active', cls: 'ok', label: _('tokens.status_used') };
+        return { key: 'pending', cls: 'pending', label: _('tokens.status_pending') };
+    }
+
+    // ── Data ─────────────────────────────────────────────────────────────
 
     async function loadTokens() {
         try {
-            const includeRevoked = currentFilter === 'revoked' || currentFilter === 'all';
-            const res = await apiFetch(`/api/panel/tokens?include_revoked=${includeRevoked}`);
-            if (res.success && res.data) {
-                allTokens = res.data.tokens || [];
-            } else {
-                allTokens = [];
-            }
-            updateStats();
-            renderTokens();
+            const res = await apiFetch('/api/panel/tokens?include_revoked=true');
+            allTokens = (res.data && Array.isArray(res.data.tokens)) ? res.data.tokens : [];
+            loadError = null;
         } catch (err) {
-            showToast(_('common.error') + ': ' + err.message, 'error');
+            allTokens = [];
+            loadError = err.message;
         }
+        renderTokens();
     }
 
     async function loadEnrollmentMode() {
+        const status = document.getElementById('enrollment-mode-status');
         try {
             const res = await apiFetch('/api/panel/enrollment/mode');
-            if (res.success && res.data) {
-                const mode = res.data.mode || 'open';
-                const radio = document.querySelector(`input[name="enrollment_mode"][value="${mode}"]`);
-                if (radio) radio.checked = true;
-            }
+            currentMode = (res.data && res.data.mode) || 'open';
+            const radio = document.querySelector(`input[name="enrollment_mode"][value="${currentMode}"]`);
+            if (radio) radio.checked = true;
+            if (status) { status.textContent = ''; status.className = 'form-status'; }
         } catch (err) {
-            // Silently fail — mode card will show default
+            if (status) {
+                status.textContent = `${_('tokens.mode_load_failed')} ${err.message}`;
+                status.className = 'form-status is-error';
+            }
         }
     }
 
     // ── Rendering ────────────────────────────────────────────────────────
 
-    function updateStats() {
-        const total = allTokens.length;
-        const active = allTokens.filter(t => t.status === 'pending').length;
-        const used = allTokens.filter(t => t.status === 'used').length;
-        const revoked = allTokens.filter(t => t.status === 'revoked').length;
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-active').textContent = active;
-        document.getElementById('stat-used').textContent = used;
-        document.getElementById('stat-revoked').textContent = revoked;
+    function renderCount() {
+        const el = document.getElementById('tokens-count');
+        if (!el) return;
+        if (loadError || !allTokens.length) { el.textContent = ''; return; }
+        const counts = { pending: 0, active: 0, expired: 0, revoked: 0 };
+        allTokens.forEach((t) => { counts[statusOf(t).key] += 1; });
+        const parts = [
+            _('tokens.count_pending', { count: counts.pending }),
+            _('tokens.count_used', { count: counts.active }),
+        ];
+        if (counts.expired) parts.push(_('tokens.count_expired', { count: counts.expired }));
+        if (counts.revoked) parts.push(_('tokens.count_revoked', { count: counts.revoked }));
+        el.innerHTML = `<strong>${allTokens.length}</strong> ${esc(_('tokens.count_total'))}: ${esc(parts.join(', '))}`;
     }
 
     function renderTokens() {
         const tbody = document.getElementById('tokens-body');
-        const search = (document.getElementById('token-search')?.value || '').toLowerCase();
+        if (!tbody) return;
+        renderCount();
 
+        if (loadError) {
+            tbody.innerHTML = `<tr><td colspan="7" class="state-cell"><span class="state is-error">${esc(_('tokens.load_failed'))} ${esc(loadError)}
+                <button type="button" class="btn btn-sm" data-token-action="reload">${esc(_('actions.retry'))}</button></span></td></tr>`;
+            return;
+        }
+
+        const search = (document.getElementById('token-search')?.value || '').trim().toLowerCase();
         let filtered = allTokens;
         if (currentFilter !== 'all') {
-            filtered = filtered.filter(t => t.status === currentFilter);
+            filtered = filtered.filter((t) => {
+                const key = statusOf(t).key;
+                // Expired tokens were never used, so they sit with "not used yet"
+                return currentFilter === 'pending' ? (key === 'pending' || key === 'expired') : key === currentFilter;
+            });
         }
         if (search) {
-            filtered = filtered.filter(t =>
+            filtered = filtered.filter((t) =>
                 (t.name || '').toLowerCase().includes(search) ||
                 (t.token_prefix || '').toLowerCase().includes(search) ||
                 (t.peer_id || '').toLowerCase().includes(search) ||
@@ -114,157 +134,165 @@
         }
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="empty-row">${escapeHtml(_('tokens.no_tokens'))}</td></tr>`;
+            const msg = allTokens.length ? _('tokens.no_match') : _('tokens.no_tokens');
+            tbody.innerHTML = `<tr><td colspan="7" class="state-cell">${esc(msg)}</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = filtered.map(t => {
-            const statusClass = t.status === 'pending' ? 'status-active'
-                : t.status === 'used' ? 'status-used'
-                : 'status-revoked';
-            const statusLabel = _('tokens.status_' + t.status);
-            const expiresStr = t.expires_at ? formatTimeAgo(t.expires_at) : '—';
-            const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
-            const usesStr = t.max_uses === 0 ? `${t.use_count} / ∞` : `${t.use_count} / ${t.max_uses}`;
-
-            return `<tr data-id="${t.id}">
-                <td><code class="token-prefix">${escapeHtml(t.token_prefix)}</code></td>
-                <td>${escapeHtml(t.name)}</td>
-                <td><span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
-                    ${isExpired ? '<span class="status-badge status-expired">' + escapeHtml(_('tokens.expired')) + '</span>' : ''}</td>
-                <td>${usesStr}</td>
-                <td>${t.peer_id ? '<code>' + escapeHtml(t.peer_id) + '</code>' : '—'}</td>
-                <td>${expiresStr}</td>
-                <td>${formatTimeAgo(t.created_at)}</td>
-                <td class="actions-cell">
-                    ${t.status !== 'revoked' ? `
-                        <button class="btn-icon" data-token-action="edit" data-id="${t.id}" title="${escapeHtml(_('common.save'))}">
-                            <span class="material-icons">edit</span>
-                        </button>
-                        <button class="btn-icon btn-icon-danger" data-token-action="revoke" data-id="${t.id}" title="${escapeHtml(_('tokens.revoke'))}">
-                            <span class="material-icons">block</span>
-                        </button>
-                    ` : ''}
-                </td>
+        tbody.innerHTML = filtered.map((t) => {
+            const st = statusOf(t);
+            const uses = t.max_uses === 0
+                ? _('tokens.uses_unlimited', { count: t.use_count })
+                : _('tokens.uses_of', { count: t.use_count, max: t.max_uses });
+            const sub = [t.token_prefix ? `<span class="mono">${esc(t.token_prefix)}…</span>` : '', t.note ? esc(t.note) : '']
+                .filter(Boolean).join(' · ');
+            const name = esc(t.name || '–');
+            return `<tr data-id="${esc(t.id)}">
+                <td><span class="token-name">${name}</span>${sub ? `<span class="cell-sub">${sub}</span>` : ''}</td>
+                <td><span class="status ${st.cls}">${esc(st.label)}</span></td>
+                <td>${esc(uses)}</td>
+                <td>${t.peer_id ? `<span class="mono">${esc(t.peer_id)}</span>` : '–'}</td>
+                <td>${esc(t.expires_at ? expiryText(t.expires_at) : _('tokens.never'))}</td>
+                <td>${esc(relative(t.created_at))}${t.created_by ? `<span class="cell-sub">${esc(t.created_by)}</span>` : ''}</td>
+                <td class="actions">${t.status !== 'revoked' ? `
+                    <button type="button" class="btn btn-sm" data-token-action="edit" data-id="${esc(t.id)}" aria-label="${esc(_('tokens.edit'))}: ${name}">${esc(_('common.edit'))}</button>
+                    <button type="button" class="btn btn-sm btn-danger-quiet" data-token-action="revoke" data-id="${esc(t.id)}" aria-label="${esc(_('tokens.revoke'))}: ${name}">${esc(_('tokens.revoke'))}</button>
+                ` : ''}</td>
             </tr>`;
         }).join('');
     }
 
-    // ── Modal Handlers ───────────────────────────────────────────────────
+    // ── Dialogs ──────────────────────────────────────────────────────────
 
-    function showCreateModal() {
-        document.getElementById('token-modal-title').textContent = _('tokens.create');
-        document.getElementById('token-id').value = '';
-        document.getElementById('token-name').value = '';
-        document.getElementById('token-max-uses').value = '1';
-        document.getElementById('token-expires').value = '0';
-        document.getElementById('token-note').value = '';
-        document.getElementById('token-modal').style.display = 'flex';
+    function templateHtml(id) {
+        const tpl = document.getElementById(id);
+        return tpl ? tpl.innerHTML : '';
     }
 
-    function editToken(id) {
-        const token = allTokens.find(t => t.id === id);
-        if (!token) return;
-        document.getElementById('token-modal-title').textContent = _('tokens.edit');
-        document.getElementById('token-id').value = token.id;
-        document.getElementById('token-name').value = token.name || '';
-        document.getElementById('token-max-uses').value = token.max_uses || 1;
-        document.getElementById('token-expires').value = '0';
-        document.getElementById('token-note').value = token.note || '';
-        document.getElementById('token-modal').style.display = 'flex';
+    function setDialogStatus(id, text) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = text ? 'form-status is-error' : 'form-status';
     }
 
-    function closeModal() {
-        document.getElementById('token-modal').style.display = 'none';
+    function openTokenDialog(token) {
+        const editing = Boolean(token);
+        Modal.show({
+            title: editing ? _('tokens.edit') : _('tokens.create'),
+            content: templateHtml('token-form-template'),
+            buttons: [
+                { label: _('common.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: editing ? _('tokens.save') : _('tokens.create'), class: 'btn-primary', onClick: saveToken },
+            ],
+        });
+        document.getElementById('token-id').value = editing ? token.id : '';
+        document.getElementById('token-name').value = editing ? (token.name || '') : '';
+        document.getElementById('token-max-uses').value = editing ? (token.max_uses || 1) : '1';
+        document.getElementById('token-note').value = editing ? (token.note || '') : '';
+        // The server keeps the expiry and an unlimited count when editing
+        const expires = document.getElementById('token-expires-group');
+        if (expires) expires.hidden = editing;
+        const usesHint = document.getElementById('token-max-uses-hint');
+        if (usesHint && editing) usesHint.textContent = _('tokens.max_uses_edit_hint');
+        if (editing) document.getElementById('token-max-uses').min = '1';
+        document.getElementById('token-name').focus();
+        bindEnter(saveToken);
     }
 
-    function showBulkModal() {
-        document.getElementById('bulk-count').value = '5';
-        document.getElementById('bulk-prefix').value = 'Device';
-        document.getElementById('bulk-max-uses').value = '1';
-        document.getElementById('bulk-expires').value = '604800';
-        document.getElementById('bulk-modal').style.display = 'flex';
+    function openBulkDialog() {
+        Modal.show({
+            title: _('tokens.bulk_generate'),
+            content: templateHtml('bulk-form-template'),
+            buttons: [
+                { label: _('common.cancel'), class: 'btn-secondary', onClick: () => Modal.close() },
+                { label: _('tokens.generate'), class: 'btn-primary', onClick: generateBulk },
+            ],
+        });
+        bindEnter(generateBulk);
     }
 
-    function closeBulkModal() {
-        document.getElementById('bulk-modal').style.display = 'none';
-    }
-
-    function closeCreatedModal() {
-        document.getElementById('token-created-modal').style.display = 'none';
+    /** Enter in a text field submits the dialog */
+    function bindEnter(fn) {
+        document.querySelectorAll('.modal-body input').forEach((input) => {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); fn(); }
+            });
+        });
     }
 
     function showCreatedTokens(tokens) {
-        const list = document.getElementById('created-tokens-list');
-        list.innerHTML = (Array.isArray(tokens) ? tokens : [tokens]).map(t => `
-            <div class="token-created-item">
-                <div class="token-created-name">${escapeHtml(t.name)}</div>
-                <div class="token-created-value">
-                    <code>${escapeHtml(t.token)}</code>
-                    <button class="btn-icon" data-token-action="copy" data-token="${encodeURIComponent(t.token)}">
-                        <span class="material-icons">content_copy</span>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-        document.getElementById('token-created-modal').style.display = 'flex';
+        const list = (Array.isArray(tokens) ? tokens : [tokens]).filter((t) => t && t.token);
+        if (!list.length) return;
+        const rows = list.map((t, i) => `
+            <dt>${esc(t.name)}</dt>
+            <dd><span class="value-field"><code id="created-token-${i}">${esc(t.token)}</code><button type="button" data-token-action="copy" data-copy-id="created-token-${i}" aria-label="${esc(_('actions.copy'))} ${esc(t.name)}">${esc(_('actions.copy'))}</button></span></dd>`).join('');
+        const buttons = [];
+        if (list.length > 1) {
+            buttons.push({
+                label: _('tokens.copy_all'),
+                class: 'btn-secondary',
+                onClick: () => copyText(list.map((t) => `${t.name}\t${t.token}`).join('\n')),
+            });
+        }
+        buttons.push({ label: _('common.close'), class: 'btn-primary', onClick: () => Modal.close() });
+        Modal.show({
+            title: list.length > 1 ? _('tokens.tokens_generated') : _('tokens.token_created'),
+            content: `<p class="notice warning">${esc(_('tokens.copy_warning'))}</p>
+                <dl class="facts tokens-created" id="created-tokens-list">${rows}</dl>`,
+            buttons,
+            size: 'large',
+        });
     }
 
-    // ── API Actions ──────────────────────────────────────────────────────
+    // ── Actions ──────────────────────────────────────────────────────────
 
     async function saveToken() {
-        const id = document.getElementById('token-id').value;
+        const id = document.getElementById('token-id')?.value;
+        const usesRaw = parseInt(document.getElementById('token-max-uses').value, 10);
         const body = {
             name: document.getElementById('token-name').value.trim(),
-            max_uses: parseInt(document.getElementById('token-max-uses').value, 10) || 1,
-            expires_in: parseInt(document.getElementById('token-expires').value, 10) || 0,
+            // 0 means unlimited; only an empty or invalid field falls back to 1
+            max_uses: Number.isFinite(usesRaw) && usesRaw >= 0 ? usesRaw : 1,
+            expires_in: parseInt(document.getElementById('token-expires')?.value, 10) || 0,
             note: document.getElementById('token-note').value.trim(),
         };
 
         if (!body.name) {
-            showToast(_('common.name_required'), 'error');
+            setDialogStatus('token-form-status', _('common.name_required'));
+            document.getElementById('token-name').focus();
             return;
         }
 
         try {
             if (id) {
-                await apiFetch(`/api/panel/tokens/${id}`, { method: 'PUT', body: JSON.stringify(body) });
-                showToast(_('common.saved'), 'success');
+                await apiFetch(`/api/panel/tokens/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) });
+                Modal.close();
+                Notifications.success(_('tokens.saved'));
             } else {
                 const res = await apiFetch('/api/panel/tokens', { method: 'POST', body: JSON.stringify(body) });
-                if (res.success && res.data) {
-                    showCreatedTokens(res.data);
-                }
-                showToast(_('common.saved'), 'success');
+                Modal.close();
+                if (res.data && res.data.token) showCreatedTokens(res.data);
+                else Notifications.success(_('tokens.saved'));
             }
-            closeModal();
             loadTokens();
         } catch (err) {
-            showToast(_('common.error') + ': ' + err.message, 'error');
-        }
-    }
-
-    async function revokeToken(id) {
-        if (!confirm(_('tokens.revoke_confirm'))) return;
-        try {
-            await apiFetch(`/api/panel/tokens/${id}`, { method: 'DELETE' });
-            showToast(_('tokens.revoked_success'), 'success');
-            loadTokens();
-        } catch (err) {
-            showToast(_('common.error') + ': ' + err.message, 'error');
+            setDialogStatus('token-form-status', `${_('tokens.save_failed')} ${err.message}`);
         }
     }
 
     async function generateBulk() {
+        const usesRaw = parseInt(document.getElementById('bulk-max-uses').value, 10);
         const body = {
-            count: parseInt(document.getElementById('bulk-count').value, 10) || 5,
+            count: parseInt(document.getElementById('bulk-count').value, 10) || 0,
             name_prefix: document.getElementById('bulk-prefix').value.trim() || 'Device',
-            max_uses: parseInt(document.getElementById('bulk-max-uses').value, 10) || 1,
+            max_uses: Number.isFinite(usesRaw) && usesRaw > 0 ? usesRaw : 1,
             expires_in: parseInt(document.getElementById('bulk-expires').value, 10) || 0,
         };
 
         if (body.count < 1 || body.count > 100) {
-            showToast(_('tokens.count_range'), 'error');
+            setDialogStatus('bulk-form-status', _('tokens.count_range'));
+            document.getElementById('bulk-count').focus();
             return;
         }
 
@@ -273,41 +301,75 @@
                 method: 'POST',
                 body: JSON.stringify(body),
             });
-            if (res.success && res.data && res.data.tokens) {
-                showCreatedTokens(res.data.tokens);
-            }
-            closeBulkModal();
+            Modal.close();
+            if (res.data && Array.isArray(res.data.tokens)) showCreatedTokens(res.data.tokens);
             loadTokens();
         } catch (err) {
-            showToast(_('common.error') + ': ' + err.message, 'error');
+            setDialogStatus('bulk-form-status', `${_('tokens.save_failed')} ${err.message}`);
         }
     }
 
-    async function setEnrollmentMode(mode) {
+    async function revokeToken(id) {
+        const token = allTokens.find((t) => String(t.id) === String(id));
+        const ok = await Modal.confirm({
+            title: _('tokens.revoke_title'),
+            message: _('tokens.revoke_confirm'),
+            confirmLabel: _('tokens.revoke'),
+            danger: true,
+        });
+        if (!ok) return;
+        try {
+            await apiFetch(`/api/panel/tokens/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            Notifications.success(_('tokens.revoked_success', { name: token ? token.name : '' }));
+            loadTokens();
+        } catch (err) {
+            Notifications.error(`${_('tokens.revoke_failed')} ${err.message}`);
+        }
+    }
+
+    async function setEnrollmentMode(radio) {
+        const status = document.getElementById('enrollment-mode-status');
+        const mode = radio.value;
+        const radios = document.querySelectorAll('input[name="enrollment_mode"]');
+        radios.forEach((r) => { r.disabled = true; });
+        if (status) { status.textContent = _('tokens.mode_saving'); status.className = 'form-status'; }
         try {
             await apiFetch('/api/panel/enrollment/mode', {
                 method: 'PUT',
                 body: JSON.stringify({ mode }),
             });
-            showToast(_('common.saved'), 'success');
+            currentMode = mode;
+            if (status) {
+                status.textContent = _('tokens.mode_saved', { mode: _('tokens.mode_' + mode) });
+                status.className = 'form-status is-ok';
+            }
         } catch (err) {
-            showToast(_('common.error') + ': ' + err.message, 'error');
+            // Put the radio back on the mode the server still has
+            const previous = document.querySelector(`input[name="enrollment_mode"][value="${currentMode}"]`);
+            if (previous) previous.checked = true;
+            if (status) {
+                status.textContent = `${_('tokens.mode_save_failed')} ${err.message}`;
+                status.className = 'form-status is-error';
+            }
+        } finally {
+            radios.forEach((r) => { r.disabled = false; });
         }
     }
 
-    function copyToken(token) {
-        navigator.clipboard.writeText(token).then(() => {
-            showToast(_('common.copied'), 'success');
-        }).catch(() => {
-            // Fallback
-            const ta = document.createElement('textarea');
-            ta.value = token;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast(_('common.copied'), 'success');
-        });
+    async function copyText(text, button) {
+        try {
+            await Utils.copyToClipboard(text);
+            if (button) {
+                const before = button.textContent;
+                button.textContent = _('tokens.copied');
+                button.classList.add('copied');
+                setTimeout(() => { button.textContent = before; button.classList.remove('copied'); }, 1600);
+            } else {
+                Notifications.success(_('common.copied'));
+            }
+        } catch (_e) {
+            Notifications.error(_('tokens.copy_failed'));
+        }
     }
 
     // ── Init ─────────────────────────────────────────────────────────────
@@ -319,86 +381,51 @@
 
             switch (button.dataset.tokenAction) {
                 case 'show-bulk-modal':
-                    showBulkModal();
+                    openBulkDialog();
                     break;
                 case 'show-create-modal':
-                    showCreateModal();
+                    openTokenDialog(null);
                     break;
-                case 'close-modal':
-                    closeModal();
+                case 'edit': {
+                    const token = allTokens.find((t) => String(t.id) === button.dataset.id);
+                    if (token) openTokenDialog(token);
                     break;
-                case 'save-token':
-                    saveToken();
-                    break;
-                case 'close-bulk-modal':
-                    closeBulkModal();
-                    break;
-                case 'generate-bulk':
-                    generateBulk();
-                    break;
-                case 'close-created-modal':
-                    closeCreatedModal();
-                    break;
-                case 'edit':
-                    editToken(Number(button.dataset.id));
-                    break;
+                }
                 case 'revoke':
-                    revokeToken(Number(button.dataset.id));
+                    revokeToken(button.dataset.id);
                     break;
-                case 'copy':
-                    copyToken(decodeURIComponent(button.dataset.token || ''));
+                case 'copy': {
+                    const el = document.getElementById(button.dataset.copyId || '');
+                    if (el) copyText(el.textContent.trim(), button);
+                    break;
+                }
+                case 'reload':
+                    loadTokens();
                     break;
             }
         });
 
-        // Filter pills
-        document.querySelectorAll('.filter-pill').forEach(btn => {
+        document.querySelectorAll('.tokens-page [data-filter]').forEach((btn) => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                document.querySelectorAll('.tokens-page [data-filter]').forEach((b) => {
+                    b.classList.toggle('active', b === btn);
+                    b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+                });
                 currentFilter = btn.dataset.filter;
                 renderTokens();
             });
         });
 
-        // Search
         const searchInput = document.getElementById('token-search');
-        if (searchInput) {
-            searchInput.addEventListener('input', () => renderTokens());
-        }
+        if (searchInput) searchInput.addEventListener('input', () => renderTokens());
 
-        // Enrollment mode radios
-        document.querySelectorAll('input[name="enrollment_mode"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                setEnrollmentMode(e.target.value);
-            });
-        });
-
-        // Close modals on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.style.display = 'none';
-            });
+        document.querySelectorAll('input[name="enrollment_mode"]').forEach((radio) => {
+            radio.addEventListener('change', (e) => setEnrollmentMode(e.target));
         });
 
         loadEnrollmentMode();
         loadTokens();
     }
-
-    // ── Public API ───────────────────────────────────────────────────────
-
-    window.Tokens = {
-        showCreateModal,
-        showBulkModal,
-        closeModal,
-        closeBulkModal,
-        closeCreatedModal,
-        saveToken,
-        editToken,
-        revokeToken,
-        generateBulk,
-        copyToken,
-    };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
