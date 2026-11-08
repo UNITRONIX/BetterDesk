@@ -12,7 +12,7 @@
             <p class="page-description">${_('chat.page_description')}</p>
             <div class="page-actions">
                 <button type="button" class="btn" id="chat-search-toggle" aria-expanded="false" aria-controls="chat-search-bar">${_('chat.search_messages')}</button>
-                <button type="button" class="btn" id="chat-new-group-btn">${_('chat.new_group')}</button>
+                <button type="button" class="btn" id="chat-new-group-btn"><span class="material-icons" aria-hidden="true">add</span><span>${_('chat.new_group')}</span></button>
             </div>
         </div>
 
@@ -109,7 +109,7 @@
                             <button type="button" class="btn btn-sm" id="chat-attach-btn">${_('chat.attach_file')}</button>
                             <button type="button" class="btn btn-sm" id="chat-emoji-btn" aria-haspopup="true" aria-expanded="false">${_('chat.emoji')}</button>
                             <span class="form-status chat-send-status" id="chat-send-status" aria-live="polite"></span>
-                            <button type="button" class="btn btn-primary chat-send-btn" id="chat-send-btn">${_('chat.send')}</button>
+                            <button type="button" class="btn btn-primary chat-send-btn" id="chat-send-btn"><span class="material-icons" aria-hidden="true">send</span><span>${_('chat.send')}</span></button>
                         </div>
                         <input type="file" id="chat-file-input" class="sr-only" tabindex="-1" aria-hidden="true">
                     </div>

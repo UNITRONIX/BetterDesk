@@ -15,6 +15,20 @@
     border-bottom: 1px solid var(--rule);
 }
 
+/* Wide screens: a wider conversation list; the thread and the message
+   field keep a readable line length instead of running across the window */
+@media (min-width: 1200px) {
+    .chat-split {
+        grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    }
+}
+
+.chat-messages-inner,
+.chat-input-area > *,
+.chat-typing-text {
+    max-width: 840px;
+}
+
 /* ── Conversation list ── */
 
 .chat-sidebar {
