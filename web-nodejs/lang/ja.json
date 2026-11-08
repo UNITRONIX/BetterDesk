@@ -2325,7 +2325,21 @@
         "no_programs_match": "検索に一致するプログラムはありません。",
         "loading_detail": "レポートを読み込んでいます…",
         "detail_none": "このデバイスからはまだハードウェアの詳細が送信されていません。BetterDesk エージェントが実行されると表示されます。",
-        "detail_failed": "レポートを読み込めませんでした。"
+        "detail_failed": "レポートを読み込めませんでした。",
+        "side_label": "全デバイスの概要",
+        "os_title": "オペレーティングシステム",
+        "os_note": "最後のレポート時点で各デバイスが使っていたシステムです。システムを選ぶとそのデバイスを一覧表示します。",
+        "os_other": "その他",
+        "os_col_system": "システム",
+        "os_col_devices": "デバイス",
+        "os_none": "まだシステムを報告したデバイスはありません。",
+        "os_more": "ほかに {count} 個のシステムが表にあります。",
+        "space_title": "空きが少ない",
+        "space_note": "最後のレポートでディスクまたはメモリの使用率が 90 % を超えていたデバイスです。選ぶとそのレポートを開きます。",
+        "disk_full_row": "{mount} 使用率 {pct} %、空き {free}",
+        "memory_full_row": "{pct} % 使用中（{total} 中 {used}）",
+        "disks_none": "使用率が 90 % を超えるディスクはありません。",
+        "memory_none": "メモリを 90 % を超えて使っているデバイスはありません。"
     },
     "tickets": {
         "title": "Tickets",

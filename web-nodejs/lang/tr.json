@@ -2331,7 +2331,21 @@
         "no_programs_match": "Aramayla eşleşen program yok.",
         "loading_detail": "Rapor yükleniyor…",
         "detail_none": "Bu cihaz henüz donanım ayrıntılarını göndermedi. BetterDesk aracısı cihazda çalıştığında görünürler.",
-        "detail_failed": "Rapor yüklenemedi."
+        "detail_failed": "Rapor yüklenemedi.",
+        "side_label": "Tüm cihazların özeti",
+        "os_title": "İşletim sistemleri",
+        "os_note": "Cihazların son raporlarında çalıştırdığı sistem. Cihazlarını listelemek için bir sistem seçin.",
+        "os_other": "Diğer",
+        "os_col_system": "Sistem",
+        "os_col_devices": "Cihazlar",
+        "os_none": "Henüz hiçbir cihaz sistemini bildirmedi.",
+        "os_more": "Tabloda {count} sistem daha var.",
+        "space_title": "Neredeyse dolu",
+        "space_note": "Son raporunda bir diski veya belleği %90'dan fazla dolu olan cihazlar. Raporunu açmak için birini seçin.",
+        "disk_full_row": "{mount} %{pct} dolu, {free} boş",
+        "memory_full_row": "%{pct} kullanımda, {total} içinden {used}",
+        "disks_none": "Hiçbir disk %90'dan fazla dolu değil.",
+        "memory_none": "Hiçbir cihaz belleğinin %90'ından fazlasını kullanmıyor."
     },
     "tickets": {
         "title": "Tickets",

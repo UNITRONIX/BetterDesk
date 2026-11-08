@@ -2404,7 +2404,21 @@
         "no_programs_match": "No program matches the search.",
         "loading_detail": "Loading the report…",
         "detail_none": "This device has not sent hardware details yet. They appear once the BetterDesk agent runs on it.",
-        "detail_failed": "Could not load the report."
+        "detail_failed": "Could not load the report.",
+        "side_label": "Summary of all devices",
+        "os_title": "Operating systems",
+        "os_note": "What the devices ran at their last report. Select a system to list its devices.",
+        "os_other": "Other",
+        "os_col_system": "System",
+        "os_col_devices": "Devices",
+        "os_none": "No device has reported its system yet.",
+        "os_more": "{count} more systems are listed in the table.",
+        "space_title": "Almost full",
+        "space_note": "Devices with a disk or memory more than 90 % used at their last report. Select one to open its report.",
+        "disk_full_row": "{mount} {pct} % full, {free} free",
+        "memory_full_row": "{pct} % in use, {used} of {total}",
+        "disks_none": "No disk is more than 90 % full.",
+        "memory_none": "No device uses more than 90 % of its memory."
     },
     "tickets": {
         "title": "Tickets",

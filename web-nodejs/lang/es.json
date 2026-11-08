@@ -2325,7 +2325,21 @@
         "no_programs_match": "Ningún programa coincide con la búsqueda.",
         "loading_detail": "Cargando el informe…",
         "detail_none": "Este dispositivo aún no ha enviado detalles de hardware. Aparecerán en cuanto el agente de BetterDesk se ejecute en él.",
-        "detail_failed": "No se pudo cargar el informe."
+        "detail_failed": "No se pudo cargar el informe.",
+        "side_label": "Resumen de todos los dispositivos",
+        "os_title": "Sistemas operativos",
+        "os_note": "Lo que ejecutaban los dispositivos en su último informe. Elija un sistema para ver sus dispositivos.",
+        "os_other": "Otros",
+        "os_col_system": "Sistema",
+        "os_col_devices": "Dispositivos",
+        "os_none": "Ningún dispositivo ha informado aún de su sistema.",
+        "os_more": "Hay {count} sistemas más en la tabla.",
+        "space_title": "Casi lleno",
+        "space_note": "Dispositivos con un disco o la memoria usados en más del 90 % en su último informe. Elija uno para abrir su informe.",
+        "disk_full_row": "{mount} lleno al {pct} %, {free} libres",
+        "memory_full_row": "{pct} % en uso, {used} de {total}",
+        "disks_none": "Ningún disco está lleno en más del 90 %.",
+        "memory_none": "Ningún dispositivo usa más del 90 % de su memoria."
     },
     "tickets": {
         "title": "Panel",

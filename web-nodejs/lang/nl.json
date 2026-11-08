@@ -2325,7 +2325,21 @@
         "no_programs_match": "Geen programma komt overeen met de zoekopdracht.",
         "loading_detail": "Rapport laden…",
         "detail_none": "Dit apparaat heeft nog geen hardwaregegevens verstuurd. Ze verschijnen zodra de BetterDesk-agent erop draait.",
-        "detail_failed": "Het rapport kon niet worden geladen."
+        "detail_failed": "Het rapport kon niet worden geladen.",
+        "side_label": "Overzicht van alle apparaten",
+        "os_title": "Besturingssystemen",
+        "os_note": "Wat de apparaten draaiden bij hun laatste rapport. Kies een systeem om de apparaten ervan te tonen.",
+        "os_other": "Overig",
+        "os_col_system": "Systeem",
+        "os_col_devices": "Apparaten",
+        "os_none": "Nog geen apparaat heeft zijn systeem gemeld.",
+        "os_more": "Nog {count} systemen staan in de tabel.",
+        "space_title": "Bijna vol",
+        "space_note": "Apparaten waarvan een schijf of het geheugen bij het laatste rapport meer dan 90 % gebruikt was. Kies er een om het rapport te openen.",
+        "disk_full_row": "{mount} {pct} % vol, {free} vrij",
+        "memory_full_row": "{pct} % in gebruik, {used} van {total}",
+        "disks_none": "Geen schijf is meer dan 90 % vol.",
+        "memory_none": "Geen apparaat gebruikt meer dan 90 % van zijn geheugen."
     },
     "tickets": {
         "title": "Helpdesk",

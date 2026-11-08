@@ -24,6 +24,12 @@
     const countLine = document.getElementById('inventory-count');
     const searchInput = document.getElementById('search-input');
     const refreshBtn = document.getElementById('refresh-btn');
+    const side = document.getElementById('inventory-side');
+
+    // Disks and memory above this share count as almost full in the side column
+    const FULL_PERCENT = 90;
+    // Rows in the side column's list of systems
+    const OS_ROWS = 6;
 
     // ---- Formatting ----
 
@@ -110,6 +116,7 @@
             refreshBtn.disabled = false;
         }
         render();
+        renderSummary();
     }
 
     function matches(d, q) {
@@ -184,6 +191,137 @@
                 <td class="col-updated">${timeCell(d.collected_at || d.last_seen)}</td>
             </tr>`;
     }
+
+    // ---- Side column: systems and devices short of space ----
+
+    // One share-bar part per OS family; the series colours come from ui/inventory.css
+    const FAMILIES = [
+        { id: 'windows', label: () => _('cross_platform.platform_windows'), cls: 'is-series-1' },
+        { id: 'linux', label: () => _('cross_platform.platform_linux'), cls: 'is-series-2' },
+        { id: 'apple', label: () => _('cross_platform.platform_macos'), cls: 'is-series-3' },
+        { id: 'other', label: () => _('inventory.os_other'), cls: 'is-muted' },
+    ];
+
+    function osFamily(os) {
+        const id = Utils.getPlatformLogoId(os);
+        return id === 'windows' || id === 'linux' || id === 'apple' ? id : 'other';
+    }
+
+    // The system without build numbers: "Windows 11 Pro", "Ubuntu 24.04"
+    function osName(d) {
+        if (d.os_name) return String(d.os_name).trim();
+        return String(d.os || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+    }
+
+    function renderOsSummary() {
+        const bar = document.getElementById('inv-os-bar');
+        const legend = document.getElementById('inv-os-legend');
+        const body = document.getElementById('inv-os-body');
+        const withOs = allDevices.filter((d) => osName(d));
+        const total = withOs.length;
+        bar.textContent = '';
+        legend.textContent = '';
+        FAMILIES.forEach((f) => {
+            const n = withOs.filter((d) => osFamily(d.os || d.os_name) === f.id).length;
+            if (!n) return;
+            const seg = document.createElement('span');
+            seg.className = f.cls;
+            seg.style.flexGrow = String(n);
+            bar.appendChild(seg);
+            const li = document.createElement('li');
+            const key = document.createElement('span');
+            key.className = 'key ' + f.cls;
+            key.setAttribute('aria-hidden', 'true');
+            const strong = document.createElement('strong');
+            strong.textContent = formatNumber(n, 0);
+            li.appendChild(key);
+            li.appendChild(strong);
+            li.appendChild(document.createTextNode(' ' + f.label()));
+            legend.appendChild(li);
+        });
+        bar.hidden = total === 0;
+
+        const counts = new Map();
+        withOs.forEach((d) => {
+            const name = osName(d);
+            counts.set(name, (counts.get(name) || 0) + 1);
+        });
+        const ranked = Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        // The most common systems; the rest stay findable through the search
+        const shown = ranked.slice(0, OS_ROWS);
+        const more = document.getElementById('inv-os-more');
+        more.hidden = ranked.length <= OS_ROWS;
+        more.textContent = _('inventory.os_more', { count: ranked.length - OS_ROWS });
+        body.innerHTML = shown.length
+            ? shown.map(([name, n]) => `<tr>
+                    <td><button type="button" class="btn-link inv-os-filter" data-os="${esc(name)}">${esc(name)}</button></td>
+                    <td class="num-cell">${esc(formatNumber(n, 0))}</td>
+                </tr>`).join('')
+            : `<tr><td colspan="2" class="state-cell">${esc(_('inventory.os_none'))}</td></tr>`;
+    }
+
+    function spaceRow(d, sub) {
+        const name = d.hostname && d.hostname !== d.device_id ? d.hostname : d.device_id;
+        return `<li><button type="button" class="list-row is-link inv-space-row" data-id="${esc(d.device_id)}">
+                <span class="row-main"><span class="row-title">${esc(name)}</span><span class="row-sub">${esc(sub)}</span></span>
+                <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
+            </button></li>`;
+    }
+
+    function renderSpaceSummary() {
+        const diskList = document.getElementById('inv-disk-list');
+        const memList = document.getElementById('inv-mem-list');
+        // Disk use comes with the list since the server reports each device's fullest disk
+        const hasDiskData = allDevices.some((d) => typeof d.disk_max_used_percent === 'number');
+        document.getElementById('inv-disk-title').hidden = !hasDiskData;
+        diskList.hidden = !hasDiskData;
+        if (hasDiskData) {
+            const full = allDevices
+                .filter((d) => d.disk_max_used_percent > FULL_PERCENT)
+                .sort((a, b) => b.disk_max_used_percent - a.disk_max_used_percent);
+            diskList.innerHTML = full.length
+                ? full.map((d) => spaceRow(d, _('inventory.disk_full_row', {
+                    mount: d.disk_max_mount || '',
+                    pct: formatNumber(d.disk_max_used_percent, 0),
+                    free: formatBytes(d.disk_max_free_bytes) || '0 B',
+                }).trim())).join('')
+                : `<li class="list-row is-empty">${esc(_('inventory.disks_none', { pct: FULL_PERCENT }))}</li>`;
+        }
+        const memFull = allDevices
+            .map((d) => ({ d, pct: percent(d.memory_used_mb, d.memory_total_mb) }))
+            .filter((x) => x.pct != null && x.pct > FULL_PERCENT)
+            .sort((a, b) => b.pct - a.pct);
+        memList.innerHTML = memFull.length
+            ? memFull.map(({ d, pct }) => spaceRow(d, _('inventory.memory_full_row', {
+                pct,
+                used: formatBytes(d.memory_used_mb * 1048576),
+                total: formatBytes(d.memory_total_mb * 1048576),
+            }))).join('')
+            : `<li class="list-row is-empty">${esc(_('inventory.memory_none', { pct: FULL_PERCENT }))}</li>`;
+    }
+
+    function renderSummary() {
+        if (!side) return;
+        side.hidden = !!loadError || !allDevices.length;
+        if (side.hidden) return;
+        renderOsSummary();
+        // Devices from the peer list have no hardware report, so there is no space to judge
+        document.getElementById('inv-space').hidden = source === 'peer_list';
+        if (source !== 'peer_list') renderSpaceSummary();
+    }
+
+    side && side.addEventListener('click', (event) => {
+        const filter = event.target.closest('.inv-os-filter');
+        if (filter) {
+            searchInput.value = filter.dataset.os;
+            currentSearch = filter.dataset.os;
+            render();
+            searchInput.focus();
+            return;
+        }
+        const row = event.target.closest('.inv-space-row');
+        if (row) openDetail(row.dataset.id);
+    });
 
     // ---- Detail dialog ----
 

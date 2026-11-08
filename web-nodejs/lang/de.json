@@ -2325,7 +2325,21 @@
         "no_programs_match": "Kein Programm passt zur Suche.",
         "loading_detail": "Bericht wird geladen …",
         "detail_none": "Dieses Gerät hat noch keine Hardwaredetails gesendet. Sie erscheinen, sobald der BetterDesk-Agent darauf läuft.",
-        "detail_failed": "Der Bericht konnte nicht geladen werden."
+        "detail_failed": "Der Bericht konnte nicht geladen werden.",
+        "side_label": "Übersicht über alle Geräte",
+        "os_title": "Betriebssysteme",
+        "os_note": "Was die Geräte bei ihrem letzten Bericht ausgeführt haben. Wählen Sie ein System, um seine Geräte aufzulisten.",
+        "os_other": "Andere",
+        "os_col_system": "System",
+        "os_col_devices": "Geräte",
+        "os_none": "Noch kein Gerät hat sein System gemeldet.",
+        "os_more": "{count} weitere Systeme stehen in der Tabelle.",
+        "space_title": "Fast voll",
+        "space_note": "Geräte, deren Datenträger oder Arbeitsspeicher beim letzten Bericht zu mehr als 90 % belegt war. Wählen Sie eines, um seinen Bericht zu öffnen.",
+        "disk_full_row": "{mount} zu {pct} % voll, {free} frei",
+        "memory_full_row": "{pct} % belegt, {used} von {total}",
+        "disks_none": "Kein Datenträger ist zu mehr als 90 % voll.",
+        "memory_none": "Kein Gerät belegt mehr als 90 % seines Arbeitsspeichers."
     },
     "tickets": {
         "title": "Dashboard",

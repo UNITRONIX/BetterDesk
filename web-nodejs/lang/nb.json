@@ -2331,7 +2331,21 @@
         "no_programs_match": "Ingen programmer samsvarer med søket.",
         "loading_detail": "Laster inn rapporten…",
         "detail_none": "Denne enheten har ikke sendt maskinvaredetaljer ennå. De vises når BetterDesk-agenten kjører på den.",
-        "detail_failed": "Kunne ikke laste inn rapporten."
+        "detail_failed": "Kunne ikke laste inn rapporten.",
+        "side_label": "Oversikt over alle enheter",
+        "os_title": "Operativsystemer",
+        "os_note": "Hva enhetene kjørte ved siste rapport. Velg et system for å se enhetene.",
+        "os_other": "Andre",
+        "os_col_system": "System",
+        "os_col_devices": "Enheter",
+        "os_none": "Ingen enhet har rapportert systemet sitt ennå.",
+        "os_more": "{count} systemer til står i tabellen.",
+        "space_title": "Nesten full",
+        "space_note": "Enheter med en disk eller minne som var mer enn 90 % brukt ved siste rapport. Velg en for å åpne rapporten.",
+        "disk_full_row": "{mount} {pct} % full, {free} ledig",
+        "memory_full_row": "{pct} % i bruk, {used} av {total}",
+        "disks_none": "Ingen disk er mer enn 90 % full.",
+        "memory_none": "Ingen enhet bruker mer enn 90 % av minnet sitt."
     },
     "tickets": {
         "title": "Tickets",

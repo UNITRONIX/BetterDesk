@@ -2331,7 +2331,21 @@
         "no_programs_match": "Không có chương trình nào khớp với tìm kiếm.",
         "loading_detail": "Đang tải báo cáo…",
         "detail_none": "Thiết bị này chưa gửi thông tin chi tiết về phần cứng. Thông tin sẽ xuất hiện khi tác tử BetterDesk chạy trên thiết bị.",
-        "detail_failed": "Không thể tải báo cáo."
+        "detail_failed": "Không thể tải báo cáo.",
+        "side_label": "Tóm tắt tất cả thiết bị",
+        "os_title": "Hệ điều hành",
+        "os_note": "Hệ thống thiết bị đang chạy ở lần báo cáo gần nhất. Chọn một hệ thống để xem các thiết bị của nó.",
+        "os_other": "Khác",
+        "os_col_system": "Hệ thống",
+        "os_col_devices": "Thiết bị",
+        "os_none": "Chưa có thiết bị nào báo cáo hệ thống.",
+        "os_more": "Còn {count} hệ thống khác trong bảng.",
+        "space_title": "Gần đầy",
+        "space_note": "Thiết bị có ổ đĩa hoặc bộ nhớ dùng trên 90 % ở lần báo cáo gần nhất. Chọn một thiết bị để mở báo cáo.",
+        "disk_full_row": "{mount} đầy {pct} %, còn trống {free}",
+        "memory_full_row": "Đang dùng {pct} %, {used} trên {total}",
+        "disks_none": "Không có ổ đĩa nào đầy quá 90 %.",
+        "memory_none": "Không có thiết bị nào dùng quá 90 % bộ nhớ."
     },
     "tickets": {
         "title": "Tickets",

@@ -2343,7 +2343,21 @@
         "no_programs_match": "Żaden program nie pasuje do wyszukiwania.",
         "loading_detail": "Wczytywanie raportu…",
         "detail_none": "To urządzenie nie przesłało jeszcze szczegółów sprzętu. Pojawią się, gdy zostanie na nim uruchomiony agent BetterDesk.",
-        "detail_failed": "Nie udało się wczytać raportu."
+        "detail_failed": "Nie udało się wczytać raportu.",
+        "side_label": "Podsumowanie wszystkich urządzeń",
+        "os_title": "Systemy operacyjne",
+        "os_note": "Co działało na urządzeniach przy ostatnim raporcie. Wybierz system, aby wyświetlić jego urządzenia.",
+        "os_other": "Inne",
+        "os_col_system": "System",
+        "os_col_devices": "Urządzenia",
+        "os_none": "Żadne urządzenie nie zgłosiło jeszcze swojego systemu.",
+        "os_more": "Kolejne systemy w tabeli: {count}.",
+        "space_title": "Prawie pełne",
+        "space_note": "Urządzenia, których dysk lub pamięć były zajęte w ponad 90 % przy ostatnim raporcie. Wybierz jedno, aby otworzyć raport.",
+        "disk_full_row": "{mount} zajęte w {pct} %, wolne {free}",
+        "memory_full_row": "{pct} % w użyciu, {used} z {total}",
+        "disks_none": "Żaden dysk nie jest zajęty w ponad 90 %.",
+        "memory_none": "Żadne urządzenie nie używa ponad 90 % pamięci."
     },
     "tickets": {
         "title": "Zgłoszenia",

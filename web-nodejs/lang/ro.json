@@ -2331,7 +2331,21 @@
         "no_programs_match": "Niciun program nu corespunde căutării.",
         "loading_detail": "Se încarcă raportul…",
         "detail_none": "Acest dispozitiv nu a trimis încă detalii hardware. Ele apar după ce agentul BetterDesk rulează pe el.",
-        "detail_failed": "Raportul nu a putut fi încărcat."
+        "detail_failed": "Raportul nu a putut fi încărcat.",
+        "side_label": "Rezumatul tuturor dispozitivelor",
+        "os_title": "Sisteme de operare",
+        "os_note": "Ce rulau dispozitivele la ultimul raport. Alegeți un sistem pentru a-i lista dispozitivele.",
+        "os_other": "Altele",
+        "os_col_system": "Sistem",
+        "os_col_devices": "Dispozitive",
+        "os_none": "Niciun dispozitiv nu și-a raportat încă sistemul.",
+        "os_more": "Încă {count} sisteme apar în tabel.",
+        "space_title": "Aproape plin",
+        "space_note": "Dispozitive cu un disc sau memoria folosite peste 90 % la ultimul raport. Alegeți unul pentru a-i deschide raportul.",
+        "disk_full_row": "{mount} plin {pct} %, {free} liber",
+        "memory_full_row": "{pct} % folosit, {used} din {total}",
+        "disks_none": "Niciun disc nu este plin peste 90 %.",
+        "memory_none": "Niciun dispozitiv nu folosește peste 90 % din memorie."
     },
     "tickets": {
         "title": "Tickets",

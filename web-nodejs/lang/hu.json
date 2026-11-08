@@ -2331,7 +2331,21 @@
         "no_programs_match": "Egyik program sem felel meg a keresésnek.",
         "loading_detail": "Jelentés betöltése…",
         "detail_none": "Ez az eszköz még nem küldött hardveradatokat. Akkor jelennek meg, amikor fut rajta a BetterDesk-ügynök.",
-        "detail_failed": "A jelentést nem sikerült betölteni."
+        "detail_failed": "A jelentést nem sikerült betölteni.",
+        "side_label": "Az összes eszköz összesítése",
+        "os_title": "Operációs rendszerek",
+        "os_note": "Mi futott az eszközökön a legutóbbi jelentéskor. Válasszon egy rendszert az eszközei listázásához.",
+        "os_other": "Egyéb",
+        "os_col_system": "Rendszer",
+        "os_col_devices": "Eszközök",
+        "os_none": "Még egy eszköz sem jelentette a rendszerét.",
+        "os_more": "További {count} rendszer szerepel a táblázatban.",
+        "space_title": "Majdnem tele",
+        "space_note": "Eszközök, amelyeknek a lemeze vagy memóriája a legutóbbi jelentéskor több mint 90 %-ban foglalt volt. Válasszon egyet a jelentése megnyitásához.",
+        "disk_full_row": "{mount} {pct} %-ban tele, {free} szabad",
+        "memory_full_row": "{pct} % foglalt, {used} / {total}",
+        "disks_none": "Egyik lemez sincs 90 %-nál jobban tele.",
+        "memory_none": "Egyik eszköz sem használja a memóriája több mint 90 %-át."
     },
     "tickets": {
         "title": "Tickets",

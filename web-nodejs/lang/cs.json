@@ -2325,7 +2325,21 @@
         "no_programs_match": "Hledání neodpovídá žádný program.",
         "loading_detail": "Načítání hlášení…",
         "detail_none": "Toto zařízení zatím neodeslalo podrobnosti o hardwaru. Zobrazí se, jakmile na něm poběží agent BetterDesk.",
-        "detail_failed": "Hlášení se nepodařilo načíst."
+        "detail_failed": "Hlášení se nepodařilo načíst.",
+        "side_label": "Souhrn všech zařízení",
+        "os_title": "Operační systémy",
+        "os_note": "Co zařízení používala při posledním hlášení. Vyberte systém a zobrazí se jeho zařízení.",
+        "os_other": "Ostatní",
+        "os_col_system": "Systém",
+        "os_col_devices": "Zařízení",
+        "os_none": "Žádné zařízení zatím nenahlásilo svůj systém.",
+        "os_more": "Dalších {count} systémů je v tabulce.",
+        "space_title": "Téměř plné",
+        "space_note": "Zařízení, jejichž disk nebo paměť byly při posledním hlášení využity z více než 90 %. Vyberte zařízení a otevře se jeho hlášení.",
+        "disk_full_row": "{mount} plný z {pct} %, volno {free}",
+        "memory_full_row": "{pct} % využito, {used} z {total}",
+        "disks_none": "Žádný disk není plný z více než 90 %.",
+        "memory_none": "Žádné zařízení nevyužívá více než 90 % paměti."
     },
     "tickets": {
         "title": "Tickety",

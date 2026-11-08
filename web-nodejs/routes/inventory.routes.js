@@ -81,6 +81,37 @@ function requireTokenDeviceMatch(req, res, deviceId) {
     return true;
 }
 
+/**
+ * The fullest disk of a report, for the list's "disks almost full" summary.
+ * Agents send sizes in bytes or in GB, and used space directly or as
+ * free/available space. Returns {} when no disk has a usable size.
+ */
+function fullestDisk(disks) {
+    if (!Array.isArray(disks)) return {};
+    const GB = 1024 ** 3;
+    const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+    let best = null;
+    for (const disk of disks) {
+        if (!disk || typeof disk !== 'object' || disk.removable) continue;
+        const total = num(disk.total_bytes) ?? (num(disk.total_gb) !== null ? num(disk.total_gb) * GB : null);
+        if (!(total > 0)) continue;
+        let used = num(disk.used_bytes) ?? (num(disk.used_gb) !== null ? num(disk.used_gb) * GB : null);
+        if (used === null && num(disk.available_bytes) !== null) used = total - num(disk.available_bytes);
+        if (used === null && num(disk.free_bytes) !== null) used = total - num(disk.free_bytes);
+        if (used === null || !Number.isFinite(used)) continue;
+        const pct = Math.max(0, Math.min(100, (used / total) * 100));
+        if (!best || pct > best.pct) {
+            best = { pct, total, free: Math.max(0, total - used), mount: String(disk.mount_point || disk.device || disk.name || '').slice(0, 120) };
+        }
+    }
+    if (!best) return {};
+    return {
+        disk_max_used_percent: Math.round(best.pct * 10) / 10,
+        disk_max_mount: best.mount,
+        disk_max_free_bytes: Math.round(best.free),
+    };
+}
+
 function parsePagination(req) {
     const parsePositiveInteger = (value, fallback, max) => {
         if (value === undefined) return fallback;
@@ -236,6 +267,8 @@ router.get('/', requireAuth, requirePermission('device.view'), async (req, res) 
                 device_id: inv.device_id,
                 hostname: inv.hardware?.hostname || inv.device_id,
                 os: `${inv.hardware?.os_name || ''} ${inv.hardware?.os_version || ''}`.trim(),
+                os_name: inv.hardware?.os_name || '',
+                ...fullestDisk(inv.hardware?.disks),
                 cpu: inv.hardware?.cpu?.brand || 'Unknown',
                 cpu_cores: inv.hardware?.cpu?.logical_cores || 0,
                 cpu_usage: inv.hardware?.cpu?.usage_percent ?? null,

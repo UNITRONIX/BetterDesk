@@ -2325,7 +2325,21 @@
         "no_programs_match": "Nessun programma corrisponde alla ricerca.",
         "loading_detail": "Caricamento del report…",
         "detail_none": "Questo dispositivo non ha ancora inviato i dettagli hardware. Compariranno non appena l'agente BetterDesk verrà eseguito su di esso.",
-        "detail_failed": "Impossibile caricare il report."
+        "detail_failed": "Impossibile caricare il report.",
+        "side_label": "Riepilogo di tutti i dispositivi",
+        "os_title": "Sistemi operativi",
+        "os_note": "Cosa eseguivano i dispositivi all'ultimo rapporto. Scegli un sistema per elencarne i dispositivi.",
+        "os_other": "Altri",
+        "os_col_system": "Sistema",
+        "os_col_devices": "Dispositivi",
+        "os_none": "Nessun dispositivo ha ancora indicato il proprio sistema.",
+        "os_more": "Altri {count} sistemi sono nella tabella.",
+        "space_title": "Quasi pieno",
+        "space_note": "Dispositivi con un disco o la memoria occupati oltre il 90 % all'ultimo rapporto. Scegline uno per aprirne il rapporto.",
+        "disk_full_row": "{mount} pieno al {pct} %, {free} liberi",
+        "memory_full_row": "{pct} % in uso, {used} di {total}",
+        "disks_none": "Nessun disco è pieno oltre il 90 %.",
+        "memory_none": "Nessun dispositivo usa più del 90 % della memoria."
     },
     "tickets": {
         "title": "Helpdesk",

@@ -2325,7 +2325,21 @@
         "no_programs_match": "Nenhum programa corresponde à pesquisa.",
         "loading_detail": "Carregando o relatório…",
         "detail_none": "Este dispositivo ainda não enviou detalhes de hardware. Eles aparecem assim que o agente BetterDesk for executado nele.",
-        "detail_failed": "Não foi possível carregar o relatório."
+        "detail_failed": "Não foi possível carregar o relatório.",
+        "side_label": "Resumo de todos os dispositivos",
+        "os_title": "Sistemas operacionais",
+        "os_note": "O que os dispositivos executavam no último relatório. Escolha um sistema para listar os dispositivos.",
+        "os_other": "Outros",
+        "os_col_system": "Sistema",
+        "os_col_devices": "Dispositivos",
+        "os_none": "Nenhum dispositivo informou o sistema ainda.",
+        "os_more": "Mais {count} sistemas estão na tabela.",
+        "space_title": "Quase cheio",
+        "space_note": "Dispositivos com um disco ou a memória mais de 90 % usados no último relatório. Escolha um para abrir o relatório.",
+        "disk_full_row": "{mount} {pct} % cheio, {free} livres",
+        "memory_full_row": "{pct} % em uso, {used} de {total}",
+        "disks_none": "Nenhum disco está mais de 90 % cheio.",
+        "memory_none": "Nenhum dispositivo usa mais de 90 % da memória."
     },
     "tickets": {
         "title": "Helpdesk",

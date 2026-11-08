@@ -64,7 +64,17 @@
     display: none;
 }
 
-@media (max-width: 1100px) {
+/* The table shares the width with the side column: measure the column, not
+   the window. CPU and disks are also in each device's report. */
+.inventory-page .page-main {
+    container-type: inline-size;
+}
+
+.inventory-table .col-device {
+    min-width: 10rem;
+}
+
+@container (max-width: 1000px) {
     .inventory-table .col-disks,
     .inventory-table .col-cpu {
         display: none;
@@ -215,4 +225,51 @@
     .inventory-detail .inv-disk-use {
         min-width: 140px;
     }
+}
+
+/* ── Side column: systems across devices and devices short of space ── */
+
+/* OS families use the chart series colours (one whole split into parts) */
+.inventory-side .share-bar .is-series-1,
+.inventory-side .share-legend .key.is-series-1 { background: var(--series-1); }
+.inventory-side .share-bar .is-series-2,
+.inventory-side .share-legend .key.is-series-2 { background: var(--series-2); }
+.inventory-side .share-bar .is-series-3,
+.inventory-side .share-legend .key.is-series-3 { background: var(--series-3); }
+
+.inventory-side .section {
+    gap: var(--space-3);
+}
+
+.inv-os-table .num-cell {
+    width: 6rem;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.inv-os-table .btn-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h);
+    text-align: start;
+}
+
+.inv-os-table td {
+    padding-block: 0;
+}
+
+.inv-space-sub {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-base);
+}
+
+/* A row that opens the device's report: a whole-row button */
+.inv-space-list button.list-row {
+    width: 100%;
+    border-inline: 0;
+    border-top: 0;
+    background: none;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
 }

@@ -2325,7 +2325,21 @@
         "no_programs_match": "검색과 일치하는 프로그램이 없습니다.",
         "loading_detail": "보고서를 불러오는 중…",
         "detail_none": "이 장치는 아직 하드웨어 세부 정보를 보내지 않았습니다. BetterDesk 에이전트가 실행되면 표시됩니다.",
-        "detail_failed": "보고서를 불러올 수 없습니다."
+        "detail_failed": "보고서를 불러올 수 없습니다.",
+        "side_label": "모든 기기 요약",
+        "os_title": "운영 체제",
+        "os_note": "마지막 보고 시점에 기기에서 실행되던 시스템입니다. 시스템을 선택하면 해당 기기를 보여 줍니다.",
+        "os_other": "기타",
+        "os_col_system": "시스템",
+        "os_col_devices": "기기",
+        "os_none": "아직 시스템을 보고한 기기가 없습니다.",
+        "os_more": "표에 시스템이 {count}개 더 있습니다.",
+        "space_title": "거의 가득 참",
+        "space_note": "마지막 보고에서 디스크나 메모리를 90 % 넘게 쓰고 있던 기기입니다. 선택하면 보고서를 엽니다.",
+        "disk_full_row": "{mount} {pct} % 사용, {free} 남음",
+        "memory_full_row": "{pct} % 사용 중, {total} 중 {used}",
+        "disks_none": "90 %를 넘게 찬 디스크가 없습니다.",
+        "memory_none": "메모리를 90 % 넘게 쓰는 기기가 없습니다."
     },
     "tickets": {
         "title": "Tickets",

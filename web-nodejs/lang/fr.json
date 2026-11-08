@@ -2347,7 +2347,21 @@
         "no_programs_match": "Aucun programme ne correspond à la recherche.",
         "loading_detail": "Chargement du rapport…",
         "detail_none": "Cet appareil n'a pas encore envoyé de détails sur son matériel. Ils apparaîtront dès que l'agent BetterDesk s'exécutera dessus.",
-        "detail_failed": "Impossible de charger le rapport."
+        "detail_failed": "Impossible de charger le rapport.",
+        "side_label": "Résumé de tous les appareils",
+        "os_title": "Systèmes d'exploitation",
+        "os_note": "Ce qu'exécutaient les appareils lors de leur dernier rapport. Choisissez un système pour lister ses appareils.",
+        "os_other": "Autres",
+        "os_col_system": "Système",
+        "os_col_devices": "Appareils",
+        "os_none": "Aucun appareil n'a encore indiqué son système.",
+        "os_more": "{count} autres systèmes figurent dans le tableau.",
+        "space_title": "Presque plein",
+        "space_note": "Appareils dont un disque ou la mémoire était utilisé à plus de 90 % lors du dernier rapport. Choisissez-en un pour ouvrir son rapport.",
+        "disk_full_row": "{mount} plein à {pct} %, {free} libres",
+        "memory_full_row": "{pct} % utilisés, {used} sur {total}",
+        "disks_none": "Aucun disque n'est plein à plus de 90 %.",
+        "memory_none": "Aucun appareil n'utilise plus de 90 % de sa mémoire."
     },
     "tickets": {
         "title": "Tableau de bord",

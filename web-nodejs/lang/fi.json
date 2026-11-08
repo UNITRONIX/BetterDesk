@@ -2331,7 +2331,21 @@
         "no_programs_match": "Yksikään ohjelma ei vastaa hakua.",
         "loading_detail": "Ladataan raporttia…",
         "detail_none": "Tämä laite ei ole vielä lähettänyt laitteistotietoja. Ne näkyvät, kun BetterDesk-agentti on käynnissä laitteessa.",
-        "detail_failed": "Raporttia ei voitu ladata."
+        "detail_failed": "Raporttia ei voitu ladata.",
+        "side_label": "Yhteenveto kaikista laitteista",
+        "os_title": "Käyttöjärjestelmät",
+        "os_note": "Mitä laitteissa oli viimeisimmän raportin aikaan. Valitse järjestelmä nähdäksesi sen laitteet.",
+        "os_other": "Muut",
+        "os_col_system": "Järjestelmä",
+        "os_col_devices": "Laitteet",
+        "os_none": "Mikään laite ei ole vielä ilmoittanut järjestelmäänsä.",
+        "os_more": "Taulukossa on vielä {count} muuta järjestelmää.",
+        "space_title": "Lähes täynnä",
+        "space_note": "Laitteet, joiden levy tai muisti oli viimeisimmässä raportissa yli 90-prosenttisesti käytössä. Avaa raportti valitsemalla laite.",
+        "disk_full_row": "{mount} {pct} % täynnä, {free} vapaana",
+        "memory_full_row": "{pct} % käytössä, {used} / {total}",
+        "disks_none": "Mikään levy ei ole yli 90-prosenttisesti täynnä.",
+        "memory_none": "Mikään laite ei käytä yli 90 % muististaan."
     },
     "tickets": {
         "title": "Tickets",

@@ -2347,7 +2347,21 @@
         "no_programs_match": "沒有符合搜尋條件的程式。",
         "loading_detail": "正在載入報告…",
         "detail_none": "此裝置尚未傳送硬體詳細資料。裝置執行 BetterDesk 代理程式後就會顯示。",
-        "detail_failed": "無法載入報告。"
+        "detail_failed": "無法載入報告。",
+        "side_label": "所有裝置概覽",
+        "os_title": "作業系統",
+        "os_note": "裝置上次回報時執行的系統。選擇一個系統即可列出它的裝置。",
+        "os_other": "其他",
+        "os_col_system": "系統",
+        "os_col_devices": "裝置",
+        "os_none": "還沒有裝置回報其系統。",
+        "os_more": "表格中還有 {count} 個系統。",
+        "space_title": "空間將滿",
+        "space_note": "上次回報時某個磁碟或記憶體使用超過 90 % 的裝置。選擇一個即可開啟它的報告。",
+        "disk_full_row": "{mount} 已用 {pct} %，剩餘 {free}",
+        "memory_full_row": "已用 {pct} %，{total} 中的 {used}",
+        "disks_none": "沒有磁碟使用超過 90 %。",
+        "memory_none": "沒有裝置使用超過 90 % 的記憶體。"
     },
     "tickets": {
         "title": "服務檯",

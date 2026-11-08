@@ -2331,7 +2331,21 @@
         "no_programs_match": "Tidak ada program yang cocok dengan pencarian.",
         "loading_detail": "Memuat laporan…",
         "detail_none": "Perangkat ini belum mengirim detail perangkat keras. Detail akan muncul setelah agen BetterDesk berjalan di perangkat ini.",
-        "detail_failed": "Laporan tidak dapat dimuat."
+        "detail_failed": "Laporan tidak dapat dimuat.",
+        "side_label": "Ringkasan semua perangkat",
+        "os_title": "Sistem operasi",
+        "os_note": "Sistem yang dijalankan perangkat pada laporan terakhirnya. Pilih sistem untuk menampilkan perangkatnya.",
+        "os_other": "Lainnya",
+        "os_col_system": "Sistem",
+        "os_col_devices": "Perangkat",
+        "os_none": "Belum ada perangkat yang melaporkan sistemnya.",
+        "os_more": "Ada {count} sistem lain di tabel.",
+        "space_title": "Hampir penuh",
+        "space_note": "Perangkat yang disk atau memorinya terpakai lebih dari 90 % pada laporan terakhir. Pilih salah satu untuk membuka laporannya.",
+        "disk_full_row": "{mount} terisi {pct} %, sisa {free}",
+        "memory_full_row": "{pct} % terpakai, {used} dari {total}",
+        "disks_none": "Tidak ada disk yang terisi lebih dari 90 %.",
+        "memory_none": "Tidak ada perangkat yang memakai lebih dari 90 % memorinya."
     },
     "tickets": {
         "title": "Tickets",

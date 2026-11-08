@@ -2325,7 +2325,21 @@
         "no_programs_match": "没有与搜索匹配的程序。",
         "loading_detail": "正在加载报告…",
         "detail_none": "此设备尚未发送硬件详细信息。设备运行 BetterDesk 代理后即会显示。",
-        "detail_failed": "无法加载报告。"
+        "detail_failed": "无法加载报告。",
+        "side_label": "所有设备概览",
+        "os_title": "操作系统",
+        "os_note": "设备上次报告时运行的系统。选择一个系统可列出它的设备。",
+        "os_other": "其他",
+        "os_col_system": "系统",
+        "os_col_devices": "设备",
+        "os_none": "还没有设备报告其系统。",
+        "os_more": "表格中还有 {count} 个系统。",
+        "space_title": "空间将满",
+        "space_note": "上次报告时某个磁盘或内存使用超过 90 % 的设备。选择一个可打开它的报告。",
+        "disk_full_row": "{mount} 已用 {pct} %，剩余 {free}",
+        "memory_full_row": "已用 {pct} %，{total} 中的 {used}",
+        "disks_none": "没有磁盘使用超过 90 %。",
+        "memory_none": "没有设备使用超过 90 % 的内存。"
     },
     "tickets": {
         "title": "服务台",
