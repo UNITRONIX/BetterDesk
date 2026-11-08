@@ -27,15 +27,10 @@
     width: auto;
 }
 
-.data-table .num-col {
-    text-align: end;
-    font-variant-numeric: tabular-nums;
-}
-
 /* Long work report summaries wrap instead of widening the table */
 .data-table td.report-cell {
     min-width: 160px;
-    max-width: 280px;
+    max-width: 420px;
 }
 
 .billing-notifications {
@@ -103,6 +98,11 @@
     background: var(--bg-subtle);
 }
 
+/* Overage rate: long header over short numbers, so the header may wrap */
+#packages-table th.is-num {
+    white-space: normal;
+}
+
 /* Packages table: used against included time as a meter, bar above the numbers */
 #packages-table td.usage-cell {
     min-width: 180px;
@@ -131,4 +131,47 @@
 
 .billing-explain p {
     max-width: var(--measure);
+}
+
+/* Help request email options: shown while help request emails are on */
+.billing-notif-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.billing-notif-options[hidden] {
+    display: none;
+}
+
+/* Optional assignment fields and a session's technical details: closed parts of a dialog */
+.assign-more,
+.session-tech {
+    margin-top: var(--space-4);
+}
+
+.assign-more > summary h3,
+.session-tech > summary h3 {
+    margin: 0;
+    font-size: var(--text-base);
+}
+
+.assign-more > .form-hint {
+    margin-bottom: var(--space-3);
+}
+
+.usage-list .is-empty a {
+    margin-inline-start: var(--space-1);
+}
+
+/* A running session's billed time is a short sentence, not a number: it may wrap */
+#sessions-table td.is-num .value-empty {
+    white-space: normal;
+}
+
+/* Screen-reader text in table cells (the full time behind "06:15 PM", "None"
+   behind a dash) is absolutely positioned; with the scroll box as its
+   containing block it stays inside the box instead of widening the page on phones */
+.commercialization-page .table-scroll {
+    position: relative;
 }

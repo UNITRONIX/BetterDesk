@@ -6693,7 +6693,19 @@
             "pending_row_sub": "Avviata il {date} da {operator}",
             "pending_none": "Nessuna sessione è in attesa di un rapporto.",
             "all_sessions_title": "Tutte le sessioni",
-            "used_this_month": "Usato questo mese"
+            "used_this_month": "Usato questo mese",
+            "running_unreadable": "Le sessioni ancora in corso non possono essere mostrate ora, perché il servizio di fatturazione non riesce a leggerle. Le sessioni terminate sono qui sotto.",
+            "error_sessions_server": "Il servizio di fatturazione non è riuscito a leggere le sessioni. Può dipendere da una sessione ancora in corso. L'elenco si ricarica quando termina.",
+            "still_running": "Ancora in corso",
+            "billed_at_end": "Conteggiato alla fine",
+            "report_after_end": "Dopo la fine",
+            "report_after_end_long": "L'operatore scrive il rapporto di lavoro al termine della sessione.",
+            "technical_details": "Dettagli tecnici",
+            "copy_failed": "Impossibile copiare. Selezioni il testo e lo copi a mano.",
+            "usage_empty": "Nessun pacchetto assegnato. Il tempo incluso compare qui quando un pacchetto viene assegnato a un gruppo di dispositivi.",
+            "smtp_missing_effect": "L'invio di e-mail non è ancora configurato, quindi non parte nessuna notifica via e-mail.",
+            "assign_more": "Altre opzioni",
+            "assign_more_hint": "Minuti rimanenti, tariffe proprie e date di validità dell'assegnazione. I campi vuoti usano i valori del pacchetto, senza data di fine."
         }
     },
     "remote_dashboard": {

@@ -6693,7 +6693,19 @@
             "pending_row_sub": "Iniciada em {date} por {operator}",
             "pending_none": "Nenhuma sessão está à espera de relatório.",
             "all_sessions_title": "Todas as sessões",
-            "used_this_month": "Usado este mês"
+            "used_this_month": "Usado este mês",
+            "running_unreadable": "As sessões em curso não podem ser mostradas agora, porque o serviço de faturação não consegue lê-las. As sessões terminadas aparecem abaixo.",
+            "error_sessions_server": "O serviço de faturação não conseguiu ler as sessões. Uma sessão ainda em curso pode causar isto. A lista volta a carregar quando ela terminar.",
+            "still_running": "Ainda em curso",
+            "billed_at_end": "Contado no fim",
+            "report_after_end": "Após terminar",
+            "report_after_end_long": "O operador escreve o relatório de trabalho quando a sessão termina.",
+            "technical_details": "Detalhes técnicos",
+            "copy_failed": "Não foi possível copiar. Selecione o texto e copie-o manualmente.",
+            "usage_empty": "Ainda não há pacotes atribuídos. O tempo incluído aparece aqui quando um pacote é atribuído a um grupo de dispositivos.",
+            "smtp_missing_effect": "O envio de e-mail ainda não está configurado, por isso não são enviados e-mails de notificação.",
+            "assign_more": "Mais opções",
+            "assign_more_hint": "Minutos restantes, tarifas próprias e as datas de validade da atribuição. Os campos vazios usam os valores do pacote, sem data de fim."
         }
     },
     "remote_dashboard": {

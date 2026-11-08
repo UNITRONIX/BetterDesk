@@ -6766,7 +6766,19 @@
             "pending_row_sub": "Started {date} by {operator}",
             "pending_none": "No sessions are waiting for a report.",
             "all_sessions_title": "All sessions",
-            "used_this_month": "Used this month"
+            "used_this_month": "Used this month",
+            "running_unreadable": "Sessions that are still running can't be listed right now, because the billing service fails to read them. Ended sessions are shown below.",
+            "error_sessions_server": "The billing service could not read the sessions. A session that is still running can cause this. The list loads again after it ends.",
+            "still_running": "Still running",
+            "billed_at_end": "Counted when it ends",
+            "report_after_end": "Due after it ends",
+            "report_after_end_long": "The operator writes the work report after the session ends.",
+            "technical_details": "Technical details",
+            "copy_failed": "Could not copy. Select the text and copy it by hand.",
+            "usage_empty": "No package assignments yet. Included time shows here once a package is assigned to a device group.",
+            "smtp_missing_effect": "Email sending is not set up yet, so no notification emails go out.",
+            "assign_more": "More options",
+            "assign_more_hint": "Remaining minutes, own rates and the dates the assignment is valid. Empty fields use the package's values, with no end date."
         }
     },
     "rdclient_login": {

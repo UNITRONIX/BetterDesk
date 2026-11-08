@@ -36,13 +36,11 @@
         if (typeof Notifications !== 'undefined' && Notifications.error) Notifications.error(msg);
     }
 
+    // Billing counts whole minutes; shown with the shared duration format ("4h 20m")
     function formatMinutes(m) {
         const n = Math.max(0, Math.round(Number(m) || 0));
-        if (!n) return t('commercialization.ui.minutes_short', '{n} min', { n: 0 });
-        const h = Math.floor(n / 60);
-        const min = n % 60;
-        if (h > 0) return t('commercialization.ui.hours_minutes', '{h} h {m} min', { h, m: min });
-        return t('commercialization.ui.minutes_short', '{n} min', { n: min });
+        if (!n) return Utils.formatNumber(0, { style: 'unit', unit: 'minute', unitDisplay: 'narrow' });
+        return Utils.formatDuration(n * 60);
     }
 
     function formatMoney(amount, currency) {
@@ -56,9 +54,43 @@
         }
     }
 
-    function formatDate(value) {
-        if (!value) return '';
-        return Utils.formatDate(value);
+    // Billing records: the exact date and time, not "3h ago"
+    function timeExact(value, empty) {
+        return Utils.timeHtml(value, { relative: false, empty });
+    }
+
+    // A date without the time: "Nov 8, 2026"
+    function dayHtml(value, empty) {
+        return Utils.timeHtml(value, { relative: false, empty, format: { hour: undefined, minute: undefined } });
+    }
+
+    // End of a session: only the time when it ended on the day it started
+    function endHtml(start, end) {
+        const a = Utils.parseDate(start);
+        const b = Utils.parseDate(end);
+        if (a && b && a.toDateString() === b.toDateString()) {
+            return Utils.timeHtml(end, { relative: false, format: { year: undefined, month: undefined, day: undefined } });
+        }
+        return timeExact(end);
+    }
+
+    // A translated sentence with one value in it that is markup ("Started {date} by …")
+    function sentenceWith(key, fallback, params, htmlKey, html) {
+        const marker = '\u0001';
+        const text = t(key, fallback, Object.assign({}, params, { [htmlKey]: marker }));
+        return escapeHtml(text).replace(marker, html);
+    }
+
+    // "2026-11" as the month's name in the console language: "November 2026"
+    function formatMonth(ym) {
+        const m = /^(\d{4})-(\d{2})$/.exec(String(ym || ''));
+        if (!m) return String(ym || '');
+        try {
+            const locale = typeof Utils._dateLocale === 'function' ? Utils._dateLocale() : undefined;
+            return new Date(Date.UTC(+m[1], +m[2] - 1, 15)).toLocaleDateString(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+        } catch (_) {
+            return String(ym);
+        }
     }
 
     function escapeHtml(s) {
@@ -93,9 +125,10 @@
         return val || status || '';
     }
 
+    // Active: good. Pending report: waits for the operator. Closed and suspended: ended or paused, nothing wrong.
+    const STATUS_TONE = { active: 'good', pending_report: 'waiting', closed: 'neutral', suspended: 'neutral' };
     function statusHtml(status) {
-        const cls = { active: 'active', suspended: 'offline', pending_report: 'warning', closed: 'offline' }[status] || '';
-        return `<span class="status ${cls}">${escapeHtml(statusLabel(status))}</span>`;
+        return Utils.statusHtml(STATUS_TONE[status] || Utils.statusTone(status), statusLabel(status));
     }
 
     function categoryLabel(cat) {
@@ -201,7 +234,7 @@
         used = Math.max(0, Number(used) || 0);
         included = Math.max(0, Number(included) || 0);
         if (!included) {
-            return `<span class="text-muted">${escapeHtml(t('commercialization.ui.no_included_time', 'No included time, every session is billed'))}</span>`;
+            return Utils.emptyHtml(t('commercialization.ui.no_included_time', 'No included time, every session is billed'));
         }
         const share = used / included;
         const level = share >= 1 ? ' is-full' : (share >= 0.8 ? ' is-high' : '');
@@ -236,11 +269,11 @@
                 <button type="button" class="menu-item danger" role="menuitem" data-delete-package="${escapeHtml(p.id)}">${Utils.icon('delete')}${escapeHtml(t('commercialization.ui.delete_package', 'Delete package'))}</button>`) : '';
             return `<tr data-id="${escapeHtml(p.id)}">
                 <td><span class="cell-title">${escapeHtml(p.name)}</span>${p.description ? `<span class="cell-sub">${escapeHtml(p.description)}</span>` : ''}</td>
-                <td>${escapeHtml(companies || '–')}</td>
-                <td class="num-col">${prev.device_count != null ? prev.device_count : '–'}</td>
-                <td class="nowrap">${formatMinutes(p.included_minutes)}</td>
+                <td>${companies ? escapeHtml(companies) : Utils.emptyHtml()}</td>
+                <td class="is-num">${prev.device_count != null ? Utils.formatNumber(prev.device_count) : Utils.emptyHtml()}</td>
+                <td class="is-num">${formatMinutes(p.included_minutes)}</td>
                 <td class="usage-cell">${usageMeter(prev.included_minutes_used || 0, prev.included_limit != null ? prev.included_limit : p.included_minutes)}</td>
-                <td class="nowrap">${escapeHtml(formatMoney(p.overage_rate, p.currency))}</td>
+                <td class="is-num">${escapeHtml(formatMoney(p.overage_rate, p.currency))}</td>
                 <td class="actions"><button type="button" class="btn btn-sm" data-preview-package="${escapeHtml(p.id)}">${Utils.icon('view')}${escapeHtml(t('commercialization.preview.open', 'Month preview'))}</button>${menu}</td>
             </tr>`;
         }).join('');
@@ -282,7 +315,7 @@
         const period = data.period_ym || '';
         if (sel) {
             const periods = data.available_periods && data.available_periods.length ? data.available_periods : [period];
-            sel.innerHTML = periods.map((p) => `<option value="${escapeHtml(p)}" ${p === period ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('');
+            sel.innerHTML = periods.map((p) => `<option value="${escapeHtml(p)}" ${p === period ? 'selected' : ''}>${escapeHtml(formatMonth(p))}</option>`).join('');
             const idx = periods.indexOf(period);
             const prev = document.getElementById('btn-preview-prev-month');
             const next = document.getElementById('btn-preview-next-month');
@@ -292,12 +325,12 @@
         }
         const stats = document.getElementById('package-preview-stats');
         if (!stats) return;
-        const companies = (data.companies || []).join(', ') || '–';
+        const companies = (data.companies || []).join(', ');
         const used = data.included_minutes_used || 0;
         const over = data.overage_minutes || 0;
         stats.innerHTML = `
-            <dt>${escapeHtml(t('commercialization.preview.company', 'Company'))}</dt><dd>${escapeHtml(companies)}</dd>
-            <dt>${escapeHtml(t('commercialization.preview.devices', 'Devices'))}</dt><dd>${data.device_count || 0}</dd>
+            <dt>${escapeHtml(t('commercialization.preview.company', 'Company'))}</dt><dd>${companies ? escapeHtml(companies) : Utils.emptyHtml()}</dd>
+            <dt>${escapeHtml(t('commercialization.preview.devices', 'Devices'))}</dt><dd>${Utils.formatNumber(data.device_count || 0)}</dd>
             <dt>${escapeHtml(t('commercialization.preview.used', 'Used'))}</dt><dd>${formatMinutes(used)}</dd>
             <dt>${escapeHtml(t('commercialization.preview.remaining', 'Remaining'))}</dt><dd>${formatMinutes(data.remaining_minutes || 0)}</dd>
             <dt>${escapeHtml(t('commercialization.preview.overage', 'Overage'))}</dt><dd>${formatMinutes(over)}, ${escapeHtml(formatMoney(data.amount_overage || 0, data.currency))}</dd>
@@ -455,10 +488,10 @@
         return t(`commercialization.targets.${type}`, type);
     }
 
-    function formatValidity(c) {
-        if (!c.valid_from && !c.valid_until) return t('commercialization.ui.no_end', 'No end date');
-        const from = c.valid_from ? formatDate(c.valid_from).split(',')[0] : '…';
-        const until = c.valid_until ? formatDate(c.valid_until).split(',')[0] : '…';
+    function validityHtml(c) {
+        if (!c.valid_from && !c.valid_until) return Utils.emptyHtml(t('commercialization.ui.no_end', 'No end date'));
+        const from = c.valid_from ? dayHtml(c.valid_from) : '…';
+        const until = c.valid_until ? dayHtml(c.valid_until) : '…';
         return `${from} – ${until}`;
     }
 
@@ -485,11 +518,11 @@
                 <span class="menu-divider"></span>
                 <button type="button" class="menu-item danger" role="menuitem" data-delete-contract="${escapeHtml(c.id)}">${Utils.icon('delete')}${escapeHtml(t('commercialization.ui.remove_assignment', 'Remove assignment'))}</button>`) : '';
             return `<tr data-id="${escapeHtml(c.id)}">
-                <td><span class="cell-title">${escapeHtml(c.target_name || c.target_key)}</span><span class="cell-sub">${escapeHtml(targetTypeLabel(c.target_type))}</span></td>
+                <td><span class="cell-title">${escapeHtml(c.target_name || c.target_key)}</span><span class="cell-sub">${Utils.tagHtml(targetTypeLabel(c.target_type))}</span></td>
                 <td>${escapeHtml(c.package_name || c.package_id)}</td>
-                <td class="nowrap">${formatMinutes(c.remaining_minutes)}</td>
+                <td class="is-num">${formatMinutes(c.remaining_minutes)}</td>
                 <td>${statusHtml(c.status)}</td>
-                <td>${escapeHtml(formatValidity(c))}</td>
+                <td class="nowrap">${validityHtml(c)}</td>
                 <td class="actions">${menu}</td>
             </tr>`;
         }).join('');
@@ -632,6 +665,9 @@
         document.getElementById('assign-overage-rate').value = contract.overage_rate ?? '';
         document.getElementById('assign-valid-from').value = contract.valid_from ? String(contract.valid_from).slice(0, 10) : '';
         document.getElementById('assign-valid-until').value = contract.valid_until ? String(contract.valid_until).slice(0, 10) : '';
+        // Editing is about these fields, so they start open
+        const more = document.getElementById('assign-more');
+        if (more) more.open = true;
     }
 
     async function submitAssignModal(editingContractId) {
@@ -704,10 +740,14 @@
             if (statusEl) {
                 statusEl.textContent = smtp.configured
                     ? t('commercialization.notifications.smtp_configured', 'Email sending (SMTP) is set up.')
-                    : t('commercialization.notifications.smtp_missing', 'Email sending (SMTP) is not set up yet.');
+                    : t('commercialization.ui.smtp_missing_effect', 'Email sending is not set up yet, so no notification emails go out.');
+                statusEl.className = smtp.configured ? 'smtp-status-line' : 'smtp-status-line notice warning';
             }
         } catch (_) {
-            if (statusEl) statusEl.textContent = t('commercialization.notifications.smtp_missing', 'Email sending (SMTP) is not set up yet.');
+            if (statusEl) {
+                statusEl.textContent = t('commercialization.ui.smtp_missing_effect', 'Email sending is not set up yet, so no notification emails go out.');
+                statusEl.className = 'smtp-status-line notice warning';
+            }
         }
         try {
             const data = await api('/api/panel/commercialization/email-config');
@@ -716,25 +756,41 @@
             document.getElementById('notif-assigned-operators').checked = cfg.notify_assigned_operators !== false;
             document.getElementById('notif-fallback-alert').checked = cfg.fallback_alert_email !== false;
             document.getElementById('notif-folder-subject').checked = cfg.include_folder_in_subject !== false;
+            syncHelpOptions();
+            const form = document.getElementById('email-notifications-form');
+            if (form && window.UiForm) UiForm.reset(form);
         } catch (e) {
             const st = document.getElementById('email-notifications-status');
             if (st) {
                 st.textContent = t('commercialization.ui.error_settings', 'Could not load the notification settings.');
-                st.className = 'form-status is-error';
+                st.classList.add('is-error');
             }
         }
     }
+
+    // The other three options only matter while help request emails are on
+    function syncHelpOptions() {
+        const main = document.getElementById('notif-help-requests-enabled');
+        const opts = document.getElementById('notif-help-options');
+        if (!main || !opts) return;
+        opts.hidden = !main.checked;
+        main.setAttribute('aria-expanded', main.checked ? 'true' : 'false');
+    }
+    document.getElementById('notif-help-requests-enabled')?.addEventListener('change', syncHelpOptions);
 
     const settingsPanel = document.getElementById('billing-settings-panel');
     settingsPanel?.addEventListener('toggle', () => {
         if (settingsPanel.open && !settingsLoaded) loadEmailNotificationSettings();
     });
 
-    document.getElementById('btn-save-email-notifications')?.addEventListener('click', async (e) => {
-        const btn = e.currentTarget;
+    document.getElementById('email-notifications-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const btn = document.getElementById('btn-save-email-notifications');
+        if (!btn) return;
         const st = document.getElementById('email-notifications-status');
         btn.disabled = true;
-        if (st) { st.textContent = t('commercialization.ui.saving', 'Saving…'); st.className = 'form-status'; }
+        if (st) { st.textContent = t('commercialization.ui.saving', 'Saving…'); st.classList.remove('is-ok', 'is-error'); }
         try {
             await api('/api/panel/commercialization/email-config', {
                 method: 'PUT',
@@ -745,9 +801,10 @@
                     include_folder_in_subject: document.getElementById('notif-folder-subject')?.checked === true
                 }
             });
-            if (st) { st.textContent = t('commercialization.notifications.saved', 'Notification settings saved'); st.className = 'form-status is-ok'; }
+            if (window.UiForm) UiForm.saved(form, t('commercialization.notifications.saved', 'Notification settings saved'));
         } catch (err) {
-            if (st) { st.textContent = err.message; st.className = 'form-status is-error'; }
+            if (window.UiForm) UiForm.failed(form, err.message);
+            else if (st) { st.textContent = err.message; st.classList.add('is-error'); }
         } finally {
             btn.disabled = false;
         }
@@ -784,29 +841,38 @@
         }
         const active = sessionsAll.filter((s) => s.status === 'active').length;
         if (count) {
-            let line = t('commercialization.ui.sessions_count', '{count} sessions', { count: `<strong>${sessionsAll.length}</strong>` });
-            if (active) line += `, ${t('commercialization.ui.sessions_active', '{count} active', { count: active })}`;
+            let line = t('commercialization.ui.sessions_count', '{count} sessions', { count: `<strong>${Utils.formatNumber(sessionsAll.length)}</strong>` });
+            if (active) line += `, ${t('commercialization.ui.sessions_active', '{count} active', { count: Utils.formatNumber(active) })}`;
             count.innerHTML = line;
         }
         tbody.innerHTML = sessionsAll.map((s) => {
             const report = reportsBySession[s.id];
-            const reportCell = report
-                ? escapeHtml(report.summary || '')
-                : `<span class="text-muted">${escapeHtml(s.status === 'pending_report'
-                    ? t('commercialization.ui.report_missing', 'Not written yet')
-                    : t('commercialization.ui.report_none', 'None'))}</span>`;
-            const write = s.status === 'pending_report' && canWriteReport
-                ? `<button type="button" class="btn btn-sm" data-complete-report="${escapeHtml(s.id)}">${Utils.icon('edit')}${escapeHtml(t('commercialization.ui.write_report', 'Write report'))}</button>`
-                : '';
+            const running = s.status === 'active';
+            const muted = (text) => Utils.emptyHtml(text);
+            let reportCell;
+            if (report) reportCell = escapeHtml(report.summary || '');
+            else if (running) reportCell = muted(t('commercialization.ui.report_after_end', 'Due after it ends'));
+            else if (s.status === 'pending_report') reportCell = muted(t('commercialization.ui.report_missing', 'Not written yet'));
+            else reportCell = Utils.emptyHtml();
+            const endedCell = running
+                ? muted(t('commercialization.ui.still_running', 'Still running'))
+                : endHtml(s.started_at, s.ended_at);
+            const billedCell = running
+                ? muted(t('commercialization.ui.billed_at_end', 'Counted when it ends'))
+                : formatMinutes(s.billed_minutes);
+            // A missing report is written from its own cell
+            if (!report && s.status === 'pending_report' && canWriteReport) {
+                reportCell = `<button type="button" class="btn btn-sm" data-complete-report="${escapeHtml(s.id)}">${Utils.icon('edit')}${escapeHtml(t('commercialization.ui.write_report', 'Write report'))}</button>`;
+            }
             return `<tr data-id="${escapeHtml(s.id)}">
-                <td class="nowrap"><span class="cell-title">${escapeHtml(s.device_name || s.device_id)}</span><span class="cell-sub mono">${escapeHtml(s.device_id || '')}</span></td>
-                <td>${escapeHtml(s.operator_name || s.operator_id || '')}</td>
-                <td>${escapeHtml(formatDate(s.started_at))}</td>
-                <td>${escapeHtml(formatDate(s.ended_at)) || '<span class="text-muted">–</span>'}</td>
-                <td class="nowrap">${formatMinutes(s.billed_minutes)}</td>
+                <td class="nowrap"><span class="cell-title">${escapeHtml(s.device_name || s.device_id)}</span><span class="cell-sub">${Utils.valueHtml(s.device_id, { copy: true, label: t('commercialization.sessions.device', 'Device') + ' ' + (s.device_id || '') })}</span></td>
+                <td>${Utils.userHtml(s.operator_name || s.operator_id)}</td>
+                <td class="nowrap">${timeExact(s.started_at)}</td>
+                <td class="nowrap">${endedCell}</td>
+                <td class="is-num">${billedCell}</td>
                 <td>${statusHtml(s.status)}</td>
                 <td class="report-cell">${reportCell}</td>
-                <td class="actions">${write}<button type="button" class="btn btn-sm" data-session-detail="${escapeHtml(s.id)}">${Utils.icon('details')}${escapeHtml(t('commercialization.ui.details', 'Details'))}</button></td>
+                <td class="actions"><button type="button" class="btn btn-sm" data-session-detail="${escapeHtml(s.id)}">${Utils.icon('details')}${escapeHtml(t('commercialization.ui.details', 'Details'))}</button></td>
             </tr>`;
         }).join('');
         tbody.querySelectorAll('[data-complete-report]').forEach((btn) => {
@@ -817,13 +883,41 @@
         });
     }
 
+    // The billing service can fail to read a session that is still running
+    // (it has no end time yet). Ended sessions can still be read by status,
+    // so the table shows those and says that running ones are missing.
+    async function loadEndedSessions(params) {
+        const lists = await Promise.all(['pending_report', 'closed'].map((status) => {
+            const q = new URLSearchParams(params);
+            q.set('status', status);
+            return api(`/api/panel/billing/sessions?${q.toString()}`);
+        }));
+        const all = lists.flatMap((d) => d.sessions || []);
+        all.sort((a, b) => String(b.started_at || '').localeCompare(String(a.started_at || '')));
+        return { sessions: all };
+    }
+
     async function loadSessions() {
         const tbody = document.querySelector('#sessions-table tbody');
         if (!tbody) return;
         const qs = sessionQuery();
+        const notice = document.getElementById('sessions-running-notice');
         try {
+            const statusFilter = document.getElementById('filter-session-status')?.value || '';
+            const listCall = api(`/api/panel/billing/sessions${qs ? `?${qs}` : ''}`).then((d) => {
+                if (notice) notice.hidden = true;
+                return d;
+            }, (err) => {
+                if (!(err && err.status >= 500) || statusFilter === 'active') throw err;
+                const params = new URLSearchParams(qs);
+                params.delete('status');
+                return loadEndedSessions(params).then((d) => {
+                    if (notice) notice.hidden = !!statusFilter;
+                    return d;
+                });
+            });
             const [sessData, reportData] = await Promise.all([
-                api(`/api/panel/billing/sessions${qs ? `?${qs}` : ''}`),
+                listCall,
                 api('/api/panel/billing/reports').catch(() => ({ reports: [] }))
             ]);
             reportsBySession = {};
@@ -836,7 +930,11 @@
         } catch (e) {
             const count = document.getElementById('sessions-count');
             if (count) count.textContent = '';
-            stateRow(tbody, 8, t('commercialization.ui.error_sessions', 'Could not load sessions. The billing service did not answer.'), () => {
+            if (notice) notice.hidden = true;
+            const message = e && e.status >= 500
+                ? t('commercialization.ui.error_sessions_server', 'The billing service could not read the sessions. A session that is still running can cause this. The list loads again after it ends.')
+                : t('commercialization.ui.error_sessions', 'Could not load sessions. The billing service did not answer.');
+            stateRow(tbody, 8, message, () => {
                 stateRow(tbody, 8, t('commercialization.ui.loading_sessions', 'Loading sessions…'));
                 loadSessions();
             });
@@ -852,40 +950,50 @@
         const s = sessionsAll.find((x) => x.id === id);
         if (!s) return;
         const r = reportsBySession[id];
-        const yesNo = (v) => escapeHtml(v ? t('common.yes', 'Yes') : t('common.no', 'No'));
-        const contract = s.contract_id ? `<span class="mono">${escapeHtml(s.contract_id)}</span>` : '';
+        const copyValue = (value, label) => (value ? Utils.valueHtml(value, { copy: true, label: `${label} ${value}` }) : '');
+        const running = s.status === 'active';
+        const notYet = Utils.emptyHtml(t('commercialization.ui.billed_at_end', 'Counted when it ends'));
         const phase = s.billing_phase ? escapeHtml(t(`commercialization.ui.phase_${s.billing_phase}`, s.billing_phase)) : '';
         const raw = s.raw_seconds != null ? formatMinutes(Math.round((s.raw_seconds || 0) / 60)) : '';
         const reportFacts = r
             ? fact(t('commercialization.report.summary', 'Work performed'), escapeHtml(r.summary || ''))
-              + fact(t('commercialization.report.category', 'Category'), escapeHtml(categoryLabel(r.category)))
+              + fact(t('commercialization.report.category', 'Category'), r.category ? Utils.tagHtml(categoryLabel(r.category)) : '')
               + fact(t('commercialization.report.ticket_ref', 'Ticket reference'), escapeHtml(r.ticket_ref || ''))
-              + fact(t('commercialization.ui.report_author', 'Written by'), escapeHtml(r.operator_id || ''))
-              + fact(t('commercialization.ui.report_date', 'Written'), escapeHtml(formatDate(r.created_at)))
+              + fact(t('commercialization.ui.report_author', 'Written by'), r.operator_id ? Utils.userHtml(r.operator_id) : '')
+              + fact(t('commercialization.ui.report_date', 'Written'), r.created_at ? timeExact(r.created_at) : '')
             : '';
         const content = `
             <dl class="facts">
-                ${fact(t('commercialization.sessions.device', 'Device'), `${escapeHtml(s.device_name || s.device_id)} <span class="mono">${escapeHtml(s.device_id || '')}</span>`)}
-                ${fact(t('commercialization.sessions.operator', 'Operator'), escapeHtml(s.operator_name || s.operator_id || ''))}
+                ${fact(t('commercialization.sessions.device', 'Device'), `${escapeHtml(s.device_name || s.device_id)} ${copyValue(s.device_id, t('commercialization.sessions.device', 'Device'))}`)}
+                ${fact(t('commercialization.sessions.operator', 'Operator'), (s.operator_name || s.operator_id) ? Utils.userHtml(s.operator_name || s.operator_id) : '')}
                 ${fact(t('commercialization.sessions.org', 'Organization'), escapeHtml(orgNames[s.org_id] || s.org_id || ''))}
                 ${fact(t('commercialization.contracts.status', 'Status'), statusHtml(s.status))}
-                ${fact(t('commercialization.sessions.started', 'Started'), escapeHtml(formatDate(s.started_at)))}
-                ${fact(t('commercialization.sessions.ended', 'Ended'), escapeHtml(formatDate(s.ended_at)))}
-                ${fact(t('commercialization.ui.measured_time', 'Measured time'), raw)}
-                ${fact(t('commercialization.ui.billed_time', 'Billed time'), formatMinutes(s.billed_minutes))}
+                ${fact(t('commercialization.sessions.started', 'Started'), s.started_at ? timeExact(s.started_at) : '')}
+                ${fact(t('commercialization.sessions.ended', 'Ended'), running
+                    ? Utils.emptyHtml(t('commercialization.ui.still_running', 'Still running'))
+                    : timeExact(s.ended_at))}
+                ${fact(t('commercialization.ui.measured_time', 'Measured time'), running ? notYet : raw)}
+                ${fact(t('commercialization.ui.billed_time', 'Billed time'), running ? notYet : formatMinutes(s.billed_minutes))}
                 ${fact(t('commercialization.sessions.phase', 'Phase'), phase)}
-                ${fact(t('commercialization.ui.included_used', 'From included time'), formatMinutes(s.included_minutes_used))}
-                ${fact(t('commercialization.ui.overage_time', 'Overage time'), formatMinutes(s.overage_minutes))}
-                ${fact(t('commercialization.ui.amount_included', 'Amount, included time'), escapeHtml(formatMoney(s.amount_included, s.currency)))}
-                ${fact(t('commercialization.ui.amount_overage', 'Amount, overage'), escapeHtml(formatMoney(s.amount_overage, s.currency)))}
-                ${fact(t('commercialization.ui.transport', 'Connection'), escapeHtml(s.transport || ''))}
-                ${fact(t('commercialization.ui.clock_synced', 'Clock in sync at start'), `${yesNo(s.clock_synced_at_start)}${s.clock_offset_ms_at_start ? ` (${escapeHtml(String(s.clock_offset_ms_at_start))} ms)` : ''}`)}
-                ${fact(t('commercialization.ui.contract_id', 'Assignment ID'), contract)}
-                ${fact(t('commercialization.ui.session_id', 'Session ID'), `<span class="mono">${escapeHtml(s.id)}</span>`)}
-                ${fact(t('commercialization.ui.relay_id', 'Relay ID'), s.relay_uuid ? `<span class="mono">${escapeHtml(s.relay_uuid)}</span>` : '')}
+                ${running ? '' : fact(t('commercialization.ui.included_used', 'From included time'), formatMinutes(s.included_minutes_used))}
+                ${running ? '' : fact(t('commercialization.ui.overage_time', 'Overage time'), formatMinutes(s.overage_minutes))}
+                ${running ? '' : fact(t('commercialization.ui.amount_included', 'Amount, included time'), escapeHtml(formatMoney(s.amount_included, s.currency)))}
+                ${running ? '' : fact(t('commercialization.ui.amount_overage', 'Amount, overage'), escapeHtml(formatMoney(s.amount_overage, s.currency)))}
             </dl>
             <h3 class="dialog-subhead">${escapeHtml(t('commercialization.report.title', 'Work report'))}</h3>
-            ${r ? `<dl class="facts">${reportFacts}</dl>` : `<p class="text-muted">${escapeHtml(t('commercialization.ui.no_report', 'No work report for this session yet.'))}</p>`}`;
+            ${r ? `<dl class="facts">${reportFacts}</dl>` : `<p class="text-muted">${escapeHtml(running
+                ? t('commercialization.ui.report_after_end_long', 'The operator writes the work report after the session ends.')
+                : t('commercialization.ui.no_report', 'No work report for this session yet.'))}</p>`}
+            <details class="disclosure session-tech">
+                <summary><h3>${escapeHtml(t('commercialization.ui.technical_details', 'Technical details'))}</h3></summary>
+                <dl class="facts">
+                    ${fact(t('commercialization.ui.transport', 'Connection'), escapeHtml(s.transport || ''))}
+                    ${fact(t('commercialization.ui.clock_synced', 'Clock in sync at start'), `${Utils.booleanHtml(s.clock_synced_at_start, { on: t('common.yes', 'Yes'), off: t('common.no', 'No') })}${s.clock_offset_ms_at_start ? ` (${escapeHtml(Utils.formatNumber(s.clock_offset_ms_at_start))} ms)` : ''}`)}
+                    ${fact(t('commercialization.ui.contract_id', 'Assignment ID'), copyValue(s.contract_id, t('commercialization.ui.contract_id', 'Assignment ID')))}
+                    ${fact(t('commercialization.ui.session_id', 'Session ID'), copyValue(s.id, t('commercialization.ui.session_id', 'Session ID')))}
+                    ${fact(t('commercialization.ui.relay_id', 'Relay ID'), copyValue(s.relay_uuid, t('commercialization.ui.relay_id', 'Relay ID')))}
+                </dl>
+            </details>`;
         const buttons = [];
         if (!r && s.status === 'pending_report' && canWriteReport) {
             buttons.push({ label: t('commercialization.ui.write_report', 'Write report'), class: 'btn', onClick: () => { Modal.close(); completePendingReport(id); } });
@@ -903,9 +1011,8 @@
         ]);
         const info = document.getElementById('report-modal-session');
         if (info && s) {
-            info.textContent = t('commercialization.ui.report_for', '{device}, started {date}', {
-                device: s.device_name || s.device_id, date: formatDate(s.started_at)
-            });
+            info.innerHTML = sentenceWith('commercialization.ui.report_for', '{device}, started {date}',
+                { device: s.device_name || s.device_id }, 'date', timeExact(s.started_at));
         }
     }
 
@@ -975,7 +1082,8 @@
                 return { c, pkg, included, used, share: included ? used / included : -1 };
             }).sort((a, b) => b.share - a.share);
             if (!rows.length) {
-                sideState(list, t('commercialization.empty.contracts', 'No package assignments yet.'));
+                list.innerHTML = `<li class="list-row is-empty"><span>${escapeHtml(t('commercialization.ui.usage_empty', 'No package assignments yet. Included time shows here once a package is assigned to a device group.'))}
+                    ${canManage ? `<a href="/commercialization?tab=packages">${escapeHtml(t('commercialization.contracts.new', 'Assign package'))}</a>` : ''}</span></li>`;
                 return;
             }
             list.innerHTML = rows.map(({ c, pkg, included, used }) => {
@@ -1010,6 +1118,8 @@
         try {
             const data = await api('/api/panel/billing/sessions?status=pending_report');
             pendingAll = (data.sessions || []).filter((s) => s.status === 'pending_report');
+            const note = document.getElementById('pending-note');
+            if (note) note.hidden = !pendingAll.length;
             if (!pendingAll.length) {
                 sideState(list, t('commercialization.ui.pending_none', 'No sessions are waiting for a report.'));
                 return;
@@ -1018,9 +1128,8 @@
                 <button type="button" class="list-row pending-row" data-pending-session="${escapeHtml(s.id)}">
                     <span class="row-main">
                         <span class="row-title">${escapeHtml(s.device_name || s.device_id)}</span>
-                        <span class="row-sub">${escapeHtml(t('commercialization.ui.pending_row_sub', 'Started {date} by {operator}', {
-                            date: formatDate(s.started_at), operator: s.operator_name || s.operator_id || ''
-                        }))}</span>
+                        <span class="row-sub">${sentenceWith('commercialization.ui.pending_row_sub', 'Started {date} by {operator}',
+                            { operator: s.operator_name || s.operator_id || '' }, 'date', Utils.timeHtml(s.started_at))}</span>
                     </span>
                     <span class="material-icons row-chevron" aria-hidden="true">chevron_right</span>
                 </button>

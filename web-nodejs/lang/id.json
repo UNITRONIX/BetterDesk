@@ -6699,7 +6699,19 @@
             "pending_row_sub": "Dimulai {date} oleh {operator}",
             "pending_none": "Tidak ada sesi yang menunggu laporan.",
             "all_sessions_title": "Semua sesi",
-            "used_this_month": "Terpakai bulan ini"
+            "used_this_month": "Terpakai bulan ini",
+            "running_unreadable": "Sesi yang masih berjalan belum bisa ditampilkan karena layanan penagihan gagal membacanya. Sesi yang sudah selesai ditampilkan di bawah.",
+            "error_sessions_server": "Layanan penagihan tidak dapat membaca sesi. Sesi yang masih berjalan dapat menyebabkannya. Daftar akan dimuat lagi setelah sesi itu selesai.",
+            "still_running": "Masih berjalan",
+            "billed_at_end": "Dihitung saat selesai",
+            "report_after_end": "Setelah selesai",
+            "report_after_end_long": "Operator menulis laporan kerja setelah sesi selesai.",
+            "technical_details": "Detail teknis",
+            "copy_failed": "Tidak dapat menyalin. Pilih teksnya lalu salin secara manual.",
+            "usage_empty": "Belum ada penetapan paket. Waktu yang termasuk akan tampil di sini setelah paket ditetapkan ke grup perangkat.",
+            "smtp_missing_effect": "Pengiriman email belum diatur, jadi tidak ada email notifikasi yang terkirim.",
+            "assign_more": "Opsi lainnya",
+            "assign_more_hint": "Sisa menit, tarif sendiri, dan tanggal berlakunya penetapan. Kolom kosong memakai nilai paket, tanpa tanggal akhir."
         }
     },
     "remote_dashboard": {

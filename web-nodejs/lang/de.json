@@ -6693,7 +6693,19 @@
             "pending_row_sub": "Gestartet am {date} von {operator}",
             "pending_none": "Keine Sitzung wartet auf einen Bericht.",
             "all_sessions_title": "Alle Sitzungen",
-            "used_this_month": "Verbraucht in diesem Monat"
+            "used_this_month": "Verbraucht in diesem Monat",
+            "running_unreadable": "Laufende Sitzungen können gerade nicht angezeigt werden, weil der Abrechnungsdienst sie nicht lesen kann. Beendete Sitzungen stehen unten.",
+            "error_sessions_server": "Der Abrechnungsdienst konnte die Sitzungen nicht lesen. Eine noch laufende Sitzung kann das auslösen. Die Liste lädt wieder, sobald sie beendet ist.",
+            "still_running": "Läuft noch",
+            "billed_at_end": "Wird am Ende berechnet",
+            "report_after_end": "Fällig nach dem Ende",
+            "report_after_end_long": "Der Bearbeiter schreibt den Arbeitsbericht, wenn die Sitzung beendet ist.",
+            "technical_details": "Technische Details",
+            "copy_failed": "Kopieren fehlgeschlagen. Markieren Sie den Text und kopieren Sie ihn von Hand.",
+            "usage_empty": "Noch keine Paketzuweisungen. Die enthaltene Zeit erscheint hier, sobald einer Gerätegruppe ein Paket zugewiesen ist.",
+            "smtp_missing_effect": "Der E-Mail-Versand ist noch nicht eingerichtet, daher werden keine Benachrichtigungen verschickt.",
+            "assign_more": "Weitere Optionen",
+            "assign_more_hint": "Verbleibende Minuten, eigene Sätze und die Gültigkeitsdaten. Leere Felder übernehmen die Werte des Pakets, ohne Enddatum."
         }
     },
     "remote_dashboard": {

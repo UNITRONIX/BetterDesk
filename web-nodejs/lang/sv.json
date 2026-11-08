@@ -6699,7 +6699,19 @@
             "pending_row_sub": "Startad {date} av {operator}",
             "pending_none": "Inga sessioner väntar på rapport.",
             "all_sessions_title": "Alla sessioner",
-            "used_this_month": "Använt den här månaden"
+            "used_this_month": "Använt den här månaden",
+            "running_unreadable": "Sessioner som pågår kan inte visas just nu, eftersom faktureringstjänsten inte kan läsa dem. Avslutade sessioner visas nedan.",
+            "error_sessions_server": "Faktureringstjänsten kunde inte läsa sessionerna. En session som fortfarande pågår kan vara orsaken. Listan laddas igen när den är slut.",
+            "still_running": "Pågår fortfarande",
+            "billed_at_end": "Räknas när den slutar",
+            "report_after_end": "Skrivs efter avslut",
+            "report_after_end_long": "Operatören skriver arbetsrapporten när sessionen är slut.",
+            "technical_details": "Tekniska detaljer",
+            "copy_failed": "Det gick inte att kopiera. Markera texten och kopiera den manuellt.",
+            "usage_empty": "Inga pakettilldelningar ännu. Inkluderad tid visas här när ett paket har tilldelats en enhetsgrupp.",
+            "smtp_missing_effect": "E-postutskick är inte konfigurerat ännu, så inga aviseringsmejl skickas.",
+            "assign_more": "Fler alternativ",
+            "assign_more_hint": "Återstående minuter, egna priser och datumen då tilldelningen gäller. Tomma fält använder paketets värden, utan slutdatum."
         }
     },
     "remote_dashboard": {

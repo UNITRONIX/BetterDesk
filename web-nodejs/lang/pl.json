@@ -6693,7 +6693,19 @@
             "pending_row_sub": "Rozpoczęta {date} przez {operator}",
             "pending_none": "Żadna sesja nie czeka na raport.",
             "all_sessions_title": "Wszystkie sesje",
-            "used_this_month": "Wykorzystano w tym miesiącu"
+            "used_this_month": "Wykorzystano w tym miesiącu",
+            "running_unreadable": "Trwających sesji nie można teraz wyświetlić, bo usługa rozliczeń nie potrafi ich odczytać. Zakończone sesje są poniżej.",
+            "error_sessions_server": "Usługa rozliczeń nie mogła odczytać sesji. Przyczyną może być sesja, która jeszcze trwa. Lista wczyta się ponownie po jej zakończeniu.",
+            "still_running": "Nadal trwa",
+            "billed_at_end": "Liczone po zakończeniu",
+            "report_after_end": "Po zakończeniu",
+            "report_after_end_long": "Operator pisze raport z pracy po zakończeniu sesji.",
+            "technical_details": "Szczegóły techniczne",
+            "copy_failed": "Nie udało się skopiować. Zaznacz tekst i skopiuj go ręcznie.",
+            "usage_empty": "Brak przypisanych pakietów. Wliczony czas pojawi się tutaj po przypisaniu pakietu do grupy urządzeń.",
+            "smtp_missing_effect": "Wysyłanie e-maili nie jest jeszcze skonfigurowane, więc powiadomienia e-mail nie są wysyłane.",
+            "assign_more": "Więcej opcji",
+            "assign_more_hint": "Pozostałe minuty, własne stawki i daty ważności przypisania. Puste pola używają wartości pakietu, bez daty końcowej."
         }
     },
     "remote_dashboard": {

@@ -6699,7 +6699,19 @@
             "pending_row_sub": "Bắt đầu lúc {date} bởi {operator}",
             "pending_none": "Không có phiên nào đang chờ báo cáo.",
             "all_sessions_title": "Tất cả phiên",
-            "used_this_month": "Đã dùng tháng này"
+            "used_this_month": "Đã dùng tháng này",
+            "running_unreadable": "Hiện chưa thể hiển thị các phiên đang chạy vì dịch vụ tính phí không đọc được chúng. Các phiên đã kết thúc được liệt kê bên dưới.",
+            "error_sessions_server": "Dịch vụ tính phí không đọc được các phiên. Một phiên vẫn đang chạy có thể gây ra lỗi này. Danh sách sẽ tải lại sau khi phiên đó kết thúc.",
+            "still_running": "Vẫn đang chạy",
+            "billed_at_end": "Tính khi kết thúc",
+            "report_after_end": "Viết sau khi kết thúc",
+            "report_after_end_long": "Người vận hành viết báo cáo công việc sau khi phiên kết thúc.",
+            "technical_details": "Chi tiết kỹ thuật",
+            "copy_failed": "Không sao chép được. Hãy chọn văn bản và sao chép thủ công.",
+            "usage_empty": "Chưa có gói nào được gán. Thời gian bao gồm sẽ hiển thị ở đây khi một gói được gán cho nhóm thiết bị.",
+            "smtp_missing_effect": "Chưa thiết lập gửi email, nên không có email thông báo nào được gửi đi.",
+            "assign_more": "Tùy chọn khác",
+            "assign_more_hint": "Số phút còn lại, mức giá riêng và ngày hiệu lực của việc gán. Trường để trống dùng giá trị của gói, không có ngày kết thúc."
         }
     },
     "remote_dashboard": {

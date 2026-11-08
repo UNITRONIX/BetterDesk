@@ -6699,7 +6699,19 @@
             "pending_row_sub": "Pornită pe {date} de {operator}",
             "pending_none": "Nicio sesiune nu așteaptă un raport.",
             "all_sessions_title": "Toate sesiunile",
-            "used_this_month": "Folosit luna aceasta"
+            "used_this_month": "Folosit luna aceasta",
+            "running_unreadable": "Sesiunile aflate în desfășurare nu pot fi afișate acum, deoarece serviciul de facturare nu le poate citi. Sesiunile încheiate sunt mai jos.",
+            "error_sessions_server": "Serviciul de facturare nu a putut citi sesiunile. Cauza poate fi o sesiune încă în desfășurare. Lista se încarcă din nou după ce se încheie.",
+            "still_running": "Încă în desfășurare",
+            "billed_at_end": "Se calculează la final",
+            "report_after_end": "După încheiere",
+            "report_after_end_long": "Operatorul scrie raportul de lucru după încheierea sesiunii.",
+            "technical_details": "Detalii tehnice",
+            "copy_failed": "Copierea nu a reușit. Selectați textul și copiați-l manual.",
+            "usage_empty": "Încă nu există pachete atribuite. Timpul inclus apare aici după ce un pachet este atribuit unui grup de dispozitive.",
+            "smtp_missing_effect": "Trimiterea de e-mailuri nu este încă configurată, deci nu pleacă e-mailuri de notificare.",
+            "assign_more": "Mai multe opțiuni",
+            "assign_more_hint": "Minutele rămase, tarifele proprii și datele de valabilitate ale atribuirii. Câmpurile goale folosesc valorile pachetului, fără dată de încheiere."
         }
     },
     "remote_dashboard": {

@@ -6697,7 +6697,19 @@
             "pending_row_sub": "由 {operator} 於 {date} 開始",
             "pending_none": "沒有等待報告的工作階段。",
             "all_sessions_title": "所有工作階段",
-            "used_this_month": "本月已用"
+            "used_this_month": "本月已用",
+            "running_unreadable": "計費服務無法讀取進行中的工作階段，因此目前無法顯示。已結束的工作階段列在下方。",
+            "error_sessions_server": "計費服務無法讀取工作階段。可能是有工作階段仍在進行。該工作階段結束後，清單會重新載入。",
+            "still_running": "仍在進行",
+            "billed_at_end": "結束時計算",
+            "report_after_end": "結束後撰寫",
+            "report_after_end_long": "工作階段結束後，操作員會撰寫工作報告。",
+            "technical_details": "技術詳細資料",
+            "copy_failed": "無法複製。請選取文字後手動複製。",
+            "usage_empty": "尚未指派任何套件。將套件指派給裝置群組後，包含的時間會顯示在這裡。",
+            "smtp_missing_effect": "尚未設定電子郵件傳送，因此不會寄出通知郵件。",
+            "assign_more": "更多選項",
+            "assign_more_hint": "剩餘分鐘、自訂費率及指派的有效日期。空白欄位會使用套件的值，且沒有結束日期。"
         }
     },
     "remote_dashboard": {

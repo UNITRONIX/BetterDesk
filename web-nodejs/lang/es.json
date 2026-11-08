@@ -6693,7 +6693,19 @@
             "pending_row_sub": "Iniciada el {date} por {operator}",
             "pending_none": "No hay sesiones esperando un informe.",
             "all_sessions_title": "Todas las sesiones",
-            "used_this_month": "Usado este mes"
+            "used_this_month": "Usado este mes",
+            "running_unreadable": "Las sesiones en curso no se pueden mostrar ahora porque el servicio de facturación no puede leerlas. Las sesiones finalizadas aparecen abajo.",
+            "error_sessions_server": "El servicio de facturación no pudo leer las sesiones. Una sesión que sigue en curso puede causarlo. La lista vuelve a cargarse cuando termine.",
+            "still_running": "Sigue en curso",
+            "billed_at_end": "Se cuenta al terminar",
+            "report_after_end": "Tras finalizar",
+            "report_after_end_long": "El operador escribe el informe de trabajo cuando termina la sesión.",
+            "technical_details": "Detalles técnicos",
+            "copy_failed": "No se pudo copiar. Seleccione el texto y cópielo a mano.",
+            "usage_empty": "Aún no hay paquetes asignados. El tiempo incluido aparece aquí cuando se asigna un paquete a un grupo de dispositivos.",
+            "smtp_missing_effect": "El envío de correo aún no está configurado, así que no se envían avisos por correo.",
+            "assign_more": "Más opciones",
+            "assign_more_hint": "Minutos restantes, tarifas propias y las fechas de validez de la asignación. Los campos vacíos usan los valores del paquete, sin fecha de fin."
         }
     },
     "remote_dashboard": {

@@ -6693,7 +6693,19 @@
             "pending_row_sub": "{date} に {operator} が開始",
             "pending_none": "報告待ちのセッションはありません。",
             "all_sessions_title": "すべてのセッション",
-            "used_this_month": "今月の使用"
+            "used_this_month": "今月の使用",
+            "running_unreadable": "請求サービスが読み取れないため、実行中のセッションは現在表示できません。終了したセッションは下に表示されています。",
+            "error_sessions_server": "請求サービスがセッションを読み取れませんでした。実行中のセッションが原因の場合があります。そのセッションが終了すると一覧が再び読み込まれます。",
+            "still_running": "実行中",
+            "billed_at_end": "終了時に計算",
+            "report_after_end": "終了後に作成",
+            "report_after_end_long": "作業レポートはセッション終了後にオペレーターが作成します。",
+            "technical_details": "技術情報",
+            "copy_failed": "コピーできませんでした。テキストを選択して手動でコピーしてください。",
+            "usage_empty": "パッケージの割り当てはまだありません。デバイスグループにパッケージを割り当てると、含まれる時間がここに表示されます。",
+            "smtp_missing_effect": "メール送信がまだ設定されていないため、通知メールは送信されません。",
+            "assign_more": "その他のオプション",
+            "assign_more_hint": "残り時間（分）、独自の料金、割り当ての有効期間。空欄の項目はパッケージの値を使い、終了日はありません。"
         }
     },
     "remote_dashboard": {

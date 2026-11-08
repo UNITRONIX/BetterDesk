@@ -6699,7 +6699,19 @@
             "pending_row_sub": "Startet {date} av {operator}",
             "pending_none": "Ingen økter venter på rapport.",
             "all_sessions_title": "Alle økter",
-            "used_this_month": "Brukt denne måneden"
+            "used_this_month": "Brukt denne måneden",
+            "running_unreadable": "Økter som fortsatt pågår kan ikke vises nå, fordi faktureringstjenesten ikke klarer å lese dem. Avsluttede økter vises nedenfor.",
+            "error_sessions_server": "Faktureringstjenesten kunne ikke lese øktene. En økt som fortsatt pågår kan være årsaken. Listen lastes igjen når den er avsluttet.",
+            "still_running": "Pågår fortsatt",
+            "billed_at_end": "Telles når den avsluttes",
+            "report_after_end": "Skrives etter avslutning",
+            "report_after_end_long": "Operatøren skriver arbeidsrapporten når økten er avsluttet.",
+            "technical_details": "Tekniske detaljer",
+            "copy_failed": "Kunne ikke kopiere. Merk teksten og kopier den manuelt.",
+            "usage_empty": "Ingen pakketildelinger ennå. Inkludert tid vises her når en pakke er tildelt en enhetsgruppe.",
+            "smtp_missing_effect": "E-postsending er ikke satt opp ennå, så ingen varslings-e-poster sendes.",
+            "assign_more": "Flere alternativer",
+            "assign_more_hint": "Gjenværende minutter, egne satser og datoene tildelingen gjelder. Tomme felt bruker pakkens verdier, uten sluttdato."
         }
     },
     "remote_dashboard": {

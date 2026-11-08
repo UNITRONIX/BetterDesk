@@ -6699,7 +6699,19 @@
             "pending_row_sub": "Indította: {operator}, {date}",
             "pending_none": "Egy munkamenet sem vár jelentésre.",
             "all_sessions_title": "Összes munkamenet",
-            "used_this_month": "Felhasználva ebben a hónapban"
+            "used_this_month": "Felhasználva ebben a hónapban",
+            "running_unreadable": "A folyamatban lévő munkamenetek most nem jeleníthetők meg, mert a számlázási szolgáltatás nem tudja beolvasni őket. A befejezett munkamenetek lent láthatók.",
+            "error_sessions_server": "A számlázási szolgáltatás nem tudta beolvasni a munkameneteket. Ezt egy még futó munkamenet okozhatja. A lista újra betöltődik, amikor véget ér.",
+            "still_running": "Még tart",
+            "billed_at_end": "A végén számolódik",
+            "report_after_end": "A befejezés után",
+            "report_after_end_long": "Az operátor a munkamenet vége után írja meg a munkajelentést.",
+            "technical_details": "Műszaki adatok",
+            "copy_failed": "A másolás nem sikerült. Jelölje ki a szöveget, és másolja kézzel.",
+            "usage_empty": "Még nincs csomag-hozzárendelés. A benne foglalt idő itt jelenik meg, amint egy eszközcsoport csomagot kap.",
+            "smtp_missing_effect": "Az e-mail-küldés még nincs beállítva, ezért értesítő e-mailek nem mennek ki.",
+            "assign_more": "További beállítások",
+            "assign_more_hint": "Hátralévő percek, saját díjak és a hozzárendelés érvényességi dátumai. Az üres mezők a csomag értékeit használják, záró dátum nélkül."
         }
     },
     "remote_dashboard": {

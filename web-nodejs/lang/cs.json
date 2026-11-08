@@ -6693,7 +6693,19 @@
             "pending_row_sub": "Zahájil(a) {operator} {date}",
             "pending_none": "Žádná relace nečeká na výkaz.",
             "all_sessions_title": "Všechny relace",
-            "used_this_month": "Využito tento měsíc"
+            "used_this_month": "Využito tento měsíc",
+            "running_unreadable": "Probíhající relace teď nelze zobrazit, protože je fakturační služba nedokáže načíst. Ukončené relace jsou níže.",
+            "error_sessions_server": "Fakturační služba nedokázala načíst relace. Může to způsobit relace, která ještě probíhá. Seznam se znovu načte, až skončí.",
+            "still_running": "Stále probíhá",
+            "billed_at_end": "Započítá se po skončení",
+            "report_after_end": "Po skončení",
+            "report_after_end_long": "Operátor napíše pracovní zprávu po skončení relace.",
+            "technical_details": "Technické údaje",
+            "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně.",
+            "usage_empty": "Zatím žádná přiřazení balíčků. Zahrnutý čas se zde zobrazí, jakmile skupině zařízení přiřadíte balíček.",
+            "smtp_missing_effect": "Odesílání e-mailů zatím není nastavené, takže se žádná upozornění neodesílají.",
+            "assign_more": "Další možnosti",
+            "assign_more_hint": "Zbývající minuty, vlastní sazby a data platnosti přiřazení. Prázdná pole převezmou hodnoty balíčku, bez data konce."
         }
     },
     "remote_dashboard": {

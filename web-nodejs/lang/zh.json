@@ -6693,7 +6693,19 @@
             "pending_row_sub": "由 {operator} 于 {date} 开始",
             "pending_none": "没有等待报告的会话。",
             "all_sessions_title": "所有会话",
-            "used_this_month": "本月已用"
+            "used_this_month": "本月已用",
+            "running_unreadable": "计费服务无法读取进行中的会话，因此暂时无法显示。已结束的会话列在下方。",
+            "error_sessions_server": "计费服务无法读取会话。可能是有会话仍在进行。该会话结束后，列表会重新加载。",
+            "still_running": "仍在进行",
+            "billed_at_end": "结束时计算",
+            "report_after_end": "结束后撰写",
+            "report_after_end_long": "会话结束后，操作员会撰写工作报告。",
+            "technical_details": "技术详情",
+            "copy_failed": "无法复制。请选中文字后手动复制。",
+            "usage_empty": "尚未分配任何套餐。将套餐分配给设备组后，包含的时间会显示在这里。",
+            "smtp_missing_effect": "尚未设置邮件发送，因此不会发出通知邮件。",
+            "assign_more": "更多选项",
+            "assign_more_hint": "剩余分钟、自定义费率及分配的有效日期。空白字段使用套餐的值，且没有结束日期。"
         }
     },
     "remote_dashboard": {

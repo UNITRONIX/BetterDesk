@@ -6693,7 +6693,19 @@
             "pending_row_sub": "{date}에 {operator}님이 시작",
             "pending_none": "보고서를 기다리는 세션이 없습니다.",
             "all_sessions_title": "모든 세션",
-            "used_this_month": "이번 달 사용"
+            "used_this_month": "이번 달 사용",
+            "running_unreadable": "청구 서비스가 진행 중인 세션을 읽지 못해 지금은 표시할 수 없습니다. 종료된 세션은 아래에 표시됩니다.",
+            "error_sessions_server": "청구 서비스가 세션을 읽지 못했습니다. 아직 진행 중인 세션 때문일 수 있습니다. 세션이 끝나면 목록이 다시 로드됩니다.",
+            "still_running": "진행 중",
+            "billed_at_end": "종료 시 계산",
+            "report_after_end": "종료 후 작성",
+            "report_after_end_long": "작업 보고서는 세션이 끝난 뒤 운영자가 작성합니다.",
+            "technical_details": "기술 정보",
+            "copy_failed": "복사하지 못했습니다. 텍스트를 선택해 직접 복사하세요.",
+            "usage_empty": "아직 패키지 할당이 없습니다. 장치 그룹에 패키지를 할당하면 포함 시간이 여기에 표시됩니다.",
+            "smtp_missing_effect": "이메일 발송이 아직 설정되지 않아 알림 이메일이 발송되지 않습니다.",
+            "assign_more": "추가 옵션",
+            "assign_more_hint": "남은 분, 별도 요금, 할당 유효 기간입니다. 빈 필드는 패키지 값을 사용하며 종료일이 없습니다."
         }
     },
     "remote_dashboard": {

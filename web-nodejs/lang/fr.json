@@ -6697,7 +6697,19 @@
             "pending_row_sub": "Démarrée le {date} par {operator}",
             "pending_none": "Aucune session n’attend de rapport.",
             "all_sessions_title": "Toutes les sessions",
-            "used_this_month": "Utilisé ce mois-ci"
+            "used_this_month": "Utilisé ce mois-ci",
+            "running_unreadable": "Les sessions en cours ne peuvent pas être affichées pour l'instant, car le service de facturation n'arrive pas à les lire. Les sessions terminées sont listées ci-dessous.",
+            "error_sessions_server": "Le service de facturation n'a pas pu lire les sessions. Une session encore en cours peut en être la cause. La liste se recharge une fois qu'elle est terminée.",
+            "still_running": "En cours",
+            "billed_at_end": "Compté à la fin",
+            "report_after_end": "À rédiger après la fin",
+            "report_after_end_long": "L'opérateur rédige le rapport d'intervention à la fin de la session.",
+            "technical_details": "Détails techniques",
+            "copy_failed": "Copie impossible. Sélectionnez le texte et copiez-le à la main.",
+            "usage_empty": "Aucune attribution de forfait pour l'instant. Le temps inclus s'affiche ici dès qu'un forfait est attribué à un groupe d'appareils.",
+            "smtp_missing_effect": "L'envoi d'e-mails n'est pas encore configuré : aucune notification par e-mail ne part.",
+            "assign_more": "Plus d'options",
+            "assign_more_hint": "Minutes restantes, tarifs propres et dates de validité de l'attribution. Les champs vides reprennent les valeurs du forfait, sans date de fin."
         }
     },
     "remote_dashboard": {

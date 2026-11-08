@@ -6699,7 +6699,19 @@
             "pending_row_sub": "Aloitettu {date}, aloittaja {operator}",
             "pending_none": "Mikään istunto ei odota raporttia.",
             "all_sessions_title": "Kaikki istunnot",
-            "used_this_month": "Käytetty tässä kuussa"
+            "used_this_month": "Käytetty tässä kuussa",
+            "running_unreadable": "Käynnissä olevia istuntoja ei voi nyt näyttää, koska laskutuspalvelu ei pysty lukemaan niitä. Päättyneet istunnot näkyvät alla.",
+            "error_sessions_server": "Laskutuspalvelu ei voinut lukea istuntoja. Syynä voi olla vielä käynnissä oleva istunto. Luettelo latautuu taas, kun se päättyy.",
+            "still_running": "Käynnissä",
+            "billed_at_end": "Lasketaan, kun se päättyy",
+            "report_after_end": "Kirjoitetaan päättymisen jälkeen",
+            "report_after_end_long": "Operaattori kirjoittaa työraportin istunnon päätyttyä.",
+            "technical_details": "Tekniset tiedot",
+            "copy_failed": "Kopiointi epäonnistui. Valitse teksti ja kopioi se käsin.",
+            "usage_empty": "Paketteja ei ole vielä määritetty. Sisältyvä aika näkyy tässä, kun paketti on määritetty laiteryhmälle.",
+            "smtp_missing_effect": "Sähköpostin lähetystä ei ole vielä määritetty, joten ilmoitussähköposteja ei lähetetä.",
+            "assign_more": "Lisää asetuksia",
+            "assign_more_hint": "Jäljellä olevat minuutit, omat hinnat ja määrityksen voimassaolopäivät. Tyhjät kentät käyttävät paketin arvoja ilman päättymispäivää."
         }
     },
     "remote_dashboard": {

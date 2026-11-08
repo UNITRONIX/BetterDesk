@@ -6699,7 +6699,19 @@
             "pending_row_sub": "{operator} tarafından {date} tarihinde başlatıldı",
             "pending_none": "Rapor bekleyen oturum yok.",
             "all_sessions_title": "Tüm oturumlar",
-            "used_this_month": "Bu ay kullanılan"
+            "used_this_month": "Bu ay kullanılan",
+            "running_unreadable": "Faturalama hizmeti devam eden oturumları okuyamadığı için bunlar şu anda gösterilemiyor. Biten oturumlar aşağıda listeleniyor.",
+            "error_sessions_server": "Faturalama hizmeti oturumları okuyamadı. Buna hâlâ devam eden bir oturum yol açabilir. Oturum bitince liste yeniden yüklenir.",
+            "still_running": "Devam ediyor",
+            "billed_at_end": "Bitince hesaplanır",
+            "report_after_end": "Bitince yazılır",
+            "report_after_end_long": "Operatör iş raporunu oturum bittikten sonra yazar.",
+            "technical_details": "Teknik ayrıntılar",
+            "copy_failed": "Kopyalanamadı. Metni seçip elle kopyalayın.",
+            "usage_empty": "Henüz paket ataması yok. Bir cihaz grubuna paket atandığında dahil süre burada görünür.",
+            "smtp_missing_effect": "E-posta gönderimi henüz ayarlanmadı, bu yüzden bildirim e-postası gitmiyor.",
+            "assign_more": "Diğer seçenekler",
+            "assign_more_hint": "Kalan dakikalar, özel ücretler ve atamanın geçerli olduğu tarihler. Boş alanlar paketin değerlerini kullanır, bitiş tarihi olmaz."
         }
     },
     "remote_dashboard": {

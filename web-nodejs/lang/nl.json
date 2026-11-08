@@ -6693,7 +6693,19 @@
             "pending_row_sub": "Gestart op {date} door {operator}",
             "pending_none": "Er wachten geen sessies op een rapport.",
             "all_sessions_title": "Alle sessies",
-            "used_this_month": "Gebruikt deze maand"
+            "used_this_month": "Gebruikt deze maand",
+            "running_unreadable": "Sessies die nog lopen, kunnen nu niet worden getoond, omdat de factureringsdienst ze niet kan lezen. Beëindigde sessies staan hieronder.",
+            "error_sessions_server": "De factureringsdienst kon de sessies niet lezen. Een sessie die nog loopt, kan de oorzaak zijn. De lijst laadt weer zodra die is beëindigd.",
+            "still_running": "Loopt nog",
+            "billed_at_end": "Geteld zodra hij eindigt",
+            "report_after_end": "Na afloop",
+            "report_after_end_long": "De operator schrijft het werkverslag nadat de sessie is beëindigd.",
+            "technical_details": "Technische gegevens",
+            "copy_failed": "Kopiëren is mislukt. Selecteer de tekst en kopieer die handmatig.",
+            "usage_empty": "Nog geen pakkettoewijzingen. De inbegrepen tijd verschijnt hier zodra een apparaatgroep een pakket heeft.",
+            "smtp_missing_effect": "E-mail versturen is nog niet ingesteld, dus er gaan geen meldingsmails uit.",
+            "assign_more": "Meer opties",
+            "assign_more_hint": "Resterende minuten, eigen tarieven en de data waarop de toewijzing geldt. Lege velden gebruiken de waarden van het pakket, zonder einddatum."
         }
     },
     "remote_dashboard": {
