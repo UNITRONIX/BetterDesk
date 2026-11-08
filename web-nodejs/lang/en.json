@@ -4392,6 +4392,8 @@
             "create_title": "New support package",
             "edit_title": "Edit package",
             "create_submit": "Create package",
+            "select_org": "Organization",
+            "select_org_placeholder": "Select an organization…",
             "created": "Package created",
             "updated": "Package updated",
             "deleted": "Package deleted",
