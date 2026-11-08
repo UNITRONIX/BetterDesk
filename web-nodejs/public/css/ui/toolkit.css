@@ -53,16 +53,38 @@
     padding-inline-start: calc(var(--row-pad-x) + 20px + var(--space-2));
 }
 
-/* Wide screens: the form and its result side by side, so a long result
+/* Each tool measures its own width, so the form and its result sit side
+   by side whenever the tool is wide enough (one column or two) */
+.tool-list > .tool {
+    container-type: inline-size;
+}
+
+/* Wide tools: the form and its result side by side, so a long result
    (processes, logs, DNS records) uses the width instead of pushing the
    next tools down */
-@media (min-width: 1200px) {
+@container (min-width: 54rem) {
     .tool-body {
         display: grid;
         grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
         align-items: start;
         gap: var(--space-4) var(--space-7);
         max-width: none;
+    }
+}
+
+/* Very wide screens: closed tools in two columns, read left to right, so
+   the list doesn't run as one thin strip across the page. An open tool
+   takes the whole row, with its form and result side by side. */
+@media (min-width: 1600px) {
+    .tool-list:not([hidden]) {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+        column-gap: var(--space-7);
+    }
+
+    .tool-list > .tool[open] {
+        grid-column: 1 / -1;
     }
 }
 
@@ -112,11 +134,6 @@
 
 .tool-result .tool-chain > li + li {
     border-top: 0;
-}
-
-.tool-table .num {
-    text-align: end;
-    font-variant-numeric: tabular-nums;
 }
 
 .tool-table .tool-wrap {

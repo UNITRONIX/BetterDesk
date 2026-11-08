@@ -351,6 +351,23 @@
                 : String(d.last_online);
         }
 
+        // Shared data display (utils.js) where it is loaded: status tones, tag sets, times
+        var U = global.Utils && global.Utils.statusHtml ? global.Utils : null;
+
+        function statusMark(st) {
+            return U ? U.statusHtml(st.className, st.label)
+                : '<span class="status ' + st.className + '">' + esc(st.label) + '</span>';
+        }
+
+        function tagSet(tags) {
+            return U ? U.tagsHtml(tags) : esc(tags.join(', '));
+        }
+
+        function lastSeenHtml(d) {
+            if (!U || d.online) return esc(lastSeenText(d));
+            return U.timeHtml(d.last_online);
+        }
+
         function renderGrid() {
             var grid = el(ids.grid);
             if (!grid) return;
@@ -371,9 +388,9 @@
                     '<div class="' + c('-card-body') + '">' +
                     '<span class="' + c('-card-name') + '" title="' + esc(name) + '">' + esc(name) + '</span>' +
                     '<span class="' + c('-card-id') + ' mono">' + esc(d.id) + '</span>' +
-                    '<span class="' + c('-card-meta') + '"><span class="status ' + st.className + '">' + esc(st.label) + '</span></span>' +
+                    '<span class="' + c('-card-meta') + '">' + statusMark(st) + '</span>' +
                     (platform ? '<span class="' + c('-card-meta') + '">' + platformHtml(platform) + '</span>' : '') +
-                    (tags.length ? '<span class="' + c('-card-tags') + ' tag-list">' + esc(tags.join(', ')) + '</span>' : '') +
+                    (tags.length ? '<span class="' + c('-card-tags') + ' tag-list">' + tagSet(tags) + '</span>' : '') +
                     '</div>' +
                     '<div class="' + c('-card-footer') + '">' + actionHtml(d, name) + '</div>' +
                     '</article>';
@@ -393,11 +410,11 @@
                 return '<tr data-id="' + esc(d.id) + '"' + (!d.online ? ' class="' + c('-row-offline') + '"' : '') + '>' +
                     '<td><span class="' + c('-hostname') + '">' + esc(name) + '</span>' +
                     '<span class="cell-sub mono ' + c('-row-id') + '">' + esc(d.id) + '</span>' +
-                    (tags.length ? '<span class="cell-sub tag-list">' + esc(tags.join(', ')) + '</span>' : '') + '</td>' +
+                    (tags.length ? '<span class="cell-sub tag-list">' + tagSet(tags) + '</span>' : '') + '</td>' +
                     '<td><span class="' + c('-device-id') + ' mono">' + esc(d.id) + '</span></td>' +
-                    '<td><span class="status ' + st.className + '">' + esc(st.label) + '</span></td>' +
+                    '<td>' + statusMark(st) + '</td>' +
                     '<td class="' + c('-platform') + '">' + platformHtml(platform) + '</td>' +
-                    '<td class="' + c('-last') + '">' + esc(lastSeenText(d)) + '</td>' +
+                    '<td class="' + c('-last') + '">' + lastSeenHtml(d) + '</td>' +
                     '<td class="actions">' + actionHtml(d, name) + '</td>' +
                     '</tr>';
             }).join('');

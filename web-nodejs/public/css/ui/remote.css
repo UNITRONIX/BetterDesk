@@ -86,6 +86,27 @@
     padding: var(--space-5) var(--page-pad) var(--space-7);
 }
 
+/* Title and quick connect: stacked, and side by side on wide screens so
+   connecting by ID sits on the first line of the page */
+.rd-desk-top {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+@media (min-width: 1100px) {
+    .rd-desk-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: var(--space-4) var(--space-7);
+    }
+
+    .rd-desk-top .rd-desk-quick-row {
+        flex-wrap: nowrap;
+    }
+}
+
 /* Quick connect: the first thing on the page */
 .rd-desk-quick-connect {
     display: flex;

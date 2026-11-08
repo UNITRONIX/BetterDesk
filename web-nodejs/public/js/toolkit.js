@@ -15,23 +15,13 @@
     const esc = (value) => Utils.escapeHtml(value == null ? '' : String(value));
     const $ = (id) => document.getElementById(id);
 
-    const locale = () => (window.BetterDesk && window.BetterDesk.lang) || undefined;
-
+    // Numbers, sizes, statuses, values and times use the shared data display (utils.js)
     function formatNumber(value, digits) {
-        try {
-            return new Intl.NumberFormat(locale(), { maximumFractionDigits: digits }).format(value);
-        } catch (e) {
-            return String(value);
-        }
+        return Utils.formatNumber(value, { maximumFractionDigits: digits });
     }
 
     function formatBytes(bytes) {
-        bytes = Number(bytes) || 0;
-        if (bytes <= 0) return '0 B';
-        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        let i = 0;
-        while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
-        return `${formatNumber(bytes, i > 2 ? 1 : 0)} ${units[i]}`;
+        return Utils.formatBytes(Number(bytes) || 0);
     }
 
     function ms(value) {
@@ -54,7 +44,7 @@
     }
 
     function statusText(kind, text) {
-        return `<span class="status ${kind}">${esc(text)}</span>`;
+        return Utils.statusHtml(kind, text);
     }
 
     /**
@@ -181,7 +171,7 @@
             const d = await Utils.api('/api/network/ping', { method: 'POST', body: { host } });
             const ok = !!d.success;
             return facts([
-                [_('toolkit.host'), `<span class="mono">${esc(d.host || host)}</span>`],
+                [_('toolkit.host'), Utils.valueHtml(d.host || host)],
                 [_('toolkit.result'), ok ? statusText('ok', _('toolkit.ping_answered')) : statusText('error', _('toolkit.ping_no_answer'))],
                 ok && d.rtt_ms != null ? [_('toolkit.response_time'), esc(ms(d.rtt_ms))] : null,
                 !ok && d.error ? [_('toolkit.reason'), esc(d.error)] : null,
@@ -198,7 +188,7 @@
             const d = await Utils.api('/api/network/tcp', { method: 'POST', body: { host, port } });
             const open = !!(d.success || d.open || d.connected);
             return facts([
-                [_('toolkit.address'), `<span class="mono">${esc(host)}:${esc(port)}</span>`],
+                [_('toolkit.address'), Utils.valueHtml(`${host}:${port}`)],
                 [_('toolkit.result'), open ? statusText('ok', _('toolkit.port_open')) : statusText('error', _('toolkit.port_closed'))],
                 open && d.rtt_ms != null ? [_('toolkit.connect_time'), esc(ms(d.rtt_ms))] : null,
                 !open && d.error ? [_('toolkit.reason'), esc(d.error)] : null,
@@ -218,15 +208,15 @@
             let html = facts([
                 [_('toolkit.subject'), esc(d.subject || '')],
                 [_('toolkit.issuer'), esc(d.issuer || '') + (d.organization && d.organization !== d.issuer ? ` (${esc(d.organization)})` : '')],
-                [_('toolkit.valid_from'), esc(Utils.formatDate(d.validFrom))],
-                [_('toolkit.valid_to'), esc(Utils.formatDate(d.validTo))],
+                [_('toolkit.valid_from'), Utils.timeHtml(d.validFrom, { relative: false })],
+                [_('toolkit.valid_to'), Utils.timeHtml(d.validTo, { relative: false })],
                 [_('toolkit.days_left'), statusText(daysKind, daysText)],
                 [_('toolkit.trusted'), d.authorized ? esc(_('common.yes')) : esc(_('toolkit.not_trusted'))],
                 d.protocol ? [_('toolkit.protocol'), esc(d.protocol)] : null,
                 d.cipher && d.cipher.name ? [_('toolkit.cipher'), esc(d.cipher.name)] : null,
                 d.altNames && d.altNames.length ? [_('toolkit.alt_names'), `<span class="mono">${d.altNames.map(esc).join('<br>')}</span>`] : null,
-                d.serial ? [_('toolkit.serial'), `<span class="mono">${esc(d.serial)}</span>`] : null,
-                d.fingerprint ? [_('toolkit.fingerprint'), `<span class="mono">${esc(d.fingerprint)}</span>`] : null,
+                d.serial ? [_('toolkit.serial'), Utils.valueHtml(d.serial, { copy: true, label: _('toolkit.serial') })] : null,
+                d.fingerprint ? [_('toolkit.fingerprint'), Utils.valueHtml(d.fingerprint, { copy: true, label: _('toolkit.fingerprint') })] : null,
             ]);
             if (d.chain && d.chain.length > 1) {
                 html += `<h3 class="tool-sub">${esc(_('toolkit.chain'))}</h3>
@@ -246,7 +236,7 @@
             const code = d.status_code;
             const ok = code >= 200 && code < 400;
             return facts([
-                [_('toolkit.url'), `<span class="mono">${esc(url)}</span>`],
+                [_('toolkit.url'), Utils.valueHtml(url)],
                 [_('toolkit.result'), code ? statusText(ok ? 'ok' : 'error', _('toolkit.http_answered', { code })) : statusText('error', _('toolkit.http_no_answer'))],
                 d.rtt_ms != null ? [_('toolkit.response_time'), esc(ms(d.rtt_ms))] : null,
                 d.error ? [_('toolkit.reason'), esc(d.error)] : null,
@@ -262,7 +252,7 @@
             let addrs = d.addresses || d.address || d.ip || [];
             if (!Array.isArray(addrs)) addrs = [addrs];
             return facts([
-                [_('toolkit.domain'), `<span class="mono">${esc(d.host || host)}</span>`],
+                [_('toolkit.domain'), Utils.valueHtml(d.host || host)],
                 [_('toolkit.resolved'), addrs.length ? `<span class="mono">${addrs.map(esc).join('<br>')}</span>` : esc(_('toolkit.no_address'))],
             ]);
         });
@@ -405,11 +395,11 @@
             const procs = (res && res.processes) || [];
             if (!procs.length) return `<p class="state">${esc(_('toolkit.no_processes'))}</p>`;
             return `<div class="table-scroll"><table class="data-table tool-table">
-                <thead><tr><th>${esc(_('toolkit.process_name'))}</th><th class="num">${esc(_('toolkit.cpu_percent'))}</th><th class="num">${esc(_('toolkit.memory_mb'))}</th></tr></thead>
+                <thead><tr><th>${esc(_('toolkit.process_name'))}</th><th class="is-num">${esc(_('toolkit.cpu_percent'))}</th><th class="is-num">${esc(_('toolkit.memory_mb'))}</th></tr></thead>
                 <tbody>${procs.map((p) => `<tr>
                     <td class="mono tool-wrap">${esc(p.name || p.command || '')}</td>
-                    <td class="num">${esc(formatNumber(Number(p.cpu) || 0, 1))}</td>
-                    <td class="num">${esc(formatNumber(Number(p.mem) || 0, 0))}</td>
+                    <td class="is-num">${esc(formatNumber(Number(p.cpu) || 0, 1))}</td>
+                    <td class="is-num">${esc(formatNumber(Number(p.mem) || 0, 0))}</td>
                 </tr>`).join('')}</tbody></table></div>`;
         });
     });
@@ -441,12 +431,12 @@
             let html = facts([
                 d.type ? [_('toolkit.db_type'), esc(d.type)] : null,
                 d.size ? [_('toolkit.db_size'), esc(d.size)] : null,
-                [_('toolkit.last_backup'), d.last_backup ? esc(Utils.formatDate(d.last_backup)) : esc(_('toolkit.no_backup'))],
+                [_('toolkit.last_backup'), Utils.timeHtml(d.last_backup, { empty: _('toolkit.no_backup') })],
             ]);
             if (tables.length) {
                 html += `<div class="table-scroll"><table class="data-table tool-table">
-                    <thead><tr><th>${esc(_('toolkit.table_name'))}</th><th class="num">${esc(_('toolkit.row_count'))}</th></tr></thead>
-                    <tbody>${tables.map((t) => `<tr><td>${esc(t.name)}</td><td class="num">${esc(formatNumber(Number(t.count) || 0, 0))}</td></tr>`).join('')}</tbody>
+                    <thead><tr><th>${esc(_('toolkit.table_name'))}</th><th class="is-num">${esc(_('toolkit.row_count'))}</th></tr></thead>
+                    <tbody>${tables.map((t) => `<tr><td>${esc(t.name)}</td><td class="is-num">${esc(formatNumber(Number(t.count) || 0, 0))}</td></tr>`).join('')}</tbody>
                 </table></div>`;
             }
             return html;
@@ -466,7 +456,7 @@
                     const running = c.state === 'running' || /^up\b/i.test(c.status || '');
                     return `<tr><td><span class="mono">${esc(c.name || c.names || '')}</span><span class="cell-sub mono">${esc(c.image || '')}</span></td>
                         <td>${statusText(running ? 'ok' : 'offline', c.status || c.state || '')}</td>
-                        <td class="mono tool-wrap">${c.ports ? esc(c.ports) : '<span class="text-muted">–</span>'}</td></tr>`;
+                        <td class="mono tool-wrap">${c.ports ? esc(c.ports) : Utils.emptyHtml()}</td></tr>`;
                 }).join('')}</tbody></table></div>`;
         });
     });

@@ -17,18 +17,18 @@
                 <span class="sr-only">${_('settings.language')}</span>
                 <select id="rd-desk-lang" class="form-select" data-language-select></select>
             </label>
-            <button type="button" class="btn btn-sm" id="rd-desk-settings" hidden>${_('remote_dashboard.open_settings')}</button>
+            <button type="button" class="btn" id="rd-desk-settings" hidden>${_('remote_dashboard.open_settings')}</button>
             <a href="/devices" class="rd-desk-console-link" target="_blank" rel="noopener noreferrer">${_('remote_dashboard.open_panel')}</a>
         </div>
     </header>
 
     <main class="page page-wide rd-desk-page" id="rd-desk-main">
+        <!-- Title and quick connect share one line on wide screens -->
+        <div class="rd-desk-top">
         <div class="page-head">
             <h1 class="rd-desk-title">${_('nav.remote')}</h1>
             <p class="page-description rd-desk-subtitle">${_('remote_dashboard.page_description')}</p>
         </div>
-
-        <p class="notice warning rd-desk-phone-note" id="rd-phone-gate" hidden>${_('remote_dashboard.phone_note')}</p>
 
         <section class="rd-desk-quick-connect" aria-labelledby="rd-desk-quick-title">
             <h2 class="sr-only" id="rd-desk-quick-title">${_('remote_dashboard.quick_connect_title')}</h2>
@@ -42,6 +42,9 @@
             </div>
             <p class="form-hint rd-desk-quick-status" id="rd-desk-quick-status" aria-live="polite">${_('remote_dashboard.quick_connect_hint')}</p>
         </section>
+        </div>
+
+        <p class="notice warning rd-desk-phone-note" id="rd-phone-gate" hidden>${_('remote_dashboard.phone_note')}</p>
 
         <div class="rd-desk-workspace">
             <aside class="rd-desk-sidebar" id="rd-desk-sidebar" aria-label="${_('remote_dashboard.filters_label')}">
