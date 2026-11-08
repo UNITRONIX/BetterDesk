@@ -23,7 +23,9 @@ const field = (id, label, input, hint) => `
 const text = (id, attrs) => `<input type="text" id="${id}" class="form-input is-medium" autocapitalize="off" autocomplete="off" spellcheck="false" ${attrs || ''}>`;
 const port = (id, value) => `<input type="number" id="${id}" class="form-input is-short" min="1" max="65535" inputmode="numeric" ${value ? `value="${value}"` : ''}>`;
 const area = (id) => `<textarea id="${id}" class="form-input" rows="3" spellcheck="false"></textarea>`;
-const run = (id, label) => `<button type="submit" class="btn" id="${id}">${label}</button>`;
+// Every tool's start button carries the "run" icon; Wake-on-LAN wakes a computer, so it gets "power on"
+const icons = { run: 'play_arrow', power_on: 'power_settings_new' };
+const run = (id, label, meaning) => `<button type="submit" class="btn" id="${id}"><span class="material-icons" aria-hidden="true">${icons[meaning || 'run']}</span>${label}</button>`;
 %><%- include('layouts/main', {
     title: _('nav.toolkit'),
     uiReworked: true,
@@ -72,7 +74,7 @@ const run = (id, label) => `<button type="submit" class="btn" id="${id}">${label
                 ${tool({ id: 'wol', result: 'wol-result', requires: 'device.connect', title: _('toolkit.wol_title'), desc: _('toolkit.wol_desc'),
                     fields: field('wol-mac', _('toolkit.mac_address'), text('wol-mac', 'placeholder="AA:BB:CC:DD:EE:FF"'))
                         + field('wol-broadcast', _('toolkit.broadcast'), text('wol-broadcast', 'placeholder="255.255.255.255"'), _('toolkit.broadcast_hint')),
-                    actions: run('wol-run', _('toolkit.wol_run')) })}
+                    actions: run('wol-run', _('toolkit.wol_run'), 'power_on') })}
             </div>
 
             <div class="tab-panel tool-list" role="tabpanel" id="tab-crypto" aria-labelledby="tab-btn-crypto" hidden>

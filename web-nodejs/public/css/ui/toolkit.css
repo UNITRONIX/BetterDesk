@@ -53,6 +53,19 @@
     padding-inline-start: calc(var(--row-pad-x) + 20px + var(--space-2));
 }
 
+/* Wide screens: the form and its result side by side, so a long result
+   (processes, logs, DNS records) uses the width instead of pushing the
+   next tools down */
+@media (min-width: 1200px) {
+    .tool-body {
+        display: grid;
+        grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+        align-items: start;
+        gap: var(--space-4) var(--space-7);
+        max-width: none;
+    }
+}
+
 .tool-form .form-group {
     margin-bottom: var(--space-4);
 }

@@ -49,7 +49,7 @@
     function codeBlock(title, value) {
         const id = `tool-copy-${++copyId}`;
         return `<div class="code-block-head"><span class="code-block-title">${esc(title)}</span>
-                <button type="button" class="btn btn-sm" data-copy="${id}">${esc(_('actions.copy'))}</button></div>
+                <button type="button" class="btn btn-sm" data-copy="${id}">${Utils.icon('copy')}${esc(_('actions.copy'))}</button></div>
             <pre class="code-block" id="${id}">${esc(value)}</pre>`;
     }
 
@@ -163,8 +163,10 @@
         const value = el.dataset.value != null ? el.dataset.value : el.textContent;
         try {
             await Utils.copyToClipboard(value);
-            btn.textContent = _('toolkit.copied');
-            setTimeout(() => { btn.textContent = _('actions.copy'); }, 1500);
+            // Buttons keep their copy icon; the plain button in a copy field has none
+            const label = (text) => (btn.classList.contains('btn') ? Utils.icon('copy') : '') + esc(text);
+            btn.innerHTML = label(_('toolkit.copied'));
+            setTimeout(() => { btn.innerHTML = label(_('actions.copy')); }, 1500);
         } catch (err) {
             Notifications.error(_('toolkit.copy_failed'));
         }
@@ -221,7 +223,7 @@
                 [_('toolkit.days_left'), statusText(daysKind, daysText)],
                 [_('toolkit.trusted'), d.authorized ? esc(_('common.yes')) : esc(_('toolkit.not_trusted'))],
                 d.protocol ? [_('toolkit.protocol'), esc(d.protocol)] : null,
-                d.cipher && d.cipher.name ? [_('toolkit.cipher'), `<span class="mono">${esc(d.cipher.name)}</span>`] : null,
+                d.cipher && d.cipher.name ? [_('toolkit.cipher'), esc(d.cipher.name)] : null,
                 d.altNames && d.altNames.length ? [_('toolkit.alt_names'), `<span class="mono">${d.altNames.map(esc).join('<br>')}</span>`] : null,
                 d.serial ? [_('toolkit.serial'), `<span class="mono">${esc(d.serial)}</span>`] : null,
                 d.fingerprint ? [_('toolkit.fingerprint'), `<span class="mono">${esc(d.fingerprint)}</span>`] : null,
@@ -435,7 +437,7 @@
             if (tables.length) {
                 html += `<div class="table-scroll"><table class="data-table tool-table">
                     <thead><tr><th>${esc(_('toolkit.table_name'))}</th><th class="num">${esc(_('toolkit.row_count'))}</th></tr></thead>
-                    <tbody>${tables.map((t) => `<tr><td class="mono">${esc(t.name)}</td><td class="num">${esc(formatNumber(Number(t.count) || 0, 0))}</td></tr>`).join('')}</tbody>
+                    <tbody>${tables.map((t) => `<tr><td>${esc(t.name)}</td><td class="num">${esc(formatNumber(Number(t.count) || 0, 0))}</td></tr>`).join('')}</tbody>
                 </table></div>`;
             }
             return html;
