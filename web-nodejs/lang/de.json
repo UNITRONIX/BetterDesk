@@ -3516,7 +3516,8 @@
         "unlink_named": "{name} trennen",
         "unlink_title": "Verknüpfung aufheben",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "IoT-Geräte verbinden sich über diesen Port mit dem Server. Jedes Gerät steht in der Liste, solange es verbunden ist."
     },
     "desktop": {
         "switch_mode": "Desktop-Modus",

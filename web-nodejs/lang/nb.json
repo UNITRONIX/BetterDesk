@@ -3522,7 +3522,8 @@
         "unlink_named": "Fjern tilknytning til {name}",
         "unlink_title": "Fjern tilknytning av enhet",
         "peer_online": "Tilkoblet",
-        "peer_offline": "Frakoblet"
+        "peer_offline": "Frakoblet",
+        "gateway_note": "IoT-enheter kobler til serveren på denne porten. Hver enhet står i listen så lenge den er tilkoblet."
     },
     "desktop": {
         "switch_mode": "Skrivebordsmodus",

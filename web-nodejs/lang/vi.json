@@ -3522,7 +3522,8 @@
         "unlink_named": "Hủy liên kết {name}",
         "unlink_title": "Hủy liên kết thiết bị",
         "peer_online": "Trực tuyến",
-        "peer_offline": "Ngoại tuyến"
+        "peer_offline": "Ngoại tuyến",
+        "gateway_note": "Thiết bị IoT kết nối tới máy chủ qua cổng này. Mỗi thiết bị hiện trong danh sách khi đang kết nối."
     },
     "desktop": {
         "switch_mode": "Chế độ máy tính để bàn",

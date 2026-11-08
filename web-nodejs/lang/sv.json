@@ -3522,7 +3522,8 @@
         "unlink_named": "Ta bort koppling till {name}",
         "unlink_title": "Ta bort koppling till enhet",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "IoT-enheter ansluter till servern på den här porten. Varje enhet visas i listan medan den är ansluten."
     },
     "desktop": {
         "switch_mode": "Skrivbordsläge",

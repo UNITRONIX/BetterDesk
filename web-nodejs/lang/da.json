@@ -3522,7 +3522,8 @@
         "unlink_named": "Fjern tilknytning af {name}",
         "unlink_title": "Fjern tilknytning af enhed",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "IoT-enheder forbinder til serveren på denne port. Hver enhed står på listen, så længe den er forbundet."
     },
     "desktop": {
         "switch_mode": "Skrivebordstilstand",

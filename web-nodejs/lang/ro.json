@@ -3522,7 +3522,8 @@
         "unlink_named": "Eliminați asocierea cu {name}",
         "unlink_title": "Eliminați asocierea dispozitivului",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "Dispozitivele IoT se conectează la server pe acest port. Fiecare apare în listă cât timp este conectat."
     },
     "desktop": {
         "switch_mode": "Modul desktop",

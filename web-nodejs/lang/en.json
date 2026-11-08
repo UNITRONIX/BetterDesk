@@ -3595,7 +3595,8 @@
         "unlink_named": "Unlink {name}",
         "unlink_title": "Unlink device",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "IoT devices connect to the server on this port. Each one is listed while it is connected."
     },
     "notifications": {
         "title": "Notifications",

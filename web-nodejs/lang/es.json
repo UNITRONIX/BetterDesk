@@ -3516,7 +3516,8 @@
         "unlink_named": "Desvincular {name}",
         "unlink_title": "Desvincular dispositivo",
         "peer_online": "En línea",
-        "peer_offline": "Sin conexión"
+        "peer_offline": "Sin conexión",
+        "gateway_note": "Los dispositivos IoT se conectan al servidor por este puerto. Cada uno aparece en la lista mientras está conectado."
     },
     "desktop": {
         "switch_mode": "Cambiar modo",

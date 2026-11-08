@@ -3516,7 +3516,8 @@
         "unlink_named": "{name} 링크 해제",
         "unlink_title": "장치 링크 해제",
         "peer_online": "온라인",
-        "peer_offline": "오프라인"
+        "peer_offline": "오프라인",
+        "gateway_note": "IoT 기기는 이 포트로 서버에 연결합니다. 연결되어 있는 동안 목록에 표시됩니다."
     },
     "desktop": {
         "switch_mode": "데스크탑 모드",

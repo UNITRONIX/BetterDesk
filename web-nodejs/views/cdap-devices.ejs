@@ -26,11 +26,8 @@
         <p class="page-description">${_('cdap.page_description')}</p>
     </div>
 
-    <!-- Gateway state as a sentence -->
-    <p class="cdap-gateway" id="cdap-gateway-banner" aria-live="polite">
-        <span class="status" id="cdap-gw-status"><span id="cdap-gw-status-text">${_('cdap.gateway_checking')}</span></span>
-    </p>
-
+    <div class="page-cols">
+    <div class="page-main">
     <!-- Gateway turned off -->
     <div class="cdap-disabled hidden" id="cdap-disabled-banner">
         <p class="state">${_('cdap.gateway_off_state')}</p>
@@ -73,9 +70,19 @@
         </div>
     </section>
 
+    </div>
+
+    <!-- The gateway the devices connect to: its state, and turning it off -->
+    <aside class="page-side cdap-side" id="cdap-side" aria-labelledby="cdap-gw-title">
+    <section class="section" aria-labelledby="cdap-gw-title">
+        <h2 id="cdap-gw-title">${_('cdap.danger_zone')}</h2>
+        <p class="cdap-gateway" id="cdap-gateway-banner" aria-live="polite">
+            <span class="status" id="cdap-gw-status"><span id="cdap-gw-status-text">${_('cdap.gateway_checking')}</span></span>
+        </p>
+        <p class="section-note">${_('cdap.gateway_note')}</p>
+    </section>
     ${canToggleGateway ? `
-    <section class="danger-zone" id="cdap-danger-zone" aria-labelledby="cdap-dz-title">
-        <h2 id="cdap-dz-title">${_('cdap.danger_zone')}</h2>
+    <section class="danger-zone" id="cdap-danger-zone" aria-label="${_('cdap.disable_title')}">
         <ul class="list">
             <li class="list-row">
                 <span class="row-main">
@@ -89,5 +96,7 @@
         </ul>
         <p class="form-status" id="cdap-toggle-status" aria-live="polite"></p>
     </section>` : ''}
+    </aside>
+    </div>
 </div>
 ` }) %>

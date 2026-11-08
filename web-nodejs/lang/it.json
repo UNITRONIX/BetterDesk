@@ -3516,7 +3516,8 @@
         "unlink_named": "Scollega {name}",
         "unlink_title": "Scollega dispositivo",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "I dispositivi IoT si collegano al server su questa porta. Ognuno compare nell'elenco finché è collegato."
     },
     "desktop": {
         "switch_mode": "Cambia modalità",

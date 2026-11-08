@@ -3516,7 +3516,8 @@
         "unlink_named": "Zrušit propojení s {name}",
         "unlink_title": "Zrušit propojení zařízení",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "Zařízení IoT se k serveru připojují přes tento port. Každé je v seznamu, dokud je připojené."
     },
     "desktop": {
         "switch_mode": "Režim plochy",

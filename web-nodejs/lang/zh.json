@@ -3516,7 +3516,8 @@
         "unlink_named": "取消关联 {name}",
         "unlink_title": "取消关联设备",
         "peer_online": "在线",
-        "peer_offline": "离线"
+        "peer_offline": "离线",
+        "gateway_note": "IoT 设备通过此端口连接服务器。设备在连接期间会显示在列表中。"
     },
     "notifications": {
         "title": "通知",

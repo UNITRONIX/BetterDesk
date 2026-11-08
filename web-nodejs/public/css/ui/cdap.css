@@ -6,8 +6,23 @@
 
 /* ── List ── */
 
-.cdap-gateway {
-    margin-top: calc(-1 * var(--space-3));
+/* Side column: the gateway's state and the switch to turn it off */
+.cdap-side .section {
+    gap: var(--space-3);
+}
+
+/* The narrow column: no second rule above the row, the button under its text */
+.cdap-side .danger-zone {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.cdap-side .danger-zone .list-row {
+    flex-wrap: wrap;
+}
+
+.cdap-side .danger-zone .row-main {
+    flex-basis: 100%;
 }
 
 .cdap-disabled {
@@ -523,7 +538,6 @@ td.state-cell .btn {
 }
 
 .cdap-number {
-    font-family: var(--mono);
     font-variant-numeric: tabular-nums;
 }
 

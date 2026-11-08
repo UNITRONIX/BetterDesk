@@ -3534,7 +3534,8 @@
         "unlink_named": "Usuń powiązanie z {name}",
         "unlink_title": "Usuń powiązanie urządzenia",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "Urządzenia IoT łączą się z serwerem przez ten port. Każde jest na liście, dopóki jest połączone."
     },
     "notifications": {
         "title": "Powiadomienia",

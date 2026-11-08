@@ -3516,7 +3516,8 @@
         "unlink_named": "{name} ontkoppelen",
         "unlink_title": "Apparaat ontkoppelen",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "IoT-apparaten maken via deze poort verbinding met de server. Elk apparaat staat in de lijst zolang het verbonden is."
     },
     "desktop": {
         "switch_mode": "Modus wisselen",

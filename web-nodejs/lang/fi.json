@@ -3522,7 +3522,8 @@
         "unlink_named": "Poista linkitys: {name}",
         "unlink_title": "Poista laitteen linkitys",
         "peer_online": "Verkossa",
-        "peer_offline": "Ei verkossa"
+        "peer_offline": "Ei verkossa",
+        "gateway_note": "IoT-laitteet yhdistävät palvelimeen tämän portin kautta. Laite näkyy luettelossa niin kauan kuin se on yhteydessä."
     },
     "desktop": {
         "switch_mode": "Työpöytätila",

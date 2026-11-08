@@ -169,6 +169,9 @@
         var danger = document.getElementById('cdap-danger-zone');
         var statusEl = document.getElementById('cdap-gw-status');
         var statusText = document.getElementById('cdap-gw-status-text');
+        // The side column is about the running gateway; while it is off the main column says so
+        var side = document.getElementById('cdap-side');
+        if (side) side.classList.toggle('hidden', !data.enabled);
 
         if (!data.enabled) {
             if (banner) banner.classList.add('hidden');

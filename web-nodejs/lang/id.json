@@ -3522,7 +3522,8 @@
         "unlink_named": "Lepas tautan {name}",
         "unlink_title": "Lepas tautan perangkat",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "Perangkat IoT terhubung ke server melalui port ini. Setiap perangkat ada di daftar selama masih terhubung."
     },
     "desktop": {
         "switch_mode": "Modus Desktop",

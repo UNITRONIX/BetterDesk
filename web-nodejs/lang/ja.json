@@ -3516,7 +3516,8 @@
         "unlink_named": "{name} のリンクを解除",
         "unlink_title": "デバイスのリンクを解除",
         "peer_online": "オンライン",
-        "peer_offline": "オフライン"
+        "peer_offline": "オフライン",
+        "gateway_note": "IoT デバイスはこのポートでサーバーに接続します。接続している間、一覧に表示されます。"
     },
     "desktop": {
         "switch_mode": "デスクトップモード",

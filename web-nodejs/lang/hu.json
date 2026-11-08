@@ -3522,7 +3522,8 @@
         "unlink_named": "{name} szétkapcsolása",
         "unlink_title": "Eszköz szétkapcsolása",
         "peer_online": "Online",
-        "peer_offline": "Offline"
+        "peer_offline": "Offline",
+        "gateway_note": "Az IoT-eszközök ezen a porton csatlakoznak a szerverhez. Mindegyik a listában látható, amíg csatlakozik."
     },
     "desktop": {
         "switch_mode": "Asztali mód",

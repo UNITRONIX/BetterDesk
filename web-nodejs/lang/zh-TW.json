@@ -3538,7 +3538,8 @@
         "unlink_named": "取消連結 {name}",
         "unlink_title": "取消連結裝置",
         "peer_online": "線上",
-        "peer_offline": "離線"
+        "peer_offline": "離線",
+        "gateway_note": "IoT 裝置透過此連接埠連線至伺服器。裝置連線期間會顯示在清單中。"
     },
     "notifications": {
         "title": "通知",

@@ -3522,7 +3522,8 @@
         "unlink_named": "{name} ilişkisini kaldır",
         "unlink_title": "Cihaz ilişkisini kaldır",
         "peer_online": "Çevrimiçi",
-        "peer_offline": "Çevrimdışı"
+        "peer_offline": "Çevrimdışı",
+        "gateway_note": "IoT cihazları sunucuya bu bağlantı noktasından bağlanır. Her cihaz bağlı kaldığı sürece listede görünür."
     },
     "desktop": {
         "switch_mode": "Masaüstü Modu",

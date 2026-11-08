@@ -3538,7 +3538,8 @@
         "unlink_named": "Dissocier {name}",
         "unlink_title": "Dissocier l'appareil",
         "peer_online": "En ligne",
-        "peer_offline": "Hors ligne"
+        "peer_offline": "Hors ligne",
+        "gateway_note": "Les appareils IoT se connectent au serveur sur ce port. Chacun apparaît dans la liste tant qu'il est connecté."
     },
     "notifications": {
         "title": "Benachrichtigungen",
