@@ -220,7 +220,8 @@
         "activate_agent_submitting": "장치를 활성화하는 중…",
         "activate_agent_success": "에이전트가 활성화되었습니다.",
         "open_agents": "BetterDesk 에이전트",
-        "agents_hint": "수신 전용 Support 에이전트를 받는 곳"
+        "agents_hint": "수신 전용 Support 에이전트를 받는 곳",
+        "attention_none": "확인이 필요한 항목이 없습니다."
     },
     "devices": {
         "title": "장치",

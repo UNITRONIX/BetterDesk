@@ -220,7 +220,8 @@
         "activate_agent_submitting": "正在激活设备…",
         "activate_agent_success": "代理已成功激活。",
         "open_agents": "BetterDesk 代理",
-        "agents_hint": "从何处获取仅入站 Support 代理"
+        "agents_hint": "从何处获取仅入站 Support 代理",
+        "attention_none": "没有需要处理的事项。"
     },
     "devices": {
         "title": "设备",

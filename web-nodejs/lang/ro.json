@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Se activează dispozitivul…",
         "activate_agent_success": "Agent activat cu succes.",
         "open_agents": "Agenți BetterDesk",
-        "agents_hint": "De unde obțineți agenți Support doar incoming"
+        "agents_hint": "De unde obțineți agenți Support doar incoming",
+        "attention_none": "Nimic nu necesită atenție."
     },
     "devices": {
         "title": "Dispozitive",

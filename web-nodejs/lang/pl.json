@@ -220,7 +220,8 @@
         "activate_agent_submitting": "Aktywowanie urządzenia…",
         "activate_agent_success": "Agent został pomyślnie aktywowany.",
         "open_agents": "Agenci BetterDesk",
-        "agents_hint": "Skąd wziąć agentów Support (tylko incoming)"
+        "agents_hint": "Skąd wziąć agentów Support (tylko incoming)",
+        "attention_none": "Nic nie wymaga uwagi."
     },
     "devices": {
         "title": "Urządzenia",

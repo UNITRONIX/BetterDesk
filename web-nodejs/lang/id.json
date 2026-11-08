@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Mengaktifkan perangkat…",
         "activate_agent_success": "Agen berhasil diaktifkan.",
         "open_agents": "Agen BetterDesk",
-        "agents_hint": "Dari mana mendapatkan agen Support hanya masuk"
+        "agents_hint": "Dari mana mendapatkan agen Support hanya masuk",
+        "attention_none": "Tidak ada yang perlu ditangani."
     },
     "devices": {
         "title": "Perangkat",

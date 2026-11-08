@@ -224,7 +224,8 @@
         "activate_agent_submitting": "正在啟用裝置…",
         "activate_agent_success": "代理程式已成功啟用。",
         "open_agents": "BetterDesk 代理",
-        "agents_hint": "從何處取得僅入站 Support 代理"
+        "agents_hint": "從何處取得僅入站 Support 代理",
+        "attention_none": "沒有需要處理的事項。"
     },
     "devices": {
         "title": "設備",

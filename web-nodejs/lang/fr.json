@@ -224,7 +224,8 @@
         "activate_agent_submitting": "Activation de l’appareil…",
         "activate_agent_success": "Agent activé avec succès.",
         "open_agents": "Agents BetterDesk",
-        "agents_hint": "Où obtenir les agents Support entrants uniquement"
+        "agents_hint": "Où obtenir les agents Support entrants uniquement",
+        "attention_none": "Rien ne demande d'attention."
     },
     "devices": {
         "title": "Tableau de bord",

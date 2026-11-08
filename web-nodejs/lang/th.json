@@ -226,7 +226,8 @@
         "activate_agent_submitting": "กำลังเปิดใช้งานอุปกรณ์…",
         "activate_agent_success": "เปิดใช้งานเอเจนต์สำเร็จ",
         "open_agents": "เอเจนต์ BetterDesk",
-        "agents_hint": "รับเอเจนต์ Support แบบรับเข้าอย่างเดียวจากที่ไหน"
+        "agents_hint": "รับเอเจนต์ Support แบบรับเข้าอย่างเดียวจากที่ไหน",
+        "attention_none": "ไม่มีรายการที่ต้องดำเนินการ"
     },
     "devices": {
         "title": "อุปกรณ์",

@@ -157,7 +157,7 @@
         "devices_online": "Geräte online",
         "active_alerts": "Aktive Warnungen",
         "recent_connections": "Gesamtgeräte",
-        "server_uptime": "Serverlaufzeit",
+        "server_uptime": "Laufzeit",
         "activity_feed": "Letzte Aktivität",
         "no_recent_activity": "Keine kürzliche Aktivität",
         "just_now": "gerade eben",
@@ -170,7 +170,7 @@
         "tip_theme": "Wechseln Sie in den Seitenleisteneinstellungen zwischen dunklem und hellem Design.",
         "tip_cdap": "Verbinden Sie IoT-Geraete und Industriesensoren ueber das CDAP-Gateway.",
         "client_config_eyebrow": "Client-Einrichtung",
-        "client_config_title": "RustDesk-Client-Konfiguration",
+        "client_config_title": "Client-Einrichtung",
         "client_config_subtitle": "Verwenden Sie diese Werte in RustDesk, um Clients mit diesem BetterDesk-Server zu verbinden.",
         "copy_all_config": "Alles kopieren",
         "show_config_qr": "QR anzeigen",
@@ -180,7 +180,7 @@
         "config_key": "Schlüssel",
         "client_config_hint": "Tragen Sie diese Werte in den RustDesk-Netzwerkeinstellungen im Bereich ID-/Relay-Server ein.",
         "open_generator": "BetterDesk-Agenten",
-        "open_keys": "Schlüssel öffnen",
+        "open_keys": "Serverschlüssel",
         "open_remote": "Remote-Desktop-Konsole öffnen",
         "attention_panel": "Benötigt Aufmerksamkeit",
         "system_ready": "System bereit",
@@ -220,7 +220,8 @@
         "activate_agent_submitting": "Gerät wird aktiviert…",
         "activate_agent_success": "Agent erfolgreich aktiviert.",
         "open_agents": "BetterDesk-Agenten",
-        "agents_hint": "Wo Sie Incoming-Only-Support-Agenten erhalten"
+        "agents_hint": "wo Sie Support-Agenten nur für eingehende Verbindungen erhalten",
+        "attention_none": "Nichts erfordert Aufmerksamkeit."
     },
     "devices": {
         "title": "Dashboard",

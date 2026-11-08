@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Eszköz aktiválása…",
         "activate_agent_success": "Az ügynök aktiválása sikeres.",
         "open_agents": "BetterDesk ügynökök",
-        "agents_hint": "Honnan szerezhetők a csak bejövő Support ügynökök"
+        "agents_hint": "Honnan szerezhetők a csak bejövő Support ügynökök",
+        "attention_none": "Semmi sem igényel figyelmet."
     },
     "devices": {
         "title": "Eszközök",

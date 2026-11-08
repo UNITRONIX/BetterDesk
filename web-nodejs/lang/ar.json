@@ -227,7 +227,8 @@
         "activate_agent_submitting": "جارٍ تفعيل الجهاز…",
         "activate_agent_success": "تم تفعيل الوكيل بنجاح.",
         "open_agents": "وكلاء BetterDesk",
-        "agents_hint": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط"
+        "agents_hint": "من أين تحصل على وكلاء Support للاتصالات الواردة فقط",
+        "attention_none": "لا شيء يحتاج إلى انتباه."
     },
     "devices": {
         "title": "الأجهزة",

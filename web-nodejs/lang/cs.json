@@ -220,7 +220,8 @@
         "activate_agent_submitting": "Aktivace zařízení…",
         "activate_agent_success": "Agent byl úspěšně aktivován.",
         "open_agents": "Agenti BetterDesk",
-        "agents_hint": "Odkud získat Support agenty pouze příchozí"
+        "agents_hint": "Odkud získat Support agenty pouze příchozí",
+        "attention_none": "Nic nevyžaduje pozornost."
     },
     "devices": {
         "title": "Zařízení",

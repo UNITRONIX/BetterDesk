@@ -226,7 +226,8 @@
         "activate_agent_submitting": "डिवाइस सक्रिय हो रहा है…",
         "activate_agent_success": "एजेंट सफलतापूर्वक सक्रिय किया गया।",
         "open_agents": "BetterDesk एजेंट",
-        "agents_hint": "केवल इनकमिंग Support एजेंट कहाँ से लें"
+        "agents_hint": "केवल इनकमिंग Support एजेंट कहाँ से लें",
+        "attention_none": "किसी चीज़ पर ध्यान देने की ज़रूरत नहीं है।"
     },
     "devices": {
         "title": "उपकरण",

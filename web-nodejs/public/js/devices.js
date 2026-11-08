@@ -2845,6 +2845,13 @@
      * Initialize filters
      */
     function initFilters() {
+        // ?status=online|offline|banned|mesh_agent preselects a status filter (links from the overview)
+        const wanted = new URLSearchParams(window.location.search).get('status');
+        const preset = wanted && document.querySelector(`.filter-btn[data-filter="${CSS.escape(wanted)}"]`);
+        if (preset) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === preset));
+            currentFilter = wanted;
+        }
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));

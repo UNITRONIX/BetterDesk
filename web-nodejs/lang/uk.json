@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Активація пристрою…",
         "activate_agent_success": "Агента успішно активовано.",
         "open_agents": "Агенти BetterDesk",
-        "agents_hint": "Звідки взяти Support-агентів лише для вхідних з’єднань"
+        "agents_hint": "Звідки взяти Support-агентів лише для вхідних з’єднань",
+        "attention_none": "Ніщо не потребує уваги."
     },
     "devices": {
         "title": "Пристрої",

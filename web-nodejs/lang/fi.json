@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Aktivoidaan laitetta…",
         "activate_agent_success": "Agentti aktivoitiin.",
         "open_agents": "BetterDesk-agentit",
-        "agents_hint": "Mistä saat vain saapuvia Support-agentteja"
+        "agents_hint": "Mistä saat vain saapuvia Support-agentteja",
+        "attention_none": "Mikään ei vaadi huomiota."
     },
     "devices": {
         "title": "Laitteet",

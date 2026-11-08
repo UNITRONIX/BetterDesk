@@ -220,7 +220,8 @@
         "activate_agent_submitting": "Apparaat activeren…",
         "activate_agent_success": "Agent is geactiveerd.",
         "open_agents": "BetterDesk-agents",
-        "agents_hint": "Waar u incoming-only Support-agents vindt"
+        "agents_hint": "Waar u incoming-only Support-agents vindt",
+        "attention_none": "Niets vraagt aandacht."
     },
     "devices": {
         "title": "Apparaten",

@@ -220,7 +220,8 @@
         "activate_agent_submitting": "デバイスを有効化しています…",
         "activate_agent_success": "エージェントを有効化しました。",
         "open_agents": "BetterDeskエージェント",
-        "agents_hint": "受信専用サポートエージェントの入手先"
+        "agents_hint": "受信専用サポートエージェントの入手先",
+        "attention_none": "対応が必要な項目はありません。"
     },
     "devices": {
         "title": "デバイス",

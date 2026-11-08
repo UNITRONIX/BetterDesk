@@ -10,12 +10,9 @@
     let rootEl = document;
     let initialized = false;
     let refreshInterval = null;
-    let activityInterval = null;
     let refreshHandler = null;
     let statusButton = null;
     let statusButtonHandler = null;
-    let tipDismissButton = null;
-    let tipDismissHandler = null;
     let copyAllConfigButton = null;
     let copyAllConfigHandler = null;
     let copyDeployStringButton = null;
@@ -52,17 +49,6 @@
     const pendingRequests = new Map();
     const PUBLIC_KEY_MASK = '••••••••••••••••••••••••';
     
-    // Tips pool — rotated daily
-    const TIPS = [
-        'dashboard.tip_desktop_mode',
-        'dashboard.tip_keyboard_shortcuts',
-        'dashboard.tip_address_book',
-        'dashboard.tip_2fa',
-        'dashboard.tip_bulk_actions',
-        'dashboard.tip_theme',
-        'dashboard.tip_cdap'
-    ];
-    
     function init(root) {
         destroy();
         rootEl = root || document;
@@ -70,9 +56,6 @@
         if (!findById('welcome-section')) return;
         initialized = true;
 
-        renderGreeting();
-        renderTip();
-        loadActivityFeed();
         loadOverview();
         loadClientConfig();
         
@@ -80,13 +63,10 @@
         refreshInterval = setInterval(() => {
             loadOverview();
         }, 30000);
-        
-        // Activity feed refresh every 60 seconds
-        activityInterval = setInterval(loadActivityFeed, 60000);
+
         
         // Manual refresh
         refreshHandler = () => {
-            loadActivityFeed();
             loadOverview();
             loadClientConfig();
         };
@@ -97,17 +77,6 @@
         statusButtonHandler = () => loadServerStatus();
         statusButton?.addEventListener('click', statusButtonHandler);
         
-        // Tip dismiss
-        tipDismissButton = findById('tip-dismiss');
-        tipDismissHandler = () => {
-            const tip = findById('welcome-tip');
-            if (tip) {
-                tip.style.display = 'none';
-                try { localStorage.setItem('bd_tip_dismissed', new Date().toDateString()); } catch {}
-            }
-        };
-        tipDismissButton?.addEventListener('click', tipDismissHandler);
-
         copyAllConfigButton = findById('copy-client-config-btn');
         copyAllConfigHandler = copyFullClientConfig;
         copyAllConfigButton?.addEventListener('click', copyAllConfigHandler);
@@ -154,10 +123,8 @@
 
     function destroy() {
         if (refreshInterval) clearInterval(refreshInterval);
-        if (activityInterval) clearInterval(activityInterval);
         if (refreshHandler) window.removeEventListener('app:refresh', refreshHandler);
         if (statusButton && statusButtonHandler) statusButton.removeEventListener('click', statusButtonHandler);
-        if (tipDismissButton && tipDismissHandler) tipDismissButton.removeEventListener('click', tipDismissHandler);
         if (copyAllConfigButton && copyAllConfigHandler) copyAllConfigButton.removeEventListener('click', copyAllConfigHandler);
         if (copyDeployStringButton && copyDeployStringHandler) copyDeployStringButton.removeEventListener('click', copyDeployStringHandler);
         if (showIntuneScriptButton && showIntuneScriptHandler) showIntuneScriptButton.removeEventListener('click', showIntuneScriptHandler);
@@ -177,12 +144,9 @@
         }
 
         refreshInterval = null;
-        activityInterval = null;
         refreshHandler = null;
         statusButton = null;
         statusButtonHandler = null;
-        tipDismissButton = null;
-        tipDismissHandler = null;
         copyAllConfigButton = null;
         copyAllConfigHandler = null;
         copyDeployStringButton = null;
@@ -210,50 +174,49 @@
             loadServerStatus()
         ]);
         loadHealthOverview(status);
+        loadAttention(stats);
     }
-    
+
     /**
-     * Render time-based personalized greeting
+     * "Needs attention": one row per thing waiting for someone, shown only
+     * when its count is above zero. Rows the user may not see are not rendered
+     * by the template, so their counts are not fetched.
      */
-    function renderGreeting() {
-        const el = findById('welcome-greeting-text');
-        if (!el) return;
-        
-        const hour = new Date().getHours();
-        let greetingKey;
-        if (hour < 6) greetingKey = 'dashboard.greeting_night';
-        else if (hour < 12) greetingKey = 'dashboard.greeting_morning';
-        else if (hour < 18) greetingKey = 'dashboard.greeting_afternoon';
-        else greetingKey = 'dashboard.greeting_evening';
-        
-        // Get username from global config
-        const username = window.BetterDesk?.user?.username || 'Admin';
-        
-        const greeting = _(greetingKey);
-        el.textContent = greeting.replace('{name}', username);
-    }
-    
-    /**
-     * Show tip of the day
-     */
-    function renderTip() {
-        const tipEl = findById('welcome-tip');
-        const textEl = findById('tip-text');
-        if (!tipEl || !textEl) return;
-        
-        // Hide if already dismissed today
-        try {
-            if (localStorage.getItem('bd_tip_dismissed') === new Date().toDateString()) {
-                tipEl.style.display = 'none';
-                return;
-            }
-        } catch {}
-        
-        // Pick tip based on day of year
-        const now = new Date();
-        const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-        const tip = TIPS[dayOfYear % TIPS.length];
-        textEl.textContent = _(tip);
+    async function loadAttention(stats) {
+        const list = findById('attention-list');
+        if (!list) return;
+
+        const setRow = (id, count) => {
+            const row = findById(id);
+            if (!row) return;
+            const value = Number(count) || 0;
+            const countEl = row.querySelector('.attention-count');
+            if (countEl) countEl.textContent = String(value);
+            row.hidden = value <= 0;
+        };
+
+        setRow('attention-banned', stats ? stats.banned : 0);
+
+        const jobs = [];
+        if (findById('attention-enrollment')) {
+            jobs.push(fetchApi('/api/registrations/count')
+                .then(data => setRow('attention-enrollment', data.count))
+                .catch(() => setRow('attention-enrollment', 0)));
+        }
+        if (findById('attention-help')) {
+            jobs.push(fetchApi('/api/help/requests')
+                .then(data => {
+                    const open = (data.requests || []).filter(r => r.status === 'pending').length;
+                    setRow('attention-help', open);
+                })
+                .catch(() => setRow('attention-help', 0)));
+        }
+        await Promise.all(jobs);
+
+        const anyVisible = Array.from(list.querySelectorAll('.attention-row'))
+            .some(row => !row.hidden);
+        const none = findById('attention-none');
+        if (none) none.hidden = anyVisible;
     }
     
     /**
@@ -290,34 +253,6 @@
         if (!element) return;
         // Use textContent for security (no HTML parsing)
         element.textContent = value;
-    }
-    
-    /**
-     * Update a stat element with animation
-     */
-    function updateStat(elementId, value) {
-        const element = findById(elementId);
-        if (!element) return;
-        
-        const currentValue = parseInt(element.textContent) || 0;
-        
-        if (currentValue === value) return;
-        
-        // Simple counter animation
-        const duration = 500;
-        const steps = 20;
-        const stepValue = (value - currentValue) / steps;
-        let step = 0;
-        
-        const interval = setInterval(() => {
-            step++;
-            if (step >= steps) {
-                element.textContent = value;
-                clearInterval(interval);
-            } else {
-                element.textContent = Math.round(currentValue + stepValue * step);
-            }
-        }, duration / steps);
     }
     
     /**
@@ -403,6 +338,8 @@
             pill.classList.add('unknown');
             text.textContent = _('status.unknown');
         }
+        // Only a problem needs a line in "Needs attention"
+        pill.hidden = pill.classList.contains('running');
     }
 
     const CLIENT_HOST_STORAGE_KEY = 'bd_client_config_host';
@@ -698,64 +635,6 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
     }
     
     /**
-     * Load activity feed from audit log
-     */
-    async function loadActivityFeed() {
-        const container = findById('activity-feed');
-        if (!container) return;
-        
-        try {
-            const data = await fetchApi('/api/dashboard/activity');
-            const events = data.events || data.data?.events || [];
-            
-            if (events.length === 0) {
-                container.innerHTML = `<div class="activity-empty">
-                    <p>${_('dashboard.no_recent_activity')}</p>
-                    <a class="btn btn-secondary btn-sm" href="/settings#audit">${_('dashboard.view_audit_log') || _('nav.settings')}</a>
-                </div>`;
-                return;
-            }
-            
-            container.innerHTML = events.slice(0, 10).map(ev => {
-                const iconMap = {
-                    'conn_start': { icon: 'link', cls: 'connect' },
-                    'conn_end': { icon: 'link_off', cls: 'disconnect' },
-                    'login': { icon: 'login', cls: 'login' },
-                    'login_failed': { icon: 'error', cls: 'ban' },
-                    'ban': { icon: 'block', cls: 'ban' },
-                    'unban': { icon: 'check_circle', cls: 'unban' },
-                    'file_transfer': { icon: 'upload_file', cls: 'file' },
-                    'alarm': { icon: 'warning', cls: 'alert' },
-                    'branding_update': { icon: 'palette', cls: 'connect' },
-                    'theme_toggle': { icon: 'dark_mode', cls: 'connect' }
-                };
-                const info = iconMap[ev.action] || { icon: 'info', cls: 'connect' };
-                const timeAgo = formatTimeAgo(ev.timestamp || ev.created_at);
-                const detail = ev.device_id || ev.peer_id || ev.details || '';
-                const actionLabel = (window.Utils && Utils.formatAuditAction)
-                    ? Utils.formatAuditAction(ev.action, ev.action_label || ev.action)
-                    : (ev.action_label || ev.action || '');
-                
-                return `<div class="activity-item stagger-item">
-                    <div class="activity-icon ${info.cls}">
-                        <span class="material-icons" aria-hidden="true">${info.icon}</span>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-text">${escapeHtml(actionLabel)}${detail ? ' — <strong>' + escapeHtml(String(detail)) + '</strong>' : ''}</div>
-                        <div class="activity-time">${timeAgo}</div>
-                    </div>
-                </div>`;
-            }).join('');
-        } catch (err) {
-            console.error('Activity feed error:', err);
-            container.innerHTML = `<div class="activity-empty">
-                <p>${_('dashboard.activity_load_error') || _('errors.server_error')}</p>
-                <a class="btn btn-secondary btn-sm" href="/settings#audit">${_('dashboard.view_audit_log') || _('nav.settings')}</a>
-            </div>`;
-        }
-    }
-    
-    /**
      * Load health overview data
      */
     async function loadHealthOverview(status) {
@@ -808,10 +687,22 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         } catch (_) { /* ignore */ }
     }
 
+    let activationOpener = null;
+
+    function onActivationKeydown(event) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeAgentActivation();
+        }
+    }
+
     async function openAgentActivation() {
         if (!activationModal) return;
+        activationOpener = document.activeElement;
         activationModal.hidden = false;
         activationModal.style.display = 'flex';
+        document.addEventListener('keydown', onActivationKeydown);
+        (activationFileButton || activationCloseButton)?.focus();
         activationForm.hidden = true;
         activationDeviceId = '';
         setActivationStatus(_('dashboard.activate_agent_scanning'));
@@ -824,6 +715,9 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
             activationModal.hidden = true;
             activationModal.style.display = 'none';
         }
+        document.removeEventListener('keydown', onActivationKeydown);
+        if (activationOpener && document.contains(activationOpener)) activationOpener.focus();
+        activationOpener = null;
     }
 
     function stopAgentActivation() {
@@ -1004,19 +898,6 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
         if (d > 0) return `${d}d ${h}h`;
         if (h > 0) return `${h}h ${m}m`;
         return `${m}m`;
-    }
-    
-    function formatTimeAgo(timestamp) {
-        if (!timestamp) return '';
-        const diff = Date.now() - new Date(timestamp).getTime();
-        const secs = Math.floor(diff / 1000);
-        if (secs < 60) return _('dashboard.just_now');
-        const mins = Math.floor(secs / 60);
-        if (mins < 60) return `${mins}m ${_('dashboard.ago')}`;
-        const hours = Math.floor(mins / 60);
-        if (hours < 24) return `${hours}h ${_('dashboard.ago')}`;
-        const days = Math.floor(hours / 24);
-        return `${days}d ${_('dashboard.ago')}`;
     }
     
     function escapeHtml(str) {

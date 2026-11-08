@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Aktiverar enhet…",
         "activate_agent_success": "Agenten aktiverades.",
         "open_agents": "BetterDesk-agenter",
-        "agents_hint": "Var du får incoming-only Support-agenter"
+        "agents_hint": "Var du får incoming-only Support-agenter",
+        "attention_none": "Inget behöver åtgärdas."
     },
     "devices": {
         "title": "Enheter",

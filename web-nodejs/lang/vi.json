@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Đang kích hoạt thiết bị…",
         "activate_agent_success": "Đã kích hoạt agent thành công.",
         "open_agents": "Tác nhân BetterDesk",
-        "agents_hint": "Lấy tác nhân Support chỉ nhận từ đâu"
+        "agents_hint": "Lấy tác nhân Support chỉ nhận từ đâu",
+        "attention_none": "Không có mục nào cần xử lý."
     },
     "devices": {
         "title": "Thiết bị",

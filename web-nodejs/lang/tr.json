@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Cihaz etkinleştiriliyor…",
         "activate_agent_success": "Ajan başarıyla etkinleştirildi.",
         "open_agents": "BetterDesk Aracıları",
-        "agents_hint": "Yalnızca gelen Support aracılarını nereden alırsınız"
+        "agents_hint": "Yalnızca gelen Support aracılarını nereden alırsınız",
+        "attention_none": "İlgilenilmesi gereken bir şey yok."
     },
     "devices": {
         "title": "Cihazlar",

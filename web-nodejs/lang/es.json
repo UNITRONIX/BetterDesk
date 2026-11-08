@@ -220,7 +220,8 @@
         "activate_agent_submitting": "Activando dispositivo…",
         "activate_agent_success": "Agente activado correctamente.",
         "open_agents": "Agentes BetterDesk",
-        "agents_hint": "De dónde obtener agentes Support solo entrantes"
+        "agents_hint": "De dónde obtener agentes Support solo entrantes",
+        "attention_none": "Nada requiere atención."
     },
     "devices": {
         "title": "Panel",

@@ -226,7 +226,8 @@
         "activate_agent_submitting": "Aktiverer enhed…",
         "activate_agent_success": "Agent aktiveret.",
         "open_agents": "BetterDesk-agenter",
-        "agents_hint": "Hvor du får incoming-only Support-agenter"
+        "agents_hint": "Hvor du får incoming-only Support-agenter",
+        "attention_none": "Intet kræver opmærksomhed."
     },
     "devices": {
         "title": "Enheder",
