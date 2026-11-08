@@ -10,7 +10,7 @@ BetterDesk supports **Linux (bare-metal)**, **Windows (PowerShell)**, and **Dock
 - Ubuntu 20.04+ / Debian 11+ / CentOS 8+ / AlmaLinux 8+
 - 1 CPU core, 512 MB RAM minimum (2 cores, 2 GB recommended)
 - Root access (sudo)
-- Open ports: 21114-21119 TCP, 21116 UDP, 5000 TCP (web console)
+- Firewall: follow a profile from [CONNECTION_PORTS.md](../CONNECTION_PORTS.md) (profile B is the recommended one). Do **not** expose the panel (`5000`) to the internet. Quick minimum for clients: 21116 TCP+UDP and 21117 TCP WAN, Client API on `443` or `21114` over TLS.
 - Node.js 22+ (auto-installed by script; installer targets Node.js 22 LTS while the Node.js 24 native cleanup-hook regression is resolved)
 - Existing bare-metal installations running Node.js 24.19.x should switch the console runtime to Node.js 22.x before restarting the service; the installer does not force-downgrade an existing Node installation.
 
@@ -18,7 +18,7 @@ BetterDesk supports **Linux (bare-metal)**, **Windows (PowerShell)**, and **Dock
 - Windows 10/11 or Windows Server 2019+
 - PowerShell 5.1+ (run as Administrator)
 - [NSSM](https://nssm.cc/) (auto-installed by script)
-- Open firewall ports: 21114-21119 TCP, 21116 UDP, 5000 TCP
+- Firewall: same profiles as Linux — see [CONNECTION_PORTS.md](../CONNECTION_PORTS.md). The panel port stays local.
 
 ### Docker
 - Docker Engine 20.10+ with Docker Compose v2
@@ -27,7 +27,7 @@ BetterDesk supports **Linux (bare-metal)**, **Windows (PowerShell)**, and **Dock
 ### FreeBSD (experimental / community)
 - FreeBSD 13+ (amd64); root or doas/sudo
 - `pkg` packages: `git`, `go`, `node`, `npm`, `python3`, `ca_root_nss`
-- Open ports (e.g. via `pf`): TCP 21114-21119, 21121, 5000; UDP 21116
+- Open ports (e.g. via `pf`): follow a profile from [CONNECTION_PORTS.md](../CONNECTION_PORTS.md); at minimum 21116 TCP+UDP and 21117 TCP.
 - No official installer or release binaries — see [FreeBSD (experimental)](#freebsd-experimental) below and `contrib/freebsd/`
 
 ---
@@ -72,8 +72,8 @@ Non-interactive install with default settings. Useful for CI/CD or scripted depl
 # Skip SHA256 binary verification
 sudo ./betterdesk.sh --skip-verify
 
-# Custom API port
-API_PORT=21120 sudo ./betterdesk.sh --auto
+# Custom API port (default 21121 compatibility proxy, Go API on 21114)
+API_PORT=21130 sudo ./betterdesk.sh --auto
 
 # Custom relay servers (overrides auto-detected IP)
 RELAY_SERVERS=YOUR.PUBLIC.IP sudo ./betterdesk.sh --auto

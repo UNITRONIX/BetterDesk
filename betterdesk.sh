@@ -1954,24 +1954,35 @@ EOF
     fi
 
     cat > "$out_dir/firewall-notes.txt" << EOF
-BetterDesk reverse-proxy firewall (#267)
+BetterDesk firewall notes — see docs/CONNECTION_PORTS.md for all profiles.
+
+WAN (clients reach these directly — cannot be HTTP-proxied):
+  - 21116/tcp + 21116/udp  Signal (registration, hole punching)
+  - 21117/tcp              Relay data
+
+Client API (needed for branding, enrollment, short-code pairing):
+  - 21114/tcp              Go Client API — expose only over TLS, or via the proxy on 443
+  - 21121/tcp              Legacy compat proxy (existing fleets only)
 
 Through your reverse proxy (HTTPS :443):
   - Panel + console WebSockets -> http://${upstream_addr}:5000
 $( [ "$route_wss" = "yes" ] && echo "  - RustDesk WSS /ws/id -> ${upstream_addr}:21118, /ws/relay -> ${upstream_addr}:21119" )
 $( [ "$panel_bind" = "0.0.0.0" ] && echo "  - Panel bind: 0.0.0.0:5000 (remote proxy) — restrict :5000 to proxy IP in firewall" )
 
-Must reach this host directly (not HTTP reverse-proxied):
-  - 21116/tcp + 21116/udp  Signal
-  - 21117/tcp              Relay
-  - 21121/tcp              Client API (unless proxied separately)
+Localhost only (never expose):
+  - 5000/tcp               Console panel
+  - 5443/tcp               Console panel (native HTTPS mode)
 
-Example (ufw):
+Example (ufw), recommended profile with a reverse proxy:
   sudo ufw allow 443/tcp
   sudo ufw allow 21116/tcp
   sudo ufw allow 21116/udp
   sudo ufw allow 21117/tcp
-  sudo ufw allow 21121/tcp
+  # Keep 21114 off WAN when the proxy reaches it on loopback:
+  sudo ufw deny 21114/tcp
+
+Verify the running profile:
+  sudo bash scripts/check-connection-ports.sh b
 EOF
 
     cat > "$out_dir/verify.sh" << 'VERIFYEOF'

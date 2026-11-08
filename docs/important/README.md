@@ -6,7 +6,7 @@ Notes migrated into the repository (2026-06-03) so agents and contributors have 
 
 | File | Topic |
 |------|--------|
-| [betterdesk-api-port-consolidation.md](./betterdesk-api-port-consolidation.md) | **Go API :21114 (default) + Node :21121 backward-compat proxy** — issue #160, installers, client config |
+| [betterdesk-api-port-consolidation.md](./betterdesk-api-port-consolidation.md) | **Go API :21114 (default) + Node :21121 backward-compat proxy** — issue #160, installers, client config. Ports table and firewall profiles now live in [../CONNECTION_PORTS.md](../CONNECTION_PORTS.md) |
 | [betterdesk-go-centralization.md](./betterdesk-go-centralization.md) | Help-request + chat: agents → Go (CDAP + REST), panel as read-proxy |
 | [betterdesk-server-deploy-paths.example.md](./betterdesk-server-deploy-paths.example.md) | Production deploy paths template — copy to `docs/private/` (gitignored) for operator notes |
 | [betterdesk-update-flow.md](./betterdesk-update-flow.md) | Panel self-update, Go rebuild after GitHub update (#158) |
