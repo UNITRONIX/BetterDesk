@@ -166,7 +166,7 @@
         "devices_online": "在线设备",
         "active_alerts": "活动告警",
         "recent_connections": "设备总数",
-        "server_uptime": "服务器运行时间",
+        "server_uptime": "网页控制台已运行",
         "activity_feed": "最近活动",
         "no_recent_activity": "暂无最近活动",
         "just_now": "刚刚",

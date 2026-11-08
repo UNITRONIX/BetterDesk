@@ -172,7 +172,7 @@
         "devices_online": "Laitteet verkossa",
         "active_alerts": "Aktiiviset hälytykset",
         "recent_connections": "Laitteita yhteensä",
-        "server_uptime": "Palvelimen käyttöaika",
+        "server_uptime": "Verkkokonsoli ollut käynnissä",
         "activity_feed": "Viimeaikainen toiminta",
         "no_recent_activity": "Ei viimeaikaista toimintaa",
         "just_now": "just now",

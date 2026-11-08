@@ -166,7 +166,7 @@
         "devices_online": "온라인 장치",
         "active_alerts": "활성 경고",
         "recent_connections": "총 장치 수",
-        "server_uptime": "서버 가동 시간",
+        "server_uptime": "웹 콘솔 실행 시간",
         "activity_feed": "최근 활동",
         "no_recent_activity": "최근 활동 없음",
         "just_now": "방금",

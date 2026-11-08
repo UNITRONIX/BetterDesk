@@ -166,7 +166,7 @@
         "devices_online": "オンラインデバイス",
         "active_alerts": "アクティブなアラート",
         "recent_connections": "総デバイス数",
-        "server_uptime": "サーバー稼働時間",
+        "server_uptime": "Web コンソールの稼働時間",
         "activity_feed": "最近のアクティビティ",
         "no_recent_activity": "最近のアクティビティはありません",
         "just_now": "たった今",

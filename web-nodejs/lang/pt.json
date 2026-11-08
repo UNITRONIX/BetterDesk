@@ -166,7 +166,7 @@
         "devices_online": "Dispositivos online",
         "active_alerts": "Alertas ativos",
         "recent_connections": "Total de dispositivos",
-        "server_uptime": "Tempo de atividade do servidor",
+        "server_uptime": "A consola web está a funcionar há",
         "activity_feed": "Atividade recente",
         "no_recent_activity": "Sem atividade recente",
         "just_now": "agora mesmo",
