@@ -1,0 +1,154 @@
+/* Tickets: list and the ticket dialog. Only what the components don't cover. */
+
+.tickets-table .col-id {
+    width: 1%;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.tickets-table .col-title {
+    min-width: 220px;
+}
+
+.tickets-table .ticket-link {
+    font-weight: 600;
+    text-align: start;
+    white-space: normal;
+}
+
+@media (pointer: coarse) {
+    .tickets-table .ticket-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}
+
+.tickets-table .col-created {
+    white-space: nowrap;
+    color: var(--text-muted);
+}
+
+/* Status marks: open is a hollow ring, in progress filled with the accent,
+   resolved filled green, closed muted */
+.status.ticket-status.is-open::before {
+    border-color: var(--warning);
+}
+
+.status.ticket-status.is-in_progress::before {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.status.ticket-status.is-resolved::before {
+    border-color: var(--success);
+    background: var(--success);
+}
+
+.status.ticket-status.is-closed {
+    color: var(--text-muted);
+}
+
+/* Priority is a word; colour only adds to it */
+.ticket-priority {
+    white-space: nowrap;
+}
+
+.ticket-priority.is-critical {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.ticket-priority.is-high {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.ticket-priority.is-low {
+    color: var(--text-muted);
+}
+
+.sla-overdue,
+.count-overdue,
+.data-table .cell-sub.sla-overdue {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+/* Ticket dialog */
+.ticket-facts {
+    grid-template-columns: minmax(110px, 160px) minmax(0, 1fr);
+}
+
+.ticket-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+}
+
+.ticket-description,
+.comment-body {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-width: var(--measure);
+}
+
+.ticket-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.ticket-comments .list-row {
+    align-items: flex-start;
+}
+
+.ticket-comments .comment-body {
+    margin-top: 2px;
+}
+
+.comment-internal-label {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.add-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.add-comment-form .form-actions {
+    margin-top: 0;
+}
+
+/* Priority and assignee move under the title on a phone */
+.tickets-table .ticket-meta-narrow {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .tickets-table .col-id,
+    .tickets-table .col-priority,
+    .tickets-table .col-category,
+    .tickets-table .col-assignee,
+    .tickets-table .col-device,
+    .tickets-table .col-created {
+        display: none;
+    }
+
+    .tickets-table .ticket-meta-narrow {
+        display: block;
+    }
+
+    .tickets-table .col-title {
+        min-width: 0;
+    }
+}
+
+/* The description takes its own line under the title (base.css caps it at
+   --measure, which lets it sit beside the title on wide screens) */
