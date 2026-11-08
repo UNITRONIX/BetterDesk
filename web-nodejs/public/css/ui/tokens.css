@@ -126,6 +126,14 @@
     --logo-circle: #4d8f06;
     --logo-overlap: #0f9e96;
 
+    /* Operating system marks (.os-icon): each system in its own colour, at
+       least 4:1 on --bg, --bg-subtle and --hover in light, 6:1 in dark */
+    --os-windows: #0067c0;
+    --os-android: #1a7f37;
+    --os-linux: #9a6700;
+    --os-apple: #3d4246;
+    --os-chrome: #c5221f;
+
     /* Layout */
     --sidebar-w: 232px;
     --topbar-h: 48px;
@@ -149,6 +157,11 @@ html[data-a11y-contrast="yellow-black"] {
     --logo-square: #58a6ff;
     --logo-circle: #a3e635;
     --logo-overlap: #3fd0c4;
+    --os-windows: #4cc2ff;
+    --os-android: #3ddc84;
+    --os-linux: #f2b630;
+    --os-apple: #d0d5d6;
+    --os-chrome: #f28b82;
 }
 
 html[data-a11y-contrast="high-light"] {

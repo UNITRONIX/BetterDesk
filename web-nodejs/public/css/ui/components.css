@@ -372,6 +372,10 @@ input.toggle-switch {
 
 .search-wrapper > .material-icons {
     position: absolute;
+    /* Icons are set to direction: ltr (base.css); an absolutely placed icon
+       resolves its inline start from its own direction, so it has to follow
+       the page or it sits on the text in right-to-left languages. */
+    direction: inherit;
     inset-inline-start: var(--space-2);
     color: var(--text-muted);
     pointer-events: none;
@@ -985,7 +989,7 @@ html[data-a11y-strong-focus="true"] :is(.tab, .tab-btn, .device-panel-tab):focus
     color: var(--text-muted);
 }
 
-/* Operating system mark (Utils.getPlatformIconHtml): one colour, sized to the text */
+/* Operating system mark (Utils.getPlatformIconHtml), sized to the text */
 .os-icon {
     width: 16px;
     height: 16px;
@@ -998,6 +1002,14 @@ html[data-a11y-strong-focus="true"] :is(.tab, .tab-btn, .device-panel-tab):focus
 .os-icon-none {
     display: inline-block;
 }
+
+/* Each system in its own colour (tokens.css --os-*). Set as fill, so page
+   rules that mute the icon's colour don't grey it out again. */
+.os-icon.os-windows { fill: var(--os-windows); }
+.os-icon.os-android { fill: var(--os-android); }
+.os-icon.os-linux { fill: var(--os-linux); }
+.os-icon.os-apple { fill: var(--os-apple); }
+.os-icon.os-chrome { fill: var(--os-chrome); }
 
 /* ── Row list ──
    The one list pattern: rows on rules, same height and inset as table
