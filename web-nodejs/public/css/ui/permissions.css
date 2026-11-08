@@ -6,20 +6,26 @@
 }
 
 .permissions-page #role-select {
-    max-width: 32ch;
+    width: 100%;
 }
 
 .permissions-page .role-info {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
-    max-width: var(--measure);
+    gap: var(--space-2);
+    margin-top: var(--space-3);
 }
 
+/* Permission groups flow down two columns on wide screens; a group is
+   never split, and the reading order is column by column */
 .permissions-matrix {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
+    columns: 2 440px;
+    column-gap: var(--space-7);
+}
+
+.permissions-matrix .perm-category {
+    break-inside: avoid;
+    margin-bottom: var(--space-6);
 }
 
 .perm-row {
@@ -29,10 +35,6 @@
 .perm-row .check-field {
     flex: 1 1 260px;
     min-width: 0;
-}
-
-.perm-row .perm-key {
-    font-family: var(--mono);
 }
 
 .perm-row .row-end {
@@ -65,4 +67,20 @@
 /* Long labels on narrow screens: the button drops below the text */
 .permissions-page .danger-zone .list-row {
     flex-wrap: wrap;
+}
+
+/* One column: the role picker comes first (it decides what the list
+   shows), the permission groups next, the reset at the end */
+@media (max-width: 1199px) {
+    .permissions-page .page-side {
+        display: contents;
+    }
+
+    .permissions-page .page-side > .section {
+        order: -1;
+    }
+
+    .permissions-page .page-side > .danger-zone {
+        order: 1;
+    }
 }
