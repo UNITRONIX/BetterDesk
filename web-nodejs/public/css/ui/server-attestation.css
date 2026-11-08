@@ -1,0 +1,71 @@
+/* Capacity test (views/server-attestation.ejs) */
+
+.sa-page .facts > dd {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+}
+
+.sa-sub {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.sa-sub:empty {
+    display: none;
+}
+
+.sa-result-sentence {
+    max-width: var(--measure);
+}
+
+.sa-tier-guide > dt {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.sa-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    max-width: var(--measure);
+}
+
+.sa-progress-text {
+    color: var(--text-muted);
+}
+
+/* Badge preview: the same three lines the sign-in page shows, plain and legible */
+.sa-hero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.sa-hero .bd-attest-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-self: flex-start;
+    gap: 2px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+}
+
+.sa-hero .bd-attest-brand,
+.sa-hero .bd-attest-conn {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.sa-hero .bd-attest-tier {
+    font-weight: 600;
+}
+
+#sa-tier-hint {
+    margin-bottom: var(--space-2);
+}
