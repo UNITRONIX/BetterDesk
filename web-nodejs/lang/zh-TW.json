@@ -1193,15 +1193,20 @@
     "download": {
         "title": "下載 BetterDesk 代理",
         "choose_platform": "選擇您的平臺",
-        "choose_platform_hint": "選擇與您的操作系統匹配的安裝程序。",
+        "choose_platform_hint": "請選擇符合您電腦作業系統的安裝程式。",
         "download": "下載",
         "building": "正在構建…",
         "failed": "構建失敗",
         "need_help": "需要幫助？",
         "powered_by": "技術支持",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client，用於受管理電腦的完整代理程式",
+        "product_support_agent": "BetterDesk Support Agent，用來取得遠端協助的小 App",
+        "product_rdclient": "BetterDesk RdClient，供支援人員使用的遠端桌面 App",
+        "this_device": "適用於這台電腦",
+        "no_platforms": "此下載頁面目前還沒有可用的安裝程式。",
+        "contact_email": "電子郵件",
+        "contact_phone": "電話",
+        "contact_web": "網站"
     },
     "server": {
         "port": "端口",
@@ -5253,5 +5258,17 @@
     "chart": {
         "role": "圖表",
         "show_table": "顯示數字"
+    },
+    "portal": {
+        "title": "下載支援代理程式",
+        "description": "在您的電腦上安裝這個小 App，您的支援團隊就能遠端協助您。",
+        "loading": "正在載入安裝程式…",
+        "release": "版本 {tag}",
+        "format_portable": "免安裝版",
+        "empty": "目前還沒有可用的安裝程式。",
+        "no_release": "您的管理員還沒有發布代理程式。請管理員在主控台中匯入最新版本的支援代理程式，然後重新載入此頁面。",
+        "incomplete": "代理程式已匯入，但缺少部分檔案。請管理員重新匯入最新版本。",
+        "load_failed": "無法載入安裝程式。",
+        "footer": "安裝完成後，管理員會告訴您如何將代理程式連線到此伺服器。"
     }
 }

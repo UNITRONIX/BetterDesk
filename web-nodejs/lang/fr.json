@@ -1193,15 +1193,20 @@
     "download": {
         "title": "BetterDesk Agent herunterladen",
         "choose_platform": "Plattform auswählen",
-        "choose_platform_hint": "Wählen Sie den Installer, der zu Ihrem Betriebssystem passt.",
+        "choose_platform_hint": "Choisissez le programme d'installation qui correspond au système d'exploitation de votre ordinateur.",
         "download": "Herunterladen",
         "building": "Wird gebaut…",
         "failed": "Build fehlgeschlagen",
         "need_help": "Benötigen Sie Hilfe?",
         "powered_by": "Bereitgestellt von",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, l'agent complet pour les ordinateurs gérés",
+        "product_support_agent": "BetterDesk Support Agent, une petite app pour recevoir de l'aide à distance",
+        "product_rdclient": "BetterDesk RdClient, l'app de bureau à distance pour l'équipe d'assistance",
+        "this_device": "Correspond à cet ordinateur",
+        "no_platforms": "Aucun programme d'installation n'est encore disponible sur cette page de téléchargement.",
+        "contact_email": "E-mail",
+        "contact_phone": "Téléphone",
+        "contact_web": "Site web"
     },
     "server": {
         "port": "Port",
@@ -5253,5 +5258,17 @@
     "chart": {
         "role": "graphique",
         "show_table": "Afficher les chiffres"
+    },
+    "portal": {
+        "title": "Télécharger l'agent d'assistance",
+        "description": "Installez cette petite app sur votre ordinateur pour que votre équipe d'assistance puisse vous aider à distance.",
+        "loading": "Chargement des programmes d'installation…",
+        "release": "Version {tag}",
+        "format_portable": "portable",
+        "empty": "Aucun programme d'installation n'est encore disponible.",
+        "no_release": "Votre administrateur n'a pas encore publié l'agent. Demandez-lui d'importer la dernière version de l'agent d'assistance dans la console, puis rechargez cette page.",
+        "incomplete": "L'agent a été importé, mais certains de ses fichiers manquent. Demandez à votre administrateur d'importer à nouveau la dernière version.",
+        "load_failed": "Impossible de charger les programmes d'installation.",
+        "footer": "Après l'installation, votre administrateur vous explique comment connecter l'agent à ce serveur."
     }
 }

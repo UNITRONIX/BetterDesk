@@ -4642,15 +4642,20 @@
     "download": {
         "title": "BetterDesk एजेंट डाउनलोड करें",
         "choose_platform": "अपना मंच चुनें",
-        "choose_platform_hint": "वह इंस्टॉलर चुनें जो आपके ऑपरेटिंग सिस्टम से मेल खाता हो।",
+        "choose_platform_hint": "अपने कंप्यूटर के ऑपरेटिंग सिस्टम से मेल खाने वाला इंस्टॉलर चुनें।",
         "download": "डाउनलोड करना",
         "building": "इमारत…",
         "failed": "निर्माण विफल",
         "need_help": "मदद की ज़रूरत है?",
         "powered_by": "द्वारा संचालित",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, प्रबंधित कंप्यूटरों के लिए पूरा एजेंट",
+        "product_support_agent": "BetterDesk Support Agent, रिमोट सहायता पाने के लिए एक छोटा ऐप",
+        "product_rdclient": "BetterDesk RdClient, सहायता कर्मचारियों के लिए रिमोट डेस्कटॉप ऐप",
+        "this_device": "इस कंप्यूटर के लिए सही",
+        "no_platforms": "इस डाउनलोड पेज के लिए अभी कोई इंस्टॉलर उपलब्ध नहीं है।",
+        "contact_email": "ईमेल",
+        "contact_phone": "फ़ोन",
+        "contact_web": "वेबसाइट"
     },
     "server_attestation": {
         "title": "सर्वर प्रदर्शन प्रमाणीकरण",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "चार्ट",
         "show_table": "संख्याएँ दिखाएँ"
+    },
+    "portal": {
+        "title": "सहायता एजेंट डाउनलोड करें",
+        "description": "यह छोटा ऐप अपने कंप्यूटर पर इंस्टॉल करें, ताकि आपकी सहायता टीम दूर से आपकी मदद कर सके।",
+        "loading": "इंस्टॉलर लोड हो रहे हैं…",
+        "release": "संस्करण {tag}",
+        "format_portable": "पोर्टेबल",
+        "empty": "अभी कोई इंस्टॉलर उपलब्ध नहीं है।",
+        "no_release": "आपके व्यवस्थापक ने अभी तक एजेंट उपलब्ध नहीं कराया है। उनसे कंसोल में नवीनतम सहायता एजेंट रिलीज़ इम्पोर्ट करने को कहें, फिर यह पेज दोबारा लोड करें।",
+        "incomplete": "एजेंट इम्पोर्ट हो गया है, लेकिन उसकी कुछ फ़ाइलें गायब हैं। अपने व्यवस्थापक से नवीनतम रिलीज़ फिर से इम्पोर्ट करने को कहें।",
+        "load_failed": "इंस्टॉलर लोड नहीं हो सके।",
+        "footer": "इंस्टॉल करने के बाद आपका व्यवस्थापक बताएगा कि एजेंट को इस सर्वर से कैसे जोड़ें।"
     }
 }

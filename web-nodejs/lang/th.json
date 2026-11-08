@@ -4642,15 +4642,20 @@
     "download": {
         "title": "ดาวน์โหลดตัวแทน BetterDesk",
         "choose_platform": "เลือกแพลตฟอร์มของคุณ",
-        "choose_platform_hint": "เลือกตัวติดตั้งที่ตรงกับระบบปฏิบัติการของคุณ",
+        "choose_platform_hint": "เลือกตัวติดตั้งที่ตรงกับระบบปฏิบัติการของคอมพิวเตอร์คุณ",
         "download": "ดาวน์โหลด",
         "building": "อาคาร...",
         "failed": "การสร้างล้มเหลว",
         "need_help": "ต้องการความช่วยเหลือ?",
         "powered_by": "ขับเคลื่อนโดย",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client เอเจนต์เต็มรูปแบบสำหรับคอมพิวเตอร์ที่มีการจัดการ",
+        "product_support_agent": "BetterDesk Support Agent แอปขนาดเล็กสำหรับรับความช่วยเหลือระยะไกล",
+        "product_rdclient": "BetterDesk RdClient แอปควบคุมระยะไกลสำหรับเจ้าหน้าที่สนับสนุน",
+        "this_device": "ตรงกับคอมพิวเตอร์เครื่องนี้",
+        "no_platforms": "หน้าดาวน์โหลดนี้ยังไม่มีตัวติดตั้ง",
+        "contact_email": "อีเมล",
+        "contact_phone": "โทรศัพท์",
+        "contact_web": "เว็บไซต์"
     },
     "server_attestation": {
         "title": "การรับรองประสิทธิภาพเซิร์ฟเวอร์",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "แผนภูมิ",
         "show_table": "แสดงตัวเลข"
+    },
+    "portal": {
+        "title": "ดาวน์โหลดเอเจนต์ช่วยเหลือ",
+        "description": "ติดตั้งแอปขนาดเล็กนี้บนคอมพิวเตอร์ของคุณ เพื่อให้ทีมสนับสนุนช่วยเหลือคุณจากระยะไกลได้",
+        "loading": "กำลังโหลดตัวติดตั้ง…",
+        "release": "เวอร์ชัน {tag}",
+        "format_portable": "แบบพกพา",
+        "empty": "ยังไม่มีตัวติดตั้ง",
+        "no_release": "ผู้ดูแลระบบยังไม่ได้เผยแพร่เอเจนต์ ขอให้ผู้ดูแลระบบนำเข้ารุ่นเอเจนต์ช่วยเหลือล่าสุดในคอนโซล แล้วโหลดหน้านี้ใหม่",
+        "incomplete": "นำเข้าเอเจนต์แล้ว แต่ไฟล์บางส่วนหายไป ขอให้ผู้ดูแลระบบนำเข้ารุ่นล่าสุดอีกครั้ง",
+        "load_failed": "โหลดตัวติดตั้งไม่ได้",
+        "footer": "หลังติดตั้ง ผู้ดูแลระบบจะบอกวิธีเชื่อมต่อเอเจนต์กับเซิร์ฟเวอร์นี้"
     }
 }

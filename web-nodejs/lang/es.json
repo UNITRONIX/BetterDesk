@@ -4636,15 +4636,20 @@
     "download": {
         "title": "Descargar BetterDesk Agent",
         "choose_platform": "Elegir plataforma",
-        "choose_platform_hint": "Selecciona el instalador correspondiente a tu sistema operativo.",
+        "choose_platform_hint": "Elija el instalador para el sistema operativo de su ordenador.",
         "download": "Descargar",
         "building": "Compilando…",
         "failed": "Compilación fallida",
         "need_help": "¿Necesitas ayuda?",
         "powered_by": "Desarrollado por",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, el agente completo para ordenadores gestionados",
+        "product_support_agent": "BetterDesk Support Agent, una pequeña app para recibir ayuda a distancia",
+        "product_rdclient": "BetterDesk RdClient, la app de escritorio remoto para el personal de soporte",
+        "this_device": "Para este ordenador",
+        "no_platforms": "Todavía no hay instaladores disponibles en esta página de descarga.",
+        "contact_email": "Correo electrónico",
+        "contact_phone": "Teléfono",
+        "contact_web": "Sitio web"
     },
     "server_attestation": {
         "title": "Certificación del servidor",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "gráfico",
         "show_table": "Mostrar los números"
+    },
+    "portal": {
+        "title": "Descargar el agente de soporte",
+        "description": "Instale esta pequeña app en su ordenador para que su equipo de soporte pueda ayudarle a distancia.",
+        "loading": "Cargando los instaladores…",
+        "release": "Versión {tag}",
+        "format_portable": "portátil",
+        "empty": "Todavía no hay instaladores disponibles.",
+        "no_release": "Su administrador aún no ha publicado el agente. Pídale que importe en la consola la última versión del agente de soporte y después vuelva a cargar esta página.",
+        "incomplete": "El agente se importó, pero faltan algunos de sus archivos. Pida a su administrador que vuelva a importar la última versión.",
+        "load_failed": "No se pudieron cargar los instaladores.",
+        "footer": "Después de instalarlo, su administrador le explicará cómo conectar el agente a este servidor."
     }
 }

@@ -4636,15 +4636,20 @@
     "download": {
         "title": "下载 BetterDesk 代理",
         "choose_platform": "选择您的平台",
-        "choose_platform_hint": "选择与您的操作系统匹配的安装程序。",
+        "choose_platform_hint": "请选择与您电脑操作系统相符的安装程序。",
         "download": "下载",
         "building": "正在构建…",
         "failed": "构建失败",
         "need_help": "需要帮助？",
         "powered_by": "技术支持",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client，用于受管电脑的完整代理",
+        "product_support_agent": "BetterDesk Support Agent，用于获取远程帮助的小应用",
+        "product_rdclient": "BetterDesk RdClient，供支持人员使用的远程桌面应用",
+        "this_device": "适用于这台电脑",
+        "no_platforms": "此下载页面暂时还没有可用的安装程序。",
+        "contact_email": "电子邮件",
+        "contact_phone": "电话",
+        "contact_web": "网站"
     },
     "server_attestation": {
         "title": "服务器性能认证",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "图表",
         "show_table": "显示数字"
+    },
+    "portal": {
+        "title": "下载支持代理",
+        "description": "在您的电脑上安装这个小应用，您的支持团队就能远程帮助您。",
+        "loading": "正在加载安装程序…",
+        "release": "版本 {tag}",
+        "format_portable": "便携版",
+        "empty": "暂时还没有可用的安装程序。",
+        "no_release": "您的管理员还没有发布代理。请让管理员在控制台中导入最新版本的支持代理，然后重新加载此页面。",
+        "incomplete": "代理已导入，但缺少部分文件。请让管理员重新导入最新版本。",
+        "load_failed": "无法加载安装程序。",
+        "footer": "安装完成后，管理员会告诉您如何把代理连接到此服务器。"
     }
 }

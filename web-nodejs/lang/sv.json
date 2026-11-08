@@ -4642,15 +4642,20 @@
     "download": {
         "title": "Ladda ner BetterDesk Agent",
         "choose_platform": "Välj din plattform",
-        "choose_platform_hint": "Välj det installationsprogram som matchar ditt operativsystem.",
+        "choose_platform_hint": "Välj installationsprogrammet för din dators operativsystem.",
         "download": "Ladda ner",
         "building": "Bygger...",
         "failed": "Bygget misslyckades",
         "need_help": "Behöver du hjälp?",
         "powered_by": "Drivs av",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, den fullständiga agenten för hanterade datorer",
+        "product_support_agent": "BetterDesk Support Agent, en liten app för att få hjälp på distans",
+        "product_rdclient": "BetterDesk RdClient, fjärrskrivbordsappen för supportpersonal",
+        "this_device": "Passar den här datorn",
+        "no_platforms": "Det finns inga installationsprogram på den här nedladdningssidan än.",
+        "contact_email": "E-post",
+        "contact_phone": "Telefon",
+        "contact_web": "Webbplats"
     },
     "server_attestation": {
         "title": "Serverattest",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "diagram",
         "show_table": "Visa siffrorna"
+    },
+    "portal": {
+        "title": "Ladda ner supportagenten",
+        "description": "Installera den här lilla appen på din dator så att ditt supportteam kan hjälpa dig på distans.",
+        "loading": "Läser in installationsprogrammen…",
+        "release": "Version {tag}",
+        "format_portable": "portabel",
+        "empty": "Det finns inga installationsprogram än.",
+        "no_release": "Din administratör har inte gjort agenten tillgänglig än. Be administratören importera den senaste versionen av supportagenten i konsolen och ladda sedan om den här sidan.",
+        "incomplete": "Agenten har importerats, men några av dess filer saknas. Be din administratör att importera den senaste versionen igen.",
+        "load_failed": "Det gick inte att läsa in installationsprogrammen.",
+        "footer": "Efter installationen förklarar din administratör hur du ansluter agenten till den här servern."
     }
 }

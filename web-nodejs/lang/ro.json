@@ -4642,15 +4642,20 @@
     "download": {
         "title": "Descărcați agentul BetterDesk",
         "choose_platform": "Alege-ți platforma",
-        "choose_platform_hint": "Selectați programul de instalare care se potrivește cu sistemul dvs. de operare.",
+        "choose_platform_hint": "Alegeți programul de instalare pentru sistemul de operare al computerului dvs.",
         "download": "Descărcați",
         "building": "Construirea…",
         "failed": "Construirea a eșuat",
         "need_help": "Ai nevoie de ajutor?",
         "powered_by": "Alimentat de",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, agentul complet pentru computere administrate",
+        "product_support_agent": "BetterDesk Support Agent, o aplicație mică pentru a primi ajutor de la distanță",
+        "product_rdclient": "BetterDesk RdClient, aplicația de desktop la distanță pentru echipa de asistență",
+        "this_device": "Potrivit pentru acest computer",
+        "no_platforms": "Încă nu există programe de instalare pe această pagină de descărcare.",
+        "contact_email": "E-mail",
+        "contact_phone": "Telefon",
+        "contact_web": "Site web"
     },
     "server_attestation": {
         "title": "Atestare server",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "grafic",
         "show_table": "Afișează cifrele"
+    },
+    "portal": {
+        "title": "Descărcați agentul de asistență",
+        "description": "Instalați această aplicație mică pe computerul dvs., ca echipa de asistență să vă poată ajuta de la distanță.",
+        "loading": "Se încarcă programele de instalare…",
+        "release": "Versiunea {tag}",
+        "format_portable": "portabil",
+        "empty": "Încă nu există programe de instalare.",
+        "no_release": "Administratorul dvs. nu a publicat încă agentul. Cereți-i să importe în consolă ultima versiune a agentului de asistență, apoi reîncărcați această pagină.",
+        "incomplete": "Agentul a fost importat, dar lipsesc unele dintre fișierele lui. Cereți administratorului să importe din nou ultima versiune.",
+        "load_failed": "Nu s-au putut încărca programele de instalare.",
+        "footer": "După instalare, administratorul vă explică cum să conectați agentul la acest server."
     }
 }

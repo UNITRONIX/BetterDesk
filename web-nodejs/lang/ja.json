@@ -4636,15 +4636,20 @@
     "download": {
         "title": "BetterDesk エージェントをダウンロード",
         "choose_platform": "プラットフォームを選択してください",
-        "choose_platform_hint": "オペレーティング システムに一致するインストーラーを選択します。",
+        "choose_platform_hint": "お使いのコンピューターの OS に合ったインストーラーを選んでください。",
         "download": "ダウンロード",
         "building": "建物…",
         "failed": "ビルドに失敗しました",
         "need_help": "助けが必要ですか?",
         "powered_by": "提供元",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client: 管理対象コンピューター用のフル機能エージェント",
+        "product_support_agent": "BetterDesk Support Agent: リモートで助けてもらうための小さなアプリ",
+        "product_rdclient": "BetterDesk RdClient: サポート担当者用のリモートデスクトップアプリ",
+        "this_device": "このコンピューター向け",
+        "no_platforms": "このダウンロードページには、まだインストーラーがありません。",
+        "contact_email": "メール",
+        "contact_phone": "電話",
+        "contact_web": "ウェブサイト"
     },
     "server_attestation": {
         "title": "サーバー性能認定",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "グラフ",
         "show_table": "数値を表示"
+    },
+    "portal": {
+        "title": "サポートエージェントのダウンロード",
+        "description": "この小さなアプリをコンピューターにインストールすると、サポート担当者がリモートで手伝えるようになります。",
+        "loading": "インストーラーを読み込んでいます…",
+        "release": "バージョン {tag}",
+        "format_portable": "ポータブル版",
+        "empty": "利用できるインストーラーはまだありません。",
+        "no_release": "管理者がまだエージェントを公開していません。コンソールでサポートエージェントの最新バージョンをインポートするよう管理者に依頼し、このページを再読み込みしてください。",
+        "incomplete": "エージェントはインポートされましたが、一部のファイルが足りません。最新バージョンをもう一度インポートするよう管理者に依頼してください。",
+        "load_failed": "インストーラーを読み込めませんでした。",
+        "footer": "インストール後、エージェントをこのサーバーに接続する方法は管理者が案内します。"
     }
 }

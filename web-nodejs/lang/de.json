@@ -4636,15 +4636,20 @@
     "download": {
         "title": "BetterDesk Agent herunterladen",
         "choose_platform": "Plattform auswählen",
-        "choose_platform_hint": "Wählen Sie den Installer, der zu Ihrem Betriebssystem passt.",
+        "choose_platform_hint": "Wählen Sie das Installationsprogramm für das Betriebssystem Ihres Computers.",
         "download": "Herunterladen",
         "building": "Wird gebaut…",
         "failed": "Build fehlgeschlagen",
         "need_help": "Benötigen Sie Hilfe?",
         "powered_by": "Bereitgestellt von",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, der vollständige Agent für verwaltete Computer",
+        "product_support_agent": "BetterDesk Support Agent, eine kleine App, um Fernhilfe zu bekommen",
+        "product_rdclient": "BetterDesk RdClient, die Fernwartungs-App für Support-Mitarbeiter",
+        "this_device": "Passt zu diesem Computer",
+        "no_platforms": "Für diese Downloadseite gibt es noch keine Installationsprogramme.",
+        "contact_email": "E-Mail",
+        "contact_phone": "Telefon",
+        "contact_web": "Website"
     },
     "server_attestation": {
         "title": "Server-Attestierung",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "Diagramm",
         "show_table": "Zahlen anzeigen"
+    },
+    "portal": {
+        "title": "Support-Agent herunterladen",
+        "description": "Installieren Sie diese kleine App auf Ihrem Computer, damit Ihr Support-Team Ihnen aus der Ferne helfen kann.",
+        "loading": "Installationsprogramme werden geladen …",
+        "release": "Version {tag}",
+        "format_portable": "portabel",
+        "empty": "Noch keine Installationsprogramme verfügbar.",
+        "no_release": "Ihr Administrator hat den Agent noch nicht bereitgestellt. Bitten Sie ihn, in der Konsole die neueste Support-Agent-Version zu importieren, und laden Sie diese Seite dann neu.",
+        "incomplete": "Der Agent wurde importiert, aber einige seiner Dateien fehlen. Bitten Sie Ihren Administrator, die neueste Version noch einmal zu importieren.",
+        "load_failed": "Die Installationsprogramme konnten nicht geladen werden.",
+        "footer": "Nach der Installation erklärt Ihnen Ihr Administrator, wie Sie den Agent mit diesem Server verbinden."
     }
 }

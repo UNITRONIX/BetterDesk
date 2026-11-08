@@ -4642,15 +4642,20 @@
     "download": {
         "title": "Завантажте BetterDesk Agent",
         "choose_platform": "Виберіть свою платформу",
-        "choose_platform_hint": "Виберіть інсталятор, який відповідає вашій операційній системі.",
+        "choose_platform_hint": "Виберіть інсталятор для операційної системи вашого комп'ютера.",
         "download": "Завантажити",
         "building": "Будівля…",
         "failed": "Не вдалося створити",
         "need_help": "Потрібна допомога?",
         "powered_by": "На основі",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, повний агент для керованих комп'ютерів",
+        "product_support_agent": "BetterDesk Support Agent, невеликий застосунок для отримання віддаленої допомоги",
+        "product_rdclient": "BetterDesk RdClient, застосунок віддаленого робочого столу для працівників підтримки",
+        "this_device": "Підходить для цього комп'ютера",
+        "no_platforms": "На цій сторінці завантаження ще немає інсталяторів.",
+        "contact_email": "Електронна пошта",
+        "contact_phone": "Телефон",
+        "contact_web": "Вебсайт"
     },
     "server_attestation": {
         "title": "Атестація сервера",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "діаграма",
         "show_table": "Показати числа"
+    },
+    "portal": {
+        "title": "Завантажити агента підтримки",
+        "description": "Встановіть цей невеликий застосунок на свій комп'ютер, щоб ваша служба підтримки могла допомагати вам віддалено.",
+        "loading": "Завантаження інсталяторів…",
+        "release": "Версія {tag}",
+        "format_portable": "портативна версія",
+        "empty": "Інсталяторів поки що немає.",
+        "no_release": "Ваш адміністратор ще не опублікував агента. Попросіть його імпортувати в консолі останню версію агента підтримки, а потім оновіть цю сторінку.",
+        "incomplete": "Агента імпортовано, але деяких його файлів бракує. Попросіть адміністратора ще раз імпортувати останню версію.",
+        "load_failed": "Не вдалося завантажити інсталятори.",
+        "footer": "Після встановлення адміністратор пояснить вам, як підключити агента до цього сервера."
     }
 }

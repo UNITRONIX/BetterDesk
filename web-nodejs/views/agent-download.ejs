@@ -1,10 +1,8 @@
 <%
-// Public download portal — branded per bundle. No auth, no shared layout.
-// Bundle ID itself is the access token.
+// Public download page for one support bundle (/d/<publicId>). No auth, no shared
+// layout: the bundle ID itself is the access token.
 const brand = bundle.branding || {};
 const gb = typeof globalBranding !== 'undefined' && globalBranding ? globalBranding : {};
-const primary = brand.primary_color || '#2563eb';
-const accent  = brand.accent_color  || '#1e293b';
 const companyName = brand.company_name || gb.appName || 'BetterDesk Support';
 const shortText   = brand.short_text   || '';
 const logo        = brand.logo_data_url || gb.logoUrl || '';
@@ -13,23 +11,50 @@ const contactPhone = brand.contact_phone || '';
 const contactUrl   = brand.contact_url   || '';
 const portalBackground = gb.background || '';
 const showPoweredBy = gb.showPoweredBy !== false;
+const themeMode = (typeof branding !== 'undefined' && branding && branding.themeMode) || 'system';
+const dataTheme = themeMode === 'dark' ? 'dark' : 'light';
+const nonce = typeof cspNonce !== 'undefined' ? cspNonce : '';
+const ver = typeof cacheVersion !== 'undefined' ? cacheVersion : '';
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// The bundle's primary colour becomes the button colour only when white text
+// on it stays readable (4.5:1); otherwise the console accent is used.
+function readableOnWhite(hex) {
+    const m = /^#([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return false;
+    const ch = [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16) / 255)
+        .map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+    const lum = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    return 1.05 / (lum + 0.05) >= 4.5;
+}
+const brandAccent = readableOnWhite(brand.primary_color) ? brand.primary_color : '';
+const osMark = { windows: 'windows', macos: 'apple', linux: 'linux' };
 %><!DOCTYPE html>
-<html lang="<%= brand.default_lang || 'en' %>">
+<html lang="<%= typeof lang !== 'undefined' && lang ? lang : (brand.default_lang || 'en') %>" dir="<%= typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr' %>" data-theme="<%= dataTheme %>" data-theme-mode="<%= themeMode %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= esc(companyName) %> — <%= t('download.title') %></title>
-    <link rel="stylesheet" href="/css/agent-download.css">
-    <link rel="stylesheet" href="/css/material-icons-local.css">
+    <meta name="robots" content="noindex, nofollow">
+    <title><%= companyName %> - <%= t('download.title') %></title>
     <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
-    <style>
-        :root {
-            --brand-primary: <%= esc(primary) %>;
-            --brand-accent:  <%= esc(accent) %>;
+    <% if (typeof cspNonce !== 'undefined') { %><%- include('partials/theme-head') %><% } %>
+    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : ver %>">
+    <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= ver %>">
+    <link rel="stylesheet" href="/css/ui/base.css?v=<%= ver %>">
+    <link rel="stylesheet" href="/css/ui/components.css?v=<%= ver %>">
+    <link rel="stylesheet" href="/css/ui/agent-download.css?v=<%= ver %>">
+    <% if (brandAccent || portalBackground) { %>
+    <style nonce="<%= nonce %>">
+        <% if (brandAccent) { %>
+        /* Buttons only: links keep the console accent, which is tuned for both themes */
+        .dl-page .btn-primary,
+        .dl-page .btn-primary:hover {
+            background: <%= brandAccent %>;
+            border-color: <%= brandAccent %>;
+            color: #ffffff;
         }
+        <% } %>
         <% if (portalBackground) { %>
-        body {
+        body.dl-has-background {
             background: <%- portalBackground %>;
             background-size: cover;
             background-position: center;
@@ -38,137 +63,168 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'
         }
         <% } %>
     </style>
+    <% } %>
 </head>
-<body>
-    <main class="portal">
-        <header class="portal-header">
-            <% if (logo) { %>
-                <img src="<%= logo %>" alt="<%= esc(companyName) %>" class="portal-logo">
-            <% } else { %>
-                <div class="portal-logo portal-logo-fallback">
-                    <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-                </div>
-            <% } %>
-            <h1><%= esc(companyName) %></h1>
-            <% if (shortText) { %>
-                <p class="portal-subtitle"><%= esc(shortText) %></p>
-            <% } %>
-        </header>
+<body class="dl-page<%= portalBackground ? ' dl-has-background' : '' %>">
+    <main class="dl-main">
+        <div class="page dl-content">
+            <header class="dl-head">
+                <% if (logo) { %>
+                    <img src="<%= logo %>" alt="" class="dl-logo">
+                <% } %>
+                <h1><%= companyName %></h1>
+                <% if (shortText) { %>
+                    <p class="page-description"><%= shortText %></p>
+                <% } %>
+            </header>
 
-        <section class="portal-intro">
-            <h2><%= t('download.choose_platform') %></h2>
-            <p><%= t('download.choose_platform_hint') %></p>
-            <% if (typeof productType !== 'undefined' && !brand.hide_product_type) { %>
-                <p class="portal-product-type">
-                    <% if (brand.product_label) { %>
-                        <%= esc(brand.product_label) %>
-                    <% } else if (productType === 'rdclient') { %>
-                        <%= t('download.product_rdclient') %>
-                    <% } else if (productType === 'support-agent') { %>
-                        <%= t('download.product_support_agent') %>
-                    <% } else { %>
-                        <%= t('download.product_agent_client') %>
-                    <% } %>
-                </p>
-            <% } %>
-        </section>
-
-        <section class="portal-grid" id="portal-grid">
-            <% platforms.forEach(p => { %>
-                <article class="portal-card" data-platform="<%= p.platform %>" data-arch="<%= p.arch %>" data-format="<%= p.format %>" data-status="<%= p.status %>">
-                    <div class="card-icon">
-                        <% if (p.platform === 'windows') { %>
-                            <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M2 5.4 9.6 4.3v7.4H2zM10.6 4.1 22 2.5v9.2H10.6zM2 12.7h7.6v7.4L2 18.9zM10.6 12.7H22v9.2l-11.4-1.6z"/></svg>
-                        <% } else if (p.format === 'deb') { %>
-                            <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-size="9" font-weight="bold">DEB</text></svg>
-                        <% } else if (p.format === 'rpm') { %>
-                            <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-size="9" font-weight="bold">RPM</text></svg>
+            <section class="section" aria-labelledby="dl-platforms-title">
+                <div class="section-head"><h2 id="dl-platforms-title"><%= t('download.choose_platform') %></h2></div>
+                <p class="section-note"><%= t('download.choose_platform_hint') %></p>
+                <% if (typeof productType !== 'undefined' && !brand.hide_product_type) { %>
+                    <p class="dl-product">
+                        <% if (brand.product_label) { %>
+                            <%= brand.product_label %>
+                        <% } else if (productType === 'rdclient') { %>
+                            <%= t('download.product_rdclient') %>
+                        <% } else if (productType === 'support-agent') { %>
+                            <%= t('download.product_support_agent') %>
                         <% } else { %>
-                            <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M12 2 4 6v6c0 5 3.5 9.4 8 10 4.5-.6 8-5 8-10V6z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                            <%= t('download.product_agent_client') %>
                         <% } %>
-                    </div>
-                    <h3><%= esc(p.label) %></h3>
-                    <p class="card-arch"><%= esc(p.arch) %></p>
-                    <div class="card-status" data-status-slot>
-                        <% if (p.status === 'ready') { %>
-                            <a class="btn btn-primary" href="/api/d/<%= bundle.public_id %>/download/<%= p.platform %>/<%= p.arch %>/<%= p.format %>">
-                                <%= t('download.download') %>
-                            </a>
-                        <% } else if (p.status === 'failed') { %>
-                            <span class="status-badge status-failed"><%= t('download.failed') %></span>
-                        <% } else { %>
-                            <span class="status-badge status-pending">
-                                <span class="spinner"></span>
-                                <%= t('download.building') %>
-                            </span>
-                        <% } %>
-                    </div>
-                </article>
-            <% }); %>
-        </section>
+                    </p>
+                <% } %>
 
-        <% if (contactEmail || contactPhone || contactUrl) { %>
-            <section class="portal-contact">
-                <h2><%= t('download.need_help') %></h2>
-                <ul class="contact-list">
-                    <% if (contactEmail) { %>
-                        <li><span class="material-icons">mail</span><a href="mailto:<%= esc(contactEmail) %>"><%= esc(contactEmail) %></a></li>
-                    <% } %>
-                    <% if (contactPhone) { %>
-                        <li><span class="material-icons">phone</span><a href="tel:<%= esc(contactPhone) %>"><%= esc(contactPhone) %></a></li>
-                    <% } %>
-                    <% if (contactUrl) { %>
-                        <li><span class="material-icons">language</span><a href="<%= esc(contactUrl) %>" target="_blank" rel="noopener"><%= esc(contactUrl) %></a></li>
-                    <% } %>
+                <% if (!platforms.length) { %>
+                    <p class="state"><%= t('download.no_platforms') %></p>
+                <% } else { %>
+                <ul class="list dl-list" id="portal-grid">
+                    <% platforms.forEach(p => { const mark = osMark[p.platform]; %>
+                    <li class="list-row portal-card" data-platform="<%= p.platform %>" data-arch="<%= p.arch %>" data-format="<%= p.format %>" data-status="<%= p.status %>">
+                        <% if (mark) { %><svg class="os-icon" aria-hidden="true" focusable="false"><use href="/img/os-icons.svg?v=<%= encodeURIComponent(ver) %>#<%= mark %>"></use></svg><% } else { %><span class="os-icon os-icon-none" aria-hidden="true"></span><% } %>
+                        <span class="row-main">
+                            <span class="row-title"><%= p.label %></span>
+                            <span class="row-sub" data-match-note hidden><%= t('download.this_device') %></span>
+                        </span>
+                        <span class="row-end" data-status-slot>
+                            <% if (p.status === 'ready') { %>
+                                <a class="btn" href="/api/d/<%= bundle.public_id %>/download/<%= p.platform %>/<%= p.arch %>/<%= p.format %>"><%= t('download.download') %></a>
+                            <% } else if (p.status === 'failed') { %>
+                                <span class="status error"><%= t('download.failed') %></span>
+                            <% } else { %>
+                                <span class="status pending"><%= t('download.building') %></span>
+                            <% } %>
+                        </span>
+                    </li>
+                    <% }); %>
                 </ul>
+                <% } %>
             </section>
-        <% } %>
 
-        <footer class="portal-footer">
-            <% if (showPoweredBy) { %>
-            <p><%= t('download.powered_by') %> <strong>BetterDesk</strong></p>
+            <% if (contactEmail || contactPhone || contactUrl) { %>
+                <section class="section" aria-labelledby="dl-help-title">
+                    <div class="section-head"><h2 id="dl-help-title"><%= t('download.need_help') %></h2></div>
+                    <dl class="facts">
+                        <% if (contactEmail) { %>
+                            <dt><%= t('download.contact_email') %></dt>
+                            <dd><a dir="ltr" href="mailto:<%= contactEmail %>"><%= contactEmail %></a></dd>
+                        <% } %>
+                        <% if (contactPhone) { %>
+                            <dt><%= t('download.contact_phone') %></dt>
+                            <dd><a dir="ltr" href="tel:<%= contactPhone %>"><%= contactPhone %></a></dd>
+                        <% } %>
+                        <% if (contactUrl) { %>
+                            <dt><%= t('download.contact_web') %></dt>
+                            <dd><a dir="ltr" href="<%= contactUrl %>" target="_blank" rel="noopener"><%= contactUrl %></a></dd>
+                        <% } %>
+                    </dl>
+                </section>
             <% } %>
-        </footer>
+
+            <% if (showPoweredBy) { %>
+            <footer class="dl-footer"><%= t('download.powered_by') %> BetterDesk</footer>
+            <% } %>
+        </div>
     </main>
 
-    <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
-        // Poll manifest every 8s while at least one platform is still building.
+    <script nonce="<%= nonce %>">
         (function () {
-            const publicId = <%- JSON.stringify(bundle.public_id) %>;
-            const t = <%- JSON.stringify({
+            const publicId = <%- JSON.stringify(bundle.public_id).replace(/</g, '\\u003c') %>;
+            const text = <%- JSON.stringify({
                 building: t('download.building'),
                 failed:   t('download.failed'),
                 download: t('download.download'),
-            }) %>;
+            }).replace(/</g, '\\u003c') %>;
+
+            // The installer for this computer's system gets the primary button
+            function detectPlatform() {
+                const ua = navigator.userAgent || '';
+                const arm = /arm64|aarch64/i.test(ua);
+                if (/Windows/i.test(ua)) return { platform: 'windows', arch: arm ? 'arm64' : 'x64', format: 'portable' };
+                if (/Mac OS X|Macintosh/i.test(ua) && !/iPhone|iPad/i.test(ua)) return { platform: 'macos' };
+                if (/Linux/i.test(ua) && !/Android/i.test(ua)) return { platform: 'linux', arch: arm ? 'arm64' : 'x64', format: 'portable' };
+                return null;
+            }
+            const mine = detectPlatform();
+            function isMine(row) {
+                if (!mine) return false;
+                const d = row.dataset;
+                return d.platform === mine.platform
+                    && (!mine.arch || d.arch === mine.arch)
+                    && (!mine.format || d.format === mine.format);
+            }
+            function markMine() {
+                let done = false;
+                document.querySelectorAll('.portal-card').forEach(function (row) {
+                    const link = row.querySelector('[data-status-slot] a.btn');
+                    const note = row.querySelector('[data-match-note]');
+                    const match = !done && isMine(row);
+                    if (match) done = true;
+                    if (note) note.hidden = !match;
+                    if (link) link.classList.toggle('btn-primary', match);
+                });
+            }
+
             function render(p) {
-                const slot = document.querySelector(
-                    `[data-platform="${p.platform}"][data-arch="${p.arch}"][data-format="${p.format}"] [data-status-slot]`
+                const row = document.querySelector(
+                    '.portal-card[data-platform="' + p.platform + '"][data-arch="' + p.arch + '"][data-format="' + p.format + '"]'
                 );
+                const slot = row && row.querySelector('[data-status-slot]');
                 if (!slot) return;
+                row.dataset.status = p.status;
+                slot.replaceChildren();
                 if (p.status === 'ready') {
-                    slot.innerHTML = `<a class="btn btn-primary" href="/api/d/${publicId}/download/${p.platform}/${p.arch}/${p.format}">${t.download}</a>`;
-                } else if (p.status === 'failed') {
-                    slot.innerHTML = `<span class="status-badge status-failed">${t.failed}</span>`;
+                    const a = document.createElement('a');
+                    a.className = 'btn';
+                    a.href = '/api/d/' + encodeURIComponent(publicId) + '/download/' + encodeURIComponent(p.platform) + '/' + encodeURIComponent(p.arch) + '/' + encodeURIComponent(p.format);
+                    a.textContent = text.download;
+                    slot.appendChild(a);
                 } else {
-                    slot.innerHTML = `<span class="status-badge status-pending"><span class="spinner"></span>${t.building}</span>`;
+                    const s = document.createElement('span');
+                    s.className = p.status === 'failed' ? 'status error' : 'status pending';
+                    s.textContent = p.status === 'failed' ? text.failed : text.building;
+                    slot.appendChild(s);
                 }
             }
+
+            // Poll the manifest every 8 s while at least one installer is still building
             let timer = null;
             async function poll() {
                 try {
-                    const r = await fetch(`/api/d/${publicId}/manifest`, { credentials: 'omit' });
+                    const r = await fetch('/api/d/' + encodeURIComponent(publicId) + '/manifest', { credentials: 'omit' });
                     if (!r.ok) return;
                     const j = await r.json();
                     if (!j || !j.success) return;
                     const platforms = j.data.platforms || [];
                     platforms.forEach(render);
-                    const stillPending = platforms.some(p => p.status !== 'ready' && p.status !== 'failed');
+                    markMine();
+                    const stillPending = platforms.some(function (p) { return p.status !== 'ready' && p.status !== 'failed'; });
                     if (!stillPending && timer) { clearInterval(timer); timer = null; }
-                } catch (_) { /* network blip — keep polling */ }
+                } catch (_) { /* network blip: keep polling */ }
             }
-            // Only start polling if there's something pending.
+            markMine();
             const hasPending = !!document.querySelector('.portal-card[data-status]:not([data-status="ready"]):not([data-status="failed"])');
-            if (hasPending) { timer = setInterval(poll, 8000); }
+            if (hasPending) timer = setInterval(poll, 8000);
         })();
     </script>
 </body>

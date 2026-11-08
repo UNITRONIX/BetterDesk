@@ -4643,15 +4643,20 @@
     "download": {
         "title": "تنزيل وكيل BetterDesk",
         "choose_platform": "اختر النظام الأساسي الخاص بك",
-        "choose_platform_hint": "حدد المثبت الذي يتوافق مع نظام التشغيل الخاص بك.",
+        "choose_platform_hint": "اختر برنامج التثبيت المناسب لنظام تشغيل حاسوبك.",
         "download": "تحميل",
         "building": "مبنى…",
         "failed": "فشل البناء",
         "need_help": "بحاجة الى مساعدة؟",
         "powered_by": "مدعوم من",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client، الوكيل الكامل للحواسيب المُدارة",
+        "product_support_agent": "BetterDesk Support Agent، تطبيق صغير لتلقي المساعدة عن بُعد",
+        "product_rdclient": "BetterDesk RdClient، تطبيق سطح المكتب البعيد لفريق الدعم",
+        "this_device": "مناسب لهذا الحاسوب",
+        "no_platforms": "لا توجد برامج تثبيت متاحة لصفحة التنزيل هذه بعد.",
+        "contact_email": "البريد الإلكتروني",
+        "contact_phone": "الهاتف",
+        "contact_web": "الموقع الإلكتروني"
     },
     "server_attestation": {
         "title": "اعتماد أداء الخادم",
@@ -5256,5 +5261,17 @@
     "chart": {
         "role": "مخطط",
         "show_table": "عرض الأرقام"
+    },
+    "portal": {
+        "title": "تنزيل وكيل الدعم",
+        "description": "ثبّت هذا التطبيق الصغير على حاسوبك ليتمكن فريق الدعم من مساعدتك عن بُعد.",
+        "loading": "جارٍ تحميل برامج التثبيت…",
+        "release": "الإصدار {tag}",
+        "format_portable": "محمول",
+        "empty": "لا توجد برامج تثبيت متاحة بعد.",
+        "no_release": "لم ينشر المسؤول الوكيل بعد. اطلب منه استيراد أحدث إصدار من وكيل الدعم في وحدة التحكم، ثم أعد تحميل هذه الصفحة.",
+        "incomplete": "تم استيراد الوكيل لكن بعض ملفاته مفقودة. اطلب من المسؤول استيراد أحدث إصدار مرة أخرى.",
+        "load_failed": "تعذّر تحميل برامج التثبيت.",
+        "footer": "بعد التثبيت، سيخبرك المسؤول بكيفية ربط الوكيل بهذا الخادم."
     }
 }

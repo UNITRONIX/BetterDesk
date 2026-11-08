@@ -4642,15 +4642,20 @@
     "download": {
         "title": "BetterDesk Aracısını İndirin",
         "choose_platform": "Platformunuzu seçin",
-        "choose_platform_hint": "İşletim sisteminize uygun yükleyiciyi seçin.",
+        "choose_platform_hint": "Bilgisayarınızın işletim sistemine uygun yükleyiciyi seçin.",
         "download": "İndir",
         "building": "Bina…",
         "failed": "Derleme başarısız oldu",
         "need_help": "Yardıma mı ihtiyacınız var?",
         "powered_by": "Tarafından desteklenmektedir",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, yönetilen bilgisayarlar için tam aracı",
+        "product_support_agent": "BetterDesk Support Agent, uzaktan yardım almak için küçük bir uygulama",
+        "product_rdclient": "BetterDesk RdClient, destek personeli için uzak masaüstü uygulaması",
+        "this_device": "Bu bilgisayara uygun",
+        "no_platforms": "Bu indirme sayfasında henüz yükleyici yok.",
+        "contact_email": "E-posta",
+        "contact_phone": "Telefon",
+        "contact_web": "Web sitesi"
     },
     "server_attestation": {
         "title": "Sunucu Performans Onayı",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "grafik",
         "show_table": "Sayıları göster"
+    },
+    "portal": {
+        "title": "Destek aracısını indirin",
+        "description": "Destek ekibinizin size uzaktan yardım edebilmesi için bu küçük uygulamayı bilgisayarınıza kurun.",
+        "loading": "Yükleyiciler yükleniyor…",
+        "release": "Sürüm {tag}",
+        "format_portable": "taşınabilir",
+        "empty": "Henüz kullanılabilir yükleyici yok.",
+        "no_release": "Yöneticiniz aracıyı henüz yayımlamadı. Konsolda destek aracısının en son sürümünü içe aktarmasını isteyin, ardından bu sayfayı yeniden yükleyin.",
+        "incomplete": "Aracı içe aktarıldı ancak bazı dosyaları eksik. Yöneticinizden en son sürümü yeniden içe aktarmasını isteyin.",
+        "load_failed": "Yükleyiciler yüklenemedi.",
+        "footer": "Kurulumdan sonra yöneticiniz aracıyı bu sunucuya nasıl bağlayacağınızı size anlatır."
     }
 }

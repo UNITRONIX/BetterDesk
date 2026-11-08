@@ -1,112 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
+<%
+// Public download page for the generic support agent (/portal). No auth, no shared layout.
+const themeMode = (typeof branding !== 'undefined' && branding && branding.themeMode) || 'system';
+const dataTheme = themeMode === 'dark' ? 'dark' : 'light';
+const nonce = typeof cspNonce !== 'undefined' ? cspNonce : '';
+const ver = typeof cacheVersion !== 'undefined' ? cacheVersion : '';
+const name = (typeof appName !== 'undefined' && appName) || 'BetterDesk';
+%><!DOCTYPE html>
+<html lang="<%= typeof lang !== 'undefined' && lang ? lang : 'en' %>" dir="<%= typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr' %>" data-theme="<%= dataTheme %>" data-theme-mode="<%= themeMode %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title || 'Download BetterDesk Agent' %></title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0b1020, #16213e);
-            color: #e6edf3;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .portal-wrap {
-            max-width: 920px;
-            margin: 0 auto;
-            padding: 60px 20px;
-        }
-        .portal-header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-        .portal-header h1 { font-size: 40px; margin-bottom: 12px; }
-        .portal-header p  { color: #8b949e; font-size: 17px; }
-        .portal-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-        }
-        .portal-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 24px;
-            text-align: center;
-            backdrop-filter: blur(20px);
-        }
-        .portal-card h3 { font-size: 20px; margin-bottom: 8px; }
-        .portal-card .arch { color: #8b949e; font-size: 13px; margin-bottom: 20px; }
-        .portal-btn {
-            display: inline-block;
-            background: #3b82f6;
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background 0.15s;
-        }
-        .portal-btn:hover { background: #2563eb; }
-        .portal-footer {
-            margin-top: 60px;
-            text-align: center;
-            color: #8b949e;
-            font-size: 13px;
-        }
-        .portal-empty {
-            color: #8b949e;
-            text-align: center;
-            padding: 40px;
-        }
-    </style>
+    <meta name="robots" content="noindex, nofollow">
+    <title><%= _('portal.title') %> - <%= name %></title>
+    <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
+    <% if (typeof cspNonce !== 'undefined') { %><%- include('partials/theme-head') %><% } %>
+    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : ver %>">
+    <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= ver %>">
+    <link rel="stylesheet" href="/css/ui/base.css?v=<%= ver %>">
+    <link rel="stylesheet" href="/css/ui/components.css?v=<%= ver %>">
+    <link rel="stylesheet" href="/css/ui/agent-download.css?v=<%= ver %>">
 </head>
-<body>
-    <div class="portal-wrap">
-        <div class="portal-header">
-            <h1>Download BetterDesk Agent</h1>
-            <p>Install the lightweight agent on your device to enable remote support.</p>
+<body class="dl-page">
+    <main class="dl-main">
+        <div class="page dl-content">
+            <header class="dl-head">
+                <h1><%= _('portal.title') %></h1>
+                <p class="page-description"><%= _('portal.description') %></p>
+            </header>
+
+            <section class="section" aria-labelledby="portal-list-title">
+                <div class="section-head"><h2 id="portal-list-title"><%= _('download.choose_platform') %></h2></div>
+                <p class="count-line" id="portal-release" hidden></p>
+                <div id="installer-grid" aria-live="polite">
+                    <p class="state"><%= _('portal.loading') %></p>
+                </div>
+            </section>
+
+            <p class="dl-footer"><%= _('portal.footer') %></p>
         </div>
-        <div class="portal-grid" id="installer-grid">
-            <div class="portal-empty">Loading available installers…</div>
-        </div>
-        <div class="portal-footer">
-            Need help? Contact your administrator for enrollment instructions.
-        </div>
-    </div>
-    <script>
+    </main>
+
+    <script nonce="<%= nonce %>">
         (function () {
-            fetch('/api/portal/installers', { credentials: 'omit' })
-                .then(r => r.json())
-                .then(function (data) {
-                    var grid = document.getElementById('installer-grid');
-                    if (!data || !data.success || !Array.isArray(data.installers) || data.installers.length === 0) {
-                        var msg = 'No installers available yet.';
-                        if (data && data.reason === 'no_release_imported') {
-                            msg = 'No agent package has been published by your administrator yet. '
-                                + 'Ask them to import the latest Support Agent release in the console, then reload this page.';
-                        } else if (data && data.reason === 'release_cache_incomplete') {
-                            msg = 'An agent package was imported but its files are incomplete. '
-                                + 'Ask your administrator to import the latest release again.';
-                        }
-                        grid.innerHTML = '<div class="portal-empty">' + msg + '</div>';
-                        return;
+            var text = <%- JSON.stringify({
+                download: _('download.download'),
+                thisDevice: _('download.this_device'),
+                release: _('portal.release'),
+                empty: _('portal.empty'),
+                noRelease: _('portal.no_release'),
+                incomplete: _('portal.incomplete'),
+                failed: _('portal.load_failed'),
+                retry: _('actions.retry'),
+                portable: _('portal.format_portable'),
+            }).replace(/</g, '\\u003c') %>;
+            var ver = <%- JSON.stringify(String(ver)) %>;
+            var names = { windows: 'Windows', linux: 'Linux', macos: 'macOS' };
+            var marks = { windows: 'windows', linux: 'linux', macos: 'apple' };
+            var grid = document.getElementById('installer-grid');
+
+            function detect() {
+                var ua = navigator.userAgent || '';
+                var arm = /arm64|aarch64/i.test(ua);
+                if (/Windows/i.test(ua)) return { platform: 'windows', arch: arm ? 'arm64' : 'x64' };
+                if (/Mac OS X|Macintosh/i.test(ua) && !/iPhone|iPad/i.test(ua)) return { platform: 'macos' };
+                if (/Linux/i.test(ua) && !/Android/i.test(ua)) return { platform: 'linux', arch: arm ? 'arm64' : 'x64' };
+                return null;
+            }
+
+            function state(message, isError) {
+                grid.replaceChildren();
+                var p = document.createElement('p');
+                p.className = 'state' + (isError ? ' is-error' : '');
+                p.textContent = message;
+                if (isError) {
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'btn btn-sm';
+                    b.textContent = text.retry;
+                    b.addEventListener('click', load);
+                    p.appendChild(b);
+                }
+                grid.appendChild(p);
+            }
+
+            function render(data) {
+                var mine = detect();
+                var picked = false;
+                var list = document.createElement('ul');
+                list.className = 'list dl-list';
+                data.installers.forEach(function (i) {
+                    var li = document.createElement('li');
+                    li.className = 'list-row';
+                    var mark = marks[i.platform];
+                    if (mark) {
+                        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        svg.setAttribute('class', 'os-icon');
+                        svg.setAttribute('aria-hidden', 'true');
+                        var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+                        use.setAttribute('href', '/img/os-icons.svg?v=' + encodeURIComponent(ver) + '#' + mark);
+                        svg.appendChild(use);
+                        li.appendChild(svg);
                     }
-                    var labels = { windows: 'Windows', linux: 'Linux', macos: 'macOS' };
-                    grid.innerHTML = data.installers.map(function (i) {
-                        var label = labels[i.platform] || i.platform;
-                        return '<div class="portal-card">'
-                            + '<h3>' + label + '</h3>'
-                            + '<div class="arch">' + (i.arch || '') + ' · ' + (i.format || '') + '</div>'
-                            + '<a class="portal-btn" href="' + i.url + '">Download</a>'
-                            + '</div>';
-                    }).join('');
-                })
-                .catch(function () {
-                    document.getElementById('installer-grid').innerHTML =
-                        '<div class="portal-empty">Failed to load installers.</div>';
+                    var main = document.createElement('span');
+                    main.className = 'row-main';
+                    var title = document.createElement('span');
+                    title.className = 'row-title';
+                    var format = (i.format === 'portable' ? text.portable : (i.format || ''));
+                    title.textContent = (names[i.platform] || i.platform) + ' ' + (i.arch || '') + (format ? ', ' + format : '');
+                    main.appendChild(title);
+                    var match = !picked && mine && i.platform === mine.platform && (!mine.arch || i.arch === mine.arch);
+                    if (match) {
+                        picked = true;
+                        var sub = document.createElement('span');
+                        sub.className = 'row-sub';
+                        sub.textContent = text.thisDevice;
+                        main.appendChild(sub);
+                    }
+                    li.appendChild(main);
+                    var end = document.createElement('span');
+                    end.className = 'row-end';
+                    var a = document.createElement('a');
+                    a.className = 'btn' + (match ? ' btn-primary' : '');
+                    a.href = i.url;
+                    a.textContent = text.download;
+                    end.appendChild(a);
+                    li.appendChild(end);
+                    list.appendChild(li);
                 });
+                grid.replaceChildren(list);
+                var rel = document.getElementById('portal-release');
+                if (rel && data.release) {
+                    rel.textContent = text.release.split('{tag}').join(data.release);
+                    rel.hidden = false;
+                }
+            }
+
+            function load() {
+                state(<%- JSON.stringify(_('portal.loading')).replace(/</g, '\\u003c') %>, false);
+                fetch('/api/portal/installers', { credentials: 'omit' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (!data || !data.success || !Array.isArray(data.installers) || data.installers.length === 0) {
+                            var msg = text.empty;
+                            if (data && data.reason === 'no_release_imported') msg = text.noRelease;
+                            else if (data && data.reason === 'release_cache_incomplete') msg = text.incomplete;
+                            state(msg, false);
+                            return;
+                        }
+                        render(data);
+                    })
+                    .catch(function () { state(text.failed, true); });
+            }
+            load();
         })();
     </script>
 </body>

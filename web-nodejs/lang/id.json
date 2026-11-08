@@ -4642,15 +4642,20 @@
     "download": {
         "title": "Unduh Agen BetterDesk",
         "choose_platform": "Pilih platform Anda",
-        "choose_platform_hint": "Pilih penginstal yang cocok dengan sistem operasi Anda.",
+        "choose_platform_hint": "Pilih penginstal yang sesuai dengan sistem operasi komputer Anda.",
         "download": "Unduh",
         "building": "Membangun…",
         "failed": "Pembuatan gagal",
         "need_help": "Butuh bantuan?",
         "powered_by": "Didukung oleh",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, agen lengkap untuk komputer yang dikelola",
+        "product_support_agent": "BetterDesk Support Agent, aplikasi kecil untuk mendapatkan bantuan jarak jauh",
+        "product_rdclient": "BetterDesk RdClient, aplikasi desktop jarak jauh untuk staf dukungan",
+        "this_device": "Cocok untuk komputer ini",
+        "no_platforms": "Belum ada penginstal yang tersedia di halaman unduhan ini.",
+        "contact_email": "Email",
+        "contact_phone": "Telepon",
+        "contact_web": "Situs web"
     },
     "server_attestation": {
         "title": "Sertifikasi Kinerja Server",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "grafik",
         "show_table": "Tampilkan angka"
+    },
+    "portal": {
+        "title": "Unduh agen dukungan",
+        "description": "Instal aplikasi kecil ini di komputer Anda agar tim dukungan Anda bisa membantu dari jarak jauh.",
+        "loading": "Memuat penginstal…",
+        "release": "Versi {tag}",
+        "format_portable": "portabel",
+        "empty": "Belum ada penginstal yang tersedia.",
+        "no_release": "Administrator Anda belum menyediakan agen. Minta mereka mengimpor versi terbaru agen dukungan di konsol, lalu muat ulang halaman ini.",
+        "incomplete": "Agen sudah diimpor, tetapi beberapa filenya hilang. Minta administrator Anda mengimpor versi terbaru sekali lagi.",
+        "load_failed": "Tidak bisa memuat penginstal.",
+        "footer": "Setelah instalasi, administrator Anda akan menjelaskan cara menghubungkan agen ke server ini."
     }
 }

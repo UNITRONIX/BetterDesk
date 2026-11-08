@@ -1189,15 +1189,20 @@
     "download": {
         "title": "Pobierz Agenta BetterDesk",
         "choose_platform": "Wybierz platformę",
-        "choose_platform_hint": "Wybierz instalator odpowiadający Twojemu systemowi operacyjnemu.",
+        "choose_platform_hint": "Wybierz instalator dla systemu operacyjnego swojego komputera.",
         "download": "Pobierz",
         "building": "Budowanie…",
         "failed": "Budowanie nieudane",
         "need_help": "Potrzebujesz pomocy?",
         "powered_by": "Napędzane przez",
-        "product_agent_client": "BetterDesk Agent Client — pełny agent zarządzany",
-        "product_support_agent": "BetterDesk Support Agent — lekki klient użytkownika",
-        "product_rdclient": "BetterDesk RdClient — klient pulpitu operatora"
+        "product_agent_client": "BetterDesk Agent Client, pełny agent dla zarządzanych komputerów",
+        "product_support_agent": "BetterDesk Support Agent, mała aplikacja do otrzymywania pomocy zdalnej",
+        "product_rdclient": "BetterDesk RdClient, aplikacja pulpitu zdalnego dla pracowników wsparcia",
+        "this_device": "Pasuje do tego komputera",
+        "no_platforms": "Na tej stronie pobierania nie ma jeszcze instalatorów.",
+        "contact_email": "E-mail",
+        "contact_phone": "Telefon",
+        "contact_web": "Strona internetowa"
     },
     "server": {
         "port": "Port",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "wykres",
         "show_table": "Pokaż liczby"
+    },
+    "portal": {
+        "title": "Pobierz agenta wsparcia",
+        "description": "Zainstaluj tę małą aplikację na swoim komputerze, aby twój zespół wsparcia mógł pomóc ci zdalnie.",
+        "loading": "Wczytywanie instalatorów…",
+        "release": "Wersja {tag}",
+        "format_portable": "wersja przenośna",
+        "empty": "Nie ma jeszcze dostępnych instalatorów.",
+        "no_release": "Twój administrator jeszcze nie udostępnił agenta. Poproś go o zaimportowanie w konsoli najnowszej wersji agenta wsparcia, a potem odśwież tę stronę.",
+        "incomplete": "Agent został zaimportowany, ale brakuje niektórych jego plików. Poproś administratora o ponowne zaimportowanie najnowszej wersji.",
+        "load_failed": "Nie udało się wczytać instalatorów.",
+        "footer": "Po instalacji administrator wyjaśni ci, jak połączyć agenta z tym serwerem."
     }
 }

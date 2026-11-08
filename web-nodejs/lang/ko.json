@@ -4636,15 +4636,20 @@
     "download": {
         "title": "BetterDesk 에이전트 다운로드",
         "choose_platform": "플랫폼을 선택하세요",
-        "choose_platform_hint": "운영 체제와 일치하는 설치 프로그램을 선택하십시오.",
+        "choose_platform_hint": "컴퓨터의 운영 체제에 맞는 설치 프로그램을 고르세요.",
         "download": "다운로드",
         "building": "건물…",
         "failed": "빌드 실패",
         "need_help": "도움이 필요하신가요?",
         "powered_by": "제공:",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client: 관리되는 컴퓨터용 전체 기능 에이전트",
+        "product_support_agent": "BetterDesk Support Agent: 원격 도움을 받기 위한 작은 앱",
+        "product_rdclient": "BetterDesk RdClient: 지원 담당자용 원격 데스크톱 앱",
+        "this_device": "이 컴퓨터에 맞음",
+        "no_platforms": "이 다운로드 페이지에는 아직 설치 프로그램이 없습니다.",
+        "contact_email": "이메일",
+        "contact_phone": "전화",
+        "contact_web": "웹사이트"
     },
     "server_attestation": {
         "title": "서버 성능 인증",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "차트",
         "show_table": "숫자 보기"
+    },
+    "portal": {
+        "title": "지원 에이전트 다운로드",
+        "description": "이 작은 앱을 컴퓨터에 설치하면 지원팀이 원격으로 도와드릴 수 있습니다.",
+        "loading": "설치 프로그램을 불러오는 중…",
+        "release": "버전 {tag}",
+        "format_portable": "포터블",
+        "empty": "아직 사용할 수 있는 설치 프로그램이 없습니다.",
+        "no_release": "관리자가 아직 에이전트를 게시하지 않았습니다. 콘솔에서 최신 지원 에이전트 버전을 가져와 달라고 관리자에게 요청한 뒤 이 페이지를 새로 고치세요.",
+        "incomplete": "에이전트를 가져왔지만 일부 파일이 없습니다. 최신 버전을 다시 가져와 달라고 관리자에게 요청하세요.",
+        "load_failed": "설치 프로그램을 불러오지 못했습니다.",
+        "footer": "설치가 끝나면 관리자가 에이전트를 이 서버에 연결하는 방법을 알려 드립니다."
     }
 }

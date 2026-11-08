@@ -4636,15 +4636,20 @@
     "download": {
         "title": "Stáhnout agenta BetterDesk",
         "choose_platform": "Vyberte platformu",
-        "choose_platform_hint": "Vyberte instalátor odpovídající vašemu operačnímu systému.",
+        "choose_platform_hint": "Vyberte instalátor pro operační systém svého počítače.",
         "download": "Stáhnout",
         "building": "Sestavování…",
         "failed": "Sestavení se nezdařilo",
         "need_help": "Potřebujete pomoc?",
         "powered_by": "Vytvořeno s",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, plný agent pro spravované počítače",
+        "product_support_agent": "BetterDesk Support Agent, malá aplikace pro získání pomoci na dálku",
+        "product_rdclient": "BetterDesk RdClient, aplikace pro vzdálenou plochu pro pracovníky podpory",
+        "this_device": "Pro tento počítač",
+        "no_platforms": "Na této stránce pro stažení zatím nejsou žádné instalátory.",
+        "contact_email": "E-mail",
+        "contact_phone": "Telefon",
+        "contact_web": "Web"
     },
     "server_attestation": {
         "title": "Atestace serveru",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "graf",
         "show_table": "Zobrazit čísla"
+    },
+    "portal": {
+        "title": "Stáhnout agenta podpory",
+        "description": "Nainstalujte si do počítače tuto malou aplikaci, aby vám váš tým podpory mohl pomoci na dálku.",
+        "loading": "Načítají se instalátory…",
+        "release": "Verze {tag}",
+        "format_portable": "přenosná verze",
+        "empty": "Zatím nejsou k dispozici žádné instalátory.",
+        "no_release": "Váš administrátor agenta ještě nezveřejnil. Požádejte ho, aby v konzoli importoval nejnovější verzi agenta podpory, a potom tuto stránku načtěte znovu.",
+        "incomplete": "Agent byl importován, ale některé jeho soubory chybí. Požádejte administrátora, aby nejnovější verzi importoval znovu.",
+        "load_failed": "Instalátory se nepodařilo načíst.",
+        "footer": "Po instalaci vám administrátor vysvětlí, jak agenta připojit k tomuto serveru."
     }
 }

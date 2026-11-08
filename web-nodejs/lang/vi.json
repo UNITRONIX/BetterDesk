@@ -4642,15 +4642,20 @@
     "download": {
         "title": "Tải xuống Đại lý BetterDesk",
         "choose_platform": "Chọn nền tảng của bạn",
-        "choose_platform_hint": "Chọn trình cài đặt phù hợp với hệ điều hành của bạn.",
+        "choose_platform_hint": "Chọn bộ cài đặt phù hợp với hệ điều hành của máy tính bạn.",
         "download": "Tải xuống",
         "building": "Tòa nhà…",
         "failed": "Xây dựng không thành công",
         "need_help": "Cần giúp đỡ?",
         "powered_by": "Được cung cấp bởi",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, tác tử đầy đủ cho máy tính được quản lý",
+        "product_support_agent": "BetterDesk Support Agent, ứng dụng nhỏ để nhận hỗ trợ từ xa",
+        "product_rdclient": "BetterDesk RdClient, ứng dụng điều khiển từ xa cho nhân viên hỗ trợ",
+        "this_device": "Phù hợp với máy tính này",
+        "no_platforms": "Trang tải xuống này chưa có bộ cài đặt nào.",
+        "contact_email": "Email",
+        "contact_phone": "Điện thoại",
+        "contact_web": "Trang web"
     },
     "server_attestation": {
         "title": "Chứng nhận hiệu suất máy chủ",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "biểu đồ",
         "show_table": "Hiện số liệu"
+    },
+    "portal": {
+        "title": "Tải tác tử hỗ trợ",
+        "description": "Cài ứng dụng nhỏ này trên máy tính để nhóm hỗ trợ có thể giúp bạn từ xa.",
+        "loading": "Đang tải danh sách bộ cài đặt…",
+        "release": "Phiên bản {tag}",
+        "format_portable": "bản di động",
+        "empty": "Chưa có bộ cài đặt nào.",
+        "no_release": "Quản trị viên chưa phát hành tác tử. Hãy nhờ họ nhập bản phát hành tác tử hỗ trợ mới nhất trong bảng điều khiển, rồi tải lại trang này.",
+        "incomplete": "Tác tử đã được nhập nhưng thiếu một số tệp. Hãy nhờ quản trị viên nhập lại bản phát hành mới nhất.",
+        "load_failed": "Không tải được danh sách bộ cài đặt.",
+        "footer": "Sau khi cài đặt, quản trị viên sẽ hướng dẫn bạn cách kết nối tác tử với máy chủ này."
     }
 }

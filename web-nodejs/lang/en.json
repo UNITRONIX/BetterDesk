@@ -1197,15 +1197,20 @@
     "download": {
         "title": "Download BetterDesk Agent",
         "choose_platform": "Choose your platform",
-        "choose_platform_hint": "Select the installer that matches your operating system.",
+        "choose_platform_hint": "Pick the installer that matches your computer's operating system.",
         "download": "Download",
         "building": "Building…",
         "failed": "Build failed",
         "need_help": "Need help?",
         "powered_by": "Powered by",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, the full agent for managed computers",
+        "product_support_agent": "BetterDesk Support Agent, a small app for getting remote help",
+        "product_rdclient": "BetterDesk RdClient, the remote desktop app for support staff",
+        "this_device": "Matches this computer",
+        "no_platforms": "No installers are available for this download page yet.",
+        "contact_email": "Email",
+        "contact_phone": "Phone",
+        "contact_web": "Website"
     },
     "server": {
         "port": "Port",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "chart",
         "show_table": "Show the numbers"
+    },
+    "portal": {
+        "title": "Download the support agent",
+        "description": "Install this small app on your computer so your support team can help you remotely.",
+        "loading": "Loading the installers…",
+        "release": "Version {tag}",
+        "format_portable": "portable",
+        "empty": "No installers are available yet.",
+        "no_release": "Your administrator hasn't published the agent yet. Ask them to import the latest support agent release in the console, then reload this page.",
+        "incomplete": "The agent was imported, but some of its files are missing. Ask your administrator to import the latest release again.",
+        "load_failed": "Could not load the installers.",
+        "footer": "After installing, your administrator tells you how to connect the agent to this server."
     }
 }

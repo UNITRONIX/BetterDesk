@@ -4642,15 +4642,20 @@
     "download": {
         "title": "Töltse le a BetterDesk ügynököt",
         "choose_platform": "Válassza ki a platformját",
-        "choose_platform_hint": "Válassza ki az operációs rendszerének megfelelő telepítőt.",
+        "choose_platform_hint": "Válassza ki a számítógépe operációs rendszerének megfelelő telepítőt.",
         "download": "Letöltés",
         "building": "Épület…",
         "failed": "Az építés nem sikerült",
         "need_help": "Segítségre van szüksége?",
         "powered_by": "Powered by",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, a teljes ügynök felügyelt számítógépekhez",
+        "product_support_agent": "BetterDesk Support Agent, egy kis alkalmazás távoli segítség kéréséhez",
+        "product_rdclient": "BetterDesk RdClient, távoliasztal-alkalmazás a támogatási munkatársaknak",
+        "this_device": "Ehhez a számítógéphez",
+        "no_platforms": "Ezen a letöltési oldalon még nincs elérhető telepítő.",
+        "contact_email": "E-mail",
+        "contact_phone": "Telefon",
+        "contact_web": "Weboldal"
     },
     "server_attestation": {
         "title": "Szerver tanúsítás",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "diagram",
         "show_table": "Számok megjelenítése"
+    },
+    "portal": {
+        "title": "A támogatási ügynök letöltése",
+        "description": "Telepítse ezt a kis alkalmazást a számítógépére, hogy a támogatási csapat távolról segíteni tudjon Önnek.",
+        "loading": "A telepítők betöltése…",
+        "release": "Verzió: {tag}",
+        "format_portable": "hordozható",
+        "empty": "Még nincs elérhető telepítő.",
+        "no_release": "A rendszergazda még nem tette közzé az ügynököt. Kérje meg, hogy importálja a konzolban a támogatási ügynök legújabb verzióját, majd töltse újra ezt az oldalt.",
+        "incomplete": "Az ügynök importálva lett, de néhány fájlja hiányzik. Kérje meg a rendszergazdát, hogy importálja újra a legújabb verziót.",
+        "load_failed": "Nem sikerült betölteni a telepítőket.",
+        "footer": "A telepítés után a rendszergazda elmondja, hogyan csatlakoztassa az ügynököt ehhez a szerverhez."
     }
 }

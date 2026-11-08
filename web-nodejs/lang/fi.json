@@ -4642,15 +4642,20 @@
     "download": {
         "title": "Lataa BetterDesk Agent",
         "choose_platform": "Valitse alustasi",
-        "choose_platform_hint": "Valitse käyttöjärjestelmääsi vastaava asennusohjelma.",
+        "choose_platform_hint": "Valitse asennusohjelma, joka sopii tietokoneesi käyttöjärjestelmään.",
         "download": "Lataa",
         "building": "Rakennus…",
         "failed": "Rakennus epäonnistui",
         "need_help": "Tarvitsetko apua?",
         "powered_by": "Voimanlähteenä",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, täysi agentti hallituille tietokoneille",
+        "product_support_agent": "BetterDesk Support Agent, pieni sovellus etäavun saamiseen",
+        "product_rdclient": "BetterDesk RdClient, etätyöpöytäsovellus tukihenkilöille",
+        "this_device": "Sopii tähän tietokoneeseen",
+        "no_platforms": "Tällä lataussivulla ei ole vielä asennusohjelmia.",
+        "contact_email": "Sähköposti",
+        "contact_phone": "Puhelin",
+        "contact_web": "Verkkosivusto"
     },
     "server_attestation": {
         "title": "Palvelintodistus",
@@ -5255,5 +5260,17 @@
     "chart": {
         "role": "kaavio",
         "show_table": "Näytä luvut"
+    },
+    "portal": {
+        "title": "Lataa tukiagentti",
+        "description": "Asenna tämä pieni sovellus tietokoneellesi, niin tukitiimisi voi auttaa sinua etänä.",
+        "loading": "Ladataan asennusohjelmia…",
+        "release": "Versio {tag}",
+        "format_portable": "siirrettävä",
+        "empty": "Asennusohjelmia ei ole vielä saatavilla.",
+        "no_release": "Järjestelmänvalvoja ei ole vielä julkaissut agenttia. Pyydä häntä tuomaan tukiagentin uusin versio konsolissa ja lataa sitten tämä sivu uudelleen.",
+        "incomplete": "Agentti on tuotu, mutta osa sen tiedostoista puuttuu. Pyydä järjestelmänvalvojaa tuomaan uusin versio uudelleen.",
+        "load_failed": "Asennusohjelmia ei voitu ladata.",
+        "footer": "Asennuksen jälkeen järjestelmänvalvoja kertoo, miten yhdistät agentin tähän palvelimeen."
     }
 }

@@ -4636,15 +4636,20 @@
     "download": {
         "title": "BetterDesk Agent downloaden",
         "choose_platform": "Platform kiezen",
-        "choose_platform_hint": "Selecteer het installatieprogramma dat bij uw besturingssysteem past.",
+        "choose_platform_hint": "Kies het installatieprogramma voor het besturingssysteem van uw computer.",
         "download": "Downloaden",
         "building": "Bouwen…",
         "failed": "Build mislukt",
         "need_help": "Hulp nodig?",
         "powered_by": "Aangedreven door",
-        "product_agent_client": "BetterDesk Agent Client — full managed endpoint agent",
-        "product_support_agent": "BetterDesk Support Agent — lightweight end-user client",
-        "product_rdclient": "BetterDesk RdClient — operator remote desktop client"
+        "product_agent_client": "BetterDesk Agent Client, de volledige agent voor beheerde computers",
+        "product_support_agent": "BetterDesk Support Agent, een kleine app om hulp op afstand te krijgen",
+        "product_rdclient": "BetterDesk RdClient, de app voor bureaublad op afstand voor supportmedewerkers",
+        "this_device": "Past bij deze computer",
+        "no_platforms": "Er zijn nog geen installatieprogramma's beschikbaar op deze downloadpagina.",
+        "contact_email": "E-mail",
+        "contact_phone": "Telefoon",
+        "contact_web": "Website"
     },
     "server_attestation": {
         "title": "Serverattetering",
@@ -5249,5 +5254,17 @@
     "chart": {
         "role": "grafiek",
         "show_table": "Toon de cijfers"
+    },
+    "portal": {
+        "title": "De ondersteuningsagent downloaden",
+        "description": "Installeer deze kleine app op uw computer, zodat uw supportteam u op afstand kan helpen.",
+        "loading": "Installatieprogramma's laden…",
+        "release": "Versie {tag}",
+        "format_portable": "draagbaar",
+        "empty": "Er zijn nog geen installatieprogramma's beschikbaar.",
+        "no_release": "Uw beheerder heeft de agent nog niet beschikbaar gemaakt. Vraag of hij of zij de nieuwste versie van de ondersteuningsagent in de console importeert en laad deze pagina daarna opnieuw.",
+        "incomplete": "De agent is geïmporteerd, maar sommige bestanden ontbreken. Vraag uw beheerder om de nieuwste versie opnieuw te importeren.",
+        "load_failed": "De installatieprogramma's konden niet worden geladen.",
+        "footer": "Na de installatie legt uw beheerder uit hoe u de agent met deze server verbindt."
     }
 }
