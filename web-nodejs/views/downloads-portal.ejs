@@ -82,7 +82,15 @@
                 .then(function (data) {
                     var grid = document.getElementById('installer-grid');
                     if (!data || !data.success || !Array.isArray(data.installers) || data.installers.length === 0) {
-                        grid.innerHTML = '<div class="portal-empty">No installers available yet.</div>';
+                        var msg = 'No installers available yet.';
+                        if (data && data.reason === 'no_release_imported') {
+                            msg = 'No agent package has been published by your administrator yet. '
+                                + 'Ask them to import the latest Support Agent release in the console, then reload this page.';
+                        } else if (data && data.reason === 'release_cache_incomplete') {
+                            msg = 'An agent package was imported but its files are incomplete. '
+                                + 'Ask your administrator to import the latest release again.';
+                        }
+                        grid.innerHTML = '<div class="portal-empty">' + msg + '</div>';
                         return;
                     }
                     var labels = { windows: 'Windows', linux: 'Linux', macos: 'macOS' };

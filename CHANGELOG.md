@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed
+- **Empty agent download portal (#439 / #475):** `/api/portal/installers` now returns a `reason` when it has nothing to list (`no_release_imported`, `release_cache_incomplete`, `cache_unreadable`). The public `/portal` page explains which one applies instead of showing a bare "No installers available yet."
+- **Flutter checksum during toolchain install (#466):** `scripts/install-build-toolchain.sh` no longer fetches `${url}.sha256`, which Flutter does not publish. The hash is resolved from Flutter's `releases_linux.json` manifest, and an unresolved hash now fails the install instead of skipping verification. Override with `FLUTTER_ARCHIVE_SHA256` when needed.
+
 ### Changed
 - _(none yet)_
 
