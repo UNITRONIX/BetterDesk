@@ -1120,7 +1120,7 @@
                 </td>
                 <td data-column="platform">
                     <div class="platform-icon">
-                        <span class="material-icons" aria-hidden="true">${Utils.getPlatformIcon(device.platform || device.os)}</span>
+                        ${Utils.getPlatformIconHtml(device.platform || device.os)}
                         <span>${Utils.escapeHtml(device.platform || device.os || '-')}</span>
                     </div>
                 </td>

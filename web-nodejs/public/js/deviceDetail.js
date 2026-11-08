@@ -320,7 +320,6 @@ const DeviceDetail = (function () {
     function _headerHTML() {
         const d = device;
         const platformLabel = d.platform || d.os || '-';
-        const platformIcon = Utils.getPlatformIcon(d.platform || d.os);
         const statusInfo = _resolveDeviceStatus(d);
         const statusClass = statusInfo.className;
         const statusLabel = statusInfo.label;
@@ -345,7 +344,7 @@ const DeviceDetail = (function () {
             <div class="device-panel-status-bar">
                 <span class="device-panel-status-badge status ${statusClass}"${statusTitle ? ` title="${Utils.escapeHtml(statusTitle)}"` : ''}>${statusLabel}</span>
                 <span class="device-panel-platform-badge">
-                    <span class="material-icons" aria-hidden="true">${platformIcon}</span>
+                    ${Utils.getPlatformIconHtml(d.platform || d.os)}
                     ${Utils.escapeHtml(platformLabel)}
                 </span>
                 ${d.username ? `<span class="device-panel-user">${Utils.escapeHtml(d.username)}</span>` : ''}
