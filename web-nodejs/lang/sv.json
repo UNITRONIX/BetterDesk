@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Statusen blir Återkallad. Du kan markera den som verifierad igen senare.",
         "legend_verified": "verifierade",
         "legend_pending": "inte verifierade ännu",
-        "legend_failed": "fingeravtryck ändrat eller återkallat"
+        "legend_failed": "fingeravtryck ändrat eller återkallat",
+        "unavailable_note": "Den här serverversionen kan ännu inte ta emot maskinvarufingeravtryck från enheter, så listan förblir tom tills en serveruppdatering lägger till det.",
+        "empty_how": "När enheter rapporterar sina fingeravtryck visas varje enhet här med status och senaste kontroll. Markera en enhet som verifierad när du har kontrollerat maskinvaran, och återkalla den om fingeravtrycket ändras."
     },
     "fleet": {
         "title": "Flottstyrning",

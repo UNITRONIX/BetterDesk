@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Statusen blir Tilbakekalt. Du kan merke den som bekreftet igjen senere.",
         "legend_verified": "bekreftet",
         "legend_pending": "ikke bekreftet ennå",
-        "legend_failed": "fingeravtrykk endret eller tilbakekalt"
+        "legend_failed": "fingeravtrykk endret eller tilbakekalt",
+        "unavailable_note": "Denne serverversjonen kan ennå ikke motta maskinvarefingeravtrykk fra enheter, så listen forblir tom til en serveroppdatering legger det til.",
+        "empty_how": "Når enheter rapporterer fingeravtrykkene sine, vises hver enhet her med status og siste kontroll. Merk en enhet som verifisert etter at du har sjekket maskinvaren, og tilbakekall den hvis fingeravtrykket endres."
     },
     "fleet": {
         "title": "Flåtestyring",

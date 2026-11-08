@@ -4662,7 +4662,9 @@
         "confirm_revoke_message": "其狀態會變為「已撤銷」。您之後可以再將其標記為已驗證。",
         "legend_verified": "已驗證",
         "legend_pending": "尚未驗證",
-        "legend_failed": "指紋已變更或已撤銷"
+        "legend_failed": "指紋已變更或已撤銷",
+        "unavailable_note": "此伺服器版本尚無法接收裝置的硬體指紋，因此在伺服器更新加入此功能前，這份清單會保持空白。",
+        "empty_how": "裝置回報指紋後，每台裝置都會連同狀態與最後檢查時間列在這裡。確認硬體後請將裝置標示為已驗證，若指紋改變則予以撤銷。"
     },
     "fleet": {
         "title": "車隊管理",

@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Starea devine Revocat. Îl puteți marca din nou ca verificat mai târziu.",
         "legend_verified": "verificate",
         "legend_pending": "încă neverificate",
-        "legend_failed": "amprentă schimbată sau revocată"
+        "legend_failed": "amprentă schimbată sau revocată",
+        "unavailable_note": "Această versiune de server nu poate încă primi amprente hardware de la dispozitive, așa că lista rămâne goală până când o actualizare a serverului adaugă acest lucru.",
+        "empty_how": "După ce dispozitivele își raportează amprentele, fiecare apare aici cu starea și ultima verificare. Marcați un dispozitiv ca verificat după ce i-ați verificat hardware-ul și revocați-l dacă amprenta i se schimbă."
     },
     "fleet": {
         "title": "Managementul flotei",

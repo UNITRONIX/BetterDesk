@@ -4662,7 +4662,9 @@
         "confirm_revoke_message": "Son état passe à Révoqué. Vous pourrez le marquer à nouveau comme vérifié plus tard.",
         "legend_verified": "vérifiés",
         "legend_pending": "pas encore vérifiés",
-        "legend_failed": "empreinte modifiée ou révoquée"
+        "legend_failed": "empreinte modifiée ou révoquée",
+        "unavailable_note": "Cette version du serveur ne peut pas encore recevoir les empreintes matérielles des appareils. La liste reste vide jusqu'à ce qu'une mise à jour du serveur l'ajoute.",
+        "empty_how": "Dès que les appareils envoient leurs empreintes, chacun apparaît ici avec son état et sa dernière vérification. Marquez un appareil comme vérifié après avoir contrôlé son matériel, et révoquez-le si son empreinte change."
     },
     "fleet": {
         "title": "Tableau de bord",

@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Statusnya berubah menjadi Dicabut. Anda bisa menandainya terverifikasi lagi nanti.",
         "legend_verified": "terverifikasi",
         "legend_pending": "belum terverifikasi",
-        "legend_failed": "sidik jari berubah atau dicabut"
+        "legend_failed": "sidik jari berubah atau dicabut",
+        "unavailable_note": "Versi server ini belum bisa menerima sidik jari perangkat keras dari perangkat, jadi daftar ini tetap kosong sampai pembaruan server menambahkannya.",
+        "empty_how": "Setelah perangkat melaporkan sidik jarinya, masing-masing tampil di sini dengan status dan pemeriksaan terakhir. Tandai perangkat sebagai terverifikasi setelah Anda memeriksa perangkat kerasnya, dan cabut jika sidik jarinya berubah."
     },
     "fleet": {
         "title": "Manajemen Armada",

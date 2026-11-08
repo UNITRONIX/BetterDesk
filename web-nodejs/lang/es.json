@@ -4529,7 +4529,9 @@
         "confirm_revoke_message": "Su estado cambia a Revocado. Puede volver a marcarlo como verificado más tarde.",
         "legend_verified": "verificados",
         "legend_pending": "aún sin verificar",
-        "legend_failed": "huella cambiada o revocada"
+        "legend_failed": "huella cambiada o revocada",
+        "unavailable_note": "Esta versión del servidor aún no puede recibir huellas de hardware de los dispositivos, así que la lista seguirá vacía hasta que una actualización del servidor lo añada.",
+        "empty_how": "Cuando los dispositivos envíen sus huellas, cada uno aparecerá aquí con su estado y su última comprobación. Marca un dispositivo como verificado después de revisar su hardware y revócalo si su huella cambia."
     },
     "fleet": {
         "title": "Panel",

@@ -4731,7 +4731,9 @@
         "confirm_revoke_message": "Its status changes to Revoked. You can mark it as verified again later.",
         "legend_verified": "verified",
         "legend_pending": "not verified yet",
-        "legend_failed": "fingerprint changed or revoked"
+        "legend_failed": "fingerprint changed or revoked",
+        "unavailable_note": "This server version can't receive hardware fingerprints from devices yet, so this list stays empty until a server update adds it.",
+        "empty_how": "Once devices report their fingerprints, each one is listed here with its status and last check. Mark a device as verified after you have checked its hardware, and revoke it if its fingerprint changes."
     },
     "fleet": {
         "title": "Fleet Management",

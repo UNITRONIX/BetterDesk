@@ -4658,7 +4658,9 @@
         "confirm_revoke_message": "Jego stan zmieni się na Odwołane. Później możesz ponownie oznaczyć je jako zweryfikowane.",
         "legend_verified": "zweryfikowane",
         "legend_pending": "jeszcze niezweryfikowane",
-        "legend_failed": "odcisk zmieniony lub odwołany"
+        "legend_failed": "odcisk zmieniony lub odwołany",
+        "unavailable_note": "Ta wersja serwera nie potrafi jeszcze odbierać sprzętowych odcisków od urządzeń, więc lista pozostanie pusta, dopóki nie doda tego aktualizacja serwera.",
+        "empty_how": "Gdy urządzenia zgłoszą swoje odciski, każde pojawi się tutaj ze stanem i ostatnim sprawdzeniem. Oznacz urządzenie jako zweryfikowane po sprawdzeniu sprzętu, a cofnij, jeśli jego odcisk się zmieni."
     },
     "fleet": {
         "title": "Zarządzanie flotą",

@@ -4529,7 +4529,9 @@
         "confirm_revoke_message": "Jeho stav se změní na Odvoláno. Později ho můžete znovu označit jako ověřené.",
         "legend_verified": "ověřeno",
         "legend_pending": "zatím neověřeno",
-        "legend_failed": "otisk změněn nebo odvolán"
+        "legend_failed": "otisk změněn nebo odvolán",
+        "unavailable_note": "Tato verze serveru zatím neumí přijímat hardwarové otisky ze zařízení, takže seznam zůstane prázdný, dokud to nepřidá aktualizace serveru.",
+        "empty_how": "Jakmile zařízení nahlásí své otisky, každé se zde zobrazí se stavem a posledním ověřením. Po kontrole hardwaru zařízení označte jako ověřené, a pokud se jeho otisk změní, odvolejte ho."
     },
     "fleet": {
         "title": "Správa flotily",

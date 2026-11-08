@@ -43,11 +43,18 @@
   // Icon for a meaning (Utils.ICONS); decorative, the label carries the meaning
   const icon = (meaning) => (window.Utils && Utils.icon ? Utils.icon(meaning) : '');
 
+  function formatDate(v) {
+    if (window.Utils && Utils.formatDate) return Utils.formatDate(v, { empty: '—' });
+    const d = new Date(v);
+    return isNaN(d) ? '—' : d.toLocaleString();
+  }
+
   function stateRow(html) {
     tbody.innerHTML = `<tr><td colspan="${COLS}" class="state-cell">${html}</td></tr>`;
   }
 
   async function loadAttestation() {
+    showEmpty(false);
     stateRow(escapeHtml(t('loading')));
     countLine.textContent = '';
     countLine.hidden = true;
@@ -97,8 +104,17 @@
     });
   }
 
+  // No records: the table makes way for a note on why the list is empty.
+  // This server version has no place to store fingerprints, so devices
+  // cannot report them yet.
+  function showEmpty(on) {
+    document.getElementById('att-empty').hidden = !on;
+    document.getElementById('att-table-wrap').hidden = on;
+  }
+
   function render(records) {
     renderCount(records);
+    showEmpty(!records.length);
     if (!records.length) {
       stateRow(escapeHtml(t('empty')));
       return;
@@ -114,7 +130,7 @@
       const fp = r.fingerprint || r.device_fingerprint || '';
       const short = fp.length > 16 ? fp.slice(0, 8) + '…' + fp.slice(-8) : fp;
       const menuId = `att-menu-${i}`;
-      const last = r.last_check ? new Date(r.last_check).toLocaleString() : '—';
+      const last = r.last_check ? formatDate(r.last_check) : '—';
       const canVerify = st.group !== 'verified';
       const canRevoke = String(r.status || '').toLowerCase() !== 'revoked';
       return `

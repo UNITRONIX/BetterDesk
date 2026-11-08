@@ -4640,7 +4640,9 @@
         "confirm_revoke_message": "其状态会变为“已撤销”。您之后可以再将其标记为已验证。",
         "legend_verified": "已验证",
         "legend_pending": "尚未验证",
-        "legend_failed": "指纹已更改或已撤销"
+        "legend_failed": "指纹已更改或已撤销",
+        "unavailable_note": "此服务器版本还无法接收设备的硬件指纹，因此在服务器更新加入此功能之前，此列表会一直为空。",
+        "empty_how": "设备上报指纹后，每台设备都会连同状态和最后检查时间列在这里。确认硬件后将设备标记为已验证，如果指纹发生变化则撤销。"
     },
     "fleet": {
         "title": "车队管理",

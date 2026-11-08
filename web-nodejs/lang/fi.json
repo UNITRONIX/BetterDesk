@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Tilaksi tulee Peruttu. Voit merkitä sen myöhemmin uudelleen vahvistetuksi.",
         "legend_verified": "vahvistettu",
         "legend_pending": "ei vielä vahvistettu",
-        "legend_failed": "sormenjälki muuttunut tai peruttu"
+        "legend_failed": "sormenjälki muuttunut tai peruttu",
+        "unavailable_note": "Tämä palvelinversio ei vielä pysty vastaanottamaan laitteiden laitteistosormenjälkiä, joten lista pysyy tyhjänä, kunnes palvelinpäivitys lisää tämän.",
+        "empty_how": "Kun laitteet ilmoittavat sormenjälkensä, jokainen näkyy tässä tilan ja viimeisen tarkistuksen kanssa. Merkitse laite vahvistetuksi tarkistettuasi sen laitteiston, ja peru se, jos sen sormenjälki muuttuu."
     },
     "fleet": {
         "title": "Laivaston hallinta",

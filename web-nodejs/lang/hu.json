@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Az állapota Visszavonva lesz. Később újra megjelölheti ellenőrzöttként.",
         "legend_verified": "ellenőrzött",
         "legend_pending": "még nem ellenőrzött",
-        "legend_failed": "ujjlenyomat megváltozott vagy visszavonva"
+        "legend_failed": "ujjlenyomat megváltozott vagy visszavonva",
+        "unavailable_note": "Ez a szerververzió még nem tud hardver-ujjlenyomatot fogadni az eszközöktől, ezért a lista üres marad, amíg egy szerverfrissítés ezt nem pótolja.",
+        "empty_how": "Amint az eszközök elküldik az ujjlenyomatukat, mindegyik itt jelenik meg az állapotával és az utolsó ellenőrzéssel. Jelölje az eszközt ellenőrzöttnek, miután megnézte a hardverét, és vonja vissza, ha az ujjlenyomata megváltozik."
     },
     "fleet": {
         "title": "Flottakezelés",

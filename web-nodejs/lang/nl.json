@@ -4529,7 +4529,9 @@
         "confirm_revoke_message": "De status wordt Ingetrokken. U kunt het later weer als geverifieerd markeren.",
         "legend_verified": "geverifieerd",
         "legend_pending": "nog niet geverifieerd",
-        "legend_failed": "vingerafdruk gewijzigd of ingetrokken"
+        "legend_failed": "vingerafdruk gewijzigd of ingetrokken",
+        "unavailable_note": "Deze serverversie kan nog geen hardwarevingerafdrukken van apparaten ontvangen, dus deze lijst blijft leeg tot een serverupdate dat toevoegt.",
+        "empty_how": "Zodra apparaten hun vingerafdruk melden, staat elk apparaat hier met de status en de laatste controle. Markeer een apparaat als geverifieerd nadat u de hardware hebt gecontroleerd, en trek het in als de vingerafdruk verandert."
     },
     "fleet": {
         "title": "Vlootbeheer",

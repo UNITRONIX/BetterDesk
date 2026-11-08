@@ -1,2 +1,21 @@
 /* Device identity (/attestation). Table, status, menus and states come from components.css. */
 
+/* The note that replaces the empty table keeps a readable line length */
+.att-empty {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: var(--measure);
+}
+
+.att-empty[hidden] {
+    display: none;
+}
+
+.att-empty p {
+    margin: 0;
+}
+
+.att-empty-how {
+    color: var(--text-muted);
+}

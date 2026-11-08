@@ -4529,7 +4529,9 @@
         "confirm_revoke_message": "Il suo stato diventa Revocato. Potrai segnarlo di nuovo come verificato più tardi.",
         "legend_verified": "verificati",
         "legend_pending": "non ancora verificati",
-        "legend_failed": "impronta cambiata o revocata"
+        "legend_failed": "impronta cambiata o revocata",
+        "unavailable_note": "Questa versione del server non può ancora ricevere le impronte hardware dai dispositivi, quindi l'elenco resta vuoto finché un aggiornamento del server non lo aggiunge.",
+        "empty_how": "Quando i dispositivi inviano le loro impronte, ognuno compare qui con lo stato e l'ultimo controllo. Segna un dispositivo come verificato dopo averne controllato l'hardware e revocalo se la sua impronta cambia."
     },
     "fleet": {
         "title": "Gestione flotta",

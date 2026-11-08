@@ -4529,7 +4529,9 @@
         "confirm_revoke_message": "Der Status wechselt zu „Widerrufen“. Sie können das Gerät später wieder als verifiziert markieren.",
         "legend_verified": "verifiziert",
         "legend_pending": "noch nicht verifiziert",
-        "legend_failed": "Fingerabdruck geändert oder widerrufen"
+        "legend_failed": "Fingerabdruck geändert oder widerrufen",
+        "unavailable_note": "Diese Serverversion kann noch keine Hardware-Fingerabdrücke von Geräten empfangen. Die Liste bleibt leer, bis ein Server-Update das ergänzt.",
+        "empty_how": "Sobald Geräte ihre Fingerabdrücke melden, steht hier jedes Gerät mit Status und letzter Prüfung. Markieren Sie ein Gerät als verifiziert, nachdem Sie seine Hardware geprüft haben, und widerrufen Sie es, wenn sich sein Fingerabdruck ändert."
     },
     "fleet": {
         "title": "Dashboard",

@@ -4529,7 +4529,9 @@
         "confirm_revoke_message": "O status muda para Revogado. Você pode marcá-lo como verificado novamente depois.",
         "legend_verified": "verificados",
         "legend_pending": "ainda não verificados",
-        "legend_failed": "impressão digital alterada ou revogada"
+        "legend_failed": "impressão digital alterada ou revogada",
+        "unavailable_note": "Esta versão do servidor ainda não consegue receber impressões de hardware dos dispositivos, por isso a lista fica vazia até que uma atualização do servidor o adicione.",
+        "empty_how": "Quando os dispositivos enviarem as suas impressões, cada um aparece aqui com o estado e a última verificação. Marque um dispositivo como verificado depois de confirmar o hardware e revogue-o se a impressão mudar."
     },
     "fleet": {
         "title": "Gestão de frota",

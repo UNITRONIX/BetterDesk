@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Durumu İptal edildi olur. Daha sonra yeniden doğrulandı olarak işaretleyebilirsiniz.",
         "legend_verified": "doğrulandı",
         "legend_pending": "henüz doğrulanmadı",
-        "legend_failed": "parmak izi değişti veya iptal edildi"
+        "legend_failed": "parmak izi değişti veya iptal edildi",
+        "unavailable_note": "Bu sunucu sürümü cihazlardan henüz donanım parmak izi alamıyor, bu yüzden bir sunucu güncellemesi bunu ekleyene kadar liste boş kalır.",
+        "empty_how": "Cihazlar parmak izlerini bildirdiğinde her biri durumu ve son kontrolüyle burada listelenir. Donanımını kontrol ettikten sonra cihazı doğrulandı olarak işaretleyin, parmak izi değişirse iptal edin."
     },
     "fleet": {
         "title": "Filo Yönetimi",

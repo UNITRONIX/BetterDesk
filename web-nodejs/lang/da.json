@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Status ændres til Tilbagekaldt. Du kan markere den som bekræftet igen senere.",
         "legend_verified": "bekræftet",
         "legend_pending": "ikke bekræftet endnu",
-        "legend_failed": "fingeraftryk ændret eller tilbagekaldt"
+        "legend_failed": "fingeraftryk ændret eller tilbagekaldt",
+        "unavailable_note": "Denne serverversion kan endnu ikke modtage hardwarefingeraftryk fra enheder, så listen forbliver tom, indtil en serveropdatering tilføjer det.",
+        "empty_how": "Når enheder rapporterer deres fingeraftryk, vises hver enhed her med status og seneste kontrol. Markér en enhed som verificeret, når du har kontrolleret dens hardware, og tilbagekald den, hvis dens fingeraftryk ændres."
     },
     "fleet": {
         "title": "Flådestyring",

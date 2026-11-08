@@ -4535,7 +4535,9 @@
         "confirm_revoke_message": "Trạng thái sẽ thành Đã thu hồi. Bạn có thể đánh dấu lại là đã xác minh sau.",
         "legend_verified": "đã xác minh",
         "legend_pending": "chưa xác minh",
-        "legend_failed": "dấu vân tay đã đổi hoặc bị thu hồi"
+        "legend_failed": "dấu vân tay đã đổi hoặc bị thu hồi",
+        "unavailable_note": "Phiên bản máy chủ này chưa nhận được dấu vân tay phần cứng từ thiết bị, nên danh sách sẽ trống cho đến khi một bản cập nhật máy chủ bổ sung tính năng này.",
+        "empty_how": "Khi thiết bị gửi dấu vân tay, mỗi thiết bị sẽ hiện ở đây cùng trạng thái và lần kiểm tra gần nhất. Đánh dấu thiết bị là đã xác minh sau khi kiểm tra phần cứng, và thu hồi nếu dấu vân tay thay đổi."
     },
     "fleet": {
         "title": "Quản lý đội tàu",
