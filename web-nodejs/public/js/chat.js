@@ -78,9 +78,45 @@
         dom.emojiPicker = $('#chat-emoji-picker');
         dom.presenceSelect = $('#chat-presence-select');
         dom.presenceDot = $('#chat-my-presence-dot');
-        dom.groupModal = $('#chat-group-modal');
-        dom.groupNameInput = $('#chat-group-name-input');
-        dom.memberSelect = $('#chat-member-select');
+        dom.split = $('#chat-split');
+        dom.connection = $('#chat-connection');
+        dom.sendStatus = $('#chat-send-status');
+        dom.searchToggle = $('#chat-search-toggle');
+        dom.emojiBtn = $('#chat-emoji-btn');
+    }
+
+    // "{count} new" and similar templates
+    function fill(template, values) {
+        return String(template).replace(/\{(\w+)\}/g, (m, k) => (values[k] !== undefined ? values[k] : m));
+    }
+
+    // Go stores group ids as "group:xxxx" and uses that id as the
+    // conversation id; older ids without the prefix get "group_".
+    function groupConvId(g) {
+        const id = String(g.id);
+        return id.startsWith('group:') ? id : 'group_' + id;
+    }
+
+    // Members come as a comma-separated string from the server (or an array)
+    function memberCount(g) {
+        const m = g.members;
+        if (Array.isArray(m)) return m.length;
+        if (typeof m === 'string') return m.split(',').map(s => s.trim()).filter(Boolean).length;
+        return 0;
+    }
+
+    function roleLabel(role) {
+        if (role === 'device') return _('chat.role_device');
+        if (role === 'operator') return _('chat.role_operator');
+        return role ? String(role) : '';
+    }
+
+    function unreadText(count) {
+        return fill(_('chat.unread_count'), { count: count > 99 ? '99+' : count });
+    }
+
+    function setConnected(connected) {
+        if (dom.connection) dom.connection.hidden = !!connected;
     }
 
     // ==================== WebSocket ====================
@@ -93,6 +129,7 @@
 
         ws.onopen = () => {
             reconnectDelay = 2000;
+            setConnected(true);
             ws.send(JSON.stringify({ type: 'hello', device_id: 'panel', role: 'operator' }));
             ws.send(JSON.stringify({ type: 'get_contacts', device_id: 'panel' }));
 
@@ -107,6 +144,7 @@
         };
 
         ws.onclose = () => {
+            setConnected(false);
             scheduleReconnect();
         };
 
@@ -143,6 +181,13 @@
             case 'groups':
                 groups = frame.groups || [];
                 renderGroups();
+                break;
+
+            case 'group_created':
+                if (typeof Notifications !== 'undefined') {
+                    Notifications.success(fill(_('chat.group_created'), { name: frame.name || '' }));
+                }
+                showTab('groups');
                 break;
 
             case 'history': {
@@ -299,7 +344,7 @@
     function renderContacts() {
         if (!dom.contactsList) return;
         if (contacts.length === 0) {
-            dom.contactsList.innerHTML = `<div class="chat-list-empty"><span class="material-icons">forum</span><p>${_('chat.no_contacts')}</p></div>`;
+            dom.contactsList.innerHTML = `<li class="list-row is-empty chat-list-empty">${Utils.escapeHtml(_('chat.no_contacts'))}</li>`;
             return;
         }
 
@@ -313,71 +358,62 @@
         dom.contactsList.innerHTML = sorted.map(c => {
             const conv = conversations.get(c.id);
             const unread = conv ? conv.unread : 0;
-            const name = Utils.escapeHtml(c.name || c.id);
-            const presenceClass = c.online ? (c.status || 'online') : 'offline';
-            const initial = (c.name || c.id).charAt(0).toUpperCase();
-            const color = Utils.sanitizeColor(c.avatar_color || '#4f6ef7');
-            const roleClass = c.role ? String(c.role).replace(/[^a-z0-9_-]/gi, '') : '';
-            const roleLabel = c.role ? Utils.escapeHtml(c.role) : '';
+            const presenceKey = c.online ? (c.status || 'online') : 'offline';
+            const sub = [roleLabel(c.role), _(`chat.presence_${presenceKey}`)].filter(Boolean).join(', ');
             const lastMsg = conv && conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : null;
-            const preview = lastMsg ? Utils.escapeHtml(lastMsg.text || '').slice(0, 40) : '';
-
-            return `
-                <div class="chat-list-item ${activeConvId === c.id ? 'active' : ''}" data-id="${Utils.escapeHtml(c.id)}" data-type="contact">
-                    <div class="chat-avatar" style="background-color: ${color}">
-                        ${initial}
-                        <span class="chat-presence-indicator ${presenceClass}"></span>
-                    </div>
-                    <div class="chat-list-item-body">
-                        <div class="chat-list-item-header">
-                            <span class="chat-list-name">${name}</span>
-                            ${lastMsg ? `<span class="chat-list-time">${formatTime(lastMsg.timestamp)}</span>` : ''}
-                        </div>
-                        <div class="chat-list-preview">
-                            ${roleLabel ? `<span class="chat-role-badge ${roleClass}">${roleLabel}</span>` : ''}
-                            ${preview}
-                        </div>
-                    </div>
-                    ${unread > 0 ? `<span class="chat-unread-badge">${unread > 99 ? '99+' : unread}</span>` : ''}
-                </div>
-            `;
+            return listRowHtml({
+                id: c.id,
+                type: 'contact',
+                name: c.name || c.id,
+                sub,
+                presence: presenceKey,
+                lastMsg,
+                unread,
+            });
         }).join('');
+    }
 
-        // Attach click handlers
-        dom.contactsList.querySelectorAll('.chat-list-item').forEach(el => {
-            el.addEventListener('click', () => openConversation(el.dataset.id, 'contact'));
-        });
+    // One conversation row: name, who or what it is, the last message, unread count as text
+    function listRowHtml({ id, type, name, sub, presence, lastMsg, unread }) {
+        const active = activeConvId === id;
+        const preview = lastMsg ? (lastMsg.text || (lastMsg.file ? lastMsg.file.name : '')) : '';
+        return `
+            <li>
+                <button type="button" class="list-row chat-list-item${active ? ' active' : ''}" data-id="${Utils.escapeHtml(id)}" data-type="${type}"${active ? ' aria-current="true"' : ''}>
+                    <span class="row-main">
+                        <span class="row-title chat-list-name">${presence ? `<span class="chat-presence-mark presence-${Utils.escapeHtml(presence)}" aria-hidden="true"></span>` : ''}${Utils.escapeHtml(name)}</span>
+                        <span class="row-sub chat-list-meta">${Utils.escapeHtml(sub)}</span>
+                        ${preview ? `<span class="row-sub chat-list-preview">${Utils.escapeHtml(preview)}</span>` : ''}
+                    </span>
+                    <span class="row-end">
+                        ${lastMsg ? `<span class="chat-list-time">${formatTime(lastMsg.timestamp)}</span>` : ''}
+                        ${unread > 0 ? `<span class="chat-unread-badge">${Utils.escapeHtml(unreadText(unread))}</span>` : ''}
+                    </span>
+                </button>
+            </li>`;
     }
 
     function renderGroups() {
         if (!dom.groupsList) return;
         if (groups.length === 0) {
-            dom.groupsList.innerHTML = `<div class="chat-list-empty"><span class="material-icons">group</span><p>${_('chat.no_groups')}</p></div>`;
+            dom.groupsList.innerHTML = `<li class="list-row is-empty chat-list-empty">${Utils.escapeHtml(_('chat.no_groups_hint'))}</li>`;
             return;
         }
 
         dom.groupsList.innerHTML = groups.map(g => {
-            const conv = conversations.get(`group_${g.id}`);
-            const unread = conv ? conv.unread : 0;
-            const name = Utils.escapeHtml(g.name);
-
-            return `
-                <div class="chat-list-item ${activeConvId === 'group_' + g.id ? 'active' : ''}" data-id="group_${Utils.escapeHtml(g.id)}" data-type="group">
-                    <div class="chat-avatar group-avatar">
-                        <span class="material-icons">groups</span>
-                    </div>
-                    <div class="chat-list-item-body">
-                        <span class="chat-list-name">${name}</span>
-                        <span class="chat-list-members">${(g.members || []).length} ${_('chat.members')}</span>
-                    </div>
-                    ${unread > 0 ? `<span class="chat-unread-badge">${unread}</span>` : ''}
-                </div>
-            `;
+            const convId = groupConvId(g);
+            const conv = conversations.get(convId);
+            const lastMsg = conv && conv.messages.length > 0 ? conv.messages[conv.messages.length - 1] : null;
+            return listRowHtml({
+                id: convId,
+                type: 'group',
+                name: g.name,
+                sub: fill(_('chat.member_count'), { count: memberCount(g) }),
+                presence: '',
+                lastMsg,
+                unread: conv ? conv.unread : 0,
+            });
         }).join('');
-
-        dom.groupsList.querySelectorAll('.chat-list-item').forEach(el => {
-            el.addEventListener('click', () => openConversation(el.dataset.id, 'group'));
-        });
     }
 
     // ==================== Conversation ====================
@@ -398,13 +434,21 @@
         // Update UI
         dom.emptyState.style.display = 'none';
         dom.conversation.style.display = 'flex';
+        // On a phone the list and the conversation take turns
+        if (dom.split) dom.split.classList.add('is-detail-open');
+        if (dom.sendStatus) dom.sendStatus.textContent = '';
 
         updateConvHeader();
         renderMessages();
         scrollToBottom();
 
         // Mark active in list
-        $$('.chat-list-item').forEach(el => el.classList.toggle('active', el.dataset.id === convId));
+        $$('.chat-list-item').forEach(el => {
+            const on = el.dataset.id === convId;
+            el.classList.toggle('active', on);
+            if (on) el.setAttribute('aria-current', 'true');
+            else el.removeAttribute('aria-current');
+        });
 
         // Load history from server
         send({ type: 'get_history', device_id: 'panel', conversation_id: convId });
@@ -420,12 +464,11 @@
         if (!activeConvId) return;
 
         if (activeConvType === 'group') {
-            const g = groups.find(g => 'group_' + g.id === activeConvId);
+            const g = groups.find(g => groupConvId(g) === activeConvId);
             if (g) {
                 dom.convName.textContent = g.name;
-                dom.convStatus.textContent = `${(g.members || []).length} ${_('chat.members')}`;
-                dom.convAvatar.innerHTML = '<span class="material-icons">groups</span>';
-                dom.convAvatar.className = 'chat-conv-avatar group-avatar';
+                dom.convStatus.textContent = fill(_('chat.member_count'), { count: memberCount(g) });
+                dom.convStatus.className = 'chat-conv-status';
             }
         } else {
             const c = contacts.find(c => c.id === activeConvId);
@@ -433,11 +476,11 @@
                 const name = c.name || c.id;
                 dom.convName.textContent = name;
                 const presenceKey = c.online ? (c.status || 'online') : 'offline';
-                dom.convStatus.textContent = _(`chat.presence_${presenceKey}`);
+                dom.convStatus.textContent = [roleLabel(c.role), _(`chat.presence_${presenceKey}`)].filter(Boolean).join(', ');
                 dom.convStatus.className = `chat-conv-status presence-${presenceKey}`;
-                dom.convAvatar.textContent = name.charAt(0).toUpperCase();
-                dom.convAvatar.style.backgroundColor = c.avatar_color || '#4f6ef7';
-                dom.convAvatar.className = 'chat-conv-avatar';
+            } else {
+                dom.convName.textContent = activeConvId;
+                dom.convStatus.textContent = '';
             }
         }
     }
@@ -462,7 +505,7 @@
         if (!dom.messagesInner) return;
         const conv = conversations.get(activeConvId);
         if (!conv || conv.messages.length === 0) {
-            dom.messagesInner.innerHTML = `<div class="chat-messages-empty"><p>${_('chat.no_messages')}</p></div>`;
+            dom.messagesInner.innerHTML = `<p class="state chat-messages-empty">${Utils.escapeHtml(_('chat.no_messages'))}</p>`;
             return;
         }
 
@@ -473,7 +516,7 @@
             // Date separator
             const date = formatDate(msg.timestamp);
             if (date !== lastDate) {
-                html += `<div class="chat-date-separator"><span>${date}</span></div>`;
+                html += `<p class="chat-date-separator">${Utils.escapeHtml(date)}</p>`;
                 lastDate = date;
             }
             html += renderMessageHtml(msg);
@@ -488,52 +531,45 @@
         const msgId = Utils.escapeHtml(String(msg.id ?? ''));
 
         if (msg.system) {
-            return `<div class="chat-msg system" data-id="${msgId}">
-                <span class="material-icons">info</span>
-                <span>${Utils.escapeHtml(msg.text)}</span>
-            </div>`;
+            return `<div class="chat-msg system" data-id="${msgId}">${Utils.escapeHtml(msg.text)}</div>`;
         }
 
         const isMe = msg.from === 'operator' || msg.from === 'panel';
         const name = Utils.escapeHtml(msg.from_name || msg.from);
         const time = formatTime(msg.timestamp);
-        const readIcon = msg.read_by && msg.read_by.length > 0 ? 'done_all' : 'done';
+        const readText = msg.read_by && msg.read_by.length > 0 ? _('chat.read_receipt') : _('chat.delivered');
 
         let content = '';
         if (msg.file) {
-            content = `<div class="chat-file-msg">
-                <span class="material-icons">description</span>
+            content = `<p class="chat-file-msg">
                 <a href="${Utils.escapeHtml(msg.file.url)}" target="_blank" rel="noopener">${Utils.escapeHtml(msg.file.name)}</a>
                 <span class="chat-file-size-label">${formatFileSize(msg.file.size)}</span>
-            </div>`;
+            </p>`;
         }
         content += msg.text ? `<div class="chat-msg-text">${linkify(Utils.escapeHtml(msg.text))}</div>` : '';
 
-        // Reactions
+        // Reactions: the emoji and how many, as plain buttons
         let reactionsHtml = '';
         if (msg.reactions && Object.keys(msg.reactions).length > 0) {
             reactionsHtml = '<div class="chat-reactions">';
             for (const [emoji, users] of Object.entries(msg.reactions)) {
                 const safeEmoji = Utils.escapeHtml(emoji);
                 const safeTitle = Utils.escapeHtml((users || []).join(', '));
-                reactionsHtml += `<span class="chat-reaction" data-emoji="${safeEmoji}" title="${safeTitle}">${safeEmoji} ${users.length}</span>`;
+                reactionsHtml += `<button type="button" class="chat-reaction" data-emoji="${safeEmoji}" title="${safeTitle}">${safeEmoji} ${(users || []).length}</button>`;
             }
             reactionsHtml += '</div>';
         }
 
         return `
             <div class="chat-msg ${isMe ? 'mine' : 'theirs'}" data-id="${msgId}">
-                ${!isMe ? `<div class="chat-msg-sender">${name}</div>` : ''}
-                <div class="chat-msg-bubble">
-                    ${content}
-                    <div class="chat-msg-meta">
-                        <span class="chat-msg-time">${time}</span>
-                        ${isMe ? `<span class="material-icons chat-msg-read">${readIcon}</span>` : ''}
-                    </div>
-                    <button class="chat-msg-react-btn" title="${_('chat.react')}">
-                        <span class="material-icons">add_reaction</span>
-                    </button>
+                <div class="chat-msg-head">
+                    <span class="chat-msg-sender">${name}</span>
+                    <span class="chat-msg-meta">
+                        <span class="chat-msg-time">${time}</span>${isMe ? `, <span class="chat-msg-read">${Utils.escapeHtml(readText)}</span>` : ''}
+                    </span>
+                    <button type="button" class="btn-link chat-msg-react-btn">${Utils.escapeHtml(_('chat.react'))}</button>
                 </div>
+                <div class="chat-msg-bubble">${content}</div>
                 ${reactionsHtml}
             </div>
         `;
@@ -584,8 +620,8 @@
 
     function markMessagesRead(ids) {
         ids.forEach(id => {
-            const el = document.querySelector(`.chat-msg[data-id="${id}"] .chat-msg-read`);
-            if (el) el.textContent = 'done_all';
+            const el = document.querySelector(`.chat-msg[data-id="${CSS.escape(String(id))}"] .chat-msg-read`);
+            if (el) el.textContent = _('chat.read_receipt');
         });
     }
 
@@ -593,6 +629,16 @@
     function sendMessage() {
         const text = (dom.input.value || '').trim();
         if (!text && !pendingFile) return;
+
+        // Say so instead of dropping the message while the socket is down
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            if (dom.sendStatus) {
+                dom.sendStatus.textContent = _('chat.send_failed');
+                dom.sendStatus.className = 'form-status chat-send-status is-error';
+            }
+            return;
+        }
+        if (dom.sendStatus) dom.sendStatus.textContent = '';
 
         // Check for quick commands
         if (text.startsWith('/')) {
@@ -676,7 +722,7 @@
 
     function showTyping(name) {
         if (!dom.typing) return;
-        dom.typingText.textContent = `${name} ${_('chat.typing_indicator')}`;
+        dom.typingText.textContent = fill(_('chat.typing_name'), { name });
         dom.typing.style.display = 'flex';
 
         // Clear after 3s
@@ -694,14 +740,26 @@
         const def = QUICK_COMMANDS[cmd];
         if (!def) return false;
 
-        if (def.confirm) {
-            if (!confirm(`Execute command: ${def.label} on ${activeConvId}?`)) return true;
+        if (def.confirm && typeof Modal !== 'undefined') {
+            const convId = activeConvId;
+            Modal.confirm({
+                title: fill(_('chat.command_confirm'), { command: def.label, device: convId }),
+                message: fill(_('chat.command_confirm_hint'), { device: convId }),
+                confirmLabel: def.label,
+                danger: true,
+            }).then(ok => { if (ok) runQuickCommand(cmd, def, parts, convId); });
+            return true;
         }
 
+        runQuickCommand(cmd, def, parts, activeConvId);
+        return true;
+    }
+
+    function runQuickCommand(cmd, def, parts, convId) {
         send({
             type: 'quick_command',
-            conversation_id: activeConvId,
-            device_id: activeConvId,
+            conversation_id: convId,
+            device_id: convId,
             action: def.action,
             args: parts.slice(1).join(' '),
         });
@@ -710,45 +768,88 @@
         const sysMsg = {
             id: Date.now(), from: 'system', system: true,
             text: `Command sent: ${cmd} ${parts.slice(1).join(' ')}`,
-            timestamp: Date.now(), conversation_id: activeConvId,
+            timestamp: Date.now(), conversation_id: convId,
         };
-        const conv = conversations.get(activeConvId);
+        const conv = conversations.get(convId);
         if (conv) {
             conv.messages.push(sysMsg);
-            appendMessageDom(sysMsg);
-            scrollToBottom();
+            if (convId === activeConvId) {
+                appendMessageDom(sysMsg);
+                scrollToBottom();
+            }
         }
-
-        return true;
     }
 
     // ==================== Reactions ====================
-    function showReactionPicker(msgEl, anchorEl) {
+    // One small floating picker for reactions and for the message field.
+    // Escape or a click outside closes it and puts focus back on the button.
+    let pickerAnchor = null;
+
+    function closeEmojiPicker(returnFocus) {
+        if (!dom.emojiPicker || dom.emojiPicker.style.display === 'none') return;
+        dom.emojiPicker.style.display = 'none';
+        document.removeEventListener('click', onPickerOutside, true);
+        document.removeEventListener('keydown', onPickerKey, true);
+        if (pickerAnchor) {
+            pickerAnchor.setAttribute('aria-expanded', 'false');
+            if (returnFocus && document.contains(pickerAnchor)) pickerAnchor.focus();
+        }
+        pickerAnchor = null;
+    }
+
+    function onPickerOutside(e) {
+        if (dom.emojiPicker.contains(e.target) || (pickerAnchor && pickerAnchor.contains(e.target))) return;
+        closeEmojiPicker(false);
+    }
+
+    function onPickerKey(e) {
+        if (e.key === 'Escape') {
+            e.stopPropagation();
+            closeEmojiPicker(true);
+        }
+    }
+
+    function openEmojiPicker(anchorEl, onPick, placeAbove) {
         if (!dom.emojiPicker) return;
+        closeEmojiPicker(false);
         dom.emojiPicker.innerHTML = EMOJI_SET.map(e =>
-            `<button class="emoji-btn" data-emoji="${e}">${e}</button>`
+            `<button type="button" class="emoji-btn" role="menuitem" data-emoji="${e}">${e}</button>`
         ).join('');
         dom.emojiPicker.style.display = 'flex';
+        pickerAnchor = anchorEl;
+        anchorEl.setAttribute('aria-expanded', 'true');
 
-        // Position near the message
+        // Fixed position next to the button, kept inside the window
         const rect = anchorEl.getBoundingClientRect();
-        dom.emojiPicker.style.top = (rect.top - 50) + 'px';
-        dom.emojiPicker.style.left = rect.left + 'px';
+        const pw = dom.emojiPicker.offsetWidth;
+        const ph = dom.emojiPicker.offsetHeight;
+        const left = Math.max(8, Math.min(rect.left, window.innerWidth - pw - 8));
+        const top = placeAbove || rect.bottom + ph + 8 > window.innerHeight
+            ? Math.max(8, rect.top - ph - 4)
+            : rect.bottom + 4;
+        dom.emojiPicker.style.left = left + 'px';
+        dom.emojiPicker.style.top = top + 'px';
 
         dom.emojiPicker.querySelectorAll('.emoji-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                toggleReaction(msgEl.dataset.id, btn.dataset.emoji);
-                dom.emojiPicker.style.display = 'none';
+                closeEmojiPicker(false);
+                onPick(btn.dataset.emoji);
             });
         });
+        const first = dom.emojiPicker.querySelector('.emoji-btn');
+        if (first) first.focus();
 
-        // Close on outside click
         setTimeout(() => {
-            document.addEventListener('click', function closePicker() {
-                dom.emojiPicker.style.display = 'none';
-                document.removeEventListener('click', closePicker);
-            }, { once: true });
-        }, 10);
+            document.addEventListener('click', onPickerOutside, true);
+            document.addEventListener('keydown', onPickerKey, true);
+        }, 0);
+    }
+
+    function showReactionPicker(msgEl, anchorEl) {
+        openEmojiPicker(anchorEl, (emoji) => {
+            toggleReaction(msgEl.dataset.id, emoji);
+            anchorEl.focus();
+        }, false);
     }
 
     function toggleReaction(messageId, emoji) {
@@ -773,7 +874,8 @@
             const count = parseInt(badge.textContent.replace(emoji, '').trim()) || 1;
             badge.textContent = `${emoji} ${count + 1}`;
         } else {
-            badge = document.createElement('span');
+            badge = document.createElement('button');
+            badge.type = 'button';
             badge.className = 'chat-reaction';
             badge.dataset.emoji = emoji;
             badge.textContent = `${emoji} 1`;
@@ -817,35 +919,49 @@
             dom.searchResults.style.display = 'none';
             return;
         }
+        dom.searchResults.style.display = 'block';
+        dom.searchResults.innerHTML = `<p class="state">${Utils.escapeHtml(_('chat.searching'))}</p>`;
         try {
             const resp = await fetch(`/api/chat/search?q=${encodeURIComponent(query)}&conversation_id=${encodeURIComponent(activeConvId || '')}`);
+            if (!resp.ok) throw new Error(resp.statusText || String(resp.status));
             const data = await resp.json();
             const msgs = data.messages || [];
 
-            dom.searchResults.style.display = 'block';
             if (msgs.length === 0) {
-                dom.searchResults.innerHTML = `<div class="chat-search-no-results">${_('chat.no_results')}</div>`;
+                dom.searchResults.innerHTML = `<p class="state chat-search-no-results">${Utils.escapeHtml(_('chat.no_results'))}</p>`;
                 return;
             }
 
-            dom.searchResults.innerHTML = msgs.map(m => `
-                <div class="chat-search-result" data-conv="${Utils.escapeHtml(m.conversation_id)}" data-id="${Utils.escapeHtml(String(m.id ?? ''))}">
-                    <span class="chat-search-from">${Utils.escapeHtml(m.from_name || m.from_id)}</span>
-                    <span class="chat-search-text">${Utils.escapeHtml((m.text || '').slice(0, 80))}</span>
-                    <span class="chat-search-time">${formatTime(m.created_at || m.timestamp)}</span>
-                </div>
-            `).join('');
+            dom.searchResults.innerHTML = `<ul class="list">${msgs.map(m => `
+                <li><button type="button" class="list-row chat-search-result" data-conv="${Utils.escapeHtml(m.conversation_id)}" data-id="${Utils.escapeHtml(String(m.id ?? ''))}">
+                    <span class="row-main">
+                        <span class="row-title chat-search-from">${Utils.escapeHtml(m.from_name || m.from_id)}</span>
+                        <span class="row-sub chat-search-text">${Utils.escapeHtml((m.text || '').slice(0, 120))}</span>
+                    </span>
+                    <span class="row-end chat-search-time">${formatTime(m.created_at || m.timestamp)}</span>
+                </button></li>
+            `).join('')}</ul>`;
 
             dom.searchResults.querySelectorAll('.chat-search-result').forEach(el => {
                 el.addEventListener('click', () => {
-                    openConversation(el.dataset.conv, 'contact');
-                    dom.searchResults.style.display = 'none';
-                    dom.searchBar.style.display = 'none';
+                    const conv = el.dataset.conv;
+                    openConversation(conv, conv.startsWith('group') ? 'group' : 'contact');
+                    closeSearch();
                 });
             });
         } catch (e) {
-            console.warn('[Chat] Search failed:', e);
+            dom.searchResults.innerHTML = `<p class="state is-error">${Utils.escapeHtml(_('chat.search_failed'))}
+                <button type="button" class="btn btn-sm" data-search-retry>${Utils.escapeHtml(_('actions.retry'))}</button></p>`;
+            const retry = dom.searchResults.querySelector('[data-search-retry]');
+            if (retry) retry.addEventListener('click', () => searchMessages(dom.searchInput.value));
         }
+    }
+
+    function closeSearch() {
+        dom.searchBar.style.display = 'none';
+        dom.searchResults.style.display = 'none';
+        dom.searchInput.value = '';
+        if (dom.searchToggle) dom.searchToggle.setAttribute('aria-expanded', 'false');
     }
 
     // ==================== Push Notifications ====================
@@ -888,30 +1004,74 @@
 
     // ==================== Group Creation ====================
     function showCreateGroupModal() {
-        dom.groupModal.style.display = 'flex';
-        dom.groupNameInput.value = '';
-
-        // Populate member checkboxes
-        dom.memberSelect.innerHTML = contacts.map(c => `
-            <label class="chat-member-option">
+        if (typeof Modal === 'undefined') return;
+        const people = contacts.filter(c => c.role === 'operator');
+        const devices = contacts.filter(c => c.role !== 'operator');
+        const option = (c) => `
+            <li><label class="checkbox-row chat-member-option">
                 <input type="checkbox" value="${Utils.escapeHtml(c.id)}">
                 <span>${Utils.escapeHtml(c.name || c.id)}</span>
-            </label>
-        `).join('');
+            </label></li>`;
+        const block = (title, list) => list.length ? `
+            <fieldset class="chat-member-group">
+                <legend>${Utils.escapeHtml(title)}</legend>
+                <ul class="chat-member-list">${list.map(option).join('')}</ul>
+            </fieldset>` : '';
 
-        dom.groupNameInput.focus();
+        Modal.show({
+            title: _('chat.create_group'),
+            content: `
+                <div class="form-group">
+                    <label class="form-label" for="chat-group-name-input">${Utils.escapeHtml(_('chat.group_name'))}</label>
+                    <input type="text" class="form-input" id="chat-group-name-input" maxlength="64">
+                </div>
+                <div class="form-group">
+                    <span class="form-label" id="chat-member-select-label">${Utils.escapeHtml(_('chat.group_members'))}</span>
+                    <p class="form-hint">${Utils.escapeHtml(_('chat.group_members_hint'))}</p>
+                    <div class="chat-member-select" id="chat-member-select" role="group" aria-labelledby="chat-member-select-label">
+                        ${contacts.length
+                            ? block(_('chat.role_operators'), people) + block(_('chat.role_devices'), devices)
+                            : `<p class="state">${Utils.escapeHtml(_('chat.no_contacts'))}</p>`}
+                    </div>
+                </div>
+                <p class="form-status is-error" id="chat-group-status" aria-live="polite"></p>`,
+            buttons: [
+                { label: _('actions.cancel'), class: '', onClick: () => Modal.close() },
+                { label: _('chat.create_group'), class: 'btn-primary', onClick: createGroup },
+            ],
+        });
     }
 
     function createGroup() {
-        const name = (dom.groupNameInput.value || '').trim();
-        if (!name) return;
+        const nameInput = document.getElementById('chat-group-name-input');
+        const memberSelect = document.getElementById('chat-member-select');
+        const status = document.getElementById('chat-group-status');
+        if (!nameInput || !memberSelect) return;
+
+        const name = (nameInput.value || '').trim();
+        if (!name) {
+            status.textContent = _('chat.group_name_required');
+            nameInput.focus();
+            return;
+        }
 
         const memberIds = [];
-        dom.memberSelect.querySelectorAll('input:checked').forEach(cb => memberIds.push(cb.value));
-        if (memberIds.length === 0) return;
+        memberSelect.querySelectorAll('input:checked').forEach(cb => memberIds.push(cb.value));
+        if (memberIds.length === 0) {
+            status.textContent = _('chat.group_members_required');
+            return;
+        }
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            status.textContent = _('chat.send_failed');
+            return;
+        }
+
+        // The console lists groups that include "panel", so the group is
+        // always created with the console as a member.
+        if (!memberIds.includes('panel')) memberIds.unshift('panel');
 
         send({ type: 'create_group', name, member_ids: memberIds });
-        dom.groupModal.style.display = 'none';
+        Modal.close();
     }
 
     // ==================== Helpers ====================
@@ -956,15 +1116,7 @@
     }
 
     function updateUnreadBadge(convId, count) {
-        const el = document.querySelector(`.chat-list-item[data-id="${convId}"] .chat-unread-badge`);
-        if (el) {
-            if (count > 0) {
-                el.textContent = count > 99 ? '99+' : count;
-                el.style.display = '';
-            } else {
-                el.style.display = 'none';
-            }
-        }
+        // The lists are re-rendered, which writes the "{count} new" text
         renderContacts();
         renderGroups();
     }
@@ -977,6 +1129,18 @@
         if (!dom.input) return;
         dom.input.style.height = 'auto';
         dom.input.style.height = Math.min(dom.input.scrollHeight, 120) + 'px';
+    }
+
+    function showTab(target) {
+        $$('.chat-tab').forEach(t => {
+            const on = t.dataset.tab === target;
+            t.classList.toggle('active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            t.tabIndex = on ? 0 : -1;
+        });
+        $$('[data-tab-content]').forEach(panel => {
+            panel.style.display = panel.dataset.tabContent === target ? '' : 'none';
+        });
     }
 
     // ==================== Event Binding ====================
@@ -993,36 +1157,63 @@
         });
         dom.input.addEventListener('input', autoResizeInput);
 
-        // Tab switching
+        // Tab switching (arrow keys move between the two tabs)
         $$('.chat-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                $$('.chat-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                const target = tab.dataset.tab;
-                $$('[data-tab-content]').forEach(panel => {
-                    panel.style.display = panel.dataset.tabContent === target ? '' : 'none';
-                });
+            tab.addEventListener('click', () => showTab(tab.dataset.tab));
+            tab.addEventListener('keydown', (e) => {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                const tabs = [...$$('.chat-tab')];
+                const next = tabs[(tabs.indexOf(tab) + 1) % tabs.length];
+                showTab(next.dataset.tab);
+                next.focus();
             });
         });
 
-        // Back button (mobile)
+        // Opening a conversation from either list
+        [dom.contactsList, dom.groupsList].forEach(list => {
+            if (!list) return;
+            list.addEventListener('click', (e) => {
+                const row = e.target.closest('.chat-list-item');
+                if (row) openConversation(row.dataset.id, row.dataset.type === 'group' ? 'group' : 'contact');
+            });
+        });
+
+        // Back to the list (shown on narrow screens, where only one pane fits)
         $('#chat-back-btn').addEventListener('click', () => {
+            const wasActive = activeConvId;
             dom.conversation.style.display = 'none';
-            dom.emptyState.style.display = 'flex';
+            dom.emptyState.style.display = '';
             activeConvId = null;
+            if (dom.split) dom.split.classList.remove('is-detail-open');
+            $$('.chat-list-item').forEach(el => {
+                el.classList.remove('active');
+                el.removeAttribute('aria-current');
+            });
+            const row = wasActive && document.querySelector(`.chat-list-item[data-id="${CSS.escape(wasActive)}"]`);
+            if (row) row.focus();
         });
 
         // Search toggle
         $('#chat-search-toggle').addEventListener('click', () => {
             const visible = dom.searchBar.style.display !== 'none';
-            dom.searchBar.style.display = visible ? 'none' : 'flex';
+            if (visible) {
+                closeSearch();
+                return;
+            }
+            dom.searchBar.style.display = '';
             dom.searchResults.style.display = 'none';
-            if (!visible) dom.searchInput.focus();
+            dom.searchToggle.setAttribute('aria-expanded', 'true');
+            dom.searchInput.focus();
         });
         $('#chat-search-close').addEventListener('click', () => {
-            dom.searchBar.style.display = 'none';
-            dom.searchResults.style.display = 'none';
-            dom.searchInput.value = '';
+            closeSearch();
+            dom.searchToggle.focus();
+        });
+        dom.searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSearch();
+                dom.searchToggle.focus();
+            }
         });
         dom.searchInput.addEventListener('input', () => {
             clearTimeout(searchDebounce);
@@ -1053,26 +1244,13 @@
         $('#chat-emoji-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             if (dom.emojiPicker.style.display === 'flex') {
-                dom.emojiPicker.style.display = 'none';
+                closeEmojiPicker(true);
                 return;
             }
-            dom.emojiPicker.innerHTML = EMOJI_SET.map(emoji =>
-                `<button class="emoji-btn" data-emoji="${emoji}">${emoji}</button>`
-            ).join('');
-            dom.emojiPicker.style.display = 'flex';
-
-            // Position above emoji button
-            const rect = e.currentTarget.getBoundingClientRect();
-            dom.emojiPicker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-            dom.emojiPicker.style.left = rect.left + 'px';
-
-            dom.emojiPicker.querySelectorAll('.emoji-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    dom.input.value += btn.dataset.emoji;
-                    dom.emojiPicker.style.display = 'none';
-                    dom.input.focus();
-                });
-            });
+            openEmojiPicker(e.currentTarget, (emoji) => {
+                dom.input.value += emoji;
+                dom.input.focus();
+            }, true);
         });
 
         // Presence selector
@@ -1082,9 +1260,6 @@
 
         // New group
         $('#chat-new-group-btn').addEventListener('click', showCreateGroupModal);
-        $('#chat-group-modal-close').addEventListener('click', () => dom.groupModal.style.display = 'none');
-        $('#chat-group-cancel').addEventListener('click', () => dom.groupModal.style.display = 'none');
-        $('#chat-group-create').addEventListener('click', createGroup);
 
         // Request notification permission
         if ('Notification' in window && Notification.permission === 'default') {
