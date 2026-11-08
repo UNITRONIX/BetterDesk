@@ -1,16 +1,16 @@
 /**
- * BetterDesk Console — Server Management page (BETA)
- * Tabs: overview, terminal, files, services
+ * BetterDesk Console: Server status, Terminal, Files and Services.
+ * One view per page load; the route renders only the panel for ?tab=.
  */
 
 (function () {
     'use strict';
 
-    // ── i18n helpers ─────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────
 
-    function t(key, fallback) {
-        if (window.i18n && typeof window.i18n.t === 'function') return window.i18n.t(key, fallback);
-        return fallback || key;
+    function t(key, vars) {
+        if (typeof window._ === 'function') return window._(key, vars || {});
+        return key;
     }
 
     function getCsrfToken() {
@@ -54,9 +54,13 @@
         const d = Math.floor(s / 86400);
         const h = Math.floor((s % 86400) / 3600);
         const m = Math.floor((s % 3600) / 60);
-        if (d) return `${d}d ${h}h ${m}m`;
-        if (h) return `${h}h ${m}m`;
-        return `${m}m`;
+        if (d) return t('server_mgmt.dur_dh', { d, h });
+        if (h) return t('server_mgmt.dur_hm', { h, m });
+        return t('server_mgmt.dur_m', { m });
+    }
+
+    function pct(v) {
+        return `${Math.round(v)} %`;
     }
 
     function escapeHtml(str) {
@@ -66,321 +70,441 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function showToast(msg, type) {
-        if (window.Toast && typeof window.Toast[type || 'info'] === 'function') {
-            window.Toast[type || 'info']('', msg);
-        } else {
-            console.log('[server-mgmt]', type || 'info', msg);
+    function notify(type, msg) {
+        if (window.Notifications && typeof window.Notifications[type] === 'function') {
+            window.Notifications[type](msg);
         }
     }
 
-    // ── Tab switching ────────────────────────────────────────────────────
+    function setText(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    }
 
-    function activateTab(target) {
-        const buttons = document.querySelectorAll('.sm-tab-btn');
-        const panels = document.querySelectorAll('.sm-tab-panel');
-        let resolved = target;
-        if (!document.getElementById(`sm-panel-${resolved}`)) resolved = 'overview';
-        buttons.forEach((b) => b.classList.toggle('active', b.getAttribute('data-tab') === resolved));
-        panels.forEach((p) => {
-            const match = p.id === `sm-panel-${resolved}`;
-            p.classList.toggle('active', match);
-            p.hidden = !match;
-        });
-        if (resolved === 'overview') overview.start();
-        else overview.stop();
-        if (resolved === 'files' && !filesView.loaded) filesView.refresh();
-        if (resolved === 'services' && !servicesView.loaded) servicesView.refresh();
-        if (resolved === 'terminal') {
-            terminalView.fit();
-            // Auto-connect on first visit (BETA convenience)
-            if (!terminalView.hasConnected()) terminalView.connect();
+    function setMeter(prefix, value) {
+        const v = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+        const fill = document.getElementById(`sm-${prefix}-fill`);
+        const gauge = document.getElementById(`sm-${prefix}-gauge`);
+        if (fill) fill.style.width = `${v}%`;
+        if (gauge) {
+            gauge.classList.toggle('is-high', v >= 80 && v < 95);
+            gauge.classList.toggle('is-full', v >= 95);
         }
-        // Reflect in URL without reload
-        try {
-            const url = new URL(window.location.href);
-            url.searchParams.set('tab', resolved);
-            window.history.replaceState({}, '', url.toString());
-        } catch (_) { /* ignore */ }
+        setText(`sm-${prefix}-value`, pct(v));
+        return v;
     }
 
-    function initTabs() {
-        const buttons = document.querySelectorAll('.sm-tab-btn');
-        buttons.forEach((btn) => {
-            btn.addEventListener('click', () => activateTab(btn.getAttribute('data-tab')));
-        });
+    function meterHtml(value) {
+        const v = Math.max(0, Math.min(100, Math.round(value)));
+        const cls = v >= 95 ? ' is-full' : (v >= 80 ? ' is-high' : '');
+        return `<div class="meter sm-meter${cls}"><span class="meter-bar"><span class="meter-fill" style="width:${v}%"></span></span><span class="meter-value">${pct(v)}</span></div>`;
     }
 
-    // ── Overview tab ─────────────────────────────────────────────────────
+    // ── Server status ────────────────────────────────────────────────────
 
     const overview = (() => {
+        const TICK_MS = 2000;
+        const STATUS_EVERY = 5; // ticks between server status checks (10 s)
         let timer = null;
-        let lastInfo = null;
-        const history = []; // { cpu, mem }
+        let ticks = 0;
+        let info = null;
+        let chartDrawn = false;
+        let failures = 0;
+
+        function setServer(id, state, meaningKey) {
+            const el = document.getElementById(`sm-${id}-status`);
+            if (!el) return;
+            el.classList.remove('ok', 'error', 'warning');
+            if (state === 'running') {
+                el.classList.add('ok');
+                el.textContent = t('status.running');
+            } else if (state === 'stopped') {
+                el.classList.add('error');
+                el.textContent = t('status.stopped');
+            } else {
+                el.classList.add('warning');
+                el.textContent = t('status.unknown');
+            }
+            setText(`sm-${id}-meaning`, meaningKey ? t(meaningKey) : '');
+        }
+
+        function serverState(s) {
+            if (s && (s.status === 'running' || s.online === true)) return 'running';
+            if (s && (s.status === 'stopped' || s.online === false)) return 'stopped';
+            return 'unknown';
+        }
+
+        async function checkServers() {
+            try {
+                const res = await api('/api/server/status');
+                const status = res.data || res;
+                const hbbs = serverState(status.hbbs);
+                const hbbr = serverState(status.hbbr);
+                setServer('hbbs', hbbs, hbbs === 'running' ? 'server_mgmt.id_running'
+                    : (hbbs === 'stopped' ? 'dashboard.status_signal_down' : 'server_mgmt.status_unknown_meaning'));
+                setServer('hbbr', hbbr, hbbr === 'running' ? 'server_mgmt.relay_running'
+                    : (hbbr === 'stopped' ? 'dashboard.status_relay_down' : 'server_mgmt.status_unknown_meaning'));
+            } catch (_) {
+                setServer('hbbs', 'unknown', 'server_mgmt.status_unknown_meaning');
+                setServer('hbbr', 'unknown', 'server_mgmt.status_unknown_meaning');
+            }
+            // The Go server's own uptime (needs the info endpoint from this release)
+            try {
+                const fresh = await api('/api/server-management/info');
+                info = fresh;
+                const secs = fresh.server && fresh.server.uptimeSeconds;
+                const show = Number.isFinite(secs) && fresh.server.running;
+                const label = document.getElementById('sm-server-uptime-label');
+                const value = document.getElementById('sm-server-uptime');
+                if (label) label.hidden = !show;
+                if (value) {
+                    value.hidden = !show;
+                    if (show) value.textContent = formatUptime(secs);
+                }
+            } catch (_) { /* keep last */ }
+        }
 
         async function tick() {
+            if (ticks % STATUS_EVERY === 0) checkServers();
+            ticks++;
             try {
-                const [info, snap] = await Promise.all([
-                    lastInfo ? Promise.resolve(lastInfo) : api('/api/server-management/info'),
-                    api('/api/server-management/resources')
-                ]);
-                if (!lastInfo) lastInfo = info;
-                render(info, snap.snapshot);
+                const snap = (await api('/api/server-management/resources')).snapshot;
+                failures = 0;
+                render(snap);
             } catch (err) {
-                console.warn('[server-mgmt] overview tick failed:', err.message);
+                failures++;
+                if (failures >= 2) showMachineError(err);
             }
+        }
+
+        function showMachineError(err) {
+            const state = document.getElementById('sm-machine-state');
+            if (!state) return;
+            state.hidden = false;
+            state.classList.add('is-error');
+            state.innerHTML = `${escapeHtml(t('server_mgmt.machine_error'))} <button type="button" class="btn btn-sm" id="sm-machine-retry">${escapeHtml(t('actions.retry'))}</button>`;
+            document.getElementById('sm-machine-retry').addEventListener('click', () => {
+                state.classList.remove('is-error');
+                state.textContent = t('server_mgmt.machine_loading');
+                start();
+            });
+            stop();
+            if (err) console.warn('[server-mgmt]', err.message);
         }
 
         function start() {
             stop();
             tick();
-            timer = setInterval(tick, 2000);
+            timer = setInterval(tick, TICK_MS);
         }
 
         function stop() {
             if (timer) { clearInterval(timer); timer = null; }
         }
 
-        function render(info, snap) {
+        function render(snap) {
             if (!snap || typeof snap !== 'object') return;
-            // CPU — backend returns sample.cpu as number (percent)
-            const cpuPct = Math.max(0, Math.min(100, Math.round(Number(snap.cpu) || 0)));
-            document.getElementById('sm-cpu-fill').style.width = `${cpuPct}%`;
-            document.getElementById('sm-cpu-value').textContent = `${cpuPct}%`;
-            document.getElementById('sm-cpu-meta').textContent =
-                `${snap.cpuModel || '–'} · ${snap.cpuCount || 0} ${t('server_mgmt.cores', 'cores')}`;
+            document.getElementById('sm-machine-state').hidden = true;
+            document.getElementById('sm-machine').hidden = false;
 
-            // Memory — backend returns sample.mem.{total,free,used,percent}
+            setMeter('cpu', snap.cpu);
+            setText('sm-cpu-meta', t('server_mgmt.cpu_meta', { cores: snap.cpuCount || 0, model: snap.cpuModel || '–' }));
+
             const mem = snap.mem || {};
-            const memPct = Math.max(0, Math.min(100, Math.round(Number(mem.percent) || 0)));
-            document.getElementById('sm-mem-fill').style.width = `${memPct}%`;
-            document.getElementById('sm-mem-value').textContent = `${memPct}%`;
-            document.getElementById('sm-mem-meta').textContent =
-                `${formatBytes(mem.used)} / ${formatBytes(mem.total)}`;
+            setMeter('mem', mem.percent);
+            setText('sm-mem-meta', t('server_mgmt.mem_meta', { used: formatBytes(mem.used), total: formatBytes(mem.total) }));
 
-            // Load avg / uptime — backend returns sample.load array
             const load = Array.isArray(snap.load) ? snap.load : [0, 0, 0];
-            document.getElementById('sm-load-1').textContent = (Number(load[0]) || 0).toFixed(2);
-            document.getElementById('sm-load-5').textContent = (Number(load[1]) || 0).toFixed(2);
-            document.getElementById('sm-load-15').textContent = (Number(load[2]) || 0).toFixed(2);
-            document.getElementById('sm-uptime-meta').textContent =
-                `${t('server_mgmt.uptime', 'Uptime')}: ${formatUptime(snap.uptime)}`;
+            setText('sm-load', load.slice(0, 3).map((v) => (Number(v) || 0).toFixed(2)).join(', '));
+            setText('sm-load-meta', t('server_mgmt.load_meta', { cores: snap.cpuCount || 0 }));
 
-            // Disks — backend returns sample.disks[] with {mount, fstype, size, used, avail}
-            const disksHost = document.getElementById('sm-disks');
-            disksHost.innerHTML = (snap.disks || []).map((d) => {
+            setText('sm-uptime-meta', formatUptime(snap.uptime));
+            setText('sm-console-uptime', t('server_mgmt.running_for', { time: formatUptime(snap.nodeUptime) }));
+
+            // Disks
+            const disks = document.getElementById('sm-disks');
+            const list = snap.disks || [];
+            disks.hidden = false;
+            disks.innerHTML = list.map((d) => {
                 const total = Number(d.size || d.total) || 0;
                 const used = Number(d.used) || 0;
-                const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((used / total) * 100))) : 0;
-                return `
-                    <div class="sm-disk-row">
-                        <div class="sm-disk-mount">${escapeHtml(d.mount || d.fs || '?')}</div>
-                        <div class="sm-disk-bar"><div class="sm-disk-bar-fill" style="width:${pct}%"></div></div>
-                        <div class="sm-disk-stat">${formatBytes(used)} / ${formatBytes(total)} (${pct}%)</div>
-                    </div>
-                `;
-            }).join('') || `<div class="sm-meta">${t('server_mgmt.no_disks', 'No disk data available')}</div>`;
+                const p = total > 0 ? (used / total) * 100 : 0;
+                return `<dt>${escapeHtml(t('server_mgmt.disk_label', { mount: d.mount || d.fs || '?' }))}</dt>
+                    <dd>${meterHtml(p)}<span class="sm-dd-sub">${escapeHtml(t('server_mgmt.disk_meta', { used: formatBytes(used), total: formatBytes(total) }))}</span></dd>`;
+            }).join('') || `<dt>${escapeHtml(t('server_mgmt.disks'))}</dt><dd>${escapeHtml(t('server_mgmt.no_disks'))}</dd>`;
 
-            // Host info
+            // Technical details
             const hi = document.getElementById('sm-host-info');
             const rows = [
-                ['hostname', snap.hostname],
+                ['hostname', snap.hostname, true],
                 ['platform', `${snap.platform} (${snap.arch})`],
-                ['kernel', snap.release || snap.osVersion],
-                ['node', info.nodeVersion || snap.nodeVersion],
-                ['process_id', info.pid],
-                ['pty_available', info.ptyAvailable ? '✓' : '✗']
+                ['kernel', snap.release || snap.osVersion, true],
+                ['node', (info && info.nodeVersion) || snap.nodeVersion, true],
+                ['process_id', info ? info.pid : null, true],
+                ['pty_available', info ? t(info.ptyAvailable ? 'server_mgmt.pty_yes' : 'server_mgmt.pty_no') : null]
             ];
-            hi.innerHTML = rows.map(([k, v]) =>
-                `<div><span class="sm-info-key">${escapeHtml(t('server_mgmt.info_' + k, k))}:</span><span class="sm-info-val">${escapeHtml(v != null ? String(v) : '–')}</span></div>`
+            hi.innerHTML = rows.map(([k, v, mono]) =>
+                `<dt>${escapeHtml(t('server_mgmt.info_' + k))}</dt><dd${mono ? ' class="mono"' : ''}>${escapeHtml(v != null ? String(v) : '–')}</dd>`
             ).join('');
 
-            // History
-            history.push({ cpu: cpuPct, mem: memPct });
-            if (history.length > 60) history.shift();
-            drawHistory();
+            drawHistory(snap.history || []);
         }
 
-        function drawHistory() {
-            const canvas = document.getElementById('sm-history-chart');
-            if (!canvas) return;
-            const dpr = window.devicePixelRatio || 1;
-            const w = canvas.clientWidth || 600;
-            const h = canvas.clientHeight || 120;
-            if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-                canvas.width = w * dpr;
-                canvas.height = h * dpr;
+        // Only the samples taken without a break up to now: older ones belong
+        // to an earlier visit and would make the time axis lie.
+        function recentRun(history) {
+            const out = [];
+            for (let i = history.length - 1; i >= 0; i--) {
+                const s = history[i];
+                if (out.length && out[0].ts - s.ts > 10000) break;
+                out.unshift(s);
             }
-            const ctx = canvas.getContext('2d');
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.clearRect(0, 0, w, h);
-            // Grid
-            ctx.strokeStyle = 'rgba(139, 148, 158, 0.2)';
-            ctx.lineWidth = 1;
-            for (let p = 0; p <= 100; p += 25) {
-                const y = h - (p / 100) * h;
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(w, y);
-                ctx.stroke();
-            }
-            if (history.length < 2) return;
-            const step = w / Math.max(1, history.length - 1);
-            const drawSeries = (key, color) => {
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                history.forEach((pt, i) => {
-                    const x = i * step;
-                    const y = h - (pt[key] / 100) * h;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
-                ctx.stroke();
-            };
-            drawSeries('cpu', '#58a6ff');
-            drawSeries('mem', '#d29922');
+            return out.slice(-60);
         }
 
-        return { start, stop };
+        function drawHistory(history) {
+            const host = document.getElementById('sm-history-chart');
+            if (!host || !window.UiChart) return;
+            // Don't rebuild while someone reads the chart or its table
+            if (chartDrawn && (host.contains(document.activeElement) || host.querySelector('details[open]'))) return;
+            const run = recentRun(history);
+            if (run.length < 2) return;
+            const fmtTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const cpu = run.map((s) => Math.round(Number(s.cpu) || 0));
+            const mem = run.map((s) => Math.round(Number(s.mem) || 0));
+            const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+            const spanSec = Math.max(1, Math.round((run[run.length - 1].ts - run[0].ts) / 1000));
+            const span = spanSec >= 120 ? t('server_mgmt.span_minutes', { n: Math.round(spanSec / 60) }) : t('server_mgmt.span_seconds', { n: spanSec });
+            window.UiChart.render(host, {
+                kind: 'line',
+                label: t('server_mgmt.history_label'),
+                summary: t('server_mgmt.history_summary', {
+                    span,
+                    cpuAvg: pct(avg(cpu)), cpuMax: pct(Math.max(...cpu)),
+                    memAvg: pct(avg(mem)), memMax: pct(Math.max(...mem))
+                }),
+                labels: run.map((s) => fmtTime(s.ts)),
+                series: [
+                    { name: t('server_mgmt.cpu'), values: cpu },
+                    { name: t('server_mgmt.memory'), values: mem }
+                ],
+                yLabel: '%',
+                yMax: 100,
+                format: (v) => pct(v),
+                xHeading: t('server_mgmt.history_time')
+            });
+            chartDrawn = true;
+        }
+
+        function init() {
+            start();
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) stop();
+                else start();
+            });
+        }
+
+        return { init };
     })();
 
-    // ── Files tab ────────────────────────────────────────────────────────
+    // ── Files ────────────────────────────────────────────────────────────
 
     const filesView = (() => {
-        let cwd = '/';
-        let editing = null; // { path, size, mtime, etag }
-        let loaded = false;
+        let cwd = '';
+        let editing = null; // { path, readOnly }
+        let menuSeq = 0;
+
+        function entryType(e) {
+            if (e.type) return e.type;
+            if (e.isSymlink) return 'symlink';
+            if (e.isDirectory) return 'dir';
+            return 'file';
+        }
+
+        function setBodyState(text, isError) {
+            const body = document.getElementById('sm-files-body');
+            if (isError) {
+                body.innerHTML = `<tr><td colspan="5" class="state-cell is-error"><span class="text-danger">${escapeHtml(text)}</span> <button type="button" class="btn btn-sm" id="sm-files-retry">${escapeHtml(t('actions.retry'))}</button></td></tr>`;
+                document.getElementById('sm-files-retry').addEventListener('click', () => refresh());
+            } else {
+                body.innerHTML = `<tr><td colspan="5" class="state-cell">${escapeHtml(text)}</td></tr>`;
+            }
+        }
 
         async function refresh(path) {
-            const target = path || document.getElementById('sm-files-path').value || cwd;
+            const target = path || document.getElementById('sm-files-path').value || cwd || '/';
+            setBodyState(t('server_mgmt.files_loading'));
+            setText('sm-files-count', '');
             try {
                 const data = await api(`/api/server-management/files?path=${encodeURIComponent(target)}`);
                 cwd = data.cwd || target;
-                loaded = true;
                 document.getElementById('sm-files-path').value = cwd;
-                renderEntries(data.entries || [], data.parent);
+                renderEntries(data.entries || []);
             } catch (err) {
-                showToast(err.message || t('server_mgmt.files_error', 'Failed to list directory'), 'error');
-                renderEntries([], null);
+                document.getElementById('sm-files-path').value = target;
+                setBodyState(t('server_mgmt.files_open_error', { error: err.message }), true);
             }
         }
 
-        function renderEntries(entries, parent) {
+        function renderEntries(entries) {
             const body = document.getElementById('sm-files-body');
-            const rows = entries.map((e) => {
-                const icon = e.type === 'dir'
-                    ? '<span class="material-icons sm-file-icon-dir">folder</span>'
-                    : (e.type === 'symlink'
-                        ? '<span class="material-icons sm-file-icon-link">link</span>'
-                        : '<span class="material-icons">description</span>');
-                const sizeText = e.type === 'dir' ? '–' : formatBytes(e.size || 0);
+            const folders = entries.filter((e) => entryType(e) === 'dir').length;
+            setText('sm-files-count', t('server_mgmt.files_count', { folders, files: entries.length - folders }));
+            if (!entries.length) {
+                setBodyState(t('server_mgmt.files_empty'));
+                return;
+            }
+            body.innerHTML = entries.map((e) => {
+                const type = entryType(e);
+                const p = escapeHtml(e.path);
+                const n = escapeHtml(e.name);
+                const sizeText = type === 'dir' ? '' : formatBytes(e.size || 0);
                 const perms = e.mode != null ? (e.mode & 0o7777).toString(8).padStart(4, '0') : '–';
                 const mtime = e.mtime ? new Date(e.mtime).toLocaleString() : '';
-                const acts = [];
-                if (e.type === 'file') {
-                    acts.push(`<button class="btn btn-tertiary" data-act="open" data-path="${escapeHtml(e.path)}" title="${t('common.edit', 'Edit')}"><span class="material-icons">edit</span></button>`);
-                }
-                acts.push(`<button class="btn btn-tertiary" data-act="rename" data-path="${escapeHtml(e.path)}" data-name="${escapeHtml(e.name)}" title="${t('server_mgmt.files_rename', 'Rename')}"><span class="material-icons">drive_file_rename_outline</span></button>`);
-                acts.push(`<button class="btn btn-tertiary" data-act="delete" data-path="${escapeHtml(e.path)}" title="${t('common.delete', 'Delete')}"><span class="material-icons">delete</span></button>`);
-
+                const nameCell = type === 'dir'
+                    ? `<button type="button" class="btn-link sm-file-open-dir" data-act="cd" data-path="${p}">${n}/</button>`
+                    : `<span class="sm-file-name">${n}</span>${type === 'symlink' ? `<span class="cell-sub">${escapeHtml(t('server_mgmt.files_link'))}</span>` : ''}`;
+                const menuId = `sm-file-menu-${++menuSeq}`;
+                const items = [];
+                if (type === 'file') items.push(`<button type="button" class="menu-item" role="menuitem" data-act="open" data-path="${p}">${escapeHtml(t('server_mgmt.files_open'))}</button>`);
+                items.push(`<button type="button" class="menu-item" role="menuitem" data-act="rename" data-path="${p}" data-name="${n}">${escapeHtml(t('server_mgmt.files_rename'))}…</button>`);
+                items.push('<span class="menu-divider"></span>');
+                items.push(`<button type="button" class="menu-item danger" role="menuitem" data-act="delete" data-path="${p}" data-name="${n}">${escapeHtml(t('actions.delete'))}…</button>`);
                 return `
-                    <tr data-type="${e.type}" data-path="${escapeHtml(e.path)}" data-name="${escapeHtml(e.name)}">
-                        <td>${icon}</td>
-                        <td>${escapeHtml(e.name)}</td>
-                        <td>${sizeText}</td>
-                        <td><code>${perms}</code></td>
+                    <tr data-type="${type}" data-path="${p}" data-name="${n}">
+                        <td>${nameCell}</td>
+                        <td class="num-col">${sizeText}</td>
                         <td>${escapeHtml(mtime)}</td>
-                        <td><div class="sm-file-actions">${acts.join('')}</div></td>
+                        <td class="mono">${perms}</td>
+                        <td class="actions">
+                            <span class="menu-anchor">
+                                <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"
+                                        aria-label="${escapeHtml(t('server_mgmt.files_actions_for', { name: e.name }))}"><span class="material-icons" aria-hidden="true">more_vert</span></button>
+                                <span class="menu menu-end" id="${menuId}" role="menu">${items.join('')}</span>
+                            </span>
+                        </td>
                     </tr>
                 `;
-            });
-            body.innerHTML = rows.join('') ||
-                `<tr><td colspan="6"><div class="empty-state"><span class="material-icons">folder_off</span><p>${t('server_mgmt.files_empty', 'Empty directory')}</p></div></td></tr>`;
+            }).join('');
+        }
 
-            body.querySelectorAll('tr[data-type]').forEach((tr) => {
-                tr.addEventListener('click', (ev) => {
-                    if (ev.target.closest('button')) return;
-                    if (tr.getAttribute('data-type') === 'dir') refresh(tr.getAttribute('data-path'));
-                });
-            });
-            body.querySelectorAll('button[data-act]').forEach((btn) => {
-                btn.addEventListener('click', (ev) => {
-                    ev.stopPropagation();
-                    const act = btn.getAttribute('data-act');
-                    const p = btn.getAttribute('data-path');
-                    if (act === 'open') openFile(p);
-                    else if (act === 'rename') renameFile(p, btn.getAttribute('data-name'));
-                    else if (act === 'delete') deleteFile(p);
-                });
-            });
+        function onBodyClick(ev) {
+            const btn = ev.target.closest('[data-act]');
+            if (!btn) return;
+            const act = btn.getAttribute('data-act');
+            const p = btn.getAttribute('data-path');
+            if (act === 'cd') refresh(p);
+            else if (act === 'open') openFile(p);
+            else if (act === 'rename') renameFile(p, btn.getAttribute('data-name'));
+            else if (act === 'delete') deleteFile(p, btn.getAttribute('data-name'));
+        }
+
+        function setFileStatus(text, kind) {
+            const el = document.getElementById('sm-file-status');
+            el.textContent = text || '';
+            el.classList.toggle('is-ok', kind === 'ok');
+            el.classList.toggle('is-error', kind === 'error');
         }
 
         async function openFile(path) {
             try {
                 const data = await api(`/api/server-management/files/read?path=${encodeURIComponent(path)}`);
-                editing = { path, size: data.size, mtime: data.mtime };
+                const binary = !!(data.isBinary || data.binary);
+                const readOnly = binary || !!data.truncated;
+                editing = { path, readOnly };
                 const ed = document.getElementById('sm-file-editor');
-                document.getElementById('sm-file-editor-path').textContent = path;
-                document.getElementById('sm-file-textarea').value = data.content || '';
-                document.getElementById('sm-file-meta').textContent =
-                    `${formatBytes(data.size || 0)} · ${data.binary ? t('server_mgmt.binary_warn', 'Binary file — preview only') : t('server_mgmt.encoding_utf8', 'UTF-8 text')} · ${data.truncated ? t('server_mgmt.truncated', 'truncated') : t('server_mgmt.full', 'full')}`;
+                const area = document.getElementById('sm-file-textarea');
+                setText('sm-file-editor-path', data.path || path);
+                area.value = data.content || '';
+                area.readOnly = readOnly;
+                let meta = t(binary ? 'server_mgmt.file_meta_binary' : 'server_mgmt.file_meta_text', { size: formatBytes(data.size || 0) });
+                if (!binary && data.truncated) meta += ' ' + t('server_mgmt.file_meta_truncated');
+                setText('sm-file-meta', meta);
+                document.getElementById('sm-file-save').hidden = readOnly;
+                setFileStatus('');
                 ed.hidden = false;
-                document.getElementById('sm-file-textarea').focus();
+                ed.scrollIntoView({ block: 'start' });
+                area.focus({ preventScroll: true });
             } catch (err) {
-                showToast(err.message || t('server_mgmt.read_failed', 'Failed to read file'), 'error');
+                notify('error', t('server_mgmt.read_failed_reason', { error: err.message }));
             }
         }
 
         async function saveFile() {
-            if (!editing) return;
+            if (!editing || editing.readOnly) return;
             const content = document.getElementById('sm-file-textarea').value;
+            setFileStatus(t('server_mgmt.file_saving'));
             try {
                 await api('/api/server-management/files/write', {
                     method: 'POST',
                     body: { path: editing.path, content }
                 });
-                showToast(t('server_mgmt.file_saved', 'File saved'), 'success');
-                refresh();
+                setFileStatus(t('server_mgmt.file_saved'), 'ok');
+                refresh(cwd);
             } catch (err) {
-                showToast(err.message || t('server_mgmt.save_failed', 'Failed to save file'), 'error');
+                setFileStatus(t('server_mgmt.save_failed_reason', { error: err.message }), 'error');
             }
+        }
+
+        function closeEditor() {
+            document.getElementById('sm-file-editor').hidden = true;
+            editing = null;
+            document.getElementById('sm-files-path').focus();
+        }
+
+        function joinPath(dir, name) {
+            const sep = dir.includes('\\') ? '\\' : '/';
+            return dir.endsWith(sep) ? dir + name : dir + sep + name;
         }
 
         async function renameFile(path, name) {
-            const next = window.prompt(t('server_mgmt.files_rename_prompt', 'New name:'), name || '');
+            const next = await Modal.prompt({
+                title: t('server_mgmt.files_rename_title', { name }),
+                label: t('server_mgmt.files_rename_prompt'),
+                value: name || '',
+                confirmLabel: t('server_mgmt.files_rename')
+            });
             if (!next || next === name) return;
             const parent = path.replace(/[/\\][^/\\]*$/, '') || '/';
-            const sep = path.includes('\\') ? '\\' : '/';
-            const target = parent.endsWith(sep) ? parent + next : parent + sep + next;
             try {
-                await api('/api/server-management/files/rename', { method: 'POST', body: { from: path, to: target } });
-                refresh();
+                await api('/api/server-management/files/rename', { method: 'POST', body: { from: path, to: joinPath(parent, next) } });
+                notify('success', t('server_mgmt.files_renamed', { name: next }));
+                refresh(cwd);
             } catch (err) {
-                showToast(err.message || t('server_mgmt.rename_failed', 'Rename failed'), 'error');
+                notify('error', t('server_mgmt.rename_failed_reason', { error: err.message }));
             }
         }
 
-        async function deleteFile(path) {
-            if (!window.confirm(t('server_mgmt.delete_confirm', 'Delete this entry?') + '\n' + path)) return;
+        async function deleteFile(path, name) {
+            const ok = await Modal.confirm({
+                title: t('server_mgmt.delete_title', { name }),
+                message: t('server_mgmt.delete_body', { path }),
+                confirmLabel: t('actions.delete'),
+                danger: true
+            });
+            if (!ok) return;
             try {
                 await api('/api/server-management/files/delete', { method: 'POST', body: { path } });
-                refresh();
+                notify('success', t('server_mgmt.files_deleted', { name }));
+                refresh(cwd);
             } catch (err) {
-                showToast(err.message || t('server_mgmt.delete_failed', 'Delete failed'), 'error');
+                notify('error', t('server_mgmt.delete_failed_reason', { error: err.message }));
             }
         }
 
         async function mkdir() {
-            const name = window.prompt(t('server_mgmt.mkdir_prompt', 'New folder name:'), 'new-folder');
+            const name = await Modal.prompt({
+                title: t('server_mgmt.files_mkdir'),
+                label: t('server_mgmt.mkdir_prompt'),
+                confirmLabel: t('server_mgmt.mkdir_confirm')
+            });
             if (!name) return;
-            const sep = cwd.includes('\\') ? '\\' : '/';
-            const target = cwd.endsWith(sep) ? cwd + name : cwd + sep + name;
             try {
-                await api('/api/server-management/files/mkdir', { method: 'POST', body: { path: target } });
-                refresh();
+                await api('/api/server-management/files/mkdir', { method: 'POST', body: { path: joinPath(cwd, name) } });
+                notify('success', t('server_mgmt.files_folder_created', { name }));
+                refresh(cwd);
             } catch (err) {
-                showToast(err.message || t('server_mgmt.mkdir_failed', 'mkdir failed'), 'error');
+                notify('error', t('server_mgmt.mkdir_failed_reason', { error: err.message }));
             }
         }
 
@@ -391,39 +515,80 @@
             refresh(parent);
         }
 
-        function init() {
+        async function init() {
             document.getElementById('sm-files-up').addEventListener('click', up);
-            document.getElementById('sm-files-refresh').addEventListener('click', () => refresh());
-            document.getElementById('sm-files-go').addEventListener('click', () => refresh());
+            document.getElementById('sm-files-refresh').addEventListener('click', () => refresh(cwd));
+            document.getElementById('sm-files-form').addEventListener('submit', (e) => { e.preventDefault(); refresh(); });
             document.getElementById('sm-files-mkdir').addEventListener('click', mkdir);
-            document.getElementById('sm-files-path').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') refresh();
-            });
+            document.getElementById('sm-files-body').addEventListener('click', onBodyClick);
             document.getElementById('sm-file-save').addEventListener('click', saveFile);
-            document.getElementById('sm-file-close').addEventListener('click', () => {
-                document.getElementById('sm-file-editor').hidden = true;
-                editing = null;
-            });
+            document.getElementById('sm-file-close').addEventListener('click', closeEditor);
+
+            // Start in the first folder the console may open
+            let start = '/';
+            try {
+                const info = await api('/api/server-management/info');
+                const roots = Array.isArray(info.fileRoots) ? info.fileRoots : [];
+                if (roots.length) {
+                    start = roots[0];
+                    const hint = document.getElementById('sm-files-roots');
+                    hint.innerHTML = escapeHtml(t('server_mgmt.files_roots')) + ' ' + roots.map((r) =>
+                        `<button type="button" class="btn-link mono" data-act="cd" data-path="${escapeHtml(r)}">${escapeHtml(r)}</button>`
+                    ).join(', ');
+                    hint.hidden = false;
+                    hint.addEventListener('click', onBodyClick);
+                }
+            } catch (_) { /* fall back to / */ }
+            refresh(start);
         }
 
-        return { init, refresh, get loaded() { return loaded; } };
+        return { init };
     })();
 
-    // ── Services tab ─────────────────────────────────────────────────────
+    // ── Services ─────────────────────────────────────────────────────────
 
     const servicesView = (() => {
         let services = [];
-        let loaded = false;
+        let platform = '';
+        let menuSeq = 0;
+
+        function setBodyState(text, isError) {
+            const body = document.getElementById('sm-services-body');
+            if (isError) {
+                body.innerHTML = `<tr><td colspan="3" class="state-cell"><span class="text-danger">${escapeHtml(text)}</span> <button type="button" class="btn btn-sm" id="sm-services-retry">${escapeHtml(t('actions.retry'))}</button></td></tr>`;
+                document.getElementById('sm-services-retry').addEventListener('click', refresh);
+            } else {
+                body.innerHTML = `<tr><td colspan="3" class="state-cell">${escapeHtml(text)}</td></tr>`;
+            }
+        }
 
         async function refresh() {
+            setBodyState(t('server_mgmt.svc_loading'));
             try {
                 const data = await api('/api/server-management/services');
                 services = data.services || [];
-                loaded = true;
+                platform = data.platform || '';
                 render();
             } catch (err) {
-                showToast(err.message || t('server_mgmt.svc_load_failed', 'Failed to load services'), 'error');
+                setText('sm-services-count', '');
+                setBodyState(t('server_mgmt.svc_load_failed_reason', { error: err.message }), true);
             }
+        }
+
+        function isRunning(s) {
+            return s.state === 'active' || s.state === 'running' || s.sub === 'running';
+        }
+
+        function stateHtml(s) {
+            const state = String(s.state || s.status || '').toLowerCase();
+            let cls = '';
+            let text;
+            if (isRunning(s)) { cls = 'ok'; text = t('status.running'); }
+            else if (state === 'failed') { cls = 'error'; text = t('server_mgmt.svc_failed'); }
+            else if (state === 'inactive' || state === 'stopped') { cls = 'offline'; text = t('status.stopped'); }
+            else { text = state || t('status.unknown'); }
+            const sub = s.sub && s.sub !== state ? `<span class="cell-sub">${escapeHtml(s.sub)}</span>` : '';
+            return `<span class="status ${cls}">${escapeHtml(text)}</span>${sub}`;
         }
 
         function render() {
@@ -433,66 +598,80 @@
                     (s.name || '').toLowerCase().includes(filter) ||
                     (s.description || '').toLowerCase().includes(filter))
                 : services;
+            const running = services.filter(isRunning).length;
+            setText('sm-services-count', services.length
+                ? (filter ? t('server_mgmt.svc_count_filtered', { shown: filtered.length, total: services.length })
+                    : t('server_mgmt.svc_count', { total: services.length, running }))
+                : '');
+            if (!services.length) { setBodyState(t('server_mgmt.svc_empty')); return; }
+            if (!filtered.length) { setBodyState(t('server_mgmt.svc_no_match')); return; }
+
+            const isWin = platform === 'win32';
             const body = document.getElementById('sm-services-body');
-            const isWin = /^win/i.test(navigator.platform);
-            const rows = filtered.map((s) => {
-                const stateClass = s.state === 'active' || s.state === 'running' ? 'active'
-                    : (s.state === 'failed' ? 'failed' : '');
-                const actions = (isWin
-                    ? ['start', 'stop', 'restart']
-                    : ['start', 'stop', 'restart', 'reload', 'enable', 'disable']
-                ).map((act) => `<button class="btn btn-tertiary" data-svc="${escapeHtml(s.name)}" data-act="${act}">
-                    <span class="material-icons">${actionIcon(act)}</span>${t('server_mgmt.svc_' + act, act)}
-                </button>`).join('');
+            body.innerHTML = filtered.map((s) => {
+                const name = escapeHtml(s.name);
+                const main = isRunning(s) ? 'stop' : 'start';
+                const menu = (isWin ? [] : ['reload', 'enable', 'disable']);
+                const menuId = `sm-svc-menu-${++menuSeq}`;
+                const menuHtml = menu.length ? `
+                    <span class="menu-anchor">
+                        <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"
+                                aria-label="${escapeHtml(t('server_mgmt.svc_actions_for', { name: s.name }))}"><span class="material-icons" aria-hidden="true">more_vert</span></button>
+                        <span class="menu menu-end" id="${menuId}" role="menu">
+                            ${menu.map((a) => `<button type="button" class="menu-item" role="menuitem" data-svc="${name}" data-act="${a}">${escapeHtml(t('server_mgmt.svc_' + a))}</button>`).join('')}
+                        </span>
+                    </span>` : '';
                 return `
                     <tr>
-                        <td><span class="sm-svc-name">${escapeHtml(s.name)}</span></td>
-                        <td><span class="sm-svc-state ${stateClass}">${escapeHtml(s.state || s.status || '–')}</span></td>
-                        <td>${escapeHtml(s.description || '')}</td>
-                        <td><div class="sm-svc-actions">${actions}</div></td>
+                        <td><span class="mono">${name}</span>${s.description ? `<span class="cell-sub">${escapeHtml(s.description)}</span>` : ''}</td>
+                        <td>${stateHtml(s)}</td>
+                        <td class="actions">
+                            <button type="button" class="btn btn-sm" data-svc="${name}" data-act="restart">${escapeHtml(t('server_mgmt.svc_restart'))}</button>
+                            <button type="button" class="btn btn-sm${main === 'stop' ? ' btn-danger-quiet' : ''}" data-svc="${name}" data-act="${main}">${escapeHtml(t('server_mgmt.svc_' + main))}</button>
+                            ${menuHtml}
+                        </td>
                     </tr>
                 `;
-            });
-            body.innerHTML = rows.join('') ||
-                `<tr><td colspan="4"><div class="empty-state"><span class="material-icons">home_repair_service</span><p>${t('server_mgmt.svc_empty', 'No services found')}</p></div></td></tr>`;
-            document.getElementById('sm-services-count').textContent =
-                `${filtered.length} / ${services.length}`;
-
-            body.querySelectorAll('button[data-svc]').forEach((btn) => {
-                btn.addEventListener('click', () => act(btn.getAttribute('data-svc'), btn.getAttribute('data-act')));
-            });
-        }
-
-        function actionIcon(a) {
-            return ({
-                start: 'play_arrow', stop: 'stop', restart: 'restart_alt',
-                reload: 'cached', enable: 'check_circle', disable: 'block', status: 'info'
-            }[a]) || 'play_arrow';
+            }).join('');
         }
 
         async function act(name, action) {
-            const dangerous = ['stop', 'disable'];
-            if (dangerous.includes(action)) {
-                if (!window.confirm(`${t('server_mgmt.svc_confirm', 'Run')} ${action} on ${name}?`)) return;
+            if (['stop', 'disable', 'restart'].includes(action)) {
+                const ok = await Modal.confirm({
+                    title: t('server_mgmt.svc_confirm_title', { action: t('server_mgmt.svc_' + action), name }),
+                    message: t('server_mgmt.svc_confirm_' + action, { name }),
+                    confirmLabel: t('server_mgmt.svc_' + action),
+                    danger: action !== 'restart'
+                });
+                if (!ok) return;
             }
             try {
                 const r = await api(`/api/server-management/services/${encodeURIComponent(name)}/${action}`, { method: 'POST' });
-                showToast(`${name} → ${action} (exit ${r.exitCode})`, r.exitCode === 0 ? 'success' : 'warning');
+                if (r.exitCode === 0 || r.exitCode === undefined) {
+                    notify('success', t('server_mgmt.svc_done', { action: t('server_mgmt.svc_' + action), name }));
+                } else {
+                    notify('error', t('server_mgmt.svc_done_exit', { action: t('server_mgmt.svc_' + action), name, code: r.exitCode }));
+                }
                 refresh();
             } catch (err) {
-                showToast(err.message || t('server_mgmt.svc_action_failed', 'Action failed'), 'error');
+                notify('error', t('server_mgmt.svc_action_failed_reason', { error: err.message }));
             }
         }
 
         function init() {
             document.getElementById('sm-services-refresh').addEventListener('click', refresh);
             document.getElementById('sm-services-search').addEventListener('input', () => render());
+            document.getElementById('sm-services-body').addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-svc]');
+                if (btn) act(btn.getAttribute('data-svc'), btn.getAttribute('data-act'));
+            });
+            refresh();
         }
 
-        return { init, refresh, get loaded() { return loaded; } };
+        return { init };
     })();
 
-    // ── Terminal tab ─────────────────────────────────────────────────────
+    // ── Terminal ─────────────────────────────────────────────────────────
 
     const terminalView = (() => {
         // xterm core: 5.5.0; addon-fit has its own version (0.10.0)
@@ -507,8 +686,6 @@
         let term = null;
         let fitAddon = null;
         let ws = null;
-        let connected = false;
-        let everConnected = false;
 
         function loadXterm() {
             if (xtermLoaded) return Promise.resolve();
@@ -524,10 +701,10 @@
                     const s2 = document.createElement('script');
                     s2.src = XTERM_FIT_URL;
                     s2.onload = () => { xtermLoaded = true; resolve(); };
-                    s2.onerror = () => reject(new Error('Failed to load xterm-addon-fit'));
+                    s2.onerror = () => reject(new Error('addon-fit'));
                     document.head.appendChild(s2);
                 };
-                s1.onerror = () => reject(new Error('Failed to load xterm.js'));
+                s1.onerror = () => reject(new Error('xterm'));
                 document.head.appendChild(s1);
             });
             return xtermLoading;
@@ -539,78 +716,84 @@
             el.className = 'sm-term-status' + (cls ? ' ' + cls : '');
         }
 
-        async function connect() {
-            try { await loadXterm(); }
-            catch (err) {
-                showToast(err.message, 'error');
+        function setButtons(connected) {
+            document.getElementById('sm-term-connect').disabled = connected;
+            document.getElementById('sm-term-disconnect').disabled = !connected;
+            document.getElementById('sm-term-clear').disabled = !term;
+        }
+
+        async function connect(focusAfter) {
+            setStatus(t('server_mgmt.term_connecting'));
+            try { await loadXterm(); } catch (_) {
+                setStatus(t('server_mgmt.term_lib_failed'), 'is-error');
                 return;
             }
             const Terminal = window.Terminal;
             const FitAddon = window.FitAddon && window.FitAddon.FitAddon;
             if (!Terminal || !FitAddon) {
-                showToast(t('server_mgmt.term_lib_failed', 'Terminal library failed to load'), 'error');
+                setStatus(t('server_mgmt.term_lib_failed'), 'is-error');
                 return;
             }
+            if (term) teardown();
             const host = document.getElementById('sm-terminal-host');
             host.innerHTML = '';
             term = new Terminal({
                 cursorBlink: true,
-                fontFamily: 'Cascadia Code, Fira Code, Menlo, monospace',
+                fontFamily: '"Atkinson Hyperlegible Mono", Menlo, Consolas, monospace',
                 fontSize: 13,
-                theme: {
-                    background: '#0d1117',
-                    foreground: '#e6edf3',
-                    cursor: '#58a6ff'
-                }
+                theme: { background: '#111414', foreground: '#e3e6e6', cursor: '#e3e6e6' }
             });
             fitAddon = new FitAddon();
             term.loadAddon(fitAddon);
+            // Tab belongs to the shell; Esc then Tab leaves the terminal
+            let escPressed = false;
+            term.attachCustomKeyEventHandler((e) => {
+                if (e.type !== 'keydown') return true;
+                if (e.key === 'Tab' && escPressed) { escPressed = false; return false; }
+                escPressed = e.key === 'Escape';
+                return true;
+            });
             term.open(host);
             try { fitAddon.fit(); } catch (_) { /* ignore */ }
 
             const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${proto}//${window.location.host}/ws/server-management/terminal`;
-            ws = new WebSocket(wsUrl);
-            setStatus(t('server_mgmt.term_connecting', 'Connecting…'));
+            ws = new WebSocket(`${proto}//${window.location.host}/ws/server-management/terminal`);
+            const socket = ws;
 
-            ws.onopen = () => {
-                ws.send(JSON.stringify({ type: 'init', cols: term.cols, rows: term.rows }));
+            socket.onopen = () => {
+                socket.send(JSON.stringify({ type: 'init', cols: term.cols, rows: term.rows }));
             };
-            ws.onmessage = (ev) => {
+            socket.onmessage = (ev) => {
                 let msg;
                 try { msg = JSON.parse(ev.data); } catch (_) { return; }
                 if (msg.type === 'ready') {
-                    connected = true;
-                    everConnected = true;
-                    setStatus(`${t('server_mgmt.term_connected', 'Connected')} · ${msg.user || ''}@${msg.platform || ''} (${msg.kind})`, 'connected');
-                    document.getElementById('sm-term-connect').disabled = true;
-                    document.getElementById('sm-term-disconnect').disabled = false;
-                    document.getElementById('sm-term-clear').disabled = false;
-                    if (!msg.pty_available) {
-                        term.writeln('\x1b[33m[!] node-pty not available — running in pipe-fallback mode (limited interactivity)\x1b[0m');
-                    }
+                    let text = t('server_mgmt.term_connected_as', { user: msg.user || '?', platform: msg.platform || '' });
+                    if (!msg.pty_available || msg.kind === 'pipe') text += ' ' + t('server_mgmt.term_limited');
+                    setStatus(text, 'is-ok');
+                    setButtons(true);
+                    // Only when asked: a focused terminal keeps Tab for the shell
+                    if (focusAfter === true) term.focus();
                 } else if (msg.type === 'output') {
                     term.write(msg.data);
                 } else if (msg.type === 'end') {
-                    term.writeln(`\r\n\x1b[90m[shell exited code=${msg.code} signal=${msg.signal || ''}]\x1b[0m`);
+                    term.writeln(`\r\n[${t('server_mgmt.term_exited', { code: msg.code })}]`);
                 } else if (msg.type === 'error') {
-                    term.writeln(`\r\n\x1b[31m[error] ${msg.error}\x1b[0m`);
-                    setStatus(msg.error, 'error');
+                    term.writeln(`\r\n[${msg.error}]`);
+                    setStatus(t('server_mgmt.term_error_reason', { error: msg.error }), 'is-error');
                 }
             };
-            ws.onclose = () => {
-                connected = false;
-                setStatus(t('server_mgmt.term_disconnected', 'Disconnected'));
-                document.getElementById('sm-term-connect').disabled = false;
-                document.getElementById('sm-term-disconnect').disabled = true;
+            socket.onclose = () => {
+                if (ws !== socket) return;
+                ws = null;
+                setStatus(t('server_mgmt.term_disconnected'));
+                setButtons(false);
             };
-            ws.onerror = () => setStatus(t('server_mgmt.term_error', 'Connection error'), 'error');
+            socket.onerror = () => setStatus(t('server_mgmt.term_error'), 'is-error');
 
             term.onData((d) => {
                 if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'input', data: d }));
             });
 
-            // Resize handler
             const handleResize = () => {
                 if (!fitAddon || !term) return;
                 try { fitAddon.fit(); } catch (_) { return; }
@@ -622,11 +805,12 @@
             term._cleanupResize = () => window.removeEventListener('resize', handleResize);
         }
 
-        function disconnect() {
+        function teardown() {
             if (ws) {
-                try { ws.send(JSON.stringify({ type: 'close' })); } catch (_) { /* ignore */ }
-                try { ws.close(); } catch (_) { /* ignore */ }
+                const socket = ws;
                 ws = null;
+                try { socket.send(JSON.stringify({ type: 'close' })); } catch (_) { /* ignore */ }
+                try { socket.close(); } catch (_) { /* ignore */ }
             }
             if (term) {
                 try { term._cleanupResize && term._cleanupResize(); } catch (_) { /* ignore */ }
@@ -634,30 +818,29 @@
                 term = null;
                 fitAddon = null;
             }
+        }
+
+        function disconnect() {
+            teardown();
             document.getElementById('sm-terminal-host').innerHTML = '';
-            document.getElementById('sm-term-connect').disabled = false;
-            document.getElementById('sm-term-disconnect').disabled = true;
-            document.getElementById('sm-term-clear').disabled = true;
-            setStatus(t('server_mgmt.term_disconnected', 'Disconnected'));
+            setButtons(false);
+            setStatus(t('server_mgmt.term_disconnected'));
+            document.getElementById('sm-term-connect').focus();
         }
 
         function clear() {
-            if (term) term.clear();
-        }
-
-        function fit() {
-            if (term && fitAddon) {
-                try { fitAddon.fit(); } catch (_) { /* ignore */ }
-            }
+            if (term) { term.clear(); term.focus(); }
         }
 
         function init() {
-            document.getElementById('sm-term-connect').addEventListener('click', connect);
+            document.getElementById('sm-term-connect').addEventListener('click', () => connect(true));
             document.getElementById('sm-term-disconnect').addEventListener('click', disconnect);
             document.getElementById('sm-term-clear').addEventListener('click', clear);
+            window.addEventListener('pagehide', teardown);
+            connect(false);
         }
 
-        return { init, fit, connect, hasConnected: () => everConnected };
+        return { init };
     })();
 
     // ── Bootstrap ────────────────────────────────────────────────────────
@@ -665,20 +848,11 @@
     function bootstrap() {
         const page = document.getElementById('server-mgmt-page');
         if (!page) return;
-        initTabs();
-        filesView.init();
-        servicesView.init();
-        terminalView.init();
-
-        // Determine initial tab: ?tab= query param > data-initial-tab > 'overview'
-        let initialTab = 'overview';
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const queryTab = params.get('tab');
-            if (queryTab) initialTab = queryTab;
-            else if (page.dataset.initialTab) initialTab = page.dataset.initialTab;
-        } catch (_) { /* ignore */ }
-        activateTab(initialTab);
+        const tab = page.dataset.initialTab || 'overview';
+        if (tab === 'terminal') terminalView.init();
+        else if (tab === 'files') filesView.init();
+        else if (tab === 'services') servicesView.init();
+        else overview.init();
     }
 
     if (document.readyState === 'loading') {

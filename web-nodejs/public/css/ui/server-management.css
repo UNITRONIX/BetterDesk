@@ -1,0 +1,117 @@
+/* Server status, Terminal, Files and Services (views/server-management.ejs) */
+
+/* A value with a sentence under it inside a facts row */
+.sm-page .facts > dd {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+}
+
+.sm-dd-sub {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.sm-dd-sub:empty {
+    display: none;
+}
+
+.sm-meter {
+    width: min(100%, 320px);
+}
+
+/* Disk rows continue the machine facts without a second top rule */
+.sm-disks {
+    border-top: 0;
+}
+
+.sm-history-audit {
+    color: var(--text-muted);
+}
+
+/* Terminal */
+.sm-term-note {
+    max-width: var(--measure);
+}
+
+.sm-term-status {
+    color: var(--text-muted);
+}
+
+.sm-term-status.is-ok { color: var(--success); }
+.sm-term-status.is-error { color: var(--danger); }
+
+.sm-terminal-host {
+    height: min(520px, 70vh);
+    overflow: hidden;
+}
+
+/* Files */
+.sm-files-pathbar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.sm-files-pathrow {
+    display: flex;
+    gap: var(--space-2);
+    max-width: 720px;
+}
+
+.sm-files-path {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--mono);
+}
+
+.sm-files-table .num-col {
+    text-align: end;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.sm-file-open-dir {
+    font-weight: 600;
+    text-align: start;
+}
+
+.sm-file-name {
+    overflow-wrap: anywhere;
+}
+
+.sm-file-textarea {
+    min-height: 360px;
+    font-family: var(--mono);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    white-space: pre;
+}
+
+.sm-file-textarea[readonly] {
+    background: var(--bg-subtle);
+}
+
+.sm-file-editor h2 {
+    overflow-wrap: anywhere;
+}
+
+/* Services */
+.sm-services-table td.actions .menu-anchor {
+    vertical-align: middle;
+}
+
+/* Same bar length whatever the number is */
+.sm-meter .meter-value {
+    min-width: 4.5ch;
+    text-align: end;
+}
+
+@media (pointer: coarse) {
+    #sm-files-roots .btn-link,
+    .sm-file-open-dir {
+        min-height: 44px;
+    }
+}
+

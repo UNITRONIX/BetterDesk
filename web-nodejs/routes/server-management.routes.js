@@ -29,6 +29,7 @@ const { requireAuth, requirePermission } = require('../middleware/auth');
 const sm = require('../services/serverManagement');
 const { isPtyAvailable, activeSessionCount } = require('../services/serverTerminalProxy');
 const db = require('../services/database');
+const serverBackend = require('../services/serverBackend');
 
 const REQUIRED_PERMISSION = 'server.config';
 
@@ -68,7 +69,30 @@ router.get('/server-management', requireAuth, requirePermission(REQUIRED_PERMISS
 
 // ─── Info / capabilities ──────────────────────────────────────────────────────
 
-router.get('/api/server-management/info', auth, (req, res) => {
+// Go durations look like "26h3m4.5s"; turn them into seconds
+function goDurationSeconds(text) {
+    if (typeof text !== 'string' || !text) return null;
+    const units = { h: 3600, m: 60, s: 1, ms: 0.001, 'µs': 0.000001, us: 0.000001, ns: 1e-9 };
+    let total = 0;
+    let matched = false;
+    for (const m of text.matchAll(/([\d.]+)(ms|µs|us|ns|h|m|s)/g)) {
+        total += parseFloat(m[1]) * units[m[2]];
+        matched = true;
+    }
+    return matched ? Math.floor(total) : null;
+}
+
+router.get('/api/server-management/info', auth, async (req, res) => {
+    // Uptime of the BetterDesk server (Go), which is not the console's or the host's
+    let server = null;
+    try {
+        const health = await serverBackend.getHealth();
+        server = {
+            running: !!health && health.status === 'running',
+            uptimeSeconds: goDurationSeconds(health && health.uptime),
+            version: (health && health.version) || null
+        };
+    } catch (_) { /* leave null */ }
     res.json({
         success: true,
         platform: process.platform,
@@ -77,6 +101,8 @@ router.get('/api/server-management/info', auth, (req, res) => {
         pid: process.pid,
         ptyAvailable: isPtyAvailable(),
         terminalSessions: activeSessionCount(),
+        fileRoots: sm.getAllowedFileRoots(),
+        server,
         beta: true
     });
 });

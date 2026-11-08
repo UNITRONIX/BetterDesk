@@ -477,6 +477,7 @@ module.exports = {
     isAllowedBetterDeskService,
     FILE_MAX_BYTES,
     getResourceSnapshot,
+    getAllowedFileRoots,
     getMutableFileRoots,
     listDirectory,
     readFilePreview,

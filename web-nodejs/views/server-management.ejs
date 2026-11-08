@@ -1,214 +1,165 @@
-<% var initialTab = (typeof currentTab !== 'undefined' && currentTab) ? currentTab : 'overview'; %>
-<%- include('layouts/main', {
-    title: _('server_mgmt.title'),
-    pageStyles: ['server-management'],
-    pageScripts: ['server-management'],
+<%
+    var initialTab = (typeof currentTab !== 'undefined' && currentTab) ? currentTab : 'overview';
+    var smTitles = {
+        overview: _('nav.server_status'),
+        terminal: _('server_mgmt.tab_terminal'),
+        files: _('server_mgmt.tab_files'),
+        services: _('server_mgmt.tab_services')
+    };
+    var smTitle = smTitles[initialTab] || smTitles.overview;
+%><%- include('layouts/main', {
+    title: smTitle,
+    uiReworked: true,
+    pageStyles: initialTab === 'overview' ? ['ui/chart', 'ui/server-management'] : ['ui/server-management'],
+    pageScripts: initialTab === 'overview' ? ['ui-chart', 'server-management'] : ['server-management'],
     currentPage: 'server-management',
     currentTab: initialTab,
-    widePage: true,
-    breadcrumb: [{ label: _('server_mgmt.title') }],
+    breadcrumb: [{ label: smTitle }],
     body: `
-        <div class="server-mgmt-page" id="server-mgmt-page" data-initial-tab="${initialTab}">
-            <!-- Header -->
-            <div class="page-header server-mgmt-header">
-                <div class="page-title">
-                    <h1>
-                        <span class="material-icons">dns</span>
-                        ${_('server_mgmt.title')}
-                        <span class="beta-badge" title="${_('server_mgmt.beta_tooltip')}">BETA</span>
-                    </h1>
-                </div>
-                <p class="page-subtitle">${_('server_mgmt.subtitle')}</p>
+        <div class="page ${initialTab === 'overview' ? '' : 'page-wide'} sm-page" id="server-mgmt-page" data-initial-tab="${initialTab}">
+            <div class="page-head">
+                <h1>${smTitle}</h1>
+                <p class="page-description">${_('server_mgmt.' + initialTab + '_description')}</p>
             </div>
 
-            <!-- Beta notice -->
-            <div class="server-mgmt-notice">
-                <span class="material-icons">info</span>
-                <div>
-                    <strong>${_('server_mgmt.notice_title')}</strong>
-                    <p>${_('server_mgmt.notice_body')}</p>
+            ${initialTab === 'overview' ? `
+            <section class="sm-tab-panel section" id="sm-panel-overview" aria-labelledby="sm-servers-title">
+                <div class="section-head"><h2 id="sm-servers-title">${_('server_mgmt.servers_title')}</h2></div>
+                <dl class="facts sm-servers">
+                    <dt>${_('dashboard.signal_server')}</dt>
+                    <dd><span class="status" id="sm-hbbs-status">${_('status.checking')}</span><span class="sm-dd-sub" id="sm-hbbs-meaning"></span></dd>
+                    <dt>${_('dashboard.relay_server_label')}</dt>
+                    <dd><span class="status" id="sm-hbbr-status">${_('status.checking')}</span><span class="sm-dd-sub" id="sm-hbbr-meaning"></span></dd>
+                    <dt id="sm-server-uptime-label" hidden>${_('server_mgmt.server_uptime')}</dt>
+                    <dd id="sm-server-uptime" hidden>–</dd>
+                    <dt>${_('dashboard.web_console')}</dt>
+                    <dd><span class="status ok">${_('status.running')}</span><span class="sm-dd-sub" id="sm-console-uptime"></span></dd>
+                </dl>
+            </section>
+
+            <section class="section" aria-labelledby="sm-machine-title">
+                <div class="section-head"><h2 id="sm-machine-title">${_('server_mgmt.machine_title')}</h2></div>
+                <p class="section-note">${_('server_mgmt.machine_note')}</p>
+                <p class="state" id="sm-machine-state">${_('server_mgmt.machine_loading')}</p>
+                <dl class="facts" id="sm-machine" hidden>
+                    <dt>${_('server_mgmt.cpu')}</dt>
+                    <dd><div class="meter sm-meter" id="sm-cpu-gauge"><span class="meter-bar"><span class="meter-fill" id="sm-cpu-fill"></span></span><span class="meter-value" id="sm-cpu-value">–</span></div><span class="sm-dd-sub" id="sm-cpu-meta"></span></dd>
+                    <dt>${_('server_mgmt.memory')}</dt>
+                    <dd><div class="meter sm-meter" id="sm-mem-gauge"><span class="meter-bar"><span class="meter-fill" id="sm-mem-fill"></span></span><span class="meter-value" id="sm-mem-value">–</span></div><span class="sm-dd-sub" id="sm-mem-meta"></span></dd>
+                    <dt>${_('server_mgmt.load')}</dt>
+                    <dd><span class="num" id="sm-load">–</span><span class="sm-dd-sub" id="sm-load-meta"></span></dd>
+                    <dt>${_('server_mgmt.host_uptime')}</dt>
+                    <dd><span id="sm-uptime-meta">–</span><span class="sm-dd-sub">${_('server_mgmt.host_uptime_hint')}</span></dd>
+                </dl>
+                <dl class="facts sm-disks" id="sm-disks" hidden></dl>
+            </section>
+
+            <section class="section" aria-labelledby="sm-history-title">
+                <div class="section-head"><h2 id="sm-history-title">${_('server_mgmt.history')}</h2></div>
+                <p class="section-note">${_('server_mgmt.history_note')}</p>
+                <div id="sm-history-chart"><p class="state">${_('server_mgmt.history_waiting')}</p></div>
+                <p class="sm-history-audit">${_('server_mgmt.history_restarts', { link: '<a href="/security-audit">' + _('nav.security_audit') + '</a>' })}</p>
+            </section>
+
+            <details class="section disclosure" id="sm-host-details">
+                <summary><h2>${_('server_mgmt.host_info')}</h2></summary>
+                <dl class="facts" id="sm-host-info"></dl>
+            </details>
+            ` : ''}
+
+            ${initialTab === 'terminal' ? `
+            <section class="sm-tab-panel section" id="sm-panel-terminal" aria-label="${_('server_mgmt.tab_terminal')}">
+                <p class="sm-term-note">${_('server_mgmt.term_warning')} ${_('server_mgmt.term_keyboard')}</p>
+                <div class="toolbar">
+                    <button type="button" class="btn" id="sm-term-connect">${_('server_mgmt.term_connect')}</button>
+                    <button type="button" class="btn" id="sm-term-disconnect" disabled>${_('server_mgmt.term_disconnect')}</button>
+                    <button type="button" class="btn" id="sm-term-clear" disabled>${_('server_mgmt.term_clear')}</button>
+                    <span class="sm-term-status" id="sm-term-status" role="status">${_('server_mgmt.term_disconnected')}</span>
                 </div>
-            </div>
+                <div class="terminal-box sm-terminal-host" id="sm-terminal-host" aria-label="${_('server_mgmt.tab_terminal')}"></div>
+            </section>
+            ` : ''}
 
-            <div class="server-mgmt-layout">
-                <div class="server-mgmt-content">
-                    <!-- Overview tab -->
-                    <section class="sm-tab-panel active" id="sm-panel-overview" role="tabpanel">
-                        <div class="sm-overview-grid">
-                            <div class="sm-card">
-                                <div class="sm-card-header">
-                                    <span class="material-icons">memory</span>
-                                    <h3>${_('server_mgmt.cpu')}</h3>
-                                </div>
-                                <div class="sm-gauge" id="sm-cpu-gauge">
-                                    <div class="sm-gauge-bar"><div class="sm-gauge-fill" id="sm-cpu-fill"></div></div>
-                                    <div class="sm-gauge-value" id="sm-cpu-value">0%</div>
-                                </div>
-                                <div class="sm-meta" id="sm-cpu-meta"></div>
-                            </div>
-
-                            <div class="sm-card">
-                                <div class="sm-card-header">
-                                    <span class="material-icons">developer_board</span>
-                                    <h3>${_('server_mgmt.memory')}</h3>
-                                </div>
-                                <div class="sm-gauge">
-                                    <div class="sm-gauge-bar"><div class="sm-gauge-fill" id="sm-mem-fill"></div></div>
-                                    <div class="sm-gauge-value" id="sm-mem-value">0%</div>
-                                </div>
-                                <div class="sm-meta" id="sm-mem-meta"></div>
-                            </div>
-
-                            <div class="sm-card">
-                                <div class="sm-card-header">
-                                    <span class="material-icons">speed</span>
-                                    <h3>${_('server_mgmt.load')}</h3>
-                                </div>
-                                <div class="sm-load-row">
-                                    <div><span class="sm-stat-label">1m</span><span id="sm-load-1">–</span></div>
-                                    <div><span class="sm-stat-label">5m</span><span id="sm-load-5">–</span></div>
-                                    <div><span class="sm-stat-label">15m</span><span id="sm-load-15">–</span></div>
-                                </div>
-                                <div class="sm-meta" id="sm-uptime-meta"></div>
-                            </div>
-
-                            <div class="sm-card sm-card-wide">
-                                <div class="sm-card-header">
-                                    <span class="material-icons">storage</span>
-                                    <h3>${_('server_mgmt.disks')}</h3>
-                                </div>
-                                <div id="sm-disks"></div>
-                            </div>
-
-                            <div class="sm-card sm-card-wide">
-                                <div class="sm-card-header">
-                                    <span class="material-icons">timeline</span>
-                                    <h3>${_('server_mgmt.history')}</h3>
-                                </div>
-                                <div class="sm-history-wrap">
-                                    <canvas id="sm-history-chart" height="120"></canvas>
-                                    <div class="sm-history-legend">
-                                        <span><span class="dot dot-cpu"></span>${_('server_mgmt.cpu')}</span>
-                                        <span><span class="dot dot-mem"></span>${_('server_mgmt.memory')}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="sm-card sm-card-wide">
-                                <div class="sm-card-header">
-                                    <span class="material-icons">badge</span>
-                                    <h3>${_('server_mgmt.host_info')}</h3>
-                                </div>
-                                <div class="sm-info-grid" id="sm-host-info"></div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Terminal tab -->
-                    <section class="sm-tab-panel" id="sm-panel-terminal" role="tabpanel" hidden>
-                        <div class="sm-terminal-toolbar">
-                            <button class="btn btn-primary" id="sm-term-connect">
-                                <span class="material-icons">play_arrow</span>
-                                ${_('server_mgmt.term_connect')}
-                            </button>
-                            <button class="btn btn-secondary" id="sm-term-disconnect" disabled>
-                                <span class="material-icons">stop</span>
-                                ${_('server_mgmt.term_disconnect')}
-                            </button>
-                            <button class="btn btn-tertiary" id="sm-term-clear" disabled>
-                                <span class="material-icons">delete_sweep</span>
-                                ${_('server_mgmt.term_clear')}
-                            </button>
-                            <span class="sm-term-status" id="sm-term-status">${_('server_mgmt.term_disconnected')}</span>
-                        </div>
-                        <div class="sm-terminal-warning">
-                            <span class="material-icons">warning</span>
-                            <span>${_('server_mgmt.term_warning')}</span>
-                        </div>
-                        <div class="sm-terminal-host" id="sm-terminal-host"></div>
-                        <p class="sm-term-hint">${_('server_mgmt.term_hint')}</p>
-                    </section>
-
-                    <!-- Files tab -->
-                    <section class="sm-tab-panel" id="sm-panel-files" role="tabpanel" hidden>
-                        <div class="sm-files-toolbar">
-                            <button class="btn btn-tertiary" id="sm-files-up" title="${_('server_mgmt.files_up')}">
-                                <span class="material-icons">arrow_upward</span>
-                            </button>
-                            <button class="btn btn-tertiary" id="sm-files-refresh" title="${_('common.refresh')}">
-                                <span class="material-icons">refresh</span>
-                            </button>
-                            <input type="text" class="form-input sm-files-path" id="sm-files-path" value="/" spellcheck="false">
-                            <button class="btn btn-secondary" id="sm-files-go">${_('server_mgmt.files_go')}</button>
-                            <span class="spacer"></span>
-                            <button class="btn btn-tertiary" id="sm-files-mkdir">
-                                <span class="material-icons">create_new_folder</span>
-                                ${_('server_mgmt.files_mkdir')}
-                            </button>
-                        </div>
-                        <div class="sm-files-table-wrapper">
-                            <table class="data-table sm-files-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width:40px"></th>
-                                        <th>${_('server_mgmt.files_name')}</th>
-                                        <th style="width:110px">${_('server_mgmt.files_size')}</th>
-                                        <th style="width:90px">${_('server_mgmt.files_perms')}</th>
-                                        <th style="width:160px">${_('server_mgmt.files_mtime')}</th>
-                                        <th style="width:160px">${_('common.actions')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="sm-files-body">
-                                    <tr><td colspan="6"><div class="empty-state"><span class="material-icons">folder_off</span><p>${_('common.loading')}…</p></div></td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Inline file editor -->
-                        <div class="sm-file-editor" id="sm-file-editor" hidden>
-                            <div class="sm-file-editor-header">
-                                <span class="material-icons">edit_document</span>
-                                <span class="sm-file-editor-path" id="sm-file-editor-path"></span>
-                                <span class="spacer"></span>
-                                <button class="btn btn-primary" id="sm-file-save">
-                                    <span class="material-icons">save</span>${_('common.save')}
-                                </button>
-                                <button class="btn btn-tertiary" id="sm-file-close">
-                                    <span class="material-icons">close</span>${_('common.cancel')}
-                                </button>
-                            </div>
-                            <textarea class="sm-file-textarea" id="sm-file-textarea" spellcheck="false"></textarea>
-                            <p class="sm-file-meta" id="sm-file-meta"></p>
-                        </div>
-                    </section>
-
-                    <!-- Services tab -->
-                    <section class="sm-tab-panel" id="sm-panel-services" role="tabpanel" hidden>
-                        <div class="sm-services-toolbar">
-                            <input type="search" class="form-input sm-services-search" id="sm-services-search" placeholder="${_('server_mgmt.svc_search_placeholder')}">
-                            <button class="btn btn-tertiary" id="sm-services-refresh">
-                                <span class="material-icons">refresh</span>${_('common.refresh')}
-                            </button>
-                            <span class="sm-services-count" id="sm-services-count"></span>
-                        </div>
-                        <div class="sm-services-table-wrapper">
-                            <table class="data-table sm-services-table">
-                                <thead>
-                                    <tr>
-                                        <th>${_('server_mgmt.svc_name')}</th>
-                                        <th style="width:120px">${_('server_mgmt.svc_state')}</th>
-                                        <th>${_('server_mgmt.svc_description')}</th>
-                                        <th style="width:280px">${_('common.actions')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="sm-services-body">
-                                    <tr><td colspan="4"><div class="empty-state"><span class="material-icons">home_repair_service</span><p>${_('common.loading')}…</p></div></td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+            ${initialTab === 'files' ? `
+            <section class="sm-tab-panel section" id="sm-panel-files" aria-label="${_('server_mgmt.tab_files')}">
+                <form class="sm-files-pathbar" id="sm-files-form" role="search">
+                    <label class="form-label" for="sm-files-path">${_('server_mgmt.files_path_label')}</label>
+                    <div class="sm-files-pathrow">
+                        <input type="text" class="form-input sm-files-path" id="sm-files-path" value="" spellcheck="false" autocomplete="off">
+                        <button type="submit" class="btn" id="sm-files-go">${_('server_mgmt.files_go')}</button>
+                    </div>
+                    <p class="form-hint" id="sm-files-roots" hidden></p>
+                </form>
+                <div class="toolbar">
+                    <button type="button" class="btn" id="sm-files-up">${_('server_mgmt.files_up')}</button>
+                    <button type="button" class="btn" id="sm-files-refresh">${_('actions.refresh')}</button>
+                    <div class="toolbar-end">
+                        <button type="button" class="btn" id="sm-files-mkdir">${_('server_mgmt.files_mkdir')}</button>
+                    </div>
                 </div>
-            </div>
+                <p class="count-line" id="sm-files-count" aria-live="polite"></p>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${_('server_mgmt.tab_files')}">
+                    <table class="data-table sm-files-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${_('server_mgmt.files_name')}</th>
+                                <th scope="col" class="num-col">${_('server_mgmt.files_size')}</th>
+                                <th scope="col">${_('server_mgmt.files_mtime')}</th>
+                                <th scope="col">${_('server_mgmt.files_perms')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sm-files-body">
+                            <tr><td colspan="5" class="state-cell">${_('server_mgmt.files_loading')}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <section class="section sm-file-editor" id="sm-file-editor" aria-labelledby="sm-file-editor-path" hidden>
+                    <div class="section-head">
+                        <h2 class="mono" id="sm-file-editor-path"></h2>
+                    </div>
+                    <p class="section-note" id="sm-file-meta"></p>
+                    <label class="sr-only" for="sm-file-textarea">${_('server_mgmt.file_content')}</label>
+                    <textarea class="form-input sm-file-textarea" id="sm-file-textarea" spellcheck="false"></textarea>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="sm-file-save">${_('server_mgmt.file_save')}</button>
+                        <button type="button" class="btn" id="sm-file-close">${_('actions.close')}</button>
+                        <span class="form-status" id="sm-file-status" aria-live="polite"></span>
+                    </div>
+                </section>
+            </section>
+            ` : ''}
+
+            ${initialTab === 'services' ? `
+            <section class="sm-tab-panel section" id="sm-panel-services" aria-label="${_('server_mgmt.tab_services')}">
+                <div class="toolbar">
+                    <div class="toolbar-search search-wrapper">
+                        <span class="material-icons" aria-hidden="true">search</span>
+                        <input type="search" class="form-input sm-services-search" id="sm-services-search"
+                               aria-label="${_('server_mgmt.svc_search_label')}" placeholder="${_('server_mgmt.svc_search_label')}">
+                    </div>
+                    <div class="toolbar-end">
+                        <button type="button" class="btn" id="sm-services-refresh">${_('actions.refresh')}</button>
+                    </div>
+                </div>
+                <p class="count-line" id="sm-services-count" aria-live="polite"></p>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="${_('server_mgmt.tab_services')}">
+                    <table class="data-table sm-services-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">${_('server_mgmt.svc_name')}</th>
+                                <th scope="col">${_('server_mgmt.svc_state')}</th>
+                                <th scope="col" class="actions"><span class="sr-only">${_('common.actions')}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sm-services-body">
+                            <tr><td colspan="3" class="state-cell">${_('server_mgmt.svc_loading')}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            ` : ''}
         </div>
     `
 }) %>
