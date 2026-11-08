@@ -17,7 +17,7 @@ const { requireAuth } = require('../middleware/auth');
 router.get('/', requireAuth, (req, res) => {
     const activateAgentNav = String(req.query.activateAgent || '') === '1';
     res.render('dashboard', {
-        title: activateAgentNav ? req.t('nav.activate_agent') : req.t('nav.dashboard'),
+        title: activateAgentNav ? req.t('nav.pair_agent') : req.t('nav.dashboard'),
         activePage: 'dashboard',
         activateAgentNav
     });

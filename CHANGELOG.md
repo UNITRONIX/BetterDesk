@@ -1,7 +1,19 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- **Główne → agent pairing now issues a one-time code instead of opening the QR scanner.**
+  The button in the client-config card (previously **Activate agent**, QR scanner) and the
+  sidebar entry (**Activate agent**, now **Pair agent**) open a pairing-code dialog: server
+  address (prefilled from the resolved client address), optional label, code generation,
+  10-minute countdown and copy. Codes are minted through the existing
+  `POST /api/panel/pairing/codes` behind `enrollment.approve`; the plaintext is shown once
+  and never logged.
+  The QR scanner is still available — inside the dialog as **Scan agent QR** and on the full
+  `/pairing` page (active codes, revoke). `/?activateAgent=1` now opens the code dialog, so
+  existing bookmarks and shortcuts no longer land in the QR scanner.
+  New keys `nav.pair_agent`, `dashboard.pair_with_code`, `pairing.scan_qr_agent`,
+  `pairing.generating` in all 26 locales; `agents.*` copy (step 3, button, description) no
+  longer presents QR as the primary path.
 
 ---
 
