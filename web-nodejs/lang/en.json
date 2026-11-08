@@ -1667,7 +1667,15 @@
         "group_deleted_named": "Deleted group {name}.",
         "group_delete_failed": "Could not delete group {name}",
         "user_groups_note": "A user group gives several people access to the same device groups. Add people to a group when you edit them, then allow the group in a device group's access settings.",
-        "tip_least_role": "Give each person the lowest role that covers their work."
+        "tip_least_role": "Give each person the lowest role that covers their work.",
+        "search_label": "Search users",
+        "side_label": "User groups and roles",
+        "roles_title": "What each role can do",
+        "roles_change_link": "Change what a role can do",
+        "count_filtered": "{shown} of {count} users",
+        "no_match": "No user matches \"{query}\".",
+        "clear_search": "Clear search",
+        "group_actions_for": "More actions for {name}"
     },
     "folders": {
         "title": "Folders",

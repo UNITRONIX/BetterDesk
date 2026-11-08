@@ -1641,7 +1641,15 @@
         "group_deleted_named": "Gruppo {name} eliminato.",
         "group_delete_failed": "Impossibile eliminare il gruppo {name}",
         "user_groups_note": "Un gruppo utente dà a più persone l'accesso agli stessi gruppi di dispositivi. Aggiungi le persone a un gruppo quando le modifichi, poi consenti il gruppo nelle impostazioni di accesso di un gruppo di dispositivi.",
-        "tip_least_role": "Assegna a ogni persona il ruolo più basso che basta per il suo lavoro."
+        "tip_least_role": "Assegna a ogni persona il ruolo più basso che basta per il suo lavoro.",
+        "search_label": "Cerca utenti",
+        "side_label": "Gruppi di utenti e ruoli",
+        "roles_title": "Cosa può fare ogni ruolo",
+        "roles_change_link": "Cambia cosa può fare un ruolo",
+        "count_filtered": "{shown} di {count} utenti",
+        "no_match": "Nessun utente corrisponde a \"{query}\".",
+        "clear_search": "Cancella ricerca",
+        "group_actions_for": "Altre azioni per {name}"
     },
     "folders": {
         "title": "Cartelle",

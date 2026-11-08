@@ -1647,7 +1647,15 @@
         "group_deleted_named": "Grupul {name} a fost șters.",
         "group_delete_failed": "Grupul {name} nu a putut fi șters",
         "user_groups_note": "Un grup de utilizatori le dă mai multor persoane acces la aceleași grupuri de dispozitive. Adăugați persoanele într-un grup când le editați, apoi permiteți grupul în setările de acces ale unui grup de dispozitive.",
-        "tip_least_role": "Dați fiecărei persoane cel mai mic rol care îi acoperă munca."
+        "tip_least_role": "Dați fiecărei persoane cel mai mic rol care îi acoperă munca.",
+        "search_label": "Caută utilizatori",
+        "side_label": "Grupuri de utilizatori și roluri",
+        "roles_title": "Ce poate face fiecare rol",
+        "roles_change_link": "Schimbă ce poate face un rol",
+        "count_filtered": "{shown} din {count} utilizatori",
+        "no_match": "Niciun utilizator nu corespunde cu \"{query}\".",
+        "clear_search": "Șterge căutarea",
+        "group_actions_for": "Mai multe acțiuni pentru {name}"
     },
     "folders": {
         "title": "Foldere",

@@ -1647,7 +1647,15 @@
         "group_deleted_named": "{name} csoport törölve.",
         "group_delete_failed": "A(z) {name} csoport nem törölhető",
         "user_groups_note": "Egy felhasználói csoport több embernek ad hozzáférést ugyanazokhoz az eszközcsoportokhoz. A személyeket szerkesztéskor adja hozzá a csoporthoz, majd engedélyezze a csoportot az eszközcsoport hozzáférési beállításaiban.",
-        "tip_least_role": "Mindenkinek a legalacsonyabb szerepkört adja, amely elég a munkájához."
+        "tip_least_role": "Mindenkinek a legalacsonyabb szerepkört adja, amely elég a munkájához.",
+        "search_label": "Felhasználók keresése",
+        "side_label": "Felhasználói csoportok és szerepkörök",
+        "roles_title": "Mire jogosult az egyes szerepkörök",
+        "roles_change_link": "A szerepkörök jogosultságainak módosítása",
+        "count_filtered": "{count} felhasználóból {shown}",
+        "no_match": "Egy felhasználó sem felel meg ennek: \"{query}\".",
+        "clear_search": "Keresés törlése",
+        "group_actions_for": "További műveletek: {name}"
     },
     "folders": {
         "title": "Mappák",

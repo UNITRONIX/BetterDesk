@@ -1641,7 +1641,15 @@
         "group_deleted_named": "Skupina {name} byla smazána.",
         "group_delete_failed": "Skupinu {name} nelze smazat",
         "user_groups_note": "Skupina uživatelů dává více lidem přístup ke stejným skupinám zařízení. Lidi do skupiny přidáte při jejich úpravě a skupinu pak povolíte v nastavení přístupu skupiny zařízení.",
-        "tip_least_role": "Dejte každému nejnižší roli, která pokryje jeho práci."
+        "tip_least_role": "Dejte každému nejnižší roli, která pokryje jeho práci.",
+        "search_label": "Hledat uživatele",
+        "side_label": "Skupiny uživatelů a role",
+        "roles_title": "Co která role smí",
+        "roles_change_link": "Změnit, co role smí",
+        "count_filtered": "{shown} z {count} uživatelů",
+        "no_match": "Hledání \"{query}\" neodpovídá žádný uživatel.",
+        "clear_search": "Vymazat hledání",
+        "group_actions_for": "Další akce pro {name}"
     },
     "folders": {
         "title": "Složky",

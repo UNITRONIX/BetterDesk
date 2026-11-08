@@ -1641,7 +1641,15 @@
         "group_deleted_named": "Groep {name} verwijderd.",
         "group_delete_failed": "Groep {name} kon niet worden verwijderd",
         "user_groups_note": "Een gebruikersgroep geeft meerdere mensen toegang tot dezelfde apparaatgroepen. Voeg mensen toe aan een groep wanneer u ze bewerkt en sta de groep daarna toe in de toegangsinstellingen van een apparaatgroep.",
-        "tip_least_role": "Geef iedereen de laagste rol die voor hun werk volstaat."
+        "tip_least_role": "Geef iedereen de laagste rol die voor hun werk volstaat.",
+        "search_label": "Gebruikers zoeken",
+        "side_label": "Gebruikersgroepen en rollen",
+        "roles_title": "Wat elke rol mag",
+        "roles_change_link": "Wijzigen wat een rol mag",
+        "count_filtered": "{shown} van {count} gebruikers",
+        "no_match": "Geen gebruiker komt overeen met \"{query}\".",
+        "clear_search": "Zoekopdracht wissen",
+        "group_actions_for": "Meer acties voor {name}"
     },
     "folders": {
         "title": "Mappen",

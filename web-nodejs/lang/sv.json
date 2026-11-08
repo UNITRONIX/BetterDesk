@@ -1647,7 +1647,15 @@
         "group_deleted_named": "Gruppen {name} har tagits bort.",
         "group_delete_failed": "Det gick inte att ta bort gruppen {name}",
         "user_groups_note": "En användargrupp ger flera personer åtkomst till samma enhetsgrupper. Lägg till personer i en grupp när du redigerar dem och tillåt sedan gruppen i en enhetsgrupps åtkomstinställningar.",
-        "tip_least_role": "Ge varje person den lägsta roll som räcker för deras arbete."
+        "tip_least_role": "Ge varje person den lägsta roll som räcker för deras arbete.",
+        "search_label": "Sök användare",
+        "side_label": "Användargrupper och roller",
+        "roles_title": "Vad varje roll får göra",
+        "roles_change_link": "Ändra vad en roll får göra",
+        "count_filtered": "{shown} av {count} användare",
+        "no_match": "Ingen användare matchar \"{query}\".",
+        "clear_search": "Rensa sökning",
+        "group_actions_for": "Fler åtgärder för {name}"
     },
     "folders": {
         "title": "Mappar",

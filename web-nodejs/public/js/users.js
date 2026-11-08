@@ -30,7 +30,11 @@
     // userId -> [{ id, org_name, role }] or 'error'
     const userOrgsCache = new Map();
 
-    let tableBody, countLine, userGroupsManager;
+    let tableBody, countLine, userGroupsManager, searchInput;
+    // Search box text; ?search=<username> (from the global search) fills it on load
+    let searchQuery = '';
+    // Username from ?search= whose row is scrolled into view after the first render
+    let revealUsername = '';
 
     const me = (window.BetterDesk && window.BetterDesk.user) || {};
     const canCreate = Utils.can('user.create');
@@ -44,6 +48,14 @@
         tableBody = document.getElementById('users-tbody');
         countLine = document.getElementById('users-count-line');
         userGroupsManager = document.getElementById('user-groups-manager-list');
+        searchInput = document.getElementById('users-search');
+
+        const urlSearch = new URLSearchParams(window.location.search).get('search');
+        if (urlSearch && urlSearch.trim()) {
+            searchQuery = urlSearch.trim();
+            revealUsername = searchQuery.toLowerCase();
+            if (searchInput) searchInput.value = searchQuery;
+        }
 
         // Only super admins and global admins can give any role, so only they can add users
         if (!canCreate || assignableRoles().length === 0) {
@@ -70,9 +82,24 @@
         document.getElementById('add-user-btn')?.addEventListener('click', () => showUserModal(null));
         document.getElementById('add-user-group-btn')?.addEventListener('click', () => showUserGroupModal(null));
 
+        searchInput?.addEventListener('input', Utils.debounce(() => {
+            searchQuery = searchInput.value.trim();
+            revealUsername = '';
+            syncSearchParam();
+            if (usersLoaded) renderUsers();
+        }, 150));
+
         tableBody?.addEventListener('click', (event) => {
             const btn = event.target.closest('[data-action]');
             if (!btn) return;
+            if (btn.dataset.action === 'clear-search') {
+                if (searchInput) searchInput.value = '';
+                searchQuery = '';
+                syncSearchParam();
+                renderUsers();
+                searchInput?.focus();
+                return;
+            }
             const user = users.find(u => String(u.id) === btn.dataset.id);
             if (!user) return;
             switch (btn.dataset.action) {
@@ -102,6 +129,33 @@
     // ------------------------------------------------------------------
     //  Helpers
     // ------------------------------------------------------------------
+
+    /** Keeps ?search= in the address in step with the search box, so a reload shows the same list */
+    function syncSearchParam() {
+        const url = new URL(window.location.href);
+        if (searchQuery) url.searchParams.set('search', searchQuery);
+        else url.searchParams.delete('search');
+        window.history.replaceState(window.history.state, '', url);
+    }
+
+    /** Users the search box lets through: username, email or role name contains every word */
+    function visibleUsers() {
+        const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+        if (!words.length) return users;
+        return users.filter((user) => {
+            const text = [user.username, user.email, roleLabel(user.role)].filter(Boolean).join(' ').toLowerCase();
+            return words.every(word => text.includes(word));
+        });
+    }
+
+    /** After the first render for ?search=<username>, bring that user's row into view */
+    function revealSearchedUser() {
+        if (!revealUsername || !tableBody) return;
+        const row = Array.from(tableBody.querySelectorAll('tr[data-username]'))
+            .find(tr => tr.dataset.username === revealUsername);
+        revealUsername = '';
+        if (row) row.scrollIntoView({ block: 'center' });
+    }
 
     function roleLabel(role) {
         const key = 'users.role_' + role;
@@ -218,9 +272,14 @@
         }
     }
 
-    function renderCount() {
+    function renderCount(shown) {
         if (!countLine) return;
         const n = users.length;
+        if (searchQuery && shown !== n) {
+            countLine.innerHTML = esc(_('users.count_filtered', { shown: '\u0000', count: n }))
+                .replace('\u0000', `<strong>${shown}</strong>`);
+            return;
+        }
         countLine.innerHTML = esc(_(n === 1 ? 'users.count_one' : 'users.count_many', { count: '\u0000' }))
             .replace('\u0000', `<strong>${n}</strong>`);
     }
@@ -244,13 +303,19 @@
 
     function renderUsers() {
         if (!tableBody) return;
-        renderCount();
+        const list = visibleUsers();
+        renderCount(list.length);
         if (users.length === 0) {
             stateRow(esc(_('users.empty_text')));
             return;
         }
+        if (list.length === 0) {
+            stateRow(`${esc(_('users.no_match', { query: searchQuery }))}
+                <button type="button" class="btn btn-sm" data-action="clear-search">${esc(_('users.clear_search'))}</button>`);
+            return;
+        }
 
-        tableBody.innerHTML = users.map((user, i) => {
+        tableBody.innerHTML = list.map((user, i) => {
             const id = esc(user.id);
             const provider = providerOf(user);
             const isLocal = provider === 'local';
@@ -269,12 +334,12 @@
             // Row actions: Edit as a button, the rest in the row menu
             const menuItems = [];
             if (canEdit && isLocal) {
-                menuItems.push(`<button type="button" class="menu-item" role="menuitem" data-action="reset-password" data-id="${id}">${esc(_('users.reset_password_menu'))}</button>`);
+                menuItems.push(`<button type="button" class="menu-item" role="menuitem" data-action="reset-password" data-id="${id}">${Utils.icon('password')}<span>${esc(_('users.reset_password_menu'))}</span></button>`);
             }
-            menuItems.push(`<button type="button" class="menu-item" role="menuitem" data-action="organizations" data-id="${id}">${esc(_('users.organizations_menu'))}</button>`);
+            menuItems.push(`<button type="button" class="menu-item" role="menuitem" data-action="organizations" data-id="${id}">${Utils.icon('organization')}<span>${esc(_('users.organizations_menu'))}</span></button>`);
             if (canDelete && !isSelf) {
                 menuItems.push('<span class="menu-divider" role="separator"></span>');
-                menuItems.push(`<button type="button" class="menu-item danger" role="menuitem" data-action="delete" data-id="${id}">${esc(_('users.delete_menu'))}</button>`);
+                menuItems.push(`<button type="button" class="menu-item danger" role="menuitem" data-action="delete" data-id="${id}">${Utils.icon('delete')}<span>${esc(_('users.delete_menu'))}</span></button>`);
             }
             let actions = '';
             if (canEdit) {
@@ -284,7 +349,7 @@
                 actions += `<button type="button" class="btn btn-sm" data-action="organizations" data-id="${id}">${esc(_('users.organizations'))}<span class="sr-only"> ${esc(user.username)}</span></button>`;
             } else {
                 const menuId = `user-menu-${i}`;
-                const up = users.length > 3 && i >= users.length - 2 ? ' menu-up' : '';
+                const up = list.length > 3 && i >= list.length - 2 ? ' menu-up' : '';
                 actions += `
                     <span class="menu-anchor">
                         <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
@@ -296,7 +361,7 @@
             }
 
             return `
-            <tr data-id="${id}">
+            <tr data-id="${id}" data-username="${esc(String(user.username || '').toLowerCase())}">
                 <td>
                     <span class="user-name">${esc(user.username)}</span>
                     ${subs.length ? `<span class="cell-sub">${esc(subs.join(' · '))}</span>` : ''}
@@ -314,6 +379,7 @@
                 <td class="actions">${actions}</td>
             </tr>`;
         }).join('');
+        revealSearchedUser();
     }
 
     /** Devices each user can see. Unscoped roles and users without limits see all devices. */
@@ -742,7 +808,7 @@
                                 ${['user', 'operator', 'admin', 'owner'].map(r => `<option value="${r}">${esc(orgRoleLabel(r))}</option>`).join('')}
                             </select>
                         </div>
-                        <button type="submit" class="btn" id="add-org-btn">${esc(_('users.add_to_org_button'))}</button>
+                        <button type="submit" class="btn" id="add-org-btn">${Utils.icon('add')}${esc(_('users.add_to_org_button'))}</button>
                     </form>`;
                 document.getElementById('user-orgs-add-form')?.addEventListener('submit', (event) => {
                     event.preventDefault();
@@ -837,22 +903,34 @@
             return;
         }
 
-        userGroupsManager.innerHTML = userGroups.map(group => {
+        // The side column is narrow: members go under the name, Edit and Delete into the row menu
+        userGroupsManager.innerHTML = userGroups.map((group, i) => {
             const guid = esc(group.guid);
             const name = esc(group.name || group.guid);
             const count = Number(group.member_count) || 0;
+            const members = esc(_(count === 1 ? 'users.members_one' : 'users.members_many', { count }));
+            const menuId = `user-group-menu-${i}`;
+            const up = userGroups.length > 3 && i >= userGroups.length - 2 ? ' menu-up' : '';
             return `
             <li class="list-row user-group-row" data-guid="${guid}">
                 <span class="row-main">
                     <span class="row-title">${name}</span>
-                    ${group.note ? `<span class="row-sub">${esc(group.note)}</span>` : ''}
+                    <span class="row-sub"><span class="user-group-members">${members}</span>${group.note ? ` · ${esc(group.note)}` : ''}</span>
                 </span>
+                ${canEdit ? `
                 <span class="row-end">
-                    <span class="user-group-members">${esc(_(count === 1 ? 'users.members_one' : 'users.members_many', { count }))}</span>
-                    ${canEdit ? `
-                    <button type="button" class="btn btn-sm" data-action="edit-user-group" data-guid="${guid}">${esc(_('users.edit'))}<span class="sr-only"> ${name}</span></button>
-                    <button type="button" class="btn btn-sm btn-danger-quiet" data-action="delete-user-group" data-guid="${guid}">${esc(_('actions.delete'))}<span class="sr-only"> ${name}</span></button>` : ''}
-                </span>
+                    <span class="menu-anchor">
+                        <button type="button" class="kebab-btn" data-menu-button aria-haspopup="menu" aria-expanded="false"
+                                aria-controls="${menuId}" aria-label="${esc(_('users.group_actions_for', { name: group.name || group.guid }))}">
+                            <span class="material-icons" aria-hidden="true">more_vert</span>
+                        </button>
+                        <span class="menu menu-end${up}" id="${menuId}" role="menu">
+                            <button type="button" class="menu-item" role="menuitem" data-action="edit-user-group" data-guid="${guid}">${Utils.icon('edit')}<span>${esc(_('users.edit'))}</span></button>
+                            <span class="menu-divider" role="separator"></span>
+                            <button type="button" class="menu-item danger" role="menuitem" data-action="delete-user-group" data-guid="${guid}">${Utils.icon('delete')}<span>${esc(_('actions.delete'))}</span></button>
+                        </span>
+                    </span>
+                </span>` : ''}
             </li>`;
         }).join('');
     }
@@ -924,6 +1002,8 @@
             Notifications.success(_('users.group_deleted_named', { name }));
             await loadUserGroups();
             loadUsers();
+            // The row and its menu are gone; keep focus in the section
+            document.getElementById('add-user-group-btn')?.focus();
         } catch (error) {
             Notifications.error(errorText(error), _('users.group_delete_failed', { name }));
         }

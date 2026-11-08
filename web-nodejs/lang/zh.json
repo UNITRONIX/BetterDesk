@@ -1641,7 +1641,15 @@
         "group_deleted_named": "已删除组 {name}。",
         "group_delete_failed": "无法删除组 {name}",
         "user_groups_note": "用户组可让多人访问相同的设备组。编辑用户时将其加入组，再在设备组的访问设置中允许该组。",
-        "tip_least_role": "为每个人分配足以完成工作的最低角色。"
+        "tip_least_role": "为每个人分配足以完成工作的最低角色。",
+        "search_label": "搜索用户",
+        "side_label": "用户组和角色",
+        "roles_title": "各角色可以做什么",
+        "roles_change_link": "更改角色可以做的事",
+        "count_filtered": "{count} 个用户中的 {shown} 个",
+        "no_match": "没有与“{query}”匹配的用户。",
+        "clear_search": "清除搜索",
+        "group_actions_for": "{name} 的更多操作"
     },
     "folders": {
         "title": "文件夹",

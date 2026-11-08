@@ -1641,7 +1641,15 @@
         "group_deleted_named": "Grupo {name} eliminado.",
         "group_delete_failed": "Não foi possível eliminar o grupo {name}",
         "user_groups_note": "Um grupo de utilizadores dá a várias pessoas acesso aos mesmos grupos de dispositivos. Adicione pessoas a um grupo ao editá-las e depois permita o grupo nas definições de acesso de um grupo de dispositivos.",
-        "tip_least_role": "Dê a cada pessoa a função mais baixa que cubra o seu trabalho."
+        "tip_least_role": "Dê a cada pessoa a função mais baixa que cubra o seu trabalho.",
+        "search_label": "Pesquisar utilizadores",
+        "side_label": "Grupos de utilizadores e funções",
+        "roles_title": "O que cada função pode fazer",
+        "roles_change_link": "Alterar o que uma função pode fazer",
+        "count_filtered": "{shown} de {count} utilizadores",
+        "no_match": "Nenhum utilizador corresponde a \"{query}\".",
+        "clear_search": "Limpar pesquisa",
+        "group_actions_for": "Mais ações para {name}"
     },
     "folders": {
         "title": "Pastas",

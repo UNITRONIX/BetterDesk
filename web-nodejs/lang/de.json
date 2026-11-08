@@ -1641,7 +1641,15 @@
         "group_deleted_named": "Gruppe {name} gelöscht.",
         "group_delete_failed": "Gruppe {name} konnte nicht gelöscht werden",
         "user_groups_note": "Eine Benutzergruppe gibt mehreren Personen Zugriff auf dieselben Gerätegruppen. Fügen Sie Personen beim Bearbeiten zu einer Gruppe hinzu und erlauben Sie die Gruppe dann in den Zugriffseinstellungen einer Gerätegruppe.",
-        "tip_least_role": "Geben Sie jeder Person die niedrigste Rolle, die für ihre Arbeit reicht."
+        "tip_least_role": "Geben Sie jeder Person die niedrigste Rolle, die für ihre Arbeit reicht.",
+        "search_label": "Benutzer suchen",
+        "side_label": "Benutzergruppen und Rollen",
+        "roles_title": "Was jede Rolle darf",
+        "roles_change_link": "Ändern, was eine Rolle darf",
+        "count_filtered": "{shown} von {count} Benutzern",
+        "no_match": "Kein Benutzer passt zu \"{query}\".",
+        "clear_search": "Suche löschen",
+        "group_actions_for": "Weitere Aktionen für {name}"
     },
     "folders": {
         "title": "Ordner",

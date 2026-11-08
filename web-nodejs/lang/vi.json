@@ -1647,7 +1647,15 @@
         "group_deleted_named": "Đã xóa nhóm {name}.",
         "group_delete_failed": "Không xóa được nhóm {name}",
         "user_groups_note": "Nhóm người dùng cho nhiều người truy cập cùng các nhóm thiết bị. Thêm người vào nhóm khi sửa thông tin của họ, rồi cho phép nhóm trong cài đặt truy cập của nhóm thiết bị.",
-        "tip_least_role": "Cấp cho mỗi người vai trò thấp nhất đủ cho công việc của họ."
+        "tip_least_role": "Cấp cho mỗi người vai trò thấp nhất đủ cho công việc của họ.",
+        "search_label": "Tìm người dùng",
+        "side_label": "Nhóm người dùng và vai trò",
+        "roles_title": "Mỗi vai trò làm được gì",
+        "roles_change_link": "Thay đổi những gì vai trò làm được",
+        "count_filtered": "{shown} trên {count} người dùng",
+        "no_match": "Không có người dùng nào khớp với \"{query}\".",
+        "clear_search": "Xóa tìm kiếm",
+        "group_actions_for": "Thêm thao tác cho {name}"
     },
     "folders": {
         "title": "Thư mục",

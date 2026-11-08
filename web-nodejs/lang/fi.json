@@ -1647,7 +1647,15 @@
         "group_deleted_named": "Ryhmä {name} poistettu.",
         "group_delete_failed": "Ryhmää {name} ei voitu poistaa",
         "user_groups_note": "Käyttäjäryhmä antaa usealle henkilölle pääsyn samoihin laiteryhmiin. Lisää henkilöt ryhmään muokatessasi heitä ja salli ryhmä sitten laiteryhmän käyttöoikeusasetuksissa.",
-        "tip_least_role": "Anna jokaiselle alin rooli, joka riittää hänen työhönsä."
+        "tip_least_role": "Anna jokaiselle alin rooli, joka riittää hänen työhönsä.",
+        "search_label": "Hae käyttäjiä",
+        "side_label": "Käyttäjäryhmät ja roolit",
+        "roles_title": "Mitä kukin rooli voi tehdä",
+        "roles_change_link": "Muuta, mitä rooli voi tehdä",
+        "count_filtered": "{shown}/{count} käyttäjää",
+        "no_match": "Mikään käyttäjä ei vastaa hakua \"{query}\".",
+        "clear_search": "Tyhjennä haku",
+        "group_actions_for": "Lisää toimintoja: {name}"
     },
     "folders": {
         "title": "Kansiot",

@@ -1663,7 +1663,15 @@
         "group_deleted_named": "已刪除群組 {name}。",
         "group_delete_failed": "無法刪除群組 {name}",
         "user_groups_note": "使用者群組可讓多人存取相同的裝置群組。編輯使用者時將其加入群組，再到裝置群組的存取設定中允許該群組。",
-        "tip_least_role": "為每個人指派足以完成工作的最低角色。"
+        "tip_least_role": "為每個人指派足以完成工作的最低角色。",
+        "search_label": "搜尋使用者",
+        "side_label": "使用者群組與角色",
+        "roles_title": "各角色可以做什麼",
+        "roles_change_link": "變更角色可以做的事",
+        "count_filtered": "{count} 位使用者中的 {shown} 位",
+        "no_match": "沒有符合「{query}」的使用者。",
+        "clear_search": "清除搜尋",
+        "group_actions_for": "{name} 的更多動作"
     },
     "folders": {
         "title": "資料夾",

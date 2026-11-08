@@ -1663,7 +1663,15 @@
         "group_deleted_named": "Groupe {name} supprimé.",
         "group_delete_failed": "Impossible de supprimer le groupe {name}",
         "user_groups_note": "Un groupe d'utilisateurs donne à plusieurs personnes l'accès aux mêmes groupes d'appareils. Ajoutez des personnes à un groupe en les modifiant, puis autorisez le groupe dans les réglages d'accès d'un groupe d'appareils.",
-        "tip_least_role": "Donnez à chaque personne le rôle le plus bas qui couvre son travail."
+        "tip_least_role": "Donnez à chaque personne le rôle le plus bas qui couvre son travail.",
+        "search_label": "Rechercher des utilisateurs",
+        "side_label": "Groupes d'utilisateurs et rôles",
+        "roles_title": "Ce que chaque rôle peut faire",
+        "roles_change_link": "Modifier ce qu'un rôle peut faire",
+        "count_filtered": "{shown} sur {count} utilisateurs",
+        "no_match": "Aucun utilisateur ne correspond à \"{query}\".",
+        "clear_search": "Effacer la recherche",
+        "group_actions_for": "Plus d'actions pour {name}"
     },
     "folders": {
         "title": "Dossiers",

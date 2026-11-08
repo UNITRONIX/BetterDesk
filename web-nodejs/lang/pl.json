@@ -1659,7 +1659,15 @@
         "group_deleted_named": "Usunięto grupę {name}.",
         "group_delete_failed": "Nie udało się usunąć grupy {name}",
         "user_groups_note": "Grupa użytkowników daje kilku osobom dostęp do tych samych grup urządzeń. Dodaj osoby do grupy podczas ich edycji, a potem zezwól grupie w ustawieniach dostępu grupy urządzeń.",
-        "tip_least_role": "Nadaj każdej osobie najniższą rolę, która wystarcza do jej pracy."
+        "tip_least_role": "Nadaj każdej osobie najniższą rolę, która wystarcza do jej pracy.",
+        "search_label": "Szukaj użytkowników",
+        "side_label": "Grupy użytkowników i role",
+        "roles_title": "Co może każda rola",
+        "roles_change_link": "Zmień, co może rola",
+        "count_filtered": "{shown} z {count} użytkowników",
+        "no_match": "Żaden użytkownik nie pasuje do \"{query}\".",
+        "clear_search": "Wyczyść wyszukiwanie",
+        "group_actions_for": "Więcej działań dla {name}"
     },
     "folders": {
         "title": "Foldery",

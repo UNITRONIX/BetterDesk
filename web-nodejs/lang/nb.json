@@ -1647,7 +1647,15 @@
         "group_deleted_named": "Gruppen {name} er slettet.",
         "group_delete_failed": "Kunne ikke slette gruppen {name}",
         "user_groups_note": "En brukergruppe gir flere personer tilgang til de samme enhetsgruppene. Legg personer til i en gruppe når du redigerer dem, og tillat deretter gruppen i tilgangsinnstillingene for en enhetsgruppe.",
-        "tip_least_role": "Gi hver person den laveste rollen som dekker arbeidet deres."
+        "tip_least_role": "Gi hver person den laveste rollen som dekker arbeidet deres.",
+        "search_label": "Søk etter brukere",
+        "side_label": "Brukergrupper og roller",
+        "roles_title": "Hva hver rolle kan gjøre",
+        "roles_change_link": "Endre hva en rolle kan gjøre",
+        "count_filtered": "{shown} av {count} brukere",
+        "no_match": "Ingen brukere samsvarer med \"{query}\".",
+        "clear_search": "Tøm søk",
+        "group_actions_for": "Flere handlinger for {name}"
     },
     "folders": {
         "title": "Mapper",

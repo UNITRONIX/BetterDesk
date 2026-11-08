@@ -1647,7 +1647,15 @@
         "group_deleted_named": "{name} grubu silindi.",
         "group_delete_failed": "{name} grubu silinemedi",
         "user_groups_note": "Kullanıcı grubu, birkaç kişiye aynı cihaz gruplarına erişim verir. Kişileri düzenlerken bir gruba ekleyin, sonra grubu bir cihaz grubunun erişim ayarlarında izinli yapın.",
-        "tip_least_role": "Herkese işini karşılayan en düşük rolü verin."
+        "tip_least_role": "Herkese işini karşılayan en düşük rolü verin.",
+        "search_label": "Kullanıcı ara",
+        "side_label": "Kullanıcı grupları ve roller",
+        "roles_title": "Her rol neler yapabilir",
+        "roles_change_link": "Bir rolün yapabileceklerini değiştir",
+        "count_filtered": "{count} kullanıcıdan {shown}",
+        "no_match": "\"{query}\" ile eşleşen kullanıcı yok.",
+        "clear_search": "Aramayı temizle",
+        "group_actions_for": "{name} için diğer işlemler"
     },
     "folders": {
         "title": "Klasörler",

@@ -1641,7 +1641,15 @@
         "group_deleted_named": "Grupo {name} eliminado.",
         "group_delete_failed": "No se pudo eliminar el grupo {name}",
         "user_groups_note": "Un grupo de usuarios da a varias personas acceso a los mismos grupos de dispositivos. Añada personas a un grupo al editarlas y después permita el grupo en los ajustes de acceso de un grupo de dispositivos.",
-        "tip_least_role": "Dé a cada persona el rol más bajo que cubra su trabajo."
+        "tip_least_role": "Dé a cada persona el rol más bajo que cubra su trabajo.",
+        "search_label": "Buscar usuarios",
+        "side_label": "Grupos de usuarios y roles",
+        "roles_title": "Qué puede hacer cada rol",
+        "roles_change_link": "Cambiar lo que puede hacer un rol",
+        "count_filtered": "{shown} de {count} usuarios",
+        "no_match": "Ningún usuario coincide con \"{query}\".",
+        "clear_search": "Borrar búsqueda",
+        "group_actions_for": "Más acciones para {name}"
     },
     "folders": {
         "title": "Carpetas",

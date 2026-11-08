@@ -1641,7 +1641,15 @@
         "group_deleted_named": "グループ {name} を削除しました。",
         "group_delete_failed": "グループ {name} を削除できませんでした",
         "user_groups_note": "ユーザーグループを使うと、複数の人に同じデバイスグループへのアクセスを与えられます。ユーザーを編集するときにグループに追加し、デバイスグループのアクセス設定でそのグループを許可します。",
-        "tip_least_role": "各ユーザーには、仕事に足りる最も低いロールを与えてください。"
+        "tip_least_role": "各ユーザーには、仕事に足りる最も低いロールを与えてください。",
+        "search_label": "ユーザーを検索",
+        "side_label": "ユーザーグループとロール",
+        "roles_title": "各ロールでできること",
+        "roles_change_link": "ロールでできることを変更",
+        "count_filtered": "{count} 人中 {shown} 人",
+        "no_match": "\"{query}\" に一致するユーザーはいません。",
+        "clear_search": "検索をクリア",
+        "group_actions_for": "{name} のその他の操作"
     },
     "folders": {
         "title": "フォルダー",

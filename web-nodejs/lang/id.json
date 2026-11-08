@@ -1647,7 +1647,15 @@
         "group_deleted_named": "Grup {name} dihapus.",
         "group_delete_failed": "Grup {name} tidak dapat dihapus",
         "user_groups_note": "Grup pengguna memberi beberapa orang akses ke grup perangkat yang sama. Tambahkan orang ke grup saat Anda mengeditnya, lalu izinkan grup itu di pengaturan akses grup perangkat.",
-        "tip_least_role": "Beri setiap orang peran terendah yang cukup untuk pekerjaannya."
+        "tip_least_role": "Beri setiap orang peran terendah yang cukup untuk pekerjaannya.",
+        "search_label": "Cari pengguna",
+        "side_label": "Grup pengguna dan peran",
+        "roles_title": "Apa yang bisa dilakukan tiap peran",
+        "roles_change_link": "Ubah apa yang bisa dilakukan peran",
+        "count_filtered": "{shown} dari {count} pengguna",
+        "no_match": "Tidak ada pengguna yang cocok dengan \"{query}\".",
+        "clear_search": "Hapus pencarian",
+        "group_actions_for": "Tindakan lain untuk {name}"
     },
     "folders": {
         "title": "Folder",

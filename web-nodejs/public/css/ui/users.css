@@ -18,12 +18,10 @@
 }
 
 .user-group-members {
-    white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
 
 .users-tips-list {
-    max-width: var(--measure);
     margin: 0;
     padding-inline-start: var(--space-5);
 }
@@ -110,4 +108,38 @@
 
 .users-table td.actions:has(.menu.open) {
     z-index: 3;
+}
+
+/* Side column: what each role can do, one line each */
+.users-roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: 0;
+}
+
+.users-roles-list dt {
+    font-weight: 600;
+}
+
+.users-roles-list dd {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* The users table needs about 1,100 px for its eight columns. The side
+   column only goes beside it on wide screens; below that it follows the
+   table, with its sections next to each other where they fit. */
+@media (max-width: 1679px) {
+    .users-page .page-cols {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .users-page .page-side {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+        gap: var(--space-6) var(--space-7);
+        align-items: start;
+    }
 }
