@@ -25,14 +25,6 @@
     color: var(--danger);
 }
 
-.hr-table td.actions .menu-anchor {
-    vertical-align: middle;
-}
-
-.hr-table td.actions > * + * {
-    margin-inline-start: var(--space-1);
-}
-
 /* Accepted: filled with the accent. Resolved: filled green, plain text. */
 .status.hr-accepted::before {
     border-color: var(--accent);

@@ -38,11 +38,6 @@
     max-width: 280px;
 }
 
-.data-table td.actions .menu-anchor {
-    margin-inline-start: var(--space-1);
-    vertical-align: middle;
-}
-
 .billing-notifications {
     margin-top: var(--space-4);
     display: flex;

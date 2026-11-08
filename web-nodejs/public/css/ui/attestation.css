@@ -1,7 +1,2 @@
 /* Device identity (/attestation). Table, status, menus and states come from components.css. */
 
-/* The row button and the row menu button have different heights; keep them on one line */
-.att-table td.actions > .btn,
-.att-table td.actions > .menu-anchor {
-    vertical-align: middle;
-}

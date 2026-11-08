@@ -274,6 +274,9 @@ html[data-a11y-strong-focus="true"] :focus-visible {
     top: calc(var(--topbar-h) + var(--space-4));
     max-height: calc(100vh - var(--topbar-h) - 2 * var(--space-4));
     overflow-y: auto;
+    /* room for rows that hang their padding outside the column */
+    margin-inline: calc(-1 * var(--row-pad-x));
+    padding-inline: var(--row-pad-x);
 }
 
 @media (max-width: 1199px) {
@@ -351,11 +354,13 @@ html[data-a11y-strong-focus="true"] :focus-visible {
     max-width: var(--measure);
 }
 
-/* Facts: label and value on one row, rows separated by rules */
+/* Facts: label and value on one row, rows separated by rules. Like row
+   lists and tables, the rows hang their padding outside the column (see
+   "Row edges" in components.css), so the labels line up with the headings. */
 .facts {
     display: grid;
     grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
-    margin: 0;
+    margin: 0 calc(-1 * var(--row-pad-x));
     border-top: 1px solid var(--rule);
 }
 

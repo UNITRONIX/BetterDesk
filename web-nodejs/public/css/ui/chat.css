@@ -49,6 +49,7 @@
 }
 
 .chat-list {
+    margin-inline: 0;
     border-top: 0;
 }
 

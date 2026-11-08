@@ -98,10 +98,6 @@
 }
 
 /* Services */
-.sm-services-table td.actions .menu-anchor {
-    vertical-align: middle;
-}
-
 /* Same bar length whatever the number is */
 .sm-meter .meter-value {
     min-width: 4.5ch;

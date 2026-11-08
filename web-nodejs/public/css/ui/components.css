@@ -22,6 +22,7 @@
     line-height: 1.2;
     text-decoration: none;
     white-space: nowrap;
+    vertical-align: middle;
     cursor: pointer;
     transition: background-color var(--motion), border-color var(--motion);
 }
@@ -117,7 +118,14 @@
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
+    vertical-align: middle;
     transition: background-color var(--motion);
+}
+
+/* The row menu sits next to small row buttons: same height as they are */
+.kebab-btn {
+    width: var(--control-h-sm);
+    height: var(--control-h-sm);
 }
 
 .btn-icon:hover,
@@ -348,8 +356,22 @@ input.toggle-switch {
     vertical-align: middle;
 }
 
-.data-table tbody tr:hover td,
-.table tbody tr:hover td {
+/* Row headers (th scope="row", e.g. the day column of a chart's table)
+   read as the first cell of their row, not as a second header */
+.data-table tbody th,
+.table tbody th {
+    position: static;
+    height: var(--row-h);
+    padding: var(--space-1) var(--row-pad-x);
+    border-top: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: inherit;
+    font-weight: 400;
+}
+
+.data-table tbody tr:hover :is(td, th),
+.table tbody tr:hover :is(td, th) {
     background: var(--bg-subtle);
 }
 
@@ -383,9 +405,19 @@ th.sortable.sort-desc {
     color: var(--text);
 }
 
+/* Row edges: tables, row lists (.list) and facts hang their row padding
+   outside the column, so the text in the first column lines up with the
+   headings, notes and fields above, while the rules and the hover
+   background reach a little past it (as .disclosure > summary does). */
 .table-scroll {
     overflow-x: auto;
     min-width: 0;
+    margin-inline: calc(-1 * var(--row-pad-x));
+}
+
+:not(.table-scroll) > .data-table {
+    width: calc(100% + 2 * var(--row-pad-x));
+    margin-inline: calc(-1 * var(--row-pad-x));
 }
 
 /* ── Status as text with a small mark ── */
@@ -898,7 +930,7 @@ th.sortable.sort-desc {
    hover background and a chevron. */
 
 .list {
-    margin: 0;
+    margin: 0 calc(-1 * var(--row-pad-x));
     padding: 0;
     list-style: none;
     border-top: 1px solid var(--rule);
@@ -996,6 +1028,14 @@ a.list-row:hover,
     overflow-wrap: anywhere;
     font-family: var(--mono);
     font-size: var(--text-base);
+}
+
+/* A hidden value (dots) stays on one line and is cut at the field's end,
+   so the field keeps its height */
+.value-field > .is-masked {
+    overflow: hidden;
+    overflow-wrap: normal;
+    white-space: nowrap;
 }
 
 .value-field > button {
@@ -1097,9 +1137,14 @@ a.list-row:hover,
 
 /* ── Menu button: a button that opens a small menu of rarely used actions ── */
 
+/* Inline controls (.btn, icon buttons, menu anchors) all sit on the middle
+   of the line: baseline alignment depends on whether a button starts with
+   an icon, so a menu button and a plain button next to it ended up a few
+   pixels apart. */
 .menu-anchor {
     position: relative;
     display: inline-flex;
+    vertical-align: middle;
 }
 
 .menu-anchor > .menu {
@@ -1210,7 +1255,10 @@ a.list-row:hover,
     font-variant-numeric: tabular-nums;
 }
 
-/* Cell that holds row actions */
+/* Cell that holds row actions: buttons and menu buttons on one centred
+   line with one gap. The cell's own font size is 0 so the spaces between
+   the buttons in the markup add nothing (some rows are built with spaces,
+   some without); each child gets the table's size back. */
 .data-table td.actions,
 .data-table th.actions,
 .table td.actions {
@@ -1218,8 +1266,22 @@ a.list-row:hover,
     white-space: nowrap;
 }
 
-.data-table td.actions .btn + .btn {
-    margin-inline-start: var(--space-1);
+.data-table td.actions,
+.table td.actions {
+    font-size: 0;
+}
+
+:is(.data-table, .table) td.actions > * {
+    font-size: var(--text-base);
+    vertical-align: middle;
+}
+
+:is(.data-table, .table) td.actions > .btn-sm {
+    font-size: var(--text-sm);
+}
+
+:is(.data-table, .table) td.actions > * + * {
+    margin-inline-start: var(--space-2);
 }
 
 .data-table .cell-sub {
@@ -1613,6 +1675,12 @@ input[type="file"]::file-selector-button:hover {
     border-inline-end: 1px solid var(--rule);
     overflow-y: auto;
     min-width: 0;
+}
+
+/* A pane edge is the row edge: rows in it don't hang (see "Row edges") */
+.split-list .list,
+.split-list .table-scroll {
+    margin-inline: 0;
 }
 
 .split-detail {

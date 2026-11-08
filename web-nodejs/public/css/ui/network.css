@@ -54,11 +54,6 @@
     color: var(--danger);
 }
 
-.network-table td.actions .menu-anchor {
-    vertical-align: middle;
-    margin-inline-start: var(--space-1);
-}
-
 .network-page .phone-only {
     display: none;
 }
@@ -118,7 +113,6 @@
     .network-table td.actions {
         display: flex;
         align-items: center;
-        gap: var(--space-1);
         grid-column: 2;
         grid-row: 1 / span 2;
     }

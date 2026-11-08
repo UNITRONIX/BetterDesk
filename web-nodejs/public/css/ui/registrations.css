@@ -35,11 +35,6 @@
     font-weight: 600;
 }
 
-.registrations-table td.actions .menu-anchor {
-    vertical-align: middle;
-    margin-inline-start: var(--space-1);
-}
-
 .registrations-page .phone-only {
     display: none;
 }
@@ -121,7 +116,6 @@
     .registrations-table td.actions {
         display: flex;
         align-items: center;
-        gap: var(--space-1);
         grid-column: 2;
         grid-row: 1 / span 2;
     }

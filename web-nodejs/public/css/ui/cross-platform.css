@@ -42,6 +42,7 @@ section.crossplatform-panel {
 
 .cp-matrix tbody th {
     z-index: 1;
+    background: var(--bg);
     min-width: 150px;
     height: var(--row-h);
     font-size: var(--text-base);

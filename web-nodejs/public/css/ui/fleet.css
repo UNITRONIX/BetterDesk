@@ -41,11 +41,6 @@ td.state-cell .btn {
     margin-inline-start: var(--space-2);
 }
 
-.fleet-table td.actions .btn,
-.fleet-table td.actions .menu-anchor {
-    vertical-align: middle;
-}
-
 .fleet-table .meter {
     min-width: 140px;
 }
