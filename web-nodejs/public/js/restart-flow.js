@@ -218,6 +218,8 @@
 
     async function resume() {
         if (window.location.pathname === '/settings') return;
+        // Only people who can restart the server can have a restart pending
+        if (typeof Utils.can === 'function' && !Utils.can('server.config')) return;
         try {
             const item = await Utils.api('/api/settings/restart/pending');
             if (item?.phase === 'pending') showPrompt(item);
