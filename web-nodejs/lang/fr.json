@@ -56,7 +56,7 @@
         "file_transfer": "Transfert de fichiers",
         "network": "Surveillance réseau",
         "dataguard": "Prévention des fuites de données",
-        "reports": "Reports",
+        "reports": "Rapports",
         "tenants": "Tenants",
         "registrations": "Registrations",
         "activate_agent": "Activer un agent d'assistance",
@@ -3030,7 +3030,7 @@
         "advanced": "Options avancées"
     },
     "reports": {
-        "title": "Tableau de bord",
+        "title": "Rapports",
         "generate": "Générer",
         "generate_csv": "Exporter CSV",
         "report_type": "Type",
@@ -5381,7 +5381,10 @@
         "events_chart_needs": "Un graphique par jour apparaît quand les événements remontent à {days} jours. Le serveur ne garde les événements que depuis son dernier démarrage.",
         "events_chart_summary": "{total} événements sur les {days} derniers jours, le plus le {peakDay} ({peak}).",
         "events_chart_series": "Événements",
-        "events_chart_day": "Jour"
+        "events_chart_day": "Jour",
+        "ua_on": "{browser} sous {os}",
+        "details_more": "Tout afficher",
+        "details_less": "Afficher moins"
     },
     "languages": {
         "title": "Tableau de bord",

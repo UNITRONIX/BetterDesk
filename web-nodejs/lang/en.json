@@ -5450,7 +5450,10 @@
         "events_chart_needs": "A chart per day appears once the events reach back {days} days. The server keeps events only since its last start.",
         "events_chart_summary": "{total} events in the last {days} days, most on {peakDay} ({peak}).",
         "events_chart_series": "Events",
-        "events_chart_day": "Day"
+        "events_chart_day": "Day",
+        "ua_on": "{browser} on {os}",
+        "details_more": "Show all",
+        "details_less": "Show less"
     },
     "languages": {
         "title": "Language Management",

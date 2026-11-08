@@ -59,7 +59,7 @@
         "file_transfer": "نقل الملفات",
         "network": "مراقبة الشبكة",
         "dataguard": "منع فقدان البيانات",
-        "reports": "Reports",
+        "reports": "التقارير",
         "tenants": "Tenants",
         "registrations": "Registrations",
         "activate_agent": "تفعيل وكيل دعم",
@@ -3015,7 +3015,7 @@
         "advanced": "خيارات متقدمة"
     },
     "reports": {
-        "title": "Reports",
+        "title": "التقارير",
         "generate": "إنشاء",
         "generate_csv": "Export CSV",
         "report_type": "النوع",
@@ -3926,7 +3926,7 @@
         "devices": "الأجهزة",
         "invitations": "الدعوات",
         "settings": "إعدادات",
-        "add_user": "Add User",
+        "add_user": "إضافة مستخدم",
         "assign_device": "تعيين الجهاز",
         "create_invitation": "إنشاء دعوة",
         "delete_confirm": "هل تريد حذف هذه المؤسسة؟ سيؤدي هذا إلى إزالة جميع المستخدمين والأجهزة والإعدادات المرتبطة.",
@@ -5255,7 +5255,10 @@
         "events_chart_needs": "يظهر مخطط يومي عندما تعود الأحداث إلى {days} يومًا. يحتفظ الخادم بالأحداث منذ آخر تشغيل فقط.",
         "events_chart_summary": "{total} حدث في آخر {days} يومًا، وأكثرها في {peakDay} ({peak}).",
         "events_chart_series": "الأحداث",
-        "events_chart_day": "اليوم"
+        "events_chart_day": "اليوم",
+        "ua_on": "{browser} على {os}",
+        "details_more": "عرض الكل",
+        "details_less": "عرض أقل"
     },
     "languages": {
         "title": "إدارة اللغة",

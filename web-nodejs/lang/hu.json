@@ -3014,7 +3014,7 @@
         "advanced": "Speciális beállítások"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Jelentések",
         "generate": "Készítés",
         "generate_csv": "Export CSV",
         "report_type": "Típus",
@@ -3925,7 +3925,7 @@
         "devices": "Eszközök",
         "invitations": "Meghívók",
         "settings": "Beállítások elemre",
-        "add_user": "Add User",
+        "add_user": "Felhasználó hozzáadása",
         "assign_device": "Eszköz hozzárendelése",
         "create_invitation": "Meghívó létrehozása",
         "delete_confirm": "Törli ezt a szervezetet? Ezzel eltávolítja az összes társított felhasználót, eszközt és beállítást.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Napi diagram akkor jelenik meg, ha az események {days} napra visszanyúlnak. A szerver csak az utolsó indítás óta őrzi az eseményeket.",
         "events_chart_summary": "{total} esemény az elmúlt {days} napban, a legtöbb: {peakDay} ({peak}).",
         "events_chart_series": "Események",
-        "events_chart_day": "Nap"
+        "events_chart_day": "Nap",
+        "ua_on": "{browser}, {os}",
+        "details_more": "Az összes megjelenítése",
+        "details_less": "Kevesebb megjelenítése"
     },
     "languages": {
         "title": "Nyelvkezelés",

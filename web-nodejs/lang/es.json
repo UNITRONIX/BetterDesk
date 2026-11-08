@@ -3008,7 +3008,7 @@
         "advanced": "Opciones avanzadas"
     },
     "reports": {
-        "title": "Panel",
+        "title": "Informes",
         "generate": "Generar",
         "generate_csv": "Exportar CSV",
         "report_type": "Tipo",
@@ -5248,7 +5248,10 @@
         "events_chart_needs": "Aparece un gráfico por día cuando los eventos llegan a {days} días atrás. El servidor solo guarda eventos desde su último inicio.",
         "events_chart_summary": "{total} eventos en los últimos {days} días, la mayoría el {peakDay} ({peak}).",
         "events_chart_series": "Eventos",
-        "events_chart_day": "Día"
+        "events_chart_day": "Día",
+        "ua_on": "{browser} en {os}",
+        "details_more": "Mostrar todo",
+        "details_less": "Mostrar menos"
     },
     "languages": {
         "title": "Panel",

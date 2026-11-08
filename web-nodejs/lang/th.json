@@ -58,7 +58,7 @@
         "file_transfer": "การถ่ายโอนไฟล์",
         "network": "การตรวจสอบเครือข่าย",
         "dataguard": "การป้องกันข้อมูลรั่วไหล",
-        "reports": "Reports",
+        "reports": "รายงาน",
         "tenants": "Tenants",
         "registrations": "Registrations",
         "activate_agent": "เปิดใช้งานเอเจนต์ช่วยเหลือ",
@@ -3014,7 +3014,7 @@
         "advanced": "ตัวเลือกขั้นสูง"
     },
     "reports": {
-        "title": "Reports",
+        "title": "รายงาน",
         "generate": "สร้าง",
         "generate_csv": "Export CSV",
         "report_type": "ประเภท",
@@ -3925,7 +3925,7 @@
         "devices": "อุปกรณ์",
         "invitations": "คำเชิญ",
         "settings": "การตั้งค่า",
-        "add_user": "Add User",
+        "add_user": "เพิ่มผู้ใช้",
         "assign_device": "กำหนดอุปกรณ์",
         "create_invitation": "สร้างคำเชิญ",
         "delete_confirm": "ลบองค์กรนี้ใช่ไหม การดำเนินการนี้จะลบผู้ใช้ อุปกรณ์ และการตั้งค่าที่เกี่ยวข้องทั้งหมด",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "แผนภูมิรายวันจะแสดงเมื่อเหตุการณ์ย้อนไปถึง {days} วัน เซิร์ฟเวอร์เก็บเหตุการณ์ไว้ตั้งแต่เริ่มทำงานครั้งล่าสุดเท่านั้น",
         "events_chart_summary": "{total} เหตุการณ์ใน {days} วันที่ผ่านมา มากที่สุดวัน{peakDay} ({peak})",
         "events_chart_series": "เหตุการณ์",
-        "events_chart_day": "วัน"
+        "events_chart_day": "วัน",
+        "ua_on": "{browser} บน {os}",
+        "details_more": "แสดงทั้งหมด",
+        "details_less": "แสดงน้อยลง"
     },
     "languages": {
         "title": "การจัดการภาษา",

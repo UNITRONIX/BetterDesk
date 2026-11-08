@@ -3014,7 +3014,7 @@
         "advanced": "Avancerade alternativ"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Rapporter",
         "generate": "Skapa",
         "generate_csv": "Export CSV",
         "report_type": "Typ",
@@ -3925,7 +3925,7 @@
         "devices": "Enheter",
         "invitations": "Inbjudningar",
         "settings": "Inställningar",
-        "add_user": "Add User",
+        "add_user": "Lägg till användare",
         "assign_device": "Tilldela enhet",
         "create_invitation": "Skapa inbjudan",
         "delete_confirm": "Vill du ta bort den här organisationen? Detta tar bort alla associerade användare, enheter och inställningar.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Ett diagram per dag visas när händelserna når {days} dagar bakåt. Servern sparar bara händelser sedan senaste start.",
         "events_chart_summary": "{total} händelser de senaste {days} dagarna, flest {peakDay} ({peak}).",
         "events_chart_series": "Händelser",
-        "events_chart_day": "Dag"
+        "events_chart_day": "Dag",
+        "ua_on": "{browser} på {os}",
+        "details_more": "Visa allt",
+        "details_less": "Visa mindre"
     },
     "languages": {
         "title": "Språkhantering",

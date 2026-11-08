@@ -3014,7 +3014,7 @@
         "advanced": "Lisäasetukset"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Raportit",
         "generate": "Luo",
         "generate_csv": "Export CSV",
         "report_type": "Tyyppi",
@@ -3925,7 +3925,7 @@
         "devices": "Laitteet",
         "invitations": "Kutsut",
         "settings": "Asetukset",
-        "add_user": "Add User",
+        "add_user": "Lisää käyttäjä",
         "assign_device": "Määritä laite",
         "create_invitation": "Luo kutsu",
         "delete_confirm": "Poistetaanko tämä organisaatio? Tämä poistaa kaikki liittyvät käyttäjät, laitteet ja asetukset.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Päiväkohtainen kaavio näkyy, kun tapahtumat ulottuvat {days} päivän taakse. Palvelin säilyttää tapahtumat vain viime käynnistyksestä.",
         "events_chart_summary": "{total} tapahtumaa viimeisten {days} päivän aikana, eniten {peakDay} ({peak}).",
         "events_chart_series": "Tapahtumat",
-        "events_chart_day": "Päivä"
+        "events_chart_day": "Päivä",
+        "ua_on": "{browser}, {os}",
+        "details_more": "Näytä kaikki",
+        "details_less": "Näytä vähemmän"
     },
     "languages": {
         "title": "Kielenhallinta",

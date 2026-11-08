@@ -3008,7 +3008,7 @@
         "advanced": "고급 옵션"
     },
     "reports": {
-        "title": "Reports",
+        "title": "보고서",
         "generate": "생성",
         "generate_csv": "Export CSV",
         "report_type": "유형",
@@ -3919,7 +3919,7 @@
         "devices": "장치",
         "invitations": "초대",
         "settings": "설정",
-        "add_user": "Add User",
+        "add_user": "사용자 추가",
         "assign_device": "장치 할당",
         "create_invitation": "초대장 만들기",
         "delete_confirm": "이 조직을 삭제하시겠습니까? 연결된 모든 사용자, 장치, 설정이 제거됩니다.",
@@ -5248,7 +5248,10 @@
         "events_chart_needs": "이벤트가 {days}일 전까지 거슬러 올라가면 일별 차트가 표시됩니다. 서버는 마지막 시작 이후의 이벤트만 보관합니다.",
         "events_chart_summary": "최근 {days}일 동안 {total}개, 가장 많은 날은 {peakDay}({peak}개)입니다.",
         "events_chart_series": "이벤트",
-        "events_chart_day": "날짜"
+        "events_chart_day": "날짜",
+        "ua_on": "{os}의 {browser}",
+        "details_more": "모두 보기",
+        "details_less": "간단히 보기"
     },
     "languages": {
         "title": "언어 관리",

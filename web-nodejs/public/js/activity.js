@@ -278,7 +278,7 @@
             const appRows = Array.isArray(top) ? top : (top.top_apps || []);
             appsList.innerHTML = !appRows.length
                 ? `<p class="state">${escapeHtml(_('activity.no_apps'))}</p>`
-                : `<div class="table-scroll"><table class="data-table">
+                : `<div class="table-scroll" tabindex="0" role="region" aria-labelledby="detail-apps-title"><table class="data-table">
                     <thead><tr><th scope="col">${escapeHtml(_('activity.app_name'))}</th><th scope="col">${escapeHtml(_('activity.category'))}</th>
                         <th scope="col">${escapeHtml(_('activity.total_time'))}</th><th scope="col">${escapeHtml(_('activity.sessions'))}</th></tr></thead>
                     <tbody>${appRows.map((a) => `<tr>
@@ -291,7 +291,7 @@
             sessionsList.innerHTML = !sesRows.length
                 ? `<p class="state">${escapeHtml(_('activity.no_sessions'))}</p>`
                 : `<p class="count-line">${escapeHtml(_('activity.recent_sessions_note', { count: sesRows.length }))}</p>
-                    <div class="table-scroll"><table class="data-table">
+                    <div class="table-scroll" tabindex="0" role="region" aria-labelledby="detail-sessions-title"><table class="data-table">
                     <thead><tr><th scope="col">${escapeHtml(_('activity.started_at'))}</th><th scope="col">${escapeHtml(_('activity.app_name'))}</th>
                         <th scope="col">${escapeHtml(_('activity.window_title'))}</th><th scope="col">${escapeHtml(_('activity.duration'))}</th></tr></thead>
                     <tbody>${sesRows.map((s) => `<tr>

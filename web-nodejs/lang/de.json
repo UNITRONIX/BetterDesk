@@ -52,7 +52,7 @@
         "file_transfer": "Dateiübertragung",
         "network": "Netzwerküberwachung",
         "dataguard": "Schutz vor Datenabfluss",
-        "reports": "Reports",
+        "reports": "Berichte",
         "tenants": "Tenants",
         "registrations": "Registrierungsanfragen",
         "activate_agent": "Support-Agent aktivieren",
@@ -3008,7 +3008,7 @@
         "advanced": "Erweiterte Optionen"
     },
     "reports": {
-        "title": "Dashboard",
+        "title": "Berichte",
         "generate": "Erstellen",
         "generate_csv": "CSV exportieren",
         "report_type": "Typ",
@@ -5248,7 +5248,10 @@
         "events_chart_needs": "Ein Diagramm pro Tag erscheint, sobald die Ereignisse {days} Tage zurückreichen. Der Server hält Ereignisse nur seit seinem letzten Start.",
         "events_chart_summary": "{total} Ereignisse in den letzten {days} Tagen, die meisten am {peakDay} ({peak}).",
         "events_chart_series": "Ereignisse",
-        "events_chart_day": "Tag"
+        "events_chart_day": "Tag",
+        "ua_on": "{browser} unter {os}",
+        "details_more": "Alles anzeigen",
+        "details_less": "Weniger anzeigen"
     },
     "languages": {
         "title": "Dashboard",

@@ -133,3 +133,49 @@ div.secaudit-panel {
 #hardening-count:empty {
     display: none;
 }
+
+/* Wide screens: the hardening items sit in two columns, so each status
+   stays near its item */
+@media (min-width: 1800px) {
+    #hardening-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: var(--space-7);
+    }
+}
+
+/* Long details are cut after two lines until "Show all" is pressed */
+.secaudit-details .secaudit-details-text.is-clamped {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+.secaudit-details .secaudit-details-toggle {
+    margin-top: var(--space-1);
+}
+
+/* Browser column: a short name, the full browser string under it on one line */
+.secaudit-table .secaudit-ua .cell-sub {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+@media (pointer: coarse) {
+    .secaudit-details .secaudit-details-toggle {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        margin-top: 0;
+    }
+}
+
+/* takes the width the short name gives the column, without widening it */
+.secaudit-table .secaudit-ua .cell-sub {
+    display: block;
+    width: 0;
+    min-width: 100%;
+}

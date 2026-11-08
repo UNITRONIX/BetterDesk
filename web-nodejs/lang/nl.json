@@ -3919,7 +3919,7 @@
         "devices": "Apparaten",
         "invitations": "Uitnodigingen",
         "settings": "Instellingen",
-        "add_user": "Add User",
+        "add_user": "Gebruiker toevoegen",
         "assign_device": "Apparaat toewijzen",
         "create_invitation": "Uitnodiging maken",
         "delete_confirm": "Deze organisatie verwijderen?",
@@ -5248,7 +5248,10 @@
         "events_chart_needs": "Een grafiek per dag verschijnt zodra de gebeurtenissen {days} dagen teruggaan. De server bewaart gebeurtenissen alleen sinds de laatste start.",
         "events_chart_summary": "{total} gebeurtenissen in de laatste {days} dagen, de meeste op {peakDay} ({peak}).",
         "events_chart_series": "Gebeurtenissen",
-        "events_chart_day": "Dag"
+        "events_chart_day": "Dag",
+        "ua_on": "{browser} op {os}",
+        "details_more": "Alles tonen",
+        "details_less": "Minder tonen"
     },
     "languages": {
         "title": "Taalbeheer",

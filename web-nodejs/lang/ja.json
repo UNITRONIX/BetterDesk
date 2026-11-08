@@ -3008,7 +3008,7 @@
         "advanced": "詳細オプション"
     },
     "reports": {
-        "title": "Reports",
+        "title": "レポート",
         "generate": "作成",
         "generate_csv": "Export CSV",
         "report_type": "種類",
@@ -3919,7 +3919,7 @@
         "devices": "デバイス",
         "invitations": "招待",
         "settings": "設定",
-        "add_user": "Add User",
+        "add_user": "ユーザーを追加",
         "assign_device": "デバイスの割り当て",
         "create_invitation": "招待状の作成",
         "delete_confirm": "この組織を削除しますか?これにより、関連付けられているすべてのユーザー、デバイス、設定が削除されます。",
@@ -5248,7 +5248,10 @@
         "events_chart_needs": "イベントが {days} 日前までさかのぼると、日別のグラフが表示されます。サーバーは前回の起動以降のイベントだけを保持します。",
         "events_chart_summary": "過去 {days} 日間に {total} 件。最も多いのは {peakDay}（{peak} 件）。",
         "events_chart_series": "イベント",
-        "events_chart_day": "日付"
+        "events_chart_day": "日付",
+        "ua_on": "{os} の {browser}",
+        "details_more": "すべて表示",
+        "details_less": "表示を減らす"
     },
     "languages": {
         "title": "言語管理",

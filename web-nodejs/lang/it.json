@@ -3919,7 +3919,7 @@
         "devices": "Dispositivi",
         "invitations": "Inviti",
         "settings": "Impostazioni",
-        "add_user": "Add User",
+        "add_user": "Aggiungi utente",
         "assign_device": "Assegna dispositivo",
         "create_invitation": "Crea invito",
         "delete_confirm": "Eliminare questa organizzazione?",
@@ -5248,7 +5248,10 @@
         "events_chart_needs": "Un grafico giornaliero compare quando gli eventi risalgono a {days} giorni fa. Il server conserva gli eventi solo dall’ultimo avvio.",
         "events_chart_summary": "{total} eventi negli ultimi {days} giorni, il massimo il {peakDay} ({peak}).",
         "events_chart_series": "Eventi",
-        "events_chart_day": "Giorno"
+        "events_chart_day": "Giorno",
+        "ua_on": "{browser} su {os}",
+        "details_more": "Mostra tutto",
+        "details_less": "Mostra meno"
     },
     "languages": {
         "title": "Gestione lingue",

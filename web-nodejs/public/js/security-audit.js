@@ -96,6 +96,7 @@
     if (tab !== 'audit') { params.delete('q'); params.delete('type'); }
     history.replaceState(null, '', '?' + params.toString());
     showTab(tab);
+    document.querySelectorAll('.secaudit-stack tbody').forEach(syncDetailToggles);
   }
 
   function loadTab(tab) {
@@ -184,7 +185,7 @@
           <td>${esc(r.who || '—')}</td>
           <td>${esc(r.label)}</td>
           <td>${r.device ? `<span class="mono">${esc(r.device)}</span>` : '—'}</td>
-          <td class="secaudit-details">${esc(r.details || '—')}</td>
+          <td class="secaudit-details">${detailsHtml(r.details)}</td>
           <td><span class="mono">${esc(r.ip || '—')}</span></td>
         </tr>`).join('');
     }
@@ -223,7 +224,7 @@
             <td>${esc(actionLabel(ev.action))}</td>
             <td>${esc(ev.actor || ev.user || '—')}</td>
             <td>${esc(ev.target || ev.resource || '—')}</td>
-            <td class="secaudit-details">${esc(formatDetails(ev.details || ev.detail) || '—')}</td>
+            <td class="secaudit-details">${detailsHtml(formatDetails(ev.details || ev.detail))}</td>
           </tr>`).join('');
       }
       // The server reports the unfiltered total even when filtering, so only trust it without a filter.
@@ -508,7 +509,7 @@
           <td class="secaudit-time">${esc(formatTime(s.lastActivityAt))}</td>
           <td class="secaudit-time">${esc(formatTime(s.endedAt))}</td>
           <td>${esc(reason)}</td>
-          <td class="secaudit-ua" title="${esc(s.userAgent || '')}">${esc(shortUa(s.userAgent))}</td>
+          <td class="secaudit-ua">${uaHtml(s.userAgent)}</td>
         </tr>`;
       }).join('');
     } catch (e) {
@@ -517,9 +518,67 @@
     }
   }
 
-  function shortUa(ua) {
+  // "Chrome 156 on Windows" from a browser string; the full string stays under it on one line
+  function describeUa(ua) {
+    const m = (re) => { const r = ua.match(re); return r ? r[1] : ''; };
+    let browser = '';
+    if (/Edg\//.test(ua)) browser = 'Edge ' + m(/Edg\/(\d+)/);
+    else if (/OPR\//.test(ua)) browser = 'Opera ' + m(/OPR\/(\d+)/);
+    else if (/Firefox\//.test(ua)) browser = 'Firefox ' + m(/Firefox\/(\d+)/);
+    else if (/Chrome\//.test(ua)) browser = (/HeadlessChrome/.test(ua) ? 'Headless Chrome ' : 'Chrome ') + m(/Chrome\/(\d+)/);
+    else if (/Safari\//.test(ua)) browser = 'Safari ' + m(/Version\/(\d+)/);
+    let os = '';
+    if (/Windows/.test(ua)) os = 'Windows';
+    else if (/iPhone|iPad/.test(ua)) os = 'iOS';
+    else if (/Mac OS X|Macintosh/.test(ua)) os = 'macOS';
+    else if (/Android/.test(ua)) os = 'Android';
+    else if (/CrOS/.test(ua)) os = 'ChromeOS';
+    else if (/Linux/.test(ua)) os = 'Linux';
+    browser = browser.trim();
+    if (browser && os) return tr('security_audit.ua_on', `${browser}, ${os}`, { browser, os });
+    return browser || os || '';
+  }
+
+  function uaHtml(ua) {
     if (!ua) return '—';
-    return ua.length > 64 ? ua.slice(0, 61) + '…' : ua;
+    const name = describeUa(ua);
+    if (!name) return `<span class="cell-sub" title="${esc(ua)}">${esc(ua)}</span>`;
+    return `<span>${esc(name)}</span><span class="cell-sub" title="${esc(ua)}">${esc(ua)}</span>`;
+  }
+
+  // A string added in this pass, with a fallback until the language files are reloaded
+  function tr(key, fallback, vars) {
+    const text = _(key, vars);
+    return text === key ? fallback : text;
+  }
+
+  // Long details are cut after two lines; "Show all" opens the rest in place
+  const DETAILS_CLAMP = 140;
+  function detailsHtml(text) {
+    if (!text) return '—';
+    if (String(text).length <= DETAILS_CLAMP) return esc(text);
+    return `<span class="secaudit-details-text is-clamped">${esc(text)}</span>`
+      + `<button type="button" class="btn-link secaudit-details-toggle" aria-expanded="false">${esc(tr('security_audit.details_more', 'Show all'))}</button>`;
+  }
+
+  // "Show all" only where the two lines really cut text off (wide screens fit more)
+  function syncDetailToggles(root) {
+    root.querySelectorAll('.secaudit-details-toggle').forEach((btn) => {
+      const text = btn.previousElementSibling;
+      // a hidden tab has no layout yet; it is checked again when shown
+      if (!text || !text.clientHeight || btn.getAttribute('aria-expanded') === 'true') return;
+      btn.hidden = text.scrollHeight <= text.clientHeight + 1;
+    });
+  }
+
+  function toggleDetails(e) {
+    const btn = e.target.closest('.secaudit-details-toggle');
+    if (!btn) return;
+    const text = btn.previousElementSibling;
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    text.classList.toggle('is-clamped', !open);
+    btn.setAttribute('aria-expanded', String(open));
+    btn.textContent = open ? tr('security_audit.details_less', 'Show less') : tr('security_audit.details_more', 'Show all');
   }
 
   // Phones show each row as a block; every cell carries its column name (see ui/security-audit.css)
@@ -535,8 +594,15 @@
 
   /* ── Init ── */
   function init() {
+    document.getElementById('audit-tbody').addEventListener('click', toggleDetails);
+    document.getElementById('events-tbody').addEventListener('click', toggleDetails);
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => document.querySelectorAll('.secaudit-stack tbody').forEach(syncDetailToggles), 150);
+    });
     document.querySelectorAll('.secaudit-stack tbody').forEach((tbody) => {
-      new MutationObserver(() => labelCells(tbody)).observe(tbody, { childList: true });
+      new MutationObserver(() => { labelCells(tbody); syncDetailToggles(tbody); }).observe(tbody, { childList: true });
       labelCells(tbody);
     });
 

@@ -58,7 +58,7 @@
         "file_transfer": "Pemindahan Berkas",
         "network": "Pemantauan jaringan",
         "dataguard": "Pencegahan kebocoran data",
-        "reports": "Reports",
+        "reports": "Laporan",
         "tenants": "Tenants",
         "registrations": "Registrations",
         "activate_agent": "Aktifkan agen dukungan",
@@ -3014,7 +3014,7 @@
         "advanced": "Opsi lanjutan"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Laporan",
         "generate": "Buat",
         "generate_csv": "Export CSV",
         "report_type": "Jenis",
@@ -3925,7 +3925,7 @@
         "devices": "Perangkat",
         "invitations": "Undangan",
         "settings": "Pengaturan",
-        "add_user": "Add User",
+        "add_user": "Tambah pengguna",
         "assign_device": "Tetapkan Perangkat",
         "create_invitation": "Buat Undangan",
         "delete_confirm": "Hapus organisasi ini? Tindakan ini akan menghapus semua pengguna, perangkat, dan pengaturan terkait.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Grafik per hari muncul setelah peristiwa mencakup {days} hari ke belakang. Server hanya menyimpan peristiwa sejak terakhir dijalankan.",
         "events_chart_summary": "{total} peristiwa dalam {days} hari terakhir, terbanyak pada {peakDay} ({peak}).",
         "events_chart_series": "Peristiwa",
-        "events_chart_day": "Hari"
+        "events_chart_day": "Hari",
+        "ua_on": "{browser} di {os}",
+        "details_more": "Tampilkan semua",
+        "details_less": "Tampilkan lebih sedikit"
     },
     "languages": {
         "title": "Manajemen Bahasa",

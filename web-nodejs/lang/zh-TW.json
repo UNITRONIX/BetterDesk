@@ -5381,7 +5381,10 @@
         "events_chart_needs": "事件可追溯 {days} 天後才會顯示每日圖表。伺服器只保留上次啟動以來的事件。",
         "events_chart_summary": "過去 {days} 天共 {total} 筆，最多在 {peakDay}（{peak} 筆）。",
         "events_chart_series": "事件",
-        "events_chart_day": "日期"
+        "events_chart_day": "日期",
+        "ua_on": "{os} 上的 {browser}",
+        "details_more": "顯示全部",
+        "details_less": "收合"
     },
     "languages": {
         "title": "語言管理",

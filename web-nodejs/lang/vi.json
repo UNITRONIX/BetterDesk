@@ -58,7 +58,7 @@
         "file_transfer": "Truyền tệp",
         "network": "Giám sát mạng",
         "dataguard": "Chống thất thoát dữ liệu",
-        "reports": "Reports",
+        "reports": "Báo cáo",
         "tenants": "Tenants",
         "registrations": "Registrations",
         "activate_agent": "Kích hoạt tác tử hỗ trợ",
@@ -3014,7 +3014,7 @@
         "advanced": "Tùy chọn nâng cao"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Báo cáo",
         "generate": "Tạo",
         "generate_csv": "Export CSV",
         "report_type": "Loại",
@@ -3925,7 +3925,7 @@
         "devices": "Thiết bị",
         "invitations": "Lời mời",
         "settings": "Cài đặt",
-        "add_user": "Add User",
+        "add_user": "Thêm người dùng",
         "assign_device": "Chỉ định thiết bị",
         "create_invitation": "Tạo lời mời",
         "delete_confirm": "Xóa tổ chức này? Thao tác này sẽ xóa tất cả người dùng, thiết bị và cài đặt được liên kết.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Biểu đồ theo ngày sẽ hiện khi sự kiện kéo dài đủ {days} ngày. Máy chủ chỉ giữ sự kiện kể từ lần khởi động gần nhất.",
         "events_chart_summary": "{total} sự kiện trong {days} ngày qua, nhiều nhất vào {peakDay} ({peak}).",
         "events_chart_series": "Sự kiện",
-        "events_chart_day": "Ngày"
+        "events_chart_day": "Ngày",
+        "ua_on": "{browser} trên {os}",
+        "details_more": "Hiện tất cả",
+        "details_less": "Ẩn bớt"
     },
     "languages": {
         "title": "Quản lý ngôn ngữ",

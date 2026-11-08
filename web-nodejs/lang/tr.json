@@ -58,7 +58,7 @@
         "file_transfer": "Dosya Aktarımı",
         "network": "Ağ izleme",
         "dataguard": "Veri sızıntısı önleme",
-        "reports": "Reports",
+        "reports": "Raporlar",
         "tenants": "Tenants",
         "registrations": "Registrations",
         "activate_agent": "Destek aracısını etkinleştir",
@@ -3014,7 +3014,7 @@
         "advanced": "Gelişmiş seçenekler"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Raporlar",
         "generate": "Oluştur",
         "generate_csv": "Export CSV",
         "report_type": "Tür",
@@ -3925,7 +3925,7 @@
         "devices": "Cihazlar",
         "invitations": "Davetler",
         "settings": "Ayarlar",
-        "add_user": "Add User",
+        "add_user": "Kullanıcı ekle",
         "assign_device": "Cihaz Ata",
         "create_invitation": "Davetiye Oluştur",
         "delete_confirm": "Bu kuruluş silinsin mi? Bu, ilişkili tüm kullanıcıları, cihazları ve ayarları kaldıracaktır.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Olaylar {days} gün geriye uzandığında günlük grafik görünür. Sunucu olayları yalnızca son başlatmadan bu yana tutar.",
         "events_chart_summary": "Son {days} günde {total} olay, en çok {peakDay} ({peak}).",
         "events_chart_series": "Olaylar",
-        "events_chart_day": "Gün"
+        "events_chart_day": "Gün",
+        "ua_on": "{os} üzerinde {browser}",
+        "details_more": "Tümünü göster",
+        "details_less": "Daha az göster"
     },
     "languages": {
         "title": "Dil Yönetimi",

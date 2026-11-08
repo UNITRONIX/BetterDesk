@@ -3014,7 +3014,7 @@
         "advanced": "Opțiuni avansate"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Rapoarte",
         "generate": "Generați",
         "generate_csv": "Export CSV",
         "report_type": "Tip",
@@ -3925,7 +3925,7 @@
         "devices": "Dispozitive",
         "invitations": "Invitații",
         "settings": "Setări",
-        "add_user": "Add User",
+        "add_user": "Adaugă utilizator",
         "assign_device": "Atribuiți dispozitiv",
         "create_invitation": "Creați invitație",
         "delete_confirm": "Ștergeți această organizație? Aceasta va elimina toți utilizatorii, dispozitivele și setările asociate.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Un grafic pe zile apare când evenimentele ajung {days} zile în urmă. Serverul păstrează evenimentele doar de la ultima pornire.",
         "events_chart_summary": "{total} evenimente în ultimele {days} zile, cele mai multe pe {peakDay} ({peak}).",
         "events_chart_series": "Evenimente",
-        "events_chart_day": "Zi"
+        "events_chart_day": "Zi",
+        "ua_on": "{browser} pe {os}",
+        "details_more": "Afișează tot",
+        "details_less": "Afișează mai puțin"
     },
     "languages": {
         "title": "Managementul Limbii",

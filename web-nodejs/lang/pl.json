@@ -5377,7 +5377,10 @@
         "events_chart_needs": "Wykres dzienny pojawi się, gdy zdarzenia sięgną {days} dni wstecz. Serwer przechowuje zdarzenia tylko od ostatniego uruchomienia.",
         "events_chart_summary": "{total} zdarzeń w ostatnich {days} dniach, najwięcej w {peakDay} ({peak}).",
         "events_chart_series": "Zdarzenia",
-        "events_chart_day": "Dzień"
+        "events_chart_day": "Dzień",
+        "ua_on": "{browser} w systemie {os}",
+        "details_more": "Pokaż wszystko",
+        "details_less": "Pokaż mniej"
     },
     "languages": {
         "title": "Zarządzanie językami",

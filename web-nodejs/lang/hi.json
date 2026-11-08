@@ -58,7 +58,7 @@
         "file_transfer": "दस्तावेज हस्तांतरण",
         "network": "नेटवर्क निगरानी",
         "dataguard": "डेटा हानि रोकथाम",
-        "reports": "Reports",
+        "reports": "रिपोर्ट",
         "tenants": "Tenants",
         "registrations": "Registrations",
         "activate_agent": "सहायता एजेंट सक्रिय करें",
@@ -3014,7 +3014,7 @@
         "advanced": "उन्नत विकल्प"
     },
     "reports": {
-        "title": "Reports",
+        "title": "रिपोर्ट",
         "generate": "बनाएँ",
         "generate_csv": "Export CSV",
         "report_type": "प्रकार",
@@ -3925,7 +3925,7 @@
         "devices": "उपकरण",
         "invitations": "आमंत्रण",
         "settings": "सेटिंग्स",
-        "add_user": "Add User",
+        "add_user": "उपयोगकर्ता जोड़ें",
         "assign_device": "डिवाइस असाइन करें",
         "create_invitation": "निमंत्रण बनाएँ",
         "delete_confirm": "इस संगठन को हटाएं? यह सभी संबद्ध उपयोगकर्ताओं, उपकरणों और सेटिंग्स को हटा देगा।",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "जब घटनाएँ {days} दिन पीछे तक पहुँचेंगी, तब प्रति दिन चार्ट दिखेगा। सर्वर घटनाएँ केवल पिछली बार शुरू होने के बाद से रखता है।",
         "events_chart_summary": "पिछले {days} दिनों में {total} घटनाएँ, सबसे ज़्यादा {peakDay} को ({peak})।",
         "events_chart_series": "घटनाएँ",
-        "events_chart_day": "दिन"
+        "events_chart_day": "दिन",
+        "ua_on": "{os} पर {browser}",
+        "details_more": "सब दिखाएँ",
+        "details_less": "कम दिखाएँ"
     },
     "languages": {
         "title": "भाषा प्रबंधन",

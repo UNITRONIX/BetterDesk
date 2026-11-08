@@ -3014,7 +3014,7 @@
         "advanced": "Додаткові параметри"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Звіти",
         "generate": "Створити",
         "generate_csv": "Export CSV",
         "report_type": "Тип",
@@ -3925,7 +3925,7 @@
         "devices": "Пристрої",
         "invitations": "Запрошення",
         "settings": "Налаштування",
-        "add_user": "Add User",
+        "add_user": "Додати користувача",
         "assign_device": "Призначити пристрій",
         "create_invitation": "Створити запрошення",
         "delete_confirm": "Видалити цю організацію? Це призведе до видалення всіх пов’язаних користувачі��, пристроїв і налаштувань.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Графік за днями з’явиться, коли події сягатимуть {days} днів тому. Сервер зберігає події лише з останнього запуску.",
         "events_chart_summary": "{total} подій за останні {days} днів, найбільше — {peakDay} ({peak}).",
         "events_chart_series": "Події",
-        "events_chart_day": "День"
+        "events_chart_day": "День",
+        "ua_on": "{browser} у {os}",
+        "details_more": "Показати все",
+        "details_less": "Показати менше"
     },
     "languages": {
         "title": "Управління мовою",

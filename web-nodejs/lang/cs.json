@@ -52,7 +52,7 @@
         "file_transfer": "Přenos souborů",
         "network": "Monitorování sítě",
         "dataguard": "Ochrana před únikem dat",
-        "reports": "Výkazy",
+        "reports": "Reporty",
         "tenants": "Tenanti",
         "registrations": "Registrace",
         "activate_agent": "Aktivovat agenta podpory",
@@ -5248,7 +5248,10 @@
         "events_chart_needs": "Graf po dnech se zobrazí, až události sahají {days} dní zpět. Server uchovává události jen od posledního spuštění.",
         "events_chart_summary": "{total} událostí za posledních {days} dní, nejvíce v {peakDay} ({peak}).",
         "events_chart_series": "Události",
-        "events_chart_day": "Den"
+        "events_chart_day": "Den",
+        "ua_on": "{browser} v {os}",
+        "details_more": "Zobrazit vše",
+        "details_less": "Zobrazit méně"
     },
     "languages": {
         "title": "Správa jazyků",

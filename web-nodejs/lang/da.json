@@ -3014,7 +3014,7 @@
         "advanced": "Avancerede indstillinger"
     },
     "reports": {
-        "title": "Reports",
+        "title": "Rapporter",
         "generate": "Opret",
         "generate_csv": "Export CSV",
         "report_type": "Type",
@@ -3925,7 +3925,7 @@
         "devices": "Enheder",
         "invitations": "Invitationer",
         "settings": "Indstillinger",
-        "add_user": "Add User",
+        "add_user": "Tilføj bruger",
         "assign_device": "Tildel enhed",
         "create_invitation": "Opret invitation",
         "delete_confirm": "Vil du slette denne organisation? Dette vil fjerne alle tilknyttede brugere, enheder og indstillinger.",
@@ -5254,7 +5254,10 @@
         "events_chart_needs": "Et diagram pr. dag vises, når hændelserne går {days} dage tilbage. Serveren gemmer kun hændelser siden sidste start.",
         "events_chart_summary": "{total} hændelser de seneste {days} dage, flest {peakDay} ({peak}).",
         "events_chart_series": "Hændelser",
-        "events_chart_day": "Dag"
+        "events_chart_day": "Dag",
+        "ua_on": "{browser} på {os}",
+        "details_more": "Vis alt",
+        "details_less": "Vis mindre"
     },
     "languages": {
         "title": "Sprogstyring",
