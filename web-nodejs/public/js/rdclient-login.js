@@ -5,8 +5,6 @@
 (function () {
     'use strict';
 
-    var DEFAULT_GRADIENT = 'linear-gradient(135deg, #0d1117 0%, #161b22 40%, #1a1a2e 70%, #0f3460 100%)';
-
     function t(key, fallback) {
         if (typeof _ === 'function') {
             var v = _(key);
@@ -26,18 +24,12 @@
     }
 
     function showError(el, textEl, msg) {
-        if (el) el.classList.remove('hidden');
         if (textEl) textEl.textContent = msg;
+        if (el) el.classList.remove('hidden');
     }
 
     function hideError(el) {
         if (el) el.classList.add('hidden');
-    }
-
-    function preloadWallpaper() {
-        var el = document.getElementById('rdclient-wallpaper');
-        if (!el) return;
-        el.style.background = DEFAULT_GRADIENT;
     }
 
     async function prefillCredentials() {
@@ -84,6 +76,7 @@
                 passwordInput.type = isPassword ? 'text' : 'password';
                 passwordToggle.querySelector('.material-icons').textContent =
                     isPassword ? 'visibility_off' : 'visibility';
+                passwordToggle.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
             });
         }
 
@@ -150,7 +143,7 @@
         var totpForm = document.getElementById('rdclient-totp-form');
         if (totpForm) {
             totpForm.classList.remove('hidden');
-            var first = totpForm.querySelector('.dl-totp-digit[data-idx="0"]');
+            var first = totpCodeInputs(totpForm)[0];
             if (first) setTimeout(function () { first.focus(); }, 100);
         }
     }
@@ -158,13 +151,21 @@
     function hideTotpForm() {
         document.getElementById('rdclient-login-form').classList.remove('hidden');
         document.getElementById('rdclient-totp-form').classList.add('hidden');
-        document.querySelectorAll('#rdclient-totp-form .dl-totp-digit').forEach(function (d) { d.value = ''; });
+        totpCodeInputs().forEach(function (d) { d.value = ''; });
+        var userInput = document.getElementById('rdclient-username');
+        if (userInput) userInput.focus();
+    }
+
+    // The code field (#rdclient-totp-code); older markup used six .dl-totp-digit boxes
+    function totpCodeInputs(form) {
+        form = form || document.getElementById('rdclient-totp-form');
+        if (!form) return [];
+        var single = form.querySelector('#rdclient-totp-code');
+        return single ? [single] : Array.prototype.slice.call(form.querySelectorAll('.dl-totp-digit'));
     }
 
     function getTotpCode() {
-        var code = '';
-        document.querySelectorAll('#rdclient-totp-form .dl-totp-digit').forEach(function (d) { code += d.value; });
-        return code;
+        return totpCodeInputs().map(function (d) { return d.value; }).join('').replace(/\D/g, '');
     }
 
     function bindTotpForm() {
@@ -176,6 +177,16 @@
         var csrfToken = (window.BetterDesk && window.BetterDesk.csrfToken) || '';
 
         if (!form) return;
+
+        var codeInput = form.querySelector('#rdclient-totp-code');
+        if (codeInput) {
+            // Submits on its own once six digits are in, as the digit boxes did
+            codeInput.addEventListener('input', function () {
+                var val = codeInput.value.replace(/\D/g, '').substring(0, 6);
+                if (codeInput.value !== val) codeInput.value = val;
+                if (val.length === 6) submitTotp();
+            });
+        }
 
         var digits = form.querySelectorAll('.dl-totp-digit');
         digits.forEach(function (digit, idx) {
@@ -199,6 +210,7 @@
         });
 
         function submitTotp() {
+            if (submitBtn.disabled) return;
             var code = getTotpCode();
             if (code.length !== 6) {
                 showError(errorEl, errorText, t('rdclient_login.enter_6_digits', 'Enter all 6 digits'));
@@ -226,8 +238,9 @@
                     return;
                 }
                 showError(errorEl, errorText, data.error || t('rdclient_login.invalid_code', 'Invalid code'));
-                document.querySelectorAll('#rdclient-totp-form .dl-totp-digit').forEach(function (d) { d.value = ''; });
-                if (digits[0]) digits[0].focus();
+                var inputs = totpCodeInputs(form);
+                inputs.forEach(function (d) { d.value = ''; });
+                if (inputs[0]) inputs[0].focus();
             })
             .catch(function () {
                 submitBtn.classList.remove('loading');
@@ -246,7 +259,6 @@
     }
 
     function init() {
-        preloadWallpaper();
         prefillCredentials();
         checkSessionExpired();
         bindLoginForm();

@@ -5674,8 +5674,8 @@
         "popup_blocked": "Der Browser hat den neuen Tab blockiert. Erlauben Sie Pop-ups für diese Seite und versuchen Sie es erneut."
     },
     "rdclient_login": {
-        "title": "Remote-Desktop-Client",
-        "subtitle": "Melden Sie sich an, um eine Verbindung zu Ihren Geräten herzustellen",
+        "title": "Anmelden für den Remote-Desktop",
+        "subtitle": "Melden Sie sich mit Ihrem Konsolenkonto an, um Geräte aus diesem Browser zu steuern.",
         "username_placeholder": "Benutzername",
         "password_placeholder": "Passwort",
         "remember_me": "Auf diesem Gerät merken",
@@ -5684,12 +5684,12 @@
         "totp_subtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein",
         "verify": "Bestätigen",
         "back_to_login": "Zurück zur Anmeldung",
-        "open_console_login": "Konsolen-Anmeldung öffnen",
-        "session_expired": "Sitzung abgelaufen. Bitte erneut anmelden.",
-        "fill_all_fields": "Bitte alle Felder ausfüllen",
+        "open_console_login": "Stattdessen bei der Konsole anmelden",
+        "session_expired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+        "fill_all_fields": "Geben Sie Benutzername und Passwort ein.",
         "invalid_credentials": "Ungültige Anmeldedaten",
-        "network_error": "Netzwerkfehler",
-        "enter_6_digits": "Alle 6 Ziffern eingeben",
+        "network_error": "Der Server ist nicht erreichbar. Prüfen Sie die Verbindung und versuchen Sie es erneut.",
+        "enter_6_digits": "Geben Sie den 6-stelligen Code ein.",
         "invalid_code": "Ungültiger Code"
     },
     "rdclient_settings": {

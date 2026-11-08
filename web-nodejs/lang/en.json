@@ -5694,8 +5694,8 @@
         }
     },
     "rdclient_login": {
-        "title": "Remote Desktop Client",
-        "subtitle": "Sign in to connect to your devices",
+        "title": "Sign in to remote desktop",
+        "subtitle": "Use your console account to connect to devices from this browser.",
         "username_placeholder": "Username",
         "password_placeholder": "Password",
         "remember_me": "Remember me on this device",
@@ -5704,12 +5704,12 @@
         "totp_subtitle": "Enter the 6-digit code from your authenticator app",
         "verify": "Verify",
         "back_to_login": "Back to sign in",
-        "open_console_login": "Open console login",
-        "session_expired": "Session expired. Please sign in again.",
-        "fill_all_fields": "Please fill in all fields",
+        "open_console_login": "Sign in to the console instead",
+        "session_expired": "Your session has ended. Sign in again.",
+        "fill_all_fields": "Enter your username and password.",
         "invalid_credentials": "Invalid credentials",
-        "network_error": "Network error",
-        "enter_6_digits": "Enter all 6 digits",
+        "network_error": "Could not reach the server. Check your connection and try again.",
+        "enter_6_digits": "Enter the 6-digit code.",
         "invalid_code": "Invalid code"
     },
     "rdclient_settings": {
