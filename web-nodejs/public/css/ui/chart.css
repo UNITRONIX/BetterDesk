@@ -72,6 +72,12 @@
 .chart-series-2 .chart-bar { fill: var(--series-2); }
 .chart-series-3 .chart-bar { fill: var(--series-3); }
 
+/* ui-chart.js parks the crosshair and dots at x = -10 while idle */
+.chart-cross[x1="-10"],
+.chart-dot[cx="-10"] {
+    visibility: hidden;
+}
+
 .chart-cross {
     stroke: var(--border);
     stroke-width: 1;
