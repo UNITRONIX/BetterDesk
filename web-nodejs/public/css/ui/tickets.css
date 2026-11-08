@@ -29,45 +29,6 @@
     color: var(--text-muted);
 }
 
-/* Status marks: open is a hollow ring, in progress filled with the accent,
-   resolved filled green, closed muted */
-.status.ticket-status.is-open::before {
-    border-color: var(--warning);
-}
-
-.status.ticket-status.is-in_progress::before {
-    border-color: var(--accent);
-    background: var(--accent);
-}
-
-.status.ticket-status.is-resolved::before {
-    border-color: var(--success);
-    background: var(--success);
-}
-
-.status.ticket-status.is-closed {
-    color: var(--text-muted);
-}
-
-/* Priority is a word; colour only adds to it */
-.ticket-priority {
-    white-space: nowrap;
-}
-
-.ticket-priority.is-critical {
-    color: var(--danger);
-    font-weight: 600;
-}
-
-.ticket-priority.is-high {
-    color: var(--warning);
-    font-weight: 600;
-}
-
-.ticket-priority.is-low {
-    color: var(--text-muted);
-}
-
 .sla-overdue,
 .count-overdue,
 .data-table .cell-sub.sla-overdue {
@@ -220,5 +181,14 @@
 
     .tickets-priority-facts > dd {
         padding-top: var(--row-pad-y);
+    }
+}
+
+/* Device IDs open the device panel: a full touch target on phones */
+@media (pointer: coarse) {
+    button[data-open-device] {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
     }
 }

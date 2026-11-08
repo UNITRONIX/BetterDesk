@@ -25,21 +25,6 @@
     color: var(--danger);
 }
 
-/* Accepted: filled with the accent. Resolved: filled green, plain text. */
-.status.hr-accepted::before {
-    border-color: var(--accent);
-    background: var(--accent);
-}
-
-.status.hr-resolved {
-    color: var(--text-muted);
-}
-
-.status.hr-resolved::before {
-    border-color: var(--success);
-    background: var(--success);
-}
-
 /* Connect menu: each way to connect with one line on what it needs */
 .hr-connect-menu {
     min-width: 260px;
@@ -169,9 +154,9 @@
 
 /* ── Side column: requests by status ── */
 
-/* Accepted uses the same accent as its status mark in the table */
-.share-bar .is-accepted,
-.share-legend .key.is-accepted {
+/* Waiting uses the accent, like the waiting status mark in the table */
+.share-bar .is-waiting,
+.share-legend .key.is-waiting {
     background: var(--accent);
 }
 
@@ -181,6 +166,15 @@
 
 @media (pointer: coarse) {
     .hr-share-filter {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}
+
+/* Device names open the device panel: a full touch target on phones */
+@media (pointer: coarse) {
+    .hr-table button[data-action="device"] {
         display: inline-flex;
         align-items: center;
         min-height: 44px;

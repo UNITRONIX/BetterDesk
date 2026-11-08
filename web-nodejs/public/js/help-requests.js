@@ -225,22 +225,29 @@
 
     function rowHtml(req, index, total) {
         const created = Utils.parseDate(req.created_at);
-        const age = Utils.formatRelativeTime(created, { empty: _('common.not_available') });
-        const full = Utils.formatDate(created, { empty: '' });
+        const age = Utils.timeHtml(created, { empty: _('common.not_available') });
         const message = req.message
             ? `<span class="hr-message" id="hr-msg-${index}">${esc(req.message)}</span>`
             : `<span class="hr-message is-missing" id="hr-msg-${index}">${esc(_('help_request.no_message'))}</span>`;
+        // The device opens the shared device panel (deviceDetail.js) where the role may view devices
+        const openable = !!(req.device_id && window.DeviceDetail && can('device.view'));
+        const deviceLink = (text, cls) => openable
+            ? `<button type="button" class="btn-link ${cls}" data-action="device">${esc(text)}</button>`
+            : `<span class="${cls}">${esc(text)}</span>`;
         const deviceName = req.hostname
-            ? `<span class="row-name">${esc(req.hostname)}</span>`
-            : `<span class="row-name is-missing">${esc(_('help_request.no_device_name'))}</span>`;
+            ? deviceLink(req.hostname, 'row-name')
+            : (openable ? deviceLink(_('help_request.no_device_name'), 'row-name is-missing')
+                : `<span class="row-name is-missing">${esc(_('help_request.no_device_name'))}</span>`);
+        const phoneDevice = req.hostname ? `${deviceLink(req.hostname, 'hr-device-name')} · ` : '';
         const sub = statusSub(req);
-        const statusCls = req.status === 'pending' ? 'pending' : (req.status === 'accepted' ? 'hr-accepted' : 'hr-resolved');
+        // Waiting for someone, taken (good), resolved (ended, nothing left to do)
+        const tone = req.status === 'pending' ? 'waiting' : (req.status === 'accepted' ? 'good' : 'neutral');
         const upClass = total > 3 && index >= total - 2 ? ' menu-near-end' : '';
         return `<tr data-id="${esc(req.id)}" class="is-${esc(req.status)}${upClass}">
-            <td class="col-message">${message}<span class="cell-sub phone-only">${req.hostname ? `${esc(req.hostname)} · ` : ''}<span class="mono">${esc(req.device_id)}</span> · ${esc(age)}</span></td>
-            <td class="col-device">${deviceName}<span class="cell-sub mono">${esc(req.device_id)}</span></td>
-            <td class="col-age"${full ? ` title="${esc(full)}"` : ''}>${esc(age)}</td>
-            <td class="col-status"><span class="status ${statusCls}">${esc(statusLabel(req))}</span>${sub ? `<span class="cell-sub">${esc(sub)}</span>` : ''}</td>
+            <td class="col-message">${message}<span class="cell-sub phone-only">${phoneDevice}${Utils.valueHtml(req.device_id)} · ${age}</span></td>
+            <td class="col-device">${deviceName}<span class="cell-sub">${Utils.valueHtml(req.device_id)}</span></td>
+            <td class="col-age">${age}</td>
+            <td class="col-status">${Utils.statusHtml(tone, statusLabel(req))}${sub ? `<span class="cell-sub">${esc(sub)}</span>` : ''}</td>
             <td class="actions">${actionsHtml(req, index)}</td>
         </tr>`;
     }
@@ -328,9 +335,9 @@
         if (!shareBar || !shareLegend) return;
         const fmt = numberFormat();
         const parts = [
-            { status: 'pending', cls: 'is-warning', label: _('help_request.share_waiting') },
-            { status: 'accepted', cls: 'is-accepted', label: _('help_request.share_accepted') },
-            { status: 'resolved', cls: 'is-ok', label: _('help_request.share_resolved') },
+            { status: 'pending', cls: 'is-waiting', label: _('help_request.share_waiting') },
+            { status: 'accepted', cls: 'is-ok', label: _('help_request.share_accepted') },
+            { status: 'resolved', cls: 'is-muted', label: _('help_request.share_resolved') },
         ];
         parts.forEach((p) => { p.n = requests.filter(r => r.status === p.status).length; });
         const total = parts.reduce((a, p) => a + p.n, 0);
@@ -451,6 +458,7 @@
             case 'resolve': changeStatus(id, 'resolve'); break;
             case 'connect-web': connectWeb(req.device_id); break;
             case 'connect-app': connectApp(req.device_id); break;
+            case 'device': DeviceDetail.open(req.device_id); break;
         }
     });
 

@@ -214,7 +214,7 @@
             main.appendChild(el('span', 'row-sub', fill(_('tickets.overdue_row'), {
                 id: Number(t.id),
                 priority: _(`tickets.priority_${String(t.priority || '').replace(/[^a-z_]/g, '')}`),
-                time: formatTimeAgo(t.sla_due_at),
+                time: Utils.formatRelativeTime(t.sla_due_at),
             })));
             btn.appendChild(main);
             const chev = el('span', 'material-icons row-chevron', 'chevron_right');
@@ -227,14 +227,20 @@
 
     // ---- Render ----
 
+    // Values use the shared data display (utils.js): status tones, tags, names, times
     function statusHtml(status) {
         const safe = String(status || '').replace(/[^a-z_]/g, '');
-        return `<span class="status ticket-status is-${safe}">${escapeHtml(_(`tickets.status_${safe}`))}</span>`;
+        return Utils.statusHtml(safe, _(`tickets.status_${safe}`));
     }
 
+    // Priority is a severity: critical and high danger, medium warning, low neutral
     function priorityHtml(priority) {
         const safe = String(priority || '').replace(/[^a-z_]/g, '');
-        return `<span class="ticket-priority is-${safe}">${escapeHtml(_(`tickets.priority_${safe}`))}</span>`;
+        return Utils.statusHtml(safe, _(`tickets.priority_${safe}`));
+    }
+
+    function categoryHtml(category) {
+        return category ? Utils.tagHtml(categoryText(category)) : Utils.emptyHtml();
     }
 
     function categoryText(category) {
@@ -244,10 +250,25 @@
         return label === `tickets.category_${safe}` ? category : label;
     }
 
-    function assigneeHtml(name) {
+    function assigneeHtml(name, avatar) {
         return name
-            ? escapeHtml(name)
-            : `<span class="text-muted">${escapeHtml(_('tickets.unassigned'))}</span>`;
+            ? Utils.userHtml(name, { avatar: !!avatar })
+            : Utils.emptyHtml(_('tickets.unassigned'));
+    }
+
+    // A device opens the shared device panel (deviceDetail.js) when the role may view devices
+    function deviceHtml(deviceId) {
+        const canOpen = window.DeviceDetail && (!(window.Utils && typeof Utils.can === 'function') || Utils.can('device.view'));
+        return canOpen
+            ? `<button type="button" class="btn-link mono" data-open-device="${escapeHtml(deviceId)}">${escapeHtml(deviceId)}</button>`
+            : `<span class="mono">${escapeHtml(deviceId)}</span>`;
+    }
+
+    // Recent: "5h ago"; older than a week: the date without the time, so the column stays narrow
+    function createdHtml(value) {
+        const d = Utils.parseDate(value);
+        const old = d && Date.now() - d.getTime() > 7 * 86400000;
+        return Utils.timeHtml(value, old ? { relative: false, format: { hour: undefined, minute: undefined } } : {});
     }
 
     function renderTable(tickets) {
@@ -286,10 +307,10 @@
                 </td>
                 <td>${statusHtml(t.status)}</td>
                 <td class="col-priority">${priorityHtml(t.priority)}</td>
-                <td class="col-category">${escapeHtml(categoryText(t.category))}</td>
-                <td class="col-assignee">${assigneeHtml(t.assigned_to)}</td>
-                <td class="col-device">${t.device_id ? `<span class="mono">${escapeHtml(t.device_id)}</span>` : ''}</td>
-                <td class="col-created"><span title="${escapeHtml(formatDate(t.created_at))}">${escapeHtml(formatTimeAgo(t.created_at))}</span></td>
+                <td class="col-category">${categoryHtml(t.category)}</td>
+                <td class="col-assignee">${assigneeHtml(t.assigned_to, true)}</td>
+                <td class="col-device">${t.device_id ? deviceHtml(t.device_id) : ''}</td>
+                <td class="col-created">${createdHtml(t.created_at)}</td>
                 <td class="actions">${menu}</td>
             </tr>`;
         }).join('');
@@ -351,41 +372,22 @@
         const id = Number(t.id);
         const overdue = isOverdue(t);
         const due = t.sla_due_at
-            ? `${escapeHtml(formatDate(t.sla_due_at))}${overdue ? ` <span class="sla-overdue">${escapeHtml(_('tickets.sla_overdue'))}</span>` : ''}`
+            ? `${Utils.timeHtml(t.sla_due_at, { relative: false })}${overdue ? ` <span class="sla-overdue">${escapeHtml(_('tickets.sla_overdue'))}</span>` : ''}`
             : '—';
 
         let html = `
             <dl class="facts ticket-facts">
                 <dt>${escapeHtml(_('tickets.status'))}</dt><dd>${statusHtml(t.status)}</dd>
                 <dt>${escapeHtml(_('tickets.priority'))}</dt><dd>${priorityHtml(t.priority)}</dd>
-                <dt>${escapeHtml(_('tickets.category'))}</dt><dd>${escapeHtml(categoryText(t.category)) || '—'}</dd>
-                <dt>${escapeHtml(_('tickets.assigned_to'))}</dt><dd>${assigneeHtml(t.assigned_to)}</dd>
-                <dt>${escapeHtml(_('tickets.device'))}</dt><dd>${t.device_id ? `<span class="mono">${escapeHtml(t.device_id)}</span>` : '—'}</dd>
-                <dt>${escapeHtml(_('tickets.created_by'))}</dt><dd>${escapeHtml(t.created_by || '—')}</dd>
-                <dt>${escapeHtml(_('tickets.created_at'))}</dt><dd>${escapeHtml(formatDate(t.created_at))}</dd>
+                <dt>${escapeHtml(_('tickets.category'))}</dt><dd>${categoryHtml(t.category)}</dd>
+                <dt>${escapeHtml(_('tickets.assigned_to'))}</dt><dd>${assigneeHtml(t.assigned_to, true)}</dd>
+                <dt>${escapeHtml(_('tickets.device'))}</dt><dd>${t.device_id ? deviceHtml(t.device_id) : '—'}</dd>
+                <dt>${escapeHtml(_('tickets.created_by'))}</dt><dd>${Utils.userHtml(t.created_by)}</dd>
+                <dt>${escapeHtml(_('tickets.created_at'))}</dt><dd>${Utils.timeHtml(t.created_at, { relative: false })}</dd>
                 <dt>${escapeHtml(_('tickets.sla_due'))}</dt><dd>${due}</dd>
             </dl>`;
 
-        if (t.description) {
-            html += `<section class="ticket-block">
-                <h3>${escapeHtml(_('tickets.description'))}</h3>
-                <p class="ticket-description">${escapeHtml(t.description)}</p>
-            </section>`;
-        }
-
-        if (t.attachments && t.attachments.length) {
-            html += `<section class="ticket-block">
-                <h3>${escapeHtml(_('tickets.attachments'))}</h3>
-                <ul class="list">${t.attachments.map(a => `
-                    <li class="list-row"><span class="row-main">
-                        <a href="/api/tickets/attachments/${Number(a.id)}">${escapeHtml(a.filename)}</a>
-                        <span class="row-sub">${escapeHtml(formatSize(a.size_bytes))}${a.uploaded_by ? `, ${escapeHtml(a.uploaded_by)}` : ''}</span>
-                    </span></li>`).join('')}
-                </ul>
-            </section>`;
-        }
-
-        // Status and assignment
+        // Status and assignment, right under the facts they change
         if (canEdit) {
             const actions = [];
             if (t.status === 'open') {
@@ -409,6 +411,25 @@
             }
         }
 
+        if (t.description) {
+            html += `<section class="ticket-block">
+                <h3>${escapeHtml(_('tickets.description'))}</h3>
+                <p class="ticket-description">${escapeHtml(t.description)}</p>
+            </section>`;
+        }
+
+        if (t.attachments && t.attachments.length) {
+            html += `<section class="ticket-block">
+                <h3>${escapeHtml(_('tickets.attachments'))}</h3>
+                <ul class="list">${t.attachments.map(a => `
+                    <li class="list-row"><span class="row-main">
+                        <a href="/api/tickets/attachments/${Number(a.id)}">${escapeHtml(a.filename)}</a>
+                        <span class="row-sub">${escapeHtml(Utils.formatBytes(a.size_bytes || 0))}${a.uploaded_by ? `, ${escapeHtml(a.uploaded_by)}` : ''}</span>
+                    </span></li>`).join('')}
+                </ul>
+            </section>`;
+        }
+
         // Comments
         const comments = t.comments || [];
         html += `<section class="ticket-block" aria-labelledby="ticket-comments-title">
@@ -418,8 +439,8 @@
                 <li class="list-row comment-item${c.is_internal ? ' comment-internal' : ''}">
                     <div class="row-main">
                         <span class="row-sub comment-header">
-                            <span class="comment-author">${escapeHtml(c.author || '—')}</span>,
-                            <span class="comment-time" title="${escapeHtml(formatDate(c.created_at))}">${escapeHtml(formatTimeAgo(c.created_at))}</span>${c.is_internal ? `, <span class="comment-internal-label">${escapeHtml(_('tickets.internal_label'))}</span>` : ''}
+                            <span class="comment-author">${Utils.userHtml(c.author, { avatar: true })}</span>,
+                            <span class="comment-time">${Utils.timeHtml(c.created_at)}</span>${c.is_internal ? `, <span class="comment-internal-label">${escapeHtml(_('tickets.internal_label'))}</span>` : ''}
                         </span>
                         <p class="comment-body">${escapeHtml(c.body)}</p>
                     </div>
@@ -670,29 +691,6 @@
         return new Date(value);
     }
 
-    function formatTimeAgo(dateStr) {
-        if (!dateStr) return '—';
-        const d = parseDate(dateStr);
-        const diff = Math.floor((Date.now() - d) / 1000);
-        if (diff < 60) return _('time.seconds_ago').replace('{count}', Math.max(diff, 0));
-        if (diff < 3600) return _('time.minutes_ago').replace('{count}', Math.floor(diff / 60));
-        if (diff < 86400) return _('time.hours_ago').replace('{count}', Math.floor(diff / 3600));
-        if (diff < 2592000) return _('time.days_ago').replace('{count}', Math.floor(diff / 86400));
-        return d.toLocaleDateString();
-    }
-
-    function formatDate(dateStr) {
-        if (!dateStr) return '—';
-        return parseDate(dateStr).toLocaleString();
-    }
-
-    function formatSize(bytes) {
-        const n = Number(bytes) || 0;
-        if (n < 1024) return `${n} B`;
-        if (n < 1048576) return `${(n / 1024).toFixed(1)} KB`;
-        return `${(n / 1048576).toFixed(1)} MB`;
-    }
-
     function notify(message, type) {
         if (typeof Notifications !== 'undefined') {
             if (type === 'error') Notifications.error(message);
@@ -753,6 +751,14 @@
         if (el.matches('.edit-btn')) openEdit(id);
         else if (el.matches('.delete-btn')) deleteTicket(id);
         else openDetail(id);
+    });
+
+    // A device in the table or the detail dialog: the panel opens above the page, so the dialog closes first
+    document.addEventListener('click', (e) => {
+        const dev = e.target.closest('[data-open-device]');
+        if (!dev || !window.DeviceDetail) return;
+        if (dev.closest('.modal-overlay')) Modal.close();
+        DeviceDetail.open(dev.dataset.openDevice);
     });
 
     // Actions inside the detail dialog (it lives in #modal-container)
