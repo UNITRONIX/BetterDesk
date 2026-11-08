@@ -202,11 +202,13 @@ html[data-a11y-strong-focus="true"] :focus-visible {
     color: var(--text-muted);
 }
 
+/* Always on its own line under the title and actions; the padding keeps lines short */
 .page-description {
-    flex-basis: 100%;
+    order: 1;
+    flex: 0 0 100%;
     margin-top: calc(-1 * var(--space-1));
+    padding-inline-end: max(0px, calc(100% - var(--measure)));
     color: var(--text-muted);
-    max-width: var(--measure);
 }
 
 .page-actions {
