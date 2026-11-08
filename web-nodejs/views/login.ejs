@@ -1,22 +1,6 @@
-<!DOCTYPE html>
-<html lang="<%= lang || 'en' %>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<%= appName %> - Login">
-    <meta name="robots" content="noindex, nofollow">
-    <title><%= _('auth.login') %> - <%= appName %></title>
-    
-    <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
-    <link rel="stylesheet" href="/css/main.css?v=<%= cacheVersion %>">
-    <link rel="stylesheet" href="/css/theme.css?v=<%= cacheVersion %>">
-    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : cacheVersion %>">
-    <link rel="stylesheet" href="/css/login.css?v=<%= cacheVersion %>">
-    <link rel="stylesheet" href="/css/server-attestation.css?v=<%= cacheVersion %>">
-</head>
 <%
-    var promoMode = (branding && branding.loginPromoMode) || 'slides';
-    if (promoMode !== 'classic' && promoMode !== 'single' && promoMode !== 'slides') promoMode = 'slides';
+    var promoMode = (branding && branding.loginPromoMode) || 'classic';
+    if (promoMode !== 'classic' && promoMode !== 'single' && promoMode !== 'slides') promoMode = 'classic';
     var loginSlides = (branding && Array.isArray(branding.loginSlides) && branding.loginSlides.length)
         ? branding.loginSlides
         : [];
@@ -30,7 +14,28 @@
         if (slide.slideKey) return _('login_promo.slides.' + slide.slideKey + '.body');
         return '';
     }
+    var themeMode = (branding && branding.themeMode) || 'system';
+    var dataTheme = themeMode === 'light' || themeMode === 'system' ? 'light' : 'dark';
 %>
+<!DOCTYPE html>
+<html lang="<%= lang || 'en' %>" dir="<%= typeof isRtl !== 'undefined' && isRtl ? 'rtl' : 'ltr' %>" data-theme="<%= dataTheme %>" data-theme-mode="<%= themeMode %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<%= appName %> - <%= _('auth.login_title') %>">
+    <meta name="robots" content="noindex, nofollow">
+    <title><%= _('auth.login_title') %> - <%= appName %></title>
+
+    <link rel="icon" type="image/svg+xml" href="/branding/favicon.svg">
+    <%- include('partials/theme-head') %>
+    <link rel="preload" href="/fonts/AtkinsonHyperlegibleNext-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/css/branding.css?v=<%= typeof brandingRevision !== 'undefined' ? brandingRevision : cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/tokens.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/base.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/components.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/ui/login.css?v=<%= cacheVersion %>">
+    <link rel="stylesheet" href="/css/server-attestation.css?v=<%= cacheVersion %>">
+</head>
 <body class="login-page login-layout-<%= promoMode %>">
     <% if (promoMode === 'slides' && loginSlides.length) { %>
     <aside class="login-promo" id="login-promo" aria-roledescription="carousel" aria-label="<%= _('branding.login_slides_title') %>">
@@ -60,7 +65,7 @@
                 <span class="material-icons" aria-hidden="true">chevron_left</span>
             </button>
             <div class="login-promo-dots" id="login-promo-dots" role="tablist">
-                <% loginSlides.forEach(function(_, idx) { %>
+                <% loginSlides.forEach(function(_s, idx) { %>
                 <button type="button" class="login-promo-dot<%= idx === 0 ? ' is-active' : '' %>" data-slide-to="<%= idx %>" aria-label="<%= idx + 1 %>"></button>
                 <% }); %>
             </div>
@@ -74,190 +79,128 @@
     <aside class="login-promo login-promo-single" id="login-promo" aria-hidden="true"></aside>
     <% } %>
 
-    <div class="login-main">
-        <div class="login-container">
-            <div class="login-card">
-                <div class="login-header">
-                    <div class="login-logo">
-                        <% if (branding.logoType === 'text' && branding.logoText) { %>
-                        <span class="brand-text-logo brand-text-logo-lg"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
-                        <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
-                        <span class="login-logo-svg"><%- branding.logoSvg %></span>
-                        <% } else if (branding.logoType === 'image' && branding.logoUrl) { %>
-                        <img src="<%= branding.logoUrl %>" alt="<%= appName %>" class="login-logo-img">
-                        <% } else { %>
-                        <span class="material-icons">dns</span>
-                        <span class="login-logo-text"><%= appName %></span>
-                        <% } %>
-                    </div>
-                    <h1 class="login-title"><%= branding.loginTitle || _('auth.login_title') %></h1>
-                    <p class="login-subtitle"><%= branding.loginSubtitle || _('auth.login_subtitle') %></p>
-                </div>
-                
-                <!-- Error message -->
-                <div class="login-error hidden" id="login-error">
-                    <span class="material-icons">error</span>
-                    <span id="error-message"></span>
-                </div>
-                
-                <form class="login-form" id="login-form">
-                    <div class="form-group">
-                        <label class="form-label" for="username">
-                            <span class="material-icons" style="font-size: 16px;">person</span>
-                            <%= _('auth.username') %>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="username" 
-                            name="username" 
-                            class="form-input" 
-                            placeholder="<%= _('auth.username_placeholder') %>"
-                            autocomplete="username"
-                            required
-                            autofocus
-                        >
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="password">
-                            <span class="material-icons" style="font-size: 16px;">lock</span>
-                            <%= _('auth.password') %>
-                        </label>
-                        <div class="password-wrapper">
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                class="form-input" 
-                                placeholder="<%= _('auth.password_placeholder') %>"
-                                autocomplete="current-password"
-                                required
-                            >
-                            <button type="button" class="password-toggle" id="password-toggle">
-                                <span class="material-icons">visibility</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="login-options">
-                        <label class="remember-me">
-                            <input type="checkbox" name="remember" id="remember">
-                            <span><%= _('auth.remember_me') %></span>
-                        </label>
-                        <div class="login-language-picker" title="<%= _('settings.language') %>">
-                            <span class="material-icons" aria-hidden="true">language</span>
-                            <select id="login-language-select" data-language-select aria-label="<%= _('settings.language') %>">
-                                <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
-                                    <option value="<%= language.code %>" <%= lang === language.code ? 'selected' : '' %>><%= language.native || language.name || language.code %></option>
-                                <% }); %>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary login-btn" id="login-btn">
-                        <span class="material-icons">login</span>
-                        <%= _('auth.login') %>
-                    </button>
-                </form>
-                
-                <!-- SSO / OIDC Login (shown dynamically when OIDC is enabled) -->
-                <div class="login-sso hidden" id="sso-section">
-                    <div class="login-divider">
-                        <span><%= _('auth.or') %></span>
-                    </div>
-                    <a href="/api/auth/oidc/authorize" class="btn btn-secondary login-btn sso-btn" id="sso-btn">
-                        <span class="material-icons">key</span>
-                        <span id="sso-btn-text"><%= _('auth.login_sso') %></span>
-                    </a>
-                </div>
-                
-                <!-- TOTP Verification Step (hidden by default) -->
-                <form class="login-form hidden" id="totp-form">
-                    <div class="totp-header">
-                        <span class="material-icons totp-icon">security</span>
-                        <h2 class="totp-title"><%= _('auth.totp_title') %></h2>
-                        <p class="totp-subtitle"><%= _('auth.totp_subtitle') %></p>
-                    </div>
-                    
-                    <div class="form-group" id="totp-code-group">
-                        <label class="form-label" for="totp-code">
-                            <span class="material-icons" style="font-size: 16px;">pin</span>
-                            <%= _('auth.totp_code') %>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="totp-code" 
-                            name="totp-code" 
-                            class="form-input totp-input" 
-                            placeholder="000000"
-                            autocomplete="one-time-code"
-                            inputmode="numeric"
-                            pattern="[0-9]{6}"
-                            maxlength="6"
-                            required
-                        >
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary login-btn" id="totp-btn">
-                        <span class="material-icons">verified_user</span>
-                        <%= _('auth.totp_verify') %>
-                    </button>
-                    
-                    <div class="totp-recovery-link">
-                        <a href="#" id="toggle-recovery"><%= _('auth.totp_use_recovery') %></a>
-                    </div>
-                    
-                    <!-- Recovery code input (hidden) -->
-                    <div class="form-group hidden" id="recovery-group">
-                        <label class="form-label" for="recovery-code">
-                            <span class="material-icons" style="font-size: 16px;">vpn_key</span>
-                            <%= _('auth.totp_recovery_code') %>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="recovery-code" 
-                            name="recovery-code" 
-                            class="form-input" 
-                            placeholder="XXXX-XXXX"
-                            autocomplete="off"
-                            maxlength="9"
-                        >
-                    </div>
-                    
-                    <div class="totp-back-link">
-                        <a href="#" id="totp-back">
-                            <span class="material-icons" style="font-size: 16px;">arrow_back</span>
-                            <%= _('auth.totp_back_to_login') %>
-                        </a>
-                    </div>
-                </form>
-                
-                <div class="login-footer">
-                    <% if (branding.footerText) { %>
-                    <p class="login-footer-custom"><%= branding.footerText %></p>
-                    <% } %>
-                    <% if (branding.showPoweredBy !== 'false') { %>
-                    <p><%= appName %> v<%= appVersion %></p>
-                    <% } %>
-                </div>
+    <main class="login-main">
+        <div class="login-box">
+            <div class="login-brand">
+                <% if (branding.logoType === 'text' && branding.logoText) { %>
+                <span class="brand-text-logo"><%= branding.logoText %><% if (branding.logoTextAccent) { %><span class="brand-text-accent"><%= branding.logoTextAccent %></span><% } %></span>
+                <% } else if (branding.logoType === 'svg' && branding.logoSvg) { %>
+                <span class="login-logo-svg"><%- branding.logoSvg %></span>
+                <span class="login-logo-text"><%= appName %></span>
+                <% } else if (branding.logoType === 'image' && branding.logoUrl) { %>
+                <img src="<%= branding.logoUrl %>" alt="" class="login-logo-img">
+                <span class="login-logo-text"><%= appName %></span>
+                <% } else { %>
+                <span class="login-logo-text"><%= appName %></span>
+                <% } %>
             </div>
-        </div>
-    </div>
 
-    <% if (typeof attestationBadge !== 'undefined' && attestationBadge && attestationBadge.valid && attestationBadge.tier) { %>
-    <div class="login-attestation-badge">
-        <%- include('partials/server-attestation-badge', {
-            tier: attestationBadge.tier,
-            size: 'small',
-            showConnections: false,
-            maxConnections: attestationBadge.maxConnections,
-            brandName: attestationBadge.brand,
-            badgeTitle: attestationBadge.badgeTitle,
-            tierLabel: attestationBadge.tierLabel
-        }) %>
-    </div>
-    <% } %>
-    
+            <h1 class="login-title"><%= branding.loginTitle || _('auth.login_title') %></h1>
+            <% if (branding.loginSubtitle) { %>
+            <p class="login-subtitle"><%= branding.loginSubtitle %></p>
+            <% } %>
+
+            <div class="login-error notice error hidden" id="login-error" role="alert">
+                <span id="error-message"></span>
+            </div>
+
+            <form class="login-form" id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="username"><%= _('auth.username') %></label>
+                    <input type="text" id="username" name="username" class="form-input"
+                           autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password"><%= _('auth.password') %></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" class="form-input"
+                               autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" id="password-toggle"
+                                aria-label="<%= _('auth.show_password') %>" title="<%= _('auth.show_password') %>">
+                            <span class="material-icons" aria-hidden="true">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <label class="checkbox-row remember-me" for="remember">
+                    <input type="checkbox" name="remember" id="remember">
+                    <span><%= _('auth.remember_me') %></span>
+                </label>
+
+                <button type="submit" class="btn btn-primary btn-block login-btn" id="login-btn"><%= _('auth.login') %></button>
+            </form>
+
+            <!-- SSO / OIDC Login (shown by login.js when OIDC is enabled) -->
+            <div class="login-sso hidden" id="sso-section">
+                <p class="login-divider"><span><%= _('auth.or') %></span></p>
+                <a href="/api/auth/oidc/authorize" class="btn btn-secondary btn-block login-btn sso-btn" id="sso-btn">
+                    <span id="sso-btn-text"><%= _('auth.login_sso') %></span>
+                </a>
+            </div>
+
+            <!-- TOTP step (hidden until the password is accepted) -->
+            <form class="login-form hidden" id="totp-form">
+                <div class="totp-header">
+                    <h2 class="totp-title"><%= _('auth.totp_title') %></h2>
+                    <p class="totp-subtitle"><%= _('auth.totp_subtitle') %></p>
+                </div>
+
+                <div class="form-group" id="totp-code-group">
+                    <label class="form-label" for="totp-code"><%= _('auth.totp_code') %></label>
+                    <input type="text" id="totp-code" name="totp-code" class="form-input totp-input mono"
+                           autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+                </div>
+
+                <div class="form-group hidden" id="recovery-group">
+                    <label class="form-label" for="recovery-code"><%= _('auth.totp_recovery_code') %></label>
+                    <input type="text" id="recovery-code" name="recovery-code" class="form-input mono"
+                           placeholder="XXXX-XXXX" autocomplete="off" maxlength="9">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block login-btn" id="totp-btn"><%= _('auth.totp_verify') %></button>
+
+                <p class="totp-links">
+                    <a href="#" id="toggle-recovery"><%= _('auth.totp_use_recovery') %></a>
+                    <a href="#" id="totp-back"><%= _('auth.totp_back_to_login') %></a>
+                </p>
+            </form>
+
+            <div class="login-footer">
+                <label class="login-language-picker" for="login-language-select">
+                    <span><%= _('settings.language') %></span>
+                    <select id="login-language-select" class="form-select" data-language-select>
+                        <% (availableLanguageList || Object.values(availableLanguages || {})).forEach(function(language) { %>
+                            <option value="<%= language.code %>" <%= lang === language.code ? 'selected' : '' %> lang="<%= language.code %>"><%= language.native || language.name || language.code %></option>
+                        <% }); %>
+                    </select>
+                </label>
+                <% if (branding.footerText) { %>
+                <p class="login-footer-custom"><%= branding.footerText %></p>
+                <% } %>
+                <% if (branding.showPoweredBy !== 'false') { %>
+                <p class="login-version"><%= appName %> <%= appVersion %></p>
+                <% } %>
+            </div>
+
+            <% if (typeof attestationBadge !== 'undefined' && attestationBadge && attestationBadge.valid && attestationBadge.tier) { %>
+            <div class="login-attestation-badge">
+                <%- include('partials/server-attestation-badge', {
+                    tier: attestationBadge.tier,
+                    size: 'small',
+                    showConnections: false,
+                    maxConnections: attestationBadge.maxConnections,
+                    brandName: attestationBadge.brand,
+                    badgeTitle: attestationBadge.badgeTitle,
+                    tierLabel: attestationBadge.tierLabel
+                }) %>
+            </div>
+            <% } %>
+        </div>
+    </main>
+
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
     <script nonce="<%= cspNonce %>">
         window.BetterDesk = {
             csrfToken: '<%= csrfToken || "" %>',

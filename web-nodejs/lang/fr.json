@@ -136,7 +136,8 @@
         "session_expired": "Votre session a expiré ou a été remplacée par une nouvelle connexion. Veuillez vous reconnecter.",
         "session_idle_warning_title": "Session bientôt expirée",
         "session_idle_warning_body": "Vous serez déconnecté pour inactivité dans {{seconds}} secondes.",
-        "session_stay_signed_in": "Rester connecté"
+        "session_stay_signed_in": "Rester connecté",
+        "show_password": "Afficher le mot de passe"
     },
     "dashboard": {
         "title": "Tableau de bord",

@@ -180,13 +180,12 @@ function getDefaultLoginSlides() {
 
 function normalizeLoginPromoMode(mode) {
     const m = String(mode || '').trim().toLowerCase();
-    return LOGIN_PROMO_MODES.has(m) ? m : 'slides';
+    return LOGIN_PROMO_MODES.has(m) ? m : 'classic';
 }
 
 /**
- * Soft-migrate installs that never saved loginPromoMode.
- * Default to slides (75% promo / 25% form). Operators who want a single wallpaper
- * or classic card pick that explicitly in Settings → Branding.
+ * Installs that never saved loginPromoMode get the plain sign-in form.
+ * Operators who want a wallpaper or slides pick that in Settings → Branding.
  * @param {string|undefined} storedMode
  * @param {Object} _branding
  * @param {boolean} hadExplicitMode
@@ -194,7 +193,7 @@ function normalizeLoginPromoMode(mode) {
  */
 function resolveLoginPromoMode(storedMode, _branding, hadExplicitMode) {
     if (hadExplicitMode) return normalizeLoginPromoMode(storedMode);
-    return 'slides';
+    return 'classic';
 }
 
 /**
@@ -437,7 +436,7 @@ const DEFAULT_BRANDING = {
     loginTitle: '',         // overrides the login heading
     loginSubtitle: '',      // overrides the login subtitle
     // classic = centered card; single = split + loginBg*; slides = carousel (max 10)
-    loginPromoMode: 'slides',
+    loginPromoMode: 'classic',
     loginSlides: [],         // filled with getDefaultLoginSlides() at module init / on load
 
     // Footer / attribution

@@ -96,9 +96,9 @@
         "more": "More"
     },
     "auth": {
-        "login": "Login",
+        "login": "Sign in",
         "logout": "Logout",
-        "login_title": "Sign In",
+        "login_title": "Sign in",
         "login_subtitle": "Sign in to BetterDesk console",
         "username": "Username",
         "username_placeholder": "Enter username",
@@ -121,13 +121,13 @@
         "logout_confirm": "Are you sure you want to logout?",
         "change_password": "Change password",
         "password_required": "Password is required",
-        "totp_title": "Two-Factor Authentication",
-        "totp_subtitle": "Enter the 6-digit code from your authenticator app",
-        "totp_code": "Verification Code",
+        "totp_title": "Two-factor authentication",
+        "totp_subtitle": "Enter the 6-digit code from your authenticator app.",
+        "totp_code": "Verification code",
         "totp_verify": "Verify",
         "totp_use_recovery": "Use a recovery code instead",
         "totp_use_code": "Use authenticator code instead",
-        "totp_recovery_code": "Recovery Code",
+        "totp_recovery_code": "Recovery code",
         "totp_back_to_login": "Back to login",
         "totp_invalid_code": "Invalid verification code. Please try again.",
         "totp_enter_code": "Please enter a 6-digit code",
@@ -140,7 +140,8 @@
         "session_expired": "Your session expired or was replaced by a new login. Please sign in again.",
         "session_idle_warning_title": "Session expiring soon",
         "session_idle_warning_body": "You will be signed out due to inactivity in {{seconds}} seconds.",
-        "session_stay_signed_in": "Stay signed in"
+        "session_stay_signed_in": "Stay signed in",
+        "show_password": "Show password"
     },
     "dashboard": {
         "title": "Dashboard",

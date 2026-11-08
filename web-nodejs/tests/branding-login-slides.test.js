@@ -32,11 +32,13 @@ describe('login promo slides branding', () => {
         assert.strictEqual(sanitized[0].overlay, '90');
 
         assert.strictEqual(brandingService.normalizeLoginPromoMode('classic'), 'classic');
-        assert.strictEqual(brandingService.normalizeLoginPromoMode('nope'), 'slides');
+        // Unknown or never-saved modes fall back to the plain sign-in form
+        assert.strictEqual(brandingService.normalizeLoginPromoMode('nope'), 'classic');
         assert.strictEqual(
             brandingService.resolveLoginPromoMode(undefined, { loginBgImageUrl: '/uploads/x.jpg' }, false),
-            'slides'
+            'classic'
         );
+        assert.strictEqual(brandingService.resolveLoginPromoMode('slides', {}, true), 'slides');
         assert.strictEqual(
             brandingService.resolveLoginPromoMode('single', { loginBgType: 'inherit' }, true),
             'single'

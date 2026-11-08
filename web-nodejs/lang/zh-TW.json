@@ -136,7 +136,8 @@
         "session_expired": "您的工作階段已過期或被新的登入取代。請重新登入。",
         "session_idle_warning_title": "工作階段即將過期",
         "session_idle_warning_body": "因閒置將在 {{seconds}} 秒後登出。",
-        "session_stay_signed_in": "保持登入"
+        "session_stay_signed_in": "保持登入",
+        "show_password": "顯示密碼"
     },
     "dashboard": {
         "title": "儀表板",

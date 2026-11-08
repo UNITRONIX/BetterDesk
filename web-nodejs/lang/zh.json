@@ -132,7 +132,8 @@
         "session_expired": "您的会话已过期或被新的登录替换。请重新登录。",
         "session_idle_warning_title": "会话即将过期",
         "session_idle_warning_body": "由于无操作，将在 {{seconds}} 秒后退出登录。",
-        "session_stay_signed_in": "保持登录"
+        "session_stay_signed_in": "保持登录",
+        "show_password": "显示密码"
     },
     "dashboard": {
         "title": "仪表板",

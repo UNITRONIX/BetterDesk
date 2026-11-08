@@ -132,7 +132,8 @@
         "session_expired": "La sessione è scaduta o è stata sostituita da un nuovo accesso. Accedi di nuovo.",
         "session_idle_warning_title": "Sessione in scadenza",
         "session_idle_warning_body": "Verrai disconnesso per inattività tra {{seconds}} secondi.",
-        "session_stay_signed_in": "Resta connesso"
+        "session_stay_signed_in": "Resta connesso",
+        "show_password": "Mostra password"
     },
     "dashboard": {
         "title": "Panoramica",

@@ -132,7 +132,8 @@
         "session_expired": "Sua sessão expirou ou foi substituída por um novo login. Entre novamente.",
         "session_idle_warning_title": "Sessão expirando em breve",
         "session_idle_warning_body": "Você será desconectado por inatividade em {{seconds}} segundos.",
-        "session_stay_signed_in": "Permanecer conectado"
+        "session_stay_signed_in": "Permanecer conectado",
+        "show_password": "Mostrar senha"
     },
     "dashboard": {
         "title": "Painel",

@@ -132,7 +132,8 @@
         "session_expired": "Uw sessie is verlopen of vervangen door een nieuwe login. Meld u opnieuw aan.",
         "session_idle_warning_title": "Sessie verloopt binnenkort",
         "session_idle_warning_body": "U wordt over {{seconds}} seconden uitgelogd wegens inactiviteit.",
-        "session_stay_signed_in": "Ingelogd blijven"
+        "session_stay_signed_in": "Ingelogd blijven",
+        "show_password": "Wachtwoord tonen"
     },
     "dashboard": {
         "title": "Overzicht",

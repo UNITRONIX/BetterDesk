@@ -106,7 +106,7 @@
         "change_password": "Passwort ändern",
         "password_required": "Passwort ist erforderlich",
         "totp_title": "Zwei-Faktor-Authentifizierung",
-        "totp_subtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein",
+        "totp_subtitle": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.",
         "totp_code": "Bestätigungscode",
         "totp_verify": "Bestätigen",
         "totp_use_recovery": "Stattdessen einen Wiederherstellungscode verwenden",
@@ -132,7 +132,8 @@
         "session_expired": "Ihre Sitzung ist abgelaufen oder wurde durch eine neue Anmeldung ersetzt. Bitte melden Sie sich erneut an.",
         "session_idle_warning_title": "Sitzung läuft bald ab",
         "session_idle_warning_body": "Sie werden wegen Inaktivität in {{seconds}} Sekunden abgemeldet.",
-        "session_stay_signed_in": "Angemeldet bleiben"
+        "session_stay_signed_in": "Angemeldet bleiben",
+        "show_password": "Passwort anzeigen"
     },
     "dashboard": {
         "title": "Übersicht",

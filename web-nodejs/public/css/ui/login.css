@@ -1,0 +1,256 @@
+/*
+ * Login: a plain form on the page background. The optional promo panel
+ * (Settings → Branding → login layout "single" or "slides") sits beside it.
+ */
+
+.login-page {
+    display: flex;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.login-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 12vh var(--space-4) var(--space-6);
+}
+
+.login-box {
+    width: 100%;
+    max-width: 340px;
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    font-weight: 700;
+}
+
+.login-logo-img,
+.login-logo-svg svg {
+    width: auto;
+    height: 28px;
+    display: block;
+}
+
+.login-brand .brand-text-accent {
+    color: var(--accent);
+}
+
+.login-title {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-lg);
+}
+
+.login-subtitle {
+    margin-bottom: var(--space-4);
+    color: var(--text-muted);
+}
+
+.login-title + .login-error,
+.login-title + .login-form {
+    margin-top: var(--space-4);
+}
+
+.login-error {
+    margin-bottom: var(--space-4);
+}
+
+.login-form .remember-me {
+    margin-bottom: var(--space-4);
+}
+
+.login-btn.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+    color: var(--text-muted);
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--rule);
+}
+
+.totp-header {
+    margin-bottom: var(--space-4);
+}
+
+.totp-title {
+    font-size: var(--text-md);
+    margin-bottom: var(--space-1);
+}
+
+.totp-subtitle {
+    color: var(--text-muted);
+}
+
+.totp-input {
+    letter-spacing: 0.2em;
+    font-size: var(--text-md);
+}
+
+.totp-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.login-footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.login-language-picker {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.login-language-picker .form-select {
+    width: auto;
+    min-height: var(--control-h-sm);
+    font-size: var(--text-sm);
+}
+
+.login-attestation-badge {
+    margin-top: var(--space-4);
+}
+
+/* ── Optional promo panel ── */
+
+.login-promo {
+    position: relative;
+    flex: 0 0 50%;
+    overflow: hidden;
+    background: var(--bg-subtle);
+    border-inline-end: 1px solid var(--rule);
+}
+
+.login-promo-slides {
+    position: absolute;
+    inset: 0;
+}
+
+.login-promo-slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+}
+
+.login-promo-slide.is-active {
+    display: block;
+}
+
+.login-promo-slide-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.login-promo-slide-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, var(--slide-overlay, 0.45));
+}
+
+.login-promo-copy {
+    position: absolute;
+    inset-inline: var(--space-6);
+    bottom: var(--space-7);
+    max-width: 480px;
+    color: #ffffff;
+}
+
+.login-promo-slide:not(:has(.login-promo-slide-bg)) .login-promo-copy {
+    color: var(--text);
+}
+
+.login-promo-slide:not(:has(.login-promo-slide-bg)) .login-promo-slide-overlay {
+    display: none;
+}
+
+.login-promo-title {
+    color: inherit;
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-2);
+}
+
+.login-promo-body {
+    color: inherit;
+    opacity: 0.9;
+}
+
+.login-promo-controls {
+    position: absolute;
+    inset-inline-start: var(--space-6);
+    bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.login-promo-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-h);
+    height: var(--control-h);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--radius);
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.login-promo-dots {
+    display: flex;
+    gap: var(--space-1);
+}
+
+.login-promo-dot {
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 1px solid #ffffff;
+    border-radius: 1px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.login-promo-dot.is-active {
+    background: #ffffff;
+}
+
+@media (max-width: 899px) {
+    .login-promo {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .login-main {
+        padding-top: var(--space-6);
+    }
+}

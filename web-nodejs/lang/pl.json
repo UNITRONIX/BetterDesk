@@ -132,7 +132,8 @@
         "session_expired": "Twoja sesja wygasła lub została zastąpiona nowym logowaniem. Zaloguj się ponownie.",
         "session_idle_warning_title": "Sesja wkrótce wygaśnie",
         "session_idle_warning_body": "Zostaniesz wylogowany z powodu bezczynności za {{seconds}} s.",
-        "session_stay_signed_in": "Pozostań zalogowany"
+        "session_stay_signed_in": "Pozostań zalogowany",
+        "show_password": "Pokaż hasło"
     },
     "dashboard": {
         "title": "Panel",

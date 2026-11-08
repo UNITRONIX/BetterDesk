@@ -138,7 +138,8 @@
         "session_expired": "Oturumunuz sona erdi veya yeni bir girişle değiştirildi. Lütfen tekrar oturum açın.",
         "session_idle_warning_title": "Oturum yakında sona erecek",
         "session_idle_warning_body": "Hareketsizlik nedeniyle {{seconds}} saniye içinde oturumunuz kapatılacak.",
-        "session_stay_signed_in": "Oturumda kal"
+        "session_stay_signed_in": "Oturumda kal",
+        "show_password": "Şifreyi göster"
     },
     "dashboard": {
         "title": "Kontrol Paneli",

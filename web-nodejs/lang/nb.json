@@ -138,7 +138,8 @@
         "session_expired": "Økten er utløpt eller erstattet av en ny innlogging. Logg inn på nytt.",
         "session_idle_warning_title": "Økten utløper snart",
         "session_idle_warning_body": "Du logges ut på grunn av inaktivitet om {{seconds}} sekunder.",
-        "session_stay_signed_in": "Forbli innlogget"
+        "session_stay_signed_in": "Forbli innlogget",
+        "show_password": "Vis passord"
     },
     "dashboard": {
         "title": "Dashbord",

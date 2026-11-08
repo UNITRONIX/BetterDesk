@@ -138,7 +138,8 @@
         "session_expired": "Sesi Anda kedaluwarsa atau digantikan oleh login baru. Silakan masuk lagi.",
         "session_idle_warning_title": "Sesi akan segera berakhir",
         "session_idle_warning_body": "Anda akan keluar karena tidak aktif dalam {{seconds}} detik.",
-        "session_stay_signed_in": "Tetap masuk"
+        "session_stay_signed_in": "Tetap masuk",
+        "show_password": "Tampilkan kata sandi"
     },
     "dashboard": {
         "title": "Dasbor",

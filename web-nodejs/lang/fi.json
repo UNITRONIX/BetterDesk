@@ -138,7 +138,8 @@
         "session_expired": "Istuntosi vanheni tai korvattiin uudella kirjautumisella. Kirjaudu uudelleen.",
         "session_idle_warning_title": "Istunto vanhenee pian",
         "session_idle_warning_body": "Sinut kirjataan ulos käyttämättömyyden vuoksi {{seconds}} sekunnin kuluttua.",
-        "session_stay_signed_in": "Pysy kirjautuneena"
+        "session_stay_signed_in": "Pysy kirjautuneena",
+        "show_password": "Näytä salasana"
     },
     "dashboard": {
         "title": "Kojelauta",

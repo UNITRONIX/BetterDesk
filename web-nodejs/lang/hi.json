@@ -138,7 +138,8 @@
         "session_expired": "आपका सत्र समाप्त हो गया या नई लॉगिन से बदल दिया गया। कृपया फिर से साइन इन करें।",
         "session_idle_warning_title": "सत्र जल्द समाप्त होगा",
         "session_idle_warning_body": "निष्क्रियता के कारण {{seconds}} सेकंड में आपको साइन आउट किया जाएगा।",
-        "session_stay_signed_in": "साइन इन रहें"
+        "session_stay_signed_in": "साइन इन रहें",
+        "show_password": "पासवर्ड दिखाएँ"
     },
     "dashboard": {
         "title": "डैशबोर्ड",

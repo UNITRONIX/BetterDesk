@@ -138,7 +138,8 @@
         "session_expired": "Din session har gått ut eller ersatts av en ny inloggning. Logga in igen.",
         "session_idle_warning_title": "Sessionen går snart ut",
         "session_idle_warning_body": "Du loggas ut på grund av inaktivitet om {{seconds}} sekunder.",
-        "session_stay_signed_in": "Förbli inloggad"
+        "session_stay_signed_in": "Förbli inloggad",
+        "show_password": "Visa lösenord"
     },
     "dashboard": {
         "title": "Instrumentbräda",

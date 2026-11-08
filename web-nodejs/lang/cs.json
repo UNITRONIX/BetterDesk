@@ -132,7 +132,8 @@
         "session_expired": "Vaše relace vypršela nebo byla nahrazena novým přihlášením. Přihlaste se znovu.",
         "session_idle_warning_title": "Relace brzy vyprší",
         "session_idle_warning_body": "Budete odhlášeni kvůli nečinnosti za {{seconds}} s.",
-        "session_stay_signed_in": "Zůstat přihlášen"
+        "session_stay_signed_in": "Zůstat přihlášen",
+        "show_password": "Zobrazit heslo"
     },
     "dashboard": {
         "title": "Nástěnka",

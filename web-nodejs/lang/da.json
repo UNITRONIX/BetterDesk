@@ -138,7 +138,8 @@
         "session_expired": "Din session er udløbet eller erstattet af et nyt login. Log ind igen.",
         "session_idle_warning_title": "Session udløber snart",
         "session_idle_warning_body": "Du logges ud på grund af inaktivitet om {{seconds}} sekunder.",
-        "session_stay_signed_in": "Forbliv logget ind"
+        "session_stay_signed_in": "Forbliv logget ind",
+        "show_password": "Vis adgangskode"
     },
     "dashboard": {
         "title": "Oversigt",

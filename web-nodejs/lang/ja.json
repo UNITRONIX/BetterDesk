@@ -132,7 +132,8 @@
         "session_expired": "セッションの有効期限が切れたか、新しいログインに置き換えられました。再度サインインしてください。",
         "session_idle_warning_title": "セッションまもなく期限切れ",
         "session_idle_warning_body": "操作がないため {{seconds}} 秒後にサインアウトされます。",
-        "session_stay_signed_in": "サインインを維持"
+        "session_stay_signed_in": "サインインを維持",
+        "show_password": "パスワードを表示"
     },
     "dashboard": {
         "title": "ダッシュボード",

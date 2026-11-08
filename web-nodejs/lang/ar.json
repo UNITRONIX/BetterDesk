@@ -139,7 +139,8 @@
         "session_expired": "انتهت جلستك أو تم استبدالها بتسجيل دخول جديد. يرجى تسجيل الدخول مرة أخرى.",
         "session_idle_warning_title": "الجلسة على وشك الانتهاء",
         "session_idle_warning_body": "سيتم تسجيل خروجك بسبب عدم النشاط خلال {{seconds}} ثانية.",
-        "session_stay_signed_in": "البقاء مسجلاً"
+        "session_stay_signed_in": "البقاء مسجلاً",
+        "show_password": "إظهار كلمة المرور"
     },
     "dashboard": {
         "title": "لوحة القيادة",

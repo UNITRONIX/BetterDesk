@@ -132,7 +132,8 @@
         "session_expired": "세션이 만료되었거나 새 로그인으로 대체되었습니다. 다시 로그인해 주세요.",
         "session_idle_warning_title": "세션이 곧 만료됩니다",
         "session_idle_warning_body": "비활성으로 인해 {{seconds}}초 후 로그아웃됩니다.",
-        "session_stay_signed_in": "로그인 유지"
+        "session_stay_signed_in": "로그인 유지",
+        "show_password": "비밀번호 표시"
     },
     "dashboard": {
         "title": "대시보드",
