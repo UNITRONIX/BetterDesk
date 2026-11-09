@@ -20,7 +20,9 @@ export default ts.config(
 			'svelte/no-at-html-tags': 'error',
 			'svelte/no-target-blank': 'error',
 			'svelte/require-each-key': 'error',
-			'svelte/valid-compile': 'error'
+			'svelte/valid-compile': 'error',
+			// hrefs go through link() in #lib/nav.ts (adds the base); goto/pushState must use resolve()
+			'svelte/no-navigation-without-resolve': ['error', { ignoreLinks: true }]
 		}
 	},
 	{
@@ -33,6 +35,10 @@ export default ts.config(
 		files: ['src/**/*.svelte'],
 		plugins: { local: { rules: { 'no-literal-ui-text': noLiteralUiText } } },
 		rules: { 'local/no-literal-ui-text': 'error' }
+	},
+	{
+		files: ['tests/**', 'e2e/**'],
+		rules: { '@typescript-eslint/no-non-null-assertion': 'off' }
 	},
 	{
 		files: ['eslint-rules/**', 'scripts/**', '*.config.*'],

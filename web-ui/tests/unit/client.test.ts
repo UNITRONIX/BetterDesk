@@ -40,7 +40,10 @@ afterEach(() => {
 
 describe('request', () => {
 	test('sends the CSRF token on writes, never on reads', async () => {
-		replies.push(() => json({ ok: 1 }), () => json({ ok: 2 }));
+		replies.push(
+			() => json({ ok: 1 }),
+			() => json({ ok: 2 })
+		);
 		await request('/api/x');
 		await request('/api/x', { method: 'POST', body: { a: 1 } });
 		const h0 = calls[0]!.init.headers as Record<string, string>;
@@ -108,7 +111,10 @@ describe('request', () => {
 		expect(calls).toHaveLength(2);
 		calls = [];
 		replies.push(() => json({ error: 'busy' }, 503));
-		await expect(request('/api/x', { method: 'POST' })).rejects.toMatchObject({ status: 503, message: 'busy' });
+		await expect(request('/api/x', { method: 'POST' })).rejects.toMatchObject({
+			status: 503,
+			message: 'busy'
+		});
 		expect(calls).toHaveLength(1);
 	});
 
@@ -121,7 +127,10 @@ describe('request', () => {
 
 	test('server error text is passed through', async () => {
 		replies.push(() => json({ success: false, error: 'Device not found' }, 404));
-		await expect(request('/api/devices/9')).rejects.toMatchObject({ message: 'Device not found', status: 404 });
+		await expect(request('/api/devices/9')).rejects.toMatchObject({
+			message: 'Device not found',
+			status: 404
+		});
 	});
 });
 
