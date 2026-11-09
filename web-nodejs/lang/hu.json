@@ -43,7 +43,8 @@
         "off": "Ki",
         "none": "Nincs",
         "copy_value": "{value} másolása",
-        "copy_failed": "A másolás nem sikerült. Jelölje ki a szöveget, és másolja ki kézzel."
+        "copy_failed": "A másolás nem sikerült. Jelölje ki a szöveget, és másolja ki kézzel.",
+        "opens_in_new_tab": "új lapon nyílik meg"
     },
     "nav": {
         "main": "Fő",
@@ -273,7 +274,8 @@
         "open_server_status": "Szerver állapotának megnyitása",
         "page_intro": "Mi igényli a figyelmét, hogyan állnak az eszközei, és milyen értékekre van szükségük a RustDesk-klienseknek a csatlakozáshoz.",
         "find_device_long": "Eszköz keresése ID, név, felhasználó vagy címke alapján",
-        "devices_total_line": "Összesen {total} eszköz."
+        "devices_total_line": "Összesen {total} eszköz.",
+        "activate_agent_no_reader": "Ez a böngésző nem tud QR-kódot olvasni. Hagyja jóvá az eszközt inkább itt: {link}."
     },
     "devices": {
         "title": "Eszközök",

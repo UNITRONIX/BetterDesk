@@ -37,7 +37,8 @@
         "off": "Disattivo",
         "none": "Nessuno",
         "copy_value": "Copia {value}",
-        "copy_failed": "Impossibile copiare. Selezioni il testo e lo copi manualmente."
+        "copy_failed": "Impossibile copiare. Selezioni il testo e lo copi manualmente.",
+        "opens_in_new_tab": "si apre in una nuova scheda"
     },
     "nav": {
         "main": "Principale",
@@ -267,7 +268,8 @@
         "open_server_status": "Apri lo stato del server",
         "page_intro": "Cosa richiede la Sua attenzione, come stanno i Suoi dispositivi e i valori di cui i client RustDesk hanno bisogno per connettersi.",
         "find_device_long": "Cerca un dispositivo per ID, nome, utente o tag",
-        "devices_total_line": "{total} dispositivi in totale."
+        "devices_total_line": "{total} dispositivi in totale.",
+        "activate_agent_no_reader": "Questo browser non legge i codici QR. Approva invece il dispositivo in {link}."
     },
     "devices": {
         "title": "Dispositivi",

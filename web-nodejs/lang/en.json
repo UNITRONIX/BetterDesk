@@ -37,7 +37,8 @@
         "off": "Off",
         "none": "None",
         "copy_value": "Copy {value}",
-        "copy_failed": "Could not copy. Select the text and copy it yourself."
+        "copy_failed": "Could not copy. Select the text and copy it yourself.",
+        "opens_in_new_tab": "opens in a new tab"
     },
     "nav": {
         "main": "Main",
@@ -275,7 +276,8 @@
         "open_server_status": "Open server status",
         "page_intro": "What needs your attention, how your devices are doing, and the values RustDesk clients need to connect.",
         "find_device_long": "Find a device by ID, name, user or tag",
-        "devices_total_line": "{total} devices in total."
+        "devices_total_line": "{total} devices in total.",
+        "activate_agent_no_reader": "This browser can't read QR codes. Approve the device under {link} instead."
     },
     "devices": {
         "title": "Devices",

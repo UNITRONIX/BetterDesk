@@ -41,7 +41,8 @@
         "off": "關",
         "none": "無",
         "copy_value": "複製 {value}",
-        "copy_failed": "無法複製。請選取文字後自行複製。"
+        "copy_failed": "無法複製。請選取文字後自行複製。",
+        "opens_in_new_tab": "在新分頁中開啟"
     },
     "nav": {
         "main": "主要",
@@ -271,7 +272,8 @@
         "open_server_status": "開啟伺服器狀態",
         "page_intro": "需要您處理的事項、裝置的狀態，以及 RustDesk 用戶端連線所需的值。",
         "find_device_long": "依 ID、名稱、使用者或標籤尋找裝置",
-        "devices_total_line": "共 {total} 台裝置。"
+        "devices_total_line": "共 {total} 台裝置。",
+        "activate_agent_no_reader": "此瀏覽器無法讀取 QR 碼。請改在 {link} 中核准裝置。"
     },
     "devices": {
         "title": "設備",

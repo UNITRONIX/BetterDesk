@@ -37,7 +37,8 @@
         "off": "关",
         "none": "无",
         "copy_value": "复制 {value}",
-        "copy_failed": "无法复制。请选中文本后手动复制。"
+        "copy_failed": "无法复制。请选中文本后手动复制。",
+        "opens_in_new_tab": "在新标签页中打开"
     },
     "nav": {
         "main": "主要",
@@ -267,7 +268,8 @@
         "open_server_status": "打开服务器状态",
         "page_intro": "需要您处理的事项、设备的状态，以及 RustDesk 客户端连接所需的值。",
         "find_device_long": "按 ID、名称、用户或标签查找设备",
-        "devices_total_line": "共 {total} 台设备。"
+        "devices_total_line": "共 {total} 台设备。",
+        "activate_agent_no_reader": "此浏览器无法读取二维码。请改在 {link} 中批准设备。"
     },
     "devices": {
         "title": "设备",

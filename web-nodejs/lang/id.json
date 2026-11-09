@@ -43,7 +43,8 @@
         "off": "Nonaktif",
         "none": "Tidak ada",
         "copy_value": "Salin {value}",
-        "copy_failed": "Tidak dapat menyalin. Pilih teksnya dan salin sendiri."
+        "copy_failed": "Tidak dapat menyalin. Pilih teksnya dan salin sendiri.",
+        "opens_in_new_tab": "terbuka di tab baru"
     },
     "nav": {
         "main": "Utama",
@@ -273,7 +274,8 @@
         "open_server_status": "Buka status server",
         "page_intro": "Hal yang perlu Anda perhatikan, kondisi perangkat Anda, dan nilai yang dibutuhkan klien RustDesk untuk terhubung.",
         "find_device_long": "Cari perangkat menurut ID, nama, pengguna, atau tag",
-        "devices_total_line": "Total {total} perangkat."
+        "devices_total_line": "Total {total} perangkat.",
+        "activate_agent_no_reader": "Browser ini tidak dapat membaca kode QR. Setujui perangkat di {link} sebagai gantinya."
     },
     "devices": {
         "title": "Perangkat",

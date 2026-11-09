@@ -37,7 +37,8 @@
         "off": "Aus",
         "none": "Keine Angabe",
         "copy_value": "{value} kopieren",
-        "copy_failed": "Kopieren nicht möglich. Bitte markieren Sie den Text und kopieren Sie ihn selbst."
+        "copy_failed": "Kopieren nicht möglich. Bitte markieren Sie den Text und kopieren Sie ihn selbst.",
+        "opens_in_new_tab": "öffnet sich in einem neuen Tab"
     },
     "nav": {
         "main": "Hauptmenü",
@@ -267,7 +268,8 @@
         "open_server_status": "Serverstatus öffnen",
         "page_intro": "Was Ihre Aufmerksamkeit braucht, wie es Ihren Geräten geht und welche Werte RustDesk-Clients zum Verbinden brauchen.",
         "find_device_long": "Gerät nach ID, Name, Benutzer oder Tag suchen",
-        "devices_total_line": "{total} Geräte insgesamt."
+        "devices_total_line": "{total} Geräte insgesamt.",
+        "activate_agent_no_reader": "Dieser Browser kann keine QR-Codes lesen. Geben Sie das Gerät stattdessen unter {link} frei."
     },
     "devices": {
         "title": "Geräte",

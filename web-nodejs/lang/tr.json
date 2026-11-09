@@ -43,7 +43,8 @@
         "off": "Kapalı",
         "none": "Yok",
         "copy_value": "{value} kopyala",
-        "copy_failed": "Kopyalanamadı. Metni seçip kendiniz kopyalayın."
+        "copy_failed": "Kopyalanamadı. Metni seçip kendiniz kopyalayın.",
+        "opens_in_new_tab": "yeni sekmede açılır"
     },
     "nav": {
         "main": "Ana menü",
@@ -273,7 +274,8 @@
         "open_server_status": "Sunucu durumunu aç",
         "page_intro": "İlgilenmeniz gerekenler, cihazlarınızın durumu ve RustDesk istemcilerinin bağlanmak için ihtiyaç duyduğu değerler.",
         "find_device_long": "Cihazı ID, ad, kullanıcı veya etikete göre bulun",
-        "devices_total_line": "Toplam {total} cihaz."
+        "devices_total_line": "Toplam {total} cihaz.",
+        "activate_agent_no_reader": "Bu tarayıcı QR kodlarını okuyamıyor. Bunun yerine cihazı {link} bölümünden onaylayın."
     },
     "devices": {
         "title": "Cihazlar",

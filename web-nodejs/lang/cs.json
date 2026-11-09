@@ -37,7 +37,8 @@
         "off": "Vypnuto",
         "none": "Žádné",
         "copy_value": "Kopírovat {value}",
-        "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně."
+        "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně.",
+        "opens_in_new_tab": "otevře se na nové kartě"
     },
     "nav": {
         "main": "Hlavní",
@@ -267,7 +268,8 @@
         "open_server_status": "Otevřít stav serveru",
         "page_intro": "Co vyžaduje vaši pozornost, jak se daří vašim zařízením a jaké hodnoty potřebují klienti RustDesk k připojení.",
         "find_device_long": "Najít zařízení podle ID, názvu, uživatele nebo štítku",
-        "devices_total_line": "Celkem zařízení: {total}."
+        "devices_total_line": "Celkem zařízení: {total}.",
+        "activate_agent_no_reader": "Tento prohlížeč neumí číst QR kódy. Schvalte zařízení místo toho v sekci {link}."
     },
     "devices": {
         "title": "Zařízení",

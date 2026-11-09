@@ -37,7 +37,8 @@
         "off": "オフ",
         "none": "なし",
         "copy_value": "{value} をコピー",
-        "copy_failed": "コピーできませんでした。テキストを選択して手動でコピーしてください。"
+        "copy_failed": "コピーできませんでした。テキストを選択して手動でコピーしてください。",
+        "opens_in_new_tab": "新しいタブで開きます"
     },
     "nav": {
         "main": "メイン",
@@ -267,7 +268,8 @@
         "open_server_status": "サーバーの状態を開く",
         "page_intro": "対応が必要なこと、デバイスの状態、RustDesk クライアントの接続に必要な値を表示します。",
         "find_device_long": "ID、名前、ユーザー、タグでデバイスを検索",
-        "devices_total_line": "合計 {total} 台のデバイス。"
+        "devices_total_line": "合計 {total} 台のデバイス。",
+        "activate_agent_no_reader": "このブラウザーは QR コードを読み取れません。代わりに {link} でデバイスを承認してください。"
     },
     "devices": {
         "title": "デバイス",

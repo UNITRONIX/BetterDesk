@@ -43,7 +43,8 @@
         "off": "Av",
         "none": "Ingen",
         "copy_value": "Kopiera {value}",
-        "copy_failed": "Det gick inte att kopiera. Markera texten och kopiera den själv."
+        "copy_failed": "Det gick inte att kopiera. Markera texten och kopiera den själv.",
+        "opens_in_new_tab": "öppnas i en ny flik"
     },
     "nav": {
         "main": "Huvud",
@@ -273,7 +274,8 @@
         "open_server_status": "Öppna serverstatus",
         "page_intro": "Vad som behöver din uppmärksamhet, hur dina enheter mår och vilka värden RustDesk-klienter behöver för att ansluta.",
         "find_device_long": "Hitta en enhet efter ID, namn, användare eller tagg",
-        "devices_total_line": "{total} enheter totalt."
+        "devices_total_line": "{total} enheter totalt.",
+        "activate_agent_no_reader": "Den här webbläsaren kan inte läsa QR-koder. Godkänn enheten under {link} i stället."
     },
     "devices": {
         "title": "Enheter",

@@ -43,7 +43,8 @@
         "off": "Tắt",
         "none": "Không có",
         "copy_value": "Sao chép {value}",
-        "copy_failed": "Không sao chép được. Hãy chọn văn bản và tự sao chép."
+        "copy_failed": "Không sao chép được. Hãy chọn văn bản và tự sao chép.",
+        "opens_in_new_tab": "mở trong thẻ mới"
     },
     "nav": {
         "main": "Chính",
@@ -273,7 +274,8 @@
         "open_server_status": "Mở trạng thái máy chủ",
         "page_intro": "Những việc cần bạn chú ý, tình trạng các thiết bị của bạn và các giá trị mà client RustDesk cần để kết nối.",
         "find_device_long": "Tìm thiết bị theo ID, tên, người dùng hoặc thẻ",
-        "devices_total_line": "Tổng cộng {total} thiết bị."
+        "devices_total_line": "Tổng cộng {total} thiết bị.",
+        "activate_agent_no_reader": "Trình duyệt này không đọc được mã QR. Hãy duyệt thiết bị trong {link}."
     },
     "devices": {
         "title": "Thiết bị",

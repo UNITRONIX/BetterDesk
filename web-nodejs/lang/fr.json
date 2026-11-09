@@ -41,7 +41,8 @@
         "off": "Désactivé",
         "none": "Aucun",
         "copy_value": "Copier {value}",
-        "copy_failed": "Impossible de copier. Sélectionnez le texte et copiez-le vous-même."
+        "copy_failed": "Impossible de copier. Sélectionnez le texte et copiez-le vous-même.",
+        "opens_in_new_tab": "s'ouvre dans un nouvel onglet"
     },
     "nav": {
         "main": "Principal",
@@ -271,7 +272,8 @@
         "open_server_status": "Ouvrir l'état du serveur",
         "page_intro": "Ce qui demande votre attention, l'état de vos appareils et les valeurs dont les clients RustDesk ont besoin pour se connecter.",
         "find_device_long": "Chercher un appareil par ID, nom, utilisateur ou tag",
-        "devices_total_line": "{total} appareils au total."
+        "devices_total_line": "{total} appareils au total.",
+        "activate_agent_no_reader": "Ce navigateur ne sait pas lire les codes QR. Approuvez plutôt l'appareil dans {link}."
     },
     "devices": {
         "title": "Appareils",

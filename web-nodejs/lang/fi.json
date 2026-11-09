@@ -43,7 +43,8 @@
         "off": "Pois",
         "none": "Ei mitään",
         "copy_value": "Kopioi {value}",
-        "copy_failed": "Kopiointi epäonnistui. Valitse teksti ja kopioi se itse."
+        "copy_failed": "Kopiointi epäonnistui. Valitse teksti ja kopioi se itse.",
+        "opens_in_new_tab": "avautuu uuteen välilehteen"
     },
     "nav": {
         "main": "Pää",
@@ -273,7 +274,8 @@
         "open_server_status": "Avaa palvelimen tila",
         "page_intro": "Mikä vaatii huomiotasi, miten laitteesi voivat ja arvot, joita RustDesk-asiakkaat tarvitsevat yhdistämiseen.",
         "find_device_long": "Etsi laitetta ID:n, nimen, käyttäjän tai tunnisteen perusteella",
-        "devices_total_line": "Yhteensä {total} laitetta."
+        "devices_total_line": "Yhteensä {total} laitetta.",
+        "activate_agent_no_reader": "Tämä selain ei pysty lukemaan QR-koodeja. Hyväksy laite sen sijaan kohdassa {link}."
     },
     "devices": {
         "title": "Laitteet",

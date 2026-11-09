@@ -43,7 +43,8 @@
         "off": "Oprit",
         "none": "Niciunul",
         "copy_value": "Copiază {value}",
-        "copy_failed": "Nu s-a putut copia. Selectați textul și copiați-l manual."
+        "copy_failed": "Nu s-a putut copia. Selectați textul și copiați-l manual.",
+        "opens_in_new_tab": "se deschide într-o filă nouă"
     },
     "nav": {
         "main": "Principal",
@@ -273,7 +274,8 @@
         "open_server_status": "Deschide starea serverului",
         "page_intro": "Ce necesită atenția dumneavoastră, cum funcționează dispozitivele și valorile de care clienții RustDesk au nevoie pentru conectare.",
         "find_device_long": "Căutați un dispozitiv după ID, nume, utilizator sau etichetă",
-        "devices_total_line": "{total} dispozitive în total."
+        "devices_total_line": "{total} dispozitive în total.",
+        "activate_agent_no_reader": "Acest browser nu poate citi coduri QR. Aprobați dispozitivul din {link}."
     },
     "devices": {
         "title": "Dispozitive",

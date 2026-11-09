@@ -37,7 +37,8 @@
         "off": "Uit",
         "none": "Geen",
         "copy_value": "{value} kopiëren",
-        "copy_failed": "Kopiëren is mislukt. Selecteer de tekst en kopieer hem zelf."
+        "copy_failed": "Kopiëren is mislukt. Selecteer de tekst en kopieer hem zelf.",
+        "opens_in_new_tab": "opent in een nieuw tabblad"
     },
     "nav": {
         "main": "Hoofdmenu",
@@ -267,7 +268,8 @@
         "open_server_status": "Serverstatus openen",
         "page_intro": "Wat uw aandacht nodig heeft, hoe het met uw apparaten gaat en welke waarden RustDesk-clients nodig hebben om verbinding te maken.",
         "find_device_long": "Apparaat zoeken op ID, naam, gebruiker of tag",
-        "devices_total_line": "{total} apparaten in totaal."
+        "devices_total_line": "{total} apparaten in totaal.",
+        "activate_agent_no_reader": "Deze browser kan geen QR-codes lezen. Keur het apparaat in plaats daarvan goed onder {link}."
     },
     "devices": {
         "title": "Apparaten",

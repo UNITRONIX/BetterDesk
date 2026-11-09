@@ -37,7 +37,8 @@
         "off": "꺼짐",
         "none": "없음",
         "copy_value": "{value} 복사",
-        "copy_failed": "복사하지 못했습니다. 텍스트를 선택해 직접 복사하세요."
+        "copy_failed": "복사하지 못했습니다. 텍스트를 선택해 직접 복사하세요.",
+        "opens_in_new_tab": "새 탭에서 열립니다"
     },
     "nav": {
         "main": "메인",
@@ -267,7 +268,8 @@
         "open_server_status": "서버 상태 열기",
         "page_intro": "확인이 필요한 항목, 장치 상태, RustDesk 클라이언트 연결에 필요한 값을 보여 줍니다.",
         "find_device_long": "ID, 이름, 사용자 또는 태그로 장치 찾기",
-        "devices_total_line": "전체 장치 {total}대"
+        "devices_total_line": "전체 장치 {total}대",
+        "activate_agent_no_reader": "이 브라우저는 QR 코드를 읽을 수 없습니다. 대신 {link}에서 장치를 승인하세요."
     },
     "devices": {
         "title": "장치",

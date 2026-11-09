@@ -43,7 +43,8 @@
         "off": "Fra",
         "none": "Ingen",
         "copy_value": "Kopiér {value}",
-        "copy_failed": "Kunne ikke kopiere. Markér teksten, og kopiér den selv."
+        "copy_failed": "Kunne ikke kopiere. Markér teksten, og kopiér den selv.",
+        "opens_in_new_tab": "åbner i en ny fane"
     },
     "nav": {
         "main": "Hoved",
@@ -273,7 +274,8 @@
         "open_server_status": "Åbn serverstatus",
         "page_intro": "Hvad der kræver din opmærksomhed, hvordan dine enheder har det, og hvilke værdier RustDesk-klienter skal bruge for at forbinde.",
         "find_device_long": "Find en enhed efter ID, navn, bruger eller tag",
-        "devices_total_line": "{total} enheder i alt."
+        "devices_total_line": "{total} enheder i alt.",
+        "activate_agent_no_reader": "Denne browser kan ikke læse QR-koder. Godkend enheden under {link} i stedet."
     },
     "devices": {
         "title": "Enheder",
