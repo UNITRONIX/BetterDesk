@@ -9,7 +9,8 @@
  *   GET /policies/:orgId                   — Org-specific policies
  *   GET /attestation                       — Device attestation dashboard
  *
- * API routes (proxy to Go server /api/org/{id}/policy):
+ * API routes (proxy to Go server /api/org/{id}/policy). Reads and writes
+ * need the same roles as the pages (requireAdmin):
  *   GET    /api/panel/policies/:orgId              — Get all policies for org
  *   PUT    /api/panel/policies/:orgId/connection    — Set connection policy
  *   PUT    /api/panel/policies/:orgId/features      — Set feature policy
@@ -94,7 +95,7 @@ router.get('/attestation', requireAuth, requireAdmin, (req, res) => {
 // ---------------------------------------------------------------------------
 
 // Get all policies for organization
-router.get('/api/panel/policies/:orgId', requireAuth, (req, res) => {
+router.get('/api/panel/policies/:orgId', requireAuth, requireAdmin, (req, res) => {
     const orgId = assertSafeApiId(req.params.orgId, 'orgId');
     return goApiProxy(req, res, 'get', `/org/${encodeURIComponent(orgId)}/policy`);
 });
@@ -125,13 +126,13 @@ router.put('/api/panel/policies/:orgId/update', requireAdmin, (req, res) =>
     goApiProxy(req, res, 'put', orgPolicyPath(req, '/update'), req.body));
 
 // Get effective (merged) policy for a device
-router.get('/api/panel/policies/:orgId/effective/:deviceId', requireAuth, (req, res) => {
+router.get('/api/panel/policies/:orgId/effective/:deviceId', requireAuth, requireAdmin, (req, res) => {
     const deviceId = assertSafeApiId(req.params.deviceId, 'deviceId');
     return goApiProxy(req, res, 'get', `${orgPolicyPath(req, '')}/effective/${encodeURIComponent(deviceId)}`);
 });
 
 // Policy audit log
-router.get('/api/panel/policies/:orgId/audit', requireAuth, (req, res) =>
+router.get('/api/panel/policies/:orgId/audit', requireAuth, requireAdmin, (req, res) =>
     goApiProxy(req, res, 'get', orgPolicyPath(req, '/audit')));
 
 // ---------------------------------------------------------------------------
@@ -181,7 +182,7 @@ router.get('/api/panel/attestation', requireAuth, requireAdmin, async (req, res)
 });
 
 // Get attestation for specific device
-router.get('/api/panel/attestation/:deviceId', requireAuth, async (req, res) => {
+router.get('/api/panel/attestation/:deviceId', requireAuth, requireAdmin, async (req, res) => {
     let deviceId;
     try {
         deviceId = assertSafeApiId(req.params.deviceId, 'deviceId');
