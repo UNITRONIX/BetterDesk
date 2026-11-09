@@ -6766,19 +6766,19 @@
             "create_submit": "Crear paquete",
             "select_org": "Organización",
             "select_org_placeholder": "Seleccionar organización…",
-            "description": "Description",
-            "edit_title": "Edit package",
-            "created": "Package created",
-            "updated": "Package updated",
-            "deleted": "Package deleted",
+            "description": "Descripción",
+            "edit_title": "Editar paquete",
+            "created": "Paquete creado",
+            "updated": "Paquete actualizado",
+            "deleted": "Paquete eliminado",
             "delete_confirm": "Delete this package? Assignments using it must be removed first.",
-            "unit": "Unit",
-            "unit_minutes": "Minutes",
-            "unit_hours": "Hours",
+            "unit": "Unidad",
+            "unit_minutes": "Minutos",
+            "unit_hours": "Horas",
             "included_amount": "Included amount",
             "rounding": "Billing accuracy (minutes)",
-            "rounding_custom": "Custom",
-            "rounding_custom_value": "Custom minutes"
+            "rounding_custom": "Personalizado",
+            "rounding_custom_value": "Minutos personalizados"
         },
         "sessions": {
             "device": "Dispositivo",
@@ -6786,10 +6786,10 @@
             "duration": "Duración",
             "phase": "Fase",
             "amount": "Importe",
-            "org": "Organization",
-            "started": "Started",
-            "ended": "Ended",
-            "report": "Report",
+            "org": "Organización",
+            "started": "Inicio",
+            "ended": "Fin",
+            "report": "Informe",
             "complete_report": "Complete report"
         },
         "reports": {
@@ -6811,16 +6811,16 @@
             "select_package": "Seleccionar paquete",
             "no_orgs": "No se encontraron organizaciones",
             "no_packages": "Cree un paquete primero",
-            "assignments_title": "Package assignments",
-            "target": "Target",
-            "hourly_rate": "Hourly rate",
+            "assignments_title": "Asignaciones de paquetes",
+            "target": "Destino",
+            "hourly_rate": "Tarifa por hora",
             "custom_overage": "Custom overage rate / h",
-            "validity": "Validity",
-            "valid_from": "Valid from",
-            "valid_until": "Valid until",
-            "edit_title": "Edit assignment",
-            "updated": "Assignment updated",
-            "deleted": "Assignment removed",
+            "validity": "Validez",
+            "valid_from": "Válida desde",
+            "valid_until": "Válida hasta",
+            "edit_title": "Editar asignación",
+            "updated": "Asignación actualizada",
+            "deleted": "Asignación quitada",
             "delete_confirm": "Remove this package assignment?"
         },
         "export": {
@@ -6852,10 +6852,10 @@
             "submit": "Asignar",
             "target_type": "Target type",
             "target": "Target",
-            "select_target": "Select target…",
+            "select_target": "Seleccione un destino…",
             "missing_fields": "Select target and package",
             "optional": "Optional",
-            "success": "Package assigned"
+            "success": "Paquete asignado"
         },
         "form": {
             "cancel": "Cancelar"
@@ -6875,45 +6875,45 @@
             "saved": "Ajustes de notificación guardados"
         },
         "targets": {
-            "org": "Organization",
-            "device_group": "Device group",
-            "folder": "Folder",
-            "device": "Device"
+            "org": "Organización",
+            "device_group": "Grupo de dispositivos",
+            "folder": "Carpeta",
+            "device": "Dispositivo"
         },
         "actions": {
-            "edit": "Edit",
+            "edit": "Editar",
             "delete": "Delete",
-            "save": "Save",
-            "refresh": "Refresh"
+            "save": "Guardar",
+            "refresh": "Actualizar"
         },
         "filters": {
             "target_type": "Target type",
             "all_types": "All types",
-            "all_statuses": "All statuses",
-            "all_orgs": "All organizations",
-            "organization": "Organization",
+            "all_statuses": "Todos los estados",
+            "all_orgs": "Todas las organizaciones",
+            "organization": "Organización",
             "search": "Search",
             "search_placeholder": "Name or package…",
             "device_id_placeholder": "Device ID"
         },
         "status": {
-            "active": "Active",
-            "suspended": "Suspended",
-            "pending_report": "Pending report",
-            "closed": "Closed"
+            "active": "Activa",
+            "suspended": "Suspendida",
+            "pending_report": "Informe pendiente",
+            "closed": "Cerrada"
         },
         "preview": {
-            "title": "Package preview",
-            "open": "Month preview",
-            "company": "Company",
-            "devices": "Devices",
-            "used": "Used",
-            "remaining": "Remaining",
-            "overage": "Overage",
-            "month_total": "Month total",
+            "title": "Vista previa del paquete",
+            "open": "Vista previa del mes",
+            "company": "Empresa",
+            "devices": "Dispositivos",
+            "used": "Usado",
+            "remaining": "Restante",
+            "overage": "Exceso",
+            "month_total": "Total del mes",
             "timezone": "Billing timezone",
-            "prev_month": "Older month",
-            "next_month": "Newer month",
+            "prev_month": "Mes más antiguo",
+            "next_month": "Mes más reciente",
             "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         },
         "ui": {

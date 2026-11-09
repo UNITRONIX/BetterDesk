@@ -6903,17 +6903,17 @@
             "closed": "Zamknięty"
         },
         "preview": {
-            "title": "Package preview",
-            "open": "Month preview",
-            "company": "Company",
-            "devices": "Devices",
-            "used": "Used",
-            "remaining": "Remaining",
-            "overage": "Overage",
-            "month_total": "Month total",
+            "title": "Podgląd pakietu",
+            "open": "Podgląd miesiąca",
+            "company": "Firma",
+            "devices": "Urządzenia",
+            "used": "Wykorzystano",
+            "remaining": "Pozostało",
+            "overage": "Nadwyżka",
+            "month_total": "Suma za miesiąc",
             "timezone": "Billing timezone",
-            "prev_month": "Older month",
-            "next_month": "Newer month",
+            "prev_month": "Starszy miesiąc",
+            "next_month": "Nowszy miesiąc",
             "hint": "Right-click a package row for preview. Month history is kept when usage resets."
         },
         "ui": {
