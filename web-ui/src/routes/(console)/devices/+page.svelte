@@ -812,7 +812,8 @@
 		</section>
 	</div>
 
-	<AccessRules {groups} {devices} />
+	<!-- Below the list: drawn once the list has its rows, so it doesn't jump down as they arrive -->
+	{#if loaded}<AccessRules {groups} {devices} />{/if}
 </div>
 
 {#if dragDevice}

@@ -9,6 +9,14 @@
 		     also starts the bootstrap and strings requests (routes/console.routes.js) -->
 		<script src="/console-boot.js"></script>
 		<link rel="preload" href="/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin />
+		<!-- Same URL as the @font-face in lib/styles/base.css (tests/unit/app-html.test.ts checks) -->
+		<link
+			rel="preload"
+			href="/fonts/MaterialSymbolsOutlined.woff2?v=249c49bac408"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
 		<link rel="stylesheet" href="/css/branding.css" />
 		%sveltekit.head%
 	</head>
