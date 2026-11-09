@@ -54,7 +54,8 @@ export const PORTED: readonly string[] = [
 	'/server-management',
 	'/scaling',
 	'/server-attestation',
-	'/commercialization'
+	'/commercialization',
+	'/cdap-studio'
 ];
 
 /** Whether a path (no query) is one of the entries */
