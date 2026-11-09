@@ -9,6 +9,8 @@
 - After update, if server source changed but binary build/deploy failed, `applyUpdate` attempts **auto-rebuild** via `rebuildServerBinary` before leaving a stale marker.
 - The panel always builds the Go server locally from the exact update commit. It downloads only the required `betterdesk-server/` subtree through the GitHub tree API, installs the pinned Go toolchain into the console data directory when needed, runs `go mod download` and `go build`, then deploys the resulting binary.
 - The panel does not download or install a pre-built server binary from GitHub Releases or GitHub Actions. This keeps source, dependencies and the compiled binary on the same selected branch/SHA.
+- **New web console (`web-ui/`):** native installs build it on the server. The installers copy `web-ui/` (without `node_modules`, `build`, `.svelte-kit`, test output, `tests` and `e2e`) to `<console>/web-ui`, write `WEB_UI_DIR=<console>/web-ui/build` to the console `.env`, and run `npx -y npm@11.6.2 ci --include=dev` and `npm run build` there (Node.js 22.17 or newer; npm 10 can't resolve the dependency tree). The panel update syncs changed `web-ui/` files the same way (the whole tree on the first update or when the compare list is cut off), rebuilds when anything outside `tests/`, `e2e/` and docs changed, and restarts the console on the new build. In a repo checkout it uses `../web-ui`. The build dependencies take about 220 MB in `web-ui/node_modules`, plus the npm cache.
+- A failed web-ui build is non-critical, like a failed `npm install`: the previous `build/` is copied aside before the build and put back afterwards (the static adapter empties `build/` before it writes), the update is still recorded, the log is in `<console>/data/web-ui-build.log`, and `data/.web_ui_build_pending` makes the next update build again. Without any build the console shows the old pages. Docker image installs (`BETTERDESK_UPDATE_MODE=image`) get the build from the image.
 - Console update merges new keys from `web-nodejs/.env.example` into existing `.env` using `buildEnvSubstitutions()` (resolved paths, no raw `__PLACEHOLDER__` values).
 - After server updates, `patchServiceDefinitions()` sanitizes writable/NSSM units in place; protected Linux systemd units require the explicit root maintenance step below.
 - Update preflight now includes the shared management capability report. It
@@ -52,6 +54,8 @@ GitHub `compare` API caps `files` at 300, so large diffs are truncated and chang
 ### Installer GitHub update
 
 - Bash: `cp -rf src/. dest/` — PS1: `Copy-Item "$src\*" $dest` (never nest source inside existing dir if rename failed).
+- The console copy (`rsync --delete` in Bash) excludes `/web-ui/`, which lives inside the console folder; `install_web_ui` / `Install-WebUi` then replace its sources and build it.
+- `betterdesk-docker.sh` copies `web-ui/` from the download too: the images build it, so the Dockerfiles fail without it.
 
 ### Configuration merge (Skansmer / boruto79 follow-ups)
 

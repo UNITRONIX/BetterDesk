@@ -9,6 +9,11 @@ const NON_CRITICAL_UPDATE_FAILURES = new Set([
     'betterdesk-server.service',
     'server-source',
     'npm install',
+    // The new console (web-ui): a failed sync or build keeps the previous build
+    'web-ui',
+    'web-ui source',
+    'web-ui build',
+    'web-ui env',
     'support-agent-source-sync',
     'support-agent-rebuild-defer',
     // Installer / Docker root files — optional beside the console; EACCES/EPERM
