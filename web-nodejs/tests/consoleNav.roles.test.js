@@ -57,6 +57,14 @@ describe('console navigation follows the route guards', () => {
         expect(pagesFor(role).has('chat')).toBe(shown);
     });
 
+    // GET /keys and its API need a session only; the full API key needs server.keys on its own
+    test.each(['super_admin', 'admin', 'global_admin', 'server_admin', 'operator', 'viewer'])(
+        '%s sees Client setup, which every signed-in role may open',
+        (role) => {
+            expect(pagesFor(role).has('keys')).toBe(true);
+        }
+    );
+
     test('without a role, role-guarded pages stay hidden', () => {
         const nav = buildNav({ can: () => true, isSuperAdmin: false, t: (k) => k, currentPage: '', currentTab: '' });
         const pages = new Set(nav.sections.flatMap((s) => s.pages.map((p) => p.page)));

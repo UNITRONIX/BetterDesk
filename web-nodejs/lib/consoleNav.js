@@ -89,7 +89,7 @@ const SECTIONS = [
             { page: 'settings:time', keywords: 'time zone timezone ntp clock', href: '/settings?tab=time', label: 'settings.tab_time', when: perm('server.config'), group: 'nav.group_console' },
             { page: 'settings:advanced', keywords: 'advanced config files restart', href: '/settings?tab=advanced', label: 'settings.tab_advanced', when: perm('server.config'), group: 'nav.group_console' },
             { page: 'languages', keywords: 'languages translations i18n', href: '/languages', label: 'nav.languages', when: perm('server.config'), group: 'nav.group_console' },
-            { page: 'keys', keywords: 'keys public key qr client setup rustdesk config', core: true, href: '/keys', label: 'nav.keys', when: perm('server.config'), group: 'nav.group_clients' },
+            { page: 'keys', keywords: 'keys public key qr client setup rustdesk config', core: true, href: '/keys', label: 'nav.keys', when: always, group: 'nav.group_clients' },
             { page: 'tokens', keywords: 'tokens enrollment mode', href: '/tokens', label: 'nav.tokens', when: perm('enrollment.manage'), group: 'nav.group_clients' },
             { page: 'pairing', keywords: 'pairing code', href: '/pairing', label: 'nav.pairing', when: perm('enrollment.approve'), group: 'nav.group_clients' },
             { page: 'agents', keywords: 'agents installers generator', href: '/agents', label: 'nav.agents', when: adminRole, alsoActiveFor: ['generator'], group: 'nav.group_clients' },
