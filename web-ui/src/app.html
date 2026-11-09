@@ -24,6 +24,15 @@
 			type="font/woff2"
 			crossorigin
 		/>
+		<!-- IDs and keys in tables are in Plex Mono: found only once a table draws, it
+		     would arrive late and change the rows' line breaks -->
+		<link
+			rel="preload"
+			href="%sveltekit.assets%/fonts/IBMPlexMono-latin-400.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
 		<link rel="stylesheet" href="/css/branding.css" />
 		%sveltekit.head%
 	</head>

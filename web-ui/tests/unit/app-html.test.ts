@@ -20,4 +20,16 @@ describe('the page shell (src/app.html)', () => {
 			expect(faces).toContain(url);
 		}
 	});
+
+	test('preloads the text, icon and mono fonts, so none of them swaps in after the page has drawn', () => {
+		const preloads = [...read('src/app.html').matchAll(/rel="preload"\s+href="([^"]+)"/g)].map((m) => m[1]!);
+		const files = preloads.map((h) => h.split('/').pop()!.split('?')[0]);
+		expect(files).toEqual(
+			expect.arrayContaining([
+				'IBMPlexSans-latin.woff2',
+				'MaterialSymbolsOutlined.woff2',
+				'IBMPlexMono-latin-400.woff2'
+			])
+		);
+	});
 });
