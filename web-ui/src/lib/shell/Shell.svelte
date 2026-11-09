@@ -34,7 +34,7 @@
 	import Sidebar from './Sidebar.svelte';
 	import Topbar from './Topbar.svelte';
 	import { a11y } from './a11y.svelte.ts';
-	import { getBrandingExtras, type BrandingExtras } from './api.ts';
+	import { brandingExtras } from './api.ts';
 	import { onPanelEvents, startLiveEvents, stopLiveEvents } from './live-events.svelte.ts';
 	import { bottomItems, breadcrumb, buildNavModel, pageKey } from './nav-model.ts';
 	import { onPanelEvent, startNotifications, stopNotifications } from './notifications.svelte.ts';
@@ -55,7 +55,7 @@
 	let searchOpen = $state(false);
 	let actionsOpen = $state(false);
 	let navigation = $state(0);
-	let branding = $state.raw<BrandingExtras | null>(null);
+	const branding = $derived(session.raw ? brandingExtras(session.raw.branding) : null);
 	let sidebar = $state<HTMLElement | null>(null);
 	let main = $state<HTMLElement | null>(null);
 	let helpButton = $state<HTMLButtonElement | null>(null);
@@ -129,7 +129,7 @@
 		main?.focus();
 	}
 
-	/* ── Start: real-time data, session watch, branding ── */
+	/* ── Start: real-time data, session watch ── */
 
 	onMount(() => {
 		const mq = window.matchMedia(DRAWER_QUERY);
@@ -148,9 +148,6 @@
 				startLiveEvents();
 				cleanups.push(stopLiveEvents, onPanelEvents(onPanelEvent), onPanelEvents(announce));
 			}
-			getBrandingExtras()
-				.then((b) => (branding = b))
-				.catch(() => {});
 		}
 		return () => cleanups.forEach((fn) => fn());
 	});

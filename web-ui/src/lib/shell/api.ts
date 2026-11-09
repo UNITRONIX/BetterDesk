@@ -2,12 +2,13 @@
  * Endpoints the shell calls (the old shell's scripts called the same):
  * notifications (notif-center.js), the registration count (app.js),
  * sign-out and session check (app.js, session-guard.js), people for the
- * global search (ui-search.js), and the branding details and supporters
- * the old layout rendered on the server.
+ * global search (ui-search.js), and the supporters the old layout rendered
+ * on the server. The branding details come with the bootstrap.
  */
 
 import * as v from 'valibot';
 import { api, request, wrapped, BoolLike, Text, NumLike } from '#lib/api/client.ts';
+import type { Bootstrap } from '#lib/api/console.ts';
 
 /* ── Notifications: GET /api/bd/notifications, POST .../:id/read, POST .../read-all ── */
 
@@ -144,36 +145,31 @@ export async function listUsersForSearch(
 		.filter((u) => u.username);
 }
 
-/* ── Branding the old layout rendered on the server: GET /api/settings/branding ── */
+/* ── Branding the old layout rendered on the server: in the bootstrap ── */
 
-export const BrandingExtras = v.pipe(
-	v.looseObject({
-		data: v.looseObject({
-			logoType: Text,
-			logoIcon: Text,
-			logoSvg: Text,
-			logoUrl: Text,
-			logoText: Text,
-			logoTextAccent: Text,
-			footerText: Text,
-			showPoweredBy: v.optional(v.nullable(v.union([v.string(), v.boolean()])))
-		})
-	}),
-	v.transform(({ data }) => ({
-		logoType: data.logoType ?? '',
-		logoIcon: data.logoIcon ?? '',
-		logoSvg: data.logoSvg ?? '',
-		logoUrl: data.logoUrl ?? '',
-		logoText: data.logoText ?? '',
-		logoTextAccent: data.logoTextAccent ?? '',
-		footerText: data.footerText ?? '',
-		showPoweredBy: data.showPoweredBy !== 'false' && data.showPoweredBy !== false
-	}))
-);
-export type BrandingExtras = v.InferOutput<typeof BrandingExtras>;
+/** The logo and footer from Settings › Appearance, as the sidebar draws them */
+export interface BrandingExtras {
+	logoType: string;
+	logoIcon: string;
+	logoSvg: string;
+	logoUrl: string;
+	logoText: string;
+	logoTextAccent: string;
+	footerText: string;
+	showPoweredBy: boolean;
+}
 
-export function getBrandingExtras(signal?: AbortSignal): Promise<BrandingExtras> {
-	return api(BrandingExtras, '/api/settings/branding', { signal });
+export function brandingExtras(b: Bootstrap['branding']): BrandingExtras {
+	return {
+		logoType: b.logoType ?? '',
+		logoIcon: b.logoIcon,
+		logoSvg: b.logoSvg,
+		logoUrl: b.logoUrl,
+		logoText: b.logoText,
+		logoTextAccent: b.logoTextAccent,
+		footerText: b.footerText,
+		showPoweredBy: b.showPoweredBy
+	};
 }
 
 /* ── Help panel: project supporters and links (config/supporters.json) ── */

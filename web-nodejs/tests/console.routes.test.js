@@ -9,7 +9,8 @@ const { createTestApp } = require('./helpers');
 jest.mock('../services/database', () => ({
     logAction: jest.fn().mockResolvedValue(undefined),
     getBrandingConfig: jest.fn().mockResolvedValue([]),
-    getBrandingConfigRevision: jest.fn().mockResolvedValue('rev-1')
+    getBrandingConfigRevision: jest.fn().mockResolvedValue('rev-1'),
+    listUserAvatarVersions: jest.fn().mockResolvedValue([{ user_id: 7, username: 'demo_op', version: 'pic-42' }])
 }));
 
 const { manager } = require('../services/i18nService');
@@ -77,6 +78,37 @@ describe('GET /api/console/bootstrap', () => {
         });
         const res = await request(app).get('/api/console/bootstrap');
         expect(res.body.permissions).toEqual(['device.view', 'device.delete']);
+    });
+
+    test('carries the profile picture version and the branding the shell draws', async () => {
+        const withPicture = await request(appWith({ id: 7, username: 'demo_op', role: 'operator' })).get('/api/console/bootstrap');
+        expect(withPicture.body.user.avatarVersion).toBe('pic-42');
+        const without = await request(appWith({ id: 8, username: 'v', role: 'viewer' })).get('/api/console/bootstrap');
+        expect(without.body.user.avatarVersion).toBeNull();
+        expect(withPicture.body.branding).toEqual(expect.objectContaining({
+            logoIcon: expect.any(String),
+            logoSvg: expect.any(String),
+            logoUrl: expect.any(String),
+            logoText: expect.any(String),
+            logoTextAccent: expect.any(String),
+            footerText: expect.any(String),
+            showPoweredBy: true
+        }));
+    });
+});
+
+describe('GET /api/console/supporters', () => {
+    test('needs a session', async () => {
+        const res = await request(appWith(null)).get('/api/console/supporters');
+        expect(res.status).toBe(401);
+    });
+
+    test('returns the Help panel supporters and project links', async () => {
+        const res = await request(appWith({ id: 2, username: 'v', role: 'viewer' })).get('/api/console/supporters');
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body.honorary)).toBe(true);
+        expect(Array.isArray(res.body.individuals)).toBe(true);
+        expect(res.body.links.repo.startsWith('https://github.com/')).toBe(true);
     });
 });
 

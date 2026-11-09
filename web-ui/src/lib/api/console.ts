@@ -57,6 +57,14 @@ export const Bootstrap = v.object({
 		appDescription: v.string(),
 		themeMode: v.string(),
 		logoType: v.nullable(v.string()),
+		/* The logo and footer from Settings › Appearance */
+		logoIcon: v.optional(v.string(), ''),
+		logoSvg: v.optional(v.string(), ''),
+		logoUrl: v.optional(v.string(), ''),
+		logoText: v.optional(v.string(), ''),
+		logoTextAccent: v.optional(v.string(), ''),
+		footerText: v.optional(v.string(), ''),
+		showPoweredBy: v.optional(v.boolean(), true),
 		revision: v.union([v.string(), v.number()])
 	}),
 	palettes: v.object({ light: Palette, dark: Palette }),

@@ -10,6 +10,7 @@
  * GET /api/console/strings/:code
  *                              Public. One language's strings merged over
  *                              English, cached for a year under ?v=<revision>.
+ * GET /api/console/supporters  Signed in. The Help panel's supporters and links.
  *
  * The old pages keep their own calls (window.BetterDesk, /api/i18n/*).
  */
@@ -25,6 +26,8 @@ const { buildNav } = require('../lib/consoleNav');
 const { manager } = require('../services/i18nService');
 const brandingService = require('../services/brandingService');
 const panelSessionService = require('../services/panelSessionService');
+const avatarService = require('../services/avatarService');
+const supportersService = require('../services/supportersService');
 
 const router = express.Router();
 
@@ -132,7 +135,7 @@ const BOOT_SCRIPT = `(function (boot) {
     root.setAttribute('data-theme', theme);
     root.style.colorScheme = theme;
     // Accessibility panel settings: same key, defaults and limits as
-    // public/js/accessibility.js and web-ui/src/lib/state/a11y.svelte.ts
+    // public/js/accessibility.js and web-ui/src/lib/shell/a11y.svelte.ts
     var a = {};
     try { a = JSON.parse(get('betterdesk_accessibility_v1') || '{}') || {}; } catch (e) { a = {}; }
     function num(v, min, max, d) { v = Number(v); return isFinite(v) ? Math.min(max, Math.max(min, v)) : d; }
@@ -207,7 +210,7 @@ router.get('/api/console/strings/:code', (req, res) => {
     return res.send(body);
 });
 
-router.get('/api/console/bootstrap', requireAuth, (req, res) => {
+router.get('/api/console/bootstrap', requireAuth, async (req, res) => {
     const user = req.session.user || {};
     const role = user.role;
     const can = (p) => requestHasPermission(req, p);
@@ -216,6 +219,8 @@ router.get('/api/console/bootstrap', requireAuth, (req, res) => {
     const nav = buildNav({ can, isSuperAdmin: superAdmin, t, currentPage: '', currentTab: '' });
     const branding = res.locals.branding || brandingService.getBranding() || {};
     const boot = publicBoot(req);
+    // getAvatarVersion answers null on any failure: initials instead of the picture
+    const avatarVersion = await avatarService.getAvatarVersion(req.session.userId || user.id);
 
     res.setHeader('Cache-Control', 'no-store');
     res.json({
@@ -225,7 +230,7 @@ router.get('/api/console/bootstrap', requireAuth, (req, res) => {
             username: user.username,
             role,
             preferredLanguage: user.preferred_language || null,
-            avatarVersion: res.locals.userAvatarVersion || null
+            avatarVersion: avatarVersion || null
         },
         permissions: UI_PERMISSIONS.filter(can),
         isSuperAdmin: superAdmin,
@@ -256,6 +261,13 @@ router.get('/api/console/bootstrap', requireAuth, (req, res) => {
             appDescription: branding.appDescription || '',
             themeMode: boot.themeMode,
             logoType: branding.logoType || null,
+            logoIcon: branding.logoIcon || '',
+            logoSvg: branding.logoSvg || '',
+            logoUrl: branding.logoUrl || '',
+            logoText: branding.logoText || '',
+            logoTextAccent: branding.logoTextAccent || '',
+            footerText: branding.footerText || '',
+            showPoweredBy: String(branding.showPoweredBy) !== 'false',
             revision: boot.brandingRevision
         },
         palettes: boot.palettes,
@@ -263,6 +275,11 @@ router.get('/api/console/bootstrap', requireAuth, (req, res) => {
         csrfToken: res.locals.csrfToken || '',
         appVersion: config.appVersion || ''
     });
+});
+
+// The Help panel's project supporters and links (config/supporters.json)
+router.get('/api/console/supporters', requireAuth, (req, res) => {
+    res.json({ success: true, ...supportersService.loadSupporters() });
 });
 
 module.exports = router;
