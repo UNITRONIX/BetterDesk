@@ -46,6 +46,12 @@ and the resolved versions are in `web-ui/package-lock.json`.
   authors, SourceLair Private Company and Christopher Jeffrey
 - qrcode-generator, copyright Kazuhiko Arase
 
+Each build writes the full license text of every bundled package to
+`licenses.txt` next to the code (served at `/app/licenses.txt`), and the build
+fails when a bundled package is under a license other than MIT, ISC, 0BSD,
+BSD-2-Clause, BSD-3-Clause or Apache-2.0 (`web-ui/vite-plugins/licenses.ts`).
+Keep this list in step with that file.
+
 Build and test tools in `web-ui/package.json` (Vite, TypeScript, Vitest,
 Playwright, ESLint and others) are not part of what the console serves.
 
