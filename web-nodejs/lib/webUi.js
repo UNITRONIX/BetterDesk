@@ -5,6 +5,8 @@
  *   precompressed (brotli or gzip) when the browser accepts it.
  * - Every other GET under <base> gets the app's fallback page. Console pages
  *   need a session (the same redirect as requireAuth); public pages do not.
+ *   An address no page of the app has (routes.json in the build) gets the
+ *   page with status 404, and the app shows its not-found page there.
  * - The old URL of a page the new console serves (lib/portedPages.js)
  *   redirects to the same URL under <base>, once there is a build.
  * - The page's Content-Security-Policy comes from the build: SvelteKit writes
@@ -70,14 +72,55 @@ function escapeAttr(value) {
     return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+/**
+ * The app's pages (routes.json, written by web-ui/vite-plugins/routes.ts):
+ * one pattern per page, as SvelteKit matches paths. null without the file,
+ * or when it can't be read, and then every address counts as a page.
+ * @returns {RegExp[]|null}
+ */
+function loadRoutes(dir) {
+    try {
+        const list = JSON.parse(fs.readFileSync(path.join(dir, 'routes.json'), 'utf8'));
+        if (!Array.isArray(list) || list.length === 0) return null;
+        return list.map((r) => new RegExp(r.pattern));
+    } catch (_) {
+        return null;
+    }
+}
+
+function mtimeOf(file) {
+    try { return fs.statSync(file).mtimeMs; } catch (_) { return 0; }
+}
+
 function loadIndex(dir) {
     const file = path.join(dir, 'index.html');
     try {
         const html = fs.readFileSync(file, 'utf8');
-        return { html, csp: headerPolicy(readCsp(html)), mtime: fs.statSync(file).mtimeMs };
+        return {
+            html,
+            csp: headerPolicy(readCsp(html)),
+            routes: loadRoutes(dir),
+            mtime: fs.statSync(file).mtimeMs,
+            routesMtime: mtimeOf(path.join(dir, 'routes.json'))
+        };
     } catch (_) {
         return null;
     }
+}
+
+/**
+ * Whether the app has a page at this path (without the base). The path is
+ * decoded the way SvelteKit decodes it before matching (%25 stays).
+ */
+function isAppPage(routes, sub) {
+    if (!routes) return true;
+    let decoded;
+    try {
+        decoded = sub.split('%25').map(decodeURI).join('%25');
+    } catch (_) {
+        return false;
+    }
+    return routes.some((re) => re.test(decoded));
 }
 
 /**
@@ -110,11 +153,20 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
         const file = path.join(dir, 'index.html');
         try {
             const mtime = fs.statSync(file).mtimeMs;
-            if (!index || index.mtime !== mtime) index = loadIndex(dir);
+            if (!index || index.mtime !== mtime
+                || index.routesMtime !== mtimeOf(path.join(dir, 'routes.json'))) index = loadIndex(dir);
         } catch (_) {
             index = null;
         }
         return index;
+    }
+
+    function sendPage(res, page, status) {
+        res.status(status);
+        res.setHeader('Content-Security-Policy', page.csp);
+        res.setHeader('Cache-Control', 'no-store');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.send(page.html);
     }
 
     // res.sendErrorPage(kind, { status, title, message }): the error page in the
@@ -181,18 +233,20 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
             if (filePath.endsWith('version.json')) res.setHeader('Cache-Control', 'no-cache');
         }
     });
-    router.use(base, (req, res, next) => {
+    router.use(base || '/', (req, res, next) => {
         let p;
         try { p = decodeURIComponent(req.path); } catch (_) { return res.status(400).end(); }
         return /\.html?$/i.test(p) ? next() : files(req, res, next);
     });
 
     // The app's pages
-    router.get([base, `${base}/*`], (req, res, next) => {
+    router.get(base ? [base, `${base}/*`] : '*', (req, res, next) => {
         const page = current();
         if (!page) return next();
         const sub = req.path.slice(base.length) || '/';
         if (path.extname(sub) && !sub.endsWith('.html')) return next(); // a missing file, not a page
+        // No page has this address: the app shows its not-found page, signed in or not
+        if (!isAppPage(page.routes, sub)) return sendPage(res, page, 404);
         const isPublic = PUBLIC_PATHS.some((re) => re.test(sub)) || VIEWER_PATH.test(sub);
         // The sign-in page is for people who aren't signed in (guestOnly): someone who
         // is goes where ?return= points when it is a console path, or to the start
@@ -203,18 +257,15 @@ function createWebUi({ base: wanted, dir = DEFAULT_DIR, ported = PORTED_PAGES } 
         if (!isPublic) {
             const role = req.session && req.session.user && req.session.user.role;
             if (!req.session || !req.session.userId || role === 'pro') {
-                const target = req.originalUrl.startsWith('/') && !req.originalUrl.startsWith('//') ? req.originalUrl : base;
+                const target = req.originalUrl.startsWith('/') && !req.originalUrl.startsWith('//') ? req.originalUrl : base || '/';
                 if (REMOTE_PATH.test(sub)) {
                     return res.redirect(`${base}/remote/login?return=${encodeURIComponent(target)}`);
                 }
                 // "expired" only when a session ended, not on a first visit (R4)
-                return res.redirect(loginRedirectUrl(req, { returnTo: safeReturnPath(req.originalUrl) || base }));
+                return res.redirect(loginRedirectUrl(req, { returnTo: safeReturnPath(req.originalUrl) || base || '/' }));
             }
         }
-        res.setHeader('Content-Security-Policy', page.csp);
-        res.setHeader('Cache-Control', 'no-store');
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        return res.send(page.html);
+        return sendPage(res, page, 200);
     });
 
     return router;

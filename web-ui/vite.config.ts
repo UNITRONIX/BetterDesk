@@ -3,6 +3,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { Agent } from 'node:http';
 import { defineConfig } from 'vitest/config';
 import { licenses } from './vite-plugins/licenses.ts';
+import { withRoutesList } from './vite-plugins/routes.ts';
 
 // Where the console is served from. "/app" while old and new pages run side
 // by side; "" once every page has moved over.
@@ -23,13 +24,17 @@ export default defineConfig({
 		// licenses.txt next to the code; fails the build on a license the console may not ship
 		licenses(),
 		sveltekit({
-			adapter: adapter({
-				pages: 'build',
-				assets: 'build',
-				fallback: 'index.html',
-				precompress: true,
-				strict: true
-			}),
+			// routes.json beside index.html: the server answers addresses no page has with 404
+			adapter: withRoutesList(
+				adapter({
+					pages: 'build',
+					assets: 'build',
+					fallback: 'index.html',
+					precompress: true,
+					strict: true
+				}),
+				'build'
+			),
 			paths: { base, relative: false },
 			appDir: '_ui',
 			csp: {
